@@ -1,6 +1,6 @@
 # Spec 004 SC-001 (specs 046 to 049): install a blank Secure Boot VM end to
-# end, from network boot to Ready, with the engine of this commit
-# (tests/e2e/ci.sh). Long (Ubuntu's image and a full install), so it runs on
+# end, from network boot to Ready, with the engine of this commit; reboot it;
+# then set up a workstation that reaches it over MCP (tests/e2e/ci.sh). Long (Ubuntu's image and a full install), so it runs on
 # pushes to main and by hand, separately from ci.yml's checks and tag.
 name: e2e
 
@@ -35,10 +35,10 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
           ls -l /dev/kvm
-      - name: QEMU, OVMF, dnsmasq
+      - name: QEMU, OVMF, dnsmasq, cloud-image-utils
         run: |
           sudo apt-get update -q
-          sudo apt-get install -y -q qemu-system-x86 qemu-utils ovmf dnsmasq-base
+          sudo apt-get install -y -q qemu-system-x86 qemu-utils ovmf dnsmasq-base cloud-image-utils netcat-openbsd
       - name: Install a VM end to end
         run: tests/e2e/ci.sh
       - name: Logs
@@ -51,5 +51,6 @@ jobs:
             tests/e2e/work/
             !tests/e2e/work/*.qcow2
             !tests/e2e/work/*.fd
+            !tests/e2e/work/*.iso
           if-no-files-found: ignore
           retention-days: 14

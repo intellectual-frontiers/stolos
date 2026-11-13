@@ -6,12 +6,28 @@ GRUB, Ubuntu's unattended installer, then `archon first-boot`.
 
 ## In CI
 
-`.github/workflows/e2e.yml` runs [`ci.sh`](ci.sh) on every push to `main` (and by hand) on a GitHub
-runner with KVM. It builds a throwaway fleet repository (`fleets/e2e`, a fresh signer, its tip
-signed), serves it and **this checkout of the engine** over HTTP on the lab bridge (so the VM runs
-the engine under test), runs the boot server from that fleet, powers on the VM, and waits for the
-boot server's event `boot.ready` (spec 049). Then it asks the VM through its MCP server
-(`archon fleet query`). The logs are the run's `e2e-logs` artifact.
+The lab is [`lib.sh`](lib.sh); two scripts set it up:
+
+- [`ci.sh`](ci.sh), run by `.github/workflows/e2e.yml` on every push to `main` (and by hand): a
+  throwaway fleet repository (`fleets/e2e`, a fresh signer, its tip signed), served with **this
+  checkout of the engine** over HTTP on the lab bridge, so the machines run the engine under test.
+- [`fleet.sh`](fleet.sh), run by the reusable `.github/workflows/fleet-e2e.yml` from a fleet
+  repository: its synthetic fleet, with the engine its `deno.json` pins (checked against its
+  `deno.lock`). See [docs/fleet-repository.md](../../docs/fleet-repository.md), "The synthetic
+  fleet".
+
+Either way, a run:
+
+1. starts the boot server from the fleet repository and network-boots a blank Secure Boot VM, which
+   installs to the boot server's event `boot.ready` (spec 049);
+2. checks that the host's first boot continued the install's trace;
+3. asks the server through its MCP server, from the runner (`archon fleet query`);
+4. powers the server off and on again, with less memory, and runs `archon verify` on it;
+5. starts a workstation from Ubuntu's cloud image (verified against Ubuntu's `SHA256SUMS`), clones
+   the repository to `/srv/archon`, runs `archon workstation add`, `archon verify`, and
+   `archon fleet query` from there: the agent's path to the server (spec 030).
+
+Every key and password of a run is made by it and thrown away. The logs are the run's artifact.
 
 ## By hand
 
@@ -20,8 +36,7 @@ first-boot push, exactly as a real host is installed: UEFI HTTP Boot from `archo
 signed shim and GRUB, Ubuntu's unattended installer, then `archon first-boot`.
 
 Needs a Linux machine with QEMU, OVMF, and dnsmasq
-(`apt install qemu-system-x86
-ovmf dnsmasq-base`), root (for the bridge and tap device), and a fleet
+(`apt install qemu-system-x86 ovmf dnsmasq-base`), root (for the bridge and tap device), and a fleet
 with a test host:
 
 ```sh

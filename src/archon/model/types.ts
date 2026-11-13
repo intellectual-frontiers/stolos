@@ -64,6 +64,22 @@ export interface SignerDef {
   added: string;
 }
 
+/**
+ * The fleet's outside providers (spec 046), each a closed set the engine
+ * implements. Defaults: Cloudflare for DNS and mail, Let's Encrypt for ACME.
+ */
+export interface ProvidersDef {
+  /** DNS: each server's records and the ACME DNS challenge (spec 032). */
+  dns: "cloudflare";
+  /** Outbound mail: the SMTP relay (Cloudflare Email Service, spec 027). */
+  mail: "cloudflare";
+  /**
+   * Certificates (spec 032). "letsencrypt-staging" gives untrusted certificates
+   * with generous rate limits: for synthetic and test fleets.
+   */
+  acme: "letsencrypt" | "letsencrypt-staging";
+}
+
 export interface FleetDef {
   id: string;
   title: string;
@@ -73,6 +89,8 @@ export interface FleetDef {
   timezone: string;
   locale: string;
   keyboard: string;
+  /** DNS, mail, and ACME providers (spec 046); see ProvidersDef for the defaults. */
+  providers?: Partial<ProvidersDef>;
   /** Who may approve changes (spec 047): loaded from fleets/<id>/signers.ts. */
   signers?: SignerDef[];
   /** The fleet's admin: one person, one account on every host (spec 003). */

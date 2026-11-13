@@ -72,6 +72,48 @@ export function writePin(denoJson: string, pin: Pin, tag: string): string {
   return denoJson.replace(from, to);
 }
 
+/**
+ * The engine repository ("owner/name") a pin's base points at:
+ * https://raw.githubusercontent.com/<owner>/<name>/ (else undefined).
+ */
+export function engineRepository(pin: Pin): string | undefined {
+  return pin.base.match(/^https:\/\/raw\.githubusercontent\.com\/([^/]+\/[^/]+)\/$/)?.[1];
+}
+
+/**
+ * A fleet repository's workflows call the engine's reusable workflows
+ * (fleet-e2e.yml) at a tag: the same tag as the pin, so the lab tests the
+ * engine the fleet runs. Returns the text with every such reference moved to
+ * `tag`.
+ */
+export function rewriteWorkflowRefs(text: string, engineRepo: string, tag: string): string {
+  const esc = engineRepo.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&");
+  return text.replace(
+    new RegExp(`(${esc}/\\.github/workflows/[\\w.-]+\\.ya?ml@)v\\d+\\.\\d+\\.\\d+`, "g"),
+    `$1${tag}`,
+  );
+}
+
+/** Move the engine's reusable workflows to `tag` in .github/workflows; the files changed. */
+async function moveWorkflowRefs(repo: string, pin: Pin, tag: string): Promise<string[]> {
+  const engineRepo = engineRepository(pin);
+  if (!engineRepo) return [];
+  const changed: string[] = [];
+  try {
+    for (const e of Deno.readDirSync(join(repo, ".github", "workflows"))) {
+      if (!e.isFile || !/\.ya?ml$/.test(e.name)) continue;
+      const rel = `.github/workflows/${e.name}`;
+      const before = await Deno.readTextFile(join(repo, rel));
+      const after = rewriteWorkflowRefs(before, engineRepo, tag);
+      if (after !== before) {
+        await Deno.writeTextFile(join(repo, rel), after);
+        changed.push(rel);
+      }
+    }
+  } catch { /* no workflows */ }
+  return changed;
+}
+
 /** The version the engine says it is at `tag` (its src/archon/version.ts), or why not. */
 export async function releasedVersion(
   pin: Pin,
@@ -158,6 +200,7 @@ export async function fleetUpgrade(o: UpgradeOptions): Promise<number> {
   // 2. The pin, engine.ts, and the lock.
   const l = ui.phase("Lock");
   await Deno.writeTextFile(denoJsonPath, writePin(text, pin, o.tag));
+  const workflows = await moveWorkflowRefs(repo, pin, o.tag);
   const entry = join(repo, ENGINE_ENTRY);
   if ((await readTextOr(entry)) !== ENGINE_ENTRY_TEXT) {
     await Deno.writeTextFile(entry, ENGINE_ENTRY_TEXT);
@@ -179,7 +222,7 @@ export async function fleetUpgrade(o: UpgradeOptions): Promise<number> {
   if (!cache.ok) {
     // Put everything back: a half-done upgrade is worse than none.
     await Deno.writeTextFile(denoJsonPath, text);
-    await git(["checkout", "--", "deno.lock", ENGINE_ENTRY]).catch(() => {});
+    await git(["checkout", "--", "deno.lock", ENGINE_ENTRY, ...workflows]).catch(() => {});
     l.fail(
       `the engine at ${o.tag} could not be cached: ${cache.stderr.trim().split("\n").pop()}`,
       "check the network, then run it again; nothing was changed",
@@ -217,11 +260,13 @@ export async function fleetUpgrade(o: UpgradeOptions): Promise<number> {
   if (o.noCommit) {
     c.done("files changed, not committed (--no-commit)");
     ui.next.push(
-      `review: git diff; then: git add deno.json deno.lock ${ENGINE_ENTRY} && git commit -S -m "stolos ${o.tag}: adopt the engine ${o.tag}"`,
+      `review: git diff; then: git add deno.json deno.lock ${ENGINE_ENTRY} ${
+        workflows.join(" ")
+      } && git commit -S -m "stolos ${o.tag}: adopt the engine ${o.tag}"`,
     );
     return ui.finish();
   }
-  await git(["add", "deno.json", "deno.lock", ENGINE_ENTRY]);
+  await git(["add", "deno.json", "deno.lock", ENGINE_ENTRY, ...workflows]);
   c.status("signing (your key's passphrase)");
   ui.pause();
   const commit = await run(

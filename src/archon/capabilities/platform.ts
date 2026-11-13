@@ -68,7 +68,7 @@ export const NO_MULTICAST_NAMES = {
   ],
 };
 
-export const platform = (): Capability => ({ host }) => ({
+export const platform = (): Capability => ({ host, fleet }) => ({
   spec: SPEC,
   packages: RELIED_ON.map((name) => ({ name, spec: SPEC })),
   units: [
@@ -96,6 +96,14 @@ export const platform = (): Capability => ({ host }) => ({
       owner: "root",
       spec: SPEC,
       onChange: [{ kind: "restart", unit: "systemd-resolved.service" }],
+    },
+    {
+      // Spec 046: which fleet of the checkout this machine is (archon reads it on every run).
+      path: "/etc/archon/fleet",
+      content: `${fleet.id}\n`,
+      mode: "0644",
+      owner: "root",
+      spec: SPEC,
     },
     {
       path: "/etc/archon/host",

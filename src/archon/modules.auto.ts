@@ -102,6 +102,7 @@ import "./mcp/server.ts";
 import "./model/durable.ts";
 import "./model/export.ts";
 import "./model/load.ts";
+import "./model/providers.ts";
 import "./model/resolve.ts";
 import "./model/secret-inventory.ts";
 import "./model/site.ts";

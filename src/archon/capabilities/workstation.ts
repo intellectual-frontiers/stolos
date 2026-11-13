@@ -56,7 +56,7 @@ export const vscode = (): Capability => ({ host, users }) => {
 
 const SPEC = "020-workstation" as const;
 
-export const workstationBase = (): Capability => ({ host, users }) => ({
+export const workstationBase = (): Capability => ({ host, fleet, users }) => ({
   spec: SPEC,
   packages: ["git", "curl", "unzip", "software-properties-common"].map((name) => ({
     name,
@@ -71,6 +71,14 @@ export const workstationBase = (): Capability => ({ host, users }) => ({
     spec: SPEC,
   }],
   files: [
+    {
+      // Spec 046: which fleet of the checkout this machine is (archon reads it on every run).
+      path: "/etc/archon/fleet",
+      content: `${fleet.id}\n`,
+      mode: "0644",
+      owner: "root",
+      spec: SPEC,
+    },
     {
       path: "/etc/archon/host",
       content: `${host.name}\n`,

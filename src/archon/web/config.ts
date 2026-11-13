@@ -10,6 +10,7 @@
 
 import type { FleetDef, HostDef, HostPlan, WebRoute } from "../model/types.ts";
 import { LOCAL_NETWORKS, localNetworks } from "../capabilities/ssh.ts";
+import { ACME_DIRECTORIES, providersOf } from "../model/providers.ts";
 
 export const WEB = {
   staticConfig: "/etc/traefik/traefik.yml",
@@ -109,6 +110,7 @@ export function traefikStatic(plan: Pick<HostPlan, "host" | "fleet" | "units">):
           [WEB.resolver]: {
             acme: {
               ...(email ? { email } : {}),
+              caServer: ACME_DIRECTORIES[providersOf(plan.fleet).acme],
               storage: WEB.acmeStorage,
               dnsChallenge: { provider: "cloudflare", resolvers: ["1.1.1.1:53", "1.0.0.1:53"] },
             },

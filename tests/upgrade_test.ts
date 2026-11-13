@@ -149,3 +149,24 @@ Deno.test("046: fleet upgrade locks, validates, and signs; refuses what is not a
     await Deno.remove(dir, { recursive: true });
   }
 });
+
+Deno.test("046: an upgrade moves the engine's reusable workflows to the same tag as the pin", async () => {
+  const { engineRepository, rewriteWorkflowRefs } = await import(
+    "../src/archon/fleet/upgrade.ts"
+  );
+  const pin = { base: "https://raw.githubusercontent.com/acme/stolos/", tag: "v0.1.0" };
+  assertEquals(engineRepository(pin), "acme/stolos");
+  const yml = [
+    "    uses: acme/stolos/.github/workflows/fleet-e2e.yml@v0.1.0",
+    "    uses: other/stolos/.github/workflows/fleet-e2e.yml@v0.1.0",
+    "    uses: actions/checkout@v5",
+  ].join("\n");
+  assertEquals(
+    rewriteWorkflowRefs(yml, "acme/stolos", "v0.2.0").split("\n"),
+    [
+      "    uses: acme/stolos/.github/workflows/fleet-e2e.yml@v0.2.0",
+      "    uses: other/stolos/.github/workflows/fleet-e2e.yml@v0.1.0",
+      "    uses: actions/checkout@v5",
+    ],
+  );
+});

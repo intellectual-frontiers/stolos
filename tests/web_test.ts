@@ -46,6 +46,23 @@ Deno.test("032: Traefik redirects 80, limits 443 to the LAN, and gets Let's Encr
   assertEquals(bare.certificatesResolvers, undefined);
 });
 
+Deno.test("046: the ACME provider is an explicit choice: Let's Encrypt, or its staging service", () => {
+  const prod = JSON.parse(traefikStatic(resolvePlan(host(), webFleet())));
+  assertEquals(
+    prod.certificatesResolvers[WEB.resolver].acme.caServer,
+    "https://acme-v02.api.letsencrypt.org/directory",
+  );
+  const staging = JSON.parse(
+    traefikStatic(
+      resolvePlan(host(), { ...webFleet(), providers: { acme: "letsencrypt-staging" } }),
+    ),
+  );
+  assertEquals(
+    staging.certificatesResolvers[WEB.resolver].acme.caServer,
+    "https://acme-staging-v02.api.letsencrypt.org/directory",
+  );
+});
+
 Deno.test("032: routes from capabilities, the model, and guests; LAN-only; Cockpit over TLS", () => {
   const h = host({
     web: { routes: [{ name: "grafana", port: 3000, description: "dashboards" }] },

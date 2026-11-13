@@ -129,6 +129,53 @@ To review before committing, add `--no-commit`: the files change, and you commit
 `git commit -S`. Never commit without `-S` (or `commit.gpgsign=true`): an unsigned tip is refused by
 every host.
 
+## The synthetic fleet: test before a real server
+
+A fleet repository can hold a **synthetic fleet**: a fleet made for the end-to-end lab, shaped like
+your real one (the same providers, mail and web settings, capabilities), with made-up hosts. GitHub
+Actions installs its server from a blank Secure Boot VM with the engine your `deno.json` pins,
+reboots it, and sets up its workstation, which then reaches the server over MCP. When that passes,
+the same engine version and the same kind of model are ready for a physical server.
+
+A synthetic fleet differs from a real one in three places, so the lab can run it:
+
+```ts
+// fleets/<id>/fleet.ts
+const E2E_ADMIN_KEY = "ssh-ed25519 AAAA..."; // each run replaces it with its own key
+// ...
+repository: { slug: "<owner>/<repo>", url: "http://10.77.0.1:8000/fleet.git" }, // the lab serves it
+admin: { user: "uat", uid: 1000, github: { /* ... */ sshKeys: [E2E_ADMIN_KEY] } },
+// fleets/<id>/hosts/<server>/host.ts
+mac: "52:54:00:12:34:56", // the lab's VM
+```
+
+Each run makes its own signer, admin password hash, and the server's host keys, signs the fleet's
+tip, and throws all of them away: nothing secret is stored in the repository or in GitHub. Use
+`providers: { acme: "letsencrypt-staging" }` and documentation domains (`example.net`) so nothing
+reaches a real provider.
+
+The workflow in the fleet repository calls the engine's, at the same tag as the pin
+(`archon fleet
+upgrade` moves both):
+
+```yaml
+# .github/workflows/e2e.yml
+on: {
+  workflow_dispatch: {},
+  push: { branches: [main], paths: [deno.json, deno.lock, "fleets/synthetic-uat/**"] },
+}
+jobs:
+  e2e:
+    uses: intellectual-frontiers/stolos/.github/workflows/fleet-e2e.yml@v0.14.0
+    with: { fleet: synthetic-uat, server: e2e-server-uat, workstation: e2e-workstation-uat }
+```
+
+**Cost.** A run takes about 25 minutes of a Linux runner. In a private repository, that counts
+against the GitHub account's included Actions minutes (2,000 a month on the Free plan, 3,000 on
+Pro); beyond them, GitHub charges only if you set a budget above zero. So the workflow runs by hand
+and when the engine pin or the synthetic fleet changes, not on every push. Check usage under
+Settings, Billing and licensing.
+
 ## Registration: who each host is
 
 `archon host add <host>` writes `fleets/<id>/hosts/<host>/registration.ts`: the host's SSH host

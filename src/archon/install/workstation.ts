@@ -101,6 +101,8 @@ export async function workstationAdd(
       "run",
       "--allow-all",
       "--quiet",
+      // The lock is what makes a signed commit cover the engine (spec 046).
+      "--frozen",
       "--config",
       join(P.repo, "deno.json"),
       join(P.repo, "archon.ts"),
@@ -108,6 +110,9 @@ export async function workstationAdd(
       "--no-pull",
       "--host",
       name,
+      // Spec 046: the fleet of this checkout (until /etc/archon/fleet says so).
+      "--fleet",
+      P.fleetId,
     ],
     stdin: "inherit",
     stdout: "inherit",

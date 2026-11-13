@@ -1,0 +1,94 @@
+# A fleet repository's end-to-end lab (tests/e2e/fleet.sh, spec 046): its
+# synthetic fleet's server installs from a blank Secure Boot VM to Ready with
+# the engine its deno.json pins (checked against its deno.lock), reboots, and
+# a workstation set up from the repository reaches it over MCP.
+#
+# Called from the fleet repository, at the same tag as its pin (archon fleet
+# upgrade moves both together):
+#
+#   jobs:
+#     e2e:
+#       uses: intellectual-frontiers/stolos/.github/workflows/fleet-e2e.yml@v0.14.0
+#       with: { fleet: synthetic-uat, server: e2e-server-uat, workstation: e2e-workstation-uat }
+#
+# Nothing secret is needed: every key and password of a run is made by it and
+# thrown away. The lab scripts come from the engine at the fleet's pin.
+name: fleet-e2e
+
+on:
+  workflow_call:
+    inputs:
+      fleet:
+        description: The synthetic fleet's id (fleets/<id>/).
+        required: true
+        type: string
+      server:
+        description: Its server host (network-booted and installed).
+        required: true
+        type: string
+      workstation:
+        description: Its workstation (set up with archon workstation add); empty to skip.
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  install:
+    runs-on: ubuntu-24.04
+    # About 25 minutes; a hung VM must not hold a runner (or private minutes) for hours.
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          path: fleet
+      - name: The engine's tag, from the pin
+        id: pin
+        run: |
+          tag=$(grep -oE 'raw\.githubusercontent\.com/[^/]+/[^/]+/v[0-9]+\.[0-9]+\.[0-9]+/src/' fleet/deno.json |
+            grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+')
+          repo=$(grep -oE 'raw\.githubusercontent\.com/[^/]+/[^/]+/' fleet/deno.json | cut -d/ -f2,3)
+          echo "tag=$tag" >>"$GITHUB_OUTPUT"
+          echo "repo=$repo" >>"$GITHUB_OUTPUT"
+          echo "engine $repo at $tag"
+      - uses: actions/checkout@v5
+        with:
+          repository: ${{ steps.pin.outputs.repo }}
+          ref: ${{ steps.pin.outputs.tag }}
+          path: stolos
+          persist-credentials: false
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: KVM for this runner
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' |
+            sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          ls -l /dev/kvm || echo "::warning::no KVM on this runner: the VMs are emulated (much slower)"
+          nproc; free -m
+      - name: QEMU, OVMF, dnsmasq, cloud-image-utils
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q qemu-system-x86 qemu-utils ovmf dnsmasq-base cloud-image-utils netcat-openbsd
+      - name: Install, reboot, and reach the synthetic fleet
+        env:
+          FLEET: ${{ inputs.fleet }}
+          SERVER: ${{ inputs.server }}
+          WORKSTATION: ${{ inputs.workstation }}
+        run: stolos/tests/e2e/fleet.sh fleet "$FLEET" "$SERVER" "$WORKSTATION"
+      - name: Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fleet-e2e-logs
+          path: |
+            stolos/tests/e2e/work/
+            !stolos/tests/e2e/work/*.qcow2
+            !stolos/tests/e2e/work/*.fd
+            !stolos/tests/e2e/work/*.iso
+          if-no-files-found: ignore
+          retention-days: 14
