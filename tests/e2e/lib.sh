@@ -177,13 +177,17 @@ workstation_stage() {
   [ -n "${WS:-}" ] || return 0
   log "$WS: Ubuntu cloud image"
   sudo "$HERE/ws-vm.sh" "$ADMIN" "$W/admin.pub"
-  local ip="" s
-  for _ in $(seq 90); do
-    ip=$({ grep -i "$WS_MAC" "$W/leases" 2>/dev/null || true; } | awk '{print $3}' | tail -n 1)
-    [ -n "$ip" ] && ssh_to "$ADMIN@$ip" true 2>/dev/null && break
+  local ip="" s cand
+  # Its card can hold more than one lease (an early DHCP client, then the
+  # booted system's): try each, newest first, until one answers SSH.
+  for _ in $(seq 60); do
+    for cand in $(awk -v m="$WS_MAC" 'tolower($2) == m { print $1, $3 }' "$W/leases" 2>/dev/null |
+      sort -rn | awk '{ print $2 }'); do
+      if ssh_to "$ADMIN@$cand" true 2>/dev/null; then ip=$cand; break 2; fi
+    done
     sleep 5
   done
-  [ -n "$ip" ] || fail "the workstation did not come up"
+  [ -n "$ip" ] || fail "the workstation did not answer SSH on any of its leases"
   log "$WS is at $ip"
   local deno_v sip
   deno_v=$(deno --version | head -n 1 | cut -d' ' -f2)
