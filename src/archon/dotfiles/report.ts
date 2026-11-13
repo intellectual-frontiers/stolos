@@ -18,7 +18,7 @@ export async function dotfilesReport(
   const p = ui.phase(`Dotfiles of ${user} on ${host}`);
   for (const l of c.layers) {
     const n = c.files.filter((f) => f.layer.dir === l.dir).length;
-    const there = await exists(join(P.repo, l.dir));
+    const there = l.kind === "engine" || await exists(join(P.repo, l.dir));
     console.log(
       `  ${there ? "●" : "○"} ${l.dir.padEnd(44)} ${there ? `${n} file(s) win here` : "(none)"}`,
     );

@@ -1240,7 +1240,7 @@ export const COMMANDS: Command[] = [
     name: "dotfiles",
     summary: "Show where your dotfiles come from (layers in the repository)",
     description:
-      `Lists the layers that make up a user's chezmoi source on this host, most general first: home/ (everyone), dotfiles/hosts/<host>/home/ (everyone on this host), dotfiles/users/<user>/home/ (this user everywhere), and dotfiles/hosts/<host>/users/<user>/home/ (this user here). A later layer replaces a file with the same target. With a path (~/.bashrc, .config/fish/config.fish), shows the one layer and repository file that provide it; without, every managed file and its layer. Read-only: archon apply composes the source into /var/lib/archon-dotfiles/<user> and runs chezmoi from there (spec 031). See archon-dotfiles(7).`,
+      `Lists the layers that make up a user's chezmoi source on this host, most general first: the engine's home/ (every fleet), fleets/<id>/home/ (everyone in this fleet), fleets/<id>/hosts/<host>/home/ (everyone on this host), fleets/<id>/users/<user>/home/ (this user everywhere), and fleets/<id>/hosts/<host>/users/<user>/home/ (this user here). A later layer replaces a file with the same target. With a path (~/.bashrc, .config/fish/config.fish), shows the one layer and repository file that provide it; without, every managed file and its layer. Read-only: archon apply composes the source into /var/lib/archon-dotfiles/<user> and runs chezmoi from there (spec 031). See archon-dotfiles(7).`,
     tier: "read",
     unlocked: true,
     args: [

@@ -42,7 +42,7 @@ function repo(tree: Record<string, Record<string, string>>) {
 }
 
 Deno.test("031: later layers replace by target; ignore files combine; problems are named", async () => {
-  const [base, h, u, hu] = layersFor("alpha", "alice").map((l) => l.dir);
+  const [, base, h, u, hu] = layersFor("alpha", "alice", "lab").map((l) => l.dir);
   const r = repo({
     [base]: {
       "README.md": "docs",
@@ -82,18 +82,22 @@ Deno.test("031: the composed source is written, kept in step, and checked withou
   try {
     const repoDir = `${dir}/repo`;
     const out = `${dir}/out`;
-    await Deno.mkdir(`${repoDir}/home/dot_config`, { recursive: true });
-    await Deno.mkdir(`${repoDir}/dotfiles/users/ann/home`, { recursive: true });
-    await Deno.writeTextFile(`${repoDir}/home/dot_bashrc.tmpl`, "base\n");
-    await Deno.writeTextFile(`${repoDir}/home/dot_config/a`, "a\n");
-    await Deno.writeTextFile(`${repoDir}/dotfiles/users/ann/home/dot_bashrc`, "ann\n");
+    // Spec 046: the engine's base layer comes with the engine; the fleet's and
+    // the user's layers are in the fleet's folder.
+    await Deno.mkdir(`${repoDir}/fleets/lab/home/dot_config`, { recursive: true });
+    await Deno.mkdir(`${repoDir}/fleets/lab/users/ann/home`, { recursive: true });
+    await Deno.writeTextFile(`${repoDir}/fleets/lab/home/dot_config/a`, "a\n");
+    await Deno.writeTextFile(`${repoDir}/fleets/lab/users/ann/home/dot_bashrc`, "ann\n");
 
     const check = await syncComposed(repoDir, "alpha", "ann", { check: true, root: out });
-    assertEquals(check.changed.sort(), ["dot_bashrc", "dot_config/a"]);
+    assert(check.changed.includes("dot_bashrc"), "the user's layer");
+    assert(check.changed.includes("dot_config/a"), "the fleet's layer");
+    assert(check.changed.includes("dot_config/tmux/tmux.conf"), "the engine's base layer");
+    assert(!check.changed.includes("dot_bashrc.tmpl"), "replaced by the user's ~/.bashrc");
     assert(!(await Deno.stat(`${out}/ann`).catch(() => undefined)));
 
     const s = await syncComposed(repoDir, "alpha", "ann", { check: false, root: out });
-    assertEquals(s.changed.length, 2);
+    assertEquals(s.changed.length, check.changed.length);
     assertEquals(await Deno.readTextFile(`${out}/ann/dot_bashrc`), "ann\n");
     assertEquals(
       (await syncComposed(repoDir, "alpha", "ann", { check: false, root: out })).changed,
@@ -101,7 +105,7 @@ Deno.test("031: the composed source is written, kept in step, and checked withou
     );
 
     // A file no layer provides any more is removed.
-    await Deno.remove(`${repoDir}/home/dot_config/a`);
+    await Deno.remove(`${repoDir}/fleets/lab/home/dot_config/a`);
     const again = await syncComposed(repoDir, "alpha", "ann", { check: false, root: out });
     assertEquals(again.changed, ["dot_config/a"]);
     assert(!(await Deno.stat(`${out}/ann/dot_config/a`).catch(() => undefined)));
@@ -122,9 +126,9 @@ Deno.test("031: layers must name hosts and users in the model", () => {
       hostUsers,
     ),
     [
-      "dotfiles/hosts/rome: no host rome in the model",
-      "dotfiles/users/zed: no user zed on any host",
-      "dotfiles/hosts/alpha/users/bob: alpha has no user bob",
+      "fleets/lab/hosts/rome/home: no host rome in the model",
+      "fleets/lab/users/zed: no user zed on any host",
+      "fleets/lab/hosts/alpha/users/bob: alpha has no user bob",
     ],
   );
 });
@@ -149,7 +153,7 @@ Deno.test("031: chezmoi reads the composed source; the login banner and man page
   assert(files.some((f) => f.path === "/etc/update-motd.d/71-archon-dotfiles"));
   const { renderManPages } = await import("../src/archon/render/man.ts");
   const page = renderManPages().get("man7/archon-dotfiles.7")!;
-  assertStringIncludes(page, "dotfiles/hosts/<host>/users/<user>/home/");
+  assertStringIncludes(page, "fleets/<id>/hosts/<host>/users/<user>/home/");
   assertStringIncludes(page, '.SH "WHAT NOT TO DO"');
 });
 

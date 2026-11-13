@@ -1,10 +1,12 @@
-// 031-dotfile-layers: every user's chezmoi source is composed from layers in
-// this repository, most general first:
+// 031-dotfile-layers: every user's chezmoi source is composed from layers,
+// most general first (spec 046: the engine's base travels with the engine;
+// the rest is in the fleet repository, under the fleet's folder):
 //
-//   home/                                    the fleet base (every user, every host)
-//   dotfiles/hosts/<host>/home/              everyone on one host
-//   dotfiles/users/<user>/home/              one user on every host
-//   dotfiles/hosts/<host>/users/<user>/home/ one user on one host
+//   @engine/home/                                 the engine's base (every fleet)
+//   fleets/<id>/home/                             the fleet (every user, every host)
+//   fleets/<id>/hosts/<host>/home/                everyone on one host
+//   fleets/<id>/users/<user>/home/                one user on every host
+//   fleets/<id>/hosts/<host>/users/<user>/home/   one user on one host
 //
 // A later layer replaces a file with the same target (~/.bashrc is the same
 // target whether its source is dot_bashrc or dot_bashrc.tmpl). The root
@@ -17,7 +19,10 @@ import { join } from "../core/path.ts";
 
 export const COMPOSED_ROOT = "/var/lib/archon-dotfiles";
 
-export type LayerKind = "fleet" | "host" | "user" | "host-user";
+export type LayerKind = "engine" | "fleet" | "host" | "user" | "host-user";
+
+/** The engine's base layer: read from the engine's own files (assets.auto.ts), not the repository. */
+export const ENGINE_LAYER = "@engine/home";
 
 export interface Layer {
   kind: LayerKind;
@@ -25,12 +30,14 @@ export interface Layer {
   dir: string;
 }
 
-export function layersFor(host: string, user: string): Layer[] {
+export function layersFor(host: string, user: string, fleet: string): Layer[] {
+  const f = `fleets/${fleet}`;
   return [
-    { kind: "fleet", dir: "home" },
-    { kind: "host", dir: `dotfiles/hosts/${host}/home` },
-    { kind: "user", dir: `dotfiles/users/${user}/home` },
-    { kind: "host-user", dir: `dotfiles/hosts/${host}/users/${user}/home` },
+    { kind: "engine", dir: ENGINE_LAYER },
+    { kind: "fleet", dir: `${f}/home` },
+    { kind: "host", dir: `${f}/hosts/${host}/home` },
+    { kind: "user", dir: `${f}/users/${user}/home` },
+    { kind: "host-user", dir: `${f}/hosts/${host}/users/${user}/home` },
   ];
 }
 
@@ -139,8 +146,9 @@ export async function compose(
   user: string,
   list: LayerReader,
   read: TextReader,
+  fleet = "lab",
 ): Promise<Composition> {
-  const layers = layersFor(host, user);
+  const layers = layersFor(host, user, fleet);
   const byTarget = new Map<string, ComposedFile>();
   // A target directory keeps the source name the most general layer gave it,
   // so `dot_ssh` in one layer and `private_dot_ssh` in another do not collide.
@@ -212,18 +220,20 @@ export function composedEntries(
 export function strayLayers(
   dirs: { hosts: string[]; users: string[]; hostUsers: Array<[string, string]> },
   hostUsers: Map<string, string[]>,
+  fleet = "lab",
 ): string[] {
+  const f = `fleets/${fleet}`;
   const allUsers = new Set([...hostUsers.values()].flat());
   const out: string[] = [];
   for (const h of dirs.hosts) {
-    if (!hostUsers.has(h)) out.push(`dotfiles/hosts/${h}: no host ${h} in the model`);
+    if (!hostUsers.has(h)) out.push(`${f}/hosts/${h}/home: no host ${h} in the model`);
   }
   for (const u of dirs.users) {
-    if (!allUsers.has(u)) out.push(`dotfiles/users/${u}: no user ${u} on any host`);
+    if (!allUsers.has(u)) out.push(`${f}/users/${u}: no user ${u} on any host`);
   }
   for (const [h, u] of dirs.hostUsers) {
     if (hostUsers.has(h) && !hostUsers.get(h)!.includes(u)) {
-      out.push(`dotfiles/hosts/${h}/users/${u}: ${h} has no user ${u}`);
+      out.push(`${f}/hosts/${h}/users/${u}: ${h} has no user ${u}`);
     }
   }
   return out;

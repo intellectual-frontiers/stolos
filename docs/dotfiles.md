@@ -29,15 +29,21 @@ connect from; if you see boxes, install one there, or choose the plain prompt wi
 
 ## Layers
 
-Your chezmoi source is composed from up to four layers in the repository, most general first. A
-later layer replaces a file with the same target in your home directory.
+Your chezmoi source is composed from up to five layers, most general first. A later layer replaces a
+file with the same target in your home directory. The first comes with the engine (its `home/`
+folder, carried inside the engine); the others are folders of your fleet repository, under the
+fleet's own folder.
 
-| Layer                                      | Applies to                              |
-| ------------------------------------------ | --------------------------------------- |
-| `home/`                                    | everyone on every host (the fleet base) |
-| `dotfiles/hosts/<host>/home/`              | everyone on one host                    |
-| `dotfiles/users/<user>/home/`              | one user on every host                  |
-| `dotfiles/hosts/<host>/users/<user>/home/` | one user on one host                    |
+| Layer                                         | Applies to                                  |
+| --------------------------------------------- | ------------------------------------------- |
+| the engine's `home/`                          | everyone in every fleet (the engine's base) |
+| `fleets/<id>/home/`                           | everyone on every host of this fleet        |
+| `fleets/<id>/hosts/<host>/home/`              | everyone on one host                        |
+| `fleets/<id>/users/<user>/home/`              | one user on every host                      |
+| `fleets/<id>/hosts/<host>/users/<user>/home/` | one user on one host                        |
+
+To change a file the engine provides, do not change the engine: copy it into `fleets/<id>/home/`
+(everyone in your fleet) or a more specific layer, and edit the copy.
 
 Each layer is an ordinary chezmoi source directory: `dot_bashrc` is `~/.bashrc`,
 `dot_config/fish/config.fish.tmpl` is a template for `~/.config/fish/config.fish`, and `private_`,
@@ -71,7 +77,7 @@ chezmoi apply                      # apply the composed source now, without wait
 1. Run `archon dotfiles <file>` to find the repository file that provides it.
 2. To change it for everyone, edit it there. To change it for one host or one person, copy it into
    the more specific layer (for example
-   `dotfiles/users/<you>/home/dot_config/fish/config.fish.tmpl`) and edit the copy.
+   `fleets/<id>/users/<you>/home/dot_config/fish/config.fish.tmpl`) and edit the copy.
 3. Commit with the spec ID (for example `031-dotfile-layers: fish abbreviations for <you>`) and push
    to `main`.
 4. `archon update` on the host, or wait for the reconcile timer (15 minutes).

@@ -61,19 +61,23 @@ export async function dotfileProblems(
   const { strayLayers } = await import("./dotfiles/layers.ts");
   const { composeFrom } = await import("./dotfiles/sync.ts");
   const { usersFor } = await import("./model/load.ts");
-  const root = join(repo, "dotfiles");
-  const hostDirs = await listDirs(join(root, "hosts"));
+  // Spec 046: the layers live in the fleet's folder (fleets/<id>/...).
+  const root = join(repo, "fleets", P.fleetId);
+  const hostDirs = [];
+  for (const h of await listDirs(join(root, "hosts"))) {
+    if (await exists(join(root, "hosts", h, "home"))) hostDirs.push(h);
+  }
   const dirs = {
     hosts: hostDirs,
     users: await listDirs(join(root, "users")),
     hostUsers: (await Promise.all(
-      hostDirs.map(async (h) =>
+      (await listDirs(join(root, "hosts"))).map(async (h) =>
         (await listDirs(join(root, "hosts", h, "users"))).map((u) => [h, u] as [string, string])
       ),
     )).flat(),
   };
   const hostUsers = new Map(hosts.map((h) => [h.name, usersFor(fleet, h).map((u) => u.name)]));
-  const problems: Problem[] = strayLayers(dirs, hostUsers).map((m) => ({
+  const problems: Problem[] = strayLayers(dirs, hostUsers, P.fleetId).map((m) => ({
     where: m.split(":")[0],
     message: m.slice(m.indexOf(":") + 2),
     fix: "rename or remove the layer, or add the host or user to the model",

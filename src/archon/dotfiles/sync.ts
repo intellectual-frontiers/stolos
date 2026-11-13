@@ -3,6 +3,8 @@
 // readable by the user's group, so chezmoi reads it and nothing writes to it
 // but archon. Files no layer provides any more are removed.
 
+import { P } from "../core/paths.ts";
+import { engineFile, engineFiles } from "../core/assets.ts";
 import { dirname, join } from "../core/path.ts";
 import { ensureDir, exists, walkFiles } from "../core/fsx.ts";
 import { run } from "../core/exec.ts";
@@ -12,16 +14,36 @@ import {
   composedDir,
   composedEntries,
   type Composition,
+  ENGINE_LAYER,
 } from "./layers.ts";
 
-/** Compose from a checkout (the repository root on disk). */
-export function composeFrom(repo: string, host: string, user: string): Promise<Composition> {
+/** Compose from a checkout (the repository root on disk) and the engine's base layer. */
+export function composeFrom(
+  repo: string,
+  host: string,
+  user: string,
+  fleet = P.fleetId,
+): Promise<Composition> {
   return compose(
     host,
     user,
-    (dir) => walkFiles(join(repo, dir)),
-    (rel) => Deno.readTextFile(join(repo, rel)),
+    (dir) =>
+      Promise.resolve(dir === ENGINE_LAYER ? engineFiles("home") : undefined).then((e) =>
+        e ?? walkFiles(join(repo, dir))
+      ),
+    (rel) =>
+      rel.startsWith(ENGINE_LAYER + "/")
+        ? Promise.resolve(engineFile(rel.replace("@engine/", "")))
+        : Deno.readTextFile(join(repo, rel)),
+    fleet,
   );
+}
+
+/** The bytes of a composed file, from the repository or the engine. */
+function bytesOf(repo: string, from: string): Promise<Uint8Array> {
+  return from.startsWith(ENGINE_LAYER + "/")
+    ? Promise.resolve(new TextEncoder().encode(engineFile(from.replace("@engine/", ""))))
+    : Deno.readFile(join(repo, from));
 }
 
 const same = (a: Uint8Array, b: Uint8Array) =>
@@ -44,7 +66,7 @@ export async function syncComposed(
   const enc = new TextEncoder();
   const want = new Map<string, Uint8Array>();
   for (const e of composedEntries(c)) {
-    want.set(e.path, e.from ? await Deno.readFile(join(repo, e.from)) : enc.encode(e.text!));
+    want.set(e.path, e.from ? await bytesOf(repo, e.from) : enc.encode(e.text!));
   }
   const changed: string[] = [];
   for (const [path, bytes] of want) {
