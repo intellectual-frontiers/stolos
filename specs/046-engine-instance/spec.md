@@ -52,6 +52,13 @@ Constitution Articles 7, 24, 26.
   module the engine may load on demand, and `--frozen` never meets an unlocked one. A fleet
   repository that is not on GitHub (`repository.url` elsewhere) is cloned from its URL at first
   boot.
+- **FR-005b** `archon fleet upgrade <tag>` (repo tier, never over MCP) is the only way a fleet
+  repository changes its engine: the tag must be a release (`src/archon/version.ts` at that tag says
+  the same version), newer than the pin unless `--downgrade`, and the tree clean; it rewrites the
+  pin, rebuilds `deno.lock` through `engine.ts`, validates every fleet with the new engine in its
+  own process (`--frozen`), and makes one signed commit of `deno.json`, `deno.lock`, and
+  `engine.ts`. On any failure nothing is committed and the pin is put back. Documented in
+  `docs/fleet-repository.md`; engine releases in `docs/releasing.md`.
 - **FR-006** Boot-machine secrets are per fleet: `<config>/archon/secrets/<fleet>/`.
 - **FR-007** The engine's version is `VERSION` in `src/archon/version.ts`, never in a configuration
   file. `deno task version bump` raises the minor number; every push to `main` raises it; CI
@@ -78,6 +85,9 @@ Constitution Articles 7, 24, 26.
 - **SC-001** `deno task test` passes, including `tests/engine_test.ts`; `deno task archon build`
   renders the lab.
 - **SC-002** A fleet repository pinned to a tag builds its fleet with no engine file of its own.
+- **SC-004** `tests/upgrade_test.ts`: an upgrade against a local copy of the engine locks modules
+  loaded on demand, validates, and signs exactly three files; a tag that is not a release, an
+  unknown tag, an older version, and a dirty tree are refused with nothing changed.
 - **SC-003** `.github/workflows/e2e.yml` (`tests/e2e/ci.sh`): a throwaway fleet, signed, served with
   this checkout of the engine; a blank Secure Boot VM installs to the event `boot.ready`;
   `archon fleet query` answers from it.

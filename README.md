@@ -35,8 +35,10 @@ fleets/<id>/
 
 - Each host checks out the fleet repository at `/srv/archon`, knows its fleet from
   `/etc/archon/fleet`, and runs `archon` (the launcher runs `archon.ts` with the lockfile frozen).
-- To adopt a newer engine, change the tag in `deno.json`, refresh `deno.lock`, and push a signed
-  commit.
+- To adopt a newer engine: `deno task archon fleet upgrade v0.8.0`, then `git push`. It checks the
+  tag is a release, locks every engine file in `deno.lock`, validates every fleet, and makes one
+  signed commit (see [docs/fleet-repository.md](docs/fleet-repository.md): why the lock is a
+  security control, and what to do when it complains).
 
 Every push to this repository's `main` raises the version in
 [`src/archon/version.ts`](src/archon/version.ts) (0.1.0, 0.2.0, ...), and CI tags the commit
@@ -56,21 +58,23 @@ From a fleet repository, `archon` finds the fleet the same way: `ARCHON_REPO` (t
 
 ## Documentation
 
-| Read                                                                           | For                                                                                             |
-| ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
-| [docs/boot-machine.md](docs/boot-machine.md)                                   | The boot machine: tools, firewall, router, `boot serve`, `boot doctor`, mail, the secrets vault |
-| [docs/hosts.md](docs/hosts.md)                                                 | Adding, installing, and re-installing hosts                                                     |
-| [docs/install-timeline.md](docs/install-timeline.md)                           | What happens during an install, in order                                                        |
-| [docs/workstation.md](docs/workstation.md)                                     | Ubuntu on WSL as a workstation                                                                  |
-| [docs/daily-use.md](docs/daily-use.md)                                         | Working on a host: commands, the prompt, observing, updates                                     |
-| [docs/web.md](docs/web.md)                                                     | HTTPS on every server, publishing services, guests, containers                                  |
-| [docs/dotfiles.md](docs/dotfiles.md)                                           | Dotfile layers and how chezmoi applies them                                                     |
-| [docs/agent.md](docs/agent.md)                                                 | The agent layer: any MCP client on a workstation, limited by each server                        |
-| [docs/sql.md](docs/sql.md)                                                     | SQL over infrastructure: osquery, DuckDB                                                        |
-| [docs/pg.md](docs/pg.md), [docs/s3.md](docs/s3.md), [docs/smb.md](docs/smb.md) | PostgreSQL, S3, SMB                                                                             |
-| [docs/disaster-recovery.md](docs/disaster-recovery.md)                         | Losing the boot machine                                                                         |
-| [docs/troubleshooting.md](docs/troubleshooting.md)                             | Symptoms, causes, and fixes                                                                     |
-| [AGENTS.md](AGENTS.md)                                                         | How to change the engine (people and agents)                                                    |
+| Read                                                                           | For                                                                                                                  |
+| ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| [docs/fleet-repository.md](docs/fleet-repository.md)                           | Your fleet repository: the pin, the lock (and why they are security), upgrading the engine, signing, troubleshooting |
+| [docs/releasing.md](docs/releasing.md)                                         | Changing the engine: spec, version, `deno task ci`, tags, and protecting them                                        |
+| [docs/boot-machine.md](docs/boot-machine.md)                                   | The boot machine: tools, firewall, router, `boot serve`, `boot doctor`, mail, the secrets vault                      |
+| [docs/hosts.md](docs/hosts.md)                                                 | Adding, installing, and re-installing hosts                                                                          |
+| [docs/install-timeline.md](docs/install-timeline.md)                           | What happens during an install, in order                                                                             |
+| [docs/workstation.md](docs/workstation.md)                                     | Ubuntu on WSL as a workstation                                                                                       |
+| [docs/daily-use.md](docs/daily-use.md)                                         | Working on a host: commands, the prompt, observing, updates                                                          |
+| [docs/web.md](docs/web.md)                                                     | HTTPS on every server, publishing services, guests, containers                                                       |
+| [docs/dotfiles.md](docs/dotfiles.md)                                           | Dotfile layers and how chezmoi applies them                                                                          |
+| [docs/agent.md](docs/agent.md)                                                 | The agent layer: any MCP client on a workstation, limited by each server                                             |
+| [docs/sql.md](docs/sql.md)                                                     | SQL over infrastructure: osquery, DuckDB                                                                             |
+| [docs/pg.md](docs/pg.md), [docs/s3.md](docs/s3.md), [docs/smb.md](docs/smb.md) | PostgreSQL, S3, SMB                                                                                                  |
+| [docs/disaster-recovery.md](docs/disaster-recovery.md)                         | Losing the boot machine                                                                                              |
+| [docs/troubleshooting.md](docs/troubleshooting.md)                             | Symptoms, causes, and fixes                                                                                          |
+| [AGENTS.md](AGENTS.md)                                                         | How to change the engine (people and agents)                                                                         |
 
 ## Status
 

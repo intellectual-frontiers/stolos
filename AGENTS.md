@@ -31,7 +31,7 @@ everything here.
 - **Never** put a secret, a token, or a person's data in this repository: it is public.
 - Write without em dashes: use commas, colons, parentheses, or separate sentences.
 
-## Before you push
+## Before you push (the whole procedure: [docs/releasing.md](docs/releasing.md))
 
 Raise the version, then run exactly what CI runs, and push only when it passes:
 

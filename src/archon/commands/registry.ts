@@ -194,6 +194,42 @@ export const COMMANDS: Command[] = [
     },
   },
   {
+    name: "fleet upgrade",
+    summary: "Move this repository to another released engine version, locked and signed",
+    description:
+      `Run in the fleet repository, on the boot machine or a workstation. Checks that the tag is a release (the engine's own version.ts at that tag says the same version), refuses an older version unless --downgrade, rewrites the @stolos/ pin in deno.json, builds deno.lock again through engine.ts (a hash of every engine file: hosts run with --frozen, so the lock is what makes your signature cover the engine's code), validates every fleet with the new engine, and makes one signed commit of deno.json, deno.lock, and engine.ts. Push it to approve it. If anything fails, nothing is committed (spec 046; docs/fleet-repository.md).`,
+    tier: "repo",
+    noMcp: true,
+    operation: true,
+    args: [
+      {
+        name: "tag",
+        type: "string",
+        positional: true,
+        required: true,
+        description: "The version tag, for example v0.8.0.",
+      },
+      { name: "downgrade", type: "boolean", description: "Allow an older (or the same) version." },
+      {
+        name: "no-commit",
+        type: "boolean",
+        description: "Change the files only; you review and commit.",
+      },
+    ],
+    examples: [{
+      cmd: "deno task archon fleet upgrade v0.8.0",
+      text: "Adopt the engine v0.8.0, then git push to approve it.",
+    }],
+    async run(a) {
+      const { fleetUpgrade } = await import("../fleet/upgrade.ts");
+      return await fleetUpgrade({
+        tag: a.tag as string,
+        downgrade: !!a.downgrade,
+        noCommit: !!a["no-commit"],
+      });
+    },
+  },
+  {
     name: "fleet query",
     summary: "Ask every server the same SQL question, through each one's MCP server",
     description:

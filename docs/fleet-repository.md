@@ -1,0 +1,142 @@
+# The fleet repository: pin, lock, upgrade
+
+This guide is for whoever looks after a fleet repository (for example `shah/fleet`): the private
+repository that holds your fleets and that every host checks out at `/srv/archon`. Read it once
+before your first engine upgrade; keep it at hand for the troubleshooting table at the end.
+
+## What is in a fleet repository
+
+```
+deno.json     the pin: which engine version this repository uses (@stolos/ → a tagged URL)
+deno.lock     a SHA-256 hash of every file of that engine version
+archon.ts     the archon command (two lines: it runs the pinned engine)
+boot.ts       the boot server (two lines, the same way)
+engine.ts     names every engine module, so deno.lock covers all of them
+fleets/<id>/  one folder per fleet: fleet.ts, site.ts, signers.ts, hosts/<host>/host.ts, ...
+```
+
+Nothing here is the engine itself. The engine lives in the public repository
+`intellectual-frontiers/stolos` and is downloaded, by version, from GitHub.
+
+## Why the pin and the lock matter (security, not only tidiness)
+
+Every host runs `archon` as root, so whatever code it runs can do anything on that host. That code
+comes from two places:
+
+1. **This repository.** A host only moves to a commit at the tip of `main` that is **signed** by one
+   of the fleet's signers (`fleets/<id>/signers.ts`, `archon signers`). Pushing an unsigned commit
+   does nothing: every host refuses it and says so in its journal.
+2. **The engine.** It is fetched from
+   `https://raw.githubusercontent.com/intellectual-frontiers/stolos/<tag>/src/`. Your signature does
+   not reach those files by itself: they are not in this repository.
+
+`deno.lock` is what joins the two. It is a file in this repository, so it is covered by your
+signature, and it holds the hash of every engine file. Hosts run the engine with `--frozen`: if any
+engine file they download differs from its hash (a moved tag, a compromised GitHub account, an
+altered file on the way), Deno refuses to run it. The host stops; it does not run unapproved code.
+
+So: **never delete `--frozen`, never hand-edit `deno.lock`, and never change the pin without
+`archon fleet upgrade`.** If something about the lock is in your way, the table at the end says what
+it means and what to do.
+
+## The pin
+
+`deno.json` holds one mapping:
+
+```json
+{
+  "imports": {
+    "@stolos/": "https://raw.githubusercontent.com/intellectual-frontiers/stolos/v0.8.0/src/"
+  }
+}
+```
+
+`v0.8.0` is the engine version. Engine versions only go up (0.7.0, 0.8.0, 0.9.0, ...); each one is a
+tag that the engine's CI made after its checks passed. The engine's own `src/archon/version.ts` at
+that tag says the same version: that is how `fleet upgrade` knows a tag is a real release.
+
+## Upgrading the engine (the only supported way)
+
+Do this on the boot machine or your workstation, in your clone of the fleet repository, with your
+signing key at hand (you will type its passphrase once).
+
+1. **Pick the version.** The engine's tags are listed at
+   <https://github.com/intellectual-frontiers/stolos/tags>; its commit messages and specifications
+   (`specs/`) say what changed. Prefer the newest tag whose end-to-end run (the `e2e` workflow)
+   passed.
+2. **Start clean and current:**
+
+   ```sh
+   git pull
+   git status          # must show nothing to commit
+   ```
+
+3. **Upgrade:**
+
+   ```sh
+   deno task archon fleet upgrade v0.8.0
+   ```
+
+   It prints one line per step:
+
+   - **Engine version**: the tag is a release, and newer than the current pin (going back needs
+     `--downgrade`, on purpose).
+   - **Lock**: the pin moves, `engine.ts` is checked, and `deno.lock` is built again: the engine is
+     downloaded and every file hashed.
+   - **Validate**: every fleet in the repository is validated with the new engine. If one fails,
+     nothing is committed; the message says how to see why, and how to stay on the old version.
+   - **Commit**: one signed commit of `deno.json`, `deno.lock`, and `engine.ts`, with the subject
+     `stolos v0.8.0: adopt the engine v0.8.0`. Git asks for your key's passphrase here.
+
+4. **Approve it by pushing:**
+
+   ```sh
+   git push
+   ```
+
+5. **Watch the hosts move** (each one within 15 minutes, or at once with `archon update` on it):
+
+   ```sh
+   deno task archon fleet status
+   ```
+
+To review before committing, add `--no-commit`: the files change, and you commit yourself with
+`git commit -S`. Never commit without `-S` (or `commit.gpgsign=true`): an unsigned tip is refused by
+every host.
+
+## Signing: the one-time setup on your machine
+
+Each operator signs with their own key, listed in the fleet's `signers.ts`. The key is a file,
+protected by a passphrase that you type and never store; it is never loaded into an ssh-agent, so
+nothing on your machine (an agent included) can sign without you.
+
+```sh
+ssh-keygen -t ed25519 -f ~/.ssh/fleet-signing -C "<your name> signing"   # set a passphrase
+git config --global gpg.format ssh
+git config --global user.signingkey ~/.ssh/fleet-signing
+git config --global commit.gpgsign true
+deno task archon signers           # checks all of the above
+```
+
+A new signer is added by a person who already is one:
+
+```sh
+deno task archon signers add <name> --role daily --key <their .pub file>
+git commit -S -m "<fleet> signers: add <name>" && git push
+```
+
+Every fleet also has a **recovery** signer, whose key is kept only in the encrypted vault, to
+replace a lost or stolen daily key. See `docs/disaster-recovery.md`.
+
+## Troubleshooting
+
+| What you see                                                                           | What it means                                                                          | What to do                                                                                                                                                                                          |
+| -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `error: ... integrity check failed` or `lockfile is out of date` when running `archon` | an engine file differs from its hash in `deno.lock` (the tag moved, or a file changed) | Stop. Do not regenerate the lock to make it go away. Tell the engine's maintainers; compare the tag with the engine's history. Only after you know why: `archon fleet upgrade` to a known-good tag. |
+| `Engine version: vX is not a released engine version`                                  | the tag does not exist, or is misspelled                                               | pick a tag from the engine's tags page                                                                                                                                                              |
+| `... own version.ts says ...: not a release`                                           | the tag does not point at a release commit                                             | pick another tag; tell the engine's maintainers                                                                                                                                                     |
+| `vX is older than the pinned vY`                                                       | going backwards                                                                        | if you mean it, add `--downgrade` (and say why in the commit)                                                                                                                                       |
+| `the repository has uncommitted changes`                                               | the upgrade must be a commit of its own                                                | commit or stash your other change first                                                                                                                                                             |
+| `Validate: fleet <id> does not validate with vX`                                       | the new engine expects something your model lacks                                      | run `ARCHON_FLEET=<id> deno task archon validate`, fix the model in its own commit, then upgrade again                                                                                              |
+| `Commit: the commit was not made`                                                      | signing failed or was cancelled                                                        | `deno task archon signers` shows what is missing in your setup                                                                                                                                      |
+| a host's journal says `refused ...: not signed` (`journalctl -t archon-approval`)      | someone pushed an unsigned tip                                                         | push a signed commit on top (`git commit -S --allow-empty -m "approve"` only if the unsigned work is right)                                                                                         |

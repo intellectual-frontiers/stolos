@@ -78,6 +78,7 @@ import "./doctor/probe.ts";
 import "./dotfiles/layers.ts";
 import "./dotfiles/report.ts";
 import "./dotfiles/sync.ts";
+import "./fleet/upgrade.ts";
 import "./guests/guests.ts";
 import "./guide/command.ts";
 import "./guide/guide.ts";
