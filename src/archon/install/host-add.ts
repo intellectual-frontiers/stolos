@@ -123,7 +123,7 @@ export async function hostAdd(o: HostAddOptions): Promise<number> {
   });
   const c = ui.phase("Recognition");
   if ("refusal" in how) {
-    c.fail(how.refusal);
+    c.fail(how.refusal, undefined, "E051-NO-RECOGNITION");
     return ui.finish();
   }
   const { destroyRefusal } = await import("../../archon-boot/reinstall.ts");
@@ -139,6 +139,15 @@ export async function hostAdd(o: HostAddOptions): Promise<number> {
     describeRecognition(name, how) +
       (o.confirmDestroy ? "; its install may erase disks that are not blank" : ""),
   );
+  // Spec 053: what this host will need from the fleet, said before it is armed.
+  const { loadSigners } = await import("../identity/signers.ts");
+  if (!(await loadSigners().catch(() => [])).some((x) => x.role === "daily")) {
+    c.warn(
+      `the fleet has no daily signer: ${name} will install, but refuse every change after`,
+      "deno task archon signers add <your name> --role daily --key <your public key file>",
+      "E047-NO-SIGNERS",
+    );
+  }
   const m = ui.phase("Host model");
   if ((await exists(file)) && !o.force) {
     m.done(`fleets/<fleet>/hosts/${name}/host.ts exists (kept; --force rewrites it)`);

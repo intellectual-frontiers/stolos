@@ -189,6 +189,38 @@ export const COMMANDS: Command[] = [
     },
   },
   {
+    name: "where",
+    summary: "Where you are, and the one thing to do next (also: archon, with no arguments)",
+    description:
+      `In a fleet repository (the boot machine, a workstation's checkout): every step from a new repository to running hosts (the fleet, the engine pin and lock, signers and this machine's signing, the admin password, mail and Cloudflare tokens, each server, and whether everything is committed and pushed), each marked done, next, to do, or not set up yet, as the real state says, with the one command to run next. Nothing about progress is stored: it is computed each time. On a host: archon state (spec 053).`,
+    tier: "read",
+    args: [],
+    async run(_a, ctx) {
+      const { whereCommand } = await import("../guide/where.ts");
+      return await whereCommand(ctx.json);
+    },
+  },
+  {
+    name: "explain",
+    summary: "What a problem's code means, its likely cause, and its fix",
+    description:
+      `Every problem archon can explain has a stable code (E for a problem, P for something not set up yet), shown as "explain: archon explain <code>" under it. Without a code, lists them all. Runs anywhere, offline (spec 052).`,
+    tier: "read",
+    args: [{
+      name: "code",
+      type: "string",
+      positional: true,
+      description: "The code, for example E051-DISK-NOT-BLANK (none: list them).",
+    }],
+    examples: [{ cmd: "archon explain E051-DISK-NOT-BLANK", text: "Why an install stopped." }],
+    async run(a) {
+      const { explainText, EXPLAIN } = await import("../core/explain.ts");
+      const code = a.code as string | undefined;
+      console.log(explainText(code));
+      return !code || EXPLAIN[code.toUpperCase()] ? 0 : 1;
+    },
+  },
+  {
     name: "state",
     summary: "What this machine recorded about itself: install, latest verify, switches, data",
     description:

@@ -18,9 +18,16 @@ export interface Check {
   command: string;
   ok: boolean;
   output: string;
-  /** "warn": a failure is reported as a warning and does not count as failed. */
-  level?: "fail" | "warn";
+  /**
+   * "warn": a failure is reported as a warning and does not count as failed.
+   * "pending" (spec 052): the check exited 3, "not set up yet": shown with its
+   * next step, never a failure or a warning.
+   */
+  level?: "fail" | "warn" | "pending";
 }
+
+/** Spec 052: a check that exits 3 says "not set up yet" (a token not delivered, ...). */
+export const PENDING_EXIT = 3;
 
 /**
  * The latest verify, in this machine's archon.sql (spec 048): read over SSH by
@@ -32,13 +39,17 @@ export interface RecordedVerify {
   total: number;
   failed: string[];
   warned: string[];
+  /** Spec 052: not set up yet (a check that exited 3). */
+  pending?: string[];
   since: string;
 }
 
 export function verifyRecord(checks: Check[], now = new Date()): RecordedVerify {
   const failed = failedChecks(checks).map((c) => c.resource);
   const warned = checks.filter((c) => !c.ok && c.level === "warn").map((c) => c.resource);
+  const pending = checks.filter((c) => !c.ok && c.level === "pending").map((c) => c.resource);
   return {
+    ...(pending.length ? { pending } : {}),
     passed: checks.filter((c) => c.ok).length,
     total: checks.length,
     failed,
@@ -66,7 +77,8 @@ export async function recordVerify(
 }
 
 /** Checks that count as failed (warning-level checks never do). */
-export const failedChecks = (checks: Check[]) => checks.filter((c) => !c.ok && c.level !== "warn");
+export const failedChecks = (checks: Check[]) =>
+  checks.filter((c) => !c.ok && c.level !== "warn" && c.level !== "pending");
 
 export async function verify(host: HostDef): Promise<Check[]> {
   const plan = await planFor(host);
@@ -122,6 +134,7 @@ export async function verify(host: HostDef): Promise<Check[]> {
       asUser: undefined,
       level: c.level,
       fix: c.fix,
+      code: c.code,
     })),
     // Spec 017: every modeled guest exists (lxc info fails for a missing one).
     ...(plan.host.guests ?? []).map((g) => ({
@@ -143,14 +156,30 @@ export async function verify(host: HostDef): Promise<Check[]> {
     });
     const output = (r.stdout + r.stderr).trim().split("\n")[0] ?? "";
     const ok = r.ok && (!t.expect || t.expect.test(r.stdout));
-    const extra = t as { level?: "fail" | "warn"; fix?: string };
-    checks.push({ resource: t.resource, command: t.command, ok, output, level: extra.level });
+    const extra = t as { level?: "fail" | "warn"; fix?: string; code?: string };
+    const pending = !ok && r.code === PENDING_EXIT && !!extra.level;
+    const level = pending ? "pending" : extra.level;
+    checks.push({ resource: t.resource, command: t.command, ok, output, level });
     if (ok) p.ok(`${t.resource}: ${t.command}`);
-    else p.warn(`${t.resource}: ${output || `${t.command} failed`}`, extra.fix ?? t.command);
+    // Spec 052: shown as what it is, and counted the same way.
+    else if (pending) {
+      p.pending(`${t.resource}: not set up yet`, extra.fix ?? t.command, extra.code);
+    } else if (level === "warn") {
+      p.warn(
+        `${t.resource}: ${output || `${t.command} failed`}`,
+        extra.fix ?? t.command,
+        extra.code,
+      );
+    } else {p.fail(
+        `${t.resource}: ${output || `${t.command} failed`}`,
+        extra.fix ?? t.command,
+        extra.code,
+      );}
   }
   const passed = checks.filter((c) => c.ok).length;
   const failed = failedChecks(checks).length;
-  const warned = checks.length - passed - failed;
+  const pendingCount = checks.filter((c) => !c.ok && c.level === "pending").length;
+  const warned = checks.length - passed - failed - pendingCount;
   recordChecks(passed, failed);
   // Spec 035: the welcome page shows the checks as they are now, not at install.
   if (isRoot()) {
@@ -173,7 +202,7 @@ export async function verify(host: HostDef): Promise<Check[]> {
   p.done(
     `${passed} passed${failed ? ` · ${failed} failed` : ""}${
       warned ? ` · ${warned} warning(s)` : ""
-    }`,
+    }${pendingCount ? ` · ${pendingCount} not set up yet` : ""}`,
   );
   return checks;
 }

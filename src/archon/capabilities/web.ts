@@ -201,17 +201,21 @@ export const web = (): Capability => ({ host, fleet }) => {
         ? [
           {
             name: `${name} has a trusted certificate`,
+            // Spec 052: without the Cloudflare token, not set up yet (exit 3).
             command:
-              `sh -c 'curl -s --max-time 5 -o /dev/null --resolve ${name}:443:127.0.0.1 https://${name}/'`,
+              `sh -c 'test -s ${WEB.credential} || exit 3; curl -s --max-time 5 -o /dev/null --resolve ${name}:443:127.0.0.1 https://${name}/'`,
             level: "warn" as const,
+            code: "P032-WEB-TOKEN",
             fix:
               "archon web status (the Cloudflare token: deno task boot web-setup, then web-push <host>)",
             spec: SPEC,
           },
           {
             name: `${name} resolves to this server`,
-            command: `sh -c 'getent ahostsv4 ${name} | grep -q .'`,
+            command:
+              `sh -c 'test -s ${WEB.credential} || exit 3; getent ahostsv4 ${name} | grep -q .'`,
             level: "warn" as const,
+            code: "P032-WEB-TOKEN",
             fix: "sudo archon web dns",
             spec: SPEC,
           },

@@ -45,7 +45,8 @@ function usage(): string {
     "",
     ...COMMANDS.map((c) => `  ${c.name.padEnd(width)}  ${c.summary}`),
     "",
-    "Global options: --host <name>, --json, -v/--verbose. Every command has a man page: man archon-<command>.",
+    "Global options: --fleet <id>, --host <name>, --json, -v/--verbose. Every command has a man page: man archon-<command>.",
+    "Where you are, and the one thing to do next: archon (no arguments). A problem's code: archon explain <code>.",
   ].join("\n");
 }
 
@@ -69,11 +70,14 @@ function globals(argv: string[]) {
 
 export async function main(argv: string[]): Promise<number> {
   await ensureHome();
-  if (!argv.length || argv[0] === "help" || argv[0] === "--help" || argv[0] === "-h") {
+  // Spec 053: no arguments is "where am I, and what next".
+  if (!argv.length) argv = ["where"];
+  if (argv[0] === "help" || argv[0] === "--help" || argv[0] === "-h") {
     console.log(usage());
-    return argv.length ? 0 : 2;
+    return 0;
   }
   const { rest, g } = globals(argv);
+  if (!rest.length) rest.push("where"); // only global options: still "where am I"
   // Spec 046: --fleet chooses the fleet for this run (and what it starts through sudo).
   if (typeof g.fleet === "string") {
     Deno.env.set("ARCHON_FLEET", g.fleet);

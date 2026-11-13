@@ -210,16 +210,30 @@ export function recordChanges(n: number, check: boolean): void {
  * OpenTelemetry is off.
  */
 export async function flushEvents(
-  problems: Array<{ level: "warn" | "fail"; phase: string; message: string; fix?: string }>,
+  problems: Array<
+    {
+      level: "warn" | "fail" | "pending";
+      phase: string;
+      message: string;
+      fix?: string;
+      code?: string;
+    }
+  >,
 ): Promise<void> {
   if (!api) return;
   const ids = root?.spanContext() ?? lastRoot;
   for (const p of problems) {
     runEvents.push({
       name: "archon.problem",
-      severity: p.level === "fail" ? "error" : "warn",
+      // Spec 052: not set up yet is information, not a problem.
+      severity: p.level === "fail" ? "error" : p.level === "warn" ? "warn" : "info",
       message: redact(p.message),
-      attrs: { "archon.phase": p.phase, ...(p.fix ? { "archon.fix": redact(p.fix) } : {}) },
+      attrs: {
+        "archon.phase": p.phase,
+        "archon.level": p.level,
+        ...(p.fix ? { "archon.fix": redact(p.fix) } : {}),
+        ...(p.code ? { "archon.code": p.code } : {}),
+      },
       ...(ids ? { traceId: ids.traceId, spanId: ids.spanId } : {}),
     });
   }

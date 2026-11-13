@@ -7,16 +7,28 @@
 // Terminal: spinner, progress bar, in-place redraw, colors, emoji.
 // Pipe/timer/journald: plain final lines only. NO_COLOR disables color.
 // Non-UTF-8 locale or ARCHON_PLAIN=1: ASCII marks ([ok] [warn] [FAIL]).
+import { translate } from "./explain.ts";
+
 // ARCHON_VERBOSE=1 (or -v): every item is shown, dimmed, as it happens.
 // --json: nothing on screen; the log file still records everything.
 
 export type Level = "ok" | "warn" | "fail" | "defer" | "skip";
 
+/**
+ * Spec 052: four states, the same everywhere. "fail" and "warn" are problems;
+ * "pending" is something not set up yet, expected until someone does it (a
+ * token not pushed, a certificate not issued yet): shown with its next step,
+ * never a failure, never counted as a warning.
+ */
+export type ProblemLevel = "warn" | "fail" | "pending";
+
 export interface Problem {
-  level: "warn" | "fail";
+  level: ProblemLevel;
   phase: string;
   message: string;
   fix?: string;
+  /** A stable code: archon explain <code> (spec 052). */
+  code?: string;
   logLine?: number;
 }
 
@@ -65,6 +77,7 @@ const MARKS = {
     ok: "✅",
     warn: "⚠️ ",
     fail: "❌",
+    pending: "⏳",
     defer: "🔒",
     skip: "⏭️ ",
     start: "🛰️ ",
@@ -75,6 +88,7 @@ const MARKS = {
     ok: "[ok]",
     warn: "[warn]",
     fail: "[FAIL]",
+    pending: "[todo]",
     defer: "[defer]",
     skip: "[skip]",
     start: "==>",
@@ -99,6 +113,7 @@ export class Phase {
   oks = 0;
   warns = 0;
   fails = 0;
+  pendings = 0;
   deferred = 0;
   skipped = 0;
   result?: string;
@@ -134,13 +149,18 @@ export class Phase {
     this.ui.deferred.push(msg);
     this.ui.item("defer", msg);
   }
-  warn(msg: string, fix?: string) {
+  warn(msg: string, fix?: string, code?: string) {
     this.warns++;
-    this.ui.problem("warn", this.name, msg, fix);
+    this.ui.problem("warn", this.name, msg, fix, code);
   }
-  fail(msg: string, fix?: string) {
+  fail(msg: string, fix?: string, code?: string) {
     this.fails++;
-    this.ui.problem("fail", this.name, msg, fix);
+    this.ui.problem("fail", this.name, msg, fix, code);
+  }
+  /** Not set up yet (spec 052): its next step; never a failure or a warning. */
+  pending(msg: string, next: string, code?: string) {
+    this.pendings++;
+    this.ui.problem("pending", this.name, msg, next, code);
   }
   /** Detail for the log only (shown dimmed with --verbose). */
   note(msg: string) {
@@ -162,6 +182,7 @@ export class Phase {
     if (this.changes) parts.push(`${this.changes} changed`);
     if (this.fails) parts.push(`${this.fails} failed`);
     if (this.warns) parts.push(`${this.warns} warning${this.warns > 1 ? "s" : ""}`);
+    if (this.pendings) parts.push(`${this.pendings} not set up yet`);
     if (this.deferred) parts.push(`${this.deferred} deferred`);
     return parts.join(" · ") || "up to date";
   }
@@ -323,12 +344,28 @@ export class Ui {
     this.out(this.dim(`     ${mark} ${msg}`));
   }
 
-  problem(level: "warn" | "fail", phase: string, message: string, fix?: string) {
-    const logLine = this.log(`   ${level.toUpperCase()} ${message}${fix ? ` (fix: ${fix})` : ""}`);
+  problem(level: ProblemLevel, phase: string, message: string, fix?: string, code?: string) {
+    // Spec 052: a raw tool error gets its plain cause and fix, when it is a known one.
+    if (!fix || !code) {
+      const t = translate(message);
+      if (t) {
+        fix ??= t.fix;
+        code ??= t.code;
+      }
+    }
+    const logLine = this.log(
+      `   ${level === "pending" ? "TODO" : level.toUpperCase()} ${message}${
+        fix ? ` (${level === "pending" ? "next" : "fix"}: ${fix})` : ""
+      }${code ? ` [${code}]` : ""}`,
+    );
     if (this.problems.some((p) => p.level === level && p.message === message)) return;
-    this.problems.push({ level, phase, message, fix, logLine });
-    const mark = level === "fail" ? this.m.fail : this.m.warn;
-    const text = level === "fail" ? this.red(message) : this.yellow(message);
+    this.problems.push({ level, phase, message, fix, ...(code ? { code } : {}), logLine });
+    const mark = this.m[level];
+    const text = level === "fail"
+      ? this.red(message)
+      : level === "warn"
+      ? this.yellow(message)
+      : message;
     this.out(`   ${mark} ${text}`);
   }
 
@@ -443,22 +480,36 @@ export class Ui {
       );
       this.out(`   ${" ".repeat(16)} ${this.dim(this.deferHint)}`);
     }
-    if (this.problems.length) {
-      this.out("");
-      this.out(
-        this.bold(
-          `${this.emoji ? "━━" : "=="} Needs attention ${(this.emoji ? "━" : "=").repeat(40)}`,
-        ),
-      );
-      for (const p of this.problems) {
-        const mark = p.level === "fail" ? this.m.fail : this.m.warn;
-        const msg = p.level === "fail" ? this.red(p.message) : this.yellow(p.message);
-        this.out(`${mark} ${this.bold(p.phase.toLowerCase().padEnd(14))} ${msg}`);
-        if (p.fix) this.out(`   ${" ".repeat(14)} ${this.dim(`fix: ${p.fix}`)}`);
-        if (this.logPath && p.logLine) {
-          this.out(`   ${" ".repeat(14)} ${this.dim(`log: ${this.logPath}:${p.logLine}`)}`);
-        }
+    const rule = (title: string) =>
+      this.bold(`${this.emoji ? "━━" : "=="} ${title} ${(this.emoji ? "━" : "=").repeat(40)}`);
+    const show = (p: Problem) => {
+      const msg = p.level === "fail"
+        ? this.red(p.message)
+        : p.level === "warn"
+        ? this.yellow(p.message)
+        : p.message;
+      this.out(`${this.m[p.level]} ${this.bold(p.phase.toLowerCase().padEnd(14))} ${msg}`);
+      if (p.fix) {
+        this.out(
+          `   ${" ".repeat(14)} ${this.dim(`${p.level === "pending" ? "next" : "fix"}: ${p.fix}`)}`,
+        );
       }
+      if (p.code) this.out(`   ${" ".repeat(14)} ${this.dim(`explain: archon explain ${p.code}`)}`);
+      if (this.logPath && p.logLine && p.level !== "pending") {
+        this.out(`   ${" ".repeat(14)} ${this.dim(`log: ${this.logPath}:${p.logLine}`)}`);
+      }
+    };
+    const real = this.problems.filter((p) => p.level !== "pending");
+    const pending = this.problems.filter((p) => p.level === "pending");
+    if (real.length) {
+      this.out("");
+      this.out(rule("Needs attention"));
+      real.forEach(show);
+    }
+    if (pending.length) {
+      this.out("");
+      this.out(rule("Not set up yet"));
+      pending.forEach(show);
     }
     this.printPanel();
     const took = fmtDuration(this.now() - this.started);
@@ -478,8 +529,8 @@ export class Ui {
     for (const n of o.next ?? this.next) this.out(`   ${this.dim(n)}`);
     this.log(
       `== finished: ${fails.length} failure(s), ${
-        this.problems.length - fails.length
-      } warning(s), ${this.deferred.length} deferred`,
+        this.problems.filter((p) => p.level === "warn").length
+      } warning(s), ${pending.length} not set up yet, ${this.deferred.length} deferred`,
     );
     try {
       this.logFile?.close();

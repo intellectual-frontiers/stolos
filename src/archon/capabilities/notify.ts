@@ -5,6 +5,7 @@
 
 import type { Capability } from "../model/types.ts";
 import { HOST_NOTIFY } from "../notify/notify.ts";
+import { SASL_PASSWD } from "../notify/transport.ts";
 import { WATCH } from "../notify/watch.ts";
 import { header } from "../render/systemd.ts";
 import { timedJob } from "./ops.ts";
@@ -64,8 +65,10 @@ export const notify = (): Capability => ({ fleet }) => {
     ],
     checks: [{
       name: "notify:ok",
-      command: "archon notify status --check",
+      // Spec 052: without the relay token, mail is not set up yet (exit 3).
+      command: `sh -c 'test -s ${SASL_PASSWD} || exit 3; archon notify status --check'`,
       level: "warn",
+      code: "P027-MAIL-TOKEN",
       fix:
         "on the boot machine: deno task boot mail-push <host> (or deno task boot mail-setup first); archon notify status shows the last error",
       spec: SPEC,

@@ -181,6 +181,12 @@ install_server() {
   cp -r "$EVENTS" "$OUT/telemetry" 2>/dev/null || true
   log "install: ${result:-timed out after $TIMEOUT_MIN minutes}"
   [ "$result" = ready ] || fail "the install did not reach Ready"
+  # Spec 052: every check passed; what waits for a token is "not set up yet", apart.
+  local ready
+  ready=$(plain <"$OUT/boot.log" | grep -oE "Ready: [0-9]+/[0-9]+ checks[^·]*(· [0-9]+ not set up yet)?" | tail -n 1)
+  log "$ready"
+  echo "$ready" | awk '{ split($2, a, "/"); exit !(a[1] == a[2]) }' ||
+    fail "Ready, but not every check passed ($ready): a pending item counted as a problem, or a real one"
 }
 
 # A server installed by hand, finished from the runner (spec 005): Ubuntu's

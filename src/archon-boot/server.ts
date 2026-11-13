@@ -113,7 +113,14 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
   const stalls = new StallWatch((key) => {
     const host = key.startsWith("host:") ? key.slice(5) : installing.get(key);
     const address = key.startsWith("host:") ? undefined : key;
-    o.emit({ name: "boot.stalled", severity: "warn", address, host, message: stallMessage(host) });
+    o.emit({
+      name: "boot.stalled",
+      severity: "warn",
+      address,
+      host,
+      message: `${stallMessage(host)} (archon explain E051-INSTALLER-STALLED)`,
+      attrs: { code: "E051-INSTALLER-STALLED" },
+    });
     if (host) {
       installProblem(host, "the installer went quiet after taking the image (too little RAM?)");
     }
@@ -300,12 +307,12 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
               name: "boot.mismatch",
               address: from,
               host: h.name,
-              attrs: { mac: menu[1], expected: h.mac! },
+              attrs: { mac: menu[1], expected: h.mac!, code: "E051-MAC-MISMATCH" },
               message: `unknown machine ${
                 menu[1]
               } network-booted while ${h.name} waits for ${h.mac}. If it is ${h.name}, its MAC was mistyped: deno task boot arm ${h.name} --mac-address ${
                 menu[1]
-              } (or --claim). Nothing was installed.`,
+              } (or --claim). Nothing was installed. (archon explain E051-MAC-MISMATCH)`,
             });
           }
         }
@@ -518,7 +525,8 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
             severity: "warn",
             address: from,
             host: name,
-            message: `install stopped: ${d.why}. ${d.fix}`,
+            message: `install stopped: ${d.why}. ${d.fix} (archon explain E051-DISK-NOT-BLANK)`,
+            attrs: { code: "E051-DISK-NOT-BLANK" },
           });
           installProblem(name, `install stopped by the blank-disk guard: ${d.why}`);
           return text(`stop: ${d.why}. ${d.fix}\n`);

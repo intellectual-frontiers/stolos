@@ -154,7 +154,11 @@ export async function hostBootstrap(o: HostBootstrapOptions): Promise<number> {
   const reg = await loadRegistration(host.name);
   const refusal = bootstrapRefusal(host.name, facts, fleet.ubuntu.release, reg?.mac);
   if (refusal) {
-    m.fail(refusal);
+    m.fail(
+      refusal,
+      undefined,
+      refusal.includes("network card") ? "E051-WRONG-MACHINE" : "E051-WRONG-RELEASE",
+    );
     return 1;
   }
   m.done(`${facts.summary}${facts.uplink ? ` · network card ${facts.uplink}` : ""}`);

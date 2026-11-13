@@ -98,7 +98,16 @@ export async function syncCheckout(opts: { check?: boolean } = {}): Promise<Sync
         `refused ${remote.slice(0, 10)}: ${t.reason}`,
         "user.warning",
       );
-      return { current: false, pulled: [], incoming, head: head0, remote, blocked: t.reason };
+      // Spec 052: the reason carries its code (archon explain E047-...).
+      const code = `E047-${(t.code ?? "untrusted").toUpperCase()}`;
+      return {
+        current: false,
+        pulled: [],
+        incoming,
+        head: head0,
+        remote,
+        blocked: `${t.reason} (archon explain ${code})`,
+      };
     }
   }
   if (opts.check) return { current: false, pulled: [], incoming, head: head0, remote };

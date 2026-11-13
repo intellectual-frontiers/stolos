@@ -74,6 +74,9 @@ export async function emailChecks(
     ok: (m: string) => (found.push(`ok    ${m}`), phase.ok(m)),
     warn: (m: string, fix?: string) => (found.push(`WARN  ${m}`), phase.warn(m, fix)),
     fail: (m: string, fix?: string) => (found.push(`FAIL  ${m}`), phase.fail(m, fix)),
+    pending: (m: string, next: string, code: string) => (
+      found.push(`TODO  ${m}`), phase.pending(m, next, code)
+    ),
     done: (m: string) => phase.done(m),
   };
   const domain = site.from.split("@")[1];
@@ -82,9 +85,7 @@ export async function emailChecks(
   // domain (a synthetic fleet's) can never be onboarded: not asked about.
   const missing = isReservedDomain(domain) ? [] : await domainRecords(domain);
   if (isReservedDomain(domain)) {
-    p.warn(
-      `${domain} is reserved for tests (RFC 2606): its DNS is not checked, and no mail can leave`,
-    );
+    p.ok(`${domain} is reserved for tests (RFC 2606): its DNS is not checked`);
   } else if (missing.length) {
     p.fail(
       `${domain} is missing ${missing.join(", ")}: Cloudflare will refuse or mail will be rejected`,
@@ -98,7 +99,8 @@ export async function emailChecks(
   const cred = await loadCredential(site);
   const { host, port } = relayParts(site.relay);
   if (!cred) {
-    p.warn(`no relay token: this machine cannot send mail`, fixCredential);
+    // Spec 052: not set up yet, with its next step (not a problem).
+    p.pending(`no relay token yet: this machine sends no mail`, fixCredential, "P027-MAIL-TOKEN");
   } else {
     try {
       await probeSmtp(cred, { relay: site.relay, ipv4: site.ipv4 });

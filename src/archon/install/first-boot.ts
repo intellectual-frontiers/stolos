@@ -99,11 +99,18 @@ export async function firstBoot(host: HostDef): Promise<number> {
     failedChecks(checks).length;
   // Spec 048: the install record stays on this machine (archon.sql, table
   // archon_install), read over SSH by fleet status; nothing is pushed.
+  const pendingChecks = checks.filter((c) => !c.ok && c.level === "pending").length;
+  const tally = {
+    passed: checks.filter((c) => c.ok).length,
+    total: checks.length - pendingChecks,
+    pending: pendingChecks,
+  };
   await putRecord(host.name, "install", "install", {
     host: host.name,
     ubuntu: UBUNTU_POINT,
     archon: head,
-    checks: { passed: checks.filter((c) => c.ok).length, total: checks.length },
+    // Spec 052: not set up yet is neither passed nor failed: counted apart.
+    checks: { passed: tally.passed, total: tally.total, pending: tally.pending },
     // Every step that failed or warned, so a partial first boot shows.
     // Warnings (a transient network failure, a warning-level check) leave it ok;
     // the next successful apply settles anything left (spec 009).
@@ -139,7 +146,9 @@ export async function firstBoot(host: HostDef): Promise<number> {
   pending.push(bootEvent({
     phase: failed ? "Done with problems" : "Ready",
     level: failed ? "fail" : "ok",
-    summary: `${checks.filter((c) => c.ok).length}/${checks.length} checks · ssh ${host.name}${
+    summary: `${tally.passed}/${tally.total} checks${
+      tally.pending ? ` · ${tally.pending} not set up yet` : ""
+    } · ssh ${host.name}${
       failed ? ` · ${failed} problem(s), see archon query "select * from archon_install"` : ""
     }`,
   }));
@@ -160,9 +169,10 @@ export async function firstBoot(host: HostDef): Promise<number> {
   await notify({
     event: failed ? "✗ Done with problems" : "✓ Ready",
     level: failed ? "fail" : "info",
-    what: `${host.name} installed Ubuntu ${UBUNTU_POINT} with Archon ${head}: ${
-      checks.filter((c) => c.ok).length
-    }/${checks.length} checks passed${failed ? `, ${failed} problem(s)` : ""}.`,
+    what:
+      `${host.name} installed Ubuntu ${UBUNTU_POINT} with Archon ${head}: ${tally.passed}/${tally.total} checks passed${
+        tally.pending ? ` (${tally.pending} not set up yet)` : ""
+      }${failed ? `, ${failed} problem(s)` : ""}.`,
     todo: failed
       ? `ssh ${host.name}, then archon verify (the install record: archon query "select * from archon_install").`
       : `ssh ${host.name}; archon observe; Cockpit at https://${host.name}:9090 from the local network.`,

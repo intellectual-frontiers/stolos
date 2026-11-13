@@ -146,8 +146,10 @@ export const mail = (): Capability => ({ fleet, host }) => {
     }],
     checks: [{
       name: "mail:credential",
-      command: `test -s ${SASL_PASSWD}`,
+      // Spec 052: no token yet is "not set up yet" (exit 3), not a problem.
+      command: `sh -c 'test -s ${SASL_PASSWD} || exit 3'`,
       level: "warn",
+      code: "P027-MAIL-TOKEN",
       fix: "on the boot machine: deno task boot mail-push <host> (after deno task boot mail-setup)",
       spec: SPEC,
     }],

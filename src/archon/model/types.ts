@@ -552,6 +552,8 @@ export interface CheckDef {
   command: string;
   level: "fail" | "warn";
   fix?: string;
+  /** Spec 052: archon explain <code>. Exit 3 from the command means "not set up yet". */
+  code?: string;
   spec: SpecId;
 }
 
