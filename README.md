@@ -90,5 +90,10 @@ the example lab, versioning). Since then:
   `archon fleet query` read machines live over SSH; hosts never push, and their deploy keys are
   read-only.
 
-Next: OpenTelemetry everywhere (`049-telemetry`), then decisions and registration in Git
-(`decisions.ts`, `registration.ts`).
+- `049-telemetry`: OpenTelemetry everywhere (one list of signals, traces across machines, events
+  structured at their source; the boot PC as the default collector).
+- `050-telemetry-ui`: the telemetry web UI (OpenObserve) as an opt-in on any server.
+- The `e2e` workflow installs a blank Secure Boot VM from network boot to `Ready` on every push.
+
+Next: decisions and registration in Git (`decisions.ts`, `registration.ts`), and an install as one
+trace from `boot arm` to `Ready`.
