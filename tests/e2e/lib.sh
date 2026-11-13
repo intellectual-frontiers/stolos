@@ -158,11 +158,22 @@ query_from_runner() {
 reboot_server() {
   local ip
   ip=$(server_ip)
-  log "$SERVER: power off, then on again from its disk (${E2E_SERVER_MEM:-2048} MiB)"
+  log "$SERVER: shut down (the power button), then on again from its disk (${E2E_SERVER_MEM:-2048} MiB)"
+  # A clean shutdown, as an operator's would be: right after an install,
+  # Ubuntu's unattended-upgrades may still be running apt, and its shutdown
+  # hook waits for it. Cutting the power then can break dpkg's state.
+  local pid start waited
+  pid=$(sudo cat "$OUT/qemu.pid")
+  start=$(date +%s)
   echo system_powerdown | sudo nc -U -q 1 "$OUT/monitor.sock" >/dev/null 2>&1 || true
-  for _ in $(seq 60); do sudo kill -0 "$(sudo cat "$OUT/qemu.pid")" 2>/dev/null || break; sleep 2; done
-  sudo kill "$(sudo cat "$OUT/qemu.pid")" 2>/dev/null || true
-  sleep 2
+  for _ in $(seq 300); do sudo kill -0 "$pid" 2>/dev/null || break; sleep 2; done
+  waited=$(($(date +%s) - start))
+  if sudo kill -0 "$pid" 2>/dev/null; then
+    sudo kill "$pid" 2>/dev/null || true
+    fail "$SERVER did not shut down within $waited seconds of the power button"
+  fi
+  log "$SERVER shut down cleanly in $waited seconds"
+  sudo mv "$OUT/console.log" "$OUT/console-install.log"
   sudo E2E_VM_BOOT=disk E2E_VM_MEM="${E2E_SERVER_MEM:-2048}" "$HERE/vm.sh"
   for _ in $(seq 90); do ssh_to "$ADMIN@$ip" true 2>/dev/null && break; sleep 5; done
   ssh_to "$ADMIN@$ip" 'systemctl is-system-running --wait >/dev/null; archon verify' 2>&1 | plain |
