@@ -15,7 +15,11 @@ export async function fleetQuery(sql: string, json: boolean): Promise<number> {
   const servers = mcpServers(hosts, P.fleetId);
   // Spec 047: each server's key is checked against Git (registration.ts).
   const { writeKnownHosts } = await import("../fleet/registration.ts");
-  const knownHosts = await writeKnownHosts().catch(() => undefined);
+  const knownHosts = await writeKnownHosts().catch((e) => {
+    // Without it, ssh checks the servers against your own known_hosts only.
+    console.error(`warning: known_hosts.auto (from Git) not written: ${(e as Error).message}`);
+    return undefined;
+  });
   const answers = await Promise.all(servers.map(async (s) => {
     const r = await callRemoteTool(s.target, "archon_query", { sql, json: true }, { knownHosts });
     let rows: Array<Record<string, unknown>> = [];
@@ -23,10 +27,15 @@ export async function fleetQuery(sql: string, json: boolean): Promise<number> {
       try {
         rows = JSON.parse(r.text);
       } catch {
-        return { host: s.name.replace(/^archon-/, ""), ok: false, error: r.text, rows };
+        return { host: s.name.replace(`archon-${P.fleetId}-`, ""), ok: false, error: r.text, rows };
       }
     }
-    return { host: s.name.replace(/^archon-/, ""), ok: r.ok, error: r.ok ? "" : r.text, rows };
+    return {
+      host: s.name.replace(`archon-${P.fleetId}-`, ""),
+      ok: r.ok,
+      error: r.ok ? "" : r.text,
+      rows,
+    };
   }));
   const rows = answers.flatMap((a) => a.rows.map((r) => ({ host: a.host, ...r })));
   if (json) {

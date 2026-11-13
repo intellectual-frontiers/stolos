@@ -140,6 +140,9 @@ check_trace() {
   log "the host's first boot continued the install's trace"
 }
 
+# A fleet query's table has a row for the server whose ok column is 1.
+answered() { grep -qE "^${SERVER}[[:space:]]+1([[:space:]]|\$)" "$1"; }
+
 # The operator's view, from the runner (as the boot machine): archon fleet query over MCP.
 query_from_runner() {
   local ip
@@ -150,7 +153,7 @@ query_from_runner() {
   mkdir -p "$HOME/.ssh" && cp "$W/admin" "$HOME/.ssh/id_ed25519" && chmod 600 "$HOME/.ssh/id_ed25519"
   (cd "$F" && "${A[@]}" fleet query "select host, ok, passed, total from archon_install") |
     tee "$OUT/fleet-query.txt" || fail "fleet query failed"
-  grep -q "$SERVER" "$OUT/fleet-query.txt" || fail "fleet query did not answer for $SERVER"
+  answered "$OUT/fleet-query.txt" || fail "fleet query did not answer ok for $SERVER"
 }
 
 # Power the server off and on again with less memory (the installer needed
@@ -220,7 +223,7 @@ deno run -A --frozen archon.ts --fleet $FLEET workstation add $WS"
     -o LogLevel=ERROR "$W/admin" "$ADMIN@$ip:.ssh/id_ed25519"
   ssh_to "$ADMIN@$ip" "chmod 600 ~/.ssh/id_ed25519; archon verify && cd /srv/archon && archon fleet query 'select host, ok from archon_install'" \
     2>&1 | plain | tee "$OUT/workstation-query.txt" || fail "the workstation could not query $SERVER"
-  grep -q "$SERVER" "$OUT/workstation-query.txt" || fail "the workstation's fleet query did not answer for $SERVER"
+  answered "$OUT/workstation-query.txt" || fail "the workstation's fleet query did not answer ok for $SERVER"
   log "$WS reached $SERVER over MCP"
 }
 

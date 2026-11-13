@@ -153,6 +153,13 @@ export const P = {
       ? "/var/lib/archon"
       : join(userData, "archon", "state", fleetId() || "_");
   },
+  /**
+   * This user's own files derived from Git, per fleet (known_hosts.auto): an
+   * operator on a workstation cannot write /var/lib/archon.
+   */
+  get userState(): string {
+    return join(userData, "archon", "state", fleetId() || "_");
+  },
   /** Rendered by archon build; never committed. */
   get out(): string {
     return join(repoRoot(), "out", fleetId() || "_");

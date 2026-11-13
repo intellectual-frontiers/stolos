@@ -94,7 +94,12 @@ export function knownHostsText(
 
 /** This machine's known_hosts.auto for the active fleet (in its state folder). */
 export function knownHostsAutoFile(): string {
-  return join(P.state, "known_hosts.auto");
+  // Root (a host's own runs) keeps it with the host's state; anyone else in
+  // their own user data (a workstation's operator cannot write /var/lib/archon).
+  return join(
+    Deno.build.os !== "windows" && Deno.uid() === 0 ? P.state : P.userState,
+    "known_hosts.auto",
+  );
 }
 
 /** Write known_hosts.auto from Git; return its path. */

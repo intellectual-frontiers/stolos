@@ -37,7 +37,11 @@ export async function fleetStatus(): Promise<number> {
   const live = new Map<string, { ok: boolean; why?: string }>();
   // Spec 047: each server's key is checked against Git (registration.ts).
   const { writeKnownHosts } = await import("../fleet/registration.ts");
-  const knownHosts = await writeKnownHosts().catch(() => undefined);
+  const knownHosts = await writeKnownHosts().catch((e) => {
+    // Without it, ssh checks the servers against your own known_hosts only.
+    console.error(`warning: known_hosts.auto (from Git) not written: ${(e as Error).message}`);
+    return undefined;
+  });
   await Promise.all(
     hosts.filter((h) => h.kind !== "workstation").map(async (h) => {
       const target = mcpServers([h], P.fleetId)[0]?.target;
