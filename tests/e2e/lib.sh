@@ -132,6 +132,11 @@ lab_network() {
   # $W/www over HTTP on the bridge: the fleet repository, and (ci.sh) the engine.
   deno run -A "$HERE/serve.ts" "$W/www" $BR 8000 >"$OUT/http.log" 2>&1 &
   for _ in $(seq 50); do curl -s -o /dev/null "http://$BR:8000/" && break; sleep 0.2; done
+  # The machines look up tool releases through a mirror that holds the job's
+  # token (GitHub's shared runner addresses exhaust the anonymous limit).
+  deno run -A "$HERE/github-mirror.ts" $BR 8001 >"$OUT/github-mirror.log" 2>&1 &
+  for _ in $(seq 50); do curl -s -o /dev/null "http://$BR:8001/rate_limit" && break; sleep 0.2; done
+  [ -n "${GITHUB_TOKEN:-}" ] || log "no GITHUB_TOKEN: tool lookups are anonymous (60 an hour per address)"
 }
 
 # Commit the working copy, signed with this run's key, and serve it to the hosts.
@@ -151,7 +156,7 @@ install_server() {
   # With OpenTelemetry on, as a fleet repository's `deno task boot` runs it (spec 049).
   (cd "$F" && OTEL_DENO=true OTEL_SERVICE_NAME=archon-boot OTEL_EXPORTER_OTLP_PROTOCOL=http/json \
     OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:4319 exec deno run -A --frozen boot.ts serve \
-    --fleet "$FLEET" --port 8080) >"$OUT/boot.log" 2>&1 &
+    --fleet "$FLEET" --port 8080 --github-api "http://$BR:8001") >"$OUT/boot.log" 2>&1 &
   for _ in $(seq 600); do curl -fsS -o /dev/null "http://$BR:8080/health" && break; sleep 2; done
   curl -fsS "http://$BR:8080/health"
   if [ -n "${E2E_GUARD_TEST:-}" ]; then guard_test; fi
@@ -197,6 +202,8 @@ bootstrap_server() {
   SERVER_IP=$(lease_ip "$MAC")
   [ -n "$SERVER_IP" ] || fail "$SERVER did not answer SSH"
   ssh_to "$ADMIN@$SERVER_IP" 'cloud-init status --wait >/dev/null || true'
+  # The first boot reads /etc/archon/proxy.env, as a network install's does: the mirror.
+  ssh_to "$ADMIN@$SERVER_IP" "sudo mkdir -p /etc/archon && echo 'export ARCHON_GITHUB_API=http://$BR:8001' | sudo tee /etc/archon/proxy.env >/dev/null"
   log "$SERVER is at $SERVER_IP; bootstrapping"
   # The boot machine's ssh, for this lab's addresses only: trust each new VM once.
   mkdir -p "$HOME/.ssh"
@@ -266,6 +273,15 @@ query_from_runner() {
 reboot_server() {
   local ip
   ip=$(server_ip)
+  # Spec 054: as archon poweroff does, wait until nothing changes packages first.
+  # The first boot starts Ubuntu's unattended upgrades at its end; Ubuntu's own
+  # shutdown hook then waits for them, for as long as that day's updates take.
+  local apt_wait
+  apt_wait=$(date +%s)
+  # (By command line: unattended-upgrade-shutdown always runs, and ps cuts names to 15 characters.)
+  ssh_to "$ADMIN@$ip" 'for i in $(seq 240); do ps -eo args= | awk "{print \$1; print \$2}" | sed "s#.*/##" | grep -qxE "apt|apt-get|aptitude|dpkg|unattended-upgrade" || exit 0; sleep 5; done; exit 1' ||
+    fail "$SERVER was still changing packages after 20 minutes"
+  log "$SERVER: nothing changes packages ($(($(date +%s) - apt_wait)) seconds waited)"
   log "$SERVER: shut down (the power button), then on again from its disk (${E2E_SERVER_MEM:-2048} MiB)"
   # A clean shutdown, as an operator's would be: right after an install,
   # Ubuntu's unattended-upgrades may still be running apt, and its shutdown
@@ -321,6 +337,7 @@ export PATH=\$HOME/.deno/bin:\$PATH
 sudo mkdir -p /srv/archon && sudo chown \$USER: /srv/archon
 git clone -q http://$BR:8000/fleet.git /srv/archon
 cd /srv/archon
+export ARCHON_GITHUB_API=http://$BR:8001
 deno run -A --frozen archon.ts --fleet $FLEET workstation add $WS"
   ssh_to "$ADMIN@$ip" "$s" 2>&1 | plain | tee "$OUT/workstation-add.txt" ||
     fail "archon workstation add failed"

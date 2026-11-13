@@ -54,6 +54,8 @@ jobs:
           sudo apt-get install -y -q qemu-system-x86 qemu-utils ovmf dnsmasq-base cloud-image-utils netcat-openbsd parted
       - name: Install a VM end to end
         env:
+          # For the lab's GitHub API mirror (tool releases); it never leaves the runner.
+          GITHUB_TOKEN: ${{ github.token }}
           E2E_VM_MEM: ${{ inputs.vm_mem }}
           E2E_SQUEEZE_MB: ${{ inputs.squeeze_mb }}
           E2E_SERVER_INSTALL: ${{ inputs.install }}

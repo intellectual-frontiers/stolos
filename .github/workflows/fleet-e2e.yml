@@ -77,6 +77,8 @@ jobs:
           sudo apt-get install -y -q qemu-system-x86 qemu-utils ovmf dnsmasq-base cloud-image-utils netcat-openbsd parted
       - name: Install, reboot, and reach the synthetic fleet
         env:
+          # For the lab's GitHub API mirror (tool releases); it never leaves the runner.
+          GITHUB_TOKEN: ${{ github.token }}
           FLEET: ${{ inputs.fleet }}
           SERVER: ${{ inputs.server }}
           WORKSTATION: ${{ inputs.workstation }}

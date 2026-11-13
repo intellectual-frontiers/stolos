@@ -5,23 +5,31 @@
 
 import { run } from "../core/exec.ts";
 
-const PACKAGE_TOOLS = /^(apt|apt-get|aptitude|dpkg|unattended-upgr|packagekitd)$/;
+/**
+ * What changes packages, by program name. Ubuntu servers always run
+ * unattended-upgrade-shutdown (it waits for a shutdown signal), and process
+ * names are cut to 15 characters ("unattended-upgr" for both it and a real
+ * run), so the full command line is what tells them apart.
+ */
+const PACKAGE_TOOLS = new Set(["apt", "apt-get", "aptitude", "dpkg", "unattended-upgrade"]);
 
-/** What is changing packages now, from `ps -eo comm=` output; empty when nothing is. */
-export function packageWork(psComm: string): string[] {
+/** What is changing packages now, from `ps -eo args=` output; empty when nothing is. */
+export function packageWork(psArgs: string): string[] {
   const seen = new Set<string>();
-  for (const line of psComm.split("\n")) {
-    const c = line.trim();
-    if (PACKAGE_TOOLS.test(c)) seen.add(c === "unattended-upgr" ? "unattended-upgrades" : c);
+  for (const line of psArgs.split("\n")) {
+    // The program, or the script an interpreter runs (python3 /usr/bin/unattended-upgrade).
+    const words = line.trim().split(/\s+/).slice(0, 2);
+    for (const w of words) {
+      const name = w.split("/").pop() ?? "";
+      if (PACKAGE_TOOLS.has(name)) seen.add(name);
+    }
   }
-  // packagekitd idles in the background; it counts only with another one.
-  if (seen.size === 1 && seen.has("packagekitd")) return [];
   return [...seen].sort();
 }
 
 /** What is changing packages on this machine now (empty: nothing). */
 export async function packagesBusy(): Promise<string[]> {
-  const r = await run(["ps", "-eo", "comm="]);
+  const r = await run(["ps", "-eo", "args="]);
   return r.ok ? packageWork(r.stdout) : [];
 }
 

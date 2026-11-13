@@ -117,7 +117,7 @@ export async function main(argv: string[]): Promise<number> {
       const self = Deno.env.get("ARCHON_SELF") ?? "/usr/local/bin/archon";
       const p = new Deno.Command("sudo", {
         args: [
-          "--preserve-env=ARCHON_AGENT,ARCHON_VERBOSE,ARCHON_PLAIN,NO_COLOR,LANG,LC_ALL,TERM,TRACEPARENT,ARCHON_FLEET,ARCHON_REPO",
+          "--preserve-env=ARCHON_AGENT,ARCHON_VERBOSE,ARCHON_PLAIN,NO_COLOR,LANG,LC_ALL,TERM,TRACEPARENT,ARCHON_FLEET,ARCHON_REPO,ARCHON_GITHUB_API",
           self,
           ...argv,
         ],

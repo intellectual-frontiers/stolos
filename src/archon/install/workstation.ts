@@ -98,7 +98,8 @@ export async function workstationAdd(
   console.error("\nApplying with sudo (it may ask for your password once):\n");
   const r = await new Deno.Command("sudo", {
     args: [
-      "--preserve-env=ARCHON_VERBOSE,ARCHON_PLAIN,NO_COLOR,LANG,LC_ALL,TERM",
+      // ARCHON_GITHUB_API: a site's mirror of GitHub's releases API (spec 010).
+      "--preserve-env=ARCHON_VERBOSE,ARCHON_PLAIN,NO_COLOR,LANG,LC_ALL,TERM,ARCHON_GITHUB_API",
       Deno.execPath(),
       "run",
       "--allow-all",
