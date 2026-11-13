@@ -104,6 +104,25 @@ To review before committing, add `--no-commit`: the files change, and you commit
 `git commit -S`. Never commit without `-S` (or `commit.gpgsign=true`): an unsigned tip is refused by
 every host.
 
+## Decisions: what is on, on each host
+
+Opt-ins (PostgreSQL, S3, SMB shares, the telemetry web UI) are off on every server until someone
+turns one on. Record that decision in Git, from your workstation, so it is approved like any other
+change and survives a re-install:
+
+```sh
+deno task archon decide pg on --durable --host olympia     # or --ephemeral; off to turn it off
+git commit -S -m "fcr decide: pg on on olympia" && git push
+```
+
+It writes `fleets/<id>/hosts/<host>/decisions.ts`; the host applies it within 15 minutes. A decision
+in Git wins over anything recorded on the host itself. **Durable or ephemeral** matters: durable
+data is backed up, and the boot machine refuses to re-install a durable host unless a person types
+`--confirm-destroy <host>` (Article 23); going from durable to ephemeral needs the same.
+
+Running `archon pg on` (and the others) on the host itself still works, but only that machine
+remembers it; it tells you the `archon decide` line that records it in Git.
+
 ## Signing: the one-time setup on your machine
 
 Each operator signs with their own key, listed in the fleet's `signers.ts`. The key is a file,

@@ -361,6 +361,14 @@ export interface OptInRecord {
   data?: DataClass;
 }
 
+/**
+ * What operators decided for a host, in Git (spec 047): fleets/<id>/hosts/<host>/decisions.ts,
+ * written by `archon decide`. A decision here wins over the host's own record.
+ */
+export interface HostDecisions {
+  optIns?: Record<string, OptInRecord>;
+}
+
 /** the host's own archon.sql (opt-in pg): the opt-in switch (spec 040) and the instances Archon made. */
 export interface PgState extends Partial<OptInRecord> {
   instances: Record<string, PgRecord>;

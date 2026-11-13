@@ -1133,6 +1133,54 @@ export const COMMANDS: Command[] = [
     },
   },
   {
+    name: "decide",
+    summary:
+      "Record an opt-in decision for a host in Git (on a workstation): on or off, durable or ephemeral",
+    description:
+      `Writes fleets/<fleet>/hosts/<host>/decisions.ts (spec 047): whether an opt-in (pg, s3, smb, otel-ui) is on for that host and, for one that holds end users' data, whether that data is durable or ephemeral (Article 23). A decision in Git wins over the host's own record, survives a re-install, and lets the boot machine know a host's data class while it is offline. Commit it signed and push: the host applies it within 15 minutes. Durable to ephemeral needs --confirm-destroy with the host's name, typed by a person.`,
+    tier: "repo",
+    noMcp: true,
+    operation: true,
+    args: [
+      {
+        name: "opt-in",
+        type: "string",
+        positional: true,
+        required: true,
+        description: "pg, s3, smb, or otel-ui.",
+      },
+      {
+        name: "state",
+        type: "string",
+        positional: true,
+        required: true,
+        description: "on or off.",
+      },
+      ...CHOICE_ARGS,
+      CONFIRM_DESTROY_ARG("the host's name"),
+    ],
+    examples: [{
+      cmd: "deno task archon decide pg on --durable --host olympia",
+      text: "PostgreSQL on for olympia, its data durable; then commit -S and push.",
+    }],
+    async run(a, ctx) {
+      const state = String(a.state);
+      if (state !== "on" && state !== "off") throw new Error("say on or off");
+      const { decide } = await import("../fleet/decisions.ts");
+      const { currentUser } = await import("../core/exec.ts");
+      const data = a.durable ? "durable" : a.ephemeral ? "ephemeral" : undefined;
+      if (a.durable && a.ephemeral) throw new Error("--durable or --ephemeral, not both");
+      return await decide(
+        ctx.hostName,
+        String(a["opt-in"]),
+        state === "on",
+        data,
+        a["confirm-destroy"],
+        currentUser() || "operator",
+      );
+    },
+  },
+  {
     name: "otel ui on",
     summary: "Turn on the telemetry web UI (OpenObserve) on this server; it collects for the fleet",
     description:

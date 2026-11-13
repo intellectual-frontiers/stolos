@@ -64,7 +64,12 @@ export async function loadHosts(): Promise<HostDef[]> {
     const host = mod.host as HostDef;
     // Spec 038: what operators recorded on the host is part of its model.
     const pgState = await readPgState(host.name);
-    const optIn = await readOptIns(host.name);
+    // Spec 047: a decision in Git (decisions.ts) wins over the host's own record.
+    const { loadDecisions } = await import("../fleet/decisions.ts");
+    const optIn = {
+      ...(await readOptIns(host.name)),
+      ...((await loadDecisions(host.name)).optIns ?? {}),
+    };
     hosts.push({
       ...host,
       ...(pgState ? { pgState } : {}),

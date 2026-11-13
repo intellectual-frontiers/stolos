@@ -29,6 +29,15 @@ export async function loadModel(): Promise<Model> {
   const hosts = await loadHosts();
   const problems = validateFleet(fleet, hosts);
   problems.push(...(await signersFileProblems(fleet)));
+  // Spec 047: decisions.ts are written by archon decide, in one form.
+  const { decisionProblems } = await import("./fleet/decisions.ts");
+  for (const f of await decisionProblems(hosts.map((h) => h.name))) {
+    problems.push({
+      where: f,
+      message: "not in the form archon decide writes",
+      fix: "change it only with archon decide (or copy that form exactly)",
+    });
+  }
   const specs = await knownSpecs();
   const plans: HostPlan[] = [];
   for (const h of hosts) {

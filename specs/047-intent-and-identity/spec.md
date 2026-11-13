@@ -1,12 +1,12 @@
 # Feature Specification: Intent and identity in Git; approval by signature
 
 **Feature Branch**: `047-intent-and-identity` (committed directly to main) **Created**: 2026-11-13
-**Status**: In progress (v0.3.0: signers and signed approval) **Input**: Constitution Articles 9
-and 25. Git holds what each machine should be, who belongs, and what operators decided; hosts only
-read it. Approval is a tip of `main` signed by a fleet signer (a daily key in a passphrase-protected
-file on the operator's machine, never in an agent; a recovery key kept only in the vault), and newer
-than what the host applied. The list of signers changes only through a commit signed by a key
-already on it.
+**Status**: In progress (v0.3.0: signers and signed approval; v0.10.0: decisions in Git) **Input**:
+Constitution Articles 9 and 25. Git holds what each machine should be, who belongs, and what
+operators decided; hosts only read it. Approval is a tip of `main` signed by a fleet signer (a daily
+key in a passphrase-protected file on the operator's machine, never in an agent; a recovery key kept
+only in the vault), and newer than what the host applied. The list of signers changes only through a
+commit signed by a key already on it.
 
 ## User Scenarios & Testing _(mandatory)_
 
@@ -49,6 +49,15 @@ already on it.
   `signers add` and `signers remove` (repo tier) change `signers.ts`; `signers trust` (mutate, never
   over MCP, key typed by a person) writes the local emergency list and notifies the mailbox.
 
+- **FR-006** Operators' decisions are in Git: `fleets/<id>/hosts/<host>/decisions.ts` (a typed
+  literal in one form, checked by `archon build`), written by
+  `archon decide <opt-in> on|off [--durable|--ephemeral] --host <host>` (repo tier, never over MCP)
+  on a workstation. A decision there wins over the host's own record (`archon.sql`): the model,
+  `apply`'s unit switches, and the data class (Article 23) all follow it, so it survives a
+  re-install and the boot machine knows a host's class while it is offline. Durable to ephemeral
+  needs `--confirm-destroy <host>`, typed by a person. Turning an opt-in on or off on the host
+  itself still works and says how to record it in Git.
+
 ## Open (next versions)
 
 - Read-only deploy keys, with hosts no longer pushing (spec 048 removes `archon push` and
@@ -61,5 +70,8 @@ already on it.
 
 ## Success Criteria
 
+- **SC-002** `tests/decisions_test.ts`: `decide` writes the fixed form; the model and the data class
+  follow Git's decision with no record on any machine; durable to ephemeral needs
+  `--confirm-destroy`; a hand edit out of form fails `build`.
 - **SC-001** `tests/signers_test.ts`: a signed tip is accepted; unsigned, unknown-signer, rollback,
   and self-added signers are refused; the install checks before it runs anything.

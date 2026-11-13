@@ -59,6 +59,8 @@ class Runner {
   unreadable: string[] = [];
   /** The host being applied (for operator switches, spec 037). */
   host = "";
+  /** Its opt-in switches as the model has them (Git's decisions over local records, spec 047). */
+  optIn: Record<string, { enabled: boolean }> = {};
   constructor(readonly opts: ApplyOptions) {}
   get sandbox() {
     return !!this.opts.root;
@@ -202,6 +204,7 @@ async function applyPlan(host: HostDef, opts: ApplyOptions, _started: Date): Pro
   const plan = await planFor(host);
   const r = new Runner(opts);
   r.host = host.name;
+  r.optIn = host.optIn ?? {};
   const verb = opts.check ? "would" : "";
   // "12 installed" after a run; "12 to install" with --check.
   const n = (k: number, done: string, todo: string) => `${k} ${verb ? todo : done}`;
@@ -752,7 +755,8 @@ export async function switchOn(host: string, name: string, root = P.state): Prom
 
 async function unit(u0: UnitDef, r: Runner) {
   // An operator's switch decides between the unit's own state and "enabled" (spec 037).
-  const u: UnitDef = u0.switch && (await switchOn(r.host, u0.switch))
+  const u: UnitDef = u0.switch &&
+      (u0.switch in r.optIn ? r.optIn[u0.switch].enabled : await switchOn(r.host, u0.switch))
     ? { ...u0, state: "enabled", start: true }
     : u0;
   if (u.managed && u.content !== undefined) {
