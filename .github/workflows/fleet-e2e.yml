@@ -38,7 +38,7 @@ permissions:
 jobs:
   install:
     runs-on: ubuntu-24.04
-    # About 25 minutes; a hung VM must not hold a runner (or private minutes) for hours.
+    # About 20 minutes; a hung VM must not hold a runner (or private minutes) for hours.
     timeout-minutes: 50
     steps:
       - uses: actions/checkout@v5

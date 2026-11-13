@@ -170,7 +170,7 @@ jobs:
     with: { fleet: synthetic-uat, server: e2e-server-uat, workstation: e2e-workstation-uat }
 ```
 
-**Cost.** A run takes about 25 minutes of a Linux runner. In a private repository, that counts
+**Cost.** A run takes about 20 minutes of a Linux runner. In a private repository, that counts
 against the GitHub account's included Actions minutes (2,000 a month on the Free plan, 3,000 on
 Pro); beyond them, GitHub charges only if you set a budget above zero. So the workflow runs by hand
 and when the engine pin or the synthetic fleet changes, not on every push. Check usage under
