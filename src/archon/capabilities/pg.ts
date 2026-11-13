@@ -45,7 +45,9 @@ export const pg = (): Capability => ({ fleet, host, users }) => {
       switch: "pg",
       verify:
         // Rendered from the host's own record (spec 048): on, it runs; off, it does not.
-        on ? `systemctl is-active --quiet ${PG_UNIT}` : `! systemctl is-active --quiet ${PG_UNIT}`,
+        on
+          ? `systemctl is-active --quiet ${PG_UNIT}`
+          : `sh -c '! systemctl is-active --quiet ${PG_UNIT}'`,
       spec: SPEC,
     },
   };

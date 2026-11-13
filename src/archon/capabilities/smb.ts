@@ -66,7 +66,7 @@ export const smb = (): Capability => ({ fleet, host, users }) => {
           // Rendered from the host's own record (spec 048).
           on
             ? `systemctl is-active --quiet ${SMB.unit}`
-            : `! systemctl is-active --quiet ${SMB.unit}`,
+            : `sh -c '! systemctl is-active --quiet ${SMB.unit}'`,
         spec: SPEC,
       },
       {

@@ -53,7 +53,7 @@ export const containers = (): Capability => ({ host }) => {
           ? `sh -c 'systemctl is-active --quiet ${
             unitOfContainer(c)
           } && curl -fsS -o /dev/null --max-time 5 ${c.health}'`
-          : `! systemctl is-active --quiet ${unitOfContainer(c)}`,
+          : `sh -c '! systemctl is-active --quiet ${unitOfContainer(c)}'`,
       spec: c.spec,
     });
     if (on) {

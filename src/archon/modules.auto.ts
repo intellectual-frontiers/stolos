@@ -119,6 +119,7 @@ import "./observe/observe.ts";
 import "./observe/remote.ts";
 import "./optin/data.ts";
 import "./optin/optin.ts";
+import "./otelui/otelui.ts";
 import "./personas/mod.ts";
 import "./pg/commands.ts";
 import "./pg/config.ts";

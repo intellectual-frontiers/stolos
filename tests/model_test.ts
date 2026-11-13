@@ -302,3 +302,26 @@ Deno.test("every sysusers file is valid for systemd-sysusers (no colon in a GECO
     }
   }
 });
+
+Deno.test("048: every verify command runs without a shell's help (no bare !, &&, |, or ;)", async () => {
+  const { resolvePlan } = await import("../src/archon/model/resolve.ts");
+  const { fleet, host } = await import("./fixtures.ts");
+  for (
+    const h of [
+      host(),
+      host({ optIn: { pg: { enabled: true, by: "a", at: "t", data: "durable" } } }),
+      host({ optIn: { s3: { enabled: true, by: "a", at: "t", data: "ephemeral" } } }),
+      host({ optIn: { smb: { enabled: true, by: "a", at: "t", data: "ephemeral" } } }),
+    ]
+  ) {
+    const plan = resolvePlan(h, fleet());
+    const cmds = [
+      ...plan.units.map((u) => u.verify),
+      ...plan.checks.map((c) => c.command),
+    ].filter((c): c is string => !!c);
+    for (const c of cmds) {
+      if (/^sh -c /.test(c)) continue;
+      assert(!/^!|&&|\|\||[|;]/.test(c), `needs sh -c: ${c}`);
+    }
+  }
+});
