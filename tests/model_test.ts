@@ -312,6 +312,7 @@ Deno.test("048: every verify command runs without a shell's help (no bare !, &&,
       host({ optIn: { pg: { enabled: true, by: "a", at: "t", data: "durable" } } }),
       host({ optIn: { s3: { enabled: true, by: "a", at: "t", data: "ephemeral" } } }),
       host({ optIn: { smb: { enabled: true, by: "a", at: "t", data: "ephemeral" } } }),
+      host({ optIn: { "otel-ui": { enabled: true, by: "a", at: "t", data: "ephemeral" } } }),
     ]
   ) {
     const plan = resolvePlan(h, fleet());

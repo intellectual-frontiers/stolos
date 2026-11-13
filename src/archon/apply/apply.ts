@@ -246,6 +246,11 @@ async function applyPlan(host: HostDef, opts: ApplyOptions, _started: Date): Pro
       const { prepareS3 } = await import("../s3/s3.ts");
       await r.guard("/var/lib/archon/s3", () => prepareS3(sinkOf(r)));
     }
+    // Spec 050: the telemetry web UI's credentials (and the Collector's copy).
+    if (!r.sandbox && plan.host.optIn?.["otel-ui"]?.enabled) {
+      const { prepareOtelUi } = await import("../otelui/otelui.ts");
+      await r.guard("/var/lib/archon/otel-ui", () => prepareOtelUi(sinkOf(r)));
+    }
     const written = r.mark() - fBefore;
     r.p.done(written ? n(written, "written", "to write") : `${plan.files.length} up to date`);
   }

@@ -136,7 +136,18 @@ Deno.test("040/041: commands and tiers", async () => {
   const { COMMANDS } = await import("../src/archon/commands/registry.ts");
   const by = (n: string) => COMMANDS.find((c) => c.name === n)!;
   assertEquals(by("opt-in").tier, "read");
-  for (const n of ["fs s3 on", "fs s3 off", "pg on", "pg off", "fs smb on", "fs smb off"]) {
+  for (
+    const n of [
+      "fs s3 on",
+      "fs s3 off",
+      "pg on",
+      "pg off",
+      "fs smb on",
+      "fs smb off",
+      "otel ui on",
+      "otel ui off",
+    ]
+  ) {
     assertEquals(by(n).tier, "mutate", n);
   }
   assertEquals(by("fs s3 status").tier, "read");
@@ -147,6 +158,7 @@ Deno.test("040/041: commands and tiers", async () => {
     ["smb", "service"],
     ["pg", "service"],
     ["s3", "container"],
+    ["otel-ui", "container"],
   ]);
 });
 

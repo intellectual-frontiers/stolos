@@ -17,6 +17,8 @@ export const USER_DATA_OPT_INS: Record<string, string> = {
   pg: "PostgreSQL",
   s3: "S3",
   smb: "SMB shares",
+  // Spec 050: logs can carry what people typed or uploaded; ephemeral is the usual choice.
+  "otel-ui": "the telemetry web UI (OpenObserve)",
 };
 
 /**
@@ -28,6 +30,7 @@ export const DATA_PATHS: Record<string, string[]> = {
   pg: [],
   s3: ["/srv/s3"],
   smb: ["/srv/smb"],
+  "otel-ui": ["/srv/otel-ui"],
 };
 
 export interface DataSource {

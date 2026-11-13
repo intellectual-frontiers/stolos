@@ -7,6 +7,8 @@
 // are then forwarded, with a bounded queue on disk. Until a collector answers,
 // the file is empty and everything stays local.
 
+import { LOCAL_UI_ENDPOINT } from "../otelui/otelui.ts";
+import { OTEL_UI } from "../containers/catalog.ts";
 import { readTextOr } from "../core/fsx.ts";
 import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
@@ -24,7 +26,17 @@ export const DEFAULT_COLLECTOR_NAME = "otel.localdomain";
 
 export interface Found {
   endpoint: string;
-  source: "model" | "dns" | "boot";
+  source: "local-ui" | "model" | "dns" | "boot";
+}
+
+async function healthy(url: string): Promise<boolean> {
+  try {
+    const r = await fetch(url, { signal: AbortSignal.timeout(3000) });
+    await r.body?.cancel();
+    return r.ok;
+  } catch {
+    return false;
+  }
 }
 
 /** Does this URL accept OTLP/HTTP? (An empty export is a valid request.) */
@@ -43,9 +55,13 @@ export async function acceptsOtlp(endpoint: string): Promise<boolean> {
   }
 }
 
-export async function candidates(fleet: FleetDef, _host: HostDef): Promise<Found[]> {
+export async function candidates(fleet: FleetDef, host: HostDef): Promise<Found[]> {
   const t = fleet.telemetry ?? {};
   const out: Found[] = [];
+  // Spec 050: the telemetry web UI on this very server comes first.
+  if (host.optIn?.["otel-ui"]?.enabled) {
+    out.push({ endpoint: LOCAL_UI_ENDPOINT, source: "local-ui" });
+  }
   if (t.collector) out.push({ endpoint: t.collector, source: "model" });
   const name = t.name ?? DEFAULT_COLLECTOR_NAME;
   if ((await run(["getent", "ahostsv4", name])).ok) {
@@ -100,6 +116,11 @@ export function centralConfig(
         endpoint,
         // The boot server reads OTLP as JSON (spec 049); a real collector takes protobuf.
         ...(source === "boot" ? { encoding: "json" } : {}),
+        // The web UI on this server (spec 050): its credential comes from the
+        // Collector's environment file, never from this file.
+        ...(source === "local-ui"
+          ? { headers: { Authorization: "Basic ${env:ARCHON_OTEL_UI_AUTH}" } }
+          : {}),
         // Bounded and on disk: a collector that is down costs some space, never memory.
         sending_queue: { storage: "file_storage", queue_size: 2000 },
         retry_on_failure: { enabled: true },
@@ -131,12 +152,30 @@ export async function discover(host: HostDef, check = false): Promise<number> {
   const p = ui.phase("Collector");
   const fleet = await loadFleet();
   let found: Found | undefined;
+  const tried: Found[] = [];
   for (const c of await candidates(fleet, host)) {
     p.status(`trying ${c.endpoint} (${c.source})`);
-    if (await acceptsOtlp(c.endpoint)) {
+    tried.push(c);
+    // The web UI here needs its credential to accept OTLP: its health says it is up.
+    const up = c.source === "local-ui"
+      ? await healthy(OTEL_UI.health)
+      : await acceptsOtlp(c.endpoint);
+    if (up) {
       found = c;
       break;
     }
+  }
+  // Spec 050: the boot PC is optional. When it is the one that did not answer,
+  // say so, and how to use it, so that anyone can set it up.
+  const boot = tried.find((c) => c.source === "boot");
+  if (!found && boot) {
+    p.note(
+      `the boot PC (${boot.endpoint}) is not collecting: it does only while \`deno task boot serve\` runs on it (optional; see docs/telemetry.md)`,
+    );
+  } else if (!found && !fleet.site?.bootServer) {
+    p.note(
+      "no collector: telemetry stays on this machine (journald, PCP, Archon's OTLP files). To keep it in one place, turn on the web UI on a server (archon otel ui on --ephemeral) or run the boot PC's boot server (docs/telemetry.md)",
+    );
   }
   const want = found ? centralConfig(found.endpoint, CORE_PCP_METRICS, found.source) : "{}\n";
   if ((await readTextOr(CENTRAL.config)) !== want) {

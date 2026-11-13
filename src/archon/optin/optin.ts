@@ -85,6 +85,27 @@ export const OPT_INS: OptInDef[] = [
       ];
     },
   },
+  {
+    name: "otel-ui",
+    kind: "container",
+    title: "Telemetry web UI (OpenObserve)",
+    unit: "archon-otel-ui.service",
+    commands: {
+      on: "archon otel ui on",
+      off: "archon otel ui off",
+      status: "archon otel ui status",
+    },
+    howTo: (fleet, host) => {
+      const n = fqdn(fleet, host);
+      return [
+        `Web UI: https://otel.${
+          n ?? host.name
+        } (local networks) · sign in: archon otel ui password --show`,
+        `This server now collects the fleet's telemetry on port 4318: point otel.localdomain (router DNS) or telemetry.collector in fleet.ts at ${host.name}; servers find it within 15 minutes.`,
+        "Only telemetry from now on is forwarded; what came before stays where it was (spec 050).",
+      ];
+    },
+  },
 ];
 
 export const optInDef = (name: string) => OPT_INS.find((o) => o.name === name);

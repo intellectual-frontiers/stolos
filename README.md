@@ -61,6 +61,7 @@ From a fleet repository, `archon` finds the fleet the same way: `ARCHON_REPO` (t
 | Read                                                                           | For                                                                                                                  |
 | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
 | [docs/fleet-repository.md](docs/fleet-repository.md)                           | Your fleet repository: the pin, the lock (and why they are security), upgrading the engine, signing, troubleshooting |
+| [docs/telemetry.md](docs/telemetry.md)                                         | Logs, metrics, and traces: the headless Collector, collecting in one place, the web UI (OpenObserve), the boot PC    |
 | [docs/releasing.md](docs/releasing.md)                                         | Changing the engine: spec, version, `deno task ci`, tags, and protecting them                                        |
 | [docs/boot-machine.md](docs/boot-machine.md)                                   | The boot machine: tools, firewall, router, `boot serve`, `boot doctor`, mail, the secrets vault                      |
 | [docs/hosts.md](docs/hosts.md)                                                 | Adding, installing, and re-installing hosts                                                                          |

@@ -50,7 +50,36 @@ export const S3: ContainerDef = {
   health: "http://127.0.0.1:9300/health/ready",
 };
 
-export const CONTAINERS: ContainerDef[] = [S3];
+/**
+ * OpenObserve, the telemetry web UI (spec 050): logs, metrics, and traces in
+ * one place, OTLP in, a single node on local disk. AGPL-3.0 (fine for running
+ * it internally). Its own phone-home is off.
+ */
+export const OTEL_UI: ContainerDef = {
+  name: "otel-ui",
+  title: "Telemetry web UI (OpenObserve)",
+  spec: "050-telemetry-ui",
+  image:
+    "docker.io/openobserve/openobserve:v1.1.2@sha256:4a154849432f75c4fb024de32fe34163c02406c905dab22bf8d213d2e3386392",
+  uid: 10002,
+  ports: [{
+    host: 5080,
+    container: 5080,
+    route: "otel",
+    description: "the telemetry web UI (OpenObserve)",
+  }],
+  volumes: [{ host: "/srv/otel-ui", container: "/data" }],
+  environment: {
+    ZO_DATA_DIR: "/data",
+    ZO_HTTP_PORT: "5080",
+    ZO_TELEMETRY: "false",
+    ZO_COMPACT_DATA_RETENTION_DAYS: "14",
+  },
+  secrets: "/var/lib/archon/otel-ui/openobserve.env",
+  health: "http://127.0.0.1:5080/healthz",
+};
+
+export const CONTAINERS: ContainerDef[] = [S3, OTEL_UI];
 
 export const unitOfContainer = (c: Pick<ContainerDef, "name">) => `archon-${c.name}.service`;
 export const quadletPath = (c: Pick<ContainerDef, "name">) =>

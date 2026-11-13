@@ -1133,6 +1133,75 @@ export const COMMANDS: Command[] = [
     },
   },
   {
+    name: "otel ui on",
+    summary: "Turn on the telemetry web UI (OpenObserve) on this server; it collects for the fleet",
+    description:
+      `The telemetry web UI is an opt-in container (specs 040, 050): every server has it, masked, until an operator runs this. --durable or --ephemeral is required (Article 23, spec 044); telemetry is usually ephemeral. OpenObserve (pinned by digest) starts under Podman, unprivileged, on 127.0.0.1; Traefik serves it on the local networks at otel.<host>.<domain>; its admin password is generated here, root only (archon otel ui password --show). This server's Collector then forwards everything it collects (journald, PCP, Archon's and apps' OTLP) to it, adding the credential itself, and accepts OTLP from the local networks on 4318: point otel.localdomain (router DNS) or telemetry.collector in fleet.ts at this server and the others find it within 15 minutes. Only telemetry from then on is forwarded. Until this is on anywhere, every server keeps its own telemetry and the headless Collector works as before. See docs/telemetry.md.`,
+    tier: "mutate",
+    operation: true,
+    args: [...CHOICE_ARGS, CONFIRM_DESTROY_ARG("the host's name")],
+    async run(a, ctx) {
+      const { setOptIn } = await import("../optin/optin.ts");
+      const code = await setOptIn(ctx.hostName, "otel-ui", true, {
+        data: chooseData(a, "the telemetry the web UI keeps"),
+        confirm: a["confirm-destroy"],
+      });
+      // Forward to it at once (the discovery timer would within 15 minutes).
+      const { discover } = await import("../observe/discover.ts");
+      // A fresh load: the record just written is part of the host's model.
+      await discover(await requireHost(ctx.hostName)).catch(() => 0);
+      return code;
+    },
+  },
+  {
+    name: "otel ui off",
+    summary: "Turn off the telemetry web UI on this server (its data kept)",
+    description:
+      `Records the decision and applies it: the container stops and its unit is masked, its route leaves Traefik, the Collector stops accepting OTLP from the network and goes back to local only (or to another collector it finds). /srv/otel-ui and the credentials are kept (specs 040, 050).`,
+    tier: "mutate",
+    operation: true,
+    args: [],
+    async run(_a, ctx) {
+      const { setOptIn } = await import("../optin/optin.ts");
+      const code = await setOptIn(ctx.hostName, "otel-ui", false);
+      const { discover } = await import("../observe/discover.ts");
+      // A fresh load: the record just written is part of the host's model.
+      await discover(await requireHost(ctx.hostName)).catch(() => 0);
+      return code;
+    },
+  },
+  {
+    name: "otel ui status",
+    summary:
+      "Whether the telemetry web UI is on here, ready, where, and where this server forwards",
+    description:
+      `Read-only (spec 050): on or off, whether OpenObserve answers, its address, and the collector this server forwards to (the web UI here, telemetry.collector, otel.localdomain, the boot PC, or none). --json for tools.`,
+    tier: "read",
+    args: [],
+    async run(_a, ctx) {
+      const { otelUiStatus } = await import("../otelui/otelui.ts");
+      return await otelUiStatus(ctx.hostName, ctx.json);
+    },
+  },
+  {
+    name: "otel ui password",
+    summary: "The telemetry web UI's sign-in (the password only with --show, typed by a person)",
+    description:
+      `Prints the admin's sign-in name; with --show, its password too. The password is root only on this server; --show is typed by a person and never offered over MCP (spec 050).`,
+    tier: "mutate",
+    noMcp: true,
+    args: [{
+      name: "show",
+      type: "boolean",
+      human: true,
+      description: "Print the password (typed by a person).",
+    }],
+    async run(a) {
+      const { otelUiPassword } = await import("../otelui/otelui.ts");
+      return await otelUiPassword(!!a.show);
+    },
+  },
+  {
     name: "fs s3 on",
     summary: "Turn on S3 object storage (RustFS) on this server",
     description:

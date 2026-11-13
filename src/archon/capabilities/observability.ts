@@ -12,6 +12,7 @@
 // /var/cache/archon-otel are outside spec 016's paths), and cheap to run (the
 // Collector is niced, idle I/O, memory-capped).
 
+import { localNetworks } from "./ssh.ts";
 import type { Capability, FleetDef, HostDef, ObservabilityDef } from "../model/types.ts";
 import { header, ini } from "../render/systemd.ts";
 import { timedJob } from "./ops.ts";
@@ -81,6 +82,9 @@ export const CORE_PCP_METRICS = [
 ];
 
 /** The local Collector: Archon's OTLP in, OTLP JSON files out (JSON is valid YAML). */
+/** Spec 050: with the telemetry web UI on, this server collects for the fleet. */
+export const collectsForFleet = (host: HostDef) => host.optIn?.["otel-ui"]?.enabled === true;
+
 export function collectorConfig(host: HostDef, fleet: FleetDef, o: ObservabilityDef): string {
   const pipeline = {
     receivers: ["otlp"],
@@ -92,7 +96,9 @@ export function collectorConfig(host: HostDef, fleet: FleetDef, o: Observability
       otlp: {
         protocols: {
           grpc: { endpoint: OBSERVE.otlpGrpc },
-          http: { endpoint: OBSERVE.otlpHttp },
+          // Spec 050: the fleet's other servers send here when the web UI is on
+          // (the firewall opens 4318 to the local networks only).
+          http: { endpoint: collectsForFleet(host) ? "0.0.0.0:4318" : OBSERVE.otlpHttp },
         },
       },
     },
@@ -132,6 +138,15 @@ export const observability = (): Capability => ({ fleet, host }) => {
     spec: SPEC,
     // Ubuntu's own metrics recorder (pmcd, pmlogger, pmproxy).
     packages: [{ name: "pcp", spec: SPEC }],
+    // Spec 050: OTLP from the fleet's other servers, when this one has the web UI.
+    ports: collectsForFleet(host)
+      ? [{
+        port: 4318,
+        protocol: "tcp" as const,
+        from: localNetworks(fleet),
+        spec: "050-telemetry-ui" as const,
+      }]
+      : [],
     files: [
       {
         // journald: persistent, bounded by age and size; it also keeps 15% of
@@ -208,6 +223,8 @@ export const observability = (): Capability => ({ fleet, host }) => {
               `+/bin/sh -c 'test -s ${OBSERVE.centralConfig} || echo "{}" > ${OBSERVE.centralConfig}'`,
             ExecStart:
               `/usr/local/bin/otelcol-contrib --config=${OBSERVE.collectorConfig} --config=${OBSERVE.centralConfig}`,
+            // Spec 050: the web UI's credential, when it is on here (read by systemd as root).
+            EnvironmentFile: "-/var/lib/archon/otel-ui/collector.env",
             DynamicUser: true,
             CacheDirectory: "archon-otel",
             CacheDirectoryMode: "0755",
@@ -243,7 +260,9 @@ export const observability = (): Capability => ({ fleet, host }) => {
     ],
     notes: [
       `Ephemeral local stores: PCP archives up to ${o.metricsDays} days and ${o.metricsMaxSize}; journald up to ${o.logsRetention} and ${o.logsMaxSize}; Archon's OTLP files up to ${o.tracesDays} days and 64 MB. Below ${o.minFreePercent}% free disk, metric archives are pruned first.`,
-      "OTLP is the only protocol data leaves in; the Collector listens on 127.0.0.1 only.",
+      collectsForFleet(host)
+        ? "This server has the telemetry web UI: its Collector also accepts OTLP from the local networks (4318) and forwards everything to OpenObserve."
+        : "OTLP is the only protocol data leaves in; the Collector listens on 127.0.0.1 only.",
     ],
   };
 };
