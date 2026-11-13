@@ -1,5 +1,20 @@
 # End-to-end install test (spec 004, SC-001)
 
+Installs a blank UEFI virtual machine (Secure Boot on, Microsoft keys) from power-on to `Ready`,
+exactly as a real host is installed: UEFI network boot from `archon-boot`, Ubuntu's signed shim and
+GRUB, Ubuntu's unattended installer, then `archon first-boot`.
+
+## In CI
+
+`.github/workflows/e2e.yml` runs [`ci.sh`](ci.sh) on every push to `main` (and by hand) on a GitHub
+runner with KVM. It builds a throwaway fleet repository (`fleets/e2e`, a fresh signer, its tip
+signed), serves it and **this checkout of the engine** over HTTP on the lab bridge (so the VM runs
+the engine under test), runs the boot server from that fleet, powers on the VM, and waits for the
+boot server's event `boot.ready` (spec 049). Then it asks the VM through its MCP server
+(`archon fleet query`). The logs are the run's `e2e-logs` artifact.
+
+## By hand
+
 Installs a blank UEFI virtual machine (Secure Boot on, Microsoft keys) from power-on to its
 first-boot push, exactly as a real host is installed: UEFI HTTP Boot from `archon-boot`, Ubuntu's
 signed shim and GRUB, Ubuntu's unattended installer, then `archon first-boot`.

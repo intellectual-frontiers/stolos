@@ -1,0 +1,47 @@
+# Spec 004 SC-001 (specs 046 to 049): install a blank Secure Boot VM end to
+# end, from network boot to Ready, with the engine of this commit
+# (tests/e2e/ci.sh). Long (Ubuntu's image and a full install), so it runs on
+# pushes to main and by hand, separately from ci.yml's checks and tag.
+name: e2e
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  install:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v5
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: KVM for this runner
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' |
+            sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          ls -l /dev/kvm
+      - name: QEMU, OVMF, dnsmasq
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q qemu-system-x86 qemu-utils ovmf dnsmasq-base
+      - name: Install a VM end to end
+        run: tests/e2e/ci.sh
+      - name: Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-logs
+          path: tests/e2e/work/
+          if-no-files-found: ignore

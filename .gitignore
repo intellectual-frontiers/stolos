@@ -5,6 +5,4 @@ node_modules/
 out/
 # The engine keeps no lockfile; a fleet repository commits its own.
 deno.lock
-# Python wheels downloaded while checking things (never part of the repository).
-*.whl
 examples/.mcp.json

@@ -46,6 +46,12 @@ Constitution Articles 7, 24, 26.
   `@stolos/archon-boot/main.ts`). The host launcher and the first boot run
   `deno run -A --frozen --config /srv/archon/deno.json /srv/archon/archon.ts`. The install writes
   `/etc/archon/fleet`.
+- **FR-005a** Every engine module is named statically in the generated `src/archon/modules.auto.ts`;
+  a fleet repository's `engine.ts` (`import "@stolos/archon/modules.auto.ts";`) is cached with its
+  entry files (`deno cache --lock=deno.lock archon.ts boot.ts engine.ts`), so `deno.lock` pins every
+  module the engine may load on demand, and `--frozen` never meets an unlocked one. A fleet
+  repository that is not on GitHub (`repository.url` elsewhere) is cloned from its URL at first
+  boot.
 - **FR-006** Boot-machine secrets are per fleet: `<config>/archon/secrets/<fleet>/`.
 - **FR-007** The engine's version is `VERSION` in `src/archon/version.ts`, never in a configuration
   file. `deno task version bump` raises the minor number; every push to `main` raises it; CI
@@ -72,3 +78,6 @@ Constitution Articles 7, 24, 26.
 - **SC-001** `deno task test` passes, including `tests/engine_test.ts`; `deno task archon build`
   renders the lab.
 - **SC-002** A fleet repository pinned to a tag builds its fleet with no engine file of its own.
+- **SC-003** `.github/workflows/e2e.yml` (`tests/e2e/ci.sh`): a throwaway fleet, signed, served with
+  this checkout of the engine; a blank Secure Boot VM installs to the event `boot.ready`;
+  `archon fleet query` answers from it.

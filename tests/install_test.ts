@@ -274,3 +274,14 @@ Deno.test("a changed firewall profile reaches the running firewall (ufw reload)"
   const last = f.onChange!.at(-1)!;
   assert(last.kind === "run" && last.argv.join(" ") === "ufw reload");
 });
+
+Deno.test("046: a fleet repository not on GitHub is cloned from its URL", async () => {
+  const { fleet, host } = await import("./fixtures.ts");
+  const { firstBootScript, onGitHub } = await import("../src/archon/render/autoinstall.ts");
+  const f = fleet();
+  assert(onGitHub(f));
+  const local = { ...f, repository: { slug: "e2e/fleet", url: "http://10.77.0.1:8000/fleet.git" } };
+  assert(!onGitHub(local));
+  const s = firstBootScript(local, host());
+  assertStringIncludes(s, "git clone -q -b main http://10.77.0.1:8000/fleet.git /srv/archon");
+});

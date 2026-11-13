@@ -24,6 +24,7 @@
       "out/",
       "examples/out/",
       "src/archon/assets.auto.ts",
+      "src/archon/modules.auto.ts",
       "state/",
       ".specify/",
       "home/"
@@ -37,6 +38,7 @@
       "out/",
       "examples/out/",
       "src/archon/assets.auto.ts",
+      "src/archon/modules.auto.ts",
       "state/",
       ".specify/",
       "home/"

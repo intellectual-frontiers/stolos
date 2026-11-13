@@ -75,7 +75,11 @@ if ! command -v deno >/dev/null 2>&1; then
   rm -rf "$T"
 fi
 if [ ! -d /srv/archon/.git ]; then
-  if [ -f /etc/archon/deploy_key ]; then
+  if ${onGitHub(fleet) ? "false" : "true"}; then
+    # Spec 046: a fleet repository that is not on GitHub (the end-to-end lab
+    # serves one over HTTP): cloned from its URL.
+    git clone -q -b ${branch} ${fleet.repository.url} /srv/archon
+  elif [ -f /etc/archon/deploy_key ]; then
     GIT_SSH_COMMAND="ssh -i /etc/archon/deploy_key -o IdentitiesOnly=yes -o UserKnownHostsFile=/etc/archon/github_known_hosts" \\
       git clone -q -b ${branch} git@github.com:${fleet.repository.slug}.git /srv/archon
   else
@@ -263,4 +267,9 @@ export function userData(c: InstallContext, s: InstallSecrets): string {
 
 export function metaData(host: HostDef): string {
   return `instance-id: archon-${host.name}\nlocal-hostname: ${host.name}\n`;
+}
+
+/** Whether the fleet repository is on GitHub (else it is cloned from its URL). */
+export function onGitHub(fleet: FleetDef): boolean {
+  return /^https:\/\/github\.com\//.test(fleet.repository.url);
 }
