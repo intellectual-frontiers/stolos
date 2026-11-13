@@ -21,6 +21,23 @@ TIMEOUT_MIN=${E2E_TIMEOUT_MIN:-80}
 rm -rf "$W" && mkdir -p "$W/www" "$HERE/work"
 export ARCHON_REPO="$W/fleet" ARCHON_FLEET=e2e
 log() { echo "e2e: $*"; }
+# Whatever happens, the logs can be uploaded (QEMU writes its console as root).
+trap 'sudo chmod -R a+rX "$HERE/work" 2>/dev/null || true' EXIT
+
+# On failure: everything the boot server recorded, and what the VM says about itself.
+diagnose() {
+  echo "::group::boot.log (every event the boot server recorded)"
+  sed 's/\x1b\[[0-9;]*m//g' "$HERE/work/boot.log" || true
+  echo "::endgroup::"
+  local ip
+  ip=$(awk -v m="$MAC" '$2 == m { print $3 }' "$W/leases" 2>/dev/null | tail -n 1)
+  [ -n "$ip" ] || return 0
+  echo "::group::the VM ($ip): archon state, archon verify, its run logs"
+  local s=(ssh -i "$W/admin" -o BatchMode=yes -o ConnectTimeout=10 -o StrictHostKeyChecking=accept-new tester@"$ip")
+  "${s[@]}" 'archon state; archon verify; for f in $(ls -t /var/log/archon/*.log 2>/dev/null | head -n 3); do echo "== $f"; tail -n 80 "$f"; done' \
+    2>&1 | sed 's/\x1b\[[0-9;]*m//g' | tee "$HERE/work/vm-diagnosis.txt" || true
+  echo "::endgroup::"
+}
 
 # ------------------------------------------------------------ the lab network
 log "bridge, NAT, DHCP with the network-boot file"
@@ -127,11 +144,14 @@ while [ "$(date +%s)" -lt "$deadline" ]; do
   if grep -qs '"boot.done-with-problems"' "$EVENTS"/otlp-*.jsonl; then result=problems; break; fi
   if ! sudo kill -0 "$(sudo cat "$HERE/work/qemu.pid")" 2>/dev/null; then result=vm-stopped; break; fi
   sleep 30
-  log "$(tail -n 1 "$HERE/work/boot.log" | sed 's/\x1b\[[0-9;]*m//g')"
+  # Every event since the last look (the full log is printed on failure too).
+  n=$(wc -l <"$HERE/work/boot.log")
+  sed -n "$((${seen:-0} + 1)),${n}p" "$HERE/work/boot.log" | sed 's/\x1b\[[0-9;]*m//g'
+  seen=$n
 done
 cp -r "$EVENTS" "$HERE/work/telemetry" 2>/dev/null || true
 log "install: ${result:-timed out after $TIMEOUT_MIN minutes}"
-[ "$result" = ready ] || exit 1
+if [ "$result" != ready ]; then diagnose; exit 1; fi
 
 # ------------------------- ask the VM through its MCP server, as an operator
 ip=$(awk -v m="$MAC" '$2 == m { print $3 }' "$W/leases" | tail -n 1)
@@ -139,6 +159,9 @@ log "e2e is at $ip"
 echo "$ip e2e" | sudo tee -a /etc/hosts >/dev/null
 mkdir -p "$HOME/.ssh" && cp "$W/admin" "$HOME/.ssh/id_ed25519" && chmod 600 "$HOME/.ssh/id_ed25519"
 cd "$F"
-"${A[@]}" fleet query "select host, ok, passed, total from archon_install" | tee "$HERE/work/fleet-query.txt"
-grep -q "e2e" "$HERE/work/fleet-query.txt"
+if ! "${A[@]}" fleet query "select host, ok, passed, total from archon_install" | tee "$HERE/work/fleet-query.txt" ||
+  ! grep -q "e2e" "$HERE/work/fleet-query.txt"; then
+  diagnose
+  exit 1
+fi
 log "passed"
