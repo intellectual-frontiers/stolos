@@ -23,8 +23,13 @@ lab_init
 [ -n "${E2E_PREPARE_ONLY:-}" ] || lab_network
 
 log "fleet repository $(basename "$SRC"), fleet $FLEET, signed for this run"
-git clone -q "$SRC" "$F"
+# The repository's files at its HEAD, as a new repository: the lab needs no
+# history, and a CI checkout is shallow, which git's plain HTTP transport (how
+# the lab serves it) cannot serve.
+mkdir -p "$F"
+git -C "$SRC" archive HEAD | tar -x -C "$F"
 cd "$F"
+git init -q -b main
 git config user.name "e2e"
 git config user.email "e2e@example.invalid"
 # The pinned engine, exactly as hosts get it: every file checked against deno.lock.
