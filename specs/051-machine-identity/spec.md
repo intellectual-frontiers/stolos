@@ -28,9 +28,11 @@ becomes, and whether its disks may be erased.
   install.
 - **FR-006** `--confirm-destroy <host>` is typed by a person (never served over MCP, refused from an
   agent), must name the host, and is spent by the one install it allowed.
-- **FR-007** A machine that takes the installer image and asks for nothing within 6 minutes is named
-  (`boot.stalled`), with the likely cause (Ubuntu's network installer needs about 8 GiB of RAM) and
-  the bootstrap path.
+- **FR-007** Off by default, on with `boot serve --stall-watch`: a machine that takes the installer
+  image and asks for nothing within 6 minutes is named (`boot.stalled`), with the likely cause
+  (Ubuntu's network installer needs about 8 GiB of RAM) and the bootstrap path. It is a hint, not a
+  guarantee (it guesses the machine from DHCP leases, which an installer can change mid-install), so
+  it is not on unless asked for.
 - **FR-009** Each machine records what it is, as it reports itself (make, model, serial, CPUs,
   memory, disks, network cards), in `archon.sql` (`archon_inventory`) at first boot and whenever a
   verify finds it changed; `archon state` and `fleet status` show it. A host whose MAC its machine
@@ -49,7 +51,9 @@ becomes, and whether its disks may be erased.
 - **SC-003** The synthetic fleet's lab (`fleet.sh`): the server is added with `--mac-address`.
 - **SC-004** Both labs: `fleet query` answers `archon_inventory` for the server.
 
-## Open
+## Not built
 
-- Reading memory from the firmware's tables in GRUB, before the installer: depends on Ubuntu's
-  signed GRUB carrying its `smbios` module (to verify). The stall watch covers it until then.
+- Reading memory from the firmware's tables in GRUB, before the installer: it depends on Ubuntu's
+  signed GRUB carrying its `smbios` module, which is not verified, so it was not built. The machine
+  reports its memory to the blank-disk guard (the boot window shows it), and the first boot records
+  it.

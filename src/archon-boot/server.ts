@@ -33,6 +33,12 @@ export interface ServeOptions {
   githubApi?: string;
   /** Spec 049: every event, structured; the window and boot.log render it. */
   emit: (e: ArchonEvent) => void;
+  /**
+   * Spec 051, off by default (boot serve --stall-watch): name a machine whose
+   * installer took the image and went quiet. It guesses which machine from DHCP
+   * leases, which installers change mid-install; it is a hint, not a guarantee.
+   */
+  stallWatch?: boolean;
 }
 
 /** How long a machine's address stays tied to the host named in its Boot URI. */
@@ -110,21 +116,25 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
   // Spec 051: an installer that took the image and went quiet (too little RAM).
   // Keyed by host when known: the installer can take the image from one DHCP
   // lease and ask for its configuration from another.
-  const stalls = new StallWatch((key) => {
-    const host = key.startsWith("host:") ? key.slice(5) : installing.get(key);
-    const address = key.startsWith("host:") ? undefined : key;
-    o.emit({
-      name: "boot.stalled",
-      severity: "warn",
-      address,
-      host,
-      message: `${stallMessage(host)} (archon explain E051-INSTALLER-STALLED)`,
-      attrs: { code: "E051-INSTALLER-STALLED" },
-    });
-    if (host) {
-      installProblem(host, "the installer went quiet after taking the image (too little RAM?)");
-    }
-  });
+  const stalls = new StallWatch(
+    o.stallWatch
+      ? (key) => {
+        const host = key.startsWith("host:") ? key.slice(5) : installing.get(key);
+        const address = key.startsWith("host:") ? undefined : key;
+        o.emit({
+          name: "boot.stalled",
+          severity: "warn",
+          address,
+          host,
+          message: `${stallMessage(host)} (archon explain E051-INSTALLER-STALLED)`,
+          attrs: { code: "E051-INSTALLER-STALLED" },
+        });
+        if (host) {
+          installProblem(host, "the installer went quiet after taking the image (too little RAM?)");
+        }
+      }
+      : () => {},
+  );
   const addressHost = (from: string): string | undefined => {
     const m = byAddress.get(from);
     return m && Date.now() - m.at < BOOT_URI_MEMORY_MS ? m.host : undefined;

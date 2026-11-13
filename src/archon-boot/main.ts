@@ -210,7 +210,7 @@ async function main(args: string[]): Promise<number> {
   }
   if (cmd !== "serve") {
     console.error(
-      "usage: deno task boot serve [--address <this-pc>] [--port 8080] [--tftp-port 69 | --no-tftp]\n" +
+      "usage: deno task boot serve [--address <this-pc>] [--port 8080] [--tftp-port 69 | --no-tftp] [--stall-watch]\n" +
         "       deno task boot reinstall <host> [--force] [--confirm-destroy <host>]\n" +
         "       deno task boot arm <host> --claim | --mac-address <mac> [--confirm-destroy <host>]\n" +
         "       deno task boot retire <host> --confirm-destroy <host> [--no-push]\n" +
@@ -268,6 +268,8 @@ async function main(args: string[]): Promise<number> {
   };
   const serveOpts = {
     port,
+    // Spec 051: a hint, off unless asked for.
+    stallWatch: args.includes("--stall-watch"),
     proxy,
     caPem: caFile ? await Deno.readTextFile(caFile) : undefined,
     githubApi,

@@ -44,7 +44,9 @@ With `--claim`, that means the next unknown machine to network-boot is erased wh
 installer downloads the whole installer image (about 3 GB) into memory and runs from there. With
 less, it stalls before partitioning, with nothing on the boot server's screen after "installer image
 (whole)". (Found by the end-to-end lab: machines with 5.75 and 7 GiB stalled there; 8 GiB installs.)
-For a smaller machine, install Ubuntu by hand, then bootstrap (below).
+`deno task boot serve --stall-watch` names such a machine after 6 minutes; it is off by default,
+because it guesses the machine from DHCP leases and is a hint, not a guarantee. For a smaller
+machine, install Ubuntu by hand, then bootstrap (below).
 
 1. Start the boot server on the PC and leave it running ([boot machine](boot-machine.md)):
 

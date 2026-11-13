@@ -77,6 +77,9 @@ export interface Sandbox {
   ): Promise<{ code: number; out: string }>;
 }
 
+/** How long a command in the sandbox may run before its test fails. */
+const RUN_TIMEOUT_MS = 90_000;
+
 export async function sandbox(prefix = "archon-test-"): Promise<Sandbox> {
   const home = await Deno.makeTempDir({ prefix });
   const config = join(home, "config");
@@ -127,9 +130,26 @@ export async function sandbox(prefix = "archon-test-"): Promise<Sandbox> {
     const w = c.stdin.getWriter();
     await w.write(new TextEncoder().encode(stdin));
     await w.close();
-    const o = await c.output();
+    // A command that hangs fails its test, saying so, instead of stalling the suite.
+    let timedOut = false;
+    const timer = setTimeout(() => {
+      timedOut = true;
+      try {
+        c.kill("SIGKILL");
+      } catch { /* already gone */ }
+    }, RUN_TIMEOUT_MS);
+    const o = await c.output().finally(() => clearTimeout(timer));
     const d = new TextDecoder();
-    return { code: o.code, out: d.decode(o.stdout) + d.decode(o.stderr) };
+    const out = d.decode(o.stdout) + d.decode(o.stderr);
+    if (timedOut) {
+      return {
+        code: 124,
+        out: `${out}\n[sandbox] archon ${args.join(" ")} did not finish in ${
+          RUN_TIMEOUT_MS / 1000
+        }s: killed`,
+      };
+    }
+    return { code: o.code, out };
   };
   await probe(home, run);
   return { home, env, run };
