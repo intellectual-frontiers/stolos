@@ -83,8 +83,23 @@ export async function syncCheckout(opts: { check?: boolean } = {}): Promise<Sync
       incoming,
       head: head0,
       remote,
-      blocked: dirty ? "working tree has uncommitted changes" : "local commits not on origin/main",
+      blocked: dirty
+        ? "working tree has uncommitted changes"
+        : "origin/main does not come after this checkout (local commits, or a rollback)",
     };
+  }
+  // Spec 047 (Article 9): move only to a tip signed by a signer this host trusts.
+  const { checkTip, enforcing } = await import("../identity/signers.ts");
+  if (await enforcing()) {
+    const t = await checkTip(repo, remote, head0, undefined, isRoot() ? owner : undefined);
+    if (!t.ok) {
+      await journal(
+        "archon-approval",
+        `refused ${remote.slice(0, 10)}: ${t.reason}`,
+        "user.warning",
+      );
+      return { current: false, pulled: [], incoming, head: head0, remote, blocked: t.reason };
+    }
   }
   if (opts.check) return { current: false, pulled: [], incoming, head: head0, remote };
   const merge = await git(["merge", "--ff-only", "--quiet", `origin/${branch}`]);

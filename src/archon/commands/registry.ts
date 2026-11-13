@@ -161,6 +161,87 @@ export const COMMANDS: Command[] = [
     },
   },
   {
+    name: "signers",
+    summary: "Who may approve this fleet's changes, and your own signing setup",
+    description:
+      `Lists the fleet's signers (fleets/<fleet>/signers.ts): each one's role (daily, which approves changes; recovery, kept offline to replace a lost or stolen daily key), key, and when it was added. Then checks your own signing setup: Git signs commits with SSH, the key is protected by a passphrase, and it is not loaded in an ssh-agent (so every signature asks you, and an agent cannot approve on its own). A host applies only a tip of main signed by one of these keys (spec 047, Article 9).`,
+    tier: "read",
+    operation: true,
+    args: [],
+    async run(_a, ctx) {
+      const { signersList } = await import("../identity/signers-commands.ts");
+      return await signersList(ctx.json);
+    },
+  },
+  {
+    name: "signers add",
+    summary: "Add a signer (or replace one by name) in the fleet's signers.ts",
+    description:
+      `Writes fleets/<fleet>/signers.ts in its fixed form. --key is the public key or its .pub file. Hosts accept the new list only from a commit signed by a key already on it: commit with git commit -S and push (spec 047).`,
+    tier: "repo",
+    operation: true,
+    args: [
+      {
+        name: "name",
+        type: "string",
+        positional: true,
+        required: true,
+        description: "Signer name.",
+      },
+      { name: "role", type: "string", required: true, description: "daily or recovery." },
+      { name: "key", type: "string", required: true, description: "Public key, or a .pub file." },
+    ],
+    async run(a) {
+      const { signersAdd } = await import("../identity/signers-commands.ts");
+      return await signersAdd(a.name as string, a.role as string, a.key as string);
+    },
+  },
+  {
+    name: "signers remove",
+    summary: "Remove a signer from the fleet's signers.ts",
+    description:
+      `Removes the signer by name. Commit signed by another listed key and push; hosts stop accepting the removed key once they apply that commit (spec 047).`,
+    tier: "repo",
+    operation: true,
+    args: [
+      {
+        name: "name",
+        type: "string",
+        positional: true,
+        required: true,
+        description: "Signer name.",
+      },
+    ],
+    async run(a) {
+      const { signersRemove } = await import("../identity/signers-commands.ts");
+      return await signersRemove(a.name as string);
+    },
+  },
+  {
+    name: "signers trust",
+    summary: "Emergency: trust a signing key on this host, typed by a person here",
+    description:
+      `For when every signing key is lost: a person logged in to the host (never an agent, never over MCP) trusts a new public key in /etc/archon/allowed_signers.local, and the mailbox is told. Then add it to the fleet's signers.ts, commit signed by it, push, and remove the local file (spec 047).`,
+    tier: "mutate",
+    operation: true,
+    noMcp: true,
+    args: [
+      {
+        name: "key",
+        type: "string",
+        positional: true,
+        required: true,
+        human: true,
+        description: "The new public key, or its .pub file.",
+      },
+      { name: "name", type: "string", required: true, description: "A name for it." },
+    ],
+    async run(a) {
+      const { signersTrust } = await import("../identity/signers-commands.ts");
+      return await signersTrust(a.key as string, a.name as string);
+    },
+  },
+  {
     name: "host bootstrap",
     summary: "Finish a host whose Ubuntu was installed by hand (over SSH)",
     description:

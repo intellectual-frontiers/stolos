@@ -37,7 +37,10 @@ export class NoFleetError extends Error {
 export async function loadFleet(): Promise<FleetDef> {
   if (!(await exists(P.fleet))) throw new NoFleetError();
   const mod = await import(toFileUrl(P.fleet).href);
-  const fleet = mod.fleet as FleetDef;
+  const fleet = { ...(mod.fleet as FleetDef) };
+  // Spec 047: who may approve this fleet's changes, from fleets/<id>/signers.ts.
+  const { loadSigners } = await import("../identity/signers.ts");
+  fleet.signers = await loadSigners();
   // Spec 046-engine-instance: a fleet's folder is named after its id.
   if (fleet.id !== P.fleetId) {
     throw new Error(`fleets/${P.fleetId}/fleet.ts says id "${fleet.id}": rename one to match`);

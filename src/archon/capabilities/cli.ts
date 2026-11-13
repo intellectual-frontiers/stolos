@@ -1,5 +1,6 @@
 // 012-cli-mcp: the `archon` launcher on every host.
 
+import { ALLOWED_SIGNERS, ALLOWED_SIGNERS_LOCAL, allowedSignersText } from "../identity/signers.ts";
 import type { Capability, FileDef } from "../model/types.ts";
 import { docsFiles } from "../render/man.ts";
 import { renderEmit, SHELL_DIR, SHELLS, THEME } from "../shell/emit.ts";
@@ -52,12 +53,30 @@ export OTEL_EXPORTER_OTLP_PROTOCOL="\${OTEL_EXPORTER_OTLP_PROTOCOL:-http/json}"
 exec /usr/local/bin/deno run --allow-all --quiet --frozen --config /srv/archon/deno.json /srv/archon/archon.ts "$@"
 `;
 
-export const cli = (): Capability => () => ({
+export const cli = (): Capability => ({ host, fleet }) => ({
   spec: SPEC,
   files: [
     { path: "/usr/local/bin/archon", content: LAUNCHER, mode: "0755", owner: "root", spec: SPEC },
+    // Spec 047 (Article 9): the signers whose approval this server accepts, from
+    // the commit it applies, plus any key a person trusted here in an emergency.
+    ...(host.kind === "workstation" ? [] : [{
+      path: ALLOWED_SIGNERS,
+      content: allowedSignersText(fleet.signers ?? [], localSigners()),
+      mode: "0644",
+      owner: "root",
+      spec: "047-intent-and-identity" as const,
+    }]),
     // Man pages and fish completions from the registry (Article 6).
     ...docsFiles(),
     ...shellFiles(),
   ],
 });
+
+/** Keys a person trusted on this host in an emergency (archon signers trust). */
+function localSigners(): string {
+  try {
+    return Deno.readTextFileSync(ALLOWED_SIGNERS_LOCAL);
+  } catch {
+    return "";
+  }
+}

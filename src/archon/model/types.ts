@@ -48,6 +48,22 @@ export interface UserDef {
   spec: SpecId;
 }
 
+/**
+ * Who may approve changes to a fleet (spec 047, Article 9): a host applies only
+ * a tip of main signed by one of these keys. Kept in fleets/<id>/signers.ts,
+ * written by `archon signers`.
+ */
+export interface SignerDef {
+  /** A short name, the principal in allowed_signers ("alice-daily"). */
+  name: string;
+  /** daily: approves changes; recovery: kept offline, replaces a lost or stolen daily key. */
+  role: "daily" | "recovery";
+  /** The public key: "ssh-ed25519 AAAA..." (or sk-ssh-ed25519@openssh.com). */
+  key: string;
+  /** When it was added (ISO date). */
+  added: string;
+}
+
 export interface FleetDef {
   id: string;
   title: string;
@@ -57,6 +73,8 @@ export interface FleetDef {
   timezone: string;
   locale: string;
   keyboard: string;
+  /** Who may approve changes (spec 047): loaded from fleets/<id>/signers.ts. */
+  signers?: SignerDef[];
   /** The fleet's admin: one person, one account on every host (spec 003). */
   admin: { user: string; uid: number; github: GitHubIdentity };
   /**

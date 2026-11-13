@@ -1,7 +1,7 @@
 # Feature Specification: The engine and its fleets
 
 **Feature Branch**: `046-engine-instance` (committed directly to main) **Created**: 2026-11-13
-**Status**: In progress (v0.1.0: the split, the lab, versioning) **Input**: Make Archon a general
+**Status**: In progress (the split, the lab, versioning: v0.1.0 to v0.2.0) **Input**: Make Archon a general
 engine in a public repository (`intellectual-frontiers/stolos`) that any operator uses to manage
 fleets on any network, while each operator's fleets (their model, site, hosts, and decisions) live
 in a repository of their own (for example `shah/fleet`), which imports the engine by version.

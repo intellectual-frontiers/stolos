@@ -5,7 +5,7 @@
 import { P } from "./core/paths.ts";
 import { engineSpecs } from "./core/assets.ts";
 import { join } from "./core/path.ts";
-import { ensureDir, exists, listDirs, walkFiles, writeIfChanged } from "./core/fsx.ts";
+import { ensureDir, exists, listDirs, readTextOr, walkFiles, writeIfChanged } from "./core/fsx.ts";
 import { ui } from "./core/ui.ts";
 import { loadFleet, loadHosts, NoFleetError } from "./model/load.ts";
 import { resolvePlan } from "./model/resolve.ts";
@@ -28,6 +28,7 @@ export async function loadModel(): Promise<Model> {
   const fleet = await loadFleet();
   const hosts = await loadHosts();
   const problems = validateFleet(fleet, hosts);
+  problems.push(...(await signersFileProblems(fleet)));
   const specs = await knownSpecs();
   const plans: HostPlan[] = [];
   for (const h of hosts) {
@@ -177,4 +178,20 @@ export async function build(): Promise<boolean> {
   const names = m.hosts.map((h) => h.name).join(", ");
   p.done(`${names ? `${names} valid` : "valid, no hosts yet"} · ${n} rendered`);
   return true;
+}
+
+/** Spec 047: the signers are usable, and signers.ts is in the form archon writes. */
+async function signersFileProblems(fleet: FleetDef): Promise<Problem[]> {
+  const { signerProblems, signersFile, signersSource } = await import("./identity/signers.ts");
+  const list = fleet.signers ?? [];
+  const out: Problem[] = signerProblems(list).map((p) => ({ where: "signers", ...p }));
+  const text = await readTextOr(signersFile());
+  if (text !== undefined && text !== signersSource(list)) {
+    out.push({
+      where: "signers",
+      message: "signers.ts is not in the form archon writes",
+      fix: "change it only with archon signers add/remove (or copy that form exactly)",
+    });
+  }
+  return out;
 }

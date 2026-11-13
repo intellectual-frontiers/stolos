@@ -4,6 +4,7 @@
 // time and never reach out/ or git (Article 13). JSON is valid YAML, so the
 // config is written as JSON after the #cloud-config marker.
 
+import { allowedSignersText } from "../identity/signers.ts";
 import type { DiskDef, FleetDef, HostDef } from "../model/types.ts";
 
 const DEFAULT_DISK: DiskDef = { match: "largest", layout: "lvm" };
@@ -82,6 +83,16 @@ if [ ! -d /srv/archon/.git ]; then
     git clone -q -b ${branch} https://github.com/${fleet.repository.slug}.git /srv/archon
   fi
 fi
+# Spec 047 (Article 9): run nothing from the repository unless its tip is
+# signed by one of the fleet's signers, as listed when this host was installed.
+if ! git -C /srv/archon -c gpg.format=ssh -c gpg.ssh.program=ssh-keygen -c gpg.ssh.allowedSignersFile=/etc/archon/allowed_signers \\
+  verify-commit HEAD >/dev/null 2>&1; then
+  [ -f /etc/archon/boot-events ] && curl -fsS --noproxy "*" -m 5 -X POST -H 'content-type: application/json' \\
+    -d '{"origin":"archon","phase":"First boot","level":"fail","summary":"the repository tip is not signed by a fleet signer: nothing was run"}' \\
+    "$(cat /etc/archon/boot-events)" >/dev/null 2>&1 || true
+  echo "archon: /srv/archon HEAD is not signed by a fleet signer; refusing to run it" >&2
+  exit 1
+fi
 exec /usr/local/bin/deno run -A --quiet --frozen --config /srv/archon/deno.json /srv/archon/archon.ts first-boot --host ${host.name}
 `;
 }
@@ -100,6 +111,12 @@ export function userData(c: InstallContext, s: InstallSecrets): string {
     { path: "/etc/archon/host", content: `${host.name}\n`, permissions: "0644" },
     // Spec 046-engine-instance: which fleet of the repository this host belongs to.
     { path: "/etc/archon/fleet", content: `${fleet.id}\n`, permissions: "0644" },
+    // Spec 047: the signers this host trusts from its first boot on.
+    {
+      path: "/etc/archon/allowed_signers",
+      content: allowedSignersText(fleet.signers ?? []),
+      permissions: "0644",
+    },
     { path: "/etc/archon/github_known_hosts", content: GITHUB_KNOWN_HOSTS, permissions: "0644" },
     {
       path: "/usr/local/sbin/archon-first-boot",
