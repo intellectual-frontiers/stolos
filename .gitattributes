@@ -1,0 +1,5 @@
+# Everything in this repository is LF, on Windows boot machines too: hosts
+# read these files, and Deno writes LF.
+* text=auto eol=lf
+*.png binary
+*.efi binary

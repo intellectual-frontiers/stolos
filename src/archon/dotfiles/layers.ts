@@ -1,0 +1,230 @@
+// 031-dotfile-layers: every user's chezmoi source is composed from layers in
+// this repository, most general first:
+//
+//   home/                                    the fleet base (every user, every host)
+//   dotfiles/hosts/<host>/home/              everyone on one host
+//   dotfiles/users/<user>/home/              one user on every host
+//   dotfiles/hosts/<host>/users/<user>/home/ one user on one host
+//
+// A later layer replaces a file with the same target (~/.bashrc is the same
+// target whether its source is dot_bashrc or dot_bashrc.tmpl). The root
+// .chezmoiignore and .chezmoiremove of every layer are concatenated. `archon
+// apply` writes the composition to /var/lib/archon-dotfiles/<user> (owned by
+// root, readable by the user) and runs chezmoi from there, so chezmoi's
+// templates and data work as usual and every change goes through the repo.
+
+import { join } from "../core/path.ts";
+
+export const COMPOSED_ROOT = "/var/lib/archon-dotfiles";
+
+export type LayerKind = "fleet" | "host" | "user" | "host-user";
+
+export interface Layer {
+  kind: LayerKind;
+  /** Repository-relative directory (forward slashes). */
+  dir: string;
+}
+
+export function layersFor(host: string, user: string): Layer[] {
+  return [
+    { kind: "fleet", dir: "home" },
+    { kind: "host", dir: `dotfiles/hosts/${host}/home` },
+    { kind: "user", dir: `dotfiles/users/${user}/home` },
+    { kind: "host-user", dir: `dotfiles/hosts/${host}/users/${user}/home` },
+  ];
+}
+
+export function composedDir(user: string): string {
+  return join(COMPOSED_ROOT, user);
+}
+
+/** Root files of a layer whose contents are concatenated, not replaced. */
+const CONCATENATED = [".chezmoiignore", ".chezmoiremove"];
+
+/** Layer files that are documentation, not dotfiles. */
+const DOCS = ["README.md"];
+
+// chezmoi source-state attributes (https://www.chezmoi.io/reference/source-state-attributes/).
+const PREFIXES = [
+  "after_",
+  "before_",
+  "create_",
+  "empty_",
+  "encrypted_",
+  "exact_",
+  "executable_",
+  "external_",
+  "modify_",
+  "once_",
+  "onchange_",
+  "private_",
+  "readonly_",
+  "remove_",
+  "run_",
+  "symlink_",
+];
+
+/** The target name of one source path component ("private_dot_ssh" is ".ssh"). */
+export function targetName(component: string, isFile: boolean): string {
+  let s = component;
+  for (let again = true; again;) {
+    again = false;
+    if (s.startsWith("literal_")) return s.slice("literal_".length);
+    for (const p of PREFIXES) {
+      if (s.startsWith(p)) {
+        s = s.slice(p.length);
+        again = true;
+      }
+    }
+  }
+  if (s.startsWith("dot_")) s = "." + s.slice(4);
+  if (isFile) s = s.replace(/\.(tmpl|literal)$/, "");
+  return s;
+}
+
+/** The target path (relative to the home directory) of a source path. */
+export function targetOf(sourceRel: string): string {
+  const parts = sourceRel.split("/");
+  return parts.map((c, i) => targetName(c, i === parts.length - 1)).join("/");
+}
+
+/**
+ * Why a source file may not be in any layer, or undefined. Scripts run code
+ * at apply time, encrypted files are secrets (Article 13), externals download
+ * without a pinned checksum (Article 12), and a .chezmoiroot would point
+ * chezmoi elsewhere.
+ */
+export function forbidden(sourceRel: string): string | undefined {
+  const parts = sourceRel.split("/");
+  const top = parts[0];
+  if (top === ".chezmoiscripts") return "scripts are not allowed in dotfiles (use the model)";
+  if (top.startsWith(".chezmoiexternal")) return "externals download unpinned files (Article 12)";
+  if (top === ".chezmoiroot") return "a layer cannot move chezmoi's source";
+  for (const c of parts) {
+    if (c.startsWith("run_")) return "scripts are not allowed in dotfiles (use the model)";
+    if (c.startsWith("encrypted_") || /\.(age|asc)$/.test(c)) {
+      return "no secrets in dotfiles (Article 13)";
+    }
+  }
+  return undefined;
+}
+
+export interface ComposedFile {
+  /** Path in the composed source. */
+  source: string;
+  /** Repository-relative path it comes from. */
+  from: string;
+  layer: Layer;
+  /** Target path relative to the home directory. */
+  target: string;
+}
+
+export interface Composition {
+  layers: Layer[];
+  /** Layers that exist (have at least one file). */
+  present: Layer[];
+  files: ComposedFile[];
+  /** Concatenated special files (.chezmoiignore, .chezmoiremove) and their text. */
+  concatenated: Map<string, string>;
+  problems: string[];
+}
+
+/** Read a layer's files: repository-relative paths below its directory. */
+export type LayerReader = (dir: string) => Promise<string[]>;
+export type TextReader = (repoRel: string) => Promise<string>;
+
+/** Compose a user's source on a host from the layers (pure apart from the readers). */
+export async function compose(
+  host: string,
+  user: string,
+  list: LayerReader,
+  read: TextReader,
+): Promise<Composition> {
+  const layers = layersFor(host, user);
+  const byTarget = new Map<string, ComposedFile>();
+  // A target directory keeps the source name the most general layer gave it,
+  // so `dot_ssh` in one layer and `private_dot_ssh` in another do not collide.
+  const dirSource = new Map<string, string>([["", ""]]);
+  const concatenated = new Map<string, string>();
+  const problems: string[] = [];
+  const present: Layer[] = [];
+  for (const layer of layers) {
+    const rels = await list(layer.dir);
+    if (rels.length) present.push(layer);
+    const seen = new Map<string, string>();
+    for (const rel of rels) {
+      const from = `${layer.dir}/${rel}`;
+      if (DOCS.includes(rel)) continue;
+      if (CONCATENATED.includes(rel)) {
+        const text = await read(from);
+        concatenated.set(
+          rel,
+          (concatenated.get(rel) ?? "") +
+            `# from ${layer.dir}/${rel}\n${text.replace(/\n?$/, "\n")}`,
+        );
+        continue;
+      }
+      const why = forbidden(rel);
+      if (why) {
+        problems.push(`${from}: ${why}`);
+        continue;
+      }
+      const target = rel.startsWith(".chezmoi") ? rel : targetOf(rel);
+      const twin = seen.get(target);
+      if (twin) {
+        problems.push(`${from}: same target ~/${target} as ${layer.dir}/${twin} in the same layer`);
+        continue;
+      }
+      seen.set(target, rel);
+      const src = rel.split("/");
+      const tgt = target.split("/");
+      for (let i = 1; i < src.length; i++) {
+        const td = tgt.slice(0, i).join("/");
+        if (!dirSource.has(td)) {
+          const parent = dirSource.get(tgt.slice(0, i - 1).join("/"))!;
+          dirSource.set(td, parent ? `${parent}/${src[i - 1]}` : src[i - 1]);
+        }
+      }
+      const dir = dirSource.get(tgt.slice(0, -1).join("/"))!;
+      byTarget.set(target, {
+        source: dir ? `${dir}/${src.at(-1)}` : src.at(-1)!,
+        from,
+        layer,
+        target,
+      });
+    }
+  }
+  const files = [...byTarget.values()].sort((a, b) => a.source.localeCompare(b.source));
+  return { layers, present, files, concatenated, problems };
+}
+
+/** The composition's files as path -> repository path or literal text (for writing). */
+export function composedEntries(
+  c: Composition,
+): Array<{ path: string; from?: string; text?: string }> {
+  return [
+    ...c.files.map((f) => ({ path: f.source, from: f.from })),
+    ...[...c.concatenated].map(([path, text]) => ({ path, text })),
+  ].sort((a, b) => a.path.localeCompare(b.path));
+}
+
+/** Layer directories in the repository that name no host or no user on it. */
+export function strayLayers(
+  dirs: { hosts: string[]; users: string[]; hostUsers: Array<[string, string]> },
+  hostUsers: Map<string, string[]>,
+): string[] {
+  const allUsers = new Set([...hostUsers.values()].flat());
+  const out: string[] = [];
+  for (const h of dirs.hosts) {
+    if (!hostUsers.has(h)) out.push(`dotfiles/hosts/${h}: no host ${h} in the model`);
+  }
+  for (const u of dirs.users) {
+    if (!allUsers.has(u)) out.push(`dotfiles/users/${u}: no user ${u} on any host`);
+  }
+  for (const [h, u] of dirs.hostUsers) {
+    if (hostUsers.has(h) && !hostUsers.get(h)!.includes(u)) {
+      out.push(`dotfiles/hosts/${h}/users/${u}: ${h} has no user ${u}`);
+    }
+  }
+  return out;
+}

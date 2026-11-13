@@ -1,0 +1,180 @@
+// `archon validate` and `archon build` (spec 002): validate the fleet and
+// every host plan (TypeScript, Article 10), then render each host's files into
+// out/hosts/<host>/rootfs/. Deterministic: building twice changes nothing.
+
+import { P } from "./core/paths.ts";
+import { engineSpecs } from "./core/assets.ts";
+import { join } from "./core/path.ts";
+import { ensureDir, exists, listDirs, walkFiles, writeIfChanged } from "./core/fsx.ts";
+import { ui } from "./core/ui.ts";
+import { loadFleet, loadHosts, NoFleetError } from "./model/load.ts";
+import { resolvePlan } from "./model/resolve.ts";
+import { type Problem, validateFleet, validatePlan } from "./model/validate.ts";
+import type { FleetDef, HostDef, HostPlan } from "./model/types.ts";
+
+export interface Model {
+  fleet: FleetDef;
+  hosts: HostDef[];
+  plans: HostPlan[];
+  problems: Problem[];
+}
+
+export async function knownSpecs(): Promise<Set<string>> {
+  return new Set([...engineSpecs(), ...(await listDirs(join(P.fleetDir, "specs")))]);
+}
+
+/** Load, resolve, and validate everything. Never throws for model problems. */
+export async function loadModel(): Promise<Model> {
+  const fleet = await loadFleet();
+  const hosts = await loadHosts();
+  const problems = validateFleet(fleet, hosts);
+  const specs = await knownSpecs();
+  const plans: HostPlan[] = [];
+  for (const h of hosts) {
+    try {
+      const plan = resolvePlan(h, fleet);
+      problems.push(...validatePlan(plan, specs));
+      plans.push(plan);
+    } catch (e) {
+      problems.push({
+        where: `hosts/${h.name}`,
+        message: (e as Error).message,
+        fix: "fix the capability definitions",
+      });
+    }
+  }
+  problems.push(...await dotfileProblems(fleet, hosts));
+  return { fleet, hosts, plans, problems };
+}
+
+/**
+ * Spec 031: every dotfile layer names a host and a user in the model, and
+ * every user's composition on every host is clean (no forbidden files, no two
+ * sources for one target within a layer).
+ */
+export async function dotfileProblems(
+  fleet: FleetDef,
+  hosts: HostDef[],
+  repo = P.repo,
+): Promise<Problem[]> {
+  const { strayLayers } = await import("./dotfiles/layers.ts");
+  const { composeFrom } = await import("./dotfiles/sync.ts");
+  const { usersFor } = await import("./model/load.ts");
+  const root = join(repo, "dotfiles");
+  const hostDirs = await listDirs(join(root, "hosts"));
+  const dirs = {
+    hosts: hostDirs,
+    users: await listDirs(join(root, "users")),
+    hostUsers: (await Promise.all(
+      hostDirs.map(async (h) =>
+        (await listDirs(join(root, "hosts", h, "users"))).map((u) => [h, u] as [string, string])
+      ),
+    )).flat(),
+  };
+  const hostUsers = new Map(hosts.map((h) => [h.name, usersFor(fleet, h).map((u) => u.name)]));
+  const problems: Problem[] = strayLayers(dirs, hostUsers).map((m) => ({
+    where: m.split(":")[0],
+    message: m.slice(m.indexOf(":") + 2),
+    fix: "rename or remove the layer, or add the host or user to the model",
+  }));
+  const seen = new Set<string>();
+  for (const [h, users] of hostUsers) {
+    for (const u of users) {
+      for (const m of (await composeFrom(repo, h, u)).problems) {
+        if (seen.has(m)) continue;
+        seen.add(m);
+        problems.push({
+          where: m.split(":")[0],
+          message: m.slice(m.indexOf(":") + 2),
+          fix: "see man archon-dotfiles",
+        });
+      }
+    }
+  }
+  return problems;
+}
+
+/** Report problems through the calm UI; true when the model is valid. */
+export function report(phase: ReturnType<typeof ui.phase>, m: Model): boolean {
+  for (const p of m.problems) phase.fail(`${p.where}: ${p.message}`, p.fix);
+  return m.problems.length === 0;
+}
+
+export async function planFor(host: HostDef): Promise<HostPlan> {
+  return resolvePlan(host, await loadFleet());
+}
+
+/** Render every host's files under out/hosts/<host>/rootfs/. Returns files written. */
+export async function renderHosts(m: Model): Promise<number> {
+  let written = 0;
+  for (const plan of m.plans) {
+    const root = join(P.out, "hosts", plan.host.name, "rootfs");
+    const keep = new Set<string>();
+    for (const f of plan.files) {
+      if (f.content === undefined) continue;
+      const rel = f.path.replace(/^\//, "");
+      keep.add(rel);
+      const target = join(root, rel);
+      await ensureDir(join(target, ".."));
+      if (await writeIfChanged(target, f.content)) written++;
+    }
+    // Files no longer in the plan are removed from out/ (rendered output only).
+    if (await exists(root)) {
+      for (const rel of await walkFiles(root)) {
+        if (!keep.has(rel)) {
+          await Deno.remove(join(root, rel));
+          written++;
+        }
+      }
+    }
+  }
+  return written;
+}
+
+/**
+ * Files generated from the registry and the model (spec 012): man pages under
+ * out/<fleet>/man, and .mcp.json (spec 030), one MCP server per server host.
+ */
+export async function renderRepoFiles(m?: Model): Promise<number> {
+  const { renderManPages } = await import("./render/man.ts");
+  const { mcpServers, renderMcpJson } = await import("./render/agent.ts");
+  const servers = m ? mcpServers(m.hosts) : [];
+  let written = 0;
+  for (const [rel, content] of renderManPages()) {
+    const target = join(P.man, rel);
+    await ensureDir(join(target, ".."));
+    if (await writeIfChanged(target, content)) written++;
+  }
+  if (await writeIfChanged(P.mcpJson, renderMcpJson(servers))) written++;
+  return written;
+}
+
+/** Spec 028: the network reference, from the site model, under out/site/. */
+export async function renderSite(m: Model): Promise<number> {
+  if (!m.fleet.site) return 0;
+  const { renderNetworkDoc } = await import("./render/network-doc.ts");
+  const html = renderNetworkDoc(m.fleet.site, m.hosts, {});
+  return (await writeIfChanged(join(P.out, "site", "network-reference.html"), html)) ? 1 : 0;
+}
+
+export async function build(): Promise<boolean> {
+  const p = ui.phase("Model");
+  let m: Model;
+  try {
+    m = await loadModel();
+  } catch (e) {
+    if (!(e instanceof NoFleetError)) throw e;
+    // A fresh repository: the registry's files still render.
+    const n = await renderRepoFiles();
+    p.done(`no fleet yet (archon fleet init) · ${n} repository file(s) rendered`);
+    return true;
+  }
+  if (!report(p, m)) {
+    p.done(`${m.problems.length} problem(s); nothing rendered`);
+    return false;
+  }
+  const n = (await renderHosts(m)) + (await renderRepoFiles(m)) + (await renderSite(m));
+  const names = m.hosts.map((h) => h.name).join(", ");
+  p.done(`${names ? `${names} valid` : "valid, no hosts yet"} · ${n} rendered`);
+  return true;
+}

@@ -1,0 +1,14 @@
+# Managed by chezmoi from /srv/archon (spec 011-shell). Do not edit here.
+[user]
+	name = {{ .archon.fullName }}
+{{- if .archon.email }}
+	email = {{ .archon.email }}
+{{- end }}
+[init]
+	defaultBranch = main
+[pull]
+	ff = only
+[push]
+	autoSetupRemote = true
+[core]
+	sharedRepository = group

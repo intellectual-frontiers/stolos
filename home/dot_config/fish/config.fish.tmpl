@@ -1,0 +1,12 @@
+# Managed by chezmoi from /srv/archon (specs 011, 036). Do not edit here: change
+# home/dot_config/fish/config.fish.tmpl in the repository, or a layer of your own
+# (man archon-dotfiles). This machine only: ~/.config/fish/local.fish.
+
+fish_add_path --global /usr/local/bin
+
+# Spec 036: Archon's shell features (modern ls, cat, tree; fzf keys; zoxide; the
+# prompt; titles). Without this line, fish has its own defaults only.
+command --query archon; and archon shell emit fish | source
+
+# Spec 031: this machine's own tweaks, never managed by archon (man archon-dotfiles).
+test -r ~/.config/fish/local.fish; and source ~/.config/fish/local.fish

@@ -1,0 +1,38 @@
+# ~/.bashrc: managed by chezmoi from /srv/archon (specs 011, 036).
+# Do not edit here: change home/dot_bashrc.tmpl in the repository, or a layer of
+# your own (man archon-dotfiles). This machine only: ~/.bashrc.local.
+
+# Non-interactive shells (scp, automation, an agent's shell tool) stop here.
+case $- in
+  *i*) ;;
+  *) return ;;
+esac
+
+# Ubuntu's own defaults.
+HISTCONTROL=ignoreboth
+HISTSIZE=10000
+HISTFILESIZE=20000
+shopt -s histappend checkwinsize
+[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+if [ -f /usr/share/bash-completion/bash_completion ]; then
+  . /usr/share/bash-completion/bash_completion
+fi
+PS1='\u@\h:\w\$ '
+alias ls='ls --color=auto'
+alias grep='grep --color=auto'
+{{- if .archon.features.fish }}
+
+# Spec 011: bash stays the login shell; fish (the fish developers' PPA, spec 010) is the interactive shell.
+# Set ARCHON_NO_FISH=1 to stay in bash.
+if [ -z "${ARCHON_NO_FISH:-}" ] && [ -t 0 ] && [ -x /usr/bin/fish ] && [ "${SHLVL:-1}" = 1 ]; then
+  # $SHELL names the shell you work in, so tmux and editors open fish too.
+  SHELL=/usr/bin/fish exec /usr/bin/fish --login
+fi
+{{- end }}
+
+# Spec 036: Archon's shell features (modern ls, cat, tree; fzf keys; zoxide; the
+# prompt; titles). Without this line, bash has Ubuntu's defaults only.
+command -v archon >/dev/null 2>&1 && eval "$(archon shell emit bash)"
+
+# Spec 031: this machine's own tweaks, never managed by archon (man archon-dotfiles).
+[ -r "$HOME/.bashrc.local" ] && . "$HOME/.bashrc.local"

@@ -1,0 +1,63 @@
+-- ~/.psqlrc: the fleet's psql settings (spec 038-pg, home/dot_psqlrc).
+-- Change it in the repository (man archon-dotfiles), not here.
+\set QUIET 1
+
+-- Tables: unicode borders, NULL shown as ∅.
+\pset linestyle unicode
+\pset border 2
+\pset null '∅'
+-- A typo inside a transaction does not lose the transaction (interactive only).
+\set ON_ERROR_ROLLBACK interactive
+\set COMP_KEYWORD_CASE upper
+\set HISTCONTROL ignoredups
+\set HISTFILE ~/.psql_history- :DBNAME
+
+-- Facts for the prompt, from the server: the instance (Archon sets archon.instance,
+-- archon.environment, archon.protected) and whether you are a superuser. Colors are
+-- wrapped in readline's invisible markers (chr(1), chr(2)) so line editing stays right.
+\if :{?SERVICE}
+\else
+\set SERVICE ''
+\endif
+WITH f AS (
+  SELECT
+    coalesce(nullif(:'SERVICE', ''), nullif(current_setting('archon.instance', true), ''),
+             nullif(current_setting('cluster_name', true), ''), 'postgres') AS service,
+    coalesce(nullif(current_setting('archon.environment', true), ''), 'unmanaged') AS env,
+    coalesce(current_setting('archon.protected', true), 'off') = 'on' AS protected,
+    coalesce((SELECT rolsuper FROM pg_roles WHERE rolname = current_user), false) AS super
+), c AS (
+  SELECT f.*,
+    chr(1) || chr(27) || '[0m' || chr(2) AS off,
+    chr(1) || chr(27) || '[1;31m' || chr(2) AS red
+  FROM f
+)
+SELECT
+  service AS archon_service,
+  env AS archon_env,
+  protected AS archon_protected,
+  chr(1) || chr(27) || '[1;36m' || chr(2) || service || off || ' · ' ||
+    chr(1) || chr(27) || CASE env WHEN 'production' THEN '[1;31m' WHEN 'staging' THEN '[1;33m'
+                                   ELSE '[1;32m' END || chr(2) || env || off ||
+    CASE WHEN protected THEN ' ' || red || '🔒 protected' || off ELSE '' END AS archon_head,
+  CASE WHEN super THEN red ELSE chr(1) || chr(27) || '[1;32m' || chr(2) END || '❯' || off AS archon_arrow,
+  chr(27) || '[1;31m⚠  ' || service || ' is protected (' || env ||
+    '): AUTOCOMMIT is off. Nothing is saved until you type COMMIT; ROLLBACK undoes it.' || chr(27) || '[0m'
+    AS archon_warning
+FROM c
+\gset
+
+\if :archon_protected
+-- A protected database: nothing is saved until you type COMMIT.
+\set AUTOCOMMIT off
+\echo :archon_warning
+\endif
+
+-- Line 1: instance · environment (protected) · role@database · host:port · backend PID,
+-- then * while a transaction is open (! after an error in it).
+-- Line 2: the arrow, red for a superuser.
+\set PROMPT1 '%:archon_head: · %[%033[33m%]%n%[%033[0m%]@%[%033[1;34m%]%/%[%033[0m%] · %M:%> · pid %p%[%033[1;31m%]%x%[%033[0m%]\n%:archon_arrow: '
+\set PROMPT2 '%:archon_arrow: %R '
+
+\timing on
+\set QUIET 0

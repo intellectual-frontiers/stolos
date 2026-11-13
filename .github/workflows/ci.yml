@@ -1,0 +1,71 @@
+# Spec 046-engine-instance: every push and pull request is checked; every push
+# to main must raise the version in src/archon/version.ts, and is tagged
+# v<version> so fleets can pin @stolos/ to it (raw GitHub URLs need a tag).
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Generated files are fresh
+        run: deno run -A tools/gen-assets.ts --check
+      - name: Types
+        run: deno task check
+      - name: Lint
+        run: deno lint
+      - name: Format
+        run: deno fmt --check
+      - name: Tests
+        run: deno task test
+      - name: The version was raised (push to main)
+        if: github.event_name == 'push'
+        run: |
+          if git rev-parse -q --verify HEAD^ >/dev/null; then
+            deno task version check HEAD^
+          else
+            deno task version show
+          fi
+      - name: The version is newer than main (pull request)
+        if: github.event_name == 'pull_request'
+        run: deno task version check origin/${{ github.base_ref }}
+
+  tag:
+    needs: check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Tag v<version>
+        run: |
+          TAG="v$(deno run -A tools/version.ts show)"
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            if [ "$(git rev-list -n 1 "$TAG")" = "$(git rev-parse HEAD)" ]; then
+              echo "$TAG already tags this commit"
+            else
+              echo "::error::$TAG already tags another commit: raise the version" && exit 1
+            fi
+          else
+            git tag "$TAG"
+            git push origin "$TAG"
+          fi

@@ -1,0 +1,10 @@
+README.md
+{{- if not .archon.features.fish }}
+.config/fish
+{{- end }}
+{{- if not .archon.features.tmux }}
+.config/tmux
+{{- end }}
+{{- if not .archon.features.devTools }}
+.gitconfig
+{{- end }}
