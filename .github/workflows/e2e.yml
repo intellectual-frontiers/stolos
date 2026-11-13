@@ -52,5 +52,6 @@ jobs:
             !tests/e2e/work/*.qcow2
             !tests/e2e/work/*.fd
             !tests/e2e/work/*.iso
+            !tests/e2e/work/*.sock
           if-no-files-found: ignore
           retention-days: 14

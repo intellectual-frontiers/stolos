@@ -90,5 +90,6 @@ jobs:
             !stolos/tests/e2e/work/*.qcow2
             !stolos/tests/e2e/work/*.fd
             !stolos/tests/e2e/work/*.iso
+            !stolos/tests/e2e/work/*.sock
           if-no-files-found: ignore
           retention-days: 14

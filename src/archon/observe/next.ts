@@ -48,7 +48,7 @@ export function nextSteps(o: NextOptions): string[] {
   }
   if (server) {
     lines.push(
-      `agent     from a workstation's checkout: your MCP client   (server archon-${name}, over ssh ops@${name}; spec 030)`,
+      `agent     from a workstation's checkout: your MCP client   (server archon-${o.fleet.id}-${name}, over ssh ops@${name}; spec 030)`,
     );
   }
   return lines;

@@ -32,8 +32,9 @@ lab_init() {
 }
 
 # The address a host's last event came from (an installer had another lease).
+# (Never fails: an empty answer means none yet; set -e would end the run.)
 server_ip() {
-  plain <"$OUT/boot.log" | grep -E " $SERVER " | grep -oE '10\.77\.0\.[0-9]+' | tail -n 1
+  { plain <"$OUT/boot.log" | grep -E " $SERVER " | grep -oE '10\.77\.0\.[0-9]+' | tail -n 1; } || true
 }
 
 ssh_to() { # ssh_to <user@address> <command>
@@ -143,6 +144,7 @@ check_trace() {
 query_from_runner() {
   local ip
   ip=$(server_ip)
+  [ -n "$ip" ] || fail "no address for $SERVER in the boot log"
   log "$SERVER is at $ip"
   echo "$ip $SERVER" | sudo tee -a /etc/hosts >/dev/null
   mkdir -p "$HOME/.ssh" && cp "$W/admin" "$HOME/.ssh/id_ed25519" && chmod 600 "$HOME/.ssh/id_ed25519"
@@ -177,7 +179,7 @@ workstation_stage() {
   sudo "$HERE/ws-vm.sh" "$ADMIN" "$W/admin.pub"
   local ip="" s
   for _ in $(seq 90); do
-    ip=$(grep -i "$WS_MAC" "$W/leases" 2>/dev/null | awk '{print $3}' | tail -n 1)
+    ip=$({ grep -i "$WS_MAC" "$W/leases" 2>/dev/null || true; } | awk '{print $3}' | tail -n 1)
     [ -n "$ip" ] && ssh_to "$ADMIN@$ip" true 2>/dev/null && break
     sleep 5
   done
