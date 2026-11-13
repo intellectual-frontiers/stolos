@@ -1515,13 +1515,17 @@ export const COMMANDS: Command[] = [
     name: "reboot",
     summary: "Reboot this host; --netboot boots it from the network once (for a re-install)",
     description:
-      `Reboots in 5 seconds, so it can be run over SSH. With --netboot it first sets the firmware's one-time next boot (UEFI BootNext) to the network entry the install recorded (/etc/archon/netboot-entry), or the first PXE/HTTP IPv4 entry, so the boot server can re-install an armed host without anyone at the console; the boot order itself is unchanged. deno task boot reinstall <host> runs this for you (spec 004).`,
+      `Waits until nothing changes packages (apt, dpkg, unattended-upgrades: up to 15 minutes; --now does not wait, spec 054), then reboots in 5 seconds, so it can be run over SSH. With --netboot it first sets the firmware's one-time next boot (UEFI BootNext) to the network entry the install recorded (/etc/archon/netboot-entry), or the first PXE/HTTP IPv4 entry, so the boot server can re-install an armed host without anyone at the console; the boot order itself is unchanged. deno task boot reinstall <host> runs this for you (spec 004).`,
     tier: "mutate",
     operation: true,
     args: [{
       name: "netboot",
       type: "boolean",
       description: "Boot from the network once (the boot server re-installs it if armed).",
+    }, {
+      name: "now",
+      type: "boolean",
+      description: "Do not wait for apt or dpkg to finish (it can break dpkg's state).",
     }],
     examples: [{
       cmd: "archon reboot --netboot",
@@ -1529,7 +1533,25 @@ export const COMMANDS: Command[] = [
     }],
     async run(a) {
       const { reboot } = await import("../install/netboot.ts");
-      return await reboot({ netboot: !!a.netboot });
+      return await reboot({ netboot: !!a.netboot, now: !!a.now });
+    },
+  },
+  {
+    name: "poweroff",
+    summary: "Shut this host down cleanly, after apt and dpkg finish",
+    description:
+      `Waits until nothing changes packages (apt, dpkg, unattended-upgrades: up to 15 minutes, saying what it waits for), then shuts down cleanly in 5 seconds, so it can be run over SSH. Cutting the power while apt runs can break dpkg's state; this is the way to turn a server off (spec 054). --now does not wait.`,
+    tier: "mutate",
+    operation: true,
+    args: [{
+      name: "now",
+      type: "boolean",
+      description: "Do not wait for apt or dpkg to finish (it can break dpkg's state).",
+    }],
+    examples: [{ cmd: "archon poweroff", text: "Turn this server off, cleanly." }],
+    async run(a) {
+      const { reboot } = await import("../install/netboot.ts");
+      return await reboot({ netboot: false, now: !!a.now, poweroff: true });
     },
   },
   {

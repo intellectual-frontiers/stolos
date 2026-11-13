@@ -57,6 +57,16 @@ export async function stateCommand(hostName: string, json: boolean): Promise<num
       : "no install record (installed by hand, or before spec 048)",
   );
   if (s.inventory) p.note(`machine: ${describeInventory(s.inventory)}`);
+  // Spec 054: say so while packages change (powering off now can break dpkg).
+  const { packagesBusy } = await import("../install/apt-busy.ts");
+  const busy = await packagesBusy();
+  if (busy.length) {
+    p.warn(
+      `${busy.join(", ")} is changing packages now: do not power this machine off`,
+      "wait for it, or turn it off with archon poweroff (it waits for apt)",
+      "E009-APT-BUSY",
+    );
+  }
   if (s.verify) {
     p.note(
       `verify: ${s.verify.passed}/${s.verify.total} checks since ${

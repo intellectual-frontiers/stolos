@@ -34,7 +34,50 @@ export function pickNetbootEntry(entries: BootEntry[], recorded?: string): BootE
     net.find((e) => /IPv4|IP4/i.test(e.label)) ?? net[0];
 }
 
-export async function reboot(opts: { netboot: boolean }): Promise<number> {
+export async function reboot(
+  opts: { netboot: boolean; now?: boolean; poweroff?: boolean },
+): Promise<number> {
+  // Spec 054: never in the middle of apt or dpkg (it can break dpkg's state).
+  if (!opts.now) {
+    const w = ui.phase("Packages");
+    const { waitForPackages } = await import("./apt-busy.ts");
+    const quiet = await waitForPackages((what, s) =>
+      w.status(`waiting for ${what.join(", ")} to finish (${s}s; Ctrl+C is safe)`)
+    );
+    if (!quiet) {
+      w.fail(
+        "apt or dpkg is still changing packages after 15 minutes",
+        `see what it does: journalctl -u unattended-upgrades -u apt-daily-upgrade -f; then run it again (or --now, if you accept the risk to dpkg's state)`,
+        "E009-APT-BUSY",
+      );
+      return 1;
+    }
+    w.done("nothing is changing packages");
+  }
+  if (opts.poweroff) {
+    const p = ui.phase("Power off");
+    const { notify } = await import("../notify/events.ts");
+    await notify({
+      event: "⏻ powering off",
+      level: "warn",
+      what: "archon poweroff: this host is shutting down; it stays off until someone powers it on.",
+      key: `poweroff:${new Date().toISOString().slice(0, 16)}`,
+    });
+    const r = await run([
+      "systemd-run",
+      "--quiet",
+      "--on-active=5",
+      "--timer-property=AccuracySec=1s",
+      "systemctl",
+      "poweroff",
+    ]);
+    if (!r.ok) {
+      p.fail(`could not schedule the power-off: ${(r.stderr || r.stdout).trim()}`);
+      return 1;
+    }
+    p.done("powering off in 5s (a clean shutdown)");
+    return 0;
+  }
   const p = ui.phase("Reboot");
   if (opts.netboot) {
     const list = await run(["efibootmgr"]);

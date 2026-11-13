@@ -92,6 +92,7 @@ import "./guide/where.ts";
 import "./identity/fleet-init.ts";
 import "./identity/signers-commands.ts";
 import "./identity/signers.ts";
+import "./install/apt-busy.ts";
 import "./install/first-boot.ts";
 import "./install/host-add.ts";
 import "./install/host-bootstrap.ts";
