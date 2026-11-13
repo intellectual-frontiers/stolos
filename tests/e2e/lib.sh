@@ -91,7 +91,7 @@ lab_network() {
     --log-dhcp --log-facility="$OUT/dnsmasq.log" --pid-file="$W/dnsmasq.pid"
   # $W/www over HTTP on the bridge: the fleet repository, and (ci.sh) the engine.
   deno run -A "$HERE/serve.ts" "$W/www" $BR 8000 >"$OUT/http.log" 2>&1 &
-  for _ in $(seq 50); do curl -fsS -o /dev/null "http://$BR:8000/" && break; sleep 0.2; done
+  for _ in $(seq 50); do curl -s -o /dev/null "http://$BR:8000/" && break; sleep 0.2; done
 }
 
 # Commit the working copy, signed with this run's key, and serve it to the hosts.

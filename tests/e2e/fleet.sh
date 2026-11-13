@@ -9,7 +9,7 @@
 # http://10.77.0.1:8000/fleet.git, its server's host.ts has mac
 # 52:54:00:12:34:56, and its fleet.ts holds its admin's key as
 #   const E2E_ADMIN_KEY = "ssh-ed25519 ...";
-# which this run replaces with its own (the private half never exists
+# (deno fmt may wrap it) which this run replaces with its own (the private half never exists
 # anywhere else). This run also adds its own signer, the admin password's
 # hash, and the server's host keys (archon host add), all thrown away after.
 . "$(cd "$(dirname "$0")" && pwd)/lib.sh"
@@ -18,7 +18,9 @@ FLEET=$2 SERVER=$3 WS=${4:-}
 F="$W/fleet"
 export ARCHON_REPO="$F" ARCHON_FLEET=$FLEET
 lab_init
-lab_network
+# E2E_PREPARE_ONLY=1: everything up to the machines (no root, no KVM), to try
+# a fleet repository's synthetic fleet on any Linux machine.
+[ -n "${E2E_PREPARE_ONLY:-}" ] || lab_network
 
 log "fleet repository $(basename "$SRC"), fleet $FLEET, signed for this run"
 git clone -q "$SRC" "$F"
@@ -29,8 +31,10 @@ git config user.email "e2e@example.invalid"
 deno cache --frozen --allow-import archon.ts boot.ts engine.ts >/dev/null ||
   { log "the engine does not match deno.lock"; exit 1; }
 FT="fleets/$FLEET/fleet.ts"
-grep -q '^const E2E_ADMIN_KEY = ".*";$' "$FT" || { log "$FT has no E2E_ADMIN_KEY line"; exit 1; }
-sed -i "s|^const E2E_ADMIN_KEY = \".*\";\$|const E2E_ADMIN_KEY = \"$(cut -d' ' -f1,2 "$W/admin.pub")\";|" "$FT"
+# Its value, however deno fmt wrapped the line.
+grep -Pzoq 'const E2E_ADMIN_KEY =\s*"[^"]*";' "$FT" || { log "$FT has no const E2E_ADMIN_KEY = \"...\";"; exit 1; }
+KEY="$(cut -d' ' -f1,2 "$W/admin.pub")" perl -0pi -e 's/(const E2E_ADMIN_KEY =\s*)"[^"]*";/$1"$ENV{KEY}";/' "$FT"
+grep -q "$(cut -d' ' -f2 "$W/admin.pub")" "$FT" || { log "could not set E2E_ADMIN_KEY in $FT"; exit 1; }
 ADMIN=$(grep -oE 'user: "[a-z_][a-z0-9_-]*"' "$FT" | head -n 1 | cut -d'"' -f2)
 A=(deno run -A --frozen archon.ts --fleet "$FLEET")
 "${A[@]}" signers add e2e-run --role daily --key "$W/signer.pub"
@@ -41,4 +45,5 @@ chmod 600 "$HOME/.config/archon/secrets/$FLEET/admin-password.hash"
 "${A[@]}" build
 cd "$HERE"
 publish_fleet
+if [ -n "${E2E_PREPARE_ONLY:-}" ]; then log "prepared (E2E_PREPARE_ONLY): $W/www/fleet.git"; exit 0; fi
 run_lab
