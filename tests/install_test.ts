@@ -285,3 +285,30 @@ Deno.test("046: a fleet repository not on GitHub is cloned from its URL", async 
   const s = firstBootScript(local, host());
   assertStringIncludes(s, "git clone -q -b main http://10.77.0.1:8000/fleet.git /srv/archon");
 });
+
+Deno.test("049: the first boot continues the install's trace, reported to the boot server", async () => {
+  const { fleet, host } = await import("./fixtures.ts");
+  const { firstBootScript, firstBootTelemetry, userData } = await import(
+    "../src/archon/render/autoinstall.ts"
+  );
+  const tp = "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01";
+  const env = firstBootTelemetry({
+    fleet: fleet(),
+    host: host(),
+    base: "http://10.0.1.157:8080/install/alpha/tok/",
+    traceparent: tp,
+  });
+  assertStringIncludes(env, "OTEL_EXPORTER_OTLP_ENDPOINT=http://10.0.1.157:8080/otlp\n");
+  assertStringIncludes(env, "OTEL_EXPORTER_OTLP_PROTOCOL=http/json\n");
+  assertStringIncludes(env, `TRACEPARENT=${tp}\n`);
+  const s = firstBootScript(fleet(), host());
+  assert(
+    s.indexOf(". /etc/archon/first-boot.env") < s.indexOf("exec /usr/local/bin/deno"),
+    "the environment is read before archon runs",
+  );
+  const ud = userData(
+    { fleet: fleet(), host: host(), base: "http://10.0.1.157:8080/i/", traceparent: tp } as never,
+    {} as never,
+  );
+  assertStringIncludes(ud, "/etc/archon/first-boot.env");
+});

@@ -35,6 +35,25 @@ export interface InstallContext {
   githubApi?: string;
   /** The MAC of the NIC the machine network-booted from, as GRUB reported it. */
   bootMac?: string;
+  /** Spec 049: the boot server's install trace, which the first boot continues. */
+  traceparent?: string;
+}
+
+/**
+ * Spec 049: the first boot reports its spans to the boot server (the one
+ * collector sure to be there), in the install's trace: /etc/archon/first-boot.env.
+ */
+export function firstBootTelemetry(c: Pick<InstallContext, "base" | "traceparent" | "fleet" | "host">): string {
+  const origin = new URL(c.base).origin;
+  return [
+    "# Written by archon-boot (spec 049): the first boot's telemetry, to the boot server.",
+    "OTEL_DENO=true",
+    "OTEL_SERVICE_NAME=archon",
+    "OTEL_EXPORTER_OTLP_PROTOCOL=http/json",
+    `OTEL_EXPORTER_OTLP_ENDPOINT=${origin}/otlp`,
+    `OTEL_RESOURCE_ATTRIBUTES=service.namespace=${c.fleet.id},host.name=${c.host.name}`,
+    ...(c.traceparent ? [`TRACEPARENT=${c.traceparent}`] : []),
+  ].join("\n") + "\n";
 }
 
 /** GitHub's published SSH host keys (https://api.github.com/meta), for the first clone. */
@@ -97,6 +116,8 @@ if ! git -C /srv/archon -c gpg.format=ssh -c gpg.ssh.program=ssh-keygen -c gpg.s
   echo "archon: /srv/archon HEAD is not signed by a fleet signer; refusing to run it" >&2
   exit 1
 fi
+# Spec 049: the first boot continues the install's trace, reported to the boot server.
+if [ -f /etc/archon/first-boot.env ]; then set -a; . /etc/archon/first-boot.env; set +a; fi
 exec /usr/local/bin/deno run -A --quiet --frozen --config /srv/archon/deno.json /srv/archon/archon.ts first-boot --host ${host.name}
 `;
 }
@@ -115,6 +136,7 @@ export function userData(c: InstallContext, s: InstallSecrets): string {
     { path: "/etc/archon/host", content: `${host.name}\n`, permissions: "0644" },
     // Spec 046-engine-instance: which fleet of the repository this host belongs to.
     { path: "/etc/archon/fleet", content: `${fleet.id}\n`, permissions: "0644" },
+    { path: "/etc/archon/first-boot.env", content: firstBootTelemetry(c), permissions: "0644" },
     // Spec 047: the signers this host trusts from its first boot on.
     {
       path: "/etc/archon/allowed_signers",

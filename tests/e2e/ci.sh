@@ -131,7 +131,10 @@ cd "$ENGINE"
 
 # ------------------------------------------------- boot server, then the VM
 log "boot server (downloads Ubuntu's boot files and image on its first run)"
-(cd "$F" && exec deno run -A --frozen boot.ts serve --port 8080) >"$HERE/work/boot.log" 2>&1 &
+# With OpenTelemetry on, as a fleet repository's `deno task boot` runs it (spec 049).
+(cd "$F" && OTEL_DENO=true OTEL_SERVICE_NAME=archon-boot OTEL_EXPORTER_OTLP_PROTOCOL=http/json \
+  OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:4319 exec deno run -A --frozen boot.ts serve --port 8080) \
+  >"$HERE/work/boot.log" 2>&1 &
 for _ in $(seq 600); do curl -fsS -o /dev/null "http://$BR:8080/health" && break; sleep 2; done
 curl -fsS "http://$BR:8080/health"
 log "blank VM, Secure Boot on, network boot"
@@ -154,6 +157,17 @@ done
 cp -r "$EVENTS" "$HERE/work/telemetry" 2>/dev/null || true
 log "install: ${result:-timed out after $TIMEOUT_MIN minutes}"
 if [ "$result" != ready ]; then diagnose; exit 1; fi
+
+# ----------------------------- the install is one trace, boot server to host
+# Spec 049: the boot server's "install e2e" trace, continued by the host's first boot.
+TEL="$HOME/.local/share/archon/boot/telemetry"
+sleep 10 # the last batches
+if ! deno run -A "$HERE/trace.ts" "$TEL" e2e; then
+  log "the host's first boot did not continue the install's trace"
+  diagnose
+  exit 1
+fi
+log "the host's first boot continued the install's trace"
 
 # ------------------------- ask the VM through its MCP server, as an operator
 ip=$(sed 's/\x1b\[[0-9;]*m//g' "$HERE/work/boot.log" | grep -E ' e2e ' | grep -oE '10\.77\.0\.[0-9]+' | tail -n 1)

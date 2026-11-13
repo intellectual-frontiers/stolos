@@ -140,6 +140,7 @@ type Attrs = Record<string, string | number | boolean>;
 interface Span {
   setAttribute(k: string, v: string | number | boolean): void;
   setStatus(s: { code: number }): void;
+  spanContext(): { traceId: string; spanId: string; traceFlags: number };
   end(): void;
 }
 interface Api {
@@ -197,6 +198,18 @@ export function installStep(host: string, step: string, attrs: Attrs = {}): void
   i.step?.end();
   i.stepName = step;
   i.step = tracer.startSpan(step, { attributes: { "host.name": host, ...attrs } }, i.ctx);
+}
+
+/**
+ * Spec 049: the install's trace, as a W3C traceparent, for the host's first boot
+ * to continue (undefined when telemetry is off or no install is under way).
+ */
+export function installTraceparent(host: string): string | undefined {
+  const i = installs.get(host);
+  if (!i) return undefined;
+  const c = (i.step ?? i.root).spanContext();
+  if (!/[1-9a-f]/.test(c.traceId)) return undefined;
+  return `00-${c.traceId}-${c.spanId}-${c.traceFlags.toString(16).padStart(2, "0")}`;
 }
 
 /** A failed step: marked on the step and the install, which goes on. */

@@ -3,7 +3,13 @@
 // its secrets filled in at request time (Article 13).
 
 import type { ArchonEvent } from "../archon/telemetry/events.ts";
-import { FLEET_KEEP, FLEET_OTLP_PATH, FLEET_TELEMETRY_DIR, otlpHandler } from "./telemetry.ts";
+import {
+  FLEET_KEEP,
+  FLEET_OTLP_PATH,
+  FLEET_TELEMETRY_DIR,
+  installTraceparent,
+  otlpHandler,
+} from "./telemetry.ts";
 import { loadFleet, loadServers } from "../archon/model/load.ts";
 import type { HostDef } from "../archon/model/types.ts";
 import { metaData, userData } from "../archon/render/autoinstall.ts";
@@ -294,6 +300,8 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
           typeof e.name === "string" && /^boot\.(armed|reboot|certificate)$/.test(e.name) &&
           typeof e.message === "string" && e.message.trim()
         ) {
+          // Spec 049: an install's trace starts when it is armed.
+          if (e.name === "boot.armed" && typeof e.host === "string") installStep(e.host, "armed");
           o.emit({
             name: e.name,
             message: e.message.trim().slice(0, 500),
@@ -477,6 +485,7 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
               caPem: o.caPem,
               githubApi: o.githubApi,
               bootMac,
+              traceparent: installTraceparent(name),
             },
             { passwordHash, deployKey, hostKeys, mailCredential, webCredential, acme },
           ),
