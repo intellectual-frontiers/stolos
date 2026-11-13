@@ -43,7 +43,9 @@ export interface InstallContext {
  * Spec 049: the first boot reports its spans to the boot server (the one
  * collector sure to be there), in the install's trace: /etc/archon/first-boot.env.
  */
-export function firstBootTelemetry(c: Pick<InstallContext, "base" | "traceparent" | "fleet" | "host">): string {
+export function firstBootTelemetry(
+  c: Pick<InstallContext, "base" | "traceparent" | "fleet" | "host">,
+): string {
   const origin = new URL(c.base).origin;
   return [
     "# Written by archon-boot (spec 049): the first boot's telemetry, to the boot server.",
