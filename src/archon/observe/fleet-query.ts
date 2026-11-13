@@ -12,8 +12,11 @@ export async function fleetQuery(sql: string, json: boolean): Promise<number> {
   if (why) throw new Error(`refused: ${why}`);
   const hosts = await loadHosts();
   const servers = mcpServers(hosts);
+  // Spec 047: each server's key is checked against Git (registration.ts).
+  const { writeKnownHosts } = await import("../fleet/registration.ts");
+  const knownHosts = await writeKnownHosts().catch(() => undefined);
   const answers = await Promise.all(servers.map(async (s) => {
-    const r = await callRemoteTool(s.target, "archon_query", { sql, json: true });
+    const r = await callRemoteTool(s.target, "archon_query", { sql, json: true }, { knownHosts });
     let rows: Array<Record<string, unknown>> = [];
     if (r.ok) {
       try {

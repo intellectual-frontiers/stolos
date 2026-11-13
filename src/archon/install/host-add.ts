@@ -140,10 +140,22 @@ export async function hostAdd(o: HostAddOptions): Promise<void> {
 
   const hk = ui.phase("SSH identity");
   const keys = await ensureHostKeys(name);
+  // Spec 047: who the host is, in Git: its public keys (operators trust these), its card, its deploy key.
+  const { writeRegistration, loadRegistration } = await import("../fleet/registration.ts");
+  const deployPub = await readTextOr(SECRETS.deployKeyPub(name));
+  const fingerprint = deployPub
+    ? (await run(["ssh-keygen", "-lf", "-"], { stdin: deployPub })).stdout.split(/\s+/)[1]
+    : undefined;
+  const regFile = await writeRegistration(name, {
+    sshHostKeys: keys.map((k) => k.public),
+    ...(mac ? { mac } : {}),
+    ...(fingerprint ? { deployKey: fingerprint } : {}),
+    added: (await loadRegistration(name))?.added ?? new Date().toISOString().slice(0, 10),
+  });
   hk.done(
     `${
       keys.map((k) => k.type).join(", ")
-    } host keys on this machine only: ${name} keeps them across re-installs`,
+    } host keys; private halves on this machine only, public halves in ${regFile}`,
   );
 
   const a = ui.phase("Install");
@@ -162,7 +174,7 @@ export async function hostAdd(o: HostAddOptions): Promise<void> {
   // The install clones main: the new host's model must be there first.
   const { publishChange } = await import("./publish.ts");
   const published = o.push !== false &&
-    await publishChange([repoRel(file)], `004-install: add host ${name}`);
+    await publishChange([repoRel(file), regFile], `004-install: add host ${name}`);
   ui.next.push(
     ...(published ? [] : [
       `next: deno task archon build, then git add -A fleets/<fleet>/hosts/${name}/host.ts .mcp.json, git commit -m "004-install: add host ${name}", git push`,

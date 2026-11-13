@@ -35,11 +35,17 @@ export async function fleetStatus(): Promise<number> {
   // Spec 048: ask every server live (its MCP server, over SSH as ops), all at
   // once; keep each answer in this machine's state as the last one seen.
   const live = new Map<string, { ok: boolean; why?: string }>();
+  // Spec 047: each server's key is checked against Git (registration.ts).
+  const { writeKnownHosts } = await import("../fleet/registration.ts");
+  const knownHosts = await writeKnownHosts().catch(() => undefined);
   await Promise.all(
     hosts.filter((h) => h.kind !== "workstation").map(async (h) => {
       const target = mcpServers([h])[0]?.target;
       if (!target) return;
-      const r = await callRemoteTool(target, "archon_state", { json: true }, { timeoutMs: 15_000 });
+      const r = await callRemoteTool(target, "archon_state", { json: true }, {
+        timeoutMs: 15_000,
+        knownHosts,
+      });
       if (!r.ok) return live.set(h.name, { ok: false, why: r.text.split("\n").pop() });
       try {
         const st = JSON.parse(r.text) as HostState;

@@ -9,10 +9,17 @@ export interface RemoteResult {
   text: string;
 }
 
-/** ssh arguments for a server's MCP endpoint. */
-export function sshArgs(target: string, timeoutS = 8): string[] {
+/**
+ * ssh arguments for a server's MCP endpoint. With `knownHosts` (known_hosts.auto,
+ * generated from the hosts' registrations in Git, spec 047), the server's key is
+ * checked against Git first, then the user's own known_hosts.
+ */
+export function sshArgs(target: string, timeoutS = 8, knownHosts?: string): string[] {
   return [
     "-T",
+    ...(knownHosts && !/\s/.test(knownHosts)
+      ? ["-o", `UserKnownHostsFile=${knownHosts} ~/.ssh/known_hosts`]
+      : []),
     "-o",
     "BatchMode=yes",
     "-o",
@@ -28,9 +35,9 @@ export async function callRemoteTool(
   target: string,
   tool: string,
   args: Record<string, unknown>,
-  o: { timeoutMs?: number; traceparent?: string; command?: string[] } = {},
+  o: { timeoutMs?: number; traceparent?: string; command?: string[]; knownHosts?: string } = {},
 ): Promise<RemoteResult> {
-  const argv = o.command ?? ["ssh", ...sshArgs(target)];
+  const argv = o.command ?? ["ssh", ...sshArgs(target, 8, o.knownHosts)];
   const traceparent = o.traceparent ?? currentTraceparent();
   const end = span("archon.remote", { "archon.tool": tool });
   const child = new Deno.Command(argv[0], {

@@ -230,6 +230,20 @@ export const COMMANDS: Command[] = [
     },
   },
   {
+    name: "fleet trust",
+    summary: "Trust every host's SSH keys from Git (registration.ts) in your known_hosts",
+    description:
+      `On a workstation or the boot machine: writes each registered host's SSH host public keys (fleets/<fleet>/hosts/<host>/registration.ts, written by archon host add) into your known_hosts, for every name it has (host, DNS name, address, web name), replacing older lines. Plain ssh and MCP clients then check each server against Git, never trusting a first connection blindly. archon fleet status and fleet query do the same on their own, with known_hosts.auto (spec 047).`,
+    tier: "repo",
+    noMcp: true,
+    operation: true,
+    args: [],
+    async run() {
+      const { fleetTrust } = await import("../fleet/registration.ts");
+      return await fleetTrust();
+    },
+  },
+  {
     name: "fleet query",
     summary: "Ask every server the same SQL question, through each one's MCP server",
     description:

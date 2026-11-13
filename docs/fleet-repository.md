@@ -104,6 +104,24 @@ To review before committing, add `--no-commit`: the files change, and you commit
 `git commit -S`. Never commit without `-S` (or `commit.gpgsign=true`): an unsigned tip is refused by
 every host.
 
+## Registration: who each host is
+
+`archon host add <host>` writes `fleets/<id>/hosts/<host>/registration.ts`: the host's SSH host
+**public** keys (the private halves stay on the boot machine and in its vault), its network card,
+and its deploy key's fingerprint. Commit it with the host's `host.ts`.
+
+Your machine checks every server against those keys, so a first connection is never trusted blindly:
+`archon fleet status` and `archon fleet query` do it on their own, and once on each workstation (and
+again after a host is added) run
+
+```sh
+deno task archon fleet trust     # writes the registered keys into your known_hosts
+```
+
+so plain `ssh <host>` and your MCP client check the same keys. If ssh ever says a host's key
+changed, do not accept it: compare with `registration.ts`, and ask whoever looks after the boot
+machine.
+
 ## Decisions: what is on, on each host
 
 Opt-ins (PostgreSQL, S3, SMB shares, the telemetry web UI) are off on every server until someone

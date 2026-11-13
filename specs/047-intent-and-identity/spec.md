@@ -1,12 +1,12 @@
 # Feature Specification: Intent and identity in Git; approval by signature
 
 **Feature Branch**: `047-intent-and-identity` (committed directly to main) **Created**: 2026-11-13
-**Status**: In progress (v0.3.0: signers and signed approval; v0.10.0: decisions in Git) **Input**:
-Constitution Articles 9 and 25. Git holds what each machine should be, who belongs, and what
-operators decided; hosts only read it. Approval is a tip of `main` signed by a fleet signer (a daily
-key in a passphrase-protected file on the operator's machine, never in an agent; a recovery key kept
-only in the vault), and newer than what the host applied. The list of signers changes only through a
-commit signed by a key already on it.
+**Status**: In progress (v0.3.0: signers and signed approval; v0.10.0: decisions in Git; v0.11.0:
+registration in Git) **Input**: Constitution Articles 9 and 25. Git holds what each machine should
+be, who belongs, and what operators decided; hosts only read it. Approval is a tip of `main` signed
+by a fleet signer (a daily key in a passphrase-protected file on the operator's machine, never in an
+agent; a recovery key kept only in the vault), and newer than what the host applied. The list of
+signers changes only through a commit signed by a key already on it.
 
 ## User Scenarios & Testing _(mandatory)_
 
@@ -58,6 +58,14 @@ commit signed by a key already on it.
   needs `--confirm-destroy <host>`, typed by a person. Turning an opt-in on or off on the host
   itself still works and says how to record it in Git.
 
+- **FR-007** Who a host is, in Git: `fleets/<id>/hosts/<host>/registration.ts` (one fixed form,
+  checked by `archon build`: valid public keys), written by `archon host add`: its SSH host public
+  keys, its network card, and its deploy key's fingerprint; never a private key.
+  `archon fleet status` and `fleet query` write `known_hosts.auto` from the registrations and check
+  each server against it first, then the user's own `known_hosts`; `archon fleet trust` writes the
+  same keys into the user's `known_hosts` for plain `ssh` and MCP clients. A first connection is
+  checked against Git, never trusted blindly.
+
 ## Open (next versions)
 
 - Read-only deploy keys, with hosts no longer pushing (spec 048 removes `archon push` and
@@ -70,6 +78,8 @@ commit signed by a key already on it.
 
 ## Success Criteria
 
+- **SC-003** `tests/registration_test.ts`: one form; `known_hosts` lines for every name of a
+  registered host and none for others; fleet commands use `known_hosts.auto` first.
 - **SC-002** `tests/decisions_test.ts`: `decide` writes the fixed form; the model and the data class
   follow Git's decision with no record on any machine; durable to ephemeral needs
   `--confirm-destroy`; a hand edit out of form fails `build`.

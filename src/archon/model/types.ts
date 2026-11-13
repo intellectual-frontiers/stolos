@@ -294,6 +294,8 @@ export interface HostDef {
    */
   optIn?: Record<string, OptInRecord>;
   spec: SpecId;
+  /** Who it is, from fleets/<id>/hosts/<host>/registration.ts (spec 047): read by loadHosts. */
+  registration?: HostRegistration;
 }
 
 /**
@@ -359,6 +361,22 @@ export interface OptInRecord {
   at: string;
   /** For an opt-in that holds end users' data: the operator's choice (spec 044). */
   data?: DataClass;
+}
+
+/**
+ * Who a host is, in Git (spec 047): fleets/<id>/hosts/<host>/registration.ts,
+ * written by `archon host add`. Public facts only: its SSH host public keys
+ * (operators' known_hosts is generated from them), its network card, and the
+ * fingerprint of its read-only deploy key.
+ */
+export interface HostRegistration {
+  /** "ssh-ed25519 AAAA...", "ecdsa-sha2-nistp256 AAAA...", "ssh-rsa AAAA..." (no comments). */
+  sshHostKeys: string[];
+  mac?: string;
+  /** SHA256:... of its deploy key, when it has one. */
+  deployKey?: string;
+  /** When it was registered (ISO date). */
+  added: string;
 }
 
 /**

@@ -66,12 +66,15 @@ export async function loadHosts(): Promise<HostDef[]> {
     const pgState = await readPgState(host.name);
     // Spec 047: a decision in Git (decisions.ts) wins over the host's own record.
     const { loadDecisions } = await import("../fleet/decisions.ts");
+    const { loadRegistration } = await import("../fleet/registration.ts");
+    const registration = await loadRegistration(host.name);
     const optIn = {
       ...(await readOptIns(host.name)),
       ...((await loadDecisions(host.name)).optIns ?? {}),
     };
     hosts.push({
       ...host,
+      ...(registration ? { registration } : {}),
       ...(pgState ? { pgState } : {}),
       ...(Object.keys(optIn).length ? { optIn } : {}),
     });

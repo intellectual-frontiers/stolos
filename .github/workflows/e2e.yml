@@ -9,9 +9,11 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# One run at a time per branch. On main every version gets its complete run
+# (newer pushes wait); elsewhere a newer push replaces the run in progress.
 concurrency:
   group: e2e-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:
   contents: read

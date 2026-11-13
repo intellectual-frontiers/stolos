@@ -301,8 +301,9 @@ Deno.test("039: one PAM hook: Samba and (while on) PostgreSQL get the Linux pass
       }
       const c = new Deno.Command("sh", { args: [`${dir}/sync`], env, stdin: "piped" }).spawn();
       const w = c.stdin.getWriter();
-      await w.write(new TextEncoder().encode(stdin));
-      await w.close();
+      // The hook may exit without reading (not a real account): a closed pipe is fine.
+      await w.write(new TextEncoder().encode(stdin)).catch(() => {});
+      await w.close().catch(() => {});
       await c.status;
       await new Promise((r) => setTimeout(r, 300)); // the PostgreSQL part runs in the background
       const read = (f: string) => Deno.readTextFile(`${dir}/${f}`).catch(() => undefined);
