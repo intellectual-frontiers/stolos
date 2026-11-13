@@ -25,12 +25,15 @@ const FILLER =
   /^(to be filled by o\.e\.m\.|default string|system (product name|manufacturer|serial number)|not specified|none|0+|)$/i;
 
 async function dmi(key: string): Promise<string | undefined> {
-  const v = (await readTextOr(`/sys/class/dmi/id/${key}`))?.trim() ?? "";
+  // product_serial is readable by root only: without root, the serial is left out.
+  const v = (await readTextOr(`/sys/class/dmi/id/${key}`).catch(() => undefined))?.trim() ?? "";
   return FILLER.test(v) ? undefined : v;
 }
 
 export async function collectInventory(): Promise<Inventory> {
-  const mem = (await readTextOr("/proc/meminfo"))?.match(/^MemTotal:\s+(\d+) kB/m)?.[1];
+  const mem = (await readTextOr("/proc/meminfo").catch(() => undefined))?.match(
+    /^MemTotal:\s+(\d+) kB/m,
+  )?.[1];
   const lsblk = await run(["lsblk", "-dnbro", "NAME,SIZE,TYPE,TRAN", "-e", "1,7,11"]);
   const disks = lsblk.stdout.split("\n").map((l) => l.split(" "))
     .filter((f) => f[2] === "disk" && !f[0].startsWith("zram"))
@@ -46,7 +49,8 @@ export async function collectInventory(): Promise<Inventory> {
       } catch {
         continue;
       }
-      const a = (await readTextOr(`/sys/class/net/${e.name}/address`))?.trim();
+      const a = (await readTextOr(`/sys/class/net/${e.name}/address`).catch(() => undefined))
+        ?.trim();
       if (a) macs.push(a.toLowerCase());
     }
   } catch { /* no /sys */ }
