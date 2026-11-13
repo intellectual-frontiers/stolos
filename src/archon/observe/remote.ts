@@ -2,6 +2,8 @@
 // ops (spec 030, Article 17), the same way an agent does. The server limits
 // what it answers; nothing it says is pushed anywhere.
 
+import { currentTraceparent, span } from "../core/telemetry.ts";
+
 export interface RemoteResult {
   ok: boolean;
   text: string;
@@ -29,6 +31,8 @@ export async function callRemoteTool(
   o: { timeoutMs?: number; traceparent?: string; command?: string[] } = {},
 ): Promise<RemoteResult> {
   const argv = o.command ?? ["ssh", ...sshArgs(target)];
+  const traceparent = o.traceparent ?? currentTraceparent();
+  const end = span("archon.remote", { "archon.tool": tool });
   const child = new Deno.Command(argv[0], {
     args: argv.slice(1),
     stdin: "piped",
@@ -62,7 +66,7 @@ export async function callRemoteTool(
       params: {
         name: tool,
         arguments: args,
-        ...(o.traceparent ? { _meta: { traceparent: o.traceparent } } : {}),
+        ...(traceparent ? { _meta: { traceparent } } : {}),
       },
     });
     const reader = child.stdout.pipeThrough(new TextDecoderStream()).getReader();
@@ -100,6 +104,7 @@ export async function callRemoteTool(
   } catch (e) {
     return { ok: false, text: (e as Error).message };
   } finally {
+    end();
     clearTimeout(timer);
     await w.close().catch(() => {});
     try {

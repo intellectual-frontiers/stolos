@@ -2,6 +2,7 @@
 // per host (by Boot URI, or by MAC when the model has one), the verified installer image, and each host's install config with
 // its secrets filled in at request time (Article 13).
 
+import { FLEET_KEEP, FLEET_OTLP_PATH, FLEET_TELEMETRY_DIR, otlpHandler } from "./telemetry.ts";
 import { loadFleet, loadServers } from "../archon/model/load.ts";
 import type { HostDef } from "../archon/model/types.ts";
 import { metaData, userData } from "../archon/render/autoinstall.ts";
@@ -123,6 +124,7 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
     return text(hostMenu(host, base, t?.token));
   };
   const milestones = new Map<string, Set<string>>();
+  const fleetOtlp = otlpHandler(FLEET_TELEMETRY_DIR, FLEET_KEEP, FLEET_OTLP_PATH);
   return async (req, from) => {
     if (req.headers.get("x-archon-via") !== "tftp") lastHttp = Date.now();
     const url = new URL(req.url);
@@ -243,6 +245,8 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
         return text(chooserMenu(armed, base));
       }
       if (path === "/health") return text("archon-boot ok\n");
+      // Spec 049: the fleet's default (ephemeral) OpenTelemetry collector.
+      if (path.startsWith(FLEET_OTLP_PATH + "/")) return await fleetOtlp(req);
       // Events from this PC's own commands (arm, reinstall): loopback only.
       if (path === "/local/event" && req.method === "POST") {
         if (!/^(127\.0\.0\.1|::1|::ffff:127\.0\.0\.1)$/.test(from)) return text("no\n", 403);

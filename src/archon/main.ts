@@ -1,5 +1,6 @@
 // archon: entry point for the CLI. See archon(1).
 
+import { P } from "./core/paths.ts";
 import { COMMANDS, findCommand } from "./commands/registry.ts";
 import { effectiveTier, GLOBAL_ARGS, parseArgs, type RunContext } from "./core/registry-types.ts";
 import { isRoot } from "./core/exec.ts";
@@ -7,7 +8,8 @@ import { defaultLogPath, ui } from "./core/ui.ts";
 import { shareCheckout } from "./core/share.ts";
 import { writeStatus } from "./core/status.ts";
 import { hostLock } from "./core/lock.ts";
-import { endRun, initTelemetry, phaseListener, startRun } from "./core/telemetry.ts";
+import { count, endRun, initTelemetry, phaseListener, startRun } from "./core/telemetry.ts";
+import { VERSION } from "./version.ts";
 
 /**
  * cloud-init (the first boot) and some service managers start archon without
@@ -99,7 +101,7 @@ export async function main(argv: string[]): Promise<number> {
       const self = Deno.env.get("ARCHON_SELF") ?? "/usr/local/bin/archon";
       const p = new Deno.Command("sudo", {
         args: [
-          "--preserve-env=ARCHON_AGENT,ARCHON_VERBOSE,ARCHON_PLAIN,NO_COLOR,LANG,LC_ALL,TERM",
+          "--preserve-env=ARCHON_AGENT,ARCHON_VERBOSE,ARCHON_PLAIN,NO_COLOR,LANG,LC_ALL,TERM,TRACEPARENT",
           self,
           ...argv,
         ],
@@ -111,7 +113,13 @@ export async function main(argv: string[]): Promise<number> {
     }
     // Spec 021: this run is a trace, its phases spans (no-op without OTEL_DENO).
     await initTelemetry();
-    startRun(cmd.name, { "archon.tier": tier });
+    startRun(cmd.name, {
+      "archon.tier": tier,
+      "archon.fleet": P.fleetId,
+      "archon.host": (g.host as string) ?? await localHostName(),
+      "archon.engine.version": VERSION,
+    });
+    if (args["confirm-destroy"] !== undefined) count("archon.confirm_destroy.used");
     ui.listeners.push(phaseListener);
     const ctx: RunContext = {
       hostName: (g.host as string) ?? await localHostName(),

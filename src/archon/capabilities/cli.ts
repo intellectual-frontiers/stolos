@@ -48,6 +48,11 @@ fi
 export OTEL_DENO="\${OTEL_DENO:-true}" OTEL_SERVICE_NAME="\${OTEL_SERVICE_NAME:-archon}"
 export OTEL_EXPORTER_OTLP_ENDPOINT="\${OTEL_EXPORTER_OTLP_ENDPOINT:-http://127.0.0.1:4318}"
 export OTEL_EXPORTER_OTLP_PROTOCOL="\${OTEL_EXPORTER_OTLP_PROTOCOL:-http/json}"
+# Spec 049: every signal says which fleet, host, engine, and commit it is about.
+_f=$(cat /etc/archon/fleet 2>/dev/null); _h=$(cat /etc/archon/host 2>/dev/null)
+_v=$(sed -n 's#.*/stolos/\\(v[0-9][0-9.]*\\)/src/.*#\\1#p' /srv/archon/deno.json 2>/dev/null | head -n 1)
+_r=$(git -C /srv/archon rev-parse HEAD 2>/dev/null)
+export OTEL_RESOURCE_ATTRIBUTES="\${OTEL_RESOURCE_ATTRIBUTES:+\$OTEL_RESOURCE_ATTRIBUTES,}service.namespace=$_f,host.name=$_h,service.version=$_v,vcs.ref.head.revision=$_r"
 # Spec 046-engine-instance: the fleet repository's entry file runs the engine it
 # pins (@stolos/ in deno.json), checked against deno.lock (Article 12).
 exec /usr/local/bin/deno run --allow-all --quiet --frozen --config /srv/archon/deno.json /srv/archon/archon.ts "$@"

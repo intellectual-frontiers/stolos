@@ -98,6 +98,8 @@ export function allowedSignersText(list: SignerDef[], local = ""): string {
 
 export interface TipCheck {
   ok: boolean;
+  /** Why not, as a word (telemetry: archon.update.outcome = refused-<code>). */
+  code?: "rollback" | "no-signers" | "unsigned" | "untrusted";
   /** Who signed it (the principal), when it is good. */
   signer?: string;
   reason?: string;
@@ -121,6 +123,7 @@ export async function checkTip(
     if (!ff.ok) {
       return {
         ok: false,
+        code: "rollback",
         reason: `${tip.slice(0, 10)} does not come after ${
           current.slice(0, 10)
         }, the commit this host applied (a rollback or a rewritten history)`,
@@ -129,7 +132,11 @@ export async function checkTip(
   }
   const allowed = (await readTextOr(allowedFile)) ?? "";
   if (!allowed.split("\n").some((l) => l.trim() && !l.startsWith("#"))) {
-    return { ok: false, reason: `${allowedFile} lists no signer: nothing can be approved` };
+    return {
+      ok: false,
+      code: "no-signers",
+      reason: `${allowedFile} lists no signer: nothing can be approved`,
+    };
   }
   const v = await git([
     "-c",
@@ -145,9 +152,11 @@ export async function checkTip(
   const out = v.stderr + v.stdout;
   const who = out.match(/Good "git" signature for (\S+) with/)?.[1];
   if (v.ok && who) return { ok: true, signer: who };
+  const unsigned = /no signature|not signed|missing signature/i.test(out) || !out.trim();
   return {
     ok: false,
-    reason: /no signature|not signed|missing signature/i.test(out) || !out.trim()
+    code: unsigned ? "unsigned" : "untrusted",
+    reason: unsigned
       ? `${tip.slice(0, 10)} is not signed: approve it with a signed commit (git commit -S)`
       : `${tip.slice(0, 10)} is not signed by a key this host trusts`,
   };

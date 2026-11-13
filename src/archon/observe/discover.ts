@@ -24,7 +24,7 @@ export const DEFAULT_COLLECTOR_NAME = "otel.localdomain";
 
 export interface Found {
   endpoint: string;
-  source: "model" | "dns";
+  source: "model" | "dns" | "boot";
 }
 
 /** Does this URL accept OTLP/HTTP? (An empty export is a valid request.) */
@@ -51,11 +51,19 @@ export async function candidates(fleet: FleetDef, _host: HostDef): Promise<Found
   if ((await run(["getent", "ahostsv4", name])).ok) {
     out.push({ endpoint: `http://${name}:4318`, source: "dns" });
   }
+  // Spec 049: with no other collector, the boot PC's boot server (its HTTP
+  // port, which the servers already reach) keeps the fleet's telemetry a week.
+  const boot = fleet.site?.bootServer;
+  if (boot) out.push({ endpoint: `http://${boot.address}:${boot.http}/otlp`, source: "boot" });
   return out;
 }
 
 /** The Collector config that forwards everything to `endpoint` (JSON is valid YAML). */
-export function centralConfig(endpoint: string, pcpNames: string[]): string {
+export function centralConfig(
+  endpoint: string,
+  pcpNames: string[],
+  source: Found["source"] = "model",
+): string {
   const processors = ["memory_limiter", "resource", "batch"];
   const config = {
     extensions: {
@@ -90,6 +98,8 @@ export function centralConfig(endpoint: string, pcpNames: string[]): string {
     exporters: {
       "otlphttp/central": {
         endpoint,
+        // The boot server reads OTLP as JSON (spec 049); a real collector takes protobuf.
+        ...(source === "boot" ? { encoding: "json" } : {}),
         // Bounded and on disk: a collector that is down costs some space, never memory.
         sending_queue: { storage: "file_storage", queue_size: 2000 },
         retry_on_failure: { enabled: true },
@@ -128,7 +138,7 @@ export async function discover(host: HostDef, check = false): Promise<number> {
       break;
     }
   }
-  const want = found ? centralConfig(found.endpoint, CORE_PCP_METRICS) : "{}\n";
+  const want = found ? centralConfig(found.endpoint, CORE_PCP_METRICS, found.source) : "{}\n";
   if ((await readTextOr(CENTRAL.config)) !== want) {
     p.change(
       found ? `forward to ${found.endpoint} (${found.source})` : "forward nothing: local only",

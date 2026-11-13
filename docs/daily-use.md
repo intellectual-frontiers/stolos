@@ -71,9 +71,14 @@ low (`archon observe prune`, daily). The limits are `observability` in `fleets/<
 per host), for example `observability: { metricsDays: 90, logsMaxSize: "512M" }`. Nothing is sent
 anywhere until a central collector exists. Every 15 minutes each machine looks for one (spec 024):
 `telemetry.collector` in `fleets/<fleet>/fleet.ts`, else the name `otel.localdomain` in your
-router's DNS. When one answers OpenTelemetry, the machine forwards its logs, metrics, and Archon's
-own telemetry to it (queued on disk, bounded, if it goes away); `archon observe` shows what was
-found. `archon observe discover` looks right away.
+router's DNS, else the boot PC itself (spec 049): while `deno task boot serve` runs, it accepts
+OpenTelemetry at `http://<boot PC>:8080/otlp` (the port servers already reach) and keeps it a week
+under the boot cache (`telemetry/fleet/`), handing it to otel-tui when that runs on the PC. When one
+answers OpenTelemetry, the machine forwards its logs, metrics, and Archon's own telemetry to it
+(queued on disk, bounded, if it goes away); `archon observe` shows what was found.
+`archon observe
+discover` looks right away. Every signal Archon emits is listed in
+`man 7 archon-telemetry`.
 
 ## Name resolution and discovery
 

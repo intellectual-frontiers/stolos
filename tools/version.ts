@@ -31,6 +31,17 @@ if (cmd === "show") {
   await Deno.writeTextFile(FILE, text.replace(RE, `export const VERSION = "${fmt(next)}";`));
   console.log(fmt(next));
 } else if (cmd === "check") {
+  const known = await new Deno.Command("git", {
+    args: ["rev-parse", "-q", "--verify", `${base}^{commit}`],
+    stdout: "null",
+    stderr: "null",
+  }).output();
+  if (!known.success) {
+    console.error(
+      `unknown base ${base}: fetch it first (git fetch origin), so the check can compare`,
+    );
+    Deno.exit(1);
+  }
   const r = await new Deno.Command("git", {
     args: ["show", `${base}:src/archon/version.ts`],
     stdout: "piped",

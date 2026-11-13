@@ -33,9 +33,12 @@ everything here.
 
 ## Before you push
 
+Raise the version, then run exactly what CI runs, and push only when it passes:
+
 ```sh
-deno task gen && deno task check && deno lint && deno fmt --check && deno task test
 deno task version bump
+deno task gen
+deno task ci     # fresh generated files, types, lint, format, tests, version newer than origin/main
 ```
 
 Every commit's author is Shahid Shah, with the GitHub noreply address; an agent's part is a

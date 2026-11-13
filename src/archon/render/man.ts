@@ -2,6 +2,7 @@
 // the constitution and personas (Article 6). Installed into
 // /usr/local/share/man and fish's vendor completions directory by spec 012.
 
+import { ATTRIBUTES, METRICS, RESOURCE, SPANS } from "../telemetry/signals.ts";
 import { esc, inline, markdownToRoff, th } from "./roff.ts";
 import { COMMANDS } from "../commands/registry.ts";
 import { type Command, GLOBAL_ARGS, type Tier } from "../core/registry-types.ts";
@@ -166,6 +167,38 @@ export function sqlPage(): string {
     ".SH SEE ALSO\n\\fBarchon\\fR(1), \\fBarchon\\-pg\\fR(7), \\fBosqueryi\\fR(1), \\fBduckdb\\fR(1)\n";
 }
 
+/** Spec 049: every signal Archon emits, from telemetry/signals.ts. */
+export function telemetryMarkdown(): string {
+  const L: string[] = [
+    "Every archon run reports through Deno's built-in OpenTelemetry to the host's local Collector (127.0.0.1:4318): a trace per command with a span per phase, and the metrics below. Logs: what archon writes to the journal (identifiers archon-*) reaches the Collector through its journald receiver; what it prints through the console (errors, --json) is exported as logs linked to the trace. A run continues a trace begun elsewhere when TRACEPARENT is set (MCP calls and SSH commands from the boot machine pass it). Nothing secret is ever sent (Article 13).",
+    "",
+    "## Metrics",
+    "",
+  ];
+  for (const [name, m] of Object.entries(METRICS)) {
+    const attrs = m.attributes.length ? ` Attributes: ${m.attributes.join(", ")}.` : "";
+    L.push(
+      `- \`${name}\` (${m.kind}${
+        "unit" in m ? `, ${m.unit}` : ""
+      }; ${m.group}): ${m.description}${attrs}`,
+    );
+  }
+  L.push("", "## Spans", "");
+  for (const [name, d] of Object.entries(SPANS)) L.push(`- \`${name}\`: ${d}`);
+  L.push("", "## Attributes", "");
+  for (const [name, d] of Object.entries(ATTRIBUTES)) L.push(`- \`${name}\`: ${d}`);
+  L.push("", "## Resource attributes", "");
+  for (const [name, d] of Object.entries(RESOURCE)) L.push(`- \`${name}\`: ${d}`);
+  return L.join("\n") + "\n";
+}
+
+export function telemetryPage(): string {
+  return th("archon-telemetry", 7, MAN_DATE) +
+    ".SH NAME\narchon\\-telemetry \\- the traces, metrics, and logs every archon run reports\n.SH DESCRIPTION\n" +
+    markdownToRoff(telemetryMarkdown()) +
+    ".SH SEE ALSO\n\\fBarchon\\fR(1), \\fBarchon observe\\fR(1)\n";
+}
+
 export function personasPage(): string {
   const L = [th("archon-personas", 7, MAN_DATE).trimEnd()];
   L.push(".SH NAME", "archon\\-personas \\- composable user personas");
@@ -209,6 +242,7 @@ export function renderManPages(): Map<string, string> {
   pages.set("man7/archon-pg.7", pgPage());
   pages.set("man7/archon-sql.7", sqlPage());
   pages.set("man7/archon-guide.7", guidePage());
+  pages.set("man7/archon-telemetry.7", telemetryPage());
   return pages;
 }
 

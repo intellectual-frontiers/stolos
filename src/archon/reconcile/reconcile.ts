@@ -2,6 +2,7 @@
 // forward a clean checkout, then apply only when HEAD equals origin/main.
 // Runs a fresh `archon apply` process so the newly pulled code is used.
 
+import { count } from "../core/telemetry.ts";
 import { P } from "../core/paths.ts";
 import { currentUser, isRoot, run } from "../core/exec.ts";
 import { journal, log } from "../core/log.ts";
@@ -66,7 +67,10 @@ export async function syncCheckout(opts: { check?: boolean } = {}): Promise<Sync
   const log1 = async (range: string) =>
     (await git(["log", "--format=%h %s", range])).stdout.split("\n").filter(Boolean);
   const incoming = await log1(`HEAD..origin/${branch}`);
-  if (head0 === remote) return { current: true, pulled: [], incoming: [], head: head0, remote };
+  if (head0 === remote) {
+    count("archon.update.outcome", 1, { "archon.outcome": "current" });
+    return { current: true, pulled: [], incoming: [], head: head0, remote };
+  }
   const dirty = blockingChanges(
     (await git(["status", "--porcelain", "--untracked-files=no"])).stdout,
   );
@@ -88,6 +92,7 @@ export async function syncCheckout(opts: { check?: boolean } = {}): Promise<Sync
   if (await enforcing()) {
     const t = await checkTip(repo, remote, head0, undefined, isRoot() ? owner : undefined);
     if (!t.ok) {
+      count("archon.update.outcome", 1, { "archon.outcome": `refused-${t.code}` });
       await journal(
         "archon-approval",
         `refused ${remote.slice(0, 10)}: ${t.reason}`,
@@ -108,6 +113,7 @@ export async function syncCheckout(opts: { check?: boolean } = {}): Promise<Sync
       blocked: `fast-forward failed: ${merge.stderr.trim()}`,
     };
   }
+  count("archon.update.outcome", 1, { "archon.outcome": "applied" });
   return { current: true, pulled: incoming, incoming: [], head: remote, remote };
 }
 

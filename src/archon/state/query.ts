@@ -5,6 +5,7 @@
 // tables on the allowlist (nothing that reveals secrets or reaches out),
 // a row limit, and a time limit.
 
+import { count, span } from "../core/telemetry.ts";
 import { run } from "../core/exec.ts";
 import { OSQUERY } from "../capabilities/osquery.ts";
 import { VIEWS } from "./store.ts";
@@ -106,8 +107,17 @@ export function queryArgv(sql: string): string[] {
 
 export async function query(sql: string): Promise<Array<Record<string, string>>> {
   const why = queryRefusal(sql);
+  const tables = queryTables(sql);
+  for (const t of tables.length ? tables : ["(none)"]) {
+    count("archon.query.requests", 1, {
+      "archon.result": why ? "refused" : "served",
+      "archon.table": t,
+    });
+  }
   if (why) throw new Error(`refused: ${why}`);
+  const end = span("archon.query", { "archon.table": tables.join(",") });
   const r = await run(queryArgv(sql.trim().replace(/;\s*$/, "")));
+  end(r.ok);
   if (!r.ok) throw new Error(`osqueryi: ${(r.stderr || r.stdout).trim().split("\n").pop()}`);
   const rows = JSON.parse(r.stdout || "[]") as Array<Record<string, string>>;
   return rows.slice(0, QUERY_MAX_ROWS);

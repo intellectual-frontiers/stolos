@@ -2,6 +2,7 @@
 // fleet's signers (fleets/<id>/signers.ts, in its fixed form), and, on a host
 // in an emergency, trust a key a person types there.
 
+import { count } from "../core/telemetry.ts";
 import { P, repoRel } from "../core/paths.ts";
 import { ensureDir, exists, readTextOr } from "../core/fsx.ts";
 import { dirname } from "../core/path.ts";
@@ -120,6 +121,7 @@ export async function signersTrust(keyArg: string, name: string): Promise<number
     allowedSignersText(signers, (await readTextOr(ALLOWED_SIGNERS_LOCAL)) ?? ""),
   );
   await journal("archon-approval", `a person trusted signer ${name} on this host`, "user.warning");
+  count("archon.signers.trusted");
   const { notify } = await import("../notify/events.ts");
   await notify({
     event: `signer ${name} trusted on this host by hand`,

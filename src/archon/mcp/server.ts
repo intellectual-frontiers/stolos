@@ -5,6 +5,7 @@
 // ops over SSH, forced to `archon mcp --max-tier <tier>` (spec 030): the limit
 // is enforced here, on the server, whatever the client is configured to do.
 
+import { count, parseTraceparent } from "../core/telemetry.ts";
 import { COMMANDS } from "../commands/registry.ts";
 import type { Command, Parsed, Tier } from "../core/registry-types.ts";
 import { effectiveTier, GLOBAL_ARGS } from "../core/registry-types.ts";
@@ -153,12 +154,18 @@ async function journalCall(name: string, args: Record<string, unknown>, verdict:
   }
 }
 
-async function callTool(name: string, args: Record<string, unknown>, limit: McpTier) {
+async function callTool(
+  name: string,
+  args: Record<string, unknown>,
+  limit: McpTier,
+  traceparent?: string,
+) {
   const c = COMMANDS.find((x) => !x.noMcp && mcpToolName(x) === name);
   if (!c) return { content: [{ type: "text", text: `unknown tool ${name}` }], isError: true };
   const human = c.args.find((a) => a.human && args[a.name] !== undefined);
   if (human) {
     await journalCall(name, args, "refused");
+    count("archon.mcp.calls", 1, { "archon.tool": name, "archon.result": "refused" });
     return {
       content: [{
         type: "text",
@@ -170,6 +177,7 @@ async function callTool(name: string, args: Record<string, unknown>, limit: McpT
   }
   if (!allowed(c, args, limit)) {
     await journalCall(name, args, "refused");
+    count("archon.mcp.calls", 1, { "archon.tool": name, "archon.result": "refused" });
     const hint = c.readOnlyWith && RANK[c.tier] > RANK[limit]
       ? ` Only with ${c.readOnlyWith}: true.`
       : "";
@@ -183,13 +191,19 @@ async function callTool(name: string, args: Record<string, unknown>, limit: McpT
     };
   }
   await journalCall(name, args, "call");
+  count("archon.mcp.calls", 1, { "archon.tool": name, "archon.result": "served" });
   const self = Deno.env.get("ARCHON_SELF") ?? "/usr/local/bin/archon";
   const p = new Deno.Command(self, {
     args: argvFor(c, args),
     stdout: "piped",
     stderr: "piped",
     stdin: "null",
-    env: { ARCHON_AGENT: Deno.env.get("ARCHON_AGENT") ?? "mcp", NO_COLOR: "1" },
+    env: {
+      ARCHON_AGENT: Deno.env.get("ARCHON_AGENT") ?? "mcp",
+      NO_COLOR: "1",
+      // Spec 049: the caller's trace continues in the command it asked for.
+      ...(parseTraceparent(traceparent) ? { TRACEPARENT: traceparent! } : {}),
+    },
   });
   const r = await p.output();
   const dec = new TextDecoder();
@@ -235,10 +249,11 @@ export async function handle(msg: Msg, limit: McpTier = "mutate"): Promise<unkno
           String(msg.params?.name),
           (msg.params?.arguments as Record<string, unknown>) ?? {},
           limit,
+          (msg.params?._meta as { traceparent?: string } | undefined)?.traceparent,
         ),
       );
     case "resources/list":
-      return reply({ resources: (await resources()).map(({ path: _p, ...r }) => r) });
+      return reply({ resources: (await resources()).map(({ path: _p, text: _t, ...r }) => r) });
     case "resources/read": {
       const r = (await resources()).find((x) => x.uri === msg.params?.uri);
       if (!r) return error(-32002, `resource not found: ${msg.params?.uri}`);

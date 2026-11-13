@@ -5,6 +5,10 @@
 // kept 30 days and 256 MB at most. Nothing leaves the PC; when otel-tui runs
 // on the PC (OTLP on 127.0.0.1:4318), each batch is also handed to it.
 //
+// Spec 049: the boot server is also the fleet's default collector. Servers
+// that find no other (fleet.telemetry, or otel.localdomain) send their
+// telemetry to http://<boot PC>:<http port>/otlp, kept a week (ephemeral).
+//
 // Each install is one trace, "install <host>", with a span per step.
 
 import { join } from "../archon/core/path.ts";
@@ -19,7 +23,7 @@ const OTEL_TUI = "http://127.0.0.1:4318";
 
 // ------------------------------------------------------------------- sink
 
-async function prune(dir: string) {
+async function prune(dir: string, keepDays = KEEP_DAYS, keepBytes = KEEP_BYTES) {
   const files: Array<{ name: string; size: number }> = [];
   for await (const e of Deno.readDir(dir)) {
     if (e.isFile && /^otlp-\d{4}-\d{2}-\d{2}\.jsonl$/.test(e.name)) {
@@ -27,36 +31,62 @@ async function prune(dir: string) {
     }
   }
   files.sort((a, b) => a.name.localeCompare(b.name)); // oldest first
-  const cutoff = new Date(Date.now() - KEEP_DAYS * 86_400_000).toISOString().slice(0, 10);
+  const cutoff = new Date(Date.now() - keepDays * 86_400_000).toISOString().slice(0, 10);
   let total = files.reduce((n, f) => n + f.size, 0);
   for (const f of files.slice(0, -1)) {
-    if (f.name.slice(5, 15) >= cutoff && total <= KEEP_BYTES) break;
+    if (f.name.slice(5, 15) >= cutoff && total <= keepBytes) break;
     await Deno.remove(join(dir, f.name)).catch(() => {});
     total -= f.size;
   }
 }
 
-/** Receive OTLP/JSON on 127.0.0.1:4319 and keep it in local files. */
-export async function startSink(dir = TELEMETRY_DIR): Promise<void> {
-  await ensureDir(dir);
-  await prune(dir);
+/** Where the fleet's servers' telemetry lands when the boot PC is their collector (spec 049). */
+export const FLEET_TELEMETRY_DIR = join(TELEMETRY_DIR, "fleet");
+/** The fleet collector is ephemeral: a week, 512 MB at most. */
+export const FLEET_KEEP = { days: 7, bytes: 512 * 1024 * 1024 };
+/** Under the boot server's HTTP port, which the servers already reach (spec 049). */
+export const FLEET_OTLP_PATH = "/otlp";
+
+/**
+ * A handler for OTLP/HTTP with JSON bodies (gzip or not): each batch becomes
+ * one line of a daily file in `dir`, pruned to `keep`; when otel-tui runs on
+ * this PC, the batch is also handed to it. Paths are /v1/traces, /v1/metrics,
+ * /v1/logs after `prefix`.
+ */
+export function otlpHandler(
+  dir: string,
+  keep: { days: number; bytes: number },
+  prefix = "",
+): (req: Request) => Promise<Response> {
   let tuiDownUntil = 0;
   let lastDay = "";
-  Deno.serve({ ...SINK, onListen() {} }, async (req) => {
-    const path = new URL(req.url).pathname;
+  let ready: Promise<void> | undefined;
+  return async (req: Request) => {
+    ready ??= ensureDir(dir).then(() => prune(dir, keep.days, keep.bytes));
+    await ready;
+    const path = new URL(req.url).pathname.slice(prefix.length);
     if (req.method !== "POST" || !/^\/v1\/(traces|metrics|logs)$/.test(path)) {
       return new Response("not found\n", { status: 404 });
     }
-    const body = await req.text();
+    let body: string;
+    try {
+      body = req.headers.get("content-encoding") === "gzip"
+        ? await new Response(req.body!.pipeThrough(new DecompressionStream("gzip"))).text()
+        : await req.text();
+    } catch {
+      return new Response("bad body\n", { status: 400 });
+    }
     try {
       const line = JSON.stringify(JSON.parse(body)) + "\n";
       const day = new Date().toISOString().slice(0, 10);
       await Deno.writeTextFile(join(dir, `otlp-${day}.jsonl`), line, { append: true });
       if (day !== lastDay) {
         lastDay = day;
-        await prune(dir);
+        await prune(dir, keep.days, keep.bytes);
       }
-    } catch { /* not OTLP JSON: dropped */ }
+    } catch {
+      return new Response("only OTLP JSON\n", { status: 415 });
+    }
     // otel-tui, when it runs on this PC: best effort, never waited on for long.
     if (Date.now() > tuiDownUntil) {
       fetch(OTEL_TUI + path, {
@@ -69,7 +99,15 @@ export async function startSink(dir = TELEMETRY_DIR): Promise<void> {
       });
     }
     return new Response("{}", { headers: { "content-type": "application/json" } });
-  });
+  };
+}
+
+/** Receive the boot server's own OTLP/JSON on 127.0.0.1:4319 and keep it in local files. */
+export async function startSink(dir = TELEMETRY_DIR): Promise<void> {
+  await ensureDir(dir);
+  await prune(dir);
+  const handle = otlpHandler(dir, { days: KEEP_DAYS, bytes: KEEP_BYTES });
+  Deno.serve({ ...SINK, onListen() {} }, handle);
 }
 
 // ------------------------------------------------------- instrumentation

@@ -12,6 +12,7 @@
 // its columns. Writers load archon.sql into an in-memory SQLite, change it,
 // and write both files back (atomically, through a rename).
 
+import { count } from "../core/telemetry.ts";
 import { DatabaseSync } from "node:sqlite";
 import { join } from "../core/path.ts";
 import { ensureDir, readTextOr } from "../core/fsx.ts";
@@ -187,6 +188,7 @@ export async function putRecord(
     at,
     JSON.stringify(body),
   );
+  count("archon.state.writes", 1, { "archon.kind": kind });
   if (kind === "prov") {
     db.prepare(
       `DELETE FROM archon_record WHERE host = ? AND kind = 'prov' AND name NOT IN
