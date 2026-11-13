@@ -108,6 +108,9 @@ export const ATTRIBUTES = {
   "archon.table": "A table a query named.",
   "archon.tool": "An MCP tool's name.",
   "archon.kind": "A record's kind in archon.sql.",
+  "archon.phase": "The phase a log record is about (archon.phase and archon.problem events).",
+  "archon.fix": "The fix a problem's record suggests.",
+  "archon.event": "A log record's event name (telemetry/events.ts).",
   "archon.phase.result": "A phase's summary line.",
   "archon.phase.level": "A phase's worst level (ok, warn, fail).",
 } as const;

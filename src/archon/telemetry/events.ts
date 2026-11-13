@@ -14,6 +14,15 @@ export interface EventSpec {
 }
 
 export const EVENTS = {
+  // An archon run (spec 049): what it printed, as records in its trace.
+  "archon.phase": {
+    severity: "info",
+    description: "A phase of an archon run finished, with its result.",
+  },
+  "archon.problem": {
+    severity: "warn",
+    description: "A problem an archon run reported, with its fix.",
+  },
   // The boot server (spec 004).
   "boot.file": { severity: "info", description: "A boot file served (TFTP or HTTP)." },
   "boot.file.probe": {
@@ -88,6 +97,9 @@ export interface ArchonEvent {
   attrs?: Record<string, string | number | boolean>;
   /** Milliseconds since the epoch (default: now). */
   time?: number;
+  /** The trace and span it belongs to (W3C ids, hex). */
+  traceId?: string;
+  spanId?: string;
 }
 
 const SEVERITY_NUMBER: Record<Severity, number> = { debug: 5, info: 9, warn: 13, error: 17 };
@@ -120,6 +132,8 @@ export function toLogRecord(e: ArchonEvent): Record<string, unknown> {
     severityNumber: SEVERITY_NUMBER[sev],
     severityText: sev.toUpperCase(),
     body: { stringValue: e.message },
+    ...(e.traceId ? { traceId: e.traceId } : {}),
+    ...(e.spanId ? { spanId: e.spanId } : {}),
     attributes: Object.entries(attrs).map(([key, v]) => ({ key, value: value(v) })),
   };
 }

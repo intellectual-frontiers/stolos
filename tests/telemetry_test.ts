@@ -83,6 +83,11 @@ Deno.test("049: a run exports its trace (continuing TRACEPARENT) and its metrics
     );
     assertStringIncludes(metrics, "archon.run.duration");
     assertStringIncludes(metrics, "archon.engine.info");
+    // Spec 049: the run's phases are events, recorded as log records in its trace.
+    const logs = got.filter((g) => g.path === "/v1/logs").map((g) => compact(g.body)).join("\n");
+    assertStringIncludes(logs, '"key":"archon.event","value":{"stringValue":"archon.phase"}');
+    assertStringIncludes(logs, '"body":{"stringValue":"Model: 2 host(s) valid"}');
+    assertStringIncludes(logs, `"traceId":"${traceId}"`);
   } finally {
     await server.shutdown();
     await Deno.remove(sb.home, { recursive: true });

@@ -53,6 +53,13 @@ collector. Research: [research.md](research.md).
   events (GRUB's harmless probes) are recorded but kept out of the window unless verbose. This PC's
   commands announce events (`boot.armed`, `boot.reboot`, `boot.certificate`), never free text.
 
+- **FR-009** An install is one trace: the boot server opens it when the host is armed
+  (`boot.armed`), hands its traceparent and the boot server's collector to the host
+  (`/etc/archon/first-boot.env`), and the first boot's `archon` run continues it there.
+- **FR-010** An `archon` run's phases and problems are events (`archon.phase`, `archon.problem`),
+  each an OTLP log record in the run's trace, sent to the collector when the run ends (best effort,
+  3 seconds at most). The terminal and the run log print the same facts.
+
 ## Open
 
 - The install as one trace from `boot arm` to the end of the first boot (the boot server's trace
@@ -64,6 +71,9 @@ collector. Research: [research.md](research.md).
 
 ## Success Criteria
 
+- **SC-003** The e2e lab checks that the host's first boot continued the boot server's install trace
+  (`tests/e2e/trace.ts`); `tests/telemetry_test.ts` checks a run's phases arrive as log records in
+  its trace.
 - **SC-002** `tests/pretty_test.ts`: the window renders events (tone, columns, debug, repeats), the
   same line from an OTLP log record as from the event, and the boot server accepts only declared
   events from this PC.

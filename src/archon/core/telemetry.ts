@@ -11,6 +11,7 @@
 // OTEL_DENO, or if the API cannot load, everything here is a no-op.
 
 import { type MetricName, METRICS } from "../telemetry/signals.ts";
+import { type ArchonEvent, toLogsRequest } from "../telemetry/events.ts";
 import { redact } from "../notify/redact.ts";
 
 type Attrs = Record<string, string | number | boolean>;
@@ -55,6 +56,8 @@ let started = 0;
 const phases = new Map<string, Span>();
 const runAttrs: Attrs = {};
 const instruments = new Map<string, Instrument>();
+/** Spec 049: this run's events (phases, problems), sent as OTLP log records at its end. */
+const runEvents: ArchonEvent[] = [];
 
 /** Load the API when OpenTelemetry is on; silently off otherwise. */
 export async function initTelemetry(): Promise<void> {
@@ -156,6 +159,15 @@ export const phaseListener = {
     if (!api || !s) return;
     s.setAttribute("archon.phase.result", redact(summary));
     s.setAttribute("archon.phase.level", level);
+    const c = s.spanContext();
+    runEvents.push({
+      name: "archon.phase",
+      severity: level === "fail" ? "error" : level === "warn" ? "warn" : "info",
+      message: redact(`${name}: ${summary}`),
+      attrs: { "archon.phase": name, "archon.phase.level": level },
+      traceId: c.traceId,
+      spanId: c.spanId,
+    });
     s.setStatus({ code: level === "fail" ? api.SpanStatusCode.ERROR : api.SpanStatusCode.OK });
     s.end();
     phases.delete(name);
@@ -173,9 +185,12 @@ export function endRun(code: number, failures: number, warnings: number): void {
   for (const s of phases.values()) s.end();
   root.setAttribute("archon.outcome", outcome);
   root.setStatus({ code: outcome === "ok" ? api.SpanStatusCode.OK : api.SpanStatusCode.ERROR });
+  lastRoot = root.spanContext();
   root.end();
   root = undefined;
 }
+
+let lastRoot: SpanContext | undefined;
 
 /** archon verify: how many checks passed and failed. */
 export function recordChecks(passed: number, failed: number): void {
@@ -186,4 +201,42 @@ export function recordChecks(passed: number, failed: number): void {
 /** archon apply: how many changes it made (or would make, with --check). */
 export function recordChanges(n: number, check: boolean): void {
   count("archon.apply.changes", n, { "archon.check": check });
+}
+
+/**
+ * Spec 049: the run's problems join its events, and every event goes to the
+ * collector as an OTLP log record in the run's trace (the terminal and the run
+ * log print the same facts). Best effort, a few seconds at most; silent when
+ * OpenTelemetry is off.
+ */
+export async function flushEvents(
+  problems: Array<{ level: "warn" | "fail"; phase: string; message: string; fix?: string }>,
+): Promise<void> {
+  if (!api) return;
+  const ids = root?.spanContext() ?? lastRoot;
+  for (const p of problems) {
+    runEvents.push({
+      name: "archon.problem",
+      severity: p.level === "fail" ? "error" : "warn",
+      message: redact(p.message),
+      attrs: { "archon.phase": p.phase, ...(p.fix ? { "archon.fix": redact(p.fix) } : {}) },
+      ...(ids ? { traceId: ids.traceId, spanId: ids.spanId } : {}),
+    });
+  }
+  const endpoint = Deno.env.get("OTEL_EXPORTER_OTLP_ENDPOINT");
+  if (!endpoint || !runEvents.length) return;
+  const resource: Record<string, string> = {
+    "service.name": Deno.env.get("OTEL_SERVICE_NAME") ?? "archon",
+  };
+  for (const kv of (Deno.env.get("OTEL_RESOURCE_ATTRIBUTES") ?? "").split(",")) {
+    const i = kv.indexOf("=");
+    if (i > 0 && kv.slice(i + 1)) resource[kv.slice(0, i).trim()] = kv.slice(i + 1).trim();
+  }
+  const body = JSON.stringify(toLogsRequest(runEvents.splice(0), resource, "archon"));
+  await fetch(`${endpoint.replace(/\/$/, "")}/v1/logs`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body,
+    signal: AbortSignal.timeout(3000),
+  }).then((r) => r.body?.cancel()).catch(() => {});
 }

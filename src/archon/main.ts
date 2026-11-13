@@ -8,7 +8,14 @@ import { defaultLogPath, ui } from "./core/ui.ts";
 import { shareCheckout } from "./core/share.ts";
 import { writeStatus } from "./core/status.ts";
 import { hostLock } from "./core/lock.ts";
-import { count, endRun, initTelemetry, phaseListener, startRun } from "./core/telemetry.ts";
+import {
+  count,
+  endRun,
+  flushEvents,
+  initTelemetry,
+  phaseListener,
+  startRun,
+} from "./core/telemetry.ts";
 import { VERSION } from "./version.ts";
 
 /**
@@ -164,6 +171,7 @@ export async function main(argv: string[]): Promise<number> {
         await shareCheckout();
         await record(code ? 1 : 0, 0, 0);
         endRun(code, code ? 1 : 0, 0);
+        await flushEvents(ui.problems);
       }
     }
     // Operations (Article 19): header, phases, one run log, closing summary.
@@ -187,6 +195,7 @@ export async function main(argv: string[]): Promise<number> {
       ui.problems.filter((p) => p.level === "fail").length,
       ui.problems.filter((p) => p.level === "warn").length,
     );
+    await flushEvents(ui.problems);
     const summary = ui.finish({ title: `${cmd.name} finished` });
     return Math.max(code, summary);
   } catch (e) {
