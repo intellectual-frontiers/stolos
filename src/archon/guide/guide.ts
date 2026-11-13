@@ -523,7 +523,7 @@ export function agentSetup(plan: HostPlan): AgentSetup {
   // The same target archon build writes into .mcp.json (render/agent.ts).
   const target = `ops@${host.dnsName ?? host.ip ?? host.name}`;
   return {
-    server: `archon-${host.name}`,
+    server: `archon-${fleet.id}-${host.name}`,
     target,
     args: ["-T", "-o", "BatchMode=yes", "-o", "ServerAliveInterval=30", target],
     tier: fleet.mcp?.maxTier ?? "mutate",

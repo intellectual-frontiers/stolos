@@ -40,7 +40,7 @@ export async function fleetStatus(): Promise<number> {
   const knownHosts = await writeKnownHosts().catch(() => undefined);
   await Promise.all(
     hosts.filter((h) => h.kind !== "workstation").map(async (h) => {
-      const target = mcpServers([h])[0]?.target;
+      const target = mcpServers([h], P.fleetId)[0]?.target;
       if (!target) return;
       const r = await callRemoteTool(target, "archon_state", { json: true }, {
         timeoutMs: 15_000,

@@ -21,7 +21,8 @@ permissions:
 jobs:
   install:
     runs-on: ubuntu-24.04
-    timeout-minutes: 120
+    # A run takes about 11 minutes; a hung VM must not hold a runner for hours.
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
       - uses: denoland/setup-deno@v2
@@ -51,3 +52,4 @@ jobs:
             !tests/e2e/work/*.qcow2
             !tests/e2e/work/*.fd
           if-no-files-found: ignore
+          retention-days: 14

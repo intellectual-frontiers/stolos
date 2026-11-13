@@ -4,6 +4,7 @@
 import { ui } from "../core/ui.ts";
 import { loadHosts } from "../model/load.ts";
 import { mcpServers } from "../render/agent.ts";
+import { P } from "../core/paths.ts";
 import { callRemoteTool } from "./remote.ts";
 import { queryRefusal, table } from "../state/query.ts";
 
@@ -11,7 +12,7 @@ export async function fleetQuery(sql: string, json: boolean): Promise<number> {
   const why = queryRefusal(sql);
   if (why) throw new Error(`refused: ${why}`);
   const hosts = await loadHosts();
-  const servers = mcpServers(hosts);
+  const servers = mcpServers(hosts, P.fleetId);
   // Spec 047: each server's key is checked against Git (registration.ts).
   const { writeKnownHosts } = await import("../fleet/registration.ts");
   const knownHosts = await writeKnownHosts().catch(() => undefined);

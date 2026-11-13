@@ -71,13 +71,15 @@ Constitution Articles 7, 24, 26.
   stdio server per server host, over SSH as `ops`); each server limits its tools itself (Article
   17). Archon installs no agent on workstations.
 - **FR-010** Instructions for people and agents are `AGENTS.md` only.
+- **FR-011** `archon fleet init <id>` creates `fleets/<id>/` and, in a repository without them,
+  `deno.json` pinned to the running engine's release, `archon.ts`, `boot.ts`, `engine.ts`,
+  `.gitignore`, and `deno.lock`; it never overwrites a file. `--fleet <id>` (or `ARCHON_FLEET`)
+  chooses the fleet of a repository holding several, for `archon` and the boot server.
+- **FR-012** MCP servers are named `archon-<fleet>-<host>`. The repository has one `.mcp.json`; a
+  fleet's build replaces only its own servers' entries and keeps the other fleets'.
 
 ## Open
 
-- `archon fleet init <id>` writing `fleets/<id>/`, `deno.json`, `archon.ts`, and `boot.ts` in a
-  fleet repository (Phase 2).
-- MCP server names per fleet (`archon-<fleet>-<host>`) and `fleet/host` names where a name is
-  ambiguous.
 - Providers as explicit choices in the model (site, mail, DNS, ACME, vault).
 
 ## Success Criteria

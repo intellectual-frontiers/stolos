@@ -17,12 +17,38 @@ Deno.test("030: workstations reach each server over SSH as ops, one MCP server e
   const servers = mcpServers([
     host({ name: "alpha", dnsName: "alpha.localdomain" }),
     host({ name: "pc", kind: "workstation" }),
-  ]);
-  assertEquals(servers, [{ name: "archon-alpha", target: "ops@alpha.localdomain" }]);
+  ], "lab");
+  assertEquals(servers, [{ name: "archon-lab-alpha", target: "ops@alpha.localdomain" }]);
   const mcp = JSON.parse(renderMcpJson(servers)).mcpServers;
-  assertEquals(mcp["archon-alpha"].command, "ssh");
-  assertEquals(mcp["archon-alpha"].args.at(-1), "ops@alpha.localdomain");
-  assert(mcp["archon-alpha"].args.includes("BatchMode=yes"));
+  assertEquals(mcp["archon-lab-alpha"].command, "ssh");
+  assertEquals(mcp["archon-lab-alpha"].args.at(-1), "ops@alpha.localdomain");
+  assert(mcp["archon-lab-alpha"].args.includes("BatchMode=yes"));
+});
+
+Deno.test("046: one .mcp.json for every fleet: a build replaces only its own fleet's servers", () => {
+  const e = { command: "ssh", args: ["ops@x"] };
+  const existing = JSON.stringify({
+    mcpServers: {
+      "archon-alpha": e, // the old, fleet-less name: dropped
+      "archon-lab-old": e, // this fleet's: replaced by what the build renders
+      "archon-lab-2-beta": e, // fleet lab-2, whose id starts with lab
+      "archon-home-gamma": e, // fleet home
+      "archon-gone-delta": e, // a fleet no longer in the repository: dropped
+    },
+  });
+  const out = JSON.parse(
+    renderMcpJson([{ name: "archon-lab-alpha", target: "ops@alpha" }], {
+      existing,
+      fleet: "lab",
+      fleets: ["home", "lab", "lab-2"],
+    }),
+  ).mcpServers;
+  assertEquals(Object.keys(out), ["archon-home-gamma", "archon-lab-2-beta", "archon-lab-alpha"]);
+  // Built from fleet lab-2, lab's servers are kept.
+  const back = JSON.parse(
+    renderMcpJson([], { existing, fleet: "lab-2", fleets: ["home", "lab", "lab-2"] }),
+  ).mcpServers;
+  assertEquals(Object.keys(back), ["archon-home-gamma", "archon-lab-old"]);
 });
 
 Deno.test("030: ops' keys only start archon mcp at the fleet's tier", async () => {

@@ -2,7 +2,7 @@
 // every host plan (TypeScript, Article 10), then render each host's files into
 // out/hosts/<host>/rootfs/. Deterministic: building twice changes nothing.
 
-import { P } from "./core/paths.ts";
+import { listFleets, P } from "./core/paths.ts";
 import { engineSpecs } from "./core/assets.ts";
 import { join } from "./core/path.ts";
 import { ensureDir, exists, listDirs, readTextOr, walkFiles, writeIfChanged } from "./core/fsx.ts";
@@ -157,14 +157,19 @@ export async function renderHosts(m: Model): Promise<number> {
 export async function renderRepoFiles(m?: Model): Promise<number> {
   const { renderManPages } = await import("./render/man.ts");
   const { mcpServers, renderMcpJson } = await import("./render/agent.ts");
-  const servers = m ? mcpServers(m.hosts) : [];
+  const servers = m ? mcpServers(m.hosts, P.fleetId) : [];
   let written = 0;
   for (const [rel, content] of renderManPages()) {
     const target = join(P.man, rel);
     await ensureDir(join(target, ".."));
     if (await writeIfChanged(target, content)) written++;
   }
-  if (await writeIfChanged(P.mcpJson, renderMcpJson(servers))) written++;
+  const mcp = renderMcpJson(servers, {
+    existing: await readTextOr(P.mcpJson),
+    fleet: P.fleetId,
+    fleets: listFleets(P.repo),
+  });
+  if (await writeIfChanged(P.mcpJson, mcp)) written++;
   return written;
 }
 

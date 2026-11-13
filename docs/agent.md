@@ -41,8 +41,8 @@ C:\archon (or /srv/archon)   claude                      sshd
    claude
    ```
 
-   Claude Code asks once to trust the project's MCP servers (`archon-<host>` for each server);
-   `/mcp` shows them connected.
+   Claude Code asks once to trust the project's MCP servers (`archon-<fleet>-<host>` for each
+   server); `/mcp` shows them connected.
 
 ## Use it
 

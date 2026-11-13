@@ -1999,7 +1999,7 @@ export const COMMANDS: Command[] = [
     description:
       `Starts a Model Context Protocol server on stdin/stdout. Each command within --max-tier becomes a tool named archon_<command>; man pages, specs, the constitution, and reports are resources. A command above the tier is not listed and is refused; one with a read-only flag (apply --check) is listed and runs only with that flag. The destructive tier is never served. Each call is journaled (tag archon-mcp, with SSH_CLIENT).
 
-On a server, workstations reach it as ops over SSH (spec 030): ops' authorized_keys forces this command with the fleet's tier (fleet.mcp.maxTier, default mutate) and restrict, so an agent can do nothing else there. On a workstation, archon build renders .mcp.json with one entry per server (archon-<host>: ssh ops@<host>).`,
+On a server, workstations reach it as ops over SSH (spec 030): ops' authorized_keys forces this command with the fleet's tier (fleet.mcp.maxTier, default mutate) and restrict, so an agent can do nothing else there. On a workstation, archon build renders .mcp.json with one entry per server (archon-<fleet>-<host>: ssh ops@<host>).`,
     tier: "read",
     noMcp: true,
     args: [{
