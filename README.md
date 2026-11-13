@@ -74,7 +74,8 @@ From a fleet repository, `archon` finds the fleet the same way: `ARCHON_REPO` (t
 
 ## Status
 
-`v0.1.0` is the engine as it stood in its first fleet, made general: the engine/fleet split,
-per-fleet secrets, the example lab, and the versioning above. Next (Phase 1 of the plan): signed
-approval and read-only hosts (`047-intent-and-identity`), observing machines through osquery and
-`archon.sql` (`048-observe-by-query`), and OpenTelemetry everywhere (`049-telemetry`).
+The engine (`v0.1.0` onward) is the engine as it stood in its first fleet, made general: the
+engine/fleet split, per-fleet secrets, the example lab, and the versioning above. Next (Phase 1 of
+the plan): signed approval and read-only hosts (`047-intent-and-identity`), observing machines
+through osquery and `archon.sql` (`048-observe-by-query`), and OpenTelemetry everywhere
+(`049-telemetry`).

@@ -21,7 +21,8 @@ everything here.
   `src/archon/assets.auto.ts` (the engine's docs, specs, constitution, and base dotfiles, carried as
   a module).
 - **Full import specifiers in `src/`** (`npm:...@x.y.z`, relative paths): a fleet loads the engine
-  by URL, so the engine's own import map does not apply there.
+  by URL, so the engine's own import map does not apply there (so the lint rule `no-import-prefix`
+  is off).
 - **Every push to `main` raises the version.** Run `deno task version bump` (0.1.0, 0.2.0, ...) in
   the same push; CI fails otherwise and tags the commit `v<version>` when it passes. The version
   lives only in `src/archon/version.ts`.
