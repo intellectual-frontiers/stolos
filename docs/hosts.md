@@ -17,6 +17,12 @@ the MAC it learned. If you prefer, give it up front: `host add alpha --mac 1c:83
 
 ## First install
 
+**Memory.** A server installed by network boot needs at least 8 GB of RAM: Ubuntu's netboot
+installer downloads the whole installer image (about 3 GB) into memory and runs from there. With
+less, it stalls before partitioning, with nothing on the boot server's screen after "installer image
+(whole)". (Found by the end-to-end lab: machines with 5.75 and 7 GiB stalled there; 8 GiB installs.)
+For a smaller machine, install Ubuntu by hand, then bootstrap (below).
+
 1. Start the boot server on the PC and leave it running ([boot machine](boot-machine.md)):
 
    ```powershell
@@ -103,8 +109,11 @@ class `HTTPClient`: option 60 `HTTPClient`, option 67 the URI); PXE is simpler o
 ## Install Ubuntu by hand, then bootstrap
 
 If a server cannot network-boot (or you would rather install from a USB stick), install a plain
-Ubuntu Server and let Archon finish it over SSH. The result is the same as a network install, except
-that the host keeps the SSH host keys its installer made (the PC asks once to trust them).
+Ubuntu Server (or Ubuntu's cloud image) and let Archon finish it over SSH. The result is the same as
+a network install: the host gets its fleet, the signers it trusts, and the SSH host keys registered
+for it in Git (`registration.ts`), which replace the ones its installer made. Your first `ssh` to it
+by address asks once to trust the installer's keys; after the bootstrap, `archon fleet trust` puts
+the registered ones in your known_hosts.
 
 **a. Get Ubuntu Server 26.04 LTS** from <https://ubuntu.com/download/server> (or
 `https://releases.ubuntu.com/26.04/ubuntu-26.04.1-live-server-amd64.iso`) and check it against

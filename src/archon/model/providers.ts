@@ -21,3 +21,15 @@ export const ACME_DIRECTORIES: Record<ProvidersDef["acme"], string> = {
   // Untrusted certificates with generous rate limits: for test fleets (synthetic, UAT).
   "letsencrypt-staging": "https://acme-staging-v02.api.letsencrypt.org/directory",
 };
+
+/**
+ * Names reserved for documentation and tests (RFC 2606, RFC 6761): example.com,
+ * example.net, example.org, and the .test, .example, .invalid, .localhost
+ * domains. No provider can hold them, so a synthetic fleet uses them and the
+ * checks that ask the outside world about a domain skip them.
+ */
+export function isReservedDomain(domain: string): boolean {
+  const d = domain.toLowerCase().replace(/\.$/, "");
+  return /(^|\.)example\.(com|net|org)$/.test(d) ||
+    /(^|\.)(test|example|invalid|localhost)$/.test(d);
+}

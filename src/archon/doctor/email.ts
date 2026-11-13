@@ -12,6 +12,7 @@ import { exists } from "../core/fsx.ts";
 import { run } from "../core/exec.ts";
 import { enqueue, flush, loadCredential, queued, readStatus, type Site } from "../notify/notify.ts";
 import { probeSmtp, relayParts } from "../notify/transport.ts";
+import { isReservedDomain } from "../model/providers.ts";
 
 async function txt(name: string): Promise<string[]> {
   try {
@@ -77,9 +78,14 @@ export async function emailChecks(
   };
   const domain = site.from.split("@")[1];
 
-  // The sending domain, as Cloudflare's onboarding sets it up.
-  const missing = await domainRecords(domain);
-  if (missing.length) {
+  // The sending domain, as Cloudflare's onboarding sets it up. A reserved test
+  // domain (a synthetic fleet's) can never be onboarded: not asked about.
+  const missing = isReservedDomain(domain) ? [] : await domainRecords(domain);
+  if (isReservedDomain(domain)) {
+    p.warn(
+      `${domain} is reserved for tests (RFC 2606): its DNS is not checked, and no mail can leave`,
+    );
+  } else if (missing.length) {
     p.fail(
       `${domain} is missing ${missing.join(", ")}: Cloudflare will refuse or mail will be rejected`,
       `Cloudflare: Compute > Email Service > Email Sending > Onboard Domain > ${domain}`,

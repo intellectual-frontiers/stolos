@@ -18,6 +18,27 @@ BR=10.77.0.1
 MAC=52:54:00:12:34:56
 WS_MAC=52:54:00:12:34:57
 TIMEOUT_MIN=${E2E_TIMEOUT_MIN:-80}
+# A stall: no new event from the boot server for this long ends the run, diagnosed.
+STALL_MIN=${E2E_STALL_MIN:-15}
+# E2E_SQUEEZE_MB (tests of the lab itself): hold that much of the runner's
+# memory, to try a private runner's 8 GB on a public runner's 16.
+if [ -n "${E2E_SQUEEZE_MB:-}" ]; then
+  sudo mount -o remount,size=$((E2E_SQUEEZE_MB + 512))M /dev/shm
+  dd if=/dev/zero of=/dev/shm/archon-e2e-squeeze bs=1M count="$E2E_SQUEEZE_MB" status=none
+fi
+# How the server is installed, from the runner's memory. GitHub's public
+# runners have 16 GB: "network", a blank Secure Boot VM network-boots and
+# Ubuntu's installer runs (it holds the whole image in memory: 8 GiB). Private
+# runners have 8 GB, too little for that next to the runner itself:
+# "bootstrap", Ubuntu's cloud image finished by archon host bootstrap (the
+# path for a server installed by hand). The engine's own lab runs the network
+# install on every release. E2E_SERVER_INSTALL chooses either.
+HOST_MB=$(($(free -m | awk '/^Mem:/ { print $2 }') - ${E2E_SQUEEZE_MB:-0}))
+if [ "$HOST_MB" -ge 12000 ]; then INSTALL=${E2E_SERVER_INSTALL:-network}; else INSTALL=${E2E_SERVER_INSTALL:-bootstrap}; fi
+if [ "$INSTALL" = network ]; then SERVER_MB=8192; else SERVER_MB=3584; fi
+E2E_VM_MEM=${E2E_VM_MEM:-$SERVER_MB}
+WS_MB=${E2E_WS_MEM:-3072}
+SERVER_IP=""
 OUT="$HERE/work"
 EVENTS="$HOME/.local/share/archon/boot/telemetry"
 log() { echo "e2e: $*"; }
@@ -31,10 +52,25 @@ lab_init() {
   ssh-keygen -q -t ed25519 -N "" -C "" -f "$W/signer" # this run's signer
 }
 
-# The address a host's last event came from (an installer had another lease).
-# (Never fails: an empty answer means none yet; set -e would end the run.)
+# The server's address: known (bootstrap), else the one its last event came
+# from (an installer had another lease). Never fails: empty means none yet.
 server_ip() {
-  { plain <"$OUT/boot.log" | grep -E " $SERVER " | grep -oE '10\.77\.0\.[0-9]+' | tail -n 1; } || true
+  if [ -n "$SERVER_IP" ]; then echo "$SERVER_IP"; return; fi
+  { plain <"$OUT/boot.log" 2>/dev/null | grep -E " $SERVER " | grep -oE '10\.77\.0\.[0-9]+' | tail -n 1; } || true
+}
+
+# The address of a machine that answers SSH, from its card's leases (it can
+# hold more than one: an early DHCP client's, then the booted system's).
+lease_ip() { # lease_ip <mac>
+  local ip="" cand
+  for _ in $(seq 60); do
+    for cand in $(awk -v m="$1" 'tolower($2) == m { print $1, $3 }' "$W/leases" 2>/dev/null |
+      sort -rn | awk '{ print $2 }'); do
+      if ssh_to "$ADMIN@$cand" true 2>/dev/null; then ip=$cand; break 2; fi
+    done
+    sleep 5
+  done
+  echo "$ip"
 }
 
 ssh_to() { # ssh_to <user@address> <command>
@@ -44,9 +80,11 @@ ssh_to() { # ssh_to <user@address> <command>
 
 # On failure: everything the boot server recorded, and what the machines say.
 diagnose() {
-  echo "::group::boot.log (every event the boot server recorded)"
-  plain <"$OUT/boot.log" || true
-  echo "::endgroup::"
+  if [ -f "$OUT/boot.log" ]; then
+    echo "::group::boot.log (every event the boot server recorded)"
+    plain <"$OUT/boot.log" || true
+    echo "::endgroup::"
+  fi
   local ip
   ip=$(server_ip || true)
   if [ -n "$ip" ]; then
@@ -55,11 +93,13 @@ diagnose() {
       2>&1 | plain | tee "$OUT/vm-diagnosis.txt" || true
     echo "::endgroup::"
   fi
-  if [ -f "$OUT/ws-console.log" ]; then
-    echo "::group::workstation console (last 80 lines)"
-    sudo tail -n 80 "$OUT/ws-console.log" | plain || true
+  local c
+  for c in "$OUT"/*-console.log; do
+    [ -f "$c" ] || continue
+    echo "::group::$(basename "$c") (last 80 lines)"
+    sudo tail -n 80 "$c" | plain || true
     echo "::endgroup::"
-  fi
+  done
 }
 fail() { log "FAILED: $*"; diagnose; exit 1; }
 
@@ -114,22 +154,43 @@ install_server() {
     --fleet "$FLEET" --port 8080) >"$OUT/boot.log" 2>&1 &
   for _ in $(seq 600); do curl -fsS -o /dev/null "http://$BR:8080/health" && break; sleep 2; done
   curl -fsS "http://$BR:8080/health"
-  log "$SERVER: blank VM, Secure Boot on, network boot"
-  sudo "$HERE/vm.sh"
-  local deadline result="" seen=0 n
+  log "$SERVER: blank VM, Secure Boot on, network boot (runner ${HOST_MB} MB, VM ${E2E_VM_MEM} MiB)"
+  sudo E2E_VM_MEM="$E2E_VM_MEM" "$HERE/vm.sh"
+  local deadline result="" seen=0 n last
   deadline=$(($(date +%s) + TIMEOUT_MIN * 60))
+  last=$(date +%s)
   while [ "$(date +%s)" -lt "$deadline" ]; do
     if grep -qs '"boot.ready"' "$EVENTS"/otlp-*.jsonl; then result=ready; break; fi
     if grep -qs '"boot.done-with-problems"' "$EVENTS"/otlp-*.jsonl; then result=problems; break; fi
     if ! sudo kill -0 "$(sudo cat "$OUT/qemu.pid")" 2>/dev/null; then result=vm-stopped; break; fi
     sleep 30
     n=$(wc -l <"$OUT/boot.log")
+    if [ "$n" -gt "$seen" ]; then last=$(date +%s); fi
     sed -n "$((seen + 1)),${n}p" "$OUT/boot.log" | plain
     seen=$n
+    if [ $(($(date +%s) - last)) -ge $((STALL_MIN * 60)) ]; then result="stalled ($STALL_MIN minutes without an event)"; break; fi
   done
   cp -r "$EVENTS" "$OUT/telemetry" 2>/dev/null || true
   log "install: ${result:-timed out after $TIMEOUT_MIN minutes}"
   [ "$result" = ready ] || fail "the install did not reach Ready"
+}
+
+# A server installed by hand, finished from the runner (spec 005): Ubuntu's
+# cloud image, then archon host bootstrap, which runs the same first boot.
+bootstrap_server() {
+  log "$SERVER: Ubuntu's cloud image, then archon host bootstrap (runner ${HOST_MB} MB, VM ${E2E_VM_MEM} MiB)"
+  sudo E2E_VM_MEM="$E2E_VM_MEM" "$HERE/cloud-vm.sh" "$SERVER" "$MAC" archtap0 "$ADMIN" "$W/admin.pub"
+  SERVER_IP=$(lease_ip "$MAC")
+  [ -n "$SERVER_IP" ] || fail "$SERVER did not answer SSH"
+  ssh_to "$ADMIN@$SERVER_IP" 'cloud-init status --wait >/dev/null || true'
+  log "$SERVER is at $SERVER_IP; bootstrapping"
+  # The boot machine's ssh, for this lab's addresses only: trust each new VM once.
+  mkdir -p "$HOME/.ssh"
+  printf 'Host 10.77.0.*\n  StrictHostKeyChecking accept-new\n  UserKnownHostsFile /dev/null\n  IdentityFile %s\n  LogLevel ERROR\n' \
+    "$W/admin" >>"$HOME/.ssh/config"
+  (cd "$F" && "${A[@]}" host bootstrap "$SERVER" --ssh "$ADMIN@$SERVER_IP" </dev/null) 2>&1 | plain |
+    tee "$OUT/bootstrap.txt" || fail "archon host bootstrap failed"
+  log "$SERVER: bootstrapped"
 }
 
 # Spec 049: the boot server's "install <host>" trace, continued by the host's first boot.
@@ -165,10 +226,15 @@ reboot_server() {
   # A clean shutdown, as an operator's would be: right after an install,
   # Ubuntu's unattended-upgrades may still be running apt, and its shutdown
   # hook waits for it. Cutting the power then can break dpkg's state.
-  local pid start waited
-  pid=$(sudo cat "$OUT/qemu.pid")
+  local pid start waited pidf sock console
+  if [ "$INSTALL" = network ]; then
+    pidf="$OUT/qemu.pid" sock="$OUT/monitor.sock" console="$OUT/console.log"
+  else
+    pidf="$OUT/$SERVER-qemu.pid" sock="$OUT/$SERVER-monitor.sock" console="$OUT/$SERVER-console.log"
+  fi
+  pid=$(sudo cat "$pidf")
   start=$(date +%s)
-  echo system_powerdown | sudo nc -U -q 1 "$OUT/monitor.sock" >/dev/null 2>&1 || true
+  echo system_powerdown | sudo nc -U -q 1 "$sock" >/dev/null 2>&1 || true
   for _ in $(seq 300); do sudo kill -0 "$pid" 2>/dev/null || break; sleep 2; done
   waited=$(($(date +%s) - start))
   if sudo kill -0 "$pid" 2>/dev/null; then
@@ -176,8 +242,12 @@ reboot_server() {
     fail "$SERVER did not shut down within $waited seconds of the power button"
   fi
   log "$SERVER shut down cleanly in $waited seconds"
-  sudo mv "$OUT/console.log" "$OUT/console-install.log"
-  sudo E2E_VM_BOOT=disk E2E_VM_MEM="${E2E_SERVER_MEM:-2048}" "$HERE/vm.sh"
+  sudo mv "$console" "${console%.log}-install.log"
+  if [ "$INSTALL" = network ]; then
+    sudo E2E_VM_BOOT=disk E2E_VM_MEM="${E2E_SERVER_MEM:-2048}" "$HERE/vm.sh"
+  else
+    sudo E2E_VM_BOOT=disk E2E_VM_MEM="${E2E_SERVER_MEM:-2048}" "$HERE/cloud-vm.sh" "$SERVER" "$MAC" archtap0 "$ADMIN" "$W/admin.pub"
+  fi
   for _ in $(seq 90); do ssh_to "$ADMIN@$ip" true 2>/dev/null && break; sleep 5; done
   ssh_to "$ADMIN@$ip" 'systemctl is-system-running --wait >/dev/null; archon verify' 2>&1 | plain |
     tee "$OUT/verify-after-reboot.txt" || fail "archon verify failed after a reboot"
@@ -190,17 +260,9 @@ reboot_server() {
 workstation_stage() {
   [ -n "${WS:-}" ] || return 0
   log "$WS: Ubuntu cloud image"
-  sudo "$HERE/ws-vm.sh" "$ADMIN" "$W/admin.pub"
-  local ip="" s cand
-  # Its card can hold more than one lease (an early DHCP client, then the
-  # booted system's): try each, newest first, until one answers SSH.
-  for _ in $(seq 60); do
-    for cand in $(awk -v m="$WS_MAC" 'tolower($2) == m { print $1, $3 }' "$W/leases" 2>/dev/null |
-      sort -rn | awk '{ print $2 }'); do
-      if ssh_to "$ADMIN@$cand" true 2>/dev/null; then ip=$cand; break 2; fi
-    done
-    sleep 5
-  done
+  sudo E2E_VM_MEM="$WS_MB" "$HERE/cloud-vm.sh" "$WS" "$WS_MAC" archtap1 "$ADMIN" "$W/admin.pub"
+  local ip s
+  ip=$(lease_ip "$WS_MAC")
   [ -n "$ip" ] || fail "the workstation did not answer SSH on any of its leases"
   log "$WS is at $ip"
   local deno_v sip
@@ -228,8 +290,12 @@ deno run -A --frozen archon.ts --fleet $FLEET workstation add $WS"
 }
 
 run_lab() {
-  install_server
-  check_trace
+  if [ "$INSTALL" = network ]; then
+    install_server
+    check_trace
+  else
+    bootstrap_server
+  fi
   query_from_runner
   reboot_server
   workstation_stage

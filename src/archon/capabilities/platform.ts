@@ -83,7 +83,10 @@ export const platform = (): Capability => ({ host, fleet }) => ({
     active("systemd-networkd.service"),
     active("systemd-resolved.service"),
     active("chrony.service"),
-    active("snapd.service"),
+    // snapd is socket-activated: its service runs only while something uses it
+    // (a network install seeds snaps, so it happens to be active then; Ubuntu's
+    // cloud image leaves it idle). The socket is what must be there.
+    active("snapd.socket"),
     active("apparmor.service"),
   ],
   checks: NO_MULTICAST_NAMES.checks,

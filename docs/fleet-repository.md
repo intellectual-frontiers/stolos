@@ -170,11 +170,18 @@ jobs:
     with: { fleet: synthetic-uat, server: e2e-server-uat, workstation: e2e-workstation-uat }
 ```
 
-**Cost.** A run takes about 20 minutes of a Linux runner. In a private repository, that counts
-against the GitHub account's included Actions minutes (2,000 a month on the Free plan, 3,000 on
-Pro); beyond them, GitHub charges only if you set a budget above zero. So the workflow runs by hand
-and when the engine pin or the synthetic fleet changes, not on every push. Check usage under
-Settings, Billing and licensing.
+**How the server is installed in the lab.** A private repository's runners have 8 GB of memory, too
+little for Ubuntu's network installer (it holds the whole installer image in memory) next to the
+runner itself. There, the lab starts the server from Ubuntu's cloud image and finishes it with
+`archon host bootstrap`, the path for a server installed by hand: the same first boot, fleet,
+signers, and registered SSH host keys. The engine's own lab (public, 16 GB runners) runs the full
+network install, Secure Boot and all, on every engine release.
+
+**Cost.** A run in a private repository takes about 8 minutes of a Linux runner, counted against the
+GitHub account's included Actions minutes (2,000 a month on the Free plan, 3,000 on Pro); beyond
+them, GitHub charges only if you set a budget above zero. The workflow runs by hand and when the
+engine pin or the synthetic fleet changes, not on every push. Check usage under Settings, Billing
+and licensing.
 
 ## Registration: who each host is
 

@@ -8,6 +8,19 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      vm_mem:
+        description: The server VM's memory in MiB (empty for the lab's choice; 5888 is a private runner's).
+        required: false
+        default: ""
+      install:
+        description: How the server is installed (network or bootstrap; empty for the lab's choice).
+        required: false
+        default: ""
+      squeeze_mb:
+        description: Hold this much of the runner's memory (8192 tries a private runner's 8 GB).
+        required: false
+        default: ""
 
 # One run at a time per branch. On main every version gets its complete run
 # (newer pushes wait); elsewhere a newer push replaces the run in progress.
@@ -40,7 +53,14 @@ jobs:
           sudo apt-get update -q
           sudo apt-get install -y -q qemu-system-x86 qemu-utils ovmf dnsmasq-base cloud-image-utils netcat-openbsd
       - name: Install a VM end to end
+        env:
+          E2E_VM_MEM: ${{ inputs.vm_mem }}
+          E2E_SQUEEZE_MB: ${{ inputs.squeeze_mb }}
+          E2E_SERVER_INSTALL: ${{ inputs.install }}
         run: tests/e2e/ci.sh
+      - name: Logs readable (QEMU writes them as root; a cancelled run skips the lab's own fix)
+        if: always()
+        run: sudo chmod -R a+rX tests/e2e/work 2>/dev/null || true
       - name: Logs
         if: always()
         uses: actions/upload-artifact@v4

@@ -34,6 +34,11 @@ export const fleet: FleetDef = {
   timezone: "America/New_York",
   locale: "en_US.UTF-8",
   keyboard: "us",
+  // As a real fleet: Cloudflare for DNS and mail, Let's Encrypt (its staging
+  // service here), with documentation domains and no tokens.
+  providers: { dns: "cloudflare", mail: "cloudflare", acme: "letsencrypt-staging" },
+  mail: { to: "fleet@example.net", domain: "example.net", tag: "e2e" },
+  web: { domain: "e2e.example.net" },
   network: { ipv6: false },
   admin: {
     user: "$ADMIN",

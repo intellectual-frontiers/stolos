@@ -472,3 +472,13 @@ Deno.test("032: records are written with a 60-second TTL (a new address spreads 
   assertEquals(out[0].action, "updated");
   assertEquals(JSON.parse(bodies[0]).ttl, 60);
 });
+
+Deno.test("046: reserved test domains (a synthetic fleet's) are known as such", async () => {
+  const { isReservedDomain } = await import("../src/archon/model/providers.ts");
+  for (const d of ["example.net", "uat.example.net", "EXAMPLE.com.", "x.test", "a.invalid"]) {
+    assert(isReservedDomain(d), d);
+  }
+  for (const d of ["acme.dev", "srv.acme.dev", "notexample.net", "example.network"]) {
+    assert(!isReservedDomain(d), d);
+  }
+});

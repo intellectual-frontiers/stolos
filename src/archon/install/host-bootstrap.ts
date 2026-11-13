@@ -10,6 +10,8 @@ import { ui } from "../core/ui.ts";
 import { readSecret, SECRETS } from "../core/secrets.ts";
 import { loadFleet, loadHosts } from "../model/load.ts";
 import { firstBootScript, GITHUB_KNOWN_HOSTS } from "../render/autoinstall.ts";
+import { allowedSignersText } from "../identity/signers.ts";
+import { ensureHostKeys } from "./host-keys.ts";
 
 export interface HostBootstrapOptions {
   name: string;
@@ -24,9 +26,19 @@ set -eu
 D=$(dirname "$0")
 install -d -m 0755 /etc/archon
 install -m 0644 "$D/host" /etc/archon/host
+install -m 0644 "$D/fleet" /etc/archon/fleet
+install -m 0644 "$D/allowed_signers" /etc/archon/allowed_signers
 install -m 0644 "$D/github_known_hosts" /etc/archon/github_known_hosts
 install -m 0755 "$D/archon-first-boot" /usr/local/sbin/archon-first-boot
 [ -f "$D/deploy_key" ] && install -m 0600 "$D/deploy_key" /etc/archon/deploy_key
+# The host's SSH identity, as registered in Git (spec 047), as a network install has it.
+for t in ed25519 ecdsa rsa; do
+  if [ -f "$D/ssh_host_\${t}_key" ]; then
+    install -m 0600 "$D/ssh_host_\${t}_key" "/etc/ssh/ssh_host_\${t}_key"
+    install -m 0644 "$D/ssh_host_\${t}_key.pub" "/etc/ssh/ssh_host_\${t}_key.pub"
+  fi
+done
+systemctl try-reload-or-restart ssh.service 2>/dev/null || true
 rm -rf "$D"
 echo "archon: first boot running (log: /var/log/archon-first-boot.log)"
 if /usr/local/sbin/archon-first-boot; then
@@ -58,18 +70,27 @@ export async function hostBootstrap(o: HostBootstrapOptions): Promise<number> {
   const dir = await Deno.makeTempDir({ prefix: "archon-bootstrap-" });
   const files: Record<string, string> = {
     "host": `${host.name}\n`,
+    // As the network install (specs 046, 047): which fleet, and whose signatures to trust.
+    "fleet": `${fleet.id}\n`,
+    "allowed_signers": allowedSignersText(fleet.signers ?? []),
     "github_known_hosts": GITHUB_KNOWN_HOSTS,
     "archon-first-boot": firstBootScript(fleet, host),
     "install.sh": INSTALL,
   };
   const key = await readSecret(SECRETS.deployKey(host.name));
   if (key) files["deploy_key"] = key + "\n";
+  // Its registered SSH host keys (made by host add): the keys Git vouches for.
+  for (const k of await ensureHostKeys(host.name)) {
+    files[`ssh_host_${k.type}_key`] = k.private;
+    files[`ssh_host_${k.type}_key.pub`] = `${k.public} root@${host.name}\n`;
+  }
   for (const [n, c] of Object.entries(files)) {
-    await Deno.writeTextFile(join(dir, n), c, { mode: n === "deploy_key" ? 0o600 : 0o644 });
+    const secret = n === "deploy_key" || /^ssh_host_\w+_key$/.test(n);
+    await Deno.writeTextFile(join(dir, n), c, { mode: secret ? 0o600 : 0o644 });
   }
   p.done(
-    `first-boot files for ${host.name}${
-      key ? " (with its deploy key)" : " (no deploy key: clones over HTTPS)"
+    `first-boot files for ${host.name}, its registered SSH host keys${
+      key ? ", its deploy key" : " (no deploy key: clones over HTTPS)"
     }`,
   );
 
@@ -91,7 +112,11 @@ export async function hostBootstrap(o: HostBootstrapOptions): Promise<number> {
 
   ui.pause();
   console.error(`   running first boot on ${o.ssh} with sudo (it may ask for your password):`);
-  const code = await ssh(["-t", o.ssh, `sudo sh ${remote}/install.sh`], true);
+  // A terminal only when there is one (sudo may ask for a password); not in automation.
+  const code = await ssh(
+    [...(Deno.stdin.isTerminal() ? ["-t"] : []), o.ssh, `sudo sh ${remote}/install.sh`],
+    Deno.stdin.isTerminal(),
+  );
   ui.resume();
   const r = ui.phase("First boot");
   if (code === 0) r.done(`${host.name} converged and pushed its first record`);

@@ -18,6 +18,7 @@ qemu-system-x86_64 -name e2e-server -machine q35,smm=on -accel "$ACCEL" -cpu max
   -drive if=pflash,format=raw,unit=0,file=/usr/share/OVMF/OVMF_CODE_4M.secboot.fd,readonly=on \
   -drive if=pflash,format=raw,unit=1,file="$W/vars.fd" \
   -drive file="$W/disk.qcow2",if=virtio,format=qcow2 \
+  -device virtio-balloon-pci,free-page-reporting=on \
   -netdev tap,id=n0,ifname=archtap0,script=no,downscript=no \
   -device virtio-net-pci,netdev=n0,mac=52:54:00:12:34:56,romfile= \
   -display none -serial file:"$W/console.log" -monitor unix:"$W/monitor.sock",server,nowait \

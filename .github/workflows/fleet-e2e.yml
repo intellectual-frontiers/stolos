@@ -38,8 +38,9 @@ permissions:
 jobs:
   install:
     runs-on: ubuntu-24.04
-    # About 20 minutes; a hung VM must not hold a runner (or private minutes) for hours.
-    timeout-minutes: 50
+    # About 8 minutes on a private runner (bootstrap), 20 on a public one; a hung VM
+    # must not hold a runner (or private minutes) for long.
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v5
         with:
@@ -80,6 +81,9 @@ jobs:
           SERVER: ${{ inputs.server }}
           WORKSTATION: ${{ inputs.workstation }}
         run: stolos/tests/e2e/fleet.sh fleet "$FLEET" "$SERVER" "$WORKSTATION"
+      - name: Logs readable (QEMU writes them as root; a cancelled run skips the lab's own fix)
+        if: always()
+        run: sudo chmod -R a+rX stolos/tests/e2e/work 2>/dev/null || true
       - name: Logs
         if: always()
         uses: actions/upload-artifact@v4

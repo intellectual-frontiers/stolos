@@ -18,16 +18,24 @@ The lab is [`lib.sh`](lib.sh); two scripts set it up:
 
 Either way, a run:
 
-1. starts the boot server from the fleet repository and network-boots a blank Secure Boot VM, which
-   installs to the boot server's event `boot.ready` (spec 049);
-2. checks that the host's first boot continued the install's trace;
+1. installs the server, one of two ways (`E2E_SERVER_INSTALL`, by default from the runner's memory):
+   - `network` (16 GB runners): starts the boot server from the fleet repository and network-boots a
+     blank Secure Boot VM, which installs to the boot server's event `boot.ready` (spec 049), then
+     checks that the host's first boot continued the install's trace;
+   - `bootstrap` (8 GB runners, where Ubuntu's installer does not fit): Ubuntu's cloud image,
+     finished with `archon host bootstrap`;
+2. (network only: the trace check, above);
 3. asks the server through its MCP server, from the runner (`archon fleet query`);
 4. powers the server off and on again, with less memory, and runs `archon verify` on it;
 5. starts a workstation from Ubuntu's cloud image (verified against Ubuntu's `SHA256SUMS`), clones
    the repository to `/srv/archon`, runs `archon workstation add`, `archon verify`, and
    `archon fleet query` from there: the agent's path to the server (spec 030).
 
-Every key and password of a run is made by it and thrown away. The logs are the run's artifact.
+Every key and password of a run is made by it and thrown away. The logs are the run's artifact. A
+run with no new event for 15 minutes ends, diagnosed. `E2E_PREPARE_ONLY=1 tests/e2e/fleet.sh ...`
+prepares a fleet repository's synthetic fleet (frozen engine, keys, signer, build, signed tip)
+without any machine; `squeeze_mb` (e2e.yml, by hand) tries a private runner's memory on a public
+runner.
 
 ## By hand
 
