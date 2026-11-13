@@ -21,7 +21,7 @@
 
 import { VERSION } from "../archon/version.ts";
 import { ui } from "../archon/core/ui.ts";
-import { P } from "../archon/core/paths.ts";
+import { P, resetRoots } from "../archon/core/paths.ts";
 import { join } from "../archon/core/path.ts";
 import { ensureDir } from "../archon/core/fsx.ts";
 import { armHost, liveToken, loadTokens } from "../archon/core/secrets.ts";
@@ -313,6 +313,16 @@ async function main(args: string[]): Promise<number> {
  * entry file, which imports this one through `@stolos/` (spec 046-engine-instance).
  */
 export async function run(argv: string[] = Deno.args): Promise<never> {
+  // Spec 046: --fleet <id> (anywhere) chooses the fleet of this repository.
+  const i = argv.findIndex((a) => a === "--fleet" || a.startsWith("--fleet="));
+  if (i >= 0) {
+    const id = argv[i].includes("=") ? argv[i].split("=", 2)[1] : argv[i + 1];
+    argv = [...argv.slice(0, i), ...argv.slice(i + (argv[i].includes("=") ? 1 : 2))];
+    if (id) {
+      Deno.env.set("ARCHON_FLEET", id);
+      resetRoots();
+    }
+  }
   const code = await main(argv);
   ui.printPanel(); // spec 029: a secret changed and is not backed up yet
   Deno.exit(code);

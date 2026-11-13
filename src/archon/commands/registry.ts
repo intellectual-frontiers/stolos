@@ -51,10 +51,17 @@ export const COMMANDS: Command[] = [
     name: "fleet init",
     summary: "Create the fleet from your GitHub identity (boot machine, once)",
     description:
-      `Reads your GitHub account with gh (login, ID, name, the noreply commit address) and your public SSH keys from github.com/<login>.keys, asks for your Unix account name and an admin password, and writes fleets/<fleet>/fleet.ts (spec 003). If fleets/<fleet>/fleet.ts already exists (a rebuilt boot machine), it is kept, with its admin account, and only the password hash and this checkout's git identity are set again; --rewrite starts the file over. Only the password's SHA-512 crypt hash is kept, in this machine's secret store, never in the repository (Article 13). Runs on Windows or Linux.`,
+      `With an id, the fleet is fleets/<id>/ of this repository (ARCHON_REPO, else the nearest folder holding fleets/, else the working directory); in a new, empty repository it also writes deno.json pinned to this engine's release, archon.ts, boot.ts, engine.ts, .gitignore, and deno.lock (spec 046). Reads your GitHub account with gh (login, ID, name, the noreply commit address) and your public SSH keys from github.com/<login>.keys, asks for your Unix account name and an admin password, and writes fleets/<fleet>/fleet.ts (spec 003). If fleets/<fleet>/fleet.ts already exists (a rebuilt boot machine), it is kept, with its admin account, and only the password hash and this checkout's git identity are set again; --rewrite starts the file over. Only the password's SHA-512 crypt hash is kept, in this machine's secret store, never in the repository (Article 13). Runs on Windows or Linux.`,
     tier: "repo",
     operation: true,
     args: [
+      {
+        name: "id",
+        type: "string",
+        positional: true,
+        description:
+          "The fleet's id: fleets/<id>/ (lowercase letters, digits, hyphens). Default: the active fleet.",
+      },
       {
         name: "user",
         type: "string",
@@ -79,12 +86,16 @@ export const COMMANDS: Command[] = [
       },
     ],
     examples: [{
+      cmd: "deno task archon fleet init lab",
+      text: "Start the fleet fleets/lab/ (and, in an empty repository, the repository's files).",
+    }, {
       cmd: "deno task archon fleet init",
-      text: "Set up the fleet once, on the boot machine.",
+      text: "On a rebuilt boot machine: store the admin password hash again; the fleet is kept.",
     }],
     async run(a) {
       const { fleetInit } = await import("../identity/fleet-init.ts");
       await fleetInit({
+        id: a.id as string | undefined,
         user: a.user as string | undefined,
         timezone: a.timezone as string | undefined,
         locale: a.locale as string | undefined,

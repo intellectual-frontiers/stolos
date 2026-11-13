@@ -3,9 +3,9 @@
 // Public data goes into fleets/<fleet>/fleet.ts; the admin password hash goes
 // only into the boot machine's secret store (Article 13).
 
-import { P } from "../core/paths.ts";
+import { P, resetRoots } from "../core/paths.ts";
 import { exists } from "../core/fsx.ts";
-import { toFileUrl } from "../core/path.ts";
+import { dirname, join, resolve, toFileUrl } from "../core/path.ts";
 import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
 import { sha512Crypt } from "../core/crypt.ts";
@@ -13,6 +13,8 @@ import { SECRETS, writeSecret } from "../core/secrets.ts";
 import type { FleetDef, GitHubIdentity } from "../model/types.ts";
 
 export interface FleetInitOptions {
+  /** The new fleet's id: fleets/<id>/ (spec 046). Without it, the active fleet. */
+  id?: string;
   user?: string;
   timezone?: string;
   locale?: string;
@@ -204,7 +206,79 @@ export const fleet: FleetDef = ${JSON.stringify(f, null, 2)};
 `;
 }
 
+/** A fleet id: a folder name and a DNS label (lowercase letters, digits, hyphens). */
+export const FLEET_ID = /^[a-z][a-z0-9-]{0,30}[a-z0-9]$|^[a-z]$/;
+
+/**
+ * The repository a new fleet goes into: ARCHON_REPO, else the nearest folder
+ * at or above the working directory that holds fleets/, else the working
+ * directory (a new, empty repository).
+ */
+export function initRepository(cwd = Deno.cwd()): string {
+  const env = Deno.env.get("ARCHON_REPO");
+  if (env) return resolve(env);
+  let d = resolve(cwd);
+  for (;;) {
+    try {
+      if (Deno.statSync(join(d, "fleets")).isDirectory) return d;
+    } catch { /* keep looking */ }
+    const up = dirname(d);
+    if (up === d) return resolve(cwd);
+    d = up;
+  }
+}
+
+/**
+ * `fleet init <id>`: make fleets/<id>/ the active fleet and, in a repository
+ * without them, write the pinned deno.json, the entry files, and deno.lock.
+ */
+async function prepareRepository(id: string): Promise<void> {
+  if (!FLEET_ID.test(id)) {
+    throw new Error(
+      `fleet id ${
+        JSON.stringify(id)
+      }: use lowercase letters, digits, and hyphens (it names a folder and a DNS label)`,
+    );
+  }
+  const repo = initRepository();
+  Deno.env.set("ARCHON_REPO", repo);
+  Deno.env.set("ARCHON_FLEET", id);
+  resetRoots();
+  const r = ui.phase("Repository");
+  await Deno.mkdir(join(repo, "fleets", id), { recursive: true });
+  const { scaffoldRepository } = await import("../fleet/scaffold.ts");
+  const { VERSION } = await import("../version.ts");
+  const tag = `v${VERSION}`;
+  const written = await scaffoldRepository(repo, tag);
+  if (!written.includes("deno.json")) {
+    r.done(`${repo} · fleets/${id}/ · the engine pin in deno.json is kept`);
+    return;
+  }
+  // The lock is what makes the pin safe (docs/fleet-repository.md): make it now.
+  r.status(`pinning the engine at ${tag} and hashing every file into deno.lock`);
+  const cache = await run([
+    Deno.execPath(),
+    "cache",
+    "--allow-import",
+    "--lock=deno.lock",
+    "archon.ts",
+    "boot.ts",
+    "engine.ts",
+  ], { cwd: repo });
+  if (!cache.ok) {
+    r.warn(
+      `wrote ${written.join(", ")}, but deno.lock could not be made: ${
+        cache.stderr.trim().split("\n").pop()
+      }`,
+      `when the network is back: deno task archon fleet upgrade ${tag}`,
+    );
+    return;
+  }
+  r.done(`${repo} · fleets/${id}/ · wrote ${written.join(", ")}, deno.lock (engine ${tag})`);
+}
+
 export async function fleetInit(o: FleetInitOptions): Promise<void> {
+  if (o.id) await prepareRepository(o.id);
   const p = ui.phase("GitHub");
   p.status("reading your account with gh");
   const gh = await githubIdentity();
@@ -216,6 +290,8 @@ export async function fleetInit(o: FleetInitOptions): Promise<void> {
   p.done(`${gh.login} (${gh.name}) · ${gh.sshKeys.length} SSH key(s) · ${gh.email}`);
 
   const slug = await repositorySlug();
+  // No id and no fleet yet: the fleet is named after the repository's owner.
+  if (!o.id && !P.fleetId) await prepareRepository(slug.split("/")[0].toLowerCase());
   // A model that already exists keeps its admin account (a rebuilt boot machine).
   const existing = (await exists(P.fleet)) && !o.rewrite
     ? await import(toFileUrl(P.fleet).href).then((m) => m.fleet as FleetDef).catch(() => undefined)
@@ -225,7 +301,7 @@ export async function fleetInit(o: FleetInitOptions): Promise<void> {
       gh.login.toLowerCase());
   const tz = o.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
   const fleet: FleetDef = {
-    id: slug.split("/")[0],
+    id: P.fleetId,
     title: `${gh.name}'s fleet`,
     repository: { slug, url: `https://github.com/${slug}` },
     ubuntu: { release: "26.04", codename: "resolute" },
@@ -262,6 +338,7 @@ export async function fleetInit(o: FleetInitOptions): Promise<void> {
   // An existing model is kept (a rebuilt boot machine needs only its secrets
   // again): rewriting it would drop everything added since (site, mail, ...).
   const kept = (await exists(P.fleet)) && !o.rewrite;
+  await Deno.mkdir(P.fleetDir, { recursive: true });
   if (!kept) await Deno.writeTextFile(P.fleet, fleetSource(fleet));
   // Commits from this checkout carry your GitHub identity (noreply address),
   // set for this repository only; a global identity, if any, is left alone.

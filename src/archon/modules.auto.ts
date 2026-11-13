@@ -80,6 +80,7 @@ import "./dotfiles/report.ts";
 import "./dotfiles/sync.ts";
 import "./fleet/decisions.ts";
 import "./fleet/registration.ts";
+import "./fleet/scaffold.ts";
 import "./fleet/upgrade.ts";
 import "./guests/guests.ts";
 import "./guide/command.ts";

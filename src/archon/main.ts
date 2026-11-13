@@ -1,6 +1,6 @@
 // archon: entry point for the CLI. See archon(1).
 
-import { P } from "./core/paths.ts";
+import { P, resetRoots } from "./core/paths.ts";
 import { COMMANDS, findCommand } from "./commands/registry.ts";
 import { effectiveTier, GLOBAL_ARGS, parseArgs, type RunContext } from "./core/registry-types.ts";
 import { isRoot } from "./core/exec.ts";
@@ -74,6 +74,11 @@ export async function main(argv: string[]): Promise<number> {
     return argv.length ? 0 : 2;
   }
   const { rest, g } = globals(argv);
+  // Spec 046: --fleet chooses the fleet for this run (and what it starts through sudo).
+  if (typeof g.fleet === "string") {
+    Deno.env.set("ARCHON_FLEET", g.fleet);
+    resetRoots();
+  }
   const found = findCommand(rest);
   if (!found) {
     console.error(`${ui.red("error:")} unknown command: ${rest.join(" ")}`);
@@ -108,7 +113,7 @@ export async function main(argv: string[]): Promise<number> {
       const self = Deno.env.get("ARCHON_SELF") ?? "/usr/local/bin/archon";
       const p = new Deno.Command("sudo", {
         args: [
-          "--preserve-env=ARCHON_AGENT,ARCHON_VERBOSE,ARCHON_PLAIN,NO_COLOR,LANG,LC_ALL,TERM,TRACEPARENT",
+          "--preserve-env=ARCHON_AGENT,ARCHON_VERBOSE,ARCHON_PLAIN,NO_COLOR,LANG,LC_ALL,TERM,TRACEPARENT,ARCHON_FLEET,ARCHON_REPO",
           self,
           ...argv,
         ],

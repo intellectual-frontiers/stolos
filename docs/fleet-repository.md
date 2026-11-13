@@ -18,6 +18,31 @@ fleets/<id>/  one folder per fleet: fleet.ts, site.ts, signers.ts, hosts/<host>/
 Nothing here is the engine itself. The engine lives in the public repository
 `intellectual-frontiers/stolos` and is downloaded, by version, from GitHub.
 
+## Starting a new fleet repository
+
+You need Deno, git, and `gh` signed in (`gh auth login`). Create an empty private repository on
+GitHub, clone it, and from inside the clone run the engine once straight from its released URL
+(replace `v0.12.0` with the latest tag on `intellectual-frontiers/stolos`):
+
+```
+deno run -A https://raw.githubusercontent.com/intellectual-frontiers/stolos/v0.12.0/src/archon/main.ts fleet init lab
+```
+
+`fleet init lab` writes `deno.json` pinned to that same tag, `archon.ts`, `boot.ts`, `engine.ts`,
+`.gitignore`, and `deno.lock`, then `fleets/lab/fleet.ts` from your GitHub identity. It asks for
+your Unix account name and an admin password; only the password's hash is kept, on your machine,
+never in Git. From then on use the pinned engine through the tasks:
+
+```
+deno task archon signers add      # your signing key (see Signing below)
+deno task archon host add <name>  # the first host
+```
+
+A second fleet in the same repository is one more `deno task archon fleet init <id>`. When the
+repository holds more than one fleet, say which one each command is for with `--fleet <id>` (or set
+`ARCHON_FLEET`): for example `deno task archon --fleet lab build` and
+`deno task boot serve --fleet lab`. Files that already exist are never overwritten by `fleet init`.
+
 ## Why the pin and the lock matter (security, not only tidiness)
 
 Every host runs `archon` as root, so whatever code it runs can do anything on that host. That code

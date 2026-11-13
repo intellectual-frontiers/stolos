@@ -122,6 +122,12 @@ export function parseArgs(cmd: Command, argv: string[]): Parsed {
 /** Arguments shared by every command. */
 export const GLOBAL_ARGS: ArgSpec[] = [
   {
+    name: "fleet",
+    type: "string",
+    description:
+      "The fleet of this repository to work on (fleets/<id>/), when it holds more than one (also ARCHON_FLEET).",
+  },
+  {
     name: "host",
     type: "string",
     description: "Operate on this host model instead of the local host.",

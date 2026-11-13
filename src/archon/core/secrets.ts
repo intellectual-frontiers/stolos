@@ -9,9 +9,15 @@ import { ensureDir, exists, readTextOr } from "./fsx.ts";
 import { run } from "./exec.ts";
 import { recordChange } from "./secret-ledger.ts";
 
+// Spec 046: computed on each use, so they follow the fleet chosen for this run
+// (--fleet, ARCHON_FLEET), not the one active when this module was loaded.
 export const SECRETS = {
-  dir: P.secrets,
-  adminPasswordHash: join(P.secrets, "admin-password.hash"),
+  get dir(): string {
+    return P.secrets;
+  },
+  get adminPasswordHash(): string {
+    return join(P.secrets, "admin-password.hash");
+  },
   deployKey: (host: string) => join(P.secrets, "hosts", host, "deploy_key"),
   deployKeyPub: (host: string) => join(P.secrets, "hosts", host, "deploy_key.pub"),
   /** The server's Let's Encrypt store, carried across a re-install (spec 032). */
@@ -19,10 +25,16 @@ export const SECRETS = {
   /** The host's SSH host keys (spec 004): its identity across re-installs. */
   hostKey: (host: string, type: string) => join(P.secrets, "hosts", host, `ssh_host_${type}_key`),
   /** The mail relay's credential (spec 027): a Cloudflare API token with Email Sending: Edit. */
-  mail: join(P.secrets, "mail.json"),
+  get mail(): string {
+    return join(P.secrets, "mail.json");
+  },
   /** The Cloudflare DNS token (spec 032): Zone Read and DNS Edit on the fleet's zone. */
-  web: join(P.secrets, "web.json"),
-  tokens: join(P.secrets, "install-tokens.json"),
+  get web(): string {
+    return join(P.secrets, "web.json");
+  },
+  get tokens(): string {
+    return join(P.secrets, "install-tokens.json");
+  },
 };
 
 /**
