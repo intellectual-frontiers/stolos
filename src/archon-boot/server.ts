@@ -18,6 +18,7 @@ import type { Assets } from "./assets.ts";
 import { chooserMenu, hostMenu, mainMenu } from "./grub.ts";
 import { UBUNTU } from "./pins.ts";
 import { ensureHostKeys, trustHost } from "../archon/install/host-keys.ts";
+import { stallMessage, StallWatch } from "./stall.ts";
 import { describe, type InstallerEvent } from "./progress.ts";
 import { installEnd, installProblem, installStep, served } from "./telemetry.ts";
 import { type Handler, listen } from "./http.ts";
@@ -106,12 +107,25 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
   // After a machine loads the installer over TFTP it must reach HTTP (the ISO,
   // its config). If nothing arrives, the usual cause is a firewall: say so.
   let lastHttp = 0;
+  // Spec 051: an installer that took the image and went quiet (too little RAM).
+  // Keyed by host when known: the installer can take the image from one DHCP
+  // lease and ask for its configuration from another.
+  const stalls = new StallWatch((key) => {
+    const host = key.startsWith("host:") ? key.slice(5) : installing.get(key);
+    const address = key.startsWith("host:") ? undefined : key;
+    o.emit({ name: "boot.stalled", severity: "warn", address, host, message: stallMessage(host) });
+    if (host) {
+      installProblem(host, "the installer went quiet after taking the image (too little RAM?)");
+    }
+  });
   const addressHost = (from: string): string | undefined => {
     const m = byAddress.get(from);
     return m && Date.now() - m.at < BOOT_URI_MEMORY_MS ? m.host : undefined;
   };
   // Which host each address is installing (spec 023: its requests join that install's trace).
   const installing = new Map<string, string>();
+  // The host whose menu was served last: the installer may come back from another lease.
+  let lastMenu: { host: string; at: number } | undefined;
   const menuFor = async (
     host: HostDef,
     from: string,
@@ -128,6 +142,7 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
     });
     if (t) {
       installing.set(from, host.name);
+      lastMenu = { host: host.name, at: Date.now() };
       installStep(host.name, "network boot", { "client.address": from });
     }
     return text(hostMenu(host, base, t?.token));
@@ -262,9 +277,9 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
             name: "boot.recognized",
             address: from,
             host: byAddr[0].name,
-            message: `recognized by its address; MAC ${menu[1]} learned (add mac: "${
+            message: `recognized by its address; MAC ${
               menu[1]
-            }" to its host model to make it permanent)`,
+            } learned (recorded in its registration.ts when its install finishes)`,
             attrs: { mac: menu[1] },
           });
           return await menuFor(byAddr[0], from, base, req.method);
@@ -272,6 +287,28 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
         const armed = hosts
           .map((h) => ({ host: h, token: liveToken(tokens, h.name)?.token }))
           .filter((a): a is { host: HostDef; token: string } => !!a.token);
+        // Spec 051: a host armed for a network card that has not booted, while
+        // another machine does: the MAC may have been mistyped (or it is the
+        // wrong machine). Nothing installs; the boot window says what to do.
+        const waiting = hosts.filter((h) => {
+          const t = liveToken(tokens, h.name);
+          return h.mac && t && !t.firstUse && !t.claimUntil;
+        });
+        if (req.method === "GET" && waiting.length) {
+          for (const h of waiting) {
+            o.emit({
+              name: "boot.mismatch",
+              address: from,
+              host: h.name,
+              attrs: { mac: menu[1], expected: h.mac! },
+              message: `unknown machine ${
+                menu[1]
+              } network-booted while ${h.name} waits for ${h.mac}. If it is ${h.name}, its MAC was mistyped: deno task boot arm ${h.name} --mac-address ${
+                menu[1]
+              } (or --claim). Nothing was installed.`,
+            });
+          }
+        }
         if (req.method === "GET") {
           o.emit({
             name: "boot.unknown",
@@ -322,19 +359,23 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
             host: installing.get(from),
             message: `installer image (${req.headers.get("range") ?? "whole"})`,
           });
-          const h = installing.get(from);
+          const h = installing.get(from) ??
+            (lastMenu && Date.now() - lastMenu.at < 10 * 60_000 ? lastMenu.host : undefined);
           if (h) installStep(h, "downloading Ubuntu");
+          if (!req.headers.get("range")) stalls.imageServed(h ? `host:${h}` : from);
           served(UBUNTU.iso.name, (await Deno.stat(assets.iso)).size, "http");
         }
         return await file(assets.iso, req);
       }
       // GRUB puts the MAC it booted from into the URL (spec 004).
       const inst = path.match(
-        /^\/install\/([a-z0-9-]+)\/([A-Za-z0-9_-]+)\/(?:([0-9A-Fa-f:]{17})\/)?(user-data|meta-data|vendor-data|network-config|done|event)$/,
+        /^\/install\/([a-z0-9-]+)\/([A-Za-z0-9_-]+)\/(?:([0-9A-Fa-f:]{17})\/)?(user-data|meta-data|vendor-data|network-config|done|event|guard\.sh|facts)$/,
       );
       if (inst) {
         const [, name, token, rawMac, what] = inst;
         const bootMac = rawMac?.toLowerCase();
+        stalls.heard(`host:${name}`);
+        stalls.heard(from);
         if (what === "event") {
           // Progress: accepted during the install and for 3 hours after it finished.
           const rec = (await loadTokens()).find((x) => x.host === name && x.token === token);
@@ -399,6 +440,28 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
         if (what === "done") {
           t.done = new Date().toISOString();
           if (bootMac) t.mac = bootMac;
+          // Spec 051: the network card it installed from, as the machine reported
+          // it, is its registered MAC from now on (a fact, not something typed).
+          if (bootMac) {
+            const { loadRegistration, writeRegistration } = await import(
+              "../archon/fleet/registration.ts"
+            );
+            const reg = await loadRegistration(name).catch(() => undefined);
+            if (reg && (reg.mac !== bootMac || reg.macSource !== "installed")) {
+              const file = await writeRegistration(name, {
+                ...reg,
+                mac: bootMac,
+                macSource: "installed",
+              });
+              o.emit({
+                name: "boot.learned",
+                host: name,
+                attrs: { mac: bootMac },
+                message:
+                  `${file}: mac ${bootMac}, as the machine reported it; commit and push it (signed) to keep it`,
+              });
+            }
+          }
           t.addresses = [...new Set([...(t.addresses ?? []), from])];
           await saveTokens(tokens);
           o.emit({
@@ -417,6 +480,48 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
             message: `this PC trusts its SSH host keys for ${names.join(", ")}`,
           });
           return text("ok\n");
+        }
+        // Spec 051: the blank-disk guard, before the installer touches a disk.
+        if (what === "guard.sh") {
+          const { GUARD_SCRIPT } = await import("./guard.ts");
+          return text(GUARD_SCRIPT);
+        }
+        if (what === "facts") {
+          const { parseFacts, describeFacts, guardDecision } = await import("./guard.ts");
+          const { loadRegistration } = await import("../archon/fleet/registration.ts");
+          const facts = parseFacts(await req.text());
+          o.emit({
+            name: "boot.machine",
+            address: from,
+            host: name,
+            message: `the machine reports: ${describeFacts(facts)}`,
+            attrs: {
+              ...(facts.vendor ? { vendor: facts.vendor } : {}),
+              ...(facts.model ? { model: facts.model } : {}),
+              ...(facts.serial ? { serial: facts.serial } : {}),
+              ...(facts.memKiB ? { mem_kib: facts.memKiB } : {}),
+              ...(bootMac ? { mac: bootMac } : {}),
+            },
+          });
+          const d = guardDecision(name, facts, t, bootMac, await loadRegistration(name));
+          if (d.go) {
+            o.emit({ name: "boot.guard", address: from, host: name, message: `disks: ${d.why}` });
+            if (t.confirmDestroy) {
+              // Spent: a later install of this host asks again.
+              delete t.confirmDestroy;
+              await saveTokens(tokens);
+            }
+            return text("ok\n");
+          }
+          o.emit({
+            name: "boot.guarded",
+            severity: "warn",
+            address: from,
+            host: name,
+            message: `install stopped: ${d.why}. ${d.fix}`,
+          });
+          installProblem(name, `install stopped by the blank-disk guard: ${d.why}`);
+          return text(`stop: ${d.why}. ${d.fix}\n`);
         }
         if (what === "meta-data") {
           o.emit({ name: "boot.config", address: from, host: name, message: "meta-data" });

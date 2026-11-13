@@ -16,6 +16,7 @@ import { loadFleet, loadHosts } from "../model/load.ts";
 import { nextSteps } from "./next.ts";
 import { describeData, hostData } from "../model/durable.ts";
 import type { RecordedVerify } from "../state/verify.ts";
+import { describeInventory, type Inventory } from "../state/inventory.ts";
 
 interface Installed {
   installed?: string;
@@ -59,6 +60,7 @@ export async function fleetStatus(): Promise<number> {
         if (st.verify) {
           await putRecord(h.name, "verify", "latest", st.verify, P.state, st.verify.since);
         }
+        if (st.inventory) await putRecord(h.name, "inventory", "latest", st.inventory, P.state);
         live.set(h.name, { ok: true });
       } catch {
         live.set(h.name, { ok: false, why: "unreadable answer" });
@@ -78,6 +80,9 @@ export async function fleetStatus(): Promise<number> {
     if (latest && rec.installed && latest.since < rec.installed) latest = undefined;
     const t = tokens.find((x) => x.host === h.name);
     const kind = h.kind === "workstation" ? "workstation" : "server";
+    // Spec 051: the machine, as it reports itself.
+    const inv = (await getRecord<Inventory>(h.name, "inventory", "latest", P.state))?.body;
+    if (inv) p.note(`machine: ${describeInventory(inv)}`);
     if (latest) {
       for (const f of latest.failed) p.warn(`failing at its last verify: ${f}`);
       for (const w of latest.warned) p.note(`warning at its last verify: ${w}`);

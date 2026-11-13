@@ -26,7 +26,7 @@ export function stateDir(): string {
   return P.state;
 }
 
-export type Kind = "install" | "verify" | "prov" | "optin" | "pg";
+export type Kind = "install" | "verify" | "prov" | "optin" | "pg" | "inventory";
 
 export interface StateRecord<T = unknown> {
   host: string;
@@ -62,6 +62,12 @@ CREATE VIEW IF NOT EXISTS archon_optin AS SELECT host, name, at,
   json_extract(body, '$.enabled') AS enabled, json_extract(body, '$.by') AS by,
   json_extract(body, '$.data') AS data
   FROM archon_record WHERE kind = 'optin';
+CREATE VIEW IF NOT EXISTS archon_inventory AS SELECT host, at,
+  json_extract(body, '$.vendor') AS vendor, json_extract(body, '$.model') AS model,
+  json_extract(body, '$.serial') AS serial, json_extract(body, '$.cpus') AS cpus,
+  json_extract(body, '$.memMiB') AS mem_mib, json_extract(body, '$.disks') AS disks,
+  json_extract(body, '$.macs') AS macs
+  FROM archon_record WHERE kind = 'inventory';
 `;
 
 /** The views osquery exposes, and their columns (automatic table construction). */
@@ -79,6 +85,7 @@ export const VIEWS: Record<string, string[]> = {
   archon_verify: ["host", "at", "passed", "total", "failed", "warned"],
   archon_prov: ["host", "run", "at", "command", "ok", "changes", "trace_id", "body"],
   archon_optin: ["host", "name", "at", "enabled", "by", "data"],
+  archon_inventory: ["host", "at", "vendor", "model", "serial", "cpus", "mem_mib", "disks", "macs"],
 };
 
 /** How many provenance records a host keeps (the oldest go first). */

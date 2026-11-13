@@ -7,7 +7,7 @@
 //                                        a durable host needs --confirm-destroy (Article 23)
 //   deno task boot retire <host> --confirm-destroy <host> [--no-push]
 //                                        a server leaves the fleet, committed and pushed (spec 045)
-//   deno task boot arm <host> [--claim] [--confirm-destroy <host>]
+//   deno task boot arm <host> --claim | --mac-address <mac> [--confirm-destroy <host>]
 //                                        allow one (re)install of a host
 //   deno task boot status                hosts, Boot URIs, MACs, armed or not
 //   deno task boot doctor                check this boot machine, with a fix for each problem
@@ -69,7 +69,7 @@ async function main(args: string[]): Promise<number> {
     const name = args[1];
     if (!name || !(await loadServers()).some((h) => h.name === name)) {
       console.error(
-        `usage: deno task boot arm <host> [--claim] [--confirm-destroy <host>]  (known: ${
+        `usage: deno task boot arm <host> --claim | --mac-address <mac> [--confirm-destroy <host>]  (known: ${
           (await loadServers()).map((h) => h.name).join(", ") || "none"
         })`,
       );
@@ -86,16 +86,53 @@ async function main(args: string[]): Promise<number> {
       console.error(`${refusal} (from the records in this checkout: git pull first)`);
       return 1;
     }
-    const claim = args.includes("--claim");
-    const t = await armHost(name, claim ? 30 : 0);
+    // Spec 051: how its machine is recognized: --claim or --mac-address (or the MAC
+    // its own machine reported when it installed).
+    const { recognition, describeRecognition, CLAIM_MINUTES } = await import(
+      "../archon/install/recognize.ts"
+    );
+    const { loadRegistration, writeRegistration } = await import(
+      "../archon/fleet/registration.ts"
+    );
+    const reg = await loadRegistration(name);
+    const how = recognition(name, {
+      claim: args.includes("--claim"),
+      macAddress: opt(args, "mac-address"),
+      command: "deno task boot arm",
+    }, reg);
+    if ("refusal" in how) {
+      console.error(how.refusal);
+      return 2;
+    }
+    const claim = how.kind === "claim";
+    if (how.kind === "mac" && reg && reg.mac !== how.mac) {
+      // A person named the network card: that is the host's registered MAC from now on.
+      const file = await writeRegistration(name, { ...reg, mac: how.mac, macSource: "operator" });
+      console.log(`${file}: mac ${how.mac} (commit and push it, signed, to keep it)`);
+    }
+    const confirmed = opt(args, "confirm-destroy") === name;
+    const t = await armHost(name, claim ? CLAIM_MINUTES : 0, claim ? undefined : how.mac, {
+      confirmDestroy: confirmed,
+    });
     // Its install brings its own SSH host keys (kept on this machine): trust them now.
     const names = await trustHost(name, t.addresses ?? []);
     console.log(`This PC trusts ${name}'s SSH host keys (${names.join(", ")}).`);
     console.log(
-      claim
-        ? `${name} is armed for one install, and the next unrecognized machine to network-boot in the next 30 minutes becomes ${name}. Power it on while 'deno task boot serve' runs.`
-        : `${name} is armed for one install. Network-boot it while 'deno task boot serve' runs.`,
+      `${name} is armed for one install: ${
+        describeRecognition(name, how)
+      }. Power it on while 'deno task boot serve' runs.`,
     );
+    if (confirmed) {
+      console.log(
+        claim
+          ? `--confirm-destroy with --claim: the next unknown machine to network-boot in ${CLAIM_MINUTES} minutes is erased, whatever its disks hold.`
+          : `--confirm-destroy: its disks are erased even if they are not blank (this install only).`,
+      );
+    } else {
+      console.log(
+        "Its installer erases no disk that is not blank: if it finds one, it stops before writing anything and says what it found.",
+      );
+    }
     return 0;
   }
   if (cmd === "retire") {
@@ -175,7 +212,7 @@ async function main(args: string[]): Promise<number> {
     console.error(
       "usage: deno task boot serve [--address <this-pc>] [--port 8080] [--tftp-port 69 | --no-tftp]\n" +
         "       deno task boot reinstall <host> [--force] [--confirm-destroy <host>]\n" +
-        "       deno task boot arm <host> [--claim] [--confirm-destroy <host>]\n" +
+        "       deno task boot arm <host> --claim | --mac-address <mac> [--confirm-destroy <host>]\n" +
         "       deno task boot retire <host> --confirm-destroy <host> [--no-push]\n" +
         "       deno task boot status | doctor | observe [--last 5]\n" +
         "       deno task boot vault status | backup | verify | restore | rehearse | list | prune | recover-host-keys <host>\n" +

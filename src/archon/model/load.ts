@@ -74,6 +74,8 @@ export async function loadHosts(): Promise<HostDef[]> {
     };
     hosts.push({
       ...host,
+      // Spec 051: the MAC is a registered fact (host.ts may still name one).
+      ...(!host.mac && registration?.mac ? { mac: registration.mac } : {}),
       ...(registration ? { registration } : {}),
       ...(pgState ? { pgState } : {}),
       ...(Object.keys(optIn).length ? { optIn } : {}),

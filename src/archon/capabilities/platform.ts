@@ -3,6 +3,7 @@
 // defaults Archon relies on are present, names the host, and creates
 // Archon's state directories.
 
+import { registeredCardCheck } from "../model/identity-check.ts";
 import type { Capability, UnitDef } from "../model/types.ts";
 import { header } from "../render/systemd.ts";
 
@@ -89,7 +90,13 @@ export const platform = (): Capability => ({ host, fleet }) => ({
     active("snapd.socket"),
     active("apparmor.service"),
   ],
-  checks: NO_MULTICAST_NAMES.checks,
+  checks: [
+    ...NO_MULTICAST_NAMES.checks,
+    // Spec 051: the network card its machine reported is still in it (a replaced board shows).
+    ...(host.registration?.mac && host.registration.macSource === "installed"
+      ? [registeredCardCheck(host.registration.mac)]
+      : []),
+  ],
   files: [
     {
       // Article 20: no mDNS, no LLMNR (also Ubuntu's defaults on a server; explicit and verified).

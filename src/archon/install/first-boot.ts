@@ -115,8 +115,16 @@ export async function firstBoot(host: HostDef): Promise<number> {
       ...(p.fix ? { fix: p.fix } : {}),
     })),
   });
+  // Spec 051: what this machine is, as it reports itself.
+  const { recordInventory, collectInventory, describeInventory } = await import(
+    "../state/inventory.ts"
+  );
+  await recordInventory(host.name).catch(() => false);
+  const machine = await collectInventory().then(describeInventory).catch(() => "");
   rec.done(
-    `recorded in ${P.state}/archon.sql (${head})${failures ? ` · ${failures} problem(s)` : ""}`,
+    `recorded in ${P.state}/archon.sql (${head})${failures ? ` · ${failures} problem(s)` : ""}${
+      machine ? ` · ${machine}` : ""
+    }`,
   );
   await ensureDir(P.varLib);
   await Deno.writeTextFile(join(P.varLib, ".installed"), new Date().toISOString() + "\n");

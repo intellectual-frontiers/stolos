@@ -74,7 +74,7 @@ jobs:
       - name: QEMU, OVMF, dnsmasq, cloud-image-utils
         run: |
           sudo apt-get update -q
-          sudo apt-get install -y -q qemu-system-x86 qemu-utils ovmf dnsmasq-base cloud-image-utils netcat-openbsd
+          sudo apt-get install -y -q qemu-system-x86 qemu-utils ovmf dnsmasq-base cloud-image-utils netcat-openbsd parted
       - name: Install, reboot, and reach the synthetic fleet
         env:
           FLEET: ${{ inputs.fleet }}

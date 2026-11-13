@@ -218,7 +218,11 @@ export function userData(c: InstallContext, s: InstallSecrets): string {
       }
       : {}),
   };
-  const early: string[] = [];
+  // Spec 051: first, before anything touches a disk, the blank-disk guard: the
+  // machine reports its facts and the boot server answers (no answer, no install).
+  const early: string[] = [
+    `curl -fsS --noproxy "*" -m 30 -o /tmp/archon-guard.sh ${c.base}guard.sh && sh /tmp/archon-guard.sh ${c.base} || { echo "archon: the blank-disk guard could not run: nothing was erased" | tee /dev/console; sleep 30; poweroff -f; }`,
+  ];
   if (c.caPem) {
     // A site proxy that intercepts TLS: trust its CA inside the installer too.
     // Downloaded from archon-boot (a PEM bundle is too long for a command line).

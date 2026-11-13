@@ -2,14 +2,23 @@
 # A UEFI machine with Secure Boot on the lab bridge.
 #   (default)        a blank disk that network-boots from archon-boot;
 #   E2E_VM_BOOT=disk the same disk again, as installed (a reboot);
-#   E2E_VM_MEM       memory in MiB (default 8192: Ubuntu's live installer runs from memory).
+#   E2E_VM_MEM       memory in MiB (default 8192: Ubuntu's live installer runs from memory);
+#   E2E_DIRTY_DISK=1 the blank disk gets a partition table first (the blank-disk
+#                    guard must stop the install, spec 051).
 set -eu
 W=$(cd "$(dirname "$0")" && pwd)/work
 mkdir -p "$W"
 pkill -f "qemu-system-x86_64 -name e2e-server" || true
 if [ "${E2E_VM_BOOT:-net}" != disk ]; then
   rm -f "$W/disk.qcow2" "$W/vars.fd"
-  qemu-img create -q -f qcow2 "$W/disk.qcow2" 40G
+  if [ -n "${E2E_DIRTY_DISK:-}" ]; then
+    truncate -s 40G "$W/disk.raw"
+    parted -s "$W/disk.raw" mklabel gpt mkpart old ext4 1MiB 101MiB
+    qemu-img convert -q -O qcow2 "$W/disk.raw" "$W/disk.qcow2"
+    rm -f "$W/disk.raw"
+  else
+    qemu-img create -q -f qcow2 "$W/disk.qcow2" 40G
+  fi
   cp /usr/share/OVMF/OVMF_VARS_4M.ms.fd "$W/vars.fd"
 fi
 ACCEL=$([ -w /dev/kvm ] && echo kvm || echo tcg,thread=multi)

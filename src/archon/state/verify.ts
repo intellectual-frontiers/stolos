@@ -163,6 +163,9 @@ export async function verify(host: HostDef): Promise<Check[]> {
     });
     // The same result in this machine's archon.sql, for fleet status (spec 048).
     await recordVerify(plan.host.name, checks).catch(() => {});
+    // Spec 051: what the machine is, as it reports itself, when that changed.
+    const { recordInventory } = await import("./inventory.ts");
+    await recordInventory(plan.host.name).catch(() => {});
   }
   // Spec 025: a check that passed before and fails now sends a message (as root).
   const { verifyOutcome } = await import("../notify/events.ts");

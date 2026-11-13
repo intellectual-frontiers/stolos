@@ -8,11 +8,14 @@ import { loadHosts } from "../model/load.ts";
 import { describeData, hostData } from "../model/durable.ts";
 import { getRecord, listRecords, STATE_SQL, stateDir } from "./store.ts";
 import type { RecordedVerify } from "./verify.ts";
+import { describeInventory, type Inventory } from "./inventory.ts";
 
 export interface HostState {
   host: string;
   install?: { at: string; body: Record<string, unknown> };
   verify?: RecordedVerify;
+  /** Spec 051: what the machine is, as it reports itself. */
+  inventory?: Inventory;
   optIns: Record<string, unknown>;
   data: { class: string; reasons: string[] };
   at: string;
@@ -22,6 +25,7 @@ export async function hostState(hostName: string, dir = stateDir()): Promise<Hos
   const host = (await loadHosts()).find((h) => h.name === hostName);
   const install = await getRecord<Record<string, unknown>>(hostName, "install", "install", dir);
   const verify = (await getRecord<RecordedVerify>(hostName, "verify", "latest", dir))?.body;
+  const inventory = (await getRecord<Inventory>(hostName, "inventory", "latest", dir))?.body;
   const optIns = Object.fromEntries(
     (await listRecords(hostName, "optin", dir)).map((r) => [r.name, r.body]),
   );
@@ -30,6 +34,7 @@ export async function hostState(hostName: string, dir = stateDir()): Promise<Hos
     host: hostName,
     ...(install ? { install: { at: install.at, body: install.body } } : {}),
     ...(verify ? { verify } : {}),
+    ...(inventory ? { inventory } : {}),
     optIns,
     data: { class: d.class, reasons: d.reasons },
     at: new Date().toISOString(),
@@ -51,6 +56,7 @@ export async function stateCommand(hostName: string, json: boolean): Promise<num
       }`
       : "no install record (installed by hand, or before spec 048)",
   );
+  if (s.inventory) p.note(`machine: ${describeInventory(s.inventory)}`);
   if (s.verify) {
     p.note(
       `verify: ${s.verify.passed}/${s.verify.total} checks since ${

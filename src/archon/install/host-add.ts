@@ -16,8 +16,11 @@ import type { DiskDef } from "../model/types.ts";
 
 export interface HostAddOptions {
   name: string;
-  /** Optional: recognize the host by MAC instead of (as well as) its Boot URI. */
-  mac?: string;
+  /** Spec 051: exactly one of claim and macAddress (see recognize.ts). */
+  claim?: boolean;
+  macAddress?: string;
+  /** The host's name again: its install may erase disks that are not blank. */
+  confirmDestroy?: string;
   disk?: DiskDef["match"];
   layout?: DiskDef["layout"];
   /** Skip the GitHub deploy key (tests, or a host that should not push). */
@@ -27,9 +30,7 @@ export interface HostAddOptions {
   push?: boolean;
 }
 
-export const normalizeMac = (m: string) => m.trim().toLowerCase().replace(/-/g, ":");
-
-export function hostSource(o: { name: string; mac?: string; disk: DiskDef }): string {
+export function hostSource(o: { name: string; disk: DiskDef }): string {
   return `// Host ${o.name} (spec 004). Written by \`archon host add\`; edit freely, then
 // \`archon build\`. Capabilities come from foundation(); add more per spec.
 
@@ -39,7 +40,7 @@ import { PRIME } from "@stolos/archon/pg/config.ts";
 
 export const host: HostDef = {
   name: ${JSON.stringify(o.name)},
-${o.mac ? `  mac: ${JSON.stringify(o.mac)},\n` : ""}  arch: "amd64",
+  arch: "amd64",
   disk: { match: ${JSON.stringify(o.disk.match)}, layout: ${JSON.stringify(o.disk.layout)} },
   capabilities: foundation(),
   // Specs 038, 039: PostgreSQL 18 "prime" (off until an operator runs archon pg on).
@@ -109,23 +110,43 @@ export async function registerDeployKey(slug: string, host: string, pub: string)
   return "registered";
 }
 
-export async function hostAdd(o: HostAddOptions): Promise<void> {
+export async function hostAdd(o: HostAddOptions): Promise<number> {
   const fleet = await loadFleet();
   const name = o.name.trim().toLowerCase();
-  const mac = o.mac ? normalizeMac(o.mac) : undefined;
   const file = hostFile(name);
+  // Spec 051: refused before anything is written.
+  const { recognition, describeRecognition, CLAIM_MINUTES } = await import("./recognize.ts");
+  const how = recognition(name, {
+    claim: o.claim,
+    macAddress: o.macAddress,
+    command: "deno task archon host add",
+  });
+  const c = ui.phase("Recognition");
+  if ("refusal" in how) {
+    c.fail(how.refusal);
+    return ui.finish();
+  }
+  const { destroyRefusal } = await import("../../archon-boot/reinstall.ts");
+  if (o.confirmDestroy !== undefined) {
+    const no = destroyRefusal(name, undefined, o.confirmDestroy);
+    if (no) {
+      c.fail(no);
+      return ui.finish();
+    }
+  }
+  const mac = how.kind === "mac" ? how.mac : undefined;
+  c.done(
+    describeRecognition(name, how) +
+      (o.confirmDestroy ? "; its install may erase disks that are not blank" : ""),
+  );
   const m = ui.phase("Host model");
   if ((await exists(file)) && !o.force) {
     m.done(`fleets/<fleet>/hosts/${name}/host.ts exists (kept; --force rewrites it)`);
   } else {
     await ensureDir(join(P.hosts, name));
     const disk: DiskDef = { match: o.disk ?? "largest", layout: o.layout ?? "lvm" };
-    await Deno.writeTextFile(file, hostSource({ name, mac, disk }));
-    m.done(
-      `fleets/<fleet>/hosts/${name}/host.ts · ${
-        mac ?? "no MAC needed"
-      } · ${disk.layout} on ${disk.match} disk`,
-    );
+    await Deno.writeTextFile(file, hostSource({ name, disk }));
+    m.done(`fleets/<fleet>/hosts/${name}/host.ts · ${disk.layout} on ${disk.match} disk`);
   }
 
   const k = ui.phase("Deploy key");
@@ -146,11 +167,17 @@ export async function hostAdd(o: HostAddOptions): Promise<void> {
   const fingerprint = deployPub
     ? (await run(["ssh-keygen", "-lf", "-"], { stdin: deployPub })).stdout.split(/\s+/)[1]
     : undefined;
+  const before = await loadRegistration(name);
   const regFile = await writeRegistration(name, {
     sshHostKeys: keys.map((k) => k.public),
-    ...(mac ? { mac } : {}),
+    // Spec 051: a MAC a person gave, or the one its machine reported (kept with --claim).
+    ...(mac
+      ? { mac, macSource: "operator" as const }
+      : before?.mac
+      ? { mac: before.mac, ...(before.macSource ? { macSource: before.macSource } : {}) }
+      : {}),
     ...(fingerprint ? { deployKey: fingerprint } : {}),
-    added: (await loadRegistration(name))?.added ?? new Date().toISOString().slice(0, 10),
+    added: before?.added ?? new Date().toISOString().slice(0, 10),
   });
   hk.done(
     `${
@@ -159,7 +186,9 @@ export async function hostAdd(o: HostAddOptions): Promise<void> {
   );
 
   const a = ui.phase("Install");
-  await armHost(name);
+  await armHost(name, how.kind === "claim" ? CLAIM_MINUTES : 0, mac, {
+    confirmDestroy: o.confirmDestroy === name,
+  });
   // Spec 025: a new host, to the shared mailbox (from the boot machine).
   const { notify } = await import("../notify/events.ts");
   await notify({
@@ -180,11 +209,12 @@ export async function hostAdd(o: HostAddOptions): Promise<void> {
       `next: deno task archon build, then git add -A fleets/<fleet>/hosts/${name}/host.ts .mcp.json, git commit -m "004-install: add host ${name}", git push`,
     ]),
     "then: deno task boot serve (leave it running)",
-    mac
-      ? `then: power on ${name}; it network-boots and is recognized by its MAC`
-      : `then: deno task boot arm ${name} --claim, and power on ${name} within 30 minutes (PXE)`,
+    how.kind === "claim"
+      ? `then: within ${CLAIM_MINUTES} minutes, power on ${name}'s machine and let it network-boot (re-open the window: deno task boot arm ${name} --claim)`
+      : `then: power on ${name}; it network-boots and is recognized by its network card (${mac})`,
     `  or, for UEFI HTTP Boot with a Boot URI field: ${uri}`,
   );
+  return ui.finish();
 }
 
 /** Spec 045 (retire): remove the host's deploy key from the repository; how many were removed. */

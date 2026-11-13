@@ -50,6 +50,27 @@ export const EVENTS = {
   "boot.site-ca": { severity: "info", description: "The site's CA certificate was fetched." },
   "boot.image": { severity: "info", description: "The installer image was fetched." },
   "boot.config": { severity: "info", description: "Install configuration was fetched." },
+  "boot.machine": {
+    severity: "info",
+    description: "A machine reported its own facts before its install (spec 051).",
+  },
+  "boot.guard": { severity: "info", description: "The blank-disk guard let an install go on." },
+  "boot.guarded": {
+    severity: "warn",
+    description: "The blank-disk guard stopped an install before it wrote anything.",
+  },
+  "boot.mismatch": {
+    severity: "warn",
+    description: "An unknown machine booted while a host waits for another network card.",
+  },
+  "boot.stalled": {
+    severity: "warn",
+    description: "A machine took the installer image and went quiet (likely too little RAM).",
+  },
+  "boot.learned": {
+    severity: "info",
+    description: "A host's MAC, as its machine reported it, was recorded in registration.ts.",
+  },
   "boot.refused": { severity: "error", description: "A request without a live install token." },
   "boot.installer.step": { severity: "info", description: "An installer milestone." },
   "boot.installer.failed": { severity: "error", description: "An installer step failed." },

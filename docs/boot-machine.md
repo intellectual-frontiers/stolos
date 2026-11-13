@@ -273,7 +273,7 @@ fix for each problem.
 | `deno task boot mail-push <host>`                                                       | give a running server the token, then test its mail                                                                                |
 | `deno task boot notify --subject <s> [--body <t> \| --body-file <f>] [--attach <f>]...` | email the mailbox from this PC (also `notify test`, `notify status`)                                                               |
 | `deno task archon fleet init`                                                           | create the fleet (once)                                                                                                            |
-| `deno task archon host add <name> [--mac ...]`                                          | add a host                                                                                                                         |
+| `deno task archon host add <name> --claim \| --mac-address <mac>`                       | add a host                                                                                                                         |
 | `deno task archon host bootstrap <name> --ssh user@address`                             | finish a host whose Ubuntu was installed by hand                                                                                   |
 
 ## What is kept where

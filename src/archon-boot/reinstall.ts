@@ -256,7 +256,9 @@ export async function reinstall(
       })`,
       `it is armed anyway: power it on and pick network boot once from its boot menu (F7 on an MS-01)`,
     );
-    const t = await armHost(name);
+    // Not reached: nothing proves which machine boots next, so its installer
+    // keeps the blank-disk guard unless a person confirmed (spec 051).
+    const t = await armHost(name, 0, undefined, { confirmDestroy: o.confirmDestroy === name });
     await trustHost(name, t.addresses ?? []);
     return ui.finish({ next: [`then watch the boot server window for ${name}`] });
   }
@@ -296,7 +298,7 @@ export async function reinstall(
   // server knows it even when this PC has no record of it (a rebuilt boot machine).
   const model = hosts.find((h) => h.name === name)!;
   const mac = model.mac ?? await macOf(target);
-  const t = await armHost(name, 0, mac);
+  const t = await armHost(name, 0, mac, { reinstall: !!mac });
   a.done(`${name} is armed for one install${mac ? ` (MAC ${mac})` : ""}`);
 
   const r = ui.phase("Reboot");

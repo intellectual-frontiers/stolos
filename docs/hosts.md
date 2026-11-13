@@ -2,18 +2,41 @@
 
 ## Add a host
 
+Say how its machine will be recognized when it network-boots, with exactly one of:
+
 ```powershell
-deno task archon host add alpha
+deno task archon host add alpha --claim                          # the next unknown machine to network-boot in 30 minutes becomes alpha
+deno task archon host add alpha --mac-address 1c:83:41:30:25:f2  # only the machine with this network card
 ```
 
-This writes `fleets/<fleet>/hosts/alpha/host.ts`, creates alpha' GitHub deploy key (registered on
-this repository with your `gh` login; the private half stays on the boot machine) and its SSH host
-keys (its identity, kept across re-installs), and arms one install. It then builds, commits, and
-pushes the new model (`--no-push` leaves it), because hosts install from GitHub, and
+There is no default: without either, `host add` refuses and shows both. `--claim` needs nothing
+typed about the machine; its MAC is learned from it. `--mac-address` accepts colons, dashes, or
+none; a mistyped one is noticed (an unknown machine that boots while alpha waits for another card is
+named in the boot window, and nothing installs).
+
+This writes `fleets/<fleet>/hosts/alpha/host.ts` and `registration.ts`, creates alpha' GitHub deploy
+key (registered on this repository with your `gh` login; the private half stays on the boot machine)
+and its SSH host keys (its identity, kept across re-installs), and arms one install. It then builds,
+commits, and pushes the new model (`--no-push` leaves it), because hosts install from GitHub, and
 `deno task boot doctor` flags host changes that are not pushed yet.
 
-No MAC address is needed. The boot server recognizes a machine by a claim (first install), then by
-the MAC it learned. If you prefer, give it up front: `host add alpha --mac 1c:83:41:30:25:f2`.
+When it installs, the MAC its machine reported is written to `registration.ts`
+(`macSource: "installed"`): commit and push it, signed. From then on `boot arm alpha` (a re-install)
+needs neither option.
+
+**The blank-disk guard.** Before Ubuntu's installer touches a disk, the machine reports its own
+facts (make, model, serial, RAM, disks, and what is on them) to the boot server, which shows them.
+The install goes on by itself only if every disk is blank, or the machine already installed as this
+host (or `boot reinstall` reached it). Otherwise it stops before writing anything, powers off, and
+the boot window says what it found and the command that lets it go on. When you know the disks may
+be erased, say so up front, typed by you (never an agent), for this one install:
+
+```powershell
+deno task archon host add alpha --claim --confirm-destroy alpha
+deno task boot arm alpha --mac-address 1c:83:41:30:25:f2 --confirm-destroy alpha
+```
+
+With `--claim`, that means the next unknown machine to network-boot is erased whatever it holds.
 
 ## First install
 
@@ -95,9 +118,9 @@ Then watch the boot server's window until `alpha: ✓ Ready`. alpha comes back w
 identity, so `ssh alpha` simply works. If alpha does not answer over SSH (powered off, hung), the
 command arms it anyway and tells you to power it on and pick network boot once from its boot menu.
 
-By hand, the same is: `deno task boot arm alpha` on the PC, then `archon reboot --netboot` on the
-host (or power it on and press F7). On new hardware for an existing host name, use
-`deno task boot arm alpha --claim`.
+By hand, the same is: `deno task boot arm alpha` on the PC (alpha installed before, so its MAC is
+registered), then `archon reboot --netboot` on the host (or power it on and press F7). On new
+hardware for an existing host name, use `deno task boot arm alpha --claim`.
 
 ## HTTP Boot instead of PXE
 
@@ -181,4 +204,4 @@ SSH) and changes nothing. With it:
 
 Then remove alpha's local DNS record in the router and its line in `fleets/<fleet>/site.ts` (the
 router first, Article 21), and back up the vault. The machine itself is not touched: power it off,
-or install it as a new host with `deno task archon host add <name>`.
+or install it as a new host with `deno task archon host add <name> --claim`.

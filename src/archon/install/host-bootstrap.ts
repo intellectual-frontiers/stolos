@@ -49,6 +49,66 @@ else
 fi
 `;
 
+/**
+ * Spec 051: what the machine at the address says about itself, read before
+ * anything is copied: its Ubuntu release, its facts (as the installer's guard
+ * reports them), and its network cards (the default route's first).
+ */
+export const BOOTSTRAP_FACTS =
+  `. /etc/os-release; echo "version_id=$VERSION_ID"; echo "hostname=$(hostname)"
+for k in sys_vendor product_name product_serial; do echo "$k=$(cat /sys/class/dmi/id/$k 2>/dev/null)"; done
+echo "mem_kib=$(awk '/^MemTotal:/ { print $2 }' /proc/meminfo)"; echo "cpus=$(nproc)"
+d=$(ip -o route get 1.1.1.1 2>/dev/null | sed -n 's/.* dev \\([^ ]*\\).*/\\1/p')
+[ -n "$d" ] && echo "uplink=$(cat /sys/class/net/$d/address)"
+for n in /sys/class/net/*; do [ -e "$n/device" ] && echo "nic=$(cat $n/address)"; done
+exit 0`;
+
+export interface BootstrapFacts {
+  versionId?: string;
+  hostname?: string;
+  uplink?: string;
+  nics: string[];
+  summary: string;
+}
+
+export function parseBootstrapFacts(text: string): BootstrapFacts {
+  const get = (k: string) => text.match(new RegExp(`^${k}=(.*)$`, "m"))?.[1]?.trim() || undefined;
+  const nics = [...text.matchAll(/^nic=(.+)$/gm)].map((m) => m[1].trim().toLowerCase());
+  const mem = Number(get("mem_kib") ?? 0);
+  const who = [get("sys_vendor"), get("product_name")].filter(Boolean).join(" ") || "a machine";
+  return {
+    versionId: get("version_id"),
+    hostname: get("hostname"),
+    uplink: get("uplink")?.toLowerCase(),
+    nics,
+    summary: `${who}, Ubuntu ${get("version_id") ?? "?"}, ${get("cpus") ?? "?"} CPUs, ${
+      mem ? (mem / 1048576).toFixed(1) : "?"
+    } GiB RAM`,
+  };
+}
+
+/** Why bootstrapping this machine as the host is refused, or undefined. */
+export function bootstrapRefusal(
+  host: string,
+  f: BootstrapFacts,
+  release: string,
+  registeredMac?: string,
+): string | undefined {
+  if (f.versionId !== release) {
+    return `the machine runs Ubuntu ${
+      f.versionId ?? "(unknown)"
+    }; the fleet is Ubuntu ${release}: install Ubuntu ${release} on it first`;
+  }
+  if (registeredMac && !f.nics.includes(registeredMac) && f.uplink !== registeredMac) {
+    return `${host} is registered with network card ${registeredMac}, which this machine does not have (it has ${
+      f.nics.join(", ") || "none"
+    }): the wrong machine, or a typo in --mac-address. If it is ${host}: deno task archon host add ${host} --mac-address ${
+      f.uplink ?? "<mac>"
+    } --force`;
+  }
+  return undefined;
+}
+
 async function ssh(args: string[], interactive = false): Promise<number> {
   const p = new Deno.Command("ssh", {
     args,
@@ -65,6 +125,39 @@ export async function hostBootstrap(o: HostBootstrapOptions): Promise<number> {
   if (!host) {
     throw new Error(`no host model named '${o.name}': run archon host add ${o.name} first`);
   }
+
+  // Spec 051: the machine first, from itself.
+  const m = ui.phase("Machine");
+  const probe = await new Deno.Command("ssh", {
+    args: [o.ssh, "sh", "-s"],
+    stdin: "piped",
+    stdout: "piped",
+    stderr: "piped",
+  }).spawn();
+  const w = probe.stdin.getWriter();
+  await w.write(new TextEncoder().encode(BOOTSTRAP_FACTS + "\n"));
+  await w.close();
+  const out = await probe.output();
+  if (!out.success) {
+    const why = new TextDecoder().decode(out.stderr).trim().split("\n").pop() ?? "";
+    // ssh's own failures are 255; anything else is the probe's.
+    throw new Error(
+      out.code === 255
+        ? `cannot reach ${o.ssh} over SSH (${why}): check the address and that your key is installed`
+        : `${o.ssh} answered, but reading its facts failed (exit ${out.code}${
+          why ? `: ${why}` : ""
+        })`,
+    );
+  }
+  const facts = parseBootstrapFacts(new TextDecoder().decode(out.stdout));
+  const { loadRegistration, writeRegistration } = await import("../fleet/registration.ts");
+  const reg = await loadRegistration(host.name);
+  const refusal = bootstrapRefusal(host.name, facts, fleet.ubuntu.release, reg?.mac);
+  if (refusal) {
+    m.fail(refusal);
+    return 1;
+  }
+  m.done(`${facts.summary}${facts.uplink ? ` · network card ${facts.uplink}` : ""}`);
 
   const p = ui.phase("Files");
   const dir = await Deno.makeTempDir({ prefix: "archon-bootstrap-" });
@@ -119,8 +212,20 @@ export async function hostBootstrap(o: HostBootstrapOptions): Promise<number> {
   );
   ui.resume();
   const r = ui.phase("First boot");
-  if (code === 0) r.done(`${host.name} converged and pushed its first record`);
-  else {r.fail(
+  if (code === 0) {
+    r.done(`${host.name} converged and recorded its first install`);
+    // Spec 051: its network card, as the machine reported it, is its registered MAC.
+    if (reg && facts.uplink && (reg.mac !== facts.uplink || reg.macSource !== "installed")) {
+      const file = await writeRegistration(host.name, {
+        ...reg,
+        mac: facts.uplink,
+        macSource: "installed",
+      });
+      ui.next.push(
+        `${file}: mac ${facts.uplink}, as the machine reported it; commit and push it (signed)`,
+      );
+    }
+  } else {r.fail(
       `first boot on ${host.name} failed (exit ${code})`,
       `ssh ${o.ssh} sudo tail -n 80 /var/log/archon-first-boot.log`,
     );}

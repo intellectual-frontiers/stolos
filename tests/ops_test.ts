@@ -107,11 +107,11 @@ Deno.test("MCP arguments map to the CLI", () => {
   const query = COMMANDS.find((c) => c.name === "query")!;
   assertEquals(argvFor(query, { sql: "select 1", json: true }), ["query", "select 1", "--json"]);
   const add = COMMANDS.find((c) => c.name === "host add")!;
-  assertEquals(argvFor(add, { name: "alpha", mac: "aa:bb:cc:dd:ee:ff" }), [
+  assertEquals(argvFor(add, { name: "alpha", "mac-address": "aa:bb:cc:dd:ee:ff" }), [
     "host",
     "add",
     "alpha",
-    "--mac",
+    "--mac-address",
     "aa:bb:cc:dd:ee:ff",
   ]);
 });

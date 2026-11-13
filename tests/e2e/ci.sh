@@ -8,6 +8,8 @@
 . "$(cd "$(dirname "$0")" && pwd)/lib.sh"
 ENGINE=$(cd "$HERE/../.." && pwd)
 F="$W/fleet" FLEET=e2e SERVER=e2e WS=e2e-ws ADMIN=tester
+# Spec 051: a network install first meets a disk that is not blank (E2E_GUARD_TEST=).
+export E2E_GUARD_TEST=${E2E_GUARD_TEST-1}
 export ARCHON_REPO="$F" ARCHON_FLEET=$FLEET
 lab_init
 ln -s "$ENGINE" "$W/www/stolos"
@@ -65,7 +67,8 @@ A=(deno run -A --frozen archon.ts)
 mkdir -p "$HOME/.config/archon/secrets/e2e"
 openssl passwd -6 "$(openssl rand -hex 16)" >"$HOME/.config/archon/secrets/e2e/admin-password.hash"
 chmod 600 "$HOME/.config/archon/secrets/e2e/admin-password.hash"
-"${A[@]}" host add e2e --mac $MAC --no-deploy-key --no-push
+# Spec 051: recognized by claim (the next unknown machine to network-boot).
+"${A[@]}" host add e2e --claim --no-deploy-key --no-push
 "${A[@]}" build
 cd "$ENGINE"
 publish_fleet

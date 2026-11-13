@@ -390,7 +390,15 @@ export interface OptInRecord {
 export interface HostRegistration {
   /** "ssh-ed25519 AAAA...", "ecdsa-sha2-nistp256 AAAA...", "ssh-rsa AAAA..." (no comments). */
   sshHostKeys: string[];
+  /** The network card it is recognized by when it network-boots (spec 051). */
   mac?: string;
+  /**
+   * Where that MAC came from (spec 051): "operator", given with
+   * --mac-address; "installed", reported by the machine itself when it
+   * installed (or was bootstrapped). Only a machine that installed as this
+   * host is reinstalled without the blank-disk guard.
+   */
+  macSource?: "operator" | "installed";
   /** SHA256:... of its deploy key, when it has one. */
   deployKey?: string;
   /** When it was registered (ISO date). */

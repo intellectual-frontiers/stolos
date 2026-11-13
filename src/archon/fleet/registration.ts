@@ -25,8 +25,10 @@ export default {
   sshHostKeys: [
 ${keys}  ],
 ${r.mac ? `  mac: ${JSON.stringify(r.mac)},\n` : ""}${
-    r.deployKey ? `  deployKey: ${JSON.stringify(r.deployKey)},\n` : ""
-  }  added: ${JSON.stringify(r.added)},
+    r.mac && r.macSource ? `  macSource: ${JSON.stringify(r.macSource)},\n` : ""
+  }${r.deployKey ? `  deployKey: ${JSON.stringify(r.deployKey)},\n` : ""}  added: ${
+    JSON.stringify(r.added)
+  },
 } satisfies HostRegistration;
 `;
 }
@@ -63,11 +65,31 @@ export async function registrationProblems(
       continue;
     }
     if (!r.sshHostKeys.length) out.push({ where, message: "lists no SSH host key" });
+    if (r.mac !== undefined && parseMac(r.mac) !== r.mac) {
+      out.push({
+        where,
+        message: `mac ${JSON.stringify(r.mac)} is not a MAC address (aa:bb:cc:dd:ee:ff)`,
+      });
+    }
     for (const k of r.sshHostKeys) {
       if (!KEY.test(k)) out.push({ where, message: `not an SSH public key: ${k.slice(0, 30)}` });
     }
   }
   return out;
+}
+
+/**
+ * A MAC address in any common spelling (aa:bb:cc:dd:ee:ff, AA-BB-CC-DD-EE-FF,
+ * aabbccddeeff, aabb.ccdd.eeff) as lowercase with colons; undefined when it
+ * is not one (spec 051: refused at once, before anything is written).
+ */
+export function parseMac(raw: string): string | undefined {
+  const hex = raw.trim().toLowerCase().replace(/[:.-]/g, "");
+  if (!/^[0-9a-f]{12}$/.test(hex)) return undefined;
+  const sep = raw.trim().match(/[:.-]/g);
+  // Mixed separators are a typo, not a spelling.
+  if (sep && new Set(sep).size > 1) return undefined;
+  return hex.match(/../g)!.join(":");
 }
 
 /** The names an operator reaches a host by. */

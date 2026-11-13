@@ -124,16 +124,29 @@ export const COMMANDS: Command[] = [
     name: "host add",
     summary: "Add a host: its model, its GitHub deploy key, and one armed install",
     description:
-      `Writes fleets/<fleet>/hosts/<name>/host.ts, creates the host's ed25519 deploy key with ssh-keygen and registers it on the repository read-only (hosts never push, spec 048) through your gh login (the private half stays in this machine's secret store), arms the host for one install by archon-boot, builds, commits, and pushes the new model (the install clones main; --no-push leaves it), and prints its Boot URI (http://<this-pc>:8080/boot/<name>/bootx64.efi) to set in its BIOS; no MAC address is needed (spec 004).`,
+      `Writes fleets/<fleet>/hosts/<name>/host.ts and registration.ts, creates the host's ed25519 deploy key with ssh-keygen and registers it on the repository read-only (hosts never push, spec 048) through your gh login (the private half stays in this machine's secret store), arms the host for one install by archon-boot, builds, commits, and pushes the new model (the install clones main; --no-push leaves it). Say how its machine is recognized when it network-boots, with exactly one of --claim (the next unknown machine to network-boot in 30 minutes becomes the host; its MAC is learned from it) or --mac-address <mac> (only that network card). The installer erases no disk that is not blank unless --confirm-destroy <name> is given, typed by a person (spec 051).`,
     tier: "repo",
     operation: true,
     args: [
       { name: "name", type: "string", positional: true, required: true, description: "Host name." },
       {
-        name: "mac",
+        name: "claim",
+        type: "boolean",
+        description:
+          "The next unknown machine to network-boot in 30 minutes becomes this host (its MAC is learned from it).",
+      },
+      {
+        name: "mac-address",
         type: "string",
         description:
-          "Optional: MAC of the NIC it network-boots from. Without it the host is recognized by its own Boot URI.",
+          "Only the network card with this MAC address is this host (aa:bb:cc:dd:ee:ff; dashes or none also work).",
+      },
+      {
+        name: "confirm-destroy",
+        type: "string",
+        human: true,
+        description:
+          "The host's name again: its install may erase disks that are not blank (typed by a person; once).",
       },
       {
         name: "disk",
@@ -154,21 +167,25 @@ export const COMMANDS: Command[] = [
       },
     ],
     examples: [{
-      cmd: "deno task archon host add alpha",
-      text: "Add alpha; it prints alpha' Boot URI for the BIOS.",
+      cmd: "deno task archon host add alpha --claim",
+      text: "Add alpha; the next unknown machine to network-boot in 30 minutes becomes alpha.",
+    }, {
+      cmd: "deno task archon host add alpha --mac-address 52:54:00:12:34:56",
+      text: "Add alpha as the machine with that network card.",
     }],
     async run(a) {
       const { hostAdd } = await import("../install/host-add.ts");
-      await hostAdd({
+      return await hostAdd({
         name: a.name as string,
-        mac: a.mac as string | undefined,
+        claim: !!a.claim,
+        macAddress: a["mac-address"] as string | undefined,
+        confirmDestroy: a["confirm-destroy"] as string | undefined,
         disk: a.disk as "largest" | `/dev/${string}` | undefined,
         layout: a.layout as "lvm" | "direct" | undefined,
         noDeployKey: !!a["no-deploy-key"],
         force: !!a.force,
         push: !a["no-push"],
       });
-      return 0;
     },
   },
   {

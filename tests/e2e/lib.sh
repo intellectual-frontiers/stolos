@@ -154,14 +154,22 @@ install_server() {
     --fleet "$FLEET" --port 8080) >"$OUT/boot.log" 2>&1 &
   for _ in $(seq 600); do curl -fsS -o /dev/null "http://$BR:8080/health" && break; sleep 2; done
   curl -fsS "http://$BR:8080/health"
+  if [ -n "${E2E_GUARD_TEST:-}" ]; then guard_test; fi
   log "$SERVER: blank VM, Secure Boot on, network boot (runner ${HOST_MB} MB, VM ${E2E_VM_MEM} MiB)"
-  sudo E2E_VM_MEM="$E2E_VM_MEM" "$HERE/vm.sh"
+  if [ -n "${E2E_GUARD_TEST:-}" ]; then
+    # The same machine and disk again (the guard's partition table is still on it).
+    sudo E2E_VM_BOOT=disk E2E_VM_MEM="$E2E_VM_MEM" "$HERE/vm.sh"
+  else
+    sudo E2E_VM_MEM="$E2E_VM_MEM" "$HERE/vm.sh"
+  fi
   local deadline result="" seen=0 n last
   deadline=$(($(date +%s) + TIMEOUT_MIN * 60))
   last=$(date +%s)
   while [ "$(date +%s)" -lt "$deadline" ]; do
     if grep -qs '"boot.ready"' "$EVENTS"/otlp-*.jsonl; then result=ready; break; fi
     if grep -qs '"boot.done-with-problems"' "$EVENTS"/otlp-*.jsonl; then result=problems; break; fi
+    if grep -qs '"boot.guarded"' "$EVENTS"/otlp-*.jsonl; then result="stopped by the blank-disk guard"; break; fi
+    if grep -qs '"boot.stalled"' "$EVENTS"/otlp-*.jsonl; then result="stalled (the installer went quiet)"; break; fi
     if ! sudo kill -0 "$(sudo cat "$OUT/qemu.pid")" 2>/dev/null; then result=vm-stopped; break; fi
     sleep 30
     n=$(wc -l <"$OUT/boot.log")
@@ -193,6 +201,32 @@ bootstrap_server() {
   log "$SERVER: bootstrapped"
 }
 
+# Spec 051: a machine whose disk is not blank, claimed: the installer must
+# stop before writing anything, and power off; then a person's
+# --confirm-destroy lets the same machine install.
+guard_test() {
+  log "$SERVER: a machine with a partition table on its disk, claimed: the guard must stop it"
+  sudo E2E_DIRTY_DISK=1 E2E_VM_MEM="$E2E_VM_MEM" "$HERE/vm.sh"
+  local deadline
+  deadline=$(($(date +%s) + 15 * 60))
+  until grep -qs '"boot.guarded"' "$EVENTS"/otlp-*.jsonl; do
+    [ "$(date +%s)" -lt "$deadline" ] || fail "the blank-disk guard did not stop the install"
+    grep -qs '"boot.ready"' "$EVENTS"/otlp-*.jsonl && fail "a disk that was not blank was erased without --confirm-destroy"
+    sleep 10
+  done
+  plain <"$OUT/boot.log" | grep -E "machine reports|install stopped" | tail -n 2 || true
+  plain <"$OUT/boot.log" | grep -q "install stopped: its disks are not blank" ||
+    fail "the guard stopped the install, but not because the disk was not blank"
+  for _ in $(seq 60); do sudo kill -0 "$(sudo cat "$OUT/qemu.pid")" 2>/dev/null || break; sleep 2; done
+  sudo kill -0 "$(sudo cat "$OUT/qemu.pid")" 2>/dev/null && fail "the guarded machine did not power off"
+  log "the guard stopped it before writing anything, and it powered off"
+  # The guard's event is in the telemetry: move it aside so Ready is waited for afresh.
+  mkdir -p "$OUT/guard-telemetry"
+  mv "$EVENTS"/otlp-*.jsonl "$OUT/guard-telemetry/" 2>/dev/null || true
+  (cd "$F" && deno run -A --frozen boot.ts arm "$SERVER" --claim --confirm-destroy "$SERVER" --fleet "$FLEET") ||
+    fail "boot arm --confirm-destroy failed"
+}
+
 # Spec 049: the boot server's "install <host>" trace, continued by the host's first boot.
 check_trace() {
   sleep 10 # the last batches
@@ -215,6 +249,10 @@ query_from_runner() {
   (cd "$F" && "${A[@]}" fleet query "select host, ok, passed, total from archon_install") |
     tee "$OUT/fleet-query.txt" || fail "fleet query failed"
   answered "$OUT/fleet-query.txt" || fail "fleet query did not answer ok for $SERVER"
+  # Spec 051: what the machine is, as it reported itself.
+  (cd "$F" && "${A[@]}" fleet query "select host, model, cpus, mem_mib, macs from archon_inventory") |
+    tee "$OUT/fleet-inventory.txt" || fail "fleet query of archon_inventory failed"
+  grep -q "^$SERVER" "$OUT/fleet-inventory.txt" || fail "no inventory from $SERVER"
 }
 
 # Power the server off and on again with less memory (the installer needed
@@ -296,6 +334,10 @@ run_lab() {
   else
     bootstrap_server
   fi
+  # Spec 051: the network card, as the machine reported it, is now registered.
+  grep -q 'macSource: "installed"' "$F/fleets/$FLEET/hosts/$SERVER/registration.ts" ||
+    fail "registration.ts does not hold the MAC the machine reported"
+  log "registration.ts: $(grep -oE 'mac: "[0-9a-f:]+"' "$F/fleets/$FLEET/hosts/$SERVER/registration.ts"), as the machine reported it"
   query_from_runner
   reboot_server
   workstation_stage

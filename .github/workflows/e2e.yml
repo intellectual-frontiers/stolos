@@ -51,7 +51,7 @@ jobs:
       - name: QEMU, OVMF, dnsmasq, cloud-image-utils
         run: |
           sudo apt-get update -q
-          sudo apt-get install -y -q qemu-system-x86 qemu-utils ovmf dnsmasq-base cloud-image-utils netcat-openbsd
+          sudo apt-get install -y -q qemu-system-x86 qemu-utils ovmf dnsmasq-base cloud-image-utils netcat-openbsd parted
       - name: Install a VM end to end
         env:
           E2E_VM_MEM: ${{ inputs.vm_mem }}

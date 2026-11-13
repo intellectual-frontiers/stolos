@@ -89,6 +89,16 @@ export interface InstallToken {
   claimUntil?: string;
   /** The installer reported completion; the token is spent. */
   done?: string;
+  /**
+   * Spec 051: a person repeated the host's name with --confirm-destroy: this one
+   * install may erase disks that are not blank (otherwise the installer stops).
+   */
+  confirmDestroy?: true;
+  /**
+   * boot reinstall reached this host over SSH (its registered keys) and rebooted
+   * it into this install: a machine with this MAC holds this host already.
+   */
+  reinstall?: true;
 }
 
 const TOKEN_LIFE_AFTER_USE_MS = 2 * 60 * 60 * 1000;
@@ -107,6 +117,7 @@ export async function armHost(
   host: string,
   claimMinutes = 0,
   knownMac?: string,
+  o: { confirmDestroy?: boolean; reinstall?: boolean } = {},
 ): Promise<InstallToken> {
   const all = await loadTokens();
   const prev = all.find((t) => t.host === host);
@@ -129,6 +140,8 @@ export async function armHost(
       : mac
       ? { mac }
       : {}),
+    ...(o.confirmDestroy ? { confirmDestroy: true as const } : {}),
+    ...(o.reinstall ? { reinstall: true as const } : {}),
   };
   tokens.push(t);
   await saveTokens(tokens);
@@ -140,6 +153,12 @@ export async function armHost(
     message: `armed for one install${
       claimMinutes
         ? `; the next unknown machine to network-boot in ${claimMinutes} minutes becomes ${host}`
+        : mac
+        ? ` as the machine with network card ${mac}`
+        : ""
+    }${
+      o.confirmDestroy
+        ? "; its disks will be erased even if they are not blank (--confirm-destroy)"
         : ""
     }`,
   });

@@ -46,7 +46,8 @@ A=(deno run -A --frozen archon.ts --fleet "$FLEET")
 mkdir -p "$HOME/.config/archon/secrets/$FLEET"
 openssl passwd -6 "$(openssl rand -hex 16)" >"$HOME/.config/archon/secrets/$FLEET/admin-password.hash"
 chmod 600 "$HOME/.config/archon/secrets/$FLEET/admin-password.hash"
-"${A[@]}" host add "$SERVER" --mac $MAC --no-deploy-key --no-push
+# Spec 051: recognized by its network card (the lab VM's).
+"${A[@]}" host add "$SERVER" --mac-address $MAC --no-deploy-key --no-push
 "${A[@]}" build
 cd "$HERE"
 publish_fleet

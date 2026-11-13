@@ -35,7 +35,7 @@ never in Git. From then on use the pinned engine through the tasks:
 
 ```
 deno task archon signers add      # your signing key (see Signing below)
-deno task archon host add <name>  # the first host
+deno task archon host add <name> --claim  # the first host (or --mac-address <mac>)
 ```
 
 A second fleet in the same repository is one more `deno task archon fleet init <id>`. When the
@@ -160,10 +160,7 @@ upgrade` moves both):
 
 ```yaml
 # .github/workflows/e2e.yml
-on: {
-  workflow_dispatch: {},
-  push: { branches: [main], paths: [deno.json, deno.lock, "fleets/synthetic-uat/**"] },
-}
+on: { workflow_dispatch: {} } # by hand: a private repository's runs cost Actions minutes
 jobs:
   e2e:
     uses: intellectual-frontiers/stolos/.github/workflows/fleet-e2e.yml@v0.14.0
@@ -179,9 +176,9 @@ network install, Secure Boot and all, on every engine release.
 
 **Cost.** A run in a private repository takes about 8 minutes of a Linux runner, counted against the
 GitHub account's included Actions minutes (2,000 a month on the Free plan, 3,000 on Pro); beyond
-them, GitHub charges only if you set a budget above zero. The workflow runs by hand and when the
-engine pin or the synthetic fleet changes, not on every push. Check usage under Settings, Billing
-and licensing.
+them, GitHub charges only if you set a budget above zero. Run it by hand, for difficult or major
+changes (install, identity, boot); simple ones are proven in the engine's public lab and then on the
+real machines. Check usage under Settings, Billing and licensing.
 
 ## Registration: who each host is
 
