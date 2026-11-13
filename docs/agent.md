@@ -65,7 +65,7 @@ SSH as the admin.
 | `fleet.mcp.maxTier` | The agent can                                                 |
 | ------------------- | ------------------------------------------------------------- |
 | `read`              | look: verify, capture, apply with check, reports, logs        |
-| `repo`              | also record state (`archon push`)                             |
+| `repo`              | also change the repository (signers, hosts)                   |
 | `mutate` (default)  | also converge, restart, update, back up (each asks you first) |
 
 Change it in `fleets/<fleet>/fleet.ts`, then `deno task archon build`, commit, and push; every

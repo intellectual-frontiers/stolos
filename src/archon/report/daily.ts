@@ -26,7 +26,7 @@ export async function dailyReport(host: HostDef) {
     .split("\n").filter((l) => l.includes("[upgradable")).length;
   const timers = (await run(["systemctl", "list-timers", "--no-pager", "--plain", "archon-*"]))
     .stdout.trim();
-  const drift = await capture(host, { write: false }).then((c) => c.summary).catch((e) =>
+  const drift = await capture(host).then((c) => c.summary).catch((e) =>
     `capture failed: ${e.message}`
   );
   const reports = await listFiles(join(P.varLib, "reports"), ".md");
@@ -69,7 +69,7 @@ export async function dailyReport(host: HostDef) {
   ].join("\n");
 
   const text = facts + "\n";
-  const dir = isRoot() ? join(P.varLib, "reports") : join(P.state, "hosts", host.name, "reports");
+  const dir = isRoot() ? join(P.varLib, "reports") : join(P.state, "reports");
   await ensureDir(dir);
   const path = join(dir, `daily-${date}.md`);
   await Deno.writeTextFile(path, text);

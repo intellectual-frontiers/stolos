@@ -76,17 +76,20 @@ Deno.test("037: the switch is the host's recorded state; on only when it says en
   const root = await Deno.makeTempDir({ prefix: "archon-smb-test-" });
   try {
     assertEquals(await switchOn("alpha", "smb", root), false);
-    await Deno.mkdir(`${root}/hosts/alpha`, { recursive: true });
+    const { putRecord } = await import("../src/archon/state/store.ts");
     const rec = (enabled: boolean) =>
-      Deno.writeTextFile(
-        `${root}/hosts/alpha/smb.json`,
-        JSON.stringify({ enabled, by: "alice", at: "2026-11-12T17:00:00Z" }),
+      putRecord(
+        "alpha",
+        "optin",
+        "smb",
+        { enabled, by: "alice", at: "2026-11-12T17:00:00Z" },
+        root,
       );
     await rec(true);
     assertEquals(await switchOn("alpha", "smb", root), true);
     await rec(false);
     assertEquals(await switchOn("alpha", "smb", root), false);
-    await Deno.writeTextFile(`${root}/hosts/alpha/smb.json`, "not json");
+    await putRecord("alpha", "optin", "smb", "not a record", root);
     assertEquals(await switchOn("alpha", "smb", root), false);
   } finally {
     await Deno.remove(root, { recursive: true });

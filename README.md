@@ -74,8 +74,16 @@ From a fleet repository, `archon` finds the fleet the same way: `ARCHON_REPO` (t
 
 ## Status
 
-The engine (`v0.1.0` onward) is the engine as it stood in its first fleet, made general: the
-engine/fleet split, per-fleet secrets, the example lab, and the versioning above. Next (Phase 1 of
-the plan): signed approval and read-only hosts (`047-intent-and-identity`), observing machines
-through osquery and `archon.sql` (`048-observe-by-query`), and OpenTelemetry everywhere
-(`049-telemetry`).
+The version is in [`src/archon/version.ts`](src/archon/version.ts). The engine started as it stood
+in its first fleet, made general (`046-engine-instance`: the engine/fleet split, per-fleet secrets,
+the example lab, versioning). Since then:
+
+- `047-intent-and-identity`: hosts apply only a tip of `main` signed by one of the fleet's signers
+  (`fleets/<id>/signers.ts`, `archon signers`).
+- `048-observe-by-query`: each machine keeps its own state in `/var/lib/archon/archon.sql` (readable
+  SQL; `archon.auto.sqlite.db` is built from it for osquery). `archon state`, `archon query`, and
+  `archon fleet query` read machines live over SSH; hosts never push, and their deploy keys are
+  read-only.
+
+Next: OpenTelemetry everywhere (`049-telemetry`), then decisions and registration in Git
+(`decisions.ts`, `registration.ts`).

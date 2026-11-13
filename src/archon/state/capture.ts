@@ -1,10 +1,7 @@
-// `archon capture` (spec 014): record this host's actual state as JSON under
-// state/hosts/<host>/snapshot/ and compare it with the plan (drift). Exported
-// as RDF by `archon export`.
+// `archon capture` (spec 014, 048): read this host's actual state and compare
+// it with the plan (drift). Nothing is written: the machine answers for itself
+// (archon query).
 
-import { join } from "../core/path.ts";
-import { ensureDir } from "../core/fsx.ts";
-import { P } from "../core/paths.ts";
 import { run } from "../core/exec.ts";
 import { planFor } from "../build.ts";
 import type { HostDef } from "../model/types.ts";
@@ -94,25 +91,14 @@ export async function drift(host: HostDef, s: Snapshot): Promise<Drift> {
   return { missingPackages, unitsNotInDesiredState, unmodeledListeningPorts };
 }
 
-export async function capture(host: HostDef, opts: { write: boolean }) {
+export async function capture(host: HostDef) {
   const s = await snapshot(host);
   const d = await drift(host, s);
-  const dir = join(P.state, "hosts", host.name, "snapshot");
-  if (opts.write) {
-    await ensureDir(dir);
-    // The capture time lives in the commit; files change only when the host does.
-    const { captured: _c, ...stable } = s;
-    await Deno.writeTextFile(join(dir, "snapshot.json"), JSON.stringify(stable, null, 2) + "\n");
-    await Deno.writeTextFile(join(dir, "drift.json"), JSON.stringify(d, null, 2) + "\n");
-  }
   const summary = [
     `drift for ${host.name}:`,
     `  missing modeled packages:    ${d.missingPackages.join(", ") || "none"}`,
     `  units not in desired state:  ${d.unitsNotInDesiredState.join(", ") || "none"}`,
     `  unmodeled listening ports:   ${d.unmodeledListeningPorts.join(", ") || "none"}`,
-    ...(opts.write
-      ? ["", "next: archon push --check (is this state waiting to go to GitHub?), then archon push"]
-      : []),
   ].join("\n");
   return { snapshot: s, drift: d, summary };
 }

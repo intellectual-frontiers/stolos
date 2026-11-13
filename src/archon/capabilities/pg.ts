@@ -1,5 +1,5 @@
 // 038-pg, 039-pg-identity, 040-opt-in: PostgreSQL instances on a server, from
-// the model (host.pg.instances) and the host's record (state/hosts/<host>/pg.json).
+// the model (host.pg.instances) and the host's record (the host's own archon.sql (opt-in pg)).
 // An opt-in service: every server has postgresql-common, and postgresql.service
 // (every cluster is PartOf it) stays masked until an operator runs archon pg on;
 // then apply's Databases phase converges each instance, a Debian cluster
@@ -28,7 +28,6 @@ export const pg = (): Capability => ({ fleet, host, users }) => {
   if (host.kind === "workstation") return { spec: SPEC };
   const instances = instancesOf(host, users, fleet);
   const on = pgOn(host);
-  const record = `/srv/archon/state/hosts/${host.name}/pg.json`;
   // On every server: Ubuntu's PostgreSQL tooling, no clusters, the umbrella unit masked.
   const always = {
     packages: [{ name: "postgresql-common", spec: SPEC }, { name: "zstd", spec: SPEC }],
@@ -45,7 +44,8 @@ export const pg = (): Capability => ({ fleet, host, users }) => {
       state: "masked" as const,
       switch: "pg",
       verify:
-        `sh -c 'if grep -q "\\"enabled\\": *true" ${record} 2>/dev/null; then systemctl is-active --quiet ${PG_UNIT}; else ! systemctl is-active --quiet ${PG_UNIT}; fi'`,
+        // Rendered from the host's own record (spec 048): on, it runs; off, it does not.
+        on ? `systemctl is-active --quiet ${PG_UNIT}` : `! systemctl is-active --quiet ${PG_UNIT}`,
       spec: SPEC,
     },
   };

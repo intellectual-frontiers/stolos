@@ -1,8 +1,8 @@
 // The prompt's Archon segment (spec 009): every archon command ends by writing
 // one short line to /var/lib/archon/status/prompt, and the oh-my-posh theme
 // only reads that file, so the prompt stays instant. The line says how the
-// last run went, how many disruptive changes wait, and whether recorded
-// state is waiting for `archon push`.
+// last run went, how many disruptive changes wait, and whether the checkout
+// has local commits that are not on GitHub.
 
 import { P } from "./paths.ts";
 import { run } from "./exec.ts";
@@ -19,10 +19,8 @@ export interface RunStatus {
   deferred: number;
 }
 
-/** Recorded state or local commits not on GitHub yet (no network: uses the last fetch). */
+/** Local commits not on GitHub yet (no network: uses the last fetch). */
 export async function pushPending(repo = P.repo): Promise<boolean> {
-  const st = await run(["git", "-C", repo, "status", "--porcelain", "--", "state/"]);
-  if (st.ok && st.stdout.trim()) return true;
   const ahead = await run(["git", "-C", repo, "rev-list", "--count", "origin/main..HEAD"]);
   return ahead.ok && Number(ahead.stdout.trim()) > 0;
 }

@@ -34,7 +34,7 @@ export const PG = {
   pgdgSource: "/etc/apt/sources.list.d/archon-pgdg.sources",
   /** The PGDG signing key as Ubuntu's own postgresql-common ships it (Article 12). */
   pgdgKey: "/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc",
-  /** The operator's record: state/hosts/<host>/pg.json. */
+  /** The operator's record: the host's own archon.sql (opt-in pg). */
   stateFile: "pg.json",
   /** libpq's system-wide services (Debian's PGSYSCONFDIR): every instance, no secrets. */
   systemServices: "/etc/postgresql-common/pg_service.conf",

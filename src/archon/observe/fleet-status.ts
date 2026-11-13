@@ -1,11 +1,15 @@
 // `archon fleet status` (specs 021, 022): every server and workstation in the
-// model, its last install as it recorded it (state/hosts/<host>/installed.json),
+// model, its last install and verify as it says them now (spec 048: asked over
+// MCP, cached in this machine's archon.sql when it cannot be reached),
 // whether it is durable or ephemeral (spec 044), and how to reach and observe it. Works on the boot machine (which also knows
 // the addresses hosts installed from) and on any host.
 
+import { getRecord, putRecord } from "../state/store.ts";
+import { callRemoteTool } from "./remote.ts";
+import { mcpServers } from "../render/agent.ts";
+import type { HostState } from "../state/state-command.ts";
 import { P } from "../core/paths.ts";
-import { join } from "../core/path.ts";
-import { readTextOr } from "../core/fsx.ts";
+
 import { ui } from "../core/ui.ts";
 import { liveToken, loadTokens } from "../core/secrets.ts";
 import { loadFleet, loadHosts } from "../model/load.ts";
@@ -28,17 +32,38 @@ export async function fleetStatus(): Promise<number> {
     ui.next.push("no hosts yet: deno task archon host add <name> (or workstation add, in WSL)");
     return 0;
   }
+  // Spec 048: ask every server live (its MCP server, over SSH as ops), all at
+  // once; keep each answer in this machine's state as the last one seen.
+  const live = new Map<string, { ok: boolean; why?: string }>();
+  await Promise.all(
+    hosts.filter((h) => h.kind !== "workstation").map(async (h) => {
+      const target = mcpServers([h])[0]?.target;
+      if (!target) return;
+      const r = await callRemoteTool(target, "archon_state", { json: true }, { timeoutMs: 15_000 });
+      if (!r.ok) return live.set(h.name, { ok: false, why: r.text.split("\n").pop() });
+      try {
+        const st = JSON.parse(r.text) as HostState;
+        if (st.install) {
+          await putRecord(h.name, "install", "install", st.install.body, P.state, st.install.at);
+        }
+        if (st.verify) {
+          await putRecord(h.name, "verify", "latest", st.verify, P.state, st.verify.since);
+        }
+        live.set(h.name, { ok: true });
+      } catch {
+        live.set(h.name, { ok: false, why: "unreadable answer" });
+      }
+    }),
+  );
   for (const h of hosts) {
     const p = ui.phase(h.name);
-    const rec = JSON.parse(
-      (await readTextOr(join(P.state, "hosts", h.name, "installed.json"))) ?? "{}",
-    ) as Installed;
-    let latest: RecordedVerify | undefined;
-    try {
-      latest = JSON.parse(
-        (await readTextOr(join(P.state, "hosts", h.name, "verify.json"))) ?? "",
-      ) as RecordedVerify;
-    } catch { /* not recorded yet */ }
+    const inst = await getRecord<Installed>(h.name, "install", "install", P.state);
+    const rec: Installed = inst ? { ...inst.body, installed: inst.at } : {};
+    let latest = (await getRecord<RecordedVerify>(h.name, "verify", "latest", P.state))?.body;
+    const seen = live.get(h.name);
+    if (seen && !seen.ok) {
+      p.warn(`unreachable now (${seen.why}); showing what it said last`);
+    }
     // The latest verify, when it is newer than the install, is what the host is now.
     if (latest && rec.installed && latest.since < rec.installed) latest = undefined;
     const t = tokens.find((x) => x.host === h.name);
@@ -63,7 +88,7 @@ export async function fleetStatus(): Promise<number> {
               : ""
           }${!latest && rec.ok === false ? " · with problems" : ""}`
           : "not installed yet",
-        // Article 23: as recorded on GitHub (the host itself says it live: archon data).
+        // Article 23: from the model here (the host itself says it live: archon data).
         h.kind === "workstation" ? "" : describeData(hostData(h)),
         liveToken(tokens, h.name) ? "armed for an install" : "",
       ].filter(Boolean).join(" · "),
@@ -77,6 +102,6 @@ export async function fleetStatus(): Promise<number> {
       }).map((l) => `  ${l}`),
     );
   }
-  ui.next.push("(from this checkout: git pull for what hosts recorded since)");
+  ui.next.push("(live from each server over SSH; archon fleet query asks them anything)");
   return 0;
 }

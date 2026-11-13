@@ -88,7 +88,7 @@ export async function retire(
     ui.phase("Repository").done(`${name} is already removed here; committing and pushing it`);
     const { publishChange } = await import("../archon/install/publish.ts");
     await publishChange(
-      [repoRel(join(P.hosts, name)), repoRel(join(P.state, "hosts", name))],
+      [repoRel(join(P.hosts, name))],
       `045-retire: retire ${name}`,
     );
     return ui.finish();
@@ -180,10 +180,11 @@ export async function retire(
 
   const r = ui.phase("Repository");
   const model = join(P.hosts, name);
-  const state = join(P.state, "hosts", name);
   if (await exists(model)) await Deno.remove(model, { recursive: true });
-  if (await exists(state)) await Deno.remove(state, { recursive: true });
-  const removed = [repoRel(model), repoRel(state)];
+  // Spec 048: what this machine last heard from the host goes too.
+  const { removeRecords } = await import("../archon/state/store.ts");
+  await removeRecords(name).catch(() => {});
+  const removed = [repoRel(model)];
   r.done(`removed ${removed.join(" and ")} from this checkout`);
   const { publishChange } = await import("../archon/install/publish.ts");
   const published = push && await publishChange(removed, `045-retire: retire ${name}`);

@@ -12,7 +12,7 @@ export const SMB = {
   shared: "/srv/smb/shared",
   group: "smb-shared",
   unit: "smbd.service",
-  /** The operator's switch: state/hosts/<host>/smb.json. */
+  /** The operator's switch: the host's own archon.sql (opt-in smb). */
   switch: "smb",
   privateDir: "/var/lib/samba/private",
 } as const;

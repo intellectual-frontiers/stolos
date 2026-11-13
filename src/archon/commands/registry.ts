@@ -99,7 +99,7 @@ export const COMMANDS: Command[] = [
     name: "fleet status",
     summary: "Every server and workstation: last install, and how to reach and observe it",
     description:
-      `Lists every host in the model with its last install as it recorded it (state/hosts/<host>/installed.json: when, checks, problems) and whether it is armed, then how to reach and observe each: ssh, Cockpit's address (servers, from the local networks), archon observe, btop, archon observe tui, archon verify. On the boot machine it also shows the address each host last installed from. Read-only.`,
+      `Lists every host in the model with its last install as it recorded it (the host's own archon.sql (opt-in installed): when, checks, problems) and whether it is armed, then how to reach and observe each: ssh, Cockpit's address (servers, from the local networks), archon observe, btop, archon observe tui, archon verify. On the boot machine it also shows the address each host last installed from. Read-only.`,
     tier: "read",
     operation: true,
     args: [],
@@ -113,7 +113,7 @@ export const COMMANDS: Command[] = [
     name: "host add",
     summary: "Add a host: its model, its GitHub deploy key, and one armed install",
     description:
-      `Writes fleets/<fleet>/hosts/<name>/host.ts, creates the host's ed25519 deploy key with ssh-keygen and registers it on the repository with write access through your gh login (the private half stays in this machine's secret store), arms the host for one install by archon-boot, builds, commits, and pushes the new model (the install clones main; --no-push leaves it), and prints its Boot URI (http://<this-pc>:8080/boot/<name>/bootx64.efi) to set in its BIOS; no MAC address is needed (spec 004).`,
+      `Writes fleets/<fleet>/hosts/<name>/host.ts, creates the host's ed25519 deploy key with ssh-keygen and registers it on the repository read-only (hosts never push, spec 048) through your gh login (the private half stays in this machine's secret store), arms the host for one install by archon-boot, builds, commits, and pushes the new model (the install clones main; --no-push leaves it), and prints its Boot URI (http://<this-pc>:8080/boot/<name>/bootx64.efi) to set in its BIOS; no MAC address is needed (spec 004).`,
     tier: "repo",
     operation: true,
     args: [
@@ -158,6 +158,54 @@ export const COMMANDS: Command[] = [
         push: !a["no-push"],
       });
       return 0;
+    },
+  },
+  {
+    name: "state",
+    summary: "What this machine recorded about itself: install, latest verify, switches, data",
+    description:
+      `Reads this machine's own archon.sql (spec 048): its install record, its latest verify, the operators' switches (pg, s3, smb), and whether it holds durable data. Fleet status on the boot machine asks each server for this over MCP; nothing is pushed to Git.`,
+    tier: "read",
+    args: [],
+    async run(_a, ctx) {
+      const { stateCommand } = await import("../state/state-command.ts");
+      return await stateCommand(ctx.hostName, ctx.json);
+    },
+  },
+  {
+    name: "query",
+    summary: "Ask this machine one SQL question through osquery (read-only, allowlisted tables)",
+    description:
+      `Runs one SELECT through osqueryi, with Archon's own tables (archon_install, archon_verify, archon_prov, archon_optin, from archon.sql) next to osquery's. This server limits it: one statement, only tables on the allowlist (never shadow, process_envs, curl, file, yara, ...), at most 1000 rows, 20 seconds (spec 048, Article 17).`,
+    tier: "read",
+    args: [
+      { name: "sql", type: "string", positional: true, required: true, description: "One SELECT." },
+    ],
+    examples: [{
+      cmd:
+        'archon query "select name, port, protocol from listening_ports join processes using (pid)"',
+      text: "What listens, by process.",
+    }],
+    async run(a, ctx) {
+      const { query, table } = await import("../state/query.ts");
+      const rows = await query(a.sql as string);
+      console.log(ctx.json ? JSON.stringify(rows, null, 2) : table(rows));
+      return 0;
+    },
+  },
+  {
+    name: "fleet query",
+    summary: "Ask every server the same SQL question, through each one's MCP server",
+    description:
+      `From the boot machine or a workstation: runs archon query on each server in parallel, over SSH as ops (each server limits what it answers), and prints the rows with a host column. Unreachable servers are named (spec 048).`,
+    tier: "read",
+    noMcp: true,
+    args: [
+      { name: "sql", type: "string", positional: true, required: true, description: "One SELECT." },
+    ],
+    async run(a, ctx) {
+      const { fleetQuery } = await import("../observe/fleet-query.ts");
+      return await fleetQuery(a.sql as string, ctx.json);
     },
   },
   {
@@ -422,7 +470,7 @@ export const COMMANDS: Command[] = [
     name: "fs smb on",
     summary: "Turn on SMB file sharing (Windows, macOS, Linux) on this server",
     description:
-      `Starts Samba on this server and records the decision in state/hosts/<host>/smb.json (who, when), so every apply, reboot, and reinstall keeps it on until an operator runs archon fs smb off. Clients on the local networks connect to smb.<host>.<domain> (for example \\\\smb.alpha.lab.example.net\\shared): one share, shared, for everyone with an account, and each account's own home folder. --durable or --ephemeral is required (Article 23, spec 044): durable shares are archived nightly and guarded; ephemeral ones are not. SMB3 only, encryption when the client supports it, no guests. People sign in with their own Linux username and password: Samba keeps a copy, updated by PAM whenever the password is typed on the server (Cockpit, sudo, a password login, passwd); an account not on this server gets no access. The mailbox is told. archon push records the switch on GitHub (spec 037).`,
+      `Starts Samba on this server and records the decision in the host's own archon.sql (opt-in smb) (who, when), so every apply and reboot keeps it on until an operator runs archon fs smb off. Clients on the local networks connect to smb.<host>.<domain> (for example \\\\smb.alpha.lab.example.net\\shared): one share, shared, for everyone with an account, and each account's own home folder. --durable or --ephemeral is required (Article 23, spec 044): durable shares are archived nightly and guarded; ephemeral ones are not. SMB3 only, encryption when the client supports it, no guests. People sign in with their own Linux username and password: Samba keeps a copy, updated by PAM whenever the password is typed on the server (Cockpit, sudo, a password login, passwd); an account not on this server gets no access. The mailbox is told. The switch is in this machine's own archon.sql (spec 048).`,
     tier: "mutate",
     operation: true,
     args: [...CHOICE_ARGS, CONFIRM_DESTROY_ARG("the host's name")],
@@ -435,7 +483,7 @@ export const COMMANDS: Command[] = [
     name: "fs smb off",
     summary: "Turn off SMB file sharing on this server",
     description:
-      `Stops and masks Samba and records the decision in state/hosts/<host>/smb.json, so it stays off across applies, reboots, and reinstalls until an operator runs archon fs smb on. Shared files and SMB passwords are kept (spec 037).`,
+      `Stops and masks Samba and records the decision in the host's own archon.sql (opt-in smb), so it stays off across applies, reboots, and reinstalls until an operator runs archon fs smb on. Shared files and SMB passwords are kept (spec 037).`,
     tier: "mutate",
     operation: true,
     args: [],
@@ -461,7 +509,7 @@ export const COMMANDS: Command[] = [
     name: "pg list",
     summary: "List this server's PostgreSQL instances",
     description:
-      `Every PostgreSQL instance Archon keeps on this server (from the model and the host's record, state/hosts/<host>/pg.json): name, version, port, status, environment, and whether it is published. Clusters Archon did not create are listed as not Archon's and left alone. --json prints {host, instances, notArchons} (spec 038). See archon-pg(7).`,
+      `Every PostgreSQL instance Archon keeps on this server (from the model and the host's record, the host's own archon.sql (opt-in pg)): name, version, port, status, environment, and whether it is published. Clusters Archon did not create are listed as not Archon's and left alone. --json prints {host, instances, notArchons} (spec 038). See archon-pg(7).`,
     tier: "read",
     unlocked: true,
     args: [],
@@ -493,7 +541,7 @@ export const COMMANDS: Command[] = [
     name: "pg ensure",
     summary: "Create a PostgreSQL instance, or make sure it is right (idempotent)",
     description:
-      `Makes the instance exist and match the model: the cluster <version>/<name> (pg_createcluster, its own port from 5432 up, its own data directory, unit, and log), Archon's configuration (conf.d/50-archon.conf: localhost only, scram-sha-256, TLS 1.3), pg_hba.conf (peer on the socket, scram-sha-256 on loopback), its roles and their passwords, and their databases. An instance not in the model is recorded in state/hosts/<host>/pg.json (archon push records it on GitHub), and every apply keeps it from then on. An instance that exists, is Archon's, and is online needs nothing, so ensure then answers without sudo: an app's service account runs it unattended. Never touches a cluster Archon did not create. --json prints {ok, name, version, port, status, unit, created, changes}; a failure exits non-zero with one sentence. (spec 038). See archon-pg(7).`,
+      `Makes the instance exist and match the model: the cluster <version>/<name> (pg_createcluster, its own port from 5432 up, its own data directory, unit, and log), Archon's configuration (conf.d/50-archon.conf: localhost only, scram-sha-256, TLS 1.3), pg_hba.conf (peer on the socket, scram-sha-256 on loopback), its roles and their passwords, and their databases. An instance not in the model is recorded in the host's own archon.sql (opt-in pg), and every apply keeps it from then on. An instance that exists, is Archon's, and is online needs nothing, so ensure then answers without sudo: an app's service account runs it unattended. Never touches a cluster Archon did not create. --json prints {ok, name, version, port, status, unit, created, changes}; a failure exits non-zero with one sentence. (spec 038). See archon-pg(7).`,
     tier: "mutate",
     precheck: async (a, ctx) =>
       (await import("../pg/commands.ts")).pgEnsureReady(
@@ -735,7 +783,7 @@ export const COMMANDS: Command[] = [
     name: "pg publish",
     summary: "Make a PostgreSQL instance reachable over TLS (every address, or --local-only)",
     description:
-      `Records the decision in state/hosts/<host>/pg.json and applies it: PostgreSQL also listens on the server's address, pg_hba.conf admits TLS with scram-sha-256 (hostssl; postgres refused over any network), the firewall opens the instance's port, and PostgreSQL serves the server's wildcard certificate, so clients use pg-<name>.<host>.<domain> with sslmode=verify-full sslrootcert=system (archon pg show NAME --form external prints it all). By default every address may connect: the router decides what reaches the server from outside. With --local-only, the local networks only, in pg_hba.conf and the firewall. Publishing again changes the scope. PostgreSQL speaks TLS itself; Traefik is not involved. Undo with archon pg unpublish (spec 038).`,
+      `Records the decision in the host's own archon.sql (opt-in pg) and applies it: PostgreSQL also listens on the server's address, pg_hba.conf admits TLS with scram-sha-256 (hostssl; postgres refused over any network), the firewall opens the instance's port, and PostgreSQL serves the server's wildcard certificate, so clients use pg-<name>.<host>.<domain> with sslmode=verify-full sslrootcert=system (archon pg show NAME --form external prints it all). By default every address may connect: the router decides what reaches the server from outside. With --local-only, the local networks only, in pg_hba.conf and the firewall. Publishing again changes the scope. PostgreSQL speaks TLS itself; Traefik is not involved. Undo with archon pg unpublish (spec 038).`,
     tier: "mutate",
     args: [
       {
@@ -873,7 +921,7 @@ export const COMMANDS: Command[] = [
     name: "data set",
     summary: "Record an opt-in's data as durable or ephemeral",
     description:
-      `Changes the choice made when the opt-in was turned on (pg, s3, or smb; a guest's is in the model). Ephemeral to durable needs nothing; durable to ephemeral removes the protection, so it needs --confirm-destroy with the host's name, typed by a person (never over MCP). Recorded in state/hosts/<host>/<name>.json; the mailbox is told (spec 044).`,
+      `Changes the choice made when the opt-in was turned on (pg, s3, or smb; a guest's is in the model). Ephemeral to durable needs nothing; durable to ephemeral removes the protection, so it needs --confirm-destroy with the host's name, typed by a person (never over MCP). Recorded in an opt-in record in this machine's own archon.sql; the mailbox is told (spec 044).`,
     tier: "mutate",
     operation: true,
     args: [
@@ -901,7 +949,7 @@ export const COMMANDS: Command[] = [
     name: "opt-in",
     summary: "This server's opt-in services and containers: on or off, since when, by whom",
     description:
-      `Opt-in services and containers (spec 040) are on every server and off until an operator turns one on; then they stay on, across applies, reboots, and reinstalls, until an operator turns them off. Each decision is the host's record, state/hosts/<host>/<name>.json (archon push records it on GitHub). Lists each one: SMB file sharing (archon fs smb), PostgreSQL (archon pg), and S3 object storage (archon fs s3), whether it is on, since when, who turned it on, and the command that turns it on or shows it. Where an opt-in can use Linux accounts and their credentials, it does.`,
+      `Opt-in services and containers (spec 040) are on every server and off until an operator turns one on; then they stay on, across applies and reboots, until an operator turns them off. Each decision is the host's record, an opt-in record in this machine's own archon.sql. Lists each one: SMB file sharing (archon fs smb), PostgreSQL (archon pg), and S3 object storage (archon fs s3), whether it is on, since when, who turned it on, and the command that turns it on or shows it. Where an opt-in can use Linux accounts and their credentials, it does.`,
     tier: "read",
     unlocked: true,
     args: [],
@@ -984,7 +1032,7 @@ export const COMMANDS: Command[] = [
     name: "pg on",
     summary: "Turn PostgreSQL on for this server (off until an operator does)",
     description:
-      `PostgreSQL is an opt-in service (spec 040): every server has postgresql-common, and postgresql.service stays masked until an operator runs this. --durable or --ephemeral is required (Article 23, spec 044): durable makes the server durable (guarded against reinstalls and wipes). It records the decision in state/hosts/<host>/pg.json (who, when, which) and applies it: postgresql.service is unmasked and started, and every instance in the model and the host's record is created or started. Every apply, reboot, and reinstall keeps it on until an operator runs archon pg off. The mailbox is told. See archon-pg(7) and archon-opt-in(1).`,
+      `PostgreSQL is an opt-in service (spec 040): every server has postgresql-common, and postgresql.service stays masked until an operator runs this. --durable or --ephemeral is required (Article 23, spec 044): durable makes the server durable (guarded against reinstalls and wipes). It records the decision in the host's own archon.sql (opt-in pg) (who, when, which) and applies it: postgresql.service is unmasked and started, and every instance in the model and the host's record is created or started. Every apply, reboot, and reinstall keeps it on until an operator runs archon pg off. The mailbox is told. See archon-pg(7) and archon-opt-in(1).`,
     tier: "mutate",
     operation: true,
     args: [...CHOICE_ARGS, CONFIRM_DESTROY_ARG("the host's name")],
@@ -1052,7 +1100,7 @@ export const COMMANDS: Command[] = [
     name: "fs s3 on",
     summary: "Turn on S3 object storage (RustFS) on this server",
     description:
-      `S3 object storage is an opt-in container (specs 040, 041): every server has it, masked, until an operator runs this. --durable or --ephemeral is required (Article 23, spec 044): durable buckets (/srv/s3) are archived nightly and the server is guarded against reinstalls and wipes. Records the decision in state/hosts/<host>/s3.json (who, when, which) and applies it: RustFS (pinned by digest) is pulled and started under Podman, as an unprivileged user with every capability dropped, on 127.0.0.1 only; Traefik serves it on the local networks at s3.<host>.<domain> (the S3 API, path-style) and s3-console.<host>.<domain> (the console). Every person on the server and every fleet service account gets an S3 user of the same name, allowed the buckets named <name>-*, with a secret only that account can read (archon fs s3 key). It stays on, across applies, reboots, and reinstalls, until an operator runs archon fs s3 off. The mailbox is told.`,
+      `S3 object storage is an opt-in container (specs 040, 041): every server has it, masked, until an operator runs this. --durable or --ephemeral is required (Article 23, spec 044): durable buckets (/srv/s3) are archived nightly and the server is guarded against reinstalls and wipes. Records the decision in the host's own archon.sql (opt-in s3) (who, when, which) and applies it: RustFS (pinned by digest) is pulled and started under Podman, as an unprivileged user with every capability dropped, on 127.0.0.1 only; Traefik serves it on the local networks at s3.<host>.<domain> (the S3 API, path-style) and s3-console.<host>.<domain> (the console). Every person on the server and every fleet service account gets an S3 user of the same name, allowed the buckets named <name>-*, with a secret only that account can read (archon fs s3 key). It stays on, across applies and reboots, until an operator runs archon fs s3 off. The mailbox is told.`,
     tier: "mutate",
     operation: true,
     args: [...CHOICE_ARGS, CONFIRM_DESTROY_ARG("the host's name")],
@@ -1223,49 +1271,17 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "capture",
-    summary: "Record this host's state and report drift from the model",
+    summary: "Report this host's drift from the model (writes nothing)",
     description:
-      `Records manually installed packages, snaps, enabled units, listening ports, accounts, and tool versions as JSON under state/hosts/<host>/snapshot/ (spec 014), compares them with the plan, and prints the drift. With --summary, writes nothing.`,
-    tier: "repo",
-    args: [{
-      name: "summary",
-      type: "boolean",
-      description: "Print the drift only; write nothing.",
-    }],
-    async run(a, ctx) {
+      `Reads manually installed packages, snaps, enabled units, listening ports, accounts, and tool versions, compares them with the plan, and prints the drift. Nothing is recorded or pushed (spec 048): ask the machine directly with archon query.`,
+    tier: "read",
+    args: [],
+    async run(_a, ctx) {
       const { capture } = await import("../state/capture.ts");
-      const r = await capture(await requireHost(ctx.hostName), { write: !a.summary });
+      const r = await capture(await requireHost(ctx.hostName));
       if (ctx.json) console.log(JSON.stringify({ snapshot: r.snapshot, drift: r.drift }, null, 2));
       else console.log(r.summary);
       return 0;
-    },
-  },
-  {
-    name: "push",
-    summary: "Say whether this host's recorded state needs pushing, and push it",
-    description:
-      `capture, verify, and apply record this host's state under state/hosts/<host>/. archon push says whether anything is waiting to go to GitHub and why, commits the recorded state as "014-state: record <host> ...", rebases if others pushed, and pushes as the checkout's owner (ops, with the host's deploy key): it always runs through sudo, which does not prompt members of archon-ops, and git never waits for input. It never commits paths outside state/: those belong to the spec loop. With --check (or --dry-run) it only reports.`,
-    tier: "repo",
-    operation: true,
-    readOnlyWith: "check",
-    asOwner: true,
-    args: [
-      { name: "check", type: "boolean", description: "Report what would be pushed and why." },
-      { name: "dry-run", type: "boolean", description: "Same as --check." },
-    ],
-    async run(a, ctx) {
-      const { push } = await import("../push/push.ts");
-      const { loadFleet, usersFor } = await import("../model/load.ts");
-      const { currentUser, isRoot } = await import("../core/exec.ts");
-      const h = await requireHost(ctx.hostName);
-      const who = isRoot() ? "ops" : currentUser();
-      const u = usersFor(await loadFleet(), h).find((x) => x.name === who);
-      const identity = u?.email
-        ? ["-c", `user.name=${u.fullName}`, "-c", `user.email=${u.email}`]
-        : [];
-      const check = !!a.check || !!a["dry-run"];
-      const r = await push(h.name, { check }, identity);
-      return r.needed && !check && !r.pushed ? 1 : 0;
     },
   },
   {

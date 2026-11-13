@@ -144,18 +144,15 @@ Deno.test("network.ipv6 false renders 52archon-network (IPv4 only, retries); hos
 
 Deno.test("a successful apply settles an install record left at ok: false", async () => {
   const dir = await Deno.makeTempDir();
-  await Deno.mkdir(`${dir}/hosts/alpha`, { recursive: true });
-  const path = `${dir}/hosts/alpha/installed.json`;
-  await Deno.writeTextFile(
-    path,
-    JSON.stringify({
-      host: "alpha",
-      ok: false,
-      problems: [{ level: "fail", message: "apt: Could not get lock" }],
-    }),
-  );
+  const { getRecord, putRecord } = await import("../src/archon/state/store.ts");
+  await putRecord("alpha", "install", "install", {
+    host: "alpha",
+    ok: false,
+    problems: [{ level: "fail", message: "apt: Could not get lock" }],
+  }, dir);
   assert(await settleInstallRecord("alpha", dir));
-  const rec = JSON.parse(await Deno.readTextFile(path));
+  // deno-lint-ignore no-explicit-any
+  const rec = (await getRecord<any>("alpha", "install", "install", dir))!.body;
   assertEquals(rec.ok, true);
   assertEquals(rec.problems, []);
   assertEquals(rec.resolved.problems.length, 1);

@@ -1,7 +1,7 @@
 // `deno task boot reinstall <host>` (spec 004): one command from the boot
 // machine re-installs a running host, with no one at its console:
 //   1. the boot server must be running (it serves the install);
-//   2. over SSH, the host pushes what it recorded (`archon push`);
+//   2. (spec 048: the host keeps its own records; nothing is pushed);
 //   3. the host is armed for one install;
 //   4. over SSH, `archon reboot --netboot` boots it from the network once;
 //   5. this PC trusts the host's SSH host keys, which the install brings back.
@@ -277,19 +277,8 @@ export async function reinstall(
       }: erasing it as confirmed (--confirm-destroy ${name})`,
   );
 
-  const p = ui.phase("Push");
-  ui.pause();
-  const pushed = (await ssh(target, "archon push", true)).code;
-  ui.resume();
-  if (pushed !== 0 && !o.force) {
-    p.fail(
-      `${name} has recorded state that could not be pushed (a re-install would lose it)`,
-      `fix the push on ${name} (archon push --check), or re-run with --force to discard it`,
-    );
-    return ui.finish();
-  }
-  p.done(pushed === 0 ? "its recorded state is on GitHub" : "skipped (--force)");
-
+  // Spec 048: what the host recorded about itself stays on it and goes with
+  // the re-install; nothing is pushed. Durable data is guarded above.
   const certificate = await carryCertificates(name, target);
 
   // Spec 025: the reinstall started (the host reports Ready when it is done).

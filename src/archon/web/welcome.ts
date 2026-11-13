@@ -306,9 +306,7 @@ export function renderWelcome(d: WelcomeData, now = new Date()): string {
         ? "with warnings"
         : "succeeded"
     }, ${when(d.lastRun.at, now)}${
-      d.lastRun.push
-        ? "<br><small>recorded changes waiting for <code>archon push</code></small>"
-        : ""
+      d.lastRun.push ? "<br><small>local commits not on GitHub yet</small>" : ""
     }`
     : "none recorded yet";
   const checks = d.verify

@@ -4,7 +4,7 @@
 // Core terms, FOAF, and a small archon: namespace for the rest.
 
 import { join } from "../core/path.ts";
-import { ensureDir, exists } from "../core/fsx.ts";
+import { ensureDir } from "../core/fsx.ts";
 import { P } from "../core/paths.ts";
 import { engineFile, engineSpecs } from "../core/assets.ts";
 import { loadFleet, loadHosts } from "./load.ts";
@@ -90,16 +90,6 @@ export async function exportRdf(): Promise<string[]> {
         ["archon:changed", iri(`host/${h.name}`)],
         ["archon:change", a.changes.map(lit)],
         ["archon:failed", `${lit(String(a.failed))}^^xsd:boolean`],
-      ]);
-    }
-    const snap = join(P.state, "hosts", h.name, "snapshot", "snapshot.json");
-    if (await exists(snap)) {
-      const s = JSON.parse(await Deno.readTextFile(snap)) as Record<string, unknown>;
-      ttl += subject(iri(`host/${h.name}/snapshot`), [
-        ["a", "prov:Entity"],
-        ["prov:wasAttributedTo", iri(`host/${h.name}`)],
-        ["archon:ubuntu", lit(String(s.ubuntu ?? ""))],
-        ["archon:manualPackage", ((s.manualPackages as string[]) ?? []).map(lit)],
       ]);
     }
   }

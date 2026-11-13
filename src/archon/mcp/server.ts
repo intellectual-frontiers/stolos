@@ -78,6 +78,7 @@ export function argvFor(c: Command, args: Record<string, unknown>): string[] {
     else argv.push(`--${a.name}`, String(v));
   }
   if (typeof args.host === "string") argv.push("--host", args.host);
+  if (args.json === true) argv.push("--json");
   return argv;
 }
 

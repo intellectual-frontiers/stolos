@@ -143,9 +143,15 @@ export const P = {
   get hosts(): string {
     return join(fleetDir(), "hosts");
   },
-  /** What hosts recorded (until spec 003 keeps it on each machine). */
+  /**
+   * This machine's own state (spec 048): archon.sql and archon.auto.sqlite.db.
+   * An installed host keeps it in /var/lib/archon; the boot machine and a
+   * workstation per fleet in their user data. Never in the repository.
+   */
   get state(): string {
-    return join(fleetDir(), "state");
+    return readOr("/etc/archon/host") !== undefined
+      ? "/var/lib/archon"
+      : join(userData, "archon", "state", fleetId() || "_");
   },
   /** Rendered by archon build; never committed. */
   get out(): string {

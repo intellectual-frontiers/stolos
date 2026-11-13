@@ -315,7 +315,7 @@ export function pgEnsure(
       );
     }
     if (!i) {
-      // Not in the model: the operator's ensure records it (state/hosts/<host>/pg.json).
+      // Not in the model: the operator's ensure records it (the host's own archon.sql (opt-in pg)).
       const v = version ? Number(version) : PG.ubuntuVersion;
       i = instancesOf(
         {
@@ -340,7 +340,7 @@ export function pgEnsure(
       );
       await notifyOwner(
         "PostgreSQL instance created",
-        `${caller()} created the PostgreSQL ${rec.version} instance ${name} on ${host.name}, port ${rec.port}, private to the server. It is recorded in state/hosts/${host.name}/pg.json; archon push records it on GitHub.`,
+        `${caller()} created the PostgreSQL ${rec.version} instance ${name} on ${host.name}, port ${rec.port}, private to the server. It is recorded in archon.sql (opt-in pg);`,
         `pg:${host.name}:${name}:created`,
       );
     }

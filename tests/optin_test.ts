@@ -113,7 +113,13 @@ Deno.test("040: opt-in containers: pinned image, unprivileged, loopback only, no
   const plan = resolvePlan(host(), webFleet());
   const u = plan.units.find((x) => x.unitName === "archon-s3.service")!;
   assert(u.generated, "a generated unit: started, never enabled");
-  assertStringIncludes(u.verify, S3.health);
+  // Spec 048: verify follows the host's own record: off, it is not running.
+  assertStringIncludes(u.verify!, "! systemctl is-active --quiet archon-s3.service");
+  const on = resolvePlan(
+    host({ optIn: { s3: { enabled: true, by: "alice", at: "t", data: "durable" } } }),
+    webFleet(),
+  ).units.find((x) => x.unitName === "archon-s3.service")!;
+  assertStringIncludes(on.verify!, S3.health);
 });
 
 Deno.test("041: S3 identities are Linux accounts; each may use only its own buckets", async () => {

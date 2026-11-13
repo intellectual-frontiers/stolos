@@ -4,10 +4,11 @@
 // ports, and Traefik's own list of routes (to show containers as they start).
 // Slow facts (pending updates, the certificate, Traefik's routes) are cached.
 
+import { getRecord } from "../state/store.ts";
 import { hostData } from "../model/durable.ts";
 import { join } from "../core/path.ts";
 import { readTextOr } from "../core/fsx.ts";
-import { P } from "../core/paths.ts";
+
 import { engineFileOr } from "../core/assets.ts";
 import { run } from "../core/exec.ts";
 import { STATUS_DIR } from "../core/status.ts";
@@ -130,9 +131,9 @@ export async function welcomeData(hostName: string): Promise<WelcomeData> {
   const plan = resolvePlan(host, fleet);
   const name = fqdn(fleet, host);
   const certificate = await cached("cert", 5 * 60_000, () => certificateOf(name ?? host.name));
-  const installed = await json<WelcomeData["installed"] & { installed?: string }>(
-    join(P.state, "hosts", host.name, "installed.json"),
-  );
+  // Spec 048: this machine's own install record (archon.sql).
+  const inst = await getRecord<WelcomeData["installed"]>(host.name, "install", "install");
+  const installed = inst ? { ...inst.body, installed: inst.at } : undefined;
   const pending = await cached("updates", 10 * 60_000, async () => {
     const r = await run(["apt", "list", "--upgradable"], { env: { LANG: "C" } });
     return r.ok ? r.stdout.split("\n").filter((l) => l.includes("[upgradable")).length : undefined;

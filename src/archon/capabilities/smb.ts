@@ -1,7 +1,7 @@
 // 037-smb: file shares over SMB (Samba) on every server, off until an operator
 // turns them on with `archon fs smb on`; then on, across reboots and reinstalls,
 // until `archon fs smb off`. The switch is the host's own recorded state
-// (state/hosts/<host>/smb.json), which every apply honors.
+// (the host's own archon.sql (opt-in smb)), which every apply honors.
 //
 // Overrides of Ubuntu defaults: smbd masked until switched on (Ubuntu starts it
 // on install); nmbd always masked (NetBIOS off).
@@ -10,14 +10,12 @@ import type { Capability } from "../model/types.ts";
 import { header } from "../render/systemd.ts";
 import { localNetworks } from "./ssh.ts";
 import { SMB, smbConf } from "../smb/config.ts";
-import { P } from "../core/paths.ts";
-import { join } from "../core/path.ts";
 
 const SPEC = "037-smb" as const;
 
 export const smb = (): Capability => ({ fleet, host, users }) => {
   if (host.kind === "workstation") return { spec: SPEC };
-  const record = join(P.installedRepo, "state", "hosts", host.name, `${SMB.switch}.json`);
+  const on = host.optIn?.[SMB.switch]?.enabled === true;
   return {
     spec: SPEC,
     packages: [{ name: "samba", spec: SPEC }],
@@ -65,7 +63,10 @@ export const smb = (): Capability => ({ fleet, host, users }) => {
         state: "masked",
         switch: SMB.switch,
         verify:
-          `sh -c 'if grep -q "\\"enabled\\": *true" ${record} 2>/dev/null; then systemctl is-active --quiet ${SMB.unit}; else ! systemctl is-active --quiet ${SMB.unit}; fi'`,
+          // Rendered from the host's own record (spec 048).
+          on
+            ? `systemctl is-active --quiet ${SMB.unit}`
+            : `! systemctl is-active --quiet ${SMB.unit}`,
         spec: SPEC,
       },
       {

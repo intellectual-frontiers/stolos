@@ -282,14 +282,14 @@ export interface HostDef {
   /** PostgreSQL instances this server keeps (spec 038). */
   pg?: { instances?: PgInstanceDef[] };
   /**
-   * What operators recorded on this host (state/hosts/<host>/pg.json, spec 038):
+   * What operators recorded on this host (the host's own archon.sql (opt-in pg), spec 038):
    * the clusters Archon created and which are published. Read by loadHosts;
    * never written in a host file.
    */
   pgState?: PgState;
   /**
    * Opt-in services and containers an operator turned on or off (spec 040):
-   * state/hosts/<host>/<name>.json {enabled, by, at}. Read by loadHosts; never
+   * this machine's archon.sql<name>.json {enabled, by, at}. Read by loadHosts; never
    * written in a host file. Absent means off.
    */
   optIn?: Record<string, OptInRecord>;
@@ -327,7 +327,7 @@ export interface PgInstanceDef {
   databases?: PgDatabaseDef[];
 }
 
-/** One instance as recorded on the host (state/hosts/<host>/pg.json). */
+/** One instance as recorded on the host (the host's own archon.sql (opt-in pg)). */
 export interface PgRecord {
   version: number;
   port: number;
@@ -361,7 +361,7 @@ export interface OptInRecord {
   data?: DataClass;
 }
 
-/** state/hosts/<host>/pg.json: the opt-in switch (spec 040) and the instances Archon made. */
+/** the host's own archon.sql (opt-in pg): the opt-in switch (spec 040) and the instances Archon made. */
 export interface PgState extends Partial<OptInRecord> {
   instances: Record<string, PgRecord>;
 }
@@ -393,7 +393,7 @@ export interface UnitDef {
   state: "enabled" | "disabled" | "masked" | "ignore";
   /**
    * An operator's switch (spec 037): the name of a record in
-   * state/hosts/<host>/<switch>.json. When it says {"enabled": true} the unit is
+   * this machine's archon.sql<switch>.json. When it says {"enabled": true} the unit is
    * enabled and started; otherwise `state` applies (masked, for SMB).
    */
   switch?: string;

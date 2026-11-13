@@ -232,7 +232,8 @@ Deno.test("044: no history: the record holds only the choice, kept when turned o
     await writeOptIn("alpha", "s3", false, "alice", root);
     const got = (await readOptIns("alpha", root)).s3;
     assertEquals([got.enabled, got.data], [false, "durable"]);
-    const raw = JSON.parse(await Deno.readTextFile(`${root}/hosts/alpha/s3.json`));
+    const { getRecord } = await import("../src/archon/state/store.ts");
+    const raw = (await getRecord<Record<string, unknown>>("alpha", "optin", "s3", root))!.body;
     assertEquals(Object.keys(raw).sort(), ["at", "by", "data", "enabled"]);
   } finally {
     await Deno.remove(root, { recursive: true });
@@ -319,7 +320,8 @@ Deno.test("fleet status's source: the latest verify, rewritten only when the res
   try {
     assert(await recordVerify("alpha", checks, root, new Date("2026-11-13T01:00:00Z")));
     assert(!(await recordVerify("alpha", checks, root, new Date("2026-11-13T02:00:00Z"))));
-    const rec = JSON.parse(await Deno.readTextFile(`${root}/hosts/alpha/verify.json`));
+    const { getRecord } = await import("../src/archon/state/store.ts");
+    const rec = (await getRecord("alpha", "verify", "latest", root))!.body;
     assertEquals(rec, {
       passed: 1,
       total: 2,

@@ -3,6 +3,7 @@
 // Hosts are discovered from the directory, so there is no index to keep in
 // sync.
 
+import { getRecord, listRecords } from "../state/store.ts";
 import { P } from "../core/paths.ts";
 import { exists } from "../core/fsx.ts";
 import { join, toFileUrl } from "../core/path.ts";
@@ -78,42 +79,33 @@ export function hostFile(name: string): string {
   return join(P.hosts, name, "host.ts");
 }
 
-/** state/hosts/<host>/pg.json, when there is one (spec 038). */
+/** The PostgreSQL record (the opt-in "pg" and the instances made), when there is one (spec 038). */
 export async function readPgState(host: string, root = P.state): Promise<PgState | undefined> {
-  try {
-    const s = JSON.parse(await Deno.readTextFile(join(root, "hosts", host, "pg.json"))) as PgState;
-    return s && typeof s.instances === "object" ? s : undefined;
-  } catch {
-    return undefined;
-  }
+  const r = await getRecord<PgState>(host, "optin", "pg", root);
+  const s = r?.body;
+  return s && typeof s.instances === "object" ? s : undefined;
 }
 
 /**
- * Every opt-in decision recorded for a host (spec 040): each
- * state/hosts/<host>/<name>.json whose `enabled` is a boolean.
+ * Every opt-in decision recorded on this machine for a host (spec 040, kept in
+ * archon.sql by spec 048): each record whose \`enabled\` is a boolean.
  */
 export async function readOptIns(
   host: string,
   root = P.state,
 ): Promise<Record<string, OptInRecord>> {
   const out: Record<string, OptInRecord> = {};
-  const dir = join(root, "hosts", host);
-  try {
-    for await (const e of Deno.readDir(dir)) {
-      if (!e.isFile || !e.name.endsWith(".json")) continue;
-      try {
-        const r = JSON.parse(await Deno.readTextFile(join(dir, e.name)));
-        if (typeof r?.enabled === "boolean") {
-          out[e.name.slice(0, -5)] = {
-            enabled: r.enabled,
-            by: String(r.by ?? ""),
-            at: String(r.at ?? ""),
-            ...(r.data === "durable" || r.data === "ephemeral" ? { data: r.data } : {}),
-          };
-        }
-      } catch { /* not a record */ }
+  for (const { name, body } of await listRecords<Record<string, unknown>>(host, "optin", root)) {
+    const r = body;
+    if (typeof r?.enabled === "boolean") {
+      out[name] = {
+        enabled: r.enabled,
+        by: String(r.by ?? ""),
+        at: String(r.at ?? ""),
+        ...(r.data === "durable" || r.data === "ephemeral" ? { data: r.data } : {}),
+      };
     }
-  } catch { /* no state for this host */ }
+  }
   return out;
 }
 

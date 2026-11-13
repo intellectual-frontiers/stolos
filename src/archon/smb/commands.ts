@@ -1,10 +1,10 @@
 // 037-smb: archon fs smb on | off | status. SMB is an opt-in service (spec
-// 040): on and off are the shared switch (state/hosts/<host>/smb.json). SMB
+// 040): on and off are the shared switch (the host's own archon.sql (opt-in smb)). SMB
 // uses each account's own Linux username and password: PAM keeps Samba's copy
 // in step whenever the password is typed on the server.
 
-import { join } from "../core/path.ts";
-import { readTextOr } from "../core/fsx.ts";
+import { getRecord } from "../state/store.ts";
+
 import { P } from "../core/paths.ts";
 import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
@@ -18,15 +18,8 @@ export interface SmbRecord {
   at: string;
 }
 
-const recordPath = (host: string, root = P.state) =>
-  join(root, "hosts", host, `${SMB.switch}.json`);
-
 export async function readRecord(host: string, root = P.state): Promise<SmbRecord | undefined> {
-  try {
-    return JSON.parse((await readTextOr(recordPath(host, root))) ?? "") as SmbRecord;
-  } catch {
-    return undefined;
-  }
+  return (await getRecord<SmbRecord>(host, "optin", SMB.switch, root))?.body;
 }
 
 /** Who asked: the person behind sudo, else the current user. */

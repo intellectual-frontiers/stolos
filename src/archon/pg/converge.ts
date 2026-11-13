@@ -2,6 +2,7 @@
 // every apply (its Databases phase, so the reconcile timer keeps instances) and
 // by archon pg ensure. Archon touches only clusters it created (FR-003).
 
+import { getRecord, putRecord } from "../state/store.ts";
 import { dirname, join } from "../core/path.ts";
 import { ensureDir, exists, readTextOr } from "../core/fsx.ts";
 import { P } from "../core/paths.ts";
@@ -81,21 +82,15 @@ export function psql(v: number, n: string, sql: string, db = "postgres") {
 
 // ------------------------------------------------------------- the record
 
-const statePath = (host: string, root = P.state) => join(root, "hosts", host, PG.stateFile);
-
+// Spec 048: the record is the opt-in "pg" in this machine's archon.sql.
 export async function readState(host: string, root = P.state): Promise<PgState> {
-  try {
-    const s = JSON.parse((await readTextOr(statePath(host, root))) ?? "") as PgState;
-    // The switch alone (archon pg on, before any instance exists) is a record too.
-    return s && typeof s === "object" ? { ...s, instances: s.instances ?? {} } : { instances: {} };
-  } catch {
-    return { instances: {} };
-  }
+  const s = (await getRecord<PgState>(host, "optin", "pg", root))?.body;
+  // The switch alone (archon pg on, before any instance exists) is a record too.
+  return s && typeof s === "object" ? { ...s, instances: s.instances ?? {} } : { instances: {} };
 }
 
 /** Write the whole record (the switch and the instances), sorted. */
 export async function writeState(host: string, st: PgState, root = P.state): Promise<void> {
-  await ensureDir(join(root, "hosts", host));
   const sorted: PgState = {
     ...(typeof st.enabled === "boolean"
       ? { enabled: st.enabled, by: st.by, at: st.at, ...(st.data ? { data: st.data } : {}) }
@@ -104,7 +99,7 @@ export async function writeState(host: string, st: PgState, root = P.state): Pro
       Object.entries(st.instances).sort(([a], [b]) => a.localeCompare(b)),
     ),
   };
-  await Deno.writeTextFile(statePath(host, root), JSON.stringify(sorted, null, 2) + "\n");
+  await putRecord(host, "optin", "pg", sorted, root);
 }
 
 export async function writeRecord(

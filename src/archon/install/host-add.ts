@@ -1,5 +1,5 @@
 // `archon host add` (spec 004): write the host's model, give it its own
-// GitHub deploy key (write access to this repository only; the private half
+// GitHub deploy key (read-only access to this repository (spec 048); the private half
 // stays in the boot machine's secret store), and arm it for one install.
 
 import { P, repoRel } from "../core/paths.ts";
@@ -79,7 +79,7 @@ export async function ensureDeployKey(host: string): Promise<string> {
   return (await readTextOr(SECRETS.deployKeyPub(host)))!.trim();
 }
 
-/** Register the key on the repository (write access), replacing an older key for this host. */
+/** Register the key on the repository (read-only, spec 048), replacing an older key for this host. */
 export async function registerDeployKey(slug: string, host: string, pub: string): Promise<string> {
   const title = `archon host ${host}`;
   const list = await run(["gh", "api", `repos/${slug}/keys`, "--paginate"]);
@@ -99,7 +99,7 @@ export async function registerDeployKey(slug: string, host: string, pub: string)
     "-f",
     `key=${bare}`,
     "-F",
-    "read_only=false",
+    "read_only=true",
   ]);
   if (!add.ok) {
     throw new Error(
@@ -135,7 +135,7 @@ export async function hostAdd(o: HostAddOptions): Promise<void> {
     const pub = await ensureDeployKey(name);
     k.status(`registering it on ${fleet.repository.slug}`);
     const how = await registerDeployKey(fleet.repository.slug, name, pub);
-    k.done(`${how} on ${fleet.repository.slug} (write) · private key on this machine only`);
+    k.done(`${how} on ${fleet.repository.slug} (read-only) · private key on this machine only`);
   }
 
   const hk = ui.phase("SSH identity");

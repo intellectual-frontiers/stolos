@@ -144,7 +144,7 @@ export async function dataSet(
   const p = ui.phase("Data");
   const by = caller();
   await writeOptIn(h.name, name, rec?.enabled === true, by, P.state, data);
-  p.done(`${USER_DATA_OPT_INS[name]}: ${data}; recorded in state/hosts/${h.name}/${name}.json`);
+  p.done(`${USER_DATA_OPT_INS[name]}: ${data}; recorded in archon.sql ${h.name}/${name}.json`);
   const fresh = (await loadHosts()).find((x) => x.name === h.name)!;
   const { apply } = await import("../apply/apply.ts");
   const res = await apply(fresh, { check: false, only: ["files"] });
@@ -160,6 +160,6 @@ export async function dataSet(
     todo: "Nothing.",
     key: `data:${h.name}:${name}:${data}`,
   }).catch(() => {});
-  ui.next.push(`${h.name} is ${describeData(d)}; archon push records the choice on GitHub.`);
+  ui.next.push(`${h.name} is ${describeData(d)}; recorded in its own archon.sql (archon state).`);
   return res.failed ? 1 : 0;
 }

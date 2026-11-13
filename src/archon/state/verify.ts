@@ -1,7 +1,8 @@
 // `archon verify` (Article 15, spec 014): run every verification command in
 // the host's plan and report each result. As root, the result is also kept
-// in state/hosts/<host>/verify.json when it changes (archon fleet status).
+// in the host's own archon.sql (opt-in verify) when it changes (archon fleet status).
 
+import { getRecord, putRecord } from "./store.ts";
 import { currentUser, isRoot, run, splitArgs } from "../core/exec.ts";
 import { homeOf } from "../model/load.ts";
 import { expandPersonas } from "../personas/mod.ts";
@@ -9,8 +10,7 @@ import { ui } from "../core/ui.ts";
 import { recordChecks } from "../core/telemetry.ts";
 import { planFor } from "../build.ts";
 import type { HostDef } from "../model/types.ts";
-import { join } from "../core/path.ts";
-import { ensureDir, readTextOr } from "../core/fsx.ts";
+
 import { P } from "../core/paths.ts";
 
 export interface Check {
@@ -23,10 +23,9 @@ export interface Check {
 }
 
 /**
- * state/hosts/<host>/verify.json: the latest verify as root, for the boot
- * machine's fleet status. `since` is when this result first appeared; the
- * file is rewritten only when the result changes, so the reconcile timer's
- * runs do not each make a commit.
+ * The latest verify, in this machine's archon.sql (spec 048): read over SSH by
+ * fleet status (archon query). \`since\` is when this result first appeared; the
+ * record is rewritten only when the result changes.
  */
 export interface RecordedVerify {
   passed: number;
@@ -56,14 +55,13 @@ export async function recordVerify(
   now = new Date(),
 ): Promise<boolean> {
   const next = verifyRecord(checks, now);
-  const path = join(root, "hosts", host, "verify.json");
-  try {
-    const { since: _s, ...prev } = JSON.parse((await readTextOr(path)) ?? "") as RecordedVerify;
+  const prev = (await getRecord<RecordedVerify>(host, "verify", "latest", root))?.body;
+  if (prev) {
+    const { since: _s, ...p } = prev;
     const { since: _n, ...cur } = next;
-    if (JSON.stringify(prev) === JSON.stringify(cur)) return false;
-  } catch { /* none yet */ }
-  await ensureDir(join(root, "hosts", host));
-  await Deno.writeTextFile(path, JSON.stringify(next, null, 2) + "\n");
+    if (JSON.stringify(p) === JSON.stringify(cur)) return false;
+  }
+  await putRecord(host, "verify", "latest", next, root, next.since);
   return true;
 }
 
@@ -158,7 +156,7 @@ export async function verify(host: HostDef): Promise<Check[]> {
       total: checks.length,
       failed: failedChecks(checks).map((c) => c.resource),
     });
-    // The same result in the repository, for the boot machine (archon push carries it).
+    // The same result in this machine's archon.sql, for fleet status (spec 048).
     await recordVerify(plan.host.name, checks).catch(() => {});
   }
   // Spec 025: a check that passed before and fails now sends a message (as root).

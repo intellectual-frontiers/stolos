@@ -6,6 +6,7 @@
 // SSH keys, packages, kernel modules. osqueryi, the interactive shell, needs
 // no daemon.
 
+import { STATE_DB, VIEWS } from "../state/store.ts";
 import type { Capability } from "../model/types.ts";
 
 const SPEC = "042-sql" as const;
@@ -86,11 +87,31 @@ export const OSQUERY_SCHEDULE: Record<
   },
 };
 
+/**
+ * Spec 048: Archon's own records as osquery tables (automatic table
+ * construction), read from archon.auto.sqlite.db, which archon builds from
+ * this machine's archon.sql.
+ */
+export function archonTables(dir = "/var/lib/archon"): Record<
+  string,
+  { query: string; path: string; columns: string[]; platform: string }
+> {
+  return Object.fromEntries(
+    Object.entries(VIEWS).map(([view, columns]) => [view, {
+      query: `SELECT ${columns.join(", ")} FROM ${view}`,
+      path: `${dir}/${STATE_DB}`,
+      columns,
+      platform: "linux",
+    }]),
+  );
+}
+
 export function osqueryConf(): string {
   return JSON.stringify(
     {
       options: { host_identifier: "hostname", schedule_splay_percent: 10 },
       schedule: OSQUERY_SCHEDULE,
+      auto_table_construction: archonTables(),
     },
     null,
     2,

@@ -393,7 +393,7 @@ export async function doctor(
     if (ls.ok) e.ok("git remote over SSH (ops, deploy key): works");
     else {e.fail(
         `git remote over SSH failed: ${ls.stderr.trim().split("\n").pop()}`,
-        "ssh -T git@github.com as ops; outbound TCP 22; archon push --check",
+        "ssh -T git@github.com as ops; outbound TCP 22; git -C /srv/archon fetch",
       );}
   }
   // snapd's own connectivity check against the Snap Store.

@@ -13,9 +13,9 @@ over SSH.
 ```sh
 archon verify              # every check, with a fix for anything failing
 archon doctor              # can this host reach what it needs? network and email, with where to look
-archon capture             # record this host's state in state/ (and show drift)
-archon push --check        # is anything waiting to go to GitHub, and why
-archon push                # commit and push it (as ops, with the host's deploy key)
+archon capture             # drift from the model (writes nothing)
+archon state               # what this machine recorded: install, latest verify, switches, data
+archon query "select * from archon_verify"   # ask this machine anything, in SQL (osquery)
 sudo archon update         # pull from GitHub, validate, apply, tools, verify
 archon tools sync --report-only   # tool versions, and upgrades available
 archon backup verify       # restore-test the newest backup
@@ -38,11 +38,12 @@ The right side of the prompt shows what Archon last did on this host, for exampl
 | `⚠ <command>` (yellow)             | it finished with warnings                                                             | `archon verify`; each warning prints its fix                       |
 | `✗ <command>` (red)                | it failed                                                                             | `archon verify`, then the run log it names (`/var/log/archon/...`) |
 | `🔒 2`                             | two disruptive changes (for example to SSH) were held back so they cannot cut you off | from the console or AMT: `sudo archon apply --include-disruptive`  |
-| `⇡ push`                           | the host recorded state (capture, verify, apply history) that is not on GitHub yet    | `archon push --check` to see what and why, then `archon push`      |
+| `⇡ push`                           | the checkout has local commits that are not on GitHub                                 | `git -C /srv/archon log origin/main..`                             |
 
-`⇡ push` is routine: the daily capture and every apply record state, and `deno task boot reinstall`
-pushes it for you before a re-install. `archon push` commits only `state/hosts/<host>/`. The last
-icon is the segment's Archon mark.
+A host records nothing in the repository (spec 048): its install record, its latest verify, its
+apply history, and the operators' switches stay in its own `/var/lib/archon/archon.sql` (readable
+SQL; `archon.auto.sqlite.db` is built from it for osquery). The last icon is the segment's Archon
+mark.
 
 ## Observing a machine
 
@@ -212,4 +213,4 @@ call (`journalctl -t archon-mcp`). See [agent.md](agent.md).
 
 Every change follows the spec loop in [`AGENTS.md`](../AGENTS.md): spec, model, `archon build`,
 `archon apply --check`, commit and push, then `archon apply` (or wait for the converge timer),
-`archon verify`, `archon push`. Never change a host by hand outside that loop.
+`archon verify`. Never change a host by hand outside that loop.

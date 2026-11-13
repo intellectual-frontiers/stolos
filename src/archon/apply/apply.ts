@@ -2,6 +2,7 @@
 // right after a successful run reports zero changes. Never removes anything
 // (Article IX).
 
+import { getRecord, putRecord } from "../state/store.ts";
 import { dirname, join } from "../core/path.ts";
 import { P } from "../core/paths.ts";
 import { ensureDir, exists, readTextOr } from "../core/fsx.ts";
@@ -184,22 +185,16 @@ export async function etckeeperCommit(changes: string[]): Promise<boolean> {
   return (await run(["etckeeper", "commit", msg])).ok;
 }
 
-/** installed.json at "ok": false becomes ok once an apply succeeds; its problems are kept as resolved. */
+/** The install record at "ok": false becomes ok once an apply succeeds; its problems are kept as resolved. */
 export async function settleInstallRecord(hostName: string, root = P.state): Promise<boolean> {
-  const path = join(root, "hosts", hostName, "installed.json");
-  const raw = await readTextOr(path);
-  if (!raw) return false;
-  let rec: Record<string, unknown>;
-  try {
-    rec = JSON.parse(raw);
-  } catch {
-    return false;
-  }
+  const r = await getRecord<Record<string, unknown>>(hostName, "install", "install", root);
+  if (!r) return false;
+  const rec = r.body;
   if (rec.ok !== false) return false;
   rec.ok = true;
   rec.resolved = { at: new Date().toISOString(), by: "apply", problems: rec.problems ?? [] };
   rec.problems = [];
-  await Deno.writeTextFile(path, JSON.stringify(rec, null, 2) + "\n");
+  await putRecord(hostName, "install", "install", rec, root, r.at);
   return true;
 }
 
@@ -744,14 +739,10 @@ async function unitExists(name: string): Promise<boolean> {
   return res.ok && res.stdout.trim().length > 0;
 }
 
-/** An operator's switch (spec 037): state/hosts/<host>/<name>.json says {"enabled": true}. */
+/** An operator's switch (spec 037): the opt-in record says {"enabled": true} (spec 048). */
 export async function switchOn(host: string, name: string, root = P.state): Promise<boolean> {
-  try {
-    const rec = JSON.parse(await Deno.readTextFile(join(root, "hosts", host, `${name}.json`)));
-    return rec?.enabled === true;
-  } catch {
-    return false;
-  }
+  const rec = await getRecord<{ enabled?: boolean }>(host, "optin", name, root);
+  return rec?.body?.enabled === true;
 }
 
 async function unit(u0: UnitDef, r: Runner) {

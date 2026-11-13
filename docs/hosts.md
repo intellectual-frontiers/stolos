@@ -54,7 +54,7 @@ the MAC it learned. If you prefer, give it up front: `host add alpha --mac 1c:83
    question. To manage it with an agent, see [agent.md](agent.md): nothing is installed on the
    server for that.
 
-The first boot pushes `state/hosts/alpha/installed.json` to GitHub: `"ok": true`, or the steps that
+The first boot pushes `archon.sql alpha/installed.json` to GitHub: `"ok": true`, or the steps that
 failed under `problems`.
 
 A host is installed only while it is armed, and the install disarms it. An unrecognized machine with
@@ -77,8 +77,8 @@ It:
 
 1. checks the boot server is running;
 2. connects to alpha over SSH, asks `archon data` whether it is durable (and stops unless
-   `--confirm-destroy alpha` was given, when it is or cannot say), and runs `archon push`, so what
-   alpha recorded is on GitHub (if that fails, it stops; `--force` re-installs anyway);
+   `--confirm-destroy alpha` was given, when it is or cannot say), and goes on (what alpha recorded
+   about itself stays on alpha and goes with the re-install, spec 048);
 3. arms alpha;
 4. runs `archon reboot --netboot` on alpha: the firmware boots from the network once (UEFI BootNext,
    to the entry the last install booted from), so nobody needs to press F7. The boot order is not
@@ -89,9 +89,9 @@ Then watch the boot server's window until `alpha: ✓ Ready`. alpha comes back w
 identity, so `ssh alpha` simply works. If alpha does not answer over SSH (powered off, hung), the
 command arms it anyway and tells you to power it on and pick network boot once from its boot menu.
 
-By hand, the same is: `archon push` on the host, `deno task boot arm alpha` on the PC, then
-`archon reboot --netboot` on the host (or power it on and press F7). On new hardware for an existing
-host name, use `deno task boot arm alpha --claim`.
+By hand, the same is: `deno task boot arm alpha` on the PC, then `archon reboot --netboot` on the
+host (or power it on and press F7). On new hardware for an existing host name, use
+`deno task boot arm alpha --claim`.
 
 ## HTTP Boot instead of PXE
 
@@ -164,7 +164,7 @@ SSH) and changes nothing. With it:
 2. its deploy key leaves the repository on GitHub;
 3. this PC forgets its install token, its secrets (deploy key, SSH host keys, the carried
    certificate), and its `known_hosts` lines;
-4. `fleets/<fleet>/hosts/alpha/host.ts` and `state/hosts/alpha/` leave this checkout.
+4. `fleets/<fleet>/hosts/alpha/host.ts` and `archon.sql alpha/` leave this checkout.
 
 5. the removal is built, committed (`045-retire: retire alpha`), and pushed; only these paths and
    what `archon build` renders from them (`.mcp.json`, the agent's permissions, the man pages) are

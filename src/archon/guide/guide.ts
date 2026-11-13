@@ -254,7 +254,7 @@ export function guideFor(plan: HostPlan): GuideItem[] {
         { cmd: "archon fs smb status", why: "on or off, and how to connect" },
         {
           cmd: "archon fs smb on --durable",
-          why: "operators: turn it on, durable or --ephemeral (then archon push)",
+          why: "operators: turn it on, durable or --ephemeral",
         },
         { cmd: `\\\\${smbHost}\\shared`, why: "Windows: Map network drive" },
         { cmd: `smb://${smbHost}/shared`, why: "macOS (Finder, Connect to Server) and Linux" },
@@ -280,7 +280,7 @@ export function guideFor(plan: HostPlan): GuideItem[] {
         { cmd: "archon fs s3 key --rotate", why: "a new secret, if yours may have been seen" },
         {
           cmd: "archon fs s3 on --durable",
-          why: "operators: turn it on, durable or --ephemeral (then archon push)",
+          why: "operators: turn it on, durable or --ephemeral",
         },
         { cmd: "archon opt-in", why: "every opt-in service and container, on or off" },
       ],
@@ -300,7 +300,7 @@ export function guideFor(plan: HostPlan): GuideItem[] {
         { cmd: "archon pg list", why: "every instance, its version, port, and status" },
         {
           cmd: "archon pg on --durable",
-          why: "operators: turn PostgreSQL on, durable or --ephemeral (then archon push)",
+          why: "operators: turn PostgreSQL on, durable or --ephemeral",
         },
         { cmd: "archon pg who prime", why: "who can log in, and as which Linux account" },
         {

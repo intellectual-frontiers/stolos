@@ -8,7 +8,6 @@ an operator turns it off (specs 037, 040). `archon opt-in` lists every opt-in se
 
 ```sh
 archon fs smb on --durable  # or --ephemeral: there is no default
-archon push
 ```
 
 `--durable` or `--ephemeral` is required, with no default (constitution Article 23, spec 044):
@@ -17,9 +16,9 @@ nothing reinstalls or wipes this server without `--confirm-destroy`, typed by a 
 **ephemeral** when losing it is harmless. `archon data` shows the server's class and why;
 `archon data set` changes a choice later.
 
-`archon push` records the switch on GitHub, so a reinstall keeps it on. `archon fs smb off` turns it
-off the same way. `archon fs smb status` shows whether it is on, who turned it on and when, and who
-has an SMB password.
+The switch is in this machine's own `archon.sql` (spec 048); a reinstall starts with it off.
+`archon fs smb off` turns it off the same way. `archon fs smb status` shows whether it is on, who
+turned it on and when, and who has an SMB password.
 
 ## Your username and password
 

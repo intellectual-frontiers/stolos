@@ -3,7 +3,6 @@
 import { assert, assertEquals, assertStringIncludes } from "./assert.ts";
 import { COMMANDS } from "../src/archon/commands/registry.ts";
 import { allowed, argvFor, handle, listed, parseTier } from "../src/archon/mcp/server.ts";
-import { classifyStatus, stateMessage } from "../src/archon/push/push.ts";
 import { mcpServers, renderMcpJson } from "../src/archon/render/agent.ts";
 import { renderManPages } from "../src/archon/render/man.ts";
 import { lit, subject } from "../src/archon/model/export.ts";
@@ -77,8 +76,10 @@ Deno.test("030: archon mcp serves only its tier, and never destructive", async (
 });
 
 Deno.test("MCP arguments map to the CLI", () => {
-  const push = COMMANDS.find((c) => c.name === "push")!;
-  assertEquals(argvFor(push, { check: true }), ["push", "--check"]);
+  const apply = COMMANDS.find((c) => c.name === "apply")!;
+  assertEquals(argvFor(apply, { check: true }), ["apply", "--check"]);
+  const query = COMMANDS.find((c) => c.name === "query")!;
+  assertEquals(argvFor(query, { sql: "select 1", json: true }), ["query", "select 1", "--json"]);
   const add = COMMANDS.find((c) => c.name === "host add")!;
   assertEquals(argvFor(add, { name: "alpha", mac: "aa:bb:cc:dd:ee:ff" }), [
     "host",
@@ -87,14 +88,6 @@ Deno.test("MCP arguments map to the CLI", () => {
     "--mac",
     "aa:bb:cc:dd:ee:ff",
   ]);
-});
-
-Deno.test("push commits recorded state only", () => {
-  const s = classifyStatus(
-    " M fleets/lab/state/hosts/a/snapshot/drift.json\n?? fleets/lab/state/hosts/a/prov/x.json\n M fleets/lab/fleet.ts\n",
-  );
-  assertEquals(s.other, ["fleets/lab/fleet.ts"]);
-  assertEquals(stateMessage("a", s.state), "014-state: record a activity, snapshot");
 });
 
 Deno.test("Turtle literals and subjects are well formed", () => {
@@ -196,13 +189,9 @@ Deno.test("the host lock says who holds it", async () => {
   }
 });
 
-Deno.test("what a host recorded (state/) never blocks its pull; anything else does", async () => {
+Deno.test("048: any change in the checkout blocks a pull (hosts record nothing there)", async () => {
   const { blockingChanges } = await import("../src/archon/reconcile/reconcile.ts");
-  assertEquals(blockingChanges(" M fleets/lab/state/hosts/alpha/installed.json\n"), "");
-  assertEquals(
-    blockingChanges(" M fleets/lab/state/hosts/alpha/installed.json\n M fleets/lab/fleet.ts\n"),
-    " M fleets/lab/fleet.ts",
-  );
+  assertEquals(blockingChanges(" M fleets/lab/fleet.ts\n"), " M fleets/lab/fleet.ts");
   assertEquals(blockingChanges(""), "");
 });
 

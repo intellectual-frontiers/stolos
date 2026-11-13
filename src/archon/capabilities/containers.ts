@@ -17,7 +17,6 @@ export const containers = (): Capability => ({ host }) => {
   const routes: WebRoute[] = [];
   for (const c of CONTAINERS) {
     const on = host.optIn?.[c.name]?.enabled === true;
-    const record = `/srv/archon/state/hosts/${host.name}/${c.name}.json`;
     files.push(
       {
         path: quadletPath(c),
@@ -49,11 +48,12 @@ export const containers = (): Capability => ({ host }) => {
       state: "masked",
       switch: c.name,
       verify:
-        `sh -c 'if grep -q "\\"enabled\\": *true" ${record} 2>/dev/null; then systemctl is-active --quiet ${
-          unitOfContainer(c)
-        } && curl -fsS -o /dev/null --max-time 5 ${c.health}; else ! systemctl is-active --quiet ${
-          unitOfContainer(c)
-        }; fi'`,
+        // Rendered from the host's own record (spec 048).
+        on
+          ? `sh -c 'systemctl is-active --quiet ${
+            unitOfContainer(c)
+          } && curl -fsS -o /dev/null --max-time 5 ${c.health}'`
+          : `! systemctl is-active --quiet ${unitOfContainer(c)}`,
       spec: c.spec,
     });
     if (on) {

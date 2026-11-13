@@ -17,7 +17,6 @@ their own service account (`s-<app>`); nobody needs a password on the server.
 
 ```sh
 archon pg on --durable      # or --ephemeral: there is no default
-archon push
 ```
 
 `--durable` or `--ephemeral` is required, with no default (constitution Article 23, spec 044):
@@ -26,9 +25,10 @@ wipes this server without `--confirm-destroy`, typed by a person); **ephemeral**
 harmless. `archon data` shows the server's class and why; `archon data set` changes a choice later.
 
 `archon pg on` unmasks and starts `postgresql.service`, creates or starts every instance in the
-model, and records the decision in `state/hosts/<host>/pg.json`; `archon push` records it on GitHub,
-so a reinstall keeps it on. `archon pg off` masks `postgresql.service`, which stops every instance
-and keeps it stopped, a reboot included, until `archon pg on` (data is kept, and so is its choice).
+model, and records the decision in `the host's own archon.sql (opt-in pg)`. It stays on this machine
+(spec 048), so a reinstall keeps it on. `archon pg off` masks `postgresql.service`, which stops
+every instance and keeps it stopped, a reboot included, until `archon pg on` (data is kept, and so
+is its choice).
 
 ## Use one (anyone with an account)
 
@@ -230,11 +230,11 @@ and says so in red: nothing is saved until you type `COMMIT`, and `ROLLBACK` und
 ## Operators: instances
 
 Instances come from the model (`pg: { instances: [...] }` in `fleets/<fleet>/hosts/<host>/host.ts`)
-and from the host's record (`state/hosts/<host>/pg.json`). While PostgreSQL is on, every apply,
-including the 15-minute reconcile, keeps both.
+and from the host's record (`the host's own archon.sql (opt-in pg)`). While PostgreSQL is on, every
+apply, including the 15-minute reconcile, keeps both.
 
 ```sh
-archon pg ensure lab --version 17     # another instance (recorded on the host), then archon push
+archon pg ensure lab --version 17     # another instance (recorded on the host)
 archon pg status prime
 archon pg who prime                   # roles, the Linux accounts behind them, and any problem
 archon pg start|stop|restart|reload prime
@@ -261,7 +261,6 @@ Linux account of its name, or a second superuser, is reported by `archon pg who`
 ```sh
 archon pg publish prime              # every address the router lets through, over TLS
 archon pg publish prime --local-only # or the local networks only
-archon push
 ```
 
 Publishing makes `prime` reachable at `pg-prime.<server>.<domain>` (for alpha,

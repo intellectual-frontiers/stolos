@@ -20,11 +20,9 @@ export interface SyncResult {
   blocked?: string;
 }
 
-/** `git status --porcelain` lines that block a pull: anything outside state/. */
+/** `git status --porcelain` lines that block a pull: any (spec 048: hosts record nothing in the checkout). */
 export function blockingChanges(porcelain: string): string {
-  return porcelain.split("\n")
-    .filter((l) => l.trim() && !/^.. "?(fleets\/[^/]+\/)?state\//.test(l))
-    .join("\n");
+  return porcelain.split("\n").filter((l) => l.trim()).join("\n");
 }
 
 /**
@@ -69,9 +67,6 @@ export async function syncCheckout(opts: { check?: boolean } = {}): Promise<Sync
     (await git(["log", "--format=%h %s", range])).stdout.split("\n").filter(Boolean);
   const incoming = await log1(`HEAD..origin/${branch}`);
   if (head0 === remote) return { current: true, pulled: [], incoming: [], head: head0, remote };
-  // What this host recorded itself (state/: install record, snapshots,
-  // provenance) waits for `archon push` and never blocks a pull: the
-  // fast-forward below fails only if incoming commits touch the same files.
   const dirty = blockingChanges(
     (await git(["status", "--porcelain", "--untracked-files=no"])).stdout,
   );

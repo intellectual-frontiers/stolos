@@ -3,6 +3,7 @@
 // host's deploy key. Converges the host, hands the deploy key to ops, verifies,
 // and pushes the host's first record, which proves the key works.
 
+import { putRecord } from "../state/store.ts";
 import { P } from "../core/paths.ts";
 import { join } from "../core/path.ts";
 import { ensureDir, exists } from "../core/fsx.ts";
@@ -93,61 +94,30 @@ export async function firstBoot(host: HostDef): Promise<number> {
   const checks = await verify(host);
 
   const rec = ui.phase("Record");
-  const dir = join(P.installedRepo, "state", "hosts", host.name);
-  await ensureDir(dir);
   const head = (await git(["rev-parse", "--short", "HEAD"])).stdout.trim();
-  await Deno.writeTextFile(
-    join(dir, "installed.json"),
-    JSON.stringify(
-      {
-        host: host.name,
-        installed: new Date().toISOString(),
-        ubuntu: UBUNTU_POINT,
-        archon: head,
-        checks: { passed: checks.filter((c) => c.ok).length, total: checks.length },
-        // Every step that failed or warned, so a partial first boot shows in the repository.
-        // Warnings (a transient network failure, a warning-level check) leave it ok;
-        // the next successful apply settles anything left (spec 009).
-        ok: !ui.problems.some((p) => p.level === "fail") && !failedChecks(checks).length,
-        problems: ui.problems.map((p) => ({
-          level: p.level,
-          step: p.phase,
-          message: p.message,
-          ...(p.fix ? { fix: p.fix } : {}),
-        })),
-      },
-      null,
-      2,
-    ) + "\n",
-  );
-  await run(["chown", "-R", "ops:archon-ops", join(P.installedRepo, "state")]);
-  const who = fleet.admin.github;
-  await git(["add", "state/"]);
   const failures = ui.problems.filter((p) => p.level === "fail").length +
     failedChecks(checks).length;
-  const msg = `005-first-boot: ${host.name} installed (Ubuntu ${UBUNTU_POINT})${
-    failures ? `, ${failures} problem(s): see installed.json` : ""
-  }`;
-  const commit = await git([
-    "-c",
-    "user.name=Archon Operator",
-    "-c",
-    `user.email=${who.email}`,
-    "commit",
-    "-q",
-    "-m",
-    msg,
-  ]);
-  const push = commit.ok
-    ? await git(["pull", "-q", "--rebase", "origin", branch]).then(() =>
-      git(["push", "-q", "origin", `HEAD:${branch}`])
-    )
-    : commit;
-  if (push.ok) rec.done(`pushed "${msg}"`);
-  else {rec.fail(
-      `could not push the first record: ${(push.stderr || push.stdout).trim()}`,
-      "archon push",
-    );}
+  // Spec 048: the install record stays on this machine (archon.sql, table
+  // archon_install), read over SSH by fleet status; nothing is pushed.
+  await putRecord(host.name, "install", "install", {
+    host: host.name,
+    ubuntu: UBUNTU_POINT,
+    archon: head,
+    checks: { passed: checks.filter((c) => c.ok).length, total: checks.length },
+    // Every step that failed or warned, so a partial first boot shows.
+    // Warnings (a transient network failure, a warning-level check) leave it ok;
+    // the next successful apply settles anything left (spec 009).
+    ok: !failures,
+    problems: ui.problems.map((p) => ({
+      level: p.level,
+      step: p.phase,
+      message: p.message,
+      ...(p.fix ? { fix: p.fix } : {}),
+    })),
+  });
+  rec.done(
+    `recorded in ${P.state}/archon.sql (${head})${failures ? ` · ${failures} problem(s)` : ""}`,
+  );
   await ensureDir(P.varLib);
   await Deno.writeTextFile(join(P.varLib, ".installed"), new Date().toISOString() + "\n");
   const { nextSteps } = await import("../observe/next.ts");
@@ -162,7 +132,7 @@ export async function firstBoot(host: HostDef): Promise<number> {
     phase: failed ? "Done with problems" : "Ready",
     level: failed ? "fail" : "ok",
     summary: `${checks.filter((c) => c.ok).length}/${checks.length} checks · ssh ${host.name}${
-      failed ? ` · ${failed} problem(s), see state/hosts/${host.name}/installed.json` : ""
+      failed ? ` · ${failed} problem(s), see archon query "select * from archon_install"` : ""
     }`,
   }));
   await Promise.all(pending);
@@ -186,13 +156,12 @@ export async function firstBoot(host: HostDef): Promise<number> {
       checks.filter((c) => c.ok).length
     }/${checks.length} checks passed${failed ? `, ${failed} problem(s)` : ""}.`,
     todo: failed
-      ? `See problems in the attached installed.json; ssh ${host.name}, then archon verify.`
+      ? `ssh ${host.name}, then archon verify (the install record: archon query "select * from archon_install").`
       : `ssh ${host.name}; archon observe; Cockpit at https://${host.name}:9090 from the local network.`,
-    attach: [join(dir, "installed.json")],
     key: `install:${host.name}:${head}:${new Date().toISOString().slice(0, 13)}`,
   }, host.name);
   // Ubuntu's updates published since the installer image (spec 009): start the
   // daily run now, in the background, instead of waiting up to a day.
   await run(["systemctl", "start", "--no-block", "apt-daily.service", "apt-daily-upgrade.service"]);
-  return push.ok ? 0 : 1;
+  return failed ? 1 : 0;
 }

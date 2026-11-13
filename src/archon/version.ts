@@ -4,7 +4,7 @@
 // v<VERSION>. `deno task version bump` raises the minor number (0.1.0, 0.2.0,
 // ...); `deno task version check` fails when main already has this version.
 
-export const VERSION = "0.3.0";
+export const VERSION = "0.4.0";
 
 /** The git tag a fleet pins: "v0.1.0". */
 export const TAG = `v${VERSION}`;
