@@ -301,11 +301,13 @@ export async function reinstall(
 
   const r = ui.phase("Reboot");
   const { announce } = await import("../archon/core/announce.ts");
-  await announce(
-    `${name}: rebooting from the network (boot reinstall); its install starts when it network-boots`,
-    o.port,
-  );
-  await announce(`${name}: ${certificate}`, o.port);
+  await announce({
+    name: "boot.reboot",
+    host: name,
+    message:
+      "rebooting from the network (boot reinstall); its install starts when it network-boots",
+  }, o.port);
+  await announce({ name: "boot.certificate", host: name, message: certificate }, o.port);
   ui.pause();
   const rebooted = (await ssh(target, "archon reboot --netboot", true)).code;
   ui.resume();

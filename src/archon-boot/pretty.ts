@@ -1,60 +1,81 @@
-// The boot server's window (spec 004, Article 19): each event on one line,
-// with an icon for what happened, the time and address dimmed, the host's name
-// highlighted, success green and problems red. GRUB's harmless probing for
-// files it does not need is kept out of the window (it stays in boot.log),
-// and a line repeated within a few seconds is shown once.
+// The boot server's window (spec 004, Article 19; spec 049): a rendering of
+// structured events, never their source. Each event (telemetry/events.ts) is
+// one line: an icon and tone chosen by its name (and, for boot files, which
+// file), the time and address dimmed, the host's name highlighted, success
+// green and problems red. Debug events (GRUB's harmless probing) are kept out
+// unless verbose; the same event within a few seconds is shown once. boot.log
+// and the OTLP log records hold every event.
 
 import { ui } from "../archon/core/ui.ts";
+import { type ArchonEvent, type EventName, severityOf } from "../archon/telemetry/events.ts";
 
-const IP = /^(\d{1,3}(?:\.\d{1,3}){3}) (.*)$/;
-
-/** Files GRUB and the shim look for and do without (not found is normal). */
-const NOISE = [
-  /^TFTP \/?revocations\.efi: not found$/,
-  /^TFTP \/grub\/x86_64-efi\/[a-z]+\.lst: not found$/,
-  /^TFTP \/?grub\/grub\.cfg-[0-9a-f-]+: not found$/i,
-];
-
-interface Kind {
-  test: RegExp;
+interface Style {
   icon: string;
   ascii: string;
-  tone?: "ok" | "fail" | "warn" | "info";
+  tone?: "ok" | "fail" | "warn";
 }
 
-const KINDS: Kind[] = [
-  { test: /: (ready|installed, with problems)\. Next:$/, icon: "👉", ascii: ">>" },
-  { test: /✓ Ready/, icon: "🎉", ascii: "**", tone: "ok" },
-  { test: /^[a-z0-9-]+: ✗|✗ |refused |: not found$|error/i, icon: "❌", ascii: "!!", tone: "fail" },
-  { test: /^warning:|⚠/, icon: "⚠️ ", ascii: "!", tone: "warn" },
-  { test: /^[a-z0-9-]+: ✓ /, icon: "✅", ascii: "ok", tone: "ok" },
-  { test: /^TFTP (bootx64|grubx64)\.efi$/, icon: "🥾", ascii: ">" },
-  { test: /^TFTP (linux|initrd)$/, icon: "🐧", ascii: ">" },
-  { test: /^TFTP /, icon: "📡", ascii: ">" },
-  { test: /GRUB menu|claimed by/, icon: "🧭", ascii: ">" },
-  { test: /: armed, starting its install|: armed for one install/, icon: "🎯", ascii: ">" },
-  { test: /: rebooting from the network/, icon: "🔁", ascii: ">" },
-  { test: /installer image/, icon: "💿", ascii: ">" },
-  { test: /install config sent/, icon: "🔑", ascii: ">" },
-  { test: /: meta-data|: user-data/, icon: "📄", ascii: ">" },
-  { test: /installer: /, icon: "📦", ascii: ">" },
-  { test: /install finished/, icon: "🏁", ascii: ">", tone: "ok" },
-  { test: /trusts its SSH host keys/, icon: "🔐", ascii: ">" },
-  { test: /First boot:/, icon: "🚀", ascii: ">" },
-  { test: /Boot URI|HTTP /, icon: "🌐", ascii: ">" },
-];
+const STYLE: Partial<Record<EventName, Style>> = {
+  "boot.file.substituted": { icon: "⚠️ ", ascii: "!", tone: "warn" },
+  "boot.http.missing": { icon: "⚠️ ", ascii: "!", tone: "warn" },
+  "boot.uri.unknown": { icon: "❌", ascii: "!!", tone: "fail" },
+  "boot.menu": { icon: "🧭", ascii: ">" },
+  "boot.claimed": { icon: "🧭", ascii: ">" },
+  "boot.recognized": { icon: "🧭", ascii: ">" },
+  "boot.unknown": { icon: "🧭", ascii: ">" },
+  "boot.starting": { icon: "🎯", ascii: ">" },
+  "boot.own-disk": { icon: "💽", ascii: ">" },
+  "boot.site-ca": { icon: "🔐", ascii: ">" },
+  "boot.image": { icon: "💿", ascii: ">" },
+  "boot.config": { icon: "🔑", ascii: ">" },
+  "boot.refused": { icon: "❌", ascii: "!!", tone: "fail" },
+  "boot.installer.step": { icon: "📦", ascii: ">" },
+  "boot.installer.failed": { icon: "❌", ascii: "!!", tone: "fail" },
+  "boot.firstboot.phase": { icon: "✅", ascii: "ok", tone: "ok" },
+  "boot.ready": { icon: "🎉", ascii: "**", tone: "ok" },
+  "boot.done-with-problems": { icon: "❌", ascii: "!!", tone: "fail" },
+  "boot.next": { icon: "👉", ascii: ">>" },
+  "boot.finished": { icon: "🏁", ascii: ">", tone: "ok" },
+  "boot.hostkeys": { icon: "🔐", ascii: ">" },
+  "boot.not-found": { icon: "❌", ascii: "!!", tone: "fail" },
+  "boot.error": { icon: "❌", ascii: "!!", tone: "fail" },
+  "boot.firewall": { icon: "⚠️ ", ascii: "!", tone: "warn" },
+  "boot.armed": { icon: "🎯", ascii: ">" },
+  "boot.reboot": { icon: "🔁", ascii: ">" },
+  "boot.certificate": { icon: "🔐", ascii: ">" },
+};
 
-let last = { text: "", at: 0 };
+/** Boot files by what they are (an attribute, not the text). */
+function fileStyle(e: ArchonEvent): Style {
+  const f = String(e.attrs?.file ?? "");
+  if (/^(bootx64|grubx64)\.efi$/.test(f)) return { icon: "🥾", ascii: ">" };
+  if (/^(linux|initrd)$/.test(f)) return { icon: "🐧", ascii: ">" };
+  return e.attrs?.via === "TFTP" ? { icon: "📡", ascii: ">" } : { icon: "🌐", ascii: ">" };
+}
 
-/** One event for the window, or undefined to keep it out (it is still in boot.log). */
-export function pretty(line: string, now = Date.now(), verbose = ui.verbose): string | undefined {
-  const m = line.match(IP);
-  const from = m?.[1];
-  const msg = m ? m[2] : line;
-  if (!verbose && NOISE.some((re) => re.test(msg))) return undefined;
-  // The same line again within 3 seconds (the shim fetches bootx64.efi twice).
-  if (line === last.text && now - last.at < 3000) return undefined;
-  last = { text: line, at: now };
+function styleOf(e: ArchonEvent): Style {
+  if (e.name === "boot.file" || e.name === "boot.file.probe") return fileStyle(e);
+  // A first-boot phase that warned or failed says so in its severity.
+  const sev = severityOf(e);
+  const base = STYLE[e.name] ?? { icon: "•", ascii: "-" };
+  if (sev === "error") return { ...base, icon: "❌", ascii: "!!", tone: "fail" };
+  if (sev === "warn") return { ...base, icon: "⚠️ ", ascii: "!", tone: "warn" };
+  return base;
+}
+
+let last = { key: "", at: 0 };
+
+/** One event's line for the window, or undefined to keep it out (it is still recorded). */
+export function render(
+  e: ArchonEvent,
+  verbose = ui.verbose,
+): string | undefined {
+  const now = e.time ?? Date.now();
+  if (!verbose && severityOf(e) === "debug") return undefined;
+  // The same event again within 3 seconds (the shim fetches bootx64.efi twice).
+  const key = `${e.name}|${e.host}|${e.address}|${e.message}`;
+  if (key === last.key && now - last.at < 3000) return undefined;
+  last = { key, at: now };
 
   const time = ui.dim(
     new Date(now).toLocaleTimeString("en-GB", {
@@ -63,25 +84,27 @@ export function pretty(line: string, now = Date.now(), verbose = ui.verbose): st
       second: "2-digit",
     }),
   );
-  // "Next:" steps that follow a Ready line: indented under it, no icon.
-  if (/^ {2}\S/.test(msg)) return `${" ".repeat(12)}${ui.dim("│")} ${nextStep(msg.trim())}`;
-
-  const k = KINDS.find((x) => x.test.test(msg));
-  const icon = ui.emoji ? (k?.icon ?? "•") : (k?.ascii ?? "-");
-  // "alpha: ..." -> the host's name in its own column, highlighted.
-  const hm = msg.match(/^(?!warning:)([a-z0-9-]+): (.*)$/);
-  const text = (hm ? hm[2] : msg.replace(/^warning: /, "")).replace(/^[✓✗⚠] /, "");
-  const tone = (s: string) =>
-    k?.tone === "ok"
-      ? ui.green(s)
-      : k?.tone === "fail"
-      ? ui.red(s)
-      : k?.tone === "warn"
-      ? ui.yellow(s)
-      : s;
+  // "Next:" steps: indented under the Ready line, one per line, no icon.
+  if (e.name === "boot.next" && e.attrs?.step) {
+    return `${" ".repeat(12)}${ui.dim("│")} ${nextStep(e.message)}`;
+  }
+  const s = styleOf(e);
+  const icon = ui.emoji ? s.icon : s.ascii;
+  const tone = (t: string) =>
+    s.tone === "ok"
+      ? ui.green(t)
+      : s.tone === "fail"
+      ? ui.red(t)
+      : s.tone === "warn"
+      ? ui.yellow(t)
+      : t;
   // Who: the host once it is known (its address after the message), else the address.
-  const who = hm ? ui.bold(ui.cyan(hm[1].padEnd(14))) : ui.dim((from ?? "boot server").padEnd(14));
-  return `${time}  ${icon} ${who} ${tone(text)}${hm && from ? ui.dim(`  ${from}`) : ""}`;
+  const who = e.host
+    ? ui.bold(ui.cyan(e.host.padEnd(14)))
+    : ui.dim((e.address ?? "boot server").padEnd(14));
+  return `${time}  ${icon} ${who} ${tone(e.message)}${
+    e.host && e.address ? ui.dim(`  ${e.address}`) : ""
+  }`;
 }
 
 /** "connect   ssh alpha   (or ...)" -> the label dimmed, the command bold. */
@@ -93,5 +116,5 @@ function nextStep(s: string): string {
 
 /** For tests. */
 export function resetPretty() {
-  last = { text: "", at: 0 };
+  last = { key: "", at: 0 };
 }

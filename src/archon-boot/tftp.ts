@@ -5,6 +5,7 @@
 // (2348), tsize (2349), timeout (2349), and windowsize (7440) options; block
 // numbers roll over past 65535 (Ubuntu's initrd is ~100 MB).
 
+import type { ArchonEvent } from "../archon/telemetry/events.ts";
 import dgram from "node:dgram";
 import { Buffer } from "node:buffer";
 
@@ -14,7 +15,8 @@ export interface TftpOptions {
   port: number;
   /** Read a file for a client: bytes, or undefined when there is none. */
   read: (path: string, from: string) => Promise<Uint8Array | undefined>;
-  log: (line: string) => void;
+  /** Spec 049: structured events; the window and boot.log render them. */
+  emit: (e: ArchonEvent) => void;
 }
 
 function errorPacket(code: number, msg: string): Buffer {
@@ -151,7 +153,12 @@ export function serveTftp(o: TftpOptions): Promise<{ close: () => void }> {
       }
       await transfer(data, r, req.opts);
     } catch (e) {
-      o.log(`${r.address} TFTP ${req.file}: ${(e as Error).message}`);
+      o.emit({
+        name: "boot.error",
+        address: r.address,
+        message: `TFTP ${req.file}: ${(e as Error).message}`,
+        attrs: { via: "TFTP", file: req.file },
+      });
     }
   });
   return new Promise((resolve, reject) => {

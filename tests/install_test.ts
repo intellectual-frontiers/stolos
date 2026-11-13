@@ -170,7 +170,14 @@ Deno.test("progress: installer milestones once each, failures always, first-boot
     start(
       "subiquity/Install/install/curtin_install/run_curtin_step/cmd-install/stage-partitioning",
     ),
-    "installer: partitioning the disk",
+    {
+      name: "boot.installer.step",
+      message: "installer: partitioning the disk",
+      attrs: {
+        step:
+          "subiquity/Install/install/curtin_install/run_curtin_step/cmd-install/stage-partitioning",
+      },
+    },
   );
   assertEquals(
     start(
@@ -179,13 +186,24 @@ Deno.test("progress: installer milestones once each, failures always, first-boot
     undefined,
   );
   assertEquals(start("subiquity/Load_keyboard"), undefined);
-  assert(
+  assertEquals(
     describe({ event_type: "finish", name: "x", description: "extract", result: "FAIL" }, seen)!
-      .startsWith("✗"),
+      .name,
+    "boot.installer.failed",
   );
   assertEquals(
     describe({ origin: "archon", phase: "Tools", level: "ok", summary: "8 tools" }, seen),
-    "✓ Tools: 8 tools",
+    {
+      name: "boot.firstboot.phase",
+      severity: "info",
+      message: "Tools: 8 tools",
+      attrs: { phase: "Tools" },
+    },
+  );
+  assertEquals(
+    describe({ origin: "archon", phase: "Ready", level: "ok", summary: "82/82 checks" }, seen)!
+      .name,
+    "boot.ready",
   );
 });
 

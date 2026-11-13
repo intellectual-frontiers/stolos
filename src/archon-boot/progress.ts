@@ -3,6 +3,8 @@
 // most are noise, so a few milestones are shown, plus anything that failed.
 // The first boot reports each Archon phase itself.
 
+import type { ArchonEvent } from "../archon/telemetry/events.ts";
+
 export interface InstallerEvent {
   name?: string;
   description?: string;
@@ -25,11 +27,26 @@ const MILESTONES: Array<[RegExp, string]> = [
   [/postinstall|late/, "finishing the install"],
 ];
 
-/** One line for the window, or undefined for an event not worth showing. */
-export function describe(e: InstallerEvent, seen: Set<string>): string | undefined {
+/** What the window and the log record get from one progress report (spec 049). */
+export type ProgressEvent = Pick<ArchonEvent, "name" | "message" | "severity" | "attrs">;
+
+/** One event for a progress report, or undefined for one not worth recording. */
+export function describe(e: InstallerEvent, seen: Set<string>): ProgressEvent | undefined {
   if (e.origin === "archon") {
-    const mark = e.level === "fail" ? "✗" : e.level === "warn" ? "⚠" : "✓";
-    return `${e.phase === "First boot" ? "" : `${mark} `}${e.phase}: ${e.summary ?? ""}`.trim();
+    const phase = e.phase ?? "";
+    const severity = e.level === "fail" ? "error" : e.level === "warn" ? "warn" : "info";
+    if (phase === "Ready") {
+      return { name: "boot.ready", message: `Ready: ${e.summary ?? ""}`.trim() };
+    }
+    if (phase === "Done with problems") {
+      return { name: "boot.done-with-problems", message: `Done with problems: ${e.summary ?? ""}` };
+    }
+    return {
+      name: "boot.firstboot.phase",
+      severity,
+      message: `${phase}: ${e.summary ?? ""}`.trim(),
+      attrs: { phase },
+    };
   }
   const name = e.name ?? "";
   if (e.event_type === "finish" && e.result && e.result !== "SUCCESS") {
@@ -37,13 +54,17 @@ export function describe(e: InstallerEvent, seen: Set<string>): string | undefin
     // from (the install goes on); without a name there is nothing to act on.
     const what = (e.description ?? "").trim() || name.trim();
     if (!what) return undefined;
-    return `✗ installer: ${what} (${e.result})`;
+    return {
+      name: "boot.installer.failed",
+      message: `installer: ${what} (${e.result})`,
+      attrs: { step: name, result: e.result },
+    };
   }
   if (e.event_type !== "start") return undefined;
   for (const [re, text] of MILESTONES) {
     if (re.test(name) && !seen.has(text)) {
       seen.add(text);
-      return `installer: ${text}`;
+      return { name: "boot.installer.step", message: `installer: ${text}`, attrs: { step: name } };
     }
   }
   return undefined;

@@ -2,6 +2,7 @@
 // the constitution and personas (Article 6). Installed into
 // /usr/local/share/man and fish's vendor completions directory by spec 012.
 
+import { EVENTS } from "../telemetry/events.ts";
 import { ATTRIBUTES, METRICS, RESOURCE, SPANS } from "../telemetry/signals.ts";
 import { esc, inline, markdownToRoff, th } from "./roff.ts";
 import { COMMANDS } from "../commands/registry.ts";
@@ -187,6 +188,14 @@ export function telemetryMarkdown(): string {
   for (const [name, d] of Object.entries(SPANS)) L.push(`- \`${name}\`: ${d}`);
   L.push("", "## Attributes", "");
   for (const [name, d] of Object.entries(ATTRIBUTES)) L.push(`- \`${name}\`: ${d}`);
+  L.push("", "## Events (log records)", "");
+  L.push(
+    "Events are structured at their source and recorded as OpenTelemetry log records (attribute archon.event); the boot server's window and boot.log are renderings of them.",
+    "",
+  );
+  for (const [name, e] of Object.entries(EVENTS)) {
+    L.push(`- \`${name}\` (${e.severity}): ${e.description}`);
+  }
   L.push("", "## Resource attributes", "");
   for (const [name, d] of Object.entries(RESOURCE)) L.push(`- \`${name}\`: ${d}`);
   return L.join("\n") + "\n";

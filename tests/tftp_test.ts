@@ -20,7 +20,7 @@ Deno.test("TFTP: a transfer past block 65535 rolls over and arrives intact", asy
   const port = 16969 + Math.floor(Math.random() * 1000);
   const server = await serveTftp({
     port,
-    log: () => {},
+    emit: () => {},
     read: (p) => Promise.resolve(p === "big" ? data : undefined),
   });
   const got: Uint8Array[] = [];

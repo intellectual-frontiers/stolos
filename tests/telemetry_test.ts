@@ -10,7 +10,7 @@ import { otlpHandler } from "../src/archon-boot/telemetry.ts";
 import { centralConfig } from "../src/archon/observe/discover.ts";
 import { sandbox } from "./sandbox.ts";
 
-Deno.test("049: one list of signals, and its man page names every one", () => {
+Deno.test("049: one list of signals, and its man page names every one", async () => {
   const page = telemetryMarkdown();
   for (const name of Object.keys(METRICS)) {
     assert(/^archon\.[a-z_.]+$/.test(name), name);
@@ -20,6 +20,8 @@ Deno.test("049: one list of signals, and its man page names every one", () => {
     for (const a of m.attributes) assert(a in ATTRIBUTES, `${a} is declared`);
   }
   for (const n of [...Object.keys(SPANS), ...Object.keys(RESOURCE)]) assertStringIncludes(page, n);
+  const { EVENTS } = await import("../src/archon/telemetry/events.ts");
+  for (const n of Object.keys(EVENTS)) assertStringIncludes(page, `\`${n}\``);
 });
 
 Deno.test("049: traceparent is parsed strictly; attributes never carry a secret", () => {

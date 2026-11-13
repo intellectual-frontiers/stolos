@@ -11,6 +11,7 @@
 //
 // Each install is one trace, "install <host>", with a span per step.
 
+import { type ArchonEvent, toLogsRequest } from "../archon/telemetry/events.ts";
 import { join } from "../archon/core/path.ts";
 import { ensureDir } from "../archon/core/fsx.ts";
 import { P } from "../archon/core/paths.ts";
@@ -100,6 +101,29 @@ export function otlpHandler(
     }
     return new Response("{}", { headers: { "content-type": "application/json" } });
   };
+}
+
+/**
+ * Spec 049: record events as OpenTelemetry log records, the source of what the
+ * window and boot.log show: one OTLP logs request per event, in the same daily
+ * files as the boot server's other telemetry (and to otel-tui when it runs).
+ */
+export async function recordEvents(
+  events: ArchonEvent[],
+  resource: Record<string, string>,
+  dir = TELEMETRY_DIR,
+): Promise<void> {
+  if (!events.length) return;
+  const body = JSON.stringify(toLogsRequest(events, resource, "archon-boot"));
+  await ensureDir(dir);
+  const day = new Date().toISOString().slice(0, 10);
+  await Deno.writeTextFile(join(dir, `otlp-${day}.jsonl`), body + "\n", { append: true });
+  fetch(OTEL_TUI + "/v1/logs", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body,
+    signal: AbortSignal.timeout(1000),
+  }).then((r) => r.body?.cancel()).catch(() => {});
 }
 
 /** Receive the boot server's own OTLP/JSON on 127.0.0.1:4319 and keep it in local files. */

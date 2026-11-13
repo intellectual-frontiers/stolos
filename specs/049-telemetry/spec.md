@@ -45,15 +45,28 @@ collector. Research: [research.md](research.md).
   (`telemetry/fleet/`), 7 days and 512 MB at most, and forwards to otel-tui on the PC. Host
   discovery tries it last (`source: boot`), and the Collector's exporter then sends JSON.
 - **FR-007** Silent and harmless with no collector: the API loads only with `OTEL_DENO`.
+- **FR-008** Events are structured at their source (`src/archon/telemetry/events.ts`: a declared
+  name, severity, host, client address, attributes, message) and recorded as OpenTelemetry log
+  records (attribute `archon.event`). The boot server records each one in its OTLP files (and hands
+  it to otel-tui); its window and `boot.log` are renderings of the record: icons and tone come from
+  the event's name, severity, and attributes (which boot file), never from parsing text. Debug
+  events (GRUB's harmless probes) are recorded but kept out of the window unless verbose. This PC's
+  commands announce events (`boot.armed`, `boot.reboot`, `boot.certificate`), never free text.
 
 ## Open
 
 - The install as one trace from `boot arm` to the end of the first boot (the boot server's trace
   context through the install token).
-- Archon's progress lines as OTel logs (today: journald and the run log; console output only).
+- The archon command's own output as a rendering of events too (today its phases are spans, and its
+  lines go to the journal and the run log), with Archon's own OTLP log exporter.
+- The boot window rendering events that servers send to the fleet collector (first boot reporting as
+  OTLP logs instead of its progress webhook).
 
 ## Success Criteria
 
+- **SC-002** `tests/pretty_test.ts`: the window renders events (tone, columns, debug, repeats), the
+  same line from an OTLP log record as from the event, and the boot server accepts only declared
+  events from this PC.
 - **SC-001** `tests/telemetry_test.ts`: the list and the man page agree; traceparent and redaction;
   a real run exports a trace continuing a given parent, its phases, and its metrics; the boot server
   keeps OTLP JSON (and gzip) and refuses anything else; discovery falls back to the boot server with

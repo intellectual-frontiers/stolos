@@ -122,13 +122,15 @@ export async function armHost(
   await saveTokens(tokens);
   // A running boot server shows it at once (it reads the token only when a machine boots).
   const { announce } = await import("./announce.ts");
-  await announce(
-    `${host}: armed for one install${
+  await announce({
+    name: "boot.armed",
+    host,
+    message: `armed for one install${
       claimMinutes
         ? `; the next unknown machine to network-boot in ${claimMinutes} minutes becomes ${host}`
         : ""
     }`,
-  );
+  });
   return t;
 }
 

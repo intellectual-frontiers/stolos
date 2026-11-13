@@ -19,6 +19,7 @@
 //   deno task boot web-push <host>       give a running server that token over SSH
 //   deno task boot notify --subject ...  email the mailbox from this PC (also: notify test | status)
 
+import { VERSION } from "../archon/version.ts";
 import { ui } from "../archon/core/ui.ts";
 import { P } from "../archon/core/paths.ts";
 import { join } from "../archon/core/path.ts";
@@ -30,10 +31,11 @@ import { handler, serve } from "./server.ts";
 import { serveTftp } from "./tftp.ts";
 import { trustHost } from "../archon/install/host-keys.ts";
 import { reinstall } from "./reinstall.ts";
-import { initBootTelemetry, SINK, startSink, TELEMETRY_DIR } from "./telemetry.ts";
+import { initBootTelemetry, recordEvents, SINK, startSink, TELEMETRY_DIR } from "./telemetry.ts";
 import { firewallWarnings, type Need } from "./firewall.ts";
 import { UBUNTU } from "./pins.ts";
-import { pretty } from "./pretty.ts";
+import { render } from "./pretty.ts";
+import { type ArchonEvent, plainLine } from "../archon/telemetry/events.ts";
 import { addressFacing, bootUri, lanAddresses, preferAddress } from "../archon/core/net.ts";
 
 function opt(args: string[], name: string): string | undefined {
@@ -222,16 +224,25 @@ async function main(args: string[]): Promise<number> {
   const s = ui.phase("Serving");
   // Everything the window shows also goes to a log file, to look back at or send.
   const logFile = await openBootLog();
+  const resource = {
+    "service.name": "archon-boot",
+    "service.namespace": P.fleetId,
+    "service.version": `v${VERSION}`,
+  };
   const serveOpts = {
     port,
     proxy,
     caPem: caFile ? await Deno.readTextFile(caFile) : undefined,
     githubApi,
-    log: (line: string) => {
-      // The window shows it pretty (icons, color, no GRUB probing noise); boot.log keeps every line.
-      const shown = pretty(line);
+    emit: (e: ArchonEvent) => {
+      // Spec 049: the event is the source. It is recorded as an OpenTelemetry
+      // log record; boot.log and the window are renderings of it (the window
+      // with icons and color, without GRUB's harmless probing).
+      const ev = { ...e, time: e.time ?? Date.now() };
+      recordEvents([ev], resource).catch(() => {});
+      logFile.write(`${new Date(ev.time).toISOString()} ${plainLine(ev)}`);
+      const shown = render(ev);
       if (shown !== undefined) console.log(shown);
-      logFile.write(`${new Date().toISOString()} ${line}`);
     },
   };
   // One handler for HTTP and TFTP (PXE): identical files and menus, and one
@@ -242,7 +253,7 @@ async function main(args: string[]): Promise<number> {
   if (!args.includes("--no-tftp")) {
     await serveTftp({
       port: tftpPort,
-      log: serveOpts.log,
+      emit: serveOpts.emit,
       read: async (name, from) => {
         const local = addressFacing(from) ?? "127.0.0.1";
         const path = name.replace(/\\/g, "/").replace(/^\/*/, "/");
@@ -291,7 +302,7 @@ async function main(args: string[]): Promise<number> {
   const needs: Need[] = [{ protocol: "TCP", port, what: "HTTP" }];
   if (!args.includes("--no-tftp")) needs.push({ protocol: "UDP", port: tftpPort, what: "TFTP" });
   firewallWarnings(needs).then((lines) => {
-    for (const l of lines) serveOpts.log(`warning: ${l}`);
+    for (const l of lines) serveOpts.emit({ name: "boot.firewall", message: l });
   });
   await new Promise(() => {});
   return 0;
