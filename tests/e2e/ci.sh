@@ -30,11 +30,13 @@ diagnose() {
   sed 's/\x1b\[[0-9;]*m//g' "$HERE/work/boot.log" || true
   echo "::endgroup::"
   local ip
-  ip=$(awk -v m="$MAC" '$2 == m { print $3 }' "$W/leases" 2>/dev/null | tail -n 1)
+  # The installed system's address: the one its last event came from (the
+  # installer had another lease, with the same MAC).
+  ip=$(sed 's/\x1b\[[0-9;]*m//g' "$HERE/work/boot.log" | grep -E ' e2e ' | grep -oE '10\.77\.0\.[0-9]+' | tail -n 1)
   [ -n "$ip" ] || return 0
   echo "::group::the VM ($ip): archon state, archon verify, its run logs"
   local s=(ssh -i "$W/admin" -o BatchMode=yes -o ConnectTimeout=10 -o StrictHostKeyChecking=accept-new tester@"$ip")
-  "${s[@]}" 'archon state; archon verify; for f in $(ls -t /var/log/archon/*.log 2>/dev/null | head -n 3); do echo "== $f"; tail -n 80 "$f"; done' \
+  "${s[@]}" 'archon state; archon verify; archon query "select problems from archon_install"; for f in $(ls -t /var/log/archon/*.log 2>/dev/null | head -n 3); do echo "== $f"; tail -n 80 "$f"; done' \
     2>&1 | sed 's/\x1b\[[0-9;]*m//g' | tee "$HERE/work/vm-diagnosis.txt" || true
   echo "::endgroup::"
 }
@@ -154,7 +156,7 @@ log "install: ${result:-timed out after $TIMEOUT_MIN minutes}"
 if [ "$result" != ready ]; then diagnose; exit 1; fi
 
 # ------------------------- ask the VM through its MCP server, as an operator
-ip=$(awk -v m="$MAC" '$2 == m { print $3 }' "$W/leases" | tail -n 1)
+ip=$(sed 's/\x1b\[[0-9;]*m//g' "$HERE/work/boot.log" | grep -E ' e2e ' | grep -oE '10\.77\.0\.[0-9]+' | tail -n 1)
 log "e2e is at $ip"
 echo "$ip e2e" | sudo tee -a /etc/hosts >/dev/null
 mkdir -p "$HOME/.ssh" && cp "$W/admin" "$HOME/.ssh/id_ed25519" && chmod 600 "$HOME/.ssh/id_ed25519"

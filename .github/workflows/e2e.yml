@@ -43,5 +43,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: e2e-logs
-          path: tests/e2e/work/
+          # Logs only: not the VM's disk or firmware variables.
+          path: |
+            tests/e2e/work/
+            !tests/e2e/work/*.qcow2
+            !tests/e2e/work/*.fd
           if-no-files-found: ignore
