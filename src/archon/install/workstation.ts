@@ -72,9 +72,11 @@ export async function workstationAdd(
   if (ui.problems.some((p) => p.level === "fail")) return 1;
   const name = (o.name ?? Deno.hostname().split(".")[0]).toLowerCase();
   const user = o.user ?? currentUser();
-  // A desktop boots to the graphical target; WSL never counts as one.
+  // A desktop boots to the graphical target and has a display manager (Ubuntu's
+  // cloud and server images default to graphical.target too); WSL never counts.
   const desktop = !wsl &&
-    (await run(["systemctl", "get-default"])).stdout.trim() === "graphical.target";
+    (await run(["systemctl", "get-default"])).stdout.trim() === "graphical.target" &&
+    (await exists("/etc/systemd/system/display-manager.service"));
   c.done(
     `${
       wsl ? `WSL (${wsl})` : desktop ? "Ubuntu desktop" : "Ubuntu (headless)"

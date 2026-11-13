@@ -388,7 +388,9 @@ export const TOOLS: ToolDef[] = [
     source: "upstream-binary",
     bins: ["steampipe"],
     versionCommand: "steampipe --version",
-    verify: "/usr/local/bin/steampipe --version",
+    // It refuses to run as root; checked as nobody, with a home it can write.
+    verify: "env HOME=/tmp /usr/local/bin/steampipe --version",
+    unprivileged: true,
     spec: "042-sql",
     workstationOnly: true,
     github: {

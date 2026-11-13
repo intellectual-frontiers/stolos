@@ -526,6 +526,11 @@ export interface ToolDef {
   workstationOnly?: true;
   /** Installed on servers only (the HTTPS front door, spec 032). */
   serverOnly?: true;
+  /**
+   * The tool refuses to run as root (Steampipe): its smoke test and its verify
+   * check run as nobody when archon runs as root.
+   */
+  unprivileged?: true;
   installer?: string;
 }
 

@@ -85,7 +85,7 @@ export async function verify(host: HostDef): Promise<Check[]> {
           resource: `tool:${t.id}`,
           command: t.verify,
           expect: undefined,
-          asUser: undefined,
+          asUser: t.unprivileged && isRoot() ? "nobody" : undefined,
         }];
       }
       // Self-updating tools (on workstations) live in each holder's ~/.local/bin,
@@ -135,7 +135,12 @@ export async function verify(host: HostDef): Promise<Check[]> {
   const checks: Check[] = [];
   for (const [i, t] of targets.entries()) {
     p.step(i + 1, targets.length, t.resource);
-    const r = await run(splitArgs(t.command), { asUser: (t as { asUser?: string }).asUser });
+    const asUser = (t as { asUser?: string }).asUser;
+    // nobody's home does not exist: start where every account can.
+    const r = await run(splitArgs(t.command), {
+      asUser,
+      cwd: asUser === "nobody" ? "/" : undefined,
+    });
     const output = (r.stdout + r.stderr).trim().split("\n")[0] ?? "";
     const ok = r.ok && (!t.expect || t.expect.test(r.stdout));
     const extra = t as { level?: "fail" | "warn"; fix?: string };

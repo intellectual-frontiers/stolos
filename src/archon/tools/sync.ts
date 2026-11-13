@@ -167,7 +167,10 @@ async function activate(t: ToolDef, version: string, binDir: string): Promise<vo
     await Deno.symlink(join(binDir, bin), tmp);
     await Deno.rename(tmp, link);
   }
-  const smoke = await run(splitArgs(t.verify));
+  const smoke = await run(splitArgs(t.verify), {
+    asUser: t.unprivileged && isRoot() ? "nobody" : undefined,
+    cwd: "/", // nobody's home does not exist
+  });
   if (!smoke.ok) {
     for (const bin of t.bins) {
       const link = join(P.bin, bin);
