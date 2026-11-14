@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/vault/commands.ts - Stolos v0.53.0 documentation</title>
+  <title>archon/vault/commands.ts - Stolos v0.54.1 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.53.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.54.1</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -101,16 +101,16 @@
   <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc"><div class="markdown"><p><code>deno task stolos vault &lt;sub&gt;</code> (specs 029 and 056): the boot machine's secrets,
 and their backup. A backup is one ZIP file (see <a href="../../.././archon/vault/zip.ts/~/writeBackupZip.html">writeBackupZip</a>),
 written into stolos's backup folder; you then move it wherever you keep
-important things safe. A restore is never done by a command: <code>vault restore</code>
-prints what to do with the ZIP, by hand (constitution Articles 13 and 22).</p>
+important things safe. <code>vault restore &lt;zip&gt;</code> (spec 061) puts it back on a
+freshly cloned PC; without a ZIP it prints the steps (constitution Article 22).</p>
 <pre class="highlight"><code class="language-mermaid">flowchart LR
   status[&quot;vault status&lt;br/&gt;what changed since the last backup&quot;] --&gt; backup[&quot;vault backup&lt;br/&gt;a ZIP in the backup folder&quot;]
   backup --&gt; move[&quot;you move the ZIP&lt;br/&gt;somewhere safe&quot;]
-  move -. &quot;after a disaster&quot; .-&gt; restore[&quot;vault restore&lt;br/&gt;prints the steps&quot;]
+  move -. &quot;after a disaster&quot; .-&gt; restore[&quot;vault restore &amp;lt;zip&amp;gt;&lt;br/&gt;on the new PC&quot;]
 </code><button class="copyButton" data-copy="flowchart LR
   status[&quot;vault status&lt;br/&gt;what changed since the last backup&quot;] --&gt; backup[&quot;vault backup&lt;br/&gt;a ZIP in the backup folder&quot;]
   backup --&gt; move[&quot;you move the ZIP&lt;br/&gt;somewhere safe&quot;]
-  move -. &quot;after a disaster&quot; .-&gt; restore[&quot;vault restore&lt;br/&gt;prints the steps&quot;]
+  move -. &quot;after a disaster&quot; .-&gt; restore[&quot;vault restore &amp;lt;zip&amp;gt;&lt;br/&gt;on the new PC&quot;]
 "><svg
   class="copy"
   width="15"
@@ -195,7 +195,7 @@ holds the same ones (nothing changes on GitHub, and clients see the same host).<
     </div><div id="namespace_vaultrestore" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;vault&#x2F;commands.ts&#x2F;~&#x2F;vaultRestore.html" title="vaultRestore">
-			    <span>vaultRestore</span><span>()<span>: <span class="td-kw">number</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>vault restore</code>: the steps to restore a backup ZIP by hand (it changes nothing).</p>
+			    <span>vaultRestore</span><span>()<span>: <span class="td-kw">number</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>vault restore</code> without a ZIP: the steps (the command, and by hand); it changes nothing.</p>
 </div></div></div>
     </div><div id="namespace_vaultstatus" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -275,7 +275,7 @@ holds the same ones (nothing changes on GitHub, and clients see the same host).<
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1202 symbols</span><svg
+              <span class="leading-none">view all 1210 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

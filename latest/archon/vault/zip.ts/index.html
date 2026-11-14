@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/vault/zip.ts - Stolos v0.53.0 documentation</title>
+  <title>archon/vault/zip.ts - Stolos v0.54.1 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.53.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.54.1</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -105,8 +105,8 @@ important things safe. It holds everything this PC would need again after a
 disaster: every fleet's secrets (the admin password's hash, each server's SSH
 host keys and deploy key, the Cloudflare tokens, carried certificates) and
 your signing key (both halves; the private half stays locked by its
-passphrase). A restore is never done by a command: <code>vault restore</code> (and
-<code>RESTORE.txt</code> in every ZIP) says what to do with the ZIP, by hand.</p>
+passphrase). On a freshly cloned PC, <code>vault restore &lt;zip&gt;</code> (spec 061) puts it
+all back; <code>RESTORE.txt</code> in every ZIP says the same, with the steps by hand.</p>
 <pre class="highlight"><code class="language-mermaid">flowchart LR
   secrets[&quot;%APPDATA%\stolos\secrets\&amp;lt;fleet&amp;gt;\*&quot;] --&gt; zip[&quot;stolos-backup-&amp;lt;pc&amp;gt;-&amp;lt;time&amp;gt;.zip&lt;br/&gt;manifest.json, RESTORE.txt&quot;]
   key[&quot;your signing key&lt;br/&gt;(git config user.signingkey)&quot;] --&gt; zip
@@ -346,7 +346,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_backup_dir"
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1202 symbols</span><svg
+              <span class="leading-none">view all 1210 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
