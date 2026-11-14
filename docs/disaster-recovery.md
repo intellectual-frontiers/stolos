@@ -14,7 +14,7 @@ key's passphrase, your **GitHub** login, and, for the network, your **UniFi** ac
 1. **Tools and the repository, in one line** (spec 062). In PowerShell, not as Administrator:
 
    ```powershell
-   & ([scriptblock]::Create((irm https://raw.githubusercontent.com/intellectual-frontiers/stolos/v0.56.0/bin/bootstrap-example.windows.ps1))) --repo example/fleet
+   & ([scriptblock]::Create((irm https://raw.githubusercontent.com/intellectual-frontiers/stolos/v0.59.0/bin/bootstrap.windows.ps1))) --repo example/fleet
    ```
 
    It installs Deno, Git and gh, signs you in to GitHub in the browser, clones the fleet into

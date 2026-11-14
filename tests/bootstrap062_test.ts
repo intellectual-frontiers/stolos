@@ -17,8 +17,8 @@ import {
 import { scaffoldFiles } from "../src/archon/fleet/scaffold.ts";
 import { MIN_DENO } from "../src/archon/update/operator.ts";
 
-const SCRIPT = new URL("../bin/bootstrap-example.sh", import.meta.url).pathname;
-const PS1 = new URL("../bin/bootstrap-example.windows.ps1", import.meta.url).pathname;
+const SCRIPT = new URL("../bin/bootstrap.sh", import.meta.url).pathname;
+const PS1 = new URL("../bin/bootstrap.windows.ps1", import.meta.url).pathname;
 const has = async (cmd: string) => {
   try {
     return (await new Deno.Command("sh", { args: ["-c", `command -v ${cmd}`], stdout: "null" })

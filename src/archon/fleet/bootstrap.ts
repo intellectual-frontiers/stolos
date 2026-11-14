@@ -1,15 +1,16 @@
 /**
  * Spec 062: the bootstrap scripts that make a PC a Stolos controller (Deno,
  * Git, gh, the GitHub sign-in, the fleet cloned into `$HOME/fleet`, the
- * `stolos` shortcut). The engine keeps one template, `bin/bootstrap-example.sh`
- * and `bin/bootstrap-example.windows.ps1` (carried in {@link ASSETS}); a fleet
+ * `stolos` shortcut). The engine publishes them with every release,
+ * `bin/bootstrap.sh` and `bin/bootstrap.windows.ps1` (carried in {@link ASSETS}),
+ * which a new PC runs with --repo; a fleet
  * repository gets its own copy as `bin/bootstrap.sh` and
  * `bin/bootstrap.windows.ps1` with its repository filled in, from `fleet init`
  * and `fleet upgrade`.
  *
  * ```mermaid
  * flowchart LR
- *   tpl["engine: bin/bootstrap-example.*<br/>(--repo required)"] --> init["fleet init / fleet upgrade"]
+ *   tpl["engine: bin/bootstrap.*<br/>(--repo required)"] --> init["fleet init / fleet upgrade"]
  *   init --> copy["fleet: bin/bootstrap.*<br/>(its owner/name filled in)"]
  * ```
  *
@@ -22,8 +23,8 @@ import { VERSION } from "../version.ts";
 
 /** The template's path in the engine, by the fleet's file name. */
 const TEMPLATES: Record<string, string> = {
-  "bin/bootstrap.sh": "bin/bootstrap-example.sh",
-  "bin/bootstrap.windows.ps1": "bin/bootstrap-example.windows.ps1",
+  "bin/bootstrap.sh": "bin/bootstrap.sh",
+  "bin/bootstrap.windows.ps1": "bin/bootstrap.windows.ps1",
 };
 
 /** The bootstrap scripts' paths in a fleet repository. */
@@ -44,7 +45,7 @@ export function bootstrapDenoMin(text: string): string | undefined {
 /**
  * A fleet's bootstrap scripts, by path, with `repo` (owner/name) as their
  * default. Without one (no GitHub remote yet), they ask for --repo, as the
- * engine's example does.
+ * engine's own copy does.
  */
 export function bootstrapFiles(repo = ""): Record<string, string> {
   if (repo && !/^[\w.-]+\/[\w.-]+$/.test(repo)) throw new Error(`not owner/name: ${repo}`);
@@ -69,11 +70,11 @@ export async function repoSlug(repo: string): Promise<string> {
   return (r.ok && githubSlug(r.stdout)) || "";
 }
 
-/** Where the engine's bootstrap example is published, by release tag. */
+/** Where the engine's bootstrap is published, by release tag. */
 const RAW = "https://raw.githubusercontent.com/intellectual-frontiers/stolos/";
 
 /**
- * The one line that bootstraps a PC from the engine's example at `tag` (it is
+ * The one line that bootstraps a PC from the engine's bootstrap at `tag` (it is
  * public: no sign-in needed to fetch it), for the fleet `repo` (owner/name).
  */
 export function bootstrapOneLiner(
@@ -83,6 +84,6 @@ export function bootstrapOneLiner(
 ): string {
   const r = repo || "<owner>/<fleet-repo>";
   return os === "windows"
-    ? `& ([scriptblock]::Create((irm ${RAW}${tag}/bin/bootstrap-example.windows.ps1))) --repo ${r}`
-    : `bash <(curl -fsSL ${RAW}${tag}/bin/bootstrap-example.sh) --repo ${r}`;
+    ? `& ([scriptblock]::Create((irm ${RAW}${tag}/bin/bootstrap.windows.ps1))) --repo ${r}`
+    : `bash <(curl -fsSL ${RAW}${tag}/bin/bootstrap.sh) --repo ${r}`;
 }

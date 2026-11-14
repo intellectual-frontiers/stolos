@@ -33,8 +33,8 @@ const files = [
   ...walk(join(ROOT, "specs")).filter((f) => f.endsWith("/spec.md")),
   ...walk(join(ROOT, "home")),
   // Spec 062: the bootstrap scripts' template (fleets get their copy from it).
-  join(ROOT, "bin/bootstrap-example.sh"),
-  join(ROOT, "bin/bootstrap-example.windows.ps1"),
+  join(ROOT, "bin/bootstrap.sh"),
+  join(ROOT, "bin/bootstrap.windows.ps1"),
 ].map((f) => relative(ROOT, f).replaceAll("\\", "/")).sort();
 
 let body = "";

@@ -1,5 +1,9 @@
 # 062: Bootstrap a controller PC in one line
 
+> The engine's scripts were first named `bin/bootstrap-example.*`; since v0.59.0 they are
+> `bin/bootstrap.sh` and `bin/bootstrap.windows.ps1`: they are the production bootstrap a new PC
+> runs.
+
 ## Why
 
 A new controller PC (the PC you run `stolos` on) needed a page of steps before the first `stolos`
@@ -10,12 +14,11 @@ Windows, macOS and Linux, and be safe to run again.
 
 ## Requirements
 
-- **FR-001** The engine carries `bin/bootstrap-example.sh` (Linux and macOS, told apart with
-  `uname`) and `bin/bootstrap-example.windows.ps1`, written as explainers: each step says what it
-  does and why. In order, each checking first and skipping what is done: Deno at least the engine's
-  `MIN_DENO` (Deno's official installer, into the user's folder); Git; gh (Ubuntu's own package
-  first, then GitHub's); the GitHub sign-in (`gh auth login --web`) and `gh auth setup-git`; the
-  fleet; the shortcut.
+- **FR-001** The engine carries `bin/bootstrap.sh` (Linux and macOS, told apart with `uname`) and
+  `bin/bootstrap.windows.ps1`, written as explainers: each step says what it does and why. In order,
+  each checking first and skipping what is done: Deno at least the engine's `MIN_DENO` (Deno's
+  official installer, into the user's folder); Git; gh (Ubuntu's own package first, then GitHub's);
+  the GitHub sign-in (`gh auth login --web`) and `gh auth setup-git`; the fleet; the shortcut.
 - **FR-002** The fleet goes into `--in`, by default `$HOME/fleet` on every system. Not there (or
   empty): cloned. A checkout of the same repository: `deno task stolos update`. Anything else: never
   touched, with the fix.

@@ -106,10 +106,10 @@ Git and `gh`, signs you in to GitHub in the browser, clones your fleet repositor
 **`$HOME/fleet`** (on Windows, `C:\Users\<you>\fleet`), and adds the `stolos` shortcut. Replace
 `<owner>/<fleet-repo>` with your fleet repository:
 
-| System                                  | Run                                                                                                                                                                      |
-| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Windows (PowerShell, not Administrator) | `& ([scriptblock]::Create((irm https://raw.githubusercontent.com/intellectual-frontiers/stolos/v0.56.0/bin/bootstrap-example.windows.ps1))) --repo <owner>/<fleet-repo>` |
-| macOS or Linux (Terminal)               | `bash <(curl -fsSL https://raw.githubusercontent.com/intellectual-frontiers/stolos/v0.56.0/bin/bootstrap-example.sh) --repo <owner>/<fleet-repo>`                        |
+| System                                  | Run                                                                                                                                                              |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Windows (PowerShell, not Administrator) | `& ([scriptblock]::Create((irm https://raw.githubusercontent.com/intellectual-frontiers/stolos/v0.59.0/bin/bootstrap.windows.ps1))) --repo <owner>/<fleet-repo>` |
+| macOS or Linux (Terminal)               | `bash <(curl -fsSL https://raw.githubusercontent.com/intellectual-frontiers/stolos/v0.59.0/bin/bootstrap.sh) --repo <owner>/<fleet-repo>`                        |
 
 ```mermaid
 ---
@@ -142,24 +142,23 @@ on every system:
 
 | Option                | What it does                                                                                                                                                                     |
 | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--repo <owner/name>` | the fleet repository (required by the engine's example; a fleet's own copy knows it)                                                                                             |
+| `--repo <owner/name>` | the fleet repository (required here; a fleet's own copy in its `bin` knows it)                                                                                                   |
 | `--in <folder>`       | where the fleet goes (default `$HOME/fleet`)                                                                                                                                     |
 | `--destroy-existing`  | remove that folder first, then clone it fresh. Only a checkout of the same repository; edits or commits not on GitHub yet are listed, and you type the folder's name to go ahead |
 | `--no-shortcut`       | do not add the `stolos` shortcut                                                                                                                                                 |
 | `--dry-run`           | say what each step would do; change nothing                                                                                                                                      |
 
-**How it works, line by line.** [`bin/bootstrap-example.sh`](bin/bootstrap-example.sh) (Linux and
-macOS; it tells them apart itself) and
-[`bin/bootstrap-example.windows.ps1`](bin/bootstrap-example.windows.ps1) are written to be read:
-each step says what it does and why. They prefer the system's own packages (Ubuntu's `gh` before
-GitHub's), never need Administrator on Windows (Deno goes into your own folder; `winget` asks if it
-must), and use `sudo` on Linux only to install Git or `gh` when they are missing.
+**How it works, line by line.** [`bin/bootstrap.sh`](bin/bootstrap.sh) (Linux and macOS; it tells
+them apart itself) and [`bin/bootstrap.windows.ps1`](bin/bootstrap.windows.ps1) are written to be
+read: each step says what it does and why. They prefer the system's own packages (Ubuntu's `gh`
+before GitHub's), never need Administrator on Windows (Deno goes into your own folder; `winget` asks
+if it must), and use `sudo` on Linux only to install Git or `gh` when they are missing.
 
 **Your fleet's own copy.** `deno task stolos fleet init` writes `bin/bootstrap.sh` and
 `bin/bootstrap.windows.ps1` into the fleet repository with its name filled in (so `--repo` is not
 needed), and `deno task stolos fleet upgrade` keeps them in step with the engine. A private fleet
 repository's files cannot be downloaded before you sign in, so a new PC starts from the engine's
-public example above; the fleet's copy is for running again later, from `$HOME/fleet`.
+public bootstrap above; the fleet's copy is for running again later, from `$HOME/fleet`.
 
 <details>
 <summary><b>By hand instead</b>: the same installs, one system at a time</summary>

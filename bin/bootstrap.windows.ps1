@@ -17,15 +17,16 @@
 #      only when scripts may run, so this also sets your own execution policy
 #      to RemoteSigned when it is Restricted. Skip both with --no-shortcut.
 #
-# This is the engine's example. A fleet repository carries its own copy as
-# bin\bootstrap.windows.ps1, written by `deno task stolos fleet init` and
-# refreshed by `deno task stolos fleet upgrade`, with the fleet's repository
-# filled in below ($DefaultRepo). Both are the same script: this one needs
-# --repo.
+# This is the bootstrap, published with every Stolos release: a new PC runs it
+# from here, since a private fleet repository cannot be downloaded before you
+# sign in. It needs --repo. A fleet repository also carries a copy as
+# bin\bootstrap.windows.ps1 (written by `deno task stolos fleet init`,
+# refreshed by `deno task stolos fleet upgrade`) with its repository filled in
+# below ($DefaultRepo), for running again later. Both are the same script.
 #
 # Run it in PowerShell (not as Administrator), in one line, from the web:
 #
-#   & ([scriptblock]::Create((irm https://raw.githubusercontent.com/intellectual-frontiers/stolos/<tag>/bin/bootstrap-example.windows.ps1))) --repo <owner>/<fleet-repo>
+#   & ([scriptblock]::Create((irm https://raw.githubusercontent.com/intellectual-frontiers/stolos/<tag>/bin/bootstrap.windows.ps1))) --repo <owner>/<fleet-repo>
 #
 # or from a downloaded copy:
 #
@@ -45,7 +46,7 @@
 # (Windows PowerShell 5.1 turns a native command's stderr into an error under 'Stop'.)
 $ErrorActionPreference = 'Continue'
 
-# The fleet's repository: empty in the engine's example (then --repo is required).
+# The fleet's repository: empty in the engine's copy (then --repo is required).
 $DefaultRepo = ""
 # The engine's minimum Deno (src/archon/update/operator.ts MIN_DENO); the engine's tests keep them equal.
 $DenoMin = "2.9.6"

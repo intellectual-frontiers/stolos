@@ -15,14 +15,16 @@
 #   6. A shortcut: `stolos ...` for `deno task stolos ...`, in ~/.bashrc and
 #      ~/.zshrc (skip it with --no-shortcut).
 #
-# This is the engine's example. A fleet repository carries its own copy as
-# bin/bootstrap.sh, written by `deno task stolos fleet init` and refreshed by
-# `deno task stolos fleet upgrade`, with the fleet's repository filled in below
-# (DEFAULT_REPO). Both are the same script: this one needs --repo.
+# This is the bootstrap, published with every Stolos release: a new PC runs it
+# from here, since a private fleet repository cannot be downloaded before you
+# sign in. It needs --repo. A fleet repository also carries a copy as
+# bin/bootstrap.sh (written by `deno task stolos fleet init`, refreshed by
+# `deno task stolos fleet upgrade`) with its repository filled in below
+# (DEFAULT_REPO), for running again later. Both are the same script.
 #
 # Run it (bash, not sh; the <(...) form keeps your terminal for the prompts):
 #
-#   bash <(curl -fsSL https://raw.githubusercontent.com/intellectual-frontiers/stolos/<tag>/bin/bootstrap-example.sh) --repo <owner>/<fleet-repo>
+#   bash <(curl -fsSL https://raw.githubusercontent.com/intellectual-frontiers/stolos/<tag>/bin/bootstrap.sh) --repo <owner>/<fleet-repo>
 #
 # Options:
 #   --repo <owner/name>   the fleet repository on GitHub (or a Git URL or path)
@@ -38,7 +40,7 @@
 
 set -euo pipefail
 
-# The fleet's repository: empty in the engine's example (then --repo is required).
+# The fleet's repository: empty in the engine's copy (then --repo is required).
 DEFAULT_REPO=""
 # The engine's minimum Deno (src/archon/update/operator.ts MIN_DENO); the engine's tests keep them equal.
 DENO_MIN="2.9.6"

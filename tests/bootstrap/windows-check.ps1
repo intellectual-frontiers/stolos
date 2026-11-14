@@ -7,7 +7,7 @@
 # progress) into a fatal error under Stop. Each check throws on its own when it fails.
 $ErrorActionPreference = 'Continue'
 $shell = $args[0]
-$script = Join-Path $PSScriptRoot '..\..\bin\bootstrap-example.windows.ps1' | Resolve-Path
+$script = Join-Path $PSScriptRoot '..\..\bin\bootstrap.windows.ps1' | Resolve-Path
 $tmp = Join-Path ([IO.Path]::GetTempPath()) "stolos-boot-$shell-$PID"
 $src = Join-Path $tmp 'src'
 $fleet = Join-Path $tmp 'fleet'
