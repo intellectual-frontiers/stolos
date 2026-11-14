@@ -200,7 +200,7 @@ you keep somewhere safe (constitution Article 13):
 ```powershell
 deno task stolos vault status     # every secret: changed when, backed up when (⚠ = not backed up)
 deno task stolos vault backup     # writes the ZIP, reads it back, and says where it is
-deno task stolos vault restore    # how to restore a ZIP by hand (prints the steps; changes nothing)
+deno task stolos vault restore <zip>   # a fresh PC: put the ZIP back (checks it; never overwrites)
 deno task stolos vault list       # the ZIPs not yet moved out of the backup folder
 ```
 
@@ -219,7 +219,7 @@ flowchart LR
   s["every fleet's secrets"] --> z["stolos-backup-‹pc›-‹time›.zip<br/>in stolos's backup folder"]
   k["your signing key<br/>(both halves)"] --> z
   z --> y["you move it somewhere safe<br/>and encrypted"]
-  y -. "after a disaster" .-> r["vault restore:<br/>the steps, by hand"]
+  y -. "after a disaster" .-> r["vault restore ‹zip›<br/>on the new PC"]
 ```
 
 `vault backup` writes `stolos-backup-<pc>-<time>.zip` into stolos's backup folder
@@ -233,7 +233,7 @@ only. It holds:
 - `signing/recovery/...`: your recovery key, from the key store (`%APPDATA%\stolos\keys`; Linux and
   macOS: `~/.config/stolos/keys`), locked by its own passphrase;
 - `manifest.json`: every file's name, size, and SHA-256 (never a value);
-- `RESTORE.txt`: the restore steps, the same as `vault restore` prints.
+- `RESTORE.txt`: the restore steps, the same as `vault restore` (without a ZIP) prints.
 
 It reads the ZIP back and checks every file before saying it worked. Then **move it** wherever you
 keep important things safe, for example your OneDrive Personal Vault, a password manager, or an
@@ -241,8 +241,12 @@ encrypted USB drive, and keep an older one too. One ZIP is everything a disaster
 and both signing keys. It is not encrypted itself, and with it and your passphrases anyone could
 change your servers: treat it like the keys to them.
 
-A restore is never done by a command: Archon only explains it (`vault restore`), and you copy the
-files back by hand. See [disaster recovery](disaster-recovery.md).
+To restore (spec 061), clone the fleet repository on the new PC, `cd` into it, and run
+`deno task stolos vault restore <zip>`. It checks the ZIP (every file against its SHA-256) before
+writing anything, puts each file back (the secrets readable by you only, the daily key in `.ssh`,
+the recovery key in the key store), and runs `keys setup`, which asks for your daily passphrase once
+for a test signature. It never overwrites: a file already there and different stops it, naming the
+file. Run it again and nothing changes. See [disaster recovery](disaster-recovery.md).
 
 Until a changed secret is backed up, Archon says so: a panel at the end of the command that changed
 it and at the start of `boot serve` and `boot status`, a warning in `boot doctor`, a reminder before
@@ -297,7 +301,7 @@ fix for each problem.
 | `deno task stolos boot retire <host> --confirm-destroy <host>`                                 | a server leaves the fleet: its DNS, deploy key, identity, model, and records ([hosts](hosts.md#retire-a-host))                                            |
 | `deno task stolos boot reinstall <host> [--confirm-destroy <host>]`                            | re-install a running host, nobody at the console; a durable host, or one that cannot be reached, needs `--confirm-destroy` ([hosts](hosts.md#re-install)) |
 | `deno task stolos vault status [--lost]`                                                       | every secret, and whether the last backup has it                                                                                                          |
-| `deno task stolos vault backup` · `restore` · `list`                                           | the backup ZIP: write it; how to restore it (steps only); the ZIPs not yet moved (spec 056)                                                               |
+| `deno task stolos vault backup` · `restore` · `list`                                           | the backup ZIP: write it; restore it on a fresh PC (`restore <zip>`); the ZIPs not yet moved                                                              |
 | `deno task stolos boot web-setup`                                                              | store the Cloudflare DNS token for HTTPS certificates and server records (once)                                                                           |
 | `deno task stolos boot web-push <host>`                                                        | give a running server that token                                                                                                                          |
 | `deno task stolos boot mail-setup`                                                             | store the Cloudflare token for mail (once)                                                                                                                |

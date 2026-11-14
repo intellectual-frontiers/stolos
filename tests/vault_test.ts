@@ -3,7 +3,9 @@
 import { assert, assertEquals } from "./assert.ts";
 import { panelLines, width } from "../src/archon/vault/panel.ts";
 import type { Assessment } from "../src/archon/vault/state.ts";
-import { unzipSync } from "npm:fflate@0.8.2";
+import { unzipSync, zipSync } from "npm:fflate@0.8.2";
+import { targetOf } from "../src/archon/vault/restore.ts";
+import { exists } from "../src/archon/core/fsx.ts";
 import { secretFor } from "../src/archon/model/secret-inventory.ts";
 import { SECRETS } from "../src/archon/core/secrets.ts";
 import { P } from "../src/archon/core/paths.ts";
@@ -72,7 +74,7 @@ Deno.test("vault: status, backup (one ZIP with the secrets and the signing key),
     assertEquals(text("signing/fleet-signing"), "PRIVATE-SIGNING-KEY\n");
     assertEquals(text("signing/fleet-signing.pub"), "ssh-ed25519 AAAA me\n");
     assert(!files["secrets/lab/install-tokens.json"], "ephemeral secrets are left out");
-    assert(text("RESTORE.txt").includes("no command does it for you"));
+    assert(text("RESTORE.txt").includes("deno task stolos vault restore <path to this ZIP>"));
     const manifest = JSON.parse(text("manifest.json"));
     assertEquals(manifest.files.map((f: { name: string }) => f.name).sort(), [
       "secrets/lab/admin-password.hash",
@@ -106,13 +108,14 @@ Deno.test("vault: status, backup (one ZIP with the secrets and the signing key),
   }
 });
 
-Deno.test("vault: restore only explains (changes nothing); backup without a signing key warns", async () => {
+Deno.test("vault: restore without a ZIP only explains; backup without a signing key warns", async () => {
   const s = await vaultSandbox();
   try {
     const before = await fingerprint([join(s.home, "config"), join(s.home, "data")]);
     let r = await s.archon(["vault", "restore"]);
     assertEquals(r.code, 0, r.out);
-    assert(r.out.includes("How to restore an archon backup"), r.out);
+    assert(r.out.includes("How to restore a stolos backup"), r.out);
+    assert(r.out.includes("vault restore <path to this ZIP>"), r.out);
     assert(r.out.includes("Copy-Item") && r.out.includes("keys setup"), r.out);
     assertEquals(await fingerprint([join(s.home, "config"), join(s.home, "data")]), before);
 
@@ -123,6 +126,109 @@ Deno.test("vault: restore only explains (changes nothing); backup without a sign
     assert(r.out.includes("no signing key"), r.out);
   } finally {
     await Deno.remove(s.home, { recursive: true });
+  }
+});
+
+Deno.test("vault: restore <zip> puts back every secret and both keys on a fresh PC, idempotent, never overwrites", async () => {
+  const s = await vaultSandbox();
+  try {
+    // The old PC: secrets, a daily key, a recovery key in the key store; one backup.
+    const ssh = join(s.home, ".ssh");
+    await Deno.mkdir(ssh, { recursive: true });
+    await Deno.writeTextFile(join(ssh, "fleet-signing"), "PRIVATE-SIGNING-KEY\n");
+    await Deno.writeTextFile(join(ssh, "fleet-signing.pub"), "ssh-ed25519 AAAA me\n");
+    const store = join(s.home, "config", "stolos", "keys");
+    await Deno.mkdir(store, { recursive: true });
+    await Deno.writeTextFile(join(store, "fleet-recovery"), "PRIVATE-RECOVERY-KEY\n");
+    await Deno.writeTextFile(join(store, "fleet-recovery.pub"), "ssh-ed25519 BBBB rec\n");
+    const gitconfig = join(s.home, "gitconfig");
+    await Deno.writeTextFile(
+      gitconfig,
+      `[user]\n\tsigningkey = ${join(ssh, "fleet-signing").replace(/\\/g, "/")}\n`,
+    );
+    const git = { GIT_CONFIG_GLOBAL: gitconfig };
+    let r = await s.archon(["vault", "backup"], "", git);
+    assertEquals(r.code, 0, r.out);
+    const dir = join(s.home, "data", "stolos", "backup");
+    const zip = join(s.home, [...Deno.readDirSync(dir)][0].name);
+    await Deno.rename(join(dir, zip.split(/[\\/]/).pop()!), zip); // kept somewhere safe
+
+    // A fresh PC: none of it.
+    for (const d of [join(s.home, "config"), join(s.home, "data"), ssh]) {
+      await Deno.remove(d, { recursive: true });
+    }
+    await Deno.mkdir(join(s.home, "config"));
+    await Deno.mkdir(join(s.home, "data"));
+    const empty = { GIT_CONFIG_GLOBAL: join(s.home, "empty-gitconfig") };
+    await Deno.writeTextFile(empty.GIT_CONFIG_GLOBAL, "");
+
+    r = await s.archon(["vault", "restore", zip, "--files-only"], "", empty);
+    assertEquals(r.code, 0, r.out);
+    assert(/8 put back/.test(r.out), r.out);
+    assertEquals(
+      await Deno.readTextFile(join(s.secrets, "hosts", "alpha", "deploy_key")),
+      "PRIVATE-DEPLOY-KEY\n",
+    );
+    assertEquals(await Deno.readTextFile(join(ssh, "fleet-signing")), "PRIVATE-SIGNING-KEY\n");
+    assertEquals(await Deno.readTextFile(join(store, "fleet-recovery")), "PRIVATE-RECOVERY-KEY\n");
+    if (Deno.build.os !== "windows") {
+      for (const f of [join(ssh, "fleet-signing"), join(s.secrets, "mail.json")]) {
+        assertEquals((Deno.statSync(f).mode ?? 0) & 0o777, 0o600, `${f} owner only`);
+      }
+    }
+    assert(!r.out.includes("PRIVATE"), "never a value");
+    // The ZIP counts as the last backup: nothing is newer than it.
+    r = await s.archon(["vault", "status"]);
+    assertEquals(r.code, 0, r.out);
+
+    // Again: nothing to do.
+    r = await s.archon(["vault", "restore", zip, "--files-only"], "", empty);
+    assertEquals(r.code, 0, r.out);
+    assert(/0 put back, 8 already here/.test(r.out), r.out);
+
+    // A file that differs (perhaps newer): nothing is written, and it says which.
+    await s.put("mail.json", '{"token":"newer"}\n');
+    await Deno.remove(join(ssh, "fleet-signing.pub"));
+    r = await s.archon(["vault", "restore", zip, "--files-only"], "", empty);
+    assertEquals(r.code, 1, r.out);
+    assert(r.out.includes("differ from the backup") && r.out.includes("mail.json"), r.out);
+    assertEquals(await Deno.readTextFile(join(s.secrets, "mail.json")), '{"token":"newer"}\n');
+    assert(!(await exists(join(ssh, "fleet-signing.pub"))), "nothing written when one differs");
+
+    // A damaged ZIP, and a file that is not a backup: refused.
+    const bytes = await Deno.readFile(zip);
+    const files = unzipSync(bytes);
+    files["secrets/lab/mail.json"] = new TextEncoder().encode("tampered\n");
+    const bad = join(s.home, "bad.zip");
+    await Deno.writeFile(bad, zipSync(files));
+    r = await s.archon(["vault", "restore", bad, "--files-only"], "", empty);
+    assertEquals(r.code, 1, r.out);
+    assert(r.out.includes("does not match its SHA-256"), r.out);
+    await Deno.writeTextFile(join(s.home, "not.zip"), "hello");
+    r = await s.archon(["vault", "restore", join(s.home, "not.zip")], "", empty);
+    assertEquals(r.code, 1, r.out);
+    assert(r.out.includes("not a ZIP file"), r.out);
+  } finally {
+    await Deno.remove(s.home, { recursive: true });
+  }
+});
+
+Deno.test("vault: restore refuses a ZIP entry outside its places (no path escapes)", () => {
+  const roots = { secrets: "/s", ssh: "/h/.ssh", keys: "/k" };
+  assertEquals(targetOf("secrets/lab/mail.json", roots)?.fleet, "lab");
+  assert(targetOf("signing/fleet-signing", roots)?.to.endsWith("fleet-signing"));
+  assert(targetOf("signing/recovery/fleet-recovery", roots)?.to.startsWith("/k"));
+  for (
+    const bad of [
+      "secrets/../x/y",
+      "../etc/passwd",
+      "signing/a/b",
+      "secrets/lab",
+      "other/x",
+      "signing/C:x",
+    ]
+  ) {
+    assertEquals(targetOf(bad, roots), undefined, bad);
   }
 });
 

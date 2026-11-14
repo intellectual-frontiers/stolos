@@ -528,8 +528,14 @@ deno task stolos vault backup
 ```
 
 It writes one ZIP and tells you where. Move it somewhere safe and encrypted (a password manager, an
-encrypted USB drive, OneDrive's Personal Vault). `deno task stolos vault restore` explains how to
-use it on a new PC.
+encrypted USB drive, OneDrive's Personal Vault).
+
+On a new PC, after cloning the fleet repository, one command puts it all back (every secret, both
+keys, Git's signing):
+
+```sh
+deno task stolos vault restore <path to the ZIP>
+```
 
 </details>
 

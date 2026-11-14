@@ -59,7 +59,8 @@ async function keysSandbox() {
   await git("init", "-q", "-b", "main");
   await git("add", "-A");
   await git("commit", "-q", "--no-gpg-sign", "-m", "demo: the fleet");
-  const archon = (args: string[], stdin = "") => sb.run("src/stolos/main.ts", args, stdin, env);
+  const archon = (args: string[], stdin = "", extra: Record<string, string> = {}) =>
+    sb.run("src/stolos/main.ts", args, stdin, { ...env, ...extra });
   return { home, repo, git, archon, daily: join(home, ".ssh", "fleet-signing") };
 }
 
@@ -295,6 +296,51 @@ Deno.test("057: one backup holds everything: both keys; a loose recovery folder 
       again.includes("signing/recovery/fleet-recovery"),
       "every backup holds the recovery key",
     );
+  } finally {
+    await Deno.remove(s.home, { recursive: true });
+  }
+});
+
+Deno.test("061: a fresh PC from one backup ZIP: vault restore puts back both keys and signs", async () => {
+  const s = await keysSandbox();
+  try {
+    assertEquals((await s.archon(["keys", "setup"])).code, 0);
+    await s.git("add", "-A");
+    await s.git("commit", "-q", "-m", "demo: signers");
+    let r = await s.archon(["vault", "backup"]);
+    assertEquals(r.code, 0, r.out);
+    const dir = join(s.home, "data", "stolos", "backup");
+    const name = [...Deno.readDirSync(dir)].map((e) => e.name).find((n) => n.endsWith(".zip"))!;
+    const zip = join(s.home, name);
+    await Deno.rename(join(dir, name), zip);
+    const pub = await Deno.readTextFile(s.daily + ".pub");
+
+    // The disaster: this PC's stolos folders and keys are gone; a fresh clone.
+    for (const d of ["config", "data", ".ssh"]) {
+      await Deno.remove(join(s.home, d), { recursive: true });
+    }
+    await Deno.mkdir(join(s.home, "config"));
+    await Deno.mkdir(join(s.home, "data"));
+    const fresh = join(s.home, "fresh");
+    await s.git("clone", "-q", s.repo, fresh);
+    const there = { ARCHON_REPO: fresh };
+
+    r = await s.archon(["vault", "restore", zip], "", there);
+    assertEquals(r.code, 0, r.out);
+    assertStringIncludes(r.out, "put back");
+    assertStringIncludes(r.out, "Signers          fleets/demo/signers.ts: 2 signer(s)");
+    assertStringIncludes(r.out, "signed and verified");
+    assert(!r.out.includes("back up:"), "nothing new to back up");
+    assertEquals(await Deno.readTextFile(s.daily + ".pub"), pub);
+    assert(await exists(join(s.home, "config", "stolos", "keys", "fleet-recovery")));
+    r = await s.archon(["keys"], "", there);
+    assertEquals(r.code, 0, r.out);
+    assert(!/E057-RECOVERY-(LOOSE|MISSING)/.test(r.out), r.out);
+
+    // Again: nothing changes, nothing asked.
+    r = await s.archon(["vault", "restore", zip], "", there);
+    assertEquals(r.code, 0, r.out);
+    assertStringIncludes(r.out, "already here");
   } finally {
     await Deno.remove(s.home, { recursive: true });
   }

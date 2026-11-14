@@ -177,6 +177,7 @@ import "./update/update.ts";
 import "./vault/commands.ts";
 import "./vault/panel.ts";
 import "./vault/reminder.ts";
+import "./vault/restore.ts";
 import "./vault/state.ts";
 import "./vault/zip.ts";
 import "./version.ts";

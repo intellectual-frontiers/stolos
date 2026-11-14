@@ -7,8 +7,8 @@
  * disaster: every fleet's secrets (the admin password's hash, each server's SSH
  * host keys and deploy key, the Cloudflare tokens, carried certificates) and
  * your signing key (both halves; the private half stays locked by its
- * passphrase). A restore is never done by a command: `vault restore` (and
- * `RESTORE.txt` in every ZIP) says what to do with the ZIP, by hand.
+ * passphrase). On a freshly cloned PC, `vault restore <zip>` (spec 061) puts it
+ * all back; `RESTORE.txt` in every ZIP says the same, with the steps by hand.
  *
  * ```mermaid
  * flowchart LR
@@ -135,8 +135,8 @@ async function adoptLooseRecovery(loose: string[]): Promise<string | undefined> 
 /** The restore instructions: printed by `vault restore`, and RESTORE.txt in every ZIP. */
 export function restoreText(fleets: string[] = []): string {
   const fl = fleets.length ? fleets.join(", ") : "<fleet>";
-  return `How to restore an archon backup (by hand; no command does it for you)
-==============================================================================
+  return `How to restore a stolos backup
+=============================
 
 This ZIP holds what a boot machine needs again after a disaster:
   secrets/<fleet>/...   each fleet's secrets (${fl}): the admin password's hash,
@@ -153,6 +153,14 @@ On the new or rebuilt PC (Windows, in PowerShell):
  1. Install Deno, Git, and gh (GitHub's command line), sign in: gh auth login
  2. Clone your fleet repository, for example:
         git clone https://github.com/<owner>/<fleet repository>.git C:\\fleet
+ 3. Restore this ZIP, in one command (it checks the ZIP, never overwrites, and
+    asks for your daily key's passphrase once, for a test signature):
+        cd C:\\fleet
+        deno task stolos vault restore <path to this ZIP>
+    Then check everything: deno task stolos boot doctor. That is all.
+
+By hand instead (the same as step 3 does):
+
  3. Unzip this file somewhere private, for example your Desktop.
  4. Put the secrets back, only readable by you:
         New-Item -ItemType Directory -Force $env:APPDATA\\stolos\\secrets

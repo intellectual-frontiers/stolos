@@ -2,14 +2,14 @@
  * `deno task stolos vault <sub>` (specs 029 and 056): the boot machine's secrets,
  * and their backup. A backup is one ZIP file (see {@link writeBackupZip}),
  * written into stolos's backup folder; you then move it wherever you keep
- * important things safe. A restore is never done by a command: `vault restore`
- * prints what to do with the ZIP, by hand (constitution Articles 13 and 22).
+ * important things safe. `vault restore <zip>` (spec 061) puts it back on a
+ * freshly cloned PC; without a ZIP it prints the steps (constitution Article 22).
  *
  * ```mermaid
  * flowchart LR
  *   status["vault status<br/>what changed since the last backup"] --> backup["vault backup<br/>a ZIP in the backup folder"]
  *   backup --> move["you move the ZIP<br/>somewhere safe"]
- *   move -. "after a disaster" .-> restore["vault restore<br/>prints the steps"]
+ *   move -. "after a disaster" .-> restore["vault restore &lt;zip&gt;<br/>on the new PC"]
  * ```
  *
  * @module
@@ -131,8 +131,8 @@ export function afterBackup(path: string, signingKey?: string, recovery = false)
     "too. The ZIP itself is not encrypted: anyone with it and your passphrases could",
     "change your servers, so treat it like the keys to them.",
     "",
-    "To use it after a disaster: deno task stolos vault restore (it only explains;",
-    "the same steps are RESTORE.txt in the ZIP).",
+    "After a disaster, on the new PC, in the cloned fleet repository:",
+    "  deno task stolos vault restore <this ZIP>   (RESTORE.txt in the ZIP says the same)",
   ];
 }
 
@@ -173,7 +173,7 @@ export async function vaultBackup(): Promise<number> {
 
 // ------------------------------------------------------------------ restore
 
-/** `vault restore`: the steps to restore a backup ZIP by hand (it changes nothing). */
+/** `vault restore` without a ZIP: the steps (the command, and by hand); it changes nothing. */
 export function vaultRestore(): number {
   console.log(restoreText());
   return 0;

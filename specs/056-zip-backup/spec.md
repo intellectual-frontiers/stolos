@@ -23,7 +23,8 @@ restore should be a few steps you can read.
   that the ZIP itself is not encrypted, and to keep the recovery key apart. No signing key: a
   warning, with the fix.
 - **FR-005** `vault restore` prints the restore steps (the same as `RESTORE.txt`) and changes
-  nothing. No command restores.
+  nothing. (Revised by spec 061: `vault restore <zip>` restores, after checking the ZIP, never
+  overwriting.)
 - **FR-006** `vault list` lists the ZIPs still in the backup folder. A moved ZIP still counts as the
   last backup (the record); `vault status` points out a ZIP not yet moved.
 - **FR-007** `verify`, `rehearse`, `prune`, the Personal Vault detection (`--to`, `--wait`,

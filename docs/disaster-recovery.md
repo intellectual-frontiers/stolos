@@ -23,15 +23,19 @@ key's passphrase, your **GitHub** login, and, for the network, your **UniFi** ac
 
    ```powershell
    gh auth login --web --git-protocol https
-   git clone https://github.com/example/fleet.git C:\archon
-   cd C:\archon
+   git clone https://github.com/example/fleet.git C:\fleet
+   cd C:\fleet
    ```
 
-3. **The secrets and your signing key.** `deno task stolos vault restore` prints the steps (the same
-   as `RESTORE.txt` in the ZIP); it changes nothing. In short: unzip it somewhere private, copy
-   `secrets\*` into `%APPDATA%\stolos\secrets\` (readable by you only), copy `signing\*` into
-   `%USERPROFILE%\.ssh\` and point Git at it (`git config --global user.signingkey ...`), then
-   delete the unzipped folder.
+3. **The secrets and both keys.** In the cloned repository:
+
+   ```powershell
+   deno task stolos vault restore C:\path\to\stolos-backup-<pc>-<time>.zip
+   ```
+
+   It checks the ZIP, puts every secret and both keys back, sets up Git's signing, and asks for your
+   daily passphrase once for a test signature (spec 061). It never overwrites a file that differs.
+   Without a ZIP, `vault restore` prints the same steps by hand (they are `RESTORE.txt` in the ZIP).
 
 4. **Trust the hosts again.** `deno task stolos boot doctor` checks every secret; `known_hosts`
    comes from the hosts' public keys in the fleet repository.
