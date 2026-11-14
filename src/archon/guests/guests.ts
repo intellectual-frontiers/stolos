@@ -9,12 +9,17 @@ import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
 import type { GuestDef, HostDef } from "../model/types.ts";
 
-interface Instance {
+/** An LXD instance, as `lxc list` reports it. */
+export interface Instance {
+  /** The instance name. */
   name: string;
+  /** LXD's status, such as "Running" or "Stopped". */
   status: string;
+  /** "container" or "virtual-machine". */
   type: string;
 }
 
+/** The LXD instances on this host (lxc list); throws when lxc fails. */
 export async function instances(): Promise<Instance[]> {
   const r = await run(["lxc", "list", "--format", "json"]);
   if (!r.ok) {
@@ -27,6 +32,7 @@ export async function instances(): Promise<Instance[]> {
   }));
 }
 
+/** The `lxc launch` command line for a guest, with its kind and CPU and memory limits. */
 export function launchArgs(g: GuestDef): string[] {
   return [
     "lxc",
@@ -39,6 +45,10 @@ export function launchArgs(g: GuestDef): string[] {
   ];
 }
 
+/**
+ * Launches the host's missing guests and starts stopped ones; never deletes.
+ * Returns false when any launch or start failed.
+ */
 export async function guestSync(host: HostDef): Promise<boolean> {
   const p = ui.phase("Guests");
   const want = host.guests ?? [];

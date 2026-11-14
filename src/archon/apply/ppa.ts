@@ -21,6 +21,7 @@ export function ppaOrigin(ppa: string): string {
   return name === "ppa" ? `LP-PPA-${owner}` : `LP-PPA-${owner}-${name}`;
 }
 
+/** The URL of a PPA's signed Release file (InRelease) for a codename on Launchpad's content host. */
 export function ppaReleaseUrl(ppa: string, codename: string): string {
   return `https://ppa.launchpadcontent.net/${ppa.split("/")[0]}/${
     ppa.split("/")[1]
@@ -81,6 +82,10 @@ export async function ppaPresent(ppa: string, _codename?: string): Promise<boole
   return false;
 }
 
+/**
+ * Adds a PPA with add-apt-repository (non-interactive, without running apt
+ * update). Returns whether it succeeded and the tool's trimmed output.
+ */
 export async function addPpa(ppa: string): Promise<{ ok: boolean; output: string }> {
   const r = await run(["add-apt-repository", "--yes", "--no-update", `ppa:${ppa}`], {
     env: { DEBIAN_FRONTEND: "noninteractive", PATH: Deno.env.get("PATH") ?? "/usr/bin:/bin" },

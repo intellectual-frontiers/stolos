@@ -8,7 +8,9 @@
  * @module
  */
 
+/** One secret the fleet depends on: where it lives and how to make it again (never its value). */
 export interface SecretRef {
+  /** Stable identifier ("deploy-key"). */
   id: string;
   /** Short name for tables and the backup panel; <host> and <type> are filled in. */
   label: string;
@@ -17,7 +19,9 @@ export interface SecretRef {
    * with <host> and <type> placeholders. Owner: where it is kept.
    */
   path: string;
+  /** What it is for, in a sentence. */
   purpose: string;
+  /** Who keeps it: the boot machine (backed up by the vault) or the owner. */
   holder: "boot-machine" | "owner";
   /** How to make it again when it is lost (vault status --lost prints this). */
   recreate: string;
@@ -25,9 +29,11 @@ export interface SecretRef {
   ephemeral?: true;
   /** Identity that cannot be re-made the same: losing it changes what others trust. */
   identity?: true;
+  /** The spec that introduced it (`NNN-short-name`). */
   spec: string;
 }
 
+/** Every secret the fleet depends on: the boot machine's first, then the owner's. */
 export const SECRET_INVENTORY: SecretRef[] = [
   // ------------------------------------------------------------ boot machine
   {

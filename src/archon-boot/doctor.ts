@@ -19,6 +19,13 @@ import { cacheDir } from "./assets.ts";
 import { UBUNTU } from "./pins.ts";
 import { firewallWarnings } from "./firewall.ts";
 
+/**
+ * Run the boot doctor: check the checkout, model, secrets, Ubuntu's files,
+ * network, ports and firewall, printing a fix for each problem. Read-only.
+ * `port` is the boot server's HTTP port, `send` mails the findings, and
+ * `embedded` joins a caller's run (vault restore) instead of starting one.
+ * Returns the exit code (nonzero when a check fails).
+ */
 export async function doctor(
   o: { port: number; send?: string; embedded?: boolean },
 ): Promise<number> {

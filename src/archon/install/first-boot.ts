@@ -40,6 +40,11 @@ const MAIL_DELIVERED = "/etc/archon/mail_credential.json";
 /** The Cloudflare DNS token as the install delivered it (spec 032). */
 const WEB_DELIVERED = "/etc/archon/web_credential.json";
 
+/**
+ * Runs first boot on a freshly installed host: converge, hand over the
+ * delivered credentials and deploy key, verify, and push the first record.
+ * Returns 1 when verification found failures, else 0.
+ */
 export async function firstBoot(host: HostDef): Promise<number> {
   const fleet = await loadFleet();
   // Each phase shows up in the boot server's window as it ends.

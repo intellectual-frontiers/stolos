@@ -21,11 +21,16 @@
  * @module
  */
 
+/** The shells Archon emits code for. */
 export const SHELLS = ["bash", "zsh", "fish"] as const;
+/** One of SHELLS. */
 export type Shell = typeof SHELLS[number];
 
+/** Where `archon apply` renders each shell's init file (`init.<shell>`) and the prompt theme. */
 export const SHELL_DIR = "/usr/local/share/archon/shell";
+/** The Oh My Posh theme for the pretty prompt. */
 export const THEME = `${SHELL_DIR}/archon.omp.json`;
+/** For each shell, its startup file and the one line that turns Archon's shell code on. */
 export const LINES: Record<Shell, { file: string; line: string }> = {
   bash: { file: "~/.bashrc", line: 'eval "$(archon shell emit bash)"' },
   zsh: { file: "~/.zshrc", line: 'eval "$(archon shell emit zsh)"' },
@@ -238,6 +243,7 @@ function fish(): string {
   return L.join("\n");
 }
 
+/** The shell code for `shell`: aliases, key bindings, prompt and titles. */
 export function renderEmit(shell: Shell): string {
   return shell === "fish" ? fish() : posix(shell);
 }

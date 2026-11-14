@@ -69,7 +69,7 @@ export function firstBootTelemetry(
 }
 
 /** GitHub's published SSH host keys (https://api.github.com/meta), for the first clone. */
-export const GITHUB_KNOWN_HOSTS = [
+export const GITHUB_KNOWN_HOSTS: string = [
   "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl",
 ].join("\n") + "\n";
 

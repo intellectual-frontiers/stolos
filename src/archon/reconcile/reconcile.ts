@@ -25,6 +25,7 @@ import { currentUser, isRoot, run } from "../core/exec.ts";
 import { journal, log } from "../core/log.ts";
 import type { HostDef } from "../model/types.ts";
 
+/** What syncing the checkout with origin/main found or did. */
 export interface SyncResult {
   /** fetched, and HEAD now equals origin/main */
   current: boolean;

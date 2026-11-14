@@ -10,7 +10,7 @@ import type { Capability } from "../model/types.ts";
 import { networkOf } from "../model/resolve.ts";
 
 /** apt on a network without IPv6 (spec 009 FR-005); also covers unattended-upgrades and apt-daily. */
-export const APT_NETWORK_IPV4 = [
+export const APT_NETWORK_IPV4: string = [
   "// Archon: this network has no IPv6 route. Resolve and connect over IPv4 only, so a lost",
   '// A record is a retryable "Temporary failure resolving", not an instant IPv6-only failure.',
   'Acquire::ForceIPv4 "true";',

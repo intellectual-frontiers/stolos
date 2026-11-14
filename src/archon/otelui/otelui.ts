@@ -23,7 +23,9 @@ import { loadFleet, loadHosts } from "../model/load.ts";
 import { fqdn } from "../web/config.ts";
 import type { Sink } from "../pg/converge.ts";
 
+/** Paths and names for the telemetry web UI (spec 050). */
 export const OTEL_UI_PATHS = {
+  /** Its state directory (root only). */
   dir: "/var/lib/archon/otel-ui",
   /** For the Collector's unit (EnvironmentFile): the Basic credential, root only. */
   collectorEnv: "/var/lib/archon/otel-ui/collector.env",

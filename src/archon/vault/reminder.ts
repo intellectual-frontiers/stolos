@@ -21,7 +21,8 @@ import { assess, type Assessment, writePromptStatus } from "./state.ts";
 import { panelLines } from "./panel.ts";
 
 const DAY = 86_400_000;
-export const pcName = () => Deno.hostname().split(".")[0];
+/** This machine's short hostname, as the panel names it. */
+export const pcName = (): string => Deno.hostname().split(".")[0];
 
 /** Compute the panel for this run (shown by ui.finish or at exit). */
 export async function preparePanel(a?: Assessment): Promise<Assessment> {
@@ -84,6 +85,10 @@ deno run -A src/archon/main.ts vault status --hook >&2 || true
 exit 0
 `;
 
+/**
+ * Installs the pre-push hook in a checkout. Leaves another program's hook
+ * alone and does nothing in a sandbox. Returns whether it wrote the hook.
+ */
 export async function installPrePushHook(repo = P.repo): Promise<boolean> {
   // A sandboxed run (tests) touches nothing outside its sandbox, the checkout's hooks included.
   if (Deno.env.get("ARCHON_SANDBOX")) return false;

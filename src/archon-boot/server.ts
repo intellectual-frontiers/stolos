@@ -37,7 +37,9 @@ import { describe, type InstallerEvent } from "./progress.ts";
 import { installEnd, installProblem, installStep, served } from "./telemetry.ts";
 import { type Handler, listen } from "./http.ts";
 
+/** Options for the boot server (`deno task boot serve`). */
 export interface ServeOptions {
+  /** The HTTP port the boot server listens on (GRUB, the installer and the servers reach it). */
   port: number;
   /** Proxy the installer and first boot should use (sites behind one; optional). */
   proxy?: string;

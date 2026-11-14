@@ -9,6 +9,11 @@ import type { FileDef, FleetDef, HostDef, HostPlan, SpecId } from "./types.ts";
 import { type SiteDef, siteNetwork } from "./site.ts";
 import { usersFor } from "./load.ts";
 
+/**
+ * A host's plan: its users, then every capability's packages, units, files,
+ * ports, tools, apt repositories, checks, routes and notes merged, then the
+ * derived files. Throws on conflicting definitions of the same item.
+ */
 export function resolvePlan(host: HostDef, fleet: FleetDef): HostPlan {
   const users = usersFor(fleet, host);
   const plan: HostPlan = {

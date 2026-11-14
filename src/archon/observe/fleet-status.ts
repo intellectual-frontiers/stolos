@@ -29,6 +29,10 @@ interface Installed {
   problems?: Array<{ message: string }>;
 }
 
+/**
+ * `archon fleet status`: print each host's last install and verify (asked
+ * live, or from the cache), its data class, and its next steps. Returns 0.
+ */
 export async function fleetStatus(): Promise<number> {
   const fleet = await loadFleet();
   const hosts = await loadHosts();

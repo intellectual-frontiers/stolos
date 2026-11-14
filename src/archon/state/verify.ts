@@ -92,7 +92,7 @@ export async function recordVerify(
 }
 
 /** Checks that count as failed (warning-level checks never do). */
-export const failedChecks = (checks: Check[]) =>
+export const failedChecks = (checks: Check[]): Check[] =>
   checks.filter((c) => !c.ok && c.level !== "warn" && c.level !== "pending");
 
 /** archon verify: every check of the host's plan, each shown at its level. */

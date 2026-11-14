@@ -29,11 +29,17 @@ import { type MetricName, METRICS } from "../telemetry/signals.ts";
 import { type ArchonEvent, toLogsRequest } from "../telemetry/events.ts";
 import { redact } from "../notify/redact.ts";
 
-type Attrs = Record<string, string | number | boolean>;
-interface SpanContext {
+/** Span or metric attributes: OpenTelemetry's flat key to value map. */
+export type Attrs = Record<string, string | number | boolean>;
+/** A span's identity, as a W3C traceparent carries it. */
+export interface SpanContext {
+  /** The trace ID: 32 lowercase hex digits, not all zero. */
   traceId: string;
+  /** The parent span's ID: 16 lowercase hex digits, not all zero. */
   spanId: string;
+  /** Trace flags (bit 0: sampled). */
   traceFlags: number;
+  /** True when the context came from another process. */
   isRemote?: boolean;
 }
 interface Span {

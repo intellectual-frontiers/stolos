@@ -81,9 +81,8 @@ export function mainCf(fleet: FleetDef, host: HostDef): string {
   ].join("\n");
 }
 
-/** This host's mail domain: <host>.<domain>, onboarded for Email Sending in Cloudflare. */
 /** This host's internal mail name (myhostname, myorigin): alpha.lab.example.net. Never a sender. */
-export const hostMailName = (fleet: FleetDef, host: { name: string }) =>
+export const hostMailName = (fleet: FleetDef, host: { name: string }): string =>
   `${hostLabel(fleet.mail!, host.name)}.${fleet.mail!.domain}`;
 
 /**

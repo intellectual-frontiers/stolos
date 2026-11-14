@@ -21,13 +21,17 @@ import { newPassword, upsertSection } from "../pg/config.ts";
 import { S3 } from "../containers/catalog.ts";
 import type { Sink } from "../pg/converge.ts";
 
+/** Where S3's credentials live, and the names Archon uses with it. */
 export const S3_PATHS = {
+  /** The directory holding the admin credentials (0700). */
   dir: dirname(S3.secrets),
   /** The admin alias for rc inside the container (root only). */
   rcEnv: join(dirname(S3.secrets), "rc.env"),
   /** Each account's own secret, 0400 (P.keys: anyone may pass, nobody may list). */
   keys: "/var/lib/archon-keys/s3",
+  /** The admin's access key (user name). */
   admin: "archon-root",
+  /** rc's alias for the local server. */
   alias: "archon",
 } as const;
 
@@ -58,7 +62,8 @@ export function s3Policy(name: string): string {
   });
 }
 
-export const s3Name = (fleet: FleetDef, host: HostDef) => {
+/** The S3 API and console host names: s3.<fqdn> and s3-console.<fqdn>, else under the host name. */
+export const s3Name = (fleet: FleetDef, host: HostDef): { api: string; console: string } => {
   const n = fqdn(fleet, host);
   return { api: `s3.${n ?? host.name}`, console: `s3-console.${n ?? host.name}` };
 };

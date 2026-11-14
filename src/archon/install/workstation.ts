@@ -15,6 +15,7 @@ import { currentUser, isRoot, run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
 import { hostFile, loadFleet } from "../model/load.ts";
 
+/** The TypeScript source of a new workstation's host.ts (kind "workstation"). */
 export function workstationSource(o: { name: string; user: string; desktop?: boolean }): string {
   return `// Workstation ${o.name} (spec 020). Written by \`archon workstation add\`; edit
 // freely, then \`sudo archon update\`. Only the user-level parts apply here.
@@ -35,6 +36,12 @@ export const host: HostDef = {
 `;
 }
 
+/**
+ * `archon workstation add`: checks this machine (Linux, not root, the fleet's
+ * Ubuntu release, systemd, the /srv/archon checkout), writes the host model
+ * (kept unless `force`), then runs archon update through sudo. Returns the
+ * exit code: 1 when a check fails, else update's.
+ */
 export async function workstationAdd(
   o: { name?: string; user?: string; force?: boolean },
 ): Promise<number> {

@@ -38,6 +38,12 @@ function opts(args: string[], name: string): string[] {
   return out;
 }
 
+/**
+ * `deno task boot mail-setup`: explain the one-time Cloudflare setup, read the
+ * API token without echo, test it with an SMTP login (nothing is sent), store
+ * it in this PC's secrets, then run the doctor's email checks. Returns the exit
+ * code (1 on a missing mail setting, a bad token, or a failed check).
+ */
 export async function mailSetup(): Promise<number> {
   const fleet = await loadFleet();
   if (!fleet.mail) {
@@ -98,6 +104,11 @@ export async function mailSetup(): Promise<number> {
   return p.level === "fail" ? 1 : 0;
 }
 
+/**
+ * `deno task boot mail-push <host>`: give a running host the stored mail token
+ * over SSH (on stdin to `archon mail credential`). Returns ssh's exit code, 2
+ * for an unknown host, or 1 when no token is stored.
+ */
 export async function mailPush(name: string | undefined): Promise<number> {
   const fleet = await loadFleet();
   const hosts = await loadServers();

@@ -53,12 +53,20 @@ function bytesOf(repo: string, from: string): Promise<Uint8Array> {
 const same = (a: Uint8Array, b: Uint8Array) =>
   a.length === b.length && a.every((x, i) => x === b[i]);
 
+/** The outcome of syncComposed. */
 export interface SyncResult {
+  /** The composition the source was written from. */
   composition: Composition;
   /** Paths in the composed source that were (or would be) written or removed. */
   changed: string[];
 }
 
+/**
+ * Writes a user's composed chezmoi source (under `root` instead of
+ * /var/lib/archon-dotfiles when given), removing files no layer provides, then
+ * locks its ownership and modes down. With `check`, changes nothing and only
+ * reports what would change.
+ */
 export async function syncComposed(
   repo: string,
   host: string,

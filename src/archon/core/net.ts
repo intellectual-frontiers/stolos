@@ -4,6 +4,7 @@
  * @module
  */
 
+/** The boot server's default HTTP port. */
 export const BOOT_PORT = 8080;
 
 /** Virtual adapters (WSL, Hyper-V, containers, VPNs) come after real ones. */
@@ -12,7 +13,9 @@ const VIRTUAL =
 
 /** An address given with `boot serve --address`, used first everywhere. */
 let preferred: string | undefined;
-export function preferAddress(a: string | undefined) {
+
+/** Put `a` (from `boot serve --address`) first in every address list; undefined clears it. */
+export function preferAddress(a: string | undefined): void {
   preferred = a;
 }
 

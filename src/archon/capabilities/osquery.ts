@@ -27,7 +27,7 @@ export const OSQUERY = {
  * Flags for osqueryd (one per line, as osquery's flagfile reads them). The
  * package's unit passes the config path and the pidfile (/etc/default/osqueryd).
  */
-export const OSQUERY_FLAGS = [
+export const OSQUERY_FLAGS: string = [
   "--config_plugin=filesystem",
   "--logger_plugin=filesystem",
   `--logger_path=${OSQUERY.logs}`,

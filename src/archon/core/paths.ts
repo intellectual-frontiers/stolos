@@ -140,6 +140,7 @@ if (sandbox) {
   }
 }
 
+/** Where Archon's files live: the repository, the fleet, and this machine's caches and secrets. */
 export const P = {
   /** The instance repository (the checkout hosts converge to). */
   get repo(): string {
@@ -153,6 +154,7 @@ export const P = {
   get fleetDir(): string {
     return fleetDir();
   },
+  /** fleets/<id>/fleet.ts, the fleet's model. */
   get fleet(): string {
     return join(fleetDir(), "fleet.ts");
   },

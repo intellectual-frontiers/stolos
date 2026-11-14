@@ -113,7 +113,9 @@ export async function drift(host: HostDef, s: Snapshot): Promise<Drift> {
 }
 
 /** archon capture: show the snapshot and the drift (read-only). */
-export async function capture(host: HostDef) {
+export async function capture(
+  host: HostDef,
+): Promise<{ snapshot: Snapshot; drift: Drift; summary: string }> {
   const s = await snapshot(host);
   const d = await drift(host, s);
   const summary = [

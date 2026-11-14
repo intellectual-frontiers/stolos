@@ -21,7 +21,7 @@ import { ensureDir } from "../archon/core/fsx.ts";
 import { P } from "../archon/core/paths.ts";
 
 /** Where the boot server keeps its telemetry. */
-export const TELEMETRY_DIR = join(P.bootCache, "telemetry");
+export const TELEMETRY_DIR: string = join(P.bootCache, "telemetry");
 /** Its own OTLP receiver (loopback). */
 export const SINK = { hostname: "127.0.0.1", port: 4319 };
 const KEEP_DAYS = 30;
@@ -48,7 +48,7 @@ async function prune(dir: string, keepDays = KEEP_DAYS, keepBytes = KEEP_BYTES) 
 }
 
 /** Where the fleet's servers' telemetry lands when the boot PC is their collector (spec 049). */
-export const FLEET_TELEMETRY_DIR = join(TELEMETRY_DIR, "fleet");
+export const FLEET_TELEMETRY_DIR: string = join(TELEMETRY_DIR, "fleet");
 /** The fleet collector is ephemeral: a week, 512 MB at most. */
 export const FLEET_KEEP = { days: 7, bytes: 512 * 1024 * 1024 };
 /** Under the boot server's HTTP port, which the servers already reach (spec 049). */
@@ -142,7 +142,8 @@ export async function startSink(dir = TELEMETRY_DIR): Promise<void> {
 
 // ------------------------------------------------------- instrumentation
 
-type Attrs = Record<string, string | number | boolean>;
+/** Span or metric attributes: OpenTelemetry's flat key to value map. */
+export type Attrs = Record<string, string | number | boolean>;
 interface Span {
   setAttribute(k: string, v: string | number | boolean): void;
   setStatus(s: { code: number }): void;

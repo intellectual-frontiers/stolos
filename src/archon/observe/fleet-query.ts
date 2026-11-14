@@ -12,6 +12,11 @@ import { P } from "../core/paths.ts";
 import { callRemoteTool } from "./remote.ts";
 import { queryRefusal, table } from "../state/query.ts";
 
+/**
+ * Ask every server `sql` (refused unless it is a read-only query) and print
+ * the rows, each with its host, as a table or, with `json`, as JSON with the
+ * unreachable servers. Returns 1 when any server did not answer, else 0.
+ */
 export async function fleetQuery(sql: string, json: boolean): Promise<number> {
   const why = queryRefusal(sql);
   if (why) throw new Error(`refused: ${why}`);

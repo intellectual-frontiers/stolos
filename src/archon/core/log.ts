@@ -12,6 +12,11 @@
 import { run } from "./exec.ts";
 import { ui } from "./ui.ts";
 
+/**
+ * The logger the engine uses: `step` starts a phase, `info` notes, `ok`,
+ * `change` and `skip` are counted, `warn` and `error` (with an optional fix)
+ * are always shown. A skip that mentions "disruptive" becomes a deferral.
+ */
 export const log = {
   info: (msg: string) => ui.active().note(msg),
   step: (msg: string) => ui.phase(msg),
@@ -22,6 +27,11 @@ export const log = {
   error: (msg: string, fix?: string) => ui.active().fail(msg, fix),
 };
 
-export async function journal(tag: string, message: string, priority = "user.info") {
+/** Write `message` to the systemd journal with logger(1), tagged `tag` at syslog `priority`. */
+export async function journal(
+  tag: string,
+  message: string,
+  priority = "user.info",
+): Promise<void> {
   await run(["logger", "-t", tag, "-p", priority, message]);
 }

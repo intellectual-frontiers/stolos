@@ -37,6 +37,11 @@ function match(p: FirewallPolicy): string {
   return `${proto}${ports}${p.ipVersion === "ipv4" ? ", IPv4" : ""}`;
 }
 
+/**
+ * The network reference as one HTML page, from the site model and its hosts.
+ * `commit` names the commit it was built at; `problems` are listed in their
+ * own section.
+ */
 export function renderNetworkDoc(
   site: SiteDef,
   hosts: HostDef[],

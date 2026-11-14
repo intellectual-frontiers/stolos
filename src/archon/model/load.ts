@@ -29,7 +29,9 @@ export function mcpAuthorizedKeys(fleet: FleetDef): string[] {
   return keys.map((k) => `restrict,command="${command}" ${k.trim()}`);
 }
 
+/** No active fleet: none chosen, or fleets/<id>/fleet.ts is missing. The message says how to make one. */
 export class NoFleetError extends Error {
+  /** Build the error, naming the fleet ID when one was chosen. */
   constructor() {
     super(
       P.fleetId
@@ -39,6 +41,10 @@ export class NoFleetError extends Error {
   }
 }
 
+/**
+ * Import the active fleet's fleet.ts, with its signers (spec 047). Throws
+ * NoFleetError when there is none, or when its id does not match its folder.
+ */
 export async function loadFleet(): Promise<FleetDef> {
   if (!(await exists(P.fleet))) throw new NoFleetError();
   const mod = await import(toFileUrl(P.fleet).href);
@@ -53,6 +59,12 @@ export async function loadFleet(): Promise<FleetDef> {
   return fleet;
 }
 
+/**
+ * Import every host (servers and workstations) sorted by name, each with what
+ * this machine records about it: its registration and MAC (spec 051), its
+ * PostgreSQL state (spec 038), and its opt-ins (decisions in Git win, spec 047).
+ * Folders starting with `_` are skipped.
+ */
 export async function loadHosts(): Promise<HostDef[]> {
   const hosts: HostDef[] = [];
   if (!(await exists(P.hosts))) return hosts;
@@ -123,7 +135,8 @@ export async function readOptIns(
   return out;
 }
 
-export const isWorkstation = (h: HostDef) => h.kind === "workstation";
+/** True for a workstation (spec 020); the boot server never installs one. */
+export const isWorkstation = (h: HostDef): boolean => h.kind === "workstation";
 
 /** Hosts the boot server installs (workstations are never installed over the network). */
 export async function loadServers(): Promise<HostDef[]> {
@@ -176,6 +189,7 @@ export function usersFor(fleet: FleetDef, host: HostDef): UserDef[] {
   ];
 }
 
+/** An account's home directory: /root for root, /home/<name> otherwise. */
 export function homeOf(u: { name: string }): string {
   return u.name === "root" ? "/root" : `/home/${u.name}`;
 }

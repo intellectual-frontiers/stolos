@@ -43,6 +43,11 @@ export function subject(s: string, pairs: Array<[string, string | string[]]>): s
   return `${s}\n${body} .\n`;
 }
 
+/**
+ * Write the fleet as RDF Turtle into out/rdf/: fleet.ttl (people, hosts,
+ * specs, and what was applied), plus site.ttl when the fleet has a site.
+ * Returns the paths written.
+ */
 export async function exportRdf(): Promise<string[]> {
   const fleet = await loadFleet();
   const hosts = await loadHosts();

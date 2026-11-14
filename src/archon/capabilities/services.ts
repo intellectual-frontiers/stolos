@@ -14,7 +14,7 @@ const SPEC = "039-pg-identity" as const;
 /** sysusers.d lines for the fleet's service accounts. */
 export const serviceAccountsConf = (
   services: Array<{ name: string; uid: number; description: string }>,
-) =>
+): string =>
   header(SPEC) +
   services.map((s) =>
     `u ${s.name} ${s.uid} "${

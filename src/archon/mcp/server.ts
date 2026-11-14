@@ -21,6 +21,7 @@ import type { McpTier } from "../model/types.ts";
 
 const PROTOCOL = "2025-06-18";
 
+/** The MCP tool name of a command: `archon_` and its words joined by underscores (`archon_backup_run`). */
 export function mcpToolName(c: Command): string {
   return `archon_${c.name.replace(/ /g, "_")}`;
 }
@@ -45,7 +46,36 @@ export function allowed(c: Command, args: Record<string, unknown>, limit: McpTie
   return !c.noMcp && RANK[effectiveTier(c, args as Parsed)] <= RANK[limit];
 }
 
-export function toolFor(c: Command) {
+/** An MCP tool definition, as `tools/list` returns it. */
+export interface McpTool {
+  /** The tool's name (see mcpToolName). */
+  name: string;
+  /** A human title: `archon <command>`. */
+  title: string;
+  /** The summary, the description's first paragraph, the tier and the man page. */
+  description: string;
+  /** JSON Schema for the arguments: the command's own and `host`, without person-only ones. */
+  inputSchema: {
+    /** Always "object". */
+    type: "object";
+    /** One JSON Schema per argument (type, description, default). */
+    properties: Record<string, unknown>;
+    /** Names of the required arguments. */
+    required: string[];
+  };
+  /** MCP hints for clients. */
+  annotations: {
+    /** True for read-tier commands. */
+    readOnlyHint: boolean;
+    /** True for destructive-tier commands (never served). */
+    destructiveHint: boolean;
+    /** True for read-tier commands and apply. */
+    idempotentHint: boolean;
+  };
+}
+
+/** The MCP tool definition for a registry command. Arguments only a person types (Article 23) are left out. */
+export function toolFor(c: Command): McpTool {
   const properties: Record<string, unknown> = {};
   const required: string[] = [];
   for (const a of [...c.args, ...GLOBAL_ARGS.filter((g) => g.name === "host")]) {
@@ -217,13 +247,22 @@ async function callTool(
   return { content: [{ type: "text", text: text || `(exit ${r.code})` }], isError: r.code !== 0 };
 }
 
-type Msg = {
+/** One JSON-RPC 2.0 message from the client: a request (with `id`) or a notification. */
+export type Msg = {
+  /** Always "2.0". */
   jsonrpc: "2.0";
+  /** The request ID to answer with; absent on notifications. */
   id?: number | string;
+  /** The method, such as "tools/call". */
   method?: string;
+  /** The method's parameters. */
   params?: Record<string, unknown>;
 };
 
+/**
+ * Answer one JSON-RPC message, serving tools up to `limit`: the JSON-RPC
+ * response, or undefined for notifications (nothing to send).
+ */
 export async function handle(msg: Msg, limit: McpTier = "mutate"): Promise<unknown | undefined> {
   const reply = (result: unknown) => ({ jsonrpc: "2.0", id: msg.id, result });
   const error = (code: number, message: string) => ({
@@ -274,7 +313,12 @@ export async function handle(msg: Msg, limit: McpTier = "mutate"): Promise<unkno
   }
 }
 
-export async function serveMcp(maxTier?: string) {
+/**
+ * `archon mcp`: read newline-delimited JSON-RPC from stdin and write each
+ * response to stdout until stdin closes. `maxTier` is the --max-tier value
+ * (default mutate); an invalid one throws.
+ */
+export async function serveMcp(maxTier?: string): Promise<void> {
   const limit = parseTier(maxTier);
   const dec = new TextDecoder();
   const enc = new TextEncoder();

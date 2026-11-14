@@ -11,6 +11,7 @@ import { resolvePlan } from "../model/resolve.ts";
 import { fqdn } from "../web/config.ts";
 import { agentSetup, agentSteps, CATEGORIES, type Category, guideFor } from "./guide.ts";
 
+/** Prints the guide for a host in the model: what is on it and how to use it. Returns 0. */
 export async function guide(hostName: string): Promise<number> {
   const fleet = await loadFleet();
   const host = (await loadHosts()).find((h) => h.name === hostName);

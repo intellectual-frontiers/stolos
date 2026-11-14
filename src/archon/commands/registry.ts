@@ -19,6 +19,7 @@ async function requireHost(name: string): Promise<HostDef> {
   return h;
 }
 
+/** Every archon command, in help order: the single source for the CLI, MCP tools, man pages, and completions. */
 export const COMMANDS: Command[] = [
   {
     name: "validate",
@@ -2096,6 +2097,10 @@ On a server, workstations reach it as ops over SSH (spec 030): ops' authorized_k
   },
 ];
 
+/**
+ * Finds the command named by the leading words of argv (the longest matching
+ * name wins) and returns it with the remaining arguments, or undefined.
+ */
 export function findCommand(argv: string[]): { cmd: Command; rest: string[] } | undefined {
   // The longest name first: "fs smb status" before "fs smb", before "fs".
   const longest = Math.max(...COMMANDS.map((c) => c.name.split(" ").length));

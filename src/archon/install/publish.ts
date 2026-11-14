@@ -19,11 +19,6 @@ const last = (r: { stderr: string; stdout: string }) =>
   (r.stderr || r.stdout).trim().split("\n").pop() ?? "";
 
 /**
- * Build, then commit `paths` (and the rendered files) with `message`, and push
- * to the checkout's upstream, retrying a push that lost a race by rebasing.
- * Returns whether the change is on GitHub.
- */
-/**
  * Git's author when this checkout has none configured (a fresh boot machine):
  * the fleet admin's GitHub name and no-reply address, from the model.
  */
@@ -43,6 +38,11 @@ async function identity(
   return who ? ["-c", `user.name=${who.name}`, "-c", `user.email=${who.email}`] : [];
 }
 
+/**
+ * Build, then commit `paths` (and the rendered files) with `message`, and push
+ * to the checkout's upstream, retrying a push that lost a race by rebasing.
+ * Returns whether the change is on GitHub.
+ */
 export async function publishChange(
   paths: string[],
   message: string,

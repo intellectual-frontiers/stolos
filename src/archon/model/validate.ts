@@ -9,9 +9,13 @@
 import type { FleetDef, HostDef, HostPlan } from "./types.ts";
 import { validateSite } from "./site.ts";
 
+/** One thing wrong with the model. */
 export interface Problem {
+  /** Where it is: a fleet path (`fleet.admin.user`) or a host (`hosts/<name>`). */
   where: string;
+  /** What is wrong. */
   message: string;
+  /** How to fix it. */
   fix: string;
 }
 
@@ -34,11 +38,13 @@ const SECRET_PATTERNS: Array<[RegExp, string]> = [
   [/\$(6|y|2[aby]|gy)\$[^\s:]{8,}/, "a password hash"],
 ];
 
+/** What kind of secret `text` seems to contain ("a private key", "a GitHub token"), or undefined. */
 export function findSecret(text: string): string | undefined {
   for (const [re, what] of SECRET_PATTERNS) if (re.test(text)) return what;
   return undefined;
 }
 
+/** Check the fleet and its hosts (names, keys, settings, the site, and no secrets in the model). Empty when valid. */
 export function validateFleet(fleet: FleetDef, hosts: HostDef[]): Problem[] {
   const p: Problem[] = [];
   const add = (where: string, message: string, fix: string) => p.push({ where, message, fix });
@@ -366,6 +372,11 @@ export function validateFleet(fleet: FleetDef, hosts: HostDef[]): Problem[] {
   return p;
 }
 
+/**
+ * Check a host's resolved plan: every spec it uses exists in `knownSpecs`, and
+ * its files, ports, units and tools are well formed and carry no secret.
+ * Empty when valid.
+ */
 export function validatePlan(plan: HostPlan, knownSpecs: Set<string>): Problem[] {
   const p: Problem[] = [];
   const w = `hosts/${plan.host.name}`;

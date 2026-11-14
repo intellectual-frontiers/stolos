@@ -8,8 +8,10 @@
  * @module
  */
 
+/** The pinned key's fingerprint. */
 export const GITHUB_CLI_KEY_FINGERPRINT = "7F38BBB59D064DBCB3D84D725612B36462313325";
 
+/** GitHub CLI's apt signing key (ASCII-armored). */
 export const GITHUB_CLI_KEY = `-----BEGIN PGP PUBLIC KEY BLOCK-----
 
 mQINBGnU4fgBEADKojfVZQ7H4KY0JLAT5rvRsB7toAsacUzUi/feD9JdEGQb5g18

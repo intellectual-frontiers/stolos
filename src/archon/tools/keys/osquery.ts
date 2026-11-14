@@ -7,8 +7,10 @@
  * @module
  */
 
+/** The pinned key's fingerprint. */
 export const OSQUERY_KEY_FINGERPRINT = "1484120AC4E9F8A1A577AEEE97A80C63C9D8B80B";
 
+/** osquery's apt signing key (ASCII-armored). */
 export const OSQUERY_KEY = `-----BEGIN PGP PUBLIC KEY BLOCK-----
 Version: Hockeypuck 2.2
 

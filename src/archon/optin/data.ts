@@ -88,6 +88,10 @@ async function host(hostName: string) {
   return h;
 }
 
+/**
+ * `archon data`: shows whether a host is durable or ephemeral and why (as JSON
+ * with `json`). Returns 1 while any opt-in's data is still unchosen, else 0.
+ */
 export async function dataShow(hostName: string, json: boolean): Promise<number> {
   const h = await host(hostName);
   const d = hostData(h, await dataOnDisk());
@@ -118,6 +122,11 @@ export async function dataShow(hostName: string, json: boolean): Promise<number>
   return d.unchosen.length ? 1 : 0;
 }
 
+/**
+ * `archon data set`: records one opt-in's data class in the host's state,
+ * re-renders its files, and notifies. Calling durable data ephemeral needs
+ * `confirm` (--confirm-destroy <host>). Returns 1 when the apply failed.
+ */
 export async function dataSet(
   hostName: string,
   name: string,

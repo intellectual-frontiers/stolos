@@ -13,7 +13,15 @@ import { journal } from "../core/log.ts";
 import { capture } from "../state/capture.ts";
 import type { HostDef } from "../model/types.ts";
 
-export async function dailyReport(host: HostDef) {
+/**
+ * Writes today's daily report (failed units, disk, pending upgrades, archon
+ * timers, drift, the latest tools report) as daily-<date>.md and journals a
+ * one-line summary. Returns its path, the failed unit count, and the pending
+ * upgrade count.
+ */
+export async function dailyReport(
+  host: HostDef,
+): Promise<{ path: string; failedUnits: number; upgradable: number }> {
   const date = new Date().toISOString().slice(0, 10);
   const failed = (await run(["systemctl", "--failed", "--no-legend", "--plain", "--no-pager"]))
     .stdout.trim();

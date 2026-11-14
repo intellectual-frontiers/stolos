@@ -43,7 +43,7 @@ export function retireRefusal(
 }
 
 /** The DNS names a server publishes (spec 032). */
-export const publishedNames = (host: string, domain: string) => [
+export const publishedNames = (host: string, domain: string): string[] => [
   `${host}.${domain}`,
   `*.${host}.${domain}`,
 ];
@@ -74,11 +74,17 @@ async function askData(target: string): Promise<string | undefined> {
   }
 }
 
+/**
+ * `deno task boot retire <host> --confirm-destroy <host>`: remove a server
+ * from the fleet in the steps the module describes. `push` false leaves the
+ * commit for the owner to push (--no-push). Returns the exit code (2 for an
+ * unknown host).
+ */
 export async function retire(
   name: string | undefined,
   confirm: string | undefined,
   push = true,
-) {
+): Promise<number> {
   const hosts = await loadServers();
   const host = hosts.find((h) => h.name === name);
   if (name && !host && push && await removedButCommitted(name)) {

@@ -6,12 +6,18 @@
  * @module
  */
 
+/** The local clock compared with a web server's Date header. */
 export interface ClockCheck {
   /** Seconds the local clock is ahead (positive) or behind (negative). */
   skew: number;
+  /** The URL whose Date header was compared. */
   source: string;
 }
 
+/**
+ * Compare the local clock with `source`'s HTTP Date header (one HEAD request,
+ * 5 second timeout). Undefined when the server cannot be reached or sends no Date.
+ */
 export async function checkClock(
   source = "https://deb.debian.org/debian/",
 ): Promise<ClockCheck | undefined> {
@@ -26,6 +32,7 @@ export async function checkClock(
   }
 }
 
+/** A skew in seconds for people, rounded: "3m behind", "2h ahead", "0s ahead". */
 export function describeSkew(skew: number): string {
   const a = Math.abs(skew);
   const amount = a >= 3600

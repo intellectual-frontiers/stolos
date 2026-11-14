@@ -20,16 +20,25 @@ import { loadFleet } from "../model/load.ts";
 import type { FleetDef, HostDef } from "../model/types.ts";
 import { CORE_PCP_METRICS, OBSERVE } from "../capabilities/observability.ts";
 
+/** Where discovery writes its result. */
 export const CENTRAL = {
+  /** The second Collector config file: the forwarding to the central collector, or `{}`. */
   config: OBSERVE.centralConfig,
+  /** JSON: the endpoint and source last found (null when none) and when it was checked. */
   status: "/var/lib/archon/status/otel-central.json",
 };
 
 /** The collector's conventional name: a UniFi Local DNS record (Article 20). */
 export const DEFAULT_COLLECTOR_NAME = "otel.localdomain";
 
+/** A collector candidate: where it is and how it was found. */
 export interface Found {
+  /** Its OTLP/HTTP base URL (for example `http://otel.localdomain:4318`). */
   endpoint: string;
+  /**
+   * How it was found: the telemetry web UI on this server (spec 050), the
+   * fleet model's address, the DNS name, or the boot PC's boot server (spec 049).
+   */
   source: "local-ui" | "model" | "dns" | "boot";
 }
 
@@ -59,6 +68,10 @@ export async function acceptsOtlp(endpoint: string): Promise<boolean> {
   }
 }
 
+/**
+ * The collectors to try, in order: the web UI on this server when opted in,
+ * the model's collector, the DNS name when it resolves, then the boot server.
+ */
 export async function candidates(fleet: FleetDef, host: HostDef): Promise<Found[]> {
   const t = fleet.telemetry ?? {};
   const out: Found[] = [];
@@ -152,6 +165,12 @@ export function centralConfig(
     JSON.stringify(config, null, 2) + "\n";
 }
 
+/**
+ * `archon observe discover`: try each candidate, write the forwarding config
+ * for the first that answers (or `{}` for none) and restart the Collector when
+ * it changed, then record the result. With `check`, only report what would
+ * change. Returns 0.
+ */
 export async function discover(host: HostDef, check = false): Promise<number> {
   const p = ui.phase("Collector");
   const fleet = await loadFleet();

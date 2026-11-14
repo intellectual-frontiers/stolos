@@ -16,6 +16,11 @@ import { loadFleet, loadServers } from "../archon/model/load.ts";
 import { zoneId } from "../archon/web/cloudflare.ts";
 import { zoneOf } from "../archon/web/config.ts";
 
+/**
+ * `deno task boot web-setup`: explain the one-time Cloudflare DNS token, read
+ * it without echo, check that it can see the fleet's zone, and store it in this
+ * PC's secrets. Returns the exit code (1 on a missing web setting or a bad token).
+ */
 export async function webSetup(): Promise<number> {
   const fleet = await loadFleet();
   if (!fleet.web) {
@@ -67,6 +72,11 @@ export async function webSetup(): Promise<number> {
   return 0;
 }
 
+/**
+ * `deno task boot web-push <host>`: give a running server the stored DNS token
+ * over SSH (on stdin to `archon web credential`). Returns ssh's exit code, 2
+ * for an unknown host, or 1 when no token is stored.
+ */
 export async function webPush(name: string | undefined): Promise<number> {
   const fleet = await loadFleet();
   const hosts = await loadServers();

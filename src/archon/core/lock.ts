@@ -8,14 +8,18 @@
  * @module
  */
 
+/** The host lock file (an advisory lock; the holder's details sit beside it in `<path>.holder`). */
 export const LOCK_PATH = "/run/archon.lock";
 
 /** Who holds the lock (written by the holder, read by whoever waits). */
 export interface Holder {
+  /** The holder's process ID. */
   pid: number;
+  /** The archon command it runs, without options ("reconcile", "update"). */
   command: string;
   /** ARCHON_AGENT: timer, reconciler, mcp, or the person's own terminal. */
   agent?: string;
+  /** When it took the lock (ISO 8601). */
   since: string;
 }
 
@@ -48,7 +52,9 @@ export function describeHolder(h: Holder, now = Date.now()): string {
   return `archon ${h.command} (pid ${h.pid}, ${who}, running for ${age})`;
 }
 
+/** A taken host lock. */
 export interface Held {
+  /** Release the lock (also clears ARCHON_LOCK_HELD); safe to call twice. */
   release(): void;
 }
 

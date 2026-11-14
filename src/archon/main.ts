@@ -34,6 +34,7 @@ export async function ensureHome(): Promise<void> {
   Deno.env.set("HOME", home && home !== "/" ? home : isRoot() ? "/root" : "/");
 }
 
+/** This host's name in the model: /etc/archon/host, else the short hostname. */
 export async function localHostName(): Promise<string> {
   try {
     return (await Deno.readTextFile("/etc/archon/host")).trim();
@@ -72,6 +73,7 @@ function globals(argv: string[]) {
   return { rest, g };
 }
 
+/** The archon CLI: parses global options, finds the command, and runs it. Returns the exit code. */
 export async function main(argv: string[]): Promise<number> {
   await ensureHome();
   // Spec 053: no arguments is "where am I, and what next".

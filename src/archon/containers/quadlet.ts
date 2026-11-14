@@ -8,6 +8,7 @@
 
 import type { ContainerDef } from "./catalog.ts";
 
+/** Renders a container's Podman Quadlet (.container) file. */
 export function quadlet(c: ContainerDef): string {
   return [
     `# Rendered by archon from specs 040-opt-in and ${c.spec}. Do not edit.`,

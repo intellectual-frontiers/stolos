@@ -8,6 +8,7 @@
 
 import type { FleetDef, ProvidersDef } from "./types.ts";
 
+/** The providers a fleet gets when it names none: Cloudflare for DNS and mail, Let's Encrypt for certificates. */
 export const DEFAULT_PROVIDERS: ProvidersDef = {
   dns: "cloudflare",
   mail: "cloudflare",

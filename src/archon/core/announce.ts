@@ -10,6 +10,11 @@
 
 import type { ArchonEvent } from "../telemetry/events.ts";
 
+/**
+ * POST `event` to the boot server on loopback (`port`, default
+ * ARCHON_BOOT_PORT or 8080), waiting at most 1.5 seconds. Returns whether the
+ * server accepted it; false when none is running.
+ */
 export async function announce(
   event: Pick<ArchonEvent, "name" | "host" | "message" | "attrs">,
   port = Number(Deno.env.get("ARCHON_BOOT_PORT")) || 8080,

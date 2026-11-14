@@ -15,7 +15,9 @@ import { Buffer } from "node:buffer";
 
 const RRQ = 1, DATA = 3, ACK = 4, ERROR = 5, OACK = 6;
 
+/** Options for the TFTP server. */
 export interface TftpOptions {
+  /** The UDP port to listen on (69 is TFTP's standard port). */
   port: number;
   /** Read a file for a client: bytes, or undefined when there is none. */
   read: (path: string, from: string) => Promise<Uint8Array | undefined>;
@@ -27,6 +29,10 @@ function errorPacket(code: number, msg: string): Buffer {
   return Buffer.concat([Buffer.from([0, ERROR, 0, code]), Buffer.from(msg + "\0")]);
 }
 
+/**
+ * Parse a TFTP read request (RRQ): the file, the transfer mode (lowercased)
+ * and the options (names lowercased). Undefined for anything else.
+ */
 export function parseRequest(
   msg: Uint8Array,
 ): { file: string; mode: string; opts: Record<string, string> } | undefined {
@@ -42,7 +48,19 @@ export function parseRequest(
 }
 
 /** Negotiate options: what we accept, as sent back in the OACK. */
-export function negotiate(opts: Record<string, string>, size: number) {
+export function negotiate(
+  opts: Record<string, string>,
+  size: number,
+): {
+  /** The accepted options, to send back in the OACK (empty when none were asked). */
+  out: Record<string, string>;
+  /** Bytes per DATA block: 512 unless asked, clamped to 8..1468. */
+  blksize: number;
+  /** Retransmit timeout in seconds: 1 unless asked, clamped to 1..255. */
+  timeout: number;
+  /** Blocks sent before waiting for an ACK: 1 unless asked, clamped to 1..64. */
+  window: number;
+} {
   const out: Record<string, string> = {};
   let blksize = 512, timeout = 1, window = 1;
   if (opts.blksize) {
@@ -141,6 +159,11 @@ async function transfer(
   }
 }
 
+/**
+ * Serve TFTP reads on `o.port` (all IPv4 addresses). Resolves once bound, with
+ * a `close` to stop it; rejects with a plain explanation when the port is in
+ * use or needs privileges.
+ */
 export function serveTftp(o: TftpOptions): Promise<{ close: () => void }> {
   const sock = dgram.createSocket("udp4");
   sock.on("message", async (m: Buffer, r: { address: string; port: number }) => {

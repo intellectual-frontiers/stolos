@@ -10,14 +10,21 @@ import type { FleetDef, HostDef, UserDef } from "../model/types.ts";
 import { LOCAL_NETWORKS, localNetworks } from "../capabilities/ssh.ts";
 import { fqdn } from "../web/config.ts";
 
+/** Samba's paths, group, and unit as Archon uses them (spec 037). */
 export const SMB = {
+  /** Samba's configuration file. */
   conf: "/etc/samba/smb.conf",
+  /** The root of the SMB data. */
   root: "/srv/smb",
+  /** The share for everyone with an account. */
   shared: "/srv/smb/shared",
+  /** The group that owns the shared folder. */
   group: "smb-shared",
+  /** Samba's service. */
   unit: "smbd.service",
   /** The operator's switch: the host's own archon.sql (opt-in smb). */
   switch: "smb",
+  /** Samba's private directory (its password database). */
   privateDir: "/var/lib/samba/private",
 } as const;
 
@@ -36,6 +43,7 @@ export function smbName(fleet: FleetDef, host: HostDef): string {
   return n ? `smb.${n}` : host.name;
 }
 
+/** The rendered smb.conf: SMB3 only, no guests, no NetBIOS, local networks only, the shared folder and homes. */
 export function smbConf(fleet: FleetDef, host: HostDef, users: UserDef[]): string {
   const nets = localNetworks(fleet);
   const allow = [...(nets.length ? nets : LOCAL_NETWORKS), "127.0.0.1", "::1"];

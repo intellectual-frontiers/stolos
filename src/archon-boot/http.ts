@@ -8,6 +8,7 @@
  * @module
  */
 
+/** Answers one request; `from` is the client's address. */
 export type Handler = (req: Request, from: string) => Promise<Response>;
 
 const CANON: Record<string, string> = {
@@ -132,6 +133,10 @@ async function serveConn(conn: Deno.Conn, handler: Handler, port: number) {
   }
 }
 
+/**
+ * Listen on `port` on every IPv4 address and serve each connection with
+ * `handler` in the background. Returns the listener so the caller can close it.
+ */
 export function listen(port: number, handler: Handler): Deno.Listener {
   const listener = Deno.listen({ port, hostname: "0.0.0.0" });
   (async () => {

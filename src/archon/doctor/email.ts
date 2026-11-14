@@ -52,6 +52,7 @@ export function missingRecords(
   return missing;
 }
 
+/** Looks up a sending domain's SPF, DKIM, DMARC, and bounce MX in DNS and returns the ones missing. */
 export async function domainRecords(domain: string): Promise<string[]> {
   const [spf, dkim, dmarc, mxs] = await Promise.all([
     txt(`cf-bounce.${domain}`),
@@ -62,6 +63,12 @@ export async function domainRecords(domain: string): Promise<string[]> {
   return missingRecords(domain, { spf, dkim, dmarc, mx: mxs });
 }
 
+/**
+ * The Email phase of archon doctor: the sending domain's records, a login to
+ * the relay with its credential (`fixCredential` is the fix shown when it is
+ * missing or refused), and on servers Postfix. With `send`, also mails the
+ * findings. Reports into `phase`; does nothing when the site has no mail.
+ */
 export async function emailChecks(
   site: Site | undefined,
   phase: Phase,

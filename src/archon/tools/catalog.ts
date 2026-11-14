@@ -17,6 +17,7 @@ const SPEC = "010-tools" as const;
 const x86 = () => "x86_64";
 const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
+/** Every tool Archon installs, with where it comes from and how it is verified. */
 export const TOOLS: ToolDef[] = [
   {
     // The fish developers' own PPA (fish-shell/release-4) carries every 4.x release.
@@ -422,6 +423,7 @@ export const TOOLS: ToolDef[] = [
   },
 ];
 
+/** Where an upstream binary tool installs (/opt/tools/<id>); undefined for apt-installed tools. */
 export function installPathFor(t: ToolDef): string | undefined {
   return t.source === "upstream-binary" ? `/opt/tools/${t.id}` : undefined;
 }

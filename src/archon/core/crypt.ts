@@ -26,11 +26,17 @@ function repeatTo(src: Uint8Array, n: number): Uint8Array {
   return out;
 }
 
+/** A random salt of `len` characters from crypt's base-64 alphabet (`./0-9A-Za-z`). */
 export function randomSalt(len = 16): string {
   const bytes = crypto.getRandomValues(new Uint8Array(len));
   return Array.from(bytes, (b) => B64[b % 64]).join("");
 }
 
+/**
+ * Hash `password` as SHA-512 crypt: `$6$<salt>$<hash>`, with `rounds=<n>$`
+ * after `$6$` when `rounds` is not the default 5000. Only the first 16
+ * characters of `salt` are used (a random one by default).
+ */
 export async function sha512Crypt(
   password: string,
   salt = randomSalt(),

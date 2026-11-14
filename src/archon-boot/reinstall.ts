@@ -19,7 +19,7 @@ import { armHost, loadTokens, readSecret, SECRETS, writeSecret } from "../archon
 import { type AcmeCarry, deliverable, describeCarry } from "../archon/web/acme.ts";
 import { loadFleet, loadServers } from "../archon/model/load.ts";
 import { trustHost } from "../archon/install/host-keys.ts";
-import { describeData, hostData } from "../archon/model/durable.ts";
+import { describeData, type HostData, hostData } from "../archon/model/durable.ts";
 import type { HostDef } from "../archon/model/types.ts";
 
 const SSH_OPTS = ["-o", "BatchMode=yes", "-o", "ConnectTimeout=10"];
@@ -181,7 +181,9 @@ export function destroyRefusal(
 }
 
 /** The class the repository's records give (no SSH): for arming a host that may not answer. */
-export function recordedData(host: HostDef | undefined) {
+export function recordedData(
+  host: HostDef | undefined,
+): Pick<HostData, "class" | "reasons"> | undefined {
   if (!host) return undefined;
   const d = hostData(host);
   return { class: d.class, reasons: d.reasons };
@@ -189,6 +191,13 @@ export function recordedData(host: HostDef | undefined) {
 
 const KEY_CHANGED = /REMOTE HOST IDENTIFICATION HAS CHANGED|Host key verification failed/;
 
+/**
+ * `deno task boot reinstall <host>`: re-install a running host over the
+ * network in the steps the module describes. `port` is the boot server's HTTP
+ * port and `confirmDestroy` is the repeated name a durable host needs. `force`
+ * (--force) is accepted but not read here. Returns the exit code (2 for an
+ * unknown host).
+ */
 export async function reinstall(
   name: string | undefined,
   o: { force: boolean; port: number; confirmDestroy?: string },

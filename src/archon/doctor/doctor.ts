@@ -97,6 +97,12 @@ async function endpoints(fleet: FleetDef, host: HostDef): Promise<Endpoint[]> {
   return out;
 }
 
+/**
+ * `archon doctor`: runs each read-only phase (link, Internet, endpoints, email)
+ * and prints what it finds. With `trace`, adds a path trace to unreachable
+ * endpoints; with `send`, mails the email findings. Returns 0: the closing
+ * summary counts the problems.
+ */
 export async function doctor(
   host: HostDef,
   o: { trace: boolean; send?: string },

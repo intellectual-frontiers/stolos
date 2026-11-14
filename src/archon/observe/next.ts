@@ -10,13 +10,20 @@
 import type { FleetDef, HostDef } from "../model/types.ts";
 import { localNetworks } from "../capabilities/ssh.ts";
 
+/** What nextSteps needs to know about a host. */
 export interface NextOptions {
+  /** The host the steps are for. */
   host: HostDef;
+  /** Its fleet (admin account, web domain, local networks). */
   fleet: FleetDef;
   /** An address it is known by besides its name. */
   address?: string;
 }
 
+/**
+ * The "what now?" lines for a host, one per step, each a short label then the
+ * command or address: connect, Cockpit, observe, live, health, HTTPS, agent.
+ */
 export function nextSteps(o: NextOptions): string[] {
   const name = o.host.name;
   const addr = o.address && o.address !== name ? o.address : undefined;

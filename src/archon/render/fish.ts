@@ -8,6 +8,7 @@ import { type Command, GLOBAL_ARGS } from "../core/registry-types.ts";
 
 const q = (s: string) => `'${s.replace(/\\/g, "\\\\").replace(/'/g, "\\'")}'`;
 
+/** The fish completion script for archon, from the command registry. */
 export function renderFishCompletions(commands: Command[]): string {
   const L = [
     "# Rendered by archon from spec 010-archon-cli. Do not edit.",

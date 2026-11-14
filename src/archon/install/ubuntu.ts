@@ -5,4 +5,5 @@
  */
 export { UBUNTU } from "../../archon-boot/pins.ts";
 import { UBUNTU } from "../../archon-boot/pins.ts";
-export const UBUNTU_POINT = UBUNTU.point;
+/** The pinned Ubuntu point release, such as "26.04.1". */
+export const UBUNTU_POINT: string = UBUNTU.point;

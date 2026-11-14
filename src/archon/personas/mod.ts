@@ -7,6 +7,7 @@
 
 import type { Persona, PersonaId } from "../model/types.ts";
 
+/** Every persona by its id: its label, definition, implied personas, groups, and dotfile features. */
 export const PERSONAS: Record<PersonaId, Persona> = {
   standard: {
     id: "standard",
@@ -59,10 +60,12 @@ export function expandPersonas(ids: PersonaId[]): PersonaId[] {
   return out;
 }
 
+/** The sorted, deduplicated groups of these personas and every persona they imply. */
 export function groupsFor(ids: PersonaId[]): string[] {
   return [...new Set(expandPersonas(ids).flatMap((p) => PERSONAS[p].groups))].sort();
 }
 
+/** The dotfile features of these personas: a feature is on when any expanded persona turns it on. */
 export function featuresFor(ids: PersonaId[]): Persona["features"] {
   const f = { ...PERSONAS.standard.features };
   for (const p of expandPersonas(ids)) {

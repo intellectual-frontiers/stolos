@@ -8,8 +8,11 @@
 
 import { currentTraceparent, span } from "../core/telemetry.ts";
 
+/** A server's answer to one MCP tool call. */
 export interface RemoteResult {
+  /** True when the tool ran and did not report an error. */
   ok: boolean;
+  /** The tool's text output, or why the call failed (ssh's error, "no answer"). */
   text: string;
 }
 

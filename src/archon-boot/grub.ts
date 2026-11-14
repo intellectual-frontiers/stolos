@@ -33,6 +33,11 @@ function installEntry(host: HostDef, base: string, token: string): string {
 `;
 }
 
+/**
+ * The GRUB config for a known host: an unattended install entry when the host
+ * is armed (`token` set), otherwise a menu that boots the local disk.
+ * `base` is the boot server's URL, ending in a slash.
+ */
 export function hostMenu(host: HostDef, base: string, token: string | undefined): string {
   if (!token) {
     return `# ${host.name} is not armed for an install.

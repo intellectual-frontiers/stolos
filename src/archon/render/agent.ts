@@ -20,8 +20,9 @@ export interface McpServer {
 }
 
 /** The MCP server's name for a host of a fleet. */
-export const mcpServerName = (fleet: string, host: string) => `archon-${fleet}-${host}`;
+export const mcpServerName = (fleet: string, host: string): string => `archon-${fleet}-${host}`;
 
+/** The fleet's server hosts (workstations excluded) as MCP servers, reached as ops@ their DNS name, IP, or name. */
 export function mcpServers(hosts: HostDef[], fleet: string): McpServer[] {
   return hosts.filter((h) => h.kind !== "workstation").map((h) => ({
     name: mcpServerName(fleet, h.name),

@@ -13,6 +13,11 @@ import { ui } from "../core/ui.ts";
 import { composedDir } from "./layers.ts";
 import { composeFrom } from "./sync.ts";
 
+/**
+ * Prints which layer provides each of a user's dotfiles on a host, or with
+ * `path`, where that one file comes from. Returns 1 when the composition has
+ * problems, else 0.
+ */
 export async function dotfilesReport(
   host: string,
   user = currentUser(),

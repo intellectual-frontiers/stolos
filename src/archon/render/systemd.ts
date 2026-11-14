@@ -5,13 +5,17 @@
  * @module
  */
 
+/** One INI value: a boolean renders as yes/no, an array as one line per item, undefined is skipped. */
 export type Value = string | number | boolean | undefined | Array<string | number>;
+/** One INI section: its keys and values. */
 export type Section = Record<string, Value>;
 
+/** The "Rendered by archon" comment line naming the spec. */
 export function header(spec: string): string {
   return `# Rendered by archon from spec ${spec}. Do not edit: change the model in /srv/archon.\n`;
 }
 
+/** Renders INI sections (systemd style), with the header line first when `spec` is given. */
 export function ini(sections: Record<string, Section>, spec?: string): string {
   const out: string[] = [];
   if (spec) out.push(header(spec).trimEnd());
@@ -51,6 +55,7 @@ export function archonService(
   }, opts.spec);
 }
 
+/** A timer unit for timers.target: persistent, with a randomized delay (default 10min). */
 export function timer(
   opts: { description: string; onCalendar: string; spec: string; randomizedDelay?: string },
 ): string {

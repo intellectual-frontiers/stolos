@@ -87,11 +87,11 @@ export const CORE_PCP_METRICS = [
   "network.interface.out.errors",
 ];
 
-/** The local Collector: Archon's OTLP in, OTLP JSON files out (JSON is valid YAML). */
 /** Spec 050: with the telemetry web UI on, this server collects for the fleet. */
-export const collectsForFleet = (host: HostDef) => host.optIn?.["otel-ui"]?.enabled === true;
+export const collectsForFleet = (host: HostDef): boolean =>
+  host.optIn?.["otel-ui"]?.enabled === true;
 
-/** The OpenTelemetry Collector's configuration for this host. */
+/** The local Collector's configuration for this host: Archon's OTLP in, OTLP JSON files out (JSON is valid YAML). */
 export function collectorConfig(host: HostDef, fleet: FleetDef, o: ObservabilityDef): string {
   const pipeline = {
     receivers: ["otlp"],

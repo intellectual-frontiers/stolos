@@ -8,8 +8,10 @@
 
 import { readTextOr } from "../core/fsx.ts";
 
-export const BOOT_EVENTS = "/etc/archon/boot-events";
+/** The file holding the boot server's event URL, left by the install. */
+export const BOOT_EVENTS: string = "/etc/archon/boot-events";
 
+/** Posts a first-boot event (a phase, its level and summary) to the boot server; best effort, 5 s timeout. */
 export async function bootEvent(
   e: { phase: string; level?: string; summary?: string },
 ): Promise<void> {

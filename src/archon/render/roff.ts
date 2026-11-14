@@ -4,6 +4,7 @@
  * @module
  */
 
+/** Escapes text for roff: backslashes, hyphens, and a leading . or ' on any line. */
 export function esc(text: string): string {
   return text
     .replace(/\\/g, "\\e")
@@ -21,13 +22,14 @@ export function inline(text: string): string {
   return s;
 }
 
+/** The man page title line (.TH): name (upper-cased), section, date, source, and manual. */
 export function th(
   name: string,
   section: number | string,
   date: string,
   source = "Archon",
   manual = "Archon Manual",
-) {
+): string {
   return `.TH "${name.toUpperCase()}" "${section}" "${date}" "${source}" "${manual}"\n`;
 }
 
