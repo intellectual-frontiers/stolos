@@ -67,7 +67,7 @@ export async function removeSecret(path: string): Promise<void> {
 }
 
 /** Windows: this user only (no inherited access), the equivalent of 0600. */
-async function ownerOnly(path: string): Promise<void> {
+export async function ownerOnly(path: string): Promise<void> {
   const user = Deno.env.get("USERNAME");
   if (!user) return;
   await run(["icacls", path, "/inheritance:r", "/grant:r", `${user}:F`]).catch(() => {});

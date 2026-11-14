@@ -9,6 +9,7 @@
 import type { Capability } from "../model/types.ts";
 import { timedJob } from "./ops.ts";
 
+/** The reconcile timer (every 15 minutes) and the daily capture (specs 014, 015). */
 export const state = (): Capability => () => ({
   spec: "015-reconcile",
   units: [

@@ -21,6 +21,7 @@ import { fqdn, hostRoutes, traefikDynamic, traefikStatic, WEB } from "../web/con
 
 const SPEC = "032-web" as const;
 
+/** HTTPS from the first boot: Traefik, the welcome page, and Cloudflare DNS (spec 032). */
 export const web = (): Capability => ({ host, fleet }) => {
   const name = fqdn(fleet, host);
   const units: UnitDef[] = [

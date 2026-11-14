@@ -11,6 +11,7 @@ import type { Capability } from "../model/types.ts";
 import { hostData, SPEC } from "../model/durable.ts";
 import { dataMotd } from "../render/motd.ts";
 
+/** The server's data class (durable or ephemeral), where people see it (spec 044). */
 export const data = (): Capability => ({ host }) => {
   if (host.kind === "workstation") return { spec: SPEC };
   const d = hostData(host);

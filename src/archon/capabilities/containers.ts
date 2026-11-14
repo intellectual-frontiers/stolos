@@ -14,6 +14,7 @@ import { quadlet } from "../containers/quadlet.ts";
 
 const SPEC = "040-opt-in" as const;
 
+/** Opt-in containers (Podman Quadlet), off until an operator turns them on (spec 040). */
 export const containers = (): Capability => ({ host }) => {
   if (host.kind === "workstation") return { spec: SPEC };
   const files: FileDef[] = [];

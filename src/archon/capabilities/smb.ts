@@ -17,6 +17,7 @@ import { SMB, smbConf } from "../smb/config.ts";
 
 const SPEC = "037-smb" as const;
 
+/** File shares over SMB (Samba), off until an operator turns them on (spec 037). */
 export const smb = (): Capability => ({ fleet, host, users }) => {
   if (host.kind === "workstation") return { spec: SPEC };
   const on = host.optIn?.[SMB.switch]?.enabled === true;

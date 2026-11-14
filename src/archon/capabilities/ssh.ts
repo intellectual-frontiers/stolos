@@ -27,6 +27,7 @@ export function localNetworks(fleet: { ssh?: { passwordFrom?: string[] } }): str
   return fleet.ssh?.passwordFrom ?? LOCAL_NETWORKS;
 }
 
+/** sshd's drop-in: keys always, passwords only from these networks. */
 export function sshdConfig(passwordFrom: string[]): string {
   const lines = [
     "PermitRootLogin no",
@@ -47,6 +48,7 @@ export function sshdConfig(passwordFrom: string[]): string {
   return lines.join("\n") + "\n";
 }
 
+/** OpenSSH hardening (spec 007). */
 export const ssh = (): Capability => ({ fleet }) => ({
   spec: SPEC,
   packages: [{ name: "openssh-server", spec: SPEC }],

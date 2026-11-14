@@ -219,7 +219,7 @@ async function main(args: string[]): Promise<number> {
         "       deno task boot arm <host> --claim | --mac-address <mac> [--confirm-destroy <host>]\n" +
         "       deno task boot retire <host> --confirm-destroy <host> [--no-push]\n" +
         "       deno task boot status | doctor | observe [--last 5]\n" +
-        "       deno task boot vault status | backup | verify | restore | rehearse | list | prune | recover-host-keys <host>\n" +
+        "       deno task boot vault status | backup | restore | list | recover-host-keys <host>\n" +
         "       deno task boot mail-setup | mail-push <host> | web-setup | web-push <host>\n" +
         "       deno task boot notify --subject <s> ... | notify test | status",
     );

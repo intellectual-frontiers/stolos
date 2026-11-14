@@ -36,6 +36,7 @@ export function shellFiles(): FileDef[] {
 
 const SPEC = "012-cli-mcp" as const;
 
+/** /usr/local/bin/archon: runs the fleet repository's archon.ts, frozen. */
 export const LAUNCHER = `#!/bin/sh
 # Rendered by archon from spec ${SPEC}. Do not edit.
 # Spec 036: \`archon shell emit\` runs in every new shell, so it prints the
@@ -62,6 +63,7 @@ export OTEL_RESOURCE_ATTRIBUTES="\${OTEL_RESOURCE_ATTRIBUTES:+\$OTEL_RESOURCE_AT
 exec /usr/local/bin/deno run --allow-all --quiet --frozen --config /srv/archon/deno.json /srv/archon/archon.ts "$@"
 `;
 
+/** The archon command, its man pages, and its completions on every host (spec 012). */
 export const cli = (): Capability => ({ host, fleet }) => ({
   spec: SPEC,
   files: [

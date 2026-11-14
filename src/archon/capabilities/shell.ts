@@ -14,6 +14,7 @@ import { dotfilesMotd } from "../render/motd.ts";
 
 const SPEC = "011-shell" as const;
 
+/** chezmoi's configuration for a user (from their personas). */
 export function chezmoiConfig(u: UserDef, hostName: string, workstation = false): string {
   return JSON.stringify(
     {
@@ -44,6 +45,7 @@ export function chezmoiConfig(u: UserDef, hostName: string, workstation = false)
 /** Spec 031: the login banner reminds everyone how their dotfiles work. */
 export { dotfilesMotd };
 
+/** Dotfiles for every user, from the fleet's layers (spec 011). */
 export const shell = (): Capability => ({ host, users }) => ({
   spec: SPEC,
   files: [

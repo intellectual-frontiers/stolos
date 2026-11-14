@@ -205,5 +205,6 @@ SSH) and changes nothing. With it:
    committed. `--no-push` leaves it for you, and running the same command again later finishes it.
 
 Then remove alpha's local DNS record in the router and its line in `fleets/<fleet>/site.ts` (the
-router first, Article 21), and back up the vault. The machine itself is not touched: power it off,
-or install it as a new host with `deno task archon host add <name> --claim`.
+router first, Article 21), and back up again (`deno task boot vault backup`). The machine itself is
+not touched: power it off, or install it as a new host with
+`deno task archon host add <name> --claim`.

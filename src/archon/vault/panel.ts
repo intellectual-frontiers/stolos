@@ -49,16 +49,10 @@ export function panelLines(a: Assessment, pc: string, now = Date.now()): string[
   const secret = a.unbacked.filter((s) => !s.name.endsWith(".pub"));
   const pubs = a.unbacked.length - secret.length;
   const n = secret.length || a.unbacked.length;
-  const head = a.backupCheck?.state === "unverifiable" && a.lastBackup
-    ? `Your last backup (${ago(a.lastBackup.at, now)}) cannot be checked: ${a.backupCheck.why}.`
-    : a.lastBackup
-    ? `${n} secret${n === 1 ? " is" : "s are"} newer than your last vault backup (${
+  const head = a.lastBackup
+    ? `${n} secret${n === 1 ? " is" : "s are"} newer than your last backup (${
       ago(a.lastBackup.at, now)
     }):`
-    : a.backupCheck?.state === "missing"
-    ? `The recorded backup is gone (${a.backupCheck.why}); ${n} secret${
-      n === 1 ? " is" : "s are"
-    } not backed up:`
     : `${n} secret${n === 1 ? " has" : "s have"} never been backed up:`;
   const listed = secret.length ? secret : a.unbacked;
   const rows = listed.slice(0, 8).map((s) => [
@@ -82,11 +76,9 @@ export function panelLines(a: Assessment, pc: string, now = Date.now()): string[
       : []),
     "",
     `If ${pc} failed now, these would have to be recreated.`,
-    "Unlock OneDrive ▸ Personal Vault, then run:",
+    "Run this, then move the ZIP it makes somewhere safe:",
     "",
-    a.backupCheck?.state === "unverifiable"
-      ? "    deno task boot vault status   (or vault backup)"
-      : "    deno task boot vault backup",
+    "    deno task boot vault backup",
   ];
   const title = " 🔐  Secrets changed: back them up ";
   const inner = Math.max(...body.map(width), width(title) + 2) + 4;

@@ -14,12 +14,14 @@ import type { Capability } from "../model/types.ts";
 
 const SPEC = "039-pg-identity" as const;
 
+/** Where the password hook's files are. */
 export const PASSWORDS = {
   hook: "/usr/local/libexec/archon/password-sync",
   profile: "/usr/share/pam-configs/archon-passwords",
   profileName: "archon-passwords",
 } as const;
 
+/** The PAM hook: keeps Samba's and PostgreSQL's copies of a person's password in step with Linux. */
 export const PASSWORD_SYNC = `#!/bin/sh
 # Rendered by archon from specs 037-smb and 039-pg-identity. Do not edit.
 # Run by PAM (pam_exec expose_authtok) after a password was accepted (auth) or
@@ -60,6 +62,7 @@ Password:
 	optional pam_exec.so quiet seteuid expose_authtok ${PASSWORDS.hook}
 `;
 
+/** The password hook, for hosts with SMB or PostgreSQL (specs 037, 039). */
 export const passwords = (): Capability => ({ host }) => {
   if (host.kind === "workstation") return { spec: SPEC };
   const regenerate = {

@@ -8,6 +8,7 @@
 import type { Capability, UnitDef } from "../model/types.ts";
 import { archonService, timer } from "../render/systemd.ts";
 
+/** A job run by a systemd timer. */
 export type TimedJob = {
   name: string;
   description: string;
@@ -47,6 +48,7 @@ export function timedJob(j: TimedJob): UnitDef[] {
   ];
 }
 
+/** The daily report and its timer (spec 013). */
 export const ops = (): Capability => () => ({
   spec: "013-ops",
   units: timedJob({

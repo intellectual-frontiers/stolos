@@ -15,6 +15,7 @@ import type { Capability } from "../model/types.ts";
 
 const SPEC = "042-sql" as const;
 
+/** Where osquery's files are. */
 export const OSQUERY = {
   conf: "/etc/osquery/osquery.conf",
   flags: "/etc/osquery/osquery.flags",
@@ -110,6 +111,7 @@ export function archonTables(dir = "/var/lib/archon"): Record<
   );
 }
 
+/** osquery's configuration. */
 export function osqueryConf(): string {
   return JSON.stringify(
     {
@@ -122,6 +124,7 @@ export function osqueryConf(): string {
   ) + "\n";
 }
 
+/** osquery's daemon on every host (spec 042). */
 export const osquery = (): Capability => () => ({
   spec: SPEC,
   files: [

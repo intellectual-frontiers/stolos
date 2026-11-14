@@ -93,9 +93,9 @@ export async function doctor(
     (va.severity === "red" ? s.fail : s.warn).call(
       s,
       `${names.length} secret(s) ${
-        va.lastBackup ? "newer than the last vault backup" : "never backed up"
+        va.lastBackup ? "newer than the last backup" : "never backed up"
       }: ${names.slice(0, 4).join(", ")}${names.length > 4 ? ", ..." : ""}`,
-      "unlock OneDrive > Personal Vault, then: deno task boot vault backup",
+      "deno task boot vault backup, then move the ZIP somewhere safe",
     );
   }
   await remind();

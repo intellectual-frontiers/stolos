@@ -60,51 +60,23 @@ export async function liveSecrets(dir = P.secrets, ledger?: Ledger): Promise<Liv
 }
 
 /**
- * Is the recorded last backup really there? "ok": its folder and manifest are
- * at the destination and match the record; "missing": the destination is
- * reachable but the backup is gone or different (it does not count);
- * "unverifiable": the destination cannot be read now (the Personal Vault is
- * locked); "none": nothing recorded.
+ * The recorded last backup (spec 056). A backup is a ZIP you move wherever you
+ * keep important things, so archon cannot look for it there: the record counts.
+ * "ok": a backup was made and read back; "none": nothing recorded. `where` says
+ * whether the ZIP is still in the backup folder (not yet moved somewhere safe).
  */
 export interface BackupCheck {
-  state: "ok" | "missing" | "unverifiable" | "none";
-  why?: string;
+  /** "ok" (recorded), or "none". */
+  state: "ok" | "none";
+  /** "here": still in the backup folder; "moved": moved out (where you keep it). */
+  where?: "here" | "moved";
 }
 
-/** Reachable: the Personal Vault unlocked, or another folder's parent present. */
-async function reachable(dir: string): Promise<boolean> {
-  const pv = vaultDir();
-  if (pv && dir === pv) return await vaultOpen(dir);
-  return await Deno.stat(join(dir, "..")).then((s) => s.isDirectory).catch(() => false);
-}
-
+/** The last backup's state (spec 056): recorded or not, and whether its ZIP is still here. */
 export async function checkLastBackup(lb: Ledger["lastBackup"]): Promise<BackupCheck> {
   if (!lb) return { state: "none" };
-  const dir = lb.dir ?? vaultDir();
-  if (!dir) {
-    return {
-      state: "unverifiable",
-      why: "its folder is not recorded and there is no OneDrive here",
-    };
-  }
-  if (!(await reachable(dir))) {
-    return {
-      state: "unverifiable",
-      why: dir === vaultDir() ? "Personal Vault locked" : `${dir} cannot be reached`,
-    };
-  }
-  let manifest: { files?: Array<{ name: string; sha256: string }> } | undefined;
-  try {
-    manifest = JSON.parse(await Deno.readTextFile(join(dir, lb.file, "manifest.json")));
-  } catch {
-    return { state: "missing", why: `${lb.file} is not in ${dir}` };
-  }
-  const recorded = Object.entries(lb.names).sort().join("|");
-  const there = (manifest?.files ?? []).map((f) => [f.name, f.sha256]).sort().join("|");
-  if (recorded !== there) {
-    return { state: "missing", why: `${lb.file} in ${dir} is not the backup recorded` };
-  }
-  return { state: "ok" };
+  const here = lb.dir ? await exists(join(lb.dir, lb.file)) : false;
+  return { state: "ok", where: here ? "here" : "moved" };
 }
 
 export interface Assessment {
@@ -113,11 +85,10 @@ export interface Assessment {
   unbacked: Array<LiveSecret & { backedUp: boolean }>;
   /** In the last backup but no longer here (removed since). */
   removed: string[];
-  /** The last backup, only when it was found where it was written (or could not be checked). */
+  /** The last backup recorded. */
   lastBackup?: Ledger["lastBackup"];
-  /** Whether the recorded last backup was found. */
+  /** Whether a backup is recorded, and whether its ZIP is still in the backup folder. */
   backupCheck: BackupCheck;
-  rehearsedAt?: string;
   /** Red: something unbacked for more than 7 days, or host identity keys never backed up. */
   severity: "ok" | "amber" | "red";
 }
@@ -126,22 +97,19 @@ const DAY = 86_400_000;
 
 export async function assess(dir = P.secrets, now = Date.now()): Promise<Assessment> {
   const ledger = await readLedger();
-  // The record counts only if the backup is really there (spec 029 FR-014).
+  // Spec 056: the ZIP lives wherever you keep it; the record counts.
   const check = await checkLastBackup(ledger.lastBackup);
-  const recorded = check.state === "ok" || check.state === "unverifiable"
-    ? ledger.lastBackup
-    : undefined;
+  const recorded = check.state === "ok" ? ledger.lastBackup : undefined;
   const items = (await liveSecrets(dir, ledger)).map((s) => ({
     ...s,
     backedUp: check.state === "ok" && recorded?.names[s.name] === s.sha256,
   }));
   const unbacked = items.filter((s) => !s.ref?.ephemeral && !s.backedUp);
-  // Changed since the record (whether or not the backup can be checked now).
+  // Changed since the record.
   const changed = items.filter((s) => !s.ref?.ephemeral && recorded?.names[s.name] !== s.sha256);
   const live = new Set(items.map((s) => s.name));
   const removed = Object.keys(recorded?.names ?? {}).filter((n) => !live.has(n));
   // Red: changed for more than 7 days, or host identity keys with no backup at all.
-  // A backup that only cannot be checked now (the vault locked) stays amber.
   const red = changed.some((s) => now - Date.parse(s.changedAt) > 7 * DAY) ||
     (!recorded && unbacked.some((s) => s.ref?.identity));
   return {
@@ -150,36 +118,9 @@ export async function assess(dir = P.secrets, now = Date.now()): Promise<Assessm
     removed,
     lastBackup: recorded,
     backupCheck: check,
-    rehearsedAt: ledger.rehearsedAt,
     severity: unbacked.length || removed.length ? (red ? "red" : "amber") : "ok",
   };
 }
-
-// ------------------------------------------------------------ the vault
-
-/** OneDrive's Personal Vault, Archon's folder in it (Windows). */
-export function vaultDir(): string | undefined {
-  const od = Deno.env.get("OneDrive") ?? Deno.env.get("OneDriveConsumer");
-  return od ? join(od, "Personal Vault", "Archon") : undefined;
-}
-
-/** Is the Personal Vault unlocked (its folder present and readable)? */
-export async function vaultOpen(dir: string): Promise<boolean> {
-  const parent = join(dir, "..");
-  try {
-    const st = await Deno.stat(parent);
-    if (!st.isDirectory) return false;
-    for await (const _ of Deno.readDir(parent)) break;
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-export const UNLOCK_STEPS = [
-  "Unlock OneDrive's Personal Vault: File Explorer > OneDrive > Personal Vault, then verify",
-  "your identity (Windows Hello, or the code Microsoft sends). It locks again after 20 minutes.",
-];
 
 // ------------------------------------------------------------ the prompt
 
@@ -193,6 +134,7 @@ export async function writePromptStatus(a: Assessment): Promise<void> {
   } catch { /* the prompt is best effort */ }
 }
 
+/** Record a backup: its file, the folder it was written to, and every secret's SHA-256 in it. */
 export async function markBackedUp(
   file: string,
   names: Record<string, string>,
@@ -201,12 +143,6 @@ export async function markBackedUp(
 ): Promise<void> {
   const l = await readLedger();
   l.lastBackup = { at, file, names, ...(dir ? { dir } : {}) };
-  await writeLedger(l);
-}
-
-export async function markRehearsed(): Promise<void> {
-  const l = await readLedger();
-  l.rehearsedAt = new Date().toISOString();
   await writeLedger(l);
 }
 

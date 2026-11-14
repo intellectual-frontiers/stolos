@@ -23,6 +23,7 @@ import { timedJob } from "./ops.ts";
 
 const SPEC = "021-observability" as const;
 
+/** The default observability limits. */
 export const DEFAULT_OBSERVABILITY: ObservabilityDef = {
   metricsDays: 365,
   metricsMaxSize: "2G",
@@ -32,6 +33,7 @@ export const DEFAULT_OBSERVABILITY: ObservabilityDef = {
   minFreePercent: 15,
 };
 
+/** A host's observability limits: the defaults, the fleet's, then the host's. */
 export function observabilityPolicy(fleet: FleetDef, host: HostDef): ObservabilityDef {
   return {
     ...DEFAULT_OBSERVABILITY,
@@ -89,6 +91,7 @@ export const CORE_PCP_METRICS = [
 /** Spec 050: with the telemetry web UI on, this server collects for the fleet. */
 export const collectsForFleet = (host: HostDef) => host.optIn?.["otel-ui"]?.enabled === true;
 
+/** The OpenTelemetry Collector's configuration for this host. */
 export function collectorConfig(host: HostDef, fleet: FleetDef, o: ObservabilityDef): string {
   const pipeline = {
     receivers: ["otlp"],
@@ -136,6 +139,7 @@ export function collectorConfig(host: HostDef, fleet: FleetDef, o: Observability
   return header(SPEC) + JSON.stringify(config, null, 2) + "\n";
 }
 
+/** journald, PCP, and the OpenTelemetry Collector, within limits (spec 021). */
 export const observability = (): Capability => ({ fleet, host }) => {
   const o = observabilityPolicy(fleet, host);
   return {

@@ -167,7 +167,7 @@ export const SECRET_INVENTORY: SecretRef[] = [
     label: "recovery and MFA codes",
     path: "the owner's password manager",
     purpose:
-      "recovery and MFA codes for the UniFi account, the Google mailbox, Cloudflare, and the Microsoft account whose OneDrive Personal Vault holds the secrets backups",
+      "recovery and MFA codes for the UniFi account, the Google mailbox, Cloudflare, and the Microsoft account whose OneDrive Personal Vault holds the backup ZIPs",
     holder: "owner",
     recreate: "each service's security settings: generate new recovery codes",
     spec: "028-site-network",

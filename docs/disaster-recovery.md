@@ -2,14 +2,14 @@
 
 The boot machine (BOOTPC) holds the only live copy of the fleet's secrets: the admin password hash,
 each host's deploy key and SSH host keys, the Cloudflare DNS token, and the mail token. Losing it is
-routine (constitution Article 22): a new PC becomes the boot machine from this repository plus the
-encrypted backup in your OneDrive Personal Vault (spec 029). The hosts keep running throughout; they
-need the boot machine only to install or re-install.
+routine (constitution Article 22): a new PC becomes the boot machine from the fleet repository plus
+your latest backup ZIP (`deno task boot vault backup`, specs 029 and 056), wherever you keep it. The
+hosts keep running throughout; they need the boot machine only to install or re-install.
 
-What you need, in your password manager: your **Microsoft account** (OneDrive, and its Personal
-Vault's second sign-in), your **GitHub** login, and, for the network, your **UniFi** account.
+What you need: your latest backup ZIP (and whatever unlocks the place you keep it), your signing
+key's passphrase, your **GitHub** login, and, for the network, your **UniFi** account.
 
-## With a vault backup
+## With a backup ZIP
 
 1. **Tools.** On the new PC, in PowerShell:
 
@@ -27,16 +27,14 @@ Vault's second sign-in), your **GitHub** login, and, for the network, your **Uni
    cd C:\archon
    ```
 
-3. **Unlock the vault.** Sign in to OneDrive, then File Explorer > OneDrive > Personal Vault, and
-   verify your identity. It locks again after 20 minutes of inactivity.
+3. **The secrets and your signing key.** `deno task boot vault restore` prints the steps (the same
+   as `RESTORE.txt` in the ZIP); it changes nothing. In short: unzip it somewhere private, copy
+   `secrets\*` into `%APPDATA%\archon\secrets\` (readable by you only), copy `signing\*` into
+   `%USERPROFILE%\.ssh\` and point Git at it (`git config --global user.signingkey ...`), then
+   delete the unzipped folder.
 
-4. **Restore the secrets.** Shows the plan first, then writes each secret readable by you only,
-   rebuilds `known_hosts` from the hosts' public keys, and runs `boot doctor`:
-
-   ```powershell
-   deno task boot vault restore --dry-run
-   deno task boot vault restore
-   ```
+4. **Trust the hosts again.** `deno task boot doctor` checks every secret; `known_hosts` comes from
+   the hosts' public keys in the fleet repository.
 
 5. **The network.** Network boots and firewall policies 4 and 7 point at the boot server's address,
    10.0.1.157 (`site.bootServer` in `fleets/<fleet>/site.ts`). Either:
@@ -58,7 +56,7 @@ Vault's second sign-in), your **GitHub** login, and, for the network, your **Uni
 
    ```powershell
    deno task boot doctor            # this PC, with a fix for each problem
-   deno task boot vault rehearse    # the backup restores (changes nothing)
+   deno task boot vault status      # every secret back where it belongs
    ssh alpha archon doctor --send  # each host: its network and mail, mailed to the shared mailbox
    ```
 
@@ -78,7 +76,7 @@ Then back everything up at once: `deno task boot vault backup`.
 
 ## The gap outside Archon
 
-Two things on the boot machine are yours, not Archon's, and the vault does not hold them:
+Two things on the boot machine are yours, not Archon's, and the backup does not hold them:
 
 - **Your own SSH key** (in `%USERPROFILE%\.ssh`), with which you log in to the hosts. Each host
   accepts the keys in `fleet.admin.github.sshKeys` (`fleets/<fleet>/fleet.ts`), so add a **second

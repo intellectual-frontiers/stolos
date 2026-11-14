@@ -16,9 +16,9 @@ export const LEDGER = join(VAULT_LOCAL, "ledger.json");
 
 export interface LedgerBackup {
   at: string;
-  /** The backup's folder name. */
+  /** The backup's file name (spec 056: a ZIP; spec 029's backups were folders). */
   file: string;
-  /** The folder it was written to (the vault); older records lack it. */
+  /** The folder it was written to (the backup folder); older records lack it. */
   dir?: string;
   /** Path inside the secrets folder -> SHA-256 of what was backed up. */
   names: Record<string, string>;
@@ -28,10 +28,8 @@ export interface Ledger {
   /** Path inside the secrets folder (forward slashes) -> when it was written or removed. */
   changes: Record<string, { changedAt: string; removed?: boolean }>;
   lastBackup?: LedgerBackup;
-  rehearsedAt?: string;
-  /** The last "N secrets not backed up" email (spec 025), and the last rehearse reminder. */
+  /** The last "N secrets not backed up" email (spec 025). */
   remindedAt?: string;
-  rehearseRemindedAt?: string;
 }
 
 export async function readLedger(path = LEDGER): Promise<Ledger> {

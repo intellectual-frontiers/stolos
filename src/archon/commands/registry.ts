@@ -1638,9 +1638,9 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "vault status",
-    summary: "Boot machine: every secret, when it changed, and whether the vault backup has it",
+    summary: "Boot machine: every secret, when it changed, and whether the last backup has it",
     description:
-      `Lists every secret in the boot machine's secrets folder with its inventory name, when it last changed, and when it was last backed up to the vault (spec 029): ✓ backed up, ⚠ newer than the last backup. Exits 1 if anything is newer than the last backup. With --lost, prints how each secret would be made again if the boot machine were lost without a backup. Also writes the prompt's 🔐 backup status, installs the git pre-push reminder hook, and sends the "not backed up" email when due. Run as deno task boot vault status.`,
+      `Lists every secret in the boot machine's secrets folder with its inventory name, when it last changed, and when it was last backed up (specs 029 and 056): ✓ backed up, ⚠ newer than the last backup. Exits 1 if anything is newer than the last backup. With --lost, prints how each secret would be made again if the boot machine were lost without a backup. Also writes the prompt's 🔐 backup status, installs the git pre-push reminder hook, and sends the "not backed up" email when due. Run as deno task boot vault status.`,
     tier: "repo",
     noMcp: true,
     args: [
@@ -1658,155 +1658,43 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "vault backup",
-    summary: "Boot machine: copy the secrets into OneDrive's Personal Vault, then verify the copy",
+    summary: "Boot machine: one ZIP of every secret and your signing key, to keep somewhere safe",
     description:
-      `Copies every secret in the boot machine's secrets folder (except ephemeral install tokens) as it is into a new folder in OneDrive's Personal Vault (%OneDrive%\\Personal Vault\\Archon\\archon-secrets-<pc>-<UTC>\\), which encrypts it and asks for a second sign-in to open, with a manifest beside the files (names, SHA-256, sizes, the Archon commit). It reads every file back and checks it before reporting success. A locked Personal Vault is detected and the unlock steps printed; --wait polls for up to 10 minutes. --to <folder> (or ARCHON_VAULT_DIR) chooses another folder; outside the Personal Vault the files are not encrypted, and Archon says so.`,
+      `Writes archon-backup-<pc>-<UTC>.zip into archon's backup folder (Windows: %LOCALAPPDATA%\\archon\\backup; Linux and macOS: archon's data folder, backup) with every fleet's secrets on this PC (except ephemeral install tokens), your signing key (both halves, from git config user.signingkey; the private half stays locked by its passphrase), a manifest (names, SHA-256, sizes; never a value), and RESTORE.txt (the restore steps). It reads the ZIP back and checks every file before reporting success, makes it readable by you only, and records it. Then move the ZIP wherever you keep important things safe (an encrypted place: it is not encrypted itself). Spec 056.`,
     tier: "repo",
     operation: true,
     noMcp: true,
-    args: [
-      {
-        name: "to",
-        type: "string",
-        description: "Another folder (default: OneDrive's Personal Vault).",
-      },
-      {
-        name: "wait",
-        type: "boolean",
-        description: "Wait up to 10 minutes for the vault to be unlocked.",
-      },
-    ],
-    async run(a) {
+    args: [],
+    async run() {
       const { vaultBackup } = await import("../vault/commands.ts");
-      return await vaultBackup({
-        to: a.to as string | undefined,
-        wait: !!a.wait,
-      });
-    },
-  },
-  {
-    name: "vault verify",
-    summary: "Boot machine: check the newest backup and compare it with the live secrets",
-    description:
-      `Checks the newest backup (or --file) against its manifest and lists, by name, what is missing, changed, or extra compared with the live secrets. Changes nothing.`,
-    tier: "repo",
-    operation: true,
-    noMcp: true,
-    args: [
-      {
-        name: "to",
-        type: "string",
-        description:
-          "The vault folder (default: ARCHON_VAULT_DIR, else OneDrive's Personal Vault).",
-      },
-      { name: "file", type: "string", description: "A specific backup file." },
-    ],
-    async run(a) {
-      const { vaultVerify } = await import("../vault/commands.ts");
-      return await vaultVerify({
-        file: a.file as string | undefined,
-        to: a.to as string | undefined,
-      });
+      return await vaultBackup();
     },
   },
   {
     name: "vault restore",
-    summary: "Boot machine: restore the secrets from the vault (a new or rebuilt PC)",
-    description:
-      `Checks the newest backup (or --file), shows the plan, writes each secret readable by this user only, rebuilds known_hosts from the hosts' public keys, and runs deno task boot doctor. A live secret newer than the backup is kept unless --force. --dry-run shows the plan only.`,
-    tier: "repo",
-    operation: true,
-    noMcp: true,
-    args: [
-      {
-        name: "to",
-        type: "string",
-        description:
-          "The vault folder (default: ARCHON_VAULT_DIR, else OneDrive's Personal Vault).",
-      },
-      { name: "file", type: "string", description: "A specific backup file." },
-      { name: "dry-run", type: "boolean", description: "Show the plan only." },
-      {
-        name: "force",
-        type: "boolean",
-        description: "Overwrite live secrets newer than the backup.",
-      },
-    ],
-    async run(a) {
-      const { vaultRestore } = await import("../vault/commands.ts");
-      return await vaultRestore({
-        file: a.file as string | undefined,
-        to: a.to as string | undefined,
-        dryRun: !!a["dry-run"],
-        force: !!a.force,
-      });
-    },
-  },
-  {
-    name: "vault rehearse",
     summary:
-      "Boot machine: restore the newest backup into a temporary folder and compare; changes nothing",
+      "Boot machine: how to restore a backup ZIP by hand (prints the steps; changes nothing)",
     description:
-      `Proves the backup can be restored: restores the newest backup into a temporary folder, compares every secret with the live one, and removes the folder. With no backup yet, it rehearses the round trip with the live secrets instead (copy out, read back, compare in a temporary folder). Records the rehearsal; archon notify reminds you after 30 days without one.`,
-    tier: "repo",
-    operation: true,
+      `Prints the steps to put a backup ZIP back on a new or rebuilt PC: the secrets into archon's secrets folder (readable by you only), your signing key into .ssh and Git's settings, then the checks. It changes nothing; every ZIP holds the same steps as RESTORE.txt. Spec 056.`,
+    tier: "read",
     noMcp: true,
-    args: [
-      {
-        name: "to",
-        type: "string",
-        description:
-          "The vault folder (default: ARCHON_VAULT_DIR, else OneDrive's Personal Vault).",
-      },
-      { name: "file", type: "string", description: "A specific backup file." },
-    ],
-    async run(a) {
-      const { vaultRehearse } = await import("../vault/commands.ts");
-      return await vaultRehearse({
-        file: a.file as string | undefined,
-        to: a.to as string | undefined,
-      });
+    args: [],
+    async run() {
+      const { vaultRestore } = await import("../vault/commands.ts");
+      return vaultRestore();
     },
   },
   {
     name: "vault list",
-    summary: "Boot machine: the backups in the vault, with dates and sizes",
-    description: `Lists the vault's backups, newest first.`,
-    tier: "repo",
-    noMcp: true,
-    args: [{
-      name: "to",
-      type: "string",
-      description: "Another folder (default: OneDrive's Personal Vault).",
-    }],
-    async run(a) {
-      const { vaultList } = await import("../vault/commands.ts");
-      return await vaultList({ to: a.to as string | undefined });
-    },
-  },
-  {
-    name: "vault prune",
-    summary: "Boot machine: keep the newest N backups (never removes the newest)",
+    summary: "Boot machine: the backup ZIPs still in the backup folder",
     description:
-      `Removes all but the newest --keep backups (default 12) and their manifests. The newest backup is never removed.`,
+      `Lists the backup ZIPs still in archon's backup folder, newest first. Once you move one somewhere safe, it is no longer listed.`,
     tier: "repo",
     noMcp: true,
-    args: [
-      {
-        name: "keep",
-        type: "string",
-        default: "12",
-        description: "How many to keep (at least 1).",
-      },
-      {
-        name: "to",
-        type: "string",
-        description: "Another folder (default: OneDrive's Personal Vault).",
-      },
-    ],
-    async run(a) {
-      const { vaultPrune } = await import("../vault/commands.ts");
-      return await vaultPrune({ keep: Number(a.keep ?? 12) || 12, to: a.to as string | undefined });
+    args: [],
+    async run() {
+      const { vaultList } = await import("../vault/commands.ts");
+      return await vaultList();
     },
   },
   {

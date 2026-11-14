@@ -191,27 +191,55 @@ deno task boot observe --last 20
 To watch it live, run [otel-tui](https://github.com/ymtdzzz/otel-tui) on this PC while `boot serve`
 runs; the boot server hands it everything it records. This PC itself is not observed.
 
-## Back up the secrets (spec 029)
+## Back up the secrets (specs 029 and 056)
 
 This PC holds the only copies of the fleet's secrets: the admin password hash, each host's deploy
-key and SSH host keys, the Cloudflare DNS token, and the mail token. Their only other copy is an
-encrypted backup in your OneDrive Personal Vault (constitution Article 13):
+key and SSH host keys, the Cloudflare DNS token, and the mail token. A backup is one ZIP file that
+you keep somewhere safe (constitution Article 13):
 
 ```powershell
 deno task boot vault status     # every secret: changed when, backed up when (⚠ = not backed up)
-deno task boot vault backup     # unlock OneDrive > Personal Vault first; copies the secrets there
-deno task boot vault rehearse   # prove a restore works; changes nothing
+deno task boot vault backup     # writes the ZIP, reads it back, and says where it is
+deno task boot vault restore    # how to restore a ZIP by hand (prints the steps; changes nothing)
+deno task boot vault list       # the ZIPs not yet moved out of the backup folder
 ```
 
-Backups go to OneDrive's Personal Vault (`%OneDrive%\Personal Vault\Archon`) unless you choose
-another folder: `--to <folder>` on any vault command, or set `ARCHON_VAULT_DIR` once (for example
-`setx ARCHON_VAULT_DIR D:\Backups\archon`). With no backup yet, `rehearse` tries the round trip with
-the live secrets (copy into a temporary folder, read back, compare) and changes nothing.
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#EEF2FF"
+    primaryBorderColor: "#6366F1"
+    primaryTextColor: "#1E1B4B"
+    lineColor: "#64748B"
+    edgeLabelBackground: "#F8FAFC"
+---
+flowchart LR
+  s["every fleet's secrets"] --> z["archon-backup-‹pc›-‹time›.zip<br/>in archon's backup folder"]
+  k["your signing key<br/>(both halves)"] --> z
+  z --> y["you move it somewhere safe<br/>and encrypted"]
+  y -. "after a disaster" .-> r["vault restore:<br/>the steps, by hand"]
+```
 
-Each backup is a folder (`archon-secrets-<pc>-<time>`) holding the secret files as they are, in
-their usual layout, and a `manifest.json` of names, SHA-256, and sizes. The Personal Vault encrypts
-them and asks for a second sign-in (Windows Hello or a code) before it opens; Archon adds no
-encryption of its own, so a backup can be copied back by hand if Archon is gone.
+`vault backup` writes `archon-backup-<pc>-<time>.zip` into archon's backup folder
+(`%LOCALAPPDATA%\archon\backup`; Linux and macOS: `~/.local/share/archon/backup`), readable by you
+only. It holds:
+
+- `secrets/<fleet>/...`: every fleet's secrets on this PC, as they are (not the install tokens,
+  which are made again when needed);
+- `signing/...`: your signing key, both halves, from `git config user.signingkey` (the private half
+  is still locked by its passphrase, which is not in the ZIP);
+- `manifest.json`: every file's name, size, and SHA-256 (never a value);
+- `RESTORE.txt`: the restore steps, the same as `vault restore` prints.
+
+It reads the ZIP back and checks every file before saying it worked. Then **move it** wherever you
+keep important things safe, for example your OneDrive Personal Vault, a password manager, or an
+encrypted USB drive, and keep an older one too. The ZIP is not encrypted itself: treat it like the
+keys to your servers. Keep your **recovery** signing key somewhere else, apart from it.
+
+A restore is never done by a command: Archon only explains it (`vault restore`), and you copy the
+files back by hand. See [disaster recovery](disaster-recovery.md).
 
 Until a changed secret is backed up, Archon says so: a panel at the end of the command that changed
 it and at the start of `boot serve` and `boot status`, a warning in `boot doctor`, a reminder before
@@ -265,8 +293,8 @@ fix for each problem.
 | `deno task boot arm <host> [--claim] [--confirm-destroy <host>]`                        | allow one install of a host (`--claim`: the next unknown machine becomes it; a host recorded as durable needs `--confirm-destroy`) |
 | `deno task boot retire <host> --confirm-destroy <host>`                                 | a server leaves the fleet: its DNS, deploy key, identity, model, and records ([hosts](hosts.md#retire-a-host))                     |
 | `deno task boot reinstall <host> [--force] [--confirm-destroy <host>]`                  | re-install a running host, nobody at the console; a durable host needs `--confirm-destroy` ([hosts](hosts.md#re-install))          |
-| `deno task boot vault status [--lost]`                                                  | every secret, and whether the vault backup has it                                                                                  |
-| `deno task boot vault backup` · `verify` · `rehearse` · `restore` · `list` · `prune`    | the backup in OneDrive's Personal Vault (spec 029)                                                                                 |
+| `deno task boot vault status [--lost]`                                                  | every secret, and whether the last backup has it                                                                                   |
+| `deno task boot vault backup` · `restore` · `list`                                      | the backup ZIP: write it; how to restore it (steps only); the ZIPs not yet moved (spec 056)                                        |
 | `deno task boot web-setup`                                                              | store the Cloudflare DNS token for HTTPS certificates and server records (once)                                                    |
 | `deno task boot web-push <host>`                                                        | give a running server that token                                                                                                   |
 | `deno task boot mail-setup`                                                             | store the Cloudflare token for mail (once)                                                                                         |
@@ -285,5 +313,5 @@ fix for each problem.
 | hosts' SSH host keys as this PC trusts them                                                                                                | `%USERPROFILE%\.ssh\known_hosts`                                   | no      |
 | fleet, hosts, specs, dotfiles, what hosts recorded                                                                                         | `C:\archon`                                                        | yes     |
 
-Back up the secrets folder: without it, a re-installed host gets new SSH host keys and a new deploy
-key (`host add <name> --force`).
+Back up the secrets folder (`deno task boot vault backup`): without it, a re-installed host gets new
+SSH host keys and a new deploy key (`host add <name> --force`).

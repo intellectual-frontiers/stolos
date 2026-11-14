@@ -4,38 +4,112 @@ Stolos turns bare machines into Ubuntu servers that set themselves up, keep them
 can prove it. You describe your machines in a few TypeScript files; its command, `archon`, does the
 rest.
 
-```
-  what you write                      what Stolos does                      what you get
-┌───────────────────┐        ┌──────────────────────────────┐        ┌────────────────────────┐
-│ fleet.ts          │        │ installs Ubuntu over the     │        │ servers that match the │
-│  domain, mail,    │  ───▶  │ network (no USB, no clicks)  │  ───▶  │ description, every 15  │
-│  admin, ...       │        │ applies packages, users,     │        │ minutes, and can say   │
-│ hosts/olympia/    │        │ firewall, HTTPS, tools       │        │ so: archon verify,     │
-│  host.ts          │        │ checks every piece           │        │ archon fleet status    │
-└───────────────────┘        └──────────────────────────────┘        └────────────────────────┘
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#EEF2FF"
+    primaryBorderColor: "#6366F1"
+    primaryTextColor: "#1E1B4B"
+    lineColor: "#64748B"
+    edgeLabelBackground: "#F8FAFC"
+    clusterBkg: "#F8FAFC"
+    clusterBorder: "#CBD5E1"
+---
+flowchart LR
+  A["<b>What you write</b><br/>fleet.ts: domain, mail, admin<br/>hosts/olympia/host.ts"]:::you
+  B["<b>What Stolos does</b><br/>installs Ubuntu over the network<br/>applies packages, users, firewall,<br/>HTTPS, tools; checks every piece"]:::gh
+  C["<b>What you get</b><br/>servers that match the description,<br/>every 15 minutes, and can prove it"]:::ok
+  A --> B --> C
+  classDef you fill:#EEF2FF,stroke:#6366F1,stroke-width:2px,color:#1E1B4B
+  classDef gh fill:#F1F5F9,stroke:#475569,stroke-width:2px,color:#0F172A
+  classDef ok fill:#ECFDF5,stroke:#10B981,stroke-width:2px,color:#064E3B
+  classDef no fill:#FEF2F2,stroke:#EF4444,stroke-width:2px,color:#7F1D1D
 ```
 
 Ubuntu decides; Stolos only adds (see the [constitution](.specify/memory/constitution.md)).
+
+## What you need
+
+`archon` runs on **Windows, macOS, or Linux**. All it needs is **[Deno](https://deno.com) 2.9.6 or
+newer** (2.x), a single program with no other dependencies, plus Git and `gh` (GitHub's command
+line) to work with your fleet repository. Installers and binaries for every system:
+[docs.deno.com, installation](https://docs.deno.com/runtime/getting_started/installation/) and
+[Deno's releases](https://github.com/denoland/deno/releases).
+
+<details>
+<summary><b>Windows</b> (PowerShell)</summary>
+
+```powershell
+winget install --id DenoLand.Deno      # or: irm https://deno.land/install.ps1 | iex
+winget install --id Git.Git
+winget install --id GitHub.cli
+```
+
+Open a new PowerShell window, then check: `deno --version` (2.9.6 or newer) and `gh auth login`.
+Windows is the usual **boot machine** (the PC that installs new servers); see
+[docs/boot-machine.md](docs/boot-machine.md) for its firewall and network settings.
+
+</details>
+
+<details>
+<summary><b>macOS</b> (Terminal)</summary>
+
+```sh
+brew install deno git gh               # with Homebrew (https://brew.sh)
+# or Deno alone: curl -fsSL https://deno.land/install.sh | sh
+```
+
+Then `deno --version` (2.9.6 or newer) and `gh auth login`.
+
+</details>
+
+<details>
+<summary><b>Linux</b> (Ubuntu, or Ubuntu on WSL)</summary>
+
+```sh
+curl -fsSL https://deno.land/install.sh | sh      # Deno, into ~/.deno/bin
+sudo apt install -y git gh unzip
+```
+
+Open a new terminal, then `deno --version` (2.9.6 or newer) and `gh auth login`. Servers need
+nothing installed by you: Stolos puts Deno and `archon` on each one as it installs it.
+
+</details>
 
 ## Two kinds of repository
 
 This repository is the **engine**: public, with no real machines in it. Each fleet lives in a
 **fleet repository** of its own, private, that uses the engine by version.
 
-```
-intellectual-frontiers/stolos (public)          your fleet repository (private)
-┌──────────────────────────────────┐            ┌──────────────────────────────────────┐
-│ the engine: archon, boot server, │  tag       │ deno.json   "use engine vX.Y.Z"      │
-│ guides, an example fleet         │  vX.Y.Z    │ deno.lock   a fingerprint of every   │
-│                                  │ ─────────▶ │             engine file              │
-│ every change: a new version,     │            │ fleets/<id>/fleet.ts, hosts/...      │
-│ tested, tagged, never changed    │            │ fleets/<id>/signers.ts (who approves)│
-└──────────────────────────────────┘            └──────────────────┬───────────────────┘
-                                                                    │ each server pulls it
-                                                                    ▼ (read only)
-                                                          ┌──────────────────────┐
-                                                          │ your servers         │
-                                                          └──────────────────────┘
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#EEF2FF"
+    primaryBorderColor: "#6366F1"
+    primaryTextColor: "#1E1B4B"
+    lineColor: "#64748B"
+    edgeLabelBackground: "#F8FAFC"
+    clusterBkg: "#F8FAFC"
+    clusterBorder: "#CBD5E1"
+---
+flowchart LR
+  subgraph engine["stolos: public"]
+    E["the engine: archon, the boot server,<br/>guides, an example fleet<br/><i>every change: a new version, tested, tagged</i>"]:::gh
+  end
+  subgraph fleet["your fleet: private"]
+    F["deno.json: use engine vX.Y.Z<br/>deno.lock: a fingerprint of every engine file<br/>fleets/‹id›/fleet.ts, hosts/...<br/>fleets/‹id›/signers.ts: who approves"]:::you
+  end
+  S["your servers"]:::ok
+  E -- "tag vX.Y.Z" --> F
+  F -- "each server pulls it (read only)" --> S
+  classDef you fill:#EEF2FF,stroke:#6366F1,stroke-width:2px,color:#1E1B4B
+  classDef gh fill:#F1F5F9,stroke:#475569,stroke-width:2px,color:#0F172A
+  classDef ok fill:#ECFDF5,stroke:#10B981,stroke-width:2px,color:#064E3B
+  classDef no fill:#FEF2F2,stroke:#EF4444,stroke-width:2px,color:#7F1D1D
 ```
 
 A fleet repository holds descriptions only. Its passwords and keys stay on one PC (the **boot
@@ -59,10 +133,27 @@ Git seals each commit with your private key. The fleet lists the public keys it 
 `signers.ts`. Each server checks every new commit: sealed by a listed key, and following on from the
 commit it already runs (no going back). Otherwise it refuses, and nothing changes.
 
-```
-you: git commit (passphrase) ──▶ GitHub ──▶ server: sealed by a key in signers.ts?
-                                                 yes ──▶ apply the change
-                                                 no  ──▶ refuse (archon explain E047-UNTRUSTED)
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#EEF2FF"
+    primaryBorderColor: "#6366F1"
+    primaryTextColor: "#1E1B4B"
+    lineColor: "#64748B"
+    edgeLabelBackground: "#F8FAFC"
+    clusterBkg: "#F8FAFC"
+    clusterBorder: "#CBD5E1"
+---
+flowchart LR
+  Y["you: git commit<br/>(type your passphrase)"]:::you --> G["GitHub"]:::gh --> Q{"server: sealed by a key<br/>in signers.ts?"}
+  Q -- yes --> A["apply the change"]:::ok
+  Q -- no --> R["refuse; nothing changes<br/>(archon explain E047-UNTRUSTED)"]:::no
+  classDef you fill:#EEF2FF,stroke:#6366F1,stroke-width:2px,color:#1E1B4B
+  classDef gh fill:#F1F5F9,stroke:#475569,stroke-width:2px,color:#0F172A
+  classDef ok fill:#ECFDF5,stroke:#10B981,stroke-width:2px,color:#064E3B
+  classDef no fill:#FEF2F2,stroke:#EF4444,stroke-width:2px,color:#7F1D1D
 ```
 
 The fingerprints in `deno.lock` make your seal cover the engine's code too: a server runs exactly
@@ -70,10 +161,11 @@ the engine files you approved.
 
 ## Set up a fleet repository
 
-You need Deno, Git, and `gh` (GitHub's command line, signed in).
+With Deno, Git, and `gh` installed (above) and `gh auth login` done:
 
 1. Create an empty private repository on GitHub and clone it.
-2. Make your signing key, and tell Git to use it for every commit (the passphrase is never stored):
+2. Make your signing key, and tell Git to use it for every commit (the passphrase is never stored).
+   On Windows, write `$HOME\.ssh\fleet-signing` for `~/.ssh/fleet-signing`:
 
    ```sh
    ssh-keygen -t ed25519 -f ~/.ssh/fleet-signing -C "<your name> fleet signing"
@@ -102,22 +194,45 @@ You need Deno, Git, and `gh` (GitHub's command line, signed in).
 5. From here, `deno task archon` shows where you are and the one command to run next: tokens, your
    first server (`deno task archon host add <name> --claim`), and installing it
    (`deno task boot serve`).
+6. Back up: `deno task boot vault backup` writes one ZIP with every secret and your signing key;
+   move it somewhere safe and encrypted.
 
 The full walk-through: [docs/fleet-repository.md](docs/fleet-repository.md) and
 [docs/boot-machine.md](docs/boot-machine.md).
 
 ## How a machine becomes a server
 
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#EEF2FF"
+    primaryBorderColor: "#6366F1"
+    primaryTextColor: "#1E1B4B"
+    lineColor: "#64748B"
+    edgeLabelBackground: "#F8FAFC"
+    clusterBkg: "#F8FAFC"
+    clusterBorder: "#CBD5E1"
+---
+flowchart LR
+  H["boot machine:<br/>host add olympia --claim<br/>boot serve"]:::you
+  M["the new machine: power on,<br/>network boot"]:::gh
+  I["Ubuntu's installer asks:<br/>these are my disks"]:::gh
+  D{"blank, or erasing<br/>confirmed?"}
+  X["stop; nothing written"]:::no
+  U["install Ubuntu, then the fleet:<br/>Packages, Tools, Verify, Ready<br/>(live in the boot window)"]:::ok
+  H --> M --> I --> D
+  D -- no --> X
+  D -- yes --> U
+  classDef you fill:#EEF2FF,stroke:#6366F1,stroke-width:2px,color:#1E1B4B
+  classDef gh fill:#F1F5F9,stroke:#475569,stroke-width:2px,color:#0F172A
+  classDef ok fill:#ECFDF5,stroke:#10B981,stroke-width:2px,color:#064E3B
+  classDef no fill:#FEF2F2,stroke:#EF4444,stroke-width:2px,color:#7F1D1D
 ```
-boot machine                                   the new machine
-────────────                                   ───────────────
-host add olympia --claim
-boot serve  ◀─────────── network boot ──────── power on
-            ── Ubuntu's installer ───────────▶
-            ◀── "my disks are: ..." ──────────  (nothing erased unless blank or confirmed)
-            ── ok ───────────────────────────▶ installs Ubuntu, then the fleet's description
-            ◀── Packages, Tools, Verify, Ready  (shown live in the boot window)
-```
+
+Nothing on a disk is erased unless the disk is blank or you confirm it (`--confirm-destroy <host>`,
+typed by a person).
 
 ## Every day
 
@@ -127,6 +242,7 @@ boot serve  ◀─────────── network boot ──────
 - `deno task archon fleet status`: every server, how it is.
 - `archon explain <code>`: what a problem means and how to fix it.
 - `deno task archon fleet upgrade v<version>`: adopt a newer engine.
+- `deno task boot vault backup` after anything that made a secret; move the ZIP somewhere safe.
 
 ## Documentation
 

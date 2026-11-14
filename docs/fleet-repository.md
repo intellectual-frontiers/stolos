@@ -183,8 +183,8 @@ real machines. Check usage under Settings, Billing and licensing.
 ## Registration: who each host is
 
 `archon host add <host>` writes `fleets/<id>/hosts/<host>/registration.ts`: the host's SSH host
-**public** keys (the private halves stay on the boot machine and in its vault), its network card,
-and its deploy key's fingerprint. Commit it with the host's `host.ts`.
+**public** keys (the private halves stay on the boot machine and in its backup ZIP), its network
+card, and its deploy key's fingerprint. Commit it with the host's `host.ts`.
 
 Your machine checks every server against those keys, so a first connection is never trusted blindly:
 `archon fleet status` and `archon fleet query` do it on their own, and once on each workstation (and
@@ -238,8 +238,8 @@ deno task archon signers add <name> --role daily --key <their .pub file>
 git commit -S -m "<fleet> signers: add <name>" && git push
 ```
 
-Every fleet also has a **recovery** signer, whose key is kept only in the encrypted vault, to
-replace a lost or stolen daily key. See `docs/disaster-recovery.md`.
+Every fleet also has a **recovery** signer, whose key is kept apart, somewhere safe and encrypted
+(not with the backup ZIP), to replace a lost or stolen daily key. See `docs/disaster-recovery.md`.
 
 ## Troubleshooting
 

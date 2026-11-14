@@ -171,6 +171,7 @@ import "./vault/commands.ts";
 import "./vault/panel.ts";
 import "./vault/reminder.ts";
 import "./vault/state.ts";
+import "./vault/zip.ts";
 import "./version.ts";
 import "./web/acme.ts";
 import "./web/cloudflare.ts";

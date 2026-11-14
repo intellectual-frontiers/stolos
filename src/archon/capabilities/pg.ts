@@ -28,6 +28,7 @@ import {
   unitOf,
 } from "../pg/config.ts";
 
+/** PostgreSQL instances from the model and the host's record (specs 038 to 040). */
 export const pg = (): Capability => ({ fleet, host, users }) => {
   if (host.kind === "workstation") return { spec: SPEC };
   const instances = instancesOf(host, users, fleet);

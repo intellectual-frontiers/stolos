@@ -12,6 +12,7 @@ import type { BackupDef, Capability, HostDef } from "../model/types.ts";
 import { describeData, durableGuests, durablePaths, hostData } from "../model/durable.ts";
 import { timedJob } from "./ops.ts";
 
+/** The default backup policy: Ubuntu's /var/backups, daily, a week kept. */
 export const DEFAULT_BACKUP: BackupDef = {
   target: "/var/backups/archon",
   // The repository itself lives on GitHub; these are the host's own state.
@@ -30,12 +31,14 @@ export const DEFAULT_BACKUP: BackupDef = {
   onCalendar: "*-*-* 02:37:00",
 };
 
+/** A host's backup policy: the default with the host's overrides. */
 export function backupPolicy(host: HostDef): BackupDef {
   const p = { ...DEFAULT_BACKUP, ...(host.backup ?? {}) };
   const extra = durablePaths(host).filter((x) => !p.paths.includes(x));
   return extra.length ? { ...p, paths: [...p.paths, ...extra] } : p;
 }
 
+/** Daily, restore-tested archives of the host's own state (spec 016). */
 export const backup = (): Capability => ({ host }) => {
   const p = backupPolicy(host);
   return {

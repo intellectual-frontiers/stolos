@@ -5,7 +5,7 @@
  * - `boot doctor` reports it as a warning whose fix is the command;
  * - the prompt's 🔐 backup token while anything is unbacked;
  * - email: after 24 hours unbacked, one "N secrets not backed up" (names
- *   only), then weekly; and a rehearse reminder after 30 days without one;
+ *   only), then weekly;
  * - a non-blocking git pre-push hook that prints the panel.
  *
  * @module
@@ -56,7 +56,7 @@ export async function remind(now = Date.now()): Promise<void> {
         event: `${a.unbacked.length} secret${a.unbacked.length === 1 ? "" : "s"} not backed up`,
         level: a.severity === "red" ? "fail" : "warn",
         what: [
-          `These secrets on ${pcName()} are newer than its last vault backup${
+          `These secrets on ${pcName()} are newer than its last backup${
             a.lastBackup ? ` (${a.lastBackup.at.slice(0, 10)})` : " (there is none)"
           }:`,
           ...a.unbacked.map((s) =>
@@ -65,30 +65,11 @@ export async function remind(now = Date.now()): Promise<void> {
           "",
           `If ${pcName()} failed now, these would have to be recreated (docs/disaster-recovery.md).`,
         ].join("\n"),
-        todo:
-          "Unlock OneDrive > Personal Vault on the boot machine, then: deno task boot vault backup",
+        todo: "On the boot machine: deno task boot vault backup, then move the ZIP somewhere safe",
         key: `vault:unbacked:${new Date(now).toISOString().slice(0, 10)}`,
       });
       if (r === "queued") {
         l.remindedAt = new Date(now).toISOString();
-        await writeLedger(l);
-      }
-    }
-    if (
-      a.lastBackup && (!l.rehearsedAt || now - Date.parse(l.rehearsedAt) > 30 * DAY) &&
-      due(l.rehearseRemindedAt)
-    ) {
-      const r = await notify({
-        event: "vault restore not rehearsed for 30 days",
-        level: "info",
-        what: `No vault rehearse on ${pcName()} ${
-          l.rehearsedAt ? `since ${l.rehearsedAt.slice(0, 10)}` : "yet"
-        }. A rehearse restores the newest backup into a temporary folder and compares it with the live secrets; it changes nothing.`,
-        todo: "deno task boot vault rehearse (with OneDrive > Personal Vault unlocked)",
-        key: `vault:rehearse:${new Date(now).toISOString().slice(0, 10)}`,
-      });
-      if (r === "queued") {
-        l.rehearseRemindedAt = new Date(now).toISOString();
         await writeLedger(l);
       }
     }

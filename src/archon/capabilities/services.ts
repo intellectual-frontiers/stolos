@@ -11,6 +11,7 @@ import { header } from "../render/systemd.ts";
 
 const SPEC = "039-pg-identity" as const;
 
+/** sysusers.d lines for the fleet's service accounts. */
 export const serviceAccountsConf = (
   services: Array<{ name: string; uid: number; description: string }>,
 ) =>
@@ -21,6 +22,7 @@ export const serviceAccountsConf = (
     }" /var/lib/${s.name} /usr/sbin/nologin`
   ).join("\n") + "\n";
 
+/** The fleet's service accounts on every server (spec 039). */
 export const services = (): Capability => ({ fleet, host }) => {
   const list = fleet.services ?? [];
   if (host.kind === "workstation" || !list.length) return { spec: SPEC };

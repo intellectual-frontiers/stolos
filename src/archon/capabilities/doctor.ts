@@ -10,6 +10,7 @@ import type { Capability } from "../model/types.ts";
 
 const SPEC = "026-doctor" as const;
 
+/** The network tools archon doctor calls. */
 export const DOCTOR_PACKAGES = [
   "iproute2", // ip
   "iputils-ping", // ping
@@ -21,6 +22,7 @@ export const DOCTOR_PACKAGES = [
   "curl",
 ];
 
+/** Installs them (spec 026). */
 export const doctor = (): Capability => () => ({
   spec: SPEC,
   packages: DOCTOR_PACKAGES.map((name) => ({ name, spec: SPEC })),

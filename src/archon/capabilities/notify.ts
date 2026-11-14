@@ -16,6 +16,7 @@ import { timedJob } from "./ops.ts";
 
 const SPEC = "025-notify" as const;
 
+/** Emails the fleet's shared mailbox about major events (spec 025). */
 export const notify = (): Capability => ({ fleet }) => {
   if (!fleet.mail) return { spec: SPEC };
   return {

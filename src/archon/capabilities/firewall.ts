@@ -46,6 +46,7 @@ export function lanSources(plan: HostPlan): string[] {
   return [...new Set(plan.ports.flatMap((p) => p.from ?? []))];
 }
 
+/** ufw: incoming traffic denied except the ports the plan opens (spec 008). */
 export const firewall = (): Capability => () => ({
   spec: SPEC,
   packages: [{ name: "ufw", spec: SPEC }],

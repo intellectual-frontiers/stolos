@@ -15,6 +15,7 @@ import { archonMotd } from "../render/motd.ts";
 
 const SPEC = "022-cockpit" as const;
 
+/** Ubuntu's web console on every server, with PCP's metric history (spec 022). */
 export const cockpit = (): Capability => ({ fleet, host }) => {
   const from = localNetworks(fleet);
   return {

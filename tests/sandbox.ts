@@ -163,9 +163,10 @@ async function probe(home: string, run: Sandbox["run"]): Promise<void> {
     script,
     `import { P } from ${JSON.stringify(src("core/paths.ts"))};
 import { LEDGER, VAULT_LOCAL } from ${JSON.stringify(src("core/secret-ledger.ts"))};
-import { PROMPT_STATUS, vaultDir } from ${JSON.stringify(src("vault/state.ts"))};
+import { PROMPT_STATUS } from ${JSON.stringify(src("vault/state.ts"))};
+import { BACKUP_DIR } from ${JSON.stringify(src("vault/zip.ts"))};
 import { defaultLogPath } from ${JSON.stringify(src("core/ui.ts"))};
-console.log(JSON.stringify([P.secrets, P.bootCache, LEDGER, VAULT_LOCAL, PROMPT_STATUS, vaultDir(), defaultLogPath()]));`,
+console.log(JSON.stringify([P.secrets, P.bootCache, LEDGER, VAULT_LOCAL, PROMPT_STATUS, BACKUP_DIR, defaultLogPath()]));`,
   );
   const r = await run(script, []);
   assert(r.code === 0, `sandbox probe failed: ${r.out}`);

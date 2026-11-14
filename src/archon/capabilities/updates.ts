@@ -22,6 +22,7 @@ export const APT_NETWORK_IPV4 = [
 
 const SPEC = "009-updates" as const;
 
+/** Ubuntu's unattended-upgrades, plus the -updates pocket (spec 009). */
 export const updates = (): Capability => ({ fleet, host }) => ({
   spec: SPEC,
   packages: [{ name: "unattended-upgrades", spec: SPEC }],

@@ -11,6 +11,7 @@ import { archonService, timer } from "../render/systemd.ts";
 
 const SPEC = "010-tools" as const;
 
+/** The tool catalog, its apt packages, and the weekly tools sync (spec 010). */
 export const tools = (): Capability => ({ host }) => ({
   spec: SPEC,
   // The agent layer is a workstation's (spec 030): servers never get it.

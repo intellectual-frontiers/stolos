@@ -243,7 +243,7 @@ export function renderNetworkDoc(
   add(
     "secrets",
     "Where secrets live",
-    `<p>Names and places only. Boot-machine secrets are copied to the owner's OneDrive Personal Vault (encrypted there, behind a second sign-in) (deno task boot vault backup).</p>` +
+    `<p>Names and places only. Boot-machine secrets are backed up as one ZIP (deno task boot vault backup) that the owner keeps somewhere safe and encrypted.</p>` +
       table(
         ["Secret", "Holder", "Where", "If lost"],
         SECRET_INVENTORY.map((

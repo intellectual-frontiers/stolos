@@ -17,6 +17,7 @@ import type { Capability } from "../model/types.ts";
 
 const SPEC = "033-etckeeper" as const;
 
+/** /etc's history in a local git repository, one commit per change (spec 033). */
 export const etckeeper = (): Capability => () => ({
   spec: SPEC,
   packages: [{ name: "etckeeper", spec: SPEC }],

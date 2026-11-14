@@ -60,6 +60,7 @@ export const vscode = (): Capability => ({ host, users }) => {
 
 const SPEC = "020-workstation" as const;
 
+/** A workstation's base: its packages, its files, and the checks that apply to it (spec 020). */
 export const workstationBase = (): Capability => ({ host, fleet, users }) => ({
   spec: SPEC,
   packages: ["git", "curl", "unzip", "software-properties-common"].map((name) => ({

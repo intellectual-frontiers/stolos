@@ -10,6 +10,7 @@ import type { Capability, GuestDef } from "../model/types.ts";
 
 const SPEC = "017-guests" as const;
 
+/** LXD's preseed: its bridge and storage pool, used once by lxd init. */
 export const LXD_PRESEED = `# Rendered by archon from spec ${SPEC}. Used once by lxd init --preseed.
 config: {}
 networks:
@@ -64,6 +65,7 @@ RemainAfterExit=yes
 WantedBy=sys-subsystem-net-devices-lxdbr0.device
 `;
 
+/** LXD and the host's guests (spec 017). */
 export const guests = (): Capability => ({ host }) => {
   const list = host.guests ?? [];
   if (!list.length) return { spec: SPEC };

@@ -73,6 +73,7 @@ export const NO_MULTICAST_NAMES = {
   ],
 };
 
+/** Ubuntu Server's own components, verified, and archon's own files on the host (spec 001). */
 export const platform = (): Capability => ({ host, fleet }) => ({
   spec: SPEC,
   packages: RELIED_ON.map((name) => ({ name, spec: SPEC })),

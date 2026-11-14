@@ -15,6 +15,7 @@ import { header } from "../render/systemd.ts";
 
 const SPEC = "006-accounts" as const;
 
+/** Archon's groups, the operator sudo rule, and ops' GitHub access (spec 006). */
 export const accounts = (): Capability => ({ fleet, host }) => ({
   spec: SPEC,
   files: [

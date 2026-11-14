@@ -25,6 +25,7 @@ import {
 
 const SPEC = "027-mail" as const;
 
+/** Where Postfix's files are. */
 export const MAIL = {
   mainCf: "/etc/postfix/main.cf",
   sender: "/etc/postfix/archon-sender.regexp",
@@ -114,6 +115,7 @@ export function recipientMap(fleet: FleetDef, host: HostDef): string {
   return `# Rendered by archon from spec ${SPEC}. Do not edit.\n/^[^@]+@(${local})$/ ${m.to}\n`;
 }
 
+/** Every server can send mail through Cloudflare Email Service (spec 027). */
 export const mail = (): Capability => ({ fleet, host }) => {
   if (!fleet.mail) return { spec: SPEC };
   const file = (path: string, content: string) => ({
