@@ -294,14 +294,220 @@ typed by a person).
 
 ## Every day
 
-- `deno task archon`: where you are, and what to do next.
-- Change a file under `fleets/<id>/`, `deno task archon build`, then commit (signed) and push: every
-  server applies it within 15 minutes.
-- `deno task archon fleet status`: every server, how it is.
-- `archon explain <code>`: what a problem means and how to fix it.
-- `deno task archon fleet upgrade v<version>`: adopt a newer engine.
-- `deno task archon keys`: your signing keys, each problem with its fix (`keys setup` repairs).
-- `deno task boot vault backup` after anything that made a secret; move the ZIP somewhere safe.
+Open a terminal in your fleet repository (on Windows: PowerShell, `cd C:\fleet`), then:
+
+```sh
+git pull                          # what others (or you, elsewhere) changed
+deno task archon                  # where you are, and the one command to run next
+deno task archon fleet status     # every server, how it is
+```
+
+## Common tasks, step by step
+
+The examples use `server-hostname` for a server and `my-fleet` for the fleet: put your own names in
+their place. Every change you push is signed (Git asks for your passphrase); every server applies it
+within 15 minutes.
+
+<details>
+<summary><b>Add a server</b></summary>
+
+1. Describe it and get it ready to install. `--claim` means "the next unknown machine that boots
+   from the network becomes this server" (within 30 minutes):
+
+   ```sh
+   deno task archon host add server-hostname --claim
+   ```
+
+   If you know its network card's MAC address, use that instead, so only that machine can take the
+   name: `--mac-address 1c:83:41:30:25:f2`.
+
+2. Start the boot server on the boot machine, and leave it running:
+
+   ```sh
+   deno task boot serve
+   ```
+
+3. Power the new machine on and make it boot from the network (the boot menu key at power-on: F7,
+   F12, or F11, then the "UEFI PXE IPv4" entry for its wired port).
+4. Watch the boot server's window: the installer reports each step, then `server-hostname: ✓ Ready`.
+   About 15 to 30 minutes.
+5. Save what the machine reported about itself (its MAC address), signed:
+
+   ```sh
+   git pull
+   git add -A && git commit -m "my-fleet: server-hostname installed" && git push
+   ```
+
+6. Log in: `ssh server-hostname`. On the server, `archon` shows its state and `archon verify` checks
+   every piece.
+
+**If the disk is not blank**, the install stops before writing anything and the boot window says
+what it found (`archon explain E051-DISK-NOT-BLANK`). When you are sure it may be erased, say so,
+yourself (never an agent), for this one install, then boot it again:
+
+```sh
+deno task boot arm server-hostname --claim --confirm-destroy server-hostname
+```
+
+**If it has less than 8 GB of RAM**, a network install stalls. Install Ubuntu 26.04 Server from a
+USB stick instead, then: `deno task archon host bootstrap server-hostname --ssh you@<its address>`.
+
+</details>
+
+<details>
+<summary><b>Add a workstation (your PC's Ubuntu on WSL)</b></summary>
+
+In PowerShell: `wsl --install -d Ubuntu-26.04`, open Ubuntu, create your account, then in Ubuntu:
+
+```sh
+sudo apt update && sudo apt install -y git gh unzip
+gh auth login --web --git-protocol https && gh auth setup-git
+sudo mkdir -p /srv/archon && sudo chown "$USER": /srv/archon
+git clone https://github.com/<you>/<fleet repository>.git /srv/archon
+curl -fsSL https://deno.land/install.sh | sh -s -- -y && exec bash
+cd /srv/archon && deno task archon workstation add
+git add -A && git commit -m "my-fleet: add workstation" && git push
+```
+
+Open a new Ubuntu tab: the fleet's tools, prompt, and Claude Code are ready. Details:
+[docs/workstation.md](docs/workstation.md).
+
+</details>
+
+<details>
+<summary><b>Change something on a server</b></summary>
+
+Edit its file, `fleets/my-fleet/hosts/server-hostname/host.ts` (or `fleets/my-fleet/fleet.ts` for
+every server), then:
+
+```sh
+deno task archon build            # checks it; fix anything it shows
+git add -A && git commit -m "my-fleet: what changed" && git push
+deno task archon fleet status     # within 15 minutes, each server has applied it
+```
+
+In a hurry: `ssh -t server-hostname archon update` applies it now (it asks for your password).
+
+</details>
+
+<details>
+<summary><b>Turn on PostgreSQL (or S3, SMB): durable or ephemeral data</b></summary>
+
+Anything that holds people's data must be marked, when you turn it on, as one of:
+
+- **durable**: it exists nowhere else. The server is backed up every night, and nothing reinstalls
+  or wipes it unless you type `--confirm-destroy server-hostname`.
+- **ephemeral**: losing it is harmless (test data, a cache). Reinstalls go ahead without asking.
+
+There is no default: you choose.
+
+```sh
+deno task archon decide pg on --durable --host server-hostname
+git add -A && git commit -m "my-fleet: PostgreSQL on server-hostname" && git push
+```
+
+Check later: `ssh server-hostname archon data` lists each source of data and its choice. Going from
+ephemeral to durable is always allowed. Going from durable to ephemeral removes the protection, so
+it needs the confirmation:
+
+```sh
+deno task archon decide pg on --ephemeral --host server-hostname --confirm-destroy server-hostname
+```
+
+</details>
+
+<details>
+<summary><b>Reinstall a server</b></summary>
+
+Everything comes back from the repository and the boot machine (the same SSH identity, so
+`ssh server-hostname` still works); anything only on the server is lost. With `boot serve` running:
+
+```sh
+deno task boot reinstall server-hostname
+```
+
+A durable server (or one that cannot be asked) is reinstalled only with
+`--confirm-destroy server-hostname`. Copy off anything you need first.
+
+</details>
+
+<details>
+<summary><b>Restart or turn off a server</b></summary>
+
+On the server: `archon reboot` or `archon poweroff` (they ask for your password). Both wait for any update in progress
+to finish first. Never pull the power during an update: it can damage the package database.
+
+</details>
+
+<details>
+<summary><b>Retire a server for good</b></summary>
+
+```sh
+deno task boot retire server-hostname                                     # only shows what it holds
+deno task boot retire server-hostname --confirm-destroy server-hostname   # removes it from the fleet
+```
+
+Its DNS names, deploy key, secrets, and files leave the fleet; the machine itself is not touched.
+
+</details>
+
+<details>
+<summary><b>Keys: a new PC, a lost key, a yearly change</b></summary>
+
+| Situation                                 | Run                                                       |
+| ----------------------------------------- | --------------------------------------------------------- |
+| check everything                          | `deno task archon keys`                                   |
+| a new PC, or anything is wrong            | `deno task archon keys setup` (safe to run again)         |
+| a planned change of key                   | `deno task archon keys rotate`, then `git push`           |
+| the daily key is lost                     | `deno task archon keys lost --recovery <file>`, then push |
+| the laptop was stolen (key may be copied) | the same, with `--stolen`                                 |
+| twice a year                              | `deno task archon keys check-recovery --key <file>`       |
+
+</details>
+
+<details>
+<summary><b>Back up the boot machine</b></summary>
+
+After anything that made a secret (a new server, a new token, a new key):
+
+```sh
+deno task boot vault backup
+```
+
+It writes one ZIP and tells you where. Move it somewhere safe and encrypted (a password manager, an
+encrypted USB drive, OneDrive's Personal Vault). `deno task boot vault restore` explains how to use
+it on a new PC.
+
+</details>
+
+<details>
+<summary><b>Adopt a newer engine</b></summary>
+
+```sh
+deno task archon fleet upgrade v<version>
+git push
+```
+
+It checks the new version against your fleet first; your servers pick it up within 15 minutes.
+
+</details>
+
+## When something goes wrong
+
+Most messages end with `explain: archon explain <code>`: run it for what it means and how to fix it.
+`deno task boot doctor` checks the boot machine; `archon doctor` checks a server.
+
+| You see                                               | What to do                                                                                                                       |
+| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `push refused here: ... is not signed`                | `git commit --amend --no-edit -S`, then push again. `deno task archon keys` shows what is missing                                |
+| a server does not pick up your change                 | `deno task archon fleet status`; on the server, `journalctl -t archon-approval` says why it refused (usually `E047-UNSIGNED`)    |
+| the boot window shows nothing when the machine boots  | `deno task boot doctor` (the firewall, and the router's network boot setting); is the machine booting from the network (F7/F12)? |
+| `disk is not blank` in the boot window                | it protected the disk. If it may be erased: `deno task boot arm server-hostname --claim --confirm-destroy server-hostname`       |
+| the install stops after `installer image`             | the machine has less than 8 GB of RAM: install from USB, then `host bootstrap` (above)                                           |
+| `ssh server-hostname` warns that the host key changed | stop: do not accept it. `deno task boot doctor`, then `archon explain E047-HOST-KEY`                                             |
+| you forgot your daily key's passphrase                | it cannot be recovered: `deno task archon keys lost --recovery <file>`                                                           |
+| `integrity check failed` or `lockfile is out of date` | stop: never regenerate `deno.lock` to make it go away. See [docs/fleet-repository.md](docs/fleet-repository.md#troubleshooting)  |
+| `the repository has uncommitted changes`              | commit (or `git stash`) your other change first                                                                                  |
 
 ## Documentation
 
