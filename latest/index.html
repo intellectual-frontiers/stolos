@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Stolos v0.39.0</title>
+<title>Stolos v0.40.0</title>
 <link rel="stylesheet" href="./styles.css">
 <link rel="stylesheet" href="./page.css">
 <script src="./darkmode_toggle.js"></script>
@@ -17,38 +17,38 @@
 </head>
 <body>
 <main>
-<h1>Stolos v0.39.0</h1>
+<h1>Stolos v0.40.0</h1>
 <p>The fleet engine (its command is <code>archon</code>), documented from its TypeScript.</p>
 <p class="start">Start here: <a href="./mod.ts/index.html">the overview</a>, with how the
 pieces fit, in diagrams. Then the model: <a href="./archon/model/types.ts/index.html">types.ts</a>.
 Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 <h2>archon/</h2>
 <ul>
-<li><a href="./archon/build.ts/index.html"><code>build.ts</code></a> archon validate and archon build (spec 002): validate the fleet and every host plan (TypeScript, Article 10), then render each host's files into out/hosts/&lt;host&gt;/rootfs/.</li>
-<li><a href="./archon/main.ts/index.html"><code>main.ts</code></a> archon: entry point for the CLI.</li>
+<li><a href="./archon/build.ts/index.html"><code>build.ts</code></a> stolos validate and stolos build (spec 002): validate the fleet and every host plan (TypeScript, Article 10), then render each host's files into out/hosts/&lt;host&gt;/rootfs/.</li>
+<li><a href="./archon/main.ts/index.html"><code>main.ts</code></a> The command line, for both commands (spec 059): archon on each machine (servers, workstations) and stolos on your PC (src/stolos/main.ts), over one registry where every command says where it runs.</li>
 <li><a href="./archon/version.ts/index.html"><code>version.ts</code></a> The engine's version (spec 046-engine-instance).</li>
 </ul>
 <h2>archon-boot/</h2>
 <ul>
 <li><a href="./archon-boot/assets.ts/index.html"><code>assets.ts</code></a> Download Ubuntu's boot files and installer image once, verify each against its pinned SHA-256 (Article 12), and cache them on the boot machine.</li>
-<li><a href="./archon-boot/doctor.ts/index.html"><code>doctor.ts</code></a> deno task boot doctor (spec 004): one read-only look at this boot machine, with the fix for each problem: the checkout (hosts install from GitHub, so local changes must be pushed), the model,…</li>
+<li><a href="./archon-boot/doctor.ts/index.html"><code>doctor.ts</code></a> deno task stolos boot doctor (spec 004): one read-only look at this boot machine, with the fix for each problem: the checkout (hosts install from GitHub, so local changes must be pushed), the…</li>
 <li><a href="./archon-boot/firewall.ts/index.html"><code>firewall.ts</code></a> Firewall check for boot serve (spec 004): warn, with the exact command, when this machine's firewall would block servers from reaching TFTP (UDP) or HTTP (TCP).</li>
 <li><a href="./archon-boot/grub.ts/index.html"><code>grub.ts</code></a> GRUB configs served to Ubuntu's network GRUB (spec 004).</li>
 <li><a href="./archon-boot/guard.ts/index.html"><code>guard.ts</code></a> Spec 051: the blank-disk guard.</li>
 <li><a href="./archon-boot/http.ts/index.html"><code>http.ts</code></a> A small HTTP/1.1 server for archon-boot (spec 004).</li>
-<li><a href="./archon-boot/mail.ts/index.html"><code>mail.ts</code></a> The boot machine's side of outbound mail (specs 025, 027): deno task boot mail-setup store the Cloudflare API token (once) deno task boot mail-push &lt;host&gt; give a running host the token over SSH…</li>
+<li><a href="./archon-boot/mail.ts/index.html"><code>mail.ts</code></a> The boot machine's side of outbound mail (specs 025, 027): deno task stolos boot mail-setup store the Cloudflare API token (once) deno task stolos boot mail-push &lt;host&gt; give a running host the…</li>
 <li><a href="./archon-boot/main.ts/index.html"><code>main.ts</code></a> archon-boot (spec 004): the boot machine's side of a zero-touch install.</li>
-<li><a href="./archon-boot/observe.ts/index.html"><code>observe.ts</code></a> deno task boot observe (spec 023): recent installs from the boot server's own telemetry (the OTLP JSON files on this PC): when, how long, which step took the time, and what failed.</li>
+<li><a href="./archon-boot/observe.ts/index.html"><code>observe.ts</code></a> deno task stolos boot observe (spec 023): recent installs from the boot server's own telemetry (the OTLP JSON files on this PC): when, how long, which step took the time, and what failed.</li>
 <li><a href="./archon-boot/pins.ts/index.html"><code>pins.ts</code></a> Ubuntu boot files archon-boot serves, pinned by SHA-256 (Article 12, spec 004).</li>
 <li><a href="./archon-boot/pretty.ts/index.html"><code>pretty.ts</code></a> The boot server's window (spec 004, Article 19; spec 049): a rendering of structured events, never their source.</li>
 <li><a href="./archon-boot/progress.ts/index.html"><code>progress.ts</code></a> Install and first-boot progress in the boot server's window (spec 004).</li>
-<li><a href="./archon-boot/reinstall.ts/index.html"><code>reinstall.ts</code></a> deno task boot reinstall &lt;host&gt; (spec 004): one command from the boot machine re-installs a running host, with no one at its console: 1.</li>
-<li><a href="./archon-boot/retire.ts/index.html"><code>retire.ts</code></a> deno task boot retire &lt;host&gt; --confirm-destroy &lt;host&gt; (spec 045): a server leaves the fleet, the reverse of archon host add.</li>
+<li><a href="./archon-boot/reinstall.ts/index.html"><code>reinstall.ts</code></a> deno task stolos boot reinstall &lt;host&gt; (spec 004): one command from the boot machine re-installs a running host, with no one at its console: 1.</li>
+<li><a href="./archon-boot/retire.ts/index.html"><code>retire.ts</code></a> deno task stolos boot retire &lt;host&gt; --confirm-destroy &lt;host&gt; (spec 045): a server leaves the fleet, the reverse of stolos host add.</li>
 <li><a href="./archon-boot/server.ts/index.html"><code>server.ts</code></a> archon-boot's HTTP server (spec 004): UEFI HTTP Boot files, GRUB menus per host (by Boot URI, or by MAC when the model has one), the verified installer image, and each host's install config with…</li>
 <li><a href="./archon-boot/stall.ts/index.html"><code>stall.ts</code></a> Spec 051: a machine that takes the installer image and then goes quiet.</li>
 <li><a href="./archon-boot/telemetry.ts/index.html"><code>telemetry.ts</code></a> The boot server's own telemetry (spec 023).</li>
 <li><a href="./archon-boot/tftp.ts/index.html"><code>tftp.ts</code></a> A read-only TFTP server for PXE (spec 004): UEFI PXE firmware fetches shim over TFTP, shim fetches GRUB, and GRUB its menu, kernel, and initrd, all from the same server.</li>
-<li><a href="./archon-boot/web.ts/index.html"><code>web.ts</code></a> The boot machine's side of HTTPS (spec 032): deno task boot web-setup store the Cloudflare DNS token (once) deno task boot web-push &lt;host&gt; give a running server the token over SSH The token lives…</li>
+<li><a href="./archon-boot/web.ts/index.html"><code>web.ts</code></a> The boot machine's side of HTTPS (spec 032): deno task stolos boot web-setup store the Cloudflare DNS token (once) deno task stolos boot web-push &lt;host&gt; give a running server the token over SSH…</li>
 </ul>
 <h2>archon/apply/</h2>
 <ul>
@@ -137,10 +137,10 @@ Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 <h2>archon/fleet/</h2>
 <ul>
 <li><a href="./archon/fleet/decisions.ts/index.html"><code>decisions.ts</code></a> Spec 047-intent-and-identity (Article 25): what operators decided for a host (which opt-ins are on, and whether their data is durable) lives in Git, in fleets/&lt;id&gt;/hosts/&lt;host&gt;/decisions.ts,…</li>
-<li><a href="./archon/fleet/registration.ts/index.html"><code>registration.ts</code></a> Spec 047-intent-and-identity (Article 25): who a host is, in Git: fleets/&lt;id&gt;/hosts/&lt;host&gt;/registration.ts, written by archon host add, in one fixed form.</li>
+<li><a href="./archon/fleet/registration.ts/index.html"><code>registration.ts</code></a> Spec 047-intent-and-identity (Article 25): who a host is, in Git: fleets/&lt;id&gt;/hosts/&lt;host&gt;/registration.ts, written by stolos host add, in one fixed form.</li>
 <li><a href="./archon/fleet/scaffold.ts/index.html"><code>scaffold.ts</code></a> A new fleet repository's files (spec 046-engine-instance): what archon fleet init &lt;id&gt; writes into a repository that has none of them yet.</li>
-<li><a href="./archon/fleet/upgrade.ts/index.html"><code>upgrade.ts</code></a> archon fleet upgrade &lt;tag&gt; (spec 046-engine-instance, Articles 9, 12, 24): move a fleet repository to another released version of the engine, safely.</li>
-<li><a href="./archon/fleet/use.ts/index.html"><code>use.ts</code></a> archon fleet use &lt;id&gt;: which fleet of this repository every archon command in this checkout is for, remembered in .git/archon/fleet (never committed, so each checkout chooses its own).</li>
+<li><a href="./archon/fleet/upgrade.ts/index.html"><code>upgrade.ts</code></a> stolos fleet upgrade &lt;tag&gt; (spec 046-engine-instance, Articles 9, 12, 24): move a fleet repository to another released version of the engine, safely.</li>
+<li><a href="./archon/fleet/use.ts/index.html"><code>use.ts</code></a> stolos fleet use &lt;id&gt;: which fleet of this repository every archon command in this checkout is for, remembered in .git/archon/fleet (never committed, so each checkout chooses its own).</li>
 </ul>
 <h2>archon/guests/</h2>
 <ul>
@@ -154,25 +154,25 @@ Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 </ul>
 <h2>archon/identity/</h2>
 <ul>
-<li><a href="./archon/identity/fleet-init.ts/index.html"><code>fleet-init.ts</code></a> archon fleet init (spec 003): the fleet's identity, from your GitHub account as gh reports it.</li>
-<li><a href="./archon/identity/keys-commands.ts/index.html"><code>keys-commands.ts</code></a> Spec 057: archon keys, every step of your signing keys in one place, and idempotent: each command looks at what is already there, does only what is missing, and can be run again at any time (after…</li>
+<li><a href="./archon/identity/fleet-init.ts/index.html"><code>fleet-init.ts</code></a> stolos fleet init (spec 003): the fleet's identity, from your GitHub account as gh reports it.</li>
+<li><a href="./archon/identity/keys-commands.ts/index.html"><code>keys-commands.ts</code></a> Spec 057: stolos keys, every step of your signing keys in one place, and idempotent: each command looks at what is already there, does only what is missing, and can be run again at any time (after…</li>
 <li><a href="./archon/identity/keys.ts/index.html"><code>keys.ts</code></a> Spec 057: your signing keys, checked and fixed by one command.</li>
-<li><a href="./archon/identity/signers-commands.ts/index.html"><code>signers-commands.ts</code></a> archon signers (spec 047-intent-and-identity): list, add, and remove the fleet's signers (fleets/&lt;id&gt;/signers.ts, in its fixed form), and, on a host in an emergency, trust a key a person types there.</li>
+<li><a href="./archon/identity/signers-commands.ts/index.html"><code>signers-commands.ts</code></a> stolos signers (spec 047-intent-and-identity): list, add, and remove the fleet's signers (fleets/&lt;id&gt;/signers.ts, in its fixed form), and, on a host in an emergency, trust a key a person types there.</li>
 <li><a href="./archon/identity/signers.ts/index.html"><code>signers.ts</code></a> Spec 047-intent-and-identity (Article 9): who may approve a fleet's changes, and how a host checks an approval before it applies anything.</li>
 </ul>
 <h2>archon/install/</h2>
 <ul>
 <li><a href="./archon/install/apt-busy.ts/index.html"><code>apt-busy.ts</code></a> Spec 054: powering a machine off while apt or dpkg runs can break dpkg's state (the lab did it: dpkg's files were left empty).</li>
 <li><a href="./archon/install/first-boot.ts/index.html"><code>first-boot.ts</code></a> archon first-boot (spec 005): run once by cloud-init on a freshly installed host, after the first-boot script cloned the repository with this host's deploy key.</li>
-<li><a href="./archon/install/host-add.ts/index.html"><code>host-add.ts</code></a> archon host add (spec 004): write the host's model, give it its own GitHub deploy key (read-only access to this repository (spec 048); the private half stays in the boot machine's secret store),…</li>
-<li><a href="./archon/install/host-bootstrap.ts/index.html"><code>host-bootstrap.ts</code></a> archon host bootstrap (spec 005): finish a host whose Ubuntu was installed by hand (from Ubuntu's ISO, a cloud image, anything) instead of by network boot.</li>
+<li><a href="./archon/install/host-add.ts/index.html"><code>host-add.ts</code></a> stolos host add (spec 004): write the host's model, give it its own GitHub deploy key (read-only access to this repository (spec 048); the private half stays in the boot machine's secret store),…</li>
+<li><a href="./archon/install/host-bootstrap.ts/index.html"><code>host-bootstrap.ts</code></a> stolos host bootstrap (spec 005): finish a host whose Ubuntu was installed by hand (from Ubuntu's ISO, a cloud image, anything) instead of by network boot.</li>
 <li><a href="./archon/install/host-keys.ts/index.html"><code>host-keys.ts</code></a> Each host's SSH identity (spec 004): its host keys are made once on the boot machine (ssh-keygen, as for the deploy key), kept in the secret store, and installed by cloud-init at every install.</li>
 <li><a href="./archon/install/netboot.ts/index.html"><code>netboot.ts</code></a> archon reboot [--netboot] (spec 004): for a re-install, boot from the network once (UEFI BootNext) and then reboot.</li>
-<li><a href="./archon/install/publish.ts/index.html"><code>publish.ts</code></a> Specs 004 and 045: what archon host add and boot retire change in the checkout is built, committed, and pushed by the same command (pushing to main is approval, Article 9).</li>
+<li><a href="./archon/install/publish.ts/index.html"><code>publish.ts</code></a> Specs 004 and 045: what stolos host add and boot retire change in the checkout is built, committed, and pushed by the same command (pushing to main is approval, Article 9).</li>
 <li><a href="./archon/install/recognize.ts/index.html"><code>recognize.ts</code></a> Spec 051: how a machine becomes a host when it network-boots.</li>
 <li><a href="./archon/install/report.ts/index.html"><code>report.ts</code></a> First-boot progress to the boot server's window (spec 004): the install left the URL in /etc/archon/boot-events.</li>
 <li><a href="./archon/install/ubuntu.ts/index.html"><code>ubuntu.ts</code></a> The Ubuntu point release hosts are installed from (spec 004 pins).</li>
-<li><a href="./archon/install/workstation.ts/index.html"><code>workstation.ts</code></a> archon workstation add (spec 020): run inside Ubuntu on WSL (or on an Ubuntu desktop), from the checkout in /srv/archon, as your own user.</li>
+<li><a href="./archon/install/workstation.ts/index.html"><code>workstation.ts</code></a> stolos workstation add (spec 020): run inside Ubuntu on WSL (or on an Ubuntu desktop), from the checkout in /srv/archon, as your own user.</li>
 </ul>
 <h2>archon/mcp/</h2>
 <ul>
@@ -181,9 +181,9 @@ Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 <h2>archon/model/</h2>
 <ul>
 <li><a href="./archon/model/durable.ts/index.html"><code>durable.ts</code></a> 044-durable (Article 23): data that can come from end users is either durable (it exists nowhere else) or ephemeral (losing it is harmless).</li>
-<li><a href="./archon/model/export.ts/index.html"><code>export.ts</code></a> archon export (spec 002 FR-006, spec 014): the fleet, hosts, specs, provenance, and snapshots as RDF (Turtle) under out/rdf/.</li>
+<li><a href="./archon/model/export.ts/index.html"><code>export.ts</code></a> stolos export (spec 002 FR-006, spec 014): the fleet, hosts, specs, provenance, and snapshots as RDF (Turtle) under out/rdf/.</li>
 <li><a href="./archon/model/identity-check.ts/index.html"><code>identity-check.ts</code></a> Spec 051: a check that ties a host to the machine it installed on.</li>
-<li><a href="./archon/model/load.ts/index.html"><code>load.ts</code></a> Load the active fleet (fleets/&lt;id&gt;/fleet.ts, written by archon fleet init) and every host (fleets/&lt;id&gt;/hosts/&lt;name&gt;/host.ts, written by archon host add).</li>
+<li><a href="./archon/model/load.ts/index.html"><code>load.ts</code></a> Load the active fleet (fleets/&lt;id&gt;/fleet.ts, written by stolos fleet init) and every host (fleets/&lt;id&gt;/hosts/&lt;name&gt;/host.ts, written by stolos host add).</li>
 <li><a href="./archon/model/providers.ts/index.html"><code>providers.ts</code></a> The fleet's outside providers as explicit choices (spec 046).</li>
 <li><a href="./archon/model/resolve.ts/index.html"><code>resolve.ts</code></a> Resolve a host into a HostPlan: run every capability, merge contributions, then run derive hooks over the merged plan (spec 002).</li>
 <li><a href="./archon/model/secret-inventory.ts/index.html"><code>secret-inventory.ts</code></a> The secret inventory (spec 028, constitution Article 13): every secret the fleet depends on, by name, where it lives, and how to make it again.</li>
@@ -193,7 +193,7 @@ Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 </ul>
 <h2>archon/notify/</h2>
 <ul>
-<li><a href="./archon/notify/commands.ts/index.html"><code>commands.ts</code></a> The archon notify commands (spec 025), on hosts, workstations, and the boot machine (deno task boot notify runs the same code), and archon mail credential and mail test (spec 027).</li>
+<li><a href="./archon/notify/commands.ts/index.html"><code>commands.ts</code></a> The archon notify commands (spec 025), on hosts, workstations, and the boot machine (deno task stolos boot notify runs the same code), and archon mail credential and mail test (spec 027).</li>
 <li><a href="./archon/notify/events.ts/index.html"><code>events.ts</code></a> Which events send a message (spec 025): major actions only, never every routine run.</li>
 <li><a href="./archon/notify/mime.ts/index.html"><code>mime.ts</code></a> Mail messages for archon notify (spec 025): RFC 5322 with MIME, a plain-text part and a simple HTML part, and small attachments.</li>
 <li><a href="./archon/notify/notify.ts/index.html"><code>notify.ts</code></a> archon notify (spec 025): major events, by email, to the fleet's shared mailbox.</li>
@@ -204,8 +204,8 @@ Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 <h2>archon/observe/</h2>
 <ul>
 <li><a href="./archon/observe/discover.ts/index.html"><code>discover.ts</code></a> archon observe discover (spec 024): find a central OpenTelemetry collector and forward this machine's telemetry to it.</li>
-<li><a href="./archon/observe/fleet-query.ts/index.html"><code>fleet-query.ts</code></a> archon fleet query (spec 048): one SQL question to every server, through each server's MCP server over SSH (the server limits what it answers).</li>
-<li><a href="./archon/observe/fleet-status.ts/index.html"><code>fleet-status.ts</code></a> archon fleet status (specs 021, 022): every server and workstation in the model, its last install and verify as it says them now (spec 048: asked over MCP, cached in this machine's archon.sql when…</li>
+<li><a href="./archon/observe/fleet-query.ts/index.html"><code>fleet-query.ts</code></a> stolos fleet query (spec 048): one SQL question to every server, through each server's MCP server over SSH (the server limits what it answers).</li>
+<li><a href="./archon/observe/fleet-status.ts/index.html"><code>fleet-status.ts</code></a> stolos fleet status (specs 021, 022): every server and workstation in the model, its last install and verify as it says them now (spec 048: asked over MCP, cached in this machine's archon.sql when…</li>
 <li><a href="./archon/observe/next.ts/index.html"><code>next.ts</code></a> &quot;What now?&quot; for a freshly installed server or workstation (specs 021, 022): how to reach it, its web console, and how to observe it.</li>
 <li><a href="./archon/observe/observe.ts/index.html"><code>observe.ts</code></a> archon observe (spec 021): what this machine records about itself, where, and within which limits; observe tui opens otel-tui on it; observe prune keeps PCP's metric archives within their size and…</li>
 <li><a href="./archon/observe/remote.ts/index.html"><code>remote.ts</code></a> Spec 048-observe-by-query: ask a server through its MCP server, over SSH as ops (spec 030, Article 17), the same way an agent does.</li>
@@ -233,7 +233,7 @@ Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 </ul>
 <h2>archon/prov/</h2>
 <ul>
-<li><a href="./archon/prov/prov.ts/index.html"><code>prov.ts</code></a> Provenance (spec 014, Article 16): every apply is recorded as an activity, kept in this machine's archon.sql (spec 048) and exported as W3C PROV (Turtle) by archon export.</li>
+<li><a href="./archon/prov/prov.ts/index.html"><code>prov.ts</code></a> Provenance (spec 014, Article 16): every apply is recorded as an activity, kept in this machine's archon.sql (spec 048) and exported as W3C PROV (Turtle) by stolos export.</li>
 </ul>
 <h2>archon/reconcile/</h2>
 <ul>
@@ -246,7 +246,7 @@ Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 <li><a href="./archon/render/fish.ts/index.html"><code>fish.ts</code></a> fish completions generated from the command registry (Article VI).</li>
 <li><a href="./archon/render/man.ts/index.html"><code>man.ts</code></a> Man pages and fish completions generated from the command registry and from the constitution and personas (Article 6).</li>
 <li><a href="./archon/render/motd.ts/index.html"><code>motd.ts</code></a> The login banner (update-motd) lines Archon adds, in the same calm, colored, emoji style as archon's own output (Article 19).</li>
-<li><a href="./archon/render/network-doc.ts/index.html"><code>network-doc.ts</code></a> The network reference (spec 028), rendered from the site model by archon build into out/site/network-reference.html: the document the owner sends with each network change log (deno task boot…</li>
+<li><a href="./archon/render/network-doc.ts/index.html"><code>network-doc.ts</code></a> The network reference (spec 028), rendered from the site model by stolos build into out/site/network-reference.html: the document the owner sends with each network change log (deno task stolos…</li>
 <li><a href="./archon/render/roff.ts/index.html"><code>roff.ts</code></a> Native roff generation (no dependencies): man(7) macros, written directly.</li>
 <li><a href="./archon/render/systemd.ts/index.html"><code>systemd.ts</code></a> Render systemd unit files (and other INI-style systemd configuration) from TypeScript objects.</li>
 </ul>
@@ -299,7 +299,7 @@ Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 </ul>
 <h2>archon/vault/</h2>
 <ul>
-<li><a href="./archon/vault/commands.ts/index.html"><code>commands.ts</code></a> deno task boot vault &lt;sub&gt; (specs 029 and 056): the boot machine's secrets, and their backup.</li>
+<li><a href="./archon/vault/commands.ts/index.html"><code>commands.ts</code></a> deno task stolos vault &lt;sub&gt; (specs 029 and 056): the boot machine's secrets, and their backup.</li>
 <li><a href="./archon/vault/panel.ts/index.html"><code>panel.ts</code></a> The backup panel (spec 029, Article 19 and 22): one framed panel, amber, red when anything has been unbacked for more than 7 days or host identity keys were never backed up.</li>
 <li><a href="./archon/vault/reminder.ts/index.html"><code>reminder.ts</code></a> Backup reminders (spec 029, Article 22): hard to miss, calm (Article 19).</li>
 <li><a href="./archon/vault/state.ts/index.html"><code>state.ts</code></a> The vault's view of the boot machine's secrets (spec 029): what is there, what the inventory says each one is, and whether the last backup holds it as it is now.</li>
@@ -314,6 +314,10 @@ Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 <li><a href="./archon/web/markdown.ts/index.html"><code>markdown.ts</code></a> 035-welcome-guide: the repository's guides (docs/*.md) as HTML on the welcome page, so one text serves the repository, the man pages, and the server.</li>
 <li><a href="./archon/web/serve.ts/index.html"><code>serve.ts</code></a> archon web serve (specs 032, 035): the welcome page and the guides on 127.0.0.1:8090, behind Traefik.</li>
 <li><a href="./archon/web/welcome.ts/index.html"><code>welcome.ts</code></a> 032-web and 035-welcome-guide: the welcome page every server shows at https://&lt;host&gt;.&lt;domain&gt; (and at any name or address nothing else claims), written for someone new to the server: what it is,…</li>
+</ul>
+<h2>stolos/</h2>
+<ul>
+<li><a href="./stolos/main.ts/index.html"><code>main.ts</code></a> stolos (spec 059): the fleet's command, on your PC, in the fleet repository (deno task stolos ...).</li>
 </ul>
 </main>
 </body>

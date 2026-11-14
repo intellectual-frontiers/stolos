@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/install/host-bootstrap.ts - Stolos v0.39.0 documentation</title>
+  <title>archon/install/host-bootstrap.ts - Stolos v0.40.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.39.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.40.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -98,7 +98,7 @@
 </nav>
 <div id="searchResults"></div><div id="content">
     <main><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc"><div class="markdown"><p><code>archon host bootstrap</code> (spec 005): finish a host whose Ubuntu was installed
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc"><div class="markdown"><p><code>stolos host bootstrap</code> (spec 005): finish a host whose Ubuntu was installed
 by hand (from Ubuntu's ISO, a cloud image, anything) instead of by network
 boot. From the boot machine it copies, over SSH, exactly what the network
 install would have handed cloud-init (the host name, GitHub's host keys, the
@@ -106,7 +106,7 @@ first-boot script, and the host's deploy key), then runs the same first boot
 with sudo. Uses the OpenSSH client that ships with Windows and Linux.</p>
 <pre class="highlight"><code class="language-mermaid">sequenceDiagram
   actor P as Person
-  participant A as archon host bootstrap
+  participant A as stolos host bootstrap
   participant M as The machine (Ubuntu installed)
   P-&gt;&gt;A: host bootstrap olympia --ssh user@address
   A-&gt;&gt;M: its facts: release, RAM, network cards
@@ -116,7 +116,7 @@ with sudo. Uses the OpenSSH client that ships with Windows and Linux.</p>
   A-&gt;&gt;A: registration.ts: the card the machine reported
 </code><button class="copyButton" data-copy="sequenceDiagram
   actor P as Person
-  participant A as archon host bootstrap
+  participant A as stolos host bootstrap
   participant M as The machine (Ubuntu installed)
   P-&gt;&gt;A: host bootstrap olympia --ssh user@address
   A-&gt;&gt;M: its facts: release, RAM, network cards
@@ -186,7 +186,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_bootstrapre
     </div><div id="namespace_hostbootstrap" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-bootstrap.ts&#x2F;~&#x2F;hostBootstrap.html" title="hostBootstrap">
-			    <span>hostBootstrap</span><span>(<span><span>o<span>: <span class="td-ref">HostBootstrapOptions</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>archon host bootstrap: check the machine, copy what a network install would have handed it, run the first boot.</p>
+			    <span>hostBootstrap</span><span>(<span><span>o<span>: <span class="td-ref">HostBootstrapOptions</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>stolos host bootstrap: check the machine, copy what a network install would have handed it, run the first boot.</p>
 </div></div></div>
     </div><div id="namespace_parsebootstrapfacts" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -241,7 +241,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_bootstrapf
     </div><div id="namespace_hostbootstrapoptions" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-bootstrap.ts&#x2F;~&#x2F;HostBootstrapOptions.html" title="HostBootstrapOptions">
-			    <span>HostBootstrapOptions</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What archon host bootstrap is given.</p>
+			    <span>HostBootstrapOptions</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What stolos host bootstrap is given.</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-bootstrap.ts&#x2F;~&#x2F;HostBootstrapOptions.html#property_name">
                   <span>name</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The host.</p>
@@ -342,25 +342,25 @@ reports them), and its network cards (the default route's first).</p>
                   </span>
                 </a>
               </li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;Surface.html" title="Surface"><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
+<span class="hover:bg-TypeAlias/15 hover:bg-TypeAliasDark/15">
+                    Surface
+                  </span>
+                </a>
+              </li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;commandName.html" title="commandName"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
+                    commandName
+                  </span>
+                </a>
+              </li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;main.html" title="main"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
                     main
                   </span>
                 </a>
-              </li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;run.html" title="run"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
-                    run
-                  </span>
-                </a>
-              </li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;assets.ts&#x2F;~&#x2F;cacheDir.html" title="cacheDir"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
-                    cacheDir
-                  </span>
-                </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1182 symbols</span><svg
+              <span class="leading-none">view all 1189 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

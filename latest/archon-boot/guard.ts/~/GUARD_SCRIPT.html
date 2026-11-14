@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>GUARD_SCRIPT - archon-boot/guard.ts - Stolos v0.39.0 documentation</title>
+  <title>GUARD_SCRIPT - archon-boot/guard.ts - Stolos v0.40.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon-boot&#x2F;guard.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.39.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.40.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -199,7 +199,7 @@ F=/tmp/archon-facts
   done
 } &gt;"$F"
 A=$(curl -fsS --noproxy "*" -m 30 -X POST -H 'content-type: text/plain' --data-binary @"$F" "\${B}facts") ||
-  A="stop: the boot server did not answer, so nothing was erased (is deno task boot serve running?)"
+  A="stop: the boot server did not answer, so nothing was erased (is deno task stolos boot serve running?)"
 case "$A" in
   ok*) exit 0 ;;
 esac

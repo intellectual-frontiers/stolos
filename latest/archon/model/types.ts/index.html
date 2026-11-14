@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/model/types.ts - Stolos v0.39.0 documentation</title>
+  <title>archon/model/types.ts - Stolos v0.40.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.39.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.40.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -351,9 +351,9 @@ warning with their fix and never count as a failure (installed.json stays ok).</
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;FleetDef.html" title="FleetDef">
 			    <span>FleetDef</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fleet: one identity shared by every host (spec 003), in
-<code>fleets/&lt;id&gt;/fleet.ts</code> of a fleet repository. <code>archon fleet init &lt;id&gt;</code>
+<code>fleets/&lt;id&gt;/fleet.ts</code> of a fleet repository. <code>stolos fleet init &lt;id&gt;</code>
 writes the first one from your GitHub account; edit it freely after, then
-<code>archon build</code>.</p>
+<code>stolos build</code>.</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;FleetDef.html#property_admin">
                   <span>admin</span><span>: { user<span>: <span class="td-kw">string</span></span>; uid<span>: <span class="td-kw">number</span></span>; github<span>: <span class="td-ref">GitHubIdentity</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fleet's admin: one person, one account on every host (spec 003).</p>
@@ -495,7 +495,7 @@ that exists nowhere else (backed up with <code>lxc export</code> and guarded), o
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;HostDecisions.html" title="HostDecisions">
 			    <span>HostDecisions</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What operators decided for a host, in Git (spec 047): fleets/&lt;id&gt;/hosts/&lt;host&gt;/decisions.ts,
-written by <code>archon decide</code>. A decision here wins over the host's own record.</p>
+written by <code>stolos decide</code>. A decision here wins over the host's own record.</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;HostDecisions.html#property_optins">
                   <span>optIns</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-ref">OptInRecord</span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What operators decided in Git (decisions.ts): opt-in name to its record.</p>
@@ -504,8 +504,8 @@ written by <code>archon decide</code>. A decision here wins over the host's own 
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;HostDef.html" title="HostDef">
 			    <span>HostDef</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A host: one machine of the fleet, in <code>fleets/&lt;id&gt;/hosts/&lt;name&gt;/host.ts</code>.
-<code>archon host add &lt;name&gt; --claim</code> (or <code>--mac-address</code>) writes a server's;
-<code>archon workstation add</code> a workstation's. What it gets comes from its
+<code>stolos host add &lt;name&gt; --claim</code> (or <code>--mac-address</code>) writes a server's;
+<code>stolos workstation add</code> a workstation's. What it gets comes from its
 capabilities; what it is (its MAC, its SSH host keys) is in its
 registration.ts, from the machine itself (spec 051).</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
@@ -520,7 +520,7 @@ registration.ts, from the machine itself (spec 051).</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;HostDef.html#property_desktop">
                   <span>desktop</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Workstations (spec 036): a graphical desktop, not WSL or a headless machine.
-VS Code is installed only here; set by <code>archon workstation add</code>.</p>
+VS Code is installed only here; set by <code>stolos workstation add</code>.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;HostDef.html#property_disk">
                   <span>disk</span><span>: <span class="td-ref">DiskDef</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Servers: the install disk (default: Ubuntu's LVM layout on the largest disk).</p>
@@ -640,7 +640,7 @@ never written in a host file.</p>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;HostRegistration.html" title="HostRegistration">
 			    <span>HostRegistration</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Who a host is, in Git (spec 047): fleets/&lt;id&gt;/hosts/&lt;host&gt;/registration.ts,
-written by <code>archon host add</code>. Public facts only: its SSH host public keys
+written by <code>stolos host add</code>. Public facts only: its SSH host public keys
 (operators' known_hosts is generated from them), its network card, and the
 fingerprint of its read-only deploy key.</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
@@ -908,7 +908,7 @@ with generous rate limits: for synthetic and test fleets.</p>
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;SignerDef.html" title="SignerDef">
 			    <span>SignerDef</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Who may approve changes to a fleet (spec 047, Article 9): a host applies only
 a tip of main signed by one of these keys. Kept in fleets/&lt;id&gt;/signers.ts,
-written by <code>archon signers</code>.</p>
+written by <code>stolos signers</code>.</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;SignerDef.html#property_added">
                   <span>added</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When it was added (ISO date).</p>
@@ -1370,25 +1370,25 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_brand-1" cl
                   </span>
                 </a>
               </li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;Surface.html" title="Surface"><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
+<span class="hover:bg-TypeAlias/15 hover:bg-TypeAliasDark/15">
+                    Surface
+                  </span>
+                </a>
+              </li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;commandName.html" title="commandName"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
+                    commandName
+                  </span>
+                </a>
+              </li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;main.html" title="main"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
                     main
                   </span>
                 </a>
-              </li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;run.html" title="run"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
-                    run
-                  </span>
-                </a>
-              </li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;assets.ts&#x2F;~&#x2F;cacheDir.html" title="cacheDir"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
-                    cacheDir
-                  </span>
-                </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1182 symbols</span><svg
+              <span class="leading-none">view all 1189 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

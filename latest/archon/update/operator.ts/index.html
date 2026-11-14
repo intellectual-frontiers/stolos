@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/update/operator.ts - Stolos v0.39.0 documentation</title>
+  <title>archon/update/operator.ts - Stolos v0.40.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.39.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.40.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -111,7 +111,7 @@ only reports.</li>
 <li><strong>Keys</strong>: the parts of <code>keys setup</code> that need no passphrase (Git's
 allowed signers, the pre-push check).</li>
 <li><strong>Doctor</strong>: <code>boot doctor</code> on a boot machine (keys included), else
-<code>archon keys</code>.</li>
+<code>stolos keys</code>.</li>
 </ol>
 <p>On an installed host, <code>archon update</code> is spec 015's (pull, apply, verify).</p>
 <pre class="highlight"><code class="language-mermaid">flowchart LR
@@ -120,14 +120,14 @@ allowed signers, the pre-push check).</li>
   engine --&gt;|yes| upgrade[&quot;fleet upgrade&lt;br/&gt;(a signed commit)&quot;]
   engine --&gt;|no| keys
   upgrade --&gt; keys[&quot;keys: allowed signers,&lt;br/&gt;pre-push check&quot;]
-  keys --&gt; doctor[&quot;boot doctor&lt;br/&gt;(or archon keys)&quot;]
+  keys --&gt; doctor[&quot;boot doctor&lt;br/&gt;(or stolos keys)&quot;]
 </code><button class="copyButton" data-copy="flowchart LR
   pull[&quot;pull&lt;br/&gt;(fast-forward only)&quot;] --&gt; approval[&quot;signed by a&lt;br/&gt;trusted key?&quot;]
   approval --&gt; engine{&quot;newer Stolos&lt;br/&gt;release?&quot;}
   engine --&gt;|yes| upgrade[&quot;fleet upgrade&lt;br/&gt;(a signed commit)&quot;]
   engine --&gt;|no| keys
   upgrade --&gt; keys[&quot;keys: allowed signers,&lt;br/&gt;pre-push check&quot;]
-  keys --&gt; doctor[&quot;boot doctor&lt;br/&gt;(or archon keys)&quot;]
+  keys --&gt; doctor[&quot;boot doctor&lt;br/&gt;(or stolos keys)&quot;]
 "><svg
   class="copy"
   width="15"
@@ -318,25 +318,25 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_min_deno" c
                   </span>
                 </a>
               </li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;Surface.html" title="Surface"><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
+<span class="hover:bg-TypeAlias/15 hover:bg-TypeAliasDark/15">
+                    Surface
+                  </span>
+                </a>
+              </li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;commandName.html" title="commandName"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
+                    commandName
+                  </span>
+                </a>
+              </li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;main.html" title="main"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
                     main
                   </span>
                 </a>
-              </li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;run.html" title="run"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
-                    run
-                  </span>
-                </a>
-              </li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;assets.ts&#x2F;~&#x2F;cacheDir.html" title="cacheDir"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
-                    cacheDir
-                  </span>
-                </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1182 symbols</span><svg
+              <span class="leading-none">view all 1189 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

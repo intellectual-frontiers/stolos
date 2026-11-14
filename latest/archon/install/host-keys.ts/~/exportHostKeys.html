@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>exportHostKeys - archon/install/host-keys.ts - Stolos v0.39.0 documentation</title>
+  <title>exportHostKeys - archon/install/host-keys.ts - Stolos v0.40.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;install&#x2F;host-keys.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.39.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.40.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -167,7 +167,7 @@
 </a>
 <span class="font-bold">exportHostKeys</span><span class="font-medium">()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span> </span>
       </code><div class="space-y-7" id=""><div class="markdown"><p><code>archon host-keys export</code> (spec 029): this host's SSH host keys and ops'
-deploy key as JSON, for <code>deno task boot vault recover-host-keys &lt;host&gt;</code> when
+deploy key as JSON, for <code>deno task stolos vault recover-host-keys &lt;host&gt;</code> when
 the boot machine lost its copies without a backup: the rebuilt boot machine
 then holds the same identities, so nothing changes on GitHub or for SSH
 clients. Root only (it elevates); never offered over MCP.</p>

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon-boot/main.ts - Stolos v0.39.0 documentation</title>
+  <title>archon-boot/main.ts - Stolos v0.40.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;" class="contextLink">Stolos v0.39.0</a>
+    <a href="..&#x2F;..&#x2F;" class="contextLink">Stolos v0.40.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -100,23 +100,23 @@
     <main><section>
   <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc"><div class="markdown"><p>archon-boot (spec 004): the boot machine's side of a zero-touch install.
 Runs with Deno on Windows or Linux:</p>
-<p>deno task boot serve [--port 8080]   serve PXE (TFTP, UDP 69), UEFI HTTP Boot, and installs
-deno task boot reinstall &lt;host&gt; [--confirm-destroy &lt;host&gt;]
+<p>deno task stolos boot serve [--port 8080]   serve PXE (TFTP, UDP 69), UEFI HTTP Boot, and installs
+deno task stolos boot reinstall &lt;host&gt; [--confirm-destroy &lt;host&gt;]
 push its state, arm it, network-boot it once (over SSH);
 a durable host needs --confirm-destroy (Article 23)
-deno task boot retire &lt;host&gt; --confirm-destroy &lt;host&gt; [--no-push]
+deno task stolos boot retire &lt;host&gt; --confirm-destroy &lt;host&gt; [--no-push]
 a server leaves the fleet, committed and pushed (spec 045)
-deno task boot arm &lt;host&gt; --claim | --mac-address &lt;mac&gt; [--confirm-destroy &lt;host&gt;]
+deno task stolos boot arm &lt;host&gt; --claim | --mac-address &lt;mac&gt; [--confirm-destroy &lt;host&gt;]
 allow one (re)install of a host
-deno task boot status                hosts, Boot URIs, MACs, armed or not
-deno task boot doctor                check this boot machine, with a fix for each problem
-deno task boot observe               recent installs from the boot server's own telemetry
-deno task boot vault &lt;sub&gt;           back up and restore this PC's secrets (spec 029)
-deno task boot mail-setup            store the mail relay's token (Cloudflare, spec 027)
-deno task boot mail-push &lt;host&gt;      give a running host that token over SSH
-deno task boot web-setup             store the Cloudflare DNS token (HTTPS, spec 032)
-deno task boot web-push &lt;host&gt;       give a running server that token over SSH
-deno task boot notify --subject ...  email the mailbox from this PC (also: notify test | status)</p>
+deno task stolos boot status                hosts, Boot URIs, MACs, armed or not
+deno task stolos boot doctor                check this boot machine, with a fix for each problem
+deno task stolos boot observe               recent installs from the boot server's own telemetry
+deno task stolos vault &lt;sub&gt;           back up and restore this PC's secrets (spec 029)
+deno task stolos boot mail-setup            store the mail relay's token (Cloudflare, spec 027)
+deno task stolos boot mail-push &lt;host&gt;      give a running host that token over SSH
+deno task stolos boot web-setup             store the Cloudflare DNS token (HTTPS, spec 032)
+deno task stolos boot web-push &lt;host&gt;       give a running server that token over SSH
+deno task stolos boot notify --subject ...  email the mailbox from this PC (also: notify test | status)</p>
 </div><section class="section"  id="archon-boot&#x2F;main_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon-boot&#x2F;main_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
@@ -140,7 +140,12 @@ deno task boot notify --subject ...  email the mailbox from this PC (also: notif
   </defs>
 </svg>
 </a>
-Functions</h2></div><div class="namespaceSection"><div id="namespace_run" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+Functions</h2></div><div class="namespaceSection"><div id="namespace_bootmain" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;main.ts&#x2F;~&#x2F;bootMain.html" title="bootMain">
+			    <span>bootMain</span><span>(<span><span>argv<span>: <span class="td-kw">string</span>[]</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos boot &lt;sub&gt;</code> (spec 059): the boot server's commands; returns the exit code.</p>
+</div></div></div>
+    </div><div id="namespace_run" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;main.ts&#x2F;~&#x2F;run.html" title="run">
 			    <span>run</span><span>(<span><span>argv<span class="td-op">?</span><span>: <span class="td-kw">string</span>[]</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">never</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Run as a program and exit: from this file, or from a fleet repository's own
@@ -201,25 +206,25 @@ entry file, which imports this one through <code>@stolos/</code> (spec 046-engin
                   </span>
                 </a>
               </li><li>
+                <a href="..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;Surface.html" title="Surface"><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
+<span class="hover:bg-TypeAlias/15 hover:bg-TypeAliasDark/15">
+                    Surface
+                  </span>
+                </a>
+              </li><li>
+                <a href="..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;commandName.html" title="commandName"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
+                    commandName
+                  </span>
+                </a>
+              </li><li>
                 <a href="..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;main.html" title="main"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
                     main
                   </span>
                 </a>
-              </li><li>
-                <a href="..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;run.html" title="run"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
-                    run
-                  </span>
-                </a>
-              </li><li>
-                <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;assets.ts&#x2F;~&#x2F;cacheDir.html" title="cacheDir"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
-                    cacheDir
-                  </span>
-                </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1182 symbols</span><svg
+              <span class="leading-none">view all 1189 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -234,7 +239,7 @@ entry file, which imports this one through <code>@stolos/</code> (spec 046-engin
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon-boot/main_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_run" title="run">run</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon-boot/main_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_bootmain" title="bootMain">bootMain</a></li><li><a href="#namespace_run" title="run">run</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>

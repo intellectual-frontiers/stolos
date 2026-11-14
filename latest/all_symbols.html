@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>All Symbols - Stolos v0.39.0 documentation</title>
+  <title>All Symbols - Stolos v0.40.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href=".&#x2F;" class="contextLink">Stolos v0.39.0</a>
+    <a href=".&#x2F;" class="contextLink">Stolos v0.40.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -102,7 +102,9 @@
       <a href=".&#x2F;" class="link text-xl font-bold">default</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc"><div class="markdown_summary"><p>archon: entry point for the CLI. See archon(1).</p>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc"><div class="markdown_summary"><p>The command line, for both commands (spec 059): <code>archon</code> on each machine
+(servers, workstations) and <code>stolos</code> on your PC (src/stolos/main.ts), over
+one registry where every command says where it runs. See archon(1).</p>
 </div><section class="section"  id="default_functions"><div>
       <h2 class="anchorable mb-1"><a href="#default_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
@@ -126,7 +128,12 @@
   </defs>
 </svg>
 </a>
-Functions</h2></div><div class="namespaceSection"><div id="namespace_ensurehome" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+Functions</h2></div><div class="namespaceSection"><div id="namespace_commandname" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;.&#x2F;~&#x2F;commandName.html" title="commandName">
+			    <span>commandName</span><span>(<span><span>s<span>: <span class="td-ref">Surface</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The command's name for a surface.</p>
+</div></div></div>
+    </div><div id="namespace_ensurehome" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;.&#x2F;~&#x2F;ensureHome.html" title="ensureHome">
 			    <span>ensureHome</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">void</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>cloud-init (the first boot) and some service managers start archon without
@@ -141,13 +148,43 @@ it was rolled back on alpha' first boot): take it from the account database.</p>
     </div><div id="namespace_main" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;.&#x2F;~&#x2F;main.html" title="main">
-			    <span>main</span><span>(<span><span>argv<span>: <span class="td-kw">string</span>[]</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The archon CLI: parses global options, finds the command, and runs it. Returns the exit code.</p>
+			    <span>main</span><span>(<div class="ml-4"><div><span>argv<span>: <span class="td-kw">string</span>[]</span></span>,</div><div><span>surface<span class="td-op">?</span><span>: <span class="td-ref">Surface</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The CLI: parses global options, finds the command offered here, and runs it. Returns the exit code.</p>
 </div></div></div>
     </div><div id="namespace_run" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;.&#x2F;~&#x2F;run.html" title="run">
-			    <span>run</span><span>(<span><span>argv<span class="td-op">?</span><span>: <span class="td-kw">string</span>[]</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">never</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Run as a program and exit: from this file, or from a fleet repository's own
+			    <span>run</span><span>(<div class="ml-4"><div><span>argv<span class="td-op">?</span><span>: <span class="td-kw">string</span>[]</span></span>,</div><div><span>surface<span class="td-op">?</span><span>: <span class="td-ref">Surface</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">never</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Run as a program and exit: from this file, or from a fleet repository's own
 entry file, which imports this one through <code>@stolos/</code> (spec 046-engine-instance).</p>
+</div></div></div>
+    </div></div>
+</section>
+<section class="section"  id="default_type-aliases"><div>
+      <h2 class="anchorable mb-1"><a href="#default_type-aliases" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_surface" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;.&#x2F;~&#x2F;Surface.html" title="Surface">
+			    <span>Surface</span><span> = <span><span class="td-str">"pc"</span><span class="td-op"> | </span><span class="td-str">"machine"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Which command this is: <code>stolos</code> on your PC, <code>archon</code> on a machine.</p>
 </div></div></div>
     </div></div>
 </section>
@@ -247,7 +284,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_assets" cl
       <a href=".&#x2F;.&#x2F;archon-boot&#x2F;doctor.ts&#x2F;index.html" class="link text-xl font-bold">archon-boot&#x2F;doctor.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-2"><div class="markdown_summary"><p><code>deno task boot doctor</code> (spec 004): one read-only look at this boot machine,
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-2"><div class="markdown_summary"><p><code>deno task stolos boot doctor</code> (spec 004): one read-only look at this boot machine,
 with the fix for each problem: the checkout (hosts install from GitHub, so
 local changes must be pushed), the model, secrets, Ubuntu's files, the
 network, the ports, and the firewall. It changes nothing.</p>
@@ -674,7 +711,7 @@ F=/tmp/archon-facts
   done
 } &gt;"$F"
 A=$(curl -fsS --noproxy "*" -m 30 -X POST -H 'content-type: text/plain' --data-binary @"$F" "\${B}facts") ||
-  A="stop: the boot server did not answer, so nothing was erased (is deno task boot serve running?)"
+  A="stop: the boot server did not answer, so nothing was erased (is deno task stolos boot serve running?)"
 case "$A" in
   ok*) exit 0 ;;
 esac
@@ -799,19 +836,19 @@ Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_handler"
 Functions</h2></div><div class="namespaceSection"><div id="namespace_bootnotify" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon-boot&#x2F;mail.ts&#x2F;~&#x2F;bootNotify.html" title="bootNotify">
-			    <span>bootNotify</span><span>(<span><span>args<span>: <span class="td-kw">string</span>[]</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>deno task boot notify ... : the same options as archon notify send, or test / status.</p>
+			    <span>bootNotify</span><span>(<span><span>args<span>: <span class="td-kw">string</span>[]</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>deno task stolos boot notify ... : the same options as archon notify send, or test / status.</p>
 </div></div></div>
     </div><div id="namespace_mailpush" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon-boot&#x2F;mail.ts&#x2F;~&#x2F;mailPush.html" title="mailPush">
-			    <span>mailPush</span><span>(<span><span>name<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>deno task boot mail-push &lt;host&gt;</code>: give a running host the stored mail token
+			    <span>mailPush</span><span>(<span><span>name<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>deno task stolos boot mail-push &lt;host&gt;</code>: give a running host the stored mail token
 over SSH (on stdin to <code>archon mail credential</code>). Returns ssh's exit code, 2
 for an unknown host, or 1 when no token is stored.</p>
 </div></div></div>
     </div><div id="namespace_mailsetup" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon-boot&#x2F;mail.ts&#x2F;~&#x2F;mailSetup.html" title="mailSetup">
-			    <span>mailSetup</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>deno task boot mail-setup</code>: explain the one-time Cloudflare setup, read the
+			    <span>mailSetup</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>deno task stolos boot mail-setup</code>: explain the one-time Cloudflare setup, read the
 API token without echo, test it with an SMTP login (nothing is sent), store
 it in this PC's secrets, then run the doctor's email checks. Returns the exit
 code (1 on a missing mail setting, a bad token, or a failed check).</p>
@@ -852,7 +889,12 @@ Runs with Deno on Windows or Linux:</p>
   </defs>
 </svg>
 </a>
-Functions</h2></div><div class="namespaceSection"><div id="namespace_run-1" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+Functions</h2></div><div class="namespaceSection"><div id="namespace_bootmain" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon-boot&#x2F;main.ts&#x2F;~&#x2F;bootMain.html" title="bootMain">
+			    <span>bootMain</span><span>(<span><span>argv<span>: <span class="td-kw">string</span>[]</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos boot &lt;sub&gt;</code> (spec 059): the boot server's commands; returns the exit code.</p>
+</div></div></div>
+    </div><div id="namespace_run-1" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon-boot&#x2F;main.ts&#x2F;~&#x2F;run.html" title="run">
 			    <span>run</span><span>(<span><span>argv<span class="td-op">?</span><span>: <span class="td-kw">string</span>[]</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">never</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Run as a program and exit: from this file, or from a fleet repository's own
@@ -869,7 +911,7 @@ entry file, which imports this one through <code>@stolos/</code> (spec 046-engin
       <a href=".&#x2F;.&#x2F;archon-boot&#x2F;observe.ts&#x2F;index.html" class="link text-xl font-bold">archon-boot&#x2F;observe.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-9"><div class="markdown_summary"><p><code>deno task boot observe</code> (spec 023): recent installs from the boot server's
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-9"><div class="markdown_summary"><p><code>deno task stolos boot observe</code> (spec 023): recent installs from the boot server's
 own telemetry (the OTLP JSON files on this PC): when, how long, which step
 took the time, and what failed.</p>
 </div><section class="section"  id="archon-boot&#x2F;observe_ts_functions"><div>
@@ -898,7 +940,7 @@ took the time, and what failed.</p>
 Functions</h2></div><div class="namespaceSection"><div id="namespace_bootobserve" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon-boot&#x2F;observe.ts&#x2F;~&#x2F;bootObserve.html" title="bootObserve">
-			    <span>bootObserve</span><span>(<span><span>o<span>: { count<span>: <span class="td-kw">number</span></span>;  }</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>deno task boot observe</code>: the newest <code>count</code> installs, each with its slowest and failed steps.</p>
+			    <span>bootObserve</span><span>(<span><span>o<span>: { count<span>: <span class="td-kw">number</span></span>;  }</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>deno task stolos boot observe</code>: the newest <code>count</code> installs, each with its slowest and failed steps.</p>
 </div></div></div>
     </div><div id="namespace_installsfrom" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -1192,7 +1234,7 @@ Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_progress
       <a href=".&#x2F;.&#x2F;archon-boot&#x2F;reinstall.ts&#x2F;index.html" class="link text-xl font-bold">archon-boot&#x2F;reinstall.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-13"><div class="markdown_summary"><p><code>deno task boot reinstall &lt;host&gt;</code> (spec 004): one command from the boot
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-13"><div class="markdown_summary"><p><code>deno task stolos boot reinstall &lt;host&gt;</code> (spec 004): one command from the boot
 machine re-installs a running host, with no one at its console:</p>
 </div><section class="section"  id="archon-boot&#x2F;reinstall_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon-boot&#x2F;reinstall_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
@@ -1237,7 +1279,7 @@ refusal, or undefined when it may go ahead.</p>
     </div><div id="namespace_reinstall" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon-boot&#x2F;reinstall.ts&#x2F;~&#x2F;reinstall.html" title="reinstall">
-			    <span>reinstall</span><span>(<div class="ml-4"><div><span>name<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span>,</div><div><span>o<span>: { port<span>: <span class="td-kw">number</span></span>; confirmDestroy<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>deno task boot reinstall &lt;host&gt;</code>: re-install a running host over the
+			    <span>reinstall</span><span>(<div class="ml-4"><div><span>name<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span>,</div><div><span>o<span>: { port<span>: <span class="td-kw">number</span></span>; confirmDestroy<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>deno task stolos boot reinstall &lt;host&gt;</code>: re-install a running host over the
 network in the steps the module describes. <code>port</code> is the boot server's HTTP
 port and <code>confirmDestroy</code> is the repeated name a durable host needs. A host
 that cannot be asked needs it too. Returns the exit code (2 for an
@@ -1254,8 +1296,8 @@ unknown host).</p>
       <a href=".&#x2F;.&#x2F;archon-boot&#x2F;retire.ts&#x2F;index.html" class="link text-xl font-bold">archon-boot&#x2F;retire.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-14"><div class="markdown_summary"><p><code>deno task boot retire &lt;host&gt; --confirm-destroy &lt;host&gt;</code> (spec 045): a
-server leaves the fleet, the reverse of <code>archon host add</code>. From the boot
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-14"><div class="markdown_summary"><p><code>deno task stolos boot retire &lt;host&gt; --confirm-destroy &lt;host&gt;</code> (spec 045): a
+server leaves the fleet, the reverse of <code>stolos host add</code>. From the boot
 machine, with the name repeated by a person:</p>
 </div><section class="section"  id="archon-boot&#x2F;retire_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon-boot&#x2F;retire_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
@@ -1288,7 +1330,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_publishedna
     </div><div id="namespace_retire" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon-boot&#x2F;retire.ts&#x2F;~&#x2F;retire.html" title="retire">
-			    <span>retire</span><span>(<div class="ml-4"><div><span>name<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span>,</div><div><span>confirm<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span>,</div><div><span>push<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>deno task boot retire &lt;host&gt; --confirm-destroy &lt;host&gt;</code>: remove a server
+			    <span>retire</span><span>(<div class="ml-4"><div><span>name<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span>,</div><div><span>confirm<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span>,</div><div><span>push<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>deno task stolos boot retire &lt;host&gt; --confirm-destroy &lt;host&gt;</code>: remove a server
 from the fleet in the steps the module describes. <code>push</code> false leaves the
 commit for the owner to push (--no-push). Returns the exit code (2 for an
 unknown host).</p>
@@ -1373,7 +1415,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_handler-1" 
 Interfaces</h2></div><div class="namespaceSection"><div id="namespace_serveoptions" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon-boot&#x2F;server.ts&#x2F;~&#x2F;ServeOptions.html" title="ServeOptions">
-			    <span>ServeOptions</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Options for the boot server (<code>deno task boot serve</code>).</p>
+			    <span>ServeOptions</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Options for the boot server (<code>deno task stolos boot serve</code>).</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href=".&#x2F;.&#x2F;archon-boot&#x2F;server.ts&#x2F;~&#x2F;ServeOptions.html#property_capem">
                   <span>caPem</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>PEM of a CA that proxy needs trusted (optional).</p>
@@ -1828,14 +1870,14 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_tftpoption
 Functions</h2></div><div class="namespaceSection"><div id="namespace_webpush" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon-boot&#x2F;web.ts&#x2F;~&#x2F;webPush.html" title="webPush">
-			    <span>webPush</span><span>(<span><span>name<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>deno task boot web-push &lt;host&gt;</code>: give a running server the stored DNS token
+			    <span>webPush</span><span>(<span><span>name<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>deno task stolos boot web-push &lt;host&gt;</code>: give a running server the stored DNS token
 over SSH (on stdin to <code>archon web credential</code>). Returns ssh's exit code, 2
 for an unknown host, or 1 when no token is stored.</p>
 </div></div></div>
     </div><div id="namespace_websetup" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon-boot&#x2F;web.ts&#x2F;~&#x2F;webSetup.html" title="webSetup">
-			    <span>webSetup</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>deno task boot web-setup</code>: explain the one-time Cloudflare DNS token, read
+			    <span>webSetup</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>deno task stolos boot web-setup</code>: explain the one-time Cloudflare DNS token, read
 it without echo, check that it can see the fleet's zone, and store it in this
 PC's secrets. Returns the exit code (1 on a missing web setting or a bad token).</p>
 </div></div></div>
@@ -2392,7 +2434,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_backupresu
       <a href=".&#x2F;.&#x2F;archon&#x2F;build.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;build.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-24"><div class="markdown_summary"><p><code>archon validate</code> and <code>archon build</code> (spec 002): validate the fleet and
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-24"><div class="markdown_summary"><p><code>stolos validate</code> and <code>stolos build</code> (spec 002): validate the fleet and
 every host plan (TypeScript, Article 10), then render each host's files into
 out/hosts/&lt;host&gt;/rootfs/. Deterministic: building twice changes nothing.</p>
 </div><section class="section"  id="archon&#x2F;build_ts_functions"><div>
@@ -2421,7 +2463,7 @@ out/hosts/&lt;host&gt;/rootfs/. Deterministic: building twice changes nothing.</
 Functions</h2></div><div class="namespaceSection"><div id="namespace_build" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;build.ts&#x2F;~&#x2F;build.html" title="build">
-			    <span>build</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">boolean</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon build</code>: validate the model, then render every target into out/; true when it is valid.</p>
+			    <span>build</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">boolean</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos build</code>: validate the model, then render every target into out/; true when it is valid.</p>
 </div></div></div>
     </div><div id="namespace_dotfileproblems" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -4497,8 +4539,12 @@ Implementations load lazily.</p>
 Functions</h2></div><div class="namespaceSection"><div id="namespace_findcommand" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;commands&#x2F;registry.ts&#x2F;~&#x2F;findCommand.html" title="findCommand">
-			    <span>findCommand</span><span>(<span><span>argv<span>: <span class="td-kw">string</span>[]</span></span></span>)<span>: <span>{ cmd<span>: <span class="td-ref">Command</span></span>; rest<span>: <span class="td-kw">string</span>[]</span>;  }<span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Finds the command named by the leading words of argv (the longest matching
-name wins) and returns it with the remaining arguments, or undefined.</p>
+			    <span>findCommand</span><span>(<div class="ml-4"><div><span>argv<span>: <span class="td-kw">string</span>[]</span></span>,</div><div><span>place<span class="td-op">?</span><span>: <span><span class="td-str">"pc"</span><span class="td-op"> | </span><span class="td-str">"machine"</span></span></span></span></div></div>)<span>: <span>{ cmd<span>: <span class="td-ref">Command</span></span>; rest<span>: <span class="td-kw">string</span>[]</span>;  }<span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Find the command named by the start of argv, among those offered at <code>place</code>; returns it and the rest of argv.</p>
+</div></div></div>
+    </div><div id="namespace_offeredon" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;commands&#x2F;registry.ts&#x2F;~&#x2F;offeredOn.html" title="offeredOn">
+			    <span>offeredOn</span><span>(<div class="ml-4"><div><span>c<span>: <span class="td-ref">Command</span></span></span>,</div><div><span>place<span>: <span><span class="td-str">"pc"</span><span class="td-op"> | </span><span class="td-str">"machine"</span></span></span></span></div></div>)<span>: <span class="td-kw">boolean</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Whether a command is offered where <code>place</code> runs (&quot;pc&quot;: stolos, &quot;machine&quot;: archon).</p>
 </div></div></div>
     </div></div>
 </section>
@@ -5784,7 +5830,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_findfleetid
     </div><div id="namespace_fleetchoicefile" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;core&#x2F;paths.ts&#x2F;~&#x2F;fleetChoiceFile.html" title="fleetChoiceFile">
-			    <span>fleetChoiceFile</span><span>(<span><span>repo<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where <code>archon fleet use &lt;id&gt;</code> keeps this checkout's choice (inside .git: never committed).</p>
+			    <span>fleetChoiceFile</span><span>(<span><span>repo<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where <code>stolos fleet use &lt;id&gt;</code> keeps this checkout's choice (inside .git: never committed).</p>
 </div></div></div>
     </div><div id="namespace_listfleets" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -5872,7 +5918,7 @@ which only archon-ops may enter.</p>
                 <a href=".&#x2F;.&#x2F;archon&#x2F;core&#x2F;paths.ts&#x2F;~&#x2F;P.html#accessor_mcpjson">
                   <span>mcpJson</span><span>()<span>: <span class="td-kw">string</span></span></span></a></li><li>
                 <a href=".&#x2F;.&#x2F;archon&#x2F;core&#x2F;paths.ts&#x2F;~&#x2F;P.html#accessor_out">
-                  <span>out</span><span>()<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Rendered by archon build; never committed.</p>
+                  <span>out</span><span>()<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Rendered by stolos build; never committed.</p>
 </div></div></li><li>
                 <a href=".&#x2F;.&#x2F;archon&#x2F;core&#x2F;paths.ts&#x2F;~&#x2F;P.html#accessor_repo">
                   <span>repo</span><span>()<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The instance repository (the checkout hosts converge to).</p>
@@ -5935,11 +5981,6 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_effectiveti
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;effectiveTier.html" title="effectiveTier">
 			    <span>effectiveTier</span><span>(<div class="ml-4"><div><span>cmd<span>: <span class="td-ref">Command</span></span></span>,</div><div><span>args<span>: <span class="td-ref">Parsed</span></span></span></div></div>)<span>: <span class="td-ref">Tier</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The tier this run needs (a command's tier can depend on its arguments, for example --check).</p>
-</div></div></div>
-    </div><div id="namespace_installedhost" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<div class="namespaceItemContent">
-		    <a href=".&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;installedHost.html" title="installedHost">
-			    <span>installedHost</span><span>()<span>: <span class="td-kw">boolean</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Whether this machine is a host Archon installed (it has /etc/archon/fleet).</p>
 </div></div></div>
     </div><div id="namespace_parseargs" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -6020,10 +6061,6 @@ admin are in archon-ops, so sudo does not prompt (spec 006).</p>
                 <a href=".&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;Command.html#property_examples">
                   <span>examples</span><span>: <span class="td-ref">Array</span>&lt;{ cmd<span>: <span class="td-kw">string</span></span>; text<span>: <span class="td-kw">string</span></span>;  }&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Examples, for its man page.</p>
 </div></div></li><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;Command.html#property_hostonlytier">
-                  <span>hostOnlyTier</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its tier applies only on an installed host (/etc/archon/fleet): elsewhere
-(your PC's checkout) it runs as you, at the repo tier (spec 058: archon update).</p>
-</div></div></li><li>
                 <a href=".&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;Command.html#property_mutatewith">
                   <span>mutateWith</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The reverse: read-only, except with this flag, which changes the host
 (fs s3 key --rotate). It then elevates, and counts as mutate over MCP.</p>
@@ -6037,6 +6074,10 @@ admin are in archon-ops, so sudo does not prompt (spec 006).</p>
                 <a href=".&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;Command.html#property_operation">
                   <span>operation</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>An operation (Article XXII): runs in phases with a header, a run log, and
 a closing summary instead of printing a result.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;Command.html#property_place">
+                  <span>place</span><span>: <span class="td-ref">Place</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where it runs: &quot;pc&quot; (<code>stolos</code>, in the fleet repository on your PC), &quot;machine&quot;
+(<code>archon</code>, on each server or workstation), or &quot;both&quot;.</p>
 </div></div></li><li>
                 <a href=".&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;Command.html#property_precheck">
                   <span>precheck</span><span>: (<div class="ml-4"><div><span>args<span>: <span class="td-ref">Parsed</span></span></span>,</div><div><span>ctx<span>: <span class="td-ref">RunContext</span></span></span></div></div>) =&gt; <span class="td-ref">Promise</span>&lt;<span><span class="td-kw">number</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A look before elevating (spec 038): when it returns a code, the command is
@@ -6108,6 +6149,11 @@ Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_parsed-1
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;Parsed.html" title="Parsed">
 			    <span>Parsed</span><span> = <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">boolean</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A command's arguments, parsed: name to value.</p>
 </div></div></div>
+    </div><div id="namespace_place" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;Place.html" title="Place">
+			    <span>Place</span><span> = <span><span class="td-str">"pc"</span><span class="td-op"> | </span><span class="td-str">"machine"</span><span class="td-op"> | </span><span class="td-str">"both"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where a command runs: your PC (stolos), each machine (archon), or both.</p>
+</div></div></div>
     </div><div id="namespace_tier" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;Tier.html" title="Tier">
@@ -6157,7 +6203,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_global_args
 
       <div class="ml-4 mt-2"><section>
   <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-69"><div class="markdown_summary"><p>The secret ledger (spec 029): when each boot-machine secret last changed,
-by name only. It holds no secret: it is what tells <code>deno task boot vault status</code> (and the reminders) that something is newer than the last backup.
+by name only. It holds no secret: it is what tells <code>deno task stolos vault status</code> (and the reminders) that something is newer than the last backup.
 %LOCALAPPDATA%\archon\vault\ledger.json (Linux: ~/.local/share/archon/vault).</p>
 </div><section class="section"  id="archon&#x2F;core&#x2F;secret-ledger_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;core&#x2F;secret-ledger_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
@@ -6809,7 +6855,7 @@ OpenTelemetry is off.</p>
     </div><div id="namespace_startrun" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;core&#x2F;telemetry.ts&#x2F;~&#x2F;startRun.html" title="startRun">
-			    <span>startRun</span><span>(<div class="ml-4"><div><span>command<span>: <span class="td-kw">string</span></span></span>,</div><div><span>attrs<span class="td-op">?</span><span>: <span class="td-ref">Attrs</span></span></span></div></div>)<span>: <span class="td-kw">void</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Start this run's trace (continuing TRACEPARENT when given).</p>
+			    <span>startRun</span><span>(<div class="ml-4"><div><span>command<span>: <span class="td-kw">string</span></span></span>,</div><div><span>attrs<span class="td-op">?</span><span>: <span class="td-ref">Attrs</span></span></span>,</div><div><span>program<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">void</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Start this run's trace (continuing TRACEPARENT when given).</p>
 </div></div></div>
     </div></div>
 </section>
@@ -7982,7 +8028,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_syncresult
       <div class="ml-4 mt-2"><section>
   <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-81"><div class="markdown_summary"><p>Spec 047-intent-and-identity (Article 25): what operators decided for a host
 (which opt-ins are on, and whether their data is durable) lives in Git, in
-fleets/&lt;id&gt;/hosts/&lt;host&gt;/decisions.ts, written by <code>archon decide</code> on a
+fleets/&lt;id&gt;/hosts/&lt;host&gt;/decisions.ts, written by <code>stolos decide</code> on a
 workstation and approved by a signed push. Such a decision wins over the
 host's own record (archon.sql), survives a re-install, and tells the boot
 machine whether a host holds durable data even when it is offline.</p>
@@ -8012,7 +8058,7 @@ machine whether a host holds durable data even when it is offline.</p>
 Functions</h2></div><div class="namespaceSection"><div id="namespace_decide" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;decisions.ts&#x2F;~&#x2F;decide.html" title="decide">
-			    <span>decide</span><span>(<div class="ml-4"><div><span>hostName<span>: <span class="td-kw">string</span></span></span>,</div><div><span>name<span>: <span class="td-kw">string</span></span></span>,</div><div><span>enabled<span>: <span class="td-kw">boolean</span></span></span>,</div><div><span>data<span>: <span><span class="td-ref">DataClass</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span>,</div><div><span>confirm<span>: <span class="td-kw">unknown</span></span></span>,</div><div><span>by<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon decide &lt;opt-in&gt; on|off --host &lt;host&gt; [--durable|--ephemeral]</code> (repo
+			    <span>decide</span><span>(<div class="ml-4"><div><span>hostName<span>: <span class="td-kw">string</span></span></span>,</div><div><span>name<span>: <span class="td-kw">string</span></span></span>,</div><div><span>enabled<span>: <span class="td-kw">boolean</span></span></span>,</div><div><span>data<span>: <span><span class="td-ref">DataClass</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span>,</div><div><span>confirm<span>: <span class="td-kw">unknown</span></span></span>,</div><div><span>by<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos decide &lt;opt-in&gt; on|off --host &lt;host&gt; [--durable|--ephemeral]</code> (repo
 tier, on a workstation): write the decision; the host applies it after a
 signed push.</p>
 </div></div></div>
@@ -8048,7 +8094,7 @@ signed push.</p>
 
       <div class="ml-4 mt-2"><section>
   <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-82"><div class="markdown_summary"><p>Spec 047-intent-and-identity (Article 25): who a host is, in Git:
-fleets/&lt;id&gt;/hosts/&lt;host&gt;/registration.ts, written by <code>archon host add</code>, in
+fleets/&lt;id&gt;/hosts/&lt;host&gt;/registration.ts, written by <code>stolos host add</code>, in
 one fixed form. Its SSH host public keys are what an operator's machine
 trusts: archon writes known_hosts.auto from them, so the first connection to
 a host is checked against Git, never trusted on first use.</p>
@@ -8078,7 +8124,7 @@ a host is checked against Git, never trusted on first use.</p>
 Functions</h2></div><div class="namespaceSection"><div id="namespace_fleettrust" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;registration.ts&#x2F;~&#x2F;fleetTrust.html" title="fleetTrust">
-			    <span>fleetTrust</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon fleet trust</code>: put every registered host's keys from Git into this
+			    <span>fleetTrust</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos fleet trust</code>: put every registered host's keys from Git into this
 user's known_hosts (for plain ssh and MCP clients), replacing older lines
 for the same names.</p>
 </div></div></div>
@@ -8173,7 +8219,7 @@ file is written only when missing; an existing one is never changed.</p>
 Functions</h2></div><div class="namespaceSection"><div id="namespace_denojsontext" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;scaffold.ts&#x2F;~&#x2F;denoJsonText.html" title="denoJsonText">
-			    <span>denoJsonText</span><span>(<div class="ml-4"><div><span>tag<span>: <span class="td-kw">string</span></span></span>,</div><div><span>base<span class="td-op">?</span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A fleet repository's deno.json: the engine pinned at tag, and the archon and boot tasks (run frozen).</p>
+			    <span>denoJsonText</span><span>(<div class="ml-4"><div><span>tag<span>: <span class="td-kw">string</span></span></span>,</div><div><span>base<span class="td-op">?</span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A fleet repository's deno.json: the engine pinned at tag, and the stolos task (run frozen; spec 059).</p>
 </div></div></div>
     </div><div id="namespace_scaffoldfiles" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -8213,23 +8259,13 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_denojsontex
 Variables</h2></div><div class="namespaceSection"><div id="namespace_archon_entry_text" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;scaffold.ts&#x2F;~&#x2F;ARCHON_ENTRY_TEXT.html" title="ARCHON_ENTRY_TEXT">
-			    <span>ARCHON_ENTRY_TEXT</span><span>: <span class="td-str">`// The \`archon\` command for this repository's fleets: runs the engine pinned in
-// deno.json (\`@stolos/\`), checked against deno.lock. Hosts run this file from
-// /srv/archon through /usr/local/bin/archon.
+			    <span>ARCHON_ENTRY_TEXT</span><span>: <span class="td-str">`// Each machine's \`archon\` command: the engine pinned in deno.json (\`@stolos/\`),
+// checked against deno.lock. Servers and workstations run this file from
+// /srv/archon through /usr/local/bin/archon. On your PC, use \`deno task stolos\`.
 import { run } from "@stolos/archon/main.ts";
 
 await run();
-`</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A fleet repository's archon.ts: runs the pinned engine's archon.</p>
-</div></div></div>
-    </div><div id="namespace_boot_entry_text" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
-<div class="namespaceItemContent">
-		    <a href=".&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;scaffold.ts&#x2F;~&#x2F;BOOT_ENTRY_TEXT.html" title="BOOT_ENTRY_TEXT">
-			    <span>BOOT_ENTRY_TEXT</span><span>: <span class="td-str">`// The boot server for this repository's fleets (\`deno task boot serve --fleet &lt;id&gt;\`),
-// from the engine pinned in deno.json (\`@stolos/\`).
-import { run } from "@stolos/archon-boot/main.ts";
-
-await run();
-`</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A fleet repository's boot.ts: runs the pinned engine's boot server.</p>
+`</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A fleet repository's archon.ts: each machine's archon, from the pinned engine.</p>
 </div></div></div>
     </div><div id="namespace_engine_base" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
@@ -8239,10 +8275,21 @@ await run();
     </div><div id="namespace_gitignore_text" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;scaffold.ts&#x2F;~&#x2F;GITIGNORE_TEXT.html" title="GITIGNORE_TEXT">
-			    <span>GITIGNORE_TEXT</span><span>: <span class="td-str">`# Rendered by archon build on each machine; never committed.
+			    <span>GITIGNORE_TEXT</span><span>: <span class="td-str">`# Rendered by stolos build on each machine; never committed.
 out/
 *.log
 `</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A fleet repository's .gitignore.</p>
+</div></div></div>
+    </div><div id="namespace_stolos_entry_text" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;scaffold.ts&#x2F;~&#x2F;STOLOS_ENTRY_TEXT.html" title="STOLOS_ENTRY_TEXT">
+			    <span>STOLOS_ENTRY_TEXT</span><span>: <span class="td-str">`// The fleet's command on your PC: \`deno task stolos ...\` (with no arguments: where
+// you are, and what to do next). The engine pinned in deno.json (\`@stolos/\`),
+// checked against deno.lock.
+import { run } from "@stolos/stolos/main.ts";
+
+await run();
+`</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A fleet repository's stolos.ts: the fleet's command on your PC (spec 059).</p>
 </div></div></div>
     </div></div>
 </section>
@@ -8255,7 +8302,7 @@ out/
       <a href=".&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;upgrade.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;fleet&#x2F;upgrade.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-84"><div class="markdown_summary"><p><code>archon fleet upgrade &lt;tag&gt;</code> (spec 046-engine-instance, Articles 9, 12, 24):
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-84"><div class="markdown_summary"><p><code>stolos fleet upgrade &lt;tag&gt;</code> (spec 046-engine-instance, Articles 9, 12, 24):
 move a fleet repository to another released version of the engine, safely.</p>
 </div><section class="section"  id="archon&#x2F;fleet&#x2F;upgrade_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;fleet&#x2F;upgrade_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
@@ -8294,7 +8341,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_compare" cl
     </div><div id="namespace_fleetupgrade" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;upgrade.ts&#x2F;~&#x2F;fleetUpgrade.html" title="fleetUpgrade">
-			    <span>fleetUpgrade</span><span>(<span><span>o<span>: <span class="td-ref">UpgradeOptions</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>archon fleet upgrade: move the pin, lock the engine, validate every fleet, and make one signed commit.</p>
+			    <span>fleetUpgrade</span><span>(<span><span>o<span>: <span class="td-ref">UpgradeOptions</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>stolos fleet upgrade: move the pin, lock the engine, validate every fleet, and make one signed commit.</p>
 </div></div></div>
     </div><div id="namespace_parsetag" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -8363,7 +8410,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_pin" class
     </div><div id="namespace_upgradeoptions" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;upgrade.ts&#x2F;~&#x2F;UpgradeOptions.html" title="UpgradeOptions">
-			    <span>UpgradeOptions</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What archon fleet upgrade is given.</p>
+			    <span>UpgradeOptions</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What stolos fleet upgrade is given.</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href=".&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;upgrade.ts&#x2F;~&#x2F;UpgradeOptions.html#property_downgrade">
                   <span>downgrade</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Allow an older (or the same) version.</p>
@@ -8442,7 +8489,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_engine_entr
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;upgrade.ts&#x2F;~&#x2F;ENGINE_ENTRY_TEXT.html" title="ENGINE_ENTRY_TEXT">
 			    <span>ENGINE_ENTRY_TEXT</span><span>: <span class="td-str">`// Every engine module, so that deno.lock pins all of them (archon runs with
 // --frozen, and the engine loads some modules on demand). Nothing runs this
-// file. Kept by archon fleet upgrade (spec 046).
+// file. Kept by stolos fleet upgrade (spec 046).
 import "@stolos/archon/modules.auto.ts";
 `</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its content.</p>
 </div></div></div>
@@ -8457,7 +8504,7 @@ import "@stolos/archon/modules.auto.ts";
       <a href=".&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;use.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;fleet&#x2F;use.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-85"><div class="markdown_summary"><p><code>archon fleet use &lt;id&gt;</code>: which fleet of this repository every <code>archon</code>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-85"><div class="markdown_summary"><p><code>stolos fleet use &lt;id&gt;</code>: which fleet of this repository every <code>archon</code>
 command in this checkout is for, remembered in <code>.git/archon/fleet</code> (never
 committed, so each checkout chooses its own). It takes effect at once, in
 every terminal, on every system: no environment variable to set and no new
@@ -8493,7 +8540,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_choosefleet
     </div><div id="namespace_fleetuse" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;use.ts&#x2F;~&#x2F;fleetUse.html" title="fleetUse">
-			    <span>fleetUse</span><span>(<span><span>id<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon fleet use &lt;id&gt;</code>: check the fleet exists here, then remember it.</p>
+			    <span>fleetUse</span><span>(<span><span>id<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos fleet use &lt;id&gt;</code>: check the fleet exists here, then remember it.</p>
 </div></div></div>
     </div></div>
 </section>
@@ -8828,7 +8875,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_categories"
       <a href=".&#x2F;.&#x2F;archon&#x2F;guide&#x2F;where.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;guide&#x2F;where.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-89"><div class="markdown_summary"><p>Spec 053: &quot;where am I&quot;. <code>archon</code> with no arguments shows, for the fleet of
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-89"><div class="markdown_summary"><p>Spec 053: &quot;where am I&quot;. <code>deno task stolos</code> with no arguments shows, for the fleet of
 this repository, every step from a new repository to running hosts, each
 done or not as the real state says (Git, this machine's secret store, the
 boot server's tokens, what hosts reported), and the one command to run next.
@@ -8869,7 +8916,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_collectwher
     </div><div id="namespace_wherecommand" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;guide&#x2F;where.ts&#x2F;~&#x2F;whereCommand.html" title="whereCommand">
-			    <span>whereCommand</span><span>(<span><span>json<span>: <span class="td-kw">boolean</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon</code> (no arguments) and <code>archon where</code>.</p>
+			    <span>whereCommand</span><span>(<span><span>json<span>: <span class="td-kw">boolean</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon</code> (no arguments) and <code>stolos where</code>.</p>
 </div></div></div>
     </div><div id="namespace_wheresteps" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -8918,7 +8965,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_step" clas
     </div><div id="namespace_wherefacts" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;guide&#x2F;where.ts&#x2F;~&#x2F;WhereFacts.html" title="WhereFacts">
-			    <span>WhereFacts</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Spec 053: &quot;where am I&quot;. <code>archon</code> with no arguments shows, for the fleet of
+			    <span>WhereFacts</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Spec 053: &quot;where am I&quot;. <code>deno task stolos</code> with no arguments shows, for the fleet of
 this repository, every step from a new repository to running hosts, each
 done or not as the real state says (Git, this machine's secret store, the
 boot server's tokens, what hosts reported), and the one command to run next.
@@ -9001,7 +9048,7 @@ Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_stepstat
       <a href=".&#x2F;.&#x2F;archon&#x2F;identity&#x2F;fleet-init.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;identity&#x2F;fleet-init.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-90"><div class="markdown_summary"><p><code>archon fleet init</code> (spec 003): the fleet's identity, from your GitHub
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-90"><div class="markdown_summary"><p><code>stolos fleet init</code> (spec 003): the fleet's identity, from your GitHub
 account as <code>gh</code> reports it. Runs on the boot machine (Windows or Linux).
 Public data goes into fleets/&lt;fleet&gt;/fleet.ts; the admin password hash goes
 only into the boot machine's secret store (Article 13).</p>
@@ -9038,7 +9085,7 @@ with gh. Only the public half leaves this PC.</p>
     </div><div id="namespace_fleetinit" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;identity&#x2F;fleet-init.ts&#x2F;~&#x2F;fleetInit.html" title="fleetInit">
-			    <span>fleetInit</span><span>(<span><span>o<span>: <span class="td-ref">FleetInitOptions</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">void</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>archon fleet init: the fleet (and a new repository's files), from your GitHub account.</p>
+			    <span>fleetInit</span><span>(<span><span>o<span>: <span class="td-ref">FleetInitOptions</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">void</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>stolos fleet init: the fleet (and a new repository's files), from your GitHub account.</p>
 </div></div></div>
     </div><div id="namespace_fleetsource" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -9101,7 +9148,7 @@ keystrokes arrive (Windows Terminal, PowerShell, and Linux terminals).</p>
 Interfaces</h2></div><div class="namespaceSection"><div id="namespace_fleetinitoptions" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;identity&#x2F;fleet-init.ts&#x2F;~&#x2F;FleetInitOptions.html" title="FleetInitOptions">
-			    <span>FleetInitOptions</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What archon fleet init is given.</p>
+			    <span>FleetInitOptions</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What stolos fleet init is given.</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href=".&#x2F;.&#x2F;archon&#x2F;identity&#x2F;fleet-init.ts&#x2F;~&#x2F;FleetInitOptions.html#property_id">
                   <span>id</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The new fleet's id: fleets/&lt;id&gt;/ (spec 046). Without it, the active fleet.</p>
@@ -9165,7 +9212,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_fleet_id" c
       <a href=".&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys-commands.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;identity&#x2F;keys-commands.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-91"><div class="markdown_summary"><p>Spec 057: <code>archon keys</code>, every step of your signing keys in one place, and
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-91"><div class="markdown_summary"><p>Spec 057: <code>stolos keys</code>, every step of your signing keys in one place, and
 idempotent: each command looks at what is already there, does only what is
 missing, and can be run again at any time (after a failure, it continues).</p>
 </div><section class="section"  id="archon&#x2F;identity&#x2F;keys-commands_ts_functions"><div>
@@ -9205,7 +9252,7 @@ signs (on WSL, Windows PowerShell in the fleet folder), then pull here.</p>
     </div><div id="namespace_keyscheckpush" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys-commands.ts&#x2F;~&#x2F;keysCheckPush.html" title="keysCheckPush">
-			    <span>keysCheckPush</span><span>(<span><span>input<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon keys check-push</code> (Git's pre-push hook): each pushed tip of the
+			    <span>keysCheckPush</span><span>(<span><span>input<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos keys check-push</code> (Git's pre-push hook): each pushed tip of the
 fleet's branch must be signed by a key the fleet trusts as of what the
 remote has now, exactly as servers will check it. Refs to push come on
 standard input (&quot;&lt;local ref&gt; &lt;local sha&gt; &lt;remote ref&gt; &lt;remote sha&gt;&quot;).</p>
@@ -9213,27 +9260,27 @@ standard input (&quot;&lt;local ref&gt; &lt;local sha&gt; &lt;remote ref&gt; &lt
     </div><div id="namespace_keyscheckrecovery" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys-commands.ts&#x2F;~&#x2F;keysCheckRecovery.html" title="keysCheckRecovery">
-			    <span>keysCheckRecovery</span><span>(<span><span>key<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon keys check-recovery --key &lt;file&gt;</code>: prove the recovery key works; changes nothing else.</p>
+			    <span>keysCheckRecovery</span><span>(<span><span>key<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos keys check-recovery --key &lt;file&gt;</code>: prove the recovery key works; changes nothing else.</p>
 </div></div></div>
     </div><div id="namespace_keyslost" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys-commands.ts&#x2F;~&#x2F;keysLost.html" title="keysLost">
-			    <span>keysLost</span><span>(<div class="ml-4"><div><span>recovery<span>: <span class="td-kw">string</span></span></span>,</div><div><span>stolen<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon keys lost --recovery &lt;file&gt;</code>: replace a lost or stolen daily key, approved by the recovery key.</p>
+			    <span>keysLost</span><span>(<div class="ml-4"><div><span>recovery<span>: <span class="td-kw">string</span></span></span>,</div><div><span>stolen<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos keys lost --recovery &lt;file&gt;</code>: replace a lost or stolen daily key, approved by the recovery key.</p>
 </div></div></div>
     </div><div id="namespace_keysrotate" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys-commands.ts&#x2F;~&#x2F;keysRotate.html" title="keysRotate">
-			    <span>keysRotate</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon keys rotate</code>: a new daily key, approved by the current one; resumes a rotation in progress.</p>
+			    <span>keysRotate</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos keys rotate</code>: a new daily key, approved by the current one; resumes a rotation in progress.</p>
 </div></div></div>
     </div><div id="namespace_keyssetup" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys-commands.ts&#x2F;~&#x2F;keysSetup.html" title="keysSetup">
-			    <span>keysSetup</span><span>(<span><span>o<span class="td-op">?</span><span>: { test<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>;  }</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon keys setup</code>: everything, idempotent.</p>
+			    <span>keysSetup</span><span>(<span><span>o<span class="td-op">?</span><span>: { test<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>;  }</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos keys setup</code>: everything, idempotent.</p>
 </div></div></div>
     </div><div id="namespace_keysstatus" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys-commands.ts&#x2F;~&#x2F;keysStatus.html" title="keysStatus">
-			    <span>keysStatus</span><span>(<span><span>json<span>: <span class="td-kw">boolean</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon keys</code>: every check, with its fix; exit 1 when signing does not work.</p>
+			    <span>keysStatus</span><span>(<span><span>json<span>: <span class="td-kw">boolean</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos keys</code>: every check, with its fix; exit 1 when signing does not work.</p>
 </div></div></div>
     </div><div id="namespace_repairkeys" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -9256,8 +9303,8 @@ current signers.ts, and the pre-push check. Returns what it changed.</p>
   <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-92"><div class="markdown_summary"><p>Spec 057: your signing keys, checked and fixed by one command. This module
 gathers the facts (no prompt, nothing written) and turns them into checks,
 each with a stable code (<code>archon explain E057-...</code>) and the one command
-that fixes it. <code>archon keys</code>, <code>archon keys setup</code>, <code>boot doctor</code>, <code>archon</code>
-(where am I), and <code>archon signers</code> all use the same checks.</p>
+that fixes it. <code>stolos keys</code>, <code>stolos keys setup</code>, <code>boot doctor</code>, <code>archon</code>
+(where am I), and <code>stolos signers</code> all use the same checks.</p>
 </div><section class="section"  id="archon&#x2F;identity&#x2F;keys_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;identity&#x2F;keys_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
@@ -9501,8 +9548,8 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_min_openssh
 # Installed by archon (specs 029 and 057). Checks that what you push is signed
 # by a key the fleet trusts, so servers will accept it; then reminds you to back
 # up when a secret changed. Skip it once with: git push --no-verify
-deno task archon keys check-push || exit 1
-deno task archon vault status --hook &gt;&amp;2 || true
+deno task stolos keys check-push || exit 1
+deno task stolos vault status --hook &gt;&amp;2 || true
 exit 0
 `</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The pre-push hook archon installs (spec 057 checks signatures; spec 029 reminds about backups).</p>
 </div></div></div>
@@ -9522,7 +9569,7 @@ exit 0
       <a href=".&#x2F;.&#x2F;archon&#x2F;identity&#x2F;signers-commands.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;identity&#x2F;signers-commands.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-93"><div class="markdown_summary"><p><code>archon signers</code> (spec 047-intent-and-identity): list, add, and remove the
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-93"><div class="markdown_summary"><p><code>stolos signers</code> (spec 047-intent-and-identity): list, add, and remove the
 fleet's signers (fleets/&lt;id&gt;/signers.ts, in its fixed form), and, on a host
 in an emergency, trust a key a person types there.</p>
 </div><section class="section"  id="archon&#x2F;identity&#x2F;signers-commands_ts_functions"><div>
@@ -9551,17 +9598,17 @@ in an emergency, trust a key a person types there.</p>
 Functions</h2></div><div class="namespaceSection"><div id="namespace_signersadd" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;identity&#x2F;signers-commands.ts&#x2F;~&#x2F;signersAdd.html" title="signersAdd">
-			    <span>signersAdd</span><span>(<div class="ml-4"><div><span>name<span>: <span class="td-kw">string</span></span></span>,</div><div><span>role<span>: <span class="td-kw">string</span></span></span>,</div><div><span>keyArg<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>archon signers add.</p>
+			    <span>signersAdd</span><span>(<div class="ml-4"><div><span>name<span>: <span class="td-kw">string</span></span></span>,</div><div><span>role<span>: <span class="td-kw">string</span></span></span>,</div><div><span>keyArg<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>stolos signers add.</p>
 </div></div></div>
     </div><div id="namespace_signerslist" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;identity&#x2F;signers-commands.ts&#x2F;~&#x2F;signersList.html" title="signersList">
-			    <span>signersList</span><span>(<span><span>json<span>: <span class="td-kw">boolean</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>archon signers: the list, and this machine's signing setup.</p>
+			    <span>signersList</span><span>(<span><span>json<span>: <span class="td-kw">boolean</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>stolos signers: the list, and this machine's signing setup.</p>
 </div></div></div>
     </div><div id="namespace_signersremove" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;identity&#x2F;signers-commands.ts&#x2F;~&#x2F;signersRemove.html" title="signersRemove">
-			    <span>signersRemove</span><span>(<span><span>name<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>archon signers remove.</p>
+			    <span>signersRemove</span><span>(<span><span>name<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>stolos signers remove.</p>
 </div></div></div>
     </div><div id="namespace_signerstrust" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -9641,13 +9688,13 @@ commit applied now (no rollback) and carry a good signature by a key in
     </div><div id="namespace_signerssource" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;identity&#x2F;signers.ts&#x2F;~&#x2F;signersSource.html" title="signersSource">
-			    <span>signersSource</span><span>(<span><span>list<span>: <span class="td-ref">SignerDef</span>[]</span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fixed form of signers.ts: what <code>archon signers</code> writes, and what build checks.</p>
+			    <span>signersSource</span><span>(<span><span>list<span>: <span class="td-ref">SignerDef</span>[]</span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fixed form of signers.ts: what <code>stolos signers</code> writes, and what build checks.</p>
 </div></div></div>
     </div><div id="namespace_signingsetup" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;identity&#x2F;signers.ts&#x2F;~&#x2F;signingSetup.html" title="signingSetup">
 			    <span>signingSetup</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">Array</span>&lt;{ ok<span>: <span class="td-kw">boolean</span></span>; what<span>: <span class="td-kw">string</span></span>; fix<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }&gt;&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The signing setup of the person running a command on the boot machine or a
-workstation: spec 057's checks (archon keys), as a list of what is right and
+workstation: spec 057's checks (stolos keys), as a list of what is right and
 what is wrong with its fix.</p>
 </div></div></div>
     </div></div>
@@ -9836,7 +9883,7 @@ Returns 1 when verification found failures, else 0.</p>
       <a href=".&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-add.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;install&#x2F;host-add.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-97"><div class="markdown_summary"><p><code>archon host add</code> (spec 004): write the host's model, give it its own
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-97"><div class="markdown_summary"><p><code>stolos host add</code> (spec 004): write the host's model, give it its own
 GitHub deploy key (read-only access to this repository (spec 048); the private half
 stays in the boot machine's secret store), and arm it for one install.</p>
 </div><section class="section"  id="archon&#x2F;install&#x2F;host-add_ts_functions"><div>
@@ -9870,7 +9917,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_ensuredeplo
     </div><div id="namespace_hostadd" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-add.ts&#x2F;~&#x2F;hostAdd.html" title="hostAdd">
-			    <span>hostAdd</span><span>(<span><span>o<span>: <span class="td-ref">HostAddOptions</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>archon host add: the model, the registration, the deploy key, and one armed install.</p>
+			    <span>hostAdd</span><span>(<span><span>o<span>: <span class="td-ref">HostAddOptions</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>stolos host add: the model, the registration, the deploy key, and one armed install.</p>
 </div></div></div>
     </div><div id="namespace_hostsource" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -9915,7 +9962,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_ensuredeplo
 Interfaces</h2></div><div class="namespaceSection"><div id="namespace_hostaddoptions" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-add.ts&#x2F;~&#x2F;HostAddOptions.html" title="HostAddOptions">
-			    <span>HostAddOptions</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What archon host add is given.</p>
+			    <span>HostAddOptions</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What stolos host add is given.</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href=".&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-add.ts&#x2F;~&#x2F;HostAddOptions.html#property_claim">
                   <span>claim</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Spec 051: exactly one of claim and macAddress (see recognize.ts).</p>
@@ -9955,7 +10002,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_hostaddopt
       <a href=".&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-bootstrap.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;install&#x2F;host-bootstrap.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-98"><div class="markdown_summary"><p><code>archon host bootstrap</code> (spec 005): finish a host whose Ubuntu was installed
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-98"><div class="markdown_summary"><p><code>stolos host bootstrap</code> (spec 005): finish a host whose Ubuntu was installed
 by hand (from Ubuntu's ISO, a cloud image, anything) instead of by network
 boot. From the boot machine it copies, over SSH, exactly what the network
 install would have handed cloud-init (the host name, GitHub's host keys, the
@@ -9992,7 +10039,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_bootstrapre
     </div><div id="namespace_hostbootstrap" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-bootstrap.ts&#x2F;~&#x2F;hostBootstrap.html" title="hostBootstrap">
-			    <span>hostBootstrap</span><span>(<span><span>o<span>: <span class="td-ref">HostBootstrapOptions</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>archon host bootstrap: check the machine, copy what a network install would have handed it, run the first boot.</p>
+			    <span>hostBootstrap</span><span>(<span><span>o<span>: <span class="td-ref">HostBootstrapOptions</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>stolos host bootstrap: check the machine, copy what a network install would have handed it, run the first boot.</p>
 </div></div></div>
     </div><div id="namespace_parsebootstrapfacts" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -10047,7 +10094,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_bootstrapf
     </div><div id="namespace_hostbootstrapoptions" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-bootstrap.ts&#x2F;~&#x2F;HostBootstrapOptions.html" title="HostBootstrapOptions">
-			    <span>HostBootstrapOptions</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What archon host bootstrap is given.</p>
+			    <span>HostBootstrapOptions</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What stolos host bootstrap is given.</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href=".&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-bootstrap.ts&#x2F;~&#x2F;HostBootstrapOptions.html#property_name">
                   <span>name</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The host.</p>
@@ -10142,7 +10189,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_ensurehostk
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-keys.ts&#x2F;~&#x2F;exportHostKeys.html" title="exportHostKeys">
 			    <span>exportHostKeys</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon host-keys export</code> (spec 029): this host's SSH host keys and ops'
-deploy key as JSON, for <code>deno task boot vault recover-host-keys &lt;host&gt;</code> when
+deploy key as JSON, for <code>deno task stolos vault recover-host-keys &lt;host&gt;</code> when
 the boot machine lost its copies without a backup: the rebuilt boot machine
 then holds the same identities, so nothing changes on GitHub or for SSH
 clients. Root only (it elevates); never offered over MCP.</p>
@@ -10408,10 +10455,10 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_netboot_ent
       <a href=".&#x2F;.&#x2F;archon&#x2F;install&#x2F;publish.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;install&#x2F;publish.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-101"><div class="markdown_summary"><p>Specs 004 and 045: what <code>archon host add</code> and <code>boot retire</code> change in the
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-101"><div class="markdown_summary"><p>Specs 004 and 045: what <code>stolos host add</code> and <code>boot retire</code> change in the
 checkout is built, committed, and pushed by the same command (pushing to
 main is approval, Article 9). Only the paths the change touched are staged,
-with what <code>archon build</code> renders from them (.mcp.json, the agent's
+with what <code>stolos build</code> renders from them (.mcp.json, the agent's
 permissions, the man pages); anything else in the working tree is left alone.</p>
 </div><section class="section"  id="archon&#x2F;install&#x2F;publish_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;install&#x2F;publish_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
@@ -10471,7 +10518,7 @@ Returns whether the change is on GitHub.</p>
 Variables</h2></div><div class="namespaceSection"><div id="namespace_rendered" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;install&#x2F;publish.ts&#x2F;~&#x2F;RENDERED.html" title="RENDERED">
-			    <span>RENDERED</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What archon build renders that a host's arrival or departure changes.</p>
+			    <span>RENDERED</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What stolos build renders that a host's arrival or departure changes.</p>
 </div></div></div>
     </div></div>
 </section>
@@ -10717,7 +10764,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_ubuntu-1" c
       <a href=".&#x2F;.&#x2F;archon&#x2F;install&#x2F;workstation.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;install&#x2F;workstation.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-105"><div class="markdown_summary"><p><code>archon workstation add</code> (spec 020): run inside Ubuntu on WSL (or on an
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-105"><div class="markdown_summary"><p><code>stolos workstation add</code> (spec 020): run inside Ubuntu on WSL (or on an
 Ubuntu desktop), from the checkout in /srv/archon, as your own user. It
 writes fleets/&lt;fleet&gt;/hosts/&lt;name&gt;/host.ts (kind &quot;workstation&quot;) and then, through
 sudo, converges the user-level parts: tools, dotfiles, the
@@ -10748,7 +10795,7 @@ archon command, Ubuntu's daily updates (archon update --no-pull).</p>
 Functions</h2></div><div class="namespaceSection"><div id="namespace_workstationadd" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;install&#x2F;workstation.ts&#x2F;~&#x2F;workstationAdd.html" title="workstationAdd">
-			    <span>workstationAdd</span><span>(<span><span>o<span>: { name<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; user<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; force<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>;  }</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon workstation add</code>: checks this machine (Linux, not root, the fleet's
+			    <span>workstationAdd</span><span>(<span><span>o<span>: { name<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; user<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; force<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>;  }</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos workstation add</code>: checks this machine (Linux, not root, the fleet's
 Ubuntu release, systemd, the /srv/archon checkout), writes the host model
 (kept unless <code>force</code>), then runs archon update through sudo. Returns the
 exit code: 1 when a check fails, else update's.</p>
@@ -11149,7 +11196,7 @@ are already written into the backup target.</p>
       <a href=".&#x2F;.&#x2F;archon&#x2F;model&#x2F;export.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;model&#x2F;export.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-108"><div class="markdown_summary"><p><code>archon export</code> (spec 002 FR-006, spec 014): the fleet, hosts, specs,
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-108"><div class="markdown_summary"><p><code>stolos export</code> (spec 002 FR-006, spec 014): the fleet, hosts, specs,
 provenance, and snapshots as RDF (Turtle) under out/rdf/. RDF is an export
 only (Article 10); vocabularies are reused (Article 3): W3C PROV, Dublin
 Core terms, FOAF, and a small archon: namespace for the rest.</p>
@@ -11251,8 +11298,8 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_registeredc
       <a href=".&#x2F;.&#x2F;archon&#x2F;model&#x2F;load.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;model&#x2F;load.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-110"><div class="markdown_summary"><p>Load the active fleet (fleets/&lt;id&gt;/fleet.ts, written by <code>archon fleet init</code>)
-and every host (fleets/&lt;id&gt;/hosts/&lt;name&gt;/host.ts, written by <code>archon host add</code>).
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-110"><div class="markdown_summary"><p>Load the active fleet (fleets/&lt;id&gt;/fleet.ts, written by <code>stolos fleet init</code>)
+and every host (fleets/&lt;id&gt;/hosts/&lt;name&gt;/host.ts, written by <code>stolos host add</code>).
 Hosts are discovered from the directory, so there is no index to keep in
 sync.</p>
 </div><section class="section"  id="archon&#x2F;model&#x2F;load_ts_classes"><div>
@@ -11385,7 +11432,7 @@ A workstation has one: its existing user (spec 020).</p>
       <div class="ml-4 mt-2"><section>
   <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-111"><div class="markdown_summary"><p>The fleet's outside providers as explicit choices (spec 046). Each is a
 closed set: the engine implements exactly these, so a typo or an
-unsupported provider fails <code>archon build</code> (TypeScript), not a host.</p>
+unsupported provider fails <code>stolos build</code> (TypeScript), not a host.</p>
 </div><section class="section"  id="archon&#x2F;model&#x2F;providers_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;model&#x2F;providers_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
@@ -11523,7 +11570,7 @@ derived files. Throws on conflicting definitions of the same item.</p>
       <div class="ml-4 mt-2"><section>
   <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-113"><div class="markdown_summary"><p>The secret inventory (spec 028, constitution Article 13): every secret the
 fleet depends on, by name, where it lives, and how to make it again. Values
-never. The boot machine's secrets are what <code>deno task boot vault</code> backs up
+never. The boot machine's secrets are what <code>deno task stolos vault</code> backs up
 and restores (spec 029); the owner's are listed so a lost one is not a
 surprise. A test checks that every path the code writes is listed here.</p>
 </div><section class="section"  id="archon&#x2F;model&#x2F;secret-inventory_ts_functions"><div>
@@ -12307,9 +12354,9 @@ warning with their fix and never count as a failure (installed.json stays ok).</
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;FleetDef.html" title="FleetDef">
 			    <span>FleetDef</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fleet: one identity shared by every host (spec 003), in
-<code>fleets/&lt;id&gt;/fleet.ts</code> of a fleet repository. <code>archon fleet init &lt;id&gt;</code>
+<code>fleets/&lt;id&gt;/fleet.ts</code> of a fleet repository. <code>stolos fleet init &lt;id&gt;</code>
 writes the first one from your GitHub account; edit it freely after, then
-<code>archon build</code>.</p>
+<code>stolos build</code>.</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href=".&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;FleetDef.html#property_admin">
                   <span>admin</span><span>: { user<span>: <span class="td-kw">string</span></span>; uid<span>: <span class="td-kw">number</span></span>; github<span>: <span class="td-ref">GitHubIdentity</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fleet's admin: one person, one account on every host (spec 003).</p>
@@ -12451,7 +12498,7 @@ that exists nowhere else (backed up with <code>lxc export</code> and guarded), o
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;HostDecisions.html" title="HostDecisions">
 			    <span>HostDecisions</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What operators decided for a host, in Git (spec 047): fleets/&lt;id&gt;/hosts/&lt;host&gt;/decisions.ts,
-written by <code>archon decide</code>. A decision here wins over the host's own record.</p>
+written by <code>stolos decide</code>. A decision here wins over the host's own record.</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href=".&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;HostDecisions.html#property_optins">
                   <span>optIns</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-ref">OptInRecord</span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What operators decided in Git (decisions.ts): opt-in name to its record.</p>
@@ -12460,8 +12507,8 @@ written by <code>archon decide</code>. A decision here wins over the host's own 
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;HostDef.html" title="HostDef">
 			    <span>HostDef</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A host: one machine of the fleet, in <code>fleets/&lt;id&gt;/hosts/&lt;name&gt;/host.ts</code>.
-<code>archon host add &lt;name&gt; --claim</code> (or <code>--mac-address</code>) writes a server's;
-<code>archon workstation add</code> a workstation's. What it gets comes from its
+<code>stolos host add &lt;name&gt; --claim</code> (or <code>--mac-address</code>) writes a server's;
+<code>stolos workstation add</code> a workstation's. What it gets comes from its
 capabilities; what it is (its MAC, its SSH host keys) is in its
 registration.ts, from the machine itself (spec 051).</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
@@ -12476,7 +12523,7 @@ registration.ts, from the machine itself (spec 051).</p>
 </div></div></li><li>
                 <a href=".&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;HostDef.html#property_desktop">
                   <span>desktop</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Workstations (spec 036): a graphical desktop, not WSL or a headless machine.
-VS Code is installed only here; set by <code>archon workstation add</code>.</p>
+VS Code is installed only here; set by <code>stolos workstation add</code>.</p>
 </div></div></li><li>
                 <a href=".&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;HostDef.html#property_disk">
                   <span>disk</span><span>: <span class="td-ref">DiskDef</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Servers: the install disk (default: Ubuntu's LVM layout on the largest disk).</p>
@@ -12596,7 +12643,7 @@ never written in a host file.</p>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;HostRegistration.html" title="HostRegistration">
 			    <span>HostRegistration</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Who a host is, in Git (spec 047): fleets/&lt;id&gt;/hosts/&lt;host&gt;/registration.ts,
-written by <code>archon host add</code>. Public facts only: its SSH host public keys
+written by <code>stolos host add</code>. Public facts only: its SSH host public keys
 (operators' known_hosts is generated from them), its network card, and the
 fingerprint of its read-only deploy key.</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
@@ -12864,7 +12911,7 @@ with generous rate limits: for synthetic and test fleets.</p>
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;SignerDef.html" title="SignerDef">
 			    <span>SignerDef</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Who may approve changes to a fleet (spec 047, Article 9): a host applies only
 a tip of main signed by one of these keys. Kept in fleets/&lt;id&gt;/signers.ts,
-written by <code>archon signers</code>.</p>
+written by <code>stolos signers</code>.</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href=".&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;SignerDef.html#property_added">
                   <span>added</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When it was added (ISO date).</p>
@@ -13376,7 +13423,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_problem-1"
 
       <div class="ml-4 mt-2"><section>
   <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-117"><div class="markdown_summary"><p>The archon notify commands (spec 025), on hosts, workstations, and the boot
-machine (deno task boot notify runs the same code), and archon mail
+machine (deno task stolos boot notify runs the same code), and archon mail
 credential and mail test (spec 027).</p>
 </div><section class="section"  id="archon&#x2F;notify&#x2F;commands_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;notify&#x2F;commands_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
@@ -13411,7 +13458,7 @@ once, texthash). archon's own sends read the same file.</p>
     </div><div id="namespace_mailcredential" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;notify&#x2F;commands.ts&#x2F;~&#x2F;mailCredential.html" title="mailCredential">
-			    <span>mailCredential</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>archon mail credential: the credential JSON on stdin (deno task boot
+			    <span>mailCredential</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>archon mail credential: the credential JSON on stdin (deno task stolos boot
 mail-push). Then the doctor's email checks, mailed to the shared mailbox
 through archon and Postfix, so the new token is proven where it matters.</p>
 </div></div></div>
@@ -14729,7 +14776,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_central" cl
       <a href=".&#x2F;.&#x2F;archon&#x2F;observe&#x2F;fleet-query.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;observe&#x2F;fleet-query.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-125"><div class="markdown_summary"><p><code>archon fleet query</code> (spec 048): one SQL question to every server, through
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-125"><div class="markdown_summary"><p><code>stolos fleet query</code> (spec 048): one SQL question to every server, through
 each server's MCP server over SSH (the server limits what it answers).</p>
 </div><section class="section"  id="archon&#x2F;observe&#x2F;fleet-query_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;observe&#x2F;fleet-query_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
@@ -14772,7 +14819,7 @@ unreachable servers. Returns 1 when any server did not answer, else 0.</p>
       <a href=".&#x2F;.&#x2F;archon&#x2F;observe&#x2F;fleet-status.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;observe&#x2F;fleet-status.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-126"><div class="markdown_summary"><p><code>archon fleet status</code> (specs 021, 022): every server and workstation in the
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-126"><div class="markdown_summary"><p><code>stolos fleet status</code> (specs 021, 022): every server and workstation in the
 model, its last install and verify as it says them now (spec 048: asked over
 MCP, cached in this machine's archon.sql when it cannot be reached),
 whether it is durable or ephemeral (spec 044), and how to reach and observe it. Works on the boot machine (which also knows
@@ -14803,7 +14850,7 @@ the addresses hosts installed from) and on any host.</p>
 Functions</h2></div><div class="namespaceSection"><div id="namespace_fleetstatus" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;observe&#x2F;fleet-status.ts&#x2F;~&#x2F;fleetStatus.html" title="fleetStatus">
-			    <span>fleetStatus</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon fleet status</code>: print each host's last install and verify (asked
+			    <span>fleetStatus</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos fleet status</code>: print each host's last install and verify (asked
 live, or from the cache), its data class, and its next steps. Returns 0.</p>
 </div></div></div>
     </div></div>
@@ -14820,7 +14867,7 @@ live, or from the cache), its data class, and its next steps. Returns 0.</p>
   <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-127"><div class="markdown_summary"><p>&quot;What now?&quot; for a freshly installed server or workstation (specs 021, 022):
 how to reach it, its web console, and how to observe it. One list, shown by
 the boot server when a host is ready, at the end of the first boot, by
-<code>boot reinstall</code>, by <code>archon fleet status</code>, and (servers) at SSH login.</p>
+<code>boot reinstall</code>, by <code>stolos fleet status</code>, and (servers) at SSH login.</p>
 </div><section class="section"  id="archon&#x2F;observe&#x2F;next_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;observe&#x2F;next_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
@@ -17069,7 +17116,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_system_root
 
       <div class="ml-4 mt-2"><section>
   <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-139"><div class="markdown_summary"><p>Provenance (spec 014, Article 16): every apply is recorded as an activity,
-kept in this machine's archon.sql (spec 048) and exported as W3C PROV (Turtle) by <code>archon export</code>.</p>
+kept in this machine's archon.sql (spec 048) and exported as W3C PROV (Turtle) by <code>stolos export</code>.</p>
 </div><section class="section"  id="archon&#x2F;prov&#x2F;prov_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;prov&#x2F;prov_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
@@ -17325,7 +17372,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_mcpserverna
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;render&#x2F;agent.ts&#x2F;~&#x2F;renderMcpJson.html" title="renderMcpJson">
 			    <span>renderMcpJson</span><span>(<div class="ml-4"><div><span>servers<span class="td-op">?</span><span>: <span class="td-ref">McpServer</span>[]</span></span>,</div><div><span>keep<span class="td-op">?</span><span>: { existing<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; fleet<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; fleets<span class="td-op">?</span><span>: <span class="td-kw">string</span>[]</span>;  }</span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>.mcp.json: each server over SSH. The server forces <code>archon mcp</code> for ops'
 keys, so no command is sent. The workstation's own commands are run from
-the shell (archon on Ubuntu, deno task archon on Windows), not over MCP, so
+the shell (archon on Ubuntu, deno task stolos on Windows), not over MCP, so
 the same file works on both.</p>
 </div></div></div>
     </div></div>
@@ -17773,8 +17820,8 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_archonmotd"
 
       <div class="ml-4 mt-2"><section>
   <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-146"><div class="markdown_summary"><p>The network reference (spec 028), rendered from the site model by
-<code>archon build</code> into out/site/network-reference.html: the document the owner
-sends with each network change log (deno task boot notify --subject &quot;Lab
+<code>stolos build</code> into out/site/network-reference.html: the document the owner
+sends with each network change log (deno task stolos boot notify --subject &quot;Lab
 Network Runbook Change Log &lt;dates&gt;&quot; --attach out/site/network-reference.html).
 Generated: edit fleets/&lt;fleet&gt;/site.ts, never this output. Names only, no secrets.</p>
 </div><section class="section"  id="archon&#x2F;render&#x2F;network-doc_ts_functions"><div>
@@ -19166,7 +19213,7 @@ CREATE VIEW IF NOT EXISTS archon_inventory AS SELECT host, at,
       <div class="ml-4 mt-2"><section>
   <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-159"><div class="markdown_summary"><p><code>archon verify</code> (Article 15, spec 014): run every verification command in
 the host's plan and report each result. As root, the result is also kept
-in the host's own archon.sql (opt-in verify) when it changes (archon fleet status).</p>
+in the host's own archon.sql (opt-in verify) when it changes (stolos fleet status).</p>
 </div><section class="section"  id="archon&#x2F;state&#x2F;verify_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;state&#x2F;verify_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
@@ -20519,7 +20566,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_updateopti
       <a href=".&#x2F;.&#x2F;archon&#x2F;vault&#x2F;commands.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;vault&#x2F;commands.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-169"><div class="markdown_summary"><p><code>deno task boot vault &lt;sub&gt;</code> (specs 029 and 056): the boot machine's secrets,
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-169"><div class="markdown_summary"><p><code>deno task stolos vault &lt;sub&gt;</code> (specs 029 and 056): the boot machine's secrets,
 and their backup. A backup is one ZIP file (see writeBackupZip),
 written into archon's backup folder; you then move it wherever you keep
 important things safe. A restore is never done by a command: <code>vault restore</code>
@@ -20727,8 +20774,8 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_pre_push_ho
 # Installed by archon (specs 029 and 057). Checks that what you push is signed
 # by a key the fleet trusts, so servers will accept it; then reminds you to back
 # up when a secret changed. Skip it once with: git push --no-verify
-deno task archon keys check-push || exit 1
-deno task archon vault status --hook &gt;&amp;2 || true
+deno task stolos keys check-push || exit 1
+deno task stolos vault status --hook &gt;&amp;2 || true
 exit 0
 `</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The pre-push hook archon installs (spec 057 checks signatures; spec 029 reminds about backups).</p>
 </div></div></div>
@@ -20943,7 +20990,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_prompt_stat
       <a href=".&#x2F;.&#x2F;archon&#x2F;vault&#x2F;zip.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;vault&#x2F;zip.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-173"><div class="markdown_summary"><p>Spec 056: the boot machine's backup is one ZIP file. <code>deno task boot vault backup</code> writes it into the backup folder where archon keeps its data
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-173"><div class="markdown_summary"><p>Spec 056: the boot machine's backup is one ZIP file. <code>deno task stolos vault backup</code> writes it into the backup folder where archon keeps its data
 (Windows: <code>%LOCALAPPDATA%\archon\backup</code>; Linux: <code>~/.local/share/archon/backup</code>),
 reads it back to check every file, and tells you to put it wherever you keep
 important things safe. It holds everything this PC would need again after a
@@ -21124,7 +21171,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_tag" class=
     </div><div id="namespace_version" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;version.ts&#x2F;~&#x2F;VERSION.html" title="VERSION">
-			    <span>VERSION</span><span>: <span class="td-str">"0.39.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
+			    <span>VERSION</span><span>: <span class="td-str">"0.40.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
 from GitHub (<code>@stolos/</code> → raw.githubusercontent.com/.../v&lt;VERSION&gt;/src/), so
 every push to main raises it and the release workflow tags that commit
 v&lt;VERSION&gt;. <code>deno task version bump</code> raises the minor number (0.1.0, 0.2.0,
@@ -21142,7 +21189,7 @@ v&lt;VERSION&gt;. <code>deno task version bump</code> raises the minor number (0
 
       <div class="ml-4 mt-2"><section>
   <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-175"><div class="markdown_summary"><p>032-web: a server's Let's Encrypt certificates survive its re-install. Before
-<code>deno task boot reinstall</code> reboots a server, it copies Traefik's ACME store
+<code>deno task stolos boot reinstall</code> reboots a server, it copies Traefik's ACME store
 (the Let's Encrypt account, the certificates, and their keys) to the boot
 machine; the install hands it back, and the first boot puts it in place
 before Traefik first starts. Traefik then serves the trusted certificate
@@ -21500,7 +21547,7 @@ so a new DHCP lease is followed (spec 032). Its other IPv4 addresses
     </div><div id="namespace_webcredential" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;web&#x2F;commands.ts&#x2F;~&#x2F;webCredential.html" title="webCredential">
-			    <span>webCredential</span><span>(<span><span>hostName<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>archon web credential: the token from stdin (deno task boot web-push), then the records.</p>
+			    <span>webCredential</span><span>(<span><span>hostName<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>archon web credential: the token from stdin (deno task stolos boot web-push), then the records.</p>
 </div></div></div>
     </div><div id="namespace_webdns" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -22221,9 +22268,9 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_fleetdef-1
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;FleetDef.html" title="FleetDef">
 			    <span>FleetDef</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fleet: one identity shared by every host (spec 003), in
-<code>fleets/&lt;id&gt;/fleet.ts</code> of a fleet repository. <code>archon fleet init &lt;id&gt;</code>
+<code>fleets/&lt;id&gt;/fleet.ts</code> of a fleet repository. <code>stolos fleet init &lt;id&gt;</code>
 writes the first one from your GitHub account; edit it freely after, then
-<code>archon build</code>.</p>
+<code>stolos build</code>.</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href=".&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;FleetDef.html#property_admin">
                   <span>admin</span><span>: { user<span>: <span class="td-kw">string</span></span>; uid<span>: <span class="td-kw">number</span></span>; github<span>: <span class="td-ref">GitHubIdentity</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fleet's admin: one person, one account on every host (spec 003).</p>
@@ -22303,8 +22350,8 @@ Without it, servers still answer HTTPS with a self-signed certificate.</p>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;HostDef.html" title="HostDef">
 			    <span>HostDef</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A host: one machine of the fleet, in <code>fleets/&lt;id&gt;/hosts/&lt;name&gt;/host.ts</code>.
-<code>archon host add &lt;name&gt; --claim</code> (or <code>--mac-address</code>) writes a server's;
-<code>archon workstation add</code> a workstation's. What it gets comes from its
+<code>stolos host add &lt;name&gt; --claim</code> (or <code>--mac-address</code>) writes a server's;
+<code>stolos workstation add</code> a workstation's. What it gets comes from its
 capabilities; what it is (its MAC, its SSH host keys) is in its
 registration.ts, from the machine itself (spec 051).</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
@@ -22319,7 +22366,7 @@ registration.ts, from the machine itself (spec 051).</p>
 </div></div></li><li>
                 <a href=".&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;HostDef.html#property_desktop">
                   <span>desktop</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Workstations (spec 036): a graphical desktop, not WSL or a headless machine.
-VS Code is installed only here; set by <code>archon workstation add</code>.</p>
+VS Code is installed only here; set by <code>stolos workstation add</code>.</p>
 </div></div></li><li>
                 <a href=".&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;HostDef.html#property_disk">
                   <span>disk</span><span>: <span class="td-ref">DiskDef</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Servers: the install disk (default: Ubuntu's LVM layout on the largest disk).</p>
@@ -22419,11 +22466,89 @@ never written in a host file.</p>
 Variables</h2></div><div class="namespaceSection"><div id="namespace_version-1" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;version.ts&#x2F;~&#x2F;VERSION.html" title="VERSION">
-			    <span>VERSION</span><span>: <span class="td-str">"0.39.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
+			    <span>VERSION</span><span>: <span class="td-str">"0.40.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
 from GitHub (<code>@stolos/</code> → raw.githubusercontent.com/.../v&lt;VERSION&gt;/src/), so
 every push to main raises it and the release workflow tags that commit
 v&lt;VERSION&gt;. <code>deno task version bump</code> raises the minor number (0.1.0, 0.2.0,
 ...); <code>deno task version check</code> fails when main already has this version.</p>
+</div></div></div>
+    </div></div>
+</section>
+</div>
+</div>
+</section>
+</div>
+    </div>
+    <div>
+      <a href=".&#x2F;.&#x2F;stolos&#x2F;main.ts&#x2F;index.html" class="link text-xl font-bold">stolos&#x2F;main.ts</a>
+
+      <div class="ml-4 mt-2"><section>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-183"><div class="markdown_summary"><p><code>stolos</code> (spec 059): the fleet's command, on your PC, in the fleet
+repository (<code>deno task stolos ...</code>). Everything about the fleet as a whole:
+creating it, keys and signers, adding and installing machines (<code>stolos boot ...</code>, the boot server), backups, and keeping this checkout up to date. Each
+machine has its own command, <code>archon</code>, for itself.</p>
+</div><section class="section"  id="stolos&#x2F;main_ts_functions"><div>
+      <h2 class="anchorable mb-1"><a href="#stolos&#x2F;main_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Functions</h2></div><div class="namespaceSection"><div id="namespace_run-3" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;stolos&#x2F;main.ts&#x2F;~&#x2F;run.html" title="run">
+			    <span>run</span><span>(<span><span>argv<span class="td-op">?</span><span>: <span class="td-kw">string</span>[]</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">never</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Run as a program and exit: from this file, or from a fleet repository's stolos.ts.</p>
+</div></div></div>
+    </div><div id="namespace_stolosmain" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;stolos&#x2F;main.ts&#x2F;~&#x2F;stolosMain.html" title="stolosMain">
+			    <span>stolosMain</span><span>(<span><span>argv<span>: <span class="td-kw">string</span>[]</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The stolos CLI: <code>boot ...</code> is the boot server; everything else is a fleet command.</p>
+</div></div></div>
+    </div></div>
+</section>
+<section class="section"  id="stolos&#x2F;main_ts_variables"><div>
+      <h2 class="anchorable mb-1"><a href="#stolos&#x2F;main_ts_variables" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Variables</h2></div><div class="namespaceSection"><div id="namespace_boot_otel" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;stolos&#x2F;main.ts&#x2F;~&#x2F;BOOT_OTEL.html" title="BOOT_OTEL">
+			    <span>BOOT_OTEL</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The boot server's telemetry settings (spec 023): set for <code>stolos boot ...</code> only.</p>
 </div></div></div>
     </div></div>
 </section>

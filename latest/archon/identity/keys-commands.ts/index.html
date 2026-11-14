@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/identity/keys-commands.ts - Stolos v0.39.0 documentation</title>
+  <title>archon/identity/keys-commands.ts - Stolos v0.40.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.39.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.40.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -98,7 +98,7 @@
 </nav>
 <div id="searchResults"></div><div id="content">
     <main><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc"><div class="markdown"><p>Spec 057: <code>archon keys</code>, every step of your signing keys in one place, and
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc"><div class="markdown"><p>Spec 057: <code>stolos keys</code>, every step of your signing keys in one place, and
 idempotent: each command looks at what is already there, does only what is
 missing, and can be run again at any time (after a failure, it continues).</p>
 <ul>
@@ -211,7 +211,7 @@ signs (on WSL, Windows PowerShell in the fleet folder), then pull here.</p>
     </div><div id="namespace_keyscheckpush" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys-commands.ts&#x2F;~&#x2F;keysCheckPush.html" title="keysCheckPush">
-			    <span>keysCheckPush</span><span>(<span><span>input<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon keys check-push</code> (Git's pre-push hook): each pushed tip of the
+			    <span>keysCheckPush</span><span>(<span><span>input<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos keys check-push</code> (Git's pre-push hook): each pushed tip of the
 fleet's branch must be signed by a key the fleet trusts as of what the
 remote has now, exactly as servers will check it. Refs to push come on
 standard input (&quot;&lt;local ref&gt; &lt;local sha&gt; &lt;remote ref&gt; &lt;remote sha&gt;&quot;).</p>
@@ -219,27 +219,27 @@ standard input (&quot;&lt;local ref&gt; &lt;local sha&gt; &lt;remote ref&gt; &lt
     </div><div id="namespace_keyscheckrecovery" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys-commands.ts&#x2F;~&#x2F;keysCheckRecovery.html" title="keysCheckRecovery">
-			    <span>keysCheckRecovery</span><span>(<span><span>key<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon keys check-recovery --key &lt;file&gt;</code>: prove the recovery key works; changes nothing else.</p>
+			    <span>keysCheckRecovery</span><span>(<span><span>key<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos keys check-recovery --key &lt;file&gt;</code>: prove the recovery key works; changes nothing else.</p>
 </div></div></div>
     </div><div id="namespace_keyslost" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys-commands.ts&#x2F;~&#x2F;keysLost.html" title="keysLost">
-			    <span>keysLost</span><span>(<div class="ml-4"><div><span>recovery<span>: <span class="td-kw">string</span></span></span>,</div><div><span>stolen<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon keys lost --recovery &lt;file&gt;</code>: replace a lost or stolen daily key, approved by the recovery key.</p>
+			    <span>keysLost</span><span>(<div class="ml-4"><div><span>recovery<span>: <span class="td-kw">string</span></span></span>,</div><div><span>stolen<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos keys lost --recovery &lt;file&gt;</code>: replace a lost or stolen daily key, approved by the recovery key.</p>
 </div></div></div>
     </div><div id="namespace_keysrotate" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys-commands.ts&#x2F;~&#x2F;keysRotate.html" title="keysRotate">
-			    <span>keysRotate</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon keys rotate</code>: a new daily key, approved by the current one; resumes a rotation in progress.</p>
+			    <span>keysRotate</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos keys rotate</code>: a new daily key, approved by the current one; resumes a rotation in progress.</p>
 </div></div></div>
     </div><div id="namespace_keyssetup" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys-commands.ts&#x2F;~&#x2F;keysSetup.html" title="keysSetup">
-			    <span>keysSetup</span><span>(<span><span>o<span class="td-op">?</span><span>: { test<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>;  }</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon keys setup</code>: everything, idempotent.</p>
+			    <span>keysSetup</span><span>(<span><span>o<span class="td-op">?</span><span>: { test<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>;  }</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos keys setup</code>: everything, idempotent.</p>
 </div></div></div>
     </div><div id="namespace_keysstatus" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys-commands.ts&#x2F;~&#x2F;keysStatus.html" title="keysStatus">
-			    <span>keysStatus</span><span>(<span><span>json<span>: <span class="td-kw">boolean</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon keys</code>: every check, with its fix; exit 1 when signing does not work.</p>
+			    <span>keysStatus</span><span>(<span><span>json<span>: <span class="td-kw">boolean</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos keys</code>: every check, with its fix; exit 1 when signing does not work.</p>
 </div></div></div>
     </div><div id="namespace_repairkeys" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -303,25 +303,25 @@ current signers.ts, and the pre-push check. Returns what it changed.</p>
                   </span>
                 </a>
               </li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;Surface.html" title="Surface"><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
+<span class="hover:bg-TypeAlias/15 hover:bg-TypeAliasDark/15">
+                    Surface
+                  </span>
+                </a>
+              </li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;commandName.html" title="commandName"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
+                    commandName
+                  </span>
+                </a>
+              </li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;main.html" title="main"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
                     main
                   </span>
                 </a>
-              </li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;run.html" title="run"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
-                    run
-                  </span>
-                </a>
-              </li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;assets.ts&#x2F;~&#x2F;cacheDir.html" title="cacheDir"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
-                    cacheDir
-                  </span>
-                </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1182 symbols</span><svg
+              <span class="leading-none">view all 1189 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

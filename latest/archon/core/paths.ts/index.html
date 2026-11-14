@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/core/paths.ts - Stolos v0.39.0 documentation</title>
+  <title>archon/core/paths.ts - Stolos v0.40.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.39.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.40.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -109,7 +109,7 @@ one hosts check out at /srv/archon. One fleet of it is active per run.</li>
 directory that holds <code>fleets/</code>, else /srv/archon, else (in an engine
 checkout) its <code>examples/</code>. The fleet is ARCHON_FLEET (or --fleet), else
 /etc/archon/fleet (written at install), else this checkout's choice
-(<code>archon fleet use &lt;id&gt;</code>, in .git/archon/fleet, never committed), else the
+(<code>stolos fleet use &lt;id&gt;</code>, in .git/archon/fleet, never committed), else the
 instance's only fleet.</p>
 <pre class="highlight"><code class="language-mermaid">flowchart TD
   repo{&quot;ARCHON_REPO?&quot;} --&gt;|set| inst[&quot;that folder&quot;]
@@ -120,7 +120,7 @@ instance's only fleet.</p>
   srv --&gt;|no| ex[&quot;the engine's examples/&quot;]
   inst --&gt; fleet{&quot;--fleet / ARCHON_FLEET?&quot;}
   fleet --&gt;|unset| etc{&quot;/etc/archon/fleet?&quot;}
-  etc --&gt;|unset| use{&quot;archon fleet use&lt;br/&gt;(.git/archon/fleet)?&quot;}
+  etc --&gt;|unset| use{&quot;stolos fleet use&lt;br/&gt;(.git/archon/fleet)?&quot;}
   use --&gt;|unset| only[&quot;the only fleet&quot;]
 </code><button class="copyButton" data-copy="flowchart TD
   repo{&quot;ARCHON_REPO?&quot;} --&gt;|set| inst[&quot;that folder&quot;]
@@ -131,7 +131,7 @@ instance's only fleet.</p>
   srv --&gt;|no| ex[&quot;the engine's examples/&quot;]
   inst --&gt; fleet{&quot;--fleet / ARCHON_FLEET?&quot;}
   fleet --&gt;|unset| etc{&quot;/etc/archon/fleet?&quot;}
-  etc --&gt;|unset| use{&quot;archon fleet use&lt;br/&gt;(.git/archon/fleet)?&quot;}
+  etc --&gt;|unset| use{&quot;stolos fleet use&lt;br/&gt;(.git/archon/fleet)?&quot;}
   use --&gt;|unset| only[&quot;the only fleet&quot;]
 "><svg
   class="copy"
@@ -200,7 +200,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_findfleetid
     </div><div id="namespace_fleetchoicefile" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;paths.ts&#x2F;~&#x2F;fleetChoiceFile.html" title="fleetChoiceFile">
-			    <span>fleetChoiceFile</span><span>(<span><span>repo<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where <code>archon fleet use &lt;id&gt;</code> keeps this checkout's choice (inside .git: never committed).</p>
+			    <span>fleetChoiceFile</span><span>(<span><span>repo<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where <code>stolos fleet use &lt;id&gt;</code> keeps this checkout's choice (inside .git: never committed).</p>
 </div></div></div>
     </div><div id="namespace_listfleets" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -288,7 +288,7 @@ which only archon-ops may enter.</p>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;paths.ts&#x2F;~&#x2F;P.html#accessor_mcpjson">
                   <span>mcpJson</span><span>()<span>: <span class="td-kw">string</span></span></span></a></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;paths.ts&#x2F;~&#x2F;P.html#accessor_out">
-                  <span>out</span><span>()<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Rendered by archon build; never committed.</p>
+                  <span>out</span><span>()<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Rendered by stolos build; never committed.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;paths.ts&#x2F;~&#x2F;P.html#accessor_repo">
                   <span>repo</span><span>()<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The instance repository (the checkout hosts converge to).</p>
@@ -365,25 +365,25 @@ operator on a workstation cannot write /var/lib/archon.</p>
                   </span>
                 </a>
               </li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;Surface.html" title="Surface"><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
+<span class="hover:bg-TypeAlias/15 hover:bg-TypeAliasDark/15">
+                    Surface
+                  </span>
+                </a>
+              </li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;commandName.html" title="commandName"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
+                    commandName
+                  </span>
+                </a>
+              </li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;main.html" title="main"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
                     main
                   </span>
                 </a>
-              </li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;run.html" title="run"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
-                    run
-                  </span>
-                </a>
-              </li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;assets.ts&#x2F;~&#x2F;cacheDir.html" title="cacheDir"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
-                    cacheDir
-                  </span>
-                </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1182 symbols</span><svg
+              <span class="leading-none">view all 1189 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

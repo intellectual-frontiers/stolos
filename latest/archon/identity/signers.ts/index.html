@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/identity/signers.ts - Stolos v0.39.0 documentation</title>
+  <title>archon/identity/signers.ts - Stolos v0.40.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.39.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.40.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -101,8 +101,8 @@
   <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc"><div class="markdown"><p>Spec 047-intent-and-identity (Article 9): who may approve a fleet's changes,
 and how a host checks an approval before it applies anything.</p>
 <ul>
-<li>fleets/&lt;id&gt;/signers.ts lists the signers. It is written by <code>archon signers</code>
-in one fixed form (a typed literal, Article 4); <code>archon build</code> fails when
+<li>fleets/&lt;id&gt;/signers.ts lists the signers. It is written by <code>stolos signers</code>
+in one fixed form (a typed literal, Article 4); <code>stolos build</code> fails when
 it is not in that form.</li>
 <li>Every host keeps /etc/archon/allowed_signers (Git's format), rendered from
 the signers of the last commit it accepted, plus any key a person trusted
@@ -220,13 +220,13 @@ commit applied now (no rollback) and carry a good signature by a key in
     </div><div id="namespace_signerssource" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;signers.ts&#x2F;~&#x2F;signersSource.html" title="signersSource">
-			    <span>signersSource</span><span>(<span><span>list<span>: <span class="td-ref">SignerDef</span>[]</span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fixed form of signers.ts: what <code>archon signers</code> writes, and what build checks.</p>
+			    <span>signersSource</span><span>(<span><span>list<span>: <span class="td-ref">SignerDef</span>[]</span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fixed form of signers.ts: what <code>stolos signers</code> writes, and what build checks.</p>
 </div></div></div>
     </div><div id="namespace_signingsetup" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;signers.ts&#x2F;~&#x2F;signingSetup.html" title="signingSetup">
 			    <span>signingSetup</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">Array</span>&lt;{ ok<span>: <span class="td-kw">boolean</span></span>; what<span>: <span class="td-kw">string</span></span>; fix<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }&gt;&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The signing setup of the person running a command on the boot machine or a
-workstation: spec 057's checks (archon keys), as a list of what is right and
+workstation: spec 057's checks (stolos keys), as a list of what is right and
 what is wrong with its fix.</p>
 </div></div></div>
     </div></div>
@@ -361,25 +361,25 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_allowed_sig
                   </span>
                 </a>
               </li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;Surface.html" title="Surface"><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
+<span class="hover:bg-TypeAlias/15 hover:bg-TypeAliasDark/15">
+                    Surface
+                  </span>
+                </a>
+              </li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;commandName.html" title="commandName"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
+                    commandName
+                  </span>
+                </a>
+              </li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;main.html" title="main"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
                     main
                   </span>
                 </a>
-              </li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;run.html" title="run"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
-                    run
-                  </span>
-                </a>
-              </li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;assets.ts&#x2F;~&#x2F;cacheDir.html" title="cacheDir"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
-                    cacheDir
-                  </span>
-                </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1182 symbols</span><svg
+              <span class="leading-none">view all 1189 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

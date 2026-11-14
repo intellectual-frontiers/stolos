@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>mod.ts - Stolos v0.39.0 documentation</title>
+  <title>mod.ts - Stolos v0.40.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;" class="contextLink">Stolos v0.39.0</a>
+    <a href="..&#x2F;" class="contextLink">Stolos v0.40.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -125,7 +125,7 @@ workstations from a model written in TypeScript. Its command is <code>archon</co
 The engine (this repository, public) holds no fleet: each fleet lives in a
 fleet repository (private), under <code>fleets/&lt;id&gt;/</code>, and imports the engine at
 a released tag.</p>
-<p>Start with: <code>deno task archon</code> in a fleet repository (where you are, and the
+<p>Start with: <code>deno task stolos</code> in a fleet repository (where you are, and the
 one thing to do next), then the model's types (<a href=".././mod.ts/~/FleetDef.html">FleetDef</a> and
 <a href=".././mod.ts/~/HostDef.html">HostDef</a> in <code>archon/model/types.ts</code>), then the guides in <code>docs/</code>.</p>
 <h2 id="two-repositories,-one-approval" class="anchorable"><a href="#two-repositories,-one-approval" class="anchor" aria-label="Anchor" tabindex="-1"><svg
@@ -159,7 +159,7 @@ one thing to do next), then the model's types (<a href=".././mod.ts/~/FleetDef.h
     model[&quot;fleets/&amp;lt;id&amp;gt;/: fleet.ts, hosts/, signers.ts,&lt;br/&gt;registration.ts, decisions.ts&quot;]
     tip[&quot;main: its tip signed by&lt;br/&gt;a key in signers.ts&quot;]
   end
-  tag --&gt;|&quot;archon fleet upgrade&quot;| pin
+  tag --&gt;|&quot;stolos fleet upgrade&quot;| pin
   model --&gt; tip
   lock --&gt; tip
   tip --&gt;|&quot;read-only deploy key&quot;| hosts[&quot;hosts: /srv/archon&lt;br/&gt;deno run --frozen&quot;]
@@ -173,7 +173,7 @@ one thing to do next), then the model's types (<a href=".././mod.ts/~/FleetDef.h
     model[&quot;fleets/&amp;lt;id&amp;gt;/: fleet.ts, hosts/, signers.ts,&lt;br/&gt;registration.ts, decisions.ts&quot;]
     tip[&quot;main: its tip signed by&lt;br/&gt;a key in signers.ts&quot;]
   end
-  tag --&gt;|&quot;archon fleet upgrade&quot;| pin
+  tag --&gt;|&quot;stolos fleet upgrade&quot;| pin
   model --&gt; tip
   lock --&gt; tip
   tip --&gt;|&quot;read-only deploy key&quot;| hosts[&quot;hosts: /srv/archon&lt;br/&gt;deno run --frozen&quot;]
@@ -317,13 +317,13 @@ one it runs. The lock makes that signature cover the engine's code too.</p>
   sql --&gt; db[&quot;archon.auto.sqlite.db&quot;]
   db --&gt; osq[&quot;osquery&lt;br/&gt;(allowlisted views)&quot;]
   osq --&gt; mcp[&quot;MCP server&lt;br/&gt;(ssh as ops)&quot;]
-  mcp --&gt; fq[&quot;archon fleet query /&lt;br/&gt;fleet status&quot;]
+  mcp --&gt; fq[&quot;stolos fleet query /&lt;br/&gt;fleet status&quot;]
 </code><button class="copyButton" data-copy="flowchart LR
   run[&quot;archon apply / verify /&lt;br/&gt;first boot&quot;] --&gt; sql[&quot;archon.sql&lt;br/&gt;(readable SQL, canonical)&quot;]
   sql --&gt; db[&quot;archon.auto.sqlite.db&quot;]
   db --&gt; osq[&quot;osquery&lt;br/&gt;(allowlisted views)&quot;]
   osq --&gt; mcp[&quot;MCP server&lt;br/&gt;(ssh as ops)&quot;]
-  mcp --&gt; fq[&quot;archon fleet query /&lt;br/&gt;fleet status&quot;]
+  mcp --&gt; fq[&quot;stolos fleet query /&lt;br/&gt;fleet status&quot;]
 "><svg
   class="copy"
   width="15"
@@ -488,9 +488,9 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_fleetdef" 
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;FleetDef.html" title="FleetDef">
 			    <span>FleetDef</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fleet: one identity shared by every host (spec 003), in
-<code>fleets/&lt;id&gt;/fleet.ts</code> of a fleet repository. <code>archon fleet init &lt;id&gt;</code>
+<code>fleets/&lt;id&gt;/fleet.ts</code> of a fleet repository. <code>stolos fleet init &lt;id&gt;</code>
 writes the first one from your GitHub account; edit it freely after, then
-<code>archon build</code>.</p>
+<code>stolos build</code>.</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;FleetDef.html#property_admin">
                   <span>admin</span><span>: { user<span>: <span class="td-kw">string</span></span>; uid<span>: <span class="td-kw">number</span></span>; github<span>: <span class="td-ref">GitHubIdentity</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fleet's admin: one person, one account on every host (spec 003).</p>
@@ -570,8 +570,8 @@ Without it, servers still answer HTTPS with a self-signed certificate.</p>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;HostDef.html" title="HostDef">
 			    <span>HostDef</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A host: one machine of the fleet, in <code>fleets/&lt;id&gt;/hosts/&lt;name&gt;/host.ts</code>.
-<code>archon host add &lt;name&gt; --claim</code> (or <code>--mac-address</code>) writes a server's;
-<code>archon workstation add</code> a workstation's. What it gets comes from its
+<code>stolos host add &lt;name&gt; --claim</code> (or <code>--mac-address</code>) writes a server's;
+<code>stolos workstation add</code> a workstation's. What it gets comes from its
 capabilities; what it is (its MAC, its SSH host keys) is in its
 registration.ts, from the machine itself (spec 051).</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
@@ -586,7 +586,7 @@ registration.ts, from the machine itself (spec 051).</p>
 </div></div></li><li>
                 <a href="..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;HostDef.html#property_desktop">
                   <span>desktop</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Workstations (spec 036): a graphical desktop, not WSL or a headless machine.
-VS Code is installed only here; set by <code>archon workstation add</code>.</p>
+VS Code is installed only here; set by <code>stolos workstation add</code>.</p>
 </div></div></li><li>
                 <a href="..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;HostDef.html#property_disk">
                   <span>disk</span><span>: <span class="td-ref">DiskDef</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Servers: the install disk (default: Ubuntu's LVM layout on the largest disk).</p>
@@ -686,7 +686,7 @@ never written in a host file.</p>
 Variables</h2></div><div class="namespaceSection"><div id="namespace_version" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;.&#x2F;archon&#x2F;version.ts&#x2F;~&#x2F;VERSION.html" title="VERSION">
-			    <span>VERSION</span><span>: <span class="td-str">"0.39.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
+			    <span>VERSION</span><span>: <span class="td-str">"0.40.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
 from GitHub (<code>@stolos/</code> → raw.githubusercontent.com/.../v&lt;VERSION&gt;/src/), so
 every push to main raises it and the release workflow tags that commit
 v&lt;VERSION&gt;. <code>deno task version bump</code> raises the minor number (0.1.0, 0.2.0,
@@ -747,25 +747,25 @@ v&lt;VERSION&gt;. <code>deno task version bump</code> raises the minor number (0
                   </span>
                 </a>
               </li><li>
+                <a href="..&#x2F;.&#x2F;.&#x2F;~&#x2F;Surface.html" title="Surface"><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
+<span class="hover:bg-TypeAlias/15 hover:bg-TypeAliasDark/15">
+                    Surface
+                  </span>
+                </a>
+              </li><li>
+                <a href="..&#x2F;.&#x2F;.&#x2F;~&#x2F;commandName.html" title="commandName"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
+                    commandName
+                  </span>
+                </a>
+              </li><li>
                 <a href="..&#x2F;.&#x2F;.&#x2F;~&#x2F;main.html" title="main"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
                     main
                   </span>
                 </a>
-              </li><li>
-                <a href="..&#x2F;.&#x2F;.&#x2F;~&#x2F;run.html" title="run"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
-                    run
-                  </span>
-                </a>
-              </li><li>
-                <a href="..&#x2F;.&#x2F;archon-boot&#x2F;assets.ts&#x2F;~&#x2F;cacheDir.html" title="cacheDir"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
-                    cacheDir
-                  </span>
-                </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1182 symbols</span><svg
+              <span class="leading-none">view all 1189 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

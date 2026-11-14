@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/fleet/decisions.ts - Stolos v0.39.0 documentation</title>
+  <title>archon/fleet/decisions.ts - Stolos v0.40.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.39.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.40.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -100,7 +100,7 @@
     <main><section>
   <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc"><div class="markdown"><p>Spec 047-intent-and-identity (Article 25): what operators decided for a host
 (which opt-ins are on, and whether their data is durable) lives in Git, in
-fleets/&lt;id&gt;/hosts/&lt;host&gt;/decisions.ts, written by <code>archon decide</code> on a
+fleets/&lt;id&gt;/hosts/&lt;host&gt;/decisions.ts, written by <code>stolos decide</code> on a
 workstation and approved by a signed push. Such a decision wins over the
 host's own record (archon.sql), survives a re-install, and tells the boot
 machine whether a host holds durable data even when it is offline.</p>
@@ -130,7 +130,7 @@ machine whether a host holds durable data even when it is offline.</p>
 Functions</h2></div><div class="namespaceSection"><div id="namespace_decide" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;decisions.ts&#x2F;~&#x2F;decide.html" title="decide">
-			    <span>decide</span><span>(<div class="ml-4"><div><span>hostName<span>: <span class="td-kw">string</span></span></span>,</div><div><span>name<span>: <span class="td-kw">string</span></span></span>,</div><div><span>enabled<span>: <span class="td-kw">boolean</span></span></span>,</div><div><span>data<span>: <span><span class="td-ref">DataClass</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span>,</div><div><span>confirm<span>: <span class="td-kw">unknown</span></span></span>,</div><div><span>by<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon decide &lt;opt-in&gt; on|off --host &lt;host&gt; [--durable|--ephemeral]</code> (repo
+			    <span>decide</span><span>(<div class="ml-4"><div><span>hostName<span>: <span class="td-kw">string</span></span></span>,</div><div><span>name<span>: <span class="td-kw">string</span></span></span>,</div><div><span>enabled<span>: <span class="td-kw">boolean</span></span></span>,</div><div><span>data<span>: <span><span class="td-ref">DataClass</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span>,</div><div><span>confirm<span>: <span class="td-kw">unknown</span></span></span>,</div><div><span>by<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos decide &lt;opt-in&gt; on|off --host &lt;host&gt; [--durable|--ephemeral]</code> (repo
 tier, on a workstation): write the decision; the host applies it after a
 signed push.</p>
 </div></div></div>
@@ -209,25 +209,25 @@ signed push.</p>
                   </span>
                 </a>
               </li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;Surface.html" title="Surface"><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
+<span class="hover:bg-TypeAlias/15 hover:bg-TypeAliasDark/15">
+                    Surface
+                  </span>
+                </a>
+              </li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;commandName.html" title="commandName"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
+                    commandName
+                  </span>
+                </a>
+              </li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;main.html" title="main"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
                     main
                   </span>
                 </a>
-              </li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;run.html" title="run"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
-                    run
-                  </span>
-                </a>
-              </li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;assets.ts&#x2F;~&#x2F;cacheDir.html" title="cacheDir"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
-                    cacheDir
-                  </span>
-                </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1182 symbols</span><svg
+              <span class="leading-none">view all 1189 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

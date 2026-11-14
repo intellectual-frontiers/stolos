@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Command - archon/core/registry-types.ts - Stolos v0.39.0 documentation</title>
+  <title>Command - archon/core/registry-types.ts - Stolos v0.40.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;core&#x2F;registry-types.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.39.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.40.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -940,11 +940,11 @@ already satisfied and finishes unprivileged, so an idempotent mutate
 command (archon pg ensure) works unattended for a normal user once its
 work is done.</p>
 </div></div></div>
-<div class="anchorable docEntry" id="property_hostonlytier">
+<div class="anchorable docEntry" id="property_place">
 
   <div class="docEntryHeader">
     <div><div class="space-x-1 mb-1"><div class="text-optional border border-optional/50 bg-optional/5 inline-flex items-center gap-0.5 *:flex-none rounded-md leading-none text-sm py-1 px-2">optional</div>
-</div><code><a href="#property_hostonlytier" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+</div><code><a href="#property_place" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
   height="16"
   viewBox="0 0 14 14"
@@ -966,7 +966,7 @@ work is done.</p>
   </defs>
 </svg>
 </a>
-<a class="font-bold font-lg link" href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;Command.hostOnlyTier.html">hostOnlyTier</a><span class="font-medium text-stone-500 dark:text-stone-200"><span>: <span class="td-kw">boolean</span></span></span>
+<a class="font-bold font-lg link" href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;Command.place.html">place</a><span class="font-medium text-stone-500 dark:text-stone-200"><span>: <a href="../../../.././archon/core/registry-types.ts/~/Place.html" class="link td-ref">Place</a></span></span>
       </code>
     </div><a
   class="sourceButton"
@@ -993,8 +993,8 @@ work is done.</p>
   />
 </svg>
 </a>
-</div><div class="max-w-[75ch]"><div class="markdown"><p>Its tier applies only on an installed host (/etc/archon/fleet): elsewhere
-(your PC's checkout) it runs as you, at the repo tier (spec 058: archon update).</p>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Where it runs: &quot;pc&quot; (<code>stolos</code>, in the fleet repository on your PC), &quot;machine&quot;
+(<code>archon</code>, on each server or workstation), or &quot;both&quot;.</p>
 </div></div></div>
 <div class="anchorable docEntry" id="property_run">
 
@@ -1090,7 +1090,7 @@ work is done.</p>
 </svg>
 </button><code></code></pre>
 </div></div><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#properties" title="Properties">Properties</a></li><li><ul><li><a href="#property_name" title="name">name</a></li><li><a href="#property_summary" title="summary">summary</a></li><li><a href="#property_description" title="description">description</a></li><li><a href="#property_tier" title="tier">tier</a></li><li><a href="#property_readonlywith" title="readOnlyWith">readOnlyWith</a></li><li><a href="#property_mutatewith" title="mutateWith">mutateWith</a></li><li><a href="#property_asowner" title="asOwner">asOwner</a></li><li><a href="#property_args" title="args">args</a></li><li><a href="#property_examples" title="examples">examples</a></li><li><a href="#property_seealso" title="seeAlso">seeAlso</a></li><li><a href="#property_nomcp" title="noMcp">noMcp</a></li><li><a href="#property_operation" title="operation">operation</a></li><li><a href="#property_unlocked" title="unlocked">unlocked</a></li><li><a href="#property_precheck" title="precheck">precheck</a></li><li><a href="#property_hostonlytier" title="hostOnlyTier">hostOnlyTier</a></li><li><a href="#property_run" title="run">run</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#properties" title="Properties">Properties</a></li><li><ul><li><a href="#property_name" title="name">name</a></li><li><a href="#property_summary" title="summary">summary</a></li><li><a href="#property_description" title="description">description</a></li><li><a href="#property_tier" title="tier">tier</a></li><li><a href="#property_readonlywith" title="readOnlyWith">readOnlyWith</a></li><li><a href="#property_mutatewith" title="mutateWith">mutateWith</a></li><li><a href="#property_asowner" title="asOwner">asOwner</a></li><li><a href="#property_args" title="args">args</a></li><li><a href="#property_examples" title="examples">examples</a></li><li><a href="#property_seealso" title="seeAlso">seeAlso</a></li><li><a href="#property_nomcp" title="noMcp">noMcp</a></li><li><a href="#property_operation" title="operation">operation</a></li><li><a href="#property_unlocked" title="unlocked">unlocked</a></li><li><a href="#property_precheck" title="precheck">precheck</a></li><li><a href="#property_place" title="place">place</a></li><li><a href="#property_run" title="run">run</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>

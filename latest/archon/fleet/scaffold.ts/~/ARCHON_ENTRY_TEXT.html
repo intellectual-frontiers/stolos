@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ARCHON_ENTRY_TEXT - archon/fleet/scaffold.ts - Stolos v0.39.0 documentation</title>
+  <title>ARCHON_ENTRY_TEXT - archon/fleet/scaffold.ts - Stolos v0.40.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;fleet&#x2F;scaffold.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.39.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.40.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -142,7 +142,7 @@
   />
 </svg>
 </a>
-</div><div><div class="space-y-7" id=""><div class="markdown"><p>A fleet repository's archon.ts: runs the pinned engine's archon.</p>
+</div><div><div class="space-y-7" id=""><div class="markdown"><p>A fleet repository's archon.ts: each machine's archon, from the pinned engine.</p>
 </div><section class="section"  id="type"><div>
       <h2 class="anchorable mb-1"><a href="#type" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
@@ -169,9 +169,9 @@
 Type</h2></div><div class="space-y-8"><div class=" docEntry" id="variable_archon_entry_text">
 
   <div class="docEntryHeader">
-    <div><code><span class="font-medium text-stone-500 dark:text-stone-200"><span class="td-str">`// The \`archon\` command for this repository's fleets: runs the engine pinned in
-// deno.json (\`@stolos/\`), checked against deno.lock. Hosts run this file from
-// /srv/archon through /usr/local/bin/archon.
+    <div><code><span class="font-medium text-stone-500 dark:text-stone-200"><span class="td-str">`// Each machine's \`archon\` command: the engine pinned in deno.json (\`@stolos/\`),
+// checked against deno.lock. Servers and workstations run this file from
+// /srv/archon through /usr/local/bin/archon. On your PC, use \`deno task stolos\`.
 import { run } from "@stolos/archon/main.ts";
 
 await run();

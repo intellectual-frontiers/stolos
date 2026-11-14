@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon-boot/mail.ts - Stolos v0.39.0 documentation</title>
+  <title>archon-boot/mail.ts - Stolos v0.40.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;" class="contextLink">Stolos v0.39.0</a>
+    <a href="..&#x2F;..&#x2F;" class="contextLink">Stolos v0.40.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -99,9 +99,9 @@
 <div id="searchResults"></div><div id="content">
     <main><section>
   <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc"><div class="markdown"><p>The boot machine's side of outbound mail (specs 025, 027):</p>
-<p>deno task boot mail-setup           store the Cloudflare API token (once)
-deno task boot mail-push &lt;host&gt;     give a running host the token over SSH
-deno task boot notify --subject ... email the mailbox from this PC (also: notify test | status)</p>
+<p>deno task stolos boot mail-setup           store the Cloudflare API token (once)
+deno task stolos boot mail-push &lt;host&gt;     give a running host the token over SSH
+deno task stolos boot notify --subject ... email the mailbox from this PC (also: notify test | status)</p>
 <p>The token lives only in this PC's secrets folder and, on each server, in
 Postfix's /etc/postfix/sasl_passwd (root only). It never enters the
 repository (Article 13).</p>
@@ -131,19 +131,19 @@ repository (Article 13).</p>
 Functions</h2></div><div class="namespaceSection"><div id="namespace_bootnotify" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;mail.ts&#x2F;~&#x2F;bootNotify.html" title="bootNotify">
-			    <span>bootNotify</span><span>(<span><span>args<span>: <span class="td-kw">string</span>[]</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>deno task boot notify ... : the same options as archon notify send, or test / status.</p>
+			    <span>bootNotify</span><span>(<span><span>args<span>: <span class="td-kw">string</span>[]</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>deno task stolos boot notify ... : the same options as archon notify send, or test / status.</p>
 </div></div></div>
     </div><div id="namespace_mailpush" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;mail.ts&#x2F;~&#x2F;mailPush.html" title="mailPush">
-			    <span>mailPush</span><span>(<span><span>name<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>deno task boot mail-push &lt;host&gt;</code>: give a running host the stored mail token
+			    <span>mailPush</span><span>(<span><span>name<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>deno task stolos boot mail-push &lt;host&gt;</code>: give a running host the stored mail token
 over SSH (on stdin to <code>archon mail credential</code>). Returns ssh's exit code, 2
 for an unknown host, or 1 when no token is stored.</p>
 </div></div></div>
     </div><div id="namespace_mailsetup" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;mail.ts&#x2F;~&#x2F;mailSetup.html" title="mailSetup">
-			    <span>mailSetup</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>deno task boot mail-setup</code>: explain the one-time Cloudflare setup, read the
+			    <span>mailSetup</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>deno task stolos boot mail-setup</code>: explain the one-time Cloudflare setup, read the
 API token without echo, test it with an SMTP login (nothing is sent), store
 it in this PC's secrets, then run the doctor's email checks. Returns the exit
 code (1 on a missing mail setting, a bad token, or a failed check).</p>
@@ -203,25 +203,25 @@ code (1 on a missing mail setting, a bad token, or a failed check).</p>
                   </span>
                 </a>
               </li><li>
+                <a href="..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;Surface.html" title="Surface"><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
+<span class="hover:bg-TypeAlias/15 hover:bg-TypeAliasDark/15">
+                    Surface
+                  </span>
+                </a>
+              </li><li>
+                <a href="..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;commandName.html" title="commandName"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
+                    commandName
+                  </span>
+                </a>
+              </li><li>
                 <a href="..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;main.html" title="main"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
                     main
                   </span>
                 </a>
-              </li><li>
-                <a href="..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;run.html" title="run"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
-                    run
-                  </span>
-                </a>
-              </li><li>
-                <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;assets.ts&#x2F;~&#x2F;cacheDir.html" title="cacheDir"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
-                    cacheDir
-                  </span>
-                </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1182 symbols</span><svg
+              <span class="leading-none">view all 1189 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

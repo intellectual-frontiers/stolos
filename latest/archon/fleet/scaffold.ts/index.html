@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/fleet/scaffold.ts - Stolos v0.39.0 documentation</title>
+  <title>archon/fleet/scaffold.ts - Stolos v0.40.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.39.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.40.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -126,7 +126,7 @@ file is written only when missing; an existing one is never changed.</p>
 Functions</h2></div><div class="namespaceSection"><div id="namespace_denojsontext" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;scaffold.ts&#x2F;~&#x2F;denoJsonText.html" title="denoJsonText">
-			    <span>denoJsonText</span><span>(<div class="ml-4"><div><span>tag<span>: <span class="td-kw">string</span></span></span>,</div><div><span>base<span class="td-op">?</span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A fleet repository's deno.json: the engine pinned at tag, and the archon and boot tasks (run frozen).</p>
+			    <span>denoJsonText</span><span>(<div class="ml-4"><div><span>tag<span>: <span class="td-kw">string</span></span></span>,</div><div><span>base<span class="td-op">?</span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A fleet repository's deno.json: the engine pinned at tag, and the stolos task (run frozen; spec 059).</p>
 </div></div></div>
     </div><div id="namespace_scaffoldfiles" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -166,23 +166,13 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_denojsontex
 Variables</h2></div><div class="namespaceSection"><div id="namespace_archon_entry_text" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;scaffold.ts&#x2F;~&#x2F;ARCHON_ENTRY_TEXT.html" title="ARCHON_ENTRY_TEXT">
-			    <span>ARCHON_ENTRY_TEXT</span><span>: <span class="td-str">`// The \`archon\` command for this repository's fleets: runs the engine pinned in
-// deno.json (\`@stolos/\`), checked against deno.lock. Hosts run this file from
-// /srv/archon through /usr/local/bin/archon.
+			    <span>ARCHON_ENTRY_TEXT</span><span>: <span class="td-str">`// Each machine's \`archon\` command: the engine pinned in deno.json (\`@stolos/\`),
+// checked against deno.lock. Servers and workstations run this file from
+// /srv/archon through /usr/local/bin/archon. On your PC, use \`deno task stolos\`.
 import { run } from "@stolos/archon/main.ts";
 
 await run();
-`</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A fleet repository's archon.ts: runs the pinned engine's archon.</p>
-</div></div></div>
-    </div><div id="namespace_boot_entry_text" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
-<div class="namespaceItemContent">
-		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;scaffold.ts&#x2F;~&#x2F;BOOT_ENTRY_TEXT.html" title="BOOT_ENTRY_TEXT">
-			    <span>BOOT_ENTRY_TEXT</span><span>: <span class="td-str">`// The boot server for this repository's fleets (\`deno task boot serve --fleet &lt;id&gt;\`),
-// from the engine pinned in deno.json (\`@stolos/\`).
-import { run } from "@stolos/archon-boot/main.ts";
-
-await run();
-`</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A fleet repository's boot.ts: runs the pinned engine's boot server.</p>
+`</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A fleet repository's archon.ts: each machine's archon, from the pinned engine.</p>
 </div></div></div>
     </div><div id="namespace_engine_base" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
@@ -192,10 +182,21 @@ await run();
     </div><div id="namespace_gitignore_text" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;scaffold.ts&#x2F;~&#x2F;GITIGNORE_TEXT.html" title="GITIGNORE_TEXT">
-			    <span>GITIGNORE_TEXT</span><span>: <span class="td-str">`# Rendered by archon build on each machine; never committed.
+			    <span>GITIGNORE_TEXT</span><span>: <span class="td-str">`# Rendered by stolos build on each machine; never committed.
 out/
 *.log
 `</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A fleet repository's .gitignore.</p>
+</div></div></div>
+    </div><div id="namespace_stolos_entry_text" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;scaffold.ts&#x2F;~&#x2F;STOLOS_ENTRY_TEXT.html" title="STOLOS_ENTRY_TEXT">
+			    <span>STOLOS_ENTRY_TEXT</span><span>: <span class="td-str">`// The fleet's command on your PC: \`deno task stolos ...\` (with no arguments: where
+// you are, and what to do next). The engine pinned in deno.json (\`@stolos/\`),
+// checked against deno.lock.
+import { run } from "@stolos/stolos/main.ts";
+
+await run();
+`</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A fleet repository's stolos.ts: the fleet's command on your PC (spec 059).</p>
 </div></div></div>
     </div></div>
 </section>
@@ -252,25 +253,25 @@ out/
                   </span>
                 </a>
               </li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;Surface.html" title="Surface"><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
+<span class="hover:bg-TypeAlias/15 hover:bg-TypeAliasDark/15">
+                    Surface
+                  </span>
+                </a>
+              </li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;commandName.html" title="commandName"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
+                    commandName
+                  </span>
+                </a>
+              </li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;main.html" title="main"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
                     main
                   </span>
                 </a>
-              </li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;run.html" title="run"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
-                    run
-                  </span>
-                </a>
-              </li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;assets.ts&#x2F;~&#x2F;cacheDir.html" title="cacheDir"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
-                    cacheDir
-                  </span>
-                </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1182 symbols</span><svg
+              <span class="leading-none">view all 1189 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -285,7 +286,7 @@ out/
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/fleet/scaffold_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_denojsontext" title="denoJsonText">denoJsonText</a></li><li><a href="#namespace_scaffoldfiles" title="scaffoldFiles">scaffoldFiles</a></li><li><a href="#namespace_scaffoldrepository" title="scaffoldRepository">scaffoldRepository</a></li></ul></li><li><a href="#archon/fleet/scaffold_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_archon_entry_text" title="ARCHON_ENTRY_TEXT">ARCHON_ENTRY_TEXT</a></li><li><a href="#namespace_boot_entry_text" title="BOOT_ENTRY_TEXT">BOOT_ENTRY_TEXT</a></li><li><a href="#namespace_engine_base" title="ENGINE_BASE">ENGINE_BASE</a></li><li><a href="#namespace_gitignore_text" title="GITIGNORE_TEXT">GITIGNORE_TEXT</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/fleet/scaffold_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_denojsontext" title="denoJsonText">denoJsonText</a></li><li><a href="#namespace_scaffoldfiles" title="scaffoldFiles">scaffoldFiles</a></li><li><a href="#namespace_scaffoldrepository" title="scaffoldRepository">scaffoldRepository</a></li></ul></li><li><a href="#archon/fleet/scaffold_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_archon_entry_text" title="ARCHON_ENTRY_TEXT">ARCHON_ENTRY_TEXT</a></li><li><a href="#namespace_engine_base" title="ENGINE_BASE">ENGINE_BASE</a></li><li><a href="#namespace_gitignore_text" title="GITIGNORE_TEXT">GITIGNORE_TEXT</a></li><li><a href="#namespace_stolos_entry_text" title="STOLOS_ENTRY_TEXT">STOLOS_ENTRY_TEXT</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>
