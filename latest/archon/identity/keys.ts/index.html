@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/identity/keys.ts - Stolos v0.59.0 documentation</title>
+  <title>archon/identity/keys.ts - Stolos v0.60.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.59.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.60.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -181,6 +181,13 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_collectkeyf
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys.ts&#x2F;~&#x2F;collectKeyFacts.html" title="collectKeyFacts">
 			    <span>collectKeyFacts</span><span>(<span><span>repo<span class="td-op">?</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">KeyFacts</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Gather the facts (no prompt; nothing is written).</p>
 </div></div></div>
+    </div><div id="namespace_gitidentity" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys.ts&#x2F;~&#x2F;gitIdentity.html" title="gitIdentity">
+			    <span>gitIdentity</span><span>(<span><span>repo<span class="td-op">?</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Who Git records as a commit's author in this checkout (&quot;Name &lt;email&gt;&quot;), or
+undefined when Git does not know (no user.name or user.email in this checkout
+or globally): then no commit can be made, signed or not.</p>
+</div></div></div>
     </div><div id="namespace_haspassphrase" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys.ts&#x2F;~&#x2F;hasPassphrase.html" title="hasPassphrase">
@@ -303,6 +310,9 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_keycheck" 
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys.ts&#x2F;~&#x2F;KeyFacts.html#property_hook">
                   <span>hook</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The pre-push check is installed.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys.ts&#x2F;~&#x2F;KeyFacts.html#property_identity">
+                  <span>identity</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Who Git records as the author here (&quot;Name &lt;email&gt;&quot;); absent: Git cannot commit.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys.ts&#x2F;~&#x2F;KeyFacts.html#property_paths">
                   <span>paths</span><span>: <span class="td-ref">KeyPaths</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The paths in use.</p>
@@ -486,7 +496,7 @@ exit 0
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1221 symbols</span><svg
+              <span class="leading-none">view all 1222 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -501,7 +511,7 @@ exit 0
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/identity/keys_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_collectkeyfacts" title="collectKeyFacts">collectKeyFacts</a></li><li><a href="#namespace_haspassphrase" title="hasPassphrase">hasPassphrase</a></li><li><a href="#namespace_homefolder" title="homeFolder">homeFolder</a></li><li><a href="#namespace_keychecks" title="keyChecks">keyChecks</a></li><li><a href="#namespace_keypaths" title="keyPaths">keyPaths</a></li><li><a href="#namespace_keyproblems" title="keyProblems">keyProblems</a></li><li><a href="#namespace_opensshok" title="opensshOk">opensshOk</a></li><li><a href="#namespace_parseopensshversion" title="parseOpenSshVersion">parseOpenSshVersion</a></li><li><a href="#namespace_parsesignerssource" title="parseSignersSource">parseSignersSource</a></li><li><a href="#namespace_pubof" title="pubOf">pubOf</a></li><li><a href="#namespace_readkeystate" title="readKeyState">readKeyState</a></li><li><a href="#namespace_writekeystate" title="writeKeyState">writeKeyState</a></li></ul></li><li><a href="#archon/identity/keys_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_keycheck" title="KeyCheck">KeyCheck</a></li><li><a href="#namespace_keyfacts" title="KeyFacts">KeyFacts</a></li><li><a href="#namespace_keypaths-1" title="KeyPaths">KeyPaths</a></li><li><a href="#namespace_keystate" title="KeyState">KeyState</a></li></ul></li><li><a href="#archon/identity/keys_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_min_openssh" title="MIN_OPENSSH">MIN_OPENSSH</a></li><li><a href="#namespace_pre_push_hook" title="PRE_PUSH_HOOK">PRE_PUSH_HOOK</a></li><li><a href="#namespace_recovery_check_days" title="RECOVERY_CHECK_DAYS">RECOVERY_CHECK_DAYS</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/identity/keys_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_collectkeyfacts" title="collectKeyFacts">collectKeyFacts</a></li><li><a href="#namespace_gitidentity" title="gitIdentity">gitIdentity</a></li><li><a href="#namespace_haspassphrase" title="hasPassphrase">hasPassphrase</a></li><li><a href="#namespace_homefolder" title="homeFolder">homeFolder</a></li><li><a href="#namespace_keychecks" title="keyChecks">keyChecks</a></li><li><a href="#namespace_keypaths" title="keyPaths">keyPaths</a></li><li><a href="#namespace_keyproblems" title="keyProblems">keyProblems</a></li><li><a href="#namespace_opensshok" title="opensshOk">opensshOk</a></li><li><a href="#namespace_parseopensshversion" title="parseOpenSshVersion">parseOpenSshVersion</a></li><li><a href="#namespace_parsesignerssource" title="parseSignersSource">parseSignersSource</a></li><li><a href="#namespace_pubof" title="pubOf">pubOf</a></li><li><a href="#namespace_readkeystate" title="readKeyState">readKeyState</a></li><li><a href="#namespace_writekeystate" title="writeKeyState">writeKeyState</a></li></ul></li><li><a href="#archon/identity/keys_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_keycheck" title="KeyCheck">KeyCheck</a></li><li><a href="#namespace_keyfacts" title="KeyFacts">KeyFacts</a></li><li><a href="#namespace_keypaths-1" title="KeyPaths">KeyPaths</a></li><li><a href="#namespace_keystate" title="KeyState">KeyState</a></li></ul></li><li><a href="#archon/identity/keys_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_min_openssh" title="MIN_OPENSSH">MIN_OPENSSH</a></li><li><a href="#namespace_pre_push_hook" title="PRE_PUSH_HOOK">PRE_PUSH_HOOK</a></li><li><a href="#namespace_recovery_check_days" title="RECOVERY_CHECK_DAYS">RECOVERY_CHECK_DAYS</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>
