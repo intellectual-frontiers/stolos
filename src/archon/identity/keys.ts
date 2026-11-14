@@ -75,7 +75,7 @@ export function keyPaths(signingKey = "", repo = P.repo): KeyPaths {
       : join(home, ".ssh", "fleet-signing"),
     recoveryDir,
     recovery: join(recoveryDir, "fleet-recovery"),
-    allowedSigners: join(repo, ".git", "archon", "allowed_signers"),
+    allowedSigners: join(repo, ".git", "stolos", "allowed_signers"),
     state: join(P.bootCache, "..", "keys", "state.json"),
     hook: join(repo, ".git", "hooks", "pre-push"),
   };

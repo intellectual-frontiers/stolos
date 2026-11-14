@@ -264,7 +264,7 @@ Deno.test("057: the checks, from facts (no files, no prompts)", () => {
     daily: "/h/.ssh/fleet-signing",
     recoveryDir: "/h/fleet-recovery",
     recovery: "/h/fleet-recovery/fleet-recovery",
-    allowedSigners: "/r/.git/archon/allowed_signers",
+    allowedSigners: "/r/.git/stolos/allowed_signers",
     state: "/s",
     hook: "/r/.git/hooks/pre-push",
   };

@@ -10,8 +10,8 @@
 // and fails unless all are inside the sandbox; `fingerprint()` hashes the real
 // archon folders so a test can prove it left them untouched.
 //
-// Layout (the same on every OS): <home>/config/archon/secrets (secrets),
-// <home>/data/archon/... (boot cache, ledger, logs on Windows), <home>/OneDrive.
+// Layout (the same on every OS): <home>/config/stolos/secrets (secrets),
+// <home>/data/stolos/... (boot cache, ledger, logs on Windows), <home>/OneDrive.
 
 import { assert } from "./assert.ts";
 import { join } from "../src/archon/core/path.ts";

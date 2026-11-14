@@ -105,6 +105,9 @@ function globals(argv: string[]) {
 /** The CLI: parses global options, finds the command offered here, and runs it. Returns the exit code. */
 export async function main(argv: string[], surface: Surface = "machine"): Promise<number> {
   await ensureHome();
+  // Spec 059: the run log's folder is named after the command (stolos on your PC).
+  const { setLogProgram } = await import("./core/ui.ts");
+  setLogProgram(commandName(surface) as "stolos" | "archon");
   // Spec 053: no arguments is "where am I, and what next" (on a machine: its state).
   const home = surface === "pc" ? "where" : "state";
   if (!argv.length) argv = [home];

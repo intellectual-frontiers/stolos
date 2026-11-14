@@ -15,7 +15,7 @@ export interface SecretRef {
   /** Short name for tables and the backup panel; <host> and <type> are filled in. */
   label: string;
   /**
-   * Boot machine: the path inside its secrets folder (%APPDATA%\archon\secrets),
+   * Boot machine: the path inside its secrets folder (%APPDATA%\stolos\secrets),
    * with <host> and <type> placeholders. Owner: where it is kept.
    */
   path: string;

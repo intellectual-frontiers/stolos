@@ -29,7 +29,7 @@ key's passphrase, your **GitHub** login, and, for the network, your **UniFi** ac
 
 3. **The secrets and your signing key.** `deno task stolos vault restore` prints the steps (the same
    as `RESTORE.txt` in the ZIP); it changes nothing. In short: unzip it somewhere private, copy
-   `secrets\*` into `%APPDATA%\archon\secrets\` (readable by you only), copy `signing\*` into
+   `secrets\*` into `%APPDATA%\stolos\secrets\` (readable by you only), copy `signing\*` into
    `%USERPROFILE%\.ssh\` and point Git at it (`git config --global user.signingkey ...`), then
    delete the unzipped folder.
 

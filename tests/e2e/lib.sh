@@ -40,7 +40,7 @@ E2E_VM_MEM=${E2E_VM_MEM:-$SERVER_MB}
 WS_MB=${E2E_WS_MEM:-3072}
 SERVER_IP=""
 OUT="$HERE/work"
-EVENTS="$HOME/.local/share/archon/boot/telemetry"
+EVENTS="$HOME/.local/share/stolos/boot/telemetry"
 log() { echo "e2e: $*"; }
 plain() { sed 's/\x1b\[[0-9;]*m//g'; }
 

@@ -2,7 +2,7 @@
  * The secret ledger (spec 029): when each boot-machine secret last changed,
  * by name only. It holds no secret: it is what tells `deno task stolos vault
  * status` (and the reminders) that something is newer than the last backup.
- * %LOCALAPPDATA%\archon\vault\ledger.json (Linux: ~/.local/share/archon/vault).
+ * %LOCALAPPDATA%\stolos\vault\ledger.json (Linux: ~/.local/share/stolos/vault).
  *
  * @module
  */

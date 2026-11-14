@@ -1,7 +1,7 @@
 /**
  * `deno task stolos vault <sub>` (specs 029 and 056): the boot machine's secrets,
  * and their backup. A backup is one ZIP file (see {@link writeBackupZip}),
- * written into archon's backup folder; you then move it wherever you keep
+ * written into stolos's backup folder; you then move it wherever you keep
  * important things safe. A restore is never done by a command: `vault restore`
  * prints what to do with the ZIP, by hand (constitution Articles 13 and 22).
  *

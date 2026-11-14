@@ -637,20 +637,32 @@ export function truncate(s: string, width: number, ansi = true): string {
   return out;
 }
 
-/** Where this run's log goes: /var/log/archon as root, else ~/.local/state. */
+/** The program writing logs: "stolos" on your PC, "archon" on a machine (spec 059). */
+let logProgram = Deno.build.os === "windows" ? "stolos" : "archon";
+/** Set which program writes the run log (its folder is named after it). */
+export function setLogProgram(name: "stolos" | "archon"): void {
+  logProgram = name;
+}
+
+/**
+ * Where this run's log goes: /var/log/archon as root; else the program's folder
+ * (Windows: %LOCALAPPDATA%\\stolos\\log; Linux: ~/.local/state/<program>/log).
+ */
 export function defaultLogPath(): string | null {
   const inherited = env("ARCHON_LOG");
   if (inherited) return inherited;
   const stamp = new Date().toISOString().replace(/[:.]/g, "").slice(0, 15);
   const root = Deno.uid?.() === 0;
-  // Windows: %LOCALAPPDATA%\archon\log (beside boot.log), with Windows separators.
+  // Windows: %LOCALAPPDATA%\stolos\log (beside boot.log), with Windows separators.
   const win = Deno.build.os === "windows";
   const sep = win ? "\\" : "/";
   const dir = win
-    ? `${env("LOCALAPPDATA") ?? `${env("USERPROFILE") ?? "C:"}\\AppData\\Local`}\\archon\\log`
+    ? `${
+      env("LOCALAPPDATA") ?? `${env("USERPROFILE") ?? "C:"}\\AppData\\Local`
+    }\\${logProgram}\\log`
     : root
     ? "/var/log/archon"
-    : `${env("HOME") ?? "/tmp"}/.local/state/archon/log`;
+    : `${env("HOME") ?? "/tmp"}/.local/state/${logProgram}/log`;
   try {
     Deno.mkdirSync(dir, { recursive: true });
     return `${dir}${sep}${stamp}-${Deno.pid}.log`;

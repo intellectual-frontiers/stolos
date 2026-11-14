@@ -4,7 +4,7 @@ If the boot machine itself is lost, see [disaster recovery](disaster-recovery.md
 
 Start with `deno task stolos boot doctor` on the boot machine, and `archon doctor` (network and
 email) and `archon verify` (the host's configuration) on a host: each prints the fix for each
-problem it finds. When asking for help, send `%LOCALAPPDATA%\archon\boot\boot.log` (boot machine),
+problem it finds. When asking for help, send `%LOCALAPPDATA%\stolos\boot\boot.log` (boot machine),
 and from the host `/var/log/archon-first-boot.log` and the run log a failure names.
 
 ## Network boot

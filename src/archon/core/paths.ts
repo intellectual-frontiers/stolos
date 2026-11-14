@@ -10,7 +10,7 @@
  * directory that holds `fleets/`, else /srv/archon, else (in an engine
  * checkout) its `examples/`. The fleet is ARCHON_FLEET (or --fleet), else
  * /etc/archon/fleet (written at install), else this checkout's choice
- * (`stolos fleet use <id>`, in .git/archon/fleet, never committed), else the
+ * (`stolos fleet use <id>`, in .git/stolos/fleet, never committed), else the
  * instance's only fleet.
  *
  * ```mermaid
@@ -23,7 +23,7 @@
  *   srv -->|no| ex["the engine's examples/"]
  *   inst --> fleet{"--fleet / ARCHON_FLEET?"}
  *   fleet -->|unset| etc{"/etc/archon/fleet?"}
- *   etc -->|unset| use{"stolos fleet use<br/>(.git/archon/fleet)?"}
+ *   etc -->|unset| use{"stolos fleet use<br/>(.git/stolos/fleet)?"}
  *   use -->|unset| only["the only fleet"]
  * ```
  *
@@ -88,7 +88,7 @@ export function listFleets(repo: string): string[] {
 
 /** Where `stolos fleet use <id>` keeps this checkout's choice (inside .git: never committed). */
 export function fleetChoiceFile(repo: string): string {
-  return join(repo, ".git", "archon", "fleet");
+  return join(repo, ".git", "stolos", "fleet");
 }
 
 /** The active fleet's id, or "" when it cannot be decided (see the header). */
@@ -180,14 +180,14 @@ export const P = {
   get state(): string {
     return readOr("/etc/archon/host") !== undefined
       ? "/var/lib/archon"
-      : join(userData, "archon", "state", fleetId() || "_");
+      : join(userData, "stolos", "state", fleetId() || "_");
   },
   /**
    * This user's own files derived from Git, per fleet (known_hosts.auto): an
    * operator on a workstation cannot write /var/lib/archon.
    */
   get userState(): string {
-    return join(userData, "archon", "state", fleetId() || "_");
+    return join(userData, "stolos", "state", fleetId() || "_");
   },
   /** Rendered by stolos build; never committed. */
   get out(): string {
@@ -200,10 +200,10 @@ export const P = {
     return join(repoRoot(), ".mcp.json");
   },
   /** Boot machine: Ubuntu netboot cache (Article 12: verified before use). */
-  bootCache: join(userData, "archon", "boot"),
+  bootCache: join(userData, "stolos", "boot"),
   /** Boot machine: secrets, never in the repository (Article 13). */
   get secrets(): string {
-    return join(userConfig, "archon", "secrets", fleetId() || "_");
+    return join(userConfig, "stolos", "secrets", fleetId() || "_");
   },
   /** Host: runtime state written by timers, outside Git. */
   varLib: "/var/lib/archon",

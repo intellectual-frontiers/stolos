@@ -1,6 +1,6 @@
 /**
  * `stolos fleet use <id>`: which fleet of this repository every `archon`
- * command in this checkout is for, remembered in `.git/archon/fleet` (never
+ * command in this checkout is for, remembered in `.git/stolos/fleet` (never
  * committed, so each checkout chooses its own). It takes effect at once, in
  * every terminal, on every system: no environment variable to set and no new
  * window to open. `--fleet <id>` (or ARCHON_FLEET) still wins for one command.

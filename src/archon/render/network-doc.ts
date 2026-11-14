@@ -256,7 +256,7 @@ export function renderNetworkDoc(
         ) => [
           s.purpose,
           s.holder === "owner" ? "owner" : "boot machine",
-          s.holder === "owner" ? s.path : `%APPDATA%\\archon\\secrets\\${s.path}`,
+          s.holder === "owner" ? s.path : `%APPDATA%\\stolos\\secrets\\${s.path}`,
           s.recreate,
         ]),
       ),

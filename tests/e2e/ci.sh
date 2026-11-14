@@ -65,9 +65,9 @@ deno cache --allow-import --lock=deno.lock archon.ts stolos.ts engine.ts >/dev/n
 A=(deno run -A --frozen stolos.ts)
 "${A[@]}" signers add e2e-daily --role daily --key "$W/signer.pub"
 # The admin password: a hash only (never used to log in here).
-mkdir -p "$HOME/.config/archon/secrets/e2e"
-openssl passwd -6 "$(openssl rand -hex 16)" >"$HOME/.config/archon/secrets/e2e/admin-password.hash"
-chmod 600 "$HOME/.config/archon/secrets/e2e/admin-password.hash"
+mkdir -p "$HOME/.config/stolos/secrets/e2e"
+openssl passwd -6 "$(openssl rand -hex 16)" >"$HOME/.config/stolos/secrets/e2e/admin-password.hash"
+chmod 600 "$HOME/.config/stolos/secrets/e2e/admin-password.hash"
 # Spec 051: recognized by claim (the next unknown machine to network-boot).
 "${A[@]}" host add e2e --claim --no-deploy-key --no-push
 "${A[@]}" build

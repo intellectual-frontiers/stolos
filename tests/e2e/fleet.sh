@@ -43,9 +43,9 @@ grep -q "$(cut -d' ' -f2 "$W/admin.pub")" "$FT" || { log "could not set E2E_ADMI
 ADMIN=$(grep -oE 'user: "[a-z_][a-z0-9_-]*"' "$FT" | head -n 1 | cut -d'"' -f2)
 A=(deno run -A --frozen stolos.ts --fleet "$FLEET")
 "${A[@]}" signers add e2e-run --role daily --key "$W/signer.pub"
-mkdir -p "$HOME/.config/archon/secrets/$FLEET"
-openssl passwd -6 "$(openssl rand -hex 16)" >"$HOME/.config/archon/secrets/$FLEET/admin-password.hash"
-chmod 600 "$HOME/.config/archon/secrets/$FLEET/admin-password.hash"
+mkdir -p "$HOME/.config/stolos/secrets/$FLEET"
+openssl passwd -6 "$(openssl rand -hex 16)" >"$HOME/.config/stolos/secrets/$FLEET/admin-password.hash"
+chmod 600 "$HOME/.config/stolos/secrets/$FLEET/admin-password.hash"
 # Spec 051: recognized by its network card (the lab VM's).
 "${A[@]}" host add "$SERVER" --mac-address $MAC --no-deploy-key --no-push
 "${A[@]}" build

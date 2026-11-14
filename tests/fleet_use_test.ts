@@ -38,7 +38,7 @@ Deno.test("046: fleet use remembers the fleet for this checkout; --fleet wins on
     assertEquals(r.code, 0, r.out);
     assertStringIncludes(r.out, "now using fleet beta");
     assertEquals(
-      (await Deno.readTextFile(join(repo, ".git", "archon", "fleet"))).trim(),
+      (await Deno.readTextFile(join(repo, ".git", "stolos", "fleet"))).trim(),
       "beta",
     );
     r = await archon([]);

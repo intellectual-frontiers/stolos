@@ -1,7 +1,7 @@
 /**
  * Spec 056: the boot machine's backup is one ZIP file. `deno task stolos vault
  * backup` writes it into the backup folder where archon keeps its data
- * (Windows: `%LOCALAPPDATA%\archon\backup`; Linux: `~/.local/share/archon/backup`),
+ * (Windows: `%LOCALAPPDATA%\stolos\backup`; Linux: `~/.local/share/stolos/backup`),
  * reads it back to check every file, and tells you to put it wherever you keep
  * important things safe. It holds everything this PC would need again after a
  * disaster: every fleet's secrets (the admin password's hash, each server's SSH
@@ -12,7 +12,7 @@
  *
  * ```mermaid
  * flowchart LR
- *   secrets["%APPDATA%\archon\secrets\&lt;fleet&gt;\*"] --> zip["archon-backup-&lt;pc&gt;-&lt;time&gt;.zip<br/>manifest.json, RESTORE.txt"]
+ *   secrets["%APPDATA%\stolos\secrets\&lt;fleet&gt;\*"] --> zip["stolos-backup-&lt;pc&gt;-&lt;time&gt;.zip<br/>manifest.json, RESTORE.txt"]
  *   key["your signing key<br/>(git config user.signingkey)"] --> zip
  *   zip --> check["read back: every SHA-256"]
  *   check --> you["you move it somewhere safe<br/>(encrypted: OneDrive Personal Vault, a password manager)"]
@@ -29,11 +29,11 @@ import { listFleets, P } from "../core/paths.ts";
 import { ownerOnly } from "../core/secrets.ts";
 import { liveSecrets, markBackedUp, sha256 } from "./state.ts";
 
-/** Where backups are written (beside the boot cache, in archon's data folder). */
+/** Where backups are written (beside the boot cache, in stolos's data folder). */
 export const BACKUP_DIR: string = join(P.bootCache, "..", "backup");
 
 /** The ZIP's format, in its manifest. */
-export const ZIP_FORMAT = "archon-backup/1";
+export const ZIP_FORMAT = "stolos-backup/1";
 
 /** What a backup ZIP holds, in its manifest.json (names, sizes, and hashes; never a value). */
 export interface ZipManifest {
@@ -108,11 +108,11 @@ On the new or rebuilt PC (Windows, in PowerShell):
         git clone https://github.com/<owner>/<fleet repository>.git C:\\fleet
  3. Unzip this file somewhere private, for example your Desktop.
  4. Put the secrets back, only readable by you:
-        New-Item -ItemType Directory -Force $env:APPDATA\\archon\\secrets
-        Copy-Item -Recurse <unzipped>\\secrets\\* $env:APPDATA\\archon\\secrets\\
-        icacls $env:APPDATA\\archon\\secrets /inheritance:r /grant:r "$($env:USERNAME):(OI)(CI)F"
-    (Linux: mkdir -p ~/.config/archon/secrets && cp -r <unzipped>/secrets/* ~/.config/archon/secrets/
-     && chmod -R go-rwx ~/.config/archon)
+        New-Item -ItemType Directory -Force $env:APPDATA\\stolos\\secrets
+        Copy-Item -Recurse <unzipped>\\secrets\\* $env:APPDATA\\stolos\\secrets\\
+        icacls $env:APPDATA\\stolos\\secrets /inheritance:r /grant:r "$($env:USERNAME):(OI)(CI)F"
+    (Linux: mkdir -p ~/.config/stolos/secrets && cp -r <unzipped>/secrets/* ~/.config/stolos/secrets/
+     && chmod -R go-rwx ~/.config/stolos)
  5. Put your signing key back, then let archon set up Git's signing (it keeps the key):
         Copy-Item <unzipped>\\signing\\* $HOME\\.ssh\\
         cd C:\\fleet
@@ -162,7 +162,7 @@ export async function writeBackupZip(
   }
   await Deno.mkdir(BACKUP_DIR, { recursive: true });
   const stamp = now.toISOString().replace(/[-:]/g, "").replace(/\.\d+Z$/, "Z");
-  const path = join(BACKUP_DIR, `archon-backup-${pc}-${stamp}.zip`);
+  const path = join(BACKUP_DIR, `stolos-backup-${pc}-${stamp}.zip`);
   await Deno.writeFile(path, zip, { mode: 0o600 });
   if (Deno.build.os === "windows") await ownerOnly(path);
   else await Deno.chmod(path, 0o600);
@@ -190,7 +190,7 @@ export async function backupZips(
   const out = [];
   try {
     for await (const e of Deno.readDir(dir)) {
-      if (!e.isFile || !/^archon-backup-.*\.zip$/.test(e.name)) continue;
+      if (!e.isFile || !/^stolos-backup-.*\.zip$/.test(e.name)) continue;
       const path = join(dir, e.name);
       const m = await readZipManifest(path);
       if (!m) continue;

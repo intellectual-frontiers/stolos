@@ -230,7 +230,7 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
     console.log(
       `\n  Upgrading the engine to ${upgradeTo}: Git asks for your passphrase to sign it.\n`,
     );
-    const code = await task(["archon", "fleet", "upgrade", upgradeTo]);
+    const code = await task(["stolos", "fleet", "upgrade", upgradeTo]);
     const u = ui.phase("Upgrade");
     if (code === 0) {
       upgraded = true;
@@ -260,7 +260,7 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
   if (!o.noDoctor) {
     const boot = await exists(SECRETS.adminPasswordHash);
     console.log("");
-    const code = boot ? await task(["boot", "doctor"]) : await task(["archon", "keys"]);
+    const code = boot ? await task(["stolos", "boot", "doctor"]) : await task(["stolos", "keys"]);
     const dr = ui.phase("Doctor");
     if (code === 0) dr.done(boot ? "boot doctor: all well" : "stolos keys: all well");
     else {

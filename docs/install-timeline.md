@@ -1,7 +1,7 @@
 # What happens during an install
 
 From power-on to `Ready`, in order. The middle column is what the boot server's window (and
-`%LOCALAPPDATA%\archon\boot\boot.log`) shows; the last column is where to look when a step fails.
+`%LOCALAPPDATA%\stolos\boot\boot.log`) shows; the last column is where to look when a step fails.
 
 | #  | Step                                                                                                                                     | Boot server shows                                                                                                                                                                          | Where to look                                                                                         |
 | -- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |

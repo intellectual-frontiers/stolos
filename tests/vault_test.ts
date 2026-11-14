@@ -17,7 +17,7 @@ const before = await fingerprint(REAL);
 async function vaultSandbox() {
   const sb = await sandbox("archon-vault-test-");
   const home = sb.home;
-  const secrets = join(home, "config", "archon", "secrets", "lab");
+  const secrets = join(home, "config", "stolos", "secrets", "lab");
   const put = async (rel: string, text: string) => {
     const path = join(secrets, ...rel.split("/"));
     await Deno.mkdir(join(path, ".."), { recursive: true });
@@ -59,10 +59,10 @@ Deno.test("vault: status, backup (one ZIP with the secrets and the signing key),
     assert(r.out.includes("read back and checked"), r.out);
     assert(r.out.includes("move it wherever you keep important things safe"), r.out);
     assert(r.out.includes("It is not encrypted itself"), r.out);
-    const dir = join(s.home, "data", "archon", "backup");
+    const dir = join(s.home, "data", "stolos", "backup");
     const zips = [...Deno.readDirSync(dir)].map((e) => e.name);
     assertEquals(zips.length, 1, zips.join(","));
-    assert(/^archon-backup-.+-\d{8}T\d{6}Z\.zip$/.test(zips[0]), zips[0]);
+    assert(/^stolos-backup-.+-\d{8}T\d{6}Z\.zip$/.test(zips[0]), zips[0]);
     if (Deno.build.os !== "windows") {
       assertEquals((Deno.statSync(join(dir, zips[0])).mode ?? 0) & 0o777, 0o600, "owner only");
     }
@@ -144,7 +144,7 @@ Deno.test("vault: the panel, amber, and red for identity keys never backed up", 
       item("hosts/hermes/deploy_key", "2026-11-11T14:05:00Z"),
     ],
     removed: [],
-    lastBackup: { at: "2026-11-08T10:00:00Z", file: "archon-backup-x.zip", names: {} },
+    lastBackup: { at: "2026-11-08T10:00:00Z", file: "stolos-backup-x.zip", names: {} },
     backupCheck: { state: "ok" },
     severity: "amber",
   };

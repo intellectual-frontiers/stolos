@@ -35,10 +35,10 @@ Deno.test("047: registration.ts has one form; known_hosts lines name every way t
 });
 
 Deno.test("047: fleet commands check servers against known_hosts.auto, then the user's own", () => {
-  const args = sshArgs("ops@alpha", 8, "/home/a/.local/share/archon/state/lab/known_hosts.auto");
+  const args = sshArgs("ops@alpha", 8, "/home/a/.local/share/stolos/state/lab/known_hosts.auto");
   assertStringIncludes(
     args.join(" "),
-    "UserKnownHostsFile=/home/a/.local/share/archon/state/lab/known_hosts.auto ~/.ssh/known_hosts",
+    "UserKnownHostsFile=/home/a/.local/share/stolos/state/lab/known_hosts.auto ~/.ssh/known_hosts",
   );
   assert(
     !sshArgs("ops@alpha", 8, "/a b/known_hosts.auto").join(" ").includes("UserKnownHostsFile"),

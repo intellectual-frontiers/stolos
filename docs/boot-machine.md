@@ -160,11 +160,11 @@ Leave it running while hosts install. It:
 
 - downloads Ubuntu 26.04's signed boot files and installer image from `releases.ubuntu.com` once,
   checks each against the SHA-256 pinned in `src/archon-boot/pins.ts` (nothing is served on a
-  mismatch), and caches them under `%LOCALAPPDATA%\archon\boot`;
+  mismatch), and caches them under `%LOCALAPPDATA%\stolos\boot`;
 - serves TFTP (PXE) on UDP 69 and HTTP on TCP 8080;
 - shows every machine that boots from it and each install's progress, ending with
   `alpha: ✓ Ready: ...`;
-- writes the same lines to `%LOCALAPPDATA%\archon\boot\boot.log` (send that file when asking for
+- writes the same lines to `%LOCALAPPDATA%\stolos\boot\boot.log` (send that file when asking for
   help);
 - warns, with the command to run, when this PC's firewall would block servers.
 
@@ -180,7 +180,7 @@ Options:
 ## The boot server's own telemetry
 
 The boot server records itself with OpenTelemetry, and keeps it on this PC only (spec 023):
-`%LOCALAPPDATA%\archon\boot\telemetry\otlp-<date>.jsonl`, in OpenTelemetry's own file format, kept
+`%LOCALAPPDATA%\stolos\boot\telemetry\otlp-<date>.jsonl`, in OpenTelemetry's own file format, kept
 30 days and 256 MB at most. Each install is one trace, with a span per step.
 
 ```powershell
@@ -216,14 +216,14 @@ config:
     edgeLabelBackground: "#F8FAFC"
 ---
 flowchart LR
-  s["every fleet's secrets"] --> z["archon-backup-‹pc›-‹time›.zip<br/>in archon's backup folder"]
+  s["every fleet's secrets"] --> z["stolos-backup-‹pc›-‹time›.zip<br/>in stolos's backup folder"]
   k["your signing key<br/>(both halves)"] --> z
   z --> y["you move it somewhere safe<br/>and encrypted"]
   y -. "after a disaster" .-> r["vault restore:<br/>the steps, by hand"]
 ```
 
-`vault backup` writes `archon-backup-<pc>-<time>.zip` into archon's backup folder
-(`%LOCALAPPDATA%\archon\backup`; Linux and macOS: `~/.local/share/archon/backup`), readable by you
+`vault backup` writes `stolos-backup-<pc>-<time>.zip` into stolos's backup folder
+(`%LOCALAPPDATA%\stolos\backup`; Linux and macOS: `~/.local/share/stolos/backup`), readable by you
 only. It holds:
 
 - `secrets/<fleet>/...`: every fleet's secrets on this PC, as they are (not the install tokens,
@@ -308,8 +308,8 @@ fix for each problem.
 
 | What                                                                                                                                       | Where                                                              | In git? |
 | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------ | ------- |
-| admin password hash, each host's deploy key and SSH host keys, install tokens, Cloudflare DNS token (`web.json`), mail token (`mail.json`) | `%APPDATA%\archon\secrets` (Linux: `~/.config/archon/secrets`)     | never   |
-| Ubuntu's boot files and installer image, `boot.log`, `telemetry\`; `notify\` (messages waiting to send) is beside it                       | `%LOCALAPPDATA%\archon\boot` (Linux: `~/.local/share/archon/boot`) | no      |
+| admin password hash, each host's deploy key and SSH host keys, install tokens, Cloudflare DNS token (`web.json`), mail token (`mail.json`) | `%APPDATA%\stolos\secrets` (Linux: `~/.config/stolos/secrets`)     | never   |
+| Ubuntu's boot files and installer image, `boot.log`, `telemetry\`; `notify\` (messages waiting to send) is beside it                       | `%LOCALAPPDATA%\stolos\boot` (Linux: `~/.local/share/stolos/boot`) | no      |
 | hosts' SSH host keys as this PC trusts them                                                                                                | `%USERPROFILE%\.ssh\known_hosts`                                   | no      |
 | fleet, hosts, specs, dotfiles, what hosts recorded                                                                                         | `C:\archon`                                                        | yes     |
 

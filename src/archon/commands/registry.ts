@@ -91,7 +91,7 @@ export const COMMANDS: Command[] = [
     name: "fleet use",
     summary: "Choose which fleet of this repository archon works on (remembered here)",
     description:
-      `For a repository with more than one fleet (fleets/<id>/): every archon command in this checkout is then for that fleet, at once, in every terminal, until you choose another. The choice is kept in .git/archon/fleet, so it is never committed and each checkout makes its own. --fleet <id> (or ARCHON_FLEET) still chooses another for one command. fleet init chooses the fleet it creates.`,
+      `For a repository with more than one fleet (fleets/<id>/): every archon command in this checkout is then for that fleet, at once, in every terminal, until you choose another. The choice is kept in .git/stolos/fleet, so it is never committed and each checkout makes its own. --fleet <id> (or ARCHON_FLEET) still chooses another for one command. fleet init chooses the fleet it creates.`,
     tier: "read",
     args: [{
       name: "id",
@@ -1818,7 +1818,7 @@ export const COMMANDS: Command[] = [
     name: "vault backup",
     summary: "Boot machine: one ZIP of every secret and your signing key, to keep somewhere safe",
     description:
-      `Writes archon-backup-<pc>-<UTC>.zip into archon's backup folder (Windows: %LOCALAPPDATA%\\archon\\backup; Linux and macOS: archon's data folder, backup) with every fleet's secrets on this PC (except ephemeral install tokens), your signing key (both halves, from git config user.signingkey; the private half stays locked by its passphrase), a manifest (names, SHA-256, sizes; never a value), and RESTORE.txt (the restore steps). It reads the ZIP back and checks every file before reporting success, makes it readable by you only, and records it. Then move the ZIP wherever you keep important things safe (an encrypted place: it is not encrypted itself). Spec 056.`,
+      `Writes stolos-backup-<pc>-<UTC>.zip into stolos's backup folder (Windows: %LOCALAPPDATA%\\stolos\\backup; Linux and macOS: stolos's data folder, backup) with every fleet's secrets on this PC (except ephemeral install tokens), your signing key (both halves, from git config user.signingkey; the private half stays locked by its passphrase), a manifest (names, SHA-256, sizes; never a value), and RESTORE.txt (the restore steps). It reads the ZIP back and checks every file before reporting success, makes it readable by you only, and records it. Then move the ZIP wherever you keep important things safe (an encrypted place: it is not encrypted itself). Spec 056.`,
     tier: "repo",
     operation: true,
     noMcp: true,
@@ -1846,7 +1846,7 @@ export const COMMANDS: Command[] = [
     name: "vault list",
     summary: "Boot machine: the backup ZIPs still in the backup folder",
     description:
-      `Lists the backup ZIPs still in archon's backup folder, newest first. Once you move one somewhere safe, it is no longer listed.`,
+      `Lists the backup ZIPs still in stolos's backup folder, newest first. Once you move one somewhere safe, it is no longer listed.`,
     tier: "repo",
     noMcp: true,
     args: [],

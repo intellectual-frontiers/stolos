@@ -1,7 +1,7 @@
 /**
  * The boot machine's secret store (spec 003, Article 13): a per-user folder
- * outside the repository (%APPDATA%\archon\secrets on Windows,
- * ~/.config/archon/secrets elsewhere). Holds the admin password hash, each
+ * outside the repository (%APPDATA%\stolos\secrets on Windows,
+ * ~/.config/stolos/secrets elsewhere). Holds the admin password hash, each
  * host's deploy key, and install tokens. Nothing here is ever committed.
  *
  * @module

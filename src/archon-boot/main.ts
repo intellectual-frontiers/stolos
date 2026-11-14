@@ -48,7 +48,7 @@ function opt(args: string[], name: string): string | undefined {
   return args.find((a) => a.startsWith(`--${name}=`))?.split("=").slice(1).join("=");
 }
 
-/** The boot server's log (spec 004): %LOCALAPPDATA%\\archon\\boot\\boot.log, one previous copy kept. */
+/** The boot server's log (spec 004): %LOCALAPPDATA%\\stolos\\boot\\boot.log, one previous copy kept. */
 async function openBootLog(): Promise<{ path: string; write: (line: string) => void }> {
   const path = join(P.bootCache, "boot.log");
   await ensureDir(P.bootCache);
