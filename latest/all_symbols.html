@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>All Symbols - Stolos v0.37.0 documentation</title>
+  <title>All Symbols - Stolos v0.38.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href=".&#x2F;" class="contextLink">Stolos v0.37.0</a>
+    <a href=".&#x2F;" class="contextLink">Stolos v0.38.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -5781,6 +5781,11 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_findfleetid
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;core&#x2F;paths.ts&#x2F;~&#x2F;findInstanceRoot.html" title="findInstanceRoot">
 			    <span>findInstanceRoot</span><span>()<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The instance repository's root (see the header).</p>
 </div></div></div>
+    </div><div id="namespace_fleetchoicefile" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;core&#x2F;paths.ts&#x2F;~&#x2F;fleetChoiceFile.html" title="fleetChoiceFile">
+			    <span>fleetChoiceFile</span><span>(<span><span>repo<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where <code>archon fleet use &lt;id&gt;</code> keeps this checkout's choice (inside .git: never committed).</p>
+</div></div></div>
     </div><div id="namespace_listfleets" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;core&#x2F;paths.ts&#x2F;~&#x2F;listFleets.html" title="listFleets">
@@ -8440,10 +8445,59 @@ import "@stolos/archon/modules.auto.ts";
 </div>
     </div>
     <div>
+      <a href=".&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;use.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;fleet&#x2F;use.ts</a>
+
+      <div class="ml-4 mt-2"><section>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-85"><div class="markdown_summary"><p><code>archon fleet use &lt;id&gt;</code>: which fleet of this repository every <code>archon</code>
+command in this checkout is for, remembered in <code>.git/archon/fleet</code> (never
+committed, so each checkout chooses its own). It takes effect at once, in
+every terminal, on every system: no environment variable to set and no new
+window to open. <code>--fleet &lt;id&gt;</code> (or ARCHON_FLEET) still wins for one command.</p>
+</div><section class="section"  id="archon&#x2F;fleet&#x2F;use_ts_functions"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;fleet&#x2F;use_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Functions</h2></div><div class="namespaceSection"><div id="namespace_choosefleet" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;use.ts&#x2F;~&#x2F;chooseFleet.html" title="chooseFleet">
+			    <span>chooseFleet</span><span>(<div class="ml-4"><div><span>id<span>: <span class="td-kw">string</span></span></span>,</div><div><span>repo<span class="td-op">?</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span><span class="td-str">"chosen"</span><span class="td-op"> | </span><span class="td-str">"same"</span><span class="td-op"> | </span><span class="td-str">"no-git"</span></span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Remember <code>id</code> as this checkout's fleet; &quot;same&quot; when it already was.</p>
+</div></div></div>
+    </div><div id="namespace_fleetuse" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;use.ts&#x2F;~&#x2F;fleetUse.html" title="fleetUse">
+			    <span>fleetUse</span><span>(<span><span>id<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon fleet use &lt;id&gt;</code>: check the fleet exists here, then remember it.</p>
+</div></div></div>
+    </div></div>
+</section>
+</div>
+</div>
+</section>
+</div>
+    </div>
+    <div>
       <a href=".&#x2F;.&#x2F;archon&#x2F;guests&#x2F;guests.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;guests&#x2F;guests.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-85"><div class="markdown_summary"><p><code>archon guest sync|list</code> (spec 017): create missing LXD instances from the
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-86"><div class="markdown_summary"><p><code>archon guest sync|list</code> (spec 017): create missing LXD instances from the
 model and start stopped ones. Never deletes (Article 11).</p>
 </div><section class="section"  id="archon&#x2F;guests&#x2F;guests_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;guests&#x2F;guests_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
@@ -8534,7 +8588,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_instance" 
       <a href=".&#x2F;.&#x2F;archon&#x2F;guide&#x2F;command.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;guide&#x2F;command.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-86"><div class="markdown_summary"><p><code>archon guide</code> (spec 035): what's on this machine and how to use it, in the
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-87"><div class="markdown_summary"><p><code>archon guide</code> (spec 035): what's on this machine and how to use it, in the
 terminal, from the same source as the welcome page (guideFor).</p>
 </div><section class="section"  id="archon&#x2F;guide&#x2F;command_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;guide&#x2F;command_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
@@ -8575,7 +8629,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_guide" clas
       <a href=".&#x2F;.&#x2F;archon&#x2F;guide&#x2F;guide.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;guide&#x2F;guide.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-87"><div class="markdown_summary"><p>035-welcome-guide: what is on this server and how to use it, in plain words,
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-88"><div class="markdown_summary"><p>035-welcome-guide: what is on this server and how to use it, in plain words,
 computed from the server's own plan (Article 4: one source). The welcome
 page, <code>archon guide</code>, and the login banner's pointer all read this; an item
 appears only when the plan really has what it describes.</p>
@@ -8765,7 +8819,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_categories"
       <a href=".&#x2F;.&#x2F;archon&#x2F;guide&#x2F;where.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;guide&#x2F;where.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-88"><div class="markdown_summary"><p>Spec 053: &quot;where am I&quot;. <code>archon</code> with no arguments shows, for the fleet of
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-89"><div class="markdown_summary"><p>Spec 053: &quot;where am I&quot;. <code>archon</code> with no arguments shows, for the fleet of
 this repository, every step from a new repository to running hosts, each
 done or not as the real state says (Git, this machine's secret store, the
 boot server's tokens, what hosts reported), and the one command to run next.
@@ -8938,7 +8992,7 @@ Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_stepstat
       <a href=".&#x2F;.&#x2F;archon&#x2F;identity&#x2F;fleet-init.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;identity&#x2F;fleet-init.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-89"><div class="markdown_summary"><p><code>archon fleet init</code> (spec 003): the fleet's identity, from your GitHub
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-90"><div class="markdown_summary"><p><code>archon fleet init</code> (spec 003): the fleet's identity, from your GitHub
 account as <code>gh</code> reports it. Runs on the boot machine (Windows or Linux).
 Public data goes into fleets/&lt;fleet&gt;/fleet.ts; the admin password hash goes
 only into the boot machine's secret store (Article 13).</p>
@@ -9102,7 +9156,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_fleet_id" c
       <a href=".&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys-commands.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;identity&#x2F;keys-commands.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-90"><div class="markdown_summary"><p>Spec 057: <code>archon keys</code>, every step of your signing keys in one place, and
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-91"><div class="markdown_summary"><p>Spec 057: <code>archon keys</code>, every step of your signing keys in one place, and
 idempotent: each command looks at what is already there, does only what is
 missing, and can be run again at any time (after a failure, it continues).</p>
 </div><section class="section"  id="archon&#x2F;identity&#x2F;keys-commands_ts_functions"><div>
@@ -9183,7 +9237,7 @@ standard input (&quot;&lt;local ref&gt; &lt;local sha&gt; &lt;remote ref&gt; &lt
       <a href=".&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;identity&#x2F;keys.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-91"><div class="markdown_summary"><p>Spec 057: your signing keys, checked and fixed by one command. This module
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-92"><div class="markdown_summary"><p>Spec 057: your signing keys, checked and fixed by one command. This module
 gathers the facts (no prompt, nothing written) and turns them into checks,
 each with a stable code (<code>archon explain E057-...</code>) and the one command
 that fixes it. <code>archon keys</code>, <code>archon keys setup</code>, <code>boot doctor</code>, <code>archon</code>
@@ -9452,7 +9506,7 @@ exit 0
       <a href=".&#x2F;.&#x2F;archon&#x2F;identity&#x2F;signers-commands.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;identity&#x2F;signers-commands.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-92"><div class="markdown_summary"><p><code>archon signers</code> (spec 047-intent-and-identity): list, add, and remove the
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-93"><div class="markdown_summary"><p><code>archon signers</code> (spec 047-intent-and-identity): list, add, and remove the
 fleet's signers (fleets/&lt;id&gt;/signers.ts, in its fixed form), and, on a host
 in an emergency, trust a key a person types there.</p>
 </div><section class="section"  id="archon&#x2F;identity&#x2F;signers-commands_ts_functions"><div>
@@ -9511,7 +9565,7 @@ keeps it until the fleet's signers.ts lists it, signed by it.</p>
       <a href=".&#x2F;.&#x2F;archon&#x2F;identity&#x2F;signers.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;identity&#x2F;signers.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-93"><div class="markdown_summary"><p>Spec 047-intent-and-identity (Article 9): who may approve a fleet's changes,
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-94"><div class="markdown_summary"><p>Spec 047-intent-and-identity (Article 9): who may approve a fleet's changes,
 and how a host checks an approval before it applies anything.</p>
 </div><section class="section"  id="archon&#x2F;identity&#x2F;signers_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;identity&#x2F;signers_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
@@ -9668,7 +9722,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_allowed_sig
       <a href=".&#x2F;.&#x2F;archon&#x2F;install&#x2F;apt-busy.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;install&#x2F;apt-busy.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-94"><div class="markdown_summary"><p>Spec 054: powering a machine off while apt or dpkg runs can break dpkg's
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-95"><div class="markdown_summary"><p>Spec 054: powering a machine off while apt or dpkg runs can break dpkg's
 state (the lab did it: dpkg's files were left empty). Right after an install,
 Ubuntu's unattended-upgrades often runs for minutes. archon reboot and
 archon poweroff wait for it, and archon state says it is running.</p>
@@ -9721,7 +9775,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_packagesbus
       <a href=".&#x2F;.&#x2F;archon&#x2F;install&#x2F;first-boot.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;install&#x2F;first-boot.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-95"><div class="markdown_summary"><p><code>archon first-boot</code> (spec 005): run once by cloud-init on a freshly
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-96"><div class="markdown_summary"><p><code>archon first-boot</code> (spec 005): run once by cloud-init on a freshly
 installed host, after the first-boot script cloned the repository with this
 host's deploy key. Converges the host, hands the deploy key to ops, verifies,
 and pushes the host's first record, which proves the key works.</p>
@@ -9766,7 +9820,7 @@ Returns 1 when verification found failures, else 0.</p>
       <a href=".&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-add.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;install&#x2F;host-add.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-96"><div class="markdown_summary"><p><code>archon host add</code> (spec 004): write the host's model, give it its own
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-97"><div class="markdown_summary"><p><code>archon host add</code> (spec 004): write the host's model, give it its own
 GitHub deploy key (read-only access to this repository (spec 048); the private half
 stays in the boot machine's secret store), and arm it for one install.</p>
 </div><section class="section"  id="archon&#x2F;install&#x2F;host-add_ts_functions"><div>
@@ -9885,7 +9939,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_hostaddopt
       <a href=".&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-bootstrap.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;install&#x2F;host-bootstrap.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-97"><div class="markdown_summary"><p><code>archon host bootstrap</code> (spec 005): finish a host whose Ubuntu was installed
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-98"><div class="markdown_summary"><p><code>archon host bootstrap</code> (spec 005): finish a host whose Ubuntu was installed
 by hand (from Ubuntu's ISO, a cloud image, anything) instead of by network
 boot. From the boot machine it copies, over SSH, exactly what the network
 install would have handed cloud-init (the host name, GitHub's host keys, the
@@ -10034,7 +10088,7 @@ reports them), and its network cards (the default route's first).</p>
       <a href=".&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-keys.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;install&#x2F;host-keys.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-98"><div class="markdown_summary"><p>Each host's SSH identity (spec 004): its host keys are made once on the boot
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-99"><div class="markdown_summary"><p>Each host's SSH identity (spec 004): its host keys are made once on the boot
 machine (ssh-keygen, as for the deploy key), kept in the secret store, and
 installed by cloud-init at every install. A re-installed host keeps its
 identity, and the boot machine's known_hosts holds the right keys from the
@@ -10218,7 +10272,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_host_key_ty
       <a href=".&#x2F;.&#x2F;archon&#x2F;install&#x2F;netboot.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;install&#x2F;netboot.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-99"><div class="markdown_summary"><p><code>archon reboot [--netboot]</code> (spec 004): for a re-install, boot from the
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-100"><div class="markdown_summary"><p><code>archon reboot [--netboot]</code> (spec 004): for a re-install, boot from the
 network once (UEFI BootNext) and then reboot. The boot order itself never
 changes, so ordinary reboots never wait for a network boot. The install
 recorded the firmware entry it network-booted from; without that record
@@ -10338,7 +10392,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_netboot_ent
       <a href=".&#x2F;.&#x2F;archon&#x2F;install&#x2F;publish.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;install&#x2F;publish.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-100"><div class="markdown_summary"><p>Specs 004 and 045: what <code>archon host add</code> and <code>boot retire</code> change in the
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-101"><div class="markdown_summary"><p>Specs 004 and 045: what <code>archon host add</code> and <code>boot retire</code> change in the
 checkout is built, committed, and pushed by the same command (pushing to
 main is approval, Article 9). Only the paths the change touched are staged,
 with what <code>archon build</code> renders from them (.mcp.json, the agent's
@@ -10414,7 +10468,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_rendered" c
       <a href=".&#x2F;.&#x2F;archon&#x2F;install&#x2F;recognize.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;install&#x2F;recognize.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-101"><div class="markdown_summary"><p>Spec 051: how a machine becomes a host when it network-boots. A person
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-102"><div class="markdown_summary"><p>Spec 051: how a machine becomes a host when it network-boots. A person
 chooses, every time, exactly one of:</p>
 </div><section class="section"  id="archon&#x2F;install&#x2F;recognize_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;install&#x2F;recognize_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
@@ -10520,7 +10574,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_claim_minut
       <a href=".&#x2F;.&#x2F;archon&#x2F;install&#x2F;report.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;install&#x2F;report.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-102"><div class="markdown_summary"><p>First-boot progress to the boot server's window (spec 004): the install left
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-103"><div class="markdown_summary"><p>First-boot progress to the boot server's window (spec 004): the install left
 the URL in /etc/archon/boot-events. Best effort: a boot server that is gone
 changes nothing.</p>
 </div><section class="section"  id="archon&#x2F;install&#x2F;report_ts_functions"><div>
@@ -10592,7 +10646,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_boot_events
       <a href=".&#x2F;.&#x2F;archon&#x2F;install&#x2F;ubuntu.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;install&#x2F;ubuntu.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-103"><div class="markdown_summary"><p>The Ubuntu point release hosts are installed from (spec 004 pins).</p>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-104"><div class="markdown_summary"><p>The Ubuntu point release hosts are installed from (spec 004 pins).</p>
 </div><section class="section"  id="archon&#x2F;install&#x2F;ubuntu_ts_variables"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;install&#x2F;ubuntu_ts_variables" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
@@ -10647,7 +10701,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_ubuntu-1" c
       <a href=".&#x2F;.&#x2F;archon&#x2F;install&#x2F;workstation.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;install&#x2F;workstation.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-104"><div class="markdown_summary"><p><code>archon workstation add</code> (spec 020): run inside Ubuntu on WSL (or on an
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-105"><div class="markdown_summary"><p><code>archon workstation add</code> (spec 020): run inside Ubuntu on WSL (or on an
 Ubuntu desktop), from the checkout in /srv/archon, as your own user. It
 writes fleets/&lt;fleet&gt;/hosts/&lt;name&gt;/host.ts (kind &quot;workstation&quot;) and then, through
 sudo, converges the user-level parts: tools, dotfiles, the
@@ -10699,7 +10753,7 @@ exit code: 1 when a check fails, else update's.</p>
       <a href=".&#x2F;.&#x2F;archon&#x2F;mcp&#x2F;server.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;mcp&#x2F;server.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-105"><div class="markdown_summary"><p><code>archon mcp</code>: a Model Context Protocol server over stdio (JSON-RPC 2.0,
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-106"><div class="markdown_summary"><p><code>archon mcp</code>: a Model Context Protocol server over stdio (JSON-RPC 2.0,
 newline-delimited), implemented natively without an SDK (Article II).
 Every registry command within the tier limit is a tool; docs, specs,
 runbooks, and reports are resources. Workstations reach it on a server as
@@ -10869,7 +10923,7 @@ Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_msg" cla
       <a href=".&#x2F;.&#x2F;archon&#x2F;model&#x2F;durable.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;model&#x2F;durable.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-106"><div class="markdown_summary"><p>044-durable (Article 23): data that can come from end users is either
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-107"><div class="markdown_summary"><p>044-durable (Article 23): data that can come from end users is either
 durable (it exists nowhere else) or ephemeral (losing it is harmless). The
 operator chooses, for every source of such data, when turning it on; there
 is no default. A host is durable when anything on it is durable, and
@@ -11079,7 +11133,7 @@ are already written into the backup target.</p>
       <a href=".&#x2F;.&#x2F;archon&#x2F;model&#x2F;export.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;model&#x2F;export.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-107"><div class="markdown_summary"><p><code>archon export</code> (spec 002 FR-006, spec 014): the fleet, hosts, specs,
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-108"><div class="markdown_summary"><p><code>archon export</code> (spec 002 FR-006, spec 014): the fleet, hosts, specs,
 provenance, and snapshots as RDF (Turtle) under out/rdf/. RDF is an export
 only (Article 10); vocabularies are reused (Article 3): W3C PROV, Dublin
 Core terms, FOAF, and a small archon: namespace for the rest.</p>
@@ -11141,7 +11195,7 @@ values). An export only (Article 10): TypeScript validates the model.</p>
       <a href=".&#x2F;.&#x2F;archon&#x2F;model&#x2F;identity-check.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;model&#x2F;identity-check.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-108"><div class="markdown_summary"><p>Spec 051: a check that ties a host to the machine it installed on.</p>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-109"><div class="markdown_summary"><p>Spec 051: a check that ties a host to the machine it installed on.</p>
 </div><section class="section"  id="archon&#x2F;model&#x2F;identity-check_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;model&#x2F;identity-check_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
@@ -11181,7 +11235,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_registeredc
       <a href=".&#x2F;.&#x2F;archon&#x2F;model&#x2F;load.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;model&#x2F;load.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-109"><div class="markdown_summary"><p>Load the active fleet (fleets/&lt;id&gt;/fleet.ts, written by <code>archon fleet init</code>)
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-110"><div class="markdown_summary"><p>Load the active fleet (fleets/&lt;id&gt;/fleet.ts, written by <code>archon fleet init</code>)
 and every host (fleets/&lt;id&gt;/hosts/&lt;name&gt;/host.ts, written by <code>archon host add</code>).
 Hosts are discovered from the directory, so there is no index to keep in
 sync.</p>
@@ -11313,7 +11367,7 @@ A workstation has one: its existing user (spec 020).</p>
       <a href=".&#x2F;.&#x2F;archon&#x2F;model&#x2F;providers.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;model&#x2F;providers.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-110"><div class="markdown_summary"><p>The fleet's outside providers as explicit choices (spec 046). Each is a
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-111"><div class="markdown_summary"><p>The fleet's outside providers as explicit choices (spec 046). Each is a
 closed set: the engine implements exactly these, so a typo or an
 unsupported provider fails <code>archon build</code> (TypeScript), not a host.</p>
 </div><section class="section"  id="archon&#x2F;model&#x2F;providers_ts_functions"><div>
@@ -11398,7 +11452,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_acme_direct
       <a href=".&#x2F;.&#x2F;archon&#x2F;model&#x2F;resolve.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;model&#x2F;resolve.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-111"><div class="markdown_summary"><p>Resolve a host into a HostPlan: run every capability, merge contributions,
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-112"><div class="markdown_summary"><p>Resolve a host into a HostPlan: run every capability, merge contributions,
 then run derive hooks over the merged plan (spec 002).</p>
 </div><section class="section"  id="archon&#x2F;model&#x2F;resolve_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;model&#x2F;resolve_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
@@ -11451,7 +11505,7 @@ derived files. Throws on conflicting definitions of the same item.</p>
       <a href=".&#x2F;.&#x2F;archon&#x2F;model&#x2F;secret-inventory.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;model&#x2F;secret-inventory.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-112"><div class="markdown_summary"><p>The secret inventory (spec 028, constitution Article 13): every secret the
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-113"><div class="markdown_summary"><p>The secret inventory (spec 028, constitution Article 13): every secret the
 fleet depends on, by name, where it lives, and how to make it again. Values
 never. The boot machine's secrets are what <code>deno task boot vault</code> backs up
 and restores (spec 029); the owner's are listed so a lost one is not a
@@ -11593,7 +11647,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_secret_inve
       <a href=".&#x2F;.&#x2F;archon&#x2F;model&#x2F;site.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;model&#x2F;site.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-113"><div class="markdown_summary"><p>The site (spec 028, constitution Article 21): the UniFi network as typed
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-114"><div class="markdown_summary"><p>The site (spec 028, constitution Article 21): the UniFi network as typed
 data. Archon checks hosts against it and renders the network reference from
 it, but never changes the router: the owner (or the network assistant)
 changes the router, then this model is updated to match. The data is
@@ -11984,7 +12038,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_brand-1" cl
       <a href=".&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;model&#x2F;types.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-114"><div class="markdown_summary"><p>The Archon model (spec 002): a fleet with one shared identity and one file
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-115"><div class="markdown_summary"><p>The Archon model (spec 002): a fleet with one shared identity and one file
 per host. Capabilities contribute packages, files, units, and the rest to a
 host's plan. TypeScript types plus validate.ts are the whole validation
 story (Article 10); RDF is only an export.</p>
@@ -13212,7 +13266,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_brand-3" cl
       <a href=".&#x2F;.&#x2F;archon&#x2F;model&#x2F;validate.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;model&#x2F;validate.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-115"><div class="markdown_summary"><p>TypeScript is the validator (Article 10, spec 002). Each rule returns
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-116"><div class="markdown_summary"><p>TypeScript is the validator (Article 10, spec 002). Each rule returns
 problems with a message and a fix; an invalid model renders, installs, and
 applies nothing.</p>
 </div><section class="section"  id="archon&#x2F;model&#x2F;validate_ts_functions"><div>
@@ -13305,7 +13359,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_problem-1"
       <a href=".&#x2F;.&#x2F;archon&#x2F;notify&#x2F;commands.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;notify&#x2F;commands.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-116"><div class="markdown_summary"><p>The archon notify commands (spec 025), on hosts, workstations, and the boot
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-117"><div class="markdown_summary"><p>The archon notify commands (spec 025), on hosts, workstations, and the boot
 machine (deno task boot notify runs the same code), and archon mail
 credential and mail test (spec 027).</p>
 </div><section class="section"  id="archon&#x2F;notify&#x2F;commands_ts_functions"><div>
@@ -13438,7 +13492,7 @@ body as the whole message; a short one becomes <code>[Archon] &lt;host&gt;: &lt;
       <a href=".&#x2F;.&#x2F;archon&#x2F;notify&#x2F;events.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;notify&#x2F;events.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-117"><div class="markdown_summary"><p>Which events send a message (spec 025): major actions only, never every
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-118"><div class="markdown_summary"><p>Which events send a message (spec 025): major actions only, never every
 routine run. Each helper queues (never throws, never waits for the relay) and
 starts the sender.</p>
 </div><section class="section"  id="archon&#x2F;notify&#x2F;events_ts_functions"><div>
@@ -13599,7 +13653,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace__test" clas
       <a href=".&#x2F;.&#x2F;archon&#x2F;notify&#x2F;mime.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;notify&#x2F;mime.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-118"><div class="markdown_summary"><p>Mail messages for archon notify (spec 025): RFC 5322 with MIME, a plain-text
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-119"><div class="markdown_summary"><p>Mail messages for archon notify (spec 025): RFC 5322 with MIME, a plain-text
 part and a simple HTML part, and small attachments. Built here (TypeScript,
 Article 4) so the boot machine on Windows and the hosts send the same thing.</p>
 </div><section class="section"  id="archon&#x2F;notify&#x2F;mime_ts_functions"><div>
@@ -13737,7 +13791,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_attachment
       <a href=".&#x2F;.&#x2F;archon&#x2F;notify&#x2F;notify.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;notify&#x2F;notify.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-119"><div class="markdown_summary"><p>archon notify (spec 025): major events, by email, to the fleet's shared
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-120"><div class="markdown_summary"><p>archon notify (spec 025): major events, by email, to the fleet's shared
 mailbox. Reporting never fails or slows the action it reports: a message is
 queued on disk and sent by <code>archon notify flush</code> (a service started at once
 and a timer every 5 minutes) through Cloudflare's SMTP relay (spec 027),
@@ -14081,7 +14135,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_backoff_min
       <a href=".&#x2F;.&#x2F;archon&#x2F;notify&#x2F;redact.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;notify&#x2F;redact.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-120"><div class="markdown_summary"><p>Never send a secret (spec 025, Article 13): everything that goes into a
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-121"><div class="markdown_summary"><p>Never send a secret (spec 025, Article 13): everything that goes into a
 message (body, subject, attachments that are text) passes through here.</p>
 </div><section class="section"  id="archon&#x2F;notify&#x2F;redact_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;notify&#x2F;redact_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
@@ -14122,7 +14176,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_redact" cla
       <a href=".&#x2F;.&#x2F;archon&#x2F;notify&#x2F;transport.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;notify&#x2F;transport.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-121"><div class="markdown_summary"><p>How mail leaves (spec 025, spec 027): Cloudflare Email Service's
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-122"><div class="markdown_summary"><p>How mail leaves (spec 025, spec 027): Cloudflare Email Service's
 authenticated SMTP submission, smtp.mx.cloudflare.net:465 with implicit TLS,
 user &quot;api_token&quot;, the password a Cloudflare API token with Email Sending:
 Edit. Cloudflare signs with DKIM for the onboarded sending domain.</p>
@@ -14288,7 +14342,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_default_rel
       <a href=".&#x2F;.&#x2F;archon&#x2F;notify&#x2F;watch.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;notify&#x2F;watch.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-122"><div class="markdown_summary"><p>archon notify watch (spec 025, user story 2): the events an operator must
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-123"><div class="markdown_summary"><p>archon notify watch (spec 025, user story 2): the events an operator must
 hear about even when nothing in Archon ran. It follows the journal (Ubuntu
 already records every one of them: sshd, sudo, su, login, useradd, the kernel,
 systemd) and turns the few that matter into messages; nothing is added to
@@ -14510,7 +14564,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_watch-1" cl
       <a href=".&#x2F;.&#x2F;archon&#x2F;observe&#x2F;discover.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;observe&#x2F;discover.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-123"><div class="markdown_summary"><p><code>archon observe discover</code> (spec 024): find a central OpenTelemetry collector
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-124"><div class="markdown_summary"><p><code>archon observe discover</code> (spec 024): find a central OpenTelemetry collector
 and forward this machine's telemetry to it. By unicast DNS only (Article 20:
 never mDNS or DNS-SD): the fleet model's address, else the name
 &quot;otel.localdomain&quot; (fleet.telemetry.name, a UniFi Local DNS record). A
@@ -14659,7 +14713,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_central" cl
       <a href=".&#x2F;.&#x2F;archon&#x2F;observe&#x2F;fleet-query.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;observe&#x2F;fleet-query.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-124"><div class="markdown_summary"><p><code>archon fleet query</code> (spec 048): one SQL question to every server, through
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-125"><div class="markdown_summary"><p><code>archon fleet query</code> (spec 048): one SQL question to every server, through
 each server's MCP server over SSH (the server limits what it answers).</p>
 </div><section class="section"  id="archon&#x2F;observe&#x2F;fleet-query_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;observe&#x2F;fleet-query_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
@@ -14702,7 +14756,7 @@ unreachable servers. Returns 1 when any server did not answer, else 0.</p>
       <a href=".&#x2F;.&#x2F;archon&#x2F;observe&#x2F;fleet-status.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;observe&#x2F;fleet-status.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-125"><div class="markdown_summary"><p><code>archon fleet status</code> (specs 021, 022): every server and workstation in the
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-126"><div class="markdown_summary"><p><code>archon fleet status</code> (specs 021, 022): every server and workstation in the
 model, its last install and verify as it says them now (spec 048: asked over
 MCP, cached in this machine's archon.sql when it cannot be reached),
 whether it is durable or ephemeral (spec 044), and how to reach and observe it. Works on the boot machine (which also knows
@@ -14747,7 +14801,7 @@ live, or from the cache), its data class, and its next steps. Returns 0.</p>
       <a href=".&#x2F;.&#x2F;archon&#x2F;observe&#x2F;next.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;observe&#x2F;next.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-126"><div class="markdown_summary"><p>&quot;What now?&quot; for a freshly installed server or workstation (specs 021, 022):
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-127"><div class="markdown_summary"><p>&quot;What now?&quot; for a freshly installed server or workstation (specs 021, 022):
 how to reach it, its web console, and how to observe it. One list, shown by
 the boot server when a host is ready, at the end of the first boot, by
 <code>boot reinstall</code>, by <code>archon fleet status</code>, and (servers) at SSH login.</p>
@@ -14830,7 +14884,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_nextoption
       <a href=".&#x2F;.&#x2F;archon&#x2F;observe&#x2F;observe.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;observe&#x2F;observe.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-127"><div class="markdown_summary"><p><code>archon observe</code> (spec 021): what this machine records about itself, where,
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-128"><div class="markdown_summary"><p><code>archon observe</code> (spec 021): what this machine records about itself, where,
 and within which limits; <code>observe tui</code> opens otel-tui on it; <code>observe prune</code>
 keeps PCP's metric archives within their size and free-space limits (journald
 and the Collector's files limit themselves).</p>
@@ -14952,7 +15006,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_archive" c
       <a href=".&#x2F;.&#x2F;archon&#x2F;observe&#x2F;remote.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;observe&#x2F;remote.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-128"><div class="markdown_summary"><p>Spec 048-observe-by-query: ask a server through its MCP server, over SSH as
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-129"><div class="markdown_summary"><p>Spec 048-observe-by-query: ask a server through its MCP server, over SSH as
 ops (spec 030, Article 17), the same way an agent does. The server limits
 what it answers; nothing it says is pushed anywhere.</p>
 </div><section class="section"  id="archon&#x2F;observe&#x2F;remote_ts_functions"><div>
@@ -15037,7 +15091,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_remoteresu
       <a href=".&#x2F;.&#x2F;archon&#x2F;optin&#x2F;data.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;optin&#x2F;data.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-129"><div class="markdown_summary"><p>044-durable (Article 23): <code>archon data</code> shows whether this server is
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-130"><div class="markdown_summary"><p>044-durable (Article 23): <code>archon data</code> shows whether this server is
 durable or ephemeral and why; <code>archon data set</code> changes one opt-in's
 choice. Calling durable data ephemeral needs --confirm-destroy &lt;host&gt;,
 typed by a person.</p>
@@ -15144,7 +15198,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_data_dirs" 
       <a href=".&#x2F;.&#x2F;archon&#x2F;optin&#x2F;optin.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;optin&#x2F;optin.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-130"><div class="markdown_summary"><p>040-opt-in: opt-in services and containers. Every server has them; each is
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-131"><div class="markdown_summary"><p>040-opt-in: opt-in services and containers. Every server has them; each is
 off until an operator turns it on, and then on (across applies, reboots,
 and reinstalls) until an operator turns it off. The decision is the host's
 own record, this machine's archon.sql&lt;name&gt;.json {enabled, by, at}: model input
@@ -15314,7 +15368,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_opt_ins" cl
       <a href=".&#x2F;.&#x2F;archon&#x2F;otelui&#x2F;otelui.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;otelui&#x2F;otelui.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-131"><div class="markdown_summary"><p>Spec 050-telemetry-ui: OpenObserve as an opt-in on any server. Until it is
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-132"><div class="markdown_summary"><p>Spec 050-telemetry-ui: OpenObserve as an opt-in on any server. Until it is
 turned on, the headless Collector does what it always did. Once it is on:</p>
 </div><section class="section"  id="archon&#x2F;otelui&#x2F;otelui_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;otelui&#x2F;otelui_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
@@ -15412,7 +15466,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_local_ui_en
       <a href=".&#x2F;.&#x2F;archon&#x2F;personas&#x2F;mod.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;personas&#x2F;mod.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-132"><div class="markdown_summary"><p>Personas (spec 006). A persona is a bundle of groups and dotfile features;
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-133"><div class="markdown_summary"><p>Personas (spec 006). A persona is a bundle of groups and dotfile features;
 personas compose through <code>implies</code> (transitively).</p>
 </div><section class="section"  id="archon&#x2F;personas&#x2F;mod_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;personas&#x2F;mod_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
@@ -15498,7 +15552,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_archon_grou
       <a href=".&#x2F;.&#x2F;archon&#x2F;pg&#x2F;commands.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;pg&#x2F;commands.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-133"><div class="markdown_summary"><p>038-pg: archon pg list | status | ensure | start | stop | restart | reload |
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-134"><div class="markdown_summary"><p>038-pg: archon pg list | status | ensure | start | stop | restart | reload |
 upgrade | remove | backup | restore | maintain | publish | unpublish | connect.</p>
 </div><section class="section"  id="archon&#x2F;pg&#x2F;commands_ts_classes"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;pg&#x2F;commands_ts_classes" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
@@ -15820,7 +15874,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_maintain_sq
       <a href=".&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;pg&#x2F;config.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-134"><div class="markdown_summary"><p>038-pg: PostgreSQL instances as data. Pure functions only (tested without a
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-135"><div class="markdown_summary"><p>038-pg: PostgreSQL instances as data. Pure functions only (tested without a
 server): which instances a host keeps, their ports, configuration, client
 authentication, roles, the libpq service block, and the SCRAM verifier that
 sets a password without the password ever reaching PostgreSQL or its logs.</p>
@@ -16325,7 +16379,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_anywhere" c
       <a href=".&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;pg&#x2F;connections.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-135"><div class="markdown_summary"><p>043-pg-connections: what this account's libpq would use, and how to reach an
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-136"><div class="markdown_summary"><p>043-pg-connections: what this account's libpq would use, and how to reach an
 instance. Read-only; nothing on the host changes.</p>
 </div><section class="section"  id="archon&#x2F;pg&#x2F;connections_ts_classes"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;pg&#x2F;connections_ts_classes" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
@@ -16725,7 +16779,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_forms" clas
       <a href=".&#x2F;.&#x2F;archon&#x2F;pg&#x2F;converge.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;pg&#x2F;converge.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-136"><div class="markdown_summary"><p>038-pg, 039-pg-identity: make each instance what the model and the host's record say. Run by
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-137"><div class="markdown_summary"><p>038-pg, 039-pg-identity: make each instance what the model and the host's record say. Run by
 every apply (its Databases phase, so the reconcile timer keeps instances) and
 by archon pg ensure. Archon touches only clusters it created (FR-003).</p>
 </div><section class="section"  id="archon&#x2F;pg&#x2F;converge_ts_functions"><div>
@@ -16871,7 +16925,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_sink-1" cl
       <a href=".&#x2F;.&#x2F;archon&#x2F;pg&#x2F;tui.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;pg&#x2F;tui.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-137"><div class="markdown_summary"><p><code>archon pg admin-tui</code> (rainfrog) and <code>archon pg observe-tui</code> (pgcenter top):
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-138"><div class="markdown_summary"><p><code>archon pg admin-tui</code> (rainfrog) and <code>archon pg observe-tui</code> (pgcenter top):
 each finds the instance the way <code>archon pg show</code> does (an instance Archon
 keeps, any cluster here, or a service section) and starts the tool already
 connected. On this server: the socket and you as yourself (peer, no
@@ -16998,7 +17052,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_system_root
       <a href=".&#x2F;.&#x2F;archon&#x2F;prov&#x2F;prov.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;prov&#x2F;prov.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-138"><div class="markdown_summary"><p>Provenance (spec 014, Article 16): every apply is recorded as an activity,
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-139"><div class="markdown_summary"><p>Provenance (spec 014, Article 16): every apply is recorded as an activity,
 kept in this machine's archon.sql (spec 048) and exported as W3C PROV (Turtle) by <code>archon export</code>.</p>
 </div><section class="section"  id="archon&#x2F;prov&#x2F;prov_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;prov&#x2F;prov_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
@@ -17110,7 +17164,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_activity" 
       <a href=".&#x2F;.&#x2F;archon&#x2F;reconcile&#x2F;reconcile.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;reconcile&#x2F;reconcile.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-139"><div class="markdown_summary"><p><code>archon reconcile</code> (Article IX): approval means origin/main. Fetch, fast-
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-140"><div class="markdown_summary"><p><code>archon reconcile</code> (Article IX): approval means origin/main. Fetch, fast-
 forward a clean checkout, then apply only when HEAD equals origin/main.
 Runs a fresh <code>archon apply</code> process so the newly pulled code is used.</p>
 </div><section class="section"  id="archon&#x2F;reconcile&#x2F;reconcile_ts_functions"><div>
@@ -17211,7 +17265,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_syncresult
       <a href=".&#x2F;.&#x2F;archon&#x2F;render&#x2F;agent.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;render&#x2F;agent.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-140"><div class="markdown_summary"><p>The agent layer's project configuration (spec 030, Articles 4, 6, 17),
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-141"><div class="markdown_summary"><p>The agent layer's project configuration (spec 030, Articles 4, 6, 17),
 rendered from the model for a workstation's checkout: .mcp.json with one MCP
 server per server host (archon-&lt;fleet&gt;-&lt;host&gt;, reached as ops over SSH; spec
 046: one repository can hold several fleets, and two may name a host alike). It names no
@@ -17305,7 +17359,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_mcpserver"
       <a href=".&#x2F;.&#x2F;archon&#x2F;render&#x2F;autoinstall.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;render&#x2F;autoinstall.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-141"><div class="markdown_summary"><p>Ubuntu autoinstall config for one host (spec 004) and the first-boot step
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-142"><div class="markdown_summary"><p>Ubuntu autoinstall config for one host (spec 004) and the first-boot step
 inside it (spec 005). Rendered from the model; the two secrets (admin
 password hash, deploy key) are passed in only by archon-boot at request
 time and never reach out/ or git (Article 13). JSON is valid YAML, so the
@@ -17477,7 +17531,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_github_know
       <a href=".&#x2F;.&#x2F;archon&#x2F;render&#x2F;fish.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;render&#x2F;fish.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-142"><div class="markdown_summary"><p>fish completions generated from the command registry (Article VI).</p>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-143"><div class="markdown_summary"><p>fish completions generated from the command registry (Article VI).</p>
 </div><section class="section"  id="archon&#x2F;render&#x2F;fish_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;render&#x2F;fish_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
@@ -17517,7 +17571,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_renderfishc
       <a href=".&#x2F;.&#x2F;archon&#x2F;render&#x2F;man.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;render&#x2F;man.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-143"><div class="markdown_summary"><p>Man pages and fish completions generated from the command registry and from
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-144"><div class="markdown_summary"><p>Man pages and fish completions generated from the command registry and from
 the constitution and personas (Article 6). Installed into
 /usr/local/share/man and fish's vendor completions directory by spec 012.</p>
 </div><section class="section"  id="archon&#x2F;render&#x2F;man_ts_functions"><div>
@@ -17649,7 +17703,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_man_date" c
       <a href=".&#x2F;.&#x2F;archon&#x2F;render&#x2F;motd.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;render&#x2F;motd.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-144"><div class="markdown_summary"><p>The login banner (update-motd) lines Archon adds, in the same calm,
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-145"><div class="markdown_summary"><p>The login banner (update-motd) lines Archon adds, in the same calm,
 colored, emoji style as archon's own output (Article 19). Ubuntu's pam_motd
 runs these scripts as root at each login and shows their output as is; the
 colors are plain ANSI escapes, which every terminal shows.</p>
@@ -17702,7 +17756,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_archonmotd"
       <a href=".&#x2F;.&#x2F;archon&#x2F;render&#x2F;network-doc.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;render&#x2F;network-doc.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-145"><div class="markdown_summary"><p>The network reference (spec 028), rendered from the site model by
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-146"><div class="markdown_summary"><p>The network reference (spec 028), rendered from the site model by
 <code>archon build</code> into out/site/network-reference.html: the document the owner
 sends with each network change log (deno task boot notify --subject &quot;Lab
 Network Runbook Change Log &lt;dates&gt;&quot; --attach out/site/network-reference.html).
@@ -17748,7 +17802,7 @@ own section.</p>
       <a href=".&#x2F;.&#x2F;archon&#x2F;render&#x2F;roff.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;render&#x2F;roff.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-146"><div class="markdown_summary"><p>Native roff generation (no dependencies): man(7) macros, written directly.</p>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-147"><div class="markdown_summary"><p>Native roff generation (no dependencies): man(7) macros, written directly.</p>
 </div><section class="section"  id="archon&#x2F;render&#x2F;roff_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;render&#x2F;roff_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
@@ -17803,7 +17857,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_esc" class=
       <a href=".&#x2F;.&#x2F;archon&#x2F;render&#x2F;systemd.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;render&#x2F;systemd.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-147"><div class="markdown_summary"><p>Render systemd unit files (and other INI-style systemd configuration) from
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-148"><div class="markdown_summary"><p>Render systemd unit files (and other INI-style systemd configuration) from
 TypeScript objects. Article IV: the unit is code; the INI file is output.</p>
 </div><section class="section"  id="archon&#x2F;render&#x2F;systemd_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;render&#x2F;systemd_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
@@ -17894,7 +17948,7 @@ Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_section"
       <a href=".&#x2F;.&#x2F;archon&#x2F;report&#x2F;daily.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;report&#x2F;daily.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-148"><div class="markdown_summary"><p><code>archon report daily</code> (spec 013): deterministic facts only. No agent runs on
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-149"><div class="markdown_summary"><p><code>archon report daily</code> (spec 013): deterministic facts only. No agent runs on
 a server (spec 030); a workstation's agent reads reports over MCP.</p>
 </div><section class="section"  id="archon&#x2F;report&#x2F;daily_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;report&#x2F;daily_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
@@ -17938,7 +17992,7 @@ upgrade count.</p>
       <a href=".&#x2F;.&#x2F;archon&#x2F;s3&#x2F;s3.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;s3&#x2F;s3.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-149"><div class="markdown_summary"><p>041-s3: S3 object storage (RustFS), an opt-in container (spec 040), managed
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-150"><div class="markdown_summary"><p>041-s3: S3 object storage (RustFS), an opt-in container (spec 040), managed
 with archon fs s3. Identities are Linux accounts: every person on the server
 and every fleet service account has an S3 user of the same name, allowed the
 buckets named &lt;name&gt;-*. S3 signs requests with a secret the server keeps, so
@@ -18071,7 +18125,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_s3_paths" c
       <a href=".&#x2F;.&#x2F;archon&#x2F;shell&#x2F;emit.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;shell&#x2F;emit.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-150"><div class="markdown_summary"><p>036-cli-comforts: <code>archon shell emit [bash|zsh|fish]</code> prints the shell code
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-151"><div class="markdown_summary"><p>036-cli-comforts: <code>archon shell emit [bash|zsh|fish]</code> prints the shell code
 for Archon's aliases, key bindings, prompt, and titles. One line in a
 shell's startup file turns it all on; without that line a shell gets none
 of it (Ubuntu's defaults only).</p>
@@ -18214,7 +18268,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_aliases" cl
       <a href=".&#x2F;.&#x2F;archon&#x2F;smb&#x2F;commands.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;smb&#x2F;commands.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-151"><div class="markdown_summary"><p>037-smb: archon fs smb on | off | status. SMB is an opt-in service (spec
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-152"><div class="markdown_summary"><p>037-smb: archon fs smb on | off | status. SMB is an opt-in service (spec
 040): on and off are the shared switch (the host's own archon.sql (opt-in smb)). SMB
 uses each account's own Linux username and password: PAM keeps Samba's copy
 in step whenever the password is typed on the server.</p>
@@ -18318,7 +18372,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_smbrecord"
       <a href=".&#x2F;.&#x2F;archon&#x2F;smb&#x2F;config.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;smb&#x2F;config.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-152"><div class="markdown_summary"><p>037-smb: Samba's configuration, as data. One share for everyone with an
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-153"><div class="markdown_summary"><p>037-smb: Samba's configuration, as data. One share for everyone with an
 account (<code>shared</code>), and each account's own home folder; SMB3 only, encryption
 desired, no guests, no NetBIOS, the local networks only.</p>
 </div><section class="section"  id="archon&#x2F;smb&#x2F;config_ts_functions"><div>
@@ -18421,7 +18475,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_smb-2" clas
       <a href=".&#x2F;.&#x2F;archon&#x2F;state&#x2F;capture.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;state&#x2F;capture.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-153"><div class="markdown_summary"><p><code>archon capture</code> (spec 014, 048): read this host's actual state and compare
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-154"><div class="markdown_summary"><p><code>archon capture</code> (spec 014, 048): read this host's actual state and compare
 it with the plan (drift). Nothing is written: the machine answers for itself
 (archon query).</p>
 </div><section class="section"  id="archon&#x2F;state&#x2F;capture_ts_functions"><div>
@@ -18547,7 +18601,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_drift-1" c
       <a href=".&#x2F;.&#x2F;archon&#x2F;state&#x2F;inventory.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;state&#x2F;inventory.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-154"><div class="markdown_summary"><p>Spec 051: what this machine is, as it reports itself: make, model, serial,
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-155"><div class="markdown_summary"><p>Spec 051: what this machine is, as it reports itself: make, model, serial,
 CPUs, memory, disks, and network cards, from its firmware tables, /proc, and
 /sys. Recorded in archon.sql (the archon_inventory view) at first boot and on
 every verify that finds it changed, so fleet status and fleet query answer
@@ -18652,7 +18706,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_inventory"
       <a href=".&#x2F;.&#x2F;archon&#x2F;state&#x2F;query.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;state&#x2F;query.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-155"><div class="markdown_summary"><p>Spec 048-observe-by-query (Article 17): <code>archon query</code> answers one SELECT
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-156"><div class="markdown_summary"><p>Spec 048-observe-by-query (Article 17): <code>archon query</code> answers one SELECT
 about this machine through osquery, including Archon's own tables
 (archon_install, archon_verify, archon_prov, archon_optin, built from
 archon.sql). The server limits it, not the client: one statement, only
@@ -18762,7 +18816,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_query_denie
       <a href=".&#x2F;.&#x2F;archon&#x2F;state&#x2F;state-command.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;state&#x2F;state-command.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-156"><div class="markdown_summary"><p><code>archon state</code> (spec 048): what this machine recorded about itself (its
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-157"><div class="markdown_summary"><p><code>archon state</code> (spec 048): what this machine recorded about itself (its
 install, its latest verify, the operators' switches) and whether it holds
 durable data, from its own archon.sql. Fleet status asks each server for
 this over MCP; nothing is pushed.</p>
@@ -18861,7 +18915,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_hoststate-
       <a href=".&#x2F;.&#x2F;archon&#x2F;state&#x2F;store.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;state&#x2F;store.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-157"><div class="markdown_summary"><p>Spec 048-observe-by-query (Article 25): what this machine recorded about
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-158"><div class="markdown_summary"><p>Spec 048-observe-by-query (Article 25): what this machine recorded about
 itself (its install, its latest verify, what each run did, the operators'
 switches) stays on the machine, never in Git.</p>
 </div><section class="section"  id="archon&#x2F;state&#x2F;store_ts_functions"><div>
@@ -19094,7 +19148,7 @@ CREATE VIEW IF NOT EXISTS archon_inventory AS SELECT host, at,
       <a href=".&#x2F;.&#x2F;archon&#x2F;state&#x2F;verify.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;state&#x2F;verify.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-158"><div class="markdown_summary"><p><code>archon verify</code> (Article 15, spec 014): run every verification command in
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-159"><div class="markdown_summary"><p><code>archon verify</code> (Article 15, spec 014): run every verification command in
 the host's plan and report each result. As root, the result is also kept
 in the host's own archon.sql (opt-in verify) when it changes (archon fleet status).</p>
 </div><section class="section"  id="archon&#x2F;state&#x2F;verify_ts_functions"><div>
@@ -19253,7 +19307,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_pending_exi
       <a href=".&#x2F;.&#x2F;archon&#x2F;telemetry&#x2F;events.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;telemetry&#x2F;events.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-159"><div class="markdown_summary"><p>Spec 049-telemetry (Article 27): events are structured at their source.
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-160"><div class="markdown_summary"><p>Spec 049-telemetry (Article 27): events are structured at their source.
 Each event has a declared name (below), a severity, the host and address it
 is about, attributes, and a message; it is recorded as an OpenTelemetry log
 record. Anything a person reads (the boot server's window, boot.log) is a
@@ -19532,7 +19586,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_events" cla
       <a href=".&#x2F;.&#x2F;archon&#x2F;telemetry&#x2F;signals.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;telemetry&#x2F;signals.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-160"><div class="markdown_summary"><p>Spec 049-telemetry (Article 27): every signal Archon emits, declared once.
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-161"><div class="markdown_summary"><p>Spec 049-telemetry (Article 27): every signal Archon emits, declared once.
 The telemetry module accepts only these names (TypeScript checks every call),
 <code>man 7 archon-telemetry</code> is rendered from this list, and the tests read it.</p>
 </div><section class="section"  id="archon&#x2F;telemetry&#x2F;signals_ts_interfaces"><div>
@@ -19745,7 +19799,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_attributes"
       <a href=".&#x2F;.&#x2F;archon&#x2F;tools&#x2F;catalog.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;tools&#x2F;catalog.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-161"><div class="markdown_summary"><p>Tool catalog (spec 010, Article 5): the newest stable release of each tool,
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-162"><div class="markdown_summary"><p>Tool catalog (spec 010, Article 5): the newest stable release of each tool,
 from its maintainers' PPA or the vendor's own apt repository when there is
 one (apt keeps it current), else its official binary release
 (checksum-verified), else Ubuntu's archive (tmux).
@@ -19820,7 +19874,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_tools-3" cl
       <a href=".&#x2F;.&#x2F;archon&#x2F;tools&#x2F;keys&#x2F;github-cli.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;tools&#x2F;keys&#x2F;github-cli.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-162"><div class="markdown_summary"><p>GitHub CLI's apt signing key (spec 010, Article 12), pinned. Fingerprint
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-163"><div class="markdown_summary"><p>GitHub CLI's apt signing key (spec 010, Article 12), pinned. Fingerprint
 7F38BBB59D064DBCB3D84D725612B36462313325, as published in cli/cli's
 docs/install_linux.md (&quot;Our Linux packages and repository metadata are signed
 with the following PGP key fingerprints&quot;). The 2022 key 2C61...6059 expired on
@@ -19921,7 +19975,7 @@ LxU=
       <a href=".&#x2F;.&#x2F;archon&#x2F;tools&#x2F;keys&#x2F;microsoft.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;tools&#x2F;keys&#x2F;microsoft.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-163"><div class="markdown_summary"><p>Microsoft's apt signing key (spec 036, Article 12), pinned: &quot;Microsoft (Release
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-164"><div class="markdown_summary"><p>Microsoft's apt signing key (spec 036, Article 12), pinned: &quot;Microsoft (Release
 signing) <a href="mailto:gpgsecurity@microsoft.com">gpgsecurity@microsoft.com</a>&quot;, fingerprint
 BC528686B50D79E339D3721CEB3E94ADBE1229CF, from packages.microsoft.com/keys/microsoft.asc;
 it verified packages.microsoft.com/repos/code/dists/stable/InRelease on 2026-11-12.</p>
@@ -19985,7 +20039,7 @@ it verified packages.microsoft.com/repos/code/dists/stable/InRelease on 2026-11-
       <a href=".&#x2F;.&#x2F;archon&#x2F;tools&#x2F;keys&#x2F;osquery.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;tools&#x2F;keys&#x2F;osquery.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-164"><div class="markdown_summary"><p>osquery's apt signing key (spec 042, Article 12), pinned: &quot;osquery (osquery)
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-165"><div class="markdown_summary"><p>osquery's apt signing key (spec 042, Article 12), pinned: &quot;osquery (osquery)
 <a href="mailto:osquery@fb.com">osquery@fb.com</a>&quot;, fingerprint 1484120AC4E9F8A1A577AEEE97A80C63C9D8B80B (RSA 4096,
 2015-01-24), fetched from keyserver.ubuntu.com on 2026-11-12; the same
 fingerprint osquery's maintainers give for pkg.osquery.io/deb.</p>
@@ -20083,7 +20137,7 @@ gaS/aDkkb7zrq/37KTGwlMHFgVNgnRw3LB0zHRw/1+FDlRCfhEedS4rsUS8EvZHm
       <a href=".&#x2F;.&#x2F;archon&#x2F;tools&#x2F;sync.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;tools&#x2F;sync.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-165"><div class="markdown_summary"><p><code>archon tools sync</code> (spec 008, Articles V and XII).</p>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-166"><div class="markdown_summary"><p><code>archon tools sync</code> (spec 008, Articles V and XII).</p>
 </div><section class="section"  id="archon&#x2F;tools&#x2F;sync_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;tools&#x2F;sync_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
@@ -20233,7 +20287,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_release" c
       <a href=".&#x2F;.&#x2F;archon&#x2F;update&#x2F;update.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;update&#x2F;update.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-166"><div class="markdown_summary"><p><code>archon update</code> (spec 015): bring everything up to date from GitHub in one
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-167"><div class="markdown_summary"><p><code>archon update</code> (spec 015): bring everything up to date from GitHub in one
 command. Pull origin/main, then (in the freshly pulled code) validate,
 converge, refresh tools, re-converge for dotfiles, and verify.</p>
 </div><section class="section"  id="archon&#x2F;update&#x2F;update_ts_functions"><div>
@@ -20331,7 +20385,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_updateopti
       <a href=".&#x2F;.&#x2F;archon&#x2F;vault&#x2F;commands.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;vault&#x2F;commands.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-167"><div class="markdown_summary"><p><code>deno task boot vault &lt;sub&gt;</code> (specs 029 and 056): the boot machine's secrets,
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-168"><div class="markdown_summary"><p><code>deno task boot vault &lt;sub&gt;</code> (specs 029 and 056): the boot machine's secrets,
 and their backup. A backup is one ZIP file (see writeBackupZip),
 written into archon's backup folder; you then move it wherever you keep
 important things safe. A restore is never done by a command: <code>vault restore</code>
@@ -20407,7 +20461,7 @@ holds the same ones (nothing changes on GitHub, and clients see the same host).<
       <a href=".&#x2F;.&#x2F;archon&#x2F;vault&#x2F;panel.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;vault&#x2F;panel.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-168"><div class="markdown_summary"><p>The backup panel (spec 029, Article 19 and 22): one framed panel, amber, red
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-169"><div class="markdown_summary"><p>The backup panel (spec 029, Article 19 and 22): one framed panel, amber, red
 when anything has been unbacked for more than 7 days or host identity keys
 were never backed up. Shown at the end of any command that changed a
 secret, and at the start of <code>boot serve</code> and <code>boot status</code>, until the
@@ -20456,7 +20510,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_panellines"
       <a href=".&#x2F;.&#x2F;archon&#x2F;vault&#x2F;reminder.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;vault&#x2F;reminder.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-169"><div class="markdown_summary"><p>Backup reminders (spec 029, Article 22): hard to miss, calm (Article 19).</p>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-170"><div class="markdown_summary"><p>Backup reminders (spec 029, Article 22): hard to miss, calm (Article 19).</p>
 </div><section class="section"  id="archon&#x2F;vault&#x2F;reminder_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;vault&#x2F;reminder_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
@@ -20555,7 +20609,7 @@ exit 0
       <a href=".&#x2F;.&#x2F;archon&#x2F;vault&#x2F;state.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;vault&#x2F;state.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-170"><div class="markdown_summary"><p>The vault's view of the boot machine's secrets (spec 029): what is there,
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-171"><div class="markdown_summary"><p>The vault's view of the boot machine's secrets (spec 029): what is there,
 what the inventory says each one is, and whether the last backup holds it
 as it is now. Names, sizes, and SHA-256 only; never a value.</p>
 </div><section class="section"  id="archon&#x2F;vault&#x2F;state_ts_functions"><div>
@@ -20755,7 +20809,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_prompt_stat
       <a href=".&#x2F;.&#x2F;archon&#x2F;vault&#x2F;zip.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;vault&#x2F;zip.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-171"><div class="markdown_summary"><p>Spec 056: the boot machine's backup is one ZIP file. <code>deno task boot vault backup</code> writes it into the backup folder where archon keeps its data
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-172"><div class="markdown_summary"><p>Spec 056: the boot machine's backup is one ZIP file. <code>deno task boot vault backup</code> writes it into the backup folder where archon keeps its data
 (Windows: <code>%LOCALAPPDATA%\archon\backup</code>; Linux: <code>~/.local/share/archon/backup</code>),
 reads it back to check every file, and tells you to put it wherever you keep
 important things safe. It holds everything this PC would need again after a
@@ -20900,7 +20954,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_backup_dir"
       <a href=".&#x2F;.&#x2F;archon&#x2F;version.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;version.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-172"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-173"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
 from GitHub (<code>@stolos/</code> → raw.githubusercontent.com/.../v&lt;VERSION&gt;/src/), so
 every push to main raises it and the release workflow tags that commit
 v&lt;VERSION&gt;. <code>deno task version bump</code> raises the minor number (0.1.0, 0.2.0,
@@ -20936,7 +20990,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_tag" class=
     </div><div id="namespace_version" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;version.ts&#x2F;~&#x2F;VERSION.html" title="VERSION">
-			    <span>VERSION</span><span>: <span class="td-str">"0.37.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
+			    <span>VERSION</span><span>: <span class="td-str">"0.38.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
 from GitHub (<code>@stolos/</code> → raw.githubusercontent.com/.../v&lt;VERSION&gt;/src/), so
 every push to main raises it and the release workflow tags that commit
 v&lt;VERSION&gt;. <code>deno task version bump</code> raises the minor number (0.1.0, 0.2.0,
@@ -20953,7 +21007,7 @@ v&lt;VERSION&gt;. <code>deno task version bump</code> raises the minor number (0
       <a href=".&#x2F;.&#x2F;archon&#x2F;web&#x2F;acme.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;web&#x2F;acme.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-173"><div class="markdown_summary"><p>032-web: a server's Let's Encrypt certificates survive its re-install. Before
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-174"><div class="markdown_summary"><p>032-web: a server's Let's Encrypt certificates survive its re-install. Before
 <code>deno task boot reinstall</code> reboots a server, it copies Traefik's ACME store
 (the Let's Encrypt account, the certificates, and their keys) to the boot
 machine; the install hands it back, and the first boot puts it in place
@@ -21118,7 +21172,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_acme_delive
       <a href=".&#x2F;.&#x2F;archon&#x2F;web&#x2F;cloudflare.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;web&#x2F;cloudflare.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-174"><div class="markdown_summary"><p>032-web: the few Cloudflare API calls a server needs to keep its own DNS
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-175"><div class="markdown_summary"><p>032-web: the few Cloudflare API calls a server needs to keep its own DNS
 records (its name and wildcard, both to its private address, not proxied).
 The token needs Zone: Read and DNS: Edit on the zone (the same token
 Traefik uses for Let's Encrypt's DNS challenge).</p>
@@ -21262,7 +21316,7 @@ Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_fetch" c
       <a href=".&#x2F;.&#x2F;archon&#x2F;web&#x2F;commands.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;web&#x2F;commands.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-175"><div class="markdown_summary"><p>032-web on a server: archon web credential | dns | status.</p>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-176"><div class="markdown_summary"><p>032-web on a server: archon web credential | dns | status.</p>
 </div><section class="section"  id="archon&#x2F;web&#x2F;commands_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;web&#x2F;commands_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
@@ -21372,7 +21426,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_dns_state" 
       <a href=".&#x2F;.&#x2F;archon&#x2F;web&#x2F;config.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;web&#x2F;config.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-176"><div class="markdown_summary"><p>032-web: the server's HTTPS front door, as data. Traefik (an official
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-177"><div class="markdown_summary"><p>032-web: the server's HTTPS front door, as data. Traefik (an official
 release binary, spec 010) listens on 80 and 443; 80 only redirects. Every
 route on 443 is limited to the local networks at the entry point, so
 nothing on a server is reachable from outside the LAN through the proxy
@@ -21530,7 +21584,7 @@ account whose name exists, and the group archon-web does.</p>
       <a href=".&#x2F;.&#x2F;archon&#x2F;web&#x2F;markdown.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;web&#x2F;markdown.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-177"><div class="markdown_summary"><p>035-welcome-guide: the repository's guides (docs/*.md) as HTML on the welcome
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-178"><div class="markdown_summary"><p>035-welcome-guide: the repository's guides (docs/*.md) as HTML on the welcome
 page, so one text serves the repository, the man pages, and the server.
 Handles what those guides use: headings, paragraphs, lists, tables, code
 blocks, blockquotes, inline code, bold, italics, and links. Everything is
@@ -21615,7 +21669,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_linkcontex
       <a href=".&#x2F;.&#x2F;archon&#x2F;web&#x2F;serve.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;web&#x2F;serve.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-178"><div class="markdown_summary"><p><code>archon web serve</code> (specs 032, 035): the welcome page and the guides on
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-179"><div class="markdown_summary"><p><code>archon web serve</code> (specs 032, 035): the welcome page and the guides on
 127.0.0.1:8090, behind Traefik. Read-only: the model, Archon's status files,
 the install record, the timers' last runs, the update state, the listening
 ports, and Traefik's own list of routes (to show containers as they start).
@@ -21718,7 +21772,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_guides" cla
       <a href=".&#x2F;.&#x2F;archon&#x2F;web&#x2F;welcome.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;web&#x2F;welcome.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-179"><div class="markdown_summary"><p>032-web and 035-welcome-guide: the welcome page every server shows at
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-180"><div class="markdown_summary"><p>032-web and 035-welcome-guide: the welcome page every server shows at
 <a href="https://">https://</a>&lt;host&gt;.&lt;domain&gt; (and at any name or address nothing else claims),
 written for someone new to the server: what it is, whether it's healthy, its
 apps, what's installed and how to use it, and how changes are made. Rendered
@@ -22005,7 +22059,7 @@ footer { color: var(--muted); font-size: 0.85rem; margin-top: 30px; }
       <a href=".&#x2F;.&#x2F;mod.ts&#x2F;index.html" class="link text-xl font-bold">mod.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-180"><div class="markdown_summary"><h1>Stolos: the fleet engine</h1>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-181"><div class="markdown_summary"><h1>Stolos: the fleet engine</h1>
 </div><section class="section"  id="mod_ts_interfaces"><div>
       <h2 class="anchorable mb-1"><a href="#mod_ts_interfaces" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
@@ -22231,7 +22285,7 @@ never written in a host file.</p>
 Variables</h2></div><div class="namespaceSection"><div id="namespace_version-1" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;version.ts&#x2F;~&#x2F;VERSION.html" title="VERSION">
-			    <span>VERSION</span><span>: <span class="td-str">"0.37.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
+			    <span>VERSION</span><span>: <span class="td-str">"0.38.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
 from GitHub (<code>@stolos/</code> → raw.githubusercontent.com/.../v&lt;VERSION&gt;/src/), so
 every push to main raises it and the release workflow tags that commit
 v&lt;VERSION&gt;. <code>deno task version bump</code> raises the minor number (0.1.0, 0.2.0,
