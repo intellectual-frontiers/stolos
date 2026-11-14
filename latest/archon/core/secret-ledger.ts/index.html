@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/core/secret-ledger.ts - Stolos v0.30.0 documentation</title>
+  <title>archon/core/secret-ledger.ts - Stolos v0.31.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.30.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -127,20 +127,24 @@ by name only. It holds no secret: it is what tells <code>deno task boot vault st
 Functions</h2></div><div class="namespaceSection"><div id="namespace_readledger" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;secret-ledger.ts&#x2F;~&#x2F;readLedger.html" title="readLedger">
-			    <span>readLedger</span><span>(<span><span>path<span class="td-op">?</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">Ledger</span>&gt;</span></span></a></div>
+			    <span>readLedger</span><span>(<span><span>path<span class="td-op">?</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">Ledger</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Read the ledger; a missing or unreadable file reads as an empty one.</p>
+</div></div></div>
     </div><div id="namespace_recordchange" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;secret-ledger.ts&#x2F;~&#x2F;recordChange.html" title="recordChange">
-			    <span>recordChange</span><span>(<div class="ml-4"><div><span>path<span>: <span class="td-kw">string</span></span></span>,</div><div><span>removed<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">void</span>&gt;</span></span></a></div>
+			    <span>recordChange</span><span>(<div class="ml-4"><div><span>path<span>: <span class="td-kw">string</span></span></span>,</div><div><span>removed<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">void</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Record that a secret was written (or removed) now, then prepare the
+closing panel. Never throws: the ledger is advisory.</p>
+</div></div></div>
     </div><div id="namespace_secretname" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;secret-ledger.ts&#x2F;~&#x2F;secretName.html" title="secretName">
-			    <span>secretName</span><span>(<span><span>path<span>: <span class="td-kw">string</span></span></span></span>)</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The secret's name: its path inside the secrets folder, with forward slashes.</p>
+			    <span>secretName</span><span>(<span><span>path<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The secret's name: its path inside the secrets folder, with forward slashes.</p>
 </div></div></div>
     </div><div id="namespace_writeledger" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;secret-ledger.ts&#x2F;~&#x2F;writeLedger.html" title="writeLedger">
-			    <span>writeLedger</span><span>(<div class="ml-4"><div><span>l<span>: <span class="td-ref">Ledger</span></span></span>,</div><div><span>path<span class="td-op">?</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">void</span>&gt;</span></span></a></div>
+			    <span>writeLedger</span><span>(<div class="ml-4"><div><span>l<span>: <span class="td-ref">Ledger</span></span></span>,</div><div><span>path<span class="td-op">?</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">void</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Write the ledger (as formatted JSON), creating the vault folder first.</p>
+</div></div></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;core&#x2F;secret-ledger_ts_interfaces"><div>
@@ -169,21 +173,25 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_readledger"
 Interfaces</h2></div><div class="namespaceSection"><div id="namespace_ledger" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;secret-ledger.ts&#x2F;~&#x2F;Ledger.html" title="Ledger">
-			    <span>Ledger</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>Ledger</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The ledger's contents: secrets' change times and the last backup, by name only.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;secret-ledger.ts&#x2F;~&#x2F;Ledger.html#property_changes">
                   <span>changes</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span>{ changedAt<span>: <span class="td-kw">string</span></span>; removed<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>;  }&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Path inside the secrets folder (forward slashes) -&gt; when it was written or removed.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;secret-ledger.ts&#x2F;~&#x2F;Ledger.html#property_lastbackup">
-                  <span>lastBackup</span><span>: <span class="td-ref">LedgerBackup</span></span></a></li><li>
+                  <span>lastBackup</span><span>: <span class="td-ref">LedgerBackup</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The last backup recorded; absent before the first one.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;secret-ledger.ts&#x2F;~&#x2F;Ledger.html#property_remindedat">
                   <span>remindedAt</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The last &quot;N secrets not backed up&quot; email (spec 025).</p>
 </div></div></li></ul></div>
     </div><div id="namespace_ledgerbackup" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;secret-ledger.ts&#x2F;~&#x2F;LedgerBackup.html" title="LedgerBackup">
-			    <span>LedgerBackup</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>LedgerBackup</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The record of the last backup (spec 056): its ZIP, where it was written, and what it held.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;secret-ledger.ts&#x2F;~&#x2F;LedgerBackup.html#property_at">
-                  <span>at</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>at</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When it was made (ISO 8601).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;secret-ledger.ts&#x2F;~&#x2F;LedgerBackup.html#property_dir">
                   <span>dir</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The folder it was written to (the backup folder); older records lack it.</p>
 </div></div></li><li>
@@ -226,11 +234,13 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_changedthis
     </div><div id="namespace_ledger-1" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;secret-ledger.ts&#x2F;~&#x2F;LEDGER.html" title="LEDGER">
-			    <span>LEDGER</span></a></div>
+			    <span>LEDGER</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The ledger file: <code>ledger.json</code> in <code>VAULT_LOCAL</code>.</p>
+</div></div></div>
     </div><div id="namespace_vault_local" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;secret-ledger.ts&#x2F;~&#x2F;VAULT_LOCAL.html" title="VAULT_LOCAL">
-			    <span>VAULT_LOCAL</span></a></div>
+			    <span>VAULT_LOCAL</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The vault's local folder on the boot machine (holds the ledger; no secret).</p>
+</div></div></div>
     </div></div>
 </section>
 </div>
@@ -304,7 +314,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_changedthis
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1132 symbols</span><svg
+              <span class="leading-none">view all 1135 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

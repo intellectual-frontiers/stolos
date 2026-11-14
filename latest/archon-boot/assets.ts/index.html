@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon-boot/assets.ts - Stolos v0.30.0 documentation</title>
+  <title>archon-boot/assets.ts - Stolos v0.31.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;" class="contextLink">Stolos v0.30.0</a>
+    <a href="..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -126,15 +126,18 @@ its pinned SHA-256 (Article 12), and cache them on the boot machine.</p>
 Functions</h2></div><div class="namespaceSection"><div id="namespace_cachedir" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;assets.ts&#x2F;~&#x2F;cacheDir.html" title="cacheDir">
-			    <span>cacheDir</span><span>()</span></a></div>
+			    <span>cacheDir</span><span>()<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The folder that caches this Ubuntu point release's boot files and image.</p>
+</div></div></div>
     </div><div id="namespace_ensureassets" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;assets.ts&#x2F;~&#x2F;ensureAssets.html" title="ensureAssets">
-			    <span>ensureAssets</span><span>(<span><span>p<span>: <span class="td-ref">Phase</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">Assets</span>&gt;</span></span></a></div>
+			    <span>ensureAssets</span><span>(<span><span>p<span>: <span class="td-ref">Phase</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">Assets</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Download (once) and verify every boot file and the installer image against their pinned SHA-256.</p>
+</div></div></div>
     </div><div id="namespace_sha256file" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;assets.ts&#x2F;~&#x2F;sha256File.html" title="sha256File">
-			    <span>sha256File</span><span>(<span><span>path<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">string</span>&gt;</span></span></a></div>
+			    <span>sha256File</span><span>(<span><span>path<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">string</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A file's SHA-256, in hex, read in chunks (installer images are several GB).</p>
+</div></div></div>
     </div></div>
 </section>
 <section class="section"  id="archon-boot&#x2F;assets_ts_interfaces"><div>
@@ -163,11 +166,14 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_cachedir" c
 Interfaces</h2></div><div class="namespaceSection"><div id="namespace_assets" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;assets.ts&#x2F;~&#x2F;Assets.html" title="Assets">
-			    <span>Assets</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>Assets</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The verified files the boot server serves.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;assets.ts&#x2F;~&#x2F;Assets.html#property_files">
-                  <span>files</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></a></li><li>
+                  <span>files</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Netboot file name (for example &quot;grubx64.efi&quot;, &quot;linux&quot;) to its path in the cache.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;assets.ts&#x2F;~&#x2F;Assets.html#property_iso">
-                  <span>iso</span><span>: <span class="td-kw">string</span></span></a></li></ul></div>
+                  <span>iso</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The installer image's path in the cache.</p>
+</div></div></li></ul></div>
     </div></div>
 </section>
 </div>
@@ -241,7 +247,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_assets" cl
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1132 symbols</span><svg
+              <span class="leading-none">view all 1135 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

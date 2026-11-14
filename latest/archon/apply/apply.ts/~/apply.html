@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>apply - archon/apply/apply.ts - Stolos v0.30.0 documentation</title>
+  <title>apply - archon/apply/apply.ts - Stolos v0.31.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;apply&#x2F;apply.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.30.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -166,7 +166,12 @@
 </svg>
 </a>
 <span class="font-bold">apply</span><span class="font-medium">(<div class="ml-4"><div><span>host<span>: <a href="../../../.././archon/model/types.ts/~/HostDef.html" class="link td-ref">HostDef</a></span></span>,</div><div><span>opts<span>: <a href="../../../.././archon/apply/apply.ts/~/ApplyOptions.html" class="link td-ref">ApplyOptions</a></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<a href="../../../.././archon/apply/apply.ts/~/ApplyResult.html" class="link td-ref">ApplyResult</a>&gt;</span> </span>
-      </code><div class="space-y-7" id=""><section class="section"  id="parameters"><div>
+      </code><div class="space-y-7" id=""><div class="markdown"><p><code>archon apply</code>: converge the host to its plan. Must run as root unless
+<code>check</code> or <code>root</code> is set. A real run also records provenance (spec 014),
+restarts Archon's daemons when the code changed, commits /etc with
+etckeeper (spec 033), settles the install record after a success (spec
+009), and, for a full apply, reports a change of state (spec 025).</p>
+</div><section class="section"  id="parameters"><div>
       <h2 class="anchorable mb-1"><a href="#parameters" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
   height="16"

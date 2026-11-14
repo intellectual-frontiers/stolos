@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/smb/commands.ts - Stolos v0.30.0 documentation</title>
+  <title>archon/smb/commands.ts - Stolos v0.31.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.30.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -133,19 +133,25 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_howtoconnec
     </div><div id="namespace_readrecord" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;smb&#x2F;commands.ts&#x2F;~&#x2F;readRecord.html" title="readRecord">
-			    <span>readRecord</span><span>(<div class="ml-4"><div><span>host<span>: <span class="td-kw">string</span></span></span>,</div><div><span>root<span class="td-op">?</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span><span class="td-ref">SmbRecord</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span>&gt;</span></span></a></div>
+			    <span>readRecord</span><span>(<div class="ml-4"><div><span>host<span>: <span class="td-kw">string</span></span></span>,</div><div><span>root<span class="td-op">?</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span><span class="td-ref">SmbRecord</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The host's SMB switch record in archon.sql, or <code>undefined</code> when it was never turned on.</p>
+</div></div></div>
     </div><div id="namespace_smboff" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;smb&#x2F;commands.ts&#x2F;~&#x2F;smbOff.html" title="smbOff">
-			    <span>smbOff</span><span>(<span><span>host<span>: <span class="td-kw">string</span></span></span></span>)</span></a></div>
+			    <span>smbOff</span><span>(<span><span>host<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon fs smb off</code>: turn SMB off (its data is kept). Resolves to the exit code.</p>
+</div></div></div>
     </div><div id="namespace_smbon" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;smb&#x2F;commands.ts&#x2F;~&#x2F;smbOn.html" title="smbOn">
-			    <span>smbOn</span><span>(<div class="ml-4"><div><span>host<span>: <span class="td-kw">string</span></span></span>,</div><div><span>data<span>: <span class="td-ref">DataClass</span></span></span>,</div><div><span>confirm<span class="td-op">?</span><span>: <span class="td-kw">unknown</span></span></span></div></div>)</span></a></div>
+			    <span>smbOn</span><span>(<div class="ml-4"><div><span>host<span>: <span class="td-kw">string</span></span></span>,</div><div><span>data<span>: <span class="td-ref">DataClass</span></span></span>,</div><div><span>confirm<span class="td-op">?</span><span>: <span class="td-kw">unknown</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon fs smb on</code>: turn SMB on with the forced data choice (spec 044).
+<code>confirm</code> is the <code>--confirm-destroy</code> value. Resolves to the exit code.</p>
+</div></div></div>
     </div><div id="namespace_smbstatus" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;smb&#x2F;commands.ts&#x2F;~&#x2F;smbStatus.html" title="smbStatus">
-			    <span>smbStatus</span><span>(<span><span>hostName<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a></div>
+			    <span>smbStatus</span><span>(<span><span>hostName<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon fs smb status</code>: the switch, smbd and port 445, the shares, and who
+has an SMB password (as root). Returns 1 when a check failed, else 0.</p>
+</div></div></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;smb&#x2F;commands_ts_interfaces"><div>
@@ -174,13 +180,17 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_howtoconnec
 Interfaces</h2></div><div class="namespaceSection"><div id="namespace_smbrecord" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;smb&#x2F;commands.ts&#x2F;~&#x2F;SmbRecord.html" title="SmbRecord">
-			    <span>SmbRecord</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>SmbRecord</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The host's SMB switch record (spec 040's opt-in record).</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;smb&#x2F;commands.ts&#x2F;~&#x2F;SmbRecord.html#property_at">
-                  <span>at</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>at</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When (ISO 8601).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;smb&#x2F;commands.ts&#x2F;~&#x2F;SmbRecord.html#property_by">
-                  <span>by</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>by</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Who last turned it on or off.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;smb&#x2F;commands.ts&#x2F;~&#x2F;SmbRecord.html#property_enabled">
-                  <span>enabled</span><span>: <span class="td-kw">boolean</span></span></a></li></ul></div>
+                  <span>enabled</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Whether SMB is on.</p>
+</div></div></li></ul></div>
     </div></div>
 </section>
 </div>
@@ -254,7 +264,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_smbrecord"
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1132 symbols</span><svg
+              <span class="leading-none">view all 1135 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

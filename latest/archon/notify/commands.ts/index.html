@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/notify/commands.ts - Stolos v0.30.0 documentation</title>
+  <title>archon/notify/commands.ts - Stolos v0.31.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.30.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -148,19 +148,29 @@ sends on to the fleet's mailbox.</p>
     </div><div id="namespace_notifyflush" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;commands.ts&#x2F;~&#x2F;notifyFlush.html" title="notifyFlush">
-			    <span>notifyFlush</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a></div>
+			    <span>notifyFlush</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>archon notify flush (the flush service): send what is due. Prints counts
+only when something was tried. Always exit code 0.</p>
+</div></div></div>
     </div><div id="namespace_notifysend" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;commands.ts&#x2F;~&#x2F;notifySend.html" title="notifySend">
-			    <span>notifySend</span><span>(<div class="ml-4"><div><span>a<span>: <span class="td-ref">SendArgs</span></span></span>,</div><div><span>o<span>: { wait<span>: <span class="td-kw">boolean</span></span>;  }</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a></div>
+			    <span>notifySend</span><span>(<div class="ml-4"><div><span>a<span>: <span class="td-ref">SendArgs</span></span></span>,</div><div><span>o<span>: { wait<span>: <span class="td-kw">boolean</span></span>;  }</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>archon notify send: queue a message from this machine. With <code>wait</code>, send it
+now and report whether it went; otherwise start the sender and return.
+Exit code 0 when queued (or sent, with <code>wait</code>) or a duplicate, else 1.</p>
+</div></div></div>
     </div><div id="namespace_notifystatus" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;commands.ts&#x2F;~&#x2F;notifyStatus.html" title="notifyStatus">
-			    <span>notifyStatus</span><span>(<span><span>o<span>: { check<span>: <span class="td-kw">boolean</span></span>;  }</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a></div>
+			    <span>notifyStatus</span><span>(<span><span>o<span>: { check<span>: <span class="td-kw">boolean</span></span>;  }</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>archon notify status: mailbox, sender, relay, credential, last send and
+queue. With <code>check</code> (archon verify), one line instead, and exit code 1 when
+mail is not configured, the last send failed, or a message has waited more
+than 6 hours.</p>
+</div></div></div>
     </div><div id="namespace_notifytest" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;commands.ts&#x2F;~&#x2F;notifyTest.html" title="notifyTest">
-			    <span>notifyTest</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a></div>
+			    <span>notifyTest</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>archon notify test: send a test message now and wait for the relay (exit code 0 when sent).</p>
+</div></div></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;notify&#x2F;commands_ts_interfaces"><div>
@@ -189,19 +199,27 @@ sends on to the fleet's mailbox.</p>
 Interfaces</h2></div><div class="namespaceSection"><div id="namespace_sendargs" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;commands.ts&#x2F;~&#x2F;SendArgs.html" title="SendArgs">
-			    <span>SendArgs</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>SendArgs</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The options of <code>archon notify send</code>.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;commands.ts&#x2F;~&#x2F;SendArgs.html#property_attach">
-                  <span>attach</span><span>: <span class="td-kw">string</span>[]</span></a></li><li>
+                  <span>attach</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Files to attach.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;commands.ts&#x2F;~&#x2F;SendArgs.html#property_body">
-                  <span>body</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>body</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The body text (with a short subject, the subject itself when empty).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;commands.ts&#x2F;~&#x2F;SendArgs.html#property_bodyfile">
-                  <span>bodyFile</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>bodyFile</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Read the body from this file instead (it wins over <code>body</code>).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;commands.ts&#x2F;~&#x2F;SendArgs.html#property_key">
-                  <span>key</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>key</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Deduplication key: the same key within an hour is sent once.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;commands.ts&#x2F;~&#x2F;SendArgs.html#property_level">
-                  <span>level</span><span>: <span class="td-ref">Level</span></span></a></li><li>
+                  <span>level</span><span>: <span class="td-ref">Level</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How serious it is; <code>&quot;info&quot;</code> by default.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;commands.ts&#x2F;~&#x2F;SendArgs.html#property_subject">
-                  <span>subject</span><span>: <span class="td-kw">string</span></span></a></li></ul></div>
+                  <span>subject</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The subject. One that starts with <code>[</code> or <code>Lab </code> is sent as given, with the
+body as the whole message; a short one becomes <code>[Archon] &lt;host&gt;: &lt;subject&gt;</code>.</p>
+</div></div></li></ul></div>
     </div></div>
 </section>
 </div>
@@ -275,7 +293,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_sendargs" 
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1132 symbols</span><svg
+              <span class="leading-none">view all 1135 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

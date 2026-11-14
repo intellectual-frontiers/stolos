@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Attachment - archon/notify/mime.ts - Stolos v0.30.0 documentation</title>
+  <title>Attachment - archon/notify/mime.ts - Stolos v0.31.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;notify&#x2F;mime.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.30.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -142,9 +142,7 @@
   />
 </svg>
 </a>
-</div><div><div class="space-y-7" id=""><div class="markdown"><p>Mail messages for archon notify (spec 025): RFC 5322 with MIME, a plain-text
-part and a simple HTML part, and small attachments. Built here (TypeScript,
-Article 4) so the boot machine on Windows and the hosts send the same thing.</p>
+</div><div><div class="space-y-7" id=""><div class="markdown"><p>A file attached to a message.</p>
 </div><section class="section"  id="properties"><div>
       <h2 class="anchorable mb-1"><a href="#properties" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
@@ -220,7 +218,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The file name the recipient sees (for example <code>apply.log</code>).</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_type">
 
   <div class="docEntryHeader">
@@ -273,7 +272,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Its MIME type (for example <code>text/plain</code> or <code>application/gzip</code>).</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_data">
 
   <div class="docEntryHeader">
@@ -326,7 +326,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Its contents, raw bytes (base64-encoded when the message is built).</p>
+</div></div></div>
 </div></section>
 </div>
 </div>

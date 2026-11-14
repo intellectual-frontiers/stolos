@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/apply/apply.ts - Stolos v0.30.0 documentation</title>
+  <title>archon/apply/apply.ts - Stolos v0.31.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.30.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -127,7 +127,12 @@ right after a successful run reports zero changes. Never removes anything
 Functions</h2></div><div class="namespaceSection"><div id="namespace_apply" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;apply&#x2F;apply.ts&#x2F;~&#x2F;apply.html" title="apply">
-			    <span>apply</span><span>(<div class="ml-4"><div><span>host<span>: <span class="td-ref">HostDef</span></span></span>,</div><div><span>opts<span>: <span class="td-ref">ApplyOptions</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">ApplyResult</span>&gt;</span></span></a></div>
+			    <span>apply</span><span>(<div class="ml-4"><div><span>host<span>: <span class="td-ref">HostDef</span></span></span>,</div><div><span>opts<span>: <span class="td-ref">ApplyOptions</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">ApplyResult</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon apply</code>: converge the host to its plan. Must run as root unless
+<code>check</code> or <code>root</code> is set. A real run also records provenance (spec 014),
+restarts Archon's daemons when the code changed, commits /etc with
+etckeeper (spec 033), settles the install record after a success (spec
+009), and, for a full apply, reports a change of state (spec 025).</p>
+</div></div></div>
     </div><div id="namespace_archondaemons" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;apply&#x2F;apply.ts&#x2F;~&#x2F;archonDaemons.html" title="archonDaemons">
@@ -191,9 +196,11 @@ and double quotes. Verification commands (archon:verifiedBy) use this.</p>
 Interfaces</h2></div><div class="namespaceSection"><div id="namespace_applyoptions" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;apply&#x2F;apply.ts&#x2F;~&#x2F;ApplyOptions.html" title="ApplyOptions">
-			    <span>ApplyOptions</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>ApplyOptions</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What <code>archon apply</code> does.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;apply&#x2F;apply.ts&#x2F;~&#x2F;ApplyOptions.html#property_check">
-                  <span>check</span><span>: <span class="td-kw">boolean</span></span></a></li><li>
+                  <span>check</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Only report what would change; change nothing.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;apply&#x2F;apply.ts&#x2F;~&#x2F;ApplyOptions.html#property_only">
                   <span>only</span><span>: <span class="td-ref">Array</span>&lt;<div class="ml-indent"><div><span><span class="td-str">"packages"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"accounts"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"files"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"units"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"databases"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"containers"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"dotfiles"</span></span></div></div>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Run only these phases (default: all). A second pass after tools sync needs only dotfiles.</p>
 </div></div></li><li>
@@ -203,17 +210,23 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_applyoptio
     </div><div id="namespace_applyresult" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;apply&#x2F;apply.ts&#x2F;~&#x2F;ApplyResult.html" title="ApplyResult">
-			    <span>ApplyResult</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>ApplyResult</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What an apply did.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;apply&#x2F;apply.ts&#x2F;~&#x2F;ApplyResult.html#property_changes">
-                  <span>changes</span><span>: <span class="td-kw">string</span>[]</span></a></li><li>
+                  <span>changes</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Every change made (or, in a check, that would be made), one line each.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;apply&#x2F;apply.ts&#x2F;~&#x2F;ApplyResult.html#property_check">
-                  <span>check</span><span>: <span class="td-kw">boolean</span></span></a></li><li>
+                  <span>check</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Whether it was a check (nothing changed).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;apply&#x2F;apply.ts&#x2F;~&#x2F;ApplyResult.html#property_failed">
-                  <span>failed</span><span>: <span class="td-kw">boolean</span></span></a></li><li>
+                  <span>failed</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Whether any step failed.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;apply&#x2F;apply.ts&#x2F;~&#x2F;ApplyResult.html#property_host">
-                  <span>host</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>host</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The host's name.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;apply&#x2F;apply.ts&#x2F;~&#x2F;ApplyResult.html#property_skipped">
-                  <span>skipped</span><span>: <span class="td-kw">string</span>[]</span></a></li></ul></div>
+                  <span>skipped</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Steps left for a later run (for example a file whose owner does not exist yet).</p>
+</div></div></li></ul></div>
     </div></div>
 </section>
 </div>
@@ -287,7 +300,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_applyoptio
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1132 symbols</span><svg
+              <span class="leading-none">view all 1135 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

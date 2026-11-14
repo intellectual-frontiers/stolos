@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/vault/state.ts - Stolos v0.30.0 documentation</title>
+  <title>archon/vault/state.ts - Stolos v0.31.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.30.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -127,7 +127,11 @@ as it is now. Names, sizes, and SHA-256 only; never a value.</p>
 Functions</h2></div><div class="namespaceSection"><div id="namespace_assess" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;vault&#x2F;state.ts&#x2F;~&#x2F;assess.html" title="assess">
-			    <span>assess</span><span>(<div class="ml-4"><div><span>dir<span class="td-op">?</span></span>,</div><div><span>now<span class="td-op">?</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">Assessment</span>&gt;</span></span></a></div>
+			    <span>assess</span><span>(<div class="ml-4"><div><span>dir<span class="td-op">?</span></span>,</div><div><span>now<span class="td-op">?</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">Assessment</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Compare the secrets folder with the ledger's last backup record (spec 056:
+the record counts, wherever the ZIP is kept). Amber when anything is
+unbacked or removed; red when a change is more than 7 days old, or host
+identity keys have never been backed up.</p>
+</div></div></div>
     </div><div id="namespace_checklastbackup" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;vault&#x2F;state.ts&#x2F;~&#x2F;checkLastBackup.html" title="checkLastBackup">
@@ -136,7 +140,8 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_assess" cla
     </div><div id="namespace_exists" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;fsx.ts&#x2F;~&#x2F;exists.html" title="exists">
-			    <span>exists</span><span>(<span><span>path<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">boolean</span>&gt;</span></span></a></div>
+			    <span>exists</span><span>(<span><span>path<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">boolean</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Whether something is at <code>path</code> (a file, folder, or link; a broken link counts). Other errors are thrown.</p>
+</div></div></div>
     </div><div id="namespace_livesecrets" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;vault&#x2F;state.ts&#x2F;~&#x2F;liveSecrets.html" title="liveSecrets">
@@ -150,15 +155,18 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_assess" cla
     </div><div id="namespace_readtextor" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;fsx.ts&#x2F;~&#x2F;readTextOr.html" title="readTextOr">
-			    <span>readTextOr</span><span>(<div class="ml-4"><div><span>path<span>: <span class="td-kw">string</span></span></span>,</div><div><span>fallback<span class="td-op">?</span><span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span></div></div>)</span></a></div>
+			    <span>readTextOr</span><span>(<div class="ml-4"><div><span>path<span>: <span class="td-kw">string</span></span></span>,</div><div><span>fallback<span class="td-op">?</span><span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A text file's content, or <code>fallback</code> (default undefined) when it does not exist. Other errors are thrown.</p>
+</div></div></div>
     </div><div id="namespace_sha256" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;vault&#x2F;state.ts&#x2F;~&#x2F;sha256.html" title="sha256">
-			    <span>sha256</span><span>(<span><span>data<span>: <span class="td-ref">Uint8Array</span>&lt;<span class="td-ref">ArrayBuffer</span>&gt;</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">string</span>&gt;</span></span></a></div>
+			    <span>sha256</span><span>(<span><span>data<span>: <span class="td-ref">Uint8Array</span>&lt;<span class="td-ref">ArrayBuffer</span>&gt;</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">string</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>SHA-256 of some bytes, as lowercase hex.</p>
+</div></div></div>
     </div><div id="namespace_writepromptstatus" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;vault&#x2F;state.ts&#x2F;~&#x2F;writePromptStatus.html" title="writePromptStatus">
-			    <span>writePromptStatus</span><span>(<span><span>a<span>: <span class="td-ref">Assessment</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">void</span>&gt;</span></span></a></div>
+			    <span>writePromptStatus</span><span>(<span><span>a<span>: <span class="td-ref">Assessment</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">void</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Write the prompt's vault token from an assessment. Best effort: errors are ignored.</p>
+</div></div></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;vault&#x2F;state_ts_interfaces"><div>
@@ -187,12 +195,14 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_assess" cla
 Interfaces</h2></div><div class="namespaceSection"><div id="namespace_assessment" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;vault&#x2F;state.ts&#x2F;~&#x2F;Assessment.html" title="Assessment">
-			    <span>Assessment</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>Assessment</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The vault's state: every secret, what the last backup lacks, and how urgent that is.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;vault&#x2F;state.ts&#x2F;~&#x2F;Assessment.html#property_backupcheck">
                   <span>backupCheck</span><span>: <span class="td-ref">BackupCheck</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Whether a backup is recorded, and whether its ZIP is still in the backup folder.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;vault&#x2F;state.ts&#x2F;~&#x2F;Assessment.html#property_items">
-                  <span>items</span><span>: <span class="td-ref">Array</span>&lt;<span><span class="td-ref">LiveSecret</span><span class="td-op"> & </span>{ backedUp<span>: <span class="td-kw">boolean</span></span>;  }</span>&gt;</span></a></li><li>
+                  <span>items</span><span>: <span class="td-ref">Array</span>&lt;<span><span class="td-ref">LiveSecret</span><span class="td-op"> & </span>{ backedUp<span>: <span class="td-kw">boolean</span></span>;  }</span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Every secret, with whether the last recorded backup holds it as it is now.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;vault&#x2F;state.ts&#x2F;~&#x2F;Assessment.html#property_lastbackup">
                   <span>lastBackup</span><span>: <span class="td-ref">Ledger</span>[<span class="td-str">"lastBackup"</span>]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The last backup recorded.</p>
 </div></div></li><li>
@@ -222,20 +232,26 @@ whether the ZIP is still in the backup folder (not yet moved somewhere safe).</p
     </div><div id="namespace_livesecret" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;vault&#x2F;state.ts&#x2F;~&#x2F;LiveSecret.html" title="LiveSecret">
-			    <span>LiveSecret</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>LiveSecret</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One secret file as it is now on the boot machine (no value: only its name, size and digest).</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;vault&#x2F;state.ts&#x2F;~&#x2F;LiveSecret.html#property_changedat">
-                  <span>changedAt</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>changedAt</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When it last changed (ISO 8601): the ledger's record, else the file's mtime.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;vault&#x2F;state.ts&#x2F;~&#x2F;LiveSecret.html#property_name">
                   <span>name</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Path inside the secrets folder, forward slashes.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;vault&#x2F;state.ts&#x2F;~&#x2F;LiveSecret.html#property_path">
-                  <span>path</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>path</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its full path on this machine.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;vault&#x2F;state.ts&#x2F;~&#x2F;LiveSecret.html#property_ref">
-                  <span>ref</span><span>: <span class="td-ref">SecretRef</span></span></a></li><li>
+                  <span>ref</span><span>: <span class="td-ref">SecretRef</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its inventory entry, when the inventory knows the path.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;vault&#x2F;state.ts&#x2F;~&#x2F;LiveSecret.html#property_sha256">
-                  <span>sha256</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>sha256</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>SHA-256 of its contents, hex.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;vault&#x2F;state.ts&#x2F;~&#x2F;LiveSecret.html#property_size">
-                  <span>size</span><span>: <span class="td-kw">number</span></span></a></li></ul></div>
+                  <span>size</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its size in bytes.</p>
+</div></div></li></ul></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;vault&#x2F;state_ts_variables"><div>
@@ -264,12 +280,13 @@ whether the ZIP is still in the backup folder (not yet moved somewhere safe).</p
 Variables</h2></div><div class="namespaceSection"><div id="namespace_prompt_status" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;vault&#x2F;state.ts&#x2F;~&#x2F;PROMPT_STATUS.html" title="PROMPT_STATUS">
-			    <span>PROMPT_STATUS</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The prompt's vault token (spec 011): &quot;🔐 backup&quot; while anything is unbacked, else empty.</p>
+			    <span>PROMPT_STATUS</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The prompt's vault token (spec 011): &quot;🔐 backup&quot; while anything is unbacked, else empty.</p>
 </div></div></div>
     </div><div id="namespace_vault_local" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;secret-ledger.ts&#x2F;~&#x2F;VAULT_LOCAL.html" title="VAULT_LOCAL">
-			    <span>VAULT_LOCAL</span></a></div>
+			    <span>VAULT_LOCAL</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The vault's local folder on the boot machine (holds the ledger; no secret).</p>
+</div></div></div>
     </div></div>
 </section>
 </div>
@@ -343,7 +360,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_prompt_stat
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1132 symbols</span><svg
+              <span class="leading-none">view all 1135 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

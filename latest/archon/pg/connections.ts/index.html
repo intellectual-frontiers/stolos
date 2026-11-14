@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/pg/connections.ts - Stolos v0.30.0 documentation</title>
+  <title>archon/pg/connections.ts - Stolos v0.31.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.30.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -133,7 +133,8 @@ service file is dropped as it is read. Only whether one is there is kept.</p>
 Classes</h2></div><div class="namespaceSection"><div id="namespace_usageerror" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Class bg-Class/15 dark:text-ClassDark dark:bg-ClassDark/15" title="Class">c</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;UsageError.html" title="UsageError">
-			    <span>UsageError</span></a></div>
+			    <span>UsageError</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A command line the user got wrong (for example an unknown form).</p>
+</div></div></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;pg&#x2F;connections_ts_functions"><div>
@@ -162,11 +163,15 @@ Classes</h2></div><div class="namespaceSection"><div id="namespace_usageerror" c
 Functions</h2></div><div class="namespaceSection"><div id="namespace_connectionsreport" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;connectionsReport.html" title="connectionsReport">
-			    <span>connectionsReport</span><span>(<span><span>input<span>: <span class="td-ref">ConnectionsInput</span></span></span></span>)<span>: <span class="td-ref">ConnectionsReport</span></span></span></a></div>
+			    <span>connectionsReport</span><span>(<span><span>input<span>: <span class="td-ref">ConnectionsInput</span></span></span></span>)<span>: <span class="td-ref">ConnectionsReport</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Match the password file against the service files as libpq would, and say
+what is wrong: a file libpq ignores, a password in a service file, network
+TLS that is not verify-full, an entry no service uses. Pure: no I/O.</p>
+</div></div></div>
     </div><div id="namespace_entryserves" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;entryServes.html" title="entryServes">
-			    <span>entryServes</span><span>(<div class="ml-4"><div><span>e<span>: <span class="td-ref">PgpassEntry</span></span></span>,</div><div><span>key<span>: <span class="td-ref">ReturnType</span>&lt;<span class="td-ref">lookupKey</span>&gt;</span></span></div></div>)<span>: <span class="td-kw">boolean</span></span></span></a></div>
+			    <span>entryServes</span><span>(<div class="ml-4"><div><span>e<span>: <span class="td-ref">PgpassEntry</span></span></span>,</div><div><span>key<span>: <span class="td-ref">ReturnType</span>&lt;<span class="td-ref">lookupKey</span>&gt;</span></span></div></div>)<span>: <span class="td-kw">boolean</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Whether a password-file entry matches a lookup key, as libpq matches it (&quot;*&quot; matches any).</p>
+</div></div></div>
     </div><div id="namespace_explainfailure" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;explainFailure.html" title="explainFailure">
@@ -192,23 +197,32 @@ learns a Linux password only when it is typed on the server (PAM, spec 039).</p>
     </div><div id="namespace_parseform" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;parseForm.html" title="parseForm">
-			    <span>parseForm</span><span>(<span><span>form<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span></span>)<span>: <span class="td-ref">Form</span></span></span></a></div>
+			    <span>parseForm</span><span>(<span><span>form<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span></span>)<span>: <span class="td-ref">Form</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The form a --form value names (conninfo when absent); throws <a href="../../.././archon/pg/connections.ts/~/UsageError.html">UsageError</a> for an unknown one.</p>
+</div></div></div>
     </div><div id="namespace_parsepgpass" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;parsePgpass.html" title="parsePgpass">
-			    <span>parsePgpass</span><span>(<span><span>text<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">PgpassEntry</span>[]</span></span></a></div>
+			    <span>parsePgpass</span><span>(<span><span>text<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">PgpassEntry</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Parse a password file into its entries, skipping blank lines and comments.
+A malformed line keeps only its line number and why: none of its fields.</p>
+</div></div></div>
     </div><div id="namespace_parseservicefile" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;parseServiceFile.html" title="parseServiceFile">
-			    <span>parseServiceFile</span><span>(<div class="ml-4"><div><span>text<span>: <span class="td-kw">string</span></span></span>,</div><div><span>file<span>: <span class="td-kw">string</span></span></span>,</div><div><span>source<span>: <span class="td-ref">ServiceSection</span>[<span class="td-str">"source"</span>]</span></span></div></div>)<span>: <span class="td-ref">ServiceSection</span>[]</span></span></a></div>
+			    <span>parseServiceFile</span><span>(<div class="ml-4"><div><span>text<span>: <span class="td-kw">string</span></span></span>,</div><div><span>file<span>: <span class="td-kw">string</span></span></span>,</div><div><span>source<span>: <span class="td-ref">ServiceSection</span>[<span class="td-str">"source"</span>]</span></span></div></div>)<span>: <span class="td-ref">ServiceSection</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Parse a service file into its sections (keys lowercased, comments skipped).
+A <code>password</code> key is dropped as it is read; only that it was there is kept.</p>
+</div></div></div>
     </div><div id="namespace_pgconnections" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;pgConnections.html" title="pgConnections">
-			    <span>pgConnections</span><span>(<span><span>json<span>: <span class="td-kw">boolean</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a></div>
+			    <span>pgConnections</span><span>(<span><span>json<span>: <span class="td-kw">boolean</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon pg connections</code>: print this account's report, as text or JSON; returns the exit code.</p>
+</div></div></div>
     </div><div id="namespace_pgshow" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;pgShow.html" title="pgShow">
-			    <span>pgShow</span><span>(<div class="ml-4"><div><span>hostName<span>: <span class="td-kw">string</span></span></span>,</div><div><span>name<span>: <span class="td-kw">string</span></span></span>,</div><div><span>form<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span>,</div><div><span>remote<span>: <span class="td-kw">boolean</span></span></span>,</div><div><span>json<span>: <span class="td-kw">boolean</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a></div>
+			    <span>pgShow</span><span>(<div class="ml-4"><div><span>hostName<span>: <span class="td-kw">string</span></span></span>,</div><div><span>name<span>: <span class="td-kw">string</span></span></span>,</div><div><span>form<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span>,</div><div><span>remote<span>: <span class="td-kw">boolean</span></span></span>,</div><div><span>json<span>: <span class="td-kw">boolean</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon pg show NAME</code>: how to reach an instance, in one form. Prints the text
+(or JSON) and returns the exit code: 0 on success, 1 when NAME cannot be
+shown that way, 2 for an unknown form.</p>
+</div></div></div>
     </div><div id="namespace_pgtest" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;pgTest.html" title="pgTest">
@@ -230,7 +244,8 @@ through a private, temporary password file that is removed at once.</p>
     </div><div id="namespace_renderconnections" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;renderConnections.html" title="renderConnections">
-			    <span>renderConnections</span><span>(<span><span>r<span>: <span class="td-ref">ConnectionsReport</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a></div>
+			    <span>renderConnections</span><span>(<span><span>r<span>: <span class="td-ref">ConnectionsReport</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The report as text for the terminal (<code>archon pg connections</code>).</p>
+</div></div></div>
     </div><div id="namespace_renderexternal" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;renderExternal.html" title="renderExternal">
@@ -290,37 +305,48 @@ leaves this function.</p>
 Interfaces</h2></div><div class="namespaceSection"><div id="namespace_connectionsinput" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;ConnectionsInput.html" title="ConnectionsInput">
-			    <span>ConnectionsInput</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>ConnectionsInput</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What <a href="../../.././archon/pg/connections.ts/~/connectionsReport.html">connectionsReport</a> reads: the account and its files, already loaded (text absent when missing).</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;ConnectionsInput.html#property_me">
-                  <span>me</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>me</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The account asking: libpq's default user.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;ConnectionsInput.html#property_pgpass">
-                  <span>pgpass</span><span>: { path<span>: <span class="td-kw">string</span></span>; text<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; mode<span class="td-op">?</span><span>: <span class="td-kw">number</span></span>; isFile<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>;  }</span></a></li><li>
+                  <span>pgpass</span><span>: { path<span>: <span class="td-kw">string</span></span>; text<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; mode<span class="td-op">?</span><span>: <span class="td-kw">number</span></span>; isFile<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The password file: its path, text, mode bits, and whether it is a plain file.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;ConnectionsInput.html#property_servicefiles">
-                  <span>serviceFiles</span><span>: <span class="td-ref">Array</span>&lt;<div class="ml-indent"><div>{ path<span>: <span class="td-kw">string</span></span>; source<span>: <span class="td-ref">ServiceSection</span>[<span class="td-str">"source"</span>]</span>; text<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</div></div>&gt;</span></a></li></ul></div>
+                  <span>serviceFiles</span><span>: <span class="td-ref">Array</span>&lt;<div class="ml-indent"><div>{ path<span>: <span class="td-kw">string</span></span>; source<span>: <span class="td-ref">ServiceSection</span>[<span class="td-str">"source"</span>]</span>; text<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</div></div>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The user's and the system's service files, in the order libpq reads them.</p>
+</div></div></li></ul></div>
     </div><div id="namespace_connectionsreport-1" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;ConnectionsReport.html" title="ConnectionsReport">
-			    <span>ConnectionsReport</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>ConnectionsReport</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What <code>archon pg connections</code> reports: the password file, the service files, and how they match.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;ConnectionsReport.html#property_entries">
-                  <span>entries</span><span>: <span class="td-ref">Array</span>&lt;<div class="ml-indent"><div>{ line<span>: <span class="td-kw">number</span></span>; host<span>: <span class="td-kw">string</span></span>; port<span>: <span class="td-kw">string</span></span>; database<span>: <span class="td-kw">string</span></span>; user<span>: <span class="td-kw">string</span></span>; services<span>: <span class="td-kw">string</span>[]</span>; usable<span>: <span class="td-kw">boolean</span></span>; problems<span>: <span class="td-kw">string</span>[]</span>;  }</div></div>&gt;</span></a></li><li>
+                  <span>entries</span><span>: <span class="td-ref">Array</span>&lt;<div class="ml-indent"><div>{ line<span>: <span class="td-kw">number</span></span>; host<span>: <span class="td-kw">string</span></span>; port<span>: <span class="td-kw">string</span></span>; database<span>: <span class="td-kw">string</span></span>; user<span>: <span class="td-kw">string</span></span>; services<span>: <span class="td-kw">string</span>[]</span>; usable<span>: <span class="td-kw">boolean</span></span>; problems<span>: <span class="td-kw">string</span>[]</span>;  }</div></div>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Each password-file entry, the services it serves, and its problems.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;ConnectionsReport.html#property_passwordfile">
-                  <span>passwordFile</span><span>: { path<span>: <span class="td-kw">string</span></span>; exists<span>: <span class="td-kw">boolean</span></span>; mode<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">null</span></span></span>; usable<span>: <span class="td-kw">boolean</span></span>; problem<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">null</span></span></span>;  }</span></a></li><li>
+                  <span>passwordFile</span><span>: { path<span>: <span class="td-kw">string</span></span>; exists<span>: <span class="td-kw">boolean</span></span>; mode<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">null</span></span></span>; usable<span>: <span class="td-kw">boolean</span></span>; problem<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">null</span></span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The password file: where it is, its mode, and whether libpq would use it.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;ConnectionsReport.html#property_servicefiles">
-                  <span>serviceFiles</span><span>: <span class="td-ref">Array</span>&lt;<div class="ml-indent"><div>{ path<span>: <span class="td-kw">string</span></span>; source<span>: <span class="td-ref">ServiceSection</span>[<span class="td-str">"source"</span>]</span>; exists<span>: <span class="td-kw">boolean</span></span>;  }</div></div>&gt;</span></a></li><li>
+                  <span>serviceFiles</span><span>: <span class="td-ref">Array</span>&lt;<div class="ml-indent"><div>{ path<span>: <span class="td-kw">string</span></span>; source<span>: <span class="td-ref">ServiceSection</span>[<span class="td-str">"source"</span>]</span>; exists<span>: <span class="td-kw">boolean</span></span>;  }</div></div>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The service files libpq reads, and whether each exists.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;ConnectionsReport.html#property_services">
-                  <span>services</span><span>: <span class="td-ref">Array</span>&lt;<div class="ml-indent"><div>{ name<span>: <span class="td-kw">string</span></span>; file<span>: <span class="td-kw">string</span></span>; source<span>: <span class="td-ref">ServiceSection</span>[<span class="td-str">"source"</span>]</span>; host<span>: <span class="td-kw">string</span></span>; port<span>: <span class="td-kw">string</span></span>; database<span>: <span class="td-kw">string</span></span>; user<span>: <span class="td-kw">string</span></span>; sslmode<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">null</span></span></span>; passwordEntry<span>: <span><span class="td-kw">number</span><span class="td-op"> | </span><span class="td-kw">null</span></span></span>; problems<span>: <span class="td-kw">string</span>[]</span>;  }</div></div>&gt;</span></a></li></ul></div>
+                  <span>services</span><span>: <span class="td-ref">Array</span>&lt;<div class="ml-indent"><div>{ name<span>: <span class="td-kw">string</span></span>; file<span>: <span class="td-kw">string</span></span>; source<span>: <span class="td-ref">ServiceSection</span>[<span class="td-str">"source"</span>]</span>; host<span>: <span class="td-kw">string</span></span>; port<span>: <span class="td-kw">string</span></span>; database<span>: <span class="td-kw">string</span></span>; user<span>: <span class="td-kw">string</span></span>; sslmode<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">null</span></span></span>; passwordEntry<span>: <span><span class="td-kw">number</span><span class="td-op"> | </span><span class="td-kw">null</span></span></span>; problems<span>: <span class="td-kw">string</span>[]</span>;  }</div></div>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Each service section in effect (a user's section hides a system one of the same name).</p>
+</div></div></li></ul></div>
     </div><div id="namespace_pgpassentry" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;PgpassEntry.html" title="PgpassEntry">
 			    <span>PgpassEntry</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One password-file line, without its password.</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;PgpassEntry.html#property_database">
-                  <span>database</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>database</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The database field, as written (&quot;*&quot; matches any); empty when malformed.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;PgpassEntry.html#property_haspassword">
                   <span>hasPassword</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Whether the line has a fifth field (libpq's password); never the field itself.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;PgpassEntry.html#property_host">
-                  <span>host</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>host</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The host field, as written (&quot;*&quot; matches any); empty when malformed.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;PgpassEntry.html#property_line">
                   <span>line</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>1-based line number in the file.</p>
 </div></div></li><li>
@@ -328,26 +354,31 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_connection
                   <span>malformed</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Why libpq cannot use the line (it has fewer than five fields).</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;PgpassEntry.html#property_port">
-                  <span>port</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>port</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The port field, as written (&quot;*&quot; matches any); empty when malformed.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;PgpassEntry.html#property_user">
-                  <span>user</span><span>: <span class="td-kw">string</span></span></a></li></ul></div>
+                  <span>user</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The user field, as written (&quot;*&quot; matches any); empty when malformed.</p>
+</div></div></li></ul></div>
     </div><div id="namespace_servicesection" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;ServiceSection.html" title="ServiceSection">
 			    <span>ServiceSection</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One service-file section, without any password.</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;ServiceSection.html#property_file">
-                  <span>file</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>file</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The service file it was read from.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;ServiceSection.html#property_hadpassword">
                   <span>hadPassword</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The section holds a password (it belongs in the password file instead).</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;ServiceSection.html#property_name">
-                  <span>name</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>name</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The service name: the text between the brackets.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;ServiceSection.html#property_params">
                   <span>params</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Connection parameters, <code>password</code> removed.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;ServiceSection.html#property_source">
-                  <span>source</span><span>: <span><span class="td-str">"user"</span><span class="td-op"> | </span><span class="td-str">"system"</span></span></span></a></li></ul></div>
+                  <span>source</span><span>: <span><span class="td-str">"user"</span><span class="td-op"> | </span><span class="td-str">"system"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The account's own service file, or the system-wide one.</p>
+</div></div></li></ul></div>
     </div><div id="namespace_target" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;Target.html" title="Target">
@@ -357,9 +388,11 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_connection
                   <span>address</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The server's IP address, for a client without DNS for the name (libpq's hostaddr).</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;Target.html#property_database">
-                  <span>database</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>database</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The database to connect to (the role's default).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;Target.html#property_host">
-                  <span>host</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>host</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The socket directory, or a host name for a network connection.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;Target.html#property_kind">
                   <span>kind</span><span>: <span><span class="td-str">"human"</span><span class="td-op"> | </span><span class="td-str">"service"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A person (their Linux password) or a service account (its generated password).</p>
 </div></div></li><li>
@@ -367,17 +400,20 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_connection
                   <span>localOnly</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Published for the local networks only.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;Target.html#property_name">
-                  <span>name</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>name</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The instance's, cluster's, or service's name.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;Target.html#property_network">
                   <span>network</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Over a network: verify-full against the system's roots.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;Target.html#property_port">
-                  <span>port</span><span>: <span class="td-kw">number</span></span></a></li><li>
+                  <span>port</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The port it listens on.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;Target.html#property_server">
                   <span>server</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The server it runs on (for the PAM reminder).</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;Target.html#property_user">
-                  <span>user</span><span>: <span class="td-kw">string</span></span></a></li></ul></div>
+                  <span>user</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The role to connect as.</p>
+</div></div></li></ul></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;pg&#x2F;connections_ts_type-aliases"><div>
@@ -406,7 +442,8 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_connection
 Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_form" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;Form.html" title="Form">
-			    <span>Form</span><span> = <span class="td-ref">FORMS</span>[<span class="td-kw">number</span>]</span></a></div>
+			    <span>Form</span><span> = <span class="td-ref">FORMS</span>[<span class="td-kw">number</span>]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One of <a href="../../.././archon/pg/connections.ts/~/FORMS.html">FORMS</a>.</p>
+</div></div></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;pg&#x2F;connections_ts_variables"><div>
@@ -435,7 +472,8 @@ Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_form" cl
 Variables</h2></div><div class="namespaceSection"><div id="namespace_forms" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;FORMS.html" title="FORMS">
-			    <span>FORMS</span><span>: <div class="ml-indent"><span><span class="td-str">"conninfo"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"url"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"env"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"service"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"jdbc"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"npgsql"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"odbc"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"dotenv"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"pgadmin"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"ca"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"external"</span></span></div>[]</span></a></div>
+			    <span>FORMS</span><span>: <div class="ml-indent"><span><span class="td-str">"conninfo"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"url"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"env"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"service"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"jdbc"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"npgsql"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"odbc"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"dotenv"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"pgadmin"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"ca"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"external"</span></span></div>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The forms <code>archon pg show --form</code> accepts (conninfo is the default).</p>
+</div></div></div>
     </div><div id="namespace_libpq" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;connections.ts&#x2F;~&#x2F;LIBPQ.html" title="LIBPQ">
@@ -529,7 +567,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_forms" clas
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1132 symbols</span><svg
+              <span class="leading-none">view all 1135 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

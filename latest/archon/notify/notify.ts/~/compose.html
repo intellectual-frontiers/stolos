@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>compose - archon/notify/notify.ts - Stolos v0.30.0 documentation</title>
+  <title>compose - archon/notify/notify.ts - Stolos v0.31.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;notify&#x2F;notify.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.30.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -166,7 +166,11 @@
 </svg>
 </a>
 <span class="font-bold">compose</span><span class="font-medium">(<div class="ml-4"><div><span>site<span>: <a href="../../../.././archon/notify/notify.ts/~/Site.html" class="link td-ref">Site</a></span></span>,</div><div><span>ev<span>: <a href="../../../.././archon/notify/notify.ts/~/Event.html" class="link td-ref">Event</a></span></span>,</div><div><span>exact<span class="td-op">?</span><span>: <span class="td-kw">string</span>[]</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<a href="../../../.././archon/notify/notify.ts/~/Queued.html" class="link td-ref">Queued</a>&gt;</span> </span>
-      </code><div class="space-y-7" id=""><section class="section"  id="parameters"><div>
+      </code><div class="space-y-7" id=""><div class="markdown"><p>Build the message for an event: subject, plain text and HTML, all redacted
+(known secret shapes and the <code>exact</code> strings). With <code>ev.subject</code> the body is
+<code>ev.what</code> as given; otherwise a report with host, time, Archon commit, what
+happened and what to do.</p>
+</div><section class="section"  id="parameters"><div>
       <h2 class="anchorable mb-1"><a href="#parameters" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
   height="16"

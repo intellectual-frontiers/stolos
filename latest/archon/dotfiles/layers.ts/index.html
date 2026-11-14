@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/dotfiles/layers.ts - Stolos v0.30.0 documentation</title>
+  <title>archon/dotfiles/layers.ts - Stolos v0.31.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.30.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -132,7 +132,8 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_compose" cl
     </div><div id="namespace_composeddir" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;dotfiles&#x2F;layers.ts&#x2F;~&#x2F;composedDir.html" title="composedDir">
-			    <span>composedDir</span><span>(<span><span>user<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a></div>
+			    <span>composedDir</span><span>(<span><span>user<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The composed source directory for a user, under <code>COMPOSED_ROOT</code>.</p>
+</div></div></div>
     </div><div id="namespace_composedentries" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;dotfiles&#x2F;layers.ts&#x2F;~&#x2F;composedEntries.html" title="composedEntries">
@@ -149,7 +150,8 @@ chezmoi elsewhere.</p>
     </div><div id="namespace_layersfor" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;dotfiles&#x2F;layers.ts&#x2F;~&#x2F;layersFor.html" title="layersFor">
-			    <span>layersFor</span><span>(<div class="ml-4"><div><span>host<span>: <span class="td-kw">string</span></span></span>,</div><div><span>user<span>: <span class="td-kw">string</span></span></span>,</div><div><span>fleet<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Layer</span>[]</span></span></a></div>
+			    <span>layersFor</span><span>(<div class="ml-4"><div><span>host<span>: <span class="td-kw">string</span></span></span>,</div><div><span>user<span>: <span class="td-kw">string</span></span></span>,</div><div><span>fleet<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Layer</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The five layers for one user on one host in a fleet, most general first.</p>
+</div></div></div>
     </div><div id="namespace_straylayers" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;dotfiles&#x2F;layers.ts&#x2F;~&#x2F;strayLayers.html" title="strayLayers">
@@ -193,12 +195,14 @@ chezmoi elsewhere.</p>
 Interfaces</h2></div><div class="namespaceSection"><div id="namespace_composedfile" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;dotfiles&#x2F;layers.ts&#x2F;~&#x2F;ComposedFile.html" title="ComposedFile">
-			    <span>ComposedFile</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>ComposedFile</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One file of the composed source, from the most specific layer that has its target.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;dotfiles&#x2F;layers.ts&#x2F;~&#x2F;ComposedFile.html#property_from">
                   <span>from</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Repository-relative path it comes from.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;dotfiles&#x2F;layers.ts&#x2F;~&#x2F;ComposedFile.html#property_layer">
-                  <span>layer</span><span>: <span class="td-ref">Layer</span></span></a></li><li>
+                  <span>layer</span><span>: <span class="td-ref">Layer</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The layer it comes from.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;dotfiles&#x2F;layers.ts&#x2F;~&#x2F;ComposedFile.html#property_source">
                   <span>source</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Path in the composed source.</p>
 </div></div></li><li>
@@ -208,28 +212,34 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_composedfi
     </div><div id="namespace_composition" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;dotfiles&#x2F;layers.ts&#x2F;~&#x2F;Composition.html" title="Composition">
-			    <span>Composition</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>Composition</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A user's composed dotfiles source, with any problems found on the way.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;dotfiles&#x2F;layers.ts&#x2F;~&#x2F;Composition.html#property_concatenated">
                   <span>concatenated</span><span>: <span class="td-ref">Map</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Concatenated special files (.chezmoiignore, .chezmoiremove) and their text.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;dotfiles&#x2F;layers.ts&#x2F;~&#x2F;Composition.html#property_files">
-                  <span>files</span><span>: <span class="td-ref">ComposedFile</span>[]</span></a></li><li>
+                  <span>files</span><span>: <span class="td-ref">ComposedFile</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The files that won, sorted by source path.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;dotfiles&#x2F;layers.ts&#x2F;~&#x2F;Composition.html#property_layers">
-                  <span>layers</span><span>: <span class="td-ref">Layer</span>[]</span></a></li><li>
+                  <span>layers</span><span>: <span class="td-ref">Layer</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Every layer considered, most general first.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;dotfiles&#x2F;layers.ts&#x2F;~&#x2F;Composition.html#property_present">
                   <span>present</span><span>: <span class="td-ref">Layer</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Layers that exist (have at least one file).</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;dotfiles&#x2F;layers.ts&#x2F;~&#x2F;Composition.html#property_problems">
-                  <span>problems</span><span>: <span class="td-kw">string</span>[]</span></a></li></ul></div>
+                  <span>problems</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Files left out and why (forbidden kinds, two sources for one target in a layer).</p>
+</div></div></li></ul></div>
     </div><div id="namespace_layer" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;dotfiles&#x2F;layers.ts&#x2F;~&#x2F;Layer.html" title="Layer">
-			    <span>Layer</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>Layer</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One layer of a user's dotfiles.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;dotfiles&#x2F;layers.ts&#x2F;~&#x2F;Layer.html#property_dir">
                   <span>dir</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Repository-relative directory (forward slashes).</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;dotfiles&#x2F;layers.ts&#x2F;~&#x2F;Layer.html#property_kind">
-                  <span>kind</span><span>: <span class="td-ref">LayerKind</span></span></a></li></ul></div>
+                  <span>kind</span><span>: <span class="td-ref">LayerKind</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Which layer it is.</p>
+</div></div></li></ul></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;dotfiles&#x2F;layers_ts_type-aliases"><div>
@@ -258,7 +268,8 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_composedfi
 Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_layerkind" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;dotfiles&#x2F;layers.ts&#x2F;~&#x2F;LayerKind.html" title="LayerKind">
-			    <span>LayerKind</span><span> = <span><span class="td-str">"engine"</span><span class="td-op"> | </span><span class="td-str">"fleet"</span><span class="td-op"> | </span><span class="td-str">"host"</span><span class="td-op"> | </span><span class="td-str">"user"</span><span class="td-op"> | </span><span class="td-str">"host-user"</span></span></span></a></div>
+			    <span>LayerKind</span><span> = <span><span class="td-str">"engine"</span><span class="td-op"> | </span><span class="td-str">"fleet"</span><span class="td-op"> | </span><span class="td-str">"host"</span><span class="td-op"> | </span><span class="td-str">"user"</span><span class="td-op"> | </span><span class="td-str">"host-user"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Which layer it is, most general first: engine, fleet, host, user, host-user.</p>
+</div></div></div>
     </div><div id="namespace_layerreader" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;dotfiles&#x2F;layers.ts&#x2F;~&#x2F;LayerReader.html" title="LayerReader">
@@ -267,7 +278,8 @@ Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_layerkin
     </div><div id="namespace_textreader" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;dotfiles&#x2F;layers.ts&#x2F;~&#x2F;TextReader.html" title="TextReader">
-			    <span>TextReader</span><span> = (<span><span>repoRel<span>: <span class="td-kw">string</span></span></span></span>) =&gt; <span class="td-ref">Promise</span>&lt;<span class="td-kw">string</span>&gt;</span></a></div>
+			    <span>TextReader</span><span> = (<span><span>repoRel<span>: <span class="td-kw">string</span></span></span></span>) =&gt; <span class="td-ref">Promise</span>&lt;<span class="td-kw">string</span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Read one file's text, by repository-relative path.</p>
+</div></div></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;dotfiles&#x2F;layers_ts_variables"><div>
@@ -296,7 +308,8 @@ Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_layerkin
 Variables</h2></div><div class="namespaceSection"><div id="namespace_composed_root" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;dotfiles&#x2F;layers.ts&#x2F;~&#x2F;COMPOSED_ROOT.html" title="COMPOSED_ROOT">
-			    <span>COMPOSED_ROOT</span><span>: <span class="td-str">"/var/lib/archon-dotfiles"</span></span></a></div>
+			    <span>COMPOSED_ROOT</span><span>: <span class="td-str">"/var/lib/archon-dotfiles"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where <code>archon apply</code> writes each user's composed chezmoi source (one directory per user).</p>
+</div></div></div>
     </div><div id="namespace_engine_layer" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;dotfiles&#x2F;layers.ts&#x2F;~&#x2F;ENGINE_LAYER.html" title="ENGINE_LAYER">
@@ -375,7 +388,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_composed_ro
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1132 symbols</span><svg
+              <span class="leading-none">view all 1135 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

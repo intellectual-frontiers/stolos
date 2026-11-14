@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/core/status.ts - Stolos v0.30.0 documentation</title>
+  <title>archon/core/status.ts - Stolos v0.31.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.30.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -129,7 +129,8 @@ has local commits that are not on GitHub.</p>
 Functions</h2></div><div class="namespaceSection"><div id="namespace_promptline" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;status.ts&#x2F;~&#x2F;promptLine.html" title="promptLine">
-			    <span>promptLine</span><span>(<div class="ml-4"><div><span>s<span>: <span class="td-ref">RunStatus</span></span></span>,</div><div><span>push<span>: <span class="td-kw">boolean</span></span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a></div>
+			    <span>promptLine</span><span>(<div class="ml-4"><div><span>s<span>: <span class="td-ref">RunStatus</span></span></span>,</div><div><span>push<span>: <span class="td-kw">boolean</span></span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The prompt segment with Nerd Font glyphs: the result, deferred changes, and a push marker.</p>
+</div></div></div>
     </div><div id="namespace_promptlineplain" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;status.ts&#x2F;~&#x2F;promptLinePlain.html" title="promptLinePlain">
@@ -143,12 +144,14 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_promptline"
     </div><div id="namespace_writestatus" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;status.ts&#x2F;~&#x2F;writeStatus.html" title="writeStatus">
-			    <span>writeStatus</span><span>(<span><span>s<span>: <span class="td-ref">RunStatus</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">void</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Best effort: a host without /var/lib/archon (a workstation) has no segment.</p>
+			    <span>writeStatus</span><span>(<span><span>s<span>: <span class="td-ref">RunStatus</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">void</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Write the run's status: <code>last.json</code>, the plain line and the prompt line.
+Best effort: a host without /var/lib/archon (a workstation) has no segment.</p>
 </div></div></div>
     </div><div id="namespace_writeverify" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;status.ts&#x2F;~&#x2F;writeVerify.html" title="writeVerify">
-			    <span>writeVerify</span><span>(<span><span>v<span>: <span class="td-ref">LastVerify</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">void</span>&gt;</span></span></a></div>
+			    <span>writeVerify</span><span>(<span><span>v<span>: <span class="td-ref">LastVerify</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">void</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Save the last verify for the welcome page (<code>verify.json</code>). Best effort: errors are ignored.</p>
+</div></div></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;core&#x2F;status_ts_interfaces"><div>
@@ -180,34 +183,45 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_lastrun" c
 			    <span>LastRun</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The last run, as data (the welcome page reads it; the prompt reads the line).</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;status.ts&#x2F;~&#x2F;LastRun.html#property_at">
-                  <span>at</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>at</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When it was written (ISO 8601).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;status.ts&#x2F;~&#x2F;LastRun.html#property_push">
-                  <span>push</span><span>: <span class="td-kw">boolean</span></span></a></li></ul></div>
+                  <span>push</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Whether the checkout had local commits not on GitHub.</p>
+</div></div></li></ul></div>
     </div><div id="namespace_lastverify" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;status.ts&#x2F;~&#x2F;LastVerify.html" title="LastVerify">
 			    <span>LastVerify</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The last <code>archon verify</code> as root (spec 035): the welcome page's &quot;checks now&quot;.</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;status.ts&#x2F;~&#x2F;LastVerify.html#property_at">
-                  <span>at</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>at</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When it ran (ISO 8601).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;status.ts&#x2F;~&#x2F;LastVerify.html#property_failed">
-                  <span>failed</span><span>: <span class="td-kw">string</span>[]</span></a></li><li>
+                  <span>failed</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The resources whose checks failed.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;status.ts&#x2F;~&#x2F;LastVerify.html#property_passed">
-                  <span>passed</span><span>: <span class="td-kw">number</span></span></a></li><li>
+                  <span>passed</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How many checks passed.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;status.ts&#x2F;~&#x2F;LastVerify.html#property_total">
-                  <span>total</span><span>: <span class="td-kw">number</span></span></a></li></ul></div>
+                  <span>total</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How many checks ran.</p>
+</div></div></li></ul></div>
     </div><div id="namespace_runstatus" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;status.ts&#x2F;~&#x2F;RunStatus.html" title="RunStatus">
-			    <span>RunStatus</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>RunStatus</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How an archon command's run went, as the prompt shows it.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;status.ts&#x2F;~&#x2F;RunStatus.html#property_command">
-                  <span>command</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>command</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The command that ran (<code>&quot;update&quot;</code>, <code>&quot;apply&quot;</code>).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;status.ts&#x2F;~&#x2F;RunStatus.html#property_deferred">
-                  <span>deferred</span><span>: <span class="td-kw">number</span></span></a></li><li>
+                  <span>deferred</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How many disruptive changes wait for approval.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;status.ts&#x2F;~&#x2F;RunStatus.html#property_failures">
-                  <span>failures</span><span>: <span class="td-kw">number</span></span></a></li><li>
+                  <span>failures</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How many steps failed.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;status.ts&#x2F;~&#x2F;RunStatus.html#property_warnings">
-                  <span>warnings</span><span>: <span class="td-kw">number</span></span></a></li></ul></div>
+                  <span>warnings</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How many steps warned.</p>
+</div></div></li></ul></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;core&#x2F;status_ts_variables"><div>
@@ -236,7 +250,8 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_lastrun" c
 Variables</h2></div><div class="namespaceSection"><div id="namespace_status_dir" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;status.ts&#x2F;~&#x2F;STATUS_DIR.html" title="STATUS_DIR">
-			    <span>STATUS_DIR</span><span>: <span class="td-str">"/var/lib/archon/status"</span></span></a></div>
+			    <span>STATUS_DIR</span><span>: <span class="td-str">"/var/lib/archon/status"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where the status files live: <code>prompt</code>, <code>prompt-plain</code>, <code>last.json</code> and <code>verify.json</code>.</p>
+</div></div></div>
     </div></div>
 </section>
 </div>
@@ -310,7 +325,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_status_dir"
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1132 symbols</span><svg
+              <span class="leading-none">view all 1135 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

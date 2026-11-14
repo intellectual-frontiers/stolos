@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/tools/sync.ts - Stolos v0.30.0 documentation</title>
+  <title>archon/tools/sync.ts - Stolos v0.31.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.30.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -149,15 +149,25 @@ an hour per IP address, which one bootstrap behind a shared NAT can exhaust
     </div><div id="namespace_latestrelease" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;tools&#x2F;sync.ts&#x2F;~&#x2F;latestRelease.html" title="latestRelease">
-			    <span>latestRelease</span><span>(<div class="ml-4"><div><span>repo<span>: <span class="td-kw">string</span></span></span>,</div><div><span>tagPrefix<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">Release</span>&gt;</span></span></a></div>
+			    <span>latestRelease</span><span>(<div class="ml-4"><div><span>repo<span>: <span class="td-kw">string</span></span></span>,</div><div><span>tagPrefix<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">Release</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The latest stable release of a GitHub repository (<code>owner/name</code>), read from
+the releases API (or the mirror in <code>ARCHON_GITHUB_API</code>). <code>tagPrefix</code> is cut
+from the tag to give the version. Throws on an HTTP error or a pre-release.</p>
+</div></div></div>
     </div><div id="namespace_listtools" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;tools&#x2F;sync.ts&#x2F;~&#x2F;listTools.html" title="listTools">
-			    <span>listTools</span><span>(<div class="ml-4"><div><span>host<span>: <span class="td-ref">HostDef</span></span></span>,</div><div><span>opts<span>: { latest<span>: <span class="td-kw">boolean</span></span>;  }</span></span></div></div>)</span></a></div>
+			    <span>listTools</span><span>(<div class="ml-4"><div><span>host<span>: <span class="td-ref">HostDef</span></span></span>,</div><div><span>opts<span>: { latest<span>: <span class="td-kw">boolean</span></span>;  }</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<div class="ml-indent"><div><span class="td-ref">Array</span>&lt;<div class="ml-indent"><div>{ id<span>: <span class="td-kw">string</span></span>; source<span>: <span class="td-kw">string</span></span>; installed<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; latest<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</div></div>&gt;</div></div>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Each tool in the host's plan with its installed
+version and, when <code>latest</code> is set, the latest GitHub release (upstream
+tools only; a lookup error is shown in place of the version).</p>
+</div></div></div>
     </div><div id="namespace_synctools" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;tools&#x2F;sync.ts&#x2F;~&#x2F;syncTools.html" title="syncTools">
-			    <span>syncTools</span><span>(<div class="ml-4"><div><span>host<span>: <span class="td-ref">HostDef</span></span></span>,</div><div><span>opts<span>: { reportOnly<span>: <span class="td-kw">boolean</span></span>;  }</span></span></div></div>)</span></a></div>
+			    <span>syncTools</span><span>(<div class="ml-4"><div><span>host<span>: <span class="td-ref">HostDef</span></span></span>,</div><div><span>opts<span>: { reportOnly<span>: <span class="td-kw">boolean</span></span>;  }</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;{ rows<span>: <span class="td-ref">ToolStatus</span>[]</span>; report<span>: <span class="td-kw">string</span></span>; failed<span>: <span class="td-kw">boolean</span></span>;  }&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon tools sync</code>: bring every tool in the host's plan up to date (or,
+with <code>reportOnly</code>, only report what would change). As root, it also writes
+the week's Markdown report under the state directory's <code>reports/</code> and logs
+a summary to the journal. Must run as root unless <code>reportOnly</code>.</p>
+</div></div></div>
     </div><div id="namespace_toolsummary" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;tools&#x2F;sync.ts&#x2F;~&#x2F;toolSummary.html" title="toolSummary">
@@ -193,24 +203,46 @@ an hour per IP address, which one bootstrap behind a shared NAT can exhaust
   </defs>
 </svg>
 </a>
-Interfaces</h2></div><div class="namespaceSection"><div id="namespace_toolstatus" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+Interfaces</h2></div><div class="namespaceSection"><div id="namespace_release" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;tools&#x2F;sync.ts&#x2F;~&#x2F;Release.html" title="Release">
+			    <span>Release</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A tool's latest stable GitHub release, as <code>latestRelease</code> reads it.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;tools&#x2F;sync.ts&#x2F;~&#x2F;Release.html#property_assets">
+                  <span>assets</span><span>: <span class="td-ref">Array</span>&lt;{ name<span>: <span class="td-kw">string</span></span>; url<span>: <span class="td-kw">string</span></span>; digest<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The release's downloadable files, each with its published digest when GitHub has one.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;tools&#x2F;sync.ts&#x2F;~&#x2F;Release.html#property_tag">
+                  <span>tag</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The release's git tag, as published (for example <code>&quot;v2.1.0&quot;</code>).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;tools&#x2F;sync.ts&#x2F;~&#x2F;Release.html#property_version">
+                  <span>version</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The version: the tag without the tool's tag prefix.</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_toolstatus" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;tools&#x2F;sync.ts&#x2F;~&#x2F;ToolStatus.html" title="ToolStatus">
-			    <span>ToolStatus</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>ToolStatus</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One tool's row in a <code>archon tools sync</code> run: what is installed, what is latest, what was done.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;tools&#x2F;sync.ts&#x2F;~&#x2F;ToolStatus.html#property_action">
-                  <span>action</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>action</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What the run did or would do (<code>&quot;current&quot;</code>, <code>&quot;upgraded a -&gt; b&quot;</code>, <code>&quot;FAILED: ...&quot;</code>, and so on).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;tools&#x2F;sync.ts&#x2F;~&#x2F;ToolStatus.html#property_debian">
-                  <span>debian</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>debian</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The candidate version in Ubuntu's archive, for apt tools (the report's &quot;Trixie&quot; column).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;tools&#x2F;sync.ts&#x2F;~&#x2F;ToolStatus.html#property_id">
-                  <span>id</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>id</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The tool's id.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;tools&#x2F;sync.ts&#x2F;~&#x2F;ToolStatus.html#property_installed">
-                  <span>installed</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>installed</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The installed version (for self-updating tools, one entry per user, joined by <code>; </code>).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;tools&#x2F;sync.ts&#x2F;~&#x2F;ToolStatus.html#property_latest">
-                  <span>latest</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>latest</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The latest version: the GitHub release, the apt candidate, or <code>&quot;self-updating&quot;</code>.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;tools&#x2F;sync.ts&#x2F;~&#x2F;ToolStatus.html#property_ok">
-                  <span>ok</span><span>: <span class="td-kw">boolean</span></span></a></li><li>
+                  <span>ok</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>False when the tool failed to sync.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;tools&#x2F;sync.ts&#x2F;~&#x2F;ToolStatus.html#property_source">
-                  <span>source</span><span>: <span class="td-ref">ToolDef</span>[<span class="td-str">"source"</span>]</span></a></li></ul></div>
+                  <span>source</span><span>: <span class="td-ref">ToolDef</span>[<span class="td-str">"source"</span>]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where it comes from: <code>upstream-binary</code>, <code>apt</code> or <code>self-updating</code>.</p>
+</div></div></li></ul></div>
     </div></div>
 </section>
 </div>
@@ -284,7 +316,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_toolstatus
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1132 symbols</span><svg
+              <span class="leading-none">view all 1135 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -299,7 +331,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_toolstatus
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/tools/sync_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_aptupstream" title="aptUpstream">aptUpstream</a></li><li><a href="#namespace_compareversions" title="compareVersions">compareVersions</a></li><li><a href="#namespace_githubtoken" title="githubToken">githubToken</a></li><li><a href="#namespace_latestrelease" title="latestRelease">latestRelease</a></li><li><a href="#namespace_listtools" title="listTools">listTools</a></li><li><a href="#namespace_synctools" title="syncTools">syncTools</a></li><li><a href="#namespace_toolsummary" title="toolSummary">toolSummary</a></li><li><a href="#namespace_versionfrom" title="versionFrom">versionFrom</a></li></ul></li><li><a href="#archon/tools/sync_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_toolstatus" title="ToolStatus">ToolStatus</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/tools/sync_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_aptupstream" title="aptUpstream">aptUpstream</a></li><li><a href="#namespace_compareversions" title="compareVersions">compareVersions</a></li><li><a href="#namespace_githubtoken" title="githubToken">githubToken</a></li><li><a href="#namespace_latestrelease" title="latestRelease">latestRelease</a></li><li><a href="#namespace_listtools" title="listTools">listTools</a></li><li><a href="#namespace_synctools" title="syncTools">syncTools</a></li><li><a href="#namespace_toolsummary" title="toolSummary">toolSummary</a></li><li><a href="#namespace_versionfrom" title="versionFrom">versionFrom</a></li></ul></li><li><a href="#archon/tools/sync_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_release" title="Release">Release</a></li><li><a href="#namespace_toolstatus" title="ToolStatus">ToolStatus</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>

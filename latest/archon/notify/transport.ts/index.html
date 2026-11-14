@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/notify/transport.ts - Stolos v0.30.0 documentation</title>
+  <title>archon/notify/transport.ts - Stolos v0.31.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.30.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -134,7 +134,7 @@ argv, never in a process listing.</p>
 Functions</h2></div><div class="namespaceSection"><div id="namespace_hostlabel" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;transport.ts&#x2F;~&#x2F;hostLabel.html" title="hostLabel">
-			    <span>hostLabel</span><span>(<div class="ml-4"><div><span>mail<span>: { tag<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></span>,</div><div><span>host<span>: <span class="td-kw">string</span></span></span></div></div>)</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The detail part of the subaddress: alpha.lab.</p>
+			    <span>hostLabel</span><span>(<div class="ml-4"><div><span>mail<span>: { tag<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></span>,</div><div><span>host<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The detail part of the subaddress: alpha.lab.</p>
 </div></div></div>
     </div><div id="namespace_parsesaslpasswd" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -149,11 +149,14 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_hostlabel" 
     </div><div id="namespace_relayparts" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;transport.ts&#x2F;~&#x2F;relayParts.html" title="relayParts">
-			    <span>relayParts</span><span>(<span><span>relay<span class="td-op">?</span></span></span>)<span>: { host<span>: <span class="td-kw">string</span></span>; port<span>: <span class="td-kw">number</span></span>;  }</span></span></a></div>
+			    <span>relayParts</span><span>(<span><span>relay<span class="td-op">?</span></span></span>)<span>: { host<span>: <span class="td-kw">string</span></span>; port<span>: <span class="td-kw">number</span></span>;  }</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Split <code>host:port</code>; the port is 465 when missing or not a number.</p>
+</div></div></div>
     </div><div id="namespace_saslpasswd" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;transport.ts&#x2F;~&#x2F;saslPasswd.html" title="saslPasswd">
-			    <span>saslPasswd</span><span>(<div class="ml-4"><div><span>c<span>: <span class="td-ref">Credential</span></span></span>,</div><div><span>relay<span class="td-op">?</span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a></div>
+			    <span>saslPasswd</span><span>(<div class="ml-4"><div><span>c<span>: <span class="td-ref">Credential</span></span></span>,</div><div><span>relay<span class="td-op">?</span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The text of Postfix's sasl_passwd for this credential: a comment, then
+<code>[host]:port api_token:&lt;token&gt;</code>. It holds the token: write it root only.</p>
+</div></div></div>
     </div><div id="namespace_secretsof" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;transport.ts&#x2F;~&#x2F;secretsOf.html" title="secretsOf">
@@ -211,9 +214,11 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_credential
 			    <span>Credential</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The credential: a Cloudflare API token with the Email Sending: Edit permission.</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;transport.ts&#x2F;~&#x2F;Credential.html#property_created">
-                  <span>created</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>created</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When it was made (ISO 8601); empty when read back from sasl_passwd.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;transport.ts&#x2F;~&#x2F;Credential.html#property_token">
-                  <span>token</span><span>: <span class="td-kw">string</span></span></a></li></ul></div>
+                  <span>token</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The API token (the SMTP password). A secret: never logged or sent.</p>
+</div></div></li></ul></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;notify&#x2F;transport_ts_variables"><div>
@@ -242,7 +247,8 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_credential
 Variables</h2></div><div class="namespaceSection"><div id="namespace_default_relay" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;transport.ts&#x2F;~&#x2F;DEFAULT_RELAY.html" title="DEFAULT_RELAY">
-			    <span>DEFAULT_RELAY</span><span>: <span class="td-str">"smtp.mx.cloudflare.net:465"</span></span></a></div>
+			    <span>DEFAULT_RELAY</span><span>: <span class="td-str">"smtp.mx.cloudflare.net:465"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The SMTP relay, host:port, when the fleet names none (<code>fleet.mail.relay</code>): Cloudflare, implicit TLS.</p>
+</div></div></div>
     </div><div id="namespace_relay_user" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;transport.ts&#x2F;~&#x2F;RELAY_USER.html" title="RELAY_USER">
@@ -326,7 +332,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_default_rel
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1132 symbols</span><svg
+              <span class="leading-none">view all 1135 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

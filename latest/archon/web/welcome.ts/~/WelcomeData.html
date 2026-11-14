@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>WelcomeData - archon/web/welcome.ts - Stolos v0.30.0 documentation</title>
+  <title>WelcomeData - archon/web/welcome.ts - Stolos v0.31.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;web&#x2F;welcome.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.30.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -142,7 +142,8 @@
   />
 </svg>
 </a>
-</div><div><div class="space-y-7" id=""><section class="section"  id="properties"><div>
+</div><div><div class="space-y-7" id=""><div class="markdown"><p>Everything the welcome page shows, gathered per request by <code>archon web serve</code>.</p>
+</div><section class="section"  id="properties"><div>
       <h2 class="anchorable mb-1"><a href="#properties" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
   height="16"
@@ -217,7 +218,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The host's name in the model.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_fqdn">
 
   <div class="docEntryHeader">
@@ -271,7 +273,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Its full name (for example <code>alpha.lab.example.net</code>); unset without fleet.web.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_title">
 
   <div class="docEntryHeader">
@@ -324,7 +327,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The fleet's title.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_os">
 
   <div class="docEntryHeader">
@@ -432,7 +436,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The server's address on the local network, if known.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_repo">
 
   <div class="docEntryHeader">
@@ -485,7 +490,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The fleet repository: <code>owner/name</code> and its GitHub URL.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_lastrun">
 
   <div class="docEntryHeader">
@@ -539,7 +545,9 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Archon's last run on this host (its status file): the command, its
+counts, whether commits wait to be pushed, and when.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_verify">
 
   <div class="docEntryHeader">
@@ -593,7 +601,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The last archon verify: when, how many checks passed of how many, and which failed.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_installed">
 
   <div class="docEntryHeader">
@@ -647,7 +656,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The install record (spec 048): when, whether it succeeded, and its checks.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_certificate">
 
   <div class="docEntryHeader">
@@ -701,7 +711,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The certificate Traefik serves on 443: its issuer and expiry, as openssl prints them.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_updates">
 
   <div class="docEntryHeader">
@@ -755,7 +766,9 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Ubuntu's updates: how many wait (unset when unknown), whether a reboot is
+needed and for which packages, and when they last installed by themselves.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_backup">
 
   <div class="docEntryHeader">
@@ -809,7 +822,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The last backup run, when the host has the backup timer: when it ended and whether it succeeded.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_data">
 
   <div class="docEntryHeader">
@@ -917,7 +931,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The apps and pages behind the proxy (none without fleet.web).</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_unrouted">
 
   <div class="docEntryHeader">
@@ -1024,7 +1039,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>What is installed and how to use it, from the host's plan (spec 035).</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_agent">
 
   <div class="docEntryHeader">
@@ -1186,7 +1202,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The fleet admin's username (for the ssh command shown).</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_mailbox">
 
   <div class="docEntryHeader">
@@ -1240,7 +1257,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The fleet's mailbox, where alerts go; unset without mail.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_generated">
 
   <div class="docEntryHeader">
@@ -1293,7 +1311,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>When the data was gathered: <code>YYYY-MM-DD HH:MM UTC</code>.</p>
+</div></div></div>
 </div></section>
 </div>
 </div>

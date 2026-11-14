@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ToolStatus - archon/tools/sync.ts - Stolos v0.30.0 documentation</title>
+  <title>ToolStatus - archon/tools/sync.ts - Stolos v0.31.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;tools&#x2F;sync.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.30.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -142,7 +142,8 @@
   />
 </svg>
 </a>
-</div><div><div class="space-y-7" id=""><section class="section"  id="properties"><div>
+</div><div><div class="space-y-7" id=""><div class="markdown"><p>One tool's row in a <code>archon tools sync</code> run: what is installed, what is latest, what was done.</p>
+</div><section class="section"  id="properties"><div>
       <h2 class="anchorable mb-1"><a href="#properties" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
   height="16"
@@ -217,7 +218,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The tool's id.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_source">
 
   <div class="docEntryHeader">
@@ -270,7 +272,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Where it comes from: <code>upstream-binary</code>, <code>apt</code> or <code>self-updating</code>.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_installed">
 
   <div class="docEntryHeader">
@@ -324,7 +327,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The installed version (for self-updating tools, one entry per user, joined by <code>; </code>).</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_latest">
 
   <div class="docEntryHeader">
@@ -378,7 +382,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The latest version: the GitHub release, the apt candidate, or <code>&quot;self-updating&quot;</code>.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_debian">
 
   <div class="docEntryHeader">
@@ -432,7 +437,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The candidate version in Ubuntu's archive, for apt tools (the report's &quot;Trixie&quot; column).</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_action">
 
   <div class="docEntryHeader">
@@ -485,7 +491,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>What the run did or would do (<code>&quot;current&quot;</code>, <code>&quot;upgraded a -&gt; b&quot;</code>, <code>&quot;FAILED: ...&quot;</code>, and so on).</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_ok">
 
   <div class="docEntryHeader">
@@ -538,7 +545,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>False when the tool failed to sync.</p>
+</div></div></div>
 </div></section>
 </div>
 </div>

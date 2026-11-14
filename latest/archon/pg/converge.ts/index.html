@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/pg/converge.ts - Stolos v0.30.0 documentation</title>
+  <title>archon/pg/converge.ts - Stolos v0.31.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.30.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -132,7 +132,8 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_accountexis
     </div><div id="namespace_clusters" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;converge.ts&#x2F;~&#x2F;clusters.html" title="clusters">
-			    <span>clusters</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">Cluster</span>[]&gt;</span></span></a></div>
+			    <span>clusters</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">Cluster</span>[]&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The host's PostgreSQL clusters, from pg_lsclusters (empty when it fails).</p>
+</div></div></div>
     </div><div id="namespace_convergeinstance" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;converge.ts&#x2F;~&#x2F;convergeInstance.html" title="convergeInstance">
@@ -152,16 +153,18 @@ by: who asked (recorded when the cluster is created).</p>
     </div><div id="namespace_psql" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;converge.ts&#x2F;~&#x2F;psql.html" title="psql">
-			    <span>psql</span><span>(<div class="ml-4"><div><span>v<span>: <span class="td-kw">number</span></span></span>,</div><div><span>n<span>: <span class="td-kw">string</span></span></span>,</div><div><span>sql<span>: <span class="td-kw">string</span></span></span>,</div><div><span>db<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>psql as postgres against one cluster (Debian's wrapper picks it by --cluster).</p>
+			    <span>psql</span><span>(<div class="ml-4"><div><span>v<span>: <span class="td-kw">number</span></span></span>,</div><div><span>n<span>: <span class="td-kw">string</span></span></span>,</div><div><span>sql<span>: <span class="td-kw">string</span></span></span>,</div><div><span>db<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">RunResult</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>psql as postgres against one cluster (Debian's wrapper picks it by --cluster).</p>
 </div></div></div>
     </div><div id="namespace_readstate" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;converge.ts&#x2F;~&#x2F;readState.html" title="readState">
-			    <span>readState</span><span>(<div class="ml-4"><div><span>host<span>: <span class="td-kw">string</span></span></span>,</div><div><span>root<span class="td-op">?</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">PgState</span>&gt;</span></span></a></div>
+			    <span>readState</span><span>(<div class="ml-4"><div><span>host<span>: <span class="td-kw">string</span></span></span>,</div><div><span>root<span class="td-op">?</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">PgState</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Read the host's pg record (the switch and the instances); no instances when there is none.</p>
+</div></div></div>
     </div><div id="namespace_secretpath" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;converge.ts&#x2F;~&#x2F;secretPath.html" title="secretPath">
-			    <span>secretPath</span><span>(<div class="ml-4"><div><span>inst<span>: <span class="td-kw">string</span></span></span>,</div><div><span>role<span>: <span class="td-kw">string</span></span></span></div></div>)</span></a></div>
+			    <span>secretPath</span><span>(<div class="ml-4"><div><span>inst<span>: <span class="td-kw">string</span></span></span>,</div><div><span>role<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where a role's password for an instance is kept, under <a href="../../.././archon/pg/config.ts/~/PG.html">PG</a>.secrets.</p>
+</div></div></div>
     </div><div id="namespace_wildcardfrom" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;converge.ts&#x2F;~&#x2F;wildcardFrom.html" title="wildcardFrom">
@@ -172,7 +175,8 @@ sslrootcert=system. Undefined when there is none yet.</p>
     </div><div id="namespace_writerecord" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;converge.ts&#x2F;~&#x2F;writeRecord.html" title="writeRecord">
-			    <span>writeRecord</span><span>(<div class="ml-4"><div><span>host<span>: <span class="td-kw">string</span></span></span>,</div><div><span>name<span>: <span class="td-kw">string</span></span></span>,</div><div><span>rec<span>: <span><span class="td-ref">PgRecord</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span>,</div><div><span>root<span class="td-op">?</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">void</span>&gt;</span></span></a></div>
+			    <span>writeRecord</span><span>(<div class="ml-4"><div><span>host<span>: <span class="td-kw">string</span></span></span>,</div><div><span>name<span>: <span class="td-kw">string</span></span></span>,</div><div><span>rec<span>: <span><span class="td-ref">PgRecord</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span>,</div><div><span>root<span class="td-op">?</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">void</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Set one instance's record, or remove it when <code>rec</code> is undefined.</p>
+</div></div></div>
     </div><div id="namespace_writestate" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;converge.ts&#x2F;~&#x2F;writeState.html" title="writeState">
@@ -215,16 +219,20 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_sink" clas
 			    <span>Sink</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where converge reports (apply's Runner, or a command's phase).</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;converge.ts&#x2F;~&#x2F;Sink.html#method_change_0">
-                  <span>change</span><span>(<span><span>msg<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">void</span></span></span></a></li><li>
+                  <span>change</span><span>(<span><span>msg<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">void</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Report a change made (or, in a check, one that would be made).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;converge.ts&#x2F;~&#x2F;Sink.html#property_check">
-                  <span>check</span><span>: <span class="td-kw">boolean</span></span></a></li><li>
+                  <span>check</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A read-only check: report what would change, change nothing.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;converge.ts&#x2F;~&#x2F;Sink.html#method_fail_0">
-                  <span>fail</span><span>(<div class="ml-4"><div><span>msg<span>: <span class="td-kw">string</span></span></span>,</div><div><span>fix<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">void</span></span></span></a></li><li>
+                  <span>fail</span><span>(<div class="ml-4"><div><span>msg<span>: <span class="td-kw">string</span></span></span>,</div><div><span>fix<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">void</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Report a failure, with an optional fix to suggest.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;converge.ts&#x2F;~&#x2F;Sink.html#method_unreadable_0">
                   <span>unreadable</span><span>(<span><span>path<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">void</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A read-only check could not read this file as the calling user.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;converge.ts&#x2F;~&#x2F;Sink.html#method_warn_0">
-                  <span>warn</span><span>(<div class="ml-4"><div><span>msg<span>: <span class="td-kw">string</span></span></span>,</div><div><span>fix<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">void</span></span></span></a></li></ul></div>
+                  <span>warn</span><span>(<div class="ml-4"><div><span>msg<span>: <span class="td-kw">string</span></span></span>,</div><div><span>fix<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">void</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Report a problem that does not stop converge, with an optional fix to suggest.</p>
+</div></div></li></ul></div>
     </div></div>
 </section>
 </div>
@@ -298,7 +306,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_sink" clas
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1132 symbols</span><svg
+              <span class="leading-none">view all 1135 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

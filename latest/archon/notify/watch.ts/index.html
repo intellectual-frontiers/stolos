@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/notify/watch.ts - Stolos v0.30.0 documentation</title>
+  <title>archon/notify/watch.ts - Stolos v0.31.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.30.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -165,11 +165,17 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_classify" c
     </div><div id="namespace_readwatch" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;watch.ts&#x2F;~&#x2F;readWatch.html" title="readWatch">
-			    <span>readWatch</span><span>(<span><span>path<span class="td-op">?</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">WatchState</span>&gt;</span></span></a></div>
+			    <span>readWatch</span><span>(<span><span>path<span class="td-op">?</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">WatchState</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Read the watch state; empty (nothing seen) when missing or not JSON.</p>
+</div></div></div>
     </div><div id="namespace_watch" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;watch.ts&#x2F;~&#x2F;watch.html" title="watch">
-			    <span>watch</span><span>(<span><span>hostName<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a></div>
+			    <span>watch</span><span>(<span><span>hostName<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>archon notify watch (the watch service): check keys, boot and disk, then
+follow the journal and send a message for each signal that matters. Every
+ten minutes it checks keys and disk again and summarizes failed logins (at
+most one summary an hour); it exits 0 to restart on a new checkout. Returns
+1 if journalctl ends, so systemd restarts it.</p>
+</div></div></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;notify&#x2F;watch_ts_interfaces"><div>
@@ -201,29 +207,40 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_entry" cla
 			    <span>Entry</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One journal entry, as journalctl -o json prints it (only the fields used).</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;watch.ts&#x2F;~&#x2F;Entry.html#property_message">
-                  <span>MESSAGE</span><span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">number</span>[]</span></span></a></li><li>
+                  <span>MESSAGE</span><span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">number</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The message text, or its bytes when it is not valid UTF-8.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;watch.ts&#x2F;~&#x2F;Entry.html#property_syslog_identifier">
-                  <span>SYSLOG_IDENTIFIER</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>SYSLOG_IDENTIFIER</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The program that logged it (for example <code>sshd</code>, <code>sudo</code>, <code>postfix/smtp</code>).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;watch.ts&#x2F;~&#x2F;Entry.html#property_unit">
-                  <span>UNIT</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>UNIT</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The unit a systemd message is about (for example a failed service).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;watch.ts&#x2F;~&#x2F;Entry.html#property__comm">
-                  <span>_COMM</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>_COMM</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The process name: used when there is no SYSLOG_IDENTIFIER.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;watch.ts&#x2F;~&#x2F;Entry.html#property__systemd_unit">
-                  <span>_SYSTEMD_UNIT</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>_SYSTEMD_UNIT</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The unit of the process that logged it.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;watch.ts&#x2F;~&#x2F;Entry.html#property__transport">
-                  <span>_TRANSPORT</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>_TRANSPORT</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How it reached the journal (<code>kernel</code> for kernel messages).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;watch.ts&#x2F;~&#x2F;Entry.html#property___cursor">
-                  <span>__CURSOR</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>__CURSOR</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its position in the journal: the watch resumes after it.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;watch.ts&#x2F;~&#x2F;Entry.html#property___realtime_timestamp">
-                  <span>__REALTIME_TIMESTAMP</span><span>: <span class="td-kw">string</span></span></a></li></ul></div>
+                  <span>__REALTIME_TIMESTAMP</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When it was logged, microseconds since the epoch, as a string.</p>
+</div></div></li></ul></div>
     </div><div id="namespace_watchstate" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;watch.ts&#x2F;~&#x2F;WatchState.html" title="WatchState">
-			    <span>WatchState</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>WatchState</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What the watch remembers between runs (WATCH.state).</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;watch.ts&#x2F;~&#x2F;WatchState.html#property_bootid">
-                  <span>bootId</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>bootId</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The boot id last seen, so each boot is reported once.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;watch.ts&#x2F;~&#x2F;WatchState.html#property_cursor">
-                  <span>cursor</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>cursor</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The journal cursor of the last entry read; unset at first (it starts from now).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;watch.ts&#x2F;~&#x2F;WatchState.html#property_disk">
                   <span>disk</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>mount -&gt; the date it was last reported.</p>
 </div></div></li><li>
@@ -231,7 +248,8 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_entry" cla
                   <span>failed</span><span>: <span class="td-ref">Record</span>&lt;<div class="ml-indent"><div><span class="td-kw">string</span>,</div><div>{ count<span>: <span class="td-kw">number</span></span>; users<span>: <span class="td-kw">string</span>[]</span>; first<span>: <span class="td-kw">string</span></span>; last<span>: <span class="td-kw">string</span></span>;  }</div></div>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Failed logins not yet reported: address -&gt; { count, users }.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;watch.ts&#x2F;~&#x2F;WatchState.html#property_failedreportedat">
-                  <span>failedReportedAt</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>failedReportedAt</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When failed logins were last summarized (ISO 8601): at most one summary an hour.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;watch.ts&#x2F;~&#x2F;WatchState.html#property_keys">
                   <span>keys</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>[]&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>authorized_keys path -&gt; its lines' fingerprints.</p>
 </div></div></li><li>
@@ -266,7 +284,10 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_entry" cla
 Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_signal" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;watch.ts&#x2F;~&#x2F;Signal.html" title="Signal">
-			    <span>Signal</span><span> = <div class="ml-indent"><span>{ kind<span>: <span class="td-str">"login"</span></span>; user<span>: <span class="td-kw">string</span></span>; from<span>: <span class="td-kw">string</span></span>; method<span>: <span class="td-kw">string</span></span>; key<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span><br /><span><span class="td-op"> | </span>{ kind<span>: <span class="td-str">"login-failed"</span></span>; user<span>: <span class="td-kw">string</span></span>; from<span>: <span class="td-kw">string</span></span>; invalidUser<span>: <span class="td-kw">boolean</span></span>;  }</span><br /><span><span class="td-op"> | </span>{ kind<span>: <span class="td-str">"console"</span></span>; user<span>: <span class="td-kw">string</span></span>; via<span>: <span class="td-kw">string</span></span>;  }</span><br /><span><span class="td-op"> | </span>{ kind<span>: <span class="td-str">"su"</span></span>; user<span>: <span class="td-kw">string</span></span>; by<span>: <span class="td-kw">string</span></span>;  }</span><br /><span><span class="td-op"> | </span>{ kind<span>: <span class="td-str">"sudo-refused"</span></span>; user<span>: <span class="td-kw">string</span></span>; detail<span>: <span class="td-kw">string</span></span>;  }</span><br /><span><span class="td-op"> | </span>{ kind<span>: <span class="td-str">"account"</span></span>; detail<span>: <span class="td-kw">string</span></span>;  }</span><br /><span><span class="td-op"> | </span>{ kind<span>: <span class="td-str">"kernel"</span></span>; what<span>: <span class="td-kw">string</span></span>; detail<span>: <span class="td-kw">string</span></span>;  }</span><br /><span><span class="td-op"> | </span>{ kind<span>: <span class="td-str">"unit-failed"</span></span>; unit<span>: <span class="td-kw">string</span></span>; detail<span>: <span class="td-kw">string</span></span>;  }</span><br /><span><span class="td-op"> | </span>{ kind<span>: <span class="td-str">"mail-bounced"</span></span>; to<span>: <span class="td-kw">string</span></span>; detail<span>: <span class="td-kw">string</span></span>;  }</span></div></span></a></div>
+			    <span>Signal</span><span> = <div class="ml-indent"><span>{ kind<span>: <span class="td-str">"login"</span></span>; user<span>: <span class="td-kw">string</span></span>; from<span>: <span class="td-kw">string</span></span>; method<span>: <span class="td-kw">string</span></span>; key<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span><br /><span><span class="td-op"> | </span>{ kind<span>: <span class="td-str">"login-failed"</span></span>; user<span>: <span class="td-kw">string</span></span>; from<span>: <span class="td-kw">string</span></span>; invalidUser<span>: <span class="td-kw">boolean</span></span>;  }</span><br /><span><span class="td-op"> | </span>{ kind<span>: <span class="td-str">"console"</span></span>; user<span>: <span class="td-kw">string</span></span>; via<span>: <span class="td-kw">string</span></span>;  }</span><br /><span><span class="td-op"> | </span>{ kind<span>: <span class="td-str">"su"</span></span>; user<span>: <span class="td-kw">string</span></span>; by<span>: <span class="td-kw">string</span></span>;  }</span><br /><span><span class="td-op"> | </span>{ kind<span>: <span class="td-str">"sudo-refused"</span></span>; user<span>: <span class="td-kw">string</span></span>; detail<span>: <span class="td-kw">string</span></span>;  }</span><br /><span><span class="td-op"> | </span>{ kind<span>: <span class="td-str">"account"</span></span>; detail<span>: <span class="td-kw">string</span></span>;  }</span><br /><span><span class="td-op"> | </span>{ kind<span>: <span class="td-str">"kernel"</span></span>; what<span>: <span class="td-kw">string</span></span>; detail<span>: <span class="td-kw">string</span></span>;  }</span><br /><span><span class="td-op"> | </span>{ kind<span>: <span class="td-str">"unit-failed"</span></span>; unit<span>: <span class="td-kw">string</span></span>; detail<span>: <span class="td-kw">string</span></span>;  }</span><br /><span><span class="td-op"> | </span>{ kind<span>: <span class="td-str">"mail-bounced"</span></span>; to<span>: <span class="td-kw">string</span></span>; detail<span>: <span class="td-kw">string</span></span>;  }</span></div></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A journal entry that matters, by kind: an ssh login, failed logins, a
+console login, su, a refused sudo, an account change, a kernel error, a
+failed unit, or bounced mail.</p>
+</div></div></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;notify&#x2F;watch_ts_variables"><div>
@@ -295,11 +316,14 @@ Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_signal" 
 Variables</h2></div><div class="namespaceSection"><div id="namespace_watch-1" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;watch.ts&#x2F;~&#x2F;WATCH.html" title="WATCH">
-			    <span>WATCH</span><span>: { state<span>: <span class="td-kw">string</span></span>; unit<span>: <span class="td-kw">string</span></span>;  }</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>WATCH</span><span>: { state<span>: <span class="td-kw">string</span></span>; unit<span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where the watch keeps its state, and the systemd service that runs it.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;watch.ts&#x2F;~&#x2F;WATCH.html#property_state">
-                  <span>state</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>state</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its state file (root only): journal cursor, seen addresses, pending summaries.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;watch.ts&#x2F;~&#x2F;WATCH.html#property_unit">
-                  <span>unit</span><span>: <span class="td-kw">string</span></span></a></li></ul></div>
+                  <span>unit</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The service that runs <code>archon notify watch</code>.</p>
+</div></div></li></ul></div>
     </div></div>
 </section>
 </div>
@@ -373,7 +397,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_watch-1" cl
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1132 symbols</span><svg
+              <span class="leading-none">view all 1135 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

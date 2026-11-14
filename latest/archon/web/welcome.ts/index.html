@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/web/welcome.ts - Stolos v0.30.0 documentation</title>
+  <title>archon/web/welcome.ts - Stolos v0.31.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.30.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -146,11 +146,12 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_health" cla
     </div><div id="namespace_renderwelcome" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;welcome.ts&#x2F;~&#x2F;renderWelcome.html" title="renderWelcome">
-			    <span>renderWelcome</span><span>(<div class="ml-4"><div><span>d<span>: <span class="td-ref">WelcomeData</span></span></span>,</div><div><span>now<span class="td-op">?</span><span>: <span class="td-ref">Date</span></span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a></div>
+			    <span>renderWelcome</span><span>(<div class="ml-4"><div><span>d<span>: <span class="td-ref">WelcomeData</span></span></span>,</div><div><span>now<span class="td-op">?</span><span>: <span class="td-ref">Date</span></span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The welcome page, as a full HTML document; <code>now</code> is used for &quot;5 minutes ago&quot; style times.</p>
+</div></div></div>
     </div><div id="namespace_stripglyphs" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;welcome.ts&#x2F;~&#x2F;stripGlyphs.html" title="stripGlyphs">
-			    <span>stripGlyphs</span><span>(<span><span>s<span>: <span class="td-kw">string</span></span></span></span>)</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Nerd Font and other private-use glyphs, which browsers show as boxes.</p>
+			    <span>stripGlyphs</span><span>(<span><span>s<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Nerd Font and other private-use glyphs, which browsers show as boxes.</p>
 </div></div></div>
     </div></div>
 </section>
@@ -180,67 +181,90 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_health" cla
 Interfaces</h2></div><div class="namespaceSection"><div id="namespace_service" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;welcome.ts&#x2F;~&#x2F;Service.html" title="Service">
-			    <span>Service</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>Service</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>An app or page on the server, listed on the welcome page.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;welcome.ts&#x2F;~&#x2F;Service.html#property_description">
-                  <span>description</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>description</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What it is, in a few words.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;welcome.ts&#x2F;~&#x2F;Service.html#property_name">
-                  <span>name</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>name</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its name, also the first label of its address (for example <code>cockpit</code>).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;welcome.ts&#x2F;~&#x2F;Service.html#property_source">
                   <span>source</span><span>: <span><span class="td-str">"system"</span><span class="td-op"> | </span><span class="td-str">"model"</span><span class="td-op"> | </span><span class="td-str">"container"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where it comes from: the server itself, its model, or a container's label.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;welcome.ts&#x2F;~&#x2F;Service.html#property_url">
-                  <span>url</span><span>: <span class="td-kw">string</span></span></a></li></ul></div>
+                  <span>url</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its HTTPS address (for example <code>https://cockpit.alpha.lab.example.net</code>).</p>
+</div></div></li></ul></div>
     </div><div id="namespace_welcomedata" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;welcome.ts&#x2F;~&#x2F;WelcomeData.html" title="WelcomeData">
-			    <span>WelcomeData</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>WelcomeData</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Everything the welcome page shows, gathered per request by <code>archon web serve</code>.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;welcome.ts&#x2F;~&#x2F;WelcomeData.html#property_address">
-                  <span>address</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>address</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The server's address on the local network, if known.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;welcome.ts&#x2F;~&#x2F;WelcomeData.html#property_admin">
-                  <span>admin</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>admin</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fleet admin's username (for the ssh command shown).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;welcome.ts&#x2F;~&#x2F;WelcomeData.html#property_agent">
                   <span>agent</span><span>: <span class="td-ref">AgentSetup</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How an AI agent reaches this server (spec 035); servers only.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;welcome.ts&#x2F;~&#x2F;WelcomeData.html#property_backup">
-                  <span>backup</span><span>: { last<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; ok<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>;  }</span></a></li><li>
+                  <span>backup</span><span>: { last<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; ok<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The last backup run, when the host has the backup timer: when it ended and whether it succeeded.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;welcome.ts&#x2F;~&#x2F;WelcomeData.html#property_certificate">
-                  <span>certificate</span><span>: { issuer<span>: <span class="td-kw">string</span></span>; notAfter<span>: <span class="td-kw">string</span></span>;  }</span></a></li><li>
+                  <span>certificate</span><span>: { issuer<span>: <span class="td-kw">string</span></span>; notAfter<span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The certificate Traefik serves on 443: its issuer and expiry, as openssl prints them.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;welcome.ts&#x2F;~&#x2F;WelcomeData.html#property_data">
                   <span>data</span><span>: { class<span>: <span><span class="td-str">"durable"</span><span class="td-op"> | </span><span class="td-str">"ephemeral"</span></span></span>; reasons<span>: <span class="td-kw">string</span>[]</span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Article 23 (spec 044): durable or ephemeral, and why.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;welcome.ts&#x2F;~&#x2F;WelcomeData.html#property_fqdn">
-                  <span>fqdn</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>fqdn</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its full name (for example <code>alpha.lab.example.net</code>); unset without fleet.web.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;welcome.ts&#x2F;~&#x2F;WelcomeData.html#property_generated">
-                  <span>generated</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>generated</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When the data was gathered: <code>YYYY-MM-DD HH:MM UTC</code>.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;welcome.ts&#x2F;~&#x2F;WelcomeData.html#property_guide">
-                  <span>guide</span><span>: <span class="td-ref">GuideItem</span>[]</span></a></li><li>
+                  <span>guide</span><span>: <span class="td-ref">GuideItem</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What is installed and how to use it, from the host's plan (spec 035).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;welcome.ts&#x2F;~&#x2F;WelcomeData.html#property_guides">
                   <span>guides</span><span>: <span class="td-ref">Array</span>&lt;{ name<span>: <span class="td-kw">string</span></span>; title<span>: <span class="td-kw">string</span></span>;  }&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Guides served at /guide/&lt;name&gt;.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;welcome.ts&#x2F;~&#x2F;WelcomeData.html#property_host">
-                  <span>host</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>host</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The host's name in the model.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;welcome.ts&#x2F;~&#x2F;WelcomeData.html#property_installed">
-                  <span>installed</span><span>: { at<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; ok<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>; checks<span class="td-op">?</span><span>: { passed<span>: <span class="td-kw">number</span></span>; total<span>: <span class="td-kw">number</span></span>;  }</span>;  }</span></a></li><li>
+                  <span>installed</span><span>: { at<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; ok<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>; checks<span class="td-op">?</span><span>: { passed<span>: <span class="td-kw">number</span></span>; total<span>: <span class="td-kw">number</span></span>;  }</span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The install record (spec 048): when, whether it succeeded, and its checks.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;welcome.ts&#x2F;~&#x2F;WelcomeData.html#property_lastrun">
-                  <span>lastRun</span><span>: { command<span>: <span class="td-kw">string</span></span>; failures<span>: <span class="td-kw">number</span></span>; warnings<span>: <span class="td-kw">number</span></span>; deferred<span>: <span class="td-kw">number</span></span>; push<span>: <span class="td-kw">boolean</span></span>; at<span>: <span class="td-kw">string</span></span>;  }</span></a></li><li>
+                  <span>lastRun</span><span>: { command<span>: <span class="td-kw">string</span></span>; failures<span>: <span class="td-kw">number</span></span>; warnings<span>: <span class="td-kw">number</span></span>; deferred<span>: <span class="td-kw">number</span></span>; push<span>: <span class="td-kw">boolean</span></span>; at<span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Archon's last run on this host (its status file): the command, its
+counts, whether commits wait to be pushed, and when.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;welcome.ts&#x2F;~&#x2F;WelcomeData.html#property_mailbox">
-                  <span>mailbox</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>mailbox</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fleet's mailbox, where alerts go; unset without mail.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;welcome.ts&#x2F;~&#x2F;WelcomeData.html#property_os">
                   <span>os</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>&quot;Ubuntu 26.04.1 LTS&quot;</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;welcome.ts&#x2F;~&#x2F;WelcomeData.html#property_repo">
-                  <span>repo</span><span>: { slug<span>: <span class="td-kw">string</span></span>; url<span>: <span class="td-kw">string</span></span>;  }</span></a></li><li>
+                  <span>repo</span><span>: { slug<span>: <span class="td-kw">string</span></span>; url<span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fleet repository: <code>owner/name</code> and its GitHub URL.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;welcome.ts&#x2F;~&#x2F;WelcomeData.html#property_services">
-                  <span>services</span><span>: <span class="td-ref">Service</span>[]</span></a></li><li>
+                  <span>services</span><span>: <span class="td-ref">Service</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The apps and pages behind the proxy (none without fleet.web).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;welcome.ts&#x2F;~&#x2F;WelcomeData.html#property_title">
-                  <span>title</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>title</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fleet's title.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;welcome.ts&#x2F;~&#x2F;WelcomeData.html#property_unrouted">
                   <span>unrouted</span><span>: <span class="td-kw">number</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Ports open to the network with nothing published (internal ones excluded).</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;welcome.ts&#x2F;~&#x2F;WelcomeData.html#property_updates">
-                  <span>updates</span><span>: { pending<span class="td-op">?</span><span>: <span class="td-kw">number</span></span>; reboot<span>: <span class="td-kw">boolean</span></span>; rebootPackages<span>: <span class="td-kw">string</span>[]</span>; lastRun<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></a></li><li>
+                  <span>updates</span><span>: { pending<span class="td-op">?</span><span>: <span class="td-kw">number</span></span>; reboot<span>: <span class="td-kw">boolean</span></span>; rebootPackages<span>: <span class="td-kw">string</span>[]</span>; lastRun<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Ubuntu's updates: how many wait (unset when unknown), whether a reboot is
+needed and for which packages, and when they last installed by themselves.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;welcome.ts&#x2F;~&#x2F;WelcomeData.html#property_verify">
-                  <span>verify</span><span>: { at<span>: <span class="td-kw">string</span></span>; passed<span>: <span class="td-kw">number</span></span>; total<span>: <span class="td-kw">number</span></span>; failed<span>: <span class="td-kw">string</span>[]</span>;  }</span></a></li></ul></div>
+                  <span>verify</span><span>: { at<span>: <span class="td-kw">string</span></span>; passed<span>: <span class="td-kw">number</span></span>; total<span>: <span class="td-kw">number</span></span>; failed<span>: <span class="td-kw">string</span>[]</span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The last archon verify: when, how many checks passed of how many, and which failed.</p>
+</div></div></li></ul></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;web&#x2F;welcome_ts_type-aliases"><div>
@@ -269,7 +293,8 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_service" c
 Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_level" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;welcome.ts&#x2F;~&#x2F;Level.html" title="Level">
-			    <span>Level</span><span> = <span><span class="td-str">"ok"</span><span class="td-op"> | </span><span class="td-str">"warn"</span><span class="td-op"> | </span><span class="td-str">"fail"</span></span></span></a></div>
+			    <span>Level</span><span> = <span><span class="td-str">"ok"</span><span class="td-op"> | </span><span class="td-str">"warn"</span><span class="td-op"> | </span><span class="td-str">"fail"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The server's health, as the page shows it: healthy, something to look at, or failed.</p>
+</div></div></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;web&#x2F;welcome_ts_variables"><div>
@@ -347,7 +372,8 @@ dl.glossary dt { font-weight: 600; margin-top: 8px; } dl.glossary dd { margin: 0
 .doc h3 { margin-top: 22px; } .doc table { border-collapse: collapse; width: 100%; margin: 10px 0; }
 .doc th, .doc td { text-align: left; border-bottom: 1px solid var(--line); padding: 6px 8px 6px 0; vertical-align: top; }
 footer { color: var(--muted); font-size: 0.85rem; margin-top: 30px; }
-`</span></span></a></div>
+`</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The stylesheet every page shares (light and dark, by the browser's preference).</p>
+</div></div></div>
     </div></div>
 </section>
 </div>
@@ -421,7 +447,7 @@ footer { color: var(--muted); font-size: 0.85rem; margin-top: 30px; }
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1132 symbols</span><svg
+              <span class="leading-none">view all 1135 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/build.ts - Stolos v0.30.0 documentation</title>
+  <title>archon/build.ts - Stolos v0.31.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;" class="contextLink">Stolos v0.30.0</a>
+    <a href="..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -127,7 +127,8 @@ out/hosts/&lt;host&gt;/rootfs/. Deterministic: building twice changes nothing.</
 Functions</h2></div><div class="namespaceSection"><div id="namespace_build" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;.&#x2F;archon&#x2F;build.ts&#x2F;~&#x2F;build.html" title="build">
-			    <span>build</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">boolean</span>&gt;</span></span></a></div>
+			    <span>build</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">boolean</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon build</code>: validate the model, then render every target into out/; true when it is valid.</p>
+</div></div></div>
     </div><div id="namespace_dotfileproblems" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;.&#x2F;archon&#x2F;build.ts&#x2F;~&#x2F;dotfileProblems.html" title="dotfileProblems">
@@ -138,7 +139,8 @@ sources for one target within a layer).</p>
     </div><div id="namespace_knownspecs" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;.&#x2F;archon&#x2F;build.ts&#x2F;~&#x2F;knownSpecs.html" title="knownSpecs">
-			    <span>knownSpecs</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">Set</span>&lt;<span class="td-kw">string</span>&gt;&gt;</span></span></a></div>
+			    <span>knownSpecs</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">Set</span>&lt;<span class="td-kw">string</span>&gt;&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Every spec ID the model may name: the engine's and the fleet repository's own.</p>
+</div></div></div>
     </div><div id="namespace_loadmodel" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;.&#x2F;archon&#x2F;build.ts&#x2F;~&#x2F;loadModel.html" title="loadModel">
@@ -147,7 +149,8 @@ sources for one target within a layer).</p>
     </div><div id="namespace_planfor" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;.&#x2F;archon&#x2F;build.ts&#x2F;~&#x2F;planFor.html" title="planFor">
-			    <span>planFor</span><span>(<span><span>host<span>: <span class="td-ref">HostDef</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">HostPlan</span>&gt;</span></span></a></div>
+			    <span>planFor</span><span>(<span><span>host<span>: <span class="td-ref">HostDef</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">HostPlan</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One host's resolved plan.</p>
+</div></div></div>
     </div><div id="namespace_renderhosts" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;.&#x2F;archon&#x2F;build.ts&#x2F;~&#x2F;renderHosts.html" title="renderHosts">
@@ -197,15 +200,20 @@ out/&lt;fleet&gt;/man, and .mcp.json (spec 030), one MCP server per server host.
 Interfaces</h2></div><div class="namespaceSection"><div id="namespace_model" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;.&#x2F;archon&#x2F;build.ts&#x2F;~&#x2F;Model.html" title="Model">
-			    <span>Model</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>Model</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fleet as loaded, resolved, and validated.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;.&#x2F;archon&#x2F;build.ts&#x2F;~&#x2F;Model.html#property_fleet">
-                  <span>fleet</span><span>: <span class="td-ref">FleetDef</span></span></a></li><li>
+                  <span>fleet</span><span>: <span class="td-ref">FleetDef</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fleet (fleets/&lt;id&gt;/fleet.ts).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;.&#x2F;archon&#x2F;build.ts&#x2F;~&#x2F;Model.html#property_hosts">
-                  <span>hosts</span><span>: <span class="td-ref">HostDef</span>[]</span></a></li><li>
+                  <span>hosts</span><span>: <span class="td-ref">HostDef</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Every host.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;.&#x2F;archon&#x2F;build.ts&#x2F;~&#x2F;Model.html#property_plans">
-                  <span>plans</span><span>: <span class="td-ref">HostPlan</span>[]</span></a></li><li>
+                  <span>plans</span><span>: <span class="td-ref">HostPlan</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Each host's resolved plan (what it should have).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;.&#x2F;archon&#x2F;build.ts&#x2F;~&#x2F;Model.html#property_problems">
-                  <span>problems</span><span>: <span class="td-ref">Problem</span>[]</span></a></li></ul></div>
+                  <span>problems</span><span>: <span class="td-ref">Problem</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Every problem found; empty when the model is valid.</p>
+</div></div></li></ul></div>
     </div></div>
 </section>
 </div>
@@ -279,7 +287,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_model" cla
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1132 symbols</span><svg
+              <span class="leading-none">view all 1135 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

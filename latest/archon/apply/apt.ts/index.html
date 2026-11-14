@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/apply/apt.ts - Stolos v0.30.0 documentation</title>
+  <title>archon/apply/apt.ts - Stolos v0.31.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.30.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -180,36 +180,45 @@ the following line, so a failure names the package instead of apt's
 Interfaces</h2></div><div class="namespaceSection"><div id="namespace_aptissue" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;apply&#x2F;apt.ts&#x2F;~&#x2F;AptIssue.html" title="AptIssue">
-			    <span>AptIssue</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>AptIssue</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One problem found in apt's output, worded for people, with a fix when there is one.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;apply&#x2F;apt.ts&#x2F;~&#x2F;AptIssue.html#property_fix">
-                  <span>fix</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>fix</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What to run or check to fix it.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;apply&#x2F;apt.ts&#x2F;~&#x2F;AptIssue.html#property_level">
-                  <span>level</span><span>: <span><span class="td-str">"warn"</span><span class="td-op"> | </span><span class="td-str">"fail"</span></span></span></a></li><li>
+                  <span>level</span><span>: <span><span class="td-str">"warn"</span><span class="td-op"> | </span><span class="td-str">"fail"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A warning (apt's <code>W:</code>) or a failure (<code>E:</code>, <code>Err:</code>).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;apply&#x2F;apt.ts&#x2F;~&#x2F;AptIssue.html#property_message">
-                  <span>message</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>message</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What went wrong.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;apply&#x2F;apt.ts&#x2F;~&#x2F;AptIssue.html#property_network">
                   <span>network</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>DNS, unreachable, or timed out: retried, then a warning (spec 009).</p>
 </div></div></li></ul></div>
     </div><div id="namespace_aptresult" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;apply&#x2F;apt.ts&#x2F;~&#x2F;AptResult.html" title="AptResult">
-			    <span>AptResult</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>AptResult</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How an apt run ended.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;apply&#x2F;apt.ts&#x2F;~&#x2F;AptResult.html#property_network">
                   <span>network</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>It failed for network reasons only (warned, not failed).</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;apply&#x2F;apt.ts&#x2F;~&#x2F;AptResult.html#property_ok">
-                  <span>ok</span><span>: <span class="td-kw">boolean</span></span></a></li></ul></div>
+                  <span>ok</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Whether it succeeded (a network-only failure is not ok, but is only warned).</p>
+</div></div></li></ul></div>
     </div><div id="namespace_dpkgfailure" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;apply&#x2F;apt.ts&#x2F;~&#x2F;DpkgFailure.html" title="DpkgFailure">
-			    <span>DpkgFailure</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>DpkgFailure</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A package dpkg failed to install or configure.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;apply&#x2F;apt.ts&#x2F;~&#x2F;DpkgFailure.html#property_cause">
                   <span>cause</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The script's last output before dpkg gave up: usually the real cause.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;apply&#x2F;apt.ts&#x2F;~&#x2F;DpkgFailure.html#property_pkg">
-                  <span>pkg</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>pkg</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The package's name (without architecture).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;apply&#x2F;apt.ts&#x2F;~&#x2F;DpkgFailure.html#property_reason">
-                  <span>reason</span><span>: <span class="td-kw">string</span></span></a></li></ul></div>
+                  <span>reason</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>dpkg's reason, from the line after its error.</p>
+</div></div></li></ul></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;apply&#x2F;apt_ts_variables"><div>
@@ -247,7 +256,8 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_aptdeps" cl
     </div><div id="namespace_archive_unreachable" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;apply&#x2F;apt.ts&#x2F;~&#x2F;ARCHIVE_UNREACHABLE.html" title="ARCHIVE_UNREACHABLE">
-			    <span>ARCHIVE_UNREACHABLE</span><span>: <span class="td-str">"could not reach the Ubuntu archive; the next reconcile tries again"</span></span></a></div>
+			    <span>ARCHIVE_UNREACHABLE</span><span>: <span class="td-str">"could not reach the Ubuntu archive; the next reconcile tries again"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The warning shown when apt could not reach the Ubuntu archive for network reasons.</p>
+</div></div></div>
     </div><div id="namespace_locked" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;apply&#x2F;apt.ts&#x2F;~&#x2F;LOCKED.html" title="LOCKED">
@@ -338,7 +348,7 @@ retried, then reported as a warning that the next reconcile clears.</p>
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1132 symbols</span><svg
+              <span class="leading-none">view all 1135 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon-boot/firewall.ts - Stolos v0.30.0 documentation</title>
+  <title>archon-boot/firewall.ts - Stolos v0.31.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;" class="contextLink">Stolos v0.30.0</a>
+    <a href="..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -173,22 +173,28 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_evaluateufw
 Interfaces</h2></div><div class="namespaceSection"><div id="namespace_need" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;firewall.ts&#x2F;~&#x2F;Need.html" title="Need">
-			    <span>Need</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>Need</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A port the boot server needs reachable from the network.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;firewall.ts&#x2F;~&#x2F;Need.html#property_port">
-                  <span>port</span><span>: <span class="td-kw">number</span></span></a></li><li>
+                  <span>port</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The port number.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;firewall.ts&#x2F;~&#x2F;Need.html#property_protocol">
-                  <span>protocol</span><span>: <span><span class="td-str">"TCP"</span><span class="td-op"> | </span><span class="td-str">"UDP"</span></span></span></a></li><li>
+                  <span>protocol</span><span>: <span><span class="td-str">"TCP"</span><span class="td-op"> | </span><span class="td-str">"UDP"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>TCP (HTTP) or UDP (TFTP).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;firewall.ts&#x2F;~&#x2F;Need.html#property_what">
-                  <span>what</span><span>: <span class="td-kw">string</span></span></a></li></ul></div>
+                  <span>what</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What it is for, in words (&quot;HTTP&quot;, &quot;TFTP&quot;).</p>
+</div></div></li></ul></div>
     </div><div id="namespace_winrule" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;firewall.ts&#x2F;~&#x2F;WinRule.html" title="WinRule">
 			    <span>WinRule</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One Windows inbound rule, as the PowerShell probe reports it.</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;firewall.ts&#x2F;~&#x2F;WinRule.html#property_action">
-                  <span>action</span><span>: <span><span class="td-str">"Allow"</span><span class="td-op"> | </span><span class="td-str">"Block"</span></span></span></a></li><li>
+                  <span>action</span><span>: <span><span class="td-str">"Allow"</span><span class="td-op"> | </span><span class="td-str">"Block"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Allow or Block.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;firewall.ts&#x2F;~&#x2F;WinRule.html#property_name">
-                  <span>name</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>name</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The rule's display name.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;firewall.ts&#x2F;~&#x2F;WinRule.html#property_ports">
                   <span>ports</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Local ports: &quot;Any&quot;, or a list such as [&quot;8080&quot;] or [&quot;1000-2000&quot;].</p>
 </div></div></li><li>
@@ -210,7 +216,8 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_need" clas
     </div><div id="namespace_winstate" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;firewall.ts&#x2F;~&#x2F;WinState.html" title="WinState">
-			    <span>WinState</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>WinState</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Windows Defender Firewall's state, as the PowerShell probe reports it.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;firewall.ts&#x2F;~&#x2F;WinState.html#property_active">
                   <span>active</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Categories of the connected networks, e.g. [&quot;Public&quot;].</p>
 </div></div></li><li>
@@ -218,7 +225,8 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_need" clas
                   <span>enabled</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Firewall profiles that are on, e.g. [&quot;Domain&quot;, &quot;Private&quot;, &quot;Public&quot;].</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;firewall.ts&#x2F;~&#x2F;WinState.html#property_rules">
-                  <span>rules</span><span>: <span class="td-ref">WinRule</span>[]</span></a></li></ul></div>
+                  <span>rules</span><span>: <span class="td-ref">WinRule</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The enabled inbound rules.</p>
+</div></div></li></ul></div>
     </div></div>
 </section>
 </div>
@@ -292,7 +300,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_need" clas
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1132 symbols</span><svg
+              <span class="leading-none">view all 1135 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

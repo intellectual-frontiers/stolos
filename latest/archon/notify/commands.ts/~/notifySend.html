@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>notifySend - archon/notify/commands.ts - Stolos v0.30.0 documentation</title>
+  <title>notifySend - archon/notify/commands.ts - Stolos v0.31.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;notify&#x2F;commands.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.30.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -166,7 +166,10 @@
 </svg>
 </a>
 <span class="font-bold">notifySend</span><span class="font-medium">(<div class="ml-4"><div><span>a<span>: <a href="../../../.././archon/notify/commands.ts/~/SendArgs.html" class="link td-ref">SendArgs</a></span></span>,</div><div><span>o<span>: { wait<span>: <span class="td-kw">boolean</span></span>;  }</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span> </span>
-      </code><div class="space-y-7" id=""><section class="section"  id="parameters"><div>
+      </code><div class="space-y-7" id=""><div class="markdown"><p>archon notify send: queue a message from this machine. With <code>wait</code>, send it
+now and report whether it went; otherwise start the sender and return.
+Exit code 0 when queued (or sent, with <code>wait</code>) or a duplicate, else 1.</p>
+</div><section class="section"  id="parameters"><div>
       <h2 class="anchorable mb-1"><a href="#parameters" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
   height="16"

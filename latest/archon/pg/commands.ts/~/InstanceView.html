@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>InstanceView - archon/pg/commands.ts - Stolos v0.30.0 documentation</title>
+  <title>InstanceView - archon/pg/commands.ts - Stolos v0.31.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;pg&#x2F;commands.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.30.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -142,7 +142,8 @@
   />
 </svg>
 </a>
-</div><div><div class="space-y-7" id=""><section class="section"  id="properties"><div>
+</div><div><div class="space-y-7" id=""><div class="markdown"><p>One instance as <code>archon pg list</code> and <code>archon pg status</code> show it (stable JSON).</p>
+</div><section class="section"  id="properties"><div>
       <h2 class="anchorable mb-1"><a href="#properties" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
   height="16"
@@ -217,7 +218,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The instance's name.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_version">
 
   <div class="docEntryHeader">
@@ -270,7 +272,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Its major version.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_port">
 
   <div class="docEntryHeader">
@@ -323,7 +326,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The port it listens on (null until allocated).</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_status">
 
   <div class="docEntryHeader">
@@ -376,7 +380,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>pg_lsclusters' status, &quot;not created&quot;, or &quot;missing&quot; (recorded but no cluster).</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_unit">
 
   <div class="docEntryHeader">
@@ -429,7 +434,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Its systemd unit, postgresql@&lt;version&gt;-&lt;name&gt;.service.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_environment">
 
   <div class="docEntryHeader">
@@ -482,7 +488,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Shown in the psql prompt.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_protected">
 
   <div class="docEntryHeader">
@@ -535,7 +542,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>psql turns AUTOCOMMIT off and warns.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_inmodel">
 
   <div class="docEntryHeader">
@@ -588,7 +596,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Whether the host's model names it.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_owned">
 
   <div class="docEntryHeader">
@@ -641,7 +650,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Whether Archon created it (the host's record has it).</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_published">
 
   <div class="docEntryHeader">
@@ -694,7 +704,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The name it is published at (the host's name when the fleet has no web domain), or null when private.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_data">
 
   <div class="docEntryHeader">
@@ -747,7 +758,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Its data directory, when the cluster exists.</p>
+</div></div></div>
 </div></section>
 </div>
 </div>

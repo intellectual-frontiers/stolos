@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>latestRelease - archon/tools/sync.ts - Stolos v0.30.0 documentation</title>
+  <title>latestRelease - archon/tools/sync.ts - Stolos v0.31.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;tools&#x2F;sync.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.30.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -166,7 +166,10 @@
 </svg>
 </a>
 <span class="font-bold">latestRelease</span><span class="font-medium">(<div class="ml-4"><div><span>repo<span>: <span class="td-kw">string</span></span></span>,</div><div><span>tagPrefix<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<a href="../../../.././archon/tools/sync.ts/~/Release.html" class="link td-ref">Release</a>&gt;</span> </span>
-      </code><div class="space-y-7" id=""><section class="section"  id="parameters"><div>
+      </code><div class="space-y-7" id=""><div class="markdown"><p>The latest stable release of a GitHub repository (<code>owner/name</code>), read from
+the releases API (or the mirror in <code>ARCHON_GITHUB_API</code>). <code>tagPrefix</code> is cut
+from the tag to give the version. Throws on an HTTP error or a pre-release.</p>
+</div><section class="section"  id="parameters"><div>
       <h2 class="anchorable mb-1"><a href="#parameters" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
   height="16"

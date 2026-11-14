@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>SendArgs - archon/notify/commands.ts - Stolos v0.30.0 documentation</title>
+  <title>SendArgs - archon/notify/commands.ts - Stolos v0.31.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;notify&#x2F;commands.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.30.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -142,7 +142,8 @@
   />
 </svg>
 </a>
-</div><div><div class="space-y-7" id=""><section class="section"  id="properties"><div>
+</div><div><div class="space-y-7" id=""><div class="markdown"><p>The options of <code>archon notify send</code>.</p>
+</div><section class="section"  id="properties"><div>
       <h2 class="anchorable mb-1"><a href="#properties" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
   height="16"
@@ -217,7 +218,9 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The subject. One that starts with <code>[</code> or <code>Lab </code> is sent as given, with the
+body as the whole message; a short one becomes <code>[Archon] &lt;host&gt;: &lt;subject&gt;</code>.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_body">
 
   <div class="docEntryHeader">
@@ -271,7 +274,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The body text (with a short subject, the subject itself when empty).</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_bodyfile">
 
   <div class="docEntryHeader">
@@ -325,7 +329,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Read the body from this file instead (it wins over <code>body</code>).</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_attach">
 
   <div class="docEntryHeader">
@@ -379,7 +384,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Files to attach.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_level">
 
   <div class="docEntryHeader">
@@ -433,7 +439,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>How serious it is; <code>&quot;info&quot;</code> by default.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_key">
 
   <div class="docEntryHeader">
@@ -487,7 +494,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Deduplication key: the same key within an hour is sent once.</p>
+</div></div></div>
 </div></section>
 </div>
 </div>

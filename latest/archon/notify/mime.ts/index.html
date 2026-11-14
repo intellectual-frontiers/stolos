@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/notify/mime.ts - Stolos v0.30.0 documentation</title>
+  <title>archon/notify/mime.ts - Stolos v0.31.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.30.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -127,15 +127,21 @@ Article 4) so the boot machine on Windows and the hosts send the same thing.</p>
 Functions</h2></div><div class="namespaceSection"><div id="namespace_base64" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;mime.ts&#x2F;~&#x2F;base64.html" title="base64">
-			    <span>base64</span><span>(<span><span>bytes<span>: <span class="td-ref">Uint8Array</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a></div>
+			    <span>base64</span><span>(<span><span>bytes<span>: <span class="td-ref">Uint8Array</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Standard base64 of these bytes (in 32 KB chunks, so large inputs do not overflow the stack).</p>
+</div></div></div>
     </div><div id="namespace_base64url" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;mime.ts&#x2F;~&#x2F;base64url.html" title="base64url">
-			    <span>base64url</span><span>(<span><span>bytes<span>: <span class="td-ref">Uint8Array</span></span></span></span>)</span></a></div>
+			    <span>base64url</span><span>(<span><span>bytes<span>: <span class="td-ref">Uint8Array</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>URL-safe base64 of these bytes (RFC 4648 section 5), without <code>=</code> padding.</p>
+</div></div></div>
     </div><div id="namespace_buildmime" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;mime.ts&#x2F;~&#x2F;buildMime.html" title="buildMime">
-			    <span>buildMime</span><span>(<div class="ml-4"><div><span>m<span>: <span class="td-ref">Mail</span></span></span>,</div><div><span>boundarySeed<span class="td-op">?</span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a></div>
+			    <span>buildMime</span><span>(<div class="ml-4"><div><span>m<span>: <span class="td-ref">Mail</span></span></span>,</div><div><span>boundarySeed<span class="td-op">?</span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The whole message as RFC 5322 text with CRLF line ends: headers, a
+multipart/alternative body (plain text and HTML, base64), then each
+attachment. <code>boundarySeed</code> names the MIME boundaries (random by default;
+fixed in tests). Date and Message-ID are set here.</p>
+</div></div></div>
     </div><div id="namespace_displayname" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;mime.ts&#x2F;~&#x2F;displayName.html" title="displayName">
@@ -144,7 +150,8 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_base64" cla
     </div><div id="namespace_escapehtml" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;mime.ts&#x2F;~&#x2F;escapeHtml.html" title="escapeHtml">
-			    <span>escapeHtml</span><span>(<span><span>s<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a></div>
+			    <span>escapeHtml</span><span>(<span><span>s<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Escape <code>&amp;</code>, <code>&lt;</code> and <code>&gt;</code> for HTML text (not for attribute values: quotes are kept).</p>
+</div></div></div>
     </div><div id="namespace_headervalue" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;mime.ts&#x2F;~&#x2F;headerValue.html" title="headerValue">
@@ -178,37 +185,46 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_base64" cla
 Interfaces</h2></div><div class="namespaceSection"><div id="namespace_attachment" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;mime.ts&#x2F;~&#x2F;Attachment.html" title="Attachment">
-			    <span>Attachment</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Mail messages for archon notify (spec 025): RFC 5322 with MIME, a plain-text
-part and a simple HTML part, and small attachments. Built here (TypeScript,
-Article 4) so the boot machine on Windows and the hosts send the same thing.</p>
+			    <span>Attachment</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A file attached to a message.</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;mime.ts&#x2F;~&#x2F;Attachment.html#property_data">
-                  <span>data</span><span>: <span class="td-ref">Uint8Array</span></span></a></li><li>
+                  <span>data</span><span>: <span class="td-ref">Uint8Array</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its contents, raw bytes (base64-encoded when the message is built).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;mime.ts&#x2F;~&#x2F;Attachment.html#property_name">
-                  <span>name</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>name</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The file name the recipient sees (for example <code>apply.log</code>).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;mime.ts&#x2F;~&#x2F;Attachment.html#property_type">
-                  <span>type</span><span>: <span class="td-kw">string</span></span></a></li></ul></div>
+                  <span>type</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its MIME type (for example <code>text/plain</code> or <code>application/gzip</code>).</p>
+</div></div></li></ul></div>
     </div><div id="namespace_mail" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;mime.ts&#x2F;~&#x2F;Mail.html" title="Mail">
-			    <span>Mail</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>Mail</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One mail message, before it is encoded (buildMime).</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;mime.ts&#x2F;~&#x2F;Mail.html#property_attachments">
-                  <span>attachments</span><span>: <span class="td-ref">Attachment</span>[]</span></a></li><li>
+                  <span>attachments</span><span>: <span class="td-ref">Attachment</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Files to attach; none by default.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;mime.ts&#x2F;~&#x2F;Mail.html#property_from">
-                  <span>from</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>from</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The sender's address (for example <code>root+alpha.lab@example.com</code>).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;mime.ts&#x2F;~&#x2F;Mail.html#property_fromname">
                   <span>fromName</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Display name for From (&quot;alpha (Archon)&quot;).</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;mime.ts&#x2F;~&#x2F;Mail.html#property_headers">
-                  <span>headers</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></a></li><li>
+                  <span>headers</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Extra headers (for example <code>Reply-To</code>), values encoded like the subject.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;mime.ts&#x2F;~&#x2F;Mail.html#property_html">
-                  <span>html</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>html</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The HTML part (the same content, simply styled).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;mime.ts&#x2F;~&#x2F;Mail.html#property_subject">
-                  <span>subject</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>subject</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The subject line, any text (RFC 2047-encoded when not plain ASCII).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;mime.ts&#x2F;~&#x2F;Mail.html#property_text">
-                  <span>text</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>text</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The plain-text part.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;mime.ts&#x2F;~&#x2F;Mail.html#property_to">
-                  <span>to</span><span>: <span class="td-kw">string</span></span></a></li></ul></div>
+                  <span>to</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The recipient's address.</p>
+</div></div></li></ul></div>
     </div></div>
 </section>
 </div>
@@ -282,7 +298,7 @@ Article 4) so the boot machine on Windows and the hosts send the same thing.</p>
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1132 symbols</span><svg
+              <span class="leading-none">view all 1135 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

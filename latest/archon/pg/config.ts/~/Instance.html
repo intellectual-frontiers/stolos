@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Instance - archon/pg/config.ts - Stolos v0.30.0 documentation</title>
+  <title>Instance - archon/pg/config.ts - Stolos v0.31.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;pg&#x2F;config.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.30.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -142,7 +142,9 @@
   />
 </svg>
 </a>
-</div><div><div class="space-y-7" id=""><section class="section"  id="properties"><div>
+</div><div><div class="space-y-7" id=""><div class="markdown"><p>One instance a host keeps, resolved from the model and the host's record
+(see <a href="../../../.././archon/pg/config.ts/~/instancesOf.html">instancesOf</a>).</p>
+</div><section class="section"  id="properties"><div>
       <h2 class="anchorable mb-1"><a href="#properties" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
   height="16"
@@ -217,7 +219,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The instance's name (its Debian cluster name).</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_version">
 
   <div class="docEntryHeader">
@@ -270,7 +273,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Its major version: the record's, else the model's, else Ubuntu's.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_port">
 
   <div class="docEntryHeader">
@@ -378,7 +382,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Shown in the psql prompt (default production).</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_protected">
 
   <div class="docEntryHeader">
@@ -431,7 +436,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>psql turns AUTOCOMMIT off and warns (default true for production).</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_databases">
 
   <div class="docEntryHeader">
@@ -484,7 +490,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The databases the model puts in it (empty when only recorded).</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_roles">
 
   <div class="docEntryHeader">
@@ -646,7 +653,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The host's record of it, when Archon created it.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_published">
 
   <div class="docEntryHeader">
@@ -699,7 +707,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Whether it is published: reachable on the server's address over TLS.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_localonly">
 
   <div class="docEntryHeader">

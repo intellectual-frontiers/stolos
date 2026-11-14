@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Queued - archon/notify/notify.ts - Stolos v0.30.0 documentation</title>
+  <title>Queued - archon/notify/notify.ts - Stolos v0.31.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;notify&#x2F;notify.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.30.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -142,7 +142,8 @@
   />
 </svg>
 </a>
-</div><div><div class="space-y-7" id=""><section class="section"  id="properties"><div>
+</div><div><div class="space-y-7" id=""><div class="markdown"><p>A composed message waiting in the spool (one JSON file, named by its id).</p>
+</div><section class="section"  id="properties"><div>
       <h2 class="anchorable mb-1"><a href="#properties" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
   height="16"
@@ -217,7 +218,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p><code>&lt;epoch ms&gt;-&lt;8 hex&gt;</code>: sorts by time and names the file.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_created">
 
   <div class="docEntryHeader">
@@ -270,7 +272,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>When it was composed (ISO 8601).</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_subject">
 
   <div class="docEntryHeader">
@@ -323,7 +326,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The subject, redacted.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_text">
 
   <div class="docEntryHeader">
@@ -376,7 +380,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The plain-text body, redacted.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_html">
 
   <div class="docEntryHeader">
@@ -429,7 +434,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The HTML body, redacted.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_level">
 
   <div class="docEntryHeader">
@@ -482,7 +488,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>How serious it is.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_key">
 
   <div class="docEntryHeader">
@@ -536,7 +543,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The deduplication key, if any (sent as <code>X-Archon-Key</code>).</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_attachments">
 
   <div class="docEntryHeader">
@@ -589,7 +597,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Attached files, contents in base64.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_attempts">
 
   <div class="docEntryHeader">
@@ -642,7 +651,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>How many sends have failed so far.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_nextat">
 
   <div class="docEntryHeader">
@@ -695,7 +705,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>When to try next (ISO 8601); see BACKOFF_MIN.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_lasterror">
 
   <div class="docEntryHeader">
@@ -749,7 +760,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The last send error, redacted.</p>
+</div></div></div>
 </div></section>
 </div>
 </div>

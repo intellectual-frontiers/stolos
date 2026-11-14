@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/optin/optin.ts - Stolos v0.30.0 documentation</title>
+  <title>archon/optin/optin.ts - Stolos v0.31.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.30.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -134,7 +134,7 @@ on with a forced choice, --durable or --ephemeral, kept in the same record.</p>
 Functions</h2></div><div class="namespaceSection"><div id="namespace_caller" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;optin&#x2F;optin.ts&#x2F;~&#x2F;caller.html" title="caller">
-			    <span>caller</span><span>()</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Who asked: the person behind sudo, else the current user.</p>
+			    <span>caller</span><span>()<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Who asked: the person behind sudo, else the current user.</p>
 </div></div></div>
     </div><div id="namespace_checkchoice" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -145,17 +145,18 @@ ephemeral needs the host's name repeated with --confirm-destroy.</p>
     </div><div id="namespace_holdsuserdata" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;optin&#x2F;optin.ts&#x2F;~&#x2F;holdsUserData.html" title="holdsUserData">
-			    <span>holdsUserData</span><span>(<span><span>name<span>: <span class="td-kw">string</span></span></span></span>)</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Whether this opt-in can hold end users' data (and so needs a choice).</p>
+			    <span>holdsUserData</span><span>(<span><span>name<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">boolean</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Whether this opt-in can hold end users' data (and so needs a choice).</p>
 </div></div></div>
     </div><div id="namespace_ison" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;optin&#x2F;optin.ts&#x2F;~&#x2F;isOn.html" title="isOn">
-			    <span>isOn</span><span>(<div class="ml-4"><div><span>host<span>: <span class="td-ref">HostDef</span></span></span>,</div><div><span>name<span>: <span class="td-kw">string</span></span></span></div></div>)</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Whether an opt-in is on for this host (the model's view; absent means off).</p>
+			    <span>isOn</span><span>(<div class="ml-4"><div><span>host<span>: <span class="td-ref">HostDef</span></span></span>,</div><div><span>name<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">boolean</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Whether an opt-in is on for this host (the model's view; absent means off).</p>
 </div></div></div>
     </div><div id="namespace_optindef" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;optin&#x2F;optin.ts&#x2F;~&#x2F;optInDef.html" title="optInDef">
-			    <span>optInDef</span><span>(<span><span>name<span>: <span class="td-kw">string</span></span></span></span>)</span></a></div>
+			    <span>optInDef</span><span>(<span><span>name<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span><span class="td-ref">OptInDef</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The opt-in with this name, or <code>undefined</code>.</p>
+</div></div></div>
     </div><div id="namespace_optinlist" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;optin&#x2F;optin.ts&#x2F;~&#x2F;optInList.html" title="optInList">
@@ -201,7 +202,8 @@ lists the instances Archon made).</p>
 Interfaces</h2></div><div class="namespaceSection"><div id="namespace_optindef-1" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;optin&#x2F;optin.ts&#x2F;~&#x2F;OptInDef.html" title="OptInDef">
-			    <span>OptInDef</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>OptInDef</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One opt-in service or container: its switch, unit, commands and how to use it.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;optin&#x2F;optin.ts&#x2F;~&#x2F;OptInDef.html#property_commands">
                   <span>commands</span><span>: { on<span>: <span class="td-kw">string</span></span>; off<span>: <span class="td-kw">string</span></span>; status<span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Commands that turn it on, off, and show it.</p>
 </div></div></li><li>
@@ -209,12 +211,14 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_optindef-1
                   <span>howTo</span><span>(<div class="ml-4"><div><span>fleet<span>: <span class="td-ref">FleetDef</span></span></span>,</div><div><span>host<span>: <span class="td-ref">HostDef</span></span></span></div></div>)<span>: <span class="td-kw">string</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What people should know once it is on (addresses, how to connect).</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;optin&#x2F;optin.ts&#x2F;~&#x2F;OptInDef.html#property_kind">
-                  <span>kind</span><span>: <span><span class="td-str">"service"</span><span class="td-op"> | </span><span class="td-str">"container"</span></span></span></a></li><li>
+                  <span>kind</span><span>: <span><span class="td-str">"service"</span><span class="td-op"> | </span><span class="td-str">"container"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A system service, or a container Archon runs.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;optin&#x2F;optin.ts&#x2F;~&#x2F;OptInDef.html#property_name">
                   <span>name</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The switch: this machine's archon.sql&lt;name&gt;.json, and UnitDef.switch.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;optin&#x2F;optin.ts&#x2F;~&#x2F;OptInDef.html#property_title">
-                  <span>title</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>title</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its name for people.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;optin&#x2F;optin.ts&#x2F;~&#x2F;OptInDef.html#property_unit">
                   <span>unit</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The unit the switch masks or enables.</p>
 </div></div></li></ul></div>
@@ -246,11 +250,13 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_optindef-1
 Variables</h2></div><div class="namespaceSection"><div id="namespace_opt_ins" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;optin&#x2F;optin.ts&#x2F;~&#x2F;OPT_INS.html" title="OPT_INS">
-			    <span>OPT_INS</span><span>: <span class="td-ref">OptInDef</span>[]</span></a></div>
+			    <span>OPT_INS</span><span>: <span class="td-ref">OptInDef</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Every opt-in: SMB, PostgreSQL, S3 and the telemetry web UI.</p>
+</div></div></div>
     </div><div id="namespace_spec" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;optin&#x2F;optin.ts&#x2F;~&#x2F;SPEC.html" title="SPEC">
-			    <span>SPEC</span><span>: <span class="td-str">"040-opt-in"</span></span></a></div>
+			    <span>SPEC</span><span>: <span class="td-str">"040-opt-in"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The spec this module implements.</p>
+</div></div></div>
     </div></div>
 </section>
 </div>
@@ -324,7 +330,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_opt_ins" cl
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1132 symbols</span><svg
+              <span class="leading-none">view all 1135 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

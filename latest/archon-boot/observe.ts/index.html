@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon-boot/observe.ts - Stolos v0.30.0 documentation</title>
+  <title>archon-boot/observe.ts - Stolos v0.31.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;" class="contextLink">Stolos v0.30.0</a>
+    <a href="..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -127,7 +127,8 @@ took the time, and what failed.</p>
 Functions</h2></div><div class="namespaceSection"><div id="namespace_bootobserve" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;observe.ts&#x2F;~&#x2F;bootObserve.html" title="bootObserve">
-			    <span>bootObserve</span><span>(<span><span>o<span>: { count<span>: <span class="td-kw">number</span></span>;  }</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a></div>
+			    <span>bootObserve</span><span>(<span><span>o<span>: { count<span>: <span class="td-kw">number</span></span>;  }</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>deno task boot observe</code>: the newest <code>count</code> installs, each with its slowest and failed steps.</p>
+</div></div></div>
     </div><div id="namespace_installsfrom" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;observe.ts&#x2F;~&#x2F;installsFrom.html" title="installsFrom">
@@ -161,19 +162,26 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_bootobserve
 Interfaces</h2></div><div class="namespaceSection"><div id="namespace_install" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;observe.ts&#x2F;~&#x2F;Install.html" title="Install">
-			    <span>Install</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>Install</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One install, from its root span &quot;install &lt;host&gt;&quot;.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;observe.ts&#x2F;~&#x2F;Install.html#property_name">
-                  <span>name</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>name</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The host's name.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;observe.ts&#x2F;~&#x2F;Install.html#property_ok">
-                  <span>ok</span><span>: <span class="td-kw">boolean</span></span></a></li><li>
+                  <span>ok</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Whether the root span ended without an error.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;observe.ts&#x2F;~&#x2F;Install.html#property_result">
-                  <span>result</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>result</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its archon.result attribute (for example &quot;Ready&quot;), if any.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;observe.ts&#x2F;~&#x2F;Install.html#property_seconds">
-                  <span>seconds</span><span>: <span class="td-kw">number</span></span></a></li><li>
+                  <span>seconds</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How long it took, in seconds.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;observe.ts&#x2F;~&#x2F;Install.html#property_start">
-                  <span>start</span><span>: <span class="td-ref">Date</span></span></a></li><li>
+                  <span>start</span><span>: <span class="td-ref">Date</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When it started.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;observe.ts&#x2F;~&#x2F;Install.html#property_steps">
-                  <span>steps</span><span>: <span class="td-ref">Array</span>&lt;<div class="ml-indent"><div>{ name<span>: <span class="td-kw">string</span></span>; seconds<span>: <span class="td-kw">number</span></span>; ok<span>: <span class="td-kw">boolean</span></span>; problem<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</div></div>&gt;</span></a></li></ul></div>
+                  <span>steps</span><span>: <span class="td-ref">Array</span>&lt;<div class="ml-indent"><div>{ name<span>: <span class="td-kw">string</span></span>; seconds<span>: <span class="td-kw">number</span></span>; ok<span>: <span class="td-kw">boolean</span></span>; problem<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</div></div>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its steps (the root's children), in order, with their durations and any problem.</p>
+</div></div></li></ul></div>
     </div></div>
 </section>
 </div>
@@ -247,7 +255,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_install" c
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1132 symbols</span><svg
+              <span class="leading-none">view all 1135 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/web/config.ts - Stolos v0.30.0 documentation</title>
+  <title>archon/web/config.ts - Stolos v0.31.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.30.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -132,11 +132,13 @@ until then (and without it) Traefik's self-signed certificate answers.</p>
 Functions</h2></div><div class="namespaceSection"><div id="namespace_backendurl" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;config.ts&#x2F;~&#x2F;backendUrl.html" title="backendUrl">
-			    <span>backendUrl</span><span>(<span><span>r<span>: <span class="td-ref">Pick</span>&lt;<span class="td-ref">WebRoute</span><span>, </span><span><span class="td-str">"address"</span><span class="td-op"> | </span><span class="td-str">"port"</span><span class="td-op"> | </span><span class="td-str">"https"</span></span>&gt;</span></span></span>)<span>: <span class="td-kw">string</span></span></span></a></div>
+			    <span>backendUrl</span><span>(<span><span>r<span>: <span class="td-ref">Pick</span>&lt;<span class="td-ref">WebRoute</span><span>, </span><span><span class="td-str">"address"</span><span class="td-op"> | </span><span class="td-str">"port"</span><span class="td-op"> | </span><span class="td-str">"https"</span></span>&gt;</span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The URL Traefik forwards a route to: http or https, its address (127.0.0.1 by default), and its port.</p>
+</div></div></div>
     </div><div id="namespace_dnsrecords" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;config.ts&#x2F;~&#x2F;dnsRecords.html" title="dnsRecords">
-			    <span>dnsRecords</span><span>(<div class="ml-4"><div><span>fleet<span>: <span class="td-ref">FleetDef</span></span></span>,</div><div><span>host<span>: <span class="td-ref">HostDef</span></span></span>,</div><div><span>address<span>: <span class="td-kw">string</span></span></span></div></div>)</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The A records a server keeps in Cloudflare: its name and its wildcard, to its address.</p>
+			    <span>dnsRecords</span><span>(<div class="ml-4"><div><span>fleet<span>: <span class="td-ref">FleetDef</span></span></span>,</div><div><span>host<span>: <span class="td-ref">HostDef</span></span></span>,</div><div><span>address<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">ARecord</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The A records a server keeps in Cloudflare: its name and its wildcard, to
+its address. None without fleet.web.</p>
 </div></div></div>
     </div><div id="namespace_fqdn" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -196,9 +198,11 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_backendurl"
 Variables</h2></div><div class="namespaceSection"><div id="namespace_web" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;config.ts&#x2F;~&#x2F;WEB.html" title="WEB">
-			    <span>WEB</span><span>: { staticConfig<span>: <span class="td-kw">string</span></span>; dynamicDir<span>: <span class="td-kw">string</span></span>; dynamicConfig<span>: <span class="td-kw">string</span></span>; unit<span>: <span class="td-kw">string</span></span>; welcomeUnit<span>: <span class="td-kw">string</span></span>; welcomeUser<span>: <span class="td-kw">string</span></span>; welcomeAddress<span>: <span class="td-kw">string</span></span>; welcomePort<span>: <span class="td-kw">number</span></span>; credential<span>: <span class="td-kw">string</span></span>; env<span>: <span class="td-kw">string</span></span>; delivered<span>: <span class="td-kw">string</span></span>; group<span>: <span class="td-kw">string</span></span>; podmanSocket<span>: <span class="td-kw">string</span></span>; acmeStorage<span>: <span class="td-kw">string</span></span>; resolver<span>: <span class="td-kw">string</span></span>;  }</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>WEB</span><span>: { staticConfig<span>: <span class="td-kw">string</span></span>; dynamicDir<span>: <span class="td-kw">string</span></span>; dynamicConfig<span>: <span class="td-kw">string</span></span>; unit<span>: <span class="td-kw">string</span></span>; welcomeUnit<span>: <span class="td-kw">string</span></span>; welcomeUser<span>: <span class="td-kw">string</span></span>; welcomeAddress<span>: <span class="td-kw">string</span></span>; welcomePort<span>: <span class="td-kw">number</span></span>; credential<span>: <span class="td-kw">string</span></span>; env<span>: <span class="td-kw">string</span></span>; delivered<span>: <span class="td-kw">string</span></span>; group<span>: <span class="td-kw">string</span></span>; podmanSocket<span>: <span class="td-kw">string</span></span>; acmeStorage<span>: <span class="td-kw">string</span></span>; resolver<span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The web front door's fixed paths, units, accounts and ports on a server (spec 032).</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;config.ts&#x2F;~&#x2F;WEB.html#property_acmestorage">
-                  <span>acmeStorage</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>acmeStorage</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Traefik's ACME store: the Let's Encrypt account, certificates and keys.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;config.ts&#x2F;~&#x2F;WEB.html#property_credential">
                   <span>credential</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Root only: the Cloudflare token for archon web dns.</p>
 </div></div></li><li>
@@ -206,9 +210,11 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_web" class=
                   <span>delivered</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where an install delivers the token (first boot moves it, spec 004).</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;config.ts&#x2F;~&#x2F;WEB.html#property_dynamicconfig">
-                  <span>dynamicConfig</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>dynamicConfig</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Archon's dynamic configuration file in it (traefikDynamic).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;config.ts&#x2F;~&#x2F;WEB.html#property_dynamicdir">
-                  <span>dynamicDir</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>dynamicDir</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The folder Traefik watches for dynamic configuration.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;config.ts&#x2F;~&#x2F;WEB.html#property_env">
                   <span>env</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Root only: the same token for Traefik's DNS challenge (read by systemd).</p>
 </div></div></li><li>
@@ -216,17 +222,23 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_web" class=
                   <span>group</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>May use the Podman socket (Traefik reads container labels there).</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;config.ts&#x2F;~&#x2F;WEB.html#property_podmansocket">
-                  <span>podmanSocket</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>podmanSocket</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Podman's Docker-compatible API socket.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;config.ts&#x2F;~&#x2F;WEB.html#property_resolver">
-                  <span>resolver</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>resolver</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The name of Traefik's certificate resolver.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;config.ts&#x2F;~&#x2F;WEB.html#property_staticconfig">
-                  <span>staticConfig</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>staticConfig</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Traefik's static configuration (traefikStatic).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;config.ts&#x2F;~&#x2F;WEB.html#property_unit">
-                  <span>unit</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>unit</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Traefik's systemd service.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;config.ts&#x2F;~&#x2F;WEB.html#property_welcomeaddress">
-                  <span>welcomeAddress</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>welcomeAddress</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The welcome page listens here (loopback: only Traefik reaches it).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;config.ts&#x2F;~&#x2F;WEB.html#property_welcomeport">
-                  <span>welcomePort</span><span>: <span class="td-kw">number</span></span></a></li><li>
+                  <span>welcomePort</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The welcome page's TCP port.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;config.ts&#x2F;~&#x2F;WEB.html#property_welcomeunit">
                   <span>welcomeUnit</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The welcome page: archon web serve, on loopback only.</p>
 </div></div></li><li>
@@ -307,7 +319,7 @@ account whose name exists, and the group archon-web does.</p>
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1132 symbols</span><svg
+              <span class="leading-none">view all 1135 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
