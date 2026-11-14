@@ -76,7 +76,7 @@ export function whereSteps(f: WhereFacts): Step[] {
         ? `choose a fleet of this repository (${f.fleets.join(", ")})`
         : "create the fleet",
       command: f.fleets.length > 1
-        ? `deno task archon --fleet ${f.fleets[0]}`
+        ? `deno task archon fleet use ${f.fleets[0]}`
         : "deno task archon fleet init <id>",
     });
     return label(raw);

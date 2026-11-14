@@ -500,6 +500,7 @@ Most messages end with `explain: archon explain <code>`: run it for what it mean
 
 | You see                                               | What to do                                                                                                                       |
 | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `no fleet chosen in ...`                              | the repository holds several fleets: `deno task archon fleet use my-fleet` (once per checkout; remembered)                       |
 | `push refused here: ... is not signed`                | `git commit --amend --no-edit -S`, then push again. `deno task archon keys` shows what is missing                                |
 | a server does not pick up your change                 | `deno task archon fleet status`; on the server, `journalctl -t archon-approval` says why it refused (usually `E047-UNSIGNED`)    |
 | the boot window shows nothing when the machine boots  | `deno task boot doctor` (the firewall, and the router's network boot setting); is the machine booting from the network (F7/F12)? |

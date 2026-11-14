@@ -30,7 +30,7 @@ Deno.test("053: a new repository: create the fleet, or choose one", () => {
   );
   assertStringIncludes(
     nextCommand(whereSteps({ ...ready, fleetId: undefined, fleets: ["fcr", "synthetic-uat"] })),
-    "--fleet fcr",
+    "fleet use fcr",
   );
 });
 

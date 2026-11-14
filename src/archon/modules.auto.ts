@@ -86,6 +86,7 @@ import "./fleet/decisions.ts";
 import "./fleet/registration.ts";
 import "./fleet/scaffold.ts";
 import "./fleet/upgrade.ts";
+import "./fleet/use.ts";
 import "./guests/guests.ts";
 import "./guide/command.ts";
 import "./guide/guide.ts";

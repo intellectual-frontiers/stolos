@@ -353,6 +353,9 @@ export async function fleetInit(o: FleetInitOptions): Promise<void> {
   // again): rewriting it would drop everything added since (site, mail, ...).
   const kept = (await exists(P.fleet)) && !o.rewrite;
   await Deno.mkdir(P.fleetDir, { recursive: true });
+  // This checkout now works on the new fleet, without --fleet (archon fleet use).
+  const { chooseFleet } = await import("../fleet/use.ts");
+  await chooseFleet(P.fleetId);
   if (!kept) await Deno.writeTextFile(P.fleet, fleetSource(fleet));
   // Commits from this checkout carry your GitHub identity (noreply address),
   // set for this repository only; a global identity, if any, is left alone.

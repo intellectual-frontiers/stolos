@@ -53,6 +53,25 @@ export const COMMANDS: Command[] = [
     },
   },
   {
+    name: "fleet use",
+    summary: "Choose which fleet of this repository archon works on (remembered here)",
+    description:
+      `For a repository with more than one fleet (fleets/<id>/): every archon command in this checkout is then for that fleet, at once, in every terminal, until you choose another. The choice is kept in .git/archon/fleet, so it is never committed and each checkout makes its own. --fleet <id> (or ARCHON_FLEET) still chooses another for one command. fleet init chooses the fleet it creates.`,
+    tier: "read",
+    args: [{
+      name: "id",
+      type: "string",
+      positional: true,
+      required: true,
+      description: "The fleet: a folder of fleets/.",
+    }],
+    examples: [{ cmd: "deno task archon fleet use fcr", text: "Work on fleets/fcr from now on." }],
+    async run(a) {
+      const { fleetUse } = await import("../fleet/use.ts");
+      return await fleetUse(a.id as string);
+    },
+  },
+  {
     name: "fleet init",
     summary: "Create the fleet from your GitHub identity (boot machine, once)",
     description:

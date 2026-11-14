@@ -8,8 +8,10 @@
  *
  * The instance is ARCHON_REPO, else the nearest folder above the working
  * directory that holds `fleets/`, else /srv/archon, else (in an engine
- * checkout) its `examples/`. The fleet is ARCHON_FLEET, else /etc/archon/fleet
- * (written at install), else the instance's only fleet.
+ * checkout) its `examples/`. The fleet is ARCHON_FLEET (or --fleet), else
+ * /etc/archon/fleet (written at install), else this checkout's choice
+ * (`archon fleet use <id>`, in .git/archon/fleet, never committed), else the
+ * instance's only fleet.
  *
  * ```mermaid
  * flowchart TD
@@ -21,7 +23,8 @@
  *   srv -->|no| ex["the engine's examples/"]
  *   inst --> fleet{"--fleet / ARCHON_FLEET?"}
  *   fleet -->|unset| etc{"/etc/archon/fleet?"}
- *   etc -->|unset| only["the only fleet"]
+ *   etc -->|unset| use{"archon fleet use<br/>(.git/archon/fleet)?"}
+ *   use -->|unset| only["the only fleet"]
  * ```
  *
  * @module
@@ -83,12 +86,19 @@ export function listFleets(repo: string): string[] {
   return out.sort();
 }
 
+/** Where `archon fleet use <id>` keeps this checkout's choice (inside .git: never committed). */
+export function fleetChoiceFile(repo: string): string {
+  return join(repo, ".git", "archon", "fleet");
+}
+
 /** The active fleet's id, or "" when it cannot be decided (see the header). */
 export function findFleetId(repo: string): string {
   const env = Deno.env.get("ARCHON_FLEET");
   if (env) return env.trim();
   const etc = readOr("/etc/archon/fleet")?.trim();
   if (etc) return etc;
+  const chosen = readOr(fleetChoiceFile(repo))?.trim();
+  if (chosen) return chosen;
   const all = listFleets(repo);
   return all.length === 1 ? all[0] : "";
 }

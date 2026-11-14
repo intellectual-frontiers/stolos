@@ -39,8 +39,9 @@ deno task archon host add <name> --claim  # the first host (or --mac-address <ma
 ```
 
 A second fleet in the same repository is one more `deno task archon fleet init <id>`. When the
-repository holds more than one fleet, say which one each command is for with `--fleet <id>` (or set
-`ARCHON_FLEET`): for example `deno task archon --fleet lab build` and
+repository holds more than one fleet, choose the one this checkout works on, once:
+`deno task archon fleet use lab` (remembered in `.git`, never committed; `fleet init` chooses the
+fleet it creates). For one command, `--fleet <id>` (or `ARCHON_FLEET`) chooses another, for example
 `deno task boot serve --fleet lab`. Files that already exist are never overwritten by `fleet init`.
 
 ## Why the pin and the lock matter (security, not only tidiness)

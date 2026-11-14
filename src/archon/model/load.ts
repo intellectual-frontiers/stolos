@@ -8,7 +8,7 @@
  */
 
 import { getRecord, listRecords } from "../state/store.ts";
-import { P } from "../core/paths.ts";
+import { listFleets, P } from "../core/paths.ts";
 import { exists } from "../core/fsx.ts";
 import { join, toFileUrl } from "../core/path.ts";
 import type { FleetDef, HostDef, McpTier, OptInRecord, PgState, UserDef } from "./types.ts";
@@ -36,7 +36,9 @@ export class NoFleetError extends Error {
     super(
       P.fleetId
         ? `no fleet ${P.fleetId} in ${P.repo}: run \`archon fleet init ${P.fleetId}\` on the boot machine first`
-        : `no fleet chosen in ${P.repo}: set ARCHON_FLEET to one of fleets/, or run \`archon fleet init <id>\``,
+        : `no fleet chosen in ${P.repo}: deno task archon fleet use <id> (one of: ${
+          listFleets(P.repo).join(", ") || "none yet"
+        }), or create one: deno task archon fleet init <id>`,
     );
   }
 }
