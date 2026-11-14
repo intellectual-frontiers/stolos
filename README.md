@@ -434,8 +434,9 @@ A durable server (or one that cannot be asked) is reinstalled only with
 <details>
 <summary><b>Restart or turn off a server</b></summary>
 
-On the server: `archon reboot` or `archon poweroff` (they ask for your password). Both wait for any update in progress
-to finish first. Never pull the power during an update: it can damage the package database.
+On the server: `archon reboot` or `archon poweroff` (they ask for your password). Both wait for any
+update in progress to finish first. Never pull the power during an update: it can damage the package
+database.
 
 </details>
 
