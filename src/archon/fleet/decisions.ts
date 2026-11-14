@@ -16,6 +16,7 @@ import { toFileUrl } from "../core/path.ts";
 import { ui } from "../core/ui.ts";
 import type { DataClass, HostDecisions, OptInRecord } from "../model/types.ts";
 
+/** fleets/<id>/hosts/<host>/decisions.ts. */
 export function decisionsFile(host: string): string {
   return join(P.hosts, host, "decisions.ts");
 }
@@ -40,6 +41,7 @@ ${rows}  },
 `;
 }
 
+/** A host's decisions (none: empty). */
 export async function loadDecisions(
   host: string,
   file = decisionsFile(host),

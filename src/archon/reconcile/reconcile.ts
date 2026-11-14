@@ -32,7 +32,9 @@ export interface SyncResult {
   pulled: string[];
   /** commits on origin/main not yet applied locally (when check or blocked) */
   incoming: string[];
+  /** The commit it runs. */
   head: string;
+  /** origin/main's commit. */
   remote: string;
   /** why HEAD could not reach origin/main, if it could not */
   blocked?: string;
@@ -143,6 +145,7 @@ export async function syncCheckout(opts: { check?: boolean } = {}): Promise<Sync
   return { current: true, pulled: incoming, incoming: [], head: remote, remote };
 }
 
+/** archon reconcile: fetch, check the signature, fast-forward, apply, verify (the timer, every 15 minutes). */
 export async function reconcile(host: HostDef): Promise<number> {
   const s = await syncCheckout();
   if (!s.current) {

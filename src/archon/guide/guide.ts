@@ -11,8 +11,10 @@ import type { HostPlan } from "../model/types.ts";
 import { fqdn } from "../web/config.ts";
 import { hostData } from "../model/durable.ts";
 
+/** A guide section. */
 export type Category = "shell" | "web" | "watch" | "safety" | "email" | "work";
 
+/** Each section's emoji, title, and introduction. */
 export const CATEGORIES: Record<Category, { emoji: string; title: string; intro: string }> = {
   shell: {
     emoji: "💻",
@@ -46,9 +48,13 @@ export const CATEGORIES: Record<Category, { emoji: string; title: string; intro:
   },
 };
 
+/** One item of the guide: what is on this machine and how to use it. */
 export interface GuideItem {
+  /** Its id. */
   id: string;
+  /** Its section. */
   category: Category;
+  /** Its title. */
   title: string;
   /** One or two plain sentences: what it is and why you'd care. */
   what: string;
@@ -60,6 +66,7 @@ export interface GuideItem {
   guide?: string;
 }
 
+/** The guide's items for a host's plan. */
 export function guideFor(plan: HostPlan): GuideItem[] {
   const { fleet, host } = plan;
   const name = fqdn(fleet, host);
@@ -517,11 +524,15 @@ export interface AgentSetup {
   args: string[];
   /** The tier the server serves (it refuses the rest; destructive never). */
   tier: string;
+  /** The URL to clone the fleet repository. */
   cloneUrl: string;
+  /** The fleet repository's page. */
   repoUrl: string;
+  /** owner/name. */
   slug: string;
 }
 
+/** How an MCP client reaches this server. */
 export function agentSetup(plan: HostPlan): AgentSetup {
   const { fleet, host } = plan;
   // The same target archon build writes into .mcp.json (render/agent.ts).

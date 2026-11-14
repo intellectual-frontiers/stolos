@@ -35,7 +35,9 @@ import { run } from "../core/exec.ts";
 import { toFileUrl } from "../core/path.ts";
 import type { SignerDef } from "../model/types.ts";
 
+/** The signers a host trusts (from signers.ts, at its install and every update). */
 export const ALLOWED_SIGNERS = "/etc/archon/allowed_signers";
+/** Signers trusted on this host only, by a person at it (archon signers trust). */
 export const ALLOWED_SIGNERS_LOCAL = "/etc/archon/allowed_signers.local";
 const KEY = /^(ssh-ed25519|sk-ssh-ed25519@openssh\.com) [A-Za-z0-9+/]+={0,2}$/;
 const NAME = /^[a-z0-9][a-z0-9._-]{0,63}$/;
@@ -113,12 +115,15 @@ export function allowedSignersText(list: SignerDef[], local = ""): string {
   ].join("\n") + "\n";
 }
 
+/** Whether a new tip may be applied. */
 export interface TipCheck {
+  /** It may. */
   ok: boolean;
   /** Why not, as a word (telemetry: archon.update.outcome = refused-<code>). */
   code?: "rollback" | "no-signers" | "unsigned" | "untrusted";
   /** Who signed it (the principal), when it is good. */
   signer?: string;
+  /** Why not, in plain words. */
   reason?: string;
 }
 

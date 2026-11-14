@@ -12,11 +12,15 @@
 
 export type Severity = "debug" | "info" | "warn" | "error";
 
+/** What an event means. */
 export interface EventSpec {
+  /** Its usual severity. */
   severity: Severity;
+  /** What it says happened. */
   description: string;
 }
 
+/** Every event Archon emits (spec 049): its name, severity, and meaning. */
 export const EVENTS = {
   // An archon run (spec 049): what it printed, as records in its trace.
   "archon.phase": {
@@ -110,20 +114,28 @@ export const EVENTS = {
   },
 } as const satisfies Record<string, EventSpec>;
 
+/** An event's name (from {@link EVENTS}). */
 export type EventName = keyof typeof EVENTS;
 
+/** One event: what happened, where, and in which trace (an OpenTelemetry log record). */
 export interface ArchonEvent {
+  /** Its name. */
   name: EventName;
+  /** What happened, in plain words. */
   message: string;
+  /** The host it is about. */
   host?: string;
   /** The client's address (client.address). */
   address?: string;
+  /** Its severity, when not the usual one. */
   severity?: Severity;
+  /** Structured details. */
   attrs?: Record<string, string | number | boolean>;
   /** Milliseconds since the epoch (default: now). */
   time?: number;
   /** The trace and span it belongs to (W3C ids, hex). */
   traceId?: string;
+  /** The span it belongs to. */
   spanId?: string;
 }
 
@@ -139,6 +151,7 @@ const value = (v: string | number | boolean): AnyValue =>
     ? (Number.isInteger(v) ? { intValue: String(v) } : { doubleValue: v })
     : { stringValue: v };
 
+/** An event's severity: its own, else its kind's. */
 export const severityOf = (e: ArchonEvent): Severity => e.severity ?? EVENTS[e.name].severity;
 
 /** The event as one OpenTelemetry log record (OTLP JSON). */

@@ -10,28 +10,44 @@ import { run } from "../core/exec.ts";
 import { planFor } from "../build.ts";
 import type { HostDef } from "../model/types.ts";
 
+/** What a host is now, read from it (archon capture): packages, units, ports, users, tools. */
 export interface Snapshot {
+  /** The host. */
   host: string;
+  /** When it was read (ISO time). */
   captured: string;
+  /** Its Ubuntu release. */
   ubuntu: string;
+  /** Its running kernel. */
   kernel: string;
+  /** Packages installed by hand (apt-mark showmanual). */
   manualPackages: string[];
+  /** Snaps installed. */
   snaps: string[];
+  /** Enabled systemd units. */
   enabledUnits: string[];
+  /** Listening sockets. */
   listening: string[];
+  /** Accounts with a login shell. */
   users: string[];
+  /** Each tool's version (null: not installed). */
   tools: Record<string, string | null>;
 }
 
+/** How a host differs from its plan. */
 export interface Drift {
+  /** Packages the plan has that the host does not. */
   missingPackages: string[];
+  /** Units not in the state the plan says. */
   unitsNotInDesiredState: string[];
+  /** Ports listening that the plan does not open. */
   unmodeledListeningPorts: string[];
 }
 
 const out = async (argv: string[]) => (await run(argv)).stdout;
 const lines = (s: string) => s.split("\n").map((l) => l.trim()).filter(Boolean);
 
+/** Read what the host is now. */
 export async function snapshot(host: HostDef): Promise<Snapshot> {
   const plan = await planFor(host);
   const osr = await Deno.readTextFile("/etc/os-release").catch(() => "");
@@ -67,6 +83,7 @@ export async function snapshot(host: HostDef): Promise<Snapshot> {
   };
 }
 
+/** Compare a snapshot with the host's plan. */
 export async function drift(host: HostDef, s: Snapshot): Promise<Drift> {
   const plan = await planFor(host);
   const installed = new Set(lines(await out(["dpkg-query", "-W", "-f=${Package}\\n"])));
@@ -95,6 +112,7 @@ export async function drift(host: HostDef, s: Snapshot): Promise<Drift> {
   return { missingPackages, unitsNotInDesiredState, unmodeledListeningPorts };
 }
 
+/** archon capture: show the snapshot and the drift (read-only). */
 export async function capture(host: HostDef) {
   const s = await snapshot(host);
   const d = await drift(host, s);

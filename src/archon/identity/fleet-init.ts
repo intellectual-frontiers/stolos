@@ -16,12 +16,17 @@ import { sha512Crypt } from "../core/crypt.ts";
 import { SECRETS, writeSecret } from "../core/secrets.ts";
 import type { FleetDef, GitHubIdentity } from "../model/types.ts";
 
+/** What archon fleet init is given. */
 export interface FleetInitOptions {
   /** The new fleet's id: fleets/<id>/ (spec 046). Without it, the active fleet. */
   id?: string;
+  /** Your Unix account name on every host. */
   user?: string;
+  /** An IANA time zone (default: this machine's). */
   timezone?: string;
+  /** A locale (default en_US.UTF-8). */
   locale?: string;
+  /** A keyboard layout (default us). */
   keyboard?: string;
   /** Read the admin password from stdin instead of prompting (automation). */
   passwordStdin?: boolean;
@@ -29,10 +34,12 @@ export interface FleetInitOptions {
   rewrite?: boolean;
 }
 
+/** GitHub's anonymized commit address for an account. */
 export function noreply(id: number, login: string): string {
   return `${id}+${login}@users.noreply.github.com`;
 }
 
+/** Your GitHub account, as gh reports it, with your public SSH keys. */
 export async function githubIdentity(): Promise<GitHubIdentity> {
   const r = await run(["gh", "api", "user"]);
   if (!r.ok) {
@@ -58,6 +65,7 @@ export async function githubIdentity(): Promise<GitHubIdentity> {
   };
 }
 
+/** The fleet repository's owner/name, from its origin. */
 export async function repositorySlug(): Promise<string> {
   const r = await run(["git", "-C", P.repo, "remote", "get-url", "origin"]);
   const m = r.stdout.trim().match(/github\.com[:/]([^/]+\/[^/.]+?)(\.git)?$/);
@@ -200,6 +208,7 @@ export async function addLocalKey(login: string): Promise<string[]> {
   return [pub.split(/\s+/).slice(0, 2).join(" ")];
 }
 
+/** fleet.ts as fleet init writes it. */
 export function fleetSource(f: FleetDef): string {
   return `// The fleet (spec 003). Written by \`archon fleet init\` from your GitHub
 // account; public data only. Edit freely, then \`archon build\`.
@@ -281,6 +290,7 @@ async function prepareRepository(id: string): Promise<void> {
   r.done(`${repo} · fleets/${id}/ · wrote ${written.join(", ")}, deno.lock (engine ${tag})`);
 }
 
+/** archon fleet init: the fleet (and a new repository's files), from your GitHub account. */
 export async function fleetInit(o: FleetInitOptions): Promise<void> {
   if (o.id) await prepareRepository(o.id);
   const p = ui.phase("GitHub");

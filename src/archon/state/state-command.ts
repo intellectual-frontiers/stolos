@@ -14,17 +14,25 @@ import { getRecord, listRecords, STATE_SQL, stateDir } from "./store.ts";
 import type { RecordedVerify } from "./verify.ts";
 import { describeInventory, type Inventory } from "./inventory.ts";
 
+/** What a machine recorded about itself (archon state; MCP archon_state). */
 export interface HostState {
+  /** Its name. */
   host: string;
+  /** Its install record. */
   install?: { at: string; body: Record<string, unknown> };
+  /** Its latest verify. */
   verify?: RecordedVerify;
   /** Spec 051: what the machine is, as it reports itself. */
   inventory?: Inventory;
+  /** Opt-ins and their records. */
   optIns: Record<string, unknown>;
+  /** Its data class (Article 23). */
   data: { class: string; reasons: string[] };
+  /** When this was read. */
   at: string;
 }
 
+/** Read it from archon.sql. */
 export async function hostState(hostName: string, dir = stateDir()): Promise<HostState> {
   const host = (await loadHosts()).find((h) => h.name === hostName);
   const install = await getRecord<Record<string, unknown>>(hostName, "install", "install", dir);
@@ -45,6 +53,7 @@ export async function hostState(hostName: string, dir = stateDir()): Promise<Hos
   };
 }
 
+/** archon state: show it. */
 export async function stateCommand(hostName: string, json: boolean): Promise<number> {
   const s = await hostState(hostName);
   if (json) {

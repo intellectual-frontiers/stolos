@@ -41,7 +41,9 @@ import { exists, readTextOr } from "../core/fsx.ts";
 import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
 
+/** The file that names every engine module, so deno.lock pins all of them. */
 export const ENGINE_ENTRY = "engine.ts";
+/** Its content. */
 export const ENGINE_ENTRY_TEXT =
   `// Every engine module, so that deno.lock pins all of them (archon runs with
 // --frozen, and the engine loads some modules on demand). Nothing runs this
@@ -53,8 +55,10 @@ const TAG = /^v(\d+)\.(\d+)\.(\d+)$/;
 /** "https://raw.githubusercontent.com/<org>/stolos/v0.7.0/src/" */
 const PIN = /^(.*\/)(v\d+\.\d+\.\d+)(\/src\/)$/;
 
+/** A version: major, minor, patch. */
 export type Semver = [number, number, number];
 
+/** A tag ("v1.2.3") as a version, or undefined. */
 export function parseTag(tag: string): Semver | undefined {
   const m = tag.match(TAG);
   return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : undefined;
@@ -66,9 +70,11 @@ export function compare(a: Semver, b: Semver): number {
   return 0;
 }
 
+/** Where the engine is pinned: its base URL and tag. */
 export interface Pin {
   /** The URL before the tag ("https://raw.githubusercontent.com/<org>/stolos/"). */
   base: string;
+  /** The tag, "vX.Y.Z". */
   tag: string;
 }
 
@@ -153,7 +159,9 @@ export async function releasedVersion(
   }
 }
 
+/** What archon fleet upgrade is given. */
 export interface UpgradeOptions {
+  /** The tag to move to. */
   tag: string;
   /** Allow an older (or the same) version. */
   downgrade?: boolean;
@@ -163,6 +171,7 @@ export interface UpgradeOptions {
   repo?: string;
 }
 
+/** archon fleet upgrade: move the pin, lock the engine, validate every fleet, and make one signed commit. */
 export async function fleetUpgrade(o: UpgradeOptions): Promise<number> {
   const repo = o.repo ?? P.repo;
   const denoJsonPath = join(repo, "deno.json");

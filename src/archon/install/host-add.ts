@@ -18,22 +18,29 @@ import { BOOT_PORT, bootUri, lanAddresses } from "../core/net.ts";
 import { ensureHostKeys } from "./host-keys.ts";
 import type { DiskDef } from "../model/types.ts";
 
+/** What archon host add is given. */
 export interface HostAddOptions {
+  /** The host's name. */
   name: string;
   /** Spec 051: exactly one of claim and macAddress (see recognize.ts). */
   claim?: boolean;
+  /** Its network card (instead of --claim). */
   macAddress?: string;
   /** The host's name again: its install may erase disks that are not blank. */
   confirmDestroy?: string;
+  /** The install disk. */
   disk?: DiskDef["match"];
+  /** Ubuntu's guided layout. */
   layout?: DiskDef["layout"];
   /** Skip the GitHub deploy key (tests, or a host that should not push). */
   noDeployKey?: boolean;
+  /** Rewrite an existing host.ts. */
   force?: boolean;
   /** Build, commit, and push the new model (default true; --no-push leaves it). */
   push?: boolean;
 }
 
+/** host.ts as host add writes it. */
 export function hostSource(o: { name: string; disk: DiskDef }): string {
   return `// Host ${o.name} (spec 004). Written by \`archon host add\`; edit freely, then
 // \`archon build\`. Capabilities come from foundation(); add more per spec.
@@ -114,6 +121,7 @@ export async function registerDeployKey(slug: string, host: string, pub: string)
   return "registered";
 }
 
+/** archon host add: the model, the registration, the deploy key, and one armed install. */
 export async function hostAdd(o: HostAddOptions): Promise<number> {
   const fleet = await loadFleet();
   const name = o.name.trim().toLowerCase();

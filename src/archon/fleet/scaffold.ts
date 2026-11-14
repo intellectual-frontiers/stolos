@@ -13,6 +13,7 @@ import { ENGINE_ENTRY, ENGINE_ENTRY_TEXT } from "./upgrade.ts";
 /** Where released engines are served from; the tag is appended. */
 export const ENGINE_BASE = "https://raw.githubusercontent.com/intellectual-frontiers/stolos/";
 
+/** A fleet repository's deno.json: the engine pinned at tag, and the archon and boot tasks (run frozen). */
 export function denoJsonText(tag: string, base = ENGINE_BASE): string {
   return JSON.stringify(
     {
@@ -31,6 +32,7 @@ export function denoJsonText(tag: string, base = ENGINE_BASE): string {
   ) + "\n";
 }
 
+/** A fleet repository's archon.ts: runs the pinned engine's archon. */
 export const ARCHON_ENTRY_TEXT =
   `// The \`archon\` command for this repository's fleets: runs the engine pinned in
 // deno.json (\`@stolos/\`), checked against deno.lock. Hosts run this file from
@@ -40,6 +42,7 @@ import { run } from "@stolos/archon/main.ts";
 await run();
 `;
 
+/** A fleet repository's boot.ts: runs the pinned engine's boot server. */
 export const BOOT_ENTRY_TEXT =
   `// The boot server for this repository's fleets (\`deno task boot serve --fleet <id>\`),
 // from the engine pinned in deno.json (\`@stolos/\`).
@@ -48,6 +51,7 @@ import { run } from "@stolos/archon-boot/main.ts";
 await run();
 `;
 
+/** A fleet repository's .gitignore. */
 export const GITIGNORE_TEXT = `# Rendered by archon build on each machine; never committed.
 out/
 *.log

@@ -30,6 +30,7 @@ async function readKey(arg: string): Promise<string> {
   return text.trim().split(/\s+/).slice(0, 2).join(" ");
 }
 
+/** archon signers: the list, and this machine's signing setup. */
 export async function signersList(json: boolean): Promise<number> {
   const list = await loadSigners();
   if (json) {
@@ -64,6 +65,7 @@ async function write(list: SignerDef[]): Promise<string> {
   return repoRel(file);
 }
 
+/** archon signers add. */
 export async function signersAdd(name: string, role: string, keyArg: string): Promise<number> {
   if (role !== "daily" && role !== "recovery") throw new Error("--role is daily or recovery");
   const list = await loadSigners();
@@ -86,6 +88,7 @@ export async function signersAdd(name: string, role: string, keyArg: string): Pr
   return ui.finish();
 }
 
+/** archon signers remove. */
 export async function signersRemove(name: string): Promise<number> {
   const list = await loadSigners();
   const p = ui.phase("Signers");

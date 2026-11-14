@@ -13,8 +13,11 @@ import type { DiskDef, FleetDef, HostDef } from "../model/types.ts";
 
 const DEFAULT_DISK: DiskDef = { match: "largest", layout: "lvm" };
 
+/** What an install hands the machine that must not be in Git. */
 export interface InstallSecrets {
+  /** The admin password's hash. */
   passwordHash: string;
+  /** Its read-only deploy key. */
   deployKey?: string;
   /** The host's SSH host keys, kept on the boot machine: its identity across re-installs. */
   hostKeys?: Array<{ type: string; private: string; public: string }>;
@@ -26,8 +29,11 @@ export interface InstallSecrets {
   acme?: string;
 }
 
+/** Everything the install config is made from. */
 export interface InstallContext {
+  /** The fleet. */
   fleet: FleetDef;
+  /** The host. */
   host: HostDef;
   /** Base URL of this host's install directory on archon-boot (ends with /). */
   base: string;
@@ -135,6 +141,7 @@ function noProxy(c: InstallContext): string {
   return [...new Set(hosts)].join(",");
 }
 
+/** The autoinstall user-data: Ubuntu's installer config, the blank-disk guard first, then the first boot. */
 export function userData(c: InstallContext, s: InstallSecrets): string {
   const { fleet, host } = c;
   const a = fleet.admin;
@@ -297,6 +304,7 @@ export function userData(c: InstallContext, s: InstallSecrets): string {
   return "#cloud-config\n" + JSON.stringify(config, null, 2) + "\n";
 }
 
+/** The cloud-init meta-data. */
 export function metaData(host: HostDef): string {
   return `instance-id: archon-${host.name}\nlocal-hostname: ${host.name}\n`;
 }

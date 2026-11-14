@@ -11,8 +11,10 @@
 
 export const STALL_MS = 6 * 60_000;
 
+/** Watches installers that took the image (off by default: boot serve --stall-watch). Keyed by host when known, else by address. */
 export class StallWatch {
   #timers = new Map<string, unknown>();
+  /** onStall is called with the key when nothing more came within ms. */
   constructor(
     private onStall: (address: string) => void,
     private ms = STALL_MS,
@@ -45,12 +47,14 @@ export class StallWatch {
     }
   }
 
+  /** Stop every timer. */
   stop(): void {
     for (const id of this.#timers.values()) this.clear(id);
     this.#timers.clear();
   }
 }
 
+/** What the boot window says about a stalled installer: the likely cause and the bootstrap path. */
 export function stallMessage(host: string | undefined): string {
   return `${host ?? "this machine"} took the installer image ${
     STALL_MS / 60_000

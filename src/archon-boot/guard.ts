@@ -71,12 +71,19 @@ sleep 30
 poweroff -f
 `;
 
+/** What a machine says about itself, before its install (from its firmware tables, /proc, and its disks). */
 export interface MachineFacts {
+  /** Its maker (firmware filler such as "To Be Filled By O.E.M." is dropped). */
   vendor?: string;
+  /** Its model. */
   model?: string;
+  /** Its serial number. */
   serial?: string;
+  /** Its memory, in KiB. */
   memKiB?: number;
+  /** Its CPUs. */
   cpus?: number;
+  /** Its disks: name, size in bytes, and how attached (nvme, sata, usb, virtio). */
   disks: Array<{ name: string; bytes: number; transport?: string }>;
   /** Partition tables and filesystems found: "/dev/sda gpt", "/dev/sda2 ext4". */
   signatures: string[];
@@ -124,6 +131,7 @@ export function describeFacts(f: MachineFacts): string {
   return `${who}${f.serial ? `, serial ${f.serial}` : ""}, ${f.cpus ?? "?"} CPUs, ${ram}, ${disks}`;
 }
 
+/** The guard's answer: go (and why), or stop (why, and the command that lets it go on). */
 export type GuardDecision =
   | { go: true; why: string }
   | { go: false; why: string; fix: string };

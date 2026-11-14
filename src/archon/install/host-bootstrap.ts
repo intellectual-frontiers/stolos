@@ -30,7 +30,9 @@ import { firstBootScript, GITHUB_KNOWN_HOSTS } from "../render/autoinstall.ts";
 import { allowedSignersText } from "../identity/signers.ts";
 import { ensureHostKeys } from "./host-keys.ts";
 
+/** What archon host bootstrap is given. */
 export interface HostBootstrapOptions {
+  /** The host. */
   name: string;
   /** user@address of the freshly installed server. */
   ssh: string;
@@ -80,14 +82,21 @@ d=$(ip -o route get 1.1.1.1 2>/dev/null | sed -n 's/.* dev \\([^ ]*\\).*/\\1/p')
 for n in /sys/class/net/*; do [ -e "$n/device" ] && echo "nic=$(cat $n/address)"; done
 exit 0`;
 
+/** What the machine at the address says about itself. */
 export interface BootstrapFacts {
+  /** Its Ubuntu release. */
   versionId?: string;
+  /** Its hostname. */
   hostname?: string;
+  /** Its default route's network card. */
   uplink?: string;
+  /** Every physical network card. */
   nics: string[];
+  /** One line for people. */
   summary: string;
 }
 
+/** Parse the probe's key=value lines. */
 export function parseBootstrapFacts(text: string): BootstrapFacts {
   const get = (k: string) => text.match(new RegExp(`^${k}=(.*)$`, "m"))?.[1]?.trim() || undefined;
   const nics = [...text.matchAll(/^nic=(.+)$/gm)].map((m) => m[1].trim().toLowerCase());
@@ -136,6 +145,7 @@ async function ssh(args: string[], interactive = false): Promise<number> {
   return (await p.status).code;
 }
 
+/** archon host bootstrap: check the machine, copy what a network install would have handed it, run the first boot. */
 export async function hostBootstrap(o: HostBootstrapOptions): Promise<number> {
   const fleet = await loadFleet();
   const host = (await loadHosts()).find((h) => h.name === o.name);

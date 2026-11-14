@@ -17,10 +17,15 @@ import type { HostDef } from "../model/types.ts";
 
 import { P } from "../core/paths.ts";
 
+/** One check's result. */
 export interface Check {
+  /** What it checks (a package, a unit, a check's name). */
   resource: string;
+  /** The command run. */
   command: string;
+  /** It passed. */
   ok: boolean;
+  /** The first line it printed. */
   output: string;
   /**
    * "warn": a failure is reported as a warning and does not count as failed.
@@ -39,15 +44,21 @@ export const PENDING_EXIT = 3;
  * record is rewritten only when the result changes.
  */
 export interface RecordedVerify {
+  /** How many passed. */
   passed: number;
+  /** How many ran (pending ones included). */
   total: number;
+  /** Failures, by resource. */
   failed: string[];
+  /** Warnings, by resource. */
   warned: string[];
   /** Spec 052: not set up yet (a check that exited 3). */
   pending?: string[];
+  /** When this result first appeared. */
   since: string;
 }
 
+/** The record of a verify, as archon.sql keeps it. */
 export function verifyRecord(checks: Check[], now = new Date()): RecordedVerify {
   const failed = failedChecks(checks).map((c) => c.resource);
   const warned = checks.filter((c) => !c.ok && c.level === "warn").map((c) => c.resource);
@@ -84,6 +95,7 @@ export async function recordVerify(
 export const failedChecks = (checks: Check[]) =>
   checks.filter((c) => !c.ok && c.level !== "warn" && c.level !== "pending");
 
+/** archon verify: every check of the host's plan, each shown at its level. */
 export async function verify(host: HostDef): Promise<Check[]> {
   const plan = await planFor(host);
   const targets = [

@@ -16,10 +16,14 @@ import { SECRETS, writeSecret } from "../core/secrets.ts";
 
 /** Ubuntu's own host key types. */
 export const HOST_KEY_TYPES = ["ed25519", "ecdsa", "rsa"] as const;
+/** An SSH host key type. */
 export type HostKeyType = typeof HOST_KEY_TYPES[number];
 
+/** One SSH host key pair. */
 export interface HostKey {
+  /** Its type. */
   type: HostKeyType;
+  /** The private half (kept on the boot machine only). */
   private: string;
   /** "ssh-ed25519 AAAA..." without a comment. */
   public: string;
@@ -111,6 +115,7 @@ export async function trustHost(
 
 /** What `archon host-keys export` prints: the host's identities the boot machine keeps. */
 export interface HostExport {
+  /** The host's SSH host keys. */
   hostKeys: HostKey[];
   /** ops' GitHub deploy key (the one registered on the repository), when present. */
   deployKey?: { private: string; public: string };

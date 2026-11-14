@@ -20,7 +20,9 @@ import { join } from "../archon/core/path.ts";
 import { ensureDir } from "../archon/core/fsx.ts";
 import { P } from "../archon/core/paths.ts";
 
+/** Where the boot server keeps its telemetry. */
 export const TELEMETRY_DIR = join(P.bootCache, "telemetry");
+/** Its own OTLP receiver (loopback). */
 export const SINK = { hostname: "127.0.0.1", port: 4319 };
 const KEEP_DAYS = 30;
 const KEEP_BYTES = 256 * 1024 * 1024;
@@ -170,6 +172,7 @@ interface Api {
 
 let api: Api | undefined;
 
+/** Start the boot server's own telemetry. */
 export async function initBootTelemetry(): Promise<void> {
   if (!Deno.env.get("OTEL_DENO")) return;
   try {

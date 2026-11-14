@@ -13,11 +13,17 @@ import { run } from "../core/exec.ts";
 import { P } from "../core/paths.ts";
 import { getRecord, putRecord } from "./store.ts";
 
+/** What a machine is, as it reports itself. */
 export interface Inventory {
+  /** Its maker. */
   vendor?: string;
+  /** Its model. */
   model?: string;
+  /** Its serial (readable by root only: absent otherwise). */
   serial?: string;
+  /** Its CPUs. */
   cpus: number;
+  /** Its memory, in MiB. */
   memMiB?: number;
   /** "nvme0n1 1000 GB nvme" */
   disks: string[];
@@ -34,6 +40,7 @@ async function dmi(key: string): Promise<string | undefined> {
   return FILLER.test(v) ? undefined : v;
 }
 
+/** Read the machine's inventory from /sys, /proc, and lsblk. */
 export async function collectInventory(): Promise<Inventory> {
   const mem = (await readTextOr("/proc/meminfo").catch(() => undefined))?.match(
     /^MemTotal:\s+(\d+) kB/m,

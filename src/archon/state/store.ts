@@ -30,7 +30,9 @@ import { join } from "../core/path.ts";
 import { ensureDir, readTextOr } from "../core/fsx.ts";
 import { P } from "../core/paths.ts";
 
+/** The canonical state file: readable SQL. */
 export const STATE_SQL = "archon.sql";
+/** The SQLite database built from it, for osquery. */
 export const STATE_DB = "archon.auto.sqlite.db";
 
 /** Where this machine keeps archon.sql (tests pass their own folder). */
@@ -38,13 +40,20 @@ export function stateDir(): string {
   return P.state;
 }
 
+/** What a record is about. */
 export type Kind = "install" | "verify" | "prov" | "optin" | "pg" | "inventory";
 
+/** One record: a host's fact of one kind, by name. */
 export interface StateRecord<T = unknown> {
+  /** The host. */
   host: string;
+  /** Its kind. */
   kind: Kind;
+  /** Its name within the kind. */
   name: string;
+  /** When it was written (ISO time). */
   at: string;
+  /** Its content. */
   body: T;
 }
 
@@ -166,6 +175,7 @@ function rec<T>(r: Record<string, string>): StateRecord<T> {
   return { host: r.host, kind: r.kind as Kind, name: r.name, at: r.at, body: JSON.parse(r.body) };
 }
 
+/** One record, or undefined. */
 export async function getRecord<T = unknown>(
   host: string,
   kind: Kind,
@@ -179,6 +189,7 @@ export async function getRecord<T = unknown>(
   return r ? rec<T>(r) : undefined;
 }
 
+/** Every record of a kind, by name. */
 export async function listRecords<T = unknown>(
   host: string,
   kind: Kind,

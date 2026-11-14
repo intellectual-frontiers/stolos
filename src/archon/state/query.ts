@@ -69,7 +69,9 @@ export const QUERY_DENIED = [
   "docker_container_envs",
 ];
 
+/** The most rows a query returns. */
 export const QUERY_MAX_ROWS = 1000;
+/** How long a query may run, in seconds. */
 export const QUERY_TIMEOUT_S = 20;
 
 /** Why this SQL may not run here, or undefined. */
@@ -109,6 +111,7 @@ export function queryArgv(sql: string): string[] {
   ];
 }
 
+/** Run one allowlisted SQL query through osquery. */
 export async function query(sql: string): Promise<Array<Record<string, string>>> {
   const why = queryRefusal(sql);
   const tables = queryTables(sql);

@@ -15,10 +15,12 @@ import type { FleetDef, HostDef, HostRegistration } from "../model/types.ts";
 
 const KEY = /^(ssh-ed25519|ecdsa-sha2-nistp(256|384|521)|ssh-rsa) [A-Za-z0-9+/]+={0,2}$/;
 
+/** fleets/<id>/hosts/<host>/registration.ts. */
 export function registrationFile(host: string): string {
   return join(P.hosts, host, "registration.ts");
 }
 
+/** registration.ts's one form (sorted keys; checked by build). */
 export function registrationSource(r: HostRegistration): string {
   const keys = [...r.sshHostKeys].sort().map((k) => `    ${JSON.stringify(k)},\n`).join("");
   return `// Written by archon host add (spec 047): who this host is. Public facts only.
@@ -37,6 +39,7 @@ ${r.mac ? `  mac: ${JSON.stringify(r.mac)},\n` : ""}${
 `;
 }
 
+/** A host's registration, or undefined. */
 export async function loadRegistration(
   host: string,
   file = registrationFile(host),
@@ -46,6 +49,7 @@ export async function loadRegistration(
   return mod.default as HostRegistration;
 }
 
+/** Write a host's registration; returns its path in the repository. */
 export async function writeRegistration(host: string, r: HostRegistration): Promise<string> {
   const file = registrationFile(host);
   await ensureDir(join(file, ".."));

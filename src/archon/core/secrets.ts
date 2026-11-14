@@ -15,6 +15,7 @@ import { recordChange } from "./secret-ledger.ts";
 
 // Spec 046: computed on each use, so they follow the fleet chosen for this run
 // (--fleet, ARCHON_FLEET), not the one active when this module was loaded.
+/** Where each secret lives on the boot machine (per fleet; never in Git). */
 export const SECRETS = {
   get dir(): string {
     return P.secrets;
@@ -72,14 +73,18 @@ async function ownerOnly(path: string): Promise<void> {
   await run(["icacls", path, "/inheritance:r", "/grant:r", `${user}:F`]).catch(() => {});
 }
 
+/** A secret's content, or undefined. */
 export async function readSecret(path: string): Promise<string | undefined> {
   return (await readTextOr(path))?.trim();
 }
 
 export { exists };
 
+/** One armed install (the boot machine's own record). */
 export interface InstallToken {
+  /** The host. */
   host: string;
+  /** The random token in its install URLs. */
   token: string;
   /** When the token was issued (ISO time). */
   armed: string;
@@ -107,11 +112,13 @@ export interface InstallToken {
 
 const TOKEN_LIFE_AFTER_USE_MS = 2 * 60 * 60 * 1000;
 
+/** Every armed install. */
 export async function loadTokens(): Promise<InstallToken[]> {
   const raw = await readTextOr(SECRETS.tokens);
   return raw ? JSON.parse(raw) as InstallToken[] : [];
 }
 
+/** Write them back. */
 export async function saveTokens(tokens: InstallToken[]): Promise<void> {
   await writeSecret(SECRETS.tokens, JSON.stringify(tokens, null, 2) + "\n");
 }

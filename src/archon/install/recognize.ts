@@ -28,11 +28,13 @@
 import { parseMac } from "../fleet/registration.ts";
 import type { HostRegistration } from "../model/types.ts";
 
+/** How a machine becomes the host: claimed, by a typed MAC, or its own installed MAC. */
 export type Recognition =
   | { kind: "claim" }
   | { kind: "mac"; mac: string }
   | { kind: "installed"; mac: string };
 
+/** How long a claim waits for an unknown machine to network-boot. */
 export const CLAIM_MINUTES = 30;
 
 /** The choice, or why it is refused (with the commands that would work). */

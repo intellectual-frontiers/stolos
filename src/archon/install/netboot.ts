@@ -12,13 +12,18 @@ import { readTextOr } from "../core/fsx.ts";
 import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
 
+/** Where the install recorded the firmware entry it network-booted from. */
 export const NETBOOT_ENTRY = "/etc/archon/netboot-entry";
 
+/** One UEFI boot entry. */
 export interface BootEntry {
+  /** Its id (hex). */
   id: string;
+  /** Its label. */
   label: string;
 }
 
+/** efibootmgr's output, parsed. */
 export function parseEfibootmgr(out: string): { current?: string; entries: BootEntry[] } {
   const current = out.match(/^BootCurrent:\s*([0-9A-Fa-f]{4})/m)?.[1];
   const entries = [...out.matchAll(/^Boot([0-9A-Fa-f]{4})\*?\s+(.*)$/gm)].map((m) => ({
@@ -38,6 +43,7 @@ export function pickNetbootEntry(entries: BootEntry[], recorded?: string): BootE
     net.find((e) => /IPv4|IP4/i.test(e.label)) ?? net[0];
 }
 
+/** archon reboot (and poweroff): wait for apt and dpkg, then reboot (once from the network, with --netboot) or shut down. */
 export async function reboot(
   opts: { netboot: boolean; now?: boolean; poweroff?: boolean },
 ): Promise<number> {

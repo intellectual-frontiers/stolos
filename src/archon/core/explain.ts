@@ -20,6 +20,7 @@
  */
 
 export interface Explanation {
+  /** Its title, in one line. */
   title: string;
   /** What happened, in plain words. */
   what: string;
@@ -31,6 +32,7 @@ export interface Explanation {
   doc: string;
 }
 
+/** Every explanation, by code. */
 export const EXPLAIN: Record<string, Explanation> = {
   "E046-LOCK-INTEGRITY": {
     title: "An engine file does not match deno.lock",

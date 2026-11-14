@@ -8,15 +8,21 @@
 
 export type Group = "health" | "security" | "state";
 
+/** What a metric measures. */
 export interface MetricSpec {
+  /** Its kind. */
   kind: "counter" | "histogram" | "gauge";
+  /** Its unit. */
   unit?: string;
+  /** Its group. */
   group: Group;
+  /** What it counts or measures. */
   description: string;
   /** Attributes beyond the run's own (archon.command, archon.fleet, host). */
   attributes: string[];
 }
 
+/** Every metric Archon records (spec 049). */
 export const METRICS = {
   "archon.run.duration": {
     kind: "histogram",
@@ -88,6 +94,7 @@ export const METRICS = {
   },
 } as const satisfies Record<string, MetricSpec>;
 
+/** A metric's name (from {@link METRICS}). */
 export type MetricName = keyof typeof METRICS;
 
 /** Span names (a command's span is "archon <command>"; each phase is a child span). */

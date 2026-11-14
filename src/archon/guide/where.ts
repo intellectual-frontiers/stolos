@@ -20,17 +20,25 @@
  */
 
 export interface WhereFacts {
+  /** The fleets of this repository. */
   fleets: string[];
+  /** The active fleet, when one is chosen and exists. */
   fleetId?: string;
   /** deno.json's engine tag, when pinned; and whether deno.lock exists. */
   pinned?: string;
+  /** deno.lock exists. */
   locked: boolean;
+  /** How many signers of each role signers.ts lists. */
   signers: { daily: number; recovery: number };
   /** This machine's signing setup (signers.ts signingSetup): what is wrong, with its fix. */
   signingProblems: Array<{ what: string; fix?: string }>;
+  /** The admin password's hash is in this machine's secret store. */
   adminHash: boolean;
+  /** The fleet sends mail: is the relay token on this machine? */
   mail?: { token: boolean };
+  /** The fleet has HTTPS names: is the Cloudflare token on this machine? */
   web?: { token: boolean };
+  /** Each host: a workstation or a server, installed, armed, armed by claim. */
   hosts: Array<{
     name: string;
     workstation: boolean;
@@ -40,13 +48,18 @@ export interface WhereFacts {
   }>;
   /** Uncommitted changes in the fleet repository, and commits not pushed. */
   dirty: boolean;
+  /** Commits not pushed. */
   unpushed: number;
 }
 
+/** A step's state: done, the one to do next, to do after it, or waiting for something to be set up. */
 export type StepState = "done" | "next" | "todo" | "pending";
 
+/** One step of the checklist. */
 export interface Step {
+  /** Its state. */
   state: StepState;
+  /** What it is, in a few words. */
   text: string;
   /** The command that does it (for next, todo, and pending). */
   command?: string;

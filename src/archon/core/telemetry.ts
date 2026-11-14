@@ -134,6 +134,7 @@ export function measure(name: MetricName, v: number, attrs: Attrs = {}): void {
   instrument(name)?.record?.(v, clean({ ...runAttrs, ...attrs }));
 }
 
+/** Start this run's trace (continuing TRACEPARENT when given). */
 export function startRun(command: string, attrs: Attrs = {}): void {
   if (!api) return;
   Object.assign(runAttrs, clean({ "archon.command": command, ...attrs }));
@@ -189,6 +190,7 @@ export const phaseListener = {
   },
 };
 
+/** End this run's trace with its outcome. */
 export function endRun(code: number, failures: number, warnings: number): void {
   if (!api || !root) return;
   const outcome = code === 0 && !failures ? "ok" : "failed";
