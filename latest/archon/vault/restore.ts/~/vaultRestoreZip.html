@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>vaultRestoreZip - archon/vault/restore.ts - Stolos v0.54.1 documentation</title>
+  <title>vaultRestoreZip - archon/vault/restore.ts - Stolos v0.55.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;vault&#x2F;restore.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.54.1</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.55.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -165,7 +165,7 @@
   </defs>
 </svg>
 </a>
-<span class="font-bold">vaultRestoreZip</span><span class="font-medium">(<div class="ml-4"><div><span>zip<span>: <span class="td-kw">string</span></span></span>,</div><div><span>o<span class="td-op">?</span><span>: { filesOnly<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>;  }</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span> </span>
+<span class="font-bold">vaultRestoreZip</span><span class="font-medium">(<div class="ml-4"><div><span>zip<span>: <span class="td-kw">string</span></span></span>,</div><div><span>o<span class="td-op">?</span><span>: { filesOnly<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>; destroyExisting<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>;  }</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span> </span>
       </code><div class="space-y-7" id=""><div class="markdown"><p><code>vault restore &lt;zip&gt;</code>: check the ZIP, choose the fleet, put the files back,
 then (unless --files-only) set up signing and VS Code. Without a ZIP: the
 steps, to read (they are RESTORE.txt in every ZIP too).</p>
@@ -271,7 +271,7 @@ Parameters</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   </defs>
 </svg>
 </a>
-<span class="font-bold font-lg">o</span><span class="font-medium text-stone-500 dark:text-stone-200"><span>: { filesOnly<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>;  }</span></span>
+<span class="font-bold font-lg">o</span><span class="font-medium text-stone-500 dark:text-stone-200"><span>: { filesOnly<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>; destroyExisting<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>;  }</span></span>
       </code>
     </div><a
   class="sourceButton"

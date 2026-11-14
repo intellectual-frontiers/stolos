@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/vault/restore.ts - Stolos v0.54.1 documentation</title>
+  <title>archon/vault/restore.ts - Stolos v0.55.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.54.1</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.55.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -109,6 +109,11 @@ your daily passphrase) and gets VS Code its types.</p>
 file that differs stops the restore before anything is written (it may be
 newer than the backup). So it can be run again, and changes nothing the
 second time.</p>
+<p><code>--destroy-existing</code> restores clean instead: the secrets of every fleet, the
+key store, and the backup's daily key files in <code>.ssh</code> are removed first, so
+what is left is exactly the backup. Anything there that the backup does not
+hold identically is first saved as a backup ZIP of its own (nothing is lost),
+and only after the ZIP to restore has been read and checked.</p>
 <pre class="highlight"><code class="language-mermaid">flowchart LR
   zip[&quot;backup ZIP&quot;] --&gt; check[&quot;read it: format, every SHA-256&quot;]
   check --&gt; fleet[&quot;the fleet: one of this repository's&quot;]
@@ -180,6 +185,19 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_applyrestor
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;vault&#x2F;restore.ts&#x2F;~&#x2F;applyRestore.html" title="applyRestore">
 			    <span>applyRestore</span><span>(<span><span>plan<span>: <span class="td-ref">RestorePlan</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Put back every file not already there (nothing, when any differs); returns how many were written.</p>
 </div></div></div>
+    </div><div id="namespace_destroyexisting" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;vault&#x2F;restore.ts&#x2F;~&#x2F;destroyExisting.html" title="destroyExisting">
+			    <span>destroyExisting</span><span>(<div class="ml-4"><div><span>plan<span>: <span class="td-ref">RestorePlan</span></span></span>,</div><div><span>roots<span>: <span class="td-ref">RestoreRoots</span></span></span>,</div><div><span>now<span class="td-op">?</span><span>: <span class="td-ref">Date</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;{ removed<span>: <span class="td-kw">number</span></span>; movedAside<span>: <span class="td-kw">string</span>[]</span>;  }&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Remove what a clean restore replaces (see <a href="../../.././archon/vault/restore.ts/~/existingFiles.html">existingFiles</a>), and forget
+the secrets' change history; returns how many files went. A key file in
+<code>.ssh</code> that differs from the backup is moved aside (<code>&lt;file&gt;.replaced-&lt;date&gt;</code>),
+never deleted; no other file in <code>.ssh</code> (a GitHub key, say) is touched.</p>
+</div></div></div>
+    </div><div id="namespace_existingfiles" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;vault&#x2F;restore.ts&#x2F;~&#x2F;existingFiles.html" title="existingFiles">
+			    <span>existingFiles</span><span>(<div class="ml-4"><div><span>plan<span>: <span class="td-ref">RestorePlan</span></span></span>,</div><div><span>roots<span>: <span class="td-ref">RestoreRoots</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">string</span>[]&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Every file a clean restore removes: the secrets of every fleet, the key store, the backup's .ssh files.</p>
+</div></div></div>
     </div><div id="namespace_planrestore" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;vault&#x2F;restore.ts&#x2F;~&#x2F;planRestore.html" title="planRestore">
@@ -200,7 +218,7 @@ goes and whether it is already there. Writes nothing; throws with the reason.</p
     </div><div id="namespace_vaultrestorezip" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;vault&#x2F;restore.ts&#x2F;~&#x2F;vaultRestoreZip.html" title="vaultRestoreZip">
-			    <span>vaultRestoreZip</span><span>(<div class="ml-4"><div><span>zip<span>: <span class="td-kw">string</span></span></span>,</div><div><span>o<span class="td-op">?</span><span>: { filesOnly<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>;  }</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>vault restore &lt;zip&gt;</code>: check the ZIP, choose the fleet, put the files back,
+			    <span>vaultRestoreZip</span><span>(<div class="ml-4"><div><span>zip<span>: <span class="td-kw">string</span></span></span>,</div><div><span>o<span class="td-op">?</span><span>: { filesOnly<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>; destroyExisting<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>;  }</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>vault restore &lt;zip&gt;</code>: check the ZIP, choose the fleet, put the files back,
 then (unless --files-only) set up signing and VS Code. Without a ZIP: the
 steps, to read (they are RESTORE.txt in every ZIP too).</p>
 </div></div></div>
@@ -356,7 +374,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_restorefil
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1210 symbols</span><svg
+              <span class="leading-none">view all 1212 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -371,7 +389,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_restorefil
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/vault/restore_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_applyrestore" title="applyRestore">applyRestore</a></li><li><a href="#namespace_planrestore" title="planRestore">planRestore</a></li><li><a href="#namespace_restoreroots" title="restoreRoots">restoreRoots</a></li><li><a href="#namespace_targetof" title="targetOf">targetOf</a></li><li><a href="#namespace_vaultrestorezip" title="vaultRestoreZip">vaultRestoreZip</a></li></ul></li><li><a href="#archon/vault/restore_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_restorefile" title="RestoreFile">RestoreFile</a></li><li><a href="#namespace_restoreplan" title="RestorePlan">RestorePlan</a></li><li><a href="#namespace_restoreroots-1" title="RestoreRoots">RestoreRoots</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/vault/restore_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_applyrestore" title="applyRestore">applyRestore</a></li><li><a href="#namespace_destroyexisting" title="destroyExisting">destroyExisting</a></li><li><a href="#namespace_existingfiles" title="existingFiles">existingFiles</a></li><li><a href="#namespace_planrestore" title="planRestore">planRestore</a></li><li><a href="#namespace_restoreroots" title="restoreRoots">restoreRoots</a></li><li><a href="#namespace_targetof" title="targetOf">targetOf</a></li><li><a href="#namespace_vaultrestorezip" title="vaultRestoreZip">vaultRestoreZip</a></li></ul></li><li><a href="#archon/vault/restore_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_restorefile" title="RestoreFile">RestoreFile</a></li><li><a href="#namespace_restoreplan" title="RestorePlan">RestorePlan</a></li><li><a href="#namespace_restoreroots-1" title="RestoreRoots">RestoreRoots</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>
