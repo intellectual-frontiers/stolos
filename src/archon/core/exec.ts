@@ -6,15 +6,23 @@
  */
 
 export interface RunResult {
+  /** The exit code. */
   code: number;
+  /** What it printed. */
   stdout: string;
+  /** What it printed as errors. */
   stderr: string;
+  /** Exit code 0. */
   ok: boolean;
 }
 
+/** How to run a command. */
 export interface RunOptions {
+  /** Its working directory. */
   cwd?: string;
+  /** Its environment (added to this process's). */
   env?: Record<string, string>;
+  /** Text for its standard input. */
   stdin?: string;
   /** Run as this user via runuser(1) (requires root). */
   asUser?: string;
@@ -37,6 +45,7 @@ export async function homeDir(user: string): Promise<string> {
   }
 }
 
+/** Run a command (no shell); never throws: a missing program is exit code 127 with its message. */
 export async function run(argv: string[], opts: RunOptions = {}): Promise<RunResult> {
   let cmd = argv;
   let cwd = opts.cwd;
@@ -86,6 +95,7 @@ export async function must(argv: string[], opts: RunOptions = {}): Promise<strin
   return r.stdout;
 }
 
+/** The full path of a program on PATH, if there is one. */
 export async function which(bin: string): Promise<string | undefined> {
   for (const dir of (Deno.env.get("PATH") ?? "/usr/local/bin:/usr/bin:/bin").split(":")) {
     try {
@@ -97,10 +107,12 @@ export async function which(bin: string): Promise<string | undefined> {
   return undefined;
 }
 
+/** Running as root. */
 export function isRoot(): boolean {
   return Deno.uid?.() === 0;
 }
 
+/** This process's user name. */
 export function currentUser(): string {
   return Deno.env.get("USER") ?? Deno.env.get("LOGNAME") ?? "";
 }

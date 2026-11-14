@@ -16,6 +16,7 @@ import { translate } from "./explain.ts";
 // ARCHON_VERBOSE=1 (or -v): every item is shown, dimmed, as it happens.
 // --json: nothing on screen; the log file still records everything.
 
+/** How a phase ended: ok, with warnings, failed, deferred (a disruptive change left for later), or skipped. */
 export type Level = "ok" | "warn" | "fail" | "defer" | "skip";
 
 /**
@@ -26,24 +27,39 @@ export type Level = "ok" | "warn" | "fail" | "defer" | "skip";
  */
 export type ProblemLevel = "warn" | "fail" | "pending";
 
+/** A problem a run found, shown again under "Needs attention" (or "Not set up yet") when it ends. */
 export interface Problem {
+  /** Failure, warning, or not set up yet. */
   level: ProblemLevel;
+  /** The phase it happened in. */
   phase: string;
+  /** What happened. */
   message: string;
+  /** How to fix it (for pending: the next step). */
   fix?: string;
   /** A stable code: archon explain <code> (spec 052). */
   code?: string;
+  /** Its line in the run's log, when there is one. */
   logLine?: number;
 }
 
+/** How a {@link Ui} draws: the defaults come from the terminal and the environment. */
 export interface UiOptions {
+  /** Draw for a terminal (spinner, redraws); default: stdout is a terminal. */
   tty?: boolean;
+  /** Use color; default: a terminal without NO_COLOR. */
   color?: boolean;
+  /** Use emoji; default: where the terminal shows them. */
   emoji?: boolean;
+  /** Show every item as it happens, dimmed. */
   verbose?: boolean;
+  /** Show nothing (the log still records everything). */
   quiet?: boolean;
+  /** Where output goes; default: stdout. */
   write?: (s: string) => void;
+  /** The run's log file (null: none). */
   logPath?: string | null;
+  /** The clock, in milliseconds (tests give their own). */
   now?: () => number;
 }
 
@@ -105,6 +121,7 @@ const SPIN = {
   ascii: ["|", "/", "-", "\\"],
 };
 
+/** A duration for people: "850ms", "12s", "3m05s". */
 export function fmtDuration(ms: number): string {
   const s = Math.round(ms / 1000);
   if (s < 60) return `${s}s`;
@@ -112,17 +129,29 @@ export function fmtDuration(ms: number): string {
   return `${m}m${String(s % 60).padStart(2, "0")}s`;
 }
 
+/** One phase of a run ("Packages", "Verify", ...): its progress, its items, its problems, and its one-line result. */
 export class Phase {
+  /** How many changes it made. */
   changes = 0;
+  /** How many items were already right. */
   oks = 0;
+  /** How many warnings. */
   warns = 0;
+  /** How many failures. */
   fails = 0;
+  /** How many items are not set up yet. */
   pendings = 0;
+  /** How many disruptive changes it left for later. */
   deferred = 0;
+  /** How many items it skipped. */
   skipped = 0;
+  /** Its one-line result, when set. */
   result?: string;
+  /** Its progress bar's state. */
   progress?: { n: number; total: number; label: string };
+  /** When it started (the Ui's clock). */
   readonly started: number;
+  /** A phase of `ui`, named `name`; started by {@link Ui.phase}. */
   constructor(readonly name: string, readonly ui: Ui) {
     this.started = ui.now();
   }
@@ -136,27 +165,33 @@ export class Phase {
     this.progress = { n: 0, total: 0, label };
     this.ui.redraw();
   }
+  /** A change it made. */
   change(msg: string) {
     this.changes++;
     this.ui.item("change", msg);
   }
+  /** An item already right. */
   ok(msg: string) {
     this.oks++;
     this.ui.item("ok", msg);
   }
+  /** An item it skipped. */
   skip(msg: string) {
     this.skipped++;
     this.ui.item("skip", msg);
   }
+  /** A disruptive change left for later (shown with how to run it). */
   defer(msg: string) {
     this.deferred++;
     this.ui.deferred.push(msg);
     this.ui.item("defer", msg);
   }
+  /** A warning: shown, with its fix and code; never fails the run. */
   warn(msg: string, fix?: string, code?: string) {
     this.warns++;
     this.ui.problem("warn", this.name, msg, fix, code);
   }
+  /** A failure: shown, with its fix and code; the run exits 1. */
   fail(msg: string, fix?: string, code?: string) {
     this.fails++;
     this.ui.problem("fail", this.name, msg, fix, code);
@@ -175,9 +210,11 @@ export class Phase {
     if (result !== undefined) this.result = result;
     this.ui.endPhase(this);
   }
+  /** How it ended: fail when anything failed, else warn, else ok. */
   get level(): Level {
     return this.fails ? "fail" : this.warns ? "warn" : "ok";
   }
+  /** Its one-line result: set by done(), or counted from its items. */
   summary(): string {
     if (this.result !== undefined) {
       return this.deferred ? `${this.result} · ${this.deferred} deferred` : this.result;
@@ -192,16 +229,27 @@ export class Phase {
   }
 }
 
+/** The terminal output of an archon run: a header, phases with progress, problems with fixes, and a closing summary whose color always matches the exit code. */
 export class Ui {
+  /** Drawing for a terminal. */
   readonly tty: boolean;
+  /** Using color. */
   readonly color: boolean;
+  /** Using emoji. */
   readonly emoji: boolean;
+  /** Showing every item. */
   verbose: boolean;
+  /** Showing nothing on screen. */
   quiet: boolean;
+  /** The clock (milliseconds). */
   readonly now: () => number;
+  /** When the run started. */
   readonly started: number;
+  /** Every problem so far. */
   readonly problems: Problem[] = [];
+  /** Every disruptive change left for later. */
   readonly deferred: string[] = [];
+  /** How to run the deferred changes. */
   deferHint = "run from the console or AMT: sudo archon apply --include-disruptive";
   /** Suggested next steps printed under the closing line. */
   next: string[] = [];
@@ -217,6 +265,7 @@ export class Ui {
     this.out("");
     for (const l of this.panel.lines) this.out(color(l));
   }
+  /** The run's log file. */
   logPath: string | null;
   private current?: Phase;
   private phases: Phase[] = [];
@@ -229,6 +278,7 @@ export class Ui {
   /** The terminal is gone (an SSH session dropped); output goes only to the run log. */
   detached = false;
 
+  /** A Ui with these options (see {@link UiOptions}). */
   constructor(o: UiOptions = {}) {
     this.tty = o.tty ?? Deno.stderr.isTerminal();
     this.color = o.color ?? (!env("NO_COLOR") && (this.tty || !!env("FORCE_COLOR")));
@@ -250,19 +300,29 @@ export class Ui {
     this.logPath = o.logPath === undefined ? null : o.logPath;
   }
 
-  private get m() {
+  /** The marks for each state, emoji or ASCII. */
+  private get m(): typeof MARKS.emoji {
     return this.emoji ? MARKS.emoji : MARKS.ascii;
   }
-  private c(code: string, s: string) {
+  /** Text in an ANSI color, when color is on. */
+  private c(code: string, s: string): string {
     return this.color ? `\x1b[${code}m${s}\x1b[0m` : s;
   }
+  /** Dimmed text. */
   dim = (s: string) => this.c("2", s);
+  /** Bold text. */
   bold = (s: string) => this.c("1", s);
+  /** Red text (failures). */
   red = (s: string) => this.c("31", s);
+  /** Yellow text (warnings). */
   yellow = (s: string) => this.c("33", s);
+  /** Green text (success). */
   green = (s: string) => this.c("32", s);
+  /** Cyan text. */
   cyan = (s: string) => this.c("36", s);
+  /** Blue text. */
   blue = (s: string) => this.c("34", s);
+  /** Magenta text. */
   magenta = (s: string) => this.c("35", s);
 
   /** Open the run log lazily (operations only). */
@@ -281,6 +341,7 @@ export class Ui {
     if (path) this.openLog();
   }
 
+  /** Write a line to the log; returns its line number. */
   log(line: string): number {
     this.openLog();
     if (!this.logFile) return 0;
@@ -291,10 +352,12 @@ export class Ui {
     return this.logLines;
   }
 
+  /** Erase the spinner's line. */
   private clearLine() {
     if (this.tty) this.write("\r\x1b[2K");
   }
 
+  /** Write a line on screen (and in the log). */
   private out(line: string) {
     if (this.quiet) return;
     this.clearLine();
@@ -302,6 +365,7 @@ export class Ui {
     this.redraw();
   }
 
+  /** The run's header: its title and what it acts on. */
   header(title: string, subtitle = "") {
     this.log(`== ${title}${subtitle ? ` · ${subtitle}` : ""}`);
     if (env("ARCHON_UI_CONTINUE")) return;
@@ -314,6 +378,7 @@ export class Ui {
     this.out(`${head}\n${this.dim(rule)}`);
   }
 
+  /** Start a phase (the previous one ends). */
   phase(name: string): Phase {
     if (this.current) this.endPhase(this.current);
     const p = new Phase(name, this);
@@ -335,6 +400,7 @@ export class Ui {
     return this.current ?? this.phase(name);
   }
 
+  /** One item of the current phase (shown with -v; always logged). */
   item(kind: "change" | "ok" | "skip" | "defer" | "note", msg: string) {
     this.log(`   ${kind.padEnd(6)} ${msg}`);
     if (!this.verbose || this.quiet) return;
@@ -348,6 +414,7 @@ export class Ui {
     this.out(this.dim(`     ${mark} ${msg}`));
   }
 
+  /** Record a problem: shown now, and again when the run ends. A known raw error from another tool gets its code and fix (spec 052). */
   problem(level: ProblemLevel, phase: string, message: string, fix?: string, code?: string) {
     // Spec 052: a raw tool error gets its plain cause and fix, when it is a known one.
     if (!fix || !code) {
@@ -373,12 +440,14 @@ export class Ui {
     this.out(`   ${mark} ${text}`);
   }
 
+  /** A progress bar, n of total. */
   private bar(n: number, total: number, width = 20): string {
     const filled = total ? Math.round((n / total) * width) : 0;
     const [a, b] = this.emoji ? ["█", "░"] : ["#", "-"];
     return `[${a.repeat(filled)}${b.repeat(width - filled)}]`;
   }
 
+  /** Draw the current phase's line again (spinner, progress). */
   redraw() {
     if (!this.tty || this.quiet || !this.current) return;
     const p = this.current;
@@ -399,6 +468,7 @@ export class Ui {
     this.write(`\r\x1b[2K${truncate(line, cols - 1, this.color)}`);
   }
 
+  /** Start the spinner (terminals only). */
   private startSpinner() {
     if (!this.tty || this.quiet || this.timer !== undefined) return;
     const t = setInterval(() => {
@@ -411,6 +481,7 @@ export class Ui {
     } catch { /* older Deno */ }
   }
 
+  /** Stop the spinner. */
   private stopSpinner() {
     if (this.timer !== undefined) clearInterval(this.timer);
     this.timer = undefined;
@@ -424,6 +495,7 @@ export class Ui {
     end?(name: string, level: string, summary: string): void;
   }> = [];
 
+  /** End a phase: its mark, name, result, and time. */
   endPhase(p: Phase) {
     if (!this.phases.includes(p) || (p as { ended?: boolean }).ended) return;
     (p as { ended?: boolean }).ended = true;
@@ -452,10 +524,12 @@ export class Ui {
     this.out(`   ${msg}`);
   }
 
+  /** Stop drawing (another program uses the terminal, or a prompt is shown). */
   pause() {
     this.stopSpinner();
     this.clearLine();
   }
+  /** Draw again after pause(). */
   resume() {
     if (this.current) this.startSpinner();
   }

@@ -6,4 +6,4 @@
  */
 
 /** The documentation problems left to fix. */
-export const DOC_LINT_BASELINE = 1052;
+export const DOC_LINT_BASELINE = 928;

@@ -8,12 +8,19 @@
 
 export type Tier = "read" | "repo" | "mutate" | "destructive";
 
+/** One argument of a command: an option (--name) or a positional value. */
 export interface ArgSpec {
+  /** Its name (the option is --name). */
   name: string;
+  /** A value, or a flag. */
   type: "string" | "boolean";
+  /** What it does, in one line (help, man page, MCP). */
   description: string;
+  /** Given without --name, in order. */
   positional?: boolean;
+  /** The command refuses to run without it. */
   required?: boolean;
+  /** Its value when it is not given. */
   default?: string | boolean;
   /** May be given more than once; the values are joined with newlines. */
   repeatable?: boolean;
@@ -24,21 +31,28 @@ export interface ArgSpec {
   human?: boolean;
 }
 
+/** A command's arguments, parsed: name to value. */
 export type Parsed = Record<string, string | boolean | undefined>;
 
+/** What every command is given besides its arguments. */
 export interface RunContext {
   /** The host this invocation operates on. */
   hostName: string;
+  /** --json: machine-readable output, nothing drawn. */
   json: boolean;
+  /** -v: every item, as it happens. */
   verbose?: boolean;
 }
 
+/** One archon command: its name, help, tier, arguments, and what it runs. The man pages, the MCP tools, and `archon help` all come from these. */
 export interface Command {
   /** Space-separated words, for example "tools sync". */
   name: string;
+  /** One line, for archon help. */
   summary: string;
   /** Paragraphs separated by blank lines. */
   description: string;
+  /** What it may do: read, write the repository, change the host, or destroy (spec 030: MCP serves up to the fleet's tier). */
   tier: Tier;
   /** Tier when this flag is set (for example apply --check is read-only). */
   readOnlyWith?: string;
@@ -53,8 +67,11 @@ export interface Command {
    * admin are in archon-ops, so sudo does not prompt (spec 006).
    */
   asOwner?: boolean;
+  /** Its arguments. */
   args: ArgSpec[];
+  /** Examples, for its man page. */
   examples?: Array<{ cmd: string; text: string }>;
+  /** Related man pages. */
   seeAlso?: string[];
   /** Hide from MCP (for example `mcp` itself). */
   noMcp?: boolean;
@@ -76,14 +93,17 @@ export interface Command {
    * work is done.
    */
   precheck?: (args: Parsed, ctx: RunContext) => Promise<number | undefined>;
+  /** Runs it; returns the exit code. */
   run: (args: Parsed, ctx: RunContext) => Promise<number>;
 }
 
+/** The tier this run needs (a command's tier can depend on its arguments, for example --check). */
 export function effectiveTier(cmd: Command, args: Parsed): Tier {
   if (cmd.mutateWith && args[cmd.mutateWith]) return "mutate";
   return cmd.readOnlyWith && args[cmd.readOnlyWith] ? "read" : cmd.tier;
 }
 
+/** Parse argv for this command, or throw a message naming the problem (a person-only option from an agent is refused). */
 export function parseArgs(cmd: Command, argv: string[]): Parsed {
   const out: Parsed = {};
   const positionals = cmd.args.filter((a) => a.positional);
