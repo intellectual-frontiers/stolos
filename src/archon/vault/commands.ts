@@ -16,6 +16,7 @@
  */
 
 import { run } from "../core/exec.ts";
+import { P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";
 import { SECRETS, writeSecret } from "../core/secrets.ts";
 import { labelFor, SECRET_INVENTORY, secretFor } from "../model/secret-inventory.ts";
@@ -174,8 +175,9 @@ export async function vaultBackup(): Promise<number> {
 // ------------------------------------------------------------------ restore
 
 /** `vault restore` without a ZIP: the steps (the command, and by hand); it changes nothing. */
-export function vaultRestore(): number {
-  console.log(restoreText());
+export async function vaultRestore(): Promise<number> {
+  const { repoSlug } = await import("../fleet/bootstrap.ts");
+  console.log(restoreText([], await repoSlug(P.repo)));
   return 0;
 }
 

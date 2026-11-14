@@ -282,7 +282,7 @@ export async function vaultRestoreZip(
   if (!here.length) {
     f.fail(
       `${P.repo} holds no fleet`,
-      "clone your fleet repository, cd into it (for example C:\\fleet), then run this again",
+      "clone your fleet repository, cd into it (for example $HOME\\fleet on Windows, ~/fleet elsewhere), then run this again",
     );
     return done();
   }

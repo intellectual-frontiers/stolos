@@ -1,6 +1,6 @@
 // Spec 046-engine-instance: the engine's own text files (the constitution,
 // each specification, the guides under docs/, the base dotfile layer under
-// home/, the prompt theme) as one generated TypeScript module, so that an
+// home/, the prompt theme, the bootstrap scripts under bin/) as one generated TypeScript module, so that an
 // engine imported from GitHub (`@stolos/`) carries them: only modules travel
 // with an import. `deno task gen` writes src/archon/assets.auto.ts;
 // `deno task gen --check` fails when it is stale.
@@ -32,6 +32,9 @@ const files = [
   ...walk(join(ROOT, "docs")).filter((f) => f.endsWith(".md")),
   ...walk(join(ROOT, "specs")).filter((f) => f.endsWith("/spec.md")),
   ...walk(join(ROOT, "home")),
+  // Spec 062: the bootstrap scripts' template (fleets get their copy from it).
+  join(ROOT, "bin/bootstrap-example.sh"),
+  join(ROOT, "bin/bootstrap-example.windows.ps1"),
 ].map((f) => relative(ROOT, f).replaceAll("\\", "/")).sort();
 
 let body = "";

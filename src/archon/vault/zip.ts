@@ -21,6 +21,7 @@
  * @module
  */
 
+import { bootstrapOneLiner, repoSlug } from "../fleet/bootstrap.ts";
 import { unzipSync, zipSync } from "npm:fflate@0.8.2";
 import { join } from "../core/path.ts";
 import { exists, readTextOr } from "../core/fsx.ts";
@@ -133,7 +134,7 @@ async function adoptLooseRecovery(loose: string[]): Promise<string | undefined> 
 }
 
 /** The restore instructions: printed by `vault restore`, and RESTORE.txt in every ZIP. */
-export function restoreText(fleets: string[] = []): string {
+export function restoreText(fleets: string[] = [], repo = ""): string {
   const fl = fleets.length ? fleets.join(", ") : "<fleet>";
   return `How to restore a stolos backup
 =============================
@@ -150,12 +151,14 @@ This ZIP holds what a boot machine needs again after a disaster:
 
 On the new or rebuilt PC (Windows, in PowerShell):
 
- 1. Install Deno, Git, and gh (GitHub's command line), sign in: gh auth login
- 2. Clone your fleet repository, for example:
-        git clone https://github.com/<owner>/<fleet repository>.git C:\\fleet
+ 1-2. Bootstrap: Deno, Git, gh, your GitHub sign-in, and your fleet repository
+    cloned into $HOME\\fleet, in one line (spec 062):
+        ${bootstrapOneLiner("windows", repo)}
+    (Linux or macOS, in a terminal:
+        ${bootstrapOneLiner("posix", repo)})
  3. Restore this ZIP, in one command (it checks the ZIP, never overwrites, and
     asks for your daily key's passphrase once, for a test signature):
-        cd C:\\fleet
+        cd $HOME\\fleet
         deno task stolos vault restore <path to this ZIP>
     Then check everything: deno task stolos boot doctor. That is all.
 
@@ -172,7 +175,7 @@ By hand instead (the same as step 3 does):
         Copy-Item <unzipped>\\signing\\fleet-signing* $HOME\\.ssh\\
         New-Item -ItemType Directory -Force $env:APPDATA\\stolos\\keys
         Copy-Item <unzipped>\\signing\\recovery\\* $env:APPDATA\\stolos\\keys\\
-        cd C:\\fleet
+        cd $HOME\\fleet
         deno task stolos keys setup
     (Linux and macOS: cp <unzipped>/signing/fleet-signing* ~/.ssh/;
      mkdir -p ~/.config/stolos/keys && cp <unzipped>/signing/recovery/* ~/.config/stolos/keys/)
@@ -218,7 +221,9 @@ export async function writeBackupZip(
   const zip = zipSync({
     ...Object.fromEntries(files.map((f) => [f.name, f.data])),
     "manifest.json": enc.encode(JSON.stringify(manifest, null, 2) + "\n"),
-    "RESTORE.txt": enc.encode(restoreText(fleets.length ? fleets : listFleets(P.repo))),
+    "RESTORE.txt": enc.encode(
+      restoreText(fleets.length ? fleets : listFleets(P.repo), await repoSlug(P.repo)),
+    ),
   }, { level: 9 });
   // Read it back: every file in the manifest, with its SHA-256, before saying it worked.
   const back = unzipSync(zip);

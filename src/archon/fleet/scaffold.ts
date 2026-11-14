@@ -6,6 +6,7 @@
  * @module
  */
 
+import { bootstrapFiles, repoSlug } from "./bootstrap.ts";
 import { join } from "../core/path.ts";
 import { exists } from "../core/fsx.ts";
 import { ENGINE_ENTRY, ENGINE_ENTRY_TEXT } from "./upgrade.ts";
@@ -100,9 +101,20 @@ export const VSCODE_SETTINGS_TEXT: string = JSON.stringify(
 export const VSCODE_EXTENSIONS_TEXT =
   '{\n  "recommendations": [\n    "denoland.vscode-deno",\n    "bierner.markdown-mermaid",\n    "github.vscode-github-actions",\n    "redhat.vscode-yaml"\n  ],\n  "unwantedRecommendations": [\n    "esbenp.prettier-vscode",\n    "dbaeumer.vscode-eslint"\n  ]\n}\n';
 
-/** The files of a fleet repository, by path relative to its root. */
-export function scaffoldFiles(tag: string, base = ENGINE_BASE): Record<string, string> {
+/**
+ * Line endings Git keeps whatever the PC (spec 062): a shell script with
+ * Windows line endings does not run on Linux or macOS.
+ */
+export const GITATTRIBUTES_TEXT =
+  `# Written by stolos (spec 062): shell scripts keep LF on every system.
+*.sh text eol=lf
+`;
+
+/** The files of a fleet repository, by path relative to its root; `slug` is its GitHub owner/name. */
+export function scaffoldFiles(tag: string, base = ENGINE_BASE, slug = ""): Record<string, string> {
   return {
+    ...bootstrapFiles(slug),
+    ".gitattributes": GITATTRIBUTES_TEXT,
     "deno.json": denoJsonText(tag, base),
     "archon.ts": ARCHON_ENTRY_TEXT,
     "stolos.ts": STOLOS_ENTRY_TEXT,
@@ -120,11 +132,13 @@ export async function scaffoldRepository(
   base = ENGINE_BASE,
 ): Promise<string[]> {
   const written: string[] = [];
-  for (const [rel, text] of Object.entries(scaffoldFiles(tag, base))) {
+  const slug = await repoSlug(repo);
+  for (const [rel, text] of Object.entries(scaffoldFiles(tag, base, slug))) {
     const p = join(repo, rel);
     if (await exists(p)) continue;
     await Deno.mkdir(join(p, ".."), { recursive: true });
     await Deno.writeTextFile(p, text);
+    if (rel.endsWith(".sh") && Deno.build.os !== "windows") await Deno.chmod(p, 0o755);
     written.push(rel);
   }
   return written;

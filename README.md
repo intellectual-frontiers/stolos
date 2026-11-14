@@ -96,9 +96,73 @@ rather than written by hand. (Generating those reports is the direction, not yet
 
 `stolos` runs on **Windows, macOS, or Linux**. All it needs is **[Deno](https://deno.com) 2.9.6 or
 newer** (2.x), a single program with no other dependencies, plus Git and `gh` (GitHub's command
-line) to work with your fleet repository. Installers and binaries for every system:
-[docs.deno.com, installation](https://docs.deno.com/runtime/getting_started/installation/) and
-[Deno's releases](https://github.com/denoland/deno/releases).
+line) to work with your fleet repository. Servers need nothing installed by you: Stolos puts Deno
+and `archon` on each one as it installs it.
+
+### Bootstrap your PC in one line
+
+The PC you run `stolos` on is the fleet's **controller**. One line makes a PC one. It installs Deno,
+Git and `gh`, signs you in to GitHub in the browser, clones your fleet repository into
+**`$HOME/fleet`** (on Windows, `C:\Users\<you>\fleet`), and adds the `stolos` shortcut. Replace
+`<owner>/<fleet-repo>` with your fleet repository:
+
+| System                                  | Run                                                                                                                                                                      |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Windows (PowerShell, not Administrator) | `& ([scriptblock]::Create((irm https://raw.githubusercontent.com/intellectual-frontiers/stolos/v0.56.0/bin/bootstrap-example.windows.ps1))) --repo <owner>/<fleet-repo>` |
+| macOS or Linux (Terminal)               | `bash <(curl -fsSL https://raw.githubusercontent.com/intellectual-frontiers/stolos/v0.56.0/bin/bootstrap-example.sh) --repo <owner>/<fleet-repo>`                        |
+
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#EEF2FF"
+    primaryBorderColor: "#6366F1"
+    primaryTextColor: "#1E1B4B"
+    lineColor: "#64748B"
+    edgeLabelBackground: "#F8FAFC"
+---
+flowchart LR
+  D["Deno 2.9.6+"]:::step --> G["Git"]:::step --> H["gh"]:::step
+  H --> S["GitHub sign-in<br/>(browser)"]:::you
+  S --> F{"$HOME/fleet?"}:::gh
+  F -- "not there" --> C["clone"]:::ok
+  F -- "there" --> U["deno task stolos update"]:::ok
+  C --> K["stolos shortcut"]:::step
+  U --> K
+  classDef step fill:#F1F5F9,stroke:#475569,stroke-width:2px,color:#0F172A
+  classDef you fill:#EEF2FF,stroke:#6366F1,stroke-width:2px,color:#1E1B4B
+  classDef gh fill:#FFFBEB,stroke:#F59E0B,stroke-width:2px,color:#78350F
+  classDef ok fill:#ECFDF5,stroke:#10B981,stroke-width:2px,color:#064E3B
+```
+
+Each step checks first and skips what is already done, so running it again is always safe: on a PC
+that already has the fleet, it brings it up to date (`deno task stolos update`). Options, the same
+on every system:
+
+| Option                | What it does                                                                                                                                                                     |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--repo <owner/name>` | the fleet repository (required by the engine's example; a fleet's own copy knows it)                                                                                             |
+| `--in <folder>`       | where the fleet goes (default `$HOME/fleet`)                                                                                                                                     |
+| `--destroy-existing`  | remove that folder first, then clone it fresh. Only a checkout of the same repository; edits or commits not on GitHub yet are listed, and you type the folder's name to go ahead |
+| `--no-shortcut`       | do not add the `stolos` shortcut                                                                                                                                                 |
+| `--dry-run`           | say what each step would do; change nothing                                                                                                                                      |
+
+**How it works, line by line.** [`bin/bootstrap-example.sh`](bin/bootstrap-example.sh) (Linux and
+macOS; it tells them apart itself) and
+[`bin/bootstrap-example.windows.ps1`](bin/bootstrap-example.windows.ps1) are written to be read:
+each step says what it does and why. They prefer the system's own packages (Ubuntu's `gh` before
+GitHub's), never need Administrator on Windows (Deno goes into your own folder; `winget` asks if it
+must), and use `sudo` on Linux only to install Git or `gh` when they are missing.
+
+**Your fleet's own copy.** `deno task stolos fleet init` writes `bin/bootstrap.sh` and
+`bin/bootstrap.windows.ps1` into the fleet repository with its name filled in (so `--repo` is not
+needed), and `deno task stolos fleet upgrade` keeps them in step with the engine. A private fleet
+repository's files cannot be downloaded before you sign in, so a new PC starts from the engine's
+public example above; the fleet's copy is for running again later, from `$HOME/fleet`.
+
+<details>
+<summary><b>By hand instead</b>: the same installs, one system at a time</summary>
 
 <details>
 <summary><b>Windows</b> (PowerShell)</summary>
@@ -140,6 +204,8 @@ nothing installed by you: Stolos puts Deno and `archon` on each one as it instal
 
 </details>
 
+</details>
+
 ## Two commands: `stolos` and `archon`
 
 | Where                                 | Command                                              | For                                                                                   |
@@ -152,7 +218,8 @@ on your PC, and `stolos apply` says to run `archon apply` on the machine. With n
 `stolos` shows where you are and the next step; `archon` shows the machine's state.
 
 **A shortcut: `stolos` instead of `deno task stolos`.** It works in the fleet folder (where
-`deno.json` is), and runs the engine version pinned there.
+`deno.json` is), and runs the engine version pinned there. The bootstrap adds it for you (unless
+`--no-shortcut`); by hand:
 
 <details>
 <summary><b>Windows</b> (PowerShell)</summary>
@@ -262,9 +329,8 @@ the engine files you approved.
 
 ## Set up a fleet repository
 
-With Deno, Git, and `gh` installed (above) and `gh auth login` done:
-
-1. Create an empty private repository on GitHub and clone it.
+1. Create an empty private repository on GitHub, then bootstrap this PC with it (above:
+   `--repo <owner>/<new-repo>`). It clones the empty repository into `$HOME/fleet`; `cd` into it.
 2. Start the fleet with the engine's latest version (it writes `deno.json`, `deno.lock`, and
    `fleets/<id>/fleet.ts` from your GitHub account):
 
@@ -336,7 +402,8 @@ typed by a person).
 
 ## Every day
 
-Open a terminal in your fleet repository (on Windows: PowerShell, `cd C:\fleet`), then:
+Open a terminal in your fleet repository (`cd ~/fleet`; on Windows, in PowerShell,
+`cd $HOME\fleet`), then:
 
 ```sh
 deno task stolos update           # instead of git pull: pulls, checks signatures, moves to a newer

@@ -273,7 +273,7 @@ export function approvalSteps(
   wsl = onWsl(),
 ): string[] {
   const where = wsl
-    ? "in Windows: open PowerShell, cd C:\\fleet (your fleet folder), deno task stolos update, then run:"
+    ? "in Windows: open PowerShell, cd $HOME\\fleet (your fleet folder), deno task stolos update, then run:"
     : "on a PC whose key is already listed, in the fleet repository, after deno task stolos update, run:";
   return [
     `approve this PC's key ${where}`,
@@ -296,7 +296,7 @@ export async function keysSetup(o: { test?: boolean } = {}): Promise<number> {
         ? "this folder is not a Git checkout"
         : "no fleet here (or several: set ARCHON_FLEET)",
       !f.repo
-        ? "cd into your fleet repository (for example C:\\fleet), then run this again"
+        ? "cd into your fleet repository (for example $HOME\\fleet on Windows, ~/fleet elsewhere), then run this again"
         : "deno task stolos fleet init <id>, or set ARCHON_FLEET",
     );
     return end();

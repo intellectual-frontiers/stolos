@@ -11,21 +11,16 @@ key's passphrase, your **GitHub** login, and, for the network, your **UniFi** ac
 
 ## With a backup ZIP
 
-1. **Tools.** On the new PC, in PowerShell:
+1. **Tools and the repository, in one line** (spec 062). In PowerShell, not as Administrator:
 
    ```powershell
-   winget install --id DenoLand.Deno
-   winget install --id Git.Git
-   winget install --id GitHub.cli
+   & ([scriptblock]::Create((irm https://raw.githubusercontent.com/intellectual-frontiers/stolos/v0.56.0/bin/bootstrap-example.windows.ps1))) --repo example/fleet
    ```
 
-2. **The repository.** In a new PowerShell window:
+   It installs Deno, Git and gh, signs you in to GitHub in the browser, clones the fleet into
+   `$HOME\fleet`, and adds the `stolos` shortcut.
 
-   ```powershell
-   gh auth login --web --git-protocol https
-   git clone https://github.com/example/fleet.git C:\fleet
-   cd C:\fleet
-   ```
+2. **Into the fleet folder,** in a new PowerShell window: `cd $HOME\fleet`.
 
 3. **The secrets and both keys.** In the cloned repository:
 

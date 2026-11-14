@@ -142,7 +142,20 @@ Deno.test("046: fleet upgrade locks, validates, and signs; refuses what is not a
     assertEquals(await sh(repo, "git", "status", "--porcelain"), "", "nothing left over");
     assertEquals(
       (await sh(repo, "git", "show", "--name-only", "--format=", "HEAD")).split("\n").sort(),
-      ["deno.json", "deno.lock", "engine.ts"],
+      // Spec 062: the bootstrap scripts and .gitattributes come with the engine.
+      [
+        ".gitattributes",
+        "bin/bootstrap.sh",
+        "bin/bootstrap.windows.ps1",
+        "deno.json",
+        "deno.lock",
+        "engine.ts",
+      ],
+    );
+    assertStringIncludes(
+      await sh(repo, "git", "ls-files", "-s", "bin/bootstrap.sh"),
+      "100755",
+      "bootstrap.sh is executable on every system",
     );
 
     // Back to an older version: only with --downgrade (and only to a release).

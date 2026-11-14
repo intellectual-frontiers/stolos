@@ -379,7 +379,7 @@ Deno.test("057: the approval steps, on WSL (Windows PowerShell) and elsewhere", 
     "ssh-ed25519 AAAA",
     true,
   );
-  assertStringIncludes(wsl[0], "PowerShell, cd C:\\fleet");
+  assertStringIncludes(wsl[0], "PowerShell, cd $HOME\\fleet");
   assertEquals(
     wsl[1],
     '    deno task stolos signers add owner-pc-daily --role daily --key "ssh-ed25519 AAAA"',

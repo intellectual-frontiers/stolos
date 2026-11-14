@@ -284,18 +284,41 @@ export async function fleetUpgrade(o: UpgradeOptions): Promise<number> {
   }
   v.done(fleets.length ? `${fleets.join(", ")} valid with ${o.tag}` : "no fleets yet");
 
+  // Spec 062: the bootstrap scripts and .gitattributes, as this engine writes them.
+  const { bootstrapFiles, repoSlug } = await import("./bootstrap.ts");
+  const { GITATTRIBUTES_TEXT } = await import("./scaffold.ts");
+  const refreshed: string[] = [];
+  for (
+    const [rel, want] of Object.entries({
+      ...bootstrapFiles(await repoSlug(repo)),
+      ".gitattributes": GITATTRIBUTES_TEXT,
+    })
+  ) {
+    const p = join(repo, rel);
+    if ((await readTextOr(p)) === want) continue;
+    await Deno.mkdir(join(p, ".."), { recursive: true });
+    await Deno.writeTextFile(p, want);
+    if (rel.endsWith(".sh") && Deno.build.os !== "windows") await Deno.chmod(p, 0o755);
+    refreshed.push(rel);
+  }
+  if (refreshed.length) v.note(`refreshed ${refreshed.join(", ")}`);
+
   // 4. One signed commit.
   const c = ui.phase("Commit");
   if (o.noCommit) {
     c.done("files changed, not committed (--no-commit)");
     ui.next.push(
       `review: git diff; then: git add deno.json deno.lock ${ENGINE_ENTRY} ${
-        workflows.join(" ")
+        [...workflows, ...refreshed].join(" ")
       } && git commit -S -m "stolos ${o.tag}: adopt the engine ${o.tag}"`,
     );
     return ui.finish();
   }
-  await git(["add", "deno.json", "deno.lock", ENGINE_ENTRY, ...workflows]);
+  await git(["add", "deno.json", "deno.lock", ENGINE_ENTRY, ...workflows, ...refreshed]);
+  // Runnable on Linux and macOS whatever system made the commit.
+  if (refreshed.includes("bin/bootstrap.sh")) {
+    await git(["update-index", "--chmod=+x", "bin/bootstrap.sh"]);
+  }
   c.status("signing (your key's passphrase)");
   ui.pause();
   const commit = await run(

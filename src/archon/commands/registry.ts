@@ -1891,7 +1891,7 @@ export const COMMANDS: Command[] = [
     async run(a) {
       if (!a.zip) {
         const { vaultRestore } = await import("../vault/commands.ts");
-        return vaultRestore();
+        return await vaultRestore();
       }
       const { vaultRestoreZip } = await import("../vault/restore.ts");
       return await vaultRestoreZip(a.zip as string, {
