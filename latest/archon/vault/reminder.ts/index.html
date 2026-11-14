@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/vault/reminder.ts - Stolos v0.32.0 documentation</title>
+  <title>archon/vault/reminder.ts - Stolos v0.33.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.32.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.33.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -105,7 +105,8 @@ of <code>boot serve</code> and <code>boot status</code>, until backed up;</li>
 <li><code>boot doctor</code> reports it as a warning whose fix is the command;</li>
 <li>the prompt's 🔐 backup token while anything is unbacked;</li>
 <li>email: after 24 hours unbacked, one &quot;N secrets not backed up&quot; (names
-only), then weekly;</li>
+only), then weekly; and, every six months, to check the recovery key
+(spec 057);</li>
 <li>a non-blocking git pre-push hook that prints the panel.</li>
 </ul>
 </div><section class="section"  id="archon&#x2F;vault&#x2F;reminder_ts_functions"><div>
@@ -183,15 +184,17 @@ alone and does nothing in a sandbox. Returns whether it wrote the hook.</p>
   </defs>
 </svg>
 </a>
-Variables</h2></div><div class="namespaceSection"><div id="namespace_pre_push" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+Variables</h2></div><div class="namespaceSection"><div id="namespace_pre_push_hook" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
-		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;vault&#x2F;reminder.ts&#x2F;~&#x2F;PRE_PUSH.html" title="PRE_PUSH">
-			    <span>PRE_PUSH</span><span>: <span class="td-str">`#!/bin/sh
-# Installed by archon (spec 029): reminds you to back up the boot machine's
-# secrets when any are newer than the last vault backup. Never blocks a push.
-deno run -A src/archon/main.ts vault status --hook &gt;&amp;2 || true
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys.ts&#x2F;~&#x2F;PRE_PUSH_HOOK.html" title="PRE_PUSH_HOOK">
+			    <span>PRE_PUSH_HOOK</span><span>: <span class="td-str">`#!/bin/sh
+# Installed by archon (specs 029 and 057). Checks that what you push is signed
+# by a key the fleet trusts, so servers will accept it; then reminds you to back
+# up when a secret changed. Skip it once with: git push --no-verify
+deno task archon keys check-push || exit 1
+deno task archon vault status --hook &gt;&amp;2 || true
 exit 0
-`</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The git pre-push hook (fleet init, and vault status if missing): prints the panel, never blocks.</p>
+`</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The pre-push hook archon installs (spec 057 checks signatures; spec 029 reminds about backups).</p>
 </div></div></div>
     </div></div>
 </section>
@@ -266,7 +269,7 @@ exit 0
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1145 symbols</span><svg
+              <span class="leading-none">view all 1171 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -281,7 +284,7 @@ exit 0
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/vault/reminder_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_installprepushhook" title="installPrePushHook">installPrePushHook</a></li><li><a href="#namespace_pcname" title="pcName">pcName</a></li><li><a href="#namespace_preparepanel" title="preparePanel">preparePanel</a></li><li><a href="#namespace_remind" title="remind">remind</a></li><li><a href="#namespace_showpanelnow" title="showPanelNow">showPanelNow</a></li></ul></li><li><a href="#archon/vault/reminder_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_pre_push" title="PRE_PUSH">PRE_PUSH</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/vault/reminder_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_installprepushhook" title="installPrePushHook">installPrePushHook</a></li><li><a href="#namespace_pcname" title="pcName">pcName</a></li><li><a href="#namespace_preparepanel" title="preparePanel">preparePanel</a></li><li><a href="#namespace_remind" title="remind">remind</a></li><li><a href="#namespace_showpanelnow" title="showPanelNow">showPanelNow</a></li></ul></li><li><a href="#archon/vault/reminder_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_pre_push_hook" title="PRE_PUSH_HOOK">PRE_PUSH_HOOK</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>
