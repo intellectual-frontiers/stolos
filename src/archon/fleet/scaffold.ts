@@ -56,6 +56,18 @@ out/
 *.log
 `;
 
+/**
+ * VS Code for a fleet repository: Deno for TypeScript (checks, lint) and as the
+ * formatter, on save, for everything deno fmt formats (TypeScript, JavaScript,
+ * JSON, Markdown, YAML, CSS, HTML), with the fleet's deno.json settings.
+ */
+export const VSCODE_SETTINGS_TEXT =
+  '{\n  "deno.enable": true,\n  "deno.lint": true,\n  "editor.formatOnSave": true,\n  "editor.defaultFormatter": "denoland.vscode-deno",\n  "[typescript]": {\n    "editor.defaultFormatter": "denoland.vscode-deno"\n  },\n  "[typescriptreact]": {\n    "editor.defaultFormatter": "denoland.vscode-deno"\n  },\n  "[javascript]": {\n    "editor.defaultFormatter": "denoland.vscode-deno"\n  },\n  "[javascriptreact]": {\n    "editor.defaultFormatter": "denoland.vscode-deno"\n  },\n  "[json]": {\n    "editor.defaultFormatter": "denoland.vscode-deno"\n  },\n  "[jsonc]": {\n    "editor.defaultFormatter": "denoland.vscode-deno"\n  },\n  "[markdown]": {\n    "editor.defaultFormatter": "denoland.vscode-deno"\n  },\n  "[yaml]": {\n    "editor.defaultFormatter": "denoland.vscode-deno"\n  },\n  "[css]": {\n    "editor.defaultFormatter": "denoland.vscode-deno"\n  },\n  "[scss]": {\n    "editor.defaultFormatter": "denoland.vscode-deno"\n  },\n  "[less]": {\n    "editor.defaultFormatter": "denoland.vscode-deno"\n  },\n  "[html]": {\n    "editor.defaultFormatter": "denoland.vscode-deno"\n  },\n  "files.eol": "\\n",\n  "files.insertFinalNewline": true,\n  "files.trimFinalNewlines": true,\n  "files.trimTrailingWhitespace": true\n}\n';
+
+/** VS Code's suggested extensions: Deno, Mermaid in Markdown previews, GitHub Actions, YAML. */
+export const VSCODE_EXTENSIONS_TEXT =
+  '{\n  "recommendations": [\n    "denoland.vscode-deno",\n    "bierner.markdown-mermaid",\n    "github.vscode-github-actions",\n    "redhat.vscode-yaml"\n  ],\n  "unwantedRecommendations": [\n    "esbenp.prettier-vscode",\n    "dbaeumer.vscode-eslint"\n  ]\n}\n';
+
 /** The files of a fleet repository, by path relative to its root. */
 export function scaffoldFiles(tag: string, base = ENGINE_BASE): Record<string, string> {
   return {
@@ -64,6 +76,8 @@ export function scaffoldFiles(tag: string, base = ENGINE_BASE): Record<string, s
     "stolos.ts": STOLOS_ENTRY_TEXT,
     [ENGINE_ENTRY]: ENGINE_ENTRY_TEXT,
     ".gitignore": GITIGNORE_TEXT,
+    ".vscode/settings.json": VSCODE_SETTINGS_TEXT,
+    ".vscode/extensions.json": VSCODE_EXTENSIONS_TEXT,
   };
 }
 
@@ -77,6 +91,7 @@ export async function scaffoldRepository(
   for (const [rel, text] of Object.entries(scaffoldFiles(tag, base))) {
     const p = join(repo, rel);
     if (await exists(p)) continue;
+    await Deno.mkdir(join(p, ".."), { recursive: true });
     await Deno.writeTextFile(p, text);
     written.push(rel);
   }
