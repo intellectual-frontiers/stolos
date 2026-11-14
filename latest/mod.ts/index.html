@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>mod.ts - Stolos v0.25.0 documentation</title>
+  <title>mod.ts - Stolos v0.26.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;" class="contextLink">Stolos v0.25.0</a>
+    <a href="..&#x2F;" class="contextLink">Stolos v0.26.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -576,12 +576,14 @@ capabilities; what it is (its MAC, its SSH host keys) is in its
 registration.ts, from the machine itself (spec 051).</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;HostDef.html#property_arch">
-                  <span>arch</span><span>: <span class="td-str">"amd64"</span></span></a></li><li>
+                  <span>arch</span><span>: <span class="td-str">"amd64"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The CPU architecture (amd64 only, for now).</p>
+</div></div></li><li>
                 <a href="..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;HostDef.html#property_backup">
                   <span>backup</span><span>: <span class="td-ref">Partial</span>&lt;<span class="td-ref">BackupDef</span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Overrides of the default backup policy (spec 016).</p>
 </div></div></li><li>
                 <a href="..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;HostDef.html#property_capabilities">
-                  <span>capabilities</span><span>: <span class="td-ref">Capability</span>[]</span></a></li><li>
+                  <span>capabilities</span><span>: <span class="td-ref">Capability</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What it gets: <code>foundation()</code> for a server, <code>workstation()</code> for a workstation, plus any more.</p>
+</div></div></li><li>
                 <a href="..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;HostDef.html#property_desktop">
                   <span>desktop</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Workstations (spec 036): a graphical desktop, not WSL or a headless machine.
 VS Code is installed only here; set by <code>archon workstation add</code>.</p>
@@ -628,7 +630,8 @@ this machine's archon.sql&lt;name&gt;.json {enabled, by, at}. Read by loadHosts;
 written in a host file. Absent means off.</p>
 </div></div></li><li>
                 <a href="..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;HostDef.html#property_outofband">
-                  <span>outOfBand</span><span>: { amt<span class="td-op">?</span><span>: { address<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; notes<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span>;  }</span></a></li><li>
+                  <span>outOfBand</span><span>: { amt<span class="td-op">?</span><span>: { address<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; notes<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Out-of-band management (Intel AMT): its address and notes, for the person at the console.</p>
+</div></div></li><li>
                 <a href="..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;HostDef.html#property_pg">
                   <span>pg</span><span>: { instances<span class="td-op">?</span><span>: <span class="td-ref">PgInstanceDef</span>[]</span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>PostgreSQL instances this server keeps (spec 038).</p>
 </div></div></li><li>
@@ -641,7 +644,8 @@ never written in a host file.</p>
                   <span>registration</span><span>: <span class="td-ref">HostRegistration</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Who it is, from fleets/&lt;id&gt;/hosts/&lt;host&gt;/registration.ts (spec 047): read by loadHosts.</p>
 </div></div></li><li>
                 <a href="..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;HostDef.html#property_spec">
-                  <span>spec</span><span>: <span class="td-ref">SpecId</span></span></a></li><li>
+                  <span>spec</span><span>: <span class="td-ref">SpecId</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The spec that brought it (for a host, usually &quot;004-install&quot;).</p>
+</div></div></li><li>
                 <a href="..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;HostDef.html#property_switchport">
                   <span>switchPort</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The switch port it is cabled to: &quot;flex-2.5g/3&quot;.</p>
 </div></div></li><li>
@@ -682,7 +686,7 @@ never written in a host file.</p>
 Variables</h2></div><div class="namespaceSection"><div id="namespace_version" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;.&#x2F;archon&#x2F;version.ts&#x2F;~&#x2F;VERSION.html" title="VERSION">
-			    <span>VERSION</span><span>: <span class="td-str">"0.25.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
+			    <span>VERSION</span><span>: <span class="td-str">"0.26.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
 from GitHub (<code>@stolos/</code> → raw.githubusercontent.com/.../v&lt;VERSION&gt;/src/), so
 every push to main raises it and the release workflow tags that commit
 v&lt;VERSION&gt;. <code>deno task version bump</code> raises the minor number (0.1.0, 0.2.0,
@@ -761,7 +765,7 @@ v&lt;VERSION&gt;. <code>deno task version bump</code> raises the minor number (0
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1119 symbols</span><svg
+              <span class="leading-none">view all 1133 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

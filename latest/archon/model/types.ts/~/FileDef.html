@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>FileDef - archon/model/types.ts - Stolos v0.25.0 documentation</title>
+  <title>FileDef - archon/model/types.ts - Stolos v0.26.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;model&#x2F;types.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.25.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.26.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -142,7 +142,8 @@
   />
 </svg>
 </a>
-</div><div><div class="space-y-7" id=""><section class="section"  id="properties"><div>
+</div><div><div class="space-y-7" id=""><div class="markdown"><p>A file Archon keeps on a host: its content, owner, and mode, checked before and after it is put in place.</p>
+</div><section class="section"  id="properties"><div>
       <h2 class="anchorable mb-1"><a href="#properties" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
   height="16"
@@ -217,7 +218,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Its absolute path on the host.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_content">
 
   <div class="docEntryHeader">
@@ -271,7 +273,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Its content (absent for a symlink).</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_symlink">
 
   <div class="docEntryHeader">
@@ -325,7 +328,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Make it a symlink to this target instead.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_mode">
 
   <div class="docEntryHeader">
@@ -378,7 +382,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Its mode, for example &quot;0644&quot;.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_owner">
 
   <div class="docEntryHeader">
@@ -431,7 +436,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Its owner (a Unix account).</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_group">
 
   <div class="docEntryHeader">
@@ -485,7 +491,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Its group (default: the owner's).</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_spec">
 
   <div class="docEntryHeader">
@@ -538,7 +545,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The spec that writes it.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_validate">
 
   <div class="docEntryHeader">
@@ -592,7 +600,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>A command that checks the new content before it is put in place (the file's path appended).</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_postvalidate">
 
   <div class="docEntryHeader">
@@ -646,7 +655,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>A command that checks it after it is in place (rolled back when it fails).</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_onchange">
 
   <div class="docEntryHeader">
@@ -700,7 +710,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>What to do when it changed: reload, restart, run.</p>
+</div></div></div>
 </div></section>
 </div>
 </div>

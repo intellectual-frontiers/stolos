@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ToolDef - archon/model/types.ts - Stolos v0.25.0 documentation</title>
+  <title>ToolDef - archon/model/types.ts - Stolos v0.26.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;model&#x2F;types.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.25.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.26.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -142,7 +142,8 @@
   />
 </svg>
 </a>
-</div><div><div class="space-y-7" id=""><section class="section"  id="properties"><div>
+</div><div><div class="space-y-7" id=""><div class="markdown"><p>A tool installed at its newest release (spec 010): from apt, a snap, an upstream binary (checked, smoke-tested, rolled back on failure), or its own installer.</p>
+</div><section class="section"  id="properties"><div>
       <h2 class="anchorable mb-1"><a href="#properties" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
   height="16"
@@ -217,7 +218,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Its id (also its folder under /opt/tools).</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_name">
 
   <div class="docEntryHeader">
@@ -270,7 +272,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Its name, for people.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_source">
 
   <div class="docEntryHeader">
@@ -323,7 +326,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Where it comes from: Ubuntu's apt, a snap, an upstream release binary, or its own installer (which then updates itself).</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_bins">
 
   <div class="docEntryHeader">
@@ -376,7 +380,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The commands it provides, linked into /usr/local/bin.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_versioncommand">
 
   <div class="docEntryHeader">
@@ -429,7 +434,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The command that prints its version.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_verify">
 
   <div class="docEntryHeader">
@@ -482,7 +488,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The command that checks it works (its smoke test after an install, and a verify check).</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_spec">
 
   <div class="docEntryHeader">
@@ -535,7 +542,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The spec that brings it.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_github">
 
   <div class="docEntryHeader">
@@ -589,7 +597,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Where upstream releases come from (upstream-binary tools).</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_package">
 
   <div class="docEntryHeader">
@@ -643,7 +652,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The apt package, when it is not the id.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_ppa">
 
   <div class="docEntryHeader">
@@ -862,7 +872,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Only for users with this persona.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_workstationonly">
 
   <div class="docEntryHeader">
@@ -1082,7 +1093,8 @@ check run as nobody when archon runs as root.</p>
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The URL of its own installer script (self-updating tools).</p>
+</div></div></div>
 </div></section>
 </div>
 </div>
