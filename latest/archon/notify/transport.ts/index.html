@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/notify/transport.ts - Stolos v0.50.0 documentation</title>
+  <title>archon/notify/transport.ts - Stolos v0.51.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.50.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.51.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -181,7 +181,10 @@ domain for the whole fleet, the machine in the subaddress (RFC 5233).</p>
     </div><div id="namespace_smtperror" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;transport.ts&#x2F;~&#x2F;smtpError.html" title="smtpError">
-			    <span>smtpError</span><span>(<div class="ml-4"><div><span>exit<span>: <span class="td-kw">number</span></span></span>,</div><div><span>stderr<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What curl's SMTP failures mean.</p>
+			    <span>smtpError</span><span>(<div class="ml-4"><div><span>exit<span>: <span class="td-kw">number</span></span></span>,</div><div><span>stderr<span>: <span class="td-kw">string</span></span></span>,</div><div><span>ctx<span class="td-op">?</span><span>: { from<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; to<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; relay<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What a failed SMTP session means, in plain words: the step that failed (log
+in, the sender, the recipient, the message), what was tried there, the
+server's reply code, and the likely fix. curl reports the step and the code
+(&quot;RCPT failed: 500&quot;); the token is never part of it.</p>
 </div></div></div>
     </div></div>
 </section>
@@ -248,6 +251,11 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_default_rel
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;transport.ts&#x2F;~&#x2F;DEFAULT_RELAY.html" title="DEFAULT_RELAY">
 			    <span>DEFAULT_RELAY</span><span>: <span class="td-str">"smtp.mx.cloudflare.net:465"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The SMTP relay, host:port, when the fleet names none (<code>fleet.mail.relay</code>): Cloudflare, implicit TLS.</p>
+</div></div></div>
+    </div><div id="namespace_email" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;transport.ts&#x2F;~&#x2F;EMAIL.html" title="EMAIL">
+			    <span>EMAIL</span><span>: <span class="td-ref">RegExp</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A plausible email address (one @, a dot in the domain, no spaces or angle brackets).</p>
 </div></div></div>
     </div><div id="namespace_relay_user" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
@@ -332,7 +340,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_default_rel
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1201 symbols</span><svg
+              <span class="leading-none">view all 1202 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -347,7 +355,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_default_rel
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/notify/transport_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_hostlabel" title="hostLabel">hostLabel</a></li><li><a href="#namespace_parsesaslpasswd" title="parseSaslPasswd">parseSaslPasswd</a></li><li><a href="#namespace_probesmtp" title="probeSmtp">probeSmtp</a></li><li><a href="#namespace_relayparts" title="relayParts">relayParts</a></li><li><a href="#namespace_saslpasswd" title="saslPasswd">saslPasswd</a></li><li><a href="#namespace_secretsof" title="secretsOf">secretsOf</a></li><li><a href="#namespace_senderaddress" title="senderAddress">senderAddress</a></li><li><a href="#namespace_sendsmtp" title="sendSmtp">sendSmtp</a></li><li><a href="#namespace_smtpconfig" title="smtpConfig">smtpConfig</a></li><li><a href="#namespace_smtperror" title="smtpError">smtpError</a></li></ul></li><li><a href="#archon/notify/transport_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_credential" title="Credential">Credential</a></li></ul></li><li><a href="#archon/notify/transport_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_default_relay" title="DEFAULT_RELAY">DEFAULT_RELAY</a></li><li><a href="#namespace_relay_user" title="RELAY_USER">RELAY_USER</a></li><li><a href="#namespace_sasl_passwd" title="SASL_PASSWD">SASL_PASSWD</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/notify/transport_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_hostlabel" title="hostLabel">hostLabel</a></li><li><a href="#namespace_parsesaslpasswd" title="parseSaslPasswd">parseSaslPasswd</a></li><li><a href="#namespace_probesmtp" title="probeSmtp">probeSmtp</a></li><li><a href="#namespace_relayparts" title="relayParts">relayParts</a></li><li><a href="#namespace_saslpasswd" title="saslPasswd">saslPasswd</a></li><li><a href="#namespace_secretsof" title="secretsOf">secretsOf</a></li><li><a href="#namespace_senderaddress" title="senderAddress">senderAddress</a></li><li><a href="#namespace_sendsmtp" title="sendSmtp">sendSmtp</a></li><li><a href="#namespace_smtpconfig" title="smtpConfig">smtpConfig</a></li><li><a href="#namespace_smtperror" title="smtpError">smtpError</a></li></ul></li><li><a href="#archon/notify/transport_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_credential" title="Credential">Credential</a></li></ul></li><li><a href="#archon/notify/transport_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_default_relay" title="DEFAULT_RELAY">DEFAULT_RELAY</a></li><li><a href="#namespace_email" title="EMAIL">EMAIL</a></li><li><a href="#namespace_relay_user" title="RELAY_USER">RELAY_USER</a></li><li><a href="#namespace_sasl_passwd" title="SASL_PASSWD">SASL_PASSWD</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>
