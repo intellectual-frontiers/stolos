@@ -17,7 +17,7 @@ Deno.test("046: fleet use remembers the fleet for this checkout; --fleet wins on
       const f = join(repo, "fleets", id, "fleet.ts");
       await Deno.writeTextFile(
         f,
-        (await Deno.readTextFile(f)).replace(/"id": "lab"/, `"id": "${id}"`),
+        (await Deno.readTextFile(f)).replace(/id: "lab"/, `id: "${id}"`),
       );
     }
     await new Deno.Command("git", { args: ["init", "-q", "-b", "main", repo] }).output();

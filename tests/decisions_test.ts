@@ -15,7 +15,13 @@ Deno.test("047: decisions.ts has one form: sorted, every value written one way",
       pg: { enabled: true, by: "alice", at: "t1", data: "durable" },
     },
   });
-  assert(a.indexOf('"pg"') < a.indexOf('"s3"'));
+  assert(a.indexOf("pg: {") < a.indexOf("s3: {"), "sorted, with bare keys");
+  assert(
+    decisionsSource({ optIns: { "otel-ui": { enabled: true, by: "a", at: "t" } } }).includes(
+      '"otel-ui": {',
+    ),
+    "quoted only when it must be",
+  );
   assertStringIncludes(a, "} satisfies HostDecisions;");
   assertEquals(
     decisionsSource({
@@ -47,7 +53,7 @@ Deno.test("047: stolos decide writes Git's decision; the model and the data clas
     assertEquals(r.code, 0, r.out);
     assertStringIncludes(r.out, "deno task stolos apply");
     const text = await Deno.readTextFile(`${repo}/fleets/lab/hosts/beta/decisions.ts`);
-    assertStringIncludes(text, '"pg": {\n      enabled: true,\n      data: "durable",');
+    assertStringIncludes(text, 'pg: {\n      enabled: true,\n      data: "durable",');
     r = await archon(["validate"]);
     assertEquals(r.code, 0, r.out);
 

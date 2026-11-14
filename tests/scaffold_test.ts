@@ -56,3 +56,14 @@ Deno.test("a new fleet goes into the nearest repository holding fleets/, else th
     await Deno.remove(dir, { recursive: true });
   }
 });
+
+Deno.test("fleet files are TypeScript, not JSON: bare keys, quotes only where needed", async () => {
+  const { tsLiteral } = await import("../src/archon/core/ts-literal.ts");
+  const { fleetSource } = await import("../src/archon/identity/fleet-init.ts");
+  assertEquals(
+    tsLiteral({ id: "fcr", optIn: { "otel-ui": { enabled: true } }, keys: [], skip: undefined }),
+    '{\n  id: "fcr",\n  optIn: {\n    "otel-ui": {\n      enabled: true,\n    },\n  },\n  keys: [],\n}',
+  );
+  const src = fleetSource({ id: "fcr", title: "T" } as never);
+  assert(src.includes('  id: "fcr",') && !src.includes('"id":'), src);
+});

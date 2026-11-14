@@ -9,6 +9,7 @@
  * @module
  */
 
+import { tsKey } from "../core/ts-literal.ts";
 import { P, repoRel } from "../core/paths.ts";
 import { join } from "../core/path.ts";
 import { exists, readTextOr } from "../core/fsx.ts";
@@ -26,7 +27,7 @@ export function decisionsSource(d: HostDecisions): string {
   const rows = Object.entries(d.optIns ?? {}).sort(([a], [b]) => a.localeCompare(b)).map((
     [name, r],
   ) =>
-    `    ${JSON.stringify(name)}: {\n      enabled: ${r.enabled},\n${
+    `    ${tsKey(name)}: {\n      enabled: ${r.enabled},\n${
       r.data ? `      data: ${JSON.stringify(r.data)},\n` : ""
     }      by: ${JSON.stringify(r.by)},\n      at: ${JSON.stringify(r.at)},\n    },\n`
   ).join("");

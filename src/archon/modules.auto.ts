@@ -76,6 +76,7 @@ import "./core/secrets.ts";
 import "./core/share.ts";
 import "./core/status.ts";
 import "./core/telemetry.ts";
+import "./core/ts-literal.ts";
 import "./core/ui.ts";
 import "./doctor/doctor.ts";
 import "./doctor/email.ts";

@@ -7,6 +7,7 @@
  * @module
  */
 
+import { tsLiteral } from "../core/ts-literal.ts";
 import { P, resetRoots } from "../core/paths.ts";
 import { exists } from "../core/fsx.ts";
 import { dirname, join, resolve, toFileUrl } from "../core/path.ts";
@@ -215,7 +216,7 @@ export function fleetSource(f: FleetDef): string {
 
 import type { FleetDef } from "@stolos/archon/model/types.ts";
 
-export const fleet: FleetDef = ${JSON.stringify(f, null, 2)};
+export const fleet: FleetDef = ${tsLiteral(f)};
 `;
 }
 
