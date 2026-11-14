@@ -3,7 +3,9 @@
 # no sign-in. Usage: <shell> -File tests/bootstrap/windows-check.ps1 <shell>
 # where <shell> is pwsh (PowerShell 7) or powershell (Windows PowerShell 5.1).
 
-$ErrorActionPreference = 'Stop'
+# Continue, not Stop: Windows PowerShell 5.1 turns a native command's stderr (git clone's
+# progress) into a fatal error under Stop. Each check throws on its own when it fails.
+$ErrorActionPreference = 'Continue'
 $shell = $args[0]
 $script = Join-Path $PSScriptRoot '..\..\bin\bootstrap-example.windows.ps1' | Resolve-Path
 $tmp = Join-Path ([IO.Path]::GetTempPath()) "stolos-boot-$shell-$PID"

@@ -153,7 +153,7 @@ export function validateFleet(fleet: FleetDef, hosts: HostDef[]): Problem[] {
       add(
         "fleet.ssh.passwordFrom",
         `'${net}' is not a network in CIDR form`,
-        "for example 10.0.0.0/16 (or [] for keys only)",
+        "for example 192.168.0.0/16 (or [] for keys only)",
       );
     }
   }

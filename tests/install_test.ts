@@ -123,7 +123,7 @@ Deno.test("the ufw profile lists every modeled port", async () => {
   const rules = f.onChange!.filter((a) => a.kind === "run" && a.argv.includes("Archon-LAN"));
   assert(
     rules.some((a) =>
-      a.kind === "run" && a.argv.join(" ") === "ufw allow from 10.0.0.0/16 to any app Archon-LAN"
+      a.kind === "run" && a.argv.join(" ") === "ufw allow from 192.168.0.0/16 to any app Archon-LAN"
     ),
   );
 });

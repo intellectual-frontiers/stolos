@@ -23,7 +23,7 @@ Deno.test("037: smb.conf: SMB3, encryption desired, no guests, no NetBIOS, local
       "usershare max shares = 0",
     ]
   ) assertStringIncludes(conf, line);
-  assertStringIncludes(conf, "hosts allow = 10.0.0.0/8 172.16.0.0/12 10.0.0.0/16");
+  assertStringIncludes(conf, "hosts allow = 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16");
   // Everyone with an account but ops; each home folder its owner's only.
   assertEquals(smbUsers(users), ["alice"]);
   assertStringIncludes(conf, "valid users = alice\n");

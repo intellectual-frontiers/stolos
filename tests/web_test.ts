@@ -78,7 +78,7 @@ Deno.test("032: routes from capabilities, the model, and guests; LAN-only; Cockp
   assertEquals(plan.routes.map((r) => r.name).sort(), ["cockpit", "db", "grafana"]);
   const d = JSON.parse(traefikDynamic(plan)).http;
   assert(d.middlewares.lan.ipAllowList.sourceRange.includes("127.0.0.1/32"));
-  assert(d.middlewares.lan.ipAllowList.sourceRange.includes("10.0.0.0/16"));
+  assert(d.middlewares.lan.ipAllowList.sourceRange.includes("192.168.0.0/16"));
   assertEquals(d.routers.grafana.rule, "Host(`grafana.alpha.lab.example.net`)");
   assertEquals(d.services.grafana.loadBalancer.servers[0].url, "http://127.0.0.1:3000");
   assertEquals(d.services.db.loadBalancer.servers[0].url, "http://db.lxd:8080");

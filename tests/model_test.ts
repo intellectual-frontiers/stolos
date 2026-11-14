@@ -181,7 +181,7 @@ Deno.test("SSH: keys from anywhere, passwords too from local networks; [] means 
   const lan = sshdConfig(LOCAL_NETWORKS);
   assert(lan.startsWith("PermitRootLogin no\nPasswordAuthentication no\n"));
   assert(
-    lan.includes("Match Address 10.0.0.0/8,172.16.0.0/12,10.0.0.0/16,fc00::/7,fe80::/10\n"),
+    lan.includes("Match Address 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,fc00::/7,fe80::/10\n"),
   );
   assert(lan.trimEnd().endsWith("AuthenticationMethods publickey password"));
   assert(!sshdConfig([]).includes("Match"));

@@ -212,7 +212,7 @@ const J = (SYSLOG_IDENTIFIER: string, MESSAGE: string, extra: Record<string, str
   MESSAGE,
   ...extra,
 });
-const LOCAL = ["10.0.0.0/8", "172.16.0.0/12", "10.0.0.0/16", "fc00::/7"];
+const LOCAL = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "fc00::/7"];
 
 Deno.test("watch: sshd logins, failures, and invalid users", () => {
   assertEquals(

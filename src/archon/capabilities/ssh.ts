@@ -17,7 +17,7 @@ const SPEC = "007-ssh" as const;
 export const LOCAL_NETWORKS = [
   "10.0.0.0/8",
   "172.16.0.0/12",
-  "10.0.0.0/16",
+  "192.168.0.0/16",
   "fc00::/7",
   "fe80::/10",
 ];
