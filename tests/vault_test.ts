@@ -213,6 +213,65 @@ Deno.test("vault: restore <zip> puts back every secret and both keys on a fresh 
   }
 });
 
+Deno.test("vault: restore --destroy-existing restores clean; what the backup lacks is saved first", async () => {
+  const s = await vaultSandbox();
+  try {
+    const ssh = join(s.home, ".ssh");
+    await Deno.mkdir(ssh, { recursive: true });
+    await Deno.writeTextFile(join(ssh, "fleet-signing"), "PRIVATE-SIGNING-KEY\n");
+    await Deno.writeTextFile(join(ssh, "fleet-signing.pub"), "ssh-ed25519 AAAA me\n");
+    const gitconfig = join(s.home, "gitconfig");
+    await Deno.writeTextFile(
+      gitconfig,
+      `[user]\n\tsigningkey = ${join(ssh, "fleet-signing").replace(/\\/g, "/")}\n`,
+    );
+    let r = await s.archon(["vault", "backup"], "", { GIT_CONFIG_GLOBAL: gitconfig });
+    assertEquals(r.code, 0, r.out);
+    const dir = join(s.home, "data", "stolos", "backup");
+    const zip = join(s.home, "kept.zip");
+    await Deno.rename(join(dir, [...Deno.readDirSync(dir)][0].name), zip);
+
+    // This PC drifted: a changed secret, one the backup lacks, another daily key, a GitHub key.
+    await s.put("mail.json", '{"token":"newer"}\n');
+    await s.put("hosts/beta/deploy_key", "STRAY\n");
+    await Deno.writeTextFile(join(ssh, "fleet-signing"), "ANOTHER-KEY\n");
+    await Deno.writeTextFile(join(ssh, "id_ed25519"), "GITHUB-KEY\n");
+    const empty = { GIT_CONFIG_GLOBAL: join(s.home, "empty-gitconfig") };
+    await Deno.writeTextFile(empty.GIT_CONFIG_GLOBAL, "");
+
+    r = await s.archon(["vault", "restore", zip, "--files-only"], "", empty);
+    assertEquals(r.code, 1, "without the flag: refused");
+    assert(r.out.includes("--destroy-existing"), r.out);
+
+    r = await s.archon(["vault", "restore", zip, "--files-only", "--destroy-existing"], "", empty);
+    assertEquals(r.code, 0, r.out);
+    assert(r.out.includes("saved in"), r.out);
+    assertEquals(await Deno.readTextFile(join(s.secrets, "mail.json")), '{"token":"t1"}\n');
+    assert(!(await exists(join(s.secrets, "hosts", "beta"))), "only what the backup holds");
+    assertEquals(await Deno.readTextFile(join(ssh, "fleet-signing")), "PRIVATE-SIGNING-KEY\n");
+    const aside = [...Deno.readDirSync(ssh)].map((e) => e.name).filter((n) =>
+      n.startsWith("fleet-signing.replaced-")
+    );
+    assertEquals(aside.length, 1, "the other daily key moved aside, not deleted");
+    assertEquals(await Deno.readTextFile(join(ssh, aside[0])), "ANOTHER-KEY\n");
+    assertEquals(await Deno.readTextFile(join(ssh, "id_ed25519")), "GITHUB-KEY\n");
+    // The saved ZIP holds what was here (the stray secret, the newer mail token).
+    const saved = [...Deno.readDirSync(dir)].map((e) => e.name).filter((n) => n.endsWith(".zip"));
+    assertEquals(saved.length, 1, saved.join(","));
+    const files = unzipSync(Deno.readFileSync(join(dir, saved[0])));
+    assertEquals(new TextDecoder().decode(files["secrets/lab/hosts/beta/deploy_key"]), "STRAY\n");
+    r = await s.archon(["vault", "status"]);
+    assertEquals(r.code, 0, r.out);
+
+    // Clean already: run again, nothing saved, nothing lost.
+    r = await s.archon(["vault", "restore", zip, "--files-only", "--destroy-existing"], "", empty);
+    assertEquals(r.code, 0, r.out);
+    assertEquals([...Deno.readDirSync(dir)].filter((e) => e.name.endsWith(".zip")).length, 1);
+  } finally {
+    await Deno.remove(s.home, { recursive: true });
+  }
+});
+
 Deno.test("vault: restore refuses a ZIP entry outside its places (no path escapes)", () => {
   const roots = { secrets: "/s", ssh: "/h/.ssh", keys: "/k" };
   assertEquals(targetOf("secrets/lab/mail.json", roots)?.fleet, "lab");

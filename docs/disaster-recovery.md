@@ -34,7 +34,8 @@ key's passphrase, your **GitHub** login, and, for the network, your **UniFi** ac
    ```
 
    It checks the ZIP, puts every secret and both keys back, sets up Git's signing, and asks for your
-   daily passphrase once for a test signature (spec 061). It never overwrites a file that differs.
+   daily passphrase once for a test signature (spec 061). It never overwrites a file that differs;
+   to restore clean (exactly the backup), add `--destroy-existing`, which saves what is there first.
    Without a ZIP, `vault restore` prints the same steps by hand (they are `RESTORE.txt` in the ZIP).
 
 4. **Trust the hosts again.** `deno task stolos boot doctor` checks every secret; `known_hosts`

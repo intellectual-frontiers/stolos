@@ -1863,7 +1863,7 @@ export const COMMANDS: Command[] = [
     summary:
       "Boot machine: restore a backup ZIP on a freshly cloned PC (secrets, both keys, signing)",
     description:
-      `Run in the freshly cloned fleet repository: checks the backup ZIP (its format and every file's SHA-256), chooses the fleet it is for, puts every file back (the secrets readable by you only, the daily key in .ssh, the recovery key in the key store), records it as the last backup, then runs keys setup (Git's signing for this checkout and one test signature: your daily passphrase) and downloads the engine's types for VS Code. It never overwrites: a file already there with the same bytes is kept, and one that differs stops it before anything is written, so it can be run again. --files-only stops after the files. Without a ZIP: prints the steps (the same as RESTORE.txt in every ZIP). Specs 056 and 061.`,
+      `Run in the freshly cloned fleet repository: checks the backup ZIP (its format and every file's SHA-256), chooses the fleet it is for, puts every file back (the secrets readable by you only, the daily key in .ssh, the recovery key in the key store), records it as the last backup, then runs keys setup (Git's signing for this checkout and one test signature: your daily passphrase) and downloads the engine's types for VS Code. It never overwrites: a file already there with the same bytes is kept, and one that differs stops it before anything is written, so it can be run again. --destroy-existing restores clean: every fleet's secrets, the key store, and the backup's daily key files in .ssh are removed first (anything there the backup does not hold identically is saved as a backup ZIP of its own first; no other .ssh file is touched). --files-only stops after the files. Without a ZIP: prints the steps (the same as RESTORE.txt in every ZIP). Specs 056 and 061.`,
     tier: "repo",
     operation: true,
     noMcp: true,
@@ -1880,6 +1880,13 @@ export const COMMANDS: Command[] = [
         type: "boolean",
         description: "Put the files back, then stop (no keys setup, no editor step).",
       },
+      {
+        name: "destroy-existing",
+        type: "boolean",
+        human: true,
+        description:
+          "Restore clean: remove every fleet's secrets, the key store, and the backup's daily key in .ssh first (anything the backup lacks is saved as a ZIP of its own first).",
+      },
     ],
     async run(a) {
       if (!a.zip) {
@@ -1887,7 +1894,10 @@ export const COMMANDS: Command[] = [
         return vaultRestore();
       }
       const { vaultRestoreZip } = await import("../vault/restore.ts");
-      return await vaultRestoreZip(a.zip as string, { filesOnly: !!a["files-only"] });
+      return await vaultRestoreZip(a.zip as string, {
+        filesOnly: !!a["files-only"],
+        destroyExisting: !!a["destroy-existing"],
+      });
     },
   },
   {

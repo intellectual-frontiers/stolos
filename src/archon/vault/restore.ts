@@ -12,6 +12,12 @@
  * newer than the backup). So it can be run again, and changes nothing the
  * second time.
  *
+ * `--destroy-existing` restores clean instead: the secrets of every fleet, the
+ * key store, and the backup's daily key files in `.ssh` are removed first, so
+ * what is left is exactly the backup. Anything there that the backup does not
+ * hold identically is first saved as a backup ZIP of its own (nothing is lost),
+ * and only after the ZIP to restore has been read and checked.
+ *
  * ```mermaid
  * flowchart LR
  *   zip["backup ZIP"] --> check["read it: format, every SHA-256"]
@@ -179,6 +185,60 @@ export async function applyRestore(plan: RestorePlan): Promise<number> {
   return n;
 }
 
+/** Every file a clean restore removes: the secrets of every fleet, the key store, the backup's .ssh files. */
+export async function existingFiles(plan: RestorePlan, roots: RestoreRoots): Promise<string[]> {
+  const out: string[] = [];
+  const walk = async (d: string) => {
+    try {
+      for await (const e of Deno.readDir(d)) {
+        const p = join(d, e.name);
+        if (e.isDirectory) await walk(p);
+        else out.push(p);
+      }
+    } catch { /* not there */ }
+  };
+  await walk(roots.secrets);
+  await walk(roots.keys);
+  for (const f of plan.files) {
+    if (f.to.startsWith(roots.ssh) && (await exists(f.to))) out.push(f.to);
+  }
+  return out.sort();
+}
+
+/**
+ * Remove what a clean restore replaces (see {@link existingFiles}), and forget
+ * the secrets' change history; returns how many files went. A key file in
+ * `.ssh` that differs from the backup is moved aside (`<file>.replaced-<date>`),
+ * never deleted; no other file in `.ssh` (a GitHub key, say) is touched.
+ */
+export async function destroyExisting(
+  plan: RestorePlan,
+  roots: RestoreRoots,
+  now = new Date(),
+): Promise<{ removed: number; movedAside: string[] }> {
+  const removed = (await existingFiles(plan, roots)).length;
+  for (const d of [roots.secrets, roots.keys]) {
+    try {
+      await Deno.remove(d, { recursive: true });
+    } catch (e) {
+      if (!(e instanceof Deno.errors.NotFound)) throw e; // already gone is fine; anything else is not
+    }
+  }
+  const movedAside: string[] = [];
+  const stamp = now.toISOString().replace(/[-:]/g, "").replace(/\.\d+Z$/, "Z");
+  for (const f of plan.files) {
+    if (!f.to.startsWith(roots.ssh) || !(await exists(f.to))) continue;
+    if (f.state === "differs") {
+      await Deno.rename(f.to, `${f.to}.replaced-${stamp}`);
+      movedAside.push(`${f.to}.replaced-${stamp}`);
+    } else await Deno.remove(f.to);
+  }
+  const { writeLedger } = await import("../core/secret-ledger.ts");
+  await writeLedger({ changes: {} });
+  for (const f of plan.files) f.state = "new";
+  return { removed, movedAside };
+}
+
 const done = (): number => ui.problems.some((x) => x.level === "fail") ? 1 : 0;
 
 /**
@@ -188,16 +248,17 @@ const done = (): number => ui.problems.some((x) => x.level === "fail") ? 1 : 0;
  */
 export async function vaultRestoreZip(
   zip: string,
-  o: { filesOnly?: boolean } = {},
+  o: { filesOnly?: boolean; destroyExisting?: boolean } = {},
 ): Promise<number> {
   const name = zip.split(/[\\/]/).pop()!;
+  const roots = await restoreRoots();
 
   // 1. The ZIP, read and checked before anything is written.
   const b = ui.phase("Backup");
   b.status(`reading ${name}`);
   let plan: RestorePlan;
   try {
-    plan = await planRestore(zip, await restoreRoots());
+    plan = await planRestore(zip, roots);
   } catch (e) {
     b.fail(
       (e as Error).message,
@@ -249,7 +310,53 @@ export async function vaultRestoreZip(
       : `${P.fleetId} (the backup holds keys only)`,
   );
 
-  // 3. The files: never overwrite.
+  // 3. A clean restore: what is here goes first (saved in a ZIP of its own when the backup lacks any of it).
+  if (o.destroyExisting) {
+    const x = ui.phase("Existing");
+    const here = await existingFiles(plan, roots);
+    const identical = new Set(plan.files.filter((f) => f.state === "same").map((f) => f.to));
+    // .ssh files that differ are moved aside, not removed: only the rest needs saving first.
+    const unique = here.filter((p) => !identical.has(p) && !p.startsWith(roots.ssh));
+    let savedTo = "";
+    if (unique.length) {
+      x.status("saving what is here first");
+      const { writeBackupZip } = await import("./zip.ts");
+      const { pcName } = await import("./reminder.ts");
+      try {
+        const saved = await writeBackupZip(pcName());
+        savedTo = saved.path;
+      } catch (e) {
+        x.fail(
+          `could not save what is here first (${(e as Error).message}); nothing was removed`,
+          "run this again, or without --destroy-existing",
+        );
+        return done();
+      }
+    }
+    let gone: Awaited<ReturnType<typeof destroyExisting>>;
+    try {
+      gone = await destroyExisting(plan, roots);
+    } catch (e) {
+      x.fail(
+        `could not remove what is here: ${(e as Error).message}`,
+        "close anything using those files (an editor, a terminal in that folder), then run this again",
+      );
+      return done();
+    }
+    const { removed, movedAside } = gone;
+    for (const m of movedAside) x.note(`a different key was moved aside: ${m}`);
+    x.done(
+      removed
+        ? `removed ${removed - movedAside.length} file(s)${
+          movedAside.length ? `, moved ${movedAside.length} aside` : ""
+        }${
+          savedTo ? ` (${unique.length} not in the backup as they were: saved in ${savedTo})` : ""
+        }: secrets, the key store, the daily key in .ssh`
+        : "nothing here: already clean",
+    );
+  }
+
+  // 4. The files: never overwrite.
   const w = ui.phase("Files");
   const differs = plan.files.filter((x) => x.state === "differs");
   if (differs.length) {
@@ -258,7 +365,7 @@ export async function vaultRestoreZip(
       `${differs.length} file(s) already here differ from the backup (nothing was written): ${
         shown.join(", ")
       }${differs.length > shown.length ? ", ..." : ""}`,
-      "they may be newer than the backup: keep them (no restore needed), or move them aside and run this again",
+      "they may be newer than the backup: keep them (no restore needed), or restore clean: add --destroy-existing (what is here is saved first)",
     );
     return done();
   }
@@ -291,7 +398,7 @@ export async function vaultRestoreZip(
     return done();
   }
 
-  // 4. Signing, for this checkout: Git uses the restored daily key.
+  // 5. Signing, for this checkout: Git uses the restored daily key.
   if (plan.daily && plan.daily !== "fleet-signing") {
     const set = await run(["git", "-C", P.repo, "config", "--local", "--get", "user.signingkey"]);
     if (!set.stdout.trim()) {
@@ -306,7 +413,7 @@ export async function vaultRestoreZip(
     ui.next = ui.next.filter((l) => !l.startsWith("back up:"));
   }
 
-  // 5. VS Code: the engine's types.
+  // 6. VS Code: the engine's types.
   const e = ui.phase("Editor");
   const { cacheEngine } = await import("../fleet/scaffold.ts");
   const c = await cacheEngine(P.repo);

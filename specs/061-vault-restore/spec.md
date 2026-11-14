@@ -25,6 +25,12 @@ rehearsed procedure).
 - **FR-004** It never overwrites. A file already there with the same bytes is kept; a file that
   differs (it may be newer than the backup) stops the restore before anything is written, naming it.
   Run again, it changes nothing.
+- **FR-004a** `--destroy-existing` restores clean, after the ZIP is checked: every fleet's secrets,
+  the key store, and the backup's daily key files in `.ssh` go first, so what is left is exactly the
+  backup. Anything there the backup does not hold identically is first saved as a backup ZIP of its
+  own (if that fails, nothing is removed); a daily key file in `.ssh` that differs is moved aside as
+  `<file>.replaced-<date>`, never deleted; no other `.ssh` file is touched. The change history of
+  the secrets starts again. Only a person types it (never an agent).
 - **FR-005** The ZIP is recorded as the last backup: `vault status` shows every restored secret as
   backed up.
 - **FR-006** Then `keys setup` (Git's signing for this checkout, the pre-push check, one test
@@ -37,7 +43,9 @@ rehearsed procedure).
 
 - **SC-001** `tests/vault_test.ts`: a backup, the PC wiped, a restore (`--files-only`) puts back
   every secret and both keys owner-only; `vault status` is clean; again: nothing written; a file
-  that differs: nothing written, named; a damaged ZIP and a non-ZIP refused; no path escapes.
+  that differs: nothing written, named; `--destroy-existing`: exactly the backup, what it lacked
+  saved in a ZIP first, a different daily key moved aside, a GitHub key untouched; a damaged ZIP and
+  a non-ZIP refused; no path escapes.
 - **SC-002** `tests/keys057_test.ts`: real keys with passphrases: setup, commit, backup, the PC
   wiped, a fresh clone, `vault restore <zip>`: signing set up and a test signature verified; `keys`
   clean; again: unchanged.

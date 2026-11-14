@@ -246,7 +246,11 @@ To restore (spec 061), clone the fleet repository on the new PC, `cd` into it, a
 writing anything, puts each file back (the secrets readable by you only, the daily key in `.ssh`,
 the recovery key in the key store), and runs `keys setup`, which asks for your daily passphrase once
 for a test signature. It never overwrites: a file already there and different stops it, naming the
-file. Run it again and nothing changes. See [disaster recovery](disaster-recovery.md).
+file. Run it again and nothing changes. To restore clean instead (exactly the backup, nothing else),
+add `--destroy-existing`: it removes every fleet's secrets, the key store, and the daily key first,
+after saving anything the backup lacks as a ZIP of its own (a different daily key is moved aside as
+`fleet-signing.replaced-<date>`; no other `.ssh` file is touched). See
+[disaster recovery](disaster-recovery.md).
 
 Until a changed secret is backed up, Archon says so: a panel at the end of the command that changed
 it and at the start of `boot serve` and `boot status`, a warning in `boot doctor`, a reminder before
