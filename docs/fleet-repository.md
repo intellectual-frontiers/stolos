@@ -243,12 +243,13 @@ deno task stolos keys check-recovery --key <the recovery key's private file>
 The pre-push check `keys setup` installs refuses, on your PC, a push that servers would refuse (an
 unsigned commit, or one signed by a key `signers.ts` does not list), with the fix.
 
-| When                                                 | Run                                                                                 |
-| ---------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| a new PC, or anything is wrong                       | `deno task stolos keys setup`                                                       |
-| a planned change of key (yearly, or a new PC)        | `deno task stolos keys rotate` (approved by the current key), then `git push`       |
-| the daily key is lost                                | `deno task stolos keys lost --recovery <file>` (approved by the recovery key), push |
-| the daily key may have been copied (a stolen laptop) | the same, with `--stolen`                                                           |
+| When                                                 | Run                                                                                                    |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| a new PC, or anything is wrong                       | `deno task stolos keys setup`                                                                          |
+| a planned change of key (yearly, or a new PC)        | `deno task stolos keys rotate` (approved by the current key), then `git push`                          |
+| the daily key is lost                                | `deno task stolos keys lost --recovery <file>` (approved by the recovery key), push                    |
+| the daily key may have been copied (a stolen laptop) | the same, with `--stolen`                                                                              |
+| a new recovery key (yearly, or a new USB drive)      | `deno task stolos keys rotate-recovery --recovery <old file>` (approved by the old recovery key), push |
 
 Each of them continues where it stopped if interrupted. A new person becomes a signer when someone
 already listed adds them and signs that commit:

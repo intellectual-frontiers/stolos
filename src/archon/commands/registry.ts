@@ -549,6 +549,38 @@ export const COMMANDS: Command[] = [
     },
   },
   {
+    name: "keys rotate-recovery",
+    summary:
+      "Replace the recovery key, approved by the old one (or by the daily key if it is lost)",
+    description:
+      `Makes a new recovery key (fleet-recovery-<date>, in the recovery folder), tests it with a signature, puts it in signers.ts in place of the old one (same signer name), and commits that alone, signed with the OLD recovery key you pass (--recovery), which proves you still hold it. With --old-lost, the daily key signs instead, and it says so: a copied daily key could do the same. If interrupted, run it again: it continues; once done, it does nothing (spec 057).`,
+    tier: "repo",
+    place: "pc",
+    operation: true,
+    noMcp: true,
+    args: [
+      {
+        name: "recovery",
+        type: "string",
+        human: true,
+        description: "The OLD recovery key's private file (it approves the change).",
+      },
+      {
+        name: "old-lost",
+        type: "boolean",
+        human: true,
+        description: "The old recovery key is lost: the daily key approves the change.",
+      },
+    ],
+    async run(a) {
+      const { keysRotateRecovery } = await import("../identity/keys-commands.ts");
+      return await keysRotateRecovery({
+        old: a.recovery as string | undefined,
+        oldLost: !!a["old-lost"],
+      });
+    },
+  },
+  {
     name: "keys check-push",
     summary: "The pre-push check: what you push is signed by a key the fleet trusts",
     description:

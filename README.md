@@ -504,14 +504,15 @@ Its DNS names, deploy key, secrets, and files leave the fleet; the machine itsel
 <details>
 <summary><b>Keys: a new PC, a lost key, a yearly change</b></summary>
 
-| Situation                                 | Run                                                           |
-| ----------------------------------------- | ------------------------------------------------------------- |
-| check everything                          | `deno task stolos keys`                                       |
-| a new PC, or anything is wrong            | `deno task stolos keys setup` (safe to run again)             |
-| a planned change of key                   | `deno task stolos keys rotate`, then `deno task stolos apply` |
-| the daily key is lost                     | `deno task stolos keys lost --recovery <file>`, then push     |
-| the laptop was stolen (key may be copied) | the same, with `--stolen`                                     |
-| twice a year                              | `deno task stolos keys check-recovery --key <file>`           |
+| Situation                                       | Run                                                                                          |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| check everything                                | `deno task stolos keys`                                                                      |
+| a new PC, or anything is wrong                  | `deno task stolos keys setup` (safe to run again)                                            |
+| a planned change of key                         | `deno task stolos keys rotate`, then `deno task stolos apply`                                |
+| the daily key is lost                           | `deno task stolos keys lost --recovery <file>`, then push                                    |
+| the laptop was stolen (key may be copied)       | the same, with `--stolen`                                                                    |
+| a new recovery key (yearly, or a new USB drive) | `deno task stolos keys rotate-recovery --recovery <old file>`, then `deno task stolos apply` |
+| twice a year                                    | `deno task stolos keys check-recovery --key <file>`                                          |
 
 </details>
 

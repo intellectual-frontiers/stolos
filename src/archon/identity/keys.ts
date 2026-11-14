@@ -67,6 +67,8 @@ export function keyPaths(signingKey = "", repo = P.repo): KeyPaths {
   try {
     hasDesktop = Deno.statSync(desktop).isDirectory;
   } catch { /* none */ }
+  // Not under OneDrive: a Desktop backed up to OneDrive (its own folder, not this one) would
+  // upload the new recovery key at once; this folder is only where it waits to be moved.
   const recoveryDir = join(hasDesktop ? desktop : home, "fleet-recovery");
   return {
     home,

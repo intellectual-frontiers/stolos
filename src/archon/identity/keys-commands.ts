@@ -189,6 +189,18 @@ async function testSignature(key: string, allowed: string, name: string): Promis
   }
 }
 
+/** Sign a test message with `key` and verify it as `name` with `pub` (a one-line allowed list). */
+async function signsAs(key: string, name: string, pub: string): Promise<boolean> {
+  const dir = await Deno.makeTempDir({ prefix: "archon-check-" });
+  try {
+    const allowed = join(dir, "allowed");
+    await Deno.writeTextFile(allowed, `${name} namespaces="git" ${pub.trim()}\n`);
+    return await testSignature(key, allowed, name);
+  } finally {
+    await dropTemp(dir);
+  }
+}
+
 /** Commit signers.ts alone, signed with `key` (asks its passphrase); "none" when unchanged. */
 async function commitSigners(key: string, message: string): Promise<"done" | "none" | "failed"> {
   const rel = repoRel(signersFile()).replace(/\\/g, "/");
@@ -372,6 +384,7 @@ export async function keysSetup(o: { test?: boolean } = {}): Promise<number> {
     approval = { name: listedDaily.name, pub: dailyPub };
   }
   let recoveryMade = false;
+  let newRecovery: { file: string; name: string; pub: string } | undefined;
   if (list.some((x) => x.role === "recovery")) {
     s.note(`recovery key listed: ${list.filter((x) => x.role === "recovery").map((x) => x.name)}`);
   } else {
@@ -396,6 +409,7 @@ export async function keysSetup(o: { test?: boolean } = {}): Promise<number> {
     await writeSigners(list);
     signersChanged = true;
     recoveryMade = true;
+    newRecovery = { file: paths.recovery, name, pub: rpub };
     s.note(`added the recovery key as ${name}`);
   }
   changed ||= signersChanged;
@@ -449,6 +463,24 @@ export async function keysSetup(o: { test?: boolean } = {}): Promise<number> {
       );
     }
   } else ts.done("nothing changed (run with --test to sign once anyway)");
+
+  // The recovery key just made: prove its passphrase too, while it is fresh in mind.
+  if (newRecovery) {
+    const rt = ui.phase("Recovery test");
+    console.log(
+      `\n  A test signature: type your RECOVERY key's passphrase (${newRecovery.name}).\n`,
+    );
+    if (await signsAs(newRecovery.file, newRecovery.name, newRecovery.pub)) {
+      const state = await readKeyState(paths.state);
+      await writeKeyState({ ...state, recoveryCheckedAt: new Date().toISOString() }, paths.state);
+      rt.done(`signed and verified as ${newRecovery.name}`);
+    } else {
+      rt.fail(
+        "the recovery key's test signature did not verify",
+        `check its passphrase: deno task stolos keys check-recovery --key ${newRecovery.file}`,
+      );
+    }
+  }
 
   if (approval) {
     for (const line of approvalSteps(f.fleetId, rel, approval.name, approval.pub)) {
@@ -662,6 +694,111 @@ export async function keysLost(recovery: string, stolen = false): Promise<number
     "push it: deno task stolos apply (servers stop trusting the old key from that commit on)",
   );
   ui.next.push(`put the recovery key away again; back up: deno task stolos vault backup`);
+  return end();
+}
+
+// -------------------------------------------------------- rotate-recovery
+
+/**
+ * `stolos keys rotate-recovery --recovery <old file>` (or `--old-lost`): a new
+ * recovery key in place of the old one (same signer name). The change is
+ * approved by the OLD recovery key, proving you still hold it; only when it is
+ * lost does the daily key approve (a stolen daily key could do the same, so
+ * that path says so). The new key is tested before anything changes; running
+ * it again continues an interrupted change, or does nothing.
+ */
+export async function keysRotateRecovery(o: { old?: string; oldLost?: boolean }): Promise<number> {
+  const f = await collectKeyFacts();
+  const p = ui.phase("Change the recovery key");
+  const list = await loadSigners();
+  const recovery = list.filter((x) => x.role === "recovery");
+  if (!recovery.length) {
+    p.fail("no recovery key is listed", "deno task stolos keys setup", "E057-NO-RECOVERY");
+    return end();
+  }
+  if (!o.old && !o.oldLost) {
+    p.fail(
+      "say how the change is approved",
+      "--recovery <the OLD recovery key's private file> (best), or --old-lost when it is lost",
+    );
+    return end();
+  }
+  const fresh = join(f.paths.recoveryDir, `fleet-recovery-${today()}`);
+  const rel = repoRel(signersFile()).replace(/\\/g, "/");
+  const committed = parseSignersSource((await git(["show", `HEAD:${rel}`])).stdout);
+  const freshPub = pubOf(await readTextOr(fresh + ".pub"));
+  if (freshPub && committed.some((x) => x.role === "recovery" && x.key.trim() === freshPub)) {
+    p.done(`the recovery key was already changed today (${fresh}): nothing to do`);
+    return end();
+  }
+  // Which recovery signer is replaced, and which key signs the change.
+  let old = recovery.length === 1 ? recovery[0] : undefined;
+  let signWith = f.paths.daily;
+  if (o.old) {
+    if (!(await exists(o.old))) {
+      p.fail(`${o.old} is not there`, "plug in or unlock where you keep the recovery key");
+      return end();
+    }
+    const pub = await publicOf(o.old);
+    old = recovery.find((x) => x.key.trim() === pub);
+    if (!old) {
+      // Already replaced by an earlier run? Then the new key is listed and this one is not.
+      p.fail(
+        `${o.old} is not the fleet's current recovery key`,
+        "pass the OLD recovery key's private file",
+      );
+      return end();
+    }
+    signWith = o.old;
+  } else if (!old) {
+    p.fail("several recovery keys are listed", "pass --recovery <the one to replace>");
+    return end();
+  }
+  // 1. The new key, tested before anything changes.
+  if (!(await exists(fresh))) {
+    console.log(
+      "\n  The NEW recovery key: a passphrase different from your daily key's; write it down somewhere safe.",
+    );
+    if (!(await makeKey(fresh, `${old!.name} fleet recovery (${today()})`))) {
+      p.fail("ssh-keygen did not make the new recovery key", "run this again");
+      return end();
+    }
+  }
+  const newPub = (await publicOf(fresh))!;
+  console.log(`\n  A test signature: type the NEW recovery key's passphrase.\n`);
+  if (!(await signsAs(fresh, old!.name, newPub))) {
+    p.fail("the new recovery key did not sign", "check its passphrase, then run this again");
+    return end();
+  }
+  // 2. signers.ts, then one commit approved by the old recovery key (or the daily key).
+  if (old!.key.trim() !== newPub) await replaceKey(old!.name, newPub);
+  if (o.oldLost) {
+    p.warn(
+      "approved by your daily key: anyone who had a copy of it could have done the same",
+      "if the daily key may have been copied too, replace it now: deno task stolos keys rotate",
+    );
+  }
+  console.log(
+    `\n  Approve it with the ${o.old ? "OLD RECOVERY" : "DAILY"} key: type its passphrase.\n`,
+  );
+  const c = await commitSigners(signWith, `${f.fleetId}: change ${old!.name}'s recovery key`);
+  if (c === "failed") {
+    p.fail("the commit was not signed", "run this again (it continues from here)");
+    return end();
+  }
+  await renderAllowed(f.paths.allowedSigners);
+  const state = await readKeyState(f.paths.state);
+  await writeKeyState({ ...state, recoveryCheckedAt: new Date().toISOString() }, f.paths.state);
+  p.done(`${old!.name} has a new recovery key (${fresh}), tested`);
+  ui.next.push("push it: deno task stolos apply (servers trust the new recovery key from then on)");
+  ui.next.push(
+    `move ${fresh} and ${fresh}.pub to where you keep the recovery key, then delete them here`,
+  );
+  if (o.old) {
+    ui.next.push(
+      `destroy the OLD recovery key (${o.old}) once the push is done: it is no longer trusted`,
+    );
+  }
   return end();
 }
 

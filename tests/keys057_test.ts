@@ -75,6 +75,7 @@ Deno.test("057: setup makes and lists both keys, signs, and running it again cha
     r = await s.archon(["keys", "setup"]);
     assertEquals(r.code, 0, r.out);
     assertStringIncludes(r.out, "signed and verified as");
+    assertStringIncludes(r.out, "RECOVERY key's passphrase");
     assert(!r.out.includes(PASS), "a passphrase is never printed");
     const recovery = join(s.home, "fleet-recovery", "fleet-recovery");
     for (const f of [s.daily, s.daily + ".pub", recovery, recovery + ".pub"]) {
@@ -98,18 +99,16 @@ Deno.test("057: setup makes and lists both keys, signs, and running it again cha
     assertStringIncludes(r.out, "nothing changed");
     assertEquals([mtime(s.daily), mtime(recovery)], before, "no key is ever overwritten");
 
-    // The checks: signing works; the recovery key is still here and never checked (warnings).
+    // The checks: signing works; the recovery key, tested at setup, is still here (a warning).
     r = await s.archon(["keys"]);
     assertEquals(r.code, 0, r.out);
     assertStringIncludes(r.out, "E057-RECOVERY-ON-PC");
-    assertStringIncludes(r.out, "E057-RECOVERY-CHECK");
+    assert(!r.out.includes("E057-RECOVERY-CHECK"), "setup tested the recovery key: " + r.out);
 
-    // The recovery check records the date; then only the "move it away" warning stays.
+    // The recovery check works on its own too.
     r = await s.archon(["keys", "check-recovery", "--key", recovery]);
     assertEquals(r.code, 0, r.out);
     assertStringIncludes(r.out, "works");
-    r = await s.archon(["keys"]);
-    assert(!r.out.includes("E057-RECOVERY-CHECK"), r.out);
 
     // A wrong key is refused.
     r = await s.archon(["keys", "check-recovery", "--key", s.daily]);
@@ -202,6 +201,47 @@ Deno.test("057: rotate and lost replace the daily key, approved by the old key a
 async function exists(p: string) {
   return await Deno.stat(p).then(() => true).catch(() => false);
 }
+
+Deno.test("057: rotate-recovery: a new recovery key, tested, approved by the old one; again does nothing", async () => {
+  const s = await keysSandbox();
+  try {
+    assertEquals((await s.archon(["keys", "setup"])).code, 0);
+    await s.git("add", "-A");
+    await s.git("commit", "-q", "-m", "demo: signers");
+    const signersPath = join(s.repo, "fleets", "demo", "signers.ts");
+    const before = await Deno.readTextFile(signersPath);
+    const base = await s.git("rev-parse", "HEAD");
+    const old = join(s.home, "fleet-recovery", "fleet-recovery");
+
+    let r = await s.archon(["keys", "rotate-recovery"]);
+    assertEquals(r.code, 1, r.out);
+    assertStringIncludes(r.out, "--recovery");
+
+    r = await s.archon(["keys", "rotate-recovery", "--recovery", old]);
+    assertEquals(r.code, 0, r.out);
+    assertStringIncludes(r.out, "NEW recovery key's passphrase");
+    const head = await s.git("rev-parse", "HEAD");
+    assert(head !== base, "a commit was made");
+    // Approved by the OLD recovery key, as servers holding the old list check it.
+    const allowed = join(s.home, "allowed-before");
+    await Deno.writeTextFile(allowed, allowedSignersText(parseSignersSource(before)));
+    const t = await checkTip(s.repo, head, base, allowed);
+    assert(t.ok, t.reason);
+    assertStringIncludes(t.signer ?? "", "recovery");
+    const after = parseSignersSource(await Deno.readTextFile(signersPath));
+    const oldPub = (await Deno.readTextFile(old + ".pub")).trim().split(" ").slice(0, 2).join(" ");
+    const rec = after.filter((x) => x.role === "recovery");
+    assertEquals(rec.length, 1);
+    assert(rec[0].key !== oldPub, "the old recovery key is no longer listed");
+
+    // Again: nothing to do; and the old key is no longer accepted.
+    r = await s.archon(["keys", "rotate-recovery", "--recovery", old]);
+    assertStringIncludes(r.out, "already changed today");
+    assertEquals(await s.git("rev-parse", "HEAD"), head, "no new commit");
+  } finally {
+    await Deno.remove(s.home, { recursive: true });
+  }
+});
 
 Deno.test("057: a second PC's key: setup prints the exact command that approves it", async () => {
   const s = await keysSandbox();
