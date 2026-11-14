@@ -263,6 +263,22 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
     }
   }
 
+  // The engine's files, for VS Code (it checks fleet.ts against them): the pinned version's, all of them.
+  if (pin) {
+    const ed = ui.phase("Editor");
+    ed.status("downloading the pinned engine's files (checked against deno.lock)");
+    const { cacheEngine } = await import("../fleet/scaffold.ts");
+    const c = await cacheEngine(P.repo);
+    if (c.ok) ed.done("every engine file is here: VS Code can check fleets/<fleet>/*.ts");
+    else {
+      ed.warn(
+        `the engine's files could not be downloaded: ${c.why}`,
+        "check the network, then run this again",
+      );
+      ed.done();
+    }
+  }
+
   // 4. Keys: what needs no passphrase.
   if (P.fleetId) {
     const k = ui.phase("Keys");

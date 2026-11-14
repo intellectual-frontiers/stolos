@@ -264,7 +264,21 @@ async function prepareRepository(id: string): Promise<void> {
   const tag = `v${VERSION}`;
   const written = await scaffoldRepository(repo, tag);
   if (!written.includes("deno.json")) {
-    r.done(`${repo} · fleets/${id}/ · the engine pin in deno.json is kept`);
+    // VS Code checks fleet.ts against the engine's types: have every engine file here.
+    r.status("downloading the pinned engine's files (checked against deno.lock)");
+    const { cacheEngine } = await import("../fleet/scaffold.ts");
+    const c = await cacheEngine(repo);
+    if (!c.ok) {
+      r.warn(
+        `the engine's files could not be downloaded: ${c.why}`,
+        "when the network is back: deno task stolos update",
+      );
+    }
+    r.done(
+      `${repo} · fleets/${id}/ · the engine pin in deno.json is kept${
+        c.ok ? ", its files here" : ""
+      }`,
+    );
     return;
   }
   // The lock is what makes the pin safe (docs/fleet-repository.md): make it now.

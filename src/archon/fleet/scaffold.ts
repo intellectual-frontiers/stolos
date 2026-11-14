@@ -57,12 +57,44 @@ out/
 `;
 
 /**
- * VS Code for a fleet repository: Deno for TypeScript (checks, lint) and as the
+ * VS Code for a fleet repository: Deno for TypeScript (checks, lint; the engine's
+ * files downloaded when a file that imports them is saved) and as the
  * formatter, on save, for everything deno fmt formats (TypeScript, JavaScript,
  * JSON, Markdown, YAML, CSS, HTML), with the fleet's deno.json settings.
  */
-export const VSCODE_SETTINGS_TEXT =
-  '{\n  "deno.enable": true,\n  "deno.lint": true,\n  "editor.formatOnSave": true,\n  "editor.defaultFormatter": "denoland.vscode-deno",\n  "[typescript]": {\n    "editor.defaultFormatter": "denoland.vscode-deno"\n  },\n  "[typescriptreact]": {\n    "editor.defaultFormatter": "denoland.vscode-deno"\n  },\n  "[javascript]": {\n    "editor.defaultFormatter": "denoland.vscode-deno"\n  },\n  "[javascriptreact]": {\n    "editor.defaultFormatter": "denoland.vscode-deno"\n  },\n  "[json]": {\n    "editor.defaultFormatter": "denoland.vscode-deno"\n  },\n  "[jsonc]": {\n    "editor.defaultFormatter": "denoland.vscode-deno"\n  },\n  "[markdown]": {\n    "editor.defaultFormatter": "denoland.vscode-deno"\n  },\n  "[yaml]": {\n    "editor.defaultFormatter": "denoland.vscode-deno"\n  },\n  "[css]": {\n    "editor.defaultFormatter": "denoland.vscode-deno"\n  },\n  "[scss]": {\n    "editor.defaultFormatter": "denoland.vscode-deno"\n  },\n  "[less]": {\n    "editor.defaultFormatter": "denoland.vscode-deno"\n  },\n  "[html]": {\n    "editor.defaultFormatter": "denoland.vscode-deno"\n  },\n  "files.eol": "\\n",\n  "files.insertFinalNewline": true,\n  "files.trimFinalNewlines": true,\n  "files.trimTrailingWhitespace": true\n}\n';
+export const VSCODE_SETTINGS_TEXT: string = JSON.stringify(
+  {
+    "deno.enable": true,
+    "deno.lint": true,
+    // Saving a file downloads what it imports (the engine's types, for fleet.ts).
+    "deno.cacheOnSave": true,
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "denoland.vscode-deno",
+    ...Object.fromEntries(
+      [
+        "typescript",
+        "typescriptreact",
+        "javascript",
+        "javascriptreact",
+        "json",
+        "jsonc",
+        "markdown",
+        "yaml",
+        "css",
+        "scss",
+        "less",
+        "html",
+      ]
+        .map((l) => [`[${l}]`, { "editor.defaultFormatter": "denoland.vscode-deno" }]),
+    ),
+    "files.eol": "\n",
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+    "files.trimTrailingWhitespace": true,
+  },
+  null,
+  2,
+) + "\n";
 
 /** VS Code's suggested extensions: Deno, Mermaid in Markdown previews, GitHub Actions, YAML. */
 export const VSCODE_EXTENSIONS_TEXT =
@@ -96,4 +128,26 @@ export async function scaffoldRepository(
     written.push(rel);
   }
   return written;
+}
+
+/**
+ * Download every engine file the pin names, checked against deno.lock, into
+ * Deno's cache: what VS Code's Deno extension reads to check fleet.ts. Running
+ * a command downloads only what it runs; a type-only import (fleet.ts imports
+ * the engine's types) would otherwise never be fetched. Returns why not, if not.
+ */
+export async function cacheEngine(repo: string): Promise<{ ok: boolean; why?: string }> {
+  if (!(await exists(join(repo, "deno.lock")))) return { ok: true }; // an engine checkout
+  const entries: string[] = [];
+  for (const f of ["archon.ts", "stolos.ts", ENGINE_ENTRY]) {
+    if (await exists(join(repo, f))) entries.push(f);
+  }
+  const r = await new Deno.Command(Deno.execPath(), {
+    args: ["cache", "--frozen", "--allow-import", ...entries],
+    cwd: repo,
+    stdout: "piped",
+    stderr: "piped",
+  }).output();
+  const err = new TextDecoder().decode(r.stderr).trim().split("\n").pop() ?? "";
+  return r.success ? { ok: true } : { ok: false, why: err };
 }
