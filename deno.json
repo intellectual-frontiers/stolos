@@ -2,8 +2,8 @@
   "name": "@stolos/archon",
   "exports": "./src/archon/main.ts",
   "tasks": {
+    "stolos": "deno run -A src/stolos/main.ts",
     "archon": "deno run -A src/archon/main.ts",
-    "boot": "deno run -A --env-file=src/archon-boot/otel.env src/archon-boot/main.ts",
     "docs": "deno run -A tools/docs.ts",
     "docs:lint": "deno run -A tools/docs.ts lint && deno check --doc src/",
     "docs:baseline": "deno run -A tools/docs.ts lint --update",

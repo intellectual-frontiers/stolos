@@ -1,5 +1,5 @@
 /**
- * `archon host add` (spec 004): write the host's model, give it its own
+ * `stolos host add` (spec 004): write the host's model, give it its own
  * GitHub deploy key (read-only access to this repository (spec 048); the private half
  * stays in the boot machine's secret store), and arm it for one install.
  *
@@ -18,7 +18,7 @@ import { BOOT_PORT, bootUri, lanAddresses } from "../core/net.ts";
 import { ensureHostKeys } from "./host-keys.ts";
 import type { DiskDef } from "../model/types.ts";
 
-/** What archon host add is given. */
+/** What stolos host add is given. */
 export interface HostAddOptions {
   /** The host's name. */
   name: string;
@@ -42,8 +42,8 @@ export interface HostAddOptions {
 
 /** host.ts as host add writes it. */
 export function hostSource(o: { name: string; disk: DiskDef }): string {
-  return `// Host ${o.name} (spec 004). Written by \`archon host add\`; edit freely, then
-// \`archon build\`. Capabilities come from foundation(); add more per spec.
+  return `// Host ${o.name} (spec 004). Written by \`stolos host add\`; edit freely, then
+// \`stolos build\`. Capabilities come from foundation(); add more per spec.
 
 import type { HostDef } from "@stolos/archon/model/types.ts";
 import { foundation } from "@stolos/archon/capabilities/mod.ts";
@@ -121,7 +121,7 @@ export async function registerDeployKey(slug: string, host: string, pub: string)
   return "registered";
 }
 
-/** archon host add: the model, the registration, the deploy key, and one armed install. */
+/** stolos host add: the model, the registration, the deploy key, and one armed install. */
 export async function hostAdd(o: HostAddOptions): Promise<number> {
   const fleet = await loadFleet();
   const name = o.name.trim().toLowerCase();
@@ -131,7 +131,7 @@ export async function hostAdd(o: HostAddOptions): Promise<number> {
   const how = recognition(name, {
     claim: o.claim,
     macAddress: o.macAddress,
-    command: "deno task archon host add",
+    command: "deno task stolos host add",
   });
   const c = ui.phase("Recognition");
   if ("refusal" in how) {
@@ -156,7 +156,7 @@ export async function hostAdd(o: HostAddOptions): Promise<number> {
   if (!(await loadSigners().catch(() => [])).some((x) => x.role === "daily")) {
     c.warn(
       `the fleet has no daily signer: ${name} will install, but refuse every change after`,
-      "deno task archon signers add <your name> --role daily --key <your public key file>",
+      "deno task stolos signers add <your name> --role daily --key <your public key file>",
       "E047-NO-SIGNERS",
     );
   }
@@ -216,7 +216,7 @@ export async function hostAdd(o: HostAddOptions): Promise<number> {
     event: `host added: ${name}`,
     what:
       `Host ${name} was added to the fleet (fleets/<fleet>/hosts/${name}/host.ts) and armed for one install.`,
-    todo: `Install it: network-boot it while the boot server runs (deno task boot serve).`,
+    todo: `Install it: network-boot it while the boot server runs (deno task stolos boot serve).`,
     key: `host-add:${name}`,
   });
   const uri = bootUri(lanAddresses()[0] ?? "<this-pc>", BOOT_PORT, name);
@@ -227,11 +227,11 @@ export async function hostAdd(o: HostAddOptions): Promise<number> {
     await publishChange([repoRel(file), regFile], `004-install: add host ${name}`);
   ui.next.push(
     ...(published ? [] : [
-      `next: deno task archon build, then git add -A fleets/<fleet>/hosts/${name}/host.ts .mcp.json, git commit -m "004-install: add host ${name}", git push`,
+      `next: deno task stolos build, then git add -A fleets/<fleet>/hosts/${name}/host.ts .mcp.json, git commit -m "004-install: add host ${name}", git push`,
     ]),
-    "then: deno task boot serve (leave it running)",
+    "then: deno task stolos boot serve (leave it running)",
     how.kind === "claim"
-      ? `then: within ${CLAIM_MINUTES} minutes, power on ${name}'s machine and let it network-boot (re-open the window: deno task boot arm ${name} --claim)`
+      ? `then: within ${CLAIM_MINUTES} minutes, power on ${name}'s machine and let it network-boot (re-open the window: deno task stolos boot arm ${name} --claim)`
       : `then: power on ${name}; it network-boots and is recognized by its network card (${mac})`,
     `  or, for UEFI HTTP Boot with a Boot URI field: ${uri}`,
   );

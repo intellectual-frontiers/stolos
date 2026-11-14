@@ -2,8 +2,8 @@
  * Spec 057: your signing keys, checked and fixed by one command. This module
  * gathers the facts (no prompt, nothing written) and turns them into checks,
  * each with a stable code (`archon explain E057-...`) and the one command
- * that fixes it. `archon keys`, `archon keys setup`, `boot doctor`, `archon`
- * (where am I), and `archon signers` all use the same checks.
+ * that fixes it. `stolos keys`, `stolos keys setup`, `boot doctor`, `archon`
+ * (where am I), and `stolos signers` all use the same checks.
  *
  * Two keys, both OpenSSH ed25519 key pairs (spec 047):
  * - the **daily** key (`~/.ssh/fleet-signing`) signs your commits; it stays on
@@ -14,10 +14,10 @@
  * ```mermaid
  * flowchart LR
  *   facts["collectKeyFacts()<br/>files, Git settings, signers.ts,<br/>ssh-agent, the pre-push check"] --> checks["keyChecks()<br/>ok, or a problem with<br/>its code and its fix"]
- *   checks --> keys["archon keys"]
+ *   checks --> keys["stolos keys"]
  *   checks --> doctor["boot doctor"]
  *   checks --> where["archon (where am I)"]
- *   checks --> signers["archon signers"]
+ *   checks --> signers["stolos signers"]
  * ```
  *
  * @module
@@ -166,8 +166,8 @@ export const PRE_PUSH_HOOK = `#!/bin/sh
 # Installed by archon (specs 029 and 057). Checks that what you push is signed
 # by a key the fleet trusts, so servers will accept it; then reminds you to back
 # up when a secret changed. Skip it once with: git push --no-verify
-deno task archon keys check-push || exit 1
-deno task archon vault status --hook >&2 || true
+deno task stolos keys check-push || exit 1
+deno task stolos vault status --hook >&2 || true
 exit 0
 `;
 
@@ -262,7 +262,7 @@ export interface KeyCheck {
   fix: string;
 }
 
-const SETUP = "deno task archon keys setup";
+const SETUP = "deno task stolos keys setup";
 
 /** The checks, in the order to fix them; `now` is for the recovery check's age. */
 export function keyChecks(f: KeyFacts, now = Date.now()): KeyCheck[] {
@@ -377,7 +377,7 @@ export function keyChecks(f: KeyFacts, now = Date.now()): KeyCheck[] {
           f.state.recoveryCheckedAt!.slice(0, 10)
         } (over six months ago)`
         : "the recovery key has never been checked here",
-      "deno task archon keys check-recovery --key <the recovery key's private file>",
+      "deno task stolos keys check-recovery --key <the recovery key's private file>",
     );
   }
   add(

@@ -1,7 +1,7 @@
 /**
  * `archon verify` (Article 15, spec 014): run every verification command in
  * the host's plan and report each result. As root, the result is also kept
- * in the host's own archon.sql (opt-in verify) when it changes (archon fleet status).
+ * in the host's own archon.sql (opt-in verify) when it changes (stolos fleet status).
  *
  * @module
  */

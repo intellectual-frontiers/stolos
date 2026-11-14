@@ -23,13 +23,13 @@ Either way, a run:
      blank Secure Boot VM, which installs to the boot server's event `boot.ready` (spec 049), then
      checks that the host's first boot continued the install's trace;
    - `bootstrap` (8 GB runners, where Ubuntu's installer does not fit): Ubuntu's cloud image,
-     finished with `archon host bootstrap`;
+     finished with `stolos host bootstrap`;
 2. (network only: the trace check, above);
-3. asks the server through its MCP server, from the runner (`archon fleet query`);
+3. asks the server through its MCP server, from the runner (`stolos fleet query`);
 4. powers the server off and on again, with less memory, and runs `archon verify` on it;
 5. starts a workstation from Ubuntu's cloud image (verified against Ubuntu's `SHA256SUMS`), clones
-   the repository to `/srv/archon`, runs `archon workstation add`, `archon verify`, and
-   `archon fleet query` from there: the agent's path to the server (spec 030).
+   the repository to `/srv/archon`, runs `stolos workstation add`, `archon verify`, and
+   `stolos fleet query` from there: the agent's path to the server (spec 030).
 
 Every key and password of a run is made by it and thrown away. The logs are the run's artifact. A
 run with no new event for 15 minutes ends, diagnosed. `E2E_PREPARE_ONLY=1 tests/e2e/fleet.sh ...`
@@ -48,10 +48,10 @@ Needs a Linux machine with QEMU, OVMF, and dnsmasq
 with a test host:
 
 ```sh
-deno task archon fleet init
-deno task archon host add e2e
+deno task stolos fleet init
+deno task stolos host add e2e
 sudo tests/e2e/lab-up.sh      # bridge, DHCP with the PXE boot file, archon-boot
-deno task boot arm e2e --claim
+deno task stolos boot arm e2e --claim
 sudo tests/e2e/vm.sh          # power on the blank VM
 tail -f tests/e2e/work/boot.log
 ```

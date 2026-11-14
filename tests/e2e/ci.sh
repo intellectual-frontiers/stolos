@@ -21,7 +21,7 @@ cat >"$F/deno.json" <<JSON
 { "imports": { "@stolos/": "http://$BR:8000/stolos/src/" } }
 JSON
 printf 'import { run } from "@stolos/archon/main.ts";\n\nawait run();\n' >"$F/archon.ts"
-printf 'import { run } from "@stolos/archon-boot/main.ts";\n\nawait run();\n' >"$F/boot.ts"
+printf 'import { run } from "@stolos/stolos/main.ts";\n\nawait run();\n' >"$F/stolos.ts"
 # Every engine module, so deno.lock pins them all (archon runs with --frozen).
 printf 'import "@stolos/archon/modules.auto.ts";\n' >"$F/engine.ts"
 cat >"$F/fleets/e2e/fleet.ts" <<TS
@@ -60,8 +60,9 @@ printf "out/\n" >.gitignore
 git init -q -b main
 git config user.name "e2e"
 git config user.email "e2e@example.invalid"
-deno cache --allow-import --lock=deno.lock archon.ts boot.ts engine.ts >/dev/null
-A=(deno run -A --frozen archon.ts)
+deno cache --allow-import --lock=deno.lock archon.ts stolos.ts engine.ts >/dev/null
+# Spec 059: the fleet's commands are stolos (as on your PC); machines run archon.
+A=(deno run -A --frozen stolos.ts)
 "${A[@]}" signers add e2e-daily --role daily --key "$W/signer.pub"
 # The admin password: a hash only (never used to log in here).
 mkdir -p "$HOME/.config/archon/secrets/e2e"

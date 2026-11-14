@@ -1,5 +1,5 @@
 /**
- * `archon host bootstrap` (spec 005): finish a host whose Ubuntu was installed
+ * `stolos host bootstrap` (spec 005): finish a host whose Ubuntu was installed
  * by hand (from Ubuntu's ISO, a cloud image, anything) instead of by network
  * boot. From the boot machine it copies, over SSH, exactly what the network
  * install would have handed cloud-init (the host name, GitHub's host keys, the
@@ -9,7 +9,7 @@
  * ```mermaid
  * sequenceDiagram
  *   actor P as Person
- *   participant A as archon host bootstrap
+ *   participant A as stolos host bootstrap
  *   participant M as The machine (Ubuntu installed)
  *   P->>A: host bootstrap olympia --ssh user@address
  *   A->>M: its facts: release, RAM, network cards
@@ -30,7 +30,7 @@ import { firstBootScript, GITHUB_KNOWN_HOSTS } from "../render/autoinstall.ts";
 import { allowedSignersText } from "../identity/signers.ts";
 import { ensureHostKeys } from "./host-keys.ts";
 
-/** What archon host bootstrap is given. */
+/** What stolos host bootstrap is given. */
 export interface HostBootstrapOptions {
   /** The host. */
   name: string;
@@ -39,7 +39,7 @@ export interface HostBootstrapOptions {
 }
 
 const INSTALL = `#!/bin/sh
-# Rendered by archon host bootstrap (spec 005). Puts the files where the
+# Rendered by stolos host bootstrap (spec 005). Puts the files where the
 # network install would have, then runs the first boot.
 set -eu
 D=$(dirname "$0")
@@ -128,7 +128,7 @@ export function bootstrapRefusal(
   if (registeredMac && !f.nics.includes(registeredMac) && f.uplink !== registeredMac) {
     return `${host} is registered with network card ${registeredMac}, which this machine does not have (it has ${
       f.nics.join(", ") || "none"
-    }): the wrong machine, or a typo in --mac-address. If it is ${host}: deno task archon host add ${host} --mac-address ${
+    }): the wrong machine, or a typo in --mac-address. If it is ${host}: deno task stolos host add ${host} --mac-address ${
       f.uplink ?? "<mac>"
     } --force`;
   }
@@ -145,12 +145,12 @@ async function ssh(args: string[], interactive = false): Promise<number> {
   return (await p.status).code;
 }
 
-/** archon host bootstrap: check the machine, copy what a network install would have handed it, run the first boot. */
+/** stolos host bootstrap: check the machine, copy what a network install would have handed it, run the first boot. */
 export async function hostBootstrap(o: HostBootstrapOptions): Promise<number> {
   const fleet = await loadFleet();
   const host = (await loadHosts()).find((h) => h.name === o.name);
   if (!host) {
-    throw new Error(`no host model named '${o.name}': run archon host add ${o.name} first`);
+    throw new Error(`no host model named '${o.name}': run stolos host add ${o.name} first`);
   }
 
   // Spec 051: the machine first, from itself.

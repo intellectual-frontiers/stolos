@@ -1,5 +1,5 @@
 /**
- * `archon fleet query` (spec 048): one SQL question to every server, through
+ * `stolos fleet query` (spec 048): one SQL question to every server, through
  * each server's MCP server over SSH (the server limits what it answers).
  *
  * @module

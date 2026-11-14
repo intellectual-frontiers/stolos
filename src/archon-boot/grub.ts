@@ -42,7 +42,7 @@ export function hostMenu(host: HostDef, base: string, token: string | undefined)
   if (!token) {
     return `# ${host.name} is not armed for an install.
 set timeout=3
-menuentry "${host.name}: not armed for install, booting its own disk (deno task boot arm ${host.name})" {
+menuentry "${host.name}: not armed for install, booting its own disk (deno task stolos boot arm ${host.name})" {
   exit
 }
 `;

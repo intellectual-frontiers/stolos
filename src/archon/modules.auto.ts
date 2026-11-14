@@ -21,6 +21,7 @@ import "../archon-boot/telemetry.ts";
 import "../archon-boot/tftp.ts";
 import "../archon-boot/web.ts";
 import "../mod.ts";
+import "../stolos/main.ts";
 import "./apply/apply.ts";
 import "./apply/apt.ts";
 import "./apply/ppa.ts";

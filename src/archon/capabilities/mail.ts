@@ -155,7 +155,8 @@ export const mail = (): Capability => ({ fleet, host }) => {
       command: `sh -c 'test -s ${SASL_PASSWD} || exit 3'`,
       level: "warn",
       code: "P027-MAIL-TOKEN",
-      fix: "on the boot machine: deno task boot mail-push <host> (after deno task boot mail-setup)",
+      fix:
+        "on the boot machine: deno task stolos boot mail-push <host> (after deno task stolos boot mail-setup)",
       spec: SPEC,
     }],
     notes: [

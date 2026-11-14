@@ -1,5 +1,5 @@
 /**
- * `archon fleet init` (spec 003): the fleet's identity, from your GitHub
+ * `stolos fleet init` (spec 003): the fleet's identity, from your GitHub
  * account as `gh` reports it. Runs on the boot machine (Windows or Linux).
  * Public data goes into fleets/<fleet>/fleet.ts; the admin password hash goes
  * only into the boot machine's secret store (Article 13).
@@ -16,7 +16,7 @@ import { sha512Crypt } from "../core/crypt.ts";
 import { SECRETS, writeSecret } from "../core/secrets.ts";
 import type { FleetDef, GitHubIdentity } from "../model/types.ts";
 
-/** What archon fleet init is given. */
+/** What stolos fleet init is given. */
 export interface FleetInitOptions {
   /** The new fleet's id: fleets/<id>/ (spec 046). Without it, the active fleet. */
   id?: string;
@@ -170,7 +170,7 @@ export async function addLocalKey(login: string): Promise<string[]> {
     path = `${dir}/id_ed25519.pub`;
     if (!confirm(`Create an SSH key on this PC now (${dir}/id_ed25519)?`)) {
       throw new Error(
-        "no SSH key: add one at https://github.com/settings/keys, then run archon fleet init again",
+        "no SSH key: add one at https://github.com/settings/keys, then run stolos fleet init again",
       );
     }
     await Deno.mkdir(dir, { recursive: true });
@@ -185,7 +185,7 @@ export async function addLocalKey(login: string): Promise<string[]> {
   }
   if (!confirm(`Add ${path} to your GitHub account with gh?`)) {
     throw new Error(
-      `add ${path} at https://github.com/settings/keys, then run archon fleet init again`,
+      `add ${path} at https://github.com/settings/keys, then run stolos fleet init again`,
     );
   }
   const title = `archon ${Deno.hostname()}`;
@@ -201,7 +201,7 @@ export async function addLocalKey(login: string): Promise<string[]> {
   }
   if (!added) {
     throw new Error(
-      `could not add the key with gh; add ${path} at https://github.com/settings/keys, then run archon fleet init again`,
+      `could not add the key with gh; add ${path} at https://github.com/settings/keys, then run stolos fleet init again`,
     );
   }
   // github.com/<login>.keys can lag a moment behind; use the key just added.
@@ -210,8 +210,8 @@ export async function addLocalKey(login: string): Promise<string[]> {
 
 /** fleet.ts as fleet init writes it. */
 export function fleetSource(f: FleetDef): string {
-  return `// The fleet (spec 003). Written by \`archon fleet init\` from your GitHub
-// account; public data only. Edit freely, then \`archon build\`.
+  return `// The fleet (spec 003). Written by \`stolos fleet init\` from your GitHub
+// account; public data only. Edit freely, then \`stolos build\`.
 
 import type { FleetDef } from "@stolos/archon/model/types.ts";
 
@@ -275,7 +275,7 @@ async function prepareRepository(id: string): Promise<void> {
     "--allow-import",
     "--lock=deno.lock",
     "archon.ts",
-    "boot.ts",
+    "stolos.ts",
     "engine.ts",
   ], { cwd: repo });
   if (!cache.ok) {
@@ -283,14 +283,14 @@ async function prepareRepository(id: string): Promise<void> {
       `wrote ${written.join(", ")}, but deno.lock could not be made: ${
         cache.stderr.trim().split("\n").pop()
       }`,
-      `when the network is back: deno task archon fleet upgrade ${tag}`,
+      `when the network is back: deno task stolos fleet upgrade ${tag}`,
     );
     return;
   }
   r.done(`${repo} · fleets/${id}/ · wrote ${written.join(", ")}, deno.lock (engine ${tag})`);
 }
 
-/** archon fleet init: the fleet (and a new repository's files), from your GitHub account. */
+/** stolos fleet init: the fleet (and a new repository's files), from your GitHub account. */
 export async function fleetInit(o: FleetInitOptions): Promise<void> {
   if (o.id) await prepareRepository(o.id);
   const p = ui.phase("GitHub");
@@ -353,7 +353,7 @@ export async function fleetInit(o: FleetInitOptions): Promise<void> {
   // again): rewriting it would drop everything added since (site, mail, ...).
   const kept = (await exists(P.fleet)) && !o.rewrite;
   await Deno.mkdir(P.fleetDir, { recursive: true });
-  // This checkout now works on the new fleet, without --fleet (archon fleet use).
+  // This checkout now works on the new fleet, without --fleet (stolos fleet use).
   const { chooseFleet } = await import("../fleet/use.ts");
   await chooseFleet(P.fleetId);
   if (!kept) await Deno.writeTextFile(P.fleet, fleetSource(fleet));
@@ -367,7 +367,7 @@ export async function fleetInit(o: FleetInitOptions): Promise<void> {
     );
     ui.next.push(
       "the admin password hash is stored again; hosts keep theirs until their next install or apply",
-      "a rebuilt boot machine: deno task boot vault recover-host-keys <host> for each host (docs/disaster-recovery.md)",
+      "a rebuilt boot machine: deno task stolos vault recover-host-keys <host> for each host (docs/disaster-recovery.md)",
     );
     return;
   }
@@ -375,11 +375,11 @@ export async function fleetInit(o: FleetInitOptions): Promise<void> {
     `fleets/<fleet>/fleet.ts · admin ${user} · ${tz} · ${fleet.locale} · git commits as ${gh.email}`,
   );
   ui.next.push(
-    "next: your signing keys (spec 057): deno task archon keys setup",
+    "next: your signing keys (spec 057): deno task stolos keys setup",
     `then: git add -A; git commit -m "${
       P.fleetId || "<fleet>"
     }: the fleet and its signers"; git push`,
-    "then: deno task archon (it shows the next step)",
+    "then: deno task stolos (it shows the next step)",
   );
 }
 

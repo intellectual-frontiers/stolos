@@ -1,5 +1,5 @@
 /**
- * `archon fleet use <id>`: which fleet of this repository every `archon`
+ * `stolos fleet use <id>`: which fleet of this repository every `archon`
  * command in this checkout is for, remembered in `.git/archon/fleet` (never
  * committed, so each checkout chooses its own). It takes effect at once, in
  * every terminal, on every system: no environment variable to set and no new
@@ -27,14 +27,14 @@ export async function chooseFleet(
   return "chosen";
 }
 
-/** `archon fleet use <id>`: check the fleet exists here, then remember it. */
+/** `stolos fleet use <id>`: check the fleet exists here, then remember it. */
 export async function fleetUse(id: string): Promise<number> {
   const all = listFleets(P.repo);
   if (!all.includes(id)) {
     console.error(
       `no fleet ${id} in ${P.repo} (here: ${
         all.join(", ") || "none"
-      }); to create it: deno task archon fleet init ${id}`,
+      }); to create it: deno task stolos fleet init ${id}`,
     );
     return 1;
   }
@@ -54,6 +54,6 @@ export async function fleetUse(id: string): Promise<number> {
       `   but ARCHON_FLEET=${env} is set in this terminal and wins: remove it, or open a terminal without it`,
     );
   }
-  console.log("next: deno task archon");
+  console.log("next: deno task stolos");
   return 0;
 }

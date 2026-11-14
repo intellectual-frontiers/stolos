@@ -1,7 +1,7 @@
 # Changing and releasing the engine
 
 This guide is for people who change the engine (this repository). Fleets adopt a release with
-`archon fleet upgrade` (see [fleet-repository.md](fleet-repository.md)); a release is simply a
+`stolos fleet upgrade` (see [fleet-repository.md](fleet-repository.md)); a release is simply a
 version tag that CI made.
 
 ## Every change
@@ -54,4 +54,4 @@ new tags still appear after each push to `main`.
 
 - Every file of the engine at `v<version>` stays exactly as it is (the tag never moves).
 - `src/archon/version.ts` at that tag says `<version>`.
-- `src/archon/modules.auto.ts` names every module, so `archon fleet upgrade` locks all of them.
+- `src/archon/modules.auto.ts` names every module, so `stolos fleet upgrade` locks all of them.

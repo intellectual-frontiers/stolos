@@ -13,7 +13,7 @@
  * 4. **Keys**: the parts of `keys setup` that need no passphrase (Git's
  *    allowed signers, the pre-push check).
  * 5. **Doctor**: `boot doctor` on a boot machine (keys included), else
- *    `archon keys`.
+ *    `stolos keys`.
  *
  * On an installed host, `archon update` is spec 015's (pull, apply, verify).
  *
@@ -24,7 +24,7 @@
  *   engine -->|yes| upgrade["fleet upgrade<br/>(a signed commit)"]
  *   engine -->|no| keys
  *   upgrade --> keys["keys: allowed signers,<br/>pre-push check"]
- *   keys --> doctor["boot doctor<br/>(or archon keys)"]
+ *   keys --> doctor["boot doctor<br/>(or stolos keys)"]
  * ```
  *
  * @module
@@ -213,8 +213,8 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
       e.warn(
         `${newest} is out (pinned: ${pin.tag})`,
         dirty || ahead
-          ? `push or commit your own changes first, then: deno task archon update`
-          : `deno task archon fleet upgrade ${newest}, then git push`,
+          ? `push or commit your own changes first, then: deno task stolos update`
+          : `deno task stolos fleet upgrade ${newest}, then git push`,
       );
       e.done();
     } else {
@@ -237,7 +237,7 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
     } else {
       u.fail(
         `fleet upgrade to ${upgradeTo} did not finish`,
-        `see its messages above; then: deno task archon update`,
+        `see its messages above; then: deno task stolos update`,
       );
     }
   }
@@ -258,15 +258,15 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
     console.log("");
     const code = boot ? await task(["boot", "doctor"]) : await task(["archon", "keys"]);
     const dr = ui.phase("Doctor");
-    if (code === 0) dr.done(boot ? "boot doctor: all well" : "archon keys: all well");
+    if (code === 0) dr.done(boot ? "boot doctor: all well" : "stolos keys: all well");
     else {
       dr.warn(
-        `${boot ? "boot doctor" : "archon keys"} found something (above), each with its fix`,
-        boot ? "deno task boot doctor" : "deno task archon keys",
+        `${boot ? "boot doctor" : "stolos keys"} found something (above), each with its fix`,
+        boot ? "deno task stolos boot doctor" : "deno task stolos keys",
       );
       dr.done();
     }
   }
-  if (!upgraded && !pulled.length) ui.next.push("next: deno task archon (where you are)");
+  if (!upgraded && !pulled.length) ui.next.push("next: deno task stolos (where you are)");
   return ui.problems.some((x) => x.level === "fail") ? 1 : 0;
 }

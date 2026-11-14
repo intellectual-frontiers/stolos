@@ -1,5 +1,5 @@
-// Host beta (spec 004). Written by `archon host add`; edit freely, then
-// `archon build`. Capabilities come from foundation(); add more per spec.
+// Host beta (spec 004). Written by `stolos host add`; edit freely, then
+// `stolos build`. Capabilities come from foundation(); add more per spec.
 
 import type { HostDef } from "@stolos/archon/model/types.ts";
 import { foundation } from "@stolos/archon/capabilities/mod.ts";

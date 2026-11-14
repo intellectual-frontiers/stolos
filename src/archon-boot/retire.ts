@@ -1,6 +1,6 @@
 /**
- * `deno task boot retire <host> --confirm-destroy <host>` (spec 045): a
- * server leaves the fleet, the reverse of `archon host add`. From the boot
+ * `deno task stolos boot retire <host> --confirm-destroy <host>` (spec 045): a
+ * server leaves the fleet, the reverse of `stolos host add`. From the boot
  * machine, with the name repeated by a person:
  *   1. asks the host, if it answers, whether it is durable (archon data), and
  *      says so before anything is removed;
@@ -75,7 +75,7 @@ async function askData(target: string): Promise<string | undefined> {
 }
 
 /**
- * `deno task boot retire <host> --confirm-destroy <host>`: remove a server
+ * `deno task stolos boot retire <host> --confirm-destroy <host>`: remove a server
  * from the fleet in the steps the module describes. `push` false leaves the
  * commit for the owner to push (--no-push). Returns the exit code (2 for an
  * unknown host).
@@ -105,7 +105,7 @@ export async function retire(
   }
   if (!name || !host) {
     console.error(
-      `usage: deno task boot retire <host> --confirm-destroy <host>  (known: ${
+      `usage: deno task stolos boot retire <host> --confirm-destroy <host>  (known: ${
         hosts.map((h) => h.name).join(", ") || "none"
       })`,
     );
@@ -204,7 +204,7 @@ export async function retire(
     event: `${name} retired`,
     level: "warn",
     what:
-      `deno task boot retire ${name}: its DNS records, deploy key, install token, SSH identity, model, and records were removed (it was ${what}). The machine itself was not touched.`,
+      `deno task stolos boot retire ${name}: its DNS records, deploy key, install token, SSH identity, model, and records were removed (it was ${what}). The machine itself was not touched.`,
     todo: "Remove its local DNS record in the router, then its line in fleets/<fleet>/site.ts.",
     key: `retire:${name}`,
   }).catch(() => {});
@@ -213,7 +213,7 @@ export async function retire(
   return ui.finish({
     next: [
       ...(published ? [] : [
-        `build, commit, and push the removal: deno task archon build, then git add -A ${
+        `build, commit, and push the removal: deno task stolos build, then git add -A ${
           removed.join(" ")
         } .mcp.json, git commit, git push`,
       ]),
@@ -222,8 +222,8 @@ export async function retire(
           `the router: remove the local DNS record ${host.dnsName}, then its line in fleets/<fleet>/site.ts (Article 21)`,
         ]
         : []),
-      "deno task boot vault backup  (the vault still holds its old secrets until then)",
-      `the machine still runs ${name}'s install: power it off, or install it as a new host (archon host add)`,
+      "deno task stolos vault backup  (the vault still holds its old secrets until then)",
+      `the machine still runs ${name}'s install: power it off, or install it as a new host (stolos host add)`,
     ],
   });
 }

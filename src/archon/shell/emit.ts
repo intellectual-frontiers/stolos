@@ -211,7 +211,7 @@ function fish(): string {
     "",
     "    # archon's abbreviations, for operators (the archon-ops group).",
     "    if command --query archon; and contains archon-ops (id -nG | string split ' ')",
-    "        abbr --add ab 'archon build'",
+    "        abbr --add ab 'stolos build'",
     "        abbr --add ac 'archon apply --check'",
     "        abbr --add av 'archon verify'",
     "        abbr --add ad 'archon capture --summary'",

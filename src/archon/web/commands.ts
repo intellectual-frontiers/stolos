@@ -106,14 +106,17 @@ export async function installWebCredential(json: string): Promise<void> {
   await run(["systemctl", "try-restart", WEB.unit]);
 }
 
-/** archon web credential: the token from stdin (deno task boot web-push), then the records. */
+/** archon web credential: the token from stdin (deno task stolos boot web-push), then the records. */
 export async function webCredential(hostName: string): Promise<number> {
   const p = ui.phase("Cloudflare token");
   const json = await new Response(Deno.stdin.readable).text();
   try {
     await installWebCredential(json);
   } catch (e) {
-    p.fail((e as Error).message, "deno task boot web-setup on the boot machine, then web-push");
+    p.fail(
+      (e as Error).message,
+      "deno task stolos boot web-setup on the boot machine, then web-push",
+    );
     return 1;
   }
   p.done(`stored (root only); ${WEB.unit} restarted`);
@@ -132,7 +135,7 @@ export async function webDns(hostName: string): Promise<number> {
   if (!raw) {
     p.warn(
       "no Cloudflare token on this server",
-      "on the boot machine: deno task boot web-setup, then deno task boot web-push <host>",
+      "on the boot machine: deno task stolos boot web-setup, then deno task stolos boot web-push <host>",
     );
     return 1;
   }
@@ -203,7 +206,7 @@ export async function webStatus(hostName: string): Promise<number> {
       name
         ? (await exists(WEB.env))
           ? `journalctl -u ${WEB.unit} | grep -i acme`
-          : "deno task boot web-push <host> (no Cloudflare token here yet)"
+          : "deno task stolos boot web-push <host> (no Cloudflare token here yet)"
         : "set fleet.web in fleets/<fleet>/fleet.ts for a Let's Encrypt certificate",
     );
     c.done(`expires ${cert.notAfter}`);

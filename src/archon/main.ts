@@ -1,11 +1,13 @@
 /**
- * archon: entry point for the CLI. See archon(1).
+ * The command line, for both commands (spec 059): `archon` on each machine
+ * (servers, workstations) and `stolos` on your PC (src/stolos/main.ts), over
+ * one registry where every command says where it runs. See archon(1).
  *
  * @module
  */
 
 import { P, resetRoots } from "./core/paths.ts";
-import { COMMANDS, findCommand } from "./commands/registry.ts";
+import { COMMANDS, findCommand, offeredOn } from "./commands/registry.ts";
 import { effectiveTier, GLOBAL_ARGS, parseArgs, type RunContext } from "./core/registry-types.ts";
 import { isRoot } from "./core/exec.ts";
 import { defaultLogPath, ui } from "./core/ui.ts";
@@ -43,15 +45,38 @@ export async function localHostName(): Promise<string> {
   }
 }
 
-function usage(): string {
-  const width = Math.max(...COMMANDS.map((c) => c.name.length));
+/** Which command this is: `stolos` on your PC, `archon` on a machine. */
+export type Surface = "pc" | "machine";
+
+/** The command's name for a surface. */
+export const commandName = (s: Surface): string => s === "pc" ? "stolos" : "archon";
+
+function usage(surface: Surface): string {
+  const cmds = COMMANDS.filter((c) => offeredOn(c, surface));
+  const width = Math.max(...cmds.map((c) => c.name.length), 10);
+  const me = commandName(surface);
   return [
-    "usage: archon <command> [options]",
+    surface === "pc"
+      ? "usage: deno task stolos <command> [options]   (in your fleet repository, on your PC)"
+      : "usage: archon <command> [options]   (on this machine)",
     "",
-    ...COMMANDS.map((c) => `  ${c.name.padEnd(width)}  ${c.summary}`),
+    ...cmds.map((c) => `  ${c.name.padEnd(width)}  ${c.summary}`),
+    ...(surface === "pc"
+      ? [
+        "  " + "boot <sub>".padEnd(width) +
+        "  The boot server: serve, arm, status, doctor, reinstall, retire, ...",
+      ]
+      : []),
     "",
-    "Global options: --fleet <id>, --host <name>, --json, -v/--verbose. Every command has a man page: man archon-<command>.",
-    "Where you are, and the one thing to do next: archon (no arguments). A problem's code: archon explain <code>.",
+    "Global options: --fleet <id>, --host <name>, --json, -v/--verbose.",
+    surface === "pc"
+      ? "Where you are, and the one thing to do next: deno task stolos (no arguments). A problem's code: stolos explain <code>."
+      : "This machine's state: archon (no arguments). Every command has a man page: man archon-<command>. A problem's code: archon explain <code>.",
+    `The other command: ${
+      surface === "pc"
+        ? "archon, on each server and workstation"
+        : "stolos, on your PC in the fleet repository"
+    } (${me} is this one).`,
   ].join("\n");
 }
 
@@ -73,32 +98,54 @@ function globals(argv: string[]) {
   return { rest, g };
 }
 
-/** The archon CLI: parses global options, finds the command, and runs it. Returns the exit code. */
-export async function main(argv: string[]): Promise<number> {
+/** The CLI: parses global options, finds the command offered here, and runs it. Returns the exit code. */
+export async function main(argv: string[], surface: Surface = "machine"): Promise<number> {
   await ensureHome();
-  // Spec 053: no arguments is "where am I, and what next".
-  if (!argv.length) argv = ["where"];
+  // Spec 053: no arguments is "where am I, and what next" (on a machine: its state).
+  const home = surface === "pc" ? "where" : "state";
+  if (!argv.length) argv = [home];
   if (argv[0] === "help" || argv[0] === "--help" || argv[0] === "-h") {
-    console.log(usage());
+    console.log(usage(surface));
+    return 0;
+  }
+  if (argv[0] === "--version" || argv[0] === "version") {
+    console.log(`${commandName(surface)} ${VERSION}`);
     return 0;
   }
   const { rest, g } = globals(argv);
-  if (!rest.length) rest.push("where"); // only global options: still "where am I"
+  if (!rest.length) rest.push(home); // only global options: still the default
   // Spec 046: --fleet chooses the fleet for this run (and what it starts through sudo).
   if (typeof g.fleet === "string") {
     Deno.env.set("ARCHON_FLEET", g.fleet);
     resetRoots();
   }
-  const found = findCommand(rest);
+  const found = findCommand(rest, surface);
   if (!found) {
+    // Spec 059: the other command's? Say which, and how.
+    const other: Surface = surface === "pc" ? "machine" : "pc";
+    const there = findCommand(rest, other);
+    if (there) {
+      console.error(
+        other === "pc"
+          ? `${
+            ui.red("error:")
+          } '${there.cmd.name}' is a fleet command: on your PC, in the fleet repository: deno task stolos ${
+            rest.join(" ")
+          }`
+          : `${ui.red("error:")} '${there.cmd.name}' runs on a machine: there, archon ${
+            rest.join(" ")
+          } (for example: ssh -t <host> archon ${there.cmd.name})`,
+      );
+      return 2;
+    }
     console.error(`${ui.red("error:")} unknown command: ${rest.join(" ")}`);
-    console.error(usage());
+    console.error(usage(surface));
     return 2;
   }
   const { cmd } = found;
   if (found.rest.includes("--help")) {
     console.log(
-      `archon ${cmd.name}: ${cmd.summary}\nSee man archon-${cmd.name.replace(/ /g, "-")}.`,
+      `${commandName(surface)} ${cmd.name}: ${cmd.summary}\n${cmd.description}`,
     );
     return 0;
   }
@@ -140,7 +187,7 @@ export async function main(argv: string[]): Promise<number> {
       "archon.fleet": P.fleetId,
       "archon.host": (g.host as string) ?? await localHostName(),
       "archon.engine.version": VERSION,
-    });
+    }, commandName(surface));
     if (args["confirm-destroy"] !== undefined) count("archon.confirm_destroy.used");
     ui.listeners.push(phaseListener);
     const ctx: RunContext = {
@@ -191,7 +238,10 @@ export async function main(argv: string[]): Promise<number> {
     }
     // Operations (Article 19): header, phases, one run log, closing summary.
     ui.useLog(defaultLogPath());
-    ui.header(`Archon ${cmd.name}`, `${ctx.hostName}${tier === "read" ? " · read-only" : ""}`);
+    ui.header(
+      `${surface === "pc" ? "Stolos" : "Archon"} ${cmd.name}`,
+      `${ctx.hostName}${tier === "read" ? " · read-only" : ""}`,
+    );
     let code = 1;
     try {
       code = await cmd.run(args, ctx);
@@ -224,8 +274,11 @@ export async function main(argv: string[]): Promise<number> {
  * Run as a program and exit: from this file, or from a fleet repository's own
  * entry file, which imports this one through `@stolos/` (spec 046-engine-instance).
  */
-export async function run(argv: string[] = Deno.args): Promise<never> {
-  const code = await main(argv);
+export async function run(
+  argv: string[] = Deno.args,
+  surface: Surface = "machine",
+): Promise<never> {
+  const code = await main(argv, surface);
   ui.printPanel(); // spec 029: a secret changed and is not backed up yet
   Deno.exit(code);
 }

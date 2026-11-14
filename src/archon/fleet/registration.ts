@@ -1,6 +1,6 @@
 /**
  * Spec 047-intent-and-identity (Article 25): who a host is, in Git:
- * fleets/<id>/hosts/<host>/registration.ts, written by `archon host add`, in
+ * fleets/<id>/hosts/<host>/registration.ts, written by `stolos host add`, in
  * one fixed form. Its SSH host public keys are what an operator's machine
  * trusts: archon writes known_hosts.auto from them, so the first connection to
  * a host is checked against Git, never trusted on first use.
@@ -23,7 +23,7 @@ export function registrationFile(host: string): string {
 /** registration.ts's one form (sorted keys; checked by build). */
 export function registrationSource(r: HostRegistration): string {
   const keys = [...r.sshHostKeys].sort().map((k) => `    ${JSON.stringify(k)},\n`).join("");
-  return `// Written by archon host add (spec 047): who this host is. Public facts only.
+  return `// Written by stolos host add (spec 047): who this host is. Public facts only.
 // Its SSH host public keys are what operators' machines trust (known_hosts.auto).
 import type { HostRegistration } from "@stolos/archon/model/types.ts";
 
@@ -69,7 +69,7 @@ export async function registrationProblems(
     const r = await loadRegistration(h, file);
     const where = repoRel(file);
     if (!r || text !== registrationSource(r)) {
-      out.push({ where, message: "not in the form archon host add writes" });
+      out.push({ where, message: "not in the form stolos host add writes" });
       continue;
     }
     if (!r.sshHostKeys.length) out.push({ where, message: "lists no SSH host key" });
@@ -145,7 +145,7 @@ export async function writeKnownHosts(): Promise<string> {
 }
 
 /**
- * `archon fleet trust`: put every registered host's keys from Git into this
+ * `stolos fleet trust`: put every registered host's keys from Git into this
  * user's known_hosts (for plain ssh and MCP clients), replacing older lines
  * for the same names.
  */

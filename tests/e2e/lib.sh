@@ -30,7 +30,7 @@ fi
 # runners have 16 GB: "network", a blank Secure Boot VM network-boots and
 # Ubuntu's installer runs (it holds the whole image in memory: 8 GiB). Private
 # runners have 8 GB, too little for that next to the runner itself:
-# "bootstrap", Ubuntu's cloud image finished by archon host bootstrap (the
+# "bootstrap", Ubuntu's cloud image finished by stolos host bootstrap (the
 # path for a server installed by hand). The engine's own lab runs the network
 # install on every release. E2E_SERVER_INSTALL chooses either.
 HOST_MB=$(($(free -m | awk '/^Mem:/ { print $2 }') - ${E2E_SQUEEZE_MB:-0}))
@@ -153,9 +153,9 @@ publish_fleet() {
 
 install_server() {
   log "boot server (downloads Ubuntu's boot files and image on its first run)"
-  # With OpenTelemetry on, as a fleet repository's `deno task boot` runs it (spec 049).
-  (cd "$F" && OTEL_DENO=true OTEL_SERVICE_NAME=archon-boot OTEL_EXPORTER_OTLP_PROTOCOL=http/json \
-    OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:4319 exec deno run -A --frozen boot.ts serve \
+  # As a fleet repository's `deno task stolos boot serve` runs it (spec 059: stolos turns
+  # the boot server's OpenTelemetry on itself, spec 049).
+  (cd "$F" && exec deno run -A --frozen stolos.ts boot serve \
     --fleet "$FLEET" --port 8080 --github-api "http://$BR:8001") >"$OUT/boot.log" 2>&1 &
   for _ in $(seq 600); do curl -fsS -o /dev/null "http://$BR:8080/health" && break; sleep 2; done
   curl -fsS "http://$BR:8080/health"
@@ -195,9 +195,9 @@ install_server() {
 }
 
 # A server installed by hand, finished from the runner (spec 005): Ubuntu's
-# cloud image, then archon host bootstrap, which runs the same first boot.
+# cloud image, then stolos host bootstrap, which runs the same first boot.
 bootstrap_server() {
-  log "$SERVER: Ubuntu's cloud image, then archon host bootstrap (runner ${HOST_MB} MB, VM ${E2E_VM_MEM} MiB)"
+  log "$SERVER: Ubuntu's cloud image, then stolos host bootstrap (runner ${HOST_MB} MB, VM ${E2E_VM_MEM} MiB)"
   sudo E2E_VM_MEM="$E2E_VM_MEM" "$HERE/cloud-vm.sh" "$SERVER" "$MAC" archtap0 "$ADMIN" "$W/admin.pub"
   SERVER_IP=$(lease_ip "$MAC")
   [ -n "$SERVER_IP" ] || fail "$SERVER did not answer SSH"
@@ -210,7 +210,7 @@ bootstrap_server() {
   printf 'Host 10.77.0.*\n  StrictHostKeyChecking accept-new\n  UserKnownHostsFile /dev/null\n  IdentityFile %s\n  LogLevel ERROR\n' \
     "$W/admin" >>"$HOME/.ssh/config"
   (cd "$F" && "${A[@]}" host bootstrap "$SERVER" --ssh "$ADMIN@$SERVER_IP" </dev/null) 2>&1 | plain |
-    tee "$OUT/bootstrap.txt" || fail "archon host bootstrap failed"
+    tee "$OUT/bootstrap.txt" || fail "stolos host bootstrap failed"
   log "$SERVER: bootstrapped"
 }
 
@@ -236,7 +236,7 @@ guard_test() {
   # The guard's event is in the telemetry: move it aside so Ready is waited for afresh.
   mkdir -p "$OUT/guard-telemetry"
   mv "$EVENTS"/otlp-*.jsonl "$OUT/guard-telemetry/" 2>/dev/null || true
-  (cd "$F" && deno run -A --frozen boot.ts arm "$SERVER" --claim --confirm-destroy "$SERVER" --fleet "$FLEET") ||
+  (cd "$F" && deno run -A --frozen stolos.ts boot arm "$SERVER" --claim --confirm-destroy "$SERVER" --fleet "$FLEET") ||
     fail "boot arm --confirm-destroy failed"
 }
 
@@ -251,7 +251,7 @@ check_trace() {
 # A fleet query's table has a row for the server whose ok column is 1.
 answered() { grep -qE "^${SERVER}[[:space:]]+1([[:space:]]|\$)" "$1"; }
 
-# The operator's view, from the runner (as the boot machine): archon fleet query over MCP.
+# The operator's view, from the runner (as the boot machine): stolos fleet query over MCP.
 query_from_runner() {
   local ip
   ip=$(server_ip)
@@ -315,8 +315,8 @@ reboot_server() {
 }
 
 # A workstation (spec 020): Ubuntu's cloud image, the repository at
-# /srv/archon, archon workstation add, then the agent's path to the server:
-# archon fleet query from the workstation, over MCP (spec 030).
+# /srv/archon, stolos workstation add, then the agent's path to the server:
+# stolos fleet query from the workstation, over MCP (spec 030).
 workstation_stage() {
   [ -n "${WS:-}" ] || return 0
   log "$WS: Ubuntu cloud image"
@@ -338,13 +338,13 @@ sudo mkdir -p /srv/archon && sudo chown \$USER: /srv/archon
 git clone -q http://$BR:8000/fleet.git /srv/archon
 cd /srv/archon
 export ARCHON_GITHUB_API=http://$BR:8001
-deno run -A --frozen archon.ts --fleet $FLEET workstation add $WS"
+deno run -A --frozen stolos.ts --fleet $FLEET workstation add $WS"
   ssh_to "$ADMIN@$ip" "$s" 2>&1 | plain | tee "$OUT/workstation-add.txt" ||
-    fail "archon workstation add failed"
+    fail "stolos workstation add failed"
   log "$WS: set up; now the agent's path to $SERVER"
   scp -i "$W/admin" -o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
     -o LogLevel=ERROR "$W/admin" "$ADMIN@$ip:.ssh/id_ed25519"
-  ssh_to "$ADMIN@$ip" "chmod 600 ~/.ssh/id_ed25519; archon verify && cd /srv/archon && archon fleet query 'select host, ok from archon_install'" \
+  ssh_to "$ADMIN@$ip" "chmod 600 ~/.ssh/id_ed25519; archon verify && cd /srv/archon && /usr/local/bin/deno run -A --frozen stolos.ts --fleet $FLEET fleet query 'select host, ok from archon_install'" \
     2>&1 | plain | tee "$OUT/workstation-query.txt" || fail "the workstation could not query $SERVER"
   answered "$OUT/workstation-query.txt" || fail "the workstation's fleet query did not answer ok for $SERVER"
   log "$WS reached $SERVER over MCP"

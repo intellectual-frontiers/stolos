@@ -27,7 +27,7 @@ on:
         required: true
         type: string
       workstation:
-        description: Its workstation (set up with archon workstation add); empty to skip.
+        description: Its workstation (set up with stolos workstation add); empty to skip.
         required: false
         type: string
         default: ""

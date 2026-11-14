@@ -1,6 +1,6 @@
 /**
  * 032-web: a server's Let's Encrypt certificates survive its re-install. Before
- * `deno task boot reinstall` reboots a server, it copies Traefik's ACME store
+ * `deno task stolos boot reinstall` reboots a server, it copies Traefik's ACME store
  * (the Let's Encrypt account, the certificates, and their keys) to the boot
  * machine; the install hands it back, and the first boot puts it in place
  * before Traefik first starts. Traefik then serves the trusted certificate

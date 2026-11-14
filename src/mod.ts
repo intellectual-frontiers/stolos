@@ -7,7 +7,7 @@
  * fleet repository (private), under `fleets/<id>/`, and imports the engine at
  * a released tag.
  *
- * Start with: `deno task archon` in a fleet repository (where you are, and the
+ * Start with: `deno task stolos` in a fleet repository (where you are, and the
  * one thing to do next), then the model's types ({@link FleetDef} and
  * {@link HostDef} in `archon/model/types.ts`), then the guides in `docs/`.
  *
@@ -23,7 +23,7 @@
  *     model["fleets/&lt;id&gt;/: fleet.ts, hosts/, signers.ts,<br/>registration.ts, decisions.ts"]
  *     tip["main: its tip signed by<br/>a key in signers.ts"]
  *   end
- *   tag -->|"archon fleet upgrade"| pin
+ *   tag -->|"stolos fleet upgrade"| pin
  *   model --> tip
  *   lock --> tip
  *   tip -->|"read-only deploy key"| hosts["hosts: /srv/archon<br/>deno run --frozen"]
@@ -59,7 +59,7 @@
  *   sql --> db["archon.auto.sqlite.db"]
  *   db --> osq["osquery<br/>(allowlisted views)"]
  *   osq --> mcp["MCP server<br/>(ssh as ops)"]
- *   mcp --> fq["archon fleet query /<br/>fleet status"]
+ *   mcp --> fq["stolos fleet query /<br/>fleet status"]
  * ```
  *
  * Git holds intent (the model, decisions, who each host is); each machine holds

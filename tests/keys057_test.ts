@@ -1,4 +1,4 @@
-// Spec 057: archon keys, end to end in a sandbox: setup (twice: idempotent),
+// Spec 057: stolos keys, end to end in a sandbox: setup (twice: idempotent),
 // the checks, the pre-push check, the recovery check, rotate, and lost. Real
 // OpenSSH keys with real passphrases, supplied through SSH_ASKPASS (tests only).
 
@@ -59,7 +59,7 @@ async function keysSandbox() {
   await git("init", "-q", "-b", "main");
   await git("add", "-A");
   await git("commit", "-q", "--no-gpg-sign", "-m", "demo: the fleet");
-  const archon = (args: string[], stdin = "") => sb.run("src/archon/main.ts", args, stdin, env);
+  const archon = (args: string[], stdin = "") => sb.run("src/stolos/main.ts", args, stdin, env);
   return { home, repo, git, archon, daily: join(home, ".ssh", "fleet-signing") };
 }
 
@@ -217,7 +217,7 @@ Deno.test("057: a second PC's key: setup prints the exact command that approves 
     assertStringIncludes(r.out, `--role daily --key "${pub}"`);
     assertStringIncludes(
       r.out,
-      "git checkout -- fleets/demo/signers.ts && deno task archon update",
+      "git checkout -- fleets/demo/signers.ts && deno task stolos update",
     );
     // Running it again still shows the commands (the approval is still missing).
     const again = await s.archon(["keys", "setup"]);
@@ -239,7 +239,7 @@ Deno.test("057: the approval steps, on WSL (Windows PowerShell) and elsewhere", 
   assertStringIncludes(wsl[0], "PowerShell, cd C:\\fleet");
   assertEquals(
     wsl[1],
-    '    deno task archon signers add owner-pc-daily --role daily --key "ssh-ed25519 AAAA"',
+    '    deno task stolos signers add owner-pc-daily --role daily --key "ssh-ed25519 AAAA"',
   );
   assertStringIncludes(
     wsl[2],

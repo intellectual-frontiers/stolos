@@ -50,7 +50,7 @@ export const EXPLAIN: Record<string, Explanation> = {
     why:
       "It was pushed without signing (git commit -S), or from a machine without your signing setup.",
     fix:
-      "Make a signed commit on top (git commit -S --allow-empty -m approve) and push it; check this PC's signing with: deno task archon keys",
+      "Make a signed commit on top (git commit -S --allow-empty -m approve) and push it; check this PC's signing with: deno task stolos keys",
     doc: "docs/fleet-repository.md",
   },
   "E047-UNTRUSTED": {
@@ -59,7 +59,7 @@ export const EXPLAIN: Record<string, Explanation> = {
     why:
       "It was signed with another key (an agent's, a CI's, a new laptop's), or the signer was removed.",
     fix:
-      "Sign it again with a key in fleets/<fleet>/signers.ts (deno task archon keys shows yours); for a new PC's key, deno task archon keys setup, then a commit signed by a key already listed.",
+      "Sign it again with a key in fleets/<fleet>/signers.ts (deno task stolos keys shows yours); for a new PC's key, deno task stolos keys setup, then a commit signed by a key already listed.",
     doc: "docs/fleet-repository.md",
   },
   "E047-ROLLBACK": {
@@ -74,7 +74,7 @@ export const EXPLAIN: Record<string, Explanation> = {
     title: "The fleet has no signer",
     what: "No change can be approved: signers.ts lists no daily signer.",
     why: "The fleet is new.",
-    fix: "deno task archon keys setup (it makes your keys and lists them)",
+    fix: "deno task stolos keys setup (it makes your keys and lists them)",
     doc: "docs/fleet-repository.md",
   },
   "E047-HOST-KEY": {
@@ -84,7 +84,7 @@ export const EXPLAIN: Record<string, Explanation> = {
     why:
       "The host was reinstalled before host identities, your known_hosts predates them, or it is not the machine you meant.",
     fix:
-      "deno task archon fleet trust (writes the keys registered in Git into your known_hosts); if it still refuses, check that the address is the right machine.",
+      "deno task stolos fleet trust (writes the keys registered in Git into your known_hosts); if it still refuses, check that the address is the right machine.",
     doc: "docs/troubleshooting.md",
   },
   "E057-SSH": {
@@ -92,7 +92,7 @@ export const EXPLAIN: Record<string, Explanation> = {
     what: "Git signs commits with OpenSSH's ssh-keygen, which needs version 8.2 or newer.",
     why: "OpenSSH is missing, or an old one comes first on the PATH.",
     fix:
-      "Install a current OpenSSH (Windows: Settings > Optional features > OpenSSH Client; macOS: brew install openssh; Ubuntu: sudo apt install openssh-client), then: deno task archon keys",
+      "Install a current OpenSSH (Windows: Settings > Optional features > OpenSSH Client; macOS: brew install openssh; Ubuntu: sudo apt install openssh-client), then: deno task stolos keys",
     doc: "docs/fleet-repository.md",
   },
   "E057-NO-KEY": {
@@ -100,7 +100,7 @@ export const EXPLAIN: Record<string, Explanation> = {
     what: "Your daily key signs every change you push; without it, servers refuse your commits.",
     why: "Signing was never set up on this PC, or the key file was moved or deleted.",
     fix:
-      "deno task archon keys setup (it makes the key; if the old one was lost, use keys lost instead)",
+      "deno task stolos keys setup (it makes the key; if the old one was lost, use keys lost instead)",
     doc: "docs/fleet-repository.md",
   },
   "E057-NO-PASSPHRASE": {
@@ -122,7 +122,7 @@ export const EXPLAIN: Record<string, Explanation> = {
     title: "Git does not sign your commits in this repository",
     what: "Unsigned commits are refused by every server (E047-UNSIGNED).",
     why: "Git's signing settings are missing or point at another key.",
-    fix: "deno task archon keys setup",
+    fix: "deno task stolos keys setup",
     doc: "docs/fleet-repository.md",
   },
   "E057-NOT-LISTED": {
@@ -130,14 +130,14 @@ export const EXPLAIN: Record<string, Explanation> = {
     what: "Servers trust only the keys in signers.ts: they would refuse your commits.",
     why: "The key is new (a new PC, or a rotation not committed yet).",
     fix:
-      "deno task archon keys setup, then commit signed by a key already listed (or use keys lost with the recovery key)",
+      "deno task stolos keys setup, then commit signed by a key already listed (or use keys lost with the recovery key)",
     doc: "docs/fleet-repository.md",
   },
   "E057-NO-RECOVERY": {
     title: "No recovery key",
     what: "If the daily key is lost, only the recovery key can approve its replacement.",
     why: "None was ever made, or it was removed from signers.ts.",
-    fix: "deno task archon keys setup (it makes one; then move it off this PC)",
+    fix: "deno task stolos keys setup (it makes one; then move it off this PC)",
     doc: "docs/fleet-repository.md",
   },
   "E057-RECOVERY-ON-PC": {
@@ -152,14 +152,14 @@ export const EXPLAIN: Record<string, Explanation> = {
     title: "The recovery key has not been checked for six months",
     what: "A recovery key you cannot use (a forgotten passphrase, a dead USB drive) is no key.",
     why: "It is checked twice a year.",
-    fix: "deno task archon keys check-recovery --key <its private file>",
+    fix: "deno task stolos keys check-recovery --key <its private file>",
     doc: "docs/fleet-repository.md",
   },
   "E057-HOOK": {
     title: "Pushes are not checked on this PC first",
     what: "A commit servers would refuse is found only after it is pushed.",
     why: "The pre-push check is not installed (or another program owns the hook).",
-    fix: "deno task archon keys setup",
+    fix: "deno task stolos keys setup",
     doc: "docs/fleet-repository.md",
   },
   "E004-SSH-KEY": {
@@ -168,7 +168,7 @@ export const EXPLAIN: Record<string, Explanation> = {
     why:
       "Your key is not on your GitHub account (the fleet takes the admin's keys from there), or ssh offered another key.",
     fix:
-      "gh ssh-key list (is your key there?); then archon fleet status, or ssh -i <your key> <user>@<host>.",
+      "gh ssh-key list (is your key there?); then stolos fleet status, or ssh -i <your key> <user>@<host>.",
     doc: "docs/troubleshooting.md",
   },
   "E009-DNS": {
@@ -192,7 +192,7 @@ export const EXPLAIN: Record<string, Explanation> = {
     what: "dpkg cannot read its own records.",
     why: "The machine lost power (or was killed) while apt was installing.",
     fix:
-      "On the machine: sudo dpkg --configure -a, then sudo apt-get -f install; if dpkg's files are empty, reinstall the host (deno task boot reinstall <host>).",
+      "On the machine: sudo dpkg --configure -a, then sudo apt-get -f install; if dpkg's files are empty, reinstall the host (deno task stolos boot reinstall <host>).",
     doc: "docs/troubleshooting.md",
   },
   "E051-NO-RECOGNITION": {
@@ -211,7 +211,7 @@ export const EXPLAIN: Record<string, Explanation> = {
     why:
       "It is a used machine, or not the machine you meant (a claim takes the next unknown machine).",
     fix:
-      "If it is the right machine and its disks may be erased: deno task boot arm <host> --claim --confirm-destroy <host> (or --mac-address <mac>), then network-boot it again.",
+      "If it is the right machine and its disks may be erased: deno task stolos boot arm <host> --claim --confirm-destroy <host> (or --mac-address <mac>), then network-boot it again.",
     doc: "docs/hosts.md",
   },
   "E051-INSTALLER-STALLED": {
@@ -220,7 +220,7 @@ export const EXPLAIN: Record<string, Explanation> = {
     why:
       "Too little memory: Ubuntu's network installer holds the whole image in memory and needs about 8 GiB.",
     fix:
-      "Install Ubuntu by hand (or from its cloud image), then: deno task archon host bootstrap <host> --ssh <user>@<address>.",
+      "Install Ubuntu by hand (or from its cloud image), then: deno task stolos host bootstrap <host> --ssh <user>@<address>.",
     doc: "docs/hosts.md",
   },
   "E051-MAC-MISMATCH": {
@@ -228,12 +228,12 @@ export const EXPLAIN: Record<string, Explanation> = {
     what: "An unknown network card network-booted while a host is armed for another card.",
     why: "The MAC was mistyped, or another machine on the network boots from the network first.",
     fix:
-      "If it is the host: deno task boot arm <host> --mac-address <the card shown> (or --claim). Nothing was installed.",
+      "If it is the host: deno task stolos boot arm <host> --mac-address <the card shown> (or --claim). Nothing was installed.",
     doc: "docs/hosts.md",
   },
   "E051-WRONG-RELEASE": {
     title: "The machine runs another Ubuntu release",
-    what: "archon host bootstrap needs the fleet's Ubuntu release.",
+    what: "stolos host bootstrap needs the fleet's Ubuntu release.",
     why: "It was installed from another image.",
     fix:
       "Install the fleet's release (fleets/<fleet>/fleet.ts, ubuntu.release) on it, then bootstrap again.",
@@ -241,10 +241,10 @@ export const EXPLAIN: Record<string, Explanation> = {
   },
   "E051-WRONG-MACHINE": {
     title: "The machine lacks the host's registered network card",
-    what: "archon host bootstrap stopped: the machine at that address is not the registered one.",
+    what: "stolos host bootstrap stopped: the machine at that address is not the registered one.",
     why: "The wrong address, a replaced network card, or a typo in --mac-address.",
     fix:
-      "Check the address; if it is the host, register its card: archon host add <host> --mac-address <mac> --force.",
+      "Check the address; if it is the host, register its card: stolos host add <host> --mac-address <mac> --force.",
     doc: "docs/hosts.md",
   },
   "P027-MAIL-TOKEN": {
@@ -252,7 +252,7 @@ export const EXPLAIN: Record<string, Explanation> = {
     what: "The machine has no relay token, so it sends no mail.",
     why: "The token is delivered from the boot machine, after it is created once.",
     fix:
-      "On the boot machine: deno task boot mail-setup (once), then deno task boot mail-push <host>.",
+      "On the boot machine: deno task stolos boot mail-setup (once), then deno task stolos boot mail-push <host>.",
     doc: "docs/boot-machine.md",
   },
   "P032-WEB-TOKEN": {
@@ -261,7 +261,7 @@ export const EXPLAIN: Record<string, Explanation> = {
       "The machine has no Cloudflare token: no DNS record and no Let's Encrypt certificate yet (it answers with a self-signed one).",
     why: "The token is delivered from the boot machine, after it is created once.",
     fix:
-      "On the boot machine: deno task boot web-setup (once), then deno task boot web-push <host>.",
+      "On the boot machine: deno task stolos boot web-setup (once), then deno task stolos boot web-push <host>.",
     doc: "docs/web.md",
   },
 };

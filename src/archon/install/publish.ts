@@ -1,8 +1,8 @@
 /**
- * Specs 004 and 045: what `archon host add` and `boot retire` change in the
+ * Specs 004 and 045: what `stolos host add` and `boot retire` change in the
  * checkout is built, committed, and pushed by the same command (pushing to
  * main is approval, Article 9). Only the paths the change touched are staged,
- * with what `archon build` renders from them (.mcp.json, the agent's
+ * with what `stolos build` renders from them (.mcp.json, the agent's
  * permissions, the man pages); anything else in the working tree is left alone.
  *
  * @module
@@ -12,7 +12,7 @@ import { ui } from "../core/ui.ts";
 import { P } from "../core/paths.ts";
 import { run } from "../core/exec.ts";
 
-/** What archon build renders that a host's arrival or departure changes. */
+/** What stolos build renders that a host's arrival or departure changes. */
 export const RENDERED = [".mcp.json"];
 
 const last = (r: { stderr: string; stdout: string }) =>

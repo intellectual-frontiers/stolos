@@ -248,7 +248,7 @@ export async function setOptIn(
   }
   ui.next.push(
     `${def.commands.status} shows it; the switch is in this machine's archon.sql (archon state).`,
-    `to keep it across a re-install, record it in Git from your workstation: archon decide ${name} ${
+    `to keep it across a re-install, record it in Git from your workstation: stolos decide ${name} ${
       enabled ? "on" : "off"
     }${rec.data ? ` --${rec.data}` : ""} --host ${host.name}, then commit signed and push`,
   );

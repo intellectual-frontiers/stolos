@@ -1,5 +1,5 @@
 /**
- * Spec 053: "where am I". `archon` with no arguments shows, for the fleet of
+ * Spec 053: "where am I". `deno task stolos` with no arguments shows, for the fleet of
  * this repository, every step from a new repository to running hosts, each
  * done or not as the real state says (Git, this machine's secret store, the
  * boot server's tokens, what hosts reported), and the one command to run next.
@@ -76,8 +76,8 @@ export function whereSteps(f: WhereFacts): Step[] {
         ? `choose a fleet of this repository (${f.fleets.join(", ")})`
         : "create the fleet",
       command: f.fleets.length > 1
-        ? `deno task archon fleet use ${f.fleets[0]}`
-        : "deno task archon fleet init <id>",
+        ? `deno task stolos fleet use ${f.fleets[0]}`
+        : "deno task stolos fleet init <id>",
     });
     return label(raw);
   }
@@ -87,42 +87,42 @@ export function whereSteps(f: WhereFacts): Step[] {
       ? `engine ${f.pinned}${f.locked ? ", locked" : ", not locked (deno.lock is missing)"}`
       : "the engine is not pinned in deno.json",
     command:
-      `deno task archon fleet upgrade v<version> (the newest tag of intellectual-frontiers/stolos)`,
+      `deno task stolos fleet upgrade v<version> (the newest tag of intellectual-frontiers/stolos)`,
   });
   raw.push({
     done: f.signers.daily > 0,
     text: f.signers.daily
       ? `${f.signers.daily} daily signer(s)`
       : "no daily signer: no change can be approved",
-    command: "deno task archon keys setup",
+    command: "deno task stolos keys setup",
   });
   raw.push({
     done: f.signers.recovery > 0,
     text: f.signers.recovery
       ? `${f.signers.recovery} recovery signer(s)`
       : "no recovery signer (the key you keep apart, for when the daily one is lost)",
-    command: "deno task archon keys setup",
+    command: "deno task stolos keys setup",
   });
   raw.push({
     done: !f.signingProblems.length,
     text: f.signingProblems.length
       ? `this machine's signing: ${f.signingProblems[0].what}`
       : "this machine signs your commits",
-    command: f.signingProblems[0]?.fix ?? "deno task archon keys",
+    command: f.signingProblems[0]?.fix ?? "deno task stolos keys",
   });
   raw.push({
     done: f.adminHash,
     text: f.adminHash
       ? "admin password (hash on this machine)"
       : "no admin password hash on this machine",
-    command: `deno task archon fleet init ${id}`,
+    command: `deno task stolos fleet init ${id}`,
   });
   if (f.mail) {
     raw.push({
       done: f.mail.token,
       pending: !f.mail.token,
       text: f.mail.token ? "mail token" : "mail is not set up yet (no relay token)",
-      command: "deno task boot mail-setup",
+      command: "deno task stolos boot mail-setup",
     });
   }
   if (f.web) {
@@ -132,7 +132,7 @@ export function whereSteps(f: WhereFacts): Step[] {
       text: f.web.token
         ? "Cloudflare token (DNS, certificates)"
         : "HTTPS names are not set up yet (no Cloudflare token)",
-      command: "deno task boot web-setup",
+      command: "deno task stolos boot web-setup",
     });
   }
   const servers = f.hosts.filter((h) => !h.workstation);
@@ -140,7 +140,7 @@ export function whereSteps(f: WhereFacts): Step[] {
     raw.push({
       done: false,
       text: "no server yet",
-      command: "deno task archon host add <name> --claim   (or --mac-address <mac>)",
+      command: "deno task stolos host add <name> --claim   (or --mac-address <mac>)",
     });
   }
   for (const h of servers) {
@@ -152,8 +152,8 @@ export function whereSteps(f: WhereFacts): Step[] {
         ? `${h.name} armed${h.claim ? " (claim)" : ""}: power it on and let it network-boot`
         : `${h.name} not installed`,
       command: h.armed
-        ? "deno task boot serve   (leave it running while it installs)"
-        : `deno task boot arm ${h.name} --claim   (or --mac-address <mac>)`,
+        ? "deno task stolos boot serve   (leave it running while it installs)"
+        : `deno task stolos boot arm ${h.name} --claim   (or --mac-address <mac>)`,
     });
   }
   raw.push({
@@ -185,7 +185,7 @@ function label(
 export function nextCommand(steps: Step[]): string {
   return steps.find((s) => s.state === "next")?.command ??
     steps.find((s) => s.state === "pending")?.command ??
-    "deno task archon fleet status   (everything is set up)";
+    "deno task stolos fleet status   (everything is set up)";
 }
 
 /** The facts, from the real state (see the header). */
@@ -240,7 +240,7 @@ export async function collectWhere(): Promise<WhereFacts> {
       daily: signers.filter((s) => s.role === "daily").length,
       recovery: signers.filter((s) => s.role === "recovery").length,
     },
-    // Spec 057: what stops signing (fail); warnings stay in archon keys and boot doctor.
+    // Spec 057: what stops signing (fail); warnings stay in stolos keys and boot doctor.
     signingProblems: (await keyChecksNow().catch(() => []))
       .filter((c) => !c.ok && c.level === "fail")
       .map((c) => ({ what: c.what, fix: c.fix })),
@@ -253,7 +253,7 @@ export async function collectWhere(): Promise<WhereFacts> {
   };
 }
 
-/** `archon` (no arguments) and `archon where`. */
+/** `archon` (no arguments) and `stolos where`. */
 export async function whereCommand(json: boolean): Promise<number> {
   const { ui } = await import("../core/ui.ts");
   // On a host: what it is and how it is (archon state).

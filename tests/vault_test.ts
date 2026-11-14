@@ -29,7 +29,7 @@ async function vaultSandbox() {
   await put("mail.json", '{"token":"t1"}\n');
   await put("install-tokens.json", "[]\n");
   const archon = (args: string[], stdin = "", extra: Record<string, string> = {}) =>
-    sb.run("src/archon/main.ts", args, stdin, extra);
+    sb.run("src/stolos/main.ts", args, stdin, extra);
   return { home, secrets, archon, put };
 }
 
@@ -153,7 +153,7 @@ Deno.test("vault: the panel, amber, and red for identity keys never backed up", 
   assert(text.includes("🔐  Secrets changed: back them up"));
   assert(text.includes("2 secrets are newer than your last backup (3 days ago):"));
   assert(text.includes("mail relay token") && text.includes("hermes deploy key"));
-  assert(text.includes("If BOOTPC failed now") && text.includes("deno task boot vault backup"));
+  assert(text.includes("If BOOTPC failed now") && text.includes("deno task stolos vault backup"));
   // A frame: every line the same visible width.
   assertEquals(new Set(lines.map(width)).size, 1, text);
   assertEquals(panelLines({ ...a, unbacked: [], severity: "ok" }, "BOOTPC", now), undefined);
@@ -224,7 +224,7 @@ Deno.test("sandbox: archon refuses to start when a per-user path escapes ARCHON_
     const escaped: Record<string, string> = Deno.build.os === "windows"
       ? { APPDATA: Deno.env.get("APPDATA") ?? "C:\\" }
       : { XDG_CONFIG_HOME: "/" };
-    const r = await sb.run("src/archon/main.ts", ["vault", "status"], "", escaped);
+    const r = await sb.run("src/stolos/main.ts", ["vault", "status"], "", escaped);
     assert(r.code !== 0, r.out);
     assert(r.out.includes("outside the sandbox"), r.out);
   } finally {

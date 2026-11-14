@@ -193,7 +193,7 @@ export async function discover(host: HostDef, check = false): Promise<number> {
   const boot = tried.find((c) => c.source === "boot");
   if (!found && boot) {
     p.note(
-      `the boot PC (${boot.endpoint}) is not collecting: it does only while \`deno task boot serve\` runs on it (optional; see docs/telemetry.md)`,
+      `the boot PC (${boot.endpoint}) is not collecting: it does only while \`deno task stolos boot serve\` runs on it (optional; see docs/telemetry.md)`,
     );
   } else if (!found && !fleet.site?.bootServer) {
     p.note(

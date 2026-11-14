@@ -1,4 +1,4 @@
-// Spec 046: `archon fleet use <id>` remembers this checkout's fleet (in .git,
+// Spec 046: `stolos fleet use <id>` remembers this checkout's fleet (in .git,
 // never committed); --fleet still wins for one command.
 
 import { assert, assertEquals, assertStringIncludes } from "./assert.ts";
@@ -22,13 +22,13 @@ Deno.test("046: fleet use remembers the fleet for this checkout; --fleet wins on
     }
     await new Deno.Command("git", { args: ["init", "-q", "-b", "main", repo] }).output();
     const env = { ARCHON_REPO: repo };
-    const archon = (args: string[]) => sb.run("src/archon/main.ts", args, "", env);
+    const archon = (args: string[]) => sb.run("src/stolos/main.ts", args, "", env);
 
     let r = await archon(["validate"]);
     assert(r.code !== 0, r.out);
-    assertStringIncludes(r.out, "deno task archon fleet use <id> (one of: alpha, beta)");
+    assertStringIncludes(r.out, "deno task stolos fleet use <id> (one of: alpha, beta)");
     r = await archon([]);
-    assertStringIncludes(r.out, "deno task archon fleet use alpha");
+    assertStringIncludes(r.out, "deno task stolos fleet use alpha");
 
     r = await archon(["fleet", "use", "gamma"]);
     assertEquals(r.code, 1, r.out);

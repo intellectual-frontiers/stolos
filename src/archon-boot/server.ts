@@ -37,7 +37,7 @@ import { describe, type InstallerEvent } from "./progress.ts";
 import { installEnd, installProblem, installStep, served } from "./telemetry.ts";
 import { type Handler, listen } from "./http.ts";
 
-/** Options for the boot server (`deno task boot serve`). */
+/** Options for the boot server (`deno task stolos boot serve`). */
 export interface ServeOptions {
   /** The HTTP port the boot server listens on (GRUB, the installer and the servers reach it). */
   port: number;
@@ -203,7 +203,7 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
             o.emit({
               name: "boot.uri.unknown",
               address: from,
-              message: `Boot URI names ${name}, which is not a host (archon host add ${name})`,
+              message: `Boot URI names ${name}, which is not a host (stolos host add ${name})`,
               attrs: { uri_host: name },
             });
             return text("unknown host\n", 404);
@@ -336,7 +336,7 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
               attrs: { mac: menu[1], expected: h.mac!, code: "E051-MAC-MISMATCH" },
               message: `unknown machine ${
                 menu[1]
-              } network-booted while ${h.name} waits for ${h.mac}. If it is ${h.name}, its MAC was mistyped: deno task boot arm ${h.name} --mac-address ${
+              } network-booted while ${h.name} waits for ${h.mac}. If it is ${h.name}, its MAC was mistyped: deno task stolos boot arm ${h.name} --mac-address ${
                 menu[1]
               } (or --claim). Nothing was installed. (archon explain E051-MAC-MISMATCH)`,
             });
@@ -571,7 +571,7 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
           await saveTokens(tokens);
         }
         const passwordHash = await readSecret(SECRETS.adminPasswordHash);
-        if (!passwordHash) return text("no admin password: run archon fleet init\n", 500);
+        if (!passwordHash) return text("no admin password: run stolos fleet init\n", 500);
         const deployKey = await readSecret(SECRETS.deployKey(name));
         const hostKeys = await ensureHostKeys(name);
         milestones.delete(name); // a new install: show its milestones again

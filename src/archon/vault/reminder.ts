@@ -68,7 +68,8 @@ export async function remind(now = Date.now()): Promise<void> {
           "",
           `If ${pcName()} failed now, these would have to be recreated (docs/disaster-recovery.md).`,
         ].join("\n"),
-        todo: "On the boot machine: deno task boot vault backup, then move the ZIP somewhere safe",
+        todo:
+          "On the boot machine: deno task stolos vault backup, then move the ZIP somewhere safe",
         key: `vault:unbacked:${new Date(now).toISOString().slice(0, 10)}`,
       });
       if (r === "queued") {

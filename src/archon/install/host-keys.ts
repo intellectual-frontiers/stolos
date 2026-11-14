@@ -129,7 +129,7 @@ export function parseHostExport(text: string): HostExport {
 
 /**
  * `archon host-keys export` (spec 029): this host's SSH host keys and ops'
- * deploy key as JSON, for `deno task boot vault recover-host-keys <host>` when
+ * deploy key as JSON, for `deno task stolos vault recover-host-keys <host>` when
  * the boot machine lost its copies without a backup: the rebuilt boot machine
  * then holds the same identities, so nothing changes on GitHub or for SSH
  * clients. Root only (it elevates); never offered over MCP.

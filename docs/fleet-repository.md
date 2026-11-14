@@ -34,15 +34,16 @@ your Unix account name and an admin password; only the password's hash is kept, 
 never in Git. From then on use the pinned engine through the tasks:
 
 ```
-deno task archon keys setup       # your signing keys (see Signing below)
-deno task archon host add <name> --claim  # the first host (or --mac-address <mac>)
+deno task stolos keys setup       # your signing keys (see Signing below)
+deno task stolos host add <name> --claim  # the first host (or --mac-address <mac>)
 ```
 
-A second fleet in the same repository is one more `deno task archon fleet init <id>`. When the
+A second fleet in the same repository is one more `deno task stolos fleet init <id>`. When the
 repository holds more than one fleet, choose the one this checkout works on, once:
-`deno task archon fleet use lab` (remembered in `.git`, never committed; `fleet init` chooses the
+`deno task stolos fleet use lab` (remembered in `.git`, never committed; `fleet init` chooses the
 fleet it creates). For one command, `--fleet <id>` (or `ARCHON_FLEET`) chooses another, for example
-`deno task boot serve --fleet lab`. Files that already exist are never overwritten by `fleet init`.
+`deno task stolos boot serve --fleet lab`. Files that already exist are never overwritten by
+`fleet init`.
 
 ## Why the pin and the lock matter (security, not only tidiness)
 
@@ -50,7 +51,7 @@ Every host runs `archon` as root, so whatever code it runs can do anything on th
 comes from two places:
 
 1. **This repository.** A host only moves to a commit at the tip of `main` that is **signed** by one
-   of the fleet's signers (`fleets/<id>/signers.ts`, `archon signers`). Pushing an unsigned commit
+   of the fleet's signers (`fleets/<id>/signers.ts`, `stolos signers`). Pushing an unsigned commit
    does nothing: every host refuses it and says so in its journal.
 2. **The engine.** It is fetched from
    `https://raw.githubusercontent.com/intellectual-frontiers/stolos/<tag>/src/`. Your signature does
@@ -62,7 +63,7 @@ engine file they download differs from its hash (a moved tag, a compromised GitH
 altered file on the way), Deno refuses to run it. The host stops; it does not run unapproved code.
 
 So: **never delete `--frozen`, never hand-edit `deno.lock`, and never change the pin without
-`archon fleet upgrade`.** If something about the lock is in your way, the table at the end says what
+`stolos fleet upgrade`.** If something about the lock is in your way, the table at the end says what
 it means and what to do.
 
 ## The pin
@@ -100,7 +101,7 @@ signing key at hand (you will type its passphrase once).
 3. **Upgrade:**
 
    ```sh
-   deno task archon fleet upgrade v0.8.0
+   deno task stolos fleet upgrade v0.8.0
    ```
 
    It prints one line per step:
@@ -123,7 +124,7 @@ signing key at hand (you will type its passphrase once).
 5. **Watch the hosts move** (each one within 15 minutes, or at once with `archon update` on it):
 
    ```sh
-   deno task archon fleet status
+   deno task stolos fleet status
    ```
 
 To review before committing, add `--no-commit`: the files change, and you commit yourself with
@@ -171,7 +172,7 @@ jobs:
 **How the server is installed in the lab.** A private repository's runners have 8 GB of memory, too
 little for Ubuntu's network installer (it holds the whole installer image in memory) next to the
 runner itself. There, the lab starts the server from Ubuntu's cloud image and finishes it with
-`archon host bootstrap`, the path for a server installed by hand: the same first boot, fleet,
+`stolos host bootstrap`, the path for a server installed by hand: the same first boot, fleet,
 signers, and registered SSH host keys. The engine's own lab (public, 16 GB runners) runs the full
 network install, Secure Boot and all, on every engine release.
 
@@ -183,16 +184,16 @@ real machines. Check usage under Settings, Billing and licensing.
 
 ## Registration: who each host is
 
-`archon host add <host>` writes `fleets/<id>/hosts/<host>/registration.ts`: the host's SSH host
+`stolos host add <host>` writes `fleets/<id>/hosts/<host>/registration.ts`: the host's SSH host
 **public** keys (the private halves stay on the boot machine and in its backup ZIP), its network
 card, and its deploy key's fingerprint. Commit it with the host's `host.ts`.
 
 Your machine checks every server against those keys, so a first connection is never trusted blindly:
-`archon fleet status` and `archon fleet query` do it on their own, and once on each workstation (and
+`stolos fleet status` and `stolos fleet query` do it on their own, and once on each workstation (and
 again after a host is added) run
 
 ```sh
-deno task archon fleet trust     # writes the registered keys into your known_hosts
+deno task stolos fleet trust     # writes the registered keys into your known_hosts
 ```
 
 so plain `ssh <host>` and your MCP client check the same keys. If ssh ever says a host's key
@@ -206,7 +207,7 @@ turns one on. Record that decision in Git, from your workstation, so it is appro
 change and survives a re-install:
 
 ```sh
-deno task archon decide pg on --durable --host olympia     # or --ephemeral; off to turn it off
+deno task stolos decide pg on --durable --host olympia     # or --ephemeral; off to turn it off
 git commit -S -m "fcr decide: pg on on olympia" && git push
 ```
 
@@ -216,7 +217,7 @@ data is backed up, and the boot machine refuses to re-install a durable host unl
 `--confirm-destroy <host>` (Article 23); going from durable to ephemeral needs the same.
 
 Running `archon pg on` (and the others) on the host itself still works, but only that machine
-remembers it; it tells you the `archon decide` line that records it in Git.
+remembers it; it tells you the `stolos decide` line that records it in Git.
 
 ## Signing: your keys (spec 057)
 
@@ -226,17 +227,17 @@ nothing on your machine (an agent included) can sign without you. One command se
 can be run again at any time (it does only what is missing, and never overwrites a key):
 
 ```sh
-deno task archon keys setup     # keys, Git's signing (this repository only), signers.ts, the push check
-deno task archon keys           # every check, each with its fix; boot doctor shows the same
+deno task stolos keys setup     # keys, Git's signing (this repository only), signers.ts, the push check
+deno task stolos keys           # every check, each with its fix; boot doctor shows the same
 ```
 
 `keys setup` makes your **daily** key (`~/.ssh/fleet-signing`) and a **recovery** key in a
 `fleet-recovery` folder on your Desktop. Move that folder to an encrypted USB drive or a password
 manager, then delete it from the PC: the recovery key exists only to replace a lost daily key, so it
-must not be lost with it. Prove it still works twice a year (`archon keys` reminds you):
+must not be lost with it. Prove it still works twice a year (`stolos keys` reminds you):
 
 ```sh
-deno task archon keys check-recovery --key <the recovery key's private file>
+deno task stolos keys check-recovery --key <the recovery key's private file>
 ```
 
 The pre-push check `keys setup` installs refuses, on your PC, a push that servers would refuse (an
@@ -244,16 +245,16 @@ unsigned commit, or one signed by a key `signers.ts` does not list), with the fi
 
 | When                                                 | Run                                                                                 |
 | ---------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| a new PC, or anything is wrong                       | `deno task archon keys setup`                                                       |
-| a planned change of key (yearly, or a new PC)        | `deno task archon keys rotate` (approved by the current key), then `git push`       |
-| the daily key is lost                                | `deno task archon keys lost --recovery <file>` (approved by the recovery key), push |
+| a new PC, or anything is wrong                       | `deno task stolos keys setup`                                                       |
+| a planned change of key (yearly, or a new PC)        | `deno task stolos keys rotate` (approved by the current key), then `git push`       |
+| the daily key is lost                                | `deno task stolos keys lost --recovery <file>` (approved by the recovery key), push |
 | the daily key may have been copied (a stolen laptop) | the same, with `--stolen`                                                           |
 
 Each of them continues where it stopped if interrupted. A new person becomes a signer when someone
 already listed adds them and signs that commit:
 
 ```sh
-deno task archon signers add <name> --role daily --key <their .pub file>
+deno task stolos signers add <name> --role daily --key <their .pub file>
 git commit -m "<fleet> signers: add <name>" && git push
 ```
 
@@ -261,11 +262,11 @@ git commit -m "<fleet> signers: add <name>" && git push
 
 | What you see                                                                           | What it means                                                                          | What to do                                                                                                                                                                                          |
 | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `error: ... integrity check failed` or `lockfile is out of date` when running `archon` | an engine file differs from its hash in `deno.lock` (the tag moved, or a file changed) | Stop. Do not regenerate the lock to make it go away. Tell the engine's maintainers; compare the tag with the engine's history. Only after you know why: `archon fleet upgrade` to a known-good tag. |
+| `error: ... integrity check failed` or `lockfile is out of date` when running `archon` | an engine file differs from its hash in `deno.lock` (the tag moved, or a file changed) | Stop. Do not regenerate the lock to make it go away. Tell the engine's maintainers; compare the tag with the engine's history. Only after you know why: `stolos fleet upgrade` to a known-good tag. |
 | `Engine version: vX is not a released engine version`                                  | the tag does not exist, or is misspelled                                               | pick a tag from the engine's tags page                                                                                                                                                              |
 | `... own version.ts says ...: not a release`                                           | the tag does not point at a release commit                                             | pick another tag; tell the engine's maintainers                                                                                                                                                     |
 | `vX is older than the pinned vY`                                                       | going backwards                                                                        | if you mean it, add `--downgrade` (and say why in the commit)                                                                                                                                       |
 | `the repository has uncommitted changes`                                               | the upgrade must be a commit of its own                                                | commit or stash your other change first                                                                                                                                                             |
-| `Validate: fleet <id> does not validate with vX`                                       | the new engine expects something your model lacks                                      | run `ARCHON_FLEET=<id> deno task archon validate`, fix the model in its own commit, then upgrade again                                                                                              |
-| `Commit: the commit was not made`                                                      | signing failed or was cancelled                                                        | `deno task archon keys` shows what is missing in your setup                                                                                                                                         |
+| `Validate: fleet <id> does not validate with vX`                                       | the new engine expects something your model lacks                                      | run `ARCHON_FLEET=<id> deno task stolos validate`, fix the model in its own commit, then upgrade again                                                                                              |
+| `Commit: the commit was not made`                                                      | signing failed or was cancelled                                                        | `deno task stolos keys` shows what is missing in your setup                                                                                                                                         |
 | a host's journal says `refused ...: not signed` (`journalctl -t archon-approval`)      | someone pushed an unsigned tip                                                         | push a signed commit on top (`git commit -S --allow-empty -m "approve"` only if the unsigned work is right)                                                                                         |

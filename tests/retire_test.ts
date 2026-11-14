@@ -1,4 +1,4 @@
-// Spec 045: deno task boot retire.
+// Spec 045: deno task stolos boot retire.
 import { assert, assertEquals, assertStringIncludes } from "./assert.ts";
 import { publishedNames, retireRefusal } from "../src/archon-boot/retire.ts";
 import { deleteRecords } from "../src/archon/web/cloudflare.ts";

@@ -37,13 +37,14 @@ export function parseTier(s: string | undefined): McpTier {
 
 /** Listed: within the limit, or reducible to read with its read-only flag. */
 export function listed(c: Command, limit: McpTier): boolean {
-  if (c.noMcp) return false;
+  // Spec 059: an agent reaches machines; fleet commands (stolos) run on your PC.
+  if (c.noMcp || c.place === "pc") return false;
   return RANK[c.tier] <= RANK[limit] || !!c.readOnlyWith;
 }
 
 /** Allowed for these arguments (apply with check: read; apply without: mutate). */
 export function allowed(c: Command, args: Record<string, unknown>, limit: McpTier): boolean {
-  return !c.noMcp && RANK[effectiveTier(c, args as Parsed)] <= RANK[limit];
+  return !c.noMcp && c.place !== "pc" && RANK[effectiveTier(c, args as Parsed)] <= RANK[limit];
 }
 
 /** An MCP tool definition, as `tools/list` returns it. */

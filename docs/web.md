@@ -20,8 +20,8 @@ In Cloudflare: My Profile > API Tokens > Create Token > "Edit zone DNS" template
 Then on the boot machine:
 
 ```powershell
-deno task boot web-setup          # paste it (hidden); checked against the zone; stored on this PC only
-deno task boot web-push alpha    # a running server; new installs get it by themselves
+deno task stolos boot web-setup          # paste it (hidden); checked against the zone; stored on this PC only
+deno task stolos boot web-push alpha    # a running server; new installs get it by themselves
 ```
 
 Each server then keeps two records in Cloudflare, `alpha.lab.example.net` and
@@ -30,11 +30,11 @@ Encrypt certificate for both through Cloudflare's DNS challenge. No reserved IP 
 records follow the address the server has now (its default route's source). `archon web dns-check`
 compares it 30 seconds after boot and every 5 minutes, and only a new address (a new DHCP lease)
 reaches Cloudflare, journaled (`journalctl -t archon-web`) and mailed. Back the token up with the
-other secrets: `deno task boot vault backup`.
+other secrets: `deno task stolos vault backup`.
 
 ## Reinstalls keep the certificate
 
-`deno task boot reinstall <host>` copies the server's Let's Encrypt store (Traefik's
+`deno task stolos boot reinstall <host>` copies the server's Let's Encrypt store (Traefik's
 `/var/lib/traefik/acme.json`) to the boot machine before erasing it, and the new install puts it
 back before Traefik first starts: the same trusted certificate from the first minute, and no new
 request to Let's Encrypt, which allows only 5 identical certificates a week. The reinstall's output,
@@ -65,7 +65,7 @@ Let's Encrypt as usual.
   `https://whoami.alpha.lab.example.net` answers. For a port other than the image's first exposed
   one, add `--label traefik.http.services.whoami.loadbalancer.server.port=8080`.
 
-Then `deno task archon build`, commit, push, and `archon update` on the server (or wait for the
+Then `deno task stolos build`, commit, push, and `archon update` on the server (or wait for the
 reconcile timer). The welcome page lists ports that listen but are not published, with the line that
 would publish each.
 

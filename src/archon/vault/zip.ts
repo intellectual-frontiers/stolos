@@ -1,5 +1,5 @@
 /**
- * Spec 056: the boot machine's backup is one ZIP file. `deno task boot vault
+ * Spec 056: the boot machine's backup is one ZIP file. `deno task stolos vault
  * backup` writes it into the backup folder where archon keeps its data
  * (Windows: `%LOCALAPPDATA%\archon\backup`; Linux: `~/.local/share/archon/backup`),
  * reads it back to check every file, and tells you to put it wherever you keep
@@ -116,15 +116,15 @@ On the new or rebuilt PC (Windows, in PowerShell):
  5. Put your signing key back, then let archon set up Git's signing (it keeps the key):
         Copy-Item <unzipped>\\signing\\* $HOME\\.ssh\\
         cd C:\\fleet
-        deno task archon keys setup
+        deno task stolos keys setup
  6. Delete the unzipped folder (the ZIP itself stays wherever you keep it safe).
  7. Check, in the fleet repository:
-        deno task boot vault status      every secret, back where it belongs
-        deno task archon                 where you are, and what next
-        deno task archon keys            your signing works
+        deno task stolos vault status      every secret, back where it belongs
+        deno task stolos                 where you are, and what next
+        deno task stolos keys            your signing works
 
 If your daily signing key itself was lost (not in any backup), use your recovery key
-(kept apart) to add a new daily key: deno task archon signers add ... in a commit
+(kept apart) to add a new daily key: deno task stolos signers add ... in a commit
 signed with the recovery key. See the engine's docs/disaster-recovery.md.
 `;
 }

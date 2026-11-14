@@ -1,4 +1,4 @@
-// Written by archon host add (spec 047): who this host is. Public facts only.
+// Written by stolos host add (spec 047): who this host is. Public facts only.
 // Its SSH host public keys are what operators' machines trust (known_hosts.auto).
 import type { HostRegistration } from "@stolos/archon/model/types.ts";
 

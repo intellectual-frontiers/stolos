@@ -1,9 +1,9 @@
 /**
  * The boot machine's side of outbound mail (specs 025, 027):
  *
- *   deno task boot mail-setup           store the Cloudflare API token (once)
- *   deno task boot mail-push <host>     give a running host the token over SSH
- *   deno task boot notify --subject ... email the mailbox from this PC (also: notify test | status)
+ *   deno task stolos boot mail-setup           store the Cloudflare API token (once)
+ *   deno task stolos boot mail-push <host>     give a running host the token over SSH
+ *   deno task stolos boot notify --subject ... email the mailbox from this PC (also: notify test | status)
  *
  * The token lives only in this PC's secrets folder and, on each server, in
  * Postfix's /etc/postfix/sasl_passwd (root only). It never enters the
@@ -39,7 +39,7 @@ function opts(args: string[], name: string): string[] {
 }
 
 /**
- * `deno task boot mail-setup`: explain the one-time Cloudflare setup, read the
+ * `deno task stolos boot mail-setup`: explain the one-time Cloudflare setup, read the
  * API token without echo, test it with an SMTP login (nothing is sent), store
  * it in this PC's secrets, then run the doctor's email checks. Returns the exit
  * code (1 on a missing mail setting, a bad token, or a failed check).
@@ -90,7 +90,7 @@ export async function mailSetup(): Promise<number> {
   console.log([
     ``,
     `Cloudflare accepted the token. Stored in ${SECRETS.mail} (this PC only, never in git).`,
-    `Servers get it at their next install, or now: deno task boot mail-push <host>.`,
+    `Servers get it at their next install, or now: deno task stolos boot mail-push <host>.`,
     `Anyone with it can send mail from ${domain}. To revoke it: delete "archon mail" where you`,
     `created it (Account API Tokens or My Profile > API Tokens); then run this again and mail-push each server.`,
     ``,
@@ -100,12 +100,12 @@ export async function mailSetup(): Promise<number> {
   const { emailChecks } = await import("../archon/doctor/email.ts");
   const { bootSite } = await import("../archon/notify/notify.ts");
   const p = ui.phase("Email");
-  await emailChecks(bootSite(fleet), p, "deno task boot mail-setup", { send: "mail-setup" });
+  await emailChecks(bootSite(fleet), p, "deno task stolos boot mail-setup", { send: "mail-setup" });
   return p.level === "fail" ? 1 : 0;
 }
 
 /**
- * `deno task boot mail-push <host>`: give a running host the stored mail token
+ * `deno task stolos boot mail-push <host>`: give a running host the stored mail token
  * over SSH (on stdin to `archon mail credential`). Returns ssh's exit code, 2
  * for an unknown host, or 1 when no token is stored.
  */
@@ -114,7 +114,7 @@ export async function mailPush(name: string | undefined): Promise<number> {
   const hosts = await loadServers();
   if (!name || !hosts.some((h) => h.name === name)) {
     console.error(
-      `usage: deno task boot mail-push <host>  (known: ${
+      `usage: deno task stolos boot mail-push <host>  (known: ${
         hosts.map((h) => h.name).join(", ") || "none"
       })`,
     );
@@ -122,7 +122,7 @@ export async function mailPush(name: string | undefined): Promise<number> {
   }
   const cred = await readSecret(SECRETS.mail);
   if (!cred) {
-    console.error("No token on this PC yet: deno task boot mail-setup");
+    console.error("No token on this PC yet: deno task stolos boot mail-setup");
     return 1;
   }
   const target = `${fleet.admin.user}@${name}`;
@@ -148,15 +148,15 @@ export async function mailPush(name: string | undefined): Promise<number> {
   return code;
 }
 
-/** deno task boot notify ... : the same options as archon notify send, or test / status. */
+/** deno task stolos boot notify ... : the same options as archon notify send, or test / status. */
 export async function bootNotify(args: string[]): Promise<number> {
   if (args[0] === "test") return await notifyTest();
   if (args[0] === "status") return await notifyStatus({ check: args.includes("--check") });
   const subject = opt(args, "subject");
   if (!subject) {
     console.error(
-      "usage: deno task boot notify --subject <s> [--body <text> | --body-file <f>] [--attach <file>...] [--level info|warn|fail] [--key <k>]\n" +
-        "       deno task boot notify test | status",
+      "usage: deno task stolos boot notify --subject <s> [--body <text> | --body-file <f>] [--attach <file>...] [--level info|warn|fail] [--key <k>]\n" +
+        "       deno task stolos boot notify test | status",
     );
     return 2;
   }

@@ -2,23 +2,23 @@
  * archon-boot (spec 004): the boot machine's side of a zero-touch install.
  * Runs with Deno on Windows or Linux:
  *
- *   deno task boot serve [--port 8080]   serve PXE (TFTP, UDP 69), UEFI HTTP Boot, and installs
- *   deno task boot reinstall <host> [--confirm-destroy <host>]
+ *   deno task stolos boot serve [--port 8080]   serve PXE (TFTP, UDP 69), UEFI HTTP Boot, and installs
+ *   deno task stolos boot reinstall <host> [--confirm-destroy <host>]
  *                                        push its state, arm it, network-boot it once (over SSH);
  *                                        a durable host needs --confirm-destroy (Article 23)
- *   deno task boot retire <host> --confirm-destroy <host> [--no-push]
+ *   deno task stolos boot retire <host> --confirm-destroy <host> [--no-push]
  *                                        a server leaves the fleet, committed and pushed (spec 045)
- *   deno task boot arm <host> --claim | --mac-address <mac> [--confirm-destroy <host>]
+ *   deno task stolos boot arm <host> --claim | --mac-address <mac> [--confirm-destroy <host>]
  *                                        allow one (re)install of a host
- *   deno task boot status                hosts, Boot URIs, MACs, armed or not
- *   deno task boot doctor                check this boot machine, with a fix for each problem
- *   deno task boot observe               recent installs from the boot server's own telemetry
- *   deno task boot vault <sub>           back up and restore this PC's secrets (spec 029)
- *   deno task boot mail-setup            store the mail relay's token (Cloudflare, spec 027)
- *   deno task boot mail-push <host>      give a running host that token over SSH
- *   deno task boot web-setup             store the Cloudflare DNS token (HTTPS, spec 032)
- *   deno task boot web-push <host>       give a running server that token over SSH
- *   deno task boot notify --subject ...  email the mailbox from this PC (also: notify test | status)
+ *   deno task stolos boot status                hosts, Boot URIs, MACs, armed or not
+ *   deno task stolos boot doctor                check this boot machine, with a fix for each problem
+ *   deno task stolos boot observe               recent installs from the boot server's own telemetry
+ *   deno task stolos vault <sub>           back up and restore this PC's secrets (spec 029)
+ *   deno task stolos boot mail-setup            store the mail relay's token (Cloudflare, spec 027)
+ *   deno task stolos boot mail-push <host>      give a running host that token over SSH
+ *   deno task stolos boot web-setup             store the Cloudflare DNS token (HTTPS, spec 032)
+ *   deno task stolos boot web-push <host>       give a running server that token over SSH
+ *   deno task stolos boot notify --subject ...  email the mailbox from this PC (also: notify test | status)
  *
  * @module
  */
@@ -73,7 +73,7 @@ async function main(args: string[]): Promise<number> {
     const name = args[1];
     if (!name || !(await loadServers()).some((h) => h.name === name)) {
       console.error(
-        `usage: deno task boot arm <host> --claim | --mac-address <mac> [--confirm-destroy <host>]  (known: ${
+        `usage: deno task stolos boot arm <host> --claim | --mac-address <mac> [--confirm-destroy <host>]  (known: ${
           (await loadServers()).map((h) => h.name).join(", ") || "none"
         })`,
       );
@@ -102,7 +102,7 @@ async function main(args: string[]): Promise<number> {
     const how = recognition(name, {
       claim: args.includes("--claim"),
       macAddress: opt(args, "mac-address"),
-      command: "deno task boot arm",
+      command: "deno task stolos boot arm",
     }, reg);
     if ("refusal" in how) {
       console.error(how.refusal);
@@ -124,7 +124,7 @@ async function main(args: string[]): Promise<number> {
     console.log(
       `${name} is armed for one install: ${
         describeRecognition(name, how)
-      }. Power it on while 'deno task boot serve' runs.`,
+      }. Power it on while 'deno task stolos boot serve' runs.`,
     );
     if (confirmed) {
       console.log(
@@ -159,7 +159,7 @@ async function main(args: string[]): Promise<number> {
   if (cmd === "vault") {
     // Spec 029: the vault commands live in the one registry (Article 6).
     const { main: archon } = await import("../archon/main.ts");
-    return await archon(["vault", ...args.slice(1)]);
+    return await archon(["vault", ...args.slice(1)], "pc");
   }
   if (cmd === "web-setup") {
     const { webSetup } = await import("./web.ts");
@@ -189,7 +189,7 @@ async function main(args: string[]): Promise<number> {
     const { doctor } = await import("./doctor.ts");
     return await doctor({
       port: Number(opt(args, "port") ?? 8080),
-      send: args.includes("--send") ? "deno task boot doctor --send" : undefined,
+      send: args.includes("--send") ? "deno task stolos boot doctor --send" : undefined,
     });
   }
   if (cmd === "status") {
@@ -220,14 +220,14 @@ async function main(args: string[]): Promise<number> {
   }
   if (cmd !== "serve") {
     console.error(
-      "usage: deno task boot serve [--address <this-pc>] [--port 8080] [--tftp-port 69 | --no-tftp] [--stall-watch]\n" +
-        "       deno task boot reinstall <host> [--confirm-destroy <host>]\n" +
-        "       deno task boot arm <host> --claim | --mac-address <mac> [--confirm-destroy <host>]\n" +
-        "       deno task boot retire <host> --confirm-destroy <host> [--no-push]\n" +
-        "       deno task boot status | doctor | observe [--last 5]\n" +
-        "       deno task boot vault status | backup | restore | list | recover-host-keys <host>\n" +
-        "       deno task boot mail-setup | mail-push <host> | web-setup | web-push <host>\n" +
-        "       deno task boot notify --subject <s> ... | notify test | status",
+      "usage: deno task stolos boot serve [--address <this-pc>] [--port 8080] [--tftp-port 69 | --no-tftp] [--stall-watch]\n" +
+        "       deno task stolos boot reinstall <host> [--confirm-destroy <host>]\n" +
+        "       deno task stolos boot arm <host> --claim | --mac-address <mac> [--confirm-destroy <host>]\n" +
+        "       deno task stolos boot retire <host> --confirm-destroy <host> [--no-push]\n" +
+        "       deno task stolos boot status | doctor | observe [--last 5]\n" +
+        "       deno task stolos vault status | backup | restore | list | recover-host-keys <host>\n" +
+        "       deno task stolos boot mail-setup | mail-push <host> | web-setup | web-push <host>\n" +
+        "       deno task stolos boot notify --subject <s> ... | notify test | status",
     );
     return 2;
   }
@@ -362,6 +362,13 @@ async function main(args: string[]): Promise<number> {
  * entry file, which imports this one through `@stolos/` (spec 046-engine-instance).
  */
 export async function run(argv: string[] = Deno.args): Promise<never> {
+  const code = await bootMain(argv);
+  ui.printPanel(); // spec 029: a secret changed and is not backed up yet
+  Deno.exit(code);
+}
+
+/** `stolos boot <sub>` (spec 059): the boot server's commands; returns the exit code. */
+export async function bootMain(argv: string[]): Promise<number> {
   // Spec 046: --fleet <id> (anywhere) chooses the fleet of this repository.
   const i = argv.findIndex((a) => a === "--fleet" || a.startsWith("--fleet="));
   if (i >= 0) {
@@ -372,9 +379,7 @@ export async function run(argv: string[] = Deno.args): Promise<never> {
       resetRoots();
     }
   }
-  const code = await main(argv);
-  ui.printPanel(); // spec 029: a secret changed and is not backed up yet
-  Deno.exit(code);
+  return await main(argv);
 }
 
 if (import.meta.main) await run();

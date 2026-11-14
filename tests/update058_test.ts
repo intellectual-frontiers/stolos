@@ -54,7 +54,7 @@ Deno.test("058: update pulls, warns about an unsigned tip, and is safe to run ag
     await sh(sb.home, "git", "clone", "-q", origin, mine);
 
     const archon = (args: string[]) =>
-      sb.run("src/archon/main.ts", args, "", { ...env, ARCHON_REPO: mine, ARCHON_FLEET: "lab" });
+      sb.run("src/stolos/main.ts", args, "", { ...env, ARCHON_REPO: mine, ARCHON_FLEET: "lab" });
     let r = await archon(["update", "--no-doctor"]);
     assertEquals(r.code, 0, r.out);
     assertStringIncludes(r.out, "up to date");

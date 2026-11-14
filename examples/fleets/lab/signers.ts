@@ -1,5 +1,5 @@
-// Written by archon signers (spec 047): who may approve this fleet's changes.
-// Change it with archon signers add/remove, in a commit signed by a key below.
+// Written by stolos signers (spec 047): who may approve this fleet's changes.
+// Change it with stolos signers add/remove, in a commit signed by a key below.
 import type { SignerDef } from "@stolos/archon/model/types.ts";
 
 export default [

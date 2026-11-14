@@ -464,7 +464,7 @@ export async function doctor(
   await emailChecks(
     hostSite(fleet, host.name, host.kind === "workstation" ? "workstation" : "server", ipv6Model),
     em,
-    `on the boot machine: deno task boot mail-push ${host.name}`,
+    `on the boot machine: deno task stolos boot mail-push ${host.name}`,
     { send: o.send },
   );
 

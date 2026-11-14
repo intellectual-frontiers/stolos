@@ -5,8 +5,8 @@
 Say how its machine will be recognized when it network-boots, with exactly one of:
 
 ```powershell
-deno task archon host add alpha --claim                          # the next unknown machine to network-boot in 30 minutes becomes alpha
-deno task archon host add alpha --mac-address 1c:83:41:30:25:f2  # only the machine with this network card
+deno task stolos host add alpha --claim                          # the next unknown machine to network-boot in 30 minutes becomes alpha
+deno task stolos host add alpha --mac-address 1c:83:41:30:25:f2  # only the machine with this network card
 ```
 
 There is no default: without either, `host add` refuses and shows both. `--claim` needs nothing
@@ -18,7 +18,7 @@ This writes `fleets/<fleet>/hosts/alpha/host.ts` and `registration.ts`, creates 
 key (registered on this repository with your `gh` login; the private half stays on the boot machine)
 and its SSH host keys (its identity, kept across re-installs), and arms one install. It then builds,
 commits, and pushes the new model (`--no-push` leaves it), because hosts install from GitHub, and
-`deno task boot doctor` flags host changes that are not pushed yet.
+`deno task stolos boot doctor` flags host changes that are not pushed yet.
 
 When it installs, the MAC its machine reported is written to `registration.ts`
 (`macSource: "installed"`): commit and push it, signed. From then on `boot arm alpha` (a re-install)
@@ -32,8 +32,8 @@ the boot window says what it found and the command that lets it go on. When you 
 be erased, say so up front, typed by you (never an agent), for this one install:
 
 ```powershell
-deno task archon host add alpha --claim --confirm-destroy alpha
-deno task boot arm alpha --mac-address 1c:83:41:30:25:f2 --confirm-destroy alpha
+deno task stolos host add alpha --claim --confirm-destroy alpha
+deno task stolos boot arm alpha --mac-address 1c:83:41:30:25:f2 --confirm-destroy alpha
 ```
 
 With `--claim`, that means the next unknown machine to network-boot is erased whatever it holds.
@@ -44,20 +44,20 @@ With `--claim`, that means the next unknown machine to network-boot is erased wh
 installer downloads the whole installer image (about 3 GB) into memory and runs from there. With
 less, it stalls before partitioning, with nothing on the boot server's screen after "installer image
 (whole)". (Found by the end-to-end lab: machines with 5.75 and 7 GiB stalled there; 8 GiB installs.)
-`deno task boot serve --stall-watch` names such a machine after 6 minutes; it is off by default,
-because it guesses the machine from DHCP leases and is a hint, not a guarantee. For a smaller
-machine, install Ubuntu by hand, then bootstrap (below).
+`deno task stolos boot serve --stall-watch` names such a machine after 6 minutes; it is off by
+default, because it guesses the machine from DHCP leases and is a hint, not a guarantee. For a
+smaller machine, install Ubuntu by hand, then bootstrap (below).
 
 1. Start the boot server on the PC and leave it running ([boot machine](boot-machine.md)):
 
    ```powershell
-   deno task boot serve
+   deno task stolos boot serve
    ```
 
 2. In a second window, just before you power the server on:
 
    ```powershell
-   deno task boot arm alpha --claim
+   deno task stolos boot arm alpha --claim
    ```
 
    For the next 30 minutes, the first unrecognized machine that network-boots becomes alpha, and the
@@ -74,7 +74,7 @@ machine, install Ubuntu by hand, then bootstrap (below).
 4. Watch the boot server's window. With no further input the server installs, reboots, runs its
    first boot, and reports `alpha: ✓ Ready: 45/45 checks`, then `alpha: ready. Next:` with how to
    connect, its Cockpit address, and how to observe it (also later:
-   `deno task archon fleet status`). The [install timeline](install-timeline.md) lists every step.
+   `deno task stolos fleet status`). The [install timeline](install-timeline.md) lists every step.
    Then:
 
    ```powershell
@@ -101,7 +101,7 @@ host is lost (copy off your own data first): home directories are not kept. A **
 same goes for a host that cannot be asked. With the boot server running:
 
 ```powershell
-deno task boot reinstall alpha
+deno task stolos boot reinstall alpha
 ```
 
 It:
@@ -120,16 +120,17 @@ Then watch the boot server's window until `alpha: ✓ Ready`. alpha comes back w
 identity, so `ssh alpha` simply works. If alpha does not answer over SSH (powered off, hung), the
 command arms it anyway and tells you to power it on and pick network boot once from its boot menu.
 
-By hand, the same is: `deno task boot arm alpha` on the PC (alpha installed before, so its MAC is
-registered), then `archon reboot --netboot` on the host (or power it on and press F7). On new
-hardware for an existing host name, use `deno task boot arm alpha --claim`.
+By hand, the same is: `deno task stolos boot arm alpha` on the PC (alpha installed before, so its
+MAC is registered), then `archon reboot --netboot` on the host (or power it on and press F7). On new
+hardware for an existing host name, use `deno task stolos boot arm alpha --claim`.
 
 ## HTTP Boot instead of PXE
 
 Firmware with a _Boot URI_ field can boot over HTTP instead: set it to the host's own URI, for
-example `http://10.0.1.157:8080/boot/alpha/bootx64.efi` (`deno task boot status` prints it). The URI
-names the host, so no claim is needed. Firmware without the field can get the URL from DHCP (vendor
-class `HTTPClient`: option 60 `HTTPClient`, option 67 the URI); PXE is simpler on most routers.
+example `http://10.0.1.157:8080/boot/alpha/bootx64.efi` (`deno task stolos boot status` prints it).
+The URI names the host, so no claim is needed. Firmware without the field can get the URL from DHCP
+(vendor class `HTTPClient`: option 60 `HTTPClient`, option 67 the URI); PXE is simpler on most
+routers.
 
 ## Install Ubuntu by hand, then bootstrap
 
@@ -137,7 +138,7 @@ If a server cannot network-boot (or you would rather install from a USB stick), 
 Ubuntu Server (or Ubuntu's cloud image) and let Archon finish it over SSH. The result is the same as
 a network install: the host gets its fleet, the signers it trusts, and the SSH host keys registered
 for it in Git (`registration.ts`), which replace the ones its installer made. Your first `ssh` to it
-by address asks once to trust the installer's keys; after the bootstrap, `archon fleet trust` puts
+by address asks once to trust the installer's keys; after the bootstrap, `stolos fleet trust` puts
 the registered ones in your known_hosts.
 
 **a. Get Ubuntu Server 26.04 LTS** from <https://ubuntu.com/download/server> (or
@@ -169,12 +170,12 @@ Remove the USB stick, reboot, and note the server's address (`ip -br addr` at it
 **c. Add the host** if you have not (`host add`, commit, push), then **bootstrap it** from the PC:
 
 ```powershell
-deno task archon host bootstrap alpha --ssh alice@10.0.30.57
+deno task stolos host bootstrap alpha --ssh alice@10.0.30.57
 ```
 
 It copies alpha' deploy key and first-boot files over SSH and runs the same first boot a network
 install runs (it asks for your password once, for sudo). Later re-installs can use
-`deno task boot reinstall alpha` (network boot) like any other host.
+`deno task stolos boot reinstall alpha` (network boot) like any other host.
 
 ## Guests
 
@@ -188,7 +189,7 @@ When a server leaves the fleet for good (the same hardware may come back as a ne
 boot machine:
 
 ```powershell
-deno task boot retire alpha --confirm-destroy alpha
+deno task stolos boot retire alpha --confirm-destroy alpha
 ```
 
 Without `--confirm-destroy alpha` it only says what alpha holds (durable or ephemeral, asked over
@@ -201,10 +202,10 @@ SSH) and changes nothing. With it:
 4. `fleets/<fleet>/hosts/alpha/host.ts` and `archon.sql alpha/` leave this checkout.
 
 5. the removal is built, committed (`045-retire: retire alpha`), and pushed; only these paths and
-   what `archon build` renders from them (`.mcp.json`, the agent's permissions, the man pages) are
+   what `stolos build` renders from them (`.mcp.json`, the agent's permissions, the man pages) are
    committed. `--no-push` leaves it for you, and running the same command again later finishes it.
 
 Then remove alpha's local DNS record in the router and its line in `fleets/<fleet>/site.ts` (the
-router first, Article 21), and back up again (`deno task boot vault backup`). The machine itself is
-not touched: power it off, or install it as a new host with
-`deno task archon host add <name> --claim`.
+router first, Article 21), and back up again (`deno task stolos vault backup`). The machine itself
+is not touched: power it off, or install it as a new host with
+`deno task stolos host add <name> --claim`.

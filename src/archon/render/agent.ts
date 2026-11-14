@@ -33,7 +33,7 @@ export function mcpServers(hosts: HostDef[], fleet: string): McpServer[] {
 /**
  * .mcp.json: each server over SSH. The server forces `archon mcp` for ops'
  * keys, so no command is sent. The workstation's own commands are run from
- * the shell (archon on Ubuntu, deno task archon on Windows), not over MCP, so
+ * the shell (archon on Ubuntu, deno task stolos on Windows), not over MCP, so
  * the same file works on both.
  */
 export function renderMcpJson(

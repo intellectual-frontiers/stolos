@@ -87,14 +87,14 @@ export function validateFleet(fleet: FleetDef, hosts: HostDef[]): Problem[] {
     add(
       "fleet.admin.github.email",
       "the commit address is not the GitHub noreply address",
-      "re-run archon fleet init",
+      "re-run stolos fleet init",
     );
   }
   if (!gh.sshKeys.length) {
     add(
       "fleet.admin.github.sshKeys",
       "no SSH public keys: you could not log in after install",
-      `add a key at https://github.com/settings/keys, then re-run archon fleet init`,
+      `add a key at https://github.com/settings/keys, then re-run stolos fleet init`,
     );
   }
   for (const k of gh.sshKeys) {
@@ -102,7 +102,7 @@ export function validateFleet(fleet: FleetDef, hosts: HostDef[]): Problem[] {
       add(
         "fleet.admin.github.sshKeys",
         `not an SSH public key: ${k.slice(0, 40)}...`,
-        "re-run archon fleet init",
+        "re-run stolos fleet init",
       );
     }
   }

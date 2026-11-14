@@ -1,5 +1,5 @@
 /**
- * `deno task boot reinstall <host>` (spec 004): one command from the boot
+ * `deno task stolos boot reinstall <host>` (spec 004): one command from the boot
  * machine re-installs a running host, with no one at its console:
  *   1. the boot server must be running (it serves the install);
  *   2. (spec 048: the host keeps its own records; nothing is pushed);
@@ -192,7 +192,7 @@ export function recordedData(
 const KEY_CHANGED = /REMOTE HOST IDENTIFICATION HAS CHANGED|Host key verification failed/;
 
 /**
- * `deno task boot reinstall <host>`: re-install a running host over the
+ * `deno task stolos boot reinstall <host>`: re-install a running host over the
  * network in the steps the module describes. `port` is the boot server's HTTP
  * port and `confirmDestroy` is the repeated name a durable host needs. A host
  * that cannot be asked needs it too. Returns the exit code (2 for an
@@ -205,7 +205,7 @@ export async function reinstall(
   const hosts = await loadServers();
   if (!name || !hosts.some((h) => h.name === name)) {
     console.error(
-      `usage: deno task boot reinstall <host> [--confirm-destroy <host>]  (known: ${
+      `usage: deno task stolos boot reinstall <host> [--confirm-destroy <host>]  (known: ${
         hosts.map((h) => h.name).join(", ") || "none"
       })`,
     );
@@ -219,7 +219,7 @@ export async function reinstall(
   if (!up) {
     b.fail(
       `the boot server is not running on port ${o.port}`,
-      "start it in another window: deno task boot serve (leave it running), then run this again",
+      "start it in another window: deno task stolos boot serve (leave it running), then run this again",
     );
     return ui.finish();
   }
@@ -302,7 +302,7 @@ export async function reinstall(
     event: `↻ reinstall of ${name} started`,
     level: "warn",
     what:
-      `deno task boot reinstall ${name}: its state was pushed, it is armed and rebooting from the network. Its disk is erased and Ubuntu installed again.\n\n${certificate}.`,
+      `deno task stolos boot reinstall ${name}: its state was pushed, it is armed and rebooting from the network. Its disk is erased and Ubuntu installed again.\n\n${certificate}.`,
     todo: `Nothing, unless no "${name}: ✓ Ready" message follows within about 30 minutes.`,
     key: `reinstall:${name}:${new Date().toISOString().slice(0, 13)}`,
   });
@@ -337,7 +337,7 @@ export async function reinstall(
   return ui.finish({
     next: [
       `watch the boot server window: installer steps, first boot, then "${name}: ready. Next:" with how to reach and observe it`,
-      "or later: deno task archon fleet status",
+      "or later: deno task stolos fleet status",
     ],
   });
 }

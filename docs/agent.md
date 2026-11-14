@@ -20,7 +20,7 @@ C:\archon (or /srv/archon)   claude                      sshd
   `restrict` (no shell, no forwarding, no other command). The tier is `fleet.mcp.maxTier` in
   `fleets/<fleet>/fleet.ts`: `read`, `repo`, or `mutate` (the default). Destructive commands are
   never served. A tool above the tier is not listed, and a call to it is refused.
-- **The client asks first.** `archon build` renders `.claude/settings.json`: read tools run freely,
+- **The client asks first.** `stolos build` renders `.claude/settings.json`: read tools run freely,
   repo and mutating tools ask you, anything the server would refuse is denied.
 - **Everything is recorded.** Each call is in the server's journal (`journalctl -t archon-mcp`),
   with your workstation's address, and in its provenance (agent `mcp`). Each new SSH session as ops
@@ -53,7 +53,7 @@ Ask in plain words; the agent picks the tools:
 - "Read today's daily report for alpha and tell me what needs attention."
 - "Why did the reconcile timer fail last night on alpha?" (`archon_observe`, the journal)
 - "Add ripgrep to the tools" (the spec loop in [`AGENTS.md`](../AGENTS.md): a spec, the model,
-  `deno task archon build`, a commit you approve, then `archon_update` on each server, or the
+  `deno task stolos build`, a commit you approve, then `archon_update` on each server, or the
   reconcile timer)
 
 Model changes happen in your checkout and reach the servers through `main`; MCP is for looking at
@@ -68,7 +68,7 @@ SSH as the admin.
 | `repo`              | also change the repository (signers, hosts)                   |
 | `mutate` (default)  | also converge, restart, update, back up (each asks you first) |
 
-Change it in `fleets/<fleet>/fleet.ts`, then `deno task archon build`, commit, and push; every
+Change it in `fleets/<fleet>/fleet.ts`, then `deno task stolos build`, commit, and push; every
 server rewrites ops' keys at its next converge.
 
 ## Another agent, or a local model

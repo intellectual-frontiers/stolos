@@ -14,7 +14,7 @@ async function requireHost(name: string): Promise<HostDef> {
   const { loadHosts } = await import("../model/load.ts");
   const h = (await loadHosts()).find((x) => x.name === name);
   if (!h) {
-    throw new Error(`no host model named '${name}': add it with archon host add, or pass --host`);
+    throw new Error(`no host model named '${name}': add it with stolos host add, or pass --host`);
   }
   return h;
 }
@@ -65,7 +65,7 @@ export const COMMANDS: Command[] = [
       required: true,
       description: "The fleet: a folder of fleets/.",
     }],
-    examples: [{ cmd: "deno task archon fleet use fcr", text: "Work on fleets/fcr from now on." }],
+    examples: [{ cmd: "deno task stolos fleet use fcr", text: "Work on fleets/fcr from now on." }],
     async run(a) {
       const { fleetUse } = await import("../fleet/use.ts");
       return await fleetUse(a.id as string);
@@ -110,10 +110,10 @@ export const COMMANDS: Command[] = [
       },
     ],
     examples: [{
-      cmd: "deno task archon fleet init lab",
+      cmd: "deno task stolos fleet init lab",
       text: "Start the fleet fleets/lab/ (and, in an empty repository, the repository's files).",
     }, {
-      cmd: "deno task archon fleet init",
+      cmd: "deno task stolos fleet init",
       text: "On a rebuilt boot machine: store the admin password hash again; the fleet is kept.",
     }],
     async run(a) {
@@ -138,7 +138,7 @@ export const COMMANDS: Command[] = [
     tier: "read",
     operation: true,
     args: [],
-    examples: [{ cmd: "deno task archon fleet status", text: "On the boot machine." }],
+    examples: [{ cmd: "deno task stolos fleet status", text: "On the boot machine." }],
     async run() {
       const { fleetStatus } = await import("../observe/fleet-status.ts");
       return await fleetStatus();
@@ -191,10 +191,10 @@ export const COMMANDS: Command[] = [
       },
     ],
     examples: [{
-      cmd: "deno task archon host add alpha --claim",
+      cmd: "deno task stolos host add alpha --claim",
       text: "Add alpha; the next unknown machine to network-boot in 30 minutes becomes alpha.",
     }, {
-      cmd: "deno task archon host add alpha --mac-address 52:54:00:12:34:56",
+      cmd: "deno task stolos host add alpha --mac-address 52:54:00:12:34:56",
       text: "Add alpha as the machine with that network card.",
     }],
     async run(a) {
@@ -214,7 +214,8 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "where",
-    summary: "Where you are, and the one thing to do next (also: archon, with no arguments)",
+    summary:
+      "Where you are, and the one thing to do next (also: deno task stolos, with no arguments)",
     description:
       `In a fleet repository (the boot machine, a workstation's checkout): every step from a new repository to running hosts (the fleet, the engine pin and lock, signers and this machine's signing, the admin password, mail and Cloudflare tokens, each server, and whether everything is committed and pushed), each marked done, next, to do, or not set up yet, as the real state says, with the one command to run next. Nothing about progress is stored: it is computed each time. On a host: archon state (spec 053).`,
     tier: "read",
@@ -301,7 +302,7 @@ export const COMMANDS: Command[] = [
       },
     ],
     examples: [{
-      cmd: "deno task archon fleet upgrade v0.8.0",
+      cmd: "deno task stolos fleet upgrade v0.8.0",
       text: "Adopt the engine v0.8.0, then git push to approve it.",
     }],
     async run(a) {
@@ -317,7 +318,7 @@ export const COMMANDS: Command[] = [
     name: "fleet trust",
     summary: "Trust every host's SSH keys from Git (registration.ts) in your known_hosts",
     description:
-      `On a workstation or the boot machine: writes each registered host's SSH host public keys (fleets/<fleet>/hosts/<host>/registration.ts, written by archon host add) into your known_hosts, for every name it has (host, DNS name, address, web name), replacing older lines. Plain ssh and MCP clients then check each server against Git, never trusting a first connection blindly. archon fleet status and fleet query do the same on their own, with known_hosts.auto (spec 047).`,
+      `On a workstation or the boot machine: writes each registered host's SSH host public keys (fleets/<fleet>/hosts/<host>/registration.ts, written by stolos host add) into your known_hosts, for every name it has (host, DNS name, address, web name), replacing older lines. Plain ssh and MCP clients then check each server against Git, never trusting a first connection blindly. stolos fleet status and fleet query do the same on their own, with known_hosts.auto (spec 047).`,
     tier: "repo",
     noMcp: true,
     operation: true,
@@ -427,7 +428,7 @@ export const COMMANDS: Command[] = [
     name: "keys",
     summary: "Your signing keys: every check, and the one command that fixes each",
     description:
-      `Checks this PC's signing setup for the fleet (spec 057): OpenSSH can sign (8.2 or newer); your daily key exists, is locked by a passphrase, and is not in an ssh-agent; Git signs every commit in this repository with it; signers.ts lists it; a recovery key is listed, its private file is not on this PC, and it was checked in the last six months; and every push is checked first. Each problem shows its code (archon explain E057-...) and its fix, usually deno task archon keys setup. Changes nothing; never asks for a passphrase. Exits 1 when signing does not work.`,
+      `Checks this PC's signing setup for the fleet (spec 057): OpenSSH can sign (8.2 or newer); your daily key exists, is locked by a passphrase, and is not in an ssh-agent; Git signs every commit in this repository with it; signers.ts lists it; a recovery key is listed, its private file is not on this PC, and it was checked in the last six months; and every push is checked first. Each problem shows its code (archon explain E057-...) and its fix, usually deno task stolos keys setup. Changes nothing; never asks for a passphrase. Exits 1 when signing does not work.`,
     tier: "read",
     noMcp: true,
     args: [],
@@ -458,7 +459,7 @@ export const COMMANDS: Command[] = [
     name: "keys check-recovery",
     summary: "Prove the recovery key still works (a test signature; changes nothing)",
     description:
-      `Checks that the file you pass is the fleet's recovery key and that you still know its passphrase, by signing a test message and verifying it against signers.ts. Records the date on this PC: archon keys and boot doctor remind you after six months (spec 057).`,
+      `Checks that the file you pass is the fleet's recovery key and that you still know its passphrase, by signing a test message and verifying it against signers.ts. Records the date on this PC: stolos keys and boot doctor remind you after six months (spec 057).`,
     tier: "read",
     operation: true,
     noMcp: true,
@@ -529,7 +530,7 @@ export const COMMANDS: Command[] = [
     name: "host bootstrap",
     summary: "Finish a host whose Ubuntu was installed by hand (over SSH)",
     description:
-      `For a server installed from Ubuntu's ISO (or any other way) instead of by network boot: copies the host's first-boot files and its deploy key over SSH and runs the same first boot with sudo (spec 005). Run it from the boot machine after archon host add.`,
+      `For a server installed from Ubuntu's ISO (or any other way) instead of by network boot: copies the host's first-boot files and its deploy key over SSH and runs the same first boot with sudo (spec 005). Run it from the boot machine after stolos host add.`,
     tier: "repo",
     operation: true,
     args: [
@@ -537,7 +538,7 @@ export const COMMANDS: Command[] = [
       { name: "ssh", type: "string", required: true, description: "user@address of the server." },
     ],
     examples: [{
-      cmd: "deno task archon host bootstrap alpha --ssh alice@10.0.30.57",
+      cmd: "deno task stolos host bootstrap alpha --ssh alice@10.0.30.57",
       text: "Finish alpha after a manual Ubuntu install.",
     }],
     async run(a) {
@@ -563,7 +564,7 @@ export const COMMANDS: Command[] = [
       { name: "user", type: "string", description: "Account to set up (default: you)." },
       { name: "force", type: "boolean", description: "Rewrite an existing host file." },
     ],
-    examples: [{ cmd: "deno task archon workstation add", text: "Set up this WSL Ubuntu." }],
+    examples: [{ cmd: "deno task stolos workstation add", text: "Set up this WSL Ubuntu." }],
     async run(a) {
       const { workstationAdd } = await import("../install/workstation.ts");
       return await workstationAdd({
@@ -649,9 +650,9 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "web credential",
-    summary: "Install the Cloudflare DNS token from stdin (deno task boot web-push)",
+    summary: "Install the Cloudflare DNS token from stdin (deno task stolos boot web-push)",
     description:
-      `Reads the web credential (JSON with a Cloudflare API token that has Zone: Read and DNS: Edit on the fleet's zone) on stdin and stores it root-only for archon web dns (/etc/archon/web/cloudflare.json) and for Traefik's DNS challenge (/etc/archon/web/cloudflare.env), restarts Traefik, then publishes this server's DNS records (spec 032). The boot machine sends it with deno task boot web-push <host>; installs deliver it by themselves.`,
+      `Reads the web credential (JSON with a Cloudflare API token that has Zone: Read and DNS: Edit on the fleet's zone) on stdin and stores it root-only for archon web dns (/etc/archon/web/cloudflare.json) and for Traefik's DNS challenge (/etc/archon/web/cloudflare.env), restarts Traefik, then publishes this server's DNS records (spec 032). The boot machine sends it with deno task stolos boot web-push <host>; installs deliver it by themselves.`,
     tier: "mutate",
     operation: true,
     noMcp: true,
@@ -665,7 +666,7 @@ export const COMMANDS: Command[] = [
     name: "web acme-export",
     summary: "Print Traefik's Let's Encrypt store as JSON (for boot reinstall)",
     description:
-      `Prints this server's Traefik ACME store (the Let's Encrypt account, certificates, and keys) with each certificate's names and expiry, as JSON on stdout. deno task boot reinstall runs it before rebooting the server and keeps the result on the boot machine; the install hands it back, so the new install serves the same trusted certificate from its first minute and does not ask Let's Encrypt again (spec 032). Root only; never offered over MCP.`,
+      `Prints this server's Traefik ACME store (the Let's Encrypt account, certificates, and keys) with each certificate's names and expiry, as JSON on stdout. deno task stolos boot reinstall runs it before rebooting the server and keeps the result on the boot machine; the install hands it back, so the new install serves the same trusted certificate from its first minute and does not ask Let's Encrypt again (spec 032). Root only; never offered over MCP.`,
     tier: "read",
     asOwner: true,
     noMcp: true,
@@ -1360,7 +1361,7 @@ export const COMMANDS: Command[] = [
       CONFIRM_DESTROY_ARG("the host's name"),
     ],
     examples: [{
-      cmd: "deno task archon decide pg on --durable --host olympia",
+      cmd: "deno task stolos decide pg on --durable --host olympia",
       text: "PostgreSQL on for olympia, its data durable; then commit -S and push.",
     }],
     async run(a, ctx) {
@@ -1641,7 +1642,7 @@ export const COMMANDS: Command[] = [
     name: "reboot",
     summary: "Reboot this host; --netboot boots it from the network once (for a re-install)",
     description:
-      `Waits until nothing changes packages (apt, dpkg, unattended-upgrades: up to 15 minutes; --now does not wait, spec 054), then reboots in 5 seconds, so it can be run over SSH. With --netboot it first sets the firmware's one-time next boot (UEFI BootNext) to the network entry the install recorded (/etc/archon/netboot-entry), or the first PXE/HTTP IPv4 entry, so the boot server can re-install an armed host without anyone at the console; the boot order itself is unchanged. deno task boot reinstall <host> runs this for you (spec 004).`,
+      `Waits until nothing changes packages (apt, dpkg, unattended-upgrades: up to 15 minutes; --now does not wait, spec 054), then reboots in 5 seconds, so it can be run over SSH. With --netboot it first sets the firmware's one-time next boot (UEFI BootNext) to the network entry the install recorded (/etc/archon/netboot-entry), or the first PXE/HTTP IPv4 entry, so the boot server can re-install an armed host without anyone at the console; the boot order itself is unchanged. deno task stolos boot reinstall <host> runs this for you (spec 004).`,
     tier: "mutate",
     operation: true,
     args: [{
@@ -1727,7 +1728,7 @@ export const COMMANDS: Command[] = [
     name: "doctor",
     summary: "Can this machine reach what it needs? Network and email, with where to look",
     description:
-      `A quick, read-only diagnosis (spec 026), each problem with what it means and where to look:\n\nLink: the default route, carrier, duplex, and interface errors (ip, sysfs). Gateway: loss and latency (ping), and whether full-size packets pass (ping with don't-fragment). DNS: the configured servers (resolvectl), five uncached lookups of archive.ubuntu.com to catch a flaky upstream, each server directly (dig), a public resolver only when they all fail (to tell the router's DNS from the internet's), and this host's Local DNS name. IPv6: a route, and whether apt is limited to IPv4 where there is none (spec 009). Time: synchronized, offset, sources (timedatectl, chronyc), because TLS needs the right time. Proxy and firewall: proxy settings, UFW's outgoing policy.\n\nInternet: every endpoint this machine uses, taken from its own configuration: each apt repository's InRelease (Ubuntu, security, PPAs, GitHub CLI), the checkout's remote (over SSH as ops with the deploy key), GitHub's API and a release download (tools sync), the Claude Code installer (workstations), the Snap Store (snapd's own snap debug connectivity), and the OpenTelemetry collector if the model names one; each with curl's DNS, connect, and TLS times, and a curl failure explained (DNS, refused, timeout, TLS, certificate, reset). With --trace, mtr follows the path to each failing site over TCP.\n\nEmail (specs 025, 027): the sending domain's records in DNS (Cloudflare's cf-bounce SPF, DKIM, and MX, and DMARC), the relay's credential, a login to the relay without sending (curl, EHLO, AUTH, NOOP), and on servers Postfix: running, relaying to the right place, and its queue. archon notify's queue and last send. With --send, it also mails what the Email phase found to the shared mailbox through archon's own sender and through Postfix, so the result arrives where it matters; this happens by itself after deno task boot mail-setup, after an install, and when a server receives a new token.`,
+      `A quick, read-only diagnosis (spec 026), each problem with what it means and where to look:\n\nLink: the default route, carrier, duplex, and interface errors (ip, sysfs). Gateway: loss and latency (ping), and whether full-size packets pass (ping with don't-fragment). DNS: the configured servers (resolvectl), five uncached lookups of archive.ubuntu.com to catch a flaky upstream, each server directly (dig), a public resolver only when they all fail (to tell the router's DNS from the internet's), and this host's Local DNS name. IPv6: a route, and whether apt is limited to IPv4 where there is none (spec 009). Time: synchronized, offset, sources (timedatectl, chronyc), because TLS needs the right time. Proxy and firewall: proxy settings, UFW's outgoing policy.\n\nInternet: every endpoint this machine uses, taken from its own configuration: each apt repository's InRelease (Ubuntu, security, PPAs, GitHub CLI), the checkout's remote (over SSH as ops with the deploy key), GitHub's API and a release download (tools sync), the Claude Code installer (workstations), the Snap Store (snapd's own snap debug connectivity), and the OpenTelemetry collector if the model names one; each with curl's DNS, connect, and TLS times, and a curl failure explained (DNS, refused, timeout, TLS, certificate, reset). With --trace, mtr follows the path to each failing site over TCP.\n\nEmail (specs 025, 027): the sending domain's records in DNS (Cloudflare's cf-bounce SPF, DKIM, and MX, and DMARC), the relay's credential, a login to the relay without sending (curl, EHLO, AUTH, NOOP), and on servers Postfix: running, relaying to the right place, and its queue. archon notify's queue and last send. With --send, it also mails what the Email phase found to the shared mailbox through archon's own sender and through Postfix, so the result arrives where it matters; this happens by itself after deno task stolos boot mail-setup, after an install, and when a server receives a new token.`,
     tier: "read",
     asOwner: true,
     operation: true,
@@ -1762,7 +1763,7 @@ export const COMMANDS: Command[] = [
     name: "vault status",
     summary: "Boot machine: every secret, when it changed, and whether the last backup has it",
     description:
-      `Lists every secret in the boot machine's secrets folder with its inventory name, when it last changed, and when it was last backed up (specs 029 and 056): ✓ backed up, ⚠ newer than the last backup. Exits 1 if anything is newer than the last backup. With --lost, prints how each secret would be made again if the boot machine were lost without a backup. Also writes the prompt's 🔐 backup status, installs the git pre-push reminder hook, and sends the "not backed up" email when due. Run as deno task boot vault status.`,
+      `Lists every secret in the boot machine's secrets folder with its inventory name, when it last changed, and when it was last backed up (specs 029 and 056): ✓ backed up, ⚠ newer than the last backup. Exits 1 if anything is newer than the last backup. With --lost, prints how each secret would be made again if the boot machine were lost without a backup. Also writes the prompt's 🔐 backup status, installs the git pre-push reminder hook, and sends the "not backed up" email when due. Run as deno task stolos vault status.`,
     tier: "repo",
     noMcp: true,
     args: [
@@ -1843,7 +1844,7 @@ export const COMMANDS: Command[] = [
     name: "host-keys export",
     summary: "Print this host's SSH host keys as JSON (for vault recover-host-keys)",
     description:
-      `Prints this host's SSH host keys and ops' deploy key (private and public) as JSON on stdout, for deno task boot vault recover-host-keys <host> on a boot machine that lost its copy (spec 029). Root only; never offered over MCP.`,
+      `Prints this host's SSH host keys and ops' deploy key (private and public) as JSON on stdout, for deno task stolos vault recover-host-keys <host> on a boot machine that lost its copy (spec 029). Root only; never offered over MCP.`,
     tier: "read",
     asOwner: true,
     noMcp: true,
@@ -1910,7 +1911,7 @@ export const COMMANDS: Command[] = [
     name: "notify test",
     summary: "Send a test message and wait for the relay to accept it",
     description:
-      `Sends "[Archon] <host>: notification test" to the fleet's mailbox right away and reports whether the relay accepted it (spec 025). If this machine has no credential: on the boot machine, deno task boot mail-setup; for a host, deno task boot mail-push <host>.`,
+      `Sends "[Archon] <host>: notification test" to the fleet's mailbox right away and reports whether the relay accepted it (spec 025). If this machine has no credential: on the boot machine, deno task stolos boot mail-setup; for a host, deno task stolos boot mail-push <host>.`,
     tier: "mutate",
     unlocked: true,
     args: [],
@@ -1960,9 +1961,9 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "mail credential",
-    summary: "Install the mail relay's token from stdin (deno task boot mail-push)",
+    summary: "Install the mail relay's token from stdin (deno task stolos boot mail-push)",
     description:
-      `Reads the mail credential (JSON with a Cloudflare API token that has Email Sending: Edit) on stdin and stores it as Postfix's /etc/postfix/sasl_passwd, readable by root only, then reloads Postfix (spec 027). archon's own messages use the same token. The boot machine sends it with deno task boot mail-push <host>; installs deliver it by themselves.`,
+      `Reads the mail credential (JSON with a Cloudflare API token that has Email Sending: Edit) on stdin and stores it as Postfix's /etc/postfix/sasl_passwd, readable by root only, then reloads Postfix (spec 027). archon's own messages use the same token. The boot machine sends it with deno task stolos boot mail-push <host>; installs deliver it by themselves.`,
     tier: "mutate",
     unlocked: true,
     noMcp: true,
@@ -2002,11 +2003,11 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "update",
-    summary: "Bring this machine up to date with GitHub (use it instead of git pull)",
+    summary: "Bring this machine up to date with GitHub: pull, apply, verify",
     description:
-      `On your PC (the boot machine, or any checkout of the fleet repository), instead of git pull (spec 058): fetches and fast-forwards a clean checkout (never a merge); checks that what arrived is signed by a key the fleet trusted (as servers will); upgrades the pinned engine when a newer Stolos release is out (fleet upgrade: one signed commit you push; --no-upgrade only reports); repairs Git's allowed signers and the pre-push check; then runs boot doctor (on a boot machine) or archon keys. On an installed host: pulls the repository (as its owner), then with the freshly pulled code validates the model, applies, syncs tools, applies dotfiles again when tools changed, and verifies (spec 015); an invalid model stops before anything is applied (Article 10); --check shows incoming commits and the plan. Every step is safe to run again.`,
+      `Pulls the repository (as its owner), then with the freshly pulled code validates the model, applies, syncs tools, applies dotfiles again when tools changed, and verifies (spec 015). An invalid model stops before anything is applied (Article 10). With --check, shows incoming commits and the plan.`,
     tier: "mutate",
-    hostOnlyTier: true,
+    place: "machine",
     operation: true,
     readOnlyWith: "check",
     args: [
@@ -2017,23 +2018,8 @@ export const COMMANDS: Command[] = [
       },
       { name: "no-tools", type: "boolean", description: "Skip the tools sync." },
       { name: "no-pull", type: "boolean", description: "Use the local checkout as it is." },
-      {
-        name: "no-upgrade",
-        type: "boolean",
-        description: "On your PC: report a newer engine release, without upgrading.",
-      },
-      {
-        name: "no-doctor",
-        type: "boolean",
-        description: "On your PC: skip the doctor at the end.",
-      },
     ],
     async run(a, ctx) {
-      const { installedHost } = await import("../core/registry-types.ts");
-      if (!installedHost()) {
-        const { operatorUpdate } = await import("../update/operator.ts");
-        return await operatorUpdate({ noUpgrade: !!a["no-upgrade"], noDoctor: !!a["no-doctor"] });
-      }
       const { update } = await import("../update/update.ts");
       const steps = await update(await requireHost(ctx.hostName), {
         check: !!a.check,
@@ -2041,6 +2027,28 @@ export const COMMANDS: Command[] = [
         pull: !a["no-pull"],
       });
       return steps.every((s) => s.ok || s.step === "pull") ? 0 : 1;
+    },
+  },
+  {
+    name: "update",
+    summary: "Bring this PC's checkout up to date (use it instead of git pull), then the doctor",
+    description:
+      `Instead of git pull (spec 058): fetches and fast-forwards a clean checkout (never a merge); checks that what arrived is signed by a key the fleet trusted (as servers will); upgrades the pinned engine when a newer Stolos release is out (fleet upgrade: one signed commit you push; --no-upgrade only reports); repairs Git's allowed signers and the pre-push check; then runs boot doctor (on a boot machine) or stolos keys. Every step is safe to run again.`,
+    tier: "repo",
+    place: "pc",
+    operation: true,
+    noMcp: true,
+    args: [
+      {
+        name: "no-upgrade",
+        type: "boolean",
+        description: "Report a newer engine release, without upgrading.",
+      },
+      { name: "no-doctor", type: "boolean", description: "Skip the doctor at the end." },
+    ],
+    async run(a) {
+      const { operatorUpdate } = await import("../update/operator.ts");
+      return await operatorUpdate({ noUpgrade: !!a["no-upgrade"], noDoctor: !!a["no-doctor"] });
     },
   },
   {
@@ -2100,7 +2108,7 @@ export const COMMANDS: Command[] = [
     description:
       `Starts a Model Context Protocol server on stdin/stdout. Each command within --max-tier becomes a tool named archon_<command>; man pages, specs, the constitution, and reports are resources. A command above the tier is not listed and is refused; one with a read-only flag (apply --check) is listed and runs only with that flag. The destructive tier is never served. Each call is journaled (tag archon-mcp, with SSH_CLIENT).
 
-On a server, workstations reach it as ops over SSH (spec 030): ops' authorized_keys forces this command with the fleet's tier (fleet.mcp.maxTier, default mutate) and restrict, so an agent can do nothing else there. On a workstation, archon build renders .mcp.json with one entry per server (archon-<fleet>-<host>: ssh ops@<host>).`,
+On a server, workstations reach it as ops over SSH (spec 030): ops' authorized_keys forces this command with the fleet's tier (fleet.mcp.maxTier, default mutate) and restrict, so an agent can do nothing else there. On a workstation, stolos build renders .mcp.json with one entry per server (archon-<fleet>-<host>: ssh ops@<host>).`,
     tier: "read",
     noMcp: true,
     args: [{
@@ -2238,12 +2246,57 @@ On a server, workstations reach it as ops over SSH (spec 030): ops' authorized_k
  * Finds the command named by the leading words of argv (the longest matching
  * name wins) and returns it with the remaining arguments, or undefined.
  */
-export function findCommand(argv: string[]): { cmd: Command; rest: string[] } | undefined {
+/** Commands run with `stolos` on your PC (the rest run with `archon` on each machine). */
+const PC_COMMANDS = new Set([
+  "validate",
+  "build",
+  "fleet use",
+  "fleet init",
+  "fleet status",
+  "host add",
+  "where",
+  "fleet upgrade",
+  "fleet trust",
+  "fleet query",
+  "signers",
+  "signers add",
+  "signers remove",
+  "keys",
+  "keys setup",
+  "keys check-recovery",
+  "keys rotate",
+  "keys lost",
+  "keys check-push",
+  "host bootstrap",
+  "workstation add",
+  "decide",
+  "vault status",
+  "vault backup",
+  "vault restore",
+  "vault list",
+  "vault recover-host-keys",
+  "export",
+]);
+
+for (const c of COMMANDS) {
+  c.place ??= c.name === "explain" ? "both" : PC_COMMANDS.has(c.name) ? "pc" : "machine";
+}
+
+/** Whether a command is offered where `place` runs ("pc": stolos, "machine": archon). */
+export function offeredOn(c: Command, place: "pc" | "machine"): boolean {
+  return c.place === "both" || c.place === place;
+}
+
+/** Find the command named by the start of argv, among those offered at `place`; returns it and the rest of argv. */
+export function findCommand(
+  argv: string[],
+  place: "pc" | "machine" = "machine",
+): { cmd: Command; rest: string[] } | undefined {
   // The longest name first: "fs smb status" before "fs smb", before "fs".
   const longest = Math.max(...COMMANDS.map((c) => c.name.split(" ").length));
   for (let n = longest; n >= 1; n--) {
     const name = argv.slice(0, n).join(" ");
-    const cmd = COMMANDS.find((c) => c.name === name);
+    const cmd = COMMANDS.find((c) => c.name === name && offeredOn(c, place));
     if (cmd) return { cmd, rest: argv.slice(n) };
   }
   return undefined;

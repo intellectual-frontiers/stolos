@@ -269,7 +269,7 @@ export function eventFor(
             ctx.fromName ?? sig.from
           } with ${sig.method}. sshd is configured with PermitRootLogin no, so its configuration was changed.`,
           todo:
-            `If this was not you: disconnect the host from the network (or power it off), then re-install it (deno task boot reinstall ${h}). archon verify shows the sshd drift.`,
+            `If this was not you: disconnect the host from the network (or power it off), then re-install it (deno task stolos boot reinstall ${h}). archon verify shows the sshd drift.`,
           key: `login:root:${sig.from}:${hour()}`,
         };
       }

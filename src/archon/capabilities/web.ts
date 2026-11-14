@@ -212,7 +212,7 @@ export const web = (): Capability => ({ host, fleet }) => {
             level: "warn" as const,
             code: "P032-WEB-TOKEN",
             fix:
-              "archon web status (the Cloudflare token: deno task boot web-setup, then web-push <host>)",
+              "archon web status (the Cloudflare token: deno task stolos boot web-setup, then web-push <host>)",
             spec: SPEC,
           },
           {

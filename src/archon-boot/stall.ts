@@ -58,7 +58,7 @@ export class StallWatch {
 export function stallMessage(host: string | undefined): string {
   return `${host ?? "this machine"} took the installer image ${
     STALL_MS / 60_000
-  } minutes ago and has not asked for its configuration: its installer has most likely run out of memory. Ubuntu's network installer holds the whole image in memory and needs about 8 GiB of RAM. With less, install Ubuntu by hand (or from its cloud image) and finish it with: deno task archon host bootstrap ${
+  } minutes ago and has not asked for its configuration: its installer has most likely run out of memory. Ubuntu's network installer holds the whole image in memory and needs about 8 GiB of RAM. With less, install Ubuntu by hand (or from its cloud image) and finish it with: deno task stolos host bootstrap ${
     host ?? "<host>"
   } --ssh <user>@<address>`;
 }

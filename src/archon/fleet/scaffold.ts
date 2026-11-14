@@ -13,15 +13,13 @@ import { ENGINE_ENTRY, ENGINE_ENTRY_TEXT } from "./upgrade.ts";
 /** Where released engines are served from; the tag is appended. */
 export const ENGINE_BASE = "https://raw.githubusercontent.com/intellectual-frontiers/stolos/";
 
-/** A fleet repository's deno.json: the engine pinned at tag, and the archon and boot tasks (run frozen). */
+/** A fleet repository's deno.json: the engine pinned at tag, and the stolos task (run frozen; spec 059). */
 export function denoJsonText(tag: string, base = ENGINE_BASE): string {
   return JSON.stringify(
     {
       imports: { "@stolos/": `${base}${tag}/src/` },
       tasks: {
-        archon: "deno run -A --frozen archon.ts",
-        boot:
-          "OTEL_DENO=true OTEL_SERVICE_NAME=archon-boot OTEL_EXPORTER_OTLP_PROTOCOL=http/json OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:4319 deno run -A --frozen boot.ts",
+        stolos: "deno run -A --frozen stolos.ts",
       },
       compilerOptions: { strict: true },
       fmt: { lineWidth: 100, exclude: ["out/"] },
@@ -32,27 +30,28 @@ export function denoJsonText(tag: string, base = ENGINE_BASE): string {
   ) + "\n";
 }
 
-/** A fleet repository's archon.ts: runs the pinned engine's archon. */
+/** A fleet repository's archon.ts: each machine's archon, from the pinned engine. */
 export const ARCHON_ENTRY_TEXT =
-  `// The \`archon\` command for this repository's fleets: runs the engine pinned in
-// deno.json (\`@stolos/\`), checked against deno.lock. Hosts run this file from
-// /srv/archon through /usr/local/bin/archon.
+  `// Each machine's \`archon\` command: the engine pinned in deno.json (\`@stolos/\`),
+// checked against deno.lock. Servers and workstations run this file from
+// /srv/archon through /usr/local/bin/archon. On your PC, use \`deno task stolos\`.
 import { run } from "@stolos/archon/main.ts";
 
 await run();
 `;
 
-/** A fleet repository's boot.ts: runs the pinned engine's boot server. */
-export const BOOT_ENTRY_TEXT =
-  `// The boot server for this repository's fleets (\`deno task boot serve --fleet <id>\`),
-// from the engine pinned in deno.json (\`@stolos/\`).
-import { run } from "@stolos/archon-boot/main.ts";
+/** A fleet repository's stolos.ts: the fleet's command on your PC (spec 059). */
+export const STOLOS_ENTRY_TEXT =
+  `// The fleet's command on your PC: \`deno task stolos ...\` (with no arguments: where
+// you are, and what to do next). The engine pinned in deno.json (\`@stolos/\`),
+// checked against deno.lock.
+import { run } from "@stolos/stolos/main.ts";
 
 await run();
 `;
 
 /** A fleet repository's .gitignore. */
-export const GITIGNORE_TEXT = `# Rendered by archon build on each machine; never committed.
+export const GITIGNORE_TEXT = `# Rendered by stolos build on each machine; never committed.
 out/
 *.log
 `;
@@ -62,7 +61,7 @@ export function scaffoldFiles(tag: string, base = ENGINE_BASE): Record<string, s
   return {
     "deno.json": denoJsonText(tag, base),
     "archon.ts": ARCHON_ENTRY_TEXT,
-    "boot.ts": BOOT_ENTRY_TEXT,
+    "stolos.ts": STOLOS_ENTRY_TEXT,
     [ENGINE_ENTRY]: ENGINE_ENTRY_TEXT,
     ".gitignore": GITIGNORE_TEXT,
   };

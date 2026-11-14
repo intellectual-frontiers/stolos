@@ -7,9 +7,56 @@ import { mcpServers, renderMcpJson } from "../src/archon/render/agent.ts";
 import { renderManPages } from "../src/archon/render/man.ts";
 import { lit, subject } from "../src/archon/model/export.ts";
 
-Deno.test("every command has a man page", () => {
+Deno.test("every machine command has a man page; fleet commands (stolos) have none", () => {
   const pages = renderManPages();
-  for (const c of COMMANDS) assert(pages.has(`man1/archon-${c.name.replace(/ /g, "-")}.1`), c.name);
+  for (const c of COMMANDS) {
+    const has = pages.has(`man1/archon-${c.name.replace(/ /g, "-")}.1`);
+    if (c.place === "pc") {
+      assert(!has || COMMANDS.some((x) => x.name === c.name && x.place !== "pc"), c.name);
+    } else assert(has, c.name);
+  }
+});
+
+Deno.test("059: every command says where it runs; stolos and archon do not overlap but for explain", async () => {
+  const { offeredOn } = await import("../src/archon/commands/registry.ts");
+  for (const c of COMMANDS) assert(c.place, `${c.name} has no place`);
+  const names = (p: "pc" | "machine") =>
+    new Set(COMMANDS.filter((c) => offeredOn(c, p)).map((c) => c.name));
+  const pc = names("pc");
+  const machine = names("machine");
+  const both = [...pc].filter((n) => machine.has(n)).sort();
+  assertEquals(both, ["explain", "update"], "update is two commands: one each");
+  for (const n of ["keys setup", "fleet init", "host add", "vault backup", "decide", "where"]) {
+    assert(pc.has(n) && !machine.has(n), n);
+  }
+  for (const n of ["apply", "verify", "pg on", "reboot", "mcp", "signers trust", "state"]) {
+    assert(machine.has(n) && !pc.has(n), n);
+  }
+});
+
+Deno.test("059: each command points at the other for the other's commands", async () => {
+  const run = async (main: string, args: string[]) => {
+    const r = await new Deno.Command(Deno.execPath(), {
+      args: ["run", "-A", main, ...args],
+      stdout: "piped",
+      stderr: "piped",
+      stdin: "null",
+    }).output();
+    return {
+      code: r.code,
+      out: new TextDecoder().decode(r.stdout) + new TextDecoder().decode(r.stderr),
+    };
+  };
+  let r = await run("src/archon/main.ts", ["keys", "setup"]);
+  assertEquals(r.code, 2, r.out);
+  assertStringIncludes(r.out, "deno task stolos keys setup");
+  r = await run("src/stolos/main.ts", ["apply"]);
+  assertEquals(r.code, 2, r.out);
+  assertStringIncludes(r.out, "archon apply");
+  r = await run("src/stolos/main.ts", ["help"]);
+  assertStringIncludes(r.out, "deno task stolos <command>");
+  assertStringIncludes(r.out, "boot <sub>");
+  assert(!r.out.includes("  apply "), "no machine commands in stolos help");
 });
 
 Deno.test("030: workstations reach each server over SSH as ops, one MCP server each", async () => {

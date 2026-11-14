@@ -20,12 +20,12 @@ function quiet() {
 Deno.test("052: not set up yet is never a failure, and shows its next step", () => {
   const { ui, text } = quiet();
   const p = ui.phase("Email");
-  p.pending("no relay token yet", "deno task boot mail-push alpha", "P027-MAIL-TOKEN");
+  p.pending("no relay token yet", "deno task stolos boot mail-push alpha", "P027-MAIL-TOKEN");
   p.done();
   assertEquals(ui.finish(), 0);
   const t = text();
   assertStringIncludes(t, "Not set up yet");
-  assertStringIncludes(t, "next: deno task boot mail-push alpha");
+  assertStringIncludes(t, "next: deno task stolos boot mail-push alpha");
   assertStringIncludes(t, "explain: archon explain P027-MAIL-TOKEN");
   assert(!t.includes("Needs attention"), "a pending item is not a problem");
   assert(!t.includes("failure"));

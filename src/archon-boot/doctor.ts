@@ -1,5 +1,5 @@
 /**
- * `deno task boot doctor` (spec 004): one read-only look at this boot machine,
+ * `deno task stolos boot doctor` (spec 004): one read-only look at this boot machine,
  * with the fix for each problem: the checkout (hosts install from GitHub, so
  * local changes must be pushed), the model, secrets, Ubuntu's files, the
  * network, the ports, and the firewall. It changes nothing.
@@ -62,7 +62,7 @@ export async function doctor(
   const m = ui.phase("Model");
   const { loadModel } = await import("../archon/build.ts");
   const model = await loadModel().catch((e) => {
-    m.fail((e as Error).message, "deno task archon fleet init");
+    m.fail((e as Error).message, "deno task stolos fleet init");
     return undefined;
   });
   if (model) {
@@ -75,7 +75,7 @@ export async function doctor(
   }
 
   // ------------------------------------------------------------- signing keys
-  // Spec 057: the same checks as archon keys; nothing changes, nothing is asked.
+  // Spec 057: the same checks as stolos keys; nothing changes, nothing is asked.
   const k = ui.phase("Signing keys");
   const { keyChecksNow } = await import("../archon/identity/keys-commands.ts");
   for (const c of await keyChecksNow().catch(() => [])) {
@@ -88,13 +88,13 @@ export async function doctor(
   // ------------------------------------------------------------- secrets
   const s = ui.phase("Secrets");
   if (!(await exists(SECRETS.adminPasswordHash))) {
-    s.fail("no admin password hash", "deno task archon fleet init");
+    s.fail("no admin password hash", "deno task stolos fleet init");
   }
   for (const h of (model?.hosts ?? []).filter((x) => x.kind !== "workstation")) {
     if (!(await exists(SECRETS.deployKey(h.name)))) {
       s.warn(
         `${h.name} has no deploy key: it will clone over HTTPS and cannot push`,
-        `deno task archon host add ${h.name} --force`,
+        `deno task stolos host add ${h.name} --force`,
       );
     }
     const keys = await Promise.all(HOST_KEY_TYPES.map((t) => exists(SECRETS.hostKey(h.name, t))));
@@ -113,7 +113,7 @@ export async function doctor(
       `${names.length} secret(s) ${
         va.lastBackup ? "newer than the last backup" : "never backed up"
       }: ${names.slice(0, 4).join(", ")}${names.length > 4 ? ", ..." : ""}`,
-      "deno task boot vault backup, then move the ZIP somewhere safe",
+      "deno task stolos vault backup, then move the ZIP somewhere safe",
     );
   }
   await remind();
@@ -129,7 +129,7 @@ export async function doctor(
   if (missing.length) {
     u.warn(
       `not downloaded yet: ${missing.join(", ")}`,
-      "deno task boot serve downloads and verifies them",
+      "deno task stolos boot serve downloads and verifies them",
     );
   }
   u.done(
@@ -203,7 +203,7 @@ export async function doctor(
   await emailChecks(
     fleetForMail ? bootSite(fleetForMail) : undefined,
     em,
-    "deno task boot mail-setup",
+    "deno task stolos boot mail-setup",
     { send: o.send },
   );
 

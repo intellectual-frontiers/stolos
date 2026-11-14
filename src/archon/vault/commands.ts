@@ -1,5 +1,5 @@
 /**
- * `deno task boot vault <sub>` (specs 029 and 056): the boot machine's secrets,
+ * `deno task stolos vault <sub>` (specs 029 and 056): the boot machine's secrets,
  * and their backup. A backup is one ZIP file (see {@link writeBackupZip}),
  * written into archon's backup folder; you then move it wherever you keep
  * important things safe. A restore is never done by a command: `vault restore`
@@ -82,7 +82,7 @@ export async function vaultStatus(o: { lost?: boolean; hook?: boolean }): Promis
   if (c.where === "here") {
     console.log(
       ui.yellow(
-        `  it is still in ${BACKUP_DIR}: move it somewhere safe (see: deno task boot vault backup)`,
+        `  it is still in ${BACKUP_DIR}: move it somewhere safe (see: deno task stolos vault backup)`,
       ),
     );
   }
@@ -127,7 +127,7 @@ export function afterBackup(path: string, signingKey?: string): string[] {
     ",",
     "so treat it like the keys to your servers. Keep your recovery key somewhere else.",
     "",
-    "To use it after a disaster: deno task boot vault restore (it only explains;",
+    "To use it after a disaster: deno task stolos vault restore (it only explains;",
     "the same steps are RESTORE.txt in the ZIP).",
   ];
 }
@@ -140,7 +140,7 @@ export async function vaultBackup(): Promise<number> {
   try {
     r = await writeBackupZip(pcName());
   } catch (e) {
-    p.fail((e as Error).message, "run deno task boot vault backup again");
+    p.fail((e as Error).message, "run deno task stolos vault backup again");
     return 1;
   }
   if (!r.signingKey) {
@@ -177,7 +177,7 @@ export async function vaultList(): Promise<number> {
   const list = await backupZips();
   console.log(ui.dim(`backup folder: ${BACKUP_DIR}`));
   if (!list.length) {
-    console.log("no backup ZIPs here (moved, or none yet: deno task boot vault backup)");
+    console.log("no backup ZIPs here (moved, or none yet: deno task stolos vault backup)");
   }
   for (const b of list) {
     console.log(
@@ -230,7 +230,7 @@ export async function recoverHostKeys(host: string): Promise<number> {
   } else {
     p.warn(
       `${host} sent no deploy key`,
-      `deno task archon host add ${host} (registers a new one), then deno task boot reinstall ${host}`,
+      `deno task stolos host add ${host} (registers a new one), then deno task stolos boot reinstall ${host}`,
     );
   }
   // This PC trusts the recovered host keys again (known_hosts), for every name it uses.
@@ -239,7 +239,7 @@ export async function recoverHostKeys(host: string): Promise<number> {
   p.done(
     `${host}: ${x.hostKeys.length} host keys (${x.hostKeys.map((k) => k.type).join(", ")})${
       x.deployKey ? " and its deploy key" : ""
-    } recovered; back them up: deno task boot vault backup`,
+    } recovered; back them up: deno task stolos vault backup`,
   );
   return 0;
 }

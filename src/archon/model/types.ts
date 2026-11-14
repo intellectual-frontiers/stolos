@@ -99,7 +99,7 @@ export interface UserDef {
 /**
  * Who may approve changes to a fleet (spec 047, Article 9): a host applies only
  * a tip of main signed by one of these keys. Kept in fleets/<id>/signers.ts,
- * written by `archon signers`.
+ * written by `stolos signers`.
  */
 export interface SignerDef {
   /** A short name, the principal in allowed_signers ("alice-daily"). */
@@ -130,9 +130,9 @@ export interface ProvidersDef {
 
 /**
  * The fleet: one identity shared by every host (spec 003), in
- * `fleets/<id>/fleet.ts` of a fleet repository. `archon fleet init <id>`
+ * `fleets/<id>/fleet.ts` of a fleet repository. `stolos fleet init <id>`
  * writes the first one from your GitHub account; edit it freely after, then
- * `archon build`.
+ * `stolos build`.
  *
  * ```mermaid
  * classDiagram
@@ -361,8 +361,8 @@ export interface GuestDef {
 
 /**
  * A host: one machine of the fleet, in `fleets/<id>/hosts/<name>/host.ts`.
- * `archon host add <name> --claim` (or `--mac-address`) writes a server's;
- * `archon workstation add` a workstation's. What it gets comes from its
+ * `stolos host add <name> --claim` (or `--mac-address`) writes a server's;
+ * `stolos workstation add` a workstation's. What it gets comes from its
  * capabilities; what it is (its MAC, its SSH host keys) is in its
  * registration.ts, from the machine itself (spec 051).
  *
@@ -393,7 +393,7 @@ export interface HostDef {
   user?: string;
   /**
    * Workstations (spec 036): a graphical desktop, not WSL or a headless machine.
-   * VS Code is installed only here; set by `archon workstation add`.
+   * VS Code is installed only here; set by `stolos workstation add`.
    */
   desktop?: boolean;
   /**
@@ -529,7 +529,7 @@ export interface OptInRecord {
 
 /**
  * Who a host is, in Git (spec 047): fleets/<id>/hosts/<host>/registration.ts,
- * written by `archon host add`. Public facts only: its SSH host public keys
+ * written by `stolos host add`. Public facts only: its SSH host public keys
  * (operators' known_hosts is generated from them), its network card, and the
  * fingerprint of its read-only deploy key.
  */
@@ -553,7 +553,7 @@ export interface HostRegistration {
 
 /**
  * What operators decided for a host, in Git (spec 047): fleets/<id>/hosts/<host>/decisions.ts,
- * written by `archon decide`. A decision here wins over the host's own record.
+ * written by `stolos decide`. A decision here wins over the host's own record.
  */
 export interface HostDecisions {
   /** What operators decided in Git (decisions.ts): opt-in name to its record. */

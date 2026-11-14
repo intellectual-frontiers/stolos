@@ -1,5 +1,5 @@
 // Spec 047 (Article 25): operators' decisions live in Git (decisions.ts),
-// written by archon decide; they win over a host's own record, so they
+// written by stolos decide; they win over a host's own record, so they
 // survive a re-install and say whether a host is durable while it is offline.
 
 import { assert, assertEquals, assertStringIncludes } from "./assert.ts";
@@ -28,7 +28,7 @@ Deno.test("047: decisions.ts has one form: sorted, every value written one way",
   );
 });
 
-Deno.test("047: archon decide writes Git's decision; the model and the data class follow it", async () => {
+Deno.test("047: stolos decide writes Git's decision; the model and the data class follow it", async () => {
   const sb = await sandbox("archon-decide-test-");
   const repo = `${sb.home}/fleet`;
   try {
@@ -38,7 +38,7 @@ Deno.test("047: archon decide writes Git's decision; the model and the data clas
     })
       .output();
     const env = { ARCHON_REPO: repo, ARCHON_FLEET: "lab" };
-    const archon = (args: string[]) => sb.run(`${ENGINE}/src/archon/main.ts`, args, "", env);
+    const archon = (args: string[]) => sb.run(`${ENGINE}/src/stolos/main.ts`, args, "", env);
 
     // Turning on an opt-in that holds end users' data needs the choice.
     let r = await archon(["decide", "pg", "on", "--host", "beta"]);
@@ -77,7 +77,7 @@ Deno.test("047: archon decide writes Git's decision; the model and the data clas
       text.replace("enabled: true", "enabled:true"),
     );
     r = await archon(["validate"]);
-    assert(r.code !== 0 && /not in the form archon decide writes/.test(r.out), r.out);
+    assert(r.code !== 0 && /not in the form stolos decide writes/.test(r.out), r.out);
   } finally {
     await Deno.remove(sb.home, { recursive: true });
   }

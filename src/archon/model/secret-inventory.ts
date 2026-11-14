@@ -1,7 +1,7 @@
 /**
  * The secret inventory (spec 028, constitution Article 13): every secret the
  * fleet depends on, by name, where it lives, and how to make it again. Values
- * never. The boot machine's secrets are what `deno task boot vault` backs up
+ * never. The boot machine's secrets are what `deno task stolos vault` backs up
  * and restores (spec 029); the owner's are listed so a lost one is not a
  * surprise. A test checks that every path the code writes is listed here.
  *
@@ -43,7 +43,7 @@ export const SECRET_INVENTORY: SecretRef[] = [
     purpose: "the fleet admin's password (SHA-512 crypt), set on every host at install",
     holder: "boot-machine",
     recreate:
-      "deno task archon fleet init (keeps fleets/<fleet>/fleet.ts; asks for the password again; the same password keeps the hosts as they are)",
+      "deno task stolos fleet init (keeps fleets/<fleet>/fleet.ts; asks for the password again; the same password keeps the hosts as they are)",
     spec: "003-identity",
   },
   {
@@ -53,7 +53,7 @@ export const SECRET_INVENTORY: SecretRef[] = [
     purpose: "<host>'s GitHub deploy key (pulls and pushes its state as ops)",
     holder: "boot-machine",
     recreate:
-      "while the host runs: deno task boot vault recover-host-keys <host> (the same key comes back); otherwise deno task archon host add <host> (keeps its model, registers a new key on GitHub), then deno task boot reinstall <host> --confirm-destroy <host>",
+      "while the host runs: deno task stolos vault recover-host-keys <host> (the same key comes back); otherwise deno task stolos host add <host> (keeps its model, registers a new key on GitHub), then deno task stolos boot reinstall <host> --confirm-destroy <host>",
     spec: "004-install",
   },
   {
@@ -73,7 +73,7 @@ export const SECRET_INVENTORY: SecretRef[] = [
     holder: "boot-machine",
     identity: true,
     recreate:
-      "deno task boot vault recover-host-keys <host> while it runs; otherwise a re-install makes new keys and every client sees a changed host identity",
+      "deno task stolos vault recover-host-keys <host> while it runs; otherwise a re-install makes new keys and every client sees a changed host identity",
     spec: "004-install",
   },
   {
@@ -92,7 +92,7 @@ export const SECRET_INVENTORY: SecretRef[] = [
     purpose: "Cloudflare Email Sending token for the mail relay (Postfix and archon notify)",
     holder: "boot-machine",
     recreate:
-      "Cloudflare: create an API token with Email Sending: Edit; deno task boot mail-setup; deno task boot mail-push <host> for each server",
+      "Cloudflare: create an API token with Email Sending: Edit; deno task stolos boot mail-setup; deno task stolos boot mail-push <host> for each server",
     spec: "027-mail",
   },
   {
@@ -115,7 +115,7 @@ export const SECRET_INVENTORY: SecretRef[] = [
       "Cloudflare API token (Zone Read, DNS Edit on the fleet's zone): each server's DNS records and its Let's Encrypt certificate",
     holder: "boot-machine",
     recreate:
-      "Cloudflare: create a token with Zone: Read and DNS: Edit for the zone; deno task boot web-setup; deno task boot web-push <host> for each server",
+      "Cloudflare: create a token with Zone: Read and DNS: Edit for the zone; deno task stolos boot web-setup; deno task stolos boot web-push <host> for each server",
     spec: "032-web",
   },
   {
@@ -125,7 +125,7 @@ export const SECRET_INVENTORY: SecretRef[] = [
     purpose: "one-time install tokens for armed hosts, and MACs learned at install",
     holder: "boot-machine",
     ephemeral: true,
-    recreate: "deno task boot arm <host> makes a new one when needed",
+    recreate: "deno task stolos boot arm <host> makes a new one when needed",
     spec: "004-install",
   },
 

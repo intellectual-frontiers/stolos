@@ -55,7 +55,7 @@ Deno installed here only starts things off: Archon installs its own copy in `/us
 
 ```sh
 cd /srv/archon
-deno task archon workstation add
+deno task stolos workstation add
 ```
 
 It checks that this is Ubuntu 26.04 with systemd and the checkout in `/srv/archon`, writes
@@ -105,6 +105,6 @@ terminal's preferences. Without the font, use the plain prompt: `set -Ux ARCHON_
 (fish).
 
 VS Code is installed only on a workstation with a graphical desktop (`desktop: true` in its host
-model, set by `archon workstation add`), from Microsoft's apt repository. On WSL, use VS Code on
+model, set by `stolos workstation add`), from Microsoft's apt repository. On WSL, use VS Code on
 Windows with its WSL extension (`code .` here opens it); for servers, VS Code's Remote - SSH
 extension.

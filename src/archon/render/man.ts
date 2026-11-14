@@ -254,8 +254,10 @@ export function personasPage(): string {
 /** Every man page: file name to roff. */
 export function renderManPages(): Map<string, string> {
   const pages = new Map<string, string>();
-  pages.set("man1/archon.1", mainPage(COMMANDS));
-  for (const c of COMMANDS) pages.set(`man1/${pageName(c)}.1`, commandPage(c));
+  // Spec 059: man pages live on machines, for archon's commands (stolos runs on your PC).
+  const here = COMMANDS.filter((c) => c.place !== "pc");
+  pages.set("man1/archon.1", mainPage(here));
+  for (const c of here) pages.set(`man1/${pageName(c)}.1`, commandPage(c));
   pages.set("man7/archon-constitution.7", constitutionPage());
   pages.set("man7/archon-personas.7", personasPage());
   pages.set("man7/archon-dotfiles.7", dotfilesPage());
@@ -282,7 +284,7 @@ export function docsFiles(): FileDef[] {
   }
   files.push({
     path: "/usr/local/share/fish/vendor_completions.d/archon.fish",
-    content: renderFishCompletions(COMMANDS),
+    content: renderFishCompletions(COMMANDS.filter((c) => c.place !== "pc")),
     mode: "0644",
     owner: "root",
     spec: "012-cli-mcp",

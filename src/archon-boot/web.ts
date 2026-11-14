@@ -1,8 +1,8 @@
 /**
  * The boot machine's side of HTTPS (spec 032):
  *
- *   deno task boot web-setup          store the Cloudflare DNS token (once)
- *   deno task boot web-push <host>    give a running server the token over SSH
+ *   deno task stolos boot web-setup          store the Cloudflare DNS token (once)
+ *   deno task stolos boot web-push <host>    give a running server the token over SSH
  *
  * The token lives only in this PC's secrets folder and, on each server, root
  * only in /etc/archon/web. It never enters the repository (Article 13).
@@ -17,7 +17,7 @@ import { zoneId } from "../archon/web/cloudflare.ts";
 import { zoneOf } from "../archon/web/config.ts";
 
 /**
- * `deno task boot web-setup`: explain the one-time Cloudflare DNS token, read
+ * `deno task stolos boot web-setup`: explain the one-time Cloudflare DNS token, read
  * it without echo, check that it can see the fleet's zone, and store it in this
  * PC's secrets. Returns the exit code (1 on a missing web setting or a bad token).
  */
@@ -64,7 +64,7 @@ export async function webSetup(): Promise<number> {
   console.log([
     ``,
     `Cloudflare accepted the token for ${zone}. Stored in ${SECRETS.web} (this PC only, never in git).`,
-    `Servers get it at their next install, or now: deno task boot web-push <host>.`,
+    `Servers get it at their next install, or now: deno task stolos boot web-push <host>.`,
     `Anyone with it can change ${zone}'s DNS. To revoke it: delete "archon web" under My Profile >`,
     `API Tokens; then run this again and web-push each server.`,
     ``,
@@ -73,7 +73,7 @@ export async function webSetup(): Promise<number> {
 }
 
 /**
- * `deno task boot web-push <host>`: give a running server the stored DNS token
+ * `deno task stolos boot web-push <host>`: give a running server the stored DNS token
  * over SSH (on stdin to `archon web credential`). Returns ssh's exit code, 2
  * for an unknown host, or 1 when no token is stored.
  */
@@ -82,7 +82,7 @@ export async function webPush(name: string | undefined): Promise<number> {
   const hosts = await loadServers();
   if (!name || !hosts.some((h) => h.name === name)) {
     console.error(
-      `usage: deno task boot web-push <host>  (known: ${
+      `usage: deno task stolos boot web-push <host>  (known: ${
         hosts.map((h) => h.name).join(", ") || "none"
       })`,
     );
@@ -90,7 +90,7 @@ export async function webPush(name: string | undefined): Promise<number> {
   }
   const cred = await readSecret(SECRETS.web);
   if (!cred) {
-    console.error("No token on this PC yet: deno task boot web-setup");
+    console.error("No token on this PC yet: deno task stolos boot web-setup");
     return 1;
   }
   const target = `${fleet.admin.user}@${name}`;

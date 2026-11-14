@@ -1,5 +1,5 @@
 /**
- * `archon fleet status` (specs 021, 022): every server and workstation in the
+ * `stolos fleet status` (specs 021, 022): every server and workstation in the
  * model, its last install and verify as it says them now (spec 048: asked over
  * MCP, cached in this machine's archon.sql when it cannot be reached),
  * whether it is durable or ephemeral (spec 044), and how to reach and observe it. Works on the boot machine (which also knows
@@ -30,7 +30,7 @@ interface Installed {
 }
 
 /**
- * `archon fleet status`: print each host's last install and verify (asked
+ * `stolos fleet status`: print each host's last install and verify (asked
  * live, or from the cache), its data class, and its next steps. Returns 0.
  */
 export async function fleetStatus(): Promise<number> {
@@ -38,7 +38,7 @@ export async function fleetStatus(): Promise<number> {
   const hosts = await loadHosts();
   const tokens = await loadTokens().catch(() => []);
   if (!hosts.length) {
-    ui.next.push("no hosts yet: deno task archon host add <name> (or workstation add, in WSL)");
+    ui.next.push("no hosts yet: deno task stolos host add <name> (or workstation add, in WSL)");
     return 0;
   }
   // Spec 048: ask every server live (its MCP server, over SSH as ops), all at
@@ -125,6 +125,6 @@ export async function fleetStatus(): Promise<number> {
       }).map((l) => `  ${l}`),
     );
   }
-  ui.next.push("(live from each server over SSH; archon fleet query asks them anything)");
+  ui.next.push("(live from each server over SSH; stolos fleet query asks them anything)");
   return 0;
 }

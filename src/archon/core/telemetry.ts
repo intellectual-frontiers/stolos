@@ -141,7 +141,7 @@ export function measure(name: MetricName, v: number, attrs: Attrs = {}): void {
 }
 
 /** Start this run's trace (continuing TRACEPARENT when given). */
-export function startRun(command: string, attrs: Attrs = {}): void {
+export function startRun(command: string, attrs: Attrs = {}, program = "archon"): void {
   if (!api) return;
   Object.assign(runAttrs, clean({ "archon.command": command, ...attrs }));
   started = performance.now();
@@ -150,7 +150,7 @@ export function startRun(command: string, attrs: Attrs = {}): void {
     ? api.trace.setSpanContext(api.context.active(), parent)
     : api.context.active();
   root = api.trace.getTracer("archon").startSpan(
-    `archon ${command}`,
+    `${program} ${command}`,
     { attributes: runAttrs },
     ctx,
   );

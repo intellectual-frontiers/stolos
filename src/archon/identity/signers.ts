@@ -2,8 +2,8 @@
  * Spec 047-intent-and-identity (Article 9): who may approve a fleet's changes,
  * and how a host checks an approval before it applies anything.
  *
- * - fleets/<id>/signers.ts lists the signers. It is written by `archon signers`
- *   in one fixed form (a typed literal, Article 4); `archon build` fails when
+ * - fleets/<id>/signers.ts lists the signers. It is written by `stolos signers`
+ *   in one fixed form (a typed literal, Article 4); `stolos build` fails when
  *   it is not in that form.
  * - Every host keeps /etc/archon/allowed_signers (Git's format), rendered from
  *   the signers of the last commit it accepted, plus any key a person trusted
@@ -47,15 +47,15 @@ export function signersFile(): string {
   return join(P.fleetDir, "signers.ts");
 }
 
-/** The fixed form of signers.ts: what `archon signers` writes, and what build checks. */
+/** The fixed form of signers.ts: what `stolos signers` writes, and what build checks. */
 export function signersSource(list: SignerDef[]): string {
   const rows = [...list].sort((a, b) => a.name.localeCompare(b.name)).map((s) =>
     `  {\n    name: ${JSON.stringify(s.name)},\n    role: ${JSON.stringify(s.role)},\n    key: ${
       JSON.stringify(s.key)
     },\n    added: ${JSON.stringify(s.added)},\n  },\n`
   ).join("");
-  return `// Written by archon signers (spec 047): who may approve this fleet's changes.
-// Change it with archon signers add/remove, in a commit signed by a key below.
+  return `// Written by stolos signers (spec 047): who may approve this fleet's changes.
+// Change it with stolos signers add/remove, in a commit signed by a key below.
 import type { SignerDef } from "@stolos/archon/model/types.ts";
 
 export default [
@@ -76,7 +76,7 @@ export function signerProblems(list: SignerDef[]): Array<{ message: string; fix:
   if (!list.some((s) => s.role === "daily")) {
     out.push({
       message: "no daily signer: no change can be approved, and hosts apply nothing new",
-      fix: "archon signers add <name> --role daily --key <public key or .pub file>",
+      fix: "stolos signers add <name> --role daily --key <public key or .pub file>",
     });
   }
   const seen = new Set<string>();
@@ -191,7 +191,7 @@ export function enforcing(): Promise<boolean> {
 
 /**
  * The signing setup of the person running a command on the boot machine or a
- * workstation: spec 057's checks (archon keys), as a list of what is right and
+ * workstation: spec 057's checks (stolos keys), as a list of what is right and
  * what is wrong with its fix.
  */
 export async function signingSetup(): Promise<Array<{ ok: boolean; what: string; fix?: string }>> {

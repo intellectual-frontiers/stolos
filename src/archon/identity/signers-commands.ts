@@ -1,5 +1,5 @@
 /**
- * `archon signers` (spec 047-intent-and-identity): list, add, and remove the
+ * `stolos signers` (spec 047-intent-and-identity): list, add, and remove the
  * fleet's signers (fleets/<id>/signers.ts, in its fixed form), and, on a host
  * in an emergency, trust a key a person types there.
  *
@@ -30,7 +30,7 @@ async function readKey(arg: string): Promise<string> {
   return text.trim().split(/\s+/).slice(0, 2).join(" ");
 }
 
-/** archon signers: the list, and this machine's signing setup. */
+/** stolos signers: the list, and this machine's signing setup. */
 export async function signersList(json: boolean): Promise<number> {
   const list = await loadSigners();
   if (json) {
@@ -45,11 +45,11 @@ export async function signersList(json: boolean): Promise<number> {
   if (!list.some((s) => s.role === "recovery")) {
     p.warn(
       "no recovery signer: losing the daily key freezes the fleet",
-      "archon signers add <name> --role recovery --key <.pub> (keep the private key offline)",
+      "stolos signers add <name> --role recovery --key <.pub> (keep the private key offline)",
     );
   }
   p.done(`${list.length} signer(s) in ${repoRel(signersFile())}`);
-  const s = ui.phase("Your signing setup (deno task archon keys)");
+  const s = ui.phase("Your signing setup (deno task stolos keys)");
   for (const c of await signingSetup()) {
     if (c.ok) s.note(c.what);
     else s.warn(c.what, c.fix);
@@ -65,7 +65,7 @@ async function write(list: SignerDef[]): Promise<string> {
   return repoRel(file);
 }
 
-/** archon signers add. */
+/** stolos signers add. */
 export async function signersAdd(name: string, role: string, keyArg: string): Promise<number> {
   if (role !== "daily" && role !== "recovery") throw new Error("--role is daily or recovery");
   const list = await loadSigners();
@@ -88,12 +88,12 @@ export async function signersAdd(name: string, role: string, keyArg: string): Pr
   return ui.finish();
 }
 
-/** archon signers remove. */
+/** stolos signers remove. */
 export async function signersRemove(name: string): Promise<number> {
   const list = await loadSigners();
   const p = ui.phase("Signers");
   if (!list.some((s) => s.name === name)) {
-    p.fail(`no signer ${name}`, "archon signers list");
+    p.fail(`no signer ${name}`, "stolos signers list");
     return ui.finish();
   }
   const next = list.filter((s) => s.name !== name);
@@ -137,7 +137,7 @@ export async function signersTrust(keyArg: string, name: string): Promise<number
       key.slice(0, 30)
     }...) may now approve changes for this host.`,
     todo:
-      "Add it to the fleet's signers.ts with archon signers add, commit signed by it, and push; then remove /etc/archon/allowed_signers.local.",
+      "Add it to the fleet's signers.ts with stolos signers add, commit signed by it, and push; then remove /etc/archon/allowed_signers.local.",
     key: `signers-trust:${name}`,
   }).catch(() => {});
   p.done(`${name} trusted here (${ALLOWED_SIGNERS_LOCAL})`);

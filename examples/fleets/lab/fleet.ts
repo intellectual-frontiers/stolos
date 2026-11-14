@@ -1,6 +1,6 @@
 // The example lab fleet (spec 001-engine-instance): neutral data that CI and
 // the end-to-end lab install from. A real fleet lives in its own repository,
-// under fleets/<id>/, written by `archon fleet init`.
+// under fleets/<id>/, written by `stolos fleet init`.
 
 import type { FleetDef } from "@stolos/archon/model/types.ts";
 import { site } from "./site.ts";

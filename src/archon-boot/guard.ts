@@ -61,7 +61,7 @@ F=/tmp/archon-facts
   done
 } >"$F"
 A=$(curl -fsS --noproxy "*" -m 30 -X POST -H 'content-type: text/plain' --data-binary @"$F" "\${B}facts") ||
-  A="stop: the boot server did not answer, so nothing was erased (is deno task boot serve running?)"
+  A="stop: the boot server did not answer, so nothing was erased (is deno task stolos boot serve running?)"
 case "$A" in
   ok*) exit 0 ;;
 esac
@@ -174,7 +174,7 @@ export function guardDecision(
       f.signatures.join("; ")
     }), so the install stopped before writing anything`,
     fix:
-      `if this is the machine you mean and its disks may be erased: deno task boot arm ${host} --claim --confirm-destroy ${host} (or --mac-address ${
+      `if this is the machine you mean and its disks may be erased: deno task stolos boot arm ${host} --claim --confirm-destroy ${host} (or --mac-address ${
         bootMac ?? "<mac>"
       } instead of --claim), then network-boot it again`,
   };

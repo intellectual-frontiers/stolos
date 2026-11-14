@@ -82,7 +82,7 @@ chezmoi apply                      # apply the composed source now, without wait
    to `main`.
 4. `archon update` on the host, or wait for the reconcile timer (15 minutes).
 
-Run `deno task archon build` before pushing: it checks every layer.
+Run `deno task stolos build` before pushing: it checks every layer.
 
 ## This machine only
 
@@ -100,7 +100,7 @@ chezmoi does not manage is yours too; `archon dotfiles <file>` says so.
 
 ## What a layer may not contain
 
-`archon build` rejects these:
+`stolos build` rejects these:
 
 - scripts (`run_` files, `.chezmoiscripts/`): anything that must run belongs in the model
 - secrets (`encrypted_` files, `.age` or `.asc` files): secrets never go in the repository

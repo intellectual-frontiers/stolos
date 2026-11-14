@@ -1,5 +1,5 @@
 /**
- * `archon export` (spec 002 FR-006, spec 014): the fleet, hosts, specs,
+ * `stolos export` (spec 002 FR-006, spec 014): the fleet, hosts, specs,
  * provenance, and snapshots as RDF (Turtle) under out/rdf/. RDF is an export
  * only (Article 10); vocabularies are reused (Article 3): W3C PROV, Dublin
  * Core terms, FOAF, and a small archon: namespace for the rest.

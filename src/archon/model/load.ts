@@ -1,6 +1,6 @@
 /**
- * Load the active fleet (fleets/<id>/fleet.ts, written by `archon fleet init`)
- * and every host (fleets/<id>/hosts/<name>/host.ts, written by `archon host add`).
+ * Load the active fleet (fleets/<id>/fleet.ts, written by `stolos fleet init`)
+ * and every host (fleets/<id>/hosts/<name>/host.ts, written by `stolos host add`).
  * Hosts are discovered from the directory, so there is no index to keep in
  * sync.
  *
@@ -35,10 +35,10 @@ export class NoFleetError extends Error {
   constructor() {
     super(
       P.fleetId
-        ? `no fleet ${P.fleetId} in ${P.repo}: run \`archon fleet init ${P.fleetId}\` on the boot machine first`
-        : `no fleet chosen in ${P.repo}: deno task archon fleet use <id> (one of: ${
+        ? `no fleet ${P.fleetId} in ${P.repo}: run \`stolos fleet init ${P.fleetId}\` on the boot machine first`
+        : `no fleet chosen in ${P.repo}: deno task stolos fleet use <id> (one of: ${
           listFleets(P.repo).join(", ") || "none yet"
-        }), or create one: deno task archon fleet init <id>`,
+        }), or create one: deno task stolos fleet init <id>`,
     );
   }
 }

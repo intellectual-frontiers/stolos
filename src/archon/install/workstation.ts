@@ -1,5 +1,5 @@
 /**
- * `archon workstation add` (spec 020): run inside Ubuntu on WSL (or on an
+ * `stolos workstation add` (spec 020): run inside Ubuntu on WSL (or on an
  * Ubuntu desktop), from the checkout in /srv/archon, as your own user. It
  * writes fleets/<fleet>/hosts/<name>/host.ts (kind "workstation") and then, through
  * sudo, converges the user-level parts: tools, dotfiles, the
@@ -17,7 +17,7 @@ import { hostFile, loadFleet } from "../model/load.ts";
 
 /** The TypeScript source of a new workstation's host.ts (kind "workstation"). */
 export function workstationSource(o: { name: string; user: string; desktop?: boolean }): string {
-  return `// Workstation ${o.name} (spec 020). Written by \`archon workstation add\`; edit
+  return `// Workstation ${o.name} (spec 020). Written by \`stolos workstation add\`; edit
 // freely, then \`sudo archon update\`. Only the user-level parts apply here.
 
 import type { HostDef } from "@stolos/archon/model/types.ts";
@@ -37,7 +37,7 @@ export const host: HostDef = {
 }
 
 /**
- * `archon workstation add`: checks this machine (Linux, not root, the fleet's
+ * `stolos workstation add`: checks this machine (Linux, not root, the fleet's
  * Ubuntu release, systemd, the /srv/archon checkout), writes the host model
  * (kept unless `force`), then runs archon update through sudo. Returns the
  * exit code: 1 when a check fails, else update's.

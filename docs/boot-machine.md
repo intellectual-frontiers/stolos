@@ -89,7 +89,7 @@ Without the TCP 8080 policy the network boot gets through TFTP but the installer
 ## Describe your fleet (once)
 
 ```powershell
-deno task archon fleet init
+deno task stolos fleet init
 git add -A; git commit -m "003-identity: fleet init"; git push
 ```
 
@@ -108,8 +108,8 @@ checkout; it reaches each server through MCP over SSH. See [agent.md](agent.md).
 
 Every server answers HTTPS as `<host>.lab.example.net` with a Let's Encrypt certificate, through
 Cloudflare's DNS challenge (spec 032). Create a Cloudflare token with Zone > DNS > Edit and Zone >
-Zone > Read on `example.net`, then `deno task boot web-setup`. Servers get it at install, or now
-with `deno task boot web-push <host>`. See [web.md](web.md).
+Zone > Read on `example.net`, then `deno task stolos boot web-setup`. Servers get it at install, or
+now with `deno task stolos boot web-push <host>`. See [web.md](web.md).
 
 ## Email (once, recommended)
 
@@ -136,16 +136,16 @@ fleet@example.net). It needs the Workers Paid plan, which includes 3,000 message
 **On this PC:**
 
 ```powershell
-deno task boot mail-setup           # paste the token (hidden); then this PC mails its check results
-deno task boot mail-push alpha     # give a running server the token; it mails its check results
-deno task boot doctor --send        # check again, and mail the email findings
+deno task stolos boot mail-setup           # paste the token (hidden); then this PC mails its check results
+deno task stolos boot mail-push alpha     # give a running server the token; it mails its check results
+deno task stolos boot doctor --send        # check again, and mail the email findings
 ```
 
 The token is stored in this PC's secrets folder (`mail.json`), never in git; servers get it at their
 next install (and mail their check results from the first boot), or now with `mail-push`, and keep
 it in `/etc/postfix/sasl_passwd` (root only). Anyone holding it can send mail as the onboarded
 domain. To revoke it: **Manage Account > Account API Tokens**, `archon mail`, **Delete**; then
-create a new one, `mail-setup`, and `mail-push` each server. `deno task boot doctor` and
+create a new one, `mail-setup`, and `mail-push` each server. `deno task stolos boot doctor` and
 `archon doctor` check the domain's records, the token, and (on servers) Postfix.
 
 ## Run the boot server
@@ -153,7 +153,7 @@ create a new one, `mail-setup`, and `mail-push` each server. `deno task boot doc
 ```powershell
 cd C:\archon
 git pull
-deno task boot serve
+deno task stolos boot serve
 ```
 
 Leave it running while hosts install. It:
@@ -184,8 +184,8 @@ The boot server records itself with OpenTelemetry, and keeps it on this PC only 
 30 days and 256 MB at most. Each install is one trace, with a span per step.
 
 ```powershell
-deno task boot observe          # recent installs: each step and how long it took, what failed
-deno task boot observe --last 20
+deno task stolos boot observe          # recent installs: each step and how long it took, what failed
+deno task stolos boot observe --last 20
 ```
 
 To watch it live, run [otel-tui](https://github.com/ymtdzzz/otel-tui) on this PC while `boot serve`
@@ -198,10 +198,10 @@ key and SSH host keys, the Cloudflare DNS token, and the mail token. A backup is
 you keep somewhere safe (constitution Article 13):
 
 ```powershell
-deno task boot vault status     # every secret: changed when, backed up when (⚠ = not backed up)
-deno task boot vault backup     # writes the ZIP, reads it back, and says where it is
-deno task boot vault restore    # how to restore a ZIP by hand (prints the steps; changes nothing)
-deno task boot vault list       # the ZIPs not yet moved out of the backup folder
+deno task stolos vault status     # every secret: changed when, backed up when (⚠ = not backed up)
+deno task stolos vault backup     # writes the ZIP, reads it back, and says where it is
+deno task stolos vault restore    # how to restore a ZIP by hand (prints the steps; changes nothing)
+deno task stolos vault list       # the ZIPs not yet moved out of the backup folder
 ```
 
 ```mermaid
@@ -258,22 +258,22 @@ New-Alias -Name 'Set-PoshContext' -Value 'Set-ArchonStatus' -Scope Global -Force
 The UniFi network is modeled in `fleets/<fleet>/site.ts`: networks, zones and policies, DNS, the
 mDNS proxy, Wi-Fi, WireGuard, the boot server, and fixed addresses (names only, never passwords).
 The router is the authority (constitution Article 21): change UniFi first, then the model to match.
-`archon build` checks it (for example that a network booting from this PC has its two policies) and
+`stolos build` checks it (for example that a network booting from this PC has its two policies) and
 renders the reference, `out/site/network-reference.html`. To send a network change log to the shared
 mailbox:
 
 ```powershell
-deno task archon build
-deno task boot notify --subject "Lab Network Runbook Change Log 2026-11-12" --body-file changes.txt --attach out\site\network-reference.html
+deno task stolos build
+deno task stolos boot notify --subject "Lab Network Runbook Change Log 2026-11-12" --body-file changes.txt --attach out\site\network-reference.html
 ```
 
-If this PC's address changes, set `site.bootServer.address`: `archon build` then lists every UniFi
+If this PC's address changes, set `site.bootServer.address`: `stolos build` then lists every UniFi
 setting that still points at the old one.
 
 ## Check the boot machine
 
 ```powershell
-deno task boot doctor
+deno task stolos boot doctor
 ```
 
 Read-only. It checks the checkout (uncommitted or unpushed host changes, which hosts would not see),
@@ -283,26 +283,26 @@ fix for each problem.
 
 ## Commands
 
-| Command                                                                                 | Does                                                                                                                                                      |
-| --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `deno task boot serve`                                                                  | serve installs (leave it running)                                                                                                                         |
-| `deno task boot doctor [--send]`                                                        | check this machine (and its email), with fixes; `--send` mails the email findings                                                                         |
-| `deno task boot observe [--last 5]`                                                     | recent installs from the boot server's telemetry                                                                                                          |
-| `deno task boot status`                                                                 | hosts, armed or not, MACs learned, Boot URIs                                                                                                              |
-| `deno task archon fleet status`                                                         | every server and workstation: last install, and how to reach and observe it                                                                               |
-| `deno task boot arm <host> [--claim] [--confirm-destroy <host>]`                        | allow one install of a host (`--claim`: the next unknown machine becomes it; a host recorded as durable needs `--confirm-destroy`)                        |
-| `deno task boot retire <host> --confirm-destroy <host>`                                 | a server leaves the fleet: its DNS, deploy key, identity, model, and records ([hosts](hosts.md#retire-a-host))                                            |
-| `deno task boot reinstall <host> [--confirm-destroy <host>]`                            | re-install a running host, nobody at the console; a durable host, or one that cannot be reached, needs `--confirm-destroy` ([hosts](hosts.md#re-install)) |
-| `deno task boot vault status [--lost]`                                                  | every secret, and whether the last backup has it                                                                                                          |
-| `deno task boot vault backup` · `restore` · `list`                                      | the backup ZIP: write it; how to restore it (steps only); the ZIPs not yet moved (spec 056)                                                               |
-| `deno task boot web-setup`                                                              | store the Cloudflare DNS token for HTTPS certificates and server records (once)                                                                           |
-| `deno task boot web-push <host>`                                                        | give a running server that token                                                                                                                          |
-| `deno task boot mail-setup`                                                             | store the Cloudflare token for mail (once)                                                                                                                |
-| `deno task boot mail-push <host>`                                                       | give a running server the token, then test its mail                                                                                                       |
-| `deno task boot notify --subject <s> [--body <t> \| --body-file <f>] [--attach <f>]...` | email the mailbox from this PC (also `notify test`, `notify status`)                                                                                      |
-| `deno task archon fleet init`                                                           | create the fleet (once)                                                                                                                                   |
-| `deno task archon host add <name> --claim \| --mac-address <mac>`                       | add a host                                                                                                                                                |
-| `deno task archon host bootstrap <name> --ssh user@address`                             | finish a host whose Ubuntu was installed by hand                                                                                                          |
+| Command                                                                                        | Does                                                                                                                                                      |
+| ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `deno task stolos boot serve`                                                                  | serve installs (leave it running)                                                                                                                         |
+| `deno task stolos boot doctor [--send]`                                                        | check this machine (and its email), with fixes; `--send` mails the email findings                                                                         |
+| `deno task stolos boot observe [--last 5]`                                                     | recent installs from the boot server's telemetry                                                                                                          |
+| `deno task stolos boot status`                                                                 | hosts, armed or not, MACs learned, Boot URIs                                                                                                              |
+| `deno task stolos fleet status`                                                                | every server and workstation: last install, and how to reach and observe it                                                                               |
+| `deno task stolos boot arm <host> [--claim] [--confirm-destroy <host>]`                        | allow one install of a host (`--claim`: the next unknown machine becomes it; a host recorded as durable needs `--confirm-destroy`)                        |
+| `deno task stolos boot retire <host> --confirm-destroy <host>`                                 | a server leaves the fleet: its DNS, deploy key, identity, model, and records ([hosts](hosts.md#retire-a-host))                                            |
+| `deno task stolos boot reinstall <host> [--confirm-destroy <host>]`                            | re-install a running host, nobody at the console; a durable host, or one that cannot be reached, needs `--confirm-destroy` ([hosts](hosts.md#re-install)) |
+| `deno task stolos vault status [--lost]`                                                       | every secret, and whether the last backup has it                                                                                                          |
+| `deno task stolos vault backup` · `restore` · `list`                                           | the backup ZIP: write it; how to restore it (steps only); the ZIPs not yet moved (spec 056)                                                               |
+| `deno task stolos boot web-setup`                                                              | store the Cloudflare DNS token for HTTPS certificates and server records (once)                                                                           |
+| `deno task stolos boot web-push <host>`                                                        | give a running server that token                                                                                                                          |
+| `deno task stolos boot mail-setup`                                                             | store the Cloudflare token for mail (once)                                                                                                                |
+| `deno task stolos boot mail-push <host>`                                                       | give a running server the token, then test its mail                                                                                                       |
+| `deno task stolos boot notify --subject <s> [--body <t> \| --body-file <f>] [--attach <f>]...` | email the mailbox from this PC (also `notify test`, `notify status`)                                                                                      |
+| `deno task stolos fleet init`                                                                  | create the fleet (once)                                                                                                                                   |
+| `deno task stolos host add <name> --claim \| --mac-address <mac>`                              | add a host                                                                                                                                                |
+| `deno task stolos host bootstrap <name> --ssh user@address`                                    | finish a host whose Ubuntu was installed by hand                                                                                                          |
 
 ## What is kept where
 
@@ -313,5 +313,5 @@ fix for each problem.
 | hosts' SSH host keys as this PC trusts them                                                                                                | `%USERPROFILE%\.ssh\known_hosts`                                   | no      |
 | fleet, hosts, specs, dotfiles, what hosts recorded                                                                                         | `C:\archon`                                                        | yes     |
 
-Back up the secrets folder (`deno task boot vault backup`): without it, a re-installed host gets new
-SSH host keys and a new deploy key (`host add <name> --force`).
+Back up the secrets folder (`deno task stolos vault backup`): without it, a re-installed host gets
+new SSH host keys and a new deploy key (`host add <name> --force`).

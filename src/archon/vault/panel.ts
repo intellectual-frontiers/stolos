@@ -66,7 +66,7 @@ export function panelLines(a: Assessment, pc: string, now = Date.now()): string[
     head,
     ...rows.map((r) => `   • ${pad(r[0], w0)}  ${pad(r[1], w1)}  ${r[2]}`),
     ...(listed.length > 8
-      ? [`   and ${listed.length - 8} more (deno task boot vault status)`]
+      ? [`   and ${listed.length - 8} more (deno task stolos vault status)`]
       : []),
     ...(pubs && secret.length
       ? [`   (and ${pubs} public key${pubs === 1 ? "" : "s"} that go with them)`]
@@ -78,7 +78,7 @@ export function panelLines(a: Assessment, pc: string, now = Date.now()): string[
     `If ${pc} failed now, these would have to be recreated.`,
     "Run this, then move the ZIP it makes somewhere safe:",
     "",
-    "    deno task boot vault backup",
+    "    deno task stolos vault backup",
   ];
   const title = " 🔐  Secrets changed: back them up ";
   const inner = Math.max(...body.map(width), width(title) + 2) + 4;

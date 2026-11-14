@@ -94,26 +94,19 @@ export interface Command {
    */
   precheck?: (args: Parsed, ctx: RunContext) => Promise<number | undefined>;
   /**
-   * Its tier applies only on an installed host (/etc/archon/fleet): elsewhere
-   * (your PC's checkout) it runs as you, at the repo tier (spec 058: archon update).
+   * Where it runs: "pc" (`stolos`, in the fleet repository on your PC), "machine"
+   * (`archon`, on each server or workstation), or "both".
    */
-  hostOnlyTier?: boolean;
+  place?: Place;
   /** Runs it; returns the exit code. */
   run: (args: Parsed, ctx: RunContext) => Promise<number>;
 }
 
-/** Whether this machine is a host Archon installed (it has /etc/archon/fleet). */
-export function installedHost(): boolean {
-  try {
-    return Deno.statSync("/etc/archon/fleet").isFile;
-  } catch {
-    return false;
-  }
-}
+/** Where a command runs: your PC (stolos), each machine (archon), or both. */
+export type Place = "pc" | "machine" | "both";
 
 /** The tier this run needs (a command's tier can depend on its arguments, for example --check). */
 export function effectiveTier(cmd: Command, args: Parsed): Tier {
-  if (cmd.hostOnlyTier && !installedHost()) return "repo";
   if (cmd.mutateWith && args[cmd.mutateWith]) return "mutate";
   return cmd.readOnlyWith && args[cmd.readOnlyWith] ? "read" : cmd.tier;
 }

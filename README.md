@@ -238,21 +238,21 @@ With Deno, Git, and `gh` installed (above) and `gh auth login` done:
    installs a check that runs before every push, and makes a test signature:
 
    ```sh
-   deno task archon keys setup
+   deno task stolos keys setup
    ```
 
    Then move the `fleet-recovery` folder it made on your Desktop to an encrypted USB drive or a
-   password manager, and delete it from the PC. `deno task archon keys` checks everything later.
+   password manager, and delete it from the PC. `deno task stolos keys` checks everything later.
 4. Commit and push (Git signs it; type your passphrase):
 
    ```sh
    git add -A && git commit -m "<id>: the fleet" && git push
    ```
 
-5. From here, `deno task archon` shows where you are and the one command to run next: tokens, your
-   first server (`deno task archon host add <name> --claim`), and installing it
-   (`deno task boot serve`).
-6. Back up: `deno task boot vault backup` writes one ZIP with every secret and your signing key;
+5. From here, `deno task stolos` shows where you are and the one command to run next: tokens, your
+   first server (`deno task stolos host add <name> --claim`), and installing it
+   (`deno task stolos boot serve`).
+6. Back up: `deno task stolos vault backup` writes one ZIP with every secret and your signing key;
    move it somewhere safe and encrypted.
 
 The full walk-through: [docs/fleet-repository.md](docs/fleet-repository.md) and
@@ -297,10 +297,10 @@ typed by a person).
 Open a terminal in your fleet repository (on Windows: PowerShell, `cd C:\fleet`), then:
 
 ```sh
-deno task archon update           # instead of git pull: pulls, checks signatures, moves to a newer
+deno task stolos update           # instead of git pull: pulls, checks signatures, moves to a newer
                                   # engine release, repairs keys, and runs the doctor
-deno task archon                  # where you are, and the one command to run next
-deno task archon fleet status     # every server, how it is
+deno task stolos                  # where you are, and the one command to run next
+deno task stolos fleet status     # every server, how it is
 ```
 
 ## Common tasks, step by step
@@ -316,7 +316,7 @@ within 15 minutes.
    from the network becomes this server" (within 30 minutes):
 
    ```sh
-   deno task archon host add server-hostname --claim
+   deno task stolos host add server-hostname --claim
    ```
 
    If you know its network card's MAC address, use that instead, so only that machine can take the
@@ -325,7 +325,7 @@ within 15 minutes.
 2. Start the boot server on the boot machine, and leave it running:
 
    ```sh
-   deno task boot serve
+   deno task stolos boot serve
    ```
 
 3. Power the new machine on and make it boot from the network (the boot menu key at power-on: F7,
@@ -346,11 +346,11 @@ what it found (`archon explain E051-DISK-NOT-BLANK`). When you are sure it may b
 yourself (never an agent), for this one install, then boot it again:
 
 ```sh
-deno task boot arm server-hostname --claim --confirm-destroy server-hostname
+deno task stolos boot arm server-hostname --claim --confirm-destroy server-hostname
 ```
 
 **If it has less than 8 GB of RAM**, a network install stalls. Install Ubuntu 26.04 Server from a
-USB stick instead, then: `deno task archon host bootstrap server-hostname --ssh you@<its address>`.
+USB stick instead, then: `deno task stolos host bootstrap server-hostname --ssh you@<its address>`.
 
 </details>
 
@@ -365,7 +365,7 @@ gh auth login --web --git-protocol https && gh auth setup-git
 sudo mkdir -p /srv/archon && sudo chown "$USER": /srv/archon
 git clone https://github.com/<you>/<fleet repository>.git /srv/archon
 curl -fsSL https://deno.land/install.sh | sh -s -- -y && exec bash
-cd /srv/archon && deno task archon workstation add
+cd /srv/archon && deno task stolos workstation add
 git add -A && git commit -m "my-fleet: add workstation" && git push
 ```
 
@@ -381,9 +381,9 @@ Edit its file, `fleets/my-fleet/hosts/server-hostname/host.ts` (or `fleets/my-fl
 every server), then:
 
 ```sh
-deno task archon build            # checks it; fix anything it shows
+deno task stolos build            # checks it; fix anything it shows
 git add -A && git commit -m "my-fleet: what changed" && git push
-deno task archon fleet status     # within 15 minutes, each server has applied it
+deno task stolos fleet status     # within 15 minutes, each server has applied it
 ```
 
 In a hurry: `ssh -t server-hostname archon update` applies it now (it asks for your password).
@@ -402,7 +402,7 @@ Anything that holds people's data must be marked, when you turn it on, as one of
 There is no default: you choose.
 
 ```sh
-deno task archon decide pg on --durable --host server-hostname
+deno task stolos decide pg on --durable --host server-hostname
 git add -A && git commit -m "my-fleet: PostgreSQL on server-hostname" && git push
 ```
 
@@ -411,7 +411,7 @@ ephemeral to durable is always allowed. Going from durable to ephemeral removes 
 it needs the confirmation:
 
 ```sh
-deno task archon decide pg on --ephemeral --host server-hostname --confirm-destroy server-hostname
+deno task stolos decide pg on --ephemeral --host server-hostname --confirm-destroy server-hostname
 ```
 
 </details>
@@ -423,7 +423,7 @@ Everything comes back from the repository and the boot machine (the same SSH ide
 `ssh server-hostname` still works); anything only on the server is lost. With `boot serve` running:
 
 ```sh
-deno task boot reinstall server-hostname
+deno task stolos boot reinstall server-hostname
 ```
 
 A durable server (or one that cannot be asked) is reinstalled only with
@@ -444,8 +444,8 @@ database.
 <summary><b>Retire a server for good</b></summary>
 
 ```sh
-deno task boot retire server-hostname                                     # only shows what it holds
-deno task boot retire server-hostname --confirm-destroy server-hostname   # removes it from the fleet
+deno task stolos boot retire server-hostname                                     # only shows what it holds
+deno task stolos boot retire server-hostname --confirm-destroy server-hostname   # removes it from the fleet
 ```
 
 Its DNS names, deploy key, secrets, and files leave the fleet; the machine itself is not touched.
@@ -457,12 +457,12 @@ Its DNS names, deploy key, secrets, and files leave the fleet; the machine itsel
 
 | Situation                                 | Run                                                       |
 | ----------------------------------------- | --------------------------------------------------------- |
-| check everything                          | `deno task archon keys`                                   |
-| a new PC, or anything is wrong            | `deno task archon keys setup` (safe to run again)         |
-| a planned change of key                   | `deno task archon keys rotate`, then `git push`           |
-| the daily key is lost                     | `deno task archon keys lost --recovery <file>`, then push |
+| check everything                          | `deno task stolos keys`                                   |
+| a new PC, or anything is wrong            | `deno task stolos keys setup` (safe to run again)         |
+| a planned change of key                   | `deno task stolos keys rotate`, then `git push`           |
+| the daily key is lost                     | `deno task stolos keys lost --recovery <file>`, then push |
 | the laptop was stolen (key may be copied) | the same, with `--stolen`                                 |
-| twice a year                              | `deno task archon keys check-recovery --key <file>`       |
+| twice a year                              | `deno task stolos keys check-recovery --key <file>`       |
 
 </details>
 
@@ -472,41 +472,41 @@ Its DNS names, deploy key, secrets, and files leave the fleet; the machine itsel
 After anything that made a secret (a new server, a new token, a new key):
 
 ```sh
-deno task boot vault backup
+deno task stolos vault backup
 ```
 
 It writes one ZIP and tells you where. Move it somewhere safe and encrypted (a password manager, an
-encrypted USB drive, OneDrive's Personal Vault). `deno task boot vault restore` explains how to use
-it on a new PC.
+encrypted USB drive, OneDrive's Personal Vault). `deno task stolos vault restore` explains how to
+use it on a new PC.
 
 </details>
 
 <details>
 <summary><b>Adopt a newer engine</b></summary>
 
-`deno task archon update` does it when a newer release is out: it checks the new version against
+`deno task stolos update` does it when a newer release is out: it checks the new version against
 your fleet, makes one signed commit, and tells you to `git push`; your servers pick it up within 15
-minutes. To choose a version yourself: `deno task archon fleet upgrade v<version>`, then `git push`.
+minutes. To choose a version yourself: `deno task stolos fleet upgrade v<version>`, then `git push`.
 
 </details>
 
 ## When something goes wrong
 
 Most messages end with `explain: archon explain <code>`: run it for what it means and how to fix it.
-`deno task boot doctor` checks the boot machine; `archon doctor` checks a server.
+`deno task stolos boot doctor` checks the boot machine; `archon doctor` checks a server.
 
-| You see                                               | What to do                                                                                                                       |
-| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `no fleet chosen in ...`                              | the repository holds several fleets: `deno task archon fleet use my-fleet` (once per checkout; remembered)                       |
-| `push refused here: ... is not signed`                | `git commit --amend --no-edit -S`, then push again. `deno task archon keys` shows what is missing                                |
-| a server does not pick up your change                 | `deno task archon fleet status`; on the server, `journalctl -t archon-approval` says why it refused (usually `E047-UNSIGNED`)    |
-| the boot window shows nothing when the machine boots  | `deno task boot doctor` (the firewall, and the router's network boot setting); is the machine booting from the network (F7/F12)? |
-| `disk is not blank` in the boot window                | it protected the disk. If it may be erased: `deno task boot arm server-hostname --claim --confirm-destroy server-hostname`       |
-| the install stops after `installer image`             | the machine has less than 8 GB of RAM: install from USB, then `host bootstrap` (above)                                           |
-| `ssh server-hostname` warns that the host key changed | stop: do not accept it. `deno task boot doctor`, then `archon explain E047-HOST-KEY`                                             |
-| you forgot your daily key's passphrase                | it cannot be recovered: `deno task archon keys lost --recovery <file>`                                                           |
-| `integrity check failed` or `lockfile is out of date` | stop: never regenerate `deno.lock` to make it go away. See [docs/fleet-repository.md](docs/fleet-repository.md#troubleshooting)  |
-| `the repository has uncommitted changes`              | commit (or `git stash`) your other change first                                                                                  |
+| You see                                               | What to do                                                                                                                              |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `no fleet chosen in ...`                              | the repository holds several fleets: `deno task stolos fleet use my-fleet` (once per checkout; remembered)                              |
+| `push refused here: ... is not signed`                | `git commit --amend --no-edit -S`, then push again. `deno task stolos keys` shows what is missing                                       |
+| a server does not pick up your change                 | `deno task stolos fleet status`; on the server, `journalctl -t archon-approval` says why it refused (usually `E047-UNSIGNED`)           |
+| the boot window shows nothing when the machine boots  | `deno task stolos boot doctor` (the firewall, and the router's network boot setting); is the machine booting from the network (F7/F12)? |
+| `disk is not blank` in the boot window                | it protected the disk. If it may be erased: `deno task stolos boot arm server-hostname --claim --confirm-destroy server-hostname`       |
+| the install stops after `installer image`             | the machine has less than 8 GB of RAM: install from USB, then `host bootstrap` (above)                                                  |
+| `ssh server-hostname` warns that the host key changed | stop: do not accept it. `deno task stolos boot doctor`, then `archon explain E047-HOST-KEY`                                             |
+| you forgot your daily key's passphrase                | it cannot be recovered: `deno task stolos keys lost --recovery <file>`                                                                  |
+| `integrity check failed` or `lockfile is out of date` | stop: never regenerate `deno.lock` to make it go away. See [docs/fleet-repository.md](docs/fleet-repository.md#troubleshooting)         |
+| `the repository has uncommitted changes`              | commit (or `git stash`) your other change first                                                                                         |
 
 ## Documentation
 
@@ -534,8 +534,8 @@ Most messages end with `explain: archon explain <code>`: run it for what it mean
 ## Try it
 
 ```sh
-deno task archon validate     # the example fleet, examples/fleets/lab
-deno task archon build        # renders its machines into examples/out/lab/
+deno task stolos validate     # the example fleet, examples/fleets/lab
+deno task stolos build        # renders its machines into examples/out/lab/
 deno task test
 ```
 

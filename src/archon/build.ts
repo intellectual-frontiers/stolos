@@ -1,5 +1,5 @@
 /**
- * `archon validate` and `archon build` (spec 002): validate the fleet and
+ * `stolos validate` and `stolos build` (spec 002): validate the fleet and
  * every host plan (TypeScript, Article 10), then render each host's files into
  * out/hosts/<host>/rootfs/. Deterministic: building twice changes nothing.
  *
@@ -39,18 +39,18 @@ export async function loadModel(): Promise<Model> {
   const hosts = await loadHosts();
   const problems = validateFleet(fleet, hosts);
   problems.push(...(await signersFileProblems(fleet)));
-  // Spec 047: registration.ts is written by archon host add, in one form.
+  // Spec 047: registration.ts is written by stolos host add, in one form.
   const { registrationProblems } = await import("./fleet/registration.ts");
   for (const p of await registrationProblems(hosts.map((h) => h.name))) {
-    problems.push({ ...p, fix: "write it again with archon host add <host> (it keeps the keys)" });
+    problems.push({ ...p, fix: "write it again with stolos host add <host> (it keeps the keys)" });
   }
-  // Spec 047: decisions.ts are written by archon decide, in one form.
+  // Spec 047: decisions.ts are written by stolos decide, in one form.
   const { decisionProblems } = await import("./fleet/decisions.ts");
   for (const f of await decisionProblems(hosts.map((h) => h.name))) {
     problems.push({
       where: f,
-      message: "not in the form archon decide writes",
-      fix: "change it only with archon decide (or copy that form exactly)",
+      message: "not in the form stolos decide writes",
+      fix: "change it only with stolos decide (or copy that form exactly)",
     });
   }
   const specs = await knownSpecs();
@@ -192,7 +192,7 @@ export async function renderSite(m: Model): Promise<number> {
   return (await writeIfChanged(join(P.out, "site", "network-reference.html"), html)) ? 1 : 0;
 }
 
-/** `archon build`: validate the model, then render every target into out/; true when it is valid. */
+/** `stolos build`: validate the model, then render every target into out/; true when it is valid. */
 export async function build(): Promise<boolean> {
   const p = ui.phase("Model");
   let m: Model;
@@ -202,7 +202,7 @@ export async function build(): Promise<boolean> {
     if (!(e instanceof NoFleetError)) throw e;
     // A fresh repository: the registry's files still render.
     const n = await renderRepoFiles();
-    p.done(`no fleet yet (archon fleet init) · ${n} repository file(s) rendered`);
+    p.done(`no fleet yet (stolos fleet init) · ${n} repository file(s) rendered`);
     return true;
   }
   if (!report(p, m)) {
@@ -225,7 +225,7 @@ async function signersFileProblems(fleet: FleetDef): Promise<Problem[]> {
     out.push({
       where: "signers",
       message: "signers.ts is not in the form archon writes",
-      fix: "change it only with archon signers add/remove (or copy that form exactly)",
+      fix: "change it only with stolos signers add/remove (or copy that form exactly)",
     });
   }
   return out;

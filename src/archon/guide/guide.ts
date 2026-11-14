@@ -535,7 +535,7 @@ export interface AgentSetup {
 /** How an MCP client reaches this server. */
 export function agentSetup(plan: HostPlan): AgentSetup {
   const { fleet, host } = plan;
-  // The same target archon build writes into .mcp.json (render/agent.ts).
+  // The same target stolos build writes into .mcp.json (render/agent.ts).
   const target = `ops@${host.dnsName ?? host.ip ?? host.name}`;
   return {
     server: `archon-${fleet.id}-${host.name}`,
@@ -582,7 +582,7 @@ export function agentSteps(a: AgentSetup): Array<{ title: string; text: string; 
       text:
         "To change a server, the agent changes the repository, never the server: it edits the model, runs the build to validate it, shows you what each server would change, and commits. You review and push: pushing to main is the approval. Every server applies main within 15 minutes, or at once when the agent runs archon_update on it. Then pull again to see what the servers recorded.",
       cmds: [
-        "deno task archon build",
+        "deno task stolos build",
         'git commit -am "<spec>: <what changed>"',
         "git push",
         "git pull",

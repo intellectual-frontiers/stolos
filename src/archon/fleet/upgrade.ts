@@ -1,5 +1,5 @@
 /**
- * `archon fleet upgrade <tag>` (spec 046-engine-instance, Articles 9, 12, 24):
+ * `stolos fleet upgrade <tag>` (spec 046-engine-instance, Articles 9, 12, 24):
  * move a fleet repository to another released version of the engine, safely.
  *
  * Why each step exists (docs/fleet-repository.md says it at length):
@@ -19,7 +19,7 @@
  * ```mermaid
  * sequenceDiagram
  *   actor P as Person
- *   participant U as archon fleet upgrade
+ *   participant U as stolos fleet upgrade
  *   participant G as GitHub (stolos tag)
  *   participant R as fleet repository
  *   P->>U: fleet upgrade vX.Y.Z
@@ -47,7 +47,7 @@ export const ENGINE_ENTRY = "engine.ts";
 export const ENGINE_ENTRY_TEXT =
   `// Every engine module, so that deno.lock pins all of them (archon runs with
 // --frozen, and the engine loads some modules on demand). Nothing runs this
-// file. Kept by archon fleet upgrade (spec 046).
+// file. Kept by stolos fleet upgrade (spec 046).
 import "@stolos/archon/modules.auto.ts";
 `;
 
@@ -159,7 +159,7 @@ export async function releasedVersion(
   }
 }
 
-/** What archon fleet upgrade is given. */
+/** What stolos fleet upgrade is given. */
 export interface UpgradeOptions {
   /** The tag to move to. */
   tag: string;
@@ -171,7 +171,7 @@ export interface UpgradeOptions {
   repo?: string;
 }
 
-/** archon fleet upgrade: move the pin, lock the engine, validate every fleet, and make one signed commit. */
+/** stolos fleet upgrade: move the pin, lock the engine, validate every fleet, and make one signed commit. */
 export async function fleetUpgrade(o: UpgradeOptions): Promise<number> {
   const repo = o.repo ?? P.repo;
   const denoJsonPath = join(repo, "deno.json");
@@ -237,7 +237,7 @@ export async function fleetUpgrade(o: UpgradeOptions): Promise<number> {
   const lock = join(repo, "deno.lock");
   if (await exists(lock)) await Deno.remove(lock);
   const entries: string[] = [];
-  for (const f of ["archon.ts", "boot.ts", ENGINE_ENTRY]) {
+  for (const f of ["archon.ts", "stolos.ts", ENGINE_ENTRY]) {
     if (await exists(join(repo, f))) entries.push(f);
   }
   l.status("downloading the engine and hashing every file");
@@ -271,13 +271,13 @@ export async function fleetUpgrade(o: UpgradeOptions): Promise<number> {
       "run",
       "-A",
       "--frozen",
-      "archon.ts",
+      "stolos.ts",
       "validate",
     ], { cwd: repo, env: { ...Deno.env.toObject(), ARCHON_REPO: repo, ARCHON_FLEET: id } });
     if (!r.ok) {
       v.fail(
         `fleet ${id} does not validate with ${o.tag}`,
-        `read it with: ARCHON_FLEET=${id} deno task archon validate; fix the model (or stay on ${pin.tag}: git checkout -- deno.json deno.lock ${ENGINE_ENTRY})`,
+        `read it with: ARCHON_FLEET=${id} deno task stolos validate; fix the model (or stay on ${pin.tag}: git checkout -- deno.json deno.lock ${ENGINE_ENTRY})`,
       );
       return ui.finish();
     }
@@ -319,14 +319,14 @@ export async function fleetUpgrade(o: UpgradeOptions): Promise<number> {
   if (!commit.ok) {
     c.fail(
       "the commit was not made (signing failed or was cancelled)",
-      `check your signing setup (archon signers), then: git commit -S -m "stolos ${o.tag}: adopt the engine ${o.tag}"`,
+      `check your signing setup (stolos signers), then: git commit -S -m "stolos ${o.tag}: adopt the engine ${o.tag}"`,
     );
     return ui.finish();
   }
   c.done(`signed commit "stolos ${o.tag}: adopt the engine ${o.tag}"`);
   ui.next.push(
     "push it: git push (pushing is the approval; hosts move to it within 15 minutes)",
-    "then watch them: archon fleet status",
+    "then watch them: stolos fleet status",
   );
   return ui.finish();
 }

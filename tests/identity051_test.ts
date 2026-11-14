@@ -29,7 +29,7 @@ Deno.test("051: MAC addresses in any common spelling, typos refused", () => {
 });
 
 Deno.test("051: exactly one of --claim and --mac-address; no default", () => {
-  const cmd = "deno task archon host add";
+  const cmd = "deno task stolos host add";
   const none = recognition("olympia", { command: cmd });
   assert("refusal" in none);
   assertStringIncludes(none.refusal, "olympia --claim");

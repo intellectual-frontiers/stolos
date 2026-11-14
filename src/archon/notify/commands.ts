@@ -1,6 +1,6 @@
 /**
  * The archon notify commands (spec 025), on hosts, workstations, and the boot
- * machine (deno task boot notify runs the same code), and archon mail
+ * machine (deno task stolos boot notify runs the same code), and archon mail
  * credential and mail test (spec 027).
  *
  * @module
@@ -90,8 +90,8 @@ export async function notifySend(a: SendArgs, o: { wait: boolean }): Promise<num
     p.fail(
       `notifications are not configured on ${s.name}`,
       s.role === "boot"
-        ? "deno task boot mail-setup"
-        : `on the boot machine: deno task boot mail-push ${s.name}`,
+        ? "deno task stolos boot mail-setup"
+        : `on the boot machine: deno task stolos boot mail-push ${s.name}`,
     );
     return 1;
   }
@@ -160,7 +160,7 @@ export async function notifyStatus(o: { check: boolean }): Promise<number> {
     const problem = !s.to
       ? undefined // the fleet does not use notifications
       : !configured
-      ? "mail is not configured (on the boot machine: deno task boot mail-push <host>)"
+      ? "mail is not configured (on the boot machine: deno task stolos boot mail-push <host>)"
       : st.lastSend && !st.lastSend.ok
       ? `the last send failed: ${st.lastSend.error}`
       : stuck
@@ -187,7 +187,7 @@ export async function notifyFlush(): Promise<number> {
 }
 
 /**
- * archon mail credential: the credential JSON on stdin (deno task boot
+ * archon mail credential: the credential JSON on stdin (deno task stolos boot
  * mail-push). Then the doctor's email checks, mailed to the shared mailbox
  * through archon and Postfix, so the new token is proven where it matters.
  */
@@ -198,7 +198,7 @@ export async function mailCredential(): Promise<number> {
   const s = await site();
   const { emailChecks } = await import("../doctor/email.ts");
   const p = ui.phase("Email");
-  await emailChecks(s, p, `on the boot machine: deno task boot mail-push ${s.name}`, {
+  await emailChecks(s, p, `on the boot machine: deno task stolos boot mail-push ${s.name}`, {
     send: "new token",
   });
   return p.level === "fail" ? 1 : 0;

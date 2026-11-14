@@ -1,4 +1,4 @@
-// Spec 046 (Articles 9, 12, 24): archon fleet upgrade moves a fleet
+// Spec 046 (Articles 9, 12, 24): stolos fleet upgrade moves a fleet
 // repository to a released engine version, locks every engine file, validates
 // every fleet, and makes one signed commit; anything else is refused.
 
@@ -92,6 +92,10 @@ Deno.test("046: fleet upgrade locks, validates, and signs; refuses what is not a
     await Deno.writeTextFile(
       `${repo}/archon.ts`,
       'import { run } from "@stolos/archon/main.ts";\n\nawait run();\n',
+    );
+    await Deno.writeTextFile(
+      `${repo}/stolos.ts`,
+      'import { run } from "@stolos/stolos/main.ts";\n\nawait run();\n',
     );
     await sh(dir, "ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-C", "", "-f", `${dir}/key`);
     await sh(repo, "git", "init", "-q", "-b", "main");

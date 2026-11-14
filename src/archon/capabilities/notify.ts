@@ -75,7 +75,7 @@ export const notify = (): Capability => ({ fleet }) => {
       level: "warn",
       code: "P027-MAIL-TOKEN",
       fix:
-        "on the boot machine: deno task boot mail-push <host> (or deno task boot mail-setup first); archon notify status shows the last error",
+        "on the boot machine: deno task stolos boot mail-push <host> (or deno task stolos boot mail-setup first); archon notify status shows the last error",
       spec: SPEC,
     }],
     notes: [

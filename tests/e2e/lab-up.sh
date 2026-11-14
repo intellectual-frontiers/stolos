@@ -15,7 +15,7 @@ dnsmasq --interface=archbr0 --bind-interfaces --port=0 --except-interface=lo \
   --dhcp-range=10.77.0.50,10.77.0.99,12h --dhcp-option=3,10.77.0.1 --no-ping \
   --dhcp-boot=bootx64.efi,,10.77.0.1 \
   --log-dhcp --log-facility="$W/dnsmasq.log" --pid-file="$W/dnsmasq.pid"
-pkill -f "archon-boot/main.ts serve" || true
+pkill -f "stolos/main.ts boot serve" || true
 cd "$REPO"
-setsid deno run -A src/archon-boot/main.ts serve --port 8080 </dev/null >"$W/boot.log" 2>&1 &
+setsid deno run -A src/stolos/main.ts boot serve --port 8080 </dev/null >"$W/boot.log" 2>&1 &
 echo "lab up: tail -f $W/boot.log"

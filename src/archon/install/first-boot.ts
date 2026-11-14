@@ -183,7 +183,7 @@ export async function firstBoot(host: HostDef): Promise<number> {
   await emailChecks(
     await localSite(host.name),
     ui.phase("Email"),
-    `on the boot machine: deno task boot mail-push ${host.name}`,
+    `on the boot machine: deno task stolos boot mail-push ${host.name}`,
     { send: "installed" },
   ).catch((e) => ui.active("Email").warn(`email checks: ${(e as Error).message}`));
   // Spec 025: the install finished, to the shared mailbox, with its record.

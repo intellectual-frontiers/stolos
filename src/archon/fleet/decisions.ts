@@ -1,7 +1,7 @@
 /**
  * Spec 047-intent-and-identity (Article 25): what operators decided for a host
  * (which opt-ins are on, and whether their data is durable) lives in Git, in
- * fleets/<id>/hosts/<host>/decisions.ts, written by `archon decide` on a
+ * fleets/<id>/hosts/<host>/decisions.ts, written by `stolos decide` on a
  * workstation and approved by a signed push. Such a decision wins over the
  * host's own record (archon.sql), survives a re-install, and tells the boot
  * machine whether a host holds durable data even when it is offline.
@@ -30,8 +30,8 @@ export function decisionsSource(d: HostDecisions): string {
       r.data ? `      data: ${JSON.stringify(r.data)},\n` : ""
     }      by: ${JSON.stringify(r.by)},\n      at: ${JSON.stringify(r.at)},\n    },\n`
   ).join("");
-  return `// Written by archon decide (spec 047): what operators decided for this host.
-// Change it with archon decide, in a signed commit; a decision here wins over the host's own record.
+  return `// Written by stolos decide (spec 047): what operators decided for this host.
+// Change it with stolos decide, in a signed commit; a decision here wins over the host's own record.
 import type { HostDecisions } from "@stolos/archon/model/types.ts";
 
 export default {
@@ -64,7 +64,7 @@ export async function decisionProblems(hosts: string[]): Promise<string[]> {
 }
 
 /**
- * `archon decide <opt-in> on|off --host <host> [--durable|--ephemeral]` (repo
+ * `stolos decide <opt-in> on|off --host <host> [--durable|--ephemeral]` (repo
  * tier, on a workstation): write the decision; the host applies it after a
  * signed push.
  */

@@ -1,5 +1,5 @@
 /**
- * Spec 057: `archon keys`, every step of your signing keys in one place, and
+ * Spec 057: `stolos keys`, every step of your signing keys in one place, and
  * idempotent: each command looks at what is already there, does only what is
  * missing, and can be run again at any time (after a failure, it continues).
  *
@@ -176,7 +176,7 @@ async function testSignature(key: string, allowed: string, name: string): Promis
   const dir = await Deno.makeTempDir({ prefix: "archon-sign-" });
   try {
     const msg = join(dir, "message");
-    await Deno.writeTextFile(msg, `archon keys ${new Date().toISOString()}\n`);
+    await Deno.writeTextFile(msg, `stolos keys ${new Date().toISOString()}\n`);
     const s = await interactive(["ssh-keygen", "-q", "-Y", "sign", "-f", key, "-n", "git", msg]);
     if (!s.ok) return false;
     const v = await run(
@@ -219,7 +219,7 @@ const end = (): number => ui.problems.some((x) => x.level === "fail") ? 1 : 0;
 
 // ------------------------------------------------------------------ status
 
-/** `archon keys`: every check, with its fix; exit 1 when signing does not work. */
+/** `stolos keys`: every check, with its fix; exit 1 when signing does not work. */
 export async function keysStatus(json: boolean): Promise<number> {
   const f = await collectKeyFacts();
   const checks = keyChecks(f);
@@ -261,18 +261,18 @@ export function approvalSteps(
   wsl = onWsl(),
 ): string[] {
   const where = wsl
-    ? "in Windows: open PowerShell, cd C:\\fleet (your fleet folder), deno task archon update, then run:"
-    : "on a PC whose key is already listed, in the fleet repository, after deno task archon update, run:";
+    ? "in Windows: open PowerShell, cd C:\\fleet (your fleet folder), deno task stolos update, then run:"
+    : "on a PC whose key is already listed, in the fleet repository, after deno task stolos update, run:";
   const sep = wsl ? ";" : " &&";
   return [
     `approve this PC's key ${where}`,
-    `    deno task archon signers add ${name} --role daily --key "${pub}"`,
+    `    deno task stolos signers add ${name} --role daily --key "${pub}"`,
     `    git add -A${sep} git commit -m "${fleetId}: signers: add ${name}"${sep} git push`,
-    `then back here: git checkout -- ${rel} && deno task archon update`,
+    `then back here: git checkout -- ${rel} && deno task stolos update`,
   ];
 }
 
-/** `archon keys setup`: everything, idempotent. */
+/** `stolos keys setup`: everything, idempotent. */
 export async function keysSetup(o: { test?: boolean } = {}): Promise<number> {
   let f = await collectKeyFacts();
   const paths = f.paths;
@@ -286,7 +286,7 @@ export async function keysSetup(o: { test?: boolean } = {}): Promise<number> {
         : "no fleet here (or several: set ARCHON_FLEET)",
       !f.repo
         ? "cd into your fleet repository (for example C:\\fleet), then run this again"
-        : "deno task archon fleet init <id>, or set ARCHON_FLEET",
+        : "deno task stolos fleet init <id>, or set ARCHON_FLEET",
     );
     return end();
   }
@@ -431,7 +431,7 @@ export async function keysSetup(o: { test?: boolean } = {}): Promise<number> {
   if (hook === "foreign") {
     h.warn(
       `${paths.hook} belongs to another program: left alone`,
-      "add this line to it: deno task archon keys check-push || exit 1",
+      "add this line to it: deno task stolos keys check-push || exit 1",
       "E057-HOOK",
     );
   } else h.done(hook === "written" ? "installed: every push is checked first" : "installed");
@@ -446,7 +446,7 @@ export async function keysSetup(o: { test?: boolean } = {}): Promise<number> {
     } else {
       ts.fail(
         "the test signature did not verify",
-        "check the passphrase, then: deno task archon keys setup --test",
+        "check the passphrase, then: deno task stolos keys setup --test",
       );
     }
   } else ts.done("nothing changed (run with --test to sign once anyway)");
@@ -462,10 +462,10 @@ export async function keysSetup(o: { test?: boolean } = {}): Promise<number> {
   }
   if (recoveryMade) {
     ui.next.push(
-      `move the folder ${paths.recoveryDir} (the recovery key) to an encrypted USB drive or a password manager, then delete it from this PC; check it twice a year: deno task archon keys check-recovery --key <its private file>`,
+      `move the folder ${paths.recoveryDir} (the recovery key) to an encrypted USB drive or a password manager, then delete it from this PC; check it twice a year: deno task stolos keys check-recovery --key <its private file>`,
     );
   }
-  if (changed) ui.next.push("back up (your daily key is in it): deno task boot vault backup");
+  if (changed) ui.next.push("back up (your daily key is in it): deno task stolos vault backup");
   return end();
 }
 
@@ -488,7 +488,7 @@ export async function repairKeys(): Promise<string[]> {
 
 // ---------------------------------------------------------- check-recovery
 
-/** `archon keys check-recovery --key <file>`: prove the recovery key works; changes nothing else. */
+/** `stolos keys check-recovery --key <file>`: prove the recovery key works; changes nothing else. */
 export async function keysCheckRecovery(key: string): Promise<number> {
   const p = ui.phase("Recovery key check");
   if (!(await exists(key))) {
@@ -555,7 +555,7 @@ async function replaceKey(name: string, key: string): Promise<void> {
   await writeSigners(list.map((x) => x.name === name ? { ...x, key, added: today() } : x));
 }
 
-/** `archon keys rotate`: a new daily key, approved by the current one; resumes a rotation in progress. */
+/** `stolos keys rotate`: a new daily key, approved by the current one; resumes a rotation in progress. */
 export async function keysRotate(): Promise<number> {
   const f = await collectKeyFacts();
   const p = ui.phase("Rotate the daily key");
@@ -565,7 +565,7 @@ export async function keysRotate(): Promise<number> {
   const current = dailyOf(list, f.daily.pub) ??
     (nextPub ? list.find((x) => x.key.trim() === nextPub) : undefined);
   if (!current || !f.daily.exists) {
-    p.fail("no listed daily key here to rotate", "deno task archon keys setup", "E057-NOT-LISTED");
+    p.fail("no listed daily key here to rotate", "deno task stolos keys setup", "E057-NOT-LISTED");
     return end();
   }
   if (!nextPub && (await exists(`${f.paths.daily}.retired-${today()}`))) {
@@ -595,11 +595,11 @@ export async function keysRotate(): Promise<number> {
   await renderAllowed(f.paths.allowedSigners);
   p.done(`${current.name} has a new key; the old one is kept as ${old} (never used again)`);
   ui.next.push("push it: git push (servers accept the new key from that commit on)");
-  ui.next.push("back up the new key: deno task boot vault backup");
+  ui.next.push("back up the new key: deno task stolos vault backup");
   return end();
 }
 
-/** `archon keys lost --recovery <file>`: replace a lost or stolen daily key, approved by the recovery key. */
+/** `stolos keys lost --recovery <file>`: replace a lost or stolen daily key, approved by the recovery key. */
 export async function keysLost(recovery: string, stolen = false): Promise<number> {
   const f = await collectKeyFacts();
   const p = ui.phase("Replace a lost daily key");
@@ -620,7 +620,7 @@ export async function keysLost(recovery: string, stolen = false): Promise<number
   if (!old) {
     p.fail(
       "cannot tell which daily key is lost (several are listed)",
-      "deno task archon signers remove <its name>, then run this again",
+      "deno task stolos signers remove <its name>, then run this again",
     );
     return end();
   }
@@ -660,14 +660,14 @@ export async function keysLost(recovery: string, stolen = false): Promise<number
   await renderAllowed(f.paths.allowedSigners);
   p.done(`${old.name} has a new key, approved by ${r.name}`);
   ui.next.push("push it: git push (servers stop trusting the old key from that commit on)");
-  ui.next.push(`put the recovery key away again; back up: deno task boot vault backup`);
+  ui.next.push(`put the recovery key away again; back up: deno task stolos vault backup`);
   return end();
 }
 
 // ------------------------------------------------------------- check-push
 
 /**
- * `archon keys check-push` (Git's pre-push hook): each pushed tip of the
+ * `stolos keys check-push` (Git's pre-push hook): each pushed tip of the
  * fleet's branch must be signed by a key the fleet trusts as of what the
  * remote has now, exactly as servers will check it. Refs to push come on
  * standard input ("<local ref> <local sha> <remote ref> <remote sha>").
@@ -699,7 +699,7 @@ export async function keysCheckPush(input?: string): Promise<number> {
           t.code === "unsigned"
             ? "  sign your last commit: git commit --amend --no-edit -S   (then push again)"
             : t.code === "untrusted"
-            ? "  it was signed by a key signers.ts does not list: deno task archon keys"
+            ? "  it was signed by a key signers.ts does not list: deno task stolos keys"
             : "  pull first: git pull --rebase",
         );
         console.error(`  (archon explain E047-${(t.code ?? "untrusted").toUpperCase()})`);

@@ -52,7 +52,7 @@ Deno.test("049: a run exports its trace (continuing TRACEPARENT) and its metrics
   try {
     const traceId = "4bf92f3577b34da6a3ce929d0e0e4736";
     const parent = "00f067aa0ba902b7";
-    const r = await sb.run("src/archon/main.ts", ["validate"], "", {
+    const r = await sb.run("src/stolos/main.ts", ["validate"], "", {
       OTEL_DENO: "true",
       OTEL_SERVICE_NAME: "archon",
       OTEL_EXPORTER_OTLP_PROTOCOL: "http/json",
@@ -72,7 +72,7 @@ Deno.test("049: a run exports its trace (continuing TRACEPARENT) and its metrics
     const traces = got.filter((g) => g.path === "/v1/traces").map((g) => compact(g.body)).join(
       "\n",
     );
-    assertStringIncludes(traces, '"name":"archon validate"');
+    assertStringIncludes(traces, '"name":"stolos validate"');
     assertStringIncludes(traces, `"traceId":"${traceId}"`);
     assertStringIncludes(traces, `"parentSpanId":"${parent}"`);
     assertStringIncludes(traces, "archon.engine.version");

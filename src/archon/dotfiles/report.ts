@@ -32,7 +32,7 @@ export async function dotfilesReport(
       `  ${there ? "●" : "○"} ${l.dir.padEnd(44)} ${there ? `${n} file(s) win here` : "(none)"}`,
     );
   }
-  for (const pr of c.problems) p.fail(pr, "fix the file in the repository, then archon build");
+  for (const pr of c.problems) p.fail(pr, "fix the file in the repository, then stolos build");
   if (path) {
     const t = path.replace(/^~\//, "").replace(/^\$HOME\//, "").replace(/^\.\//, "");
     const f = c.files.find((x) => x.target === t);

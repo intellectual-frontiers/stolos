@@ -10,7 +10,7 @@
  * directory that holds `fleets/`, else /srv/archon, else (in an engine
  * checkout) its `examples/`. The fleet is ARCHON_FLEET (or --fleet), else
  * /etc/archon/fleet (written at install), else this checkout's choice
- * (`archon fleet use <id>`, in .git/archon/fleet, never committed), else the
+ * (`stolos fleet use <id>`, in .git/archon/fleet, never committed), else the
  * instance's only fleet.
  *
  * ```mermaid
@@ -23,7 +23,7 @@
  *   srv -->|no| ex["the engine's examples/"]
  *   inst --> fleet{"--fleet / ARCHON_FLEET?"}
  *   fleet -->|unset| etc{"/etc/archon/fleet?"}
- *   etc -->|unset| use{"archon fleet use<br/>(.git/archon/fleet)?"}
+ *   etc -->|unset| use{"stolos fleet use<br/>(.git/archon/fleet)?"}
  *   use -->|unset| only["the only fleet"]
  * ```
  *
@@ -86,7 +86,7 @@ export function listFleets(repo: string): string[] {
   return out.sort();
 }
 
-/** Where `archon fleet use <id>` keeps this checkout's choice (inside .git: never committed). */
+/** Where `stolos fleet use <id>` keeps this checkout's choice (inside .git: never committed). */
 export function fleetChoiceFile(repo: string): string {
   return join(repo, ".git", "archon", "fleet");
 }
@@ -189,7 +189,7 @@ export const P = {
   get userState(): string {
     return join(userData, "archon", "state", fleetId() || "_");
   },
-  /** Rendered by archon build; never committed. */
+  /** Rendered by stolos build; never committed. */
   get out(): string {
     return join(repoRoot(), "out", fleetId() || "_");
   },

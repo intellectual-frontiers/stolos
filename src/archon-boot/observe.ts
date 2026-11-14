@@ -1,5 +1,5 @@
 /**
- * `deno task boot observe` (spec 023): recent installs from the boot server's
+ * `deno task stolos boot observe` (spec 023): recent installs from the boot server's
  * own telemetry (the OTLP JSON files on this PC): when, how long, which step
  * took the time, and what failed.
  *
@@ -78,10 +78,10 @@ const dur = (s: number) =>
     ? `${Math.floor(s / 60)}m${String(Math.round(s % 60)).padStart(2, "0")}s`
     : `${s.toFixed(s < 10 ? 1 : 0)}s`;
 
-/** `deno task boot observe`: the newest `count` installs, each with its slowest and failed steps. */
+/** `deno task stolos boot observe`: the newest `count` installs, each with its slowest and failed steps. */
 export async function bootObserve(o: { count: number }): Promise<number> {
   if (!(await exists(TELEMETRY_DIR))) {
-    console.log(`No telemetry yet: deno task boot serve writes it to ${TELEMETRY_DIR}.`);
+    console.log(`No telemetry yet: deno task stolos boot serve writes it to ${TELEMETRY_DIR}.`);
     return 0;
   }
   const lines: string[] = [];

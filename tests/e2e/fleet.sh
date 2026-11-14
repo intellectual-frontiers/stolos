@@ -11,7 +11,7 @@
 #   const E2E_ADMIN_KEY = "ssh-ed25519 ...";
 # (deno fmt may wrap it) which this run replaces with its own (the private half never exists
 # anywhere else). This run also adds its own signer, the admin password's
-# hash, and the server's host keys (archon host add), all thrown away after.
+# hash, and the server's host keys (stolos host add), all thrown away after.
 . "$(cd "$(dirname "$0")" && pwd)/lib.sh"
 SRC=$(cd "$1" && pwd)
 FLEET=$2 SERVER=$3 WS=${4:-}
@@ -33,7 +33,7 @@ git init -q -b main
 git config user.name "e2e"
 git config user.email "e2e@example.invalid"
 # The pinned engine, exactly as hosts get it: every file checked against deno.lock.
-deno cache --frozen --allow-import archon.ts boot.ts engine.ts >/dev/null ||
+deno cache --frozen --allow-import archon.ts stolos.ts engine.ts >/dev/null ||
   { log "the engine does not match deno.lock"; exit 1; }
 FT="fleets/$FLEET/fleet.ts"
 # Its value, however deno fmt wrapped the line.
@@ -41,7 +41,7 @@ grep -Pzoq 'const E2E_ADMIN_KEY =\s*"[^"]*";' "$FT" || { log "$FT has no const E
 KEY="$(cut -d' ' -f1,2 "$W/admin.pub")" perl -0pi -e 's/(const E2E_ADMIN_KEY =\s*)"[^"]*";/$1"$ENV{KEY}";/' "$FT"
 grep -q "$(cut -d' ' -f2 "$W/admin.pub")" "$FT" || { log "could not set E2E_ADMIN_KEY in $FT"; exit 1; }
 ADMIN=$(grep -oE 'user: "[a-z_][a-z0-9_-]*"' "$FT" | head -n 1 | cut -d'"' -f2)
-A=(deno run -A --frozen archon.ts --fleet "$FLEET")
+A=(deno run -A --frozen stolos.ts --fleet "$FLEET")
 "${A[@]}" signers add e2e-run --role daily --key "$W/signer.pub"
 mkdir -p "$HOME/.config/archon/secrets/$FLEET"
 openssl passwd -6 "$(openssl rand -hex 16)" >"$HOME/.config/archon/secrets/$FLEET/admin-password.hash"

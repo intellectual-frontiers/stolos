@@ -1,4 +1,4 @@
-// Spec 046: a new fleet repository's files (archon fleet init <id>).
+// Spec 046: a new fleet repository's files (stolos fleet init <id>).
 import { assert, assertEquals } from "./assert.ts";
 import { join } from "../src/archon/core/path.ts";
 import { scaffoldFiles, scaffoldRepository } from "../src/archon/fleet/scaffold.ts";
@@ -10,9 +10,11 @@ Deno.test("the scaffolded deno.json is a pin fleet upgrade can read, and runs fr
   const pin = readPin(f["deno.json"]);
   assertEquals(pin?.tag, "v1.2.3");
   const j = JSON.parse(f["deno.json"]);
-  assert(j.tasks.archon.includes("--frozen"));
-  assert(j.tasks.boot.includes("--frozen"));
-  assert(j.tasks.boot.includes("OTEL_DENO=true"));
+  assertEquals(Object.keys(j.tasks), ["stolos"], "one command on your PC (spec 059)");
+  assert(j.tasks.stolos.includes("--frozen") && j.tasks.stolos.includes("stolos.ts"));
+  assert(
+    f["stolos.ts"].includes("@stolos/stolos/main.ts") && f["archon.ts"].includes("archon/main.ts"),
+  );
   assertEquals(f["engine.ts"], ENGINE_ENTRY_TEXT);
 });
 

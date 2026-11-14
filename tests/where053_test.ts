@@ -43,12 +43,12 @@ Deno.test("053: exactly one next step, the first not done; pending never blocks"
   });
   assertEquals(s.filter((x) => x.state === "next").length, 1);
   assertStringIncludes(nextCommand(s), "keys setup");
-  assert(s.some((x) => x.state === "pending" && x.command === "deno task boot mail-setup"));
+  assert(s.some((x) => x.state === "pending" && x.command === "deno task stolos boot mail-setup"));
   assert(s.some((x) => x.state === "todo" && x.command?.includes("boot arm olympia --claim")));
   // Only a pending item left: it is what to do next.
   const p = whereSteps({ ...ready, mail: { token: false } });
   assertEquals(p.filter((x) => x.state === "next").length, 0);
-  assertEquals(nextCommand(p), "deno task boot mail-setup");
+  assertEquals(nextCommand(p), "deno task stolos boot mail-setup");
 });
 
 Deno.test("053: an armed host says to keep the boot server running; no server says host add --claim", () => {
