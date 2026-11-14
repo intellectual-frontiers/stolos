@@ -1,8 +1,8 @@
 # Stolos
 
 Stolos turns bare machines into Ubuntu servers that set themselves up, keep themselves right, and
-can prove it. You describe your machines in a few TypeScript files; its command, `archon`, does the
-rest.
+can prove it. You describe your machines in a few TypeScript files; its two commands do the rest:
+`stolos` on your PC, for the fleet, and `archon` on each machine, for itself.
 
 ```mermaid
 ---
@@ -44,9 +44,10 @@ Infrastructure as code is a crowded field, and each tool covers part of the job:
 
 Shahid Shah created Stolos because he wanted **one unified experience** from bare metal to a
 verified server: state the intent once, then let every machine converge to it and prove that it did.
-No control server, no agent to install, no second language: one command (`archon`) run by **Deno**,
-a single binary, and **GitHub** as the only state, fully versioned. Every change is a signed commit,
-so the history of each server is the history of its repository.
+No control server, no agent to install, no second language: two commands (`stolos` on your PC,
+`archon` on each machine) run by **Deno**, a single binary, and **GitHub** as the only state, fully
+versioned. Every change is a signed commit, so the history of each server is the history of its
+repository.
 
 ```mermaid
 ---
@@ -93,7 +94,7 @@ rather than written by hand. (Generating those reports is the direction, not yet
 
 ## What you need
 
-`archon` runs on **Windows, macOS, or Linux**. All it needs is **[Deno](https://deno.com) 2.9.6 or
+`stolos` runs on **Windows, macOS, or Linux**. All it needs is **[Deno](https://deno.com) 2.9.6 or
 newer** (2.x), a single program with no other dependencies, plus Git and `gh` (GitHub's command
 line) to work with your fleet repository. Installers and binaries for every system:
 [docs.deno.com, installation](https://docs.deno.com/runtime/getting_started/installation/) and
@@ -139,6 +140,45 @@ nothing installed by you: Stolos puts Deno and `archon` on each one as it instal
 
 </details>
 
+## Two commands: `stolos` and `archon`
+
+| Where                                 | Command                                              | For                                                                                   |
+| ------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| your PC, in the fleet repository      | `deno task stolos ...` (or just `stolos ...`, below) | the fleet: keys, adding and installing machines (`stolos boot ...`), backups, updates |
+| each server or workstation (over SSH) | `archon ...`                                         | that machine: its state, `verify`, `update`, `reboot`, PostgreSQL, data               |
+
+Each points at the other: `archon keys setup` on a server says to run `deno task stolos keys setup`
+on your PC, and `stolos apply` says to run `archon apply` on the machine. With no arguments,
+`stolos` shows where you are and the next step; `archon` shows the machine's state.
+
+**A shortcut: `stolos` instead of `deno task stolos`.** It works in the fleet folder (where
+`deno.json` is), and runs the engine version pinned there.
+
+<details>
+<summary><b>Windows</b> (PowerShell)</summary>
+
+```powershell
+if (!(Test-Path $PROFILE)) { New-Item -Force $PROFILE | Out-Null }
+Add-Content $PROFILE 'function stolos { deno task stolos @args }'
+. $PROFILE
+```
+
+If PowerShell says "running scripts is disabled on this system", allow your own profile once:
+`Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`, then open a new window.
+
+</details>
+
+<details>
+<summary><b>macOS and Linux</b></summary>
+
+zsh (macOS's default): `echo 'stolos() { deno task stolos "$@"; }' >> ~/.zshrc`; bash:
+`echo 'stolos() { deno task stolos "$@"; }' >> ~/.bashrc`; then open a new terminal. In fish (the
+fleet's workstations): `function stolos; deno task stolos $argv; end; funcsave stolos`.
+
+</details>
+
+The rest of this README writes `deno task stolos`, which always works.
+
 ## Two kinds of repository
 
 This repository is the **engine**: public, with no real machines in it. Each fleet lives in a
@@ -159,7 +199,7 @@ config:
 ---
 flowchart LR
   subgraph engine["stolos: public"]
-    E["the engine: archon, the boot server,<br/>guides, an example fleet<br/><i>every change: a new version, tested, tagged</i>"]:::gh
+    E["the engine: stolos, archon, the boot server,<br/>guides, an example fleet<br/><i>every change: a new version, tested, tagged</i>"]:::gh
   end
   subgraph fleet["your fleet: private"]
     F["deno.json: use engine vX.Y.Z<br/>deno.lock: a fingerprint of every engine file<br/>fleets/‹id›/fleet.ts, hosts/...<br/>fleets/‹id›/signers.ts: who approves"]:::you
@@ -229,7 +269,7 @@ With Deno, Git, and `gh` installed (above) and `gh auth login` done:
    `fleets/<id>/fleet.ts` from your GitHub account):
 
    ```sh
-   deno run -A https://raw.githubusercontent.com/intellectual-frontiers/stolos/v<version>/src/archon/main.ts fleet init <id>
+   deno run -A https://raw.githubusercontent.com/intellectual-frontiers/stolos/v<version>/src/stolos/main.ts fleet init <id>
    ```
 
 3. Set up your signing keys. One command does it all, and is safe to run again at any time: it makes
@@ -338,8 +378,8 @@ within 15 minutes.
    git add -A && git commit -m "my-fleet: server-hostname installed" && git push
    ```
 
-6. Log in: `ssh server-hostname`. On the server, `archon` shows its state and `archon verify` checks
-   every piece.
+6. Log in: `ssh server-hostname`. On the server, `archon` (no arguments) shows its state and
+   `archon verify` checks every piece.
 
 **If the disk is not blank**, the install stops before writing anything and the boot window says
 what it found (`archon explain E051-DISK-NOT-BLANK`). When you are sure it may be erased, say so,

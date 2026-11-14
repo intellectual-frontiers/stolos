@@ -9,8 +9,8 @@ before your first engine upgrade; keep it at hand for the troubleshooting table 
 ```
 deno.json     the pin: which engine version this repository uses (@stolos/ → a tagged URL)
 deno.lock     a SHA-256 hash of every file of that engine version
-archon.ts     the archon command (two lines: it runs the pinned engine)
-boot.ts       the boot server (two lines, the same way)
+stolos.ts     stolos, the fleet's command on your PC (deno task stolos; two lines: the pinned engine)
+archon.ts     archon, each machine's command (/usr/local/bin/archon runs it; two lines, the same way)
 engine.ts     names every engine module, so deno.lock covers all of them
 fleets/<id>/  one folder per fleet: fleet.ts, site.ts, signers.ts, hosts/<host>/host.ts, ...
 ```
@@ -22,16 +22,16 @@ Nothing here is the engine itself. The engine lives in the public repository
 
 You need Deno, git, and `gh` signed in (`gh auth login`). Create an empty private repository on
 GitHub, clone it, and from inside the clone run the engine once straight from its released URL
-(replace `v0.12.0` with the latest tag on `intellectual-frontiers/stolos`):
+(replace `v<version>` with the latest tag on `intellectual-frontiers/stolos`):
 
 ```
-deno run -A https://raw.githubusercontent.com/intellectual-frontiers/stolos/v0.12.0/src/archon/main.ts fleet init lab
+deno run -A https://raw.githubusercontent.com/intellectual-frontiers/stolos/v<version>/src/stolos/main.ts fleet init lab
 ```
 
-`fleet init lab` writes `deno.json` pinned to that same tag, `archon.ts`, `boot.ts`, `engine.ts`,
-`.gitignore`, and `deno.lock`, then `fleets/lab/fleet.ts` from your GitHub identity. It asks for
-your Unix account name and an admin password; only the password's hash is kept, on your machine,
-never in Git. From then on use the pinned engine through the tasks:
+`fleet init lab` writes `deno.json` pinned to that same tag (one task: `stolos`), `stolos.ts`,
+`archon.ts`, `engine.ts`, `.gitignore`, and `deno.lock`, then `fleets/lab/fleet.ts` from your GitHub
+identity. It asks for your Unix account name and an admin password; only the password's hash is
+kept, on your machine, never in Git. From then on use the pinned engine through the tasks:
 
 ```
 deno task stolos keys setup       # your signing keys (see Signing below)
