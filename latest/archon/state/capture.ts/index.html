@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/state/capture.ts - Stolos v0.27.0 documentation</title>
+  <title>archon/state/capture.ts - Stolos v0.28.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.27.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.28.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -127,15 +127,18 @@ it with the plan (drift). Nothing is written: the machine answers for itself
 Functions</h2></div><div class="namespaceSection"><div id="namespace_capture" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;state&#x2F;capture.ts&#x2F;~&#x2F;capture.html" title="capture">
-			    <span>capture</span><span>(<span><span>host<span>: <span class="td-ref">HostDef</span></span></span></span>)</span></a></div>
+			    <span>capture</span><span>(<span><span>host<span>: <span class="td-ref">HostDef</span></span></span></span>)</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>archon capture: show the snapshot and the drift (read-only).</p>
+</div></div></div>
     </div><div id="namespace_drift" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;state&#x2F;capture.ts&#x2F;~&#x2F;drift.html" title="drift">
-			    <span>drift</span><span>(<div class="ml-4"><div><span>host<span>: <span class="td-ref">HostDef</span></span></span>,</div><div><span>s<span>: <span class="td-ref">Snapshot</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">Drift</span>&gt;</span></span></a></div>
+			    <span>drift</span><span>(<div class="ml-4"><div><span>host<span>: <span class="td-ref">HostDef</span></span></span>,</div><div><span>s<span>: <span class="td-ref">Snapshot</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">Drift</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Compare a snapshot with the host's plan.</p>
+</div></div></div>
     </div><div id="namespace_snapshot" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;state&#x2F;capture.ts&#x2F;~&#x2F;snapshot.html" title="snapshot">
-			    <span>snapshot</span><span>(<span><span>host<span>: <span class="td-ref">HostDef</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">Snapshot</span>&gt;</span></span></a></div>
+			    <span>snapshot</span><span>(<span><span>host<span>: <span class="td-ref">HostDef</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">Snapshot</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Read what the host is now.</p>
+</div></div></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;state&#x2F;capture_ts_interfaces"><div>
@@ -164,37 +167,52 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_capture" cl
 Interfaces</h2></div><div class="namespaceSection"><div id="namespace_drift-1" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;state&#x2F;capture.ts&#x2F;~&#x2F;Drift.html" title="Drift">
-			    <span>Drift</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>Drift</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How a host differs from its plan.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;state&#x2F;capture.ts&#x2F;~&#x2F;Drift.html#property_missingpackages">
-                  <span>missingPackages</span><span>: <span class="td-kw">string</span>[]</span></a></li><li>
+                  <span>missingPackages</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Packages the plan has that the host does not.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;state&#x2F;capture.ts&#x2F;~&#x2F;Drift.html#property_unitsnotindesiredstate">
-                  <span>unitsNotInDesiredState</span><span>: <span class="td-kw">string</span>[]</span></a></li><li>
+                  <span>unitsNotInDesiredState</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Units not in the state the plan says.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;state&#x2F;capture.ts&#x2F;~&#x2F;Drift.html#property_unmodeledlisteningports">
-                  <span>unmodeledListeningPorts</span><span>: <span class="td-kw">string</span>[]</span></a></li></ul></div>
+                  <span>unmodeledListeningPorts</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Ports listening that the plan does not open.</p>
+</div></div></li></ul></div>
     </div><div id="namespace_snapshot-1" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;state&#x2F;capture.ts&#x2F;~&#x2F;Snapshot.html" title="Snapshot">
-			    <span>Snapshot</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>Snapshot</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What a host is now, read from it (archon capture): packages, units, ports, users, tools.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;state&#x2F;capture.ts&#x2F;~&#x2F;Snapshot.html#property_captured">
-                  <span>captured</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>captured</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When it was read (ISO time).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;state&#x2F;capture.ts&#x2F;~&#x2F;Snapshot.html#property_enabledunits">
-                  <span>enabledUnits</span><span>: <span class="td-kw">string</span>[]</span></a></li><li>
+                  <span>enabledUnits</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Enabled systemd units.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;state&#x2F;capture.ts&#x2F;~&#x2F;Snapshot.html#property_host">
-                  <span>host</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>host</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The host.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;state&#x2F;capture.ts&#x2F;~&#x2F;Snapshot.html#property_kernel">
-                  <span>kernel</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>kernel</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its running kernel.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;state&#x2F;capture.ts&#x2F;~&#x2F;Snapshot.html#property_listening">
-                  <span>listening</span><span>: <span class="td-kw">string</span>[]</span></a></li><li>
+                  <span>listening</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Listening sockets.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;state&#x2F;capture.ts&#x2F;~&#x2F;Snapshot.html#property_manualpackages">
-                  <span>manualPackages</span><span>: <span class="td-kw">string</span>[]</span></a></li><li>
+                  <span>manualPackages</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Packages installed by hand (apt-mark showmanual).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;state&#x2F;capture.ts&#x2F;~&#x2F;Snapshot.html#property_snaps">
-                  <span>snaps</span><span>: <span class="td-kw">string</span>[]</span></a></li><li>
+                  <span>snaps</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Snaps installed.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;state&#x2F;capture.ts&#x2F;~&#x2F;Snapshot.html#property_tools">
-                  <span>tools</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">null</span></span>&gt;</span></a></li><li>
+                  <span>tools</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">null</span></span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Each tool's version (null: not installed).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;state&#x2F;capture.ts&#x2F;~&#x2F;Snapshot.html#property_ubuntu">
-                  <span>ubuntu</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>ubuntu</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its Ubuntu release.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;state&#x2F;capture.ts&#x2F;~&#x2F;Snapshot.html#property_users">
-                  <span>users</span><span>: <span class="td-kw">string</span>[]</span></a></li></ul></div>
+                  <span>users</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Accounts with a login shell.</p>
+</div></div></li></ul></div>
     </div></div>
 </section>
 </div>

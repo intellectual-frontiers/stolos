@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/install/host-bootstrap.ts - Stolos v0.27.0 documentation</title>
+  <title>archon/install/host-bootstrap.ts - Stolos v0.28.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.27.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.28.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -186,11 +186,13 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_bootstrapre
     </div><div id="namespace_hostbootstrap" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-bootstrap.ts&#x2F;~&#x2F;hostBootstrap.html" title="hostBootstrap">
-			    <span>hostBootstrap</span><span>(<span><span>o<span>: <span class="td-ref">HostBootstrapOptions</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a></div>
+			    <span>hostBootstrap</span><span>(<span><span>o<span>: <span class="td-ref">HostBootstrapOptions</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>archon host bootstrap: check the machine, copy what a network install would have handed it, run the first boot.</p>
+</div></div></div>
     </div><div id="namespace_parsebootstrapfacts" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-bootstrap.ts&#x2F;~&#x2F;parseBootstrapFacts.html" title="parseBootstrapFacts">
-			    <span>parseBootstrapFacts</span><span>(<span><span>text<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">BootstrapFacts</span></span></span></a></div>
+			    <span>parseBootstrapFacts</span><span>(<span><span>text<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">BootstrapFacts</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Parse the probe's key=value lines.</p>
+</div></div></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;install&#x2F;host-bootstrap_ts_interfaces"><div>
@@ -219,23 +221,31 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_bootstrapre
 Interfaces</h2></div><div class="namespaceSection"><div id="namespace_bootstrapfacts" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-bootstrap.ts&#x2F;~&#x2F;BootstrapFacts.html" title="BootstrapFacts">
-			    <span>BootstrapFacts</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>BootstrapFacts</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What the machine at the address says about itself.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-bootstrap.ts&#x2F;~&#x2F;BootstrapFacts.html#property_hostname">
-                  <span>hostname</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>hostname</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its hostname.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-bootstrap.ts&#x2F;~&#x2F;BootstrapFacts.html#property_nics">
-                  <span>nics</span><span>: <span class="td-kw">string</span>[]</span></a></li><li>
+                  <span>nics</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Every physical network card.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-bootstrap.ts&#x2F;~&#x2F;BootstrapFacts.html#property_summary">
-                  <span>summary</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>summary</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One line for people.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-bootstrap.ts&#x2F;~&#x2F;BootstrapFacts.html#property_uplink">
-                  <span>uplink</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>uplink</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its default route's network card.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-bootstrap.ts&#x2F;~&#x2F;BootstrapFacts.html#property_versionid">
-                  <span>versionId</span><span>: <span class="td-kw">string</span></span></a></li></ul></div>
+                  <span>versionId</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its Ubuntu release.</p>
+</div></div></li></ul></div>
     </div><div id="namespace_hostbootstrapoptions" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-bootstrap.ts&#x2F;~&#x2F;HostBootstrapOptions.html" title="HostBootstrapOptions">
-			    <span>HostBootstrapOptions</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>HostBootstrapOptions</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What archon host bootstrap is given.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-bootstrap.ts&#x2F;~&#x2F;HostBootstrapOptions.html#property_name">
-                  <span>name</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>name</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The host.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-bootstrap.ts&#x2F;~&#x2F;HostBootstrapOptions.html#property_ssh">
                   <span>ssh</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>user@address of the freshly installed server.</p>
 </div></div></li></ul></div>

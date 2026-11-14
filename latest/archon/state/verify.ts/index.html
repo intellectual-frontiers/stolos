@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/state/verify.ts - Stolos v0.27.0 documentation</title>
+  <title>archon/state/verify.ts - Stolos v0.28.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.27.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.28.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -137,11 +137,13 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_failedcheck
     </div><div id="namespace_verify" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;state&#x2F;verify.ts&#x2F;~&#x2F;verify.html" title="verify">
-			    <span>verify</span><span>(<span><span>host<span>: <span class="td-ref">HostDef</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">Check</span>[]&gt;</span></span></a></div>
+			    <span>verify</span><span>(<span><span>host<span>: <span class="td-ref">HostDef</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">Check</span>[]&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>archon verify: every check of the host's plan, each shown at its level.</p>
+</div></div></div>
     </div><div id="namespace_verifyrecord" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;state&#x2F;verify.ts&#x2F;~&#x2F;verifyRecord.html" title="verifyRecord">
-			    <span>verifyRecord</span><span>(<div class="ml-4"><div><span>checks<span>: <span class="td-ref">Check</span>[]</span></span>,</div><div><span>now<span class="td-op">?</span><span>: <span class="td-ref">Date</span></span></span></div></div>)<span>: <span class="td-ref">RecordedVerify</span></span></span></a></div>
+			    <span>verifyRecord</span><span>(<div class="ml-4"><div><span>checks<span>: <span class="td-ref">Check</span>[]</span></span>,</div><div><span>now<span class="td-op">?</span><span>: <span class="td-ref">Date</span></span></span></div></div>)<span>: <span class="td-ref">RecordedVerify</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The record of a verify, as archon.sql keeps it.</p>
+</div></div></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;state&#x2F;verify_ts_interfaces"><div>
@@ -170,20 +172,25 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_failedcheck
 Interfaces</h2></div><div class="namespaceSection"><div id="namespace_check" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;state&#x2F;verify.ts&#x2F;~&#x2F;Check.html" title="Check">
-			    <span>Check</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>Check</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One check's result.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;state&#x2F;verify.ts&#x2F;~&#x2F;Check.html#property_command">
-                  <span>command</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>command</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The command run.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;state&#x2F;verify.ts&#x2F;~&#x2F;Check.html#property_level">
                   <span>level</span><span>: <span><span class="td-str">"fail"</span><span class="td-op"> | </span><span class="td-str">"warn"</span><span class="td-op"> | </span><span class="td-str">"pending"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>&quot;warn&quot;: a failure is reported as a warning and does not count as failed.
 &quot;pending&quot; (spec 052): the check exited 3, &quot;not set up yet&quot;: shown with its
 next step, never a failure or a warning.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;state&#x2F;verify.ts&#x2F;~&#x2F;Check.html#property_ok">
-                  <span>ok</span><span>: <span class="td-kw">boolean</span></span></a></li><li>
+                  <span>ok</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>It passed.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;state&#x2F;verify.ts&#x2F;~&#x2F;Check.html#property_output">
-                  <span>output</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>output</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The first line it printed.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;state&#x2F;verify.ts&#x2F;~&#x2F;Check.html#property_resource">
-                  <span>resource</span><span>: <span class="td-kw">string</span></span></a></li></ul></div>
+                  <span>resource</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What it checks (a package, a unit, a check's name).</p>
+</div></div></li></ul></div>
     </div><div id="namespace_recordedverify" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;state&#x2F;verify.ts&#x2F;~&#x2F;RecordedVerify.html" title="RecordedVerify">
@@ -192,18 +199,23 @@ fleet status (archon query). `since` is when this result first appeared; the
 record is rewritten only when the result changes.</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;state&#x2F;verify.ts&#x2F;~&#x2F;RecordedVerify.html#property_failed">
-                  <span>failed</span><span>: <span class="td-kw">string</span>[]</span></a></li><li>
+                  <span>failed</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Failures, by resource.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;state&#x2F;verify.ts&#x2F;~&#x2F;RecordedVerify.html#property_passed">
-                  <span>passed</span><span>: <span class="td-kw">number</span></span></a></li><li>
+                  <span>passed</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How many passed.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;state&#x2F;verify.ts&#x2F;~&#x2F;RecordedVerify.html#property_pending">
                   <span>pending</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Spec 052: not set up yet (a check that exited 3).</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;state&#x2F;verify.ts&#x2F;~&#x2F;RecordedVerify.html#property_since">
-                  <span>since</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>since</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When this result first appeared.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;state&#x2F;verify.ts&#x2F;~&#x2F;RecordedVerify.html#property_total">
-                  <span>total</span><span>: <span class="td-kw">number</span></span></a></li><li>
+                  <span>total</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How many ran (pending ones included).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;state&#x2F;verify.ts&#x2F;~&#x2F;RecordedVerify.html#property_warned">
-                  <span>warned</span><span>: <span class="td-kw">string</span>[]</span></a></li></ul></div>
+                  <span>warned</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Warnings, by resource.</p>
+</div></div></li></ul></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;state&#x2F;verify_ts_variables"><div>

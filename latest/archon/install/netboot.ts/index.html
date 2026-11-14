@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/install/netboot.ts - Stolos v0.27.0 documentation</title>
+  <title>archon/install/netboot.ts - Stolos v0.28.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.27.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.28.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -129,7 +129,8 @@ recorded the firmware entry it network-booted from; without that record
 Functions</h2></div><div class="namespaceSection"><div id="namespace_parseefibootmgr" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;netboot.ts&#x2F;~&#x2F;parseEfibootmgr.html" title="parseEfibootmgr">
-			    <span>parseEfibootmgr</span><span>(<span><span>out<span>: <span class="td-kw">string</span></span></span></span>)<span>: { current<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; entries<span>: <span class="td-ref">BootEntry</span>[]</span>;  }</span></span></a></div>
+			    <span>parseEfibootmgr</span><span>(<span><span>out<span>: <span class="td-kw">string</span></span></span></span>)<span>: { current<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; entries<span>: <span class="td-ref">BootEntry</span>[]</span>;  }</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>efibootmgr's output, parsed.</p>
+</div></div></div>
     </div><div id="namespace_picknetbootentry" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;netboot.ts&#x2F;~&#x2F;pickNetbootEntry.html" title="pickNetbootEntry">
@@ -138,7 +139,8 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_parseefiboo
     </div><div id="namespace_reboot" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;netboot.ts&#x2F;~&#x2F;reboot.html" title="reboot">
-			    <span>reboot</span><span>(<span><span>opts<span>: { netboot<span>: <span class="td-kw">boolean</span></span>; now<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>; poweroff<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>;  }</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a></div>
+			    <span>reboot</span><span>(<span><span>opts<span>: { netboot<span>: <span class="td-kw">boolean</span></span>; now<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>; poweroff<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>;  }</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>archon reboot (and poweroff): wait for apt and dpkg, then reboot (once from the network, with --netboot) or shut down.</p>
+</div></div></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;install&#x2F;netboot_ts_interfaces"><div>
@@ -167,11 +169,14 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_parseefiboo
 Interfaces</h2></div><div class="namespaceSection"><div id="namespace_bootentry" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;netboot.ts&#x2F;~&#x2F;BootEntry.html" title="BootEntry">
-			    <span>BootEntry</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>BootEntry</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One UEFI boot entry.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;netboot.ts&#x2F;~&#x2F;BootEntry.html#property_id">
-                  <span>id</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>id</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its id (hex).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;netboot.ts&#x2F;~&#x2F;BootEntry.html#property_label">
-                  <span>label</span><span>: <span class="td-kw">string</span></span></a></li></ul></div>
+                  <span>label</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its label.</p>
+</div></div></li></ul></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;install&#x2F;netboot_ts_variables"><div>
@@ -200,7 +205,8 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_bootentry"
 Variables</h2></div><div class="namespaceSection"><div id="namespace_netboot_entry" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;netboot.ts&#x2F;~&#x2F;NETBOOT_ENTRY.html" title="NETBOOT_ENTRY">
-			    <span>NETBOOT_ENTRY</span><span>: <span class="td-str">"/etc/archon/netboot-entry"</span></span></a></div>
+			    <span>NETBOOT_ENTRY</span><span>: <span class="td-str">"/etc/archon/netboot-entry"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where the install recorded the firmware entry it network-booted from.</p>
+</div></div></div>
     </div></div>
 </section>
 </div>

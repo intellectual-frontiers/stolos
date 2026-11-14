@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/install/host-add.ts - Stolos v0.27.0 documentation</title>
+  <title>archon/install/host-add.ts - Stolos v0.28.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.27.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.28.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -132,11 +132,13 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_ensuredeplo
     </div><div id="namespace_hostadd" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-add.ts&#x2F;~&#x2F;hostAdd.html" title="hostAdd">
-			    <span>hostAdd</span><span>(<span><span>o<span>: <span class="td-ref">HostAddOptions</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a></div>
+			    <span>hostAdd</span><span>(<span><span>o<span>: <span class="td-ref">HostAddOptions</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>archon host add: the model, the registration, the deploy key, and one armed install.</p>
+</div></div></div>
     </div><div id="namespace_hostsource" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-add.ts&#x2F;~&#x2F;hostSource.html" title="hostSource">
-			    <span>hostSource</span><span>(<span><span>o<span>: { name<span>: <span class="td-kw">string</span></span>; disk<span>: <span class="td-ref">DiskDef</span></span>;  }</span></span></span>)<span>: <span class="td-kw">string</span></span></span></a></div>
+			    <span>hostSource</span><span>(<span><span>o<span>: { name<span>: <span class="td-kw">string</span></span>; disk<span>: <span class="td-ref">DiskDef</span></span>;  }</span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>host.ts as host add writes it.</p>
+</div></div></div>
     </div><div id="namespace_registerdeploykey" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-add.ts&#x2F;~&#x2F;registerDeployKey.html" title="registerDeployKey">
@@ -175,7 +177,8 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_ensuredeplo
 Interfaces</h2></div><div class="namespaceSection"><div id="namespace_hostaddoptions" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-add.ts&#x2F;~&#x2F;HostAddOptions.html" title="HostAddOptions">
-			    <span>HostAddOptions</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>HostAddOptions</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What archon host add is given.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-add.ts&#x2F;~&#x2F;HostAddOptions.html#property_claim">
                   <span>claim</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Spec 051: exactly one of claim and macAddress (see recognize.ts).</p>
 </div></div></li><li>
@@ -183,15 +186,20 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_hostaddopt
                   <span>confirmDestroy</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The host's name again: its install may erase disks that are not blank.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-add.ts&#x2F;~&#x2F;HostAddOptions.html#property_disk">
-                  <span>disk</span><span>: <span class="td-ref">DiskDef</span>[<span class="td-str">"match"</span>]</span></a></li><li>
+                  <span>disk</span><span>: <span class="td-ref">DiskDef</span>[<span class="td-str">"match"</span>]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The install disk.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-add.ts&#x2F;~&#x2F;HostAddOptions.html#property_force">
-                  <span>force</span><span>: <span class="td-kw">boolean</span></span></a></li><li>
+                  <span>force</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Rewrite an existing host.ts.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-add.ts&#x2F;~&#x2F;HostAddOptions.html#property_layout">
-                  <span>layout</span><span>: <span class="td-ref">DiskDef</span>[<span class="td-str">"layout"</span>]</span></a></li><li>
+                  <span>layout</span><span>: <span class="td-ref">DiskDef</span>[<span class="td-str">"layout"</span>]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Ubuntu's guided layout.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-add.ts&#x2F;~&#x2F;HostAddOptions.html#property_macaddress">
-                  <span>macAddress</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>macAddress</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its network card (instead of --claim).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-add.ts&#x2F;~&#x2F;HostAddOptions.html#property_name">
-                  <span>name</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>name</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The host's name.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-add.ts&#x2F;~&#x2F;HostAddOptions.html#property_nodeploykey">
                   <span>noDeployKey</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Skip the GitHub deploy key (tests, or a host that should not push).</p>
 </div></div></li><li>

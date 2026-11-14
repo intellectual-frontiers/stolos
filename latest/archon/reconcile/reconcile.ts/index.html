@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/reconcile/reconcile.ts - Stolos v0.27.0 documentation</title>
+  <title>archon/reconcile/reconcile.ts - Stolos v0.28.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.27.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.28.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -183,7 +183,8 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_blockingcha
     </div><div id="namespace_reconcile" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;reconcile&#x2F;reconcile.ts&#x2F;~&#x2F;reconcile.html" title="reconcile">
-			    <span>reconcile</span><span>(<span><span>host<span>: <span class="td-ref">HostDef</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a></div>
+			    <span>reconcile</span><span>(<span><span>host<span>: <span class="td-ref">HostDef</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>archon reconcile: fetch, check the signature, fast-forward, apply, verify (the timer, every 15 minutes).</p>
+</div></div></div>
     </div><div id="namespace_synccheckout" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;reconcile&#x2F;reconcile.ts&#x2F;~&#x2F;syncCheckout.html" title="syncCheckout">
@@ -226,7 +227,8 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_syncresult
                   <span>current</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>fetched, and HEAD now equals origin/main</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;reconcile&#x2F;reconcile.ts&#x2F;~&#x2F;SyncResult.html#property_head">
-                  <span>head</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>head</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The commit it runs.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;reconcile&#x2F;reconcile.ts&#x2F;~&#x2F;SyncResult.html#property_incoming">
                   <span>incoming</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>commits on origin/main not yet applied locally (when check or blocked)</p>
 </div></div></li><li>
@@ -234,7 +236,8 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_syncresult
                   <span>pulled</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>commits fast-forwarded in this run (subject lines)</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;reconcile&#x2F;reconcile.ts&#x2F;~&#x2F;SyncResult.html#property_remote">
-                  <span>remote</span><span>: <span class="td-kw">string</span></span></a></li></ul></div>
+                  <span>remote</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>origin/main's commit.</p>
+</div></div></li></ul></div>
     </div></div>
 </section>
 </div>

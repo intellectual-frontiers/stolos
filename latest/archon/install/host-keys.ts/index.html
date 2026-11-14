@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/install/host-keys.ts - Stolos v0.27.0 documentation</title>
+  <title>archon/install/host-keys.ts - Stolos v0.28.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.27.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.28.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -195,18 +195,22 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_hostexport
                   <span>deployKey</span><span>: { private<span>: <span class="td-kw">string</span></span>; public<span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>ops' GitHub deploy key (the one registered on the repository), when present.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-keys.ts&#x2F;~&#x2F;HostExport.html#property_hostkeys">
-                  <span>hostKeys</span><span>: <span class="td-ref">HostKey</span>[]</span></a></li></ul></div>
+                  <span>hostKeys</span><span>: <span class="td-ref">HostKey</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The host's SSH host keys.</p>
+</div></div></li></ul></div>
     </div><div id="namespace_hostkey" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-keys.ts&#x2F;~&#x2F;HostKey.html" title="HostKey">
-			    <span>HostKey</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>HostKey</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One SSH host key pair.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-keys.ts&#x2F;~&#x2F;HostKey.html#property_private">
-                  <span>private</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>private</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The private half (kept on the boot machine only).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-keys.ts&#x2F;~&#x2F;HostKey.html#property_public">
                   <span>public</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>&quot;ssh-ed25519 AAAA...&quot; without a comment.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-keys.ts&#x2F;~&#x2F;HostKey.html#property_type">
-                  <span>type</span><span>: <span class="td-ref">HostKeyType</span></span></a></li></ul></div>
+                  <span>type</span><span>: <span class="td-ref">HostKeyType</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its type.</p>
+</div></div></li></ul></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;install&#x2F;host-keys_ts_type-aliases"><div>
@@ -235,7 +239,8 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_hostexport
 Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_hostkeytype" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;host-keys.ts&#x2F;~&#x2F;HostKeyType.html" title="HostKeyType">
-			    <span>HostKeyType</span><span> = <span class="td-ref">HOST_KEY_TYPES</span>[<span class="td-kw">number</span>]</span></a></div>
+			    <span>HostKeyType</span><span> = <span class="td-ref">HOST_KEY_TYPES</span>[<span class="td-kw">number</span>]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>An SSH host key type.</p>
+</div></div></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;install&#x2F;host-keys_ts_variables"><div>

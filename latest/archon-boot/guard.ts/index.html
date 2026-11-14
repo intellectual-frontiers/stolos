@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon-boot/guard.ts - Stolos v0.27.0 documentation</title>
+  <title>archon-boot/guard.ts - Stolos v0.28.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;" class="contextLink">Stolos v0.27.0</a>
+    <a href="..&#x2F;..&#x2F;" class="contextLink">Stolos v0.28.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -225,22 +225,29 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_describefac
 Interfaces</h2></div><div class="namespaceSection"><div id="namespace_machinefacts" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;guard.ts&#x2F;~&#x2F;MachineFacts.html" title="MachineFacts">
-			    <span>MachineFacts</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>MachineFacts</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What a machine says about itself, before its install (from its firmware tables, /proc, and its disks).</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;guard.ts&#x2F;~&#x2F;MachineFacts.html#property_cpus">
-                  <span>cpus</span><span>: <span class="td-kw">number</span></span></a></li><li>
+                  <span>cpus</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its CPUs.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;guard.ts&#x2F;~&#x2F;MachineFacts.html#property_disks">
-                  <span>disks</span><span>: <span class="td-ref">Array</span>&lt;{ name<span>: <span class="td-kw">string</span></span>; bytes<span>: <span class="td-kw">number</span></span>; transport<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }&gt;</span></a></li><li>
+                  <span>disks</span><span>: <span class="td-ref">Array</span>&lt;{ name<span>: <span class="td-kw">string</span></span>; bytes<span>: <span class="td-kw">number</span></span>; transport<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its disks: name, size in bytes, and how attached (nvme, sata, usb, virtio).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;guard.ts&#x2F;~&#x2F;MachineFacts.html#property_memkib">
-                  <span>memKiB</span><span>: <span class="td-kw">number</span></span></a></li><li>
+                  <span>memKiB</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its memory, in KiB.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;guard.ts&#x2F;~&#x2F;MachineFacts.html#property_model">
-                  <span>model</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>model</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its model.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;guard.ts&#x2F;~&#x2F;MachineFacts.html#property_serial">
-                  <span>serial</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>serial</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its serial number.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;guard.ts&#x2F;~&#x2F;MachineFacts.html#property_signatures">
                   <span>signatures</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Partition tables and filesystems found: &quot;/dev/sda gpt&quot;, &quot;/dev/sda2 ext4&quot;.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;guard.ts&#x2F;~&#x2F;MachineFacts.html#property_vendor">
-                  <span>vendor</span><span>: <span class="td-kw">string</span></span></a></li></ul></div>
+                  <span>vendor</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its maker (firmware filler such as &quot;To Be Filled By O.E.M.&quot; is dropped).</p>
+</div></div></li></ul></div>
     </div></div>
 </section>
 <section class="section"  id="archon-boot&#x2F;guard_ts_type-aliases"><div>
@@ -269,7 +276,8 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_machinefac
 Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_guarddecision-1" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;guard.ts&#x2F;~&#x2F;GuardDecision.html" title="GuardDecision">
-			    <span>GuardDecision</span><span> = <div class="ml-indent"><span>{ go<span>: <span class="td-lit">true</span></span>; why<span>: <span class="td-kw">string</span></span>;  }</span><br /><span><span class="td-op"> | </span>{ go<span>: <span class="td-lit">false</span></span>; why<span>: <span class="td-kw">string</span></span>; fix<span>: <span class="td-kw">string</span></span>;  }</span></div></span></a></div>
+			    <span>GuardDecision</span><span> = <div class="ml-indent"><span>{ go<span>: <span class="td-lit">true</span></span>; why<span>: <span class="td-kw">string</span></span>;  }</span><br /><span><span class="td-op"> | </span>{ go<span>: <span class="td-lit">false</span></span>; why<span>: <span class="td-kw">string</span></span>; fix<span>: <span class="td-kw">string</span></span>;  }</span></div></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The guard's answer: go (and why), or stop (why, and the command that lets it go on).</p>
+</div></div></div>
     </div></div>
 </section>
 <section class="section"  id="archon-boot&#x2F;guard_ts_variables"><div>

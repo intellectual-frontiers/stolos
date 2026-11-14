@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/identity/signers.ts - Stolos v0.27.0 documentation</title>
+  <title>archon/identity/signers.ts - Stolos v0.28.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.27.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.28.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -255,14 +255,17 @@ commit applied now (no rollback) and carry a good signature by a key in
 Interfaces</h2></div><div class="namespaceSection"><div id="namespace_tipcheck" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;signers.ts&#x2F;~&#x2F;TipCheck.html" title="TipCheck">
-			    <span>TipCheck</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>TipCheck</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Whether a new tip may be applied.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;signers.ts&#x2F;~&#x2F;TipCheck.html#property_code">
                   <span>code</span><span>: <span><span class="td-str">"rollback"</span><span class="td-op"> | </span><span class="td-str">"no-signers"</span><span class="td-op"> | </span><span class="td-str">"unsigned"</span><span class="td-op"> | </span><span class="td-str">"untrusted"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Why not, as a word (telemetry: archon.update.outcome = refused-&lt;code&gt;).</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;signers.ts&#x2F;~&#x2F;TipCheck.html#property_ok">
-                  <span>ok</span><span>: <span class="td-kw">boolean</span></span></a></li><li>
+                  <span>ok</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>It may.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;signers.ts&#x2F;~&#x2F;TipCheck.html#property_reason">
-                  <span>reason</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>reason</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Why not, in plain words.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;signers.ts&#x2F;~&#x2F;TipCheck.html#property_signer">
                   <span>signer</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Who signed it (the principal), when it is good.</p>
 </div></div></li></ul></div>
@@ -294,11 +297,13 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_tipcheck" 
 Variables</h2></div><div class="namespaceSection"><div id="namespace_allowed_signers" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;signers.ts&#x2F;~&#x2F;ALLOWED_SIGNERS.html" title="ALLOWED_SIGNERS">
-			    <span>ALLOWED_SIGNERS</span><span>: <span class="td-str">"/etc/archon/allowed_signers"</span></span></a></div>
+			    <span>ALLOWED_SIGNERS</span><span>: <span class="td-str">"/etc/archon/allowed_signers"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The signers a host trusts (from signers.ts, at its install and every update).</p>
+</div></div></div>
     </div><div id="namespace_allowed_signers_local" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;signers.ts&#x2F;~&#x2F;ALLOWED_SIGNERS_LOCAL.html" title="ALLOWED_SIGNERS_LOCAL">
-			    <span>ALLOWED_SIGNERS_LOCAL</span><span>: <span class="td-str">"/etc/archon/allowed_signers.local"</span></span></a></div>
+			    <span>ALLOWED_SIGNERS_LOCAL</span><span>: <span class="td-str">"/etc/archon/allowed_signers.local"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Signers trusted on this host only, by a person at it (archon signers trust).</p>
+</div></div></div>
     </div></div>
 </section>
 </div>

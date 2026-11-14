@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/core/secrets.ts - Stolos v0.27.0 documentation</title>
+  <title>archon/core/secrets.ts - Stolos v0.28.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.27.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.28.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -142,11 +142,13 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_armhost" cl
     </div><div id="namespace_loadtokens" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;secrets.ts&#x2F;~&#x2F;loadTokens.html" title="loadTokens">
-			    <span>loadTokens</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">InstallToken</span>[]&gt;</span></span></a></div>
+			    <span>loadTokens</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">InstallToken</span>[]&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Every armed install.</p>
+</div></div></div>
     </div><div id="namespace_readsecret" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;secrets.ts&#x2F;~&#x2F;readSecret.html" title="readSecret">
-			    <span>readSecret</span><span>(<span><span>path<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span>&gt;</span></span></a></div>
+			    <span>readSecret</span><span>(<span><span>path<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A secret's content, or undefined.</p>
+</div></div></div>
     </div><div id="namespace_removesecret" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;secrets.ts&#x2F;~&#x2F;removeSecret.html" title="removeSecret">
@@ -155,7 +157,8 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_armhost" cl
     </div><div id="namespace_savetokens" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;secrets.ts&#x2F;~&#x2F;saveTokens.html" title="saveTokens">
-			    <span>saveTokens</span><span>(<span><span>tokens<span>: <span class="td-ref">InstallToken</span>[]</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">void</span>&gt;</span></span></a></div>
+			    <span>saveTokens</span><span>(<span><span>tokens<span>: <span class="td-ref">InstallToken</span>[]</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">void</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Write them back.</p>
+</div></div></div>
     </div><div id="namespace_writesecret" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;secrets.ts&#x2F;~&#x2F;writeSecret.html" title="writeSecret">
@@ -193,7 +196,8 @@ rewritten (and is not a change).</p>
 Interfaces</h2></div><div class="namespaceSection"><div id="namespace_installtoken" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;secrets.ts&#x2F;~&#x2F;InstallToken.html" title="InstallToken">
-			    <span>InstallToken</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>InstallToken</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One armed install (the boot machine's own record).</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;secrets.ts&#x2F;~&#x2F;InstallToken.html#property_addresses">
                   <span>addresses</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Addresses the host was installed from (its old SSH host keys are forgotten for each).</p>
 </div></div></li><li>
@@ -214,7 +218,8 @@ install may erase disks that are not blank (otherwise the installer stops).</p>
                   <span>firstUse</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>First time the host fetched its install config; the token then lives 2 hours.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;secrets.ts&#x2F;~&#x2F;InstallToken.html#property_host">
-                  <span>host</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>host</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The host.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;secrets.ts&#x2F;~&#x2F;InstallToken.html#property_mac">
                   <span>mac</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The MAC the host network-booted from, as GRUB reported it.</p>
 </div></div></li><li>
@@ -223,7 +228,8 @@ install may erase disks that are not blank (otherwise the installer stops).</p>
 it into this install: a machine with this MAC holds this host already.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;secrets.ts&#x2F;~&#x2F;InstallToken.html#property_token">
-                  <span>token</span><span>: <span class="td-kw">string</span></span></a></li></ul></div>
+                  <span>token</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The random token in its install URLs.</p>
+</div></div></li></ul></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;core&#x2F;secrets_ts_variables"><div>
@@ -252,7 +258,8 @@ it into this install: a machine with this MAC holds this host already.</p>
 Variables</h2></div><div class="namespaceSection"><div id="namespace_secrets" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;secrets.ts&#x2F;~&#x2F;SECRETS.html" title="SECRETS">
-			    <span>SECRETS</span><span>: { deployKey<span>: (<span><span>host<span>: <span class="td-kw">string</span></span></span></span>) =&gt; <span class="td-kw">unknown</span></span>; deployKeyPub<span>: (<span><span>host<span>: <span class="td-kw">string</span></span></span></span>) =&gt; <span class="td-kw">unknown</span></span>; acme<span>: (<span><span>host<span>: <span class="td-kw">string</span></span></span></span>) =&gt; <span class="td-kw">unknown</span></span>; hostKey<span>: (<div class="ml-4"><div><span>host<span>: <span class="td-kw">string</span></span></span>,</div><div><span>type<span>: <span class="td-kw">string</span></span></span></div></div>) =&gt; <span class="td-kw">unknown</span></span>; <span class="td-kw">get </span>dir()<span>: <span class="td-kw">string</span></span>; <span class="td-kw">get </span>adminPasswordHash()<span>: <span class="td-kw">string</span></span>; <span class="td-kw">get </span>mail()<span>: <span class="td-kw">string</span></span>; <span class="td-kw">get </span>web()<span>: <span class="td-kw">string</span></span>; <span class="td-kw">get </span>tokens()<span>: <span class="td-kw">string</span></span>;  }</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>SECRETS</span><span>: { deployKey<span>: (<span><span>host<span>: <span class="td-kw">string</span></span></span></span>) =&gt; <span class="td-kw">unknown</span></span>; deployKeyPub<span>: (<span><span>host<span>: <span class="td-kw">string</span></span></span></span>) =&gt; <span class="td-kw">unknown</span></span>; acme<span>: (<span><span>host<span>: <span class="td-kw">string</span></span></span></span>) =&gt; <span class="td-kw">unknown</span></span>; hostKey<span>: (<div class="ml-4"><div><span>host<span>: <span class="td-kw">string</span></span></span>,</div><div><span>type<span>: <span class="td-kw">string</span></span></span></div></div>) =&gt; <span class="td-kw">unknown</span></span>; <span class="td-kw">get </span>dir()<span>: <span class="td-kw">string</span></span>; <span class="td-kw">get </span>adminPasswordHash()<span>: <span class="td-kw">string</span></span>; <span class="td-kw">get </span>mail()<span>: <span class="td-kw">string</span></span>; <span class="td-kw">get </span>web()<span>: <span class="td-kw">string</span></span>; <span class="td-kw">get </span>tokens()<span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where each secret lives on the boot machine (per fleet; never in Git).</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;secrets.ts&#x2F;~&#x2F;SECRETS.html#property_acme">
                   <span>acme</span><span>: (<span><span>host<span>: <span class="td-kw">string</span></span></span></span>) =&gt; <span class="td-kw">unknown</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The server's Let's Encrypt store, carried across a re-install (spec 032).</p>
 </div></div></li><li>
