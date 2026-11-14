@@ -1,103 +1,163 @@
 # Stolos
 
-Stolos is a general fleet engine: you describe each host in TypeScript, and its command, `archon`,
-turns bare metal into a converged, verified **Ubuntu Server 26.04 LTS** host. It renders Ubuntu's
-own formats (autoinstall, netplan, systemd units, nftables, sudoers) from the model, installs each
-host over the network with no human steps after power-on, and keeps it converged.
-
-Ubuntu decides; Archon only adds. See the [constitution](.specify/memory/constitution.md).
-
-**Documentation:** <https://intellectual-frontiers.github.io/stolos/latest/> (every module, from its
-JSDoc, with diagrams; one folder per release, `/vX.Y.Z/`), or `deno task docs` for `out/docs/` here.
-The task guides are in [`docs/`](docs/).
-
-## Engine and fleets
-
-This repository is the **engine**. It holds no real fleet. Your fleets live in a repository of your
-own, which imports the engine by version:
+Stolos turns bare machines into Ubuntu servers that set themselves up, keep themselves right, and
+can prove it. You describe your machines in a few TypeScript files; its command, `archon`, does the
+rest.
 
 ```
-your fleet repository (private)            this repository (public)
-───────────────────────────────            ────────────────────────
-deno.json   "@stolos/": ".../v0.1.0/src/"   src/archon/        the archon command
-deno.lock   (pins every engine file)       src/archon-boot/   the boot server
-archon.ts   runs the pinned engine         specs/ docs/ home/ carried as a module
-fleets/<id>/
-  fleet.ts  site.ts                        examples/fleets/lab/  a complete example
-  hosts/<host>/host.ts
+  what you write                      what Stolos does                      what you get
+┌───────────────────┐        ┌──────────────────────────────┐        ┌────────────────────────┐
+│ fleet.ts          │        │ installs Ubuntu over the     │        │ servers that match the │
+│  domain, mail,    │  ───▶  │ network (no USB, no clicks)  │  ───▶  │ description, every 15  │
+│  admin, ...       │        │ applies packages, users,     │        │ minutes, and can say   │
+│ hosts/olympia/    │        │ firewall, HTTPS, tools       │        │ so: archon verify,     │
+│  host.ts          │        │ checks every piece           │        │ archon fleet status    │
+└───────────────────┘        └──────────────────────────────┘        └────────────────────────┘
 ```
 
-- `deno.json` maps `@stolos/` to a tagged raw GitHub URL, for example
-  `https://raw.githubusercontent.com/intellectual-frontiers/stolos/v0.1.0/src/`, and `deno.lock`
-  pins every file of it.
-- `archon.ts` is two lines:
+Ubuntu decides; Stolos only adds (see the [constitution](.specify/memory/constitution.md)).
 
-  ```ts
-  import { run } from "@stolos/archon/main.ts";
-  await run();
-  ```
+## Two kinds of repository
 
-- Each host checks out the fleet repository at `/srv/archon`, knows its fleet from
-  `/etc/archon/fleet`, and runs `archon` (the launcher runs `archon.ts` with the lockfile frozen).
-- To adopt a newer engine: `deno task archon fleet upgrade v0.8.0`, then `git push`. It checks the
-  tag is a release, locks every engine file in `deno.lock`, validates every fleet, and makes one
-  signed commit (see [docs/fleet-repository.md](docs/fleet-repository.md): why the lock is a
-  security control, and what to do when it complains).
+This repository is the **engine**: public, with no real machines in it. Each fleet lives in a
+**fleet repository** of its own, private, that uses the engine by version.
 
-Every push to this repository's `main` raises the version in
-[`src/archon/version.ts`](src/archon/version.ts) (0.1.0, 0.2.0, ...), and CI tags the commit
-`v<version>`.
-
-## Try it on the example lab
-
-```sh
-deno task archon validate     # the example fleet, examples/fleets/lab
-deno task archon build        # renders every host into examples/out/lab/
-deno task test
+```
+intellectual-frontiers/stolos (public)          your fleet repository (private)
+┌──────────────────────────────────┐            ┌──────────────────────────────────────┐
+│ the engine: archon, boot server, │  tag       │ deno.json   "use engine vX.Y.Z"      │
+│ guides, an example fleet         │  vX.Y.Z    │ deno.lock   a fingerprint of every   │
+│                                  │ ─────────▶ │             engine file              │
+│ every change: a new version,     │            │ fleets/<id>/fleet.ts, hosts/...      │
+│ tested, tagged, never changed    │            │ fleets/<id>/signers.ts (who approves)│
+└──────────────────────────────────┘            └──────────────────┬───────────────────┘
+                                                                    │ each server pulls it
+                                                                    ▼ (read only)
+                                                          ┌──────────────────────┐
+                                                          │ your servers         │
+                                                          └──────────────────────┘
 ```
 
-From a fleet repository, `archon` finds the fleet the same way: `ARCHON_REPO` (the repository) and
-`ARCHON_FLEET` (the fleet), else the nearest folder with `fleets/` and its only fleet, else
-`/srv/archon` and `/etc/archon/fleet`.
+A fleet repository holds descriptions only. Its passwords and keys stay on one PC (the **boot
+machine**, which also installs new machines); what each machine records about itself stays on that
+machine, where `archon` asks it.
+
+## Why changes are signed
+
+Your servers take their instructions from the fleet repository on GitHub. If anyone or anything that
+can push to it could change your servers (a stolen GitHub password, a leaked token, an automated
+tool, an AI agent), that would be the weak point. So every change must be **signed**.
+
+Signing uses a **key pair**: two files made together.
+
+- The **private key** is yours alone. It stays on your PC, locked with a passphrase you type each
+  time. Like a wax seal: only you hold it.
+- The **public key** (the same file name with `.pub`) can be shared with anyone. Like a picture of
+  the seal: anyone can check that a letter was sealed by you, but no one can seal with it.
+
+Git seals each commit with your private key. The fleet lists the public keys it trusts in
+`signers.ts`. Each server checks every new commit: sealed by a listed key, and following on from the
+commit it already runs (no going back). Otherwise it refuses, and nothing changes.
+
+```
+you: git commit (passphrase) ──▶ GitHub ──▶ server: sealed by a key in signers.ts?
+                                                 yes ──▶ apply the change
+                                                 no  ──▶ refuse (archon explain E047-UNTRUSTED)
+```
+
+The fingerprints in `deno.lock` make your seal cover the engine's code too: a server runs exactly
+the engine files you approved.
+
+## Set up a fleet repository
+
+You need Deno, Git, and `gh` (GitHub's command line, signed in).
+
+1. Create an empty private repository on GitHub and clone it.
+2. Make your signing key, and tell Git to use it for every commit (the passphrase is never stored):
+
+   ```sh
+   ssh-keygen -t ed25519 -f ~/.ssh/fleet-signing -C "<your name> fleet signing"
+   git config --global gpg.format ssh
+   git config --global user.signingkey ~/.ssh/fleet-signing
+   git config --global commit.gpgsign true
+   ```
+
+   Make a second, **recovery** key the same way and keep it somewhere safe and apart (an encrypted
+   vault): it replaces the first if your PC is lost.
+3. Start the fleet with the engine's latest version (it writes `deno.json`, `deno.lock`, and
+   `fleets/<id>/fleet.ts` from your GitHub account):
+
+   ```sh
+   deno run -A https://raw.githubusercontent.com/intellectual-frontiers/stolos/v<version>/src/archon/main.ts fleet init <id>
+   ```
+
+4. List your keys as the fleet's signers, then commit and push (signed):
+
+   ```sh
+   deno task archon signers add <you> --role daily --key ~/.ssh/fleet-signing.pub
+   deno task archon signers add <you>-recovery --role recovery --key <recovery>.pub
+   git add -A && git commit -m "<id>: the fleet" && git push
+   ```
+
+5. From here, `deno task archon` shows where you are and the one command to run next: tokens, your
+   first server (`deno task archon host add <name> --claim`), and installing it
+   (`deno task boot serve`).
+
+The full walk-through: [docs/fleet-repository.md](docs/fleet-repository.md) and
+[docs/boot-machine.md](docs/boot-machine.md).
+
+## How a machine becomes a server
+
+```
+boot machine                                   the new machine
+────────────                                   ───────────────
+host add olympia --claim
+boot serve  ◀─────────── network boot ──────── power on
+            ── Ubuntu's installer ───────────▶
+            ◀── "my disks are: ..." ──────────  (nothing erased unless blank or confirmed)
+            ── ok ───────────────────────────▶ installs Ubuntu, then the fleet's description
+            ◀── Packages, Tools, Verify, Ready  (shown live in the boot window)
+```
+
+## Every day
+
+- `deno task archon`: where you are, and what to do next.
+- Change a file under `fleets/<id>/`, `deno task archon build`, then commit (signed) and push: every
+  server applies it within 15 minutes.
+- `deno task archon fleet status`: every server, how it is.
+- `archon explain <code>`: what a problem means and how to fix it.
+- `deno task archon fleet upgrade v<version>`: adopt a newer engine.
 
 ## Documentation
 
-| Read                                                                           | For                                                                                                                  |
-| ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
-| [docs/fleet-repository.md](docs/fleet-repository.md)                           | Your fleet repository: the pin, the lock (and why they are security), upgrading the engine, signing, troubleshooting |
-| [docs/telemetry.md](docs/telemetry.md)                                         | Logs, metrics, and traces: the headless Collector, collecting in one place, the web UI (OpenObserve), the boot PC    |
-| [docs/releasing.md](docs/releasing.md)                                         | Changing the engine: spec, version, `deno task ci`, tags, and protecting them                                        |
-| [docs/boot-machine.md](docs/boot-machine.md)                                   | The boot machine: tools, firewall, router, `boot serve`, `boot doctor`, mail, the secrets vault                      |
-| [docs/hosts.md](docs/hosts.md)                                                 | Adding, installing, and re-installing hosts                                                                          |
-| [docs/install-timeline.md](docs/install-timeline.md)                           | What happens during an install, in order                                                                             |
-| [docs/workstation.md](docs/workstation.md)                                     | Ubuntu on WSL as a workstation                                                                                       |
-| [docs/daily-use.md](docs/daily-use.md)                                         | Working on a host: commands, the prompt, observing, updates                                                          |
-| [docs/web.md](docs/web.md)                                                     | HTTPS on every server, publishing services, guests, containers                                                       |
-| [docs/dotfiles.md](docs/dotfiles.md)                                           | Dotfile layers and how chezmoi applies them                                                                          |
-| [docs/agent.md](docs/agent.md)                                                 | The agent layer: any MCP client on a workstation, limited by each server                                             |
-| [docs/sql.md](docs/sql.md)                                                     | SQL over infrastructure: osquery, DuckDB                                                                             |
-| [docs/pg.md](docs/pg.md), [docs/s3.md](docs/s3.md), [docs/smb.md](docs/smb.md) | PostgreSQL, S3, SMB                                                                                                  |
-| [docs/disaster-recovery.md](docs/disaster-recovery.md)                         | Losing the boot machine                                                                                              |
-| [docs/troubleshooting.md](docs/troubleshooting.md)                             | Symptoms, causes, and fixes                                                                                          |
-| [AGENTS.md](AGENTS.md)                                                         | How to change the engine (people and agents)                                                                         |
+- **Reference**, from the code, with diagrams:
+  <https://intellectual-frontiers.github.io/stolos/latest/> (or `deno task docs` here).
+- **Guides**, in [`docs/`](docs/):
 
-## Status
+| Read                                                                           | For                                                                  |
+| ------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| [docs/fleet-repository.md](docs/fleet-repository.md)                           | Your fleet repository: versions, upgrading, signing, troubleshooting |
+| [docs/boot-machine.md](docs/boot-machine.md)                                   | The boot machine: tools, firewall, router, mail, the secrets vault   |
+| [docs/hosts.md](docs/hosts.md)                                                 | Adding, installing, re-installing, and retiring machines             |
+| [docs/install-timeline.md](docs/install-timeline.md)                           | What happens during an install, in order                             |
+| [docs/daily-use.md](docs/daily-use.md)                                         | Working on a server: commands, observing, updates                    |
+| [docs/workstation.md](docs/workstation.md)                                     | Your PC's Ubuntu (WSL) as a workstation                              |
+| [docs/web.md](docs/web.md)                                                     | HTTPS on every server, publishing services                           |
+| [docs/telemetry.md](docs/telemetry.md)                                         | Logs, metrics, traces, and the optional web UI                       |
+| [docs/agent.md](docs/agent.md)                                                 | AI agents and other MCP clients, limited by each server              |
+| [docs/pg.md](docs/pg.md), [docs/s3.md](docs/s3.md), [docs/smb.md](docs/smb.md) | PostgreSQL, S3, SMB                                                  |
+| [docs/sql.md](docs/sql.md)                                                     | SQL over the fleet: osquery, DuckDB                                  |
+| [docs/disaster-recovery.md](docs/disaster-recovery.md)                         | Losing the boot machine                                              |
+| [docs/troubleshooting.md](docs/troubleshooting.md)                             | Symptoms, causes, and fixes                                          |
+| [docs/releasing.md](docs/releasing.md), [AGENTS.md](AGENTS.md)                 | Changing the engine itself                                           |
 
-The version is in [`src/archon/version.ts`](src/archon/version.ts). The engine started as it stood
-in its first fleet, made general (`046-engine-instance`: the engine/fleet split, per-fleet secrets,
-the example lab, versioning). Since then:
+## Try it
 
-- `047-intent-and-identity`: hosts apply only a tip of `main` signed by one of the fleet's signers
-  (`fleets/<id>/signers.ts`, `archon signers`).
-- `048-observe-by-query`: each machine keeps its own state in `/var/lib/archon/archon.sql` (readable
-  SQL; `archon.auto.sqlite.db` is built from it for osquery). `archon state`, `archon query`, and
-  `archon fleet query` read machines live over SSH; hosts never push, and their deploy keys are
-  read-only.
+```sh
+deno task archon validate     # the example fleet, examples/fleets/lab
+deno task archon build        # renders its machines into examples/out/lab/
+deno task test
+```
 
-- `049-telemetry`: OpenTelemetry everywhere (one list of signals, traces across machines, events
-  structured at their source; the boot PC as the default collector).
-- `050-telemetry-ui`: the telemetry web UI (OpenObserve) as an opt-in on any server.
-- The `e2e` workflow installs a blank Secure Boot VM from network boot to `Ready` on every push.
-
-Next: decisions and registration in Git (`decisions.ts`, `registration.ts`), and an install as one
-trace from `boot arm` to `Ready`.
+Every change to this repository is a new version ([`src/archon/version.ts`](src/archon/version.ts)),
+tested (including a full install of a virtual machine), and tagged `v<version>`.

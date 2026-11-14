@@ -9,6 +9,23 @@
 
 import type { SiteDef } from "./site.ts";
 
+/** The site network model (spec 028), re-exported for the fleet types that use it. */
+export type {
+  BRAND,
+  Brand,
+  Cidr,
+  Device,
+  FirewallPolicy,
+  IPv4,
+  LocalDnsRecord,
+  Port,
+  SiteDef,
+  SiteNetwork,
+  VlanId,
+  WifiNetwork,
+  Zone,
+} from "./site.ts";
+
 /** A spec's folder name, `NNN-short-name` (for example `"051-machine-identity"`): why something exists. */
 export type SpecId = `${number}-${string}`;
 
@@ -247,6 +264,7 @@ export interface ServiceDef {
   name: string;
   /** Fixed, so the account is the same on every server: 800 to 899. */
   uid: number;
+  /** Its purpose, in one line. */
   description: string;
 }
 
@@ -267,12 +285,15 @@ export interface WebFleetDef {
 export interface WebRoute {
   /** A DNS label: the app's subdomain. */
   name: string;
+  /** The backend's port. */
   port: number;
   /** The backend's address (default 127.0.0.1). */
   address?: string;
   /** The backend speaks HTTPS (certificate not checked; loopback or guests only). */
   https?: boolean;
+  /** What it is, in one line (shown on the server's welcome page). */
   description?: string;
+  /** The spec that publishes it. */
   spec: SpecId;
 }
 
@@ -288,8 +309,11 @@ export interface DiskDef {
 export interface BackupDef {
   /** Directory the archives go to (default /var/backups/archon, Ubuntu's backup location). */
   target: string;
+  /** Directories to archive. */
   paths: string[];
+  /** How many archives to keep (the oldest go first). */
   keep: number;
+  /** When to run (systemd OnCalendar syntax, for example "daily"). */
   onCalendar: string;
 }
 
@@ -315,10 +339,13 @@ export interface ObservabilityDef {
 
 /** An LXD instance on a host (spec 017). */
 export interface GuestDef {
+  /** The guest's name (an LXD instance name). */
   name: string;
+  /** A system container, or a virtual machine. */
   kind: "container" | "vm";
   /** LXD image, for example "ubuntu:26.04". */
   image: string;
+  /** CPU cores (default: LXD's). */
   cpus?: number;
   /** For example "4GiB". */
   memory?: string;
@@ -377,11 +404,13 @@ export interface HostDef {
    * claim or its own Boot URI (/boot/<name>/bootx64.efi).
    */
   mac?: string;
+  /** The CPU architecture (amd64 only, for now). */
   arch: "amd64";
   /** Servers: the install disk (default: Ubuntu's LVM layout on the largest disk). */
   disk?: DiskDef;
   /** Extra accounts beyond the fleet admin and ops. */
   users?: UserDef[];
+  /** What it gets: `foundation()` for a server, `workstation()` for a workstation, plus any more. */
   capabilities: Capability[];
   /** LXD containers and VMs (spec 017). */
   guests?: GuestDef[];
@@ -389,7 +418,6 @@ export interface HostDef {
   backup?: Partial<BackupDef>;
   /** Overrides of the fleet's local observability limits (spec 021). */
   observability?: Partial<ObservabilityDef>;
-  /** Overrides of the fleet's network properties (spec 009). */
   /** The site network it lives on (spec 028), by name: "Servers". Its IPv6 follows that network. */
   network?: string;
   /** Per-host override of the network's IPv6 (spec 009). */
@@ -402,6 +430,7 @@ export interface HostDef {
   switchPort?: string;
   /** Services this server publishes through its proxy (spec 032). */
   web?: { routes?: Array<Omit<WebRoute, "spec">> };
+  /** Out-of-band management (Intel AMT): its address and notes, for the person at the console. */
   outOfBand?: { amt?: { address?: string; notes?: string } };
   /** PostgreSQL instances this server keeps (spec 038). */
   pg?: { instances?: PgInstanceDef[] };
@@ -417,6 +446,7 @@ export interface HostDef {
    * written in a host file. Absent means off.
    */
   optIn?: Record<string, OptInRecord>;
+  /** The spec that brought it (for a host, usually "004-install"). */
   spec: SpecId;
   /** Who it is, from fleets/<id>/hosts/<host>/registration.ts (spec 047): read by loadHosts. */
   registration?: HostRegistration;
@@ -428,6 +458,7 @@ export interface HostDef {
  * @group (a Linux group's members). PostgreSQL roles are the same names.
  */
 export interface PgDatabaseDef {
+  /** The database's name. */
   name: string;
   /** Owns the database and its public schema (creates tables). */
   owner: string;
@@ -441,6 +472,7 @@ export interface PgDatabaseDef {
 
 /** A named PostgreSQL instance: one Debian cluster, <version>/<name> (spec 038). */
 export interface PgInstanceDef {
+  /** The instance's name (a Debian cluster name): "prime" is the default one. */
   name: string;
   /** Major version (default 18, Ubuntu's). */
   version?: number;
@@ -450,19 +482,24 @@ export interface PgInstanceDef {
   environment?: string;
   /** psql turns AUTOCOMMIT off and warns in red (default true for production). */
   protected?: boolean;
+  /** The databases in it, and who may use each. */
   databases?: PgDatabaseDef[];
 }
 
 /** One instance as recorded on the host (the host's own archon.sql (opt-in pg)). */
 export interface PgRecord {
+  /** Its major version. */
   version: number;
+  /** The port it listens on. */
   port: number;
   /** ISO time and who: Archon owns only clusters it created (FR-003). */
   created: string;
+  /** Who created it. */
   by: string;
+  /** Shown in the psql prompt. */
   environment?: string;
+  /** psql turns AUTOCOMMIT off and warns in red. */
   protected?: boolean;
-  /** Published on the local networks at pg-<name>.<host>.<domain>. */
   /**
    * Published: reachable on the server's address over TLS (scram-sha-256). From
    * anywhere the router lets through, unless localOnly (archon pg publish --local-only).
@@ -472,16 +509,19 @@ export interface PgRecord {
   retired?: number[];
 }
 
-/** An operator's decision about an opt-in service or container (spec 040). */
 /**
  * Article 23 (spec 044): data that can come from end users is either durable
  * (it exists nowhere else) or ephemeral (losing it is harmless).
  */
 export type DataClass = "durable" | "ephemeral";
 
+/** An operator's decision about an opt-in service or container (spec 040). */
 export interface OptInRecord {
+  /** On or off. */
   enabled: boolean;
+  /** Who decided (a Unix account). */
   by: string;
+  /** When (ISO time). */
   at: string;
   /** For an opt-in that holds end users' data: the operator's choice (spec 044). */
   data?: DataClass;
@@ -516,36 +556,54 @@ export interface HostRegistration {
  * written by `archon decide`. A decision here wins over the host's own record.
  */
 export interface HostDecisions {
+  /** What operators decided in Git (decisions.ts): opt-in name to its record. */
   optIns?: Record<string, OptInRecord>;
 }
 
 /** the host's own archon.sql (opt-in pg): the opt-in switch (spec 040) and the instances Archon made. */
 export interface PgState extends Partial<OptInRecord> {
+  /** Each instance Archon created, by name. */
   instances: Record<string, PgRecord>;
 }
 
+/** What to do when a file changed: reload systemd, restart or reload a unit, or run a command. */
 export type Action =
   | { kind: "daemon-reload" }
   | { kind: "restart"; unit: string }
   | { kind: "reload-or-restart"; unit: string }
   | { kind: "run"; argv: string[]; asUser?: string; ifExists?: string };
 
+/** A file Archon keeps on a host: its content, owner, and mode, checked before and after it is put in place. */
 export interface FileDef {
+  /** Its absolute path on the host. */
   path: string;
+  /** Its content (absent for a symlink). */
   content?: string;
+  /** Make it a symlink to this target instead. */
   symlink?: string;
+  /** Its mode, for example "0644". */
   mode: string;
+  /** Its owner (a Unix account). */
   owner: string;
+  /** Its group (default: the owner's). */
   group?: string;
+  /** The spec that writes it. */
   spec: SpecId;
+  /** A command that checks the new content before it is put in place (the file's path appended). */
   validate?: string[];
+  /** A command that checks it after it is in place (rolled back when it fails). */
   postValidate?: string[];
+  /** What to do when it changed: reload, restart, run. */
   onChange?: Action[];
 }
 
+/** A systemd unit Archon manages: its file (when Archon writes it), and whether it is enabled, started, or masked. */
 export interface UnitDef {
+  /** The systemd unit's name, for example "archon-web.service". */
   unitName: string;
+  /** Archon writes the unit file (true) or only enables, starts, or masks Ubuntu's own (false). */
   managed: boolean;
+  /** The unit file's content, when Archon writes it. */
   content?: string;
   /** masked: stopped and masked, the package kept (spec 001: avahi-daemon). */
   state: "enabled" | "disabled" | "masked" | "ignore";
@@ -561,13 +619,19 @@ export interface UnitDef {
    * Turning it on is unmask and start.
    */
   generated?: boolean;
+  /** Start it now, not only at the next boot. */
   start?: boolean;
+  /** The command that checks it (exit 0: fine). */
   verify: string;
+  /** The spec that brings it. */
   spec: SpecId;
+  /** For a timer: when it fires (systemd OnCalendar syntax). */
   onCalendar?: string;
 }
 
+/** A package to install, from Ubuntu's apt (default), a PPA, a vendor repository, or a snap. */
 export interface PackageDef {
+  /** The package's name. */
   name: string;
   /** apt (default) or snap: both are native on Ubuntu (Article 2). */
   source?: "apt" | "snap";
@@ -585,6 +649,7 @@ export interface PackageDef {
    * before it is installed: Ubuntu's way to install a package unattended.
    */
   debconf?: string[];
+  /** The spec that installs it. */
   spec: SpecId;
 }
 
@@ -594,40 +659,63 @@ export interface PackageDef {
  * unattended-upgrades through `site`.
  */
 export interface AptRepoDef {
+  /** Its id: names the source file and the key (for example "vscode"). */
   id: string;
+  /** The repository's URL. */
   uri: string;
+  /** Its suites, for example "stable". */
   suites: string;
+  /** Its components, for example "main". */
   components: string;
   /** ASCII-armored public key, pinned (Article 12). */
   key: string;
   /** The repository's host, for unattended-upgrades' Origins-Pattern (site=...). */
   site: string;
+  /** The spec that adds it. */
   spec: SpecId;
 }
 
+/** A port opened in the host's firewall (ufw). */
 export interface PortDef {
+  /** The port number. */
   port: number;
+  /** tcp or udp. */
   protocol: "tcp" | "udp";
   /** Only from these networks (CIDR), for example the local networks; default: anywhere. */
   from?: string[];
+  /** The spec that opens it. */
   spec: SpecId;
 }
 
+/** Where an upstream tool's releases come from (GitHub releases, each asset checked against GitHub's SHA-256). */
 export interface GitHubSource {
+  /** The GitHub repository, "owner/name". */
   repo: string;
+  /** The release asset's file name, for this architecture and version. */
   asset: (arch: "amd64", version: string) => RegExp;
+  /** What precedes the version in its tags (for example "v"). */
   tagPrefix?: string;
 }
 
+/** A tool installed at its newest release (spec 010): from apt, a snap, an upstream binary (checked, smoke-tested, rolled back on failure), or its own installer. */
 export interface ToolDef {
+  /** Its id (also its folder under /opt/tools). */
   id: string;
+  /** Its name, for people. */
   name: string;
+  /** Where it comes from: Ubuntu's apt, a snap, an upstream release binary, or its own installer (which then updates itself). */
   source: "apt" | "snap" | "upstream-binary" | "self-updating";
+  /** The commands it provides, linked into /usr/local/bin. */
   bins: string[];
+  /** The command that prints its version. */
   versionCommand: string;
+  /** The command that checks it works (its smoke test after an install, and a verify check). */
   verify: string;
+  /** The spec that brings it. */
   spec: SpecId;
+  /** Where upstream releases come from (upstream-binary tools). */
   github?: GitHubSource;
+  /** The apt package, when it is not the id. */
   package?: string;
   /** apt tools: the maintainers' PPA with newer builds (PackageDef.ppa). */
   ppa?: string;
@@ -635,6 +723,7 @@ export interface ToolDef {
   repo?: AptRepoDef;
   /** Services restarted after this tool is installed or upgraded (for example its own daemon). */
   restarts?: string[];
+  /** Only for users with this persona. */
   forPersona?: PersonaId;
   /** Installed on workstations only (the agent layer, spec 030), never on servers. */
   workstationOnly?: true;
@@ -645,6 +734,7 @@ export interface ToolDef {
    * check run as nobody when archon runs as root.
    */
   unprivileged?: true;
+  /** The URL of its own installer script (self-updating tools). */
   installer?: string;
 }
 
@@ -653,13 +743,17 @@ export interface ToolDef {
  * warning with their fix and never count as a failure (installed.json stays ok).
  */
 export interface CheckDef {
+  /** The check's name, shown in verify (for example "mail:credential"). */
   name: string;
   /** Run without a shell (splitArgs); use `sh -c '...'` for pipes. Exit 0 means pass. */
   command: string;
+  /** "fail": a failure fails verify; "warn": reported with its fix, never a failure. */
   level: "fail" | "warn";
+  /** How to fix it, in one line (shown under the problem). */
   fix?: string;
   /** Spec 052: archon explain <code>. Exit 3 from the command means "not set up yet". */
   code?: string;
+  /** The spec that declares it. */
   spec: SpecId;
 }
 
@@ -672,17 +766,27 @@ export interface NetworkDef {
   ipv6: boolean;
 }
 
+/** What one capability adds to a host's plan. */
 export interface Contribution {
+  /** The spec it comes from. */
   spec: SpecId;
+  /** Packages to install. */
   packages?: PackageDef[];
+  /** Checks verify runs. */
   checks?: CheckDef[];
+  /** systemd units to write, enable, start, or mask. */
   units?: UnitDef[];
+  /** Files to write. */
   files?: FileDef[];
+  /** Ports to open in the firewall. */
   ports?: PortDef[];
+  /** Tools to install at their newest releases. */
   tools?: ToolDef[];
+  /** Vendor apt repositories to add. */
   aptRepos?: AptRepoDef[];
   /** Services published through the proxy (spec 032). */
   routes?: WebRoute[];
+  /** Notes for people (shown by archon guide). */
   notes?: string[];
   /** Files computed from the whole plan (for example the firewall from all ports). */
   derive?: (plan: HostPlan) => FileDef[];
@@ -706,18 +810,32 @@ export interface CapabilityContext {
  */
 export type Capability = (ctx: CapabilityContext) => Contribution;
 
+/** Everything a host gets: every capability's contribution, merged, for apply and verify. */
 export interface HostPlan {
+  /** The host. */
   host: HostDef;
+  /** Its fleet. */
   fleet: FleetDef;
+  /** Every account on it. */
   users: UserDef[];
+  /** Every package, from every capability. */
   packages: PackageDef[];
+  /** Every unit. */
   units: UnitDef[];
+  /** Every file. */
   files: FileDef[];
+  /** Every open port. */
   ports: PortDef[];
+  /** Every tool. */
   tools: ToolDef[];
+  /** Every vendor apt repository. */
   aptRepos: AptRepoDef[];
+  /** Every check. */
   checks: CheckDef[];
+  /** Every service published through the proxy. */
   routes: WebRoute[];
+  /** Notes, by spec. */
   notes: Record<string, string[]>;
+  /** The specs its capabilities come from. */
   specsUsed: SpecId[];
 }
