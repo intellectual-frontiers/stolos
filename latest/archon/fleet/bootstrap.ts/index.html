@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/fleet/bootstrap.ts - Stolos v0.58.0 documentation</title>
+  <title>archon/fleet/bootstrap.ts - Stolos v0.59.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.58.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.59.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -100,16 +100,17 @@
     <main><section>
   <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc"><div class="markdown"><p>Spec 062: the bootstrap scripts that make a PC a Stolos controller (Deno,
 Git, gh, the GitHub sign-in, the fleet cloned into <code>$HOME/fleet</code>, the
-<code>stolos</code> shortcut). The engine keeps one template, <code>bin/bootstrap-example.sh</code>
-and <code>bin/bootstrap-example.windows.ps1</code> (carried in ASSETS); a fleet
+<code>stolos</code> shortcut). The engine publishes them with every release,
+<code>bin/bootstrap.sh</code> and <code>bin/bootstrap.windows.ps1</code> (carried in ASSETS),
+which a new PC runs with --repo; a fleet
 repository gets its own copy as <code>bin/bootstrap.sh</code> and
 <code>bin/bootstrap.windows.ps1</code> with its repository filled in, from <code>fleet init</code>
 and <code>fleet upgrade</code>.</p>
 <pre class="highlight"><code class="language-mermaid">flowchart LR
-  tpl[&quot;engine: bin/bootstrap-example.*&lt;br/&gt;(--repo required)&quot;] --&gt; init[&quot;fleet init / fleet upgrade&quot;]
+  tpl[&quot;engine: bin/bootstrap.*&lt;br/&gt;(--repo required)&quot;] --&gt; init[&quot;fleet init / fleet upgrade&quot;]
   init --&gt; copy[&quot;fleet: bin/bootstrap.*&lt;br/&gt;(its owner/name filled in)&quot;]
 </code><button class="copyButton" data-copy="flowchart LR
-  tpl[&quot;engine: bin/bootstrap-example.*&lt;br/&gt;(--repo required)&quot;] --&gt; init[&quot;fleet init / fleet upgrade&quot;]
+  tpl[&quot;engine: bin/bootstrap.*&lt;br/&gt;(--repo required)&quot;] --&gt; init[&quot;fleet init / fleet upgrade&quot;]
   init --&gt; copy[&quot;fleet: bin/bootstrap.*&lt;br/&gt;(its owner/name filled in)&quot;]
 "><svg
   class="copy"
@@ -175,12 +176,12 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_bootstrapde
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;bootstrap.ts&#x2F;~&#x2F;bootstrapFiles.html" title="bootstrapFiles">
 			    <span>bootstrapFiles</span><span>(<span><span>repo<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A fleet's bootstrap scripts, by path, with <code>repo</code> (owner/name) as their
 default. Without one (no GitHub remote yet), they ask for --repo, as the
-engine's example does.</p>
+engine's own copy does.</p>
 </div></div></div>
     </div><div id="namespace_bootstraponeliner" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;bootstrap.ts&#x2F;~&#x2F;bootstrapOneLiner.html" title="bootstrapOneLiner">
-			    <span>bootstrapOneLiner</span><span>(<div class="ml-4"><div><span>os<span>: <span><span class="td-str">"windows"</span><span class="td-op"> | </span><span class="td-str">"posix"</span></span></span></span>,</div><div><span>repo<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span>,</div><div><span>tag<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The one line that bootstraps a PC from the engine's example at <code>tag</code> (it is
+			    <span>bootstrapOneLiner</span><span>(<div class="ml-4"><div><span>os<span>: <span><span class="td-str">"windows"</span><span class="td-op"> | </span><span class="td-str">"posix"</span></span></span></span>,</div><div><span>repo<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span>,</div><div><span>tag<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The one line that bootstraps a PC from the engine's bootstrap at <code>tag</code> (it is
 public: no sign-in needed to fetch it), for the fleet <code>repo</code> (owner/name).</p>
 </div></div></div>
     </div><div id="namespace_bootstraptemplate" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
