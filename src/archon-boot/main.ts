@@ -114,6 +114,21 @@ async function main(args: string[]): Promise<number> {
       const file = await writeRegistration(name, { ...reg, mac: how.mac, macSource: "operator" });
       console.log(`${file}: mac ${how.mac} (commit and push it, signed, to keep it)`);
     }
+    // Spec 063: what its first boot will run must be on GitHub, signed by a fleet signer.
+    {
+      const { checkRunnable } = await import("../archon/install/runnable.ts");
+      const rn = await checkRunnable([name]);
+      if (rn.unreachable) {
+        console.error(`could not ask GitHub (${rn.unreachable}); checked the last fetched commit`);
+      }
+      if (rn.problems.length) {
+        for (const p of rn.problems) {
+          console.error(`${p.what}\n  fix: ${p.fix}  (deno task stolos explain ${p.code})`);
+        }
+        console.error(`${name} is not armed: nothing will be installed until this is fixed.`);
+        return 1;
+      }
+    }
     const confirmed = opt(args, "confirm-destroy") === name;
     const t = await armHost(name, claim ? CLAIM_MINUTES : 0, claim ? undefined : how.mac, {
       confirmDestroy: confirmed,
@@ -257,6 +272,17 @@ async function main(args: string[]): Promise<number> {
   const fleet = await loadFleet();
   const hosts = await loadServers();
   const tokens = await loadTokens();
+  // Spec 063: what an armed host's first boot will run (GitHub's tip, its model).
+  {
+    const { checkRunnable } = await import("../archon/install/runnable.ts");
+    const rn = await checkRunnable(
+      hosts.filter((h) => liveToken(tokens, h.name)).map((h) => h.name),
+    );
+    for (const p of rn.problems) f.warn(p.what, p.fix, p.code);
+    if (rn.unreachable) {
+      f.note(`could not ask GitHub (${rn.unreachable}); checked the last fetched commit`);
+    }
+  }
   f.done(
     `${fleet.repository.slug} · ${
       hosts.map((h) => `${h.name}${liveToken(tokens, h.name) ? " (armed)" : ""}`).join(", ") ||

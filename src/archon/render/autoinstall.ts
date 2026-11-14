@@ -105,27 +105,35 @@ if ! command -v deno >/dev/null 2>&1; then
   ln -sfn "$D/deno" /usr/local/bin/deno
   rm -rf "$T"
 fi
+# The deploy key, for these two git commands only (archon sets up its own later).
+DEPLOY_SSH="ssh -i /etc/archon/deploy_key -o IdentitiesOnly=yes -o UserKnownHostsFile=/etc/archon/github_known_hosts"
 if [ ! -d /srv/archon/.git ]; then
   if ${onGitHub(fleet) ? "false" : "true"}; then
     # Spec 046: a fleet repository that is not on GitHub (the end-to-end lab
     # serves one over HTTP): cloned from its URL.
     git clone -q -b ${branch} ${fleet.repository.url} /srv/archon
   elif [ -f /etc/archon/deploy_key ]; then
-    GIT_SSH_COMMAND="ssh -i /etc/archon/deploy_key -o IdentitiesOnly=yes -o UserKnownHostsFile=/etc/archon/github_known_hosts" \\
-      git clone -q -b ${branch} git@github.com:${fleet.repository.slug}.git /srv/archon
+    GIT_SSH_COMMAND="$DEPLOY_SSH" git clone -q -b ${branch} git@github.com:${fleet.repository.slug}.git /srv/archon
   else
     # No deploy key (a public repository, or a site proxy that authenticates).
     git clone -q -b ${branch} https://github.com/${fleet.repository.slug}.git /srv/archon
   fi
+else
+  # Spec 063: run again (after a refusal): the branch as it is now, not the commit refused before.
+  if [ -f /etc/archon/deploy_key ]; then export GIT_SSH_COMMAND="$DEPLOY_SSH"; fi
+  git -C /srv/archon fetch -q origin ${branch} && git -C /srv/archon reset -q --hard FETCH_HEAD
+  unset GIT_SSH_COMMAND
 fi
 # Spec 047 (Article 9): run nothing from the repository unless its tip is
 # signed by one of the fleet's signers, as listed when this host was installed.
 if ! git -C /srv/archon -c gpg.format=ssh -c gpg.ssh.program=ssh-keygen -c gpg.ssh.allowedSignersFile=/etc/archon/allowed_signers \\
   verify-commit HEAD >/dev/null 2>&1; then
   [ -f /etc/archon/boot-events ] && curl -fsS --noproxy "*" -m 5 -X POST -H 'content-type: application/json' \\
-    -d '{"origin":"archon","phase":"First boot","level":"fail","summary":"the repository tip is not signed by a fleet signer: nothing was run"}' \\
+    -d '{"origin":"archon","phase":"First boot","level":"fail","summary":"the repository tip is not signed by a fleet signer: nothing was run. Fix: on your PC, deno task stolos apply (a commit signed by your key on top); then on this host: sudo /usr/local/sbin/archon-first-boot"}' \\
     "$(cat /etc/archon/boot-events)" >/dev/null 2>&1 || true
   echo "archon: /srv/archon HEAD is not signed by a fleet signer; refusing to run it" >&2
+  echo "archon: fix: on your PC, deno task stolos apply (a commit signed by your key on top);" >&2
+  echo "archon:      then here: sudo /usr/local/sbin/archon-first-boot (it fetches the branch again)" >&2
   exit 1
 fi
 # Spec 049: the first boot continues the install's trace, reported to the boot server.

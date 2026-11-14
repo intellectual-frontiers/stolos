@@ -1,9 +1,9 @@
 /**
  * 032-web: the server's HTTPS front door, as data. Traefik (an official
- * release binary, spec 010) listens on 80 and 443; 80 only redirects. Every
- * route on 443 is limited to the local networks at the entry point, so
- * nothing on a server is reachable from outside the LAN through the proxy
- * (the router decides what the internet sees, Article 21). Certificates come
+ * release binary, spec 010) listens on 80 and 443; 80 only redirects. No
+ * route is limited by network: who reaches the server is the router's
+ * decision (the firewall at the edge, outside the machine; Article 21 and
+ * spec 064). Certificates come
  * from Let's Encrypt through Cloudflare's DNS challenge when fleet.web is set;
  * until then (and without it) Traefik's self-signed certificate answers.
  *
@@ -13,7 +13,6 @@
  */
 
 import type { FleetDef, HostDef, HostPlan, WebRoute } from "../model/types.ts";
-import { LOCAL_NETWORKS, localNetworks } from "../capabilities/ssh.ts";
 import { ACME_DIRECTORIES, providersOf } from "../model/providers.ts";
 import type { ARecord } from "./cloudflare.ts";
 
@@ -64,12 +63,6 @@ export function zoneOf(web: { domain: string; zone?: string }): string {
   return web.zone ?? web.domain.split(".").slice(-2).join(".");
 }
 
-/** Who may reach anything behind the proxy: the local networks and loopback. */
-export function lanRanges(fleet: FleetDef): string[] {
-  const local = localNetworks(fleet);
-  return [...(local.length ? local : LOCAL_NETWORKS), "127.0.0.1/32", "::1/128"];
-}
-
 /** Routes from the model: the host's own, and each guest that publishes a port. */
 export function hostRoutes(host: HostDef): WebRoute[] {
   return [
@@ -112,8 +105,8 @@ export function traefikStatic(plan: Pick<HostPlan, "host" | "fleet" | "units">):
         address: ":443",
         http3: {},
         http: {
-          // Local networks only, for every route (file or container).
-          middlewares: ["lan@file"],
+          // No network restriction here: who reaches this server is the router's decision
+          // (the firewall at the edge, outside the machine).
           tls: name
             ? { certResolver: WEB.resolver, domains: [{ main: name, sans: [`*.${name}`] }] }
             : {},
@@ -154,7 +147,7 @@ export function traefikStatic(plan: Pick<HostPlan, "host" | "fleet" | "units">):
   return JSON.stringify(config, null, 2) + "\n";
 }
 
-/** Traefik's dynamic configuration: the LAN middleware, the welcome page, every route. */
+/** Traefik's dynamic configuration: the welcome page and every route. */
 export function traefikDynamic(
   plan: Pick<HostPlan, "host" | "fleet" | "routes">,
 ): string {
@@ -183,7 +176,6 @@ export function traefikDynamic(
   }
   const config = {
     http: {
-      middlewares: { lan: { ipAllowList: { sourceRange: lanRanges(plan.fleet) } } },
       // Backends on loopback or LXD's bridge with their own self-signed certificates (Cockpit).
       serversTransports: { "backend-tls": { insecureSkipVerify: true } },
       routers,

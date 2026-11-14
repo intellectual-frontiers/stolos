@@ -22,7 +22,6 @@ import {
   PG,
   PG_UNIT,
   pgOn,
-  publishFrom,
   SPEC,
   sudoersPg,
   unitOf,
@@ -100,11 +99,10 @@ export const pg = (): Capability => ({ fleet, host, users }) => {
       },
     ],
     // Published instances: open to every address (the router decides what reaches the
-    // server), or to the local networks only with --local-only. TLS and scram always.
+    // server). TLS and scram always.
     ports: instances.filter((i) => i.published && i.port).map((i) => ({
       port: i.port!,
       protocol: "tcp" as const,
-      ...(i.localOnly ? { from: publishFrom(fleet, true) } : {}),
       spec: SPEC,
     })),
     units: [

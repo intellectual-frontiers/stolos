@@ -17,7 +17,6 @@ import type {
   UserDef,
 } from "../model/types.ts";
 import { fqdn } from "../web/config.ts";
-import { LOCAL_NETWORKS, localNetworks } from "../capabilities/ssh.ts";
 
 /** The spec that governs PostgreSQL instances. */
 export const SPEC = "038-pg" as const;
@@ -111,8 +110,6 @@ export interface Instance {
   record?: PgRecord;
   /** Whether it is published: reachable on the server's address over TLS. */
   published: boolean;
-  /** Published for the local networks only (archon pg publish --local-only). */
-  localOnly: boolean;
 }
 
 /** Whether an operator turned PostgreSQL on for this host (an opt-in service, spec 040). */
@@ -144,7 +141,6 @@ export function instancesOf(host: HostDef, users: UserDef[], fleet: FleetDef): I
       inModel: !!m,
       record: r,
       published: !!r?.published,
-      localOnly: r?.published?.localOnly === true,
     };
   });
 }
@@ -189,16 +185,6 @@ export function publishedName(fleet: FleetDef, host: HostDef, name: string): str
 /** Every address: a published instance is open to whatever the router lets through. */
 export const ANYWHERE = ["0.0.0.0/0", "::/0"];
 
-/**
- * Who may reach a published instance: anyone the router lets through (TLS and
- * scram-sha-256 always), or the local networks only with --local-only.
- */
-export function publishFrom(fleet: FleetDef, localOnly = false): string[] {
-  if (!localOnly) return ANYWHERE;
-  const n = localNetworks(fleet);
-  return n.length ? n : LOCAL_NETWORKS;
-}
-
 /** conf.d/50-archon.conf: everything Archon sets; the rest is Ubuntu's (Article 2). */
 export function archonConf(
   i: Pick<Instance, "name" | "version" | "environment" | "protected" | "published">,
@@ -230,7 +216,7 @@ export function archonConf(
  * pg_hba.conf (spec 039): every login is a Linux account. On the socket, peer:
  * the kernel says who is connecting, and that is the role (no password). On
  * loopback, scram-sha-256. When published, TLS with scram-sha-256 from `from`
- * (every address, or the local networks with --local-only). postgres never over a
+ * (every address: the router decides who reaches the server). postgres never over a
  * network. Nothing weaker anywhere.
  */
 export function hbaConf(published: boolean, from: string[]): string {
@@ -445,7 +431,7 @@ export interface ConnectInfo {
   database: string;
   /** libpq's sslmode: "disable" on the socket, "verify-full" with --remote. */
   sslmode: string;
-  /** Present when the instance is published on the local networks. */
+  /** Present when the instance is published (open to every network; the router filters). */
   published?: { host: string; port: number; sslmode: "verify-full" };
   /** The files written for the role: its service file, and its .pgpass when it has a password. */
   files?: { service: string; pgpass?: string };

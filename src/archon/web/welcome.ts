@@ -457,7 +457,7 @@ ${
         : '<div class="svc">No apps yet.</div>'
     }
 </div>
-<p class="sub">Every app here is reachable from the local networks only. To add one, run a container with the label ${
+<p class="sub">Every app here is reachable from wherever the router lets people in. To add one, run a container with the label ${
       cmd("traefik.enable=true")
     } (see <a href="#containers">Run an app in a container</a>), or add it to this server's model.${
       d.unrouted.length
@@ -513,7 +513,7 @@ ${d.guides.map((g) => `<a href="/guide/${esc(g.name)}">${esc(g.title)}</a>`).joi
 
 <footer>Managed by Archon from <a href="${esc(d.repo.url)}">${
       esc(d.repo.slug)
-    }</a> · reachable from the local networks only${
+    }</a> · reachable from wherever the router lets people in${
       d.mailbox ? ` · alerts and mail go to ${esc(d.mailbox)}` : ""
     } · this page was made ${esc(d.generated)}; reload for the latest.</footer>`,
   );

@@ -173,6 +173,24 @@ export const EXPLAIN: Record<string, Explanation> = {
     fix: "deno task stolos keys setup",
     doc: "docs/fleet-repository.md",
   },
+  "E063-TIP-UNSIGNED": {
+    title: "GitHub's branch is not signed by a fleet signer",
+    what:
+      "A server installed now would clone the branch, find its newest commit not signed by a key in signers.ts, and run nothing (its first boot stops).",
+    why:
+      "The newest commit on GitHub was made somewhere without your signing key (another tool, the GitHub website, a pushed commit that skipped the pre-push check).",
+    fix:
+      "deno task stolos apply: one commit signed by your key on top is enough (servers check the newest commit). Then arm again; a server that already refused: sudo /usr/local/sbin/archon-first-boot on it",
+    doc: "docs/fleet-repository.md",
+  },
+  "E063-HOST-NOT-PUSHED": {
+    title: "The host's model is not on GitHub yet",
+    what:
+      "Its first boot clones the fleet from GitHub and would find no fleets/<fleet>/hosts/<host>/host.ts.",
+    why: "host add wrote the model on this PC, and it was not pushed (or not committed).",
+    fix: 'deno task stolos apply -m "004-install: add host <host>", then arm again',
+    doc: "docs/hosts.md",
+  },
   "E004-SSH-KEY": {
     title: "SSH refused your key",
     what: "The host does not accept the key you offered.",

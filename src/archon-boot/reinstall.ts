@@ -225,6 +225,24 @@ export async function reinstall(
   }
   b.done(`running on port ${o.port}`);
 
+  // Spec 063: what its first boot will run must be on GitHub, signed by a fleet signer.
+  const g = ui.phase("GitHub");
+  {
+    const { checkRunnable } = await import("../archon/install/runnable.ts");
+    const rn = await checkRunnable([name]);
+    if (rn.problems.length) {
+      for (const p of rn.problems) g.fail(p.what, p.fix, p.code);
+      return ui.finish();
+    }
+    g.done(
+      rn.tip
+        ? `${rn.tip.slice(0, 10)}${rn.signer ? `, signed by ${rn.signer}` : ""}${
+          rn.unreachable ? " (the last fetched: GitHub did not answer)" : ""
+        }`
+        : "not on GitHub (nothing to check)",
+    );
+  }
+
   const fleet = await loadFleet();
   const known = (await loadTokens()).find((t) => t.host === name)?.addresses ?? [];
   const s = ui.phase("Reach");

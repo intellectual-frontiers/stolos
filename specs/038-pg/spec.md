@@ -1,5 +1,8 @@
 # Feature Specification: PostgreSQL instances (`archon pg`)
 
+> **Revised by spec 064:** the machine restricts no network; who reaches this service is the
+> router's decision. Statements below about the local networks only no longer hold.
+
 **Feature Branch**: `038-pg` (committed directly to main) **Created**: 2026-11-12 **Status**:
 Implemented; identities, access, and the on/off switch are spec 039's **Input**: An `archon pg`
 database server. Several PostgreSQL versions side by side, each instance named, published as

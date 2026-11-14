@@ -1,5 +1,8 @@
 # Feature Specification: Cockpit
 
+> **Revised by spec 064:** the machine restricts no network; who reaches this service is the
+> router's decision. Statements below about the local networks only no longer hold.
+
 **Feature Branch**: `022-cockpit` (committed directly to main) **Created**: 2026-11-11 **Status**:
 Implemented **Input**: A local web view of each server, Ubuntu's own: Cockpit, with the metric
 history spec 021 keeps, reachable from the local networks only.

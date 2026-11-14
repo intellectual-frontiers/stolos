@@ -280,7 +280,7 @@ export interface WebFleetDef {
 
 /**
  * A service published through the server's proxy (spec 032) as
- * <name>.<host>.<domain>, from the local networks only.
+ * <name>.<host>.<domain> (who reaches it is the router's decision).
  */
 export interface WebRoute {
   /** A DNS label: the app's subdomain. */
@@ -502,9 +502,9 @@ export interface PgRecord {
   protected?: boolean;
   /**
    * Published: reachable on the server's address over TLS (scram-sha-256). From
-   * anywhere the router lets through, unless localOnly (archon pg publish --local-only).
+   * anywhere the router lets through (the machine restricts no network).
    */
-  published?: { at: string; by: string; localOnly?: boolean };
+  published?: { at: string; by: string };
   /** Older clusters kept, stopped, after an upgrade (removed with archon pg remove --version). */
   retired?: number[];
 }
@@ -681,8 +681,6 @@ export interface PortDef {
   port: number;
   /** tcp or udp. */
   protocol: "tcp" | "udp";
-  /** Only from these networks (CIDR), for example the local networks; default: anywhere. */
-  from?: string[];
   /** The spec that opens it. */
   spec: SpecId;
 }

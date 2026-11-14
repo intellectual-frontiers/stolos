@@ -1,5 +1,8 @@
 # Feature Specification: The telemetry web UI (OpenObserve), opt-in on any server
 
+> **Revised by spec 064:** the machine restricts no network; who reaches this service is the
+> router's decision. Statements below about the local networks only no longer hold.
+
 **Feature Branch**: `050-telemetry-ui` (committed directly to main) **Created**: 2026-11-13
 **Status**: Implemented **Input**: Keep the official OpenTelemetry Collector as it is (headless, on
 every server). Add a web UI as an opt-in on any server: OpenObserve (one container; logs, metrics,

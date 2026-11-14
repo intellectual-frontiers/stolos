@@ -109,6 +109,7 @@ import "./install/netboot.ts";
 import "./install/publish.ts";
 import "./install/recognize.ts";
 import "./install/report.ts";
+import "./install/runnable.ts";
 import "./install/ubuntu.ts";
 import "./install/workstation.ts";
 import "./main.ts";

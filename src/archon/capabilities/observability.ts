@@ -16,7 +16,6 @@
  * @module
  */
 
-import { localNetworks } from "./ssh.ts";
 import type { Capability, FleetDef, HostDef, ObservabilityDef } from "../model/types.ts";
 import { header, ini } from "../render/systemd.ts";
 import { timedJob } from "./ops.ts";
@@ -104,7 +103,7 @@ export function collectorConfig(host: HostDef, fleet: FleetDef, o: Observability
         protocols: {
           grpc: { endpoint: OBSERVE.otlpGrpc },
           // Spec 050: the fleet's other servers send here when the web UI is on
-          // (the firewall opens 4318 to the local networks only).
+          // (the firewall opens 4318; the router decides who reaches it).
           http: { endpoint: collectsForFleet(host) ? "0.0.0.0:4318" : OBSERVE.otlpHttp },
         },
       },
@@ -151,7 +150,6 @@ export const observability = (): Capability => ({ fleet, host }) => {
       ? [{
         port: 4318,
         protocol: "tcp" as const,
-        from: localNetworks(fleet),
         spec: "050-telemetry-ui" as const,
       }]
       : [],
@@ -269,7 +267,7 @@ export const observability = (): Capability => ({ fleet, host }) => {
     notes: [
       `Ephemeral local stores: PCP archives up to ${o.metricsDays} days and ${o.metricsMaxSize}; journald up to ${o.logsRetention} and ${o.logsMaxSize}; Archon's OTLP files up to ${o.tracesDays} days and 64 MB. Below ${o.minFreePercent}% free disk, metric archives are pruned first.`,
       collectsForFleet(host)
-        ? "This server has the telemetry web UI: its Collector also accepts OTLP from the local networks (4318) and forwards everything to OpenObserve."
+        ? "This server has the telemetry web UI: its Collector also accepts OTLP from the fleet's other servers (4318) and forwards everything to OpenObserve."
         : "OTLP is the only protocol data leaves in; the Collector listens on 127.0.0.1 only.",
     ],
   };

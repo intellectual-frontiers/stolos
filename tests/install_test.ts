@@ -115,17 +115,50 @@ Deno.test("the ufw profile lists every modeled port", async () => {
   const f = plan.files.find((x) => x.path === "/etc/ufw/applications.d/archon")!;
   assertStringIncludes(
     f.content!,
-    "[Archon]\ntitle=Archon host\ndescription=Ports in this host's Archon model, open to every network\nports=22,80,443/tcp|443,51820/udp\n",
+    "[Archon]\ntitle=Archon host\ndescription=Ports in this host's Archon model, open to every network (the router filters)\nports=22,80,443,445,9090/tcp|443,51820/udp\n",
   );
-  // Cockpit (spec 022) is open to the local networks only, one ufw rule per network.
-  assertStringIncludes(f.content!, "[Archon-LAN]");
-  assertStringIncludes(f.content!, "ports=445,9090/tcp");
-  const rules = f.onChange!.filter((a) => a.kind === "run" && a.argv.includes("Archon-LAN"));
-  assert(
-    rules.some((a) =>
-      a.kind === "run" && a.argv.join(" ") === "ufw allow from 192.168.0.0/16 to any app Archon-LAN"
-    ),
+  // No per-network rules on the machine (the router decides who reaches it): one profile,
+  // and an earlier engine's Archon-LAN rules are removed first.
+  assert(!f.content!.includes("Archon-LAN"), f.content);
+  const first = f.onChange![0];
+  assert(first.kind === "run" && first.argv[0] === "sh" && first.argv[2].includes("Archon-LAN"));
+  assert(!f.onChange!.some((x) => x.kind === "run" && x.argv.includes("from")));
+});
+
+Deno.test("an earlier engine's Archon-LAN ufw rules are all deleted, by number", async () => {
+  const { DROP_LAN_RULES } = await import("../src/archon/capabilities/firewall.ts");
+  const dir = await Deno.makeTempDir();
+  // A fake ufw: `status numbered` prints the rules file numbered; `--force delete N` drops line N.
+  const rules = `${dir}/rules`;
+  await Deno.writeTextFile(
+    rules,
+    [
+      "Archon                     ALLOW IN    Anywhere",
+      "Archon-LAN                 ALLOW IN    10.0.0.0/8",
+      "Archon-LAN                 ALLOW IN    192.168.0.0/16",
+      "Archon (v6)                ALLOW IN    Anywhere (v6)",
+      "Archon-LAN (v6)            ALLOW IN    fc00::/7",
+    ].join("\n") + "\n",
   );
+  await Deno.writeTextFile(
+    `${dir}/ufw`,
+    `#!/bin/sh
+if [ "$1 $2" = "status numbered" ]; then awk '{ printf "[%2d] %s\\n", NR, $0 }' ${rules}; exit 0; fi
+if [ "$1 $2" = "--force delete" ]; then sed -i "$3d" ${rules}; exit 0; fi
+exit 1
+`,
+  );
+  await Deno.chmod(`${dir}/ufw`, 0o755);
+  const r = await new Deno.Command("sh", {
+    args: ["-c", DROP_LAN_RULES],
+    env: { PATH: `${dir}:${Deno.env.get("PATH")}` },
+  }).output();
+  assert(r.success, new TextDecoder().decode(r.stderr));
+  assertEquals(
+    (await Deno.readTextFile(rules)).trim().split("\n").map((l) => l.split(/\s{2,}/)[0]),
+    ["Archon", "Archon (v6)"],
+  );
+  await Deno.remove(dir, { recursive: true });
 });
 
 Deno.test("arming and finishing an install forget the host's old SSH host keys", async () => {
@@ -311,4 +344,31 @@ Deno.test("049: the first boot continues the install's trace, reported to the bo
     {} as never,
   );
   assertStringIncludes(ud, "/etc/archon/first-boot.env");
+});
+
+Deno.test("063: a first boot run again fetches the branch; a refusal says how to recover", async () => {
+  const { firstBootScript } = await import("../src/archon/render/autoinstall.ts");
+  const s = firstBootScript(fleet(), host());
+  // Run again after a refusal: the branch as it is now, with the deploy key for git only.
+  assertStringIncludes(
+    s,
+    "git -C /srv/archon fetch -q origin main && git -C /srv/archon reset -q --hard FETCH_HEAD",
+  );
+  assert(
+    s.indexOf("unset GIT_SSH_COMMAND") < s.indexOf("exec /usr/local/bin/deno"),
+    "archon gets no deploy-key ssh",
+  );
+  assert(!/^export GIT_SSH_COMMAND/m.test(s), "never exported for the whole script");
+  // The refusal: what to do, on the PC and on the host, in the log and the boot server's window.
+  assertStringIncludes(s, "deno task stolos apply");
+  assertStringIncludes(s, "sudo /usr/local/sbin/archon-first-boot");
+  assert(
+    s.indexOf("verify-commit HEAD") > s.indexOf("fetch -q origin"),
+    "the commit checked is the one fetched",
+  );
+  const sh = await Deno.makeTempFile({ suffix: ".sh" });
+  await Deno.writeTextFile(sh, s);
+  const r = await new Deno.Command("bash", { args: ["-n", sh] }).output();
+  await Deno.remove(sh);
+  assert(r.success, "valid shell");
 });

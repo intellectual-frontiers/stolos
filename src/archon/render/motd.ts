@@ -37,7 +37,7 @@ export function archonMotd(fleet: FleetDef, host: HostDef, cockpitFromLan: boole
     ` 🛰️  \${b}Archon\${r} \${d}·\${r} \${b}${host.name}\${r} \${d}managed from the fleet repository (${fleet.repository.slug})\${r}`,
     ...(name
       ? [
-        `    🌐 \${c}https://${name}\${r}   \${d}welcome page, services, health (local networks)\${r}`,
+        `    🌐 \${c}https://${name}\${r}   \${d}welcome page, services, health\${r}`,
       ]
       : []),
     ...(cockpitFromLan

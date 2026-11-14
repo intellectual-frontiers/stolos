@@ -18,12 +18,14 @@ Deno.test("037: smb.conf: SMB3, encryption desired, no guests, no NetBIOS, local
       "restrict anonymous = 2",
       "disable netbios = yes",
       "smb ports = 445",
-      "hosts deny = ALL",
       "load printers = no",
       "usershare max shares = 0",
     ]
   ) assertStringIncludes(conf, line);
-  assertStringIncludes(conf, "hosts allow = 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16");
+  assert(
+    !/hosts (allow|deny)/.test(conf),
+    "no network restriction in smb.conf (the router decides)",
+  );
   // Everyone with an account but ops; each home folder its owner's only.
   assertEquals(smbUsers(users), ["alice"]);
   assertStringIncludes(conf, "valid users = alice\n");
@@ -49,8 +51,7 @@ Deno.test("037: every server has Samba, off (masked) behind the operator's switc
   assertEquals(smbd.state, "masked");
   assertEquals(smbd.switch, "smb");
   assertEquals(plan.units.find((u) => u.unitName === "nmbd.service")?.state, "masked");
-  const port = plan.ports.find((p) => p.port === 445)!;
-  assert(port.from && port.from.length > 0, "445 from the local networks only");
+  assert(plan.ports.some((p) => p.port === 445), "445 open (the router decides who reaches it)");
   assert(
     plan.files.some((f) => f.path === "/etc/samba/smb.conf" && f.validate?.[0] === "testparm"),
   );

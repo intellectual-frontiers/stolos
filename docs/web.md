@@ -1,7 +1,9 @@
 # HTTPS on every server
 
 Every server answers HTTPS from its first boot (spec 032). Traefik listens on 80 and 443; 80 only
-redirects. Everything behind it answers the **local networks only**, whatever the router forwards.
+redirects. Traefik restricts no network: **who reaches the server is the router's decision** (the
+firewall at the edge, outside the machine). Forward nothing to it from the internet unless you mean
+to publish it. Traefik's dashboard has no password of its own.
 
 | URL                                     | What                                                           |
 | --------------------------------------- | -------------------------------------------------------------- |

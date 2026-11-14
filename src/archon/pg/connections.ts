@@ -470,8 +470,6 @@ export interface Target {
   address?: string;
   /** A person (their Linux password) or a service account (its generated password). */
   kind?: "human" | "service";
-  /** Published for the local networks only. */
-  localOnly?: boolean;
   /** The server it runs on (for the PAM reminder). */
   server?: string;
 }
@@ -501,9 +499,7 @@ export function renderExternal(t: Target): string {
   // Values start at the left margin, so a copied line pastes as it is (no stray spaces).
   const indent = (x: string) => x;
   return [
-    `# ${t.name}, from another machine${
-      t.localOnly ? " on the local networks" : ""
-    } (TLS; the server's certificate is verified)`,
+    `# ${t.name}, from another machine (TLS; the server's certificate is verified)`,
     `host:        ${t.host}`,
     ...(t.address
       ? [`hostaddr:    ${t.address}   (optional: connect without DNS; TLS still checks the name)`]
@@ -697,7 +693,6 @@ export async function findTarget(
           network: true,
           address: host.ip,
           kind,
-          localOnly: i.localOnly,
           server: host.name,
         };
       }
@@ -868,7 +863,7 @@ export function explainFailure(stderr: string, t: Target): string {
     return `TLS did not verify ${t.host}: archon web status shows the server's certificate; until Traefik has the wildcard certificate, the instance uses a self-signed one.`;
   }
   if (e.includes("no pg_hba.conf entry")) {
-    return `${t.name} does not admit this client's address: it may be published --local-only (archon pg publish ${t.name} widens it).`;
+    return `${t.name} does not admit this connection: is it published (archon pg publish ${t.name})? postgres itself never connects over a network.`;
   }
   if (e.includes("could not translate host name")) {
     return `${t.host} does not resolve here: the server's DNS record (archon web dns) or this machine's DNS.`;

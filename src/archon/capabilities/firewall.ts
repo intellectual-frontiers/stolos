@@ -18,33 +18,27 @@ const portList = (ports: HostPlan["ports"]) => {
   ].join("|");
 };
 
-/** Ports open to everyone (profile Archon) and ports open to local networks only (Archon-LAN). */
+/**
+ * The ports this host opens, every one to every network: who reaches the
+ * server is the router's decision (the firewall at the edge, outside the
+ * machine), never a per-network rule here.
+ */
 export function ufwProfile(plan: HostPlan): string {
-  const open = plan.ports.filter((p) => !p.from?.length);
-  const lan = plan.ports.filter((p) => p.from?.length);
-  const out = [
+  return [
     "# Rendered by archon from spec 008-firewall. Do not edit.",
     "[Archon]",
     "title=Archon host",
-    "description=Ports in this host's Archon model, open to every network",
-    `ports=${portList(open) || "22/tcp"}`,
-  ];
-  if (lan.length) {
-    out.push(
-      "",
-      "[Archon-LAN]",
-      "title=Archon host, local networks",
-      "description=Ports in this host's Archon model, open to the local networks only",
-      `ports=${portList(lan)}`,
-    );
-  }
-  return out.join("\n") + "\n";
+    "description=Ports in this host's Archon model, open to every network (the router filters)",
+    `ports=${portList(plan.ports) || "22/tcp"}`,
+  ].join("\n") + "\n";
 }
 
-/** The networks local-only ports admit (the union of their from lists). */
-export function lanSources(plan: HostPlan): string[] {
-  return [...new Set(plan.ports.flatMap((p) => p.from ?? []))];
-}
+/**
+ * Remove every rule an earlier engine added for the Archon-LAN profile (ports
+ * once open to the local networks only), by number, until none is left.
+ */
+export const DROP_LAN_RULES =
+  'while n=$(ufw status numbered | grep -m1 "Archon-LAN" | sed -E "s/^\\[ *([0-9]+)\\].*/\\1/"); [ -n "$n" ]; do ufw --force delete "$n" >/dev/null; done';
 
 /** ufw: incoming traffic denied except the ports the plan opens (spec 008). */
 export const firewall = (): Capability => () => ({
@@ -64,20 +58,12 @@ export const firewall = (): Capability => () => ({
     owner: "root",
     spec: SPEC,
     onChange: [
+      // No per-network rules on the machine: an earlier engine's Archon-LAN rules go first.
+      { kind: "run", argv: ["sh", "-c", DROP_LAN_RULES] },
       { kind: "run", argv: ["ufw", "app", "update", "Archon"] },
       { kind: "run", argv: ["ufw", "default", "deny", "incoming"] },
       { kind: "run", argv: ["ufw", "default", "allow", "outgoing"] },
       { kind: "run", argv: ["ufw", "allow", "Archon"] },
-      // Local-only ports: one rule per local network (spec 022: Cockpit).
-      ...(lanSources(plan).length
-        ? [
-          { kind: "run" as const, argv: ["ufw", "app", "update", "Archon-LAN"] },
-          ...lanSources(plan).map((net) => ({
-            kind: "run" as const,
-            argv: ["ufw", "allow", "from", net, "to", "any", "app", "Archon-LAN"],
-          })),
-        ]
-        : []),
       { kind: "run", argv: ["ufw", "--force", "enable"] },
       // `ufw app update` rewrites the saved rules but not the running firewall:
       // without a reload, a port added to a profile (445 beside 9090) stays closed.
@@ -85,6 +71,6 @@ export const firewall = (): Capability => () => ({
     ],
   }],
   notes: [
-    "Incoming traffic is denied except the ports the model declares: ufw profile Archon (every network) and Archon-LAN (local networks only).",
+    "Incoming traffic is denied except the ports the model declares (ufw profile Archon), each open to every network: which networks reach the server is the router's decision.",
   ],
 });

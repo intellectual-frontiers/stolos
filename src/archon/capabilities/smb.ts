@@ -12,7 +12,6 @@
 
 import type { Capability } from "../model/types.ts";
 import { header } from "../render/systemd.ts";
-import { localNetworks } from "./ssh.ts";
 import { SMB, smbConf } from "../smb/config.ts";
 
 const SPEC = "037-smb" as const;
@@ -24,8 +23,8 @@ export const smb = (): Capability => ({ fleet, host, users }) => {
   return {
     spec: SPEC,
     packages: [{ name: "samba", spec: SPEC }],
-    // Open to the local networks on every server; nothing listens while SMB is off.
-    ports: [{ port: 445, protocol: "tcp", from: localNetworks(fleet), spec: SPEC }],
+    // Open on every server (the router decides who reaches it); nothing listens while SMB is off.
+    ports: [{ port: 445, protocol: "tcp", spec: SPEC }],
     files: [
       {
         path: "/etc/sysusers.d/archon-smb.conf",

@@ -92,8 +92,8 @@ sudo podman run -d --name hello --label traefik.enable=true docker.io/traefik/wh
 ```
 
 Then open `https://hello.<server>`. `sudo podman ps` lists what runs, `sudo podman logs hello` shows
-its output, and `sudo podman rm -f hello` removes it. Apps are reachable from the local networks
-only.
+its output, and `sudo podman rm -f hello` removes it. Who reaches them is the router's decision (the
+machine restricts no network).
 
 ## Opt-in services and containers
 
@@ -115,7 +115,8 @@ Linux password.
 ## What happens by itself
 
 - Security updates install every day; if one needs a restart, the welcome page and Cockpit say so.
-- A firewall lets in only SSH and the web (and Cockpit, from the local networks).
+- A firewall lets in only the ports the server uses (SSH, the web, Cockpit), each open to every
+  network: which networks reach the server is the router's decision.
 - The server's data is backed up every night.
 - Every change to the system's settings is recorded, with who made it: `sudo etckeeper vcs log`.
 - Logins, failures, and anything that needs attention are emailed to the fleet's mailbox.

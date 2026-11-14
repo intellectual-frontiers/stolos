@@ -1083,9 +1083,9 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "pg publish",
-    summary: "Make a PostgreSQL instance reachable over TLS (every address, or --local-only)",
+    summary: "Make a PostgreSQL instance reachable over TLS (the router decides from where)",
     description:
-      `Records the decision in the host's own archon.sql (opt-in pg) and applies it: PostgreSQL also listens on the server's address, pg_hba.conf admits TLS with scram-sha-256 (hostssl; postgres refused over any network), the firewall opens the instance's port, and PostgreSQL serves the server's wildcard certificate, so clients use pg-<name>.<host>.<domain> with sslmode=verify-full sslrootcert=system (archon pg show NAME --form external prints it all). By default every address may connect: the router decides what reaches the server from outside. With --local-only, the local networks only, in pg_hba.conf and the firewall. Publishing again changes the scope. PostgreSQL speaks TLS itself; Traefik is not involved. Undo with archon pg unpublish (spec 038).`,
+      `Records the decision in the host's own archon.sql (opt-in pg) and applies it: PostgreSQL also listens on the server's address, pg_hba.conf admits TLS with scram-sha-256 (hostssl; postgres refused over any network), the firewall opens the instance's port, and PostgreSQL serves the server's wildcard certificate, so clients use pg-<name>.<host>.<domain> with sslmode=verify-full sslrootcert=system (archon pg show NAME --form external prints it all). Every address may connect: the router decides what reaches the server (the machine restricts no network). PostgreSQL speaks TLS itself; Traefik is not involved. Undo with archon pg unpublish (spec 038).`,
     tier: "mutate",
     args: [
       {
@@ -1095,15 +1095,10 @@ export const COMMANDS: Command[] = [
         default: "prime",
         description: "The instance (default prime).",
       },
-      {
-        name: "local-only",
-        type: "boolean",
-        description: "Only the local networks may connect (pg_hba.conf and the firewall).",
-      },
     ],
     async run(a, ctx) {
       const m = await import("../pg/commands.ts");
-      return await m.pgPublish(ctx.hostName, a.name as string, true, !!a["local-only"]);
+      return await m.pgPublish(ctx.hostName, a.name as string, true);
     },
   },
   {

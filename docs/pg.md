@@ -194,9 +194,8 @@ for a published instance repeats this. The journal shows each sync (never the pa
 stored) and connects to the published name, never localhost, over TLS with the server's certificate
 verified. It reports who you are, the addresses, and the TLS version, or the likely cause and its
 fix: the password (initialize it, above), the certificate, an address the instance does not admit
-(`--local-only`), a name that does not resolve, or nothing answering (the firewall or the router).
-On the server itself the firewall is not crossed; run it from your workstation to test the whole
-path.
+(not published), a name that does not resolve, or nothing answering (the firewall or the router). On
+the server itself the firewall is not crossed; run it from your workstation to test the whole path.
 
 ## Other tools
 
@@ -260,7 +259,6 @@ Linux account of its name, or a second superuser, is reported by `archon pg who`
 
 ```sh
 archon pg publish prime              # every address the router lets through, over TLS
-archon pg publish prime --local-only # or the local networks only
 ```
 
 Publishing makes `prime` reachable at `pg-prime.<server>.<domain>` (for alpha,
@@ -270,17 +268,16 @@ any address), the firewall opens that one port, and PostgreSQL serves the server
 certificate (the one Traefik gets from Let's Encrypt).
 
 By default any address may connect: what reaches the server from outside is up to the router (its
-port forwarding and the public DNS), as for HTTPS. `archon pg publish prime --local-only` admits the
-local networks only, in `pg_hba.conf` and in the firewall; publishing again changes the scope.
-`archon pg show prime --form external` prints everything a client needs. Clients connect with:
+port forwarding and the public DNS), as for HTTPS. The server restricts no network itself (spec
+064). `archon pg show prime --form external` prints everything a client needs. Clients connect with:
 
 ```
 host=pg-prime.alpha.lab.example.net port=5432 sslmode=verify-full sslrootcert=system
 ```
 
 PostgreSQL speaks TLS itself: Traefik is not in the path. A person signs in with their Linux
-password, so publish beyond the local networks only for people whose passwords are strong.
-`archon pg unpublish prime` undoes all of it, people's passwords included.
+password, so let the router admit networks beyond the site only for people whose passwords are
+strong. `archon pg unpublish prime` undoes all of it, people's passwords included.
 
 ## Operators: upgrade, restore, remove (destructive)
 

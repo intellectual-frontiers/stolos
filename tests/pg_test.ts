@@ -152,7 +152,7 @@ Deno.test("038: pg_hba: peer and scram only; published adds hostssl from the loc
   }
 });
 
-Deno.test("038: publish: every address by default (the router decides), --local-only for the local networks", async () => {
+Deno.test("038, 064: publish: every address (the router decides; no --local-only)", async () => {
   assertEquals(
     publishedName(webFleet(), pgHost(), "prime"),
     "pg-prime.alpha.lab.example.net",
@@ -166,11 +166,10 @@ Deno.test("038: publish: every address by default (the router decides), --local-
     pgHost({ pgState: recorded({ published: { at: "x", by: "alice" } }) }),
     webFleet(),
   );
-  const port = pub.ports.find((p) => p.port === 5432)!;
-  assertEquals(port.from, undefined, "every address");
+  assert(pub.ports.some((p) => p.port === 5432), "open to every address");
   assert(/\[Archon\]\n[^[]*\b5432\b/.test(ufwOf(pub)), ufwOf(pub));
-  const { publishFrom } = await import("../src/archon/pg/config.ts");
-  const open = hbaConf(true, publishFrom(webFleet()));
+  const { ANYWHERE } = await import("../src/archon/pg/config.ts");
+  const open = hbaConf(true, ANYWHERE);
   assertStringIncludes(open, "hostssl  all       all       0.0.0.0/0        scram-sha-256");
   assertStringIncludes(open, "hostssl  all       all       ::/0             scram-sha-256");
   assert(
@@ -182,19 +181,9 @@ Deno.test("038: publish: every address by default (the router decides), --local-
     !/^host\s/m.test(open.split("\n").filter((l) => /0\.0\.0\.0\/0|::\/0/.test(l)).join("\n")),
     "TLS only",
   );
-  // --local-only: the local networks, in pg_hba.conf and the firewall (Archon-LAN).
-  const lan = resolvePlan(
-    pgHost({ pgState: recorded({ published: { at: "x", by: "alice", localOnly: true } }) }),
-    webFleet(),
-  );
-  const lport = lan.ports.find((p) => p.port === 5432)!;
-  assert(lport.from && lport.from.length > 0 && !lport.from.includes("0.0.0.0/0"));
-  assert(/\[Archon-LAN\][\s\S]*ports=[^\n]*\b5432\b/.test(ufwOf(lan)), ufwOf(lan));
-  assert(!/\[Archon\]\n[^[]*\b5432\b/.test(ufwOf(lan)));
-  const local = hbaConf(true, publishFrom(webFleet(), true));
-  assert(!/all\s+all\s+(0\.0\.0\.0\/0|::\/0)/.test(local), "no one beyond the local networks");
+  // The machine restricts no network: there is no --local-only (the router decides).
   const { COMMANDS } = await import("../src/archon/commands/registry.ts");
-  assert(COMMANDS.find((c) => c.name === "pg publish")!.args.some((a) => a.name === "local-only"));
+  assert(!COMMANDS.find((c) => c.name === "pg publish")!.args.some((a) => a.name === "local-only"));
   // No Traefik route for PostgreSQL (the owner's decision).
   assert(!pub.routes.some((r) => r.name.startsWith("pg-")));
 });

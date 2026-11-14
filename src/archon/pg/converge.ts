@@ -14,6 +14,7 @@ import { run, type RunResult } from "../core/exec.ts";
 import type { FleetDef, HostDef, PgRecord, PgState } from "../model/types.ts";
 import {
   allocatePort,
+  ANYWHERE,
   archonConf,
   type Cluster,
   createArgv,
@@ -32,7 +33,6 @@ import {
   pgdgSource,
   principals,
   publishedName,
-  publishFrom,
   quoteLit,
   roleSql,
   schemaAccessSql,
@@ -311,7 +311,7 @@ export async function convergeInstance(
     }
   }
   const conf = archonConf(inst, { address: host.ip, tls });
-  const hba = hbaConf(inst.published, publishFrom(fleet, inst.localOnly));
+  const hba = hbaConf(inst.published, ANYWHERE);
   const oldConf = await readFor(s, `${dir}/conf.d/50-archon.conf`);
   const oldHba = await readFor(s, `${dir}/pg_hba.conf`);
   const listenChanged = (oldConf?.match(/^listen_addresses.*$/m)?.[0]) !==

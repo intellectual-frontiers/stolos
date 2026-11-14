@@ -54,7 +54,7 @@ Then open `https://otel.<host>.<domain>` from your local network and sign in.
 
 That server now **collects for the fleet**. Its Collector forwards everything it gathers to
 OpenObserve (with the credential, which never leaves the server), and accepts OpenTelemetry from the
-other servers on port 4318 (the firewall allows the local networks only).
+other servers on port 4318 (the router decides who reaches it).
 
 ### Make the other servers send there
 

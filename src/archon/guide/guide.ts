@@ -223,8 +223,8 @@ export function guideFor(plan: HostPlan): GuideItem[] {
       category: "web",
       title: "Secure web addresses (HTTPS) for every app",
       what: name
-        ? `Every app here gets its own address under ${name}, with a certificate that renews by itself. Only the local networks can reach them.`
-        : "Apps here are served over HTTPS (with a self-signed certificate until the fleet has a domain). Only the local networks can reach them.",
+        ? `Every app here gets its own address under ${name}, with a certificate that renews by itself. Who can reach them is the router's decision.`
+        : "Apps here are served over HTTPS (with a self-signed certificate until the fleet has a domain). Who can reach them is the router's decision.",
       use: [{ cmd: "archon web status", why: "the certificate, the DNS name, and every address" }],
       links: name
         ? [{ label: "Traefik's dashboard: every route, live", href: `https://traefik.${name}` }]
@@ -280,7 +280,7 @@ export function guideFor(plan: HostPlan): GuideItem[] {
       category: "web",
       title: "S3 object storage",
       what:
-        `An S3-compatible object store (RustFS) at https://${s3Host}, from the local networks, off until an operator turns it on. Your S3 user is your Linux username; your buckets are the ones named <you>-*.`,
+        `An S3-compatible object store (RustFS) at https://${s3Host}, off until an operator turns it on. Your S3 user is your Linux username; your buckets are the ones named <you>-*.`,
       use: [
         { cmd: "archon fs s3 status", why: "on or off, and the addresses" },
         { cmd: "archon fs s3 key --write", why: "your key, as the AWS profile s3-<server>" },
@@ -429,7 +429,7 @@ export function guideFor(plan: HostPlan): GuideItem[] {
       category: "safety",
       title: "A firewall that only lets in what's needed",
       what:
-        "Only SSH (22) and the web (80, 443) answer here; Cockpit (9090) and file sharing (445, when turned on) answer the local networks only. Everything behind the web address is local-networks only too.",
+        "Only the ports this server uses answer here (SSH 22, the web 80 and 443, Cockpit 9090, file sharing 445 when turned on), each open to every network: which networks reach the server is the router's decision (the firewall at the edge, outside the machine).",
       use: [{ cmd: "sudo ufw status verbose", why: "the rules in force" }],
     });
     add({

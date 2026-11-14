@@ -1,8 +1,9 @@
 /**
  * 022-cockpit: Ubuntu's web console on every server, with PCP's metric history
- * (cockpit-bridge reads the archives spec 021 keeps). Reachable on port 9090 from
- * the local networks only (the networks that may also log in with a password,
- * spec 007); logins are the accounts' own (PAM), root excluded by Cockpit.
+ * (cockpit-bridge reads the archives spec 021 keeps). Port 9090 is open to every
+ * network (the router decides who reaches the server); logins are the
+ * accounts' own passwords (PAM), root excluded by Cockpit. A fleet that allows
+ * no password logins (keys only, spec 007) keeps it closed.
  * Installed without apt's recommended extras, so no NetworkManager or
  * PackageKit next to netplan and apt.
  *
@@ -34,7 +35,7 @@ export const cockpit = (): Capability => ({ fleet, host }) => {
       spec: SPEC,
     }],
     // Without local networks (keys only, spec 007), Cockpit is installed but closed.
-    ports: from.length ? [{ port: 9090, protocol: "tcp", from, spec: SPEC }] : [],
+    ports: from.length ? [{ port: 9090, protocol: "tcp", spec: SPEC }] : [],
     files: [{
       // Ubuntu's login banner (update-motd) says how to observe this host.
       path: "/etc/update-motd.d/70-archon",

@@ -346,6 +346,54 @@ Deno.test("061: a fresh PC from one backup ZIP: vault restore puts back both key
   }
 });
 
+Deno.test("063: boot arm refuses until GitHub's tip is signed by a fleet signer and holds the host", async () => {
+  const s = await keysSandbox();
+  try {
+    // The example fleet, copied as demo: its id too.
+    const ft = join(s.repo, "fleets", "demo", "fleet.ts");
+    await Deno.writeTextFile(ft, (await Deno.readTextFile(ft)).replace('id: "lab"', 'id: "demo"'));
+    assertEquals((await s.archon(["keys", "setup"])).code, 0);
+    await s.git("add", "-A");
+    await s.git("commit", "-q", "-m", "demo: signers");
+    // GitHub, as a bare repository: origin.
+    const bare = join(s.home, "github.git");
+    await s.git("init", "-q", "--bare", bare);
+    await s.git("remote", "add", "origin", bare);
+    await s.git("push", "-q", "--no-verify", "origin", "main");
+
+    // Someone pushed a commit not signed by a fleet signer on top.
+    await Deno.writeTextFile(join(s.repo, "README.md"), "edited elsewhere\n");
+    await s.git("add", "-A");
+    await s.git("commit", "-q", "--no-gpg-sign", "-m", "an unsigned edit");
+    await s.git("push", "-q", "--no-verify", "origin", "main");
+    let r = await s.archon(["boot", "arm", "alpha", "--claim"]);
+    assertEquals(r.code, 1, r.out);
+    assertStringIncludes(r.out, "E063-TIP-UNSIGNED");
+    assertStringIncludes(r.out, "alpha is not armed");
+
+    // Fixed by one signed commit on top; but beta's model is only on this PC.
+    const beta = "fleets/demo/hosts/beta";
+    await s.git("rm", "-q", "-r", beta);
+    await s.git("commit", "-q", "-m", "demo: beta, not on GitHub");
+    await s.git("push", "-q", "--no-verify", "origin", "main");
+    await s.git("checkout", "HEAD~1", "--", beta);
+    r = await s.archon(["boot", "arm", "beta", "--claim"]);
+    assertEquals(r.code, 1, r.out);
+    assertStringIncludes(r.out, "E063-HOST-NOT-PUSHED");
+    assert(!r.out.includes("E063-TIP-UNSIGNED"), "the tip is signed now");
+
+    // Both in order: armed.
+    await s.git("add", "-A");
+    await s.git("commit", "-q", "-m", "004-install: add host beta");
+    await s.git("push", "-q", "--no-verify", "origin", "main");
+    r = await s.archon(["boot", "arm", "beta", "--claim"]);
+    assertEquals(r.code, 0, r.out);
+    assertStringIncludes(r.out, "beta is armed for one install");
+  } finally {
+    await Deno.remove(s.home, { recursive: true });
+  }
+});
+
 Deno.test("057: a second PC's key: setup prints the exact command that approves it", async () => {
   const s = await keysSandbox();
   try {

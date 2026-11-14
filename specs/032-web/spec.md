@@ -1,11 +1,15 @@
 # Feature Specification: HTTPS on every server
 
+> **Revised by spec 064:** the machine restricts no network; who reaches this service is the
+> router's decision. Statements below about the local networks only no longer hold.
+
 **Feature Branch**: `032-web` (committed directly to main) **Created**: 2026-11-12 **Status**:
 Implemented **Input**: Every managed Ubuntu server is HTTPS-ready right after its first boot, with a
 welcome page. A modern reverse proxy (Traefik) on 443, open by default, publishes the server's
 services, its LXD guests, and its containers (Podman, by label), with Let's Encrypt certificates.
-Ports 80 and 443 are open to everyone at the server; every route is limited to the local networks.
-Each server's name is a public Cloudflare record with its private address.
+Ports 80 and 443 are open to everyone at the server, and Traefik restricts no network: who reaches
+the server is the router's decision (the firewall at the edge, outside the machine; revised). Each
+server's name is a public Cloudflare record with its private address.
 
 ## User Scenarios & Testing _(mandatory)_
 
@@ -26,8 +30,8 @@ Each server's name is a public Cloudflare record with its private address.
    `https://<guest>.alpha.<domain>` reaches the guest by its `.lxd` name.
 1. **Given** a Podman container run as root with the label `traefik.enable=true`, **When** it
    starts, **Then** it is `https://<container>.alpha.<domain>` with no change to the model.
-1. **Given** a request from outside the local networks, **When** it reaches 443, **Then** Traefik
-   refuses it (403), whatever the route.
+1. **Given** a request from any network the router lets through, **When** it reaches 443, **Then**
+   Traefik serves it: the machine filters no network for the web (the router does).
 
 ## Requirements _(mandatory)_
 
@@ -37,9 +41,9 @@ Each server's name is a public Cloudflare record with its private address.
   sync restarts it after an upgrade.
 - **FR-002**: Static configuration `/etc/traefik/traefik.yml` and dynamic configuration
   `/etc/traefik/dynamic/archon.yml` are rendered from the model (JSON, valid YAML). Entry points:
-  `:80` redirects permanently to HTTPS; `:443` (HTTP/1.1, HTTP/2, HTTP/3) applies the `lan`
-  middleware (an IP allow list of the fleet's local networks and loopback) to every route, file or
-  container.
+  `:80` redirects permanently to HTTPS; `:443` (HTTP/1.1, HTTP/2, HTTP/3) serves every route, file
+  or container, with no IP allow list (revised: the earlier `lan` middleware is gone; network
+  filtering is the router's duty).
 - **FR-003**: Firewall (spec 008): 80/tcp, 443/tcp, and 443/udp open to every network. The router
   decides what the internet reaches (Article 21).
 - **FR-004**: `fleet.web = { domain, zone?, acmeEmail? }`. A server answers as `<host>.<domain>`;

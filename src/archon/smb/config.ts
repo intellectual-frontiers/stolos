@@ -1,13 +1,12 @@
 /**
  * 037-smb: Samba's configuration, as data. One share for everyone with an
  * account (`shared`), and each account's own home folder; SMB3 only, encryption
- * desired, no guests, no NetBIOS, the local networks only.
+ * desired, no guests, no NetBIOS; no network restriction (the router decides who reaches it).
  *
  * @module
  */
 
 import type { FleetDef, HostDef, UserDef } from "../model/types.ts";
-import { LOCAL_NETWORKS, localNetworks } from "../capabilities/ssh.ts";
 import { fqdn } from "../web/config.ts";
 
 /** Samba's paths, group, and unit as Archon uses them (spec 037). */
@@ -43,10 +42,8 @@ export function smbName(fleet: FleetDef, host: HostDef): string {
   return n ? `smb.${n}` : host.name;
 }
 
-/** The rendered smb.conf: SMB3 only, no guests, no NetBIOS, local networks only, the shared folder and homes. */
-export function smbConf(fleet: FleetDef, host: HostDef, users: UserDef[]): string {
-  const nets = localNetworks(fleet);
-  const allow = [...(nets.length ? nets : LOCAL_NETWORKS), "127.0.0.1", "::1"];
+/** The rendered smb.conf: SMB3 only, no guests, no NetBIOS, the shared folder and homes (the router decides who reaches it). */
+export function smbConf(_fleet: FleetDef, host: HostDef, users: UserDef[]): string {
   const who = smbUsers(users);
   return `# Rendered by archon from spec 037-smb. Do not edit: change the model in /srv/archon.
 # On only when an operator ran \`archon fs smb on\` (archon fs smb status).
@@ -68,9 +65,7 @@ export function smbConf(fleet: FleetDef, host: HostDef, users: UserDef[]): strin
    invalid users = root ops
    passdb backend = tdbsam
    unix password sync = no
-   # The local networks only (the firewall says the same).
-   hosts allow = ${allow.join(" ")}
-   hosts deny = ALL
+   # No network restriction here: the router decides who reaches the server.
    # No printers, no user-defined shares.
    load printers = no
    printing = bsd

@@ -1,5 +1,8 @@
 # Feature Specification: File shares over SMB
 
+> **Revised by spec 064:** the machine restricts no network; who reaches this service is the
+> router's decision. Statements below about the local networks only no longer hold.
+
 **Feature Branch**: `037-smb` (committed directly to main) **Created**: 2026-11-12 **Status**:
 Implemented **Input**: An `archon fs smb` command that sets up file sharing over SMB (Samba) so
 Windows, macOS, and Linux clients reach `smb.<host>.<domain>` (for alpha,

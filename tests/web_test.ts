@@ -31,7 +31,8 @@ Deno.test("032: Traefik redirects 80, limits 443 to the LAN, and gets Let's Encr
   const plan = resolvePlan(host(), webFleet());
   const s = JSON.parse(traefikStatic(plan));
   assertEquals(s.entryPoints.web.http.redirections.entryPoint.to, "websecure");
-  assertEquals(s.entryPoints.websecure.http.middlewares, ["lan@file"]);
+  // The router decides who reaches the server; Traefik restricts no network (spec 032).
+  assertEquals(s.entryPoints.websecure.http.middlewares, undefined);
   assertEquals(s.entryPoints.websecure.http.tls.domains, [{
     main: "alpha.lab.example.net",
     sans: ["*.alpha.lab.example.net"],
@@ -77,8 +78,7 @@ Deno.test("032: routes from capabilities, the model, and guests; LAN-only; Cockp
   const plan = resolvePlan(h, webFleet());
   assertEquals(plan.routes.map((r) => r.name).sort(), ["cockpit", "db", "grafana"]);
   const d = JSON.parse(traefikDynamic(plan)).http;
-  assert(d.middlewares.lan.ipAllowList.sourceRange.includes("127.0.0.1/32"));
-  assert(d.middlewares.lan.ipAllowList.sourceRange.includes("192.168.0.0/16"));
+  assertEquals(d.middlewares, undefined, "no network allowlist in Traefik");
   assertEquals(d.routers.grafana.rule, "Host(`grafana.alpha.lab.example.net`)");
   assertEquals(d.services.grafana.loadBalancer.servers[0].url, "http://127.0.0.1:3000");
   assertEquals(d.services.db.loadBalancer.servers[0].url, "http://db.lxd:8080");
@@ -94,7 +94,7 @@ Deno.test("032: 80 and 443 open to everyone; Podman, Traefik on servers only, th
   const plan = resolvePlan(host(), webFleet());
   for (const [port, protocol] of [[80, "tcp"], [443, "tcp"], [443, "udp"]] as const) {
     const p = plan.ports.find((x) => x.port === port && x.protocol === protocol);
-    assert(p && !p.from, `${port}/${protocol}`);
+    assert(p, `${port}/${protocol}`);
   }
   assert(plan.packages.some((p) => p.name === "podman"));
   assert(plan.tools.some((t) => t.id === "traefik"));

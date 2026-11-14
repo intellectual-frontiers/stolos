@@ -5,10 +5,10 @@
  *   - this server's Collector forwards everything it collects (journald, PCP,
  *     OTLP from Archon and apps) to OpenObserve on loopback, adding the
  *     credential itself (an environment file systemd reads as root);
- *   - the Collector also accepts OTLP from the local networks on 4318, so other
+ *   - the Collector also accepts OTLP on 4318 (the router decides from where), so other
  *     servers can send here without any secret (they find it by otel.localdomain
  *     or telemetry.collector, spec 024);
- *   - Traefik serves the UI at otel.<host>.<domain> on the local networks.
+ *   - Traefik serves the UI at otel.<host>.<domain>.
  * Only telemetry from then on is forwarded: nothing is replayed.
  *
  * @module

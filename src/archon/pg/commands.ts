@@ -768,7 +768,6 @@ export function pgPublish(
   hostName: string,
   name: string,
   on: boolean,
-  localOnly = false,
 ): Promise<number> {
   return guarded(false, async () => {
     const { fleet, host } = await server(hostName);
@@ -785,8 +784,8 @@ export function pgPublish(
         `The fleet has no web domain (fleet.web), so ${name} has no name to publish at.`,
       );
     }
-    const scope = localOnly ? "the local networks only" : "every address the router lets through";
-    if (on === i.published && (!on || localOnly === i.localOnly)) {
+    const scope = "every address the router lets through";
+    if (on === i.published) {
       console.log(
         on
           ? `${name} is already published at ${pub}:${i.record.port}, for ${scope}.`
@@ -796,9 +795,7 @@ export function pgPublish(
     }
     await writeRecord(host.name, name, {
       ...i.record,
-      published: on
-        ? { at: new Date().toISOString(), by: caller(), ...(localOnly ? { localOnly: true } : {}) }
-        : undefined,
+      published: on ? { at: new Date().toISOString(), by: caller() } : undefined,
     });
     // Apply it now: the firewall rule, listen_addresses, pg_hba.conf, TLS.
     const { apply } = await import("../apply/apply.ts");
@@ -819,9 +816,7 @@ export function pgPublish(
     );
     console.log(
       on
-        ? `${name} is published at ${pub}, port ${i.record.port}, for ${scope}${
-          localOnly ? "" : " (the router decides what reaches the server from outside)"
-        }. Clients: archon pg show ${name} --form external. People sign in with their Linux password, which PostgreSQL learns when they type it on ${host.name} from now on (sudo -k && sudo -v); archon pg test ${name} checks it. Undo: archon pg unpublish ${name}.`
+        ? `${name} is published at ${pub}, port ${i.record.port}, for ${scope} (the router decides what reaches the server). Clients: archon pg show ${name} --form external. People sign in with their Linux password, which PostgreSQL learns when they type it on ${host.name} from now on (sudo -k && sudo -v); archon pg test ${name} checks it. Undo: archon pg unpublish ${name}.`
         : `${name} is private again (localhost only; the firewall rule is gone).`,
     );
     return 0;

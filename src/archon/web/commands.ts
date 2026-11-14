@@ -195,7 +195,9 @@ export async function webStatus(hostName: string): Promise<number> {
   if (w !== "active") {
     s.fail(`${WEB.welcomeUnit} is ${w}`, `journalctl -u ${WEB.welcomeUnit} -n 50`);
   }
-  s.done(`Traefik ${t} · welcome page ${w} · ports 80, 443 (local networks only behind them)`);
+  s.done(
+    `Traefik ${t} · welcome page ${w} · ports 80, 443 (open: the router decides who reaches them)`,
+  );
 
   const c = ui.phase("Certificate");
   const cert = await certificateOf(name ?? host.name);

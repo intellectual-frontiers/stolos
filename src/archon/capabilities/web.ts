@@ -1,8 +1,9 @@
 /**
  * 032-web: every server is HTTPS-ready from its first boot. Traefik (the
  * official release binary, installed by the tools sync) on 80 and 443, open
- * to everyone at the server's firewall; every route behind it is limited to
- * the local networks. A welcome page (archon web serve, loopback only)
+ * to everyone at the server's firewall, and no network allowlist behind it:
+ * who reaches the server is the router's decision (the firewall at the edge,
+ * outside the machine). A welcome page (archon web serve, loopback only)
  * answers https://<host>.<domain> and any name or address nothing else
  * claims. Podman (Ubuntu's package) is the container runtime: containers
  * that carry traefik.enable=true get <container>.<host>.<domain>.
@@ -247,7 +248,7 @@ export const web = (): Capability => ({ host, fleet }) => {
     ],
     notes: [
       name
-        ? `HTTPS: https://${name} (welcome page), apps at <app>.${name}, Traefik's dashboard at traefik.${name}; local networks only.`
+        ? `HTTPS: https://${name} (welcome page), apps at <app>.${name}, Traefik's dashboard at traefik.${name}; who reaches them is the router's decision.`
         : "HTTPS: https://<this server>/ with a self-signed certificate (set fleet.web for names and Let's Encrypt).",
       "Ports 80 and 443 are open; 80 redirects to 443. Containers publish with the label traefik.enable=true (Podman).",
     ],

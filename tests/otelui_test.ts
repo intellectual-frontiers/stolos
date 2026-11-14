@@ -42,7 +42,7 @@ Deno.test("050: off, the Collector stays headless and local; on, it collects for
   const plan = resolvePlan(h, webFleet());
   assertEquals(conf(h).receivers.otlp.protocols.http.endpoint, "0.0.0.0:4318");
   const port = plan.ports.find((p) => p.port === 4318)!;
-  assert(port && port.from && port.from.length > 0, "only from the local networks");
+  assert(port, "open: the router decides who reaches it");
   assert(plan.routes.some((r) => r.name === "otel" && r.port === 5080));
   const unit = plan.units.find((u) => u.unitName === OBSERVE.collectorUnit)!;
   assertStringIncludes(unit.content!, "EnvironmentFile=-/var/lib/archon/otel-ui/collector.env");

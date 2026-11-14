@@ -449,7 +449,7 @@ Deno.test("043: the PAM reminder: with every external connection for a person, n
     explainFailure("could not connect to server: Connection refused", t),
     "firewall",
   );
-  assertStringIncludes(explainFailure("no pg_hba.conf entry for host", t), "--local-only");
+  assertStringIncludes(explainFailure("no pg_hba.conf entry for host", t), "is it published");
 });
 
 Deno.test("043: the external form's values start at the left margin (a copied line pastes as it is)", () => {
