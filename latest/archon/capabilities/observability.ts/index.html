@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/capabilities/observability.ts - Stolos v0.28.0 documentation</title>
+  <title>archon/capabilities/observability.ts - Stolos v0.29.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.28.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.29.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -135,7 +135,8 @@ Collector is niced, idle I/O, memory-capped).</p>
 Functions</h2></div><div class="namespaceSection"><div id="namespace_collectorconfig" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;capabilities&#x2F;observability.ts&#x2F;~&#x2F;collectorConfig.html" title="collectorConfig">
-			    <span>collectorConfig</span><span>(<div class="ml-4"><div><span>host<span>: <span class="td-ref">HostDef</span></span></span>,</div><div><span>fleet<span>: <span class="td-ref">FleetDef</span></span></span>,</div><div><span>o<span>: <span class="td-ref">ObservabilityDef</span></span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a></div>
+			    <span>collectorConfig</span><span>(<div class="ml-4"><div><span>host<span>: <span class="td-ref">HostDef</span></span></span>,</div><div><span>fleet<span>: <span class="td-ref">FleetDef</span></span></span>,</div><div><span>o<span>: <span class="td-ref">ObservabilityDef</span></span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The OpenTelemetry Collector's configuration for this host.</p>
+</div></div></div>
     </div><div id="namespace_collectsforfleet" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;capabilities&#x2F;observability.ts&#x2F;~&#x2F;collectsForFleet.html" title="collectsForFleet">
@@ -144,11 +145,13 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_collectorco
     </div><div id="namespace_observability" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;capabilities&#x2F;observability.ts&#x2F;~&#x2F;observability.html" title="observability">
-			    <span>observability</span><span>()<span>: <span class="td-ref">Capability</span></span></span></a></div>
+			    <span>observability</span><span>()<span>: <span class="td-ref">Capability</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>journald, PCP, and the OpenTelemetry Collector, within limits (spec 021).</p>
+</div></div></div>
     </div><div id="namespace_observabilitypolicy" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;capabilities&#x2F;observability.ts&#x2F;~&#x2F;observabilityPolicy.html" title="observabilityPolicy">
-			    <span>observabilityPolicy</span><span>(<div class="ml-4"><div><span>fleet<span>: <span class="td-ref">FleetDef</span></span></span>,</div><div><span>host<span>: <span class="td-ref">HostDef</span></span></span></div></div>)<span>: <span class="td-ref">ObservabilityDef</span></span></span></a></div>
+			    <span>observabilityPolicy</span><span>(<div class="ml-4"><div><span>fleet<span>: <span class="td-ref">FleetDef</span></span></span>,</div><div><span>host<span>: <span class="td-ref">HostDef</span></span></span></div></div>)<span>: <span class="td-ref">ObservabilityDef</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A host's observability limits: the defaults, the fleet's, then the host's.</p>
+</div></div></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;capabilities&#x2F;observability_ts_variables"><div>
@@ -184,7 +187,8 @@ collector asks pmproxy for (<code>/metrics?names=...</code>).</p>
     </div><div id="namespace_default_observability" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;capabilities&#x2F;observability.ts&#x2F;~&#x2F;DEFAULT_OBSERVABILITY.html" title="DEFAULT_OBSERVABILITY">
-			    <span>DEFAULT_OBSERVABILITY</span><span>: <span class="td-ref">ObservabilityDef</span></span></a></div>
+			    <span>DEFAULT_OBSERVABILITY</span><span>: <span class="td-ref">ObservabilityDef</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The default observability limits.</p>
+</div></div></div>
     </div><div id="namespace_observe" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;capabilities&#x2F;observability.ts&#x2F;~&#x2F;OBSERVE.html" title="OBSERVE">
@@ -283,7 +287,7 @@ collector asks pmproxy for (<code>/metrics?names=...</code>).</p>
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1133 symbols</span><svg
+              <span class="leading-none">view all 1132 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

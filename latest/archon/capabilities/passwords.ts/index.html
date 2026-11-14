@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/capabilities/passwords.ts - Stolos v0.28.0 documentation</title>
+  <title>archon/capabilities/passwords.ts - Stolos v0.29.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.28.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.29.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -131,7 +131,8 @@ root or ops); service accounts have no password.</p>
 Functions</h2></div><div class="namespaceSection"><div id="namespace_passwords" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;capabilities&#x2F;passwords.ts&#x2F;~&#x2F;passwords.html" title="passwords">
-			    <span>passwords</span><span>()<span>: <span class="td-ref">Capability</span></span></span></a></div>
+			    <span>passwords</span><span>()<span>: <span class="td-ref">Capability</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The password hook, for hosts with SMB or PostgreSQL (specs 037, 039).</p>
+</div></div></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;capabilities&#x2F;passwords_ts_variables"><div>
@@ -182,11 +183,13 @@ if [ -x /usr/local/bin/archon ] &amp;&amp; /usr/bin/systemctl is-enabled --quiet
       /usr/local/bin/archon pg passwd-sync "$u" &gt;/dev/null 2&gt;&amp;1 &amp; )
 fi
 exit 0
-`</span></span></a></div>
+`</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The PAM hook: keeps Samba's and PostgreSQL's copies of a person's password in step with Linux.</p>
+</div></div></div>
     </div><div id="namespace_passwords-1" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;capabilities&#x2F;passwords.ts&#x2F;~&#x2F;PASSWORDS.html" title="PASSWORDS">
-			    <span>PASSWORDS</span><span>: { hook<span>: <span class="td-kw">string</span></span>; profile<span>: <span class="td-kw">string</span></span>; profileName<span>: <span class="td-kw">string</span></span>;  }</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>PASSWORDS</span><span>: { hook<span>: <span class="td-kw">string</span></span>; profile<span>: <span class="td-kw">string</span></span>; profileName<span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where the password hook's files are.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;capabilities&#x2F;passwords.ts&#x2F;~&#x2F;PASSWORDS.html#property_hook">
                   <span>hook</span><span>: <span class="td-kw">string</span></span></a></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;capabilities&#x2F;passwords.ts&#x2F;~&#x2F;PASSWORDS.html#property_profile">
@@ -272,7 +275,7 @@ sudo and passwd is the person, not root; the hook needs root.</p>
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1133 symbols</span><svg
+              <span class="leading-none">view all 1132 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

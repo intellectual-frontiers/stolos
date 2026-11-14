@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>BackupCheck - archon/vault/state.ts - Stolos v0.28.0 documentation</title>
+  <title>BackupCheck - archon/vault/state.ts - Stolos v0.29.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;vault&#x2F;state.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.28.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.29.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -142,11 +142,10 @@
   />
 </svg>
 </a>
-</div><div><div class="space-y-7" id=""><div class="markdown"><p>Is the recorded last backup really there? &quot;ok&quot;: its folder and manifest are
-at the destination and match the record; &quot;missing&quot;: the destination is
-reachable but the backup is gone or different (it does not count);
-&quot;unverifiable&quot;: the destination cannot be read now (the Personal Vault is
-locked); &quot;none&quot;: nothing recorded.</p>
+</div><div><div class="space-y-7" id=""><div class="markdown"><p>The recorded last backup (spec 056). A backup is a ZIP you move wherever you
+keep important things, so archon cannot look for it there: the record counts.
+&quot;ok&quot;: a backup was made and read back; &quot;none&quot;: nothing recorded. <code>where</code> says
+whether the ZIP is still in the backup folder (not yet moved somewhere safe).</p>
 </div><section class="section"  id="properties"><div>
       <h2 class="anchorable mb-1"><a href="#properties" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
@@ -195,7 +194,7 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   </defs>
 </svg>
 </a>
-<a class="font-bold font-lg link" href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;vault&#x2F;state.ts&#x2F;~&#x2F;BackupCheck.state.html">state</a><span class="font-medium text-stone-500 dark:text-stone-200"><span>: <span><span class="td-str">"ok"</span><span class="td-op"> | </span><span class="td-str">"missing"</span><span class="td-op"> | </span><span class="td-str">"unverifiable"</span><span class="td-op"> | </span><span class="td-str">"none"</span></span></span></span>
+<a class="font-bold font-lg link" href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;vault&#x2F;state.ts&#x2F;~&#x2F;BackupCheck.state.html">state</a><span class="font-medium text-stone-500 dark:text-stone-200"><span>: <span><span class="td-str">"ok"</span><span class="td-op"> | </span><span class="td-str">"none"</span></span></span></span>
       </code>
     </div><a
   class="sourceButton"
@@ -222,12 +221,13 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
-<div class="anchorable docEntry" id="property_why">
+</div><div class="max-w-[75ch]"><div class="markdown"><p>&quot;ok&quot; (recorded), or &quot;none&quot;.</p>
+</div></div></div>
+<div class="anchorable docEntry" id="property_where">
 
   <div class="docEntryHeader">
     <div><div class="space-x-1 mb-1"><div class="text-optional border border-optional/50 bg-optional/5 inline-flex items-center gap-0.5 *:flex-none rounded-md leading-none text-sm py-1 px-2">optional</div>
-</div><code><a href="#property_why" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+</div><code><a href="#property_where" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
   height="16"
   viewBox="0 0 14 14"
@@ -249,7 +249,7 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   </defs>
 </svg>
 </a>
-<a class="font-bold font-lg link" href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;vault&#x2F;state.ts&#x2F;~&#x2F;BackupCheck.why.html">why</a><span class="font-medium text-stone-500 dark:text-stone-200"><span>: <span class="td-kw">string</span></span></span>
+<a class="font-bold font-lg link" href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;vault&#x2F;state.ts&#x2F;~&#x2F;BackupCheck.where.html">where</a><span class="font-medium text-stone-500 dark:text-stone-200"><span>: <span><span class="td-str">"here"</span><span class="td-op"> | </span><span class="td-str">"moved"</span></span></span></span>
       </code>
     </div><a
   class="sourceButton"
@@ -276,7 +276,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>&quot;here&quot;: still in the backup folder; &quot;moved&quot;: moved out (where you keep it).</p>
+</div></div></div>
 </div></section>
 </div>
 </div>
@@ -317,7 +318,7 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
 </svg>
 </button><code></code></pre>
 </div></div><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#properties" title="Properties">Properties</a></li><li><ul><li><a href="#property_state" title="state">state</a></li><li><a href="#property_why" title="why">why</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#properties" title="Properties">Properties</a></li><li><ul><li><a href="#property_state" title="state">state</a></li><li><a href="#property_where" title="where">where</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>

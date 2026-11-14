@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/core/secret-ledger.ts - Stolos v0.28.0 documentation</title>
+  <title>archon/core/secret-ledger.ts - Stolos v0.29.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.28.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.29.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -175,12 +175,8 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_ledger" cl
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;secret-ledger.ts&#x2F;~&#x2F;Ledger.html#property_lastbackup">
                   <span>lastBackup</span><span>: <span class="td-ref">LedgerBackup</span></span></a></li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;secret-ledger.ts&#x2F;~&#x2F;Ledger.html#property_rehearseremindedat">
-                  <span>rehearseRemindedAt</span><span>: <span class="td-kw">string</span></span></a></li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;secret-ledger.ts&#x2F;~&#x2F;Ledger.html#property_rehearsedat">
-                  <span>rehearsedAt</span><span>: <span class="td-kw">string</span></span></a></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;secret-ledger.ts&#x2F;~&#x2F;Ledger.html#property_remindedat">
-                  <span>remindedAt</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The last &quot;N secrets not backed up&quot; email (spec 025), and the last rehearse reminder.</p>
+                  <span>remindedAt</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The last &quot;N secrets not backed up&quot; email (spec 025).</p>
 </div></div></li></ul></div>
     </div><div id="namespace_ledgerbackup" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
@@ -189,10 +185,10 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_ledger" cl
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;secret-ledger.ts&#x2F;~&#x2F;LedgerBackup.html#property_at">
                   <span>at</span><span>: <span class="td-kw">string</span></span></a></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;secret-ledger.ts&#x2F;~&#x2F;LedgerBackup.html#property_dir">
-                  <span>dir</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The folder it was written to (the vault); older records lack it.</p>
+                  <span>dir</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The folder it was written to (the backup folder); older records lack it.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;secret-ledger.ts&#x2F;~&#x2F;LedgerBackup.html#property_file">
-                  <span>file</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The backup's folder name.</p>
+                  <span>file</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The backup's file name (spec 056: a ZIP; spec 029's backups were folders).</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;secret-ledger.ts&#x2F;~&#x2F;LedgerBackup.html#property_names">
                   <span>names</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Path inside the secrets folder -&gt; SHA-256 of what was backed up.</p>
@@ -308,7 +304,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_changedthis
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1133 symbols</span><svg
+              <span class="leading-none">view all 1132 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
