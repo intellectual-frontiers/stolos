@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/fleet/scaffold.ts - Stolos v0.61.0 documentation</title>
+  <title>archon/fleet/scaffold.ts - Stolos v0.62.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.61.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.62.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -190,10 +190,13 @@ await run();
     </div><div id="namespace_gitattributes_text" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;scaffold.ts&#x2F;~&#x2F;GITATTRIBUTES_TEXT.html" title="GITATTRIBUTES_TEXT">
-			    <span>GITATTRIBUTES_TEXT</span><span>: <span class="td-str">`# Written by stolos (spec 062): shell scripts keep LF on every system.
-*.sh text eol=lf
-`</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Line endings Git keeps whatever the PC (spec 062): a shell script with
-Windows line endings does not run on Linux or macOS.</p>
+			    <span>GITATTRIBUTES_TEXT</span><span>: <span class="td-str">`# Written by stolos (spec 062): every text file keeps LF on every system, as stolos
+# and deno fmt write them (Git for Windows would otherwise check them out with CRLF).
+* text=auto eol=lf
+`</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Line endings Git keeps whatever the PC (spec 062): every text file LF, as
+stolos and deno fmt write them. Git for Windows would otherwise check files
+out with CRLF: a shell script would not run on Linux or macOS, and a file in
+stolos's fixed form (signers.ts, registration.ts) would not read back as it.</p>
 </div></div></div>
     </div><div id="namespace_gitignore_text" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
@@ -300,7 +303,7 @@ JSON, Markdown, YAML, CSS, HTML), with the fleet's deno.json settings.</p>
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1224 symbols</span><svg
+              <span class="leading-none">view all 1225 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

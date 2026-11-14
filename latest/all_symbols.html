@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>All Symbols - Stolos v0.61.0 documentation</title>
+  <title>All Symbols - Stolos v0.62.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href=".&#x2F;" class="contextLink">Stolos v0.61.0</a>
+    <a href=".&#x2F;" class="contextLink">Stolos v0.62.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -5379,6 +5379,11 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_ensuredir" 
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;core&#x2F;fsx.ts&#x2F;~&#x2F;exists.html" title="exists">
 			    <span>exists</span><span>(<span><span>path<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">boolean</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Whether something is at <code>path</code> (a file, folder, or link; a broken link counts). Other errors are thrown.</p>
 </div></div></div>
+    </div><div id="namespace_lf" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;core&#x2F;fsx.ts&#x2F;~&#x2F;lf.html" title="lf">
+			    <span>lf</span><span>(<span><span>text<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Text with Windows line endings (CRLF, as Git for Windows checks files out) made LF.</p>
+</div></div></div>
     </div><div id="namespace_listdirs" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;core&#x2F;fsx.ts&#x2F;~&#x2F;listDirs.html" title="listDirs">
@@ -8609,10 +8614,13 @@ await run();
     </div><div id="namespace_gitattributes_text" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;scaffold.ts&#x2F;~&#x2F;GITATTRIBUTES_TEXT.html" title="GITATTRIBUTES_TEXT">
-			    <span>GITATTRIBUTES_TEXT</span><span>: <span class="td-str">`# Written by stolos (spec 062): shell scripts keep LF on every system.
-*.sh text eol=lf
-`</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Line endings Git keeps whatever the PC (spec 062): a shell script with
-Windows line endings does not run on Linux or macOS.</p>
+			    <span>GITATTRIBUTES_TEXT</span><span>: <span class="td-str">`# Written by stolos (spec 062): every text file keeps LF on every system, as stolos
+# and deno fmt write them (Git for Windows would otherwise check them out with CRLF).
+* text=auto eol=lf
+`</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Line endings Git keeps whatever the PC (spec 062): every text file LF, as
+stolos and deno fmt write them. Git for Windows would otherwise check files
+out with CRLF: a shell script would not run on Linux or macOS, and a file in
+stolos's fixed form (signers.ts, registration.ts) would not read back as it.</p>
 </div></div></div>
     </div><div id="namespace_gitignore_text" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
@@ -21821,7 +21829,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_tag" class=
     </div><div id="namespace_version" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;version.ts&#x2F;~&#x2F;VERSION.html" title="VERSION">
-			    <span>VERSION</span><span>: <span class="td-str">"0.61.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
+			    <span>VERSION</span><span>: <span class="td-str">"0.62.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
 from GitHub (<code>@stolos/</code> → raw.githubusercontent.com/.../v&lt;VERSION&gt;/src/), so
 every push to main raises it and the release workflow tags that commit
 v&lt;VERSION&gt;. <code>deno task version bump</code> raises the minor number (0.1.0, 0.2.0,
@@ -23111,7 +23119,7 @@ never written in a host file.</p>
 Variables</h2></div><div class="namespaceSection"><div id="namespace_version-1" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;version.ts&#x2F;~&#x2F;VERSION.html" title="VERSION">
-			    <span>VERSION</span><span>: <span class="td-str">"0.61.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
+			    <span>VERSION</span><span>: <span class="td-str">"0.62.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
 from GitHub (<code>@stolos/</code> → raw.githubusercontent.com/.../v&lt;VERSION&gt;/src/), so
 every push to main raises it and the release workflow tags that commit
 v&lt;VERSION&gt;. <code>deno task version bump</code> raises the minor number (0.1.0, 0.2.0,

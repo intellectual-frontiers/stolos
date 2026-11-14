@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>GITATTRIBUTES_TEXT - archon/fleet/scaffold.ts - Stolos v0.61.0 documentation</title>
+  <title>GITATTRIBUTES_TEXT - archon/fleet/scaffold.ts - Stolos v0.62.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;fleet&#x2F;scaffold.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.61.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.62.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -142,8 +142,10 @@
   />
 </svg>
 </a>
-</div><div><div class="space-y-7" id=""><div class="markdown"><p>Line endings Git keeps whatever the PC (spec 062): a shell script with
-Windows line endings does not run on Linux or macOS.</p>
+</div><div><div class="space-y-7" id=""><div class="markdown"><p>Line endings Git keeps whatever the PC (spec 062): every text file LF, as
+stolos and deno fmt write them. Git for Windows would otherwise check files
+out with CRLF: a shell script would not run on Linux or macOS, and a file in
+stolos's fixed form (signers.ts, registration.ts) would not read back as it.</p>
 </div><section class="section"  id="type"><div>
       <h2 class="anchorable mb-1"><a href="#type" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
@@ -170,8 +172,9 @@ Windows line endings does not run on Linux or macOS.</p>
 Type</h2></div><div class="space-y-8"><div class=" docEntry" id="variable_gitattributes_text">
 
   <div class="docEntryHeader">
-    <div><code><span class="font-medium text-stone-500 dark:text-stone-200"><span class="td-str">`# Written by stolos (spec 062): shell scripts keep LF on every system.
-*.sh text eol=lf
+    <div><code><span class="font-medium text-stone-500 dark:text-stone-200"><span class="td-str">`# Written by stolos (spec 062): every text file keeps LF on every system, as stolos
+# and deno fmt write them (Git for Windows would otherwise check them out with CRLF).
+* text=auto eol=lf
 `</span></span>
       </code>
     </div><a
