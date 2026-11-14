@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/identity/keys.ts - Stolos v0.52.0 documentation</title>
+  <title>archon/identity/keys.ts - Stolos v0.53.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.52.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.53.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -307,8 +307,11 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_keycheck" 
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys.ts&#x2F;~&#x2F;KeyFacts.html#property_paths">
                   <span>paths</span><span>: <span class="td-ref">KeyPaths</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The paths in use.</p>
 </div></div></li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys.ts&#x2F;~&#x2F;KeyFacts.html#property_recoveryonpc">
-                  <span>recoveryOnPc</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Private files of a listed recovery key found on this PC (they should not be here).</p>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys.ts&#x2F;~&#x2F;KeyFacts.html#property_recoveryinstore">
+                  <span>recoveryInStore</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A listed recovery key's private file is in the key store (so every backup holds it).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys.ts&#x2F;~&#x2F;KeyFacts.html#property_recoveryloose">
+                  <span>recoveryLoose</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Private files of a listed recovery key outside the key store (not in backups until vault backup moves them).</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys.ts&#x2F;~&#x2F;KeyFacts.html#property_repo">
                   <span>repo</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The checkout is a Git repository.</p>
@@ -339,11 +342,15 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_keycheck" 
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys.ts&#x2F;~&#x2F;KeyPaths.html#property_hook">
                   <span>hook</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The checkout's pre-push hook.</p>
 </div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys.ts&#x2F;~&#x2F;KeyPaths.html#property_looserecoverydir">
+                  <span>looseRecoveryDir</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where earlier versions left the recovery key (Desktop or home, fleet-recovery): moved into the store by vault backup.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys.ts&#x2F;~&#x2F;KeyPaths.html#property_recovery">
-                  <span>recovery</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The recovery key's private file, in that folder.</p>
+                  <span>recovery</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The recovery key's private file, in the key store.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys.ts&#x2F;~&#x2F;KeyPaths.html#property_recoverydir">
-                  <span>recoveryDir</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The folder <code>keys setup</code> makes the recovery key in (you move it away after).</p>
+                  <span>recoveryDir</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>This PC's key store (%APPDATA%\stolos\keys; ~/.config/stolos/keys): where the
+recovery key lives, beside the secrets, so every backup ZIP holds it.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys.ts&#x2F;~&#x2F;KeyPaths.html#property_state">
                   <span>state</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>This PC's record of key checks (when the recovery key was last checked).</p>

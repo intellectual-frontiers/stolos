@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>writeBackupZip - archon/vault/zip.ts - Stolos v0.52.0 documentation</title>
+  <title>writeBackupZip - archon/vault/zip.ts - Stolos v0.53.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;vault&#x2F;zip.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.52.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.53.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -165,7 +165,7 @@
   </defs>
 </svg>
 </a>
-<span class="font-bold">writeBackupZip</span><span class="font-medium">(<div class="ml-4"><div><span>pc<span>: <span class="td-kw">string</span></span></span>,</div><div><span>now<span class="td-op">?</span><span>: <span class="td-ref">Date</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<div class="ml-indent"><div>{ path<span>: <span class="td-kw">string</span></span>; manifest<span>: <a href="../../../.././archon/vault/zip.ts/~/ZipManifest.html" class="link td-ref">ZipManifest</a></span>; signingKey<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; fleets<span>: <span class="td-kw">string</span>[]</span>;  }</div></div>&gt;</span> </span>
+<span class="font-bold">writeBackupZip</span><span class="font-medium">(<div class="ml-4"><div><span>pc<span>: <span class="td-kw">string</span></span></span>,</div><div><span>now<span class="td-op">?</span><span>: <span class="td-ref">Date</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<div class="ml-indent"><div>{ path<span>: <span class="td-kw">string</span></span>; manifest<span>: <a href="../../../.././archon/vault/zip.ts/~/ZipManifest.html" class="link td-ref">ZipManifest</a></span>; signingKey<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; recovery<span>: <span class="td-kw">boolean</span></span>; movedRecoveryTo<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; fleets<span>: <span class="td-kw">string</span>[]</span>;  }</div></div>&gt;</span> </span>
       </code><div class="space-y-7" id=""><div class="markdown"><p>Write the backup ZIP, read it back, and record it; returns its path and manifest.</p>
 </div><section class="section"  id="parameters"><div>
       <h2 class="anchorable mb-1"><a href="#parameters" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
@@ -324,7 +324,7 @@ Parameters</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
 Return Type</h2></div><div class="space-y-8"><div class=" docEntry" id="function_writebackupzip_0_return">
 
   <div class="docEntryHeader">
-    <div><code><span class="font-medium text-stone-500 dark:text-stone-200"><span class="td-ref">Promise</span>&lt;<div class="ml-indent"><div>{ path<span>: <span class="td-kw">string</span></span>; manifest<span>: <a href="../../../.././archon/vault/zip.ts/~/ZipManifest.html" class="link td-ref">ZipManifest</a></span>; signingKey<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; fleets<span>: <span class="td-kw">string</span>[]</span>;  }</div></div>&gt;</span>
+    <div><code><span class="font-medium text-stone-500 dark:text-stone-200"><span class="td-ref">Promise</span>&lt;<div class="ml-indent"><div>{ path<span>: <span class="td-kw">string</span></span>; manifest<span>: <a href="../../../.././archon/vault/zip.ts/~/ZipManifest.html" class="link td-ref">ZipManifest</a></span>; signingKey<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; recovery<span>: <span class="td-kw">boolean</span></span>; movedRecoveryTo<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; fleets<span>: <span class="td-kw">string</span>[]</span>;  }</div></div>&gt;</span>
       </code>
     </div><a
   class="sourceButton"
