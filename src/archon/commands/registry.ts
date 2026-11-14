@@ -1864,7 +1864,7 @@ export const COMMANDS: Command[] = [
       "Boot machine: restore a backup ZIP on a freshly cloned PC (secrets, both keys, signing)",
     description:
       `Run in the freshly cloned fleet repository: checks the backup ZIP (its format and every file's SHA-256), chooses the fleet it is for, puts every file back (the secrets readable by you only, the daily key in .ssh, the recovery key in the key store), records it as the last backup, then runs keys setup (Git's signing for this checkout and one test signature: your daily passphrase) and downloads the engine's types for VS Code. It never overwrites: a file already there with the same bytes is kept, and one that differs stops it before anything is written, so it can be run again. --files-only stops after the files. Without a ZIP: prints the steps (the same as RESTORE.txt in every ZIP). Specs 056 and 061.`,
-    tier: "mutate",
+    tier: "repo",
     operation: true,
     noMcp: true,
     args: [
