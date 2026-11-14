@@ -80,8 +80,6 @@ jobs:
       - name: Publish to the gh-pages branch
         run: |
           TAG="v$(deno run -A tools/version.ts show)"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           rm -rf ../pages
           if git ls-remote --exit-code origin gh-pages >/dev/null; then
             git clone -q --depth 1 --branch gh-pages "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" ../pages
@@ -98,7 +96,9 @@ jobs:
           printf '<!DOCTYPE html><meta http-equiv="refresh" content="0; url=latest/index.html"><a href="latest/index.html">Stolos documentation</a>\n' >../pages/index.html
           touch ../pages/.nojekyll
           git -C ../pages add -A
-          git -C ../pages commit -q -m "docs: $TAG" || echo "no change"
+          git -C ../pages -c user.name="github-actions[bot]" \
+            -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "docs: $TAG" || echo "no change"
           git -C ../pages push -q origin gh-pages
         env:
           GITHUB_TOKEN: ${{ github.token }}
