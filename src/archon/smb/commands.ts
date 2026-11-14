@@ -1,7 +1,11 @@
-// 037-smb: archon fs smb on | off | status. SMB is an opt-in service (spec
-// 040): on and off are the shared switch (the host's own archon.sql (opt-in smb)). SMB
-// uses each account's own Linux username and password: PAM keeps Samba's copy
-// in step whenever the password is typed on the server.
+/**
+ * 037-smb: archon fs smb on | off | status. SMB is an opt-in service (spec
+ * 040): on and off are the shared switch (the host's own archon.sql (opt-in smb)). SMB
+ * uses each account's own Linux username and password: PAM keeps Samba's copy
+ * in step whenever the password is typed on the server.
+ *
+ * @module
+ */
 
 import { getRecord } from "../state/store.ts";
 

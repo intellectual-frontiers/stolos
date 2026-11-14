@@ -1,6 +1,10 @@
-// The vault's view of the boot machine's secrets (spec 029): what is there,
-// what the inventory says each one is, and whether the last backup holds it
-// as it is now. Names, sizes, and SHA-256 only; never a value.
+/**
+ * The vault's view of the boot machine's secrets (spec 029): what is there,
+ * what the inventory says each one is, and whether the last backup holds it
+ * as it is now. Names, sizes, and SHA-256 only; never a value.
+ *
+ * @module
+ */
 
 import { join } from "../core/path.ts";
 import { exists, readTextOr } from "../core/fsx.ts";

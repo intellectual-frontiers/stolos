@@ -1,5 +1,9 @@
-// 008-firewall: Ubuntu's native firewall, ufw (nftables backend), with
-// incoming traffic denied except the ports the model declares.
+/**
+ * 008-firewall: Ubuntu's native firewall, ufw (nftables backend), with
+ * incoming traffic denied except the ports the model declares.
+ *
+ * @module
+ */
 
 import type { Capability, HostPlan } from "../model/types.ts";
 

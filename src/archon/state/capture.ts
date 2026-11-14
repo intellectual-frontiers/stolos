@@ -1,6 +1,10 @@
-// `archon capture` (spec 014, 048): read this host's actual state and compare
-// it with the plan (drift). Nothing is written: the machine answers for itself
-// (archon query).
+/**
+ * `archon capture` (spec 014, 048): read this host's actual state and compare
+ * it with the plan (drift). Nothing is written: the machine answers for itself
+ * (archon query).
+ *
+ * @module
+ */
 
 import { run } from "../core/exec.ts";
 import { planFor } from "../build.ts";

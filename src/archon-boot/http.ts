@@ -1,8 +1,12 @@
-// A small HTTP/1.1 server for archon-boot (spec 004). Deno.serve sends header
-// names in lowercase, which HTTP allows, but GRUB's HTTP client compares
-// "Content-Length: " case-sensitively and then reads every file as empty.
-// This transport writes canonical header names, keeps connections alive
-// (GRUB sends HEAD then GET on one connection), and streams bodies.
+/**
+ * A small HTTP/1.1 server for archon-boot (spec 004). Deno.serve sends header
+ * names in lowercase, which HTTP allows, but GRUB's HTTP client compares
+ * "Content-Length: " case-sensitively and then reads every file as empty.
+ * This transport writes canonical header names, keeps connections alive
+ * (GRUB sends HEAD then GET on one connection), and streams bodies.
+ *
+ * @module
+ */
 
 export type Handler = (req: Request, from: string) => Promise<Response>;
 

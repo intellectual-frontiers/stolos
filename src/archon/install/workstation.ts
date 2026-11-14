@@ -1,8 +1,12 @@
-// `archon workstation add` (spec 020): run inside Ubuntu on WSL (or on an
-// Ubuntu desktop), from the checkout in /srv/archon, as your own user. It
-// writes fleets/<fleet>/hosts/<name>/host.ts (kind "workstation") and then, through
-// sudo, converges the user-level parts: tools, dotfiles, the
-// archon command, Ubuntu's daily updates (archon update --no-pull).
+/**
+ * `archon workstation add` (spec 020): run inside Ubuntu on WSL (or on an
+ * Ubuntu desktop), from the checkout in /srv/archon, as your own user. It
+ * writes fleets/<fleet>/hosts/<name>/host.ts (kind "workstation") and then, through
+ * sudo, converges the user-level parts: tools, dotfiles, the
+ * archon command, Ubuntu's daily updates (archon update --no-pull).
+ *
+ * @module
+ */
 
 import { P } from "../core/paths.ts";
 import { join } from "../core/path.ts";

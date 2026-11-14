@@ -1,8 +1,12 @@
-// Spec 051: what this machine is, as it reports itself: make, model, serial,
-// CPUs, memory, disks, and network cards, from its firmware tables, /proc, and
-// /sys. Recorded in archon.sql (the archon_inventory view) at first boot and on
-// every verify that finds it changed, so fleet status and fleet query answer
-// from the machine, never from what someone typed.
+/**
+ * Spec 051: what this machine is, as it reports itself: make, model, serial,
+ * CPUs, memory, disks, and network cards, from its firmware tables, /proc, and
+ * /sys. Recorded in archon.sql (the archon_inventory view) at first boot and on
+ * every verify that finds it changed, so fleet status and fleet query answer
+ * from the machine, never from what someone typed.
+ *
+ * @module
+ */
 
 import { readTextOr } from "../core/fsx.ts";
 import { run } from "../core/exec.ts";

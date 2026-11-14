@@ -1,4 +1,8 @@
-// Capabilities: one module per spec. Every host carries foundation().
+/**
+ * Capabilities: one module per spec. Every host carries foundation().
+ *
+ * @module
+ */
 
 import type { Capability } from "../model/types.ts";
 import { platform } from "./platform.ts";

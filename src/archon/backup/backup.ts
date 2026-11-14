@@ -1,6 +1,10 @@
-// Backups (spec 016, Article 14): zstd tar archives of the host's own state and its durable data (spec 044),
-// kept to a retention count, with a restore test. Never restores in place:
-// a restore extracts into a directory for you to inspect.
+/**
+ * Backups (spec 016, Article 14): zstd tar archives of the host's own state and its durable data (spec 044),
+ * kept to a retention count, with a restore test. Never restores in place:
+ * a restore extracts into a directory for you to inspect.
+ *
+ * @module
+ */
 
 import { join } from "../core/path.ts";
 import { ensureDir, exists, listFiles } from "../core/fsx.ts";

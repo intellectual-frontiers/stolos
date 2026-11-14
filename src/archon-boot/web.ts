@@ -1,10 +1,14 @@
-// The boot machine's side of HTTPS (spec 032):
-//
-//   deno task boot web-setup          store the Cloudflare DNS token (once)
-//   deno task boot web-push <host>    give a running server the token over SSH
-//
-// The token lives only in this PC's secrets folder and, on each server, root
-// only in /etc/archon/web. It never enters the repository (Article 13).
+/**
+ * The boot machine's side of HTTPS (spec 032):
+ *
+ *   deno task boot web-setup          store the Cloudflare DNS token (once)
+ *   deno task boot web-push <host>    give a running server the token over SSH
+ *
+ * The token lives only in this PC's secrets folder and, on each server, root
+ * only in /etc/archon/web. It never enters the repository (Article 13).
+ *
+ * @module
+ */
 
 import { readHidden } from "../archon/identity/fleet-init.ts";
 import { readSecret, SECRETS, writeSecret } from "../archon/core/secrets.ts";

@@ -1,14 +1,18 @@
-// How mail leaves (spec 025, spec 027): Cloudflare Email Service's
-// authenticated SMTP submission, smtp.mx.cloudflare.net:465 with implicit TLS,
-// user "api_token", the password a Cloudflare API token with Email Sending:
-// Edit. Cloudflare signs with DKIM for the onboarded sending domain.
-//
-// archon's own messages go straight there with curl (Cloudflare's own example
-// client), so archon keeps its queue, dedupe, and outage summary. Everything
-// else on a server (apps, cron, unattended-upgrades) goes through Postfix,
-// which relays to the same place with the same token (capabilities/mail.ts).
-// curl reads its configuration, token included, on stdin (`-K -`): never in
-// argv, never in a process listing.
+/**
+ * How mail leaves (spec 025, spec 027): Cloudflare Email Service's
+ * authenticated SMTP submission, smtp.mx.cloudflare.net:465 with implicit TLS,
+ * user "api_token", the password a Cloudflare API token with Email Sending:
+ * Edit. Cloudflare signs with DKIM for the onboarded sending domain.
+ *
+ * archon's own messages go straight there with curl (Cloudflare's own example
+ * client), so archon keeps its queue, dedupe, and outage summary. Everything
+ * else on a server (apps, cron, unattended-upgrades) goes through Postfix,
+ * which relays to the same place with the same token (capabilities/mail.ts).
+ * curl reads its configuration, token included, on stdin (`-K -`): never in
+ * argv, never in a process listing.
+ *
+ * @module
+ */
 
 import { run } from "../core/exec.ts";
 

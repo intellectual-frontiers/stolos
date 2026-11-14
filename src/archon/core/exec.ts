@@ -1,5 +1,9 @@
-// Process execution through Deno.Command. Archon calls Debian's own binaries
-// (apt-get, systemctl, nft, useradd, ...) directly, never through a shell.
+/**
+ * Process execution through Deno.Command. Archon calls Debian's own binaries
+ * (apt-get, systemctl, nft, useradd, ...) directly, never through a shell.
+ *
+ * @module
+ */
 
 export interface RunResult {
   code: number;

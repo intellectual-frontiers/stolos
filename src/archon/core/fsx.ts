@@ -1,4 +1,8 @@
-// Small filesystem helpers on Deno's native APIs.
+/**
+ * Small filesystem helpers on Deno's native APIs.
+ *
+ * @module
+ */
 
 import { dirname } from "./path.ts";
 

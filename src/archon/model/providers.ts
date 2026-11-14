@@ -1,6 +1,10 @@
-// The fleet's outside providers as explicit choices (spec 046). Each is a
-// closed set: the engine implements exactly these, so a typo or an
-// unsupported provider fails `archon build` (TypeScript), not a host.
+/**
+ * The fleet's outside providers as explicit choices (spec 046). Each is a
+ * closed set: the engine implements exactly these, so a typo or an
+ * unsupported provider fails `archon build` (TypeScript), not a host.
+ *
+ * @module
+ */
 
 import type { FleetDef, ProvidersDef } from "./types.ts";
 

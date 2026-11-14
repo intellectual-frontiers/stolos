@@ -1,5 +1,9 @@
-// Resolve a host into a HostPlan: run every capability, merge contributions,
-// then run derive hooks over the merged plan (spec 002).
+/**
+ * Resolve a host into a HostPlan: run every capability, merge contributions,
+ * then run derive hooks over the merged plan (spec 002).
+ *
+ * @module
+ */
 
 import type { FileDef, FleetDef, HostDef, HostPlan, SpecId } from "./types.ts";
 import { type SiteDef, siteNetwork } from "./site.ts";

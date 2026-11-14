@@ -1,7 +1,11 @@
-// `deno task boot doctor` (spec 004): one read-only look at this boot machine,
-// with the fix for each problem: the checkout (hosts install from GitHub, so
-// local changes must be pushed), the model, secrets, Ubuntu's files, the
-// network, the ports, and the firewall. It changes nothing.
+/**
+ * `deno task boot doctor` (spec 004): one read-only look at this boot machine,
+ * with the fix for each problem: the checkout (hosts install from GitHub, so
+ * local changes must be pushed), the model, secrets, Ubuntu's files, the
+ * network, the ports, and the firewall. It changes nothing.
+ *
+ * @module
+ */
 
 import { join } from "../archon/core/path.ts";
 import { exists } from "../archon/core/fsx.ts";

@@ -1,6 +1,10 @@
-// TypeScript is the validator (Article 10, spec 002). Each rule returns
-// problems with a message and a fix; an invalid model renders, installs, and
-// applies nothing.
+/**
+ * TypeScript is the validator (Article 10, spec 002). Each rule returns
+ * problems with a message and a fix; an invalid model renders, installs, and
+ * applies nothing.
+ *
+ * @module
+ */
 
 import type { FleetDef, HostDef, HostPlan } from "./types.ts";
 import { validateSite } from "./site.ts";

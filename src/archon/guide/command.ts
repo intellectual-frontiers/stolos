@@ -1,5 +1,9 @@
-// `archon guide` (spec 035): what's on this machine and how to use it, in the
-// terminal, from the same source as the welcome page (guideFor).
+/**
+ * `archon guide` (spec 035): what's on this machine and how to use it, in the
+ * terminal, from the same source as the welcome page (guideFor).
+ *
+ * @module
+ */
 
 import { ui } from "../core/ui.ts";
 import { loadFleet, loadHosts } from "../model/load.ts";

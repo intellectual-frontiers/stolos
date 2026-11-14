@@ -1,14 +1,18 @@
-// 043-pg-connections: what this account's libpq would use, and how to reach an
-// instance. Read-only; nothing on the host changes.
-//
-//   archon pg connections   every entry of the password file and every section
-//                           of the service files, matched as libpq matches them
-//   archon pg show NAME     how to reach an instance, as conninfo, URL, PG*
-//                           environment, or a service section
-//
-// A password is never printed, logged, or returned: the password field is
-// dropped the moment a password-file line is split, and a `password` key in a
-// service file is dropped as it is read. Only whether one is there is kept.
+/**
+ * 043-pg-connections: what this account's libpq would use, and how to reach an
+ * instance. Read-only; nothing on the host changes.
+ *
+ *   archon pg connections   every entry of the password file and every section
+ *                           of the service files, matched as libpq matches them
+ *   archon pg show NAME     how to reach an instance, as conninfo, URL, PG*
+ *                           environment, or a service section
+ *
+ * A password is never printed, logged, or returned: the password field is
+ * dropped the moment a password-file line is split, and a `password` key in a
+ * service file is dropped as it is read. Only whether one is there is kept.
+ *
+ * @module
+ */
 
 import { join } from "../core/path.ts";
 import { currentUser, homeDir, run } from "../core/exec.ts";

@@ -1,8 +1,12 @@
-// 016-backups: the host's own state is archived daily (zstd tar) into Ubuntu's
-// /var/backups by default, kept to a retention count, and restore-tested.
-// Spec 044 (Article 23): durable data (S3 buckets, SMB shares) joins the
-// archive, durable guests are exported with `lxc export`, and a durable host
-// warns until an off-host copy exists.
+/**
+ * 016-backups: the host's own state is archived daily (zstd tar) into Ubuntu's
+ * /var/backups by default, kept to a retention count, and restore-tested.
+ * Spec 044 (Article 23): durable data (S3 buckets, SMB shares) joins the
+ * archive, durable guests are exported with `lxc export`, and a durable host
+ * warns until an off-host copy exists.
+ *
+ * @module
+ */
 
 import type { BackupDef, Capability, HostDef } from "../model/types.ts";
 import { describeData, durableGuests, durablePaths, hostData } from "../model/durable.ts";

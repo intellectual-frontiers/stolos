@@ -1,12 +1,16 @@
-// 032-web: the server's HTTPS front door, as data. Traefik (an official
-// release binary, spec 010) listens on 80 and 443; 80 only redirects. Every
-// route on 443 is limited to the local networks at the entry point, so
-// nothing on a server is reachable from outside the LAN through the proxy
-// (the router decides what the internet sees, Article 21). Certificates come
-// from Let's Encrypt through Cloudflare's DNS challenge when fleet.web is set;
-// until then (and without it) Traefik's self-signed certificate answers.
-//
-// Everything here is pure: the capability renders it, tests read it.
+/**
+ * 032-web: the server's HTTPS front door, as data. Traefik (an official
+ * release binary, spec 010) listens on 80 and 443; 80 only redirects. Every
+ * route on 443 is limited to the local networks at the entry point, so
+ * nothing on a server is reachable from outside the LAN through the proxy
+ * (the router decides what the internet sees, Article 21). Certificates come
+ * from Let's Encrypt through Cloudflare's DNS challenge when fleet.web is set;
+ * until then (and without it) Traefik's self-signed certificate answers.
+ *
+ * Everything here is pure: the capability renders it, tests read it.
+ *
+ * @module
+ */
 
 import type { FleetDef, HostDef, HostPlan, WebRoute } from "../model/types.ts";
 import { LOCAL_NETWORKS, localNetworks } from "../capabilities/ssh.ts";

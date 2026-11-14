@@ -1,12 +1,16 @@
-// The boot machine's side of outbound mail (specs 025, 027):
-//
-//   deno task boot mail-setup           store the Cloudflare API token (once)
-//   deno task boot mail-push <host>     give a running host the token over SSH
-//   deno task boot notify --subject ... email the mailbox from this PC (also: notify test | status)
-//
-// The token lives only in this PC's secrets folder and, on each server, in
-// Postfix's /etc/postfix/sasl_passwd (root only). It never enters the
-// repository (Article 13).
+/**
+ * The boot machine's side of outbound mail (specs 025, 027):
+ *
+ *   deno task boot mail-setup           store the Cloudflare API token (once)
+ *   deno task boot mail-push <host>     give a running host the token over SSH
+ *   deno task boot notify --subject ... email the mailbox from this PC (also: notify test | status)
+ *
+ * The token lives only in this PC's secrets folder and, on each server, in
+ * Postfix's /etc/postfix/sasl_passwd (root only). It never enters the
+ * repository (Article 13).
+ *
+ * @module
+ */
 
 import { readHidden } from "../archon/identity/fleet-init.ts";
 import { readSecret, SECRETS, writeSecret } from "../archon/core/secrets.ts";

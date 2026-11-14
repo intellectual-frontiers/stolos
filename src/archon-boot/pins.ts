@@ -1,14 +1,18 @@
-// Ubuntu boot files archon-boot serves, pinned by SHA-256 (Article 12, spec 004).
-//
-// How these were established (2026-11-10):
-// - The ISO's hash is the one in https://releases.ubuntu.com/26.04/SHA256SUMS.
-// - bootx64.efi (shim), linux, and initrd from
-//   https://releases.ubuntu.com/26.04/netboot/amd64/ are byte-identical to
-//   EFI/boot/bootx64.efi, casper/vmlinuz, and casper/initrd inside that ISO.
-// - grubx64.efi is Ubuntu's network GRUB (it differs from the ISO's local
-//   GRUB); Ubuntu publishes no separate checksum, so it is pinned here, and
-//   Secure Boot also checks Canonical's signature on it at every boot.
-// A new point release is adopted by updating this file in a reviewed commit.
+/**
+ * Ubuntu boot files archon-boot serves, pinned by SHA-256 (Article 12, spec 004).
+ *
+ * How these were established (2026-11-10):
+ * - The ISO's hash is the one in https://releases.ubuntu.com/26.04/SHA256SUMS.
+ * - bootx64.efi (shim), linux, and initrd from
+ *   https://releases.ubuntu.com/26.04/netboot/amd64/ are byte-identical to
+ *   EFI/boot/bootx64.efi, casper/vmlinuz, and casper/initrd inside that ISO.
+ * - grubx64.efi is Ubuntu's network GRUB (it differs from the ISO's local
+ *   GRUB); Ubuntu publishes no separate checksum, so it is pinned here, and
+ *   Secure Boot also checks Canonical's signature on it at every boot.
+ * A new point release is adopted by updating this file in a reviewed commit.
+ *
+ * @module
+ */
 
 export const UBUNTU = {
   release: "26.04",

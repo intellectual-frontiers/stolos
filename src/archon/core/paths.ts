@@ -1,14 +1,31 @@
-// Well-known locations (spec 046-engine-instance). Two roots:
-//
-// - the engine: this repository, loaded from a checkout (file:) or from
-//   GitHub (https:) through the instance's `@stolos/` import;
-// - the instance: the repository that holds the fleets (`fleets/<id>/`), the
-//   one hosts check out at /srv/archon. One fleet of it is active per run.
-//
-// The instance is ARCHON_REPO, else the nearest folder above the working
-// directory that holds `fleets/`, else /srv/archon, else (in an engine
-// checkout) its `examples/`. The fleet is ARCHON_FLEET, else /etc/archon/fleet
-// (written at install), else the instance's only fleet.
+/**
+ * Well-known locations (spec 046-engine-instance). Two roots:
+ *
+ * - the engine: this repository, loaded from a checkout (file:) or from
+ *   GitHub (https:) through the instance's `@stolos/` import;
+ * - the instance: the repository that holds the fleets (`fleets/<id>/`), the
+ *   one hosts check out at /srv/archon. One fleet of it is active per run.
+ *
+ * The instance is ARCHON_REPO, else the nearest folder above the working
+ * directory that holds `fleets/`, else /srv/archon, else (in an engine
+ * checkout) its `examples/`. The fleet is ARCHON_FLEET, else /etc/archon/fleet
+ * (written at install), else the instance's only fleet.
+ *
+ * ```mermaid
+ * flowchart TD
+ *   repo{"ARCHON_REPO?"} -->|set| inst["that folder"]
+ *   repo -->|unset| up{"a folder above with fleets/?"}
+ *   up -->|yes| inst
+ *   up -->|no| srv{"/srv/archon/fleets?"}
+ *   srv -->|yes| inst
+ *   srv -->|no| ex["the engine's examples/"]
+ *   inst --> fleet{"--fleet / ARCHON_FLEET?"}
+ *   fleet -->|unset| etc{"/etc/archon/fleet?"}
+ *   etc -->|unset| only["the only fleet"]
+ * ```
+ *
+ * @module
+ */
 
 import { dirname, fromFileUrl, join, resolve, sep } from "./path.ts";
 

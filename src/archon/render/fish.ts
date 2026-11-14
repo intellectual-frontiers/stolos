@@ -1,4 +1,8 @@
-// fish completions generated from the command registry (Article VI).
+/**
+ * fish completions generated from the command registry (Article VI).
+ *
+ * @module
+ */
 
 import { type Command, GLOBAL_ARGS } from "../core/registry-types.ts";
 

@@ -1,6 +1,10 @@
-// The archon notify commands (spec 025), on hosts, workstations, and the boot
-// machine (deno task boot notify runs the same code), and archon mail
-// credential and mail test (spec 027).
+/**
+ * The archon notify commands (spec 025), on hosts, workstations, and the boot
+ * machine (deno task boot notify runs the same code), and archon mail
+ * credential and mail test (spec 027).
+ *
+ * @module
+ */
 
 import { ensureDir, exists } from "../core/fsx.ts";
 import { isRoot, run } from "../core/exec.ts";

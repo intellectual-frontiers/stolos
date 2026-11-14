@@ -1,6 +1,10 @@
-// `deno task boot observe` (spec 023): recent installs from the boot server's
-// own telemetry (the OTLP JSON files on this PC): when, how long, which step
-// took the time, and what failed.
+/**
+ * `deno task boot observe` (spec 023): recent installs from the boot server's
+ * own telemetry (the OTLP JSON files on this PC): when, how long, which step
+ * took the time, and what failed.
+ *
+ * @module
+ */
 
 import { join } from "../archon/core/path.ts";
 import { exists } from "../archon/core/fsx.ts";

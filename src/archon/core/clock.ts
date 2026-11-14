@@ -1,6 +1,10 @@
-// Clock preflight (spec 016): apt rejects signatures that are "not live
-// until" a future time when the host clock is behind, which silently skips
-// trixie-security. Compare with an HTTPS Date header before touching apt.
+/**
+ * Clock preflight (spec 016): apt rejects signatures that are "not live
+ * until" a future time when the host clock is behind, which silently skips
+ * trixie-security. Compare with an HTTPS Date header before touching apt.
+ *
+ * @module
+ */
 
 export interface ClockCheck {
   /** Seconds the local clock is ahead (positive) or behind (negative). */

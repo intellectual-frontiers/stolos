@@ -1,6 +1,10 @@
-// First-boot progress to the boot server's window (spec 004): the install left
-// the URL in /etc/archon/boot-events. Best effort: a boot server that is gone
-// changes nothing.
+/**
+ * First-boot progress to the boot server's window (spec 004): the install left
+ * the URL in /etc/archon/boot-events. Best effort: a boot server that is gone
+ * changes nothing.
+ *
+ * @module
+ */
 
 import { readTextOr } from "../core/fsx.ts";
 

@@ -1,6 +1,10 @@
-// Types for the command registry (Article VI). One definition per capability
-// generates the CLI, MCP tools, man pages, fish completions, and the agent's
-// permission rules.
+/**
+ * Types for the command registry (Article VI). One definition per capability
+ * generates the CLI, MCP tools, man pages, fish completions, and the agent's
+ * permission rules.
+ *
+ * @module
+ */
 
 export type Tier = "read" | "repo" | "mutate" | "destructive";
 

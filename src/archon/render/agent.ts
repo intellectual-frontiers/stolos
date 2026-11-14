@@ -1,9 +1,13 @@
-// The agent layer's project configuration (spec 030, Articles 4, 6, 17),
-// rendered from the model for a workstation's checkout: .mcp.json with one MCP
-// server per server host (archon-<fleet>-<host>, reached as ops over SSH; spec
-// 046: one repository can hold several fleets, and two may name a host alike). It names no
-// particular agent: any MCP client reads it. Each server enforces its tier
-// itself (archon mcp --max-tier), so no agent-specific permission file is needed.
+/**
+ * The agent layer's project configuration (spec 030, Articles 4, 6, 17),
+ * rendered from the model for a workstation's checkout: .mcp.json with one MCP
+ * server per server host (archon-<fleet>-<host>, reached as ops over SSH; spec
+ * 046: one repository can hold several fleets, and two may name a host alike). It names no
+ * particular agent: any MCP client reads it. Each server enforces its tier
+ * itself (archon mcp --max-tier), so no agent-specific permission file is needed.
+ *
+ * @module
+ */
 
 import type { HostDef } from "../model/types.ts";
 

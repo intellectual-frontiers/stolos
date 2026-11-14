@@ -1,5 +1,9 @@
-// `archon report daily` (spec 013): deterministic facts only. No agent runs on
-// a server (spec 030); a workstation's agent reads reports over MCP.
+/**
+ * `archon report daily` (spec 013): deterministic facts only. No agent runs on
+ * a server (spec 030); a workstation's agent reads reports over MCP.
+ *
+ * @module
+ */
 
 import { join } from "../core/path.ts";
 import { ensureDir, listFiles } from "../core/fsx.ts";

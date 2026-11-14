@@ -1,14 +1,18 @@
-// `deno task boot reinstall <host>` (spec 004): one command from the boot
-// machine re-installs a running host, with no one at its console:
-//   1. the boot server must be running (it serves the install);
-//   2. (spec 048: the host keeps its own records; nothing is pushed);
-//   3. the host is armed for one install;
-//   4. over SSH, `archon reboot --netboot` boots it from the network once;
-//   5. this PC trusts the host's SSH host keys, which the install brings back.
-// A host that cannot be reached is armed anyway, with what to do at its console.
-// Article 23 (spec 044): a durable host (asked over SSH with `archon data`),
-// or one whose data class cannot be read, is reinstalled only with
-// --confirm-destroy <host>, typed by a person.
+/**
+ * `deno task boot reinstall <host>` (spec 004): one command from the boot
+ * machine re-installs a running host, with no one at its console:
+ *   1. the boot server must be running (it serves the install);
+ *   2. (spec 048: the host keeps its own records; nothing is pushed);
+ *   3. the host is armed for one install;
+ *   4. over SSH, `archon reboot --netboot` boots it from the network once;
+ *   5. this PC trusts the host's SSH host keys, which the install brings back.
+ * A host that cannot be reached is armed anyway, with what to do at its console.
+ * Article 23 (spec 044): a durable host (asked over SSH with `archon data`),
+ * or one whose data class cannot be read, is reinstalled only with
+ * --confirm-destroy <host>, typed by a person.
+ *
+ * @module
+ */
 
 import { ui } from "../archon/core/ui.ts";
 import { armHost, loadTokens, readSecret, SECRETS, writeSecret } from "../archon/core/secrets.ts";

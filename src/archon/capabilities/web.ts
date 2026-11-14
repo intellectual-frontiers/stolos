@@ -1,15 +1,19 @@
-// 032-web: every server is HTTPS-ready from its first boot. Traefik (the
-// official release binary, installed by the tools sync) on 80 and 443, open
-// to everyone at the server's firewall; every route behind it is limited to
-// the local networks. A welcome page (archon web serve, loopback only)
-// answers https://<host>.<domain> and any name or address nothing else
-// claims. Podman (Ubuntu's package) is the container runtime: containers
-// that carry traefik.enable=true get <container>.<host>.<domain>.
-//
-// Overrides of Ubuntu defaults: Traefik is not Ubuntu's (Ubuntu's nginx and
-// Apache cannot obtain certificates by themselves; Traefik's official binary
-// does Let's Encrypt's DNS challenge with Cloudflare built in, and reads
-// container labels). The Podman socket is group archon-web, mode 0660.
+/**
+ * 032-web: every server is HTTPS-ready from its first boot. Traefik (the
+ * official release binary, installed by the tools sync) on 80 and 443, open
+ * to everyone at the server's firewall; every route behind it is limited to
+ * the local networks. A welcome page (archon web serve, loopback only)
+ * answers https://<host>.<domain> and any name or address nothing else
+ * claims. Podman (Ubuntu's package) is the container runtime: containers
+ * that carry traefik.enable=true get <container>.<host>.<domain>.
+ *
+ * Overrides of Ubuntu defaults: Traefik is not Ubuntu's (Ubuntu's nginx and
+ * Apache cannot obtain certificates by themselves; Traefik's official binary
+ * does Let's Encrypt's DNS challenge with Cloudflare built in, and reads
+ * container labels). The Podman socket is group archon-web, mode 0660.
+ *
+ * @module
+ */
 
 import type { Capability, UnitDef } from "../model/types.ts";
 import { header, ini } from "../render/systemd.ts";

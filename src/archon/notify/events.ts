@@ -1,6 +1,10 @@
-// Which events send a message (spec 025): major actions only, never every
-// routine run. Each helper queues (never throws, never waits for the relay) and
-// starts the sender.
+/**
+ * Which events send a message (spec 025): major actions only, never every
+ * routine run. Each helper queues (never throws, never waits for the relay) and
+ * starts the sender.
+ *
+ * @module
+ */
 
 import { join } from "../core/path.ts";
 import { readTextOr } from "../core/fsx.ts";

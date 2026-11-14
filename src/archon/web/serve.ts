@@ -1,8 +1,12 @@
-// `archon web serve` (specs 032, 035): the welcome page and the guides on
-// 127.0.0.1:8090, behind Traefik. Read-only: the model, Archon's status files,
-// the install record, the timers' last runs, the update state, the listening
-// ports, and Traefik's own list of routes (to show containers as they start).
-// Slow facts (pending updates, the certificate, Traefik's routes) are cached.
+/**
+ * `archon web serve` (specs 032, 035): the welcome page and the guides on
+ * 127.0.0.1:8090, behind Traefik. Read-only: the model, Archon's status files,
+ * the install record, the timers' last runs, the update state, the listening
+ * ports, and Traefik's own list of routes (to show containers as they start).
+ * Slow facts (pending updates, the certificate, Traefik's routes) are cached.
+ *
+ * @module
+ */
 
 import { getRecord } from "../state/store.ts";
 import { hostData } from "../model/durable.ts";

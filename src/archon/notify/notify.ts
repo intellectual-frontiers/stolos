@@ -1,10 +1,14 @@
-// archon notify (spec 025): major events, by email, to the fleet's shared
-// mailbox. Reporting never fails or slows the action it reports: a message is
-// queued on disk and sent by `archon notify flush` (a service started at once
-// and a timer every 5 minutes) through Cloudflare's SMTP relay (spec 027),
-// with backoff when it cannot be reached,
-// duplicates dropped by key within an hour, and one summary after a long
-// outage. Nothing secret is ever sent (redact.ts).
+/**
+ * archon notify (spec 025): major events, by email, to the fleet's shared
+ * mailbox. Reporting never fails or slows the action it reports: a message is
+ * queued on disk and sent by `archon notify flush` (a service started at once
+ * and a timer every 5 minutes) through Cloudflare's SMTP relay (spec 027),
+ * with backoff when it cannot be reached,
+ * duplicates dropped by key within an hour, and one summary after a long
+ * outage. Nothing secret is ever sent (redact.ts).
+ *
+ * @module
+ */
 
 import { join } from "../core/path.ts";
 import { ensureDir, exists, readTextOr } from "../core/fsx.ts";

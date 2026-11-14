@@ -1,8 +1,12 @@
-// The network reference (spec 028), rendered from the site model by
-// `archon build` into out/site/network-reference.html: the document the owner
-// sends with each network change log (deno task boot notify --subject "Lab
-// Network Runbook Change Log <dates>" --attach out/site/network-reference.html).
-// Generated: edit fleets/<fleet>/site.ts, never this output. Names only, no secrets.
+/**
+ * The network reference (spec 028), rendered from the site model by
+ * `archon build` into out/site/network-reference.html: the document the owner
+ * sends with each network change log (deno task boot notify --subject "Lab
+ * Network Runbook Change Log <dates>" --attach out/site/network-reference.html).
+ * Generated: edit fleets/<fleet>/site.ts, never this output. Names only, no secrets.
+ *
+ * @module
+ */
 
 import type { HostDef } from "../model/types.ts";
 import type { FirewallPolicy, SiteDef } from "../model/site.ts";

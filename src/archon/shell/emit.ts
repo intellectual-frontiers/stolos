@@ -1,21 +1,25 @@
-// 036-cli-comforts: `archon shell emit [bash|zsh|fish]` prints the shell code
-// for Archon's aliases, key bindings, prompt, and titles. One line in a
-// shell's startup file turns it all on; without that line a shell gets none
-// of it (Ubuntu's defaults only).
-//
-//   bash  ~/.bashrc                  eval "$(archon shell emit bash)"
-//   zsh   ~/.zshrc                   eval "$(archon shell emit zsh)"
-//   fish  ~/.config/fish/config.fish archon shell emit fish | source
-//
-// The output is code (Article 4), generated here from one table. `archon apply`
-// renders it into /usr/local/share/archon/shell/init.<shell>, and the archon
-// launcher prints that file without starting Deno, so a new shell pays about
-// the cost of `cat`. Everything is guarded: it does nothing in a
-// non-interactive shell, and each piece only when its tool is installed.
-//
-// The prompt: plain (no icons) on a console terminal (the physical console,
-// a serial line, or AMT's), where no Nerd Font exists; Oh My Posh everywhere
-// else. ARCHON_PROMPT=plain or ARCHON_PROMPT=pretty overrides that.
+/**
+ * 036-cli-comforts: `archon shell emit [bash|zsh|fish]` prints the shell code
+ * for Archon's aliases, key bindings, prompt, and titles. One line in a
+ * shell's startup file turns it all on; without that line a shell gets none
+ * of it (Ubuntu's defaults only).
+ *
+ *   bash  ~/.bashrc                  eval "$(archon shell emit bash)"
+ *   zsh   ~/.zshrc                   eval "$(archon shell emit zsh)"
+ *   fish  ~/.config/fish/config.fish archon shell emit fish | source
+ *
+ * The output is code (Article 4), generated here from one table. `archon apply`
+ * renders it into /usr/local/share/archon/shell/init.<shell>, and the archon
+ * launcher prints that file without starting Deno, so a new shell pays about
+ * the cost of `cat`. Everything is guarded: it does nothing in a
+ * non-interactive shell, and each piece only when its tool is installed.
+ *
+ * The prompt: plain (no icons) on a console terminal (the physical console,
+ * a serial line, or AMT's), where no Nerd Font exists; Oh My Posh everywhere
+ * else. ARCHON_PROMPT=plain or ARCHON_PROMPT=pretty overrides that.
+ *
+ * @module
+ */
 
 export const SHELLS = ["bash", "zsh", "fish"] as const;
 export type Shell = typeof SHELLS[number];

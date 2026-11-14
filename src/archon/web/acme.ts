@@ -1,12 +1,16 @@
-// 032-web: a server's Let's Encrypt certificates survive its re-install. Before
-// `deno task boot reinstall` reboots a server, it copies Traefik's ACME store
-// (the Let's Encrypt account, the certificates, and their keys) to the boot
-// machine; the install hands it back, and the first boot puts it in place
-// before Traefik first starts. Traefik then serves the trusted certificate
-// from its first minute and asks Let's Encrypt only to renew (Let's Encrypt
-// allows 5 identical certificates a week). Renewals stay on the server: the
-// boot machine only carries the store across the re-install, and an expired
-// copy is never delivered.
+/**
+ * 032-web: a server's Let's Encrypt certificates survive its re-install. Before
+ * `deno task boot reinstall` reboots a server, it copies Traefik's ACME store
+ * (the Let's Encrypt account, the certificates, and their keys) to the boot
+ * machine; the install hands it back, and the first boot puts it in place
+ * before Traefik first starts. Traefik then serves the trusted certificate
+ * from its first minute and asks Let's Encrypt only to renew (Let's Encrypt
+ * allows 5 identical certificates a week). Renewals stay on the server: the
+ * boot machine only carries the store across the re-install, and an expired
+ * copy is never delivered.
+ *
+ * @module
+ */
 
 import { ensureDir, exists, readTextOr } from "../core/fsx.ts";
 import { run } from "../core/exec.ts";

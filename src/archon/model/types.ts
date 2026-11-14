@@ -1,33 +1,55 @@
-// The Archon model (spec 002): a fleet with one shared identity and one file
-// per host. Capabilities contribute packages, files, units, and the rest to a
-// host's plan. TypeScript types plus validate.ts are the whole validation
-// story (Article 10); RDF is only an export.
+/**
+ * The Archon model (spec 002): a fleet with one shared identity and one file
+ * per host. Capabilities contribute packages, files, units, and the rest to a
+ * host's plan. TypeScript types plus validate.ts are the whole validation
+ * story (Article 10); RDF is only an export.
+ *
+ * @module
+ */
 
 import type { SiteDef } from "./site.ts";
 
+/** A spec's folder name, `NNN-short-name` (for example `"051-machine-identity"`): why something exists. */
 export type SpecId = `${number}-${string}`;
 
 /** Tiers an agent may be given over MCP (spec 030); never destructive. */
 export type McpTier = "read" | "repo" | "mutate";
 
+/**
+ * What a person does on a host (spec 012): "standard" (uses it), "developer"
+ * (builds on it), "operator" (runs it). A user's personas decide their groups
+ * and tools.
+ */
 export type PersonaId = "standard" | "developer" | "operator";
 
+/** A persona's definition: what it means and what it brings (spec 012). */
 export interface Persona {
+  /** Its id. */
   id: PersonaId;
+  /** Its name, for people. */
   label: string;
+  /** What it means, in one sentence. */
   definition: string;
+  /** Personas it includes (an operator is also a developer). */
   implies: PersonaId[];
+  /** Linux groups it adds. */
   groups: string[];
+  /** What it turns on. */
   features: {
+    /** fish as the login shell. */
     fish: boolean;
+    /** tmux, configured. */
     tmux: boolean;
+    /** The developer tools. */
     devTools: boolean;
   };
 }
 
 /** A GitHub account as `gh` reports it (spec 003). Public data only. */
 export interface GitHubIdentity {
+  /** The GitHub login. */
   login: string;
+  /** GitHub's numeric account id (it never changes, unlike the login). */
   id: number;
   /** Profile name, or the login when the profile has none. */
   name: string;
@@ -37,14 +59,23 @@ export interface GitHubIdentity {
   sshKeys: string[];
 }
 
+/** A person's account on a host (spec 012): the fleet admin, or one of a host's extra users. */
 export interface UserDef {
+  /** The Unix account name. */
   name: string;
+  /** A fixed UID, the same on every host (default: assigned by Ubuntu). */
   uid?: number;
+  /** The person's name (GECOS). */
   fullName: string;
+  /** Their address, for git and notifications. */
   email?: string;
+  /** What they do here: their groups and tools follow. */
   personas: PersonaId[];
+  /** In the sudo group. */
   admin: boolean;
+  /** The public SSH keys that may log in as them. */
   sshKeys: string[];
+  /** The spec that brought them. */
   spec: SpecId;
 }
 
@@ -80,14 +111,65 @@ export interface ProvidersDef {
   acme: "letsencrypt" | "letsencrypt-staging";
 }
 
+/**
+ * The fleet: one identity shared by every host (spec 003), in
+ * `fleets/<id>/fleet.ts` of a fleet repository. `archon fleet init <id>`
+ * writes the first one from your GitHub account; edit it freely after, then
+ * `archon build`.
+ *
+ * ```mermaid
+ * classDiagram
+ *   FleetDef "1" --> "*" HostDef : fleets/id/hosts/
+ *   FleetDef --> ProvidersDef : providers
+ *   FleetDef --> SignerDef : signers.ts
+ *   HostDef --> HostRegistration : registration.ts
+ *   HostDef --> HostDecisions : decisions.ts
+ *   HostDef --> Capability : capabilities
+ * ```
+ *
+ * @example A fleet with mail and HTTPS, like a real one
+ * ```ts
+ * import type { FleetDef } from "@stolos/archon/model/types.ts";
+ *
+ * export const fleet: FleetDef = {
+ *   id: "lab",
+ *   title: "Example lab fleet",
+ *   repository: { slug: "example/fleet", url: "https://github.com/example/fleet" },
+ *   ubuntu: { release: "26.04", codename: "resolute" },
+ *   timezone: "America/New_York",
+ *   locale: "en_US.UTF-8",
+ *   keyboard: "us",
+ *   providers: { dns: "cloudflare", mail: "cloudflare", acme: "letsencrypt" },
+ *   mail: { to: "fleet@example.net", domain: "example.net", tag: "lab" },
+ *   web: { domain: "lab.example.net" },
+ *   admin: {
+ *     user: "alice",
+ *     uid: 1000,
+ *     github: {
+ *       login: "alice",
+ *       id: 1000001,
+ *       name: "Alice Example",
+ *       email: "1000001+alice@users.noreply.github.com",
+ *       sshKeys: ["ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGV4YW1wbGUtbGFiLWtleS1ub3QtYS1yZWFsLWtleS0wMQ"],
+ *     },
+ *   },
+ * };
+ * ```
+ */
 export interface FleetDef {
+  /** The fleet's id: its folder, fleets/<id>/, and a DNS label (lowercase, digits, hyphens). */
   id: string;
+  /** Its name, for people. */
   title: string;
   /** The GitHub repository hosts converge to; `branch` defaults to main (tests use their own). */
   repository: { slug: string; url: string; branch?: string };
+  /** The Ubuntu release every host runs (point: a point release's image, when pinned). */
   ubuntu: { release: "26.04"; codename: "resolute"; point?: string };
+  /** An IANA time zone, for example "America/New_York". */
   timezone: string;
+  /** For example "en_US.UTF-8". */
   locale: string;
+  /** The console's keyboard layout, for example "us". */
   keyboard: string;
   /** DNS, mail, and ACME providers (spec 046); see ProvidersDef for the defaults. */
   providers?: Partial<ProvidersDef>;
@@ -168,6 +250,7 @@ export interface ServiceDef {
   description: string;
 }
 
+/** HTTPS for every server (spec 032): names under one domain, certificates from Let's Encrypt. */
 export interface WebFleetDef {
   /** The DNS zone suffix servers live under, for example "lab.example.net". */
   domain: string;
@@ -249,7 +332,29 @@ export interface GuestDef {
   web?: { port: number; https?: boolean };
 }
 
+/**
+ * A host: one machine of the fleet, in `fleets/<id>/hosts/<name>/host.ts`.
+ * `archon host add <name> --claim` (or `--mac-address`) writes a server's;
+ * `archon workstation add` a workstation's. What it gets comes from its
+ * capabilities; what it is (its MAC, its SSH host keys) is in its
+ * registration.ts, from the machine itself (spec 051).
+ *
+ * @example A server, as host add writes it
+ * ```ts
+ * import type { HostDef } from "@stolos/archon/model/types.ts";
+ * import { foundation } from "@stolos/archon/capabilities/mod.ts";
+ *
+ * export const host: HostDef = {
+ *   name: "alpha",
+ *   arch: "amd64",
+ *   disk: { match: "largest", layout: "lvm" },
+ *   capabilities: foundation(),
+ *   spec: "004-install",
+ * };
+ * ```
+ */
 export interface HostDef {
+  /** Its name: a DNS label, unique in the fleet. */
   name: string;
   /**
    * "server" (default): an Ubuntu Server host Archon installs and converges.
@@ -265,10 +370,11 @@ export interface HostDef {
    */
   desktop?: boolean;
   /**
-   * Optional: the NIC the host network-boots from (lowercase, colon-separated).
-   * Without it the host is recognized by its own Boot URI
-   * (/boot/<name>/bootx64.efi), and the installed system's network matches
-   * the NIC it actually booted from (spec 004).
+   * Optional, and no longer written by archon: the NIC the host network-boots
+   * from (lowercase, colon-separated). Since spec 051 the MAC lives in
+   * registration.ts, given with --mac-address or reported by the machine; a
+   * mac here is still read. Without either, the host is recognized by a
+   * claim or its own Boot URI (/boot/<name>/bootx64.efi).
    */
   mac?: string;
   arch: "amd64";
@@ -582,12 +688,22 @@ export interface Contribution {
   derive?: (plan: HostPlan) => FileDef[];
 }
 
+/** What a capability is given: the host, its fleet, and the people with accounts on it. */
 export interface CapabilityContext {
+  /** The host being planned. */
   host: HostDef;
+  /** Its fleet. */
   fleet: FleetDef;
+  /** Every account on it (the admin, ops, and the host's users). */
   users: UserDef[];
 }
 
+/**
+ * Something a host gets (spec 002): a function from the host, its fleet, and
+ * its users to what it contributes to the host's plan (packages, files, units,
+ * ports, checks, tools). `foundation()` is every server's set; a host lists
+ * more in its `capabilities`.
+ */
 export type Capability = (ctx: CapabilityContext) => Contribution;
 
 export interface HostPlan {

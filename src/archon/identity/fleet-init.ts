@@ -1,7 +1,11 @@
-// `archon fleet init` (spec 003): the fleet's identity, from your GitHub
-// account as `gh` reports it. Runs on the boot machine (Windows or Linux).
-// Public data goes into fleets/<fleet>/fleet.ts; the admin password hash goes
-// only into the boot machine's secret store (Article 13).
+/**
+ * `archon fleet init` (spec 003): the fleet's identity, from your GitHub
+ * account as `gh` reports it. Runs on the boot machine (Windows or Linux).
+ * Public data goes into fleets/<fleet>/fleet.ts; the admin password hash goes
+ * only into the boot machine's secret store (Article 13).
+ *
+ * @module
+ */
 
 import { P, resetRoots } from "../core/paths.ts";
 import { exists } from "../core/fsx.ts";

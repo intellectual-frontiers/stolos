@@ -1,5 +1,9 @@
-// `archon guest sync|list` (spec 017): create missing LXD instances from the
-// model and start stopped ones. Never deletes (Article 11).
+/**
+ * `archon guest sync|list` (spec 017): create missing LXD instances from the
+ * model and start stopped ones. Never deletes (Article 11).
+ *
+ * @module
+ */
 
 import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";

@@ -1,16 +1,20 @@
-// 021-observability: every server and workstation observes itself with
-// Ubuntu's own components, and OpenTelemetry (OTLP) is the only protocol
-// anything speaks when data leaves where it was made.
-//
-//   metrics  PCP (pmcd, pmlogger) records; pmproxy serves them as OpenMetrics
-//            on localhost, which an OpenTelemetry Collector reads as OTLP
-//   logs     journald stores; the Collector's journald receiver reads it
-//   Archon   speaks OTLP itself (Deno); the local Collector writes it to files
-//
-// Every local store is ephemeral: age and size limits, pruned first when the
-// disk runs low, never backed up (/var/log/pcp, /var/log/journal, and
-// /var/cache/archon-otel are outside spec 016's paths), and cheap to run (the
-// Collector is niced, idle I/O, memory-capped).
+/**
+ * 021-observability: every server and workstation observes itself with
+ * Ubuntu's own components, and OpenTelemetry (OTLP) is the only protocol
+ * anything speaks when data leaves where it was made.
+ *
+ *   metrics  PCP (pmcd, pmlogger) records; pmproxy serves them as OpenMetrics
+ *            on localhost, which an OpenTelemetry Collector reads as OTLP
+ *   logs     journald stores; the Collector's journald receiver reads it
+ *   Archon   speaks OTLP itself (Deno); the local Collector writes it to files
+ *
+ * Every local store is ephemeral: age and size limits, pruned first when the
+ * disk runs low, never backed up (/var/log/pcp, /var/log/journal, and
+ * /var/cache/archon-otel are outside spec 016's paths), and cheap to run (the
+ * Collector is niced, idle I/O, memory-capped).
+ *
+ * @module
+ */
 
 import { localNetworks } from "./ssh.ts";
 import type { Capability, FleetDef, HostDef, ObservabilityDef } from "../model/types.ts";

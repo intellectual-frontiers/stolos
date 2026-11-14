@@ -1,6 +1,10 @@
-// 011-shell: per-user chezmoi data from personas, so `chezmoi apply` never
-// prompts. The dotfiles live in home/ (fish, oh-my-posh with the Archon
-// status segment, tmux, git).
+/**
+ * 011-shell: per-user chezmoi data from personas, so `chezmoi apply` never
+ * prompts. The dotfiles live in home/ (fish, oh-my-posh with the Archon
+ * status segment, tmux, git).
+ *
+ * @module
+ */
 
 import type { Capability, UserDef } from "../model/types.ts";
 import { expandPersonas, featuresFor } from "../personas/mod.ts";

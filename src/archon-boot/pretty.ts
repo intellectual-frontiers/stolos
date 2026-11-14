@@ -1,10 +1,14 @@
-// The boot server's window (spec 004, Article 19; spec 049): a rendering of
-// structured events, never their source. Each event (telemetry/events.ts) is
-// one line: an icon and tone chosen by its name (and, for boot files, which
-// file), the time and address dimmed, the host's name highlighted, success
-// green and problems red. Debug events (GRUB's harmless probing) are kept out
-// unless verbose; the same event within a few seconds is shown once. boot.log
-// and the OTLP log records hold every event.
+/**
+ * The boot server's window (spec 004, Article 19; spec 049): a rendering of
+ * structured events, never their source. Each event (telemetry/events.ts) is
+ * one line: an icon and tone chosen by its name (and, for boot files, which
+ * file), the time and address dimmed, the host's name highlighted, success
+ * green and problems red. Debug events (GRUB's harmless probing) are kept out
+ * unless verbose; the same event within a few seconds is shown once. boot.log
+ * and the OTLP log records hold every event.
+ *
+ * @module
+ */
 
 import { ui } from "../archon/core/ui.ts";
 import { type ArchonEvent, type EventName, severityOf } from "../archon/telemetry/events.ts";

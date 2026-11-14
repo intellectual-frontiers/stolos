@@ -1,11 +1,15 @@
-// `archon observe discover` (spec 024): find a central OpenTelemetry collector
-// and forward this machine's telemetry to it. By unicast DNS only (Article 20:
-// never mDNS or DNS-SD): the fleet model's address, else the name
-// "otel.localdomain" (fleet.telemetry.name, a UniFi Local DNS record). A
-// candidate counts only if it accepts OTLP. What is found goes into a second Collector config file, merged
-// with the base one: journald, PCP (through pmproxy), and Archon's own OTLP
-// are then forwarded, with a bounded queue on disk. Until a collector answers,
-// the file is empty and everything stays local.
+/**
+ * `archon observe discover` (spec 024): find a central OpenTelemetry collector
+ * and forward this machine's telemetry to it. By unicast DNS only (Article 20:
+ * never mDNS or DNS-SD): the fleet model's address, else the name
+ * "otel.localdomain" (fleet.telemetry.name, a UniFi Local DNS record). A
+ * candidate counts only if it accepts OTLP. What is found goes into a second Collector config file, merged
+ * with the base one: journald, PCP (through pmproxy), and Archon's own OTLP
+ * are then forwarded, with a bounded queue on disk. Until a collector answers,
+ * the file is empty and everything stays local.
+ *
+ * @module
+ */
 
 import { LOCAL_UI_ENDPOINT } from "../otelui/otelui.ts";
 import { OTEL_UI } from "../containers/catalog.ts";

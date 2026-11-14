@@ -1,7 +1,11 @@
-// 038-pg: PostgreSQL instances as data. Pure functions only (tested without a
-// server): which instances a host keeps, their ports, configuration, client
-// authentication, roles, the libpq service block, and the SCRAM verifier that
-// sets a password without the password ever reaching PostgreSQL or its logs.
+/**
+ * 038-pg: PostgreSQL instances as data. Pure functions only (tested without a
+ * server): which instances a host keeps, their ports, configuration, client
+ * authentication, roles, the libpq service block, and the SCRAM verifier that
+ * sets a password without the password ever reaching PostgreSQL or its logs.
+ *
+ * @module
+ */
 
 import type {
   FleetDef,

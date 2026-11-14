@@ -1,5 +1,9 @@
-// Provenance (spec 014, Article 16): every apply is recorded as an activity,
-// kept in this machine's archon.sql (spec 048) and exported as W3C PROV (Turtle) by `archon export`.
+/**
+ * Provenance (spec 014, Article 16): every apply is recorded as an activity,
+ * kept in this machine's archon.sql (spec 048) and exported as W3C PROV (Turtle) by `archon export`.
+ *
+ * @module
+ */
 
 import { listRecords, putRecord } from "../state/store.ts";
 import { P } from "../core/paths.ts";

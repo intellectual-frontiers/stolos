@@ -1,9 +1,13 @@
-// 022-cockpit: Ubuntu's web console on every server, with PCP's metric history
-// (cockpit-bridge reads the archives spec 021 keeps). Reachable on port 9090 from
-// the local networks only (the networks that may also log in with a password,
-// spec 007); logins are the accounts' own (PAM), root excluded by Cockpit.
-// Installed without apt's recommended extras, so no NetworkManager or
-// PackageKit next to netplan and apt.
+/**
+ * 022-cockpit: Ubuntu's web console on every server, with PCP's metric history
+ * (cockpit-bridge reads the archives spec 021 keeps). Reachable on port 9090 from
+ * the local networks only (the networks that may also log in with a password,
+ * spec 007); logins are the accounts' own (PAM), root excluded by Cockpit.
+ * Installed without apt's recommended extras, so no NetworkManager or
+ * PackageKit next to netplan and apt.
+ *
+ * @module
+ */
 
 import type { Capability } from "../model/types.ts";
 import { localNetworks } from "./ssh.ts";

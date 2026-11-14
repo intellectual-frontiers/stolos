@@ -1,13 +1,17 @@
-// 038-pg, 039-pg-identity, 040-opt-in: PostgreSQL instances on a server, from
-// the model (host.pg.instances) and the host's record (the host's own archon.sql (opt-in pg)).
-// An opt-in service: every server has postgresql-common, and postgresql.service
-// (every cluster is PartOf it) stays masked until an operator runs archon pg on;
-// then apply's Databases phase converges each instance, a Debian cluster
-// <version>/<name>.
-//
-// Overrides of Ubuntu defaults: no `main` cluster on install
-// (createcluster.d/50-archon.conf), so every cluster on the host is one an
-// operator asked for; postgresql.service masked until switched on.
+/**
+ * 038-pg, 039-pg-identity, 040-opt-in: PostgreSQL instances on a server, from
+ * the model (host.pg.instances) and the host's record (the host's own archon.sql (opt-in pg)).
+ * An opt-in service: every server has postgresql-common, and postgresql.service
+ * (every cluster is PartOf it) stays masked until an operator runs archon pg on;
+ * then apply's Databases phase converges each instance, a Debian cluster
+ * <version>/<name>.
+ *
+ * Overrides of Ubuntu defaults: no `main` cluster on install
+ * (createcluster.d/50-archon.conf), so every cluster on the host is one an
+ * operator asked for; postgresql.service masked until switched on.
+ *
+ * @module
+ */
 
 import type { Capability, UnitDef } from "../model/types.ts";
 import { header } from "../render/systemd.ts";

@@ -1,12 +1,16 @@
-// 044-durable (Article 23): data that can come from end users is either
-// durable (it exists nowhere else) or ephemeral (losing it is harmless). The
-// operator chooses, for every source of such data, when turning it on; there
-// is no default. A host is durable when anything on it is durable, and
-// ephemeral otherwise; nothing about the class is stored, it is worked out
-// from the host's records each time. A missing or unreadable choice counts as
-// durable. Home directories on servers are ephemeral by rule: they are
-// archived locally, and the login banner says they are not kept across a
-// reinstall.
+/**
+ * 044-durable (Article 23): data that can come from end users is either
+ * durable (it exists nowhere else) or ephemeral (losing it is harmless). The
+ * operator chooses, for every source of such data, when turning it on; there
+ * is no default. A host is durable when anything on it is durable, and
+ * ephemeral otherwise; nothing about the class is stored, it is worked out
+ * from the host's records each time. A missing or unreadable choice counts as
+ * durable. Home directories on servers are ephemeral by rule: they are
+ * archived locally, and the login banner says they are not kept across a
+ * reinstall.
+ *
+ * @module
+ */
 
 import type { DataClass, HostDef } from "./types.ts";
 

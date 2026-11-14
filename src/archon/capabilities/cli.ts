@@ -1,4 +1,8 @@
-// 012-cli-mcp: the `archon` launcher on every host.
+/**
+ * 012-cli-mcp: the `archon` launcher on every host.
+ *
+ * @module
+ */
 
 import { ALLOWED_SIGNERS, ALLOWED_SIGNERS_LOCAL, allowedSignersText } from "../identity/signers.ts";
 import type { Capability, FileDef } from "../model/types.ts";

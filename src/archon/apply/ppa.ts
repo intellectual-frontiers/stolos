@@ -1,7 +1,11 @@
-// Maintainers' PPAs (spec 010, Article 5). Ubuntu's own tool adds them:
-// add-apt-repository fetches the PPA's signing key from Launchpad over HTTPS
-// and writes a deb822 source with the key inline. Archon first checks that the
-// PPA has builds for this release, so a PPA can never break apt.
+/**
+ * Maintainers' PPAs (spec 010, Article 5). Ubuntu's own tool adds them:
+ * add-apt-repository fetches the PPA's signing key from Launchpad over HTTPS
+ * and writes a deb822 source with the key inline. Archon first checks that the
+ * PPA has builds for this release, so a PPA can never break apt.
+ *
+ * @module
+ */
 
 import { run } from "../core/exec.ts";
 

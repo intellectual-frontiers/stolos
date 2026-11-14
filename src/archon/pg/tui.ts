@@ -1,11 +1,15 @@
-// `archon pg admin-tui` (rainfrog) and `archon pg observe-tui` (pgcenter top):
-// each finds the instance the way `archon pg show` does (an instance Archon
-// keeps, any cluster here, or a service section) and starts the tool already
-// connected. On this server: the socket and you as yourself (peer, no
-// password). With --remote: the published name over TLS, verify-full against
-// the system's roots. A password never goes on a command line (other users
-// see those in ps): rainfrog asks for it; pgcenter gets it from ~/.pgpass or,
-// asked here, in its own environment only.
+/**
+ * `archon pg admin-tui` (rainfrog) and `archon pg observe-tui` (pgcenter top):
+ * each finds the instance the way `archon pg show` does (an instance Archon
+ * keeps, any cluster here, or a service section) and starts the tool already
+ * connected. On this server: the socket and you as yourself (peer, no
+ * password). With --remote: the published name over TLS, verify-full against
+ * the system's roots. A password never goes on a command line (other users
+ * see those in ps): rainfrog asks for it; pgcenter gets it from ~/.pgpass or,
+ * asked here, in its own environment only.
+ *
+ * @module
+ */
 
 import { join } from "../core/path.ts";
 import { homeDir, run } from "../core/exec.ts";

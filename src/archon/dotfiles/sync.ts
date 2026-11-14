@@ -1,7 +1,11 @@
-// 031-dotfile-layers: write a user's composed chezmoi source from the
-// repository's layers into /var/lib/archon-dotfiles/<user>: owned by root,
-// readable by the user's group, so chezmoi reads it and nothing writes to it
-// but archon. Files no layer provides any more are removed.
+/**
+ * 031-dotfile-layers: write a user's composed chezmoi source from the
+ * repository's layers into /var/lib/archon-dotfiles/<user>: owned by root,
+ * readable by the user's group, so chezmoi reads it and nothing writes to it
+ * but archon. Files no layer provides any more are removed.
+ *
+ * @module
+ */
 
 import { P } from "../core/paths.ts";
 import { engineFile, engineFiles } from "../core/assets.ts";

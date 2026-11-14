@@ -1,7 +1,11 @@
-// 040-opt-in: the catalog of opt-in containers. Each runs under Podman, from a
-// Quadlet file (Podman's own systemd integration), on every server and masked
-// until an operator turns it on. Images are pinned by digest (Article 12); a
-// new version is a change to this file, through the spec loop.
+/**
+ * 040-opt-in: the catalog of opt-in containers. Each runs under Podman, from a
+ * Quadlet file (Podman's own systemd integration), on every server and masked
+ * until an operator turns it on. Images are pinned by digest (Article 12); a
+ * new version is a change to this file, through the spec loop.
+ *
+ * @module
+ */
 
 import type { SpecId } from "../model/types.ts";
 

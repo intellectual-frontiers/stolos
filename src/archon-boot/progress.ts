@@ -1,7 +1,11 @@
-// Install and first-boot progress in the boot server's window (spec 004).
-// Ubuntu's installer reports every step to a webhook (autoinstall `reporting`);
-// most are noise, so a few milestones are shown, plus anything that failed.
-// The first boot reports each Archon phase itself.
+/**
+ * Install and first-boot progress in the boot server's window (spec 004).
+ * Ubuntu's installer reports every step to a webhook (autoinstall `reporting`);
+ * most are noise, so a few milestones are shown, plus anything that failed.
+ * The first boot reports each Archon phase itself.
+ *
+ * @module
+ */
 
 import type { ArchonEvent } from "../archon/telemetry/events.ts";
 

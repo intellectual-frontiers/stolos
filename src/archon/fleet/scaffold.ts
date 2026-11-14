@@ -1,6 +1,10 @@
-// A new fleet repository's files (spec 046-engine-instance): what `archon
-// fleet init <id>` writes into a repository that has none of them yet. Each
-// file is written only when missing; an existing one is never changed.
+/**
+ * A new fleet repository's files (spec 046-engine-instance): what `archon
+ * fleet init <id>` writes into a repository that has none of them yet. Each
+ * file is written only when missing; an existing one is never changed.
+ *
+ * @module
+ */
 
 import { join } from "../core/path.ts";
 import { exists } from "../core/fsx.ts";

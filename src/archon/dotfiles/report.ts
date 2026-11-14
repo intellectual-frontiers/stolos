@@ -1,5 +1,9 @@
-// `archon dotfiles [path] [--user <u>]` (spec 031): which layer provides each
-// of a user's dotfiles on this host. Read-only; reads only the repository.
+/**
+ * `archon dotfiles [path] [--user <u>]` (spec 031): which layer provides each
+ * of a user's dotfiles on this host. Read-only; reads only the repository.
+ *
+ * @module
+ */
 
 import { P } from "../core/paths.ts";
 import { exists } from "../core/fsx.ts";

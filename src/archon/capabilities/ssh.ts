@@ -1,7 +1,11 @@
-// 007-ssh: OpenSSH hardening as a drop-in (Ubuntu reads sshd_config.d).
-// Keys from anywhere; passwords as well only from local networks (the private
-// address ranges by default, fleet.ssh.passwordFrom), through an OpenSSH
-// Match block. Root never logs in.
+/**
+ * 007-ssh: OpenSSH hardening as a drop-in (Ubuntu reads sshd_config.d).
+ * Keys from anywhere; passwords as well only from local networks (the private
+ * address ranges by default, fleet.ssh.passwordFrom), through an OpenSSH
+ * Match block. Root never logs in.
+ *
+ * @module
+ */
 
 import type { Capability } from "../model/types.ts";
 import { header } from "../render/systemd.ts";

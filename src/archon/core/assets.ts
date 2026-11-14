@@ -1,6 +1,10 @@
-// Spec 046-engine-instance: read the engine's own text files (constitution,
-// specifications, guides, the base dotfile layer) from the generated module,
-// wherever the engine was loaded from (a checkout or GitHub).
+/**
+ * Spec 046-engine-instance: read the engine's own text files (constitution,
+ * specifications, guides, the base dotfile layer) from the generated module,
+ * wherever the engine was loaded from (a checkout or GitHub).
+ *
+ * @module
+ */
 
 import { ASSETS } from "../assets.auto.ts";
 

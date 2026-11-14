@@ -1,5 +1,9 @@
-// Path helpers built on Node's native `path` module (bundled with Deno, no
-// download needed).
+/**
+ * Path helpers built on Node's native `path` module (bundled with Deno, no
+ * download needed).
+ *
+ * @module
+ */
 
 import * as nodePath from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";

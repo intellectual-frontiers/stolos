@@ -1,8 +1,12 @@
-// `archon fleet status` (specs 021, 022): every server and workstation in the
-// model, its last install and verify as it says them now (spec 048: asked over
-// MCP, cached in this machine's archon.sql when it cannot be reached),
-// whether it is durable or ephemeral (spec 044), and how to reach and observe it. Works on the boot machine (which also knows
-// the addresses hosts installed from) and on any host.
+/**
+ * `archon fleet status` (specs 021, 022): every server and workstation in the
+ * model, its last install and verify as it says them now (spec 048: asked over
+ * MCP, cached in this machine's archon.sql when it cannot be reached),
+ * whether it is durable or ephemeral (spec 044), and how to reach and observe it. Works on the boot machine (which also knows
+ * the addresses hosts installed from) and on any host.
+ *
+ * @module
+ */
 
 import { getRecord, putRecord } from "../state/store.ts";
 import { callRemoteTool } from "./remote.ts";

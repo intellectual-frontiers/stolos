@@ -1,7 +1,11 @@
-// `archon state` (spec 048): what this machine recorded about itself (its
-// install, its latest verify, the operators' switches) and whether it holds
-// durable data, from its own archon.sql. Fleet status asks each server for
-// this over MCP; nothing is pushed.
+/**
+ * `archon state` (spec 048): what this machine recorded about itself (its
+ * install, its latest verify, the operators' switches) and whether it holds
+ * durable data, from its own archon.sql. Fleet status asks each server for
+ * this over MCP; nothing is pushed.
+ *
+ * @module
+ */
 
 import { ui } from "../core/ui.ts";
 import { loadHosts } from "../model/load.ts";

@@ -1,8 +1,12 @@
-// GitHub CLI's apt signing key (spec 010, Article 12), pinned. Fingerprint
-// 7F38BBB59D064DBCB3D84D725612B36462313325, as published in cli/cli's
-// docs/install_linux.md ("Our Linux packages and repository metadata are signed
-// with the following PGP key fingerprints"). The 2022 key 2C61...6059 expired on
-// 2026-09-05 and is not included.
+/**
+ * GitHub CLI's apt signing key (spec 010, Article 12), pinned. Fingerprint
+ * 7F38BBB59D064DBCB3D84D725612B36462313325, as published in cli/cli's
+ * docs/install_linux.md ("Our Linux packages and repository metadata are signed
+ * with the following PGP key fingerprints"). The 2022 key 2C61...6059 expired on
+ * 2026-09-05 and is not included.
+ *
+ * @module
+ */
 
 export const GITHUB_CLI_KEY_FINGERPRINT = "7F38BBB59D064DBCB3D84D725612B36462313325";
 

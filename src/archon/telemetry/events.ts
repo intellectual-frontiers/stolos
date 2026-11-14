@@ -1,10 +1,14 @@
-// Spec 049-telemetry (Article 27): events are structured at their source.
-// Each event has a declared name (below), a severity, the host and address it
-// is about, attributes, and a message; it is recorded as an OpenTelemetry log
-// record. Anything a person reads (the boot server's window, boot.log) is a
-// rendering of these records, never the source: the window's icons, colors,
-// and de-duplication come from the event's name and attributes, not from
-// parsing its text.
+/**
+ * Spec 049-telemetry (Article 27): events are structured at their source.
+ * Each event has a declared name (below), a severity, the host and address it
+ * is about, attributes, and a message; it is recorded as an OpenTelemetry log
+ * record. Anything a person reads (the boot server's window, boot.log) is a
+ * rendering of these records, never the source: the window's icons, colors,
+ * and de-duplication come from the event's name and attributes, not from
+ * parsing its text.
+ *
+ * @module
+ */
 
 export type Severity = "debug" | "info" | "warn" | "error";
 

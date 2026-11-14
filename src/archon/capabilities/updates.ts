@@ -1,6 +1,10 @@
-// 009-updates: Ubuntu's unattended-upgrades, as Ubuntu configures it, plus
-// one override (spec 009): the -updates pocket too, so Ubuntu's stable bug-fix
-// updates install daily alongside security updates. Verified, not replaced.
+/**
+ * 009-updates: Ubuntu's unattended-upgrades, as Ubuntu configures it, plus
+ * one override (spec 009): the -updates pocket too, so Ubuntu's stable bug-fix
+ * updates install daily alongside security updates. Verified, not replaced.
+ *
+ * @module
+ */
 
 import type { Capability } from "../model/types.ts";
 import { networkOf } from "../model/resolve.ts";

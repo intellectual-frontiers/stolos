@@ -1,6 +1,10 @@
-// `archon signers` (spec 047-intent-and-identity): list, add, and remove the
-// fleet's signers (fleets/<id>/signers.ts, in its fixed form), and, on a host
-// in an emergency, trust a key a person types there.
+/**
+ * `archon signers` (spec 047-intent-and-identity): list, add, and remove the
+ * fleet's signers (fleets/<id>/signers.ts, in its fixed form), and, on a host
+ * in an emergency, trust a key a person types there.
+ *
+ * @module
+ */
 
 import { count } from "../core/telemetry.ts";
 import { P, repoRel } from "../core/paths.ts";

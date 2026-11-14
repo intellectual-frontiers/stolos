@@ -1,11 +1,15 @@
-// `archon tools sync` (spec 008, Articles V and XII).
-//
-// upstream-binary: latest GitHub release -> verify the asset's published
-//   SHA-256 digest -> install under /opt/tools/<id>/<version> -> smoke test ->
-//   atomically switch /usr/local/bin/<bin> -> keep the previous version.
-// apt: installed by apt; reported against the candidate in Ubuntu's archive.
-// Nothing is ever built from source on a host: binaries only.
-// self-updating: install for persona holders, then record versions only.
+/**
+ * `archon tools sync` (spec 008, Articles V and XII).
+ *
+ * upstream-binary: latest GitHub release -> verify the asset's published
+ *   SHA-256 digest -> install under /opt/tools/<id>/<version> -> smoke test ->
+ *   atomically switch /usr/local/bin/<bin> -> keep the previous version.
+ * apt: installed by apt; reported against the candidate in Ubuntu's archive.
+ * Nothing is ever built from source on a host: binaries only.
+ * self-updating: install for persona holders, then record versions only.
+ *
+ * @module
+ */
 
 import { join } from "../core/path.ts";
 import { ensureDir, exists, walkFiles } from "../core/fsx.ts";

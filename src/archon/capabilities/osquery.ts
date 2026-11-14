@@ -1,10 +1,14 @@
-// 042-sql: osquery's daemon on every host, as infrastructure: always installed
-// and running. It listens on no port (its only socket is a local one for
-// extensions), so the firewall opens nothing. It runs Archon's scheduled
-// queries and writes what changed to /var/log/osquery (rotated), where anyone
-// with root can read the machine's history: ports, logins, users, sudoers,
-// SSH keys, packages, kernel modules. osqueryi, the interactive shell, needs
-// no daemon.
+/**
+ * 042-sql: osquery's daemon on every host, as infrastructure: always installed
+ * and running. It listens on no port (its only socket is a local one for
+ * extensions), so the firewall opens nothing. It runs Archon's scheduled
+ * queries and writes what changed to /var/log/osquery (rotated), where anyone
+ * with root can read the machine's history: ports, logins, users, sudoers,
+ * SSH keys, packages, kernel modules. osqueryi, the interactive shell, needs
+ * no daemon.
+ *
+ * @module
+ */
 
 import { STATE_DB, VIEWS } from "../state/store.ts";
 import type { Capability } from "../model/types.ts";

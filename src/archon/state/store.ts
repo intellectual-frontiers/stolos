@@ -1,16 +1,28 @@
-// Spec 048-observe-by-query (Article 25): what this machine recorded about
-// itself (its install, its latest verify, what each run did, the operators'
-// switches) stays on the machine, never in Git.
-//
-//   /var/lib/archon/archon.sql             canonical: readable SQL, one INSERT
-//                                          per record, in a fixed order
-//   /var/lib/archon/archon.auto.sqlite.db  built from archon.sql whenever it
-//                                          changes, for osquery (its tables
-//                                          archon_install, archon_verify, ...)
-//
-// Records are JSON bodies keyed by (host, kind, name); views give each kind
-// its columns. Writers load archon.sql into an in-memory SQLite, change it,
-// and write both files back (atomically, through a rename).
+/**
+ * Spec 048-observe-by-query (Article 25): what this machine recorded about
+ * itself (its install, its latest verify, what each run did, the operators'
+ * switches) stays on the machine, never in Git.
+ *
+ *   /var/lib/archon/archon.sql             canonical: readable SQL, one INSERT
+ *                                          per record, in a fixed order
+ *   /var/lib/archon/archon.auto.sqlite.db  built from archon.sql whenever it
+ *                                          changes, for osquery (its tables
+ *                                          archon_install, archon_verify, ...)
+ *
+ * Records are JSON bodies keyed by (host, kind, name); views give each kind
+ * its columns. Writers load archon.sql into an in-memory SQLite, change it,
+ * and write both files back (atomically, through a rename).
+ *
+ * ```mermaid
+ * flowchart LR
+ *   put["putRecord(host, kind, name, body)"] --> sql["archon.sql<br/>(canonical, readable)"]
+ *   sql -->|rebuild| db["archon.auto.sqlite.db"]
+ *   db --> views["views: archon_install, archon_verify,<br/>archon_prov, archon_optin, archon_inventory"]
+ *   views --> osq["osquery (automatic tables)"]
+ * ```
+ *
+ * @module
+ */
 
 import { count } from "../core/telemetry.ts";
 import { DatabaseSync } from "node:sqlite";

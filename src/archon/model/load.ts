@@ -1,7 +1,11 @@
-// Load the active fleet (fleets/<id>/fleet.ts, written by `archon fleet init`)
-// and every host (fleets/<id>/hosts/<name>/host.ts, written by `archon host add`).
-// Hosts are discovered from the directory, so there is no index to keep in
-// sync.
+/**
+ * Load the active fleet (fleets/<id>/fleet.ts, written by `archon fleet init`)
+ * and every host (fleets/<id>/hosts/<name>/host.ts, written by `archon host add`).
+ * Hosts are discovered from the directory, so there is no index to keep in
+ * sync.
+ *
+ * @module
+ */
 
 import { getRecord, listRecords } from "../state/store.ts";
 import { P } from "../core/paths.ts";

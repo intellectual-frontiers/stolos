@@ -1,9 +1,13 @@
-// Spec 051: a machine that takes the installer image and then goes quiet.
-// Ubuntu's network installer holds the whole image in memory; with too little
-// RAM (below about 8 GiB) it stalls before asking for its configuration, and
-// nothing on the boot server's screen says so. This watch notices: after the
-// image is served to an address, the installer asks for its configuration
-// from that address within minutes, or the boot window explains.
+/**
+ * Spec 051: a machine that takes the installer image and then goes quiet.
+ * Ubuntu's network installer holds the whole image in memory; with too little
+ * RAM (below about 8 GiB) it stalls before asking for its configuration, and
+ * nothing on the boot server's screen says so. This watch notices: after the
+ * image is served to an address, the installer asks for its configuration
+ * from that address within minutes, or the boot window explains.
+ *
+ * @module
+ */
 
 export const STALL_MS = 6 * 60_000;
 

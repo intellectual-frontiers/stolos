@@ -1,12 +1,16 @@
-// Calm output (Article XXII, spec 018): quiet on success, loud and actionable
-// on problems, full detail always in the log. Native Deno only.
-//
-//   ✅ Packages         86 installed (1m12s)
-//   ⠸ Files            [██████░░░░] 30/47  /etc/ssh/sshd_config.d/50-archon.conf
-//
-// Terminal: spinner, progress bar, in-place redraw, colors, emoji.
-// Pipe/timer/journald: plain final lines only. NO_COLOR disables color.
-// Non-UTF-8 locale or ARCHON_PLAIN=1: ASCII marks ([ok] [warn] [FAIL]).
+/**
+ * Calm output (Article XXII, spec 018): quiet on success, loud and actionable
+ * on problems, full detail always in the log. Native Deno only.
+ *
+ *   ✅ Packages         86 installed (1m12s)
+ *   ⠸ Files            [██████░░░░] 30/47  /etc/ssh/sshd_config.d/50-archon.conf
+ *
+ * Terminal: spinner, progress bar, in-place redraw, colors, emoji.
+ * Pipe/timer/journald: plain final lines only. NO_COLOR disables color.
+ * Non-UTF-8 locale or ARCHON_PLAIN=1: ASCII marks ([ok] [warn] [FAIL]).
+ *
+ * @module
+ */
 import { translate } from "./explain.ts";
 
 // ARCHON_VERBOSE=1 (or -v): every item is shown, dimmed, as it happens.

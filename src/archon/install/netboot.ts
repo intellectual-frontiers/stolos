@@ -1,8 +1,12 @@
-// `archon reboot [--netboot]` (spec 004): for a re-install, boot from the
-// network once (UEFI BootNext) and then reboot. The boot order itself never
-// changes, so ordinary reboots never wait for a network boot. The install
-// recorded the firmware entry it network-booted from; without that record
-// (a host installed by hand) the first PXE or HTTP IPv4 entry is used.
+/**
+ * `archon reboot [--netboot]` (spec 004): for a re-install, boot from the
+ * network once (UEFI BootNext) and then reboot. The boot order itself never
+ * changes, so ordinary reboots never wait for a network boot. The install
+ * recorded the firmware entry it network-booted from; without that record
+ * (a host installed by hand) the first PXE or HTTP IPv4 entry is used.
+ *
+ * @module
+ */
 
 import { readTextOr } from "../core/fsx.ts";
 import { run } from "../core/exec.ts";

@@ -1,6 +1,10 @@
-// 026-doctor: the network tools archon doctor calls. Ubuntu Server already
-// ships each of them (ubuntu-minimal and ubuntu-standard in 26.04); declaring
-// them keeps them there on a host installed with fewer packages.
+/**
+ * 026-doctor: the network tools archon doctor calls. Ubuntu Server already
+ * ships each of them (ubuntu-minimal and ubuntu-standard in 26.04); declaring
+ * them keeps them there on a host installed with fewer packages.
+ *
+ * @module
+ */
 
 import type { Capability } from "../model/types.ts";
 

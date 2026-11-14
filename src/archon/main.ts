@@ -1,4 +1,8 @@
-// archon: entry point for the CLI. See archon(1).
+/**
+ * archon: entry point for the CLI. See archon(1).
+ *
+ * @module
+ */
 
 import { P, resetRoots } from "./core/paths.ts";
 import { COMMANDS, findCommand } from "./commands/registry.ts";

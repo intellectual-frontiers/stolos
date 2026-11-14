@@ -1,7 +1,11 @@
-// 035-welcome-guide: what is on this server and how to use it, in plain words,
-// computed from the server's own plan (Article 4: one source). The welcome
-// page, `archon guide`, and the login banner's pointer all read this; an item
-// appears only when the plan really has what it describes.
+/**
+ * 035-welcome-guide: what is on this server and how to use it, in plain words,
+ * computed from the server's own plan (Article 4: one source). The welcome
+ * page, `archon guide`, and the login banner's pointer all read this; an item
+ * appears only when the plan really has what it describes.
+ *
+ * @module
+ */
 
 import type { HostPlan } from "../model/types.ts";
 import { fqdn } from "../web/config.ts";

@@ -1,6 +1,10 @@
-// 014-state and 015-reconcile: hosts converge to the repository on a timer
-// (Article 9), and capture their state daily into /var/lib/archon (runtime;
-// spec 048: nothing is recorded in the repository).
+/**
+ * 014-state and 015-reconcile: hosts converge to the repository on a timer
+ * (Article 9), and capture their state daily into /var/lib/archon (runtime;
+ * spec 048: nothing is recorded in the repository).
+ *
+ * @module
+ */
 
 import type { Capability } from "../model/types.ts";
 import { timedJob } from "./ops.ts";

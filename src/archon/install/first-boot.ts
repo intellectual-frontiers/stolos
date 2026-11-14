@@ -1,7 +1,24 @@
-// `archon first-boot` (spec 005): run once by cloud-init on a freshly
-// installed host, after the first-boot script cloned the repository with this
-// host's deploy key. Converges the host, hands the deploy key to ops, verifies,
-// and pushes the host's first record, which proves the key works.
+/**
+ * `archon first-boot` (spec 005): run once by cloud-init on a freshly
+ * installed host, after the first-boot script cloned the repository with this
+ * host's deploy key. Converges the host, hands the deploy key to ops, verifies,
+ * and pushes the host's first record, which proves the key works.
+ *
+ * ```mermaid
+ * sequenceDiagram
+ *   participant H as The new host
+ *   participant B as Boot server
+ *   H->>H: clone the fleet repository, verify its signature
+ *   H->>B: event: First boot
+ *   H->>H: packages, accounts, files, units, tools, dotfiles
+ *   H->>H: verify (ok, not set up yet, warnings, failures)
+ *   H->>H: archon.sql: install record, inventory
+ *   H->>B: event: Ready (or Done with problems)
+ *   H->>H: start Ubuntu's daily upgrades
+ * ```
+ *
+ * @module
+ */
 
 import { putRecord } from "../state/store.ts";
 import { P } from "../core/paths.ts";

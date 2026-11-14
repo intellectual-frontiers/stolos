@@ -1,9 +1,13 @@
-// `archon doctor` (spec 026): a quick, read-only look at whether this machine
-// can reach what it depends on, with what is wrong and where to look. It uses
-// Ubuntu's own network tools (ip, ping, resolvectl, dig, chronyc, ufw, snap,
-// mtr) and curl's timings; the endpoints come from this machine's own
-// configuration (apt sources, the checkout's remote, the tools catalog, the
-// fleet model), never from a list kept here. It changes nothing.
+/**
+ * `archon doctor` (spec 026): a quick, read-only look at whether this machine
+ * can reach what it depends on, with what is wrong and where to look. It uses
+ * Ubuntu's own network tools (ip, ping, resolvectl, dig, chronyc, ufw, snap,
+ * mtr) and curl's timings; the endpoints come from this machine's own
+ * configuration (apt sources, the checkout's remote, the tools catalog, the
+ * fleet model), never from a list kept here. It changes nothing.
+ *
+ * @module
+ */
 
 import { readTextOr } from "../core/fsx.ts";
 import { isRoot, run } from "../core/exec.ts";

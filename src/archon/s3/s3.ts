@@ -1,10 +1,14 @@
-// 041-s3: S3 object storage (RustFS), an opt-in container (spec 040), managed
-// with archon fs s3. Identities are Linux accounts: every person on the server
-// and every fleet service account has an S3 user of the same name, allowed the
-// buckets named <name>-*. S3 signs requests with a secret the server keeps, so
-// it cannot use the Linux password (Archon never puts a Linux password where it
-// can be read back): each account's secret is generated on the server, and only
-// that account (and root) can read it.
+/**
+ * 041-s3: S3 object storage (RustFS), an opt-in container (spec 040), managed
+ * with archon fs s3. Identities are Linux accounts: every person on the server
+ * and every fleet service account has an S3 user of the same name, allowed the
+ * buckets named <name>-*. S3 signs requests with a secret the server keeps, so
+ * it cannot use the Linux password (Archon never puts a Linux password where it
+ * can be read back): each account's secret is generated on the server, and only
+ * that account (and root) can read it.
+ *
+ * @module
+ */
 
 import { dirname, join } from "../core/path.ts";
 import { ensureDir, exists, readTextOr } from "../core/fsx.ts";

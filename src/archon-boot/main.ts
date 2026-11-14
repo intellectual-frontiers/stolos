@@ -1,23 +1,27 @@
-// archon-boot (spec 004): the boot machine's side of a zero-touch install.
-// Runs with Deno on Windows or Linux:
-//
-//   deno task boot serve [--port 8080]   serve PXE (TFTP, UDP 69), UEFI HTTP Boot, and installs
-//   deno task boot reinstall <host> [--confirm-destroy <host>]
-//                                        push its state, arm it, network-boot it once (over SSH);
-//                                        a durable host needs --confirm-destroy (Article 23)
-//   deno task boot retire <host> --confirm-destroy <host> [--no-push]
-//                                        a server leaves the fleet, committed and pushed (spec 045)
-//   deno task boot arm <host> --claim | --mac-address <mac> [--confirm-destroy <host>]
-//                                        allow one (re)install of a host
-//   deno task boot status                hosts, Boot URIs, MACs, armed or not
-//   deno task boot doctor                check this boot machine, with a fix for each problem
-//   deno task boot observe               recent installs from the boot server's own telemetry
-//   deno task boot vault <sub>           back up and restore this PC's secrets (spec 029)
-//   deno task boot mail-setup            store the mail relay's token (Cloudflare, spec 027)
-//   deno task boot mail-push <host>      give a running host that token over SSH
-//   deno task boot web-setup             store the Cloudflare DNS token (HTTPS, spec 032)
-//   deno task boot web-push <host>       give a running server that token over SSH
-//   deno task boot notify --subject ...  email the mailbox from this PC (also: notify test | status)
+/**
+ * archon-boot (spec 004): the boot machine's side of a zero-touch install.
+ * Runs with Deno on Windows or Linux:
+ *
+ *   deno task boot serve [--port 8080]   serve PXE (TFTP, UDP 69), UEFI HTTP Boot, and installs
+ *   deno task boot reinstall <host> [--confirm-destroy <host>]
+ *                                        push its state, arm it, network-boot it once (over SSH);
+ *                                        a durable host needs --confirm-destroy (Article 23)
+ *   deno task boot retire <host> --confirm-destroy <host> [--no-push]
+ *                                        a server leaves the fleet, committed and pushed (spec 045)
+ *   deno task boot arm <host> --claim | --mac-address <mac> [--confirm-destroy <host>]
+ *                                        allow one (re)install of a host
+ *   deno task boot status                hosts, Boot URIs, MACs, armed or not
+ *   deno task boot doctor                check this boot machine, with a fix for each problem
+ *   deno task boot observe               recent installs from the boot server's own telemetry
+ *   deno task boot vault <sub>           back up and restore this PC's secrets (spec 029)
+ *   deno task boot mail-setup            store the mail relay's token (Cloudflare, spec 027)
+ *   deno task boot mail-push <host>      give a running host that token over SSH
+ *   deno task boot web-setup             store the Cloudflare DNS token (HTTPS, spec 032)
+ *   deno task boot web-push <host>       give a running server that token over SSH
+ *   deno task boot notify --subject ...  email the mailbox from this PC (also: notify test | status)
+ *
+ * @module
+ */
 
 import { VERSION } from "../archon/version.ts";
 import { ui } from "../archon/core/ui.ts";

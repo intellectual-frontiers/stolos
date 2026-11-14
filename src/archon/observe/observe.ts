@@ -1,7 +1,11 @@
-// `archon observe` (spec 021): what this machine records about itself, where,
-// and within which limits; `observe tui` opens otel-tui on it; `observe prune`
-// keeps PCP's metric archives within their size and free-space limits (journald
-// and the Collector's files limit themselves).
+/**
+ * `archon observe` (spec 021): what this machine records about itself, where,
+ * and within which limits; `observe tui` opens otel-tui on it; `observe prune`
+ * keeps PCP's metric archives within their size and free-space limits (journald
+ * and the Collector's files limit themselves).
+ *
+ * @module
+ */
 
 import { join } from "../core/path.ts";
 import { exists } from "../core/fsx.ts";

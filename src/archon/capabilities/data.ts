@@ -1,7 +1,11 @@
-// 044-durable (Article 23): what this server's data class is, where people
-// see it. /etc/archon/data holds "durable" or "ephemeral" (the prompt reads
-// it), and the login banner says which, why, and that home directories are
-// not kept across a reinstall. Both are worked out from the model each build.
+/**
+ * 044-durable (Article 23): what this server's data class is, where people
+ * see it. /etc/archon/data holds "durable" or "ephemeral" (the prompt reads
+ * it), and the login banner says which, why, and that home directories are
+ * not kept across a reinstall. Both are worked out from the model each build.
+ *
+ * @module
+ */
 
 import type { Capability } from "../model/types.ts";
 import { hostData, SPEC } from "../model/durable.ts";

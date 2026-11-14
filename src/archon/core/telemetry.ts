@@ -1,14 +1,29 @@
-// Archon's own telemetry (specs 021, 049; Article 27), through Deno's built-in
-// OpenTelemetry: every command is a trace (one span per phase) and its results
-// are metrics. Console output (errors, --json) is exported by Deno as logs
-// linked to the trace; the journal reaches the Collector through journald.
-// Every name comes from telemetry/signals.ts.
-//
-// The launcher sets OTEL_DENO and points OTLP at the local Collector, with the
-// fleet, host, engine version, and commit as resource attributes. A run
-// continues a trace begun elsewhere when TRACEPARENT is set (an MCP call's
-// `_meta.traceparent`, an SSH command from the boot machine). Without
-// OTEL_DENO, or if the API cannot load, everything here is a no-op.
+/**
+ * Archon's own telemetry (specs 021, 049; Article 27), through Deno's built-in
+ * OpenTelemetry: every command is a trace (one span per phase) and its results
+ * are metrics. Console output (errors, --json) is exported by Deno as logs
+ * linked to the trace; the journal reaches the Collector through journald.
+ * Every name comes from telemetry/signals.ts.
+ *
+ * The launcher sets OTEL_DENO and points OTLP at the local Collector, with the
+ * fleet, host, engine version, and commit as resource attributes. A run
+ * continues a trace begun elsewhere when TRACEPARENT is set (an MCP call's
+ * `_meta.traceparent`, an SSH command from the boot machine). Without
+ * OTEL_DENO, or if the API cannot load, everything here is a no-op.
+ *
+ * ```mermaid
+ * flowchart LR
+ *   run["an archon run"] --> trace["a trace: its phases as spans"]
+ *   run --> events["its problems as log records"]
+ *   trace --> col{"collector"}
+ *   events --> col
+ *   col -->|on the host| local["the local OpenTelemetry Collector"]
+ *   col -->|first boot| boot["the boot server (/otlp)"]
+ *   local -->|opt-in| ui["OpenObserve"]
+ * ```
+ *
+ * @module
+ */
 
 import { type MetricName, METRICS } from "../telemetry/signals.ts";
 import { type ArchonEvent, toLogsRequest } from "../telemetry/events.ts";

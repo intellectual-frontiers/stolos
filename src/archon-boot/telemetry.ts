@@ -1,15 +1,19 @@
-// The boot server's own telemetry (spec 023). Deno's built-in OpenTelemetry
-// sends OTLP/JSON to a receiver inside the boot server (127.0.0.1:4319), which
-// writes it to local files only: one OTLP JSON line per batch, the format
-// OpenTelemetry's file exporter and otlpjsonfile receiver use, in daily files
-// kept 30 days and 256 MB at most. Nothing leaves the PC; when otel-tui runs
-// on the PC (OTLP on 127.0.0.1:4318), each batch is also handed to it.
-//
-// Spec 049: the boot server is also the fleet's default collector. Servers
-// that find no other (fleet.telemetry, or otel.localdomain) send their
-// telemetry to http://<boot PC>:<http port>/otlp, kept a week (ephemeral).
-//
-// Each install is one trace, "install <host>", with a span per step.
+/**
+ * The boot server's own telemetry (spec 023). Deno's built-in OpenTelemetry
+ * sends OTLP/JSON to a receiver inside the boot server (127.0.0.1:4319), which
+ * writes it to local files only: one OTLP JSON line per batch, the format
+ * OpenTelemetry's file exporter and otlpjsonfile receiver use, in daily files
+ * kept 30 days and 256 MB at most. Nothing leaves the PC; when otel-tui runs
+ * on the PC (OTLP on 127.0.0.1:4318), each batch is also handed to it.
+ *
+ * Spec 049: the boot server is also the fleet's default collector. Servers
+ * that find no other (fleet.telemetry, or otel.localdomain) send their
+ * telemetry to http://<boot PC>:<http port>/otlp, kept a week (ephemeral).
+ *
+ * Each install is one trace, "install <host>", with a span per step.
+ *
+ * @module
+ */
 
 import { type ArchonEvent, toLogsRequest } from "../archon/telemetry/events.ts";
 import { join } from "../archon/core/path.ts";

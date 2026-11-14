@@ -1,8 +1,12 @@
-// `deno task boot vault <sub>` (spec 029): the boot machine's secrets, copied
-// as they are into the owner's OneDrive Personal Vault (which encrypts them and
-// asks for a second sign-in to open), and restored from there onto a new PC
-// (constitution Articles 13 and 22). Each backup is a folder: the secret files
-// in their usual layout, and a manifest of names, SHA-256, and sizes.
+/**
+ * `deno task boot vault <sub>` (spec 029): the boot machine's secrets, copied
+ * as they are into the owner's OneDrive Personal Vault (which encrypts them and
+ * asks for a second sign-in to open), and restored from there onto a new PC
+ * (constitution Articles 13 and 22). Each backup is a folder: the secret files
+ * in their usual layout, and a manifest of names, SHA-256, and sizes.
+ *
+ * @module
+ */
 
 import { join } from "../core/path.ts";
 import { exists, readTextOr } from "../core/fsx.ts";

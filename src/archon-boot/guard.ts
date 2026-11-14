@@ -1,11 +1,29 @@
-// Spec 051: the blank-disk guard. Before Ubuntu's installer touches a disk, it
-// reports the machine's own facts (from its firmware tables, /proc, and its
-// disks) to this boot server, which answers "ok" or "stop: why". The install
-// goes on by itself only when every disk is blank, when a person confirmed
-// with --confirm-destroy <host>, or when the machine is this host already (it
-// installed as this host, or boot reinstall reached it over SSH). Anything
-// else stops before a byte is written, and the boot window says what the
-// machine holds and the one command that lets it go on.
+/**
+ * Spec 051: the blank-disk guard. Before Ubuntu's installer touches a disk, it
+ * reports the machine's own facts (from its firmware tables, /proc, and its
+ * disks) to this boot server, which answers "ok" or "stop: why". The install
+ * goes on by itself only when every disk is blank, when a person confirmed
+ * with --confirm-destroy <host>, or when the machine is this host already (it
+ * installed as this host, or boot reinstall reached it over SSH). Anything
+ * else stops before a byte is written, and the boot window says what the
+ * machine holds and the one command that lets it go on.
+ *
+ * ```mermaid
+ * flowchart TD
+ *   facts["the installer reports the machine's facts<br/>(before any disk is touched)"] --> disks{"any disk?"}
+ *   disks -->|no| stop1["stop: no disk to install to"]
+ *   disks -->|yes| blank{"every disk blank?<br/>(wipefs, partitions)"}
+ *   blank -->|yes| go["ok: install"]
+ *   blank -->|no| confirmed{"--confirm-destroy &lt;host&gt;<br/>for this install?"}
+ *   confirmed -->|yes| go
+ *   confirmed -->|no| same{"this host's own machine?<br/>(installed MAC, or boot reinstall)"}
+ *   same -->|yes| go
+ *   same -->|no| stop2["stop before writing, power off<br/>(E051-DISK-NOT-BLANK)"]
+ *   noanswer["no answer from the boot server"] --> stop3["no install"]
+ * ```
+ *
+ * @module
+ */
 
 import type { InstallToken } from "../archon/core/secrets.ts";
 import type { HostRegistration } from "../archon/model/types.ts";

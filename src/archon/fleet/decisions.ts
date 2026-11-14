@@ -1,9 +1,13 @@
-// Spec 047-intent-and-identity (Article 25): what operators decided for a host
-// (which opt-ins are on, and whether their data is durable) lives in Git, in
-// fleets/<id>/hosts/<host>/decisions.ts, written by `archon decide` on a
-// workstation and approved by a signed push. Such a decision wins over the
-// host's own record (archon.sql), survives a re-install, and tells the boot
-// machine whether a host holds durable data even when it is offline.
+/**
+ * Spec 047-intent-and-identity (Article 25): what operators decided for a host
+ * (which opt-ins are on, and whether their data is durable) lives in Git, in
+ * fleets/<id>/hosts/<host>/decisions.ts, written by `archon decide` on a
+ * workstation and approved by a signed push. Such a decision wins over the
+ * host's own record (archon.sql), survives a re-install, and tells the boot
+ * machine whether a host holds durable data even when it is offline.
+ *
+ * @module
+ */
 
 import { P, repoRel } from "../core/paths.ts";
 import { join } from "../core/path.ts";

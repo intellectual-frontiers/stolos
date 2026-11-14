@@ -1,9 +1,13 @@
-// Tool catalog (spec 010, Article 5): the newest stable release of each tool,
-// from its maintainers' PPA or the vendor's own apt repository when there is
-// one (apt keeps it current), else its official binary release
-// (checksum-verified), else Ubuntu's archive (tmux).
-// Nothing is built
-// from source.
+/**
+ * Tool catalog (spec 010, Article 5): the newest stable release of each tool,
+ * from its maintainers' PPA or the vendor's own apt repository when there is
+ * one (apt keeps it current), else its official binary release
+ * (checksum-verified), else Ubuntu's archive (tmux).
+ * Nothing is built
+ * from source.
+ *
+ * @module
+ */
 
 import type { ToolDef } from "../model/types.ts";
 import { GITHUB_CLI_KEY } from "./keys/github-cli.ts";

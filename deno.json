@@ -4,10 +4,13 @@
   "tasks": {
     "archon": "deno run -A src/archon/main.ts",
     "boot": "deno run -A --env-file=src/archon-boot/otel.env src/archon-boot/main.ts",
+    "docs": "deno run -A tools/docs.ts",
+    "docs:lint": "deno run -A tools/docs.ts lint && deno check --doc src/",
+    "docs:baseline": "deno run -A tools/docs.ts lint --update",
     "test": "deno test -A tests/",
     "gen": "deno run -A tools/gen-assets.ts",
     "version": "deno run -A tools/version.ts",
-    "ci": "deno run -A tools/gen-assets.ts --check && deno task check && deno lint && deno fmt --check && deno task test && deno task version check origin/main",
+    "ci": "deno run -A tools/gen-assets.ts --check && deno task check && deno lint && deno fmt --check && deno task docs:lint && deno task test && deno task version check origin/main",
     "check": "deno check src/ tests/ examples/ tools/",
     "lint": "deno lint",
     "fmt": "deno fmt"

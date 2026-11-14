@@ -1,6 +1,10 @@
-// archon doctor's building blocks (spec 026): one HTTP(S) probe with curl's
-// own timings, what a curl failure means, and parsers for the output of
-// Ubuntu's network tools. Pure where it can be, so it is tested without a network.
+/**
+ * archon doctor's building blocks (spec 026): one HTTP(S) probe with curl's
+ * own timings, what a curl failure means, and parsers for the output of
+ * Ubuntu's network tools. Pure where it can be, so it is tested without a network.
+ *
+ * @module
+ */
 
 import { run } from "../core/exec.ts";
 

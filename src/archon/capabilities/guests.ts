@@ -1,6 +1,10 @@
-// 017-guests: LXD (Ubuntu's native container and VM manager, a snap) with
-// its default bridge (lxdbr0) and a directory storage pool, initialized once
-// from a rendered preseed. Instances come from the host model.
+/**
+ * 017-guests: LXD (Ubuntu's native container and VM manager, a snap) with
+ * its default bridge (lxdbr0) and a directory storage pool, initialized once
+ * from a rendered preseed. Instances come from the host model.
+ *
+ * @module
+ */
 
 import type { Capability, GuestDef } from "../model/types.ts";
 

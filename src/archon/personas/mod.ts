@@ -1,5 +1,9 @@
-// Personas (spec 006). A persona is a bundle of groups and dotfile features;
-// personas compose through `implies` (transitively).
+/**
+ * Personas (spec 006). A persona is a bundle of groups and dotfile features;
+ * personas compose through `implies` (transitively).
+ *
+ * @module
+ */
 
 import type { Persona, PersonaId } from "../model/types.ts";
 

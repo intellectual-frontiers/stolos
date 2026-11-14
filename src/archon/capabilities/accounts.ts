@@ -1,9 +1,13 @@
-// 006-accounts: Archon's groups (sysusers.d), the operator sudo rule, and the
-// ops account's GitHub access through this host's deploy key. Accounts are
-// converged by `archon apply` from the fleet admin, ops, and extras.
-//
-// Overrides of Ubuntu defaults: none. The admin account Ubuntu's installer
-// creates is kept (it is in Ubuntu's `sudo` group).
+/**
+ * 006-accounts: Archon's groups (sysusers.d), the operator sudo rule, and the
+ * ops account's GitHub access through this host's deploy key. Accounts are
+ * converged by `archon apply` from the fleet admin, ops, and extras.
+ *
+ * Overrides of Ubuntu defaults: none. The admin account Ubuntu's installer
+ * creates is kept (it is in Ubuntu's `sudo` group).
+ *
+ * @module
+ */
 
 import type { Capability } from "../model/types.ts";
 import { ARCHON_GROUPS } from "../personas/mod.ts";

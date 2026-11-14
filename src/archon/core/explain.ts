@@ -1,11 +1,23 @@
-// Spec 052: every problem archon knows how to explain, by a stable code. A
-// problem shown with a code says "explain: archon explain <code>"; the code
-// stays the same across versions, so it can be searched for and written down.
-// Raw errors from other tools (ssh, apt, git, Deno) that people meet often are
-// recognized here too, and given their plain cause and fix.
-//
-// Codes: E<spec>-<WORD> for a problem, P<spec>-<WORD> for something not set up
-// yet (pending).
+/**
+ * Spec 052: every problem archon knows how to explain, by a stable code. A
+ * problem shown with a code says "explain: archon explain <code>"; the code
+ * stays the same across versions, so it can be searched for and written down.
+ * Raw errors from other tools (ssh, apt, git, Deno) that people meet often are
+ * recognized here too, and given their plain cause and fix.
+ *
+ * Codes: E<spec>-<WORD> for a problem, P<spec>-<WORD> for something not set up
+ * yet (pending).
+ *
+ * ```mermaid
+ * flowchart LR
+ *   raw["a problem, or a raw tool error<br/>(ssh, apt, dpkg, Deno)"] --> tr{"known?"}
+ *   tr -->|yes| code["its code and fix"]
+ *   tr -->|no| plain["shown as it is"]
+ *   code --> show["fix: ...<br/>explain: archon explain CODE"]
+ * ```
+ *
+ * @module
+ */
 
 export interface Explanation {
   title: string;

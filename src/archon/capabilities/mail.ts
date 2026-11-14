@@ -1,13 +1,17 @@
-// 027-mail: every server can send mail, the way programs expect to
-// (/usr/sbin/sendmail, or SMTP on localhost:25). Postfix, Ubuntu's default
-// mail server, runs as a send-only "null client" (Postfix's
-// STANDARD_CONFIGURATION_README): it receives nothing from the network,
-// delivers nothing locally, and relays everything to Cloudflare Email Service
-// over implicit TLS on port 465 with the fleet's API token (SASL). Cloudflare
-// signs with DKIM for the sending domain. Mail for local accounts (root, ops,
-// cron's MAILTO) goes to the fleet's mailbox; every sender becomes
-// <user>+<host>.<tag>@<domain> (root+alpha.lab@example.net): one
-// onboarded domain for the fleet, the machine in the subaddress (RFC 5233).
+/**
+ * 027-mail: every server can send mail, the way programs expect to
+ * (/usr/sbin/sendmail, or SMTP on localhost:25). Postfix, Ubuntu's default
+ * mail server, runs as a send-only "null client" (Postfix's
+ * STANDARD_CONFIGURATION_README): it receives nothing from the network,
+ * delivers nothing locally, and relays everything to Cloudflare Email Service
+ * over implicit TLS on port 465 with the fleet's API token (SASL). Cloudflare
+ * signs with DKIM for the sending domain. Mail for local accounts (root, ops,
+ * cron's MAILTO) goes to the fleet's mailbox; every sender becomes
+ * <user>+<host>.<tag>@<domain> (root+alpha.lab@example.net): one
+ * onboarded domain for the fleet, the machine in the subaddress (RFC 5233).
+ *
+ * @module
+ */
 
 import type { Capability, FleetDef, HostDef } from "../model/types.ts";
 import { networkOf } from "../model/resolve.ts";

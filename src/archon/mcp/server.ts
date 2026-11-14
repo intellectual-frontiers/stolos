@@ -1,9 +1,13 @@
-// `archon mcp`: a Model Context Protocol server over stdio (JSON-RPC 2.0,
-// newline-delimited), implemented natively without an SDK (Article II).
-// Every registry command within the tier limit is a tool; docs, specs,
-// runbooks, and reports are resources. Workstations reach it on a server as
-// ops over SSH, forced to `archon mcp --max-tier <tier>` (spec 030): the limit
-// is enforced here, on the server, whatever the client is configured to do.
+/**
+ * `archon mcp`: a Model Context Protocol server over stdio (JSON-RPC 2.0,
+ * newline-delimited), implemented natively without an SDK (Article II).
+ * Every registry command within the tier limit is a tool; docs, specs,
+ * runbooks, and reports are resources. Workstations reach it on a server as
+ * ops over SSH, forced to `archon mcp --max-tier <tier>` (spec 030): the limit
+ * is enforced here, on the server, whatever the client is configured to do.
+ *
+ * @module
+ */
 
 import { count, parseTraceparent } from "../core/telemetry.ts";
 import { COMMANDS } from "../commands/registry.ts";

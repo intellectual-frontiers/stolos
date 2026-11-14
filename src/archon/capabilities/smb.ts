@@ -1,10 +1,14 @@
-// 037-smb: file shares over SMB (Samba) on every server, off until an operator
-// turns them on with `archon fs smb on`; then on, across reboots and reinstalls,
-// until `archon fs smb off`. The switch is the host's own recorded state
-// (the host's own archon.sql (opt-in smb)), which every apply honors.
-//
-// Overrides of Ubuntu defaults: smbd masked until switched on (Ubuntu starts it
-// on install); nmbd always masked (NetBIOS off).
+/**
+ * 037-smb: file shares over SMB (Samba) on every server, off until an operator
+ * turns them on with `archon fs smb on`; then on, across reboots and reinstalls,
+ * until `archon fs smb off`. The switch is the host's own recorded state
+ * (the host's own archon.sql (opt-in smb)), which every apply honors.
+ *
+ * Overrides of Ubuntu defaults: smbd masked until switched on (Ubuntu starts it
+ * on install); nmbd always masked (NetBIOS off).
+ *
+ * @module
+ */
 
 import type { Capability } from "../model/types.ts";
 import { header } from "../render/systemd.ts";

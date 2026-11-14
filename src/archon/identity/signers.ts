@@ -1,15 +1,32 @@
-// Spec 047-intent-and-identity (Article 9): who may approve a fleet's changes,
-// and how a host checks an approval before it applies anything.
-//
-// - fleets/<id>/signers.ts lists the signers. It is written by `archon signers`
-//   in one fixed form (a typed literal, Article 4); `archon build` fails when
-//   it is not in that form.
-// - Every host keeps /etc/archon/allowed_signers (Git's format), rendered from
-//   the signers of the last commit it accepted, plus any key a person trusted
-//   on the host itself in an emergency (/etc/archon/allowed_signers.local).
-// - Before a host moves to a new tip of main, the tip must be signed by a key
-//   it already trusts, and must come after the commit it last applied. So the
-//   list of signers changes only through a commit signed by a key already on it.
+/**
+ * Spec 047-intent-and-identity (Article 9): who may approve a fleet's changes,
+ * and how a host checks an approval before it applies anything.
+ *
+ * - fleets/<id>/signers.ts lists the signers. It is written by `archon signers`
+ *   in one fixed form (a typed literal, Article 4); `archon build` fails when
+ *   it is not in that form.
+ * - Every host keeps /etc/archon/allowed_signers (Git's format), rendered from
+ *   the signers of the last commit it accepted, plus any key a person trusted
+ *   on the host itself in an emergency (/etc/archon/allowed_signers.local).
+ * - Before a host moves to a new tip of main, the tip must be signed by a key
+ *   it already trusts, and must come after the commit it last applied. So the
+ *   list of signers changes only through a commit signed by a key already on it.
+ *
+ * ```mermaid
+ * flowchart TD
+ *   fetch["git fetch: the new tip of main"] --> desc{"descends from the<br/>commit this host runs?"}
+ *   desc -->|no| rb["refused: E047-ROLLBACK"]
+ *   desc -->|yes| any{"signers.ts lists<br/>a daily signer?"}
+ *   any -->|no| ns["refused: E047-NO-SIGNERS"]
+ *   any -->|yes| sig{"signed?"}
+ *   sig -->|no| us["refused: E047-UNSIGNED"]
+ *   sig -->|yes| trust{"by a key the host trusts<br/>(its allowed_signers)?"}
+ *   trust -->|no| ut["refused: E047-UNTRUSTED"]
+ *   trust -->|yes| move["fast-forward, apply"]
+ * ```
+ *
+ * @module
+ */
 
 import { P } from "../core/paths.ts";
 import { join } from "../core/path.ts";

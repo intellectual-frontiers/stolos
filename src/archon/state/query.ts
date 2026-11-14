@@ -1,9 +1,13 @@
-// Spec 048-observe-by-query (Article 17): `archon query` answers one SELECT
-// about this machine through osquery, including Archon's own tables
-// (archon_install, archon_verify, archon_prov, archon_optin, built from
-// archon.sql). The server limits it, not the client: one statement, only
-// tables on the allowlist (nothing that reveals secrets or reaches out),
-// a row limit, and a time limit.
+/**
+ * Spec 048-observe-by-query (Article 17): `archon query` answers one SELECT
+ * about this machine through osquery, including Archon's own tables
+ * (archon_install, archon_verify, archon_prov, archon_optin, built from
+ * archon.sql). The server limits it, not the client: one statement, only
+ * tables on the allowlist (nothing that reveals secrets or reaches out),
+ * a row limit, and a time limit.
+ *
+ * @module
+ */
 
 import { count, span } from "../core/telemetry.ts";
 import { run } from "../core/exec.ts";

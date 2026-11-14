@@ -1,6 +1,10 @@
-// Mail messages for archon notify (spec 025): RFC 5322 with MIME, a plain-text
-// part and a simple HTML part, and small attachments. Built here (TypeScript,
-// Article 4) so the boot machine on Windows and the hosts send the same thing.
+/**
+ * Mail messages for archon notify (spec 025): RFC 5322 with MIME, a plain-text
+ * part and a simple HTML part, and small attachments. Built here (TypeScript,
+ * Article 4) so the boot machine on Windows and the hosts send the same thing.
+ *
+ * @module
+ */
 
 export interface Attachment {
   name: string;

@@ -1,4 +1,8 @@
-// 010-tools: the tool catalog, its apt packages, and the weekly tools sync.
+/**
+ * 010-tools: the tool catalog, its apt packages, and the weekly tools sync.
+ *
+ * @module
+ */
 
 import type { Capability } from "../model/types.ts";
 import { TOOLS } from "../tools/catalog.ts";

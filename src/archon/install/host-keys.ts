@@ -1,9 +1,13 @@
-// Each host's SSH identity (spec 004): its host keys are made once on the boot
-// machine (ssh-keygen, as for the deploy key), kept in the secret store, and
-// installed by cloud-init at every install. A re-installed host keeps its
-// identity, and the boot machine's known_hosts holds the right keys from the
-// start: no "trust this host?" prompt, no "REMOTE HOST IDENTIFICATION HAS
-// CHANGED" after a re-install.
+/**
+ * Each host's SSH identity (spec 004): its host keys are made once on the boot
+ * machine (ssh-keygen, as for the deploy key), kept in the secret store, and
+ * installed by cloud-init at every install. A re-installed host keeps its
+ * identity, and the boot machine's known_hosts holds the right keys from the
+ * start: no "trust this host?" prompt, no "REMOTE HOST IDENTIFICATION HAS
+ * CHANGED" after a re-install.
+ *
+ * @module
+ */
 
 import { run } from "../core/exec.ts";
 import { join } from "../core/path.ts";

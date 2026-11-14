@@ -1,10 +1,14 @@
-// 037-smb, 039-pg-identity: one PAM hook keeps the copies of a person's Linux
-// password that other protocols need in step with Linux: Samba's NT hash (SMB
-// clients cannot prove a password any other way) and PostgreSQL's SCRAM
-// verifier (for a published instance). Run by PAM, through Ubuntu's own
-// pam-auth-update, after a password is accepted (auth: a login with a password,
-// sudo, Cockpit) or changed (passwd). Real accounts only (UID 1000 and up; not
-// root or ops); service accounts have no password.
+/**
+ * 037-smb, 039-pg-identity: one PAM hook keeps the copies of a person's Linux
+ * password that other protocols need in step with Linux: Samba's NT hash (SMB
+ * clients cannot prove a password any other way) and PostgreSQL's SCRAM
+ * verifier (for a published instance). Run by PAM, through Ubuntu's own
+ * pam-auth-update, after a password is accepted (auth: a login with a password,
+ * sudo, Cockpit) or changed (passwd). Real accounts only (UID 1000 and up; not
+ * root or ops); service accounts have no password.
+ *
+ * @module
+ */
 
 import type { Capability } from "../model/types.ts";
 

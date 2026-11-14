@@ -1,6 +1,10 @@
-// 040-opt-in: a container as a Podman Quadlet file. The image runs as its own
-// unprivileged user, with every capability dropped and no way to gain more,
-// on 127.0.0.1 only.
+/**
+ * 040-opt-in: a container as a Podman Quadlet file. The image runs as its own
+ * unprivileged user, with every capability dropped and no way to gain more,
+ * on 127.0.0.1 only.
+ *
+ * @module
+ */
 
 import type { ContainerDef } from "./catalog.ts";
 

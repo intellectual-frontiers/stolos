@@ -1,6 +1,10 @@
-// 037-smb: Samba's configuration, as data. One share for everyone with an
-// account (`shared`), and each account's own home folder; SMB3 only, encryption
-// desired, no guests, no NetBIOS, the local networks only.
+/**
+ * 037-smb: Samba's configuration, as data. One share for everyone with an
+ * account (`shared`), and each account's own home folder; SMB3 only, encryption
+ * desired, no guests, no NetBIOS, the local networks only.
+ *
+ * @module
+ */
 
 import type { FleetDef, HostDef, UserDef } from "../model/types.ts";
 import { LOCAL_NETWORKS, localNetworks } from "../capabilities/ssh.ts";

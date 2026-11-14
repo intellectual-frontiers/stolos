@@ -1,25 +1,29 @@
-// archon notify watch (spec 025, user story 2): the events an operator must
-// hear about even when nothing in Archon ran. It follows the journal (Ubuntu
-// already records every one of them: sshd, sudo, su, login, useradd, the kernel,
-// systemd) and turns the few that matter into messages; nothing is added to
-// sshd, PAM, or auditd (Article 2). Every ten minutes it also looks at what the
-// journal cannot say: disk space and the authorized_keys files.
-//
-// Signals, and how loud:
-//   ssh login            info, once per user, address, and method an hour; warn from
-//                        outside the local networks or from an address never seen for that user
-//   root login           fail (sshd forbids it; one means the configuration was changed)
-//   failed ssh logins    warn, one summary an hour (per address: count and users tried)
-//   console login, su    warn (someone at the keyboard or AMT; a root shell)
-//   sudo refused         fail (wrong passwords, not in sudoers)
-//   accounts changed     warn (useradd, usermod, groups, passwd outside archon apply)
-//   authorized_keys      warn when a file changes (which keys came and went)
-//   kernel               fail: out of memory kills, disk and filesystem errors, read-only
-//                        remounts, machine-check (hardware) errors
-//   a unit failed        warn, once per unit an hour (archon's own: apply reports those)
-//   booted               info, warn if the previous run did not shut down cleanly
-//   disk space           warn at 90% used, fail at 97%, once per mount a day
-//   mail bounced         warn: Postfix could not deliver (spec 027), once per recipient an hour
+/**
+ * archon notify watch (spec 025, user story 2): the events an operator must
+ * hear about even when nothing in Archon ran. It follows the journal (Ubuntu
+ * already records every one of them: sshd, sudo, su, login, useradd, the kernel,
+ * systemd) and turns the few that matter into messages; nothing is added to
+ * sshd, PAM, or auditd (Article 2). Every ten minutes it also looks at what the
+ * journal cannot say: disk space and the authorized_keys files.
+ *
+ * Signals, and how loud:
+ *   ssh login            info, once per user, address, and method an hour; warn from
+ *                        outside the local networks or from an address never seen for that user
+ *   root login           fail (sshd forbids it; one means the configuration was changed)
+ *   failed ssh logins    warn, one summary an hour (per address: count and users tried)
+ *   console login, su    warn (someone at the keyboard or AMT; a root shell)
+ *   sudo refused         fail (wrong passwords, not in sudoers)
+ *   accounts changed     warn (useradd, usermod, groups, passwd outside archon apply)
+ *   authorized_keys      warn when a file changes (which keys came and went)
+ *   kernel               fail: out of memory kills, disk and filesystem errors, read-only
+ *                        remounts, machine-check (hardware) errors
+ *   a unit failed        warn, once per unit an hour (archon's own: apply reports those)
+ *   booted               info, warn if the previous run did not shut down cleanly
+ *   disk space           warn at 90% used, fail at 97%, once per mount a day
+ *   mail bounced         warn: Postfix could not deliver (spec 027), once per recipient an hour
+ *
+ * @module
+ */
 
 import { join } from "../core/path.ts";
 import { readTextOr } from "../core/fsx.ts";

@@ -1,5 +1,9 @@
-// Render systemd unit files (and other INI-style systemd configuration) from
-// TypeScript objects. Article IV: the unit is code; the INI file is output.
+/**
+ * Render systemd unit files (and other INI-style systemd configuration) from
+ * TypeScript objects. Article IV: the unit is code; the INI file is output.
+ *
+ * @module
+ */
 
 export type Value = string | number | boolean | undefined | Array<string | number>;
 export type Section = Record<string, Value>;

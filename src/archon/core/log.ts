@@ -1,9 +1,13 @@
-// Logging adapter over the calm-output UI (Article XXII, spec 018), plus
-// journald through logger(1) (util-linux, native; Article XVIII).
-//
-// step starts a phase; ok/change/skip are counted (shown with --verbose);
-// warn/error are always shown and repeated under "Needs attention"; skips
-// that mention "disruptive" are collected into the single Deferred line.
+/**
+ * Logging adapter over the calm-output UI (Article XXII, spec 018), plus
+ * journald through logger(1) (util-linux, native; Article XVIII).
+ *
+ * step starts a phase; ok/change/skip are counted (shown with --verbose);
+ * warn/error are always shown and repeated under "Needs attention"; skips
+ * that mention "disruptive" are collected into the single Deferred line.
+ *
+ * @module
+ */
 
 import { run } from "./exec.ts";
 import { ui } from "./ui.ts";

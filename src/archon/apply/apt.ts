@@ -1,7 +1,11 @@
-// apt with real progress (spec 018): APT::Status-Fd=2 makes apt report
-// "pmstatus:<pkg>:<percent>:<text>" and "dlstatus:..." lines on stderr, which
-// drive the progress bar; everything else goes to the run log. apt's warnings
-// are translated into problems with a fix instead of being pasted raw.
+/**
+ * apt with real progress (spec 018): APT::Status-Fd=2 makes apt report
+ * "pmstatus:<pkg>:<percent>:<text>" and "dlstatus:..." lines on stderr, which
+ * drive the progress bar; everything else goes to the run log. apt's warnings
+ * are translated into problems with a fix instead of being pasted raw.
+ *
+ * @module
+ */
 
 import { stream as realStream } from "../core/exec.ts";
 import type { Phase } from "../core/ui.ts";

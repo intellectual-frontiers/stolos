@@ -1,6 +1,10 @@
-// `archon apply`: converge a host to its plan (Article XI). Idempotent: a run
-// right after a successful run reports zero changes. Never removes anything
-// (Article IX).
+/**
+ * `archon apply`: converge a host to its plan (Article XI). Idempotent: a run
+ * right after a successful run reports zero changes. Never removes anything
+ * (Article IX).
+ *
+ * @module
+ */
 
 import { getRecord, putRecord } from "../state/store.ts";
 import { dirname, join } from "../core/path.ts";

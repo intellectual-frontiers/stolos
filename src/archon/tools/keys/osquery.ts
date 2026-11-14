@@ -1,7 +1,11 @@
-// osquery's apt signing key (spec 042, Article 12), pinned: "osquery (osquery)
-// <osquery@fb.com>", fingerprint 1484120AC4E9F8A1A577AEEE97A80C63C9D8B80B (RSA 4096,
-// 2015-01-24), fetched from keyserver.ubuntu.com on 2026-11-12; the same
-// fingerprint osquery's maintainers give for pkg.osquery.io/deb.
+/**
+ * osquery's apt signing key (spec 042, Article 12), pinned: "osquery (osquery)
+ * <osquery@fb.com>", fingerprint 1484120AC4E9F8A1A577AEEE97A80C63C9D8B80B (RSA 4096,
+ * 2015-01-24), fetched from keyserver.ubuntu.com on 2026-11-12; the same
+ * fingerprint osquery's maintainers give for pkg.osquery.io/deb.
+ *
+ * @module
+ */
 
 export const OSQUERY_KEY_FINGERPRINT = "1484120AC4E9F8A1A577AEEE97A80C63C9D8B80B";
 

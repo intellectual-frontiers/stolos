@@ -1,8 +1,12 @@
-// Spec 047-intent-and-identity (Article 25): who a host is, in Git:
-// fleets/<id>/hosts/<host>/registration.ts, written by `archon host add`, in
-// one fixed form. Its SSH host public keys are what an operator's machine
-// trusts: archon writes known_hosts.auto from them, so the first connection to
-// a host is checked against Git, never trusted on first use.
+/**
+ * Spec 047-intent-and-identity (Article 25): who a host is, in Git:
+ * fleets/<id>/hosts/<host>/registration.ts, written by `archon host add`, in
+ * one fixed form. Its SSH host public keys are what an operator's machine
+ * trusts: archon writes known_hosts.auto from them, so the first connection to
+ * a host is checked against Git, never trusted on first use.
+ *
+ * @module
+ */
 
 import { P, repoRel } from "../core/paths.ts";
 import { join, toFileUrl } from "../core/path.ts";

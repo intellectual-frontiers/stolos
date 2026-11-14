@@ -1,7 +1,11 @@
-// Microsoft's apt signing key (spec 036, Article 12), pinned: "Microsoft (Release
-// signing) <gpgsecurity@microsoft.com>", fingerprint
-// BC528686B50D79E339D3721CEB3E94ADBE1229CF, from packages.microsoft.com/keys/microsoft.asc;
-// it verified packages.microsoft.com/repos/code/dists/stable/InRelease on 2026-11-12.
+/**
+ * Microsoft's apt signing key (spec 036, Article 12), pinned: "Microsoft (Release
+ * signing) <gpgsecurity@microsoft.com>", fingerprint
+ * BC528686B50D79E339D3721CEB3E94ADBE1229CF, from packages.microsoft.com/keys/microsoft.asc;
+ * it verified packages.microsoft.com/repos/code/dists/stable/InRelease on 2026-11-12.
+ *
+ * @module
+ */
 export const MICROSOFT_KEY = `-----BEGIN PGP PUBLIC KEY BLOCK-----
 Version: BSN Pgp v1.1.0.0
 

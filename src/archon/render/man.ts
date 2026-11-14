@@ -1,6 +1,10 @@
-// Man pages and fish completions generated from the command registry and from
-// the constitution and personas (Article 6). Installed into
-// /usr/local/share/man and fish's vendor completions directory by spec 012.
+/**
+ * Man pages and fish completions generated from the command registry and from
+ * the constitution and personas (Article 6). Installed into
+ * /usr/local/share/man and fish's vendor completions directory by spec 012.
+ *
+ * @module
+ */
 
 import { EVENTS } from "../telemetry/events.ts";
 import { ATTRIBUTES, METRICS, RESOURCE, SPANS } from "../telemetry/signals.ts";

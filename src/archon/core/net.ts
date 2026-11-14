@@ -1,4 +1,8 @@
-// The boot machine's LAN addresses and the Boot URIs built from them (spec 004).
+/**
+ * The boot machine's LAN addresses and the Boot URIs built from them (spec 004).
+ *
+ * @module
+ */
 
 export const BOOT_PORT = 8080;
 

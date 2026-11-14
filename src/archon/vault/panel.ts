@@ -1,8 +1,12 @@
-// The backup panel (spec 029, Article 19 and 22): one framed panel, amber, red
-// when anything has been unbacked for more than 7 days or host identity keys
-// were never backed up. Shown at the end of any command that changed a
-// secret, and at the start of `boot serve` and `boot status`, until the
-// secrets are backed up. Names only.
+/**
+ * The backup panel (spec 029, Article 19 and 22): one framed panel, amber, red
+ * when anything has been unbacked for more than 7 days or host identity keys
+ * were never backed up. Shown at the end of any command that changed a
+ * secret, and at the start of `boot serve` and `boot status`, until the
+ * secrets are backed up. Names only.
+ *
+ * @module
+ */
 
 import { labelFor } from "../model/secret-inventory.ts";
 import type { Assessment } from "./state.ts";

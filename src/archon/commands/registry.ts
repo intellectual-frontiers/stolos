@@ -1,6 +1,10 @@
-// The command registry (Article 6). One definition per capability; the CLI,
-// MCP tools, man pages, completions, and the agent's permissions come from here.
-// Implementations load lazily.
+/**
+ * The command registry (Article 6). One definition per capability; the CLI,
+ * MCP tools, man pages, completions, and the agent's permissions come from here.
+ * Implementations load lazily.
+ *
+ * @module
+ */
 
 import { CHOICE_ARGS, chooseData, CONFIRM_DESTROY_ARG } from "../model/durable.ts";
 import type { Command, Parsed } from "../core/registry-types.ts";

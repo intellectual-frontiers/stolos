@@ -1,6 +1,23 @@
-// `archon reconcile` (Article IX): approval means origin/main. Fetch, fast-
-// forward a clean checkout, then apply only when HEAD equals origin/main.
-// Runs a fresh `archon apply` process so the newly pulled code is used.
+/**
+ * `archon reconcile` (Article IX): approval means origin/main. Fetch, fast-
+ * forward a clean checkout, then apply only when HEAD equals origin/main.
+ * Runs a fresh `archon apply` process so the newly pulled code is used.
+ *
+ * ```mermaid
+ * flowchart TD
+ *   timer["every 15 minutes, or archon update"] --> fetch["git fetch"]
+ *   fetch --> new{"new commits?"}
+ *   new -->|no| verify["verify"]
+ *   new -->|yes| tip{"tip signed and trusted?<br/>(signers.ts)"}
+ *   tip -->|no| refuse["stay; say why (E047-*)"]
+ *   tip -->|yes| ff["fast-forward /srv/archon"]
+ *   ff --> apply["apply the plan"]
+ *   apply --> verify
+ *   verify --> record["archon.sql"]
+ * ```
+ *
+ * @module
+ */
 
 import { count } from "../core/telemetry.ts";
 import { P } from "../core/paths.ts";

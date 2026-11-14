@@ -1,17 +1,21 @@
-// `deno task boot retire <host> --confirm-destroy <host>` (spec 045): a
-// server leaves the fleet, the reverse of `archon host add`. From the boot
-// machine, with the name repeated by a person:
-//   1. asks the host, if it answers, whether it is durable (archon data), and
-//      says so before anything is removed;
-//   2. removes its DNS records in Cloudflare (<host>.<domain>, *.<host>.<domain>);
-//   3. removes its deploy key from the repository on GitHub (gh);
-//   4. forgets it on this PC: its install token, its secrets (deploy key, SSH
-//      host keys, the carried Let's Encrypt store), and its known_hosts lines;
-//   5. removes its model and its recorded state from this checkout, builds,
-//      commits, and pushes that (--no-push leaves it for you).
-// The machine itself is not touched: power it off, or install it as a new host.
-// What the router holds (its local DNS record) is the owner's to change
-// (Article 21). The vault backup keeps the old secrets until it is renewed.
+/**
+ * `deno task boot retire <host> --confirm-destroy <host>` (spec 045): a
+ * server leaves the fleet, the reverse of `archon host add`. From the boot
+ * machine, with the name repeated by a person:
+ *   1. asks the host, if it answers, whether it is durable (archon data), and
+ *      says so before anything is removed;
+ *   2. removes its DNS records in Cloudflare (<host>.<domain>, *.<host>.<domain>);
+ *   3. removes its deploy key from the repository on GitHub (gh);
+ *   4. forgets it on this PC: its install token, its secrets (deploy key, SSH
+ *      host keys, the carried Let's Encrypt store), and its known_hosts lines;
+ *   5. removes its model and its recorded state from this checkout, builds,
+ *      commits, and pushes that (--no-push leaves it for you).
+ * The machine itself is not touched: power it off, or install it as a new host.
+ * What the router holds (its local DNS record) is the owner's to change
+ * (Article 21). The vault backup keeps the old secrets until it is renewed.
+ *
+ * @module
+ */
 
 import { ui } from "../archon/core/ui.ts";
 import { P, repoRel } from "../archon/core/paths.ts";

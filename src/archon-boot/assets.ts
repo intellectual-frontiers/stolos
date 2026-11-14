@@ -1,5 +1,9 @@
-// Download Ubuntu's boot files and installer image once, verify each against
-// its pinned SHA-256 (Article 12), and cache them on the boot machine.
+/**
+ * Download Ubuntu's boot files and installer image once, verify each against
+ * its pinned SHA-256 (Article 12), and cache them on the boot machine.
+ *
+ * @module
+ */
 
 import { createHash } from "node:crypto";
 import { P } from "../archon/core/paths.ts";

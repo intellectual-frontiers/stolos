@@ -1,7 +1,11 @@
-// 025-notify: email the fleet's shared mailbox about major events. The queue
-// lives in /var/spool/archon/notify (root only); the relay's token is Postfix's
-// (spec 027). A timer retries what is waiting, and
-// archon-notify-watch follows the journal for logins and other server events.
+/**
+ * 025-notify: email the fleet's shared mailbox about major events. The queue
+ * lives in /var/spool/archon/notify (root only); the relay's token is Postfix's
+ * (spec 027). A timer retries what is waiting, and
+ * archon-notify-watch follows the journal for logins and other server events.
+ *
+ * @module
+ */
 
 import type { Capability } from "../model/types.ts";
 import { HOST_NOTIFY } from "../notify/notify.ts";

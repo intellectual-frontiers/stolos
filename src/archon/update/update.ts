@@ -1,10 +1,14 @@
-// `archon update` (spec 015): bring everything up to date from GitHub in one
-// command. Pull origin/main, then (in the freshly pulled code) validate,
-// converge, refresh tools, re-converge for dotfiles, and verify.
-//
-// Output follows Article XXII: one phase per step. After a pull that brought
-// new commits, the rest runs in a fresh process that continues the same
-// screen and run log (ARCHON_UI_CONTINUE, ARCHON_LOG, ARCHON_UI_START).
+/**
+ * `archon update` (spec 015): bring everything up to date from GitHub in one
+ * command. Pull origin/main, then (in the freshly pulled code) validate,
+ * converge, refresh tools, re-converge for dotfiles, and verify.
+ *
+ * Output follows Article XXII: one phase per step. After a pull that brought
+ * new commits, the rest runs in a fresh process that continues the same
+ * screen and run log (ARCHON_UI_CONTINUE, ARCHON_LOG, ARCHON_UI_START).
+ *
+ * @module
+ */
 
 import { P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";

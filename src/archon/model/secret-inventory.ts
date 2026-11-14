@@ -1,8 +1,12 @@
-// The secret inventory (spec 028, constitution Article 13): every secret the
-// fleet depends on, by name, where it lives, and how to make it again. Values
-// never. The boot machine's secrets are what `deno task boot vault` backs up
-// and restores (spec 029); the owner's are listed so a lost one is not a
-// surprise. A test checks that every path the code writes is listed here.
+/**
+ * The secret inventory (spec 028, constitution Article 13): every secret the
+ * fleet depends on, by name, where it lives, and how to make it again. Values
+ * never. The boot machine's secrets are what `deno task boot vault` backs up
+ * and restores (spec 029); the owner's are listed so a lost one is not a
+ * surprise. A test checks that every path the code writes is listed here.
+ *
+ * @module
+ */
 
 export interface SecretRef {
   id: string;

@@ -1,19 +1,39 @@
-// `archon fleet upgrade <tag>` (spec 046-engine-instance, Articles 9, 12, 24):
-// move a fleet repository to another released version of the engine, safely.
-//
-// Why each step exists (docs/fleet-repository.md says it at length):
-//   1. The tag must be a release: the engine's own src/archon/version.ts at
-//      that tag must say the same version. A typo or a branch name is refused.
-//   2. Only forward, unless --downgrade: going back to an older engine is a
-//      decision, not an accident.
-//   3. deno.json's @stolos/ pin is rewritten to the tag; deno.lock is built
-//      again through engine.ts, so it holds a hash of every engine file. Hosts
-//      run with --frozen: any engine file that differs from the lock is
-//      refused. That is what makes your signature cover the engine's bytes.
-//   4. Every fleet in the repository is validated with the new engine before
-//      anything is committed.
-//   5. The three files are committed together and signed (git commit -S):
-//      hosts apply only a signed tip of main. Pushing it is the approval.
+/**
+ * `archon fleet upgrade <tag>` (spec 046-engine-instance, Articles 9, 12, 24):
+ * move a fleet repository to another released version of the engine, safely.
+ *
+ * Why each step exists (docs/fleet-repository.md says it at length):
+ *   1. The tag must be a release: the engine's own src/archon/version.ts at
+ *      that tag must say the same version. A typo or a branch name is refused.
+ *   2. Only forward, unless --downgrade: going back to an older engine is a
+ *      decision, not an accident.
+ *   3. deno.json's @stolos/ pin is rewritten to the tag; deno.lock is built
+ *      again through engine.ts, so it holds a hash of every engine file. Hosts
+ *      run with --frozen: any engine file that differs from the lock is
+ *      refused. That is what makes your signature cover the engine's bytes.
+ *   4. Every fleet in the repository is validated with the new engine before
+ *      anything is committed.
+ *   5. The three files are committed together and signed (git commit -S):
+ *      hosts apply only a signed tip of main. Pushing it is the approval.
+ *
+ * ```mermaid
+ * sequenceDiagram
+ *   actor P as Person
+ *   participant U as archon fleet upgrade
+ *   participant G as GitHub (stolos tag)
+ *   participant R as fleet repository
+ *   P->>U: fleet upgrade vX.Y.Z
+ *   U->>G: is vX.Y.Z a release? (its version.ts)
+ *   U->>R: deno.json pin, the reusable workflows' tag
+ *   U->>G: deno cache: every engine file
+ *   U->>R: deno.lock (a hash of each)
+ *   U->>R: validate every fleet with the new engine
+ *   U->>R: one signed commit
+ *   P->>R: git push (the approval)
+ * ```
+ *
+ * @module
+ */
 
 import { listFleets, P } from "../core/paths.ts";
 import { join } from "../core/path.ts";

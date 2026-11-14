@@ -1,8 +1,12 @@
-// Ubuntu autoinstall config for one host (spec 004) and the first-boot step
-// inside it (spec 005). Rendered from the model; the two secrets (admin
-// password hash, deploy key) are passed in only by archon-boot at request
-// time and never reach out/ or git (Article 13). JSON is valid YAML, so the
-// config is written as JSON after the #cloud-config marker.
+/**
+ * Ubuntu autoinstall config for one host (spec 004) and the first-boot step
+ * inside it (spec 005). Rendered from the model; the two secrets (admin
+ * password hash, deploy key) are passed in only by archon-boot at request
+ * time and never reach out/ or git (Article 13). JSON is valid YAML, so the
+ * config is written as JSON after the #cloud-config marker.
+ *
+ * @module
+ */
 
 import { allowedSignersText } from "../identity/signers.ts";
 import type { DiskDef, FleetDef, HostDef } from "../model/types.ts";

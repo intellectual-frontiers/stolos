@@ -7,6 +7,10 @@ host over the network with no human steps after power-on, and keeps it converged
 
 Ubuntu decides; Archon only adds. See the [constitution](.specify/memory/constitution.md).
 
+**Documentation:** <https://intellectual-frontiers.github.io/stolos/latest/> (every module, from its
+JSDoc, with diagrams; one folder per release, `/vX.Y.Z/`), or `deno task docs` for `out/docs/` here.
+The task guides are in [`docs/`](docs/).
+
 ## Engine and fleets
 
 This repository is the **engine**. It holds no real fleet. Your fleets live in a repository of your

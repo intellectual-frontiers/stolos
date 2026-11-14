@@ -1,8 +1,23 @@
-// Spec 053: "where am I". `archon` with no arguments shows, for the fleet of
-// this repository, every step from a new repository to running hosts, each
-// done or not as the real state says (Git, this machine's secret store, the
-// boot server's tokens, what hosts reported), and the one command to run next.
-// Nothing is stored about progress: it is computed every time.
+/**
+ * Spec 053: "where am I". `archon` with no arguments shows, for the fleet of
+ * this repository, every step from a new repository to running hosts, each
+ * done or not as the real state says (Git, this machine's secret store, the
+ * boot server's tokens, what hosts reported), and the one command to run next.
+ * Nothing is stored about progress: it is computed every time.
+ *
+ * ```mermaid
+ * stateDiagram-v2
+ *   direction LR
+ *   [*] --> todo
+ *   todo --> next: the first step not done
+ *   next --> done: its command run
+ *   [*] --> pending: waits for a token
+ *   pending --> done: the token delivered
+ *   done --> [*]
+ * ```
+ *
+ * @module
+ */
 
 export interface WhereFacts {
   fleets: string[];

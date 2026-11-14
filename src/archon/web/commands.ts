@@ -1,4 +1,8 @@
-// 032-web on a server: archon web credential | dns | status.
+/**
+ * 032-web on a server: archon web credential | dns | status.
+ *
+ * @module
+ */
 
 import { ensureDir, exists, readTextOr } from "../core/fsx.ts";
 import { run } from "../core/exec.ts";

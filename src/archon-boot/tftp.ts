@@ -1,9 +1,13 @@
-// A read-only TFTP server for PXE (spec 004): UEFI PXE firmware fetches shim
-// over TFTP, shim fetches GRUB, and GRUB its menu, kernel, and initrd, all from
-// the same server. Each read is answered by the same handler as HTTP, so PXE
-// and HTTP Boot serve identical files and menus. RFC 1350 with the blksize
-// (2348), tsize (2349), timeout (2349), and windowsize (7440) options; block
-// numbers roll over past 65535 (Ubuntu's initrd is ~100 MB).
+/**
+ * A read-only TFTP server for PXE (spec 004): UEFI PXE firmware fetches shim
+ * over TFTP, shim fetches GRUB, and GRUB its menu, kernel, and initrd, all from
+ * the same server. Each read is answered by the same handler as HTTP, so PXE
+ * and HTTP Boot serve identical files and menus. RFC 1350 with the blksize
+ * (2348), tsize (2349), timeout (2349), and windowsize (7440) options; block
+ * numbers roll over past 65535 (Ubuntu's initrd is ~100 MB).
+ *
+ * @module
+ */
 
 import type { ArchonEvent } from "../archon/telemetry/events.ts";
 import dgram from "node:dgram";

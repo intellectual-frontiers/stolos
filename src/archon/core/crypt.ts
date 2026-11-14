@@ -1,7 +1,11 @@
-// SHA-512 crypt ($6$), the password hash Ubuntu's installer accepts in
-// autoinstall `identity.password` (spec 003). Pure TypeScript on WebCrypto so
-// it runs the same on the Windows boot machine. Algorithm: Ulrich Drepper,
-// "Unix crypt using SHA-256 and SHA-512" (the glibc reference).
+/**
+ * SHA-512 crypt ($6$), the password hash Ubuntu's installer accepts in
+ * autoinstall `identity.password` (spec 003). Pure TypeScript on WebCrypto so
+ * it runs the same on the Windows boot machine. Algorithm: Ulrich Drepper,
+ * "Unix crypt using SHA-256 and SHA-512" (the glibc reference).
+ *
+ * @module
+ */
 
 const B64 = "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 

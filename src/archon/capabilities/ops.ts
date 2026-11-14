@@ -1,5 +1,9 @@
-// 013-ops: the daily report (deterministic facts only). No agent runs on a
-// server (spec 030): workstations reach it through archon mcp over SSH.
+/**
+ * 013-ops: the daily report (deterministic facts only). No agent runs on a
+ * server (spec 030): workstations reach it through archon mcp over SSH.
+ *
+ * @module
+ */
 
 import type { Capability, UnitDef } from "../model/types.ts";
 import { archonService, timer } from "../render/systemd.ts";

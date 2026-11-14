@@ -1,7 +1,11 @@
-// 044-durable (Article 23): `archon data` shows whether this server is
-// durable or ephemeral and why; `archon data set` changes one opt-in's
-// choice. Calling durable data ephemeral needs --confirm-destroy <host>,
-// typed by a person.
+/**
+ * 044-durable (Article 23): `archon data` shows whether this server is
+ * durable or ephemeral and why; `archon data set` changes one opt-in's
+ * choice. Calling durable data ephemeral needs --confirm-destroy <host>,
+ * typed by a person.
+ *
+ * @module
+ */
 
 import { P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";

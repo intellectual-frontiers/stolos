@@ -1,7 +1,11 @@
-// "What now?" for a freshly installed server or workstation (specs 021, 022):
-// how to reach it, its web console, and how to observe it. One list, shown by
-// the boot server when a host is ready, at the end of the first boot, by
-// `boot reinstall`, by `archon fleet status`, and (servers) at SSH login.
+/**
+ * "What now?" for a freshly installed server or workstation (specs 021, 022):
+ * how to reach it, its web console, and how to observe it. One list, shown by
+ * the boot server when a host is ready, at the end of the first boot, by
+ * `boot reinstall`, by `archon fleet status`, and (servers) at SSH login.
+ *
+ * @module
+ */
 
 import type { FleetDef, HostDef } from "../model/types.ts";
 import { localNetworks } from "../capabilities/ssh.ts";

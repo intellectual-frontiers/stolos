@@ -1,7 +1,11 @@
-// The secret ledger (spec 029): when each boot-machine secret last changed,
-// by name only. It holds no secret: it is what tells `deno task boot vault
-// status` (and the reminders) that something is newer than the last backup.
-// %LOCALAPPDATA%\archon\vault\ledger.json (Linux: ~/.local/share/archon/vault).
+/**
+ * The secret ledger (spec 029): when each boot-machine secret last changed,
+ * by name only. It holds no secret: it is what tells `deno task boot vault
+ * status` (and the reminders) that something is newer than the last backup.
+ * %LOCALAPPDATA%\archon\vault\ledger.json (Linux: ~/.local/share/archon/vault).
+ *
+ * @module
+ */
 
 import { P } from "./paths.ts";
 import { join, relative } from "./path.ts";

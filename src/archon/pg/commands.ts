@@ -1,9 +1,13 @@
-// 038-pg: archon pg list | status | ensure | start | stop | restart | reload |
-// upgrade | remove | backup | restore | maintain | publish | unpublish | connect.
-//
-// Every command names an instance (default prime). Failures exit non-zero
-// with one plain sentence (the app contract, spec 038 FR-019); --json prints a stable
-// document and nothing else on stdout.
+/**
+ * 038-pg: archon pg list | status | ensure | start | stop | restart | reload |
+ * upgrade | remove | backup | restore | maintain | publish | unpublish | connect.
+ *
+ * Every command names an instance (default prime). Failures exit non-zero
+ * with one plain sentence (the app contract, spec 038 FR-019); --json prints a stable
+ * document and nothing else on stdout.
+ *
+ * @module
+ */
 
 import { dirname, join } from "../core/path.ts";
 import { ensureDir, exists, readTextOr } from "../core/fsx.ts";

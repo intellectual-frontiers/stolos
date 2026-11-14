@@ -1,13 +1,17 @@
-// The site (spec 028, constitution Article 21): the UniFi network as typed
-// data. Archon checks hosts against it and renders the network reference from
-// it, but never changes the router: the owner (or the network assistant)
-// changes the router, then this model is updated to match. The data is
-// fleets/<fleet>/site.ts; this file is the ontology and its rules.
-//
-// Addresses, prefixes, VLANs, and ports are branded types: a plain string or
-// number does not type-check where an IPv4 is expected, and the constructors
-// (ipv4(), cidr(), vlan(), port()) reject a malformed literal when the model
-// loads, before anything is rendered (Article 10).
+/**
+ * The site (spec 028, constitution Article 21): the UniFi network as typed
+ * data. Archon checks hosts against it and renders the network reference from
+ * it, but never changes the router: the owner (or the network assistant)
+ * changes the router, then this model is updated to match. The data is
+ * fleets/<fleet>/site.ts; this file is the ontology and its rules.
+ *
+ * Addresses, prefixes, VLANs, and ports are branded types: a plain string or
+ * number does not type-check where an IPv4 is expected, and the constructors
+ * (ipv4(), cidr(), vlan(), port()) reject a malformed literal when the model
+ * loads, before anything is rendered (Article 10).
+ *
+ * @module
+ */
 
 declare const BRAND: unique symbol;
 type Brand<T, B extends string> = T & { readonly [BRAND]: B };

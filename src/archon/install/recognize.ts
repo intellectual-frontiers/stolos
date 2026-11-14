@@ -1,14 +1,29 @@
-// Spec 051: how a machine becomes a host when it network-boots. A person
-// chooses, every time, exactly one of:
-//
-//   --claim                the next unknown machine to network-boot (within 30
-//                          minutes) becomes the host; its MAC is learned from it;
-//   --mac-address <mac>    only that network card is the host.
-//
-// There is no default: a choice made without thinking is how the wrong machine
-// gets erased. The one exception is a host that already installed: the MAC its
-// own machine reported (registration.ts, macSource "installed") is a fact, so
-// `boot arm` may use it without either option.
+/**
+ * Spec 051: how a machine becomes a host when it network-boots. A person
+ * chooses, every time, exactly one of:
+ *
+ *   --claim                the next unknown machine to network-boot (within 30
+ *                          minutes) becomes the host; its MAC is learned from it;
+ *   --mac-address <mac>    only that network card is the host.
+ *
+ * There is no default: a choice made without thinking is how the wrong machine
+ * gets erased. The one exception is a host that already installed: the MAC its
+ * own machine reported (registration.ts, macSource "installed") is a fact, so
+ * `boot arm` may use it without either option.
+ *
+ * ```mermaid
+ * flowchart TD
+ *   start["host add / boot arm"] --> q{"--claim or<br/>--mac-address?"}
+ *   q -->|neither or both| refuse["refused, both commands shown<br/>(E051-NO-RECOGNITION)"]
+ *   q -->|--claim| claim["the next unknown machine<br/>in 30 minutes becomes the host"]
+ *   q -->|--mac-address| mac["only that network card"]
+ *   q -->|"neither, but its machine<br/>reported its MAC"| own["its own machine again"]
+ *   claim --> learned["MAC learned at install:<br/>registration.ts, macSource installed"]
+ *   mac --> learned
+ * ```
+ *
+ * @module
+ */
 
 import { parseMac } from "../fleet/registration.ts";
 import type { HostRegistration } from "../model/types.ts";

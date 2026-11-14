@@ -1,13 +1,17 @@
-// 040-opt-in: opt-in services and containers. Every server has them; each is
-// off until an operator turns it on, and then on (across applies, reboots,
-// and reinstalls) until an operator turns it off. The decision is the host's
-// own record, this machine's archon.sql<name>.json {enabled, by, at}: model input
-// for every plan (loadHosts), and the switch of the opt-in's unit at apply
-// time (UnitDef.switch). Where an opt-in can use Linux accounts and their
-// credentials, it does; where its protocol needs a secret of its own, the
-// identity is still the Linux account and only that account can read it.
-// Every opt-in that can hold end users' data (spec 044, Article 23) is turned
-// on with a forced choice, --durable or --ephemeral, kept in the same record.
+/**
+ * 040-opt-in: opt-in services and containers. Every server has them; each is
+ * off until an operator turns it on, and then on (across applies, reboots,
+ * and reinstalls) until an operator turns it off. The decision is the host's
+ * own record, this machine's archon.sql<name>.json {enabled, by, at}: model input
+ * for every plan (loadHosts), and the switch of the opt-in's unit at apply
+ * time (UnitDef.switch). Where an opt-in can use Linux accounts and their
+ * credentials, it does; where its protocol needs a secret of its own, the
+ * identity is still the Linux account and only that account can read it.
+ * Every opt-in that can hold end users' data (spec 044, Article 23) is turned
+ * on with a forced choice, --durable or --ephemeral, kept in the same record.
+ *
+ * @module
+ */
 
 import { getRecord, putRecord } from "../state/store.ts";
 

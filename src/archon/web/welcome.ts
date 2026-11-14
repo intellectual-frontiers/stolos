@@ -1,10 +1,14 @@
-// 032-web and 035-welcome-guide: the welcome page every server shows at
-// https://<host>.<domain> (and at any name or address nothing else claims),
-// written for someone new to the server: what it is, whether it's healthy, its
-// apps, what's installed and how to use it, and how changes are made. Rendered
-// per request by `archon web serve` (loopback only, behind Traefik, local
-// networks only). No secrets: the mailbox address and the admin's username are
-// the most personal things on it. Plain text only (no Nerd Font glyphs).
+/**
+ * 032-web and 035-welcome-guide: the welcome page every server shows at
+ * https://<host>.<domain> (and at any name or address nothing else claims),
+ * written for someone new to the server: what it is, whether it's healthy, its
+ * apps, what's installed and how to use it, and how changes are made. Rendered
+ * per request by `archon web serve` (loopback only, behind Traefik, local
+ * networks only). No secrets: the mailbox address and the admin's username are
+ * the most personal things on it. Plain text only (no Nerd Font glyphs).
+ *
+ * @module
+ */
 
 import {
   type AgentSetup,

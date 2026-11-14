@@ -1,6 +1,10 @@
-// `archon host add` (spec 004): write the host's model, give it its own
-// GitHub deploy key (read-only access to this repository (spec 048); the private half
-// stays in the boot machine's secret store), and arm it for one install.
+/**
+ * `archon host add` (spec 004): write the host's model, give it its own
+ * GitHub deploy key (read-only access to this repository (spec 048); the private half
+ * stays in the boot machine's secret store), and arm it for one install.
+ *
+ * @module
+ */
 
 import { P, repoRel } from "../core/paths.ts";
 import { join } from "../core/path.ts";

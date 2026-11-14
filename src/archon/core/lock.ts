@@ -1,8 +1,12 @@
-// One archon run at a time per host (specs 012, 017). The reconcile timer
-// applies every 15 minutes; without this it could apply, or fetch, in the
-// middle of someone's `archon update` or bootstrap. Children of a run that
-// holds the lock (bootstrap and update hand-offs, reconcile's apply) inherit
-// it through ARCHON_LOCK_HELD instead of waiting for their own parent.
+/**
+ * One archon run at a time per host (specs 012, 017). The reconcile timer
+ * applies every 15 minutes; without this it could apply, or fetch, in the
+ * middle of someone's `archon update` or bootstrap. Children of a run that
+ * holds the lock (bootstrap and update hand-offs, reconcile's apply) inherit
+ * it through ARCHON_LOCK_HELD instead of waiting for their own parent.
+ *
+ * @module
+ */
 
 export const LOCK_PATH = "/run/archon.lock";
 

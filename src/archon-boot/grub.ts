@@ -1,8 +1,12 @@
-// GRUB configs served to Ubuntu's network GRUB (spec 004). A machine is
-// recognized by its own Boot URI (/boot/<host>/bootx64.efi) or, when the model
-// names one, by its MAC. Anything else gets a menu of armed hosts whose
-// default boots the local disk, so a stray network boot never reinstalls
-// anything.
+/**
+ * GRUB configs served to Ubuntu's network GRUB (spec 004). A machine is
+ * recognized by its own Boot URI (/boot/<host>/bootx64.efi) or, when the model
+ * names one, by its MAC. Anything else gets a menu of armed hosts whose
+ * default boots the local disk, so a stray network boot never reinstalls
+ * anything.
+ *
+ * @module
+ */
 
 import type { HostDef } from "../archon/model/types.ts";
 import { UBUNTU } from "./pins.ts";

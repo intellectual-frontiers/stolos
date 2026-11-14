@@ -1,6 +1,10 @@
-// 039-pg-identity: the fleet's service accounts on every server. An app runs as
-// its own Linux account (s-<app>), the same UID everywhere, with no password and
-// no shell; that account is its identity in PostgreSQL (peer on the socket).
+/**
+ * 039-pg-identity: the fleet's service accounts on every server. An app runs as
+ * its own Linux account (s-<app>), the same UID everywhere, with no password and
+ * no shell; that account is its identity in PostgreSQL (peer on the socket).
+ *
+ * @module
+ */
 
 import type { Capability } from "../model/types.ts";
 import { header } from "../render/systemd.ts";

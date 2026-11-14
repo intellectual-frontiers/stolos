@@ -1,7 +1,11 @@
-// 032-web: the few Cloudflare API calls a server needs to keep its own DNS
-// records (its name and wildcard, both to its private address, not proxied).
-// The token needs Zone: Read and DNS: Edit on the zone (the same token
-// Traefik uses for Let's Encrypt's DNS challenge).
+/**
+ * 032-web: the few Cloudflare API calls a server needs to keep its own DNS
+ * records (its name and wildcard, both to its private address, not proxied).
+ * The token needs Zone: Read and DNS: Edit on the zone (the same token
+ * Traefik uses for Let's Encrypt's DNS challenge).
+ *
+ * @module
+ */
 
 const API = "https://api.cloudflare.com/client/v4";
 

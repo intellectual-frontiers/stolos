@@ -1,6 +1,10 @@
-// Spec 049-telemetry (Article 27): every signal Archon emits, declared once.
-// The telemetry module accepts only these names (TypeScript checks every call),
-// `man 7 archon-telemetry` is rendered from this list, and the tests read it.
+/**
+ * Spec 049-telemetry (Article 27): every signal Archon emits, declared once.
+ * The telemetry module accepts only these names (TypeScript checks every call),
+ * `man 7 archon-telemetry` is rendered from this list, and the tests read it.
+ *
+ * @module
+ */
 
 export type Group = "health" | "security" | "state";
 

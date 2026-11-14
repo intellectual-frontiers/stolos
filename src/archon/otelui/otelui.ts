@@ -1,14 +1,18 @@
-// Spec 050-telemetry-ui: OpenObserve as an opt-in on any server. Until it is
-// turned on, the headless Collector does what it always did. Once it is on:
-//   - its admin credentials are generated here, root only;
-//   - this server's Collector forwards everything it collects (journald, PCP,
-//     OTLP from Archon and apps) to OpenObserve on loopback, adding the
-//     credential itself (an environment file systemd reads as root);
-//   - the Collector also accepts OTLP from the local networks on 4318, so other
-//     servers can send here without any secret (they find it by otel.localdomain
-//     or telemetry.collector, spec 024);
-//   - Traefik serves the UI at otel.<host>.<domain> on the local networks.
-// Only telemetry from then on is forwarded: nothing is replayed.
+/**
+ * Spec 050-telemetry-ui: OpenObserve as an opt-in on any server. Until it is
+ * turned on, the headless Collector does what it always did. Once it is on:
+ *   - its admin credentials are generated here, root only;
+ *   - this server's Collector forwards everything it collects (journald, PCP,
+ *     OTLP from Archon and apps) to OpenObserve on loopback, adding the
+ *     credential itself (an environment file systemd reads as root);
+ *   - the Collector also accepts OTLP from the local networks on 4318, so other
+ *     servers can send here without any secret (they find it by otel.localdomain
+ *     or telemetry.collector, spec 024);
+ *   - Traefik serves the UI at otel.<host>.<domain> on the local networks.
+ * Only telemetry from then on is forwarded: nothing is replayed.
+ *
+ * @module
+ */
 
 import { ensureDir, exists, readTextOr } from "../core/fsx.ts";
 import { run } from "../core/exec.ts";

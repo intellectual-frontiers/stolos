@@ -1,11 +1,15 @@
-// archon doctor's email checks (spec 026, for specs 025 and 027), shared by
-// servers and the boot machine: the sending domain's records in DNS, the
-// relay's credential, a login to the relay that sends nothing, and on servers
-// Postfix itself. The records are the ones Cloudflare's Email Sending
-// onboarding creates (developers.cloudflare.com/email-service/configuration/domains/).
-// With `send` (archon doctor --send, and by itself after mail-setup, an
-// install, or a new token), it also mails what it found to the shared mailbox
-// through each path: archon's own sender, and on servers Postfix.
+/**
+ * archon doctor's email checks (spec 026, for specs 025 and 027), shared by
+ * servers and the boot machine: the sending domain's records in DNS, the
+ * relay's credential, a login to the relay that sends nothing, and on servers
+ * Postfix itself. The records are the ones Cloudflare's Email Sending
+ * onboarding creates (developers.cloudflare.com/email-service/configuration/domains/).
+ * With `send` (archon doctor --send, and by itself after mail-setup, an
+ * install, or a new token), it also mails what it found to the shared mailbox
+ * through each path: archon's own sender, and on servers Postfix.
+ *
+ * @module
+ */
 
 import type { Phase } from "../core/ui.ts";
 import { exists } from "../core/fsx.ts";

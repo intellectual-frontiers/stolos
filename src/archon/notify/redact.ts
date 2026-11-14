@@ -1,5 +1,9 @@
-// Never send a secret (spec 025, Article 13): everything that goes into a
-// message (body, subject, attachments that are text) passes through here.
+/**
+ * Never send a secret (spec 025, Article 13): everything that goes into a
+ * message (body, subject, attachments that are text) passes through here.
+ *
+ * @module
+ */
 
 const PATTERNS: Array<[RegExp, string]> = [
   [

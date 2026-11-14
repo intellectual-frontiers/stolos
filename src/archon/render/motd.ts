@@ -1,7 +1,11 @@
-// The login banner (update-motd) lines Archon adds, in the same calm,
-// colored, emoji style as archon's own output (Article 19). Ubuntu's pam_motd
-// runs these scripts as root at each login and shows their output as is; the
-// colors are plain ANSI escapes, which every terminal shows.
+/**
+ * The login banner (update-motd) lines Archon adds, in the same calm,
+ * colored, emoji style as archon's own output (Article 19). Ubuntu's pam_motd
+ * runs these scripts as root at each login and shows their output as is; the
+ * colors are plain ANSI escapes, which every terminal shows.
+ *
+ * @module
+ */
 
 import type { FleetDef, HostDef } from "../model/types.ts";
 import type { HostData } from "../model/durable.ts";

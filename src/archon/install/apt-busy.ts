@@ -1,7 +1,20 @@
-// Spec 054: powering a machine off while apt or dpkg runs can break dpkg's
-// state (the lab did it: dpkg's files were left empty). Right after an install,
-// Ubuntu's unattended-upgrades often runs for minutes. archon reboot and
-// archon poweroff wait for it, and archon state says it is running.
+/**
+ * Spec 054: powering a machine off while apt or dpkg runs can break dpkg's
+ * state (the lab did it: dpkg's files were left empty). Right after an install,
+ * Ubuntu's unattended-upgrades often runs for minutes. archon reboot and
+ * archon poweroff wait for it, and archon state says it is running.
+ *
+ * ```mermaid
+ * flowchart LR
+ *   cmd["archon reboot / poweroff"] --> ps["ps -eo args="]
+ *   ps --> busy{"apt, apt-get, aptitude,<br/>dpkg, or unattended-upgrade?"}
+ *   busy -->|yes| wait["wait (up to 15 minutes)"]
+ *   wait --> ps
+ *   busy -->|no| go["clean shutdown in 5 seconds"]
+ * ```
+ *
+ * @module
+ */
 
 import { run } from "../core/exec.ts";
 

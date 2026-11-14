@@ -1,7 +1,11 @@
-// 040-opt-in: opt-in containers on every server. Each is a Podman Quadlet file
-// whose generated unit stays masked until an operator turns it on; then it is
-// unmasked and started, and its routes appear on Traefik (LAN only, spec 032).
-// No image is downloaded until then.
+/**
+ * 040-opt-in: opt-in containers on every server. Each is a Podman Quadlet file
+ * whose generated unit stays masked until an operator turns it on; then it is
+ * unmasked and started, and its routes appear on Traefik (LAN only, spec 032).
+ * No image is downloaded until then.
+ *
+ * @module
+ */
 
 import type { Capability, FileDef, UnitDef, WebRoute } from "../model/types.ts";
 import { header } from "../render/systemd.ts";

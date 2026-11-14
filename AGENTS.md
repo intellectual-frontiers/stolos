@@ -29,6 +29,9 @@ everything here.
 - **Name no particular agent.** Instructions are this file; the agent layer is MCP (`.mcp.json`
   rendered for a fleet), limited by each server (Article 17).
 - **Never** put a secret, a token, or a person's data in this repository: it is public.
+- **Document in the TypeScript** (spec 055). Every file starts with `/** … @module */`; every export
+  has JSDoc; every `@example` compiles (`deno check --doc`); a picture is a Mermaid block.
+  `deno task docs` renders `out/docs/`; `deno task docs:lint` may only go down.
 - Write without em dashes: use commas, colons, parentheses, or separate sentences.
 
 ## Before you push (the whole procedure: [docs/releasing.md](docs/releasing.md))

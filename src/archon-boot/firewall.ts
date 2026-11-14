@@ -1,7 +1,11 @@
-// Firewall check for `boot serve` (spec 004): warn, with the exact command,
-// when this machine's firewall would block servers from reaching TFTP (UDP)
-// or HTTP (TCP). Read-only: it never changes a firewall rule. Windows Defender
-// Firewall, ufw, and firewalld; anything else is not checked.
+/**
+ * Firewall check for `boot serve` (spec 004): warn, with the exact command,
+ * when this machine's firewall would block servers from reaching TFTP (UDP)
+ * or HTTP (TCP). Read-only: it never changes a firewall rule. Windows Defender
+ * Firewall, ufw, and firewalld; anything else is not checked.
+ *
+ * @module
+ */
 
 import { run } from "../archon/core/exec.ts";
 

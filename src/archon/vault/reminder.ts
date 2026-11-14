@@ -1,11 +1,15 @@
-// Backup reminders (spec 029, Article 22): hard to miss, calm (Article 19).
-// - the panel at the end of a command that changed a secret, and at the start
-//   of `boot serve` and `boot status`, until backed up;
-// - `boot doctor` reports it as a warning whose fix is the command;
-// - the prompt's 🔐 backup token while anything is unbacked;
-// - email: after 24 hours unbacked, one "N secrets not backed up" (names
-//   only), then weekly; and a rehearse reminder after 30 days without one;
-// - a non-blocking git pre-push hook that prints the panel.
+/**
+ * Backup reminders (spec 029, Article 22): hard to miss, calm (Article 19).
+ * - the panel at the end of a command that changed a secret, and at the start
+ *   of `boot serve` and `boot status`, until backed up;
+ * - `boot doctor` reports it as a warning whose fix is the command;
+ * - the prompt's 🔐 backup token while anything is unbacked;
+ * - email: after 24 hours unbacked, one "N secrets not backed up" (names
+ *   only), then weekly; and a rehearse reminder after 30 days without one;
+ * - a non-blocking git pre-push hook that prints the panel.
+ *
+ * @module
+ */
 
 import { join } from "../core/path.ts";
 import { exists, readTextOr } from "../core/fsx.ts";

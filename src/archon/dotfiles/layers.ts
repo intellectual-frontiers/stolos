@@ -1,19 +1,23 @@
-// 031-dotfile-layers: every user's chezmoi source is composed from layers,
-// most general first (spec 046: the engine's base travels with the engine;
-// the rest is in the fleet repository, under the fleet's folder):
-//
-//   @engine/home/                                 the engine's base (every fleet)
-//   fleets/<id>/home/                             the fleet (every user, every host)
-//   fleets/<id>/hosts/<host>/home/                everyone on one host
-//   fleets/<id>/users/<user>/home/                one user on every host
-//   fleets/<id>/hosts/<host>/users/<user>/home/   one user on one host
-//
-// A later layer replaces a file with the same target (~/.bashrc is the same
-// target whether its source is dot_bashrc or dot_bashrc.tmpl). The root
-// .chezmoiignore and .chezmoiremove of every layer are concatenated. `archon
-// apply` writes the composition to /var/lib/archon-dotfiles/<user> (owned by
-// root, readable by the user) and runs chezmoi from there, so chezmoi's
-// templates and data work as usual and every change goes through the repo.
+/**
+ * 031-dotfile-layers: every user's chezmoi source is composed from layers,
+ * most general first (spec 046: the engine's base travels with the engine;
+ * the rest is in the fleet repository, under the fleet's folder):
+ *
+ *   @engine/home/                                 the engine's base (every fleet)
+ *   fleets/<id>/home/                             the fleet (every user, every host)
+ *   fleets/<id>/hosts/<host>/home/                everyone on one host
+ *   fleets/<id>/users/<user>/home/                one user on every host
+ *   fleets/<id>/hosts/<host>/users/<user>/home/   one user on one host
+ *
+ * A later layer replaces a file with the same target (~/.bashrc is the same
+ * target whether its source is dot_bashrc or dot_bashrc.tmpl). The root
+ * .chezmoiignore and .chezmoiremove of every layer are concatenated. `archon
+ * apply` writes the composition to /var/lib/archon-dotfiles/<user> (owned by
+ * root, readable by the user) and runs chezmoi from there, so chezmoi's
+ * templates and data work as usual and every change goes through the repo.
+ *
+ * @module
+ */
 
 import { join } from "../core/path.ts";
 

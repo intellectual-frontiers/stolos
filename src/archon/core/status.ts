@@ -1,8 +1,12 @@
-// The prompt's Archon segment (spec 009): every archon command ends by writing
-// one short line to /var/lib/archon/status/prompt, and the oh-my-posh theme
-// only reads that file, so the prompt stays instant. The line says how the
-// last run went, how many disruptive changes wait, and whether the checkout
-// has local commits that are not on GitHub.
+/**
+ * The prompt's Archon segment (spec 009): every archon command ends by writing
+ * one short line to /var/lib/archon/status/prompt, and the oh-my-posh theme
+ * only reads that file, so the prompt stays instant. The line says how the
+ * last run went, how many disruptive changes wait, and whether the checkout
+ * has local commits that are not on GitHub.
+ *
+ * @module
+ */
 
 import { P } from "./paths.ts";
 import { run } from "./exec.ts";

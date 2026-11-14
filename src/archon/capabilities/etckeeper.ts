@@ -1,13 +1,17 @@
-// 033-etckeeper: /etc's history in a local git repository (Ubuntu's
-// etckeeper package): a commit before and after every apt run, one a day for
-// anything else, and one per archon apply with its specs (spec 033). Archon
-// sees drift only in files it manages; etckeeper records every change to /etc,
-// and who made it. The history holds secrets (shadow, SSH host keys, the mail
-// relay's password file), so it stays local and root-only, and is never given
-// a remote (Article 13).
-//
-// Overrides of Ubuntu defaults: none (Ubuntu's etckeeper configuration: git,
-// daily autocommits, the apt hooks).
+/**
+ * 033-etckeeper: /etc's history in a local git repository (Ubuntu's
+ * etckeeper package): a commit before and after every apt run, one a day for
+ * anything else, and one per archon apply with its specs (spec 033). Archon
+ * sees drift only in files it manages; etckeeper records every change to /etc,
+ * and who made it. The history holds secrets (shadow, SSH host keys, the mail
+ * relay's password file), so it stays local and root-only, and is never given
+ * a remote (Article 13).
+ *
+ * Overrides of Ubuntu defaults: none (Ubuntu's etckeeper configuration: git,
+ * daily autocommits, the apt hooks).
+ *
+ * @module
+ */
 
 import type { Capability } from "../model/types.ts";
 

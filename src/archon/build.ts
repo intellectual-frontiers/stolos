@@ -1,6 +1,10 @@
-// `archon validate` and `archon build` (spec 002): validate the fleet and
-// every host plan (TypeScript, Article 10), then render each host's files into
-// out/hosts/<host>/rootfs/. Deterministic: building twice changes nothing.
+/**
+ * `archon validate` and `archon build` (spec 002): validate the fleet and
+ * every host plan (TypeScript, Article 10), then render each host's files into
+ * out/hosts/<host>/rootfs/. Deterministic: building twice changes nothing.
+ *
+ * @module
+ */
 
 import { listFleets, P } from "./core/paths.ts";
 import { engineSpecs } from "./core/assets.ts";

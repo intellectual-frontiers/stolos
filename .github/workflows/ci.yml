@@ -30,6 +30,8 @@ jobs:
         run: deno lint
       - name: Format
         run: deno fmt --check
+      - name: Documentation (JSDoc problems may only go down; spec 055)
+        run: deno task docs:lint
       - name: Tests
         run: deno task test
       - name: The version was raised (push to main)
@@ -71,3 +73,32 @@ jobs:
             git tag "$TAG"
             git push origin "$TAG"
           fi
+      # Spec 055: this version's documentation, on GitHub Pages (the gh-pages
+      # branch): /vX.Y.Z/ for each release, /latest/ for the newest, the last 20 kept.
+      - name: Documentation (HTML from deno doc)
+        run: deno task docs out/docs
+      - name: Publish to the gh-pages branch
+        run: |
+          TAG="v$(deno run -A tools/version.ts show)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -rf ../pages
+          if git ls-remote --exit-code origin gh-pages >/dev/null; then
+            git clone -q --depth 1 --branch gh-pages "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" ../pages
+          else
+            mkdir ../pages && git -C ../pages init -q -b gh-pages
+            git -C ../pages remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          fi
+          rm -rf "../pages/$TAG" ../pages/latest
+          cp -r out/docs "../pages/$TAG"
+          cp -r out/docs ../pages/latest
+          # Keep the newest 20 versions.
+          ls -d ../pages/v*/ 2>/dev/null | sed 's#.*/\(v[0-9.]*\)/#\1#' | sort -V | head -n -20 |
+            while read -r old; do rm -rf "../pages/$old"; done
+          printf '<!DOCTYPE html><meta http-equiv="refresh" content="0; url=latest/index.html"><a href="latest/index.html">Stolos documentation</a>\n' >../pages/index.html
+          touch ../pages/.nojekyll
+          git -C ../pages add -A
+          git -C ../pages commit -q -m "docs: $TAG" || echo "no change"
+          git -C ../pages push -q origin gh-pages
+        env:
+          GITHUB_TOKEN: ${{ github.token }}

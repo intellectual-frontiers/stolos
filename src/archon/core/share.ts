@@ -1,8 +1,12 @@
-// The shared checkout (specs 001, 016): /srv/archon belongs to its owner
-// (ops) and the archon-ops group, group-writable, so every operator can run
-// archon and git there. Files a command writes (state/, out/, prov) must stay
-// that way: as root they would otherwise be root-owned and read-only to the
-// group, and a later `archon capture` as yourself fails with EACCES.
+/**
+ * The shared checkout (specs 001, 016): /srv/archon belongs to its owner
+ * (ops) and the archon-ops group, group-writable, so every operator can run
+ * archon and git there. Files a command writes (state/, out/, prov) must stay
+ * that way: as root they would otherwise be root-owned and read-only to the
+ * group, and a later `archon capture` as yourself fails with EACCES.
+ *
+ * @module
+ */
 
 import { P } from "./paths.ts";
 import { currentUser, isRoot, run } from "./exec.ts";

@@ -1,9 +1,26 @@
-// `archon host bootstrap` (spec 005): finish a host whose Ubuntu was installed
-// by hand (from Ubuntu's ISO, a cloud image, anything) instead of by network
-// boot. From the boot machine it copies, over SSH, exactly what the network
-// install would have handed cloud-init (the host name, GitHub's host keys, the
-// first-boot script, and the host's deploy key), then runs the same first boot
-// with sudo. Uses the OpenSSH client that ships with Windows and Linux.
+/**
+ * `archon host bootstrap` (spec 005): finish a host whose Ubuntu was installed
+ * by hand (from Ubuntu's ISO, a cloud image, anything) instead of by network
+ * boot. From the boot machine it copies, over SSH, exactly what the network
+ * install would have handed cloud-init (the host name, GitHub's host keys, the
+ * first-boot script, and the host's deploy key), then runs the same first boot
+ * with sudo. Uses the OpenSSH client that ships with Windows and Linux.
+ *
+ * ```mermaid
+ * sequenceDiagram
+ *   actor P as Person
+ *   participant A as archon host bootstrap
+ *   participant M as The machine (Ubuntu installed)
+ *   P->>A: host bootstrap olympia --ssh user@address
+ *   A->>M: its facts: release, RAM, network cards
+ *   A->>A: refuse the wrong release or the wrong machine
+ *   A->>M: fleet, signers, registered SSH host keys, first boot
+ *   M->>M: the first boot
+ *   A->>A: registration.ts: the card the machine reported
+ * ```
+ *
+ * @module
+ */
 
 import { join } from "../core/path.ts";
 import { ui } from "../core/ui.ts";

@@ -1,4 +1,8 @@
-// Native roff generation (no dependencies): man(7) macros, written directly.
+/**
+ * Native roff generation (no dependencies): man(7) macros, written directly.
+ *
+ * @module
+ */
 
 export function esc(text: string): string {
   return text

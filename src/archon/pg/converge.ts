@@ -1,6 +1,10 @@
-// 038-pg, 039-pg-identity: make each instance what the model and the host's record say. Run by
-// every apply (its Databases phase, so the reconcile timer keeps instances) and
-// by archon pg ensure. Archon touches only clusters it created (FR-003).
+/**
+ * 038-pg, 039-pg-identity: make each instance what the model and the host's record say. Run by
+ * every apply (its Databases phase, so the reconcile timer keeps instances) and
+ * by archon pg ensure. Archon touches only clusters it created (FR-003).
+ *
+ * @module
+ */
 
 import { getRecord, putRecord } from "../state/store.ts";
 import { dirname, join } from "../core/path.ts";

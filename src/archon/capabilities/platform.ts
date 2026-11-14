@@ -1,7 +1,11 @@
-// 001-platform: Ubuntu Server 26.04's own components, verified, never
-// replaced (Article 2). This capability installs nothing: it checks that the
-// defaults Archon relies on are present, names the host, and creates
-// Archon's state directories.
+/**
+ * 001-platform: Ubuntu Server 26.04's own components, verified, never
+ * replaced (Article 2). This capability installs nothing: it checks that the
+ * defaults Archon relies on are present, names the host, and creates
+ * Archon's state directories.
+ *
+ * @module
+ */
 
 import { registeredCardCheck } from "../model/identity-check.ts";
 import type { Capability, UnitDef } from "../model/types.ts";

@@ -1,6 +1,10 @@
-// Spec 048-observe-by-query: ask a server through its MCP server, over SSH as
-// ops (spec 030, Article 17), the same way an agent does. The server limits
-// what it answers; nothing it says is pushed anywhere.
+/**
+ * Spec 048-observe-by-query: ask a server through its MCP server, over SSH as
+ * ops (spec 030, Article 17), the same way an agent does. The server limits
+ * what it answers; nothing it says is pushed anywhere.
+ *
+ * @module
+ */
 
 import { currentTraceparent, span } from "../core/telemetry.ts";
 

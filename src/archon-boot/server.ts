@@ -1,6 +1,20 @@
-// archon-boot's HTTP server (spec 004): UEFI HTTP Boot files, GRUB menus
-// per host (by Boot URI, or by MAC when the model has one), the verified installer image, and each host's install config with
-// its secrets filled in at request time (Article 13).
+/**
+ * archon-boot's HTTP server (spec 004): UEFI HTTP Boot files, GRUB menus
+ * per host (by Boot URI, or by MAC when the model has one), the verified installer image, and each host's install config with
+ * its secrets filled in at request time (Article 13).
+ *
+ * ```mermaid
+ * flowchart LR
+ *   pxe["PXE / HTTP Boot"] --> menu["GRUB menu<br/>(by MAC, claim, or Boot URI)"]
+ *   menu --> cfg["user-data: autoinstall<br/>(the guard runs first)"]
+ *   cfg --> facts["facts: the guard's answer"]
+ *   facts --> events["events: installer, first boot"]
+ *   events --> done["done: MAC recorded"]
+ *   otlp["/otlp: the fleet's telemetry"] --> files["telemetry files"]
+ * ```
+ *
+ * @module
+ */
 
 import type { ArchonEvent } from "../archon/telemetry/events.ts";
 import {

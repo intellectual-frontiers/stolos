@@ -1,4 +1,8 @@
-// Spec 051: a check that ties a host to the machine it installed on.
+/**
+ * Spec 051: a check that ties a host to the machine it installed on.
+ *
+ * @module
+ */
 
 /** The verify check (spec 051): the network card registered for the host is in this machine. */
 export function registeredCardCheck(mac: string) {

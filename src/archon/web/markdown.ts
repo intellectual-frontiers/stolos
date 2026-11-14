@@ -1,8 +1,12 @@
-// 035-welcome-guide: the repository's guides (docs/*.md) as HTML on the welcome
-// page, so one text serves the repository, the man pages, and the server.
-// Handles what those guides use: headings, paragraphs, lists, tables, code
-// blocks, blockquotes, inline code, bold, italics, and links. Everything is
-// escaped first; links to other guides stay on the page, the rest go to GitHub.
+/**
+ * 035-welcome-guide: the repository's guides (docs/*.md) as HTML on the welcome
+ * page, so one text serves the repository, the man pages, and the server.
+ * Handles what those guides use: headings, paragraphs, lists, tables, code
+ * blocks, blockquotes, inline code, bold, italics, and links. Everything is
+ * escaped first; links to other guides stay on the page, the rest go to GitHub.
+ *
+ * @module
+ */
 
 const esc = (s: string) =>
   s.replace(

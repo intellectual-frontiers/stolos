@@ -1,10 +1,14 @@
-// 020-workstation: Ubuntu on WSL (or a desktop) as an Archon workstation.
-// Only the user-level parts of a host apply: the tools at their newest
-// releases, the dotfiles (fish, oh-my-posh, tmux, git), .mcp.json for
-// the operator's own MCP client (spec 030), the archon command, and Ubuntu's daily updates. Nothing that belongs to a
-// server: no installer, netplan, firewall, SSH hardening, ops account,
-// converge timers, or backups. The checkout is /srv/archon, owned by the
-// workstation's user.
+/**
+ * 020-workstation: Ubuntu on WSL (or a desktop) as an Archon workstation.
+ * Only the user-level parts of a host apply: the tools at their newest
+ * releases, the dotfiles (fish, oh-my-posh, tmux, git), .mcp.json for
+ * the operator's own MCP client (spec 030), the archon command, and Ubuntu's daily updates. Nothing that belongs to a
+ * server: no installer, netplan, firewall, SSH hardening, ops account,
+ * converge timers, or backups. The checkout is /srv/archon, owned by the
+ * workstation's user.
+ *
+ * @module
+ */
 
 import { doctor } from "./doctor.ts";
 import type { Capability } from "../model/types.ts";
