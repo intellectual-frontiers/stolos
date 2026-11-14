@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/fleet/scaffold.ts - Stolos v0.48.0 documentation</title>
+  <title>archon/fleet/scaffold.ts - Stolos v0.49.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.48.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.49.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -123,7 +123,15 @@ file is written only when missing; an existing one is never changed.</p>
   </defs>
 </svg>
 </a>
-Functions</h2></div><div class="namespaceSection"><div id="namespace_denojsontext" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+Functions</h2></div><div class="namespaceSection"><div id="namespace_cacheengine" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;scaffold.ts&#x2F;~&#x2F;cacheEngine.html" title="cacheEngine">
+			    <span>cacheEngine</span><span>(<span><span>repo<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;{ ok<span>: <span class="td-kw">boolean</span></span>; why<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Download every engine file the pin names, checked against deno.lock, into
+Deno's cache: what VS Code's Deno extension reads to check fleet.ts. Running
+a command downloads only what it runs; a type-only import (fleet.ts imports
+the engine's types) would otherwise never be fetched. Returns why not, if not.</p>
+</div></div></div>
+    </div><div id="namespace_denojsontext" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;scaffold.ts&#x2F;~&#x2F;denoJsonText.html" title="denoJsonText">
 			    <span>denoJsonText</span><span>(<div class="ml-4"><div><span>tag<span>: <span class="td-kw">string</span></span></span>,</div><div><span>base<span class="td-op">?</span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A fleet repository's deno.json: the engine pinned at tag, and the stolos task (run frozen; spec 059).</p>
@@ -206,7 +214,8 @@ await run();
     </div><div id="namespace_vscode_settings_text" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;scaffold.ts&#x2F;~&#x2F;VSCODE_SETTINGS_TEXT.html" title="VSCODE_SETTINGS_TEXT">
-			    <span>VSCODE_SETTINGS_TEXT</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>VS Code for a fleet repository: Deno for TypeScript (checks, lint) and as the
+			    <span>VSCODE_SETTINGS_TEXT</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>VS Code for a fleet repository: Deno for TypeScript (checks, lint; the engine's
+files downloaded when a file that imports them is saved) and as the
 formatter, on save, for everything deno fmt formats (TypeScript, JavaScript,
 JSON, Markdown, YAML, CSS, HTML), with the fleet's deno.json settings.</p>
 </div></div></div>
@@ -283,7 +292,7 @@ JSON, Markdown, YAML, CSS, HTML), with the fleet's deno.json settings.</p>
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1197 symbols</span><svg
+              <span class="leading-none">view all 1198 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -298,7 +307,7 @@ JSON, Markdown, YAML, CSS, HTML), with the fleet's deno.json settings.</p>
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/fleet/scaffold_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_denojsontext" title="denoJsonText">denoJsonText</a></li><li><a href="#namespace_scaffoldfiles" title="scaffoldFiles">scaffoldFiles</a></li><li><a href="#namespace_scaffoldrepository" title="scaffoldRepository">scaffoldRepository</a></li></ul></li><li><a href="#archon/fleet/scaffold_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_archon_entry_text" title="ARCHON_ENTRY_TEXT">ARCHON_ENTRY_TEXT</a></li><li><a href="#namespace_engine_base" title="ENGINE_BASE">ENGINE_BASE</a></li><li><a href="#namespace_gitignore_text" title="GITIGNORE_TEXT">GITIGNORE_TEXT</a></li><li><a href="#namespace_stolos_entry_text" title="STOLOS_ENTRY_TEXT">STOLOS_ENTRY_TEXT</a></li><li><a href="#namespace_vscode_extensions_text" title="VSCODE_EXTENSIONS_TEXT">VSCODE_EXTENSIONS_TEXT</a></li><li><a href="#namespace_vscode_settings_text" title="VSCODE_SETTINGS_TEXT">VSCODE_SETTINGS_TEXT</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/fleet/scaffold_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_cacheengine" title="cacheEngine">cacheEngine</a></li><li><a href="#namespace_denojsontext" title="denoJsonText">denoJsonText</a></li><li><a href="#namespace_scaffoldfiles" title="scaffoldFiles">scaffoldFiles</a></li><li><a href="#namespace_scaffoldrepository" title="scaffoldRepository">scaffoldRepository</a></li></ul></li><li><a href="#archon/fleet/scaffold_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_archon_entry_text" title="ARCHON_ENTRY_TEXT">ARCHON_ENTRY_TEXT</a></li><li><a href="#namespace_engine_base" title="ENGINE_BASE">ENGINE_BASE</a></li><li><a href="#namespace_gitignore_text" title="GITIGNORE_TEXT">GITIGNORE_TEXT</a></li><li><a href="#namespace_stolos_entry_text" title="STOLOS_ENTRY_TEXT">STOLOS_ENTRY_TEXT</a></li><li><a href="#namespace_vscode_extensions_text" title="VSCODE_EXTENSIONS_TEXT">VSCODE_EXTENSIONS_TEXT</a></li><li><a href="#namespace_vscode_settings_text" title="VSCODE_SETTINGS_TEXT">VSCODE_SETTINGS_TEXT</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>
