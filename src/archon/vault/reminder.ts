@@ -5,7 +5,8 @@
  * - `boot doctor` reports it as a warning whose fix is the command;
  * - the prompt's 🔐 backup token while anything is unbacked;
  * - email: after 24 hours unbacked, one "N secrets not backed up" (names
- *   only), then weekly;
+ *   only), then weekly; and, every six months, to check the recovery key
+ *   (spec 057);
  * - a non-blocking git pre-push hook that prints the panel.
  *
  * @module
@@ -19,6 +20,7 @@ import { readLedger, writeLedger } from "../core/secret-ledger.ts";
 import { labelFor } from "../model/secret-inventory.ts";
 import { assess, type Assessment, writePromptStatus } from "./state.ts";
 import { panelLines } from "./panel.ts";
+import { PRE_PUSH_HOOK } from "../identity/keys.ts";
 
 const DAY = 86_400_000;
 /** This machine's short hostname, as the panel names it. */
@@ -74,16 +76,31 @@ export async function remind(now = Date.now()): Promise<void> {
         await writeLedger(l);
       }
     }
+    // Spec 057: the recovery key, checked twice a year (one email a week while due).
+    const { collectKeyFacts, keyChecks, writeKeyState } = await import("../identity/keys.ts");
+    const kf = await collectKeyFacts();
+    const due57 = keyChecks(kf, now).find((c) => c.code === "E057-RECOVERY-CHECK" && !c.ok);
+    if (due57 && due(kf.state.recoveryRemindedAt)) {
+      const r = await notify({
+        event: "check the fleet's recovery key",
+        level: "info",
+        what:
+          `${due57.what}. A recovery key you cannot use (a forgotten passphrase, a dead USB drive) cannot replace a lost daily key.`,
+        todo: due57.fix,
+        key: `keys:recovery:${new Date(now).toISOString().slice(0, 10)}`,
+      });
+      if (r === "queued") {
+        await writeKeyState(
+          { ...kf.state, recoveryRemindedAt: new Date(now).toISOString() },
+          kf.paths.state,
+        );
+      }
+    }
   } catch { /* reminders never fail the command that runs them */ }
 }
 
-/** The git pre-push hook (fleet init, and vault status if missing): prints the panel, never blocks. */
-export const PRE_PUSH = `#!/bin/sh
-# Installed by archon (spec 029): reminds you to back up the boot machine's
-# secrets when any are newer than the last vault backup. Never blocks a push.
-deno run -A src/archon/main.ts vault status --hook >&2 || true
-exit 0
-`;
+/** The git pre-push hook (specs 029 and 057): the signature check, then the backup panel. */
+export { PRE_PUSH_HOOK as PRE_PUSH } from "../identity/keys.ts";
 
 /**
  * Installs the pre-push hook in a checkout. Leaves another program's hook
@@ -96,9 +113,9 @@ export async function installPrePushHook(repo = P.repo): Promise<boolean> {
   if (!(await exists(hooks))) return false;
   const path = join(hooks, "pre-push");
   const current = await readTextOr(path);
-  if (current === PRE_PUSH) return false;
-  if (current && !current.includes("Installed by archon (spec 029)")) return false; // someone else's hook
-  await Deno.writeTextFile(path, PRE_PUSH);
+  if (current === PRE_PUSH_HOOK) return false;
+  if (current && !current.includes("Installed by archon")) return false; // someone else's hook
+  await Deno.writeTextFile(path, PRE_PUSH_HOOK);
   if (Deno.build.os !== "windows") await Deno.chmod(path, 0o755);
   return true;
 }

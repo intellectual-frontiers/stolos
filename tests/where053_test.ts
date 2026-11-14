@@ -42,7 +42,7 @@ Deno.test("053: exactly one next step, the first not done; pending never blocks"
     hosts: [{ name: "olympia", workstation: false, installed: false, armed: false, claim: false }],
   });
   assertEquals(s.filter((x) => x.state === "next").length, 1);
-  assertStringIncludes(nextCommand(s), "--role daily");
+  assertStringIncludes(nextCommand(s), "keys setup");
   assert(s.some((x) => x.state === "pending" && x.command === "deno task boot mail-setup"));
   assert(s.some((x) => x.state === "todo" && x.command?.includes("boot arm olympia --claim")));
   // Only a pending item left: it is what to do next.

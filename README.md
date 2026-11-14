@@ -225,30 +225,27 @@ the engine files you approved.
 With Deno, Git, and `gh` installed (above) and `gh auth login` done:
 
 1. Create an empty private repository on GitHub and clone it.
-2. Make your signing key, and tell Git to use it for every commit (the passphrase is never stored).
-   On Windows, write `$HOME\.ssh\fleet-signing` for `~/.ssh/fleet-signing`:
-
-   ```sh
-   ssh-keygen -t ed25519 -f ~/.ssh/fleet-signing -C "<your name> fleet signing"
-   git config --global gpg.format ssh
-   git config --global user.signingkey ~/.ssh/fleet-signing
-   git config --global commit.gpgsign true
-   ```
-
-   Make a second, **recovery** key the same way and keep it somewhere safe and apart (an encrypted
-   vault): it replaces the first if your PC is lost.
-3. Start the fleet with the engine's latest version (it writes `deno.json`, `deno.lock`, and
+2. Start the fleet with the engine's latest version (it writes `deno.json`, `deno.lock`, and
    `fleets/<id>/fleet.ts` from your GitHub account):
 
    ```sh
    deno run -A https://raw.githubusercontent.com/intellectual-frontiers/stolos/v<version>/src/archon/main.ts fleet init <id>
    ```
 
-4. List your keys as the fleet's signers, then commit and push (signed):
+3. Set up your signing keys. One command does it all, and is safe to run again at any time: it makes
+   your daily key and a recovery key (`ssh-keygen` asks for each passphrase; neither is ever
+   stored), tells Git to sign every commit in this repository, lists both keys in `signers.ts`,
+   installs a check that runs before every push, and makes a test signature:
 
    ```sh
-   deno task archon signers add <you> --role daily --key ~/.ssh/fleet-signing.pub
-   deno task archon signers add <you>-recovery --role recovery --key <recovery>.pub
+   deno task archon keys setup
+   ```
+
+   Then move the `fleet-recovery` folder it made on your Desktop to an encrypted USB drive or a
+   password manager, and delete it from the PC. `deno task archon keys` checks everything later.
+4. Commit and push (Git signs it; type your passphrase):
+
+   ```sh
    git add -A && git commit -m "<id>: the fleet" && git push
    ```
 
@@ -303,6 +300,7 @@ typed by a person).
 - `deno task archon fleet status`: every server, how it is.
 - `archon explain <code>`: what a problem means and how to fix it.
 - `deno task archon fleet upgrade v<version>`: adopt a newer engine.
+- `deno task archon keys`: your signing keys, each problem with its fix (`keys setup` repairs).
 - `deno task boot vault backup` after anything that made a secret; move the ZIP somewhere safe.
 
 ## Documentation

@@ -74,7 +74,8 @@ async function secretEntries(): Promise<{ entries: Entry[]; active: Record<strin
 
 /** Your signing key's two files, from `git config user.signingkey` (when it is a file). */
 async function signingEntries(): Promise<{ entries: Entry[]; key?: string }> {
-  const k = (await run(["git", "config", "--get", "user.signingkey"])).stdout.trim();
+  // Spec 057 sets it for the fleet repository only: ask Git there.
+  const k = (await run(["git", "-C", P.repo, "config", "--get", "user.signingkey"])).stdout.trim();
   if (!k || k.startsWith("key::")) return { entries: [] };
   const priv = k.replace(/\.pub$/, "");
   const entries: Entry[] = [];
@@ -112,16 +113,15 @@ On the new or rebuilt PC (Windows, in PowerShell):
         icacls $env:APPDATA\\archon\\secrets /inheritance:r /grant:r "$($env:USERNAME):(OI)(CI)F"
     (Linux: mkdir -p ~/.config/archon/secrets && cp -r <unzipped>/secrets/* ~/.config/archon/secrets/
      && chmod -R go-rwx ~/.config/archon)
- 5. Put your signing key back and tell Git to use it:
+ 5. Put your signing key back, then let archon set up Git's signing (it keeps the key):
         Copy-Item <unzipped>\\signing\\* $HOME\\.ssh\\
-        git config --global gpg.format ssh
-        git config --global user.signingkey $HOME\\.ssh\\<the key's file name, without .pub>
-        git config --global commit.gpgsign true
+        cd C:\\fleet
+        deno task archon keys setup
  6. Delete the unzipped folder (the ZIP itself stays wherever you keep it safe).
  7. Check, in the fleet repository:
         deno task boot vault status      every secret, back where it belongs
         deno task archon                 where you are, and what next
-        deno task archon signers         your signing works
+        deno task archon keys            your signing works
 
 If your daily signing key itself was lost (not in any backup), use your recovery key
 (kept apart) to add a new daily key: deno task archon signers add ... in a commit

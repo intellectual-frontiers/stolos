@@ -74,6 +74,17 @@ export async function doctor(
     );
   }
 
+  // ------------------------------------------------------------- signing keys
+  // Spec 057: the same checks as archon keys; nothing changes, nothing is asked.
+  const k = ui.phase("Signing keys");
+  const { keyChecksNow } = await import("../archon/identity/keys-commands.ts");
+  for (const c of await keyChecksNow().catch(() => [])) {
+    if (c.ok) k.note(c.what);
+    else if (c.level === "fail") k.fail(c.what, c.fix, c.code);
+    else k.warn(c.what, c.fix, c.code);
+  }
+  k.done();
+
   // ------------------------------------------------------------- secrets
   const s = ui.phase("Secrets");
   if (!(await exists(SECRETS.adminPasswordHash))) {

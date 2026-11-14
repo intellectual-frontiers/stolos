@@ -30,7 +30,7 @@ export interface WhereFacts {
   locked: boolean;
   /** How many signers of each role signers.ts lists. */
   signers: { daily: number; recovery: number };
-  /** This machine's signing setup (signers.ts signingSetup): what is wrong, with its fix. */
+  /** This machine's signing problems (spec 057's checks, failures first): what is wrong, with its fix. */
   signingProblems: Array<{ what: string; fix?: string }>;
   /** The admin password's hash is in this machine's secret store. */
   adminHash: boolean;
@@ -94,21 +94,21 @@ export function whereSteps(f: WhereFacts): Step[] {
     text: f.signers.daily
       ? `${f.signers.daily} daily signer(s)`
       : "no daily signer: no change can be approved",
-    command: "deno task archon signers add <your name> --role daily --key <your public key file>",
+    command: "deno task archon keys setup",
   });
   raw.push({
     done: f.signers.recovery > 0,
     text: f.signers.recovery
       ? `${f.signers.recovery} recovery signer(s)`
       : "no recovery signer (the key you keep apart, for when the daily one is lost)",
-    command: "deno task archon signers add <name> --role recovery --key <its public key file>",
+    command: "deno task archon keys setup",
   });
   raw.push({
     done: !f.signingProblems.length,
     text: f.signingProblems.length
       ? `this machine's signing: ${f.signingProblems[0].what}`
       : "this machine signs your commits",
-    command: f.signingProblems[0]?.fix ?? "deno task archon signers",
+    command: f.signingProblems[0]?.fix ?? "deno task archon keys",
   });
   raw.push({
     done: f.adminHash,
@@ -211,7 +211,8 @@ export async function collectWhere(): Promise<WhereFacts> {
     unpushed: 0,
   };
   if (!fleetId) return base;
-  const { loadSigners, signingSetup } = await import("../identity/signers.ts");
+  const { loadSigners } = await import("../identity/signers.ts");
+  const { keyChecksNow } = await import("../identity/keys-commands.ts");
   const signers = await loadSigners().catch(() => []);
   const { SECRETS, loadTokens, liveToken } = await import("../core/secrets.ts");
   const { loadFleet, loadHosts } = await import("../model/load.ts");
@@ -239,7 +240,10 @@ export async function collectWhere(): Promise<WhereFacts> {
       daily: signers.filter((s) => s.role === "daily").length,
       recovery: signers.filter((s) => s.role === "recovery").length,
     },
-    signingProblems: (await signingSetup().catch(() => [])).filter((x) => !x.ok),
+    // Spec 057: what stops signing (fail); warnings stay in archon keys and boot doctor.
+    signingProblems: (await keyChecksNow().catch(() => []))
+      .filter((c) => !c.ok && c.level === "fail")
+      .map((c) => ({ what: c.what, fix: c.fix })),
     adminHash: await exists(SECRETS.adminPasswordHash),
     ...(fleet.mail ? { mail: { token: await exists(SECRETS.mail) } } : {}),
     ...(fleet.web ? { web: { token: await exists(SECRETS.web) } } : {}),

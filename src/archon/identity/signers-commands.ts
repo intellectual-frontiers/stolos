@@ -49,7 +49,7 @@ export async function signersList(json: boolean): Promise<number> {
     );
   }
   p.done(`${list.length} signer(s) in ${repoRel(signersFile())}`);
-  const s = ui.phase("Your signing setup");
+  const s = ui.phase("Your signing setup (deno task archon keys)");
   for (const c of await signingSetup()) {
     if (c.ok) s.note(c.what);
     else s.warn(c.what, c.fix);

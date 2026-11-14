@@ -372,8 +372,11 @@ export async function fleetInit(o: FleetInitOptions): Promise<void> {
     `fleets/<fleet>/fleet.ts · admin ${user} · ${tz} · ${fleet.locale} · git commits as ${gh.email}`,
   );
   ui.next.push(
-    'next: git add -A; git commit -m "003-identity: fleet init"; git push',
-    "then: deno task archon host add <name>",
+    "next: your signing keys (spec 057): deno task archon keys setup",
+    `then: git add -A; git commit -m "${
+      P.fleetId || "<fleet>"
+    }: the fleet and its signers"; git push`,
+    "then: deno task archon (it shows the next step)",
   );
 }
 

@@ -113,7 +113,7 @@ Deno.test("vault: restore only explains (changes nothing); backup without a sign
     let r = await s.archon(["vault", "restore"]);
     assertEquals(r.code, 0, r.out);
     assert(r.out.includes("How to restore an archon backup"), r.out);
-    assert(r.out.includes("Copy-Item") && r.out.includes("user.signingkey"), r.out);
+    assert(r.out.includes("Copy-Item") && r.out.includes("keys setup"), r.out);
     assertEquals(await fingerprint([join(s.home, "config"), join(s.home, "data")]), before);
 
     const empty = join(s.home, "empty-gitconfig");

@@ -405,6 +405,108 @@ export const COMMANDS: Command[] = [
     },
   },
   {
+    name: "keys",
+    summary: "Your signing keys: every check, and the one command that fixes each",
+    description:
+      `Checks this PC's signing setup for the fleet (spec 057): OpenSSH can sign (8.2 or newer); your daily key exists, is locked by a passphrase, and is not in an ssh-agent; Git signs every commit in this repository with it; signers.ts lists it; a recovery key is listed, its private file is not on this PC, and it was checked in the last six months; and every push is checked first. Each problem shows its code (archon explain E057-...) and its fix, usually deno task archon keys setup. Changes nothing; never asks for a passphrase. Exits 1 when signing does not work.`,
+    tier: "read",
+    noMcp: true,
+    args: [],
+    async run(_a, ctx) {
+      const { keysStatus } = await import("../identity/keys-commands.ts");
+      return await keysStatus(ctx.json);
+    },
+  },
+  {
+    name: "keys setup",
+    summary: "Set up (or repair) signing on this PC: keys, Git, signers.ts, the push check",
+    description:
+      `Does only what is missing, so it is safe to run again at any time (spec 057): checks OpenSSH; makes your daily key (~/.ssh/fleet-signing; ssh-keygen asks for its passphrase, which is never stored); sets Git, for this repository only, to sign every commit with it; lists it in signers.ts; makes a recovery key in a fleet-recovery folder on your Desktop and lists it (you then move that folder away); installs the pre-push check; and makes one test signature when anything changed (or with --test). Never overwrites a key.`,
+    tier: "repo",
+    operation: true,
+    noMcp: true,
+    args: [{
+      name: "test",
+      type: "boolean",
+      description: "Make the test signature even when nothing changed.",
+    }],
+    async run(a) {
+      const { keysSetup } = await import("../identity/keys-commands.ts");
+      return await keysSetup({ test: !!a.test });
+    },
+  },
+  {
+    name: "keys check-recovery",
+    summary: "Prove the recovery key still works (a test signature; changes nothing)",
+    description:
+      `Checks that the file you pass is the fleet's recovery key and that you still know its passphrase, by signing a test message and verifying it against signers.ts. Records the date on this PC: archon keys and boot doctor remind you after six months (spec 057).`,
+    tier: "read",
+    operation: true,
+    noMcp: true,
+    args: [{
+      name: "key",
+      type: "string",
+      required: true,
+      human: true,
+      description: "The recovery key's private file (on the USB drive, or wherever you keep it).",
+    }],
+    async run(a) {
+      const { keysCheckRecovery } = await import("../identity/keys-commands.ts");
+      return await keysCheckRecovery(a.key as string);
+    },
+  },
+  {
+    name: "keys rotate",
+    summary: "Replace your daily key with a new one, approved by the current one",
+    description:
+      `Makes a new daily key, puts it in signers.ts in place of the current one (same signer name), and commits that alone, signed with the current key. Then the new key takes the old one's place (the old pair is kept as <file>.retired-<date>, never used again); Git's settings do not change. If interrupted, run it again: it continues. Push to approve (spec 057).`,
+    tier: "repo",
+    operation: true,
+    noMcp: true,
+    args: [],
+    async run() {
+      const { keysRotate } = await import("../identity/keys-commands.ts");
+      return await keysRotate();
+    },
+  },
+  {
+    name: "keys lost",
+    summary: "Your daily key is lost or stolen: replace it, approved by the recovery key",
+    description:
+      `Makes a new daily key (with --stolen, the old one still here is retired first; without it, a key that is here and listed is left alone), puts it in signers.ts in place of the lost one, and commits that alone, signed with the recovery key you pass. Once pushed, servers stop trusting the old key. If interrupted, run it again: it continues (spec 057).`,
+    tier: "repo",
+    operation: true,
+    noMcp: true,
+    args: [{
+      name: "recovery",
+      type: "string",
+      required: true,
+      human: true,
+      description: "The recovery key's private file.",
+    }, {
+      name: "stolen",
+      type: "boolean",
+      description: "The daily key is still here but someone may have a copy: replace it too.",
+    }],
+    async run(a) {
+      const { keysLost } = await import("../identity/keys-commands.ts");
+      return await keysLost(a.recovery as string, !!a.stolen);
+    },
+  },
+  {
+    name: "keys check-push",
+    summary: "The pre-push check: what you push is signed by a key the fleet trusts",
+    description:
+      `Run by Git before each push (the hook keys setup installs): each pushed tip of the fleet's branch must be signed by a key signers.ts lists as of what the remote has now, the same check servers make (spec 047). Refuses the push otherwise, with the fix. Skip it once with git push --no-verify.`,
+    tier: "read",
+    noMcp: true,
+    args: [],
+    async run() {
+      const { keysCheckPush } = await import("../identity/keys-commands.ts");
+      return await keysCheckPush();
+    },
+  },
+  {
     name: "host bootstrap",
     summary: "Finish a host whose Ubuntu was installed by hand (over SSH)",
     description:

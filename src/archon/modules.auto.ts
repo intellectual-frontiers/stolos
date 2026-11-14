@@ -91,6 +91,8 @@ import "./guide/command.ts";
 import "./guide/guide.ts";
 import "./guide/where.ts";
 import "./identity/fleet-init.ts";
+import "./identity/keys-commands.ts";
+import "./identity/keys.ts";
 import "./identity/signers-commands.ts";
 import "./identity/signers.ts";
 import "./install/apt-busy.ts";

@@ -189,43 +189,16 @@ export function enforcing(): Promise<boolean> {
   return exists(ALLOWED_SIGNERS);
 }
 
-/** The signing setup of the person running a command on the boot machine or a workstation. */
+/**
+ * The signing setup of the person running a command on the boot machine or a
+ * workstation: spec 057's checks (archon keys), as a list of what is right and
+ * what is wrong with its fix.
+ */
 export async function signingSetup(): Promise<Array<{ ok: boolean; what: string; fix?: string }>> {
-  const cfg = async (k: string) => (await run(["git", "config", "--get", k])).stdout.trim();
-  const out: Array<{ ok: boolean; what: string; fix?: string }> = [];
-  const fmt = await cfg("gpg.format");
-  const key = await cfg("user.signingkey");
-  const sign = await cfg("commit.gpgsign");
-  out.push({
-    ok: fmt === "ssh" && !!key && sign === "true",
-    what: `git signs commits with SSH (gpg.format=${fmt || "unset"}, commit.gpgsign=${
-      sign || "unset"
-    })`,
-    fix:
-      "git config --global gpg.format ssh; git config --global user.signingkey <key file>; git config --global commit.gpgsign true",
-  });
-  if (key && !key.startsWith("key::") && await exists(key.replace(/\.pub$/, ""))) {
-    const priv = key.replace(/\.pub$/, "");
-    // An encrypted key cannot be read with an empty passphrase.
-    const plain = await run(["ssh-keygen", "-y", "-P", "", "-f", priv]);
-    out.push({
-      ok: !plain.ok,
-      what: `the signing key ${priv} is ${plain.ok ? "NOT" : ""} protected by a passphrase`.replace(
-        "  ",
-        " ",
-      ),
-      fix: `ssh-keygen -p -f ${priv} (set a passphrase you type, never store)`,
-    });
-    const pub = (await readTextOr(priv + ".pub"))?.trim().split(" ").slice(0, 2).join(" ");
-    const agent = await run(["ssh-add", "-L"]);
-    const loaded = !!pub && agent.ok && agent.stdout.includes(pub);
-    out.push({
-      ok: !loaded,
-      what: loaded
-        ? "the signing key is loaded in an ssh-agent: anything running as you can sign"
-        : "the signing key is not in an ssh-agent (each signature asks for the passphrase)",
-      fix: "ssh-add -d " + priv,
-    });
-  }
-  return out;
+  const { keyChecksNow } = await import("./keys-commands.ts");
+  return (await keyChecksNow()).map((c) => ({
+    ok: c.ok,
+    what: c.what,
+    ...(c.ok ? {} : { fix: `${c.fix} (archon explain ${c.code})` }),
+  }));
 }

@@ -34,7 +34,7 @@ your Unix account name and an admin password; only the password's hash is kept, 
 never in Git. From then on use the pinned engine through the tasks:
 
 ```
-deno task archon signers add      # your signing key (see Signing below)
+deno task archon keys setup       # your signing keys (see Signing below)
 deno task archon host add <name> --claim  # the first host (or --mac-address <mac>)
 ```
 
@@ -217,29 +217,44 @@ data is backed up, and the boot machine refuses to re-install a durable host unl
 Running `archon pg on` (and the others) on the host itself still works, but only that machine
 remembers it; it tells you the `archon decide` line that records it in Git.
 
-## Signing: the one-time setup on your machine
+## Signing: your keys (spec 057)
 
 Each operator signs with their own key, listed in the fleet's `signers.ts`. The key is a file,
 protected by a passphrase that you type and never store; it is never loaded into an ssh-agent, so
-nothing on your machine (an agent included) can sign without you.
+nothing on your machine (an agent included) can sign without you. One command sets it all up, and
+can be run again at any time (it does only what is missing, and never overwrites a key):
 
 ```sh
-ssh-keygen -t ed25519 -f ~/.ssh/fleet-signing -C "<your name> signing"   # set a passphrase
-git config --global gpg.format ssh
-git config --global user.signingkey ~/.ssh/fleet-signing
-git config --global commit.gpgsign true
-deno task archon signers           # checks all of the above
+deno task archon keys setup     # keys, Git's signing (this repository only), signers.ts, the push check
+deno task archon keys           # every check, each with its fix; boot doctor shows the same
 ```
 
-A new signer is added by a person who already is one:
+`keys setup` makes your **daily** key (`~/.ssh/fleet-signing`) and a **recovery** key in a
+`fleet-recovery` folder on your Desktop. Move that folder to an encrypted USB drive or a password
+manager, then delete it from the PC: the recovery key exists only to replace a lost daily key, so it
+must not be lost with it. Prove it still works twice a year (`archon keys` reminds you):
+
+```sh
+deno task archon keys check-recovery --key <the recovery key's private file>
+```
+
+The pre-push check `keys setup` installs refuses, on your PC, a push that servers would refuse (an
+unsigned commit, or one signed by a key `signers.ts` does not list), with the fix.
+
+| When                                                 | Run                                                                                 |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| a new PC, or anything is wrong                       | `deno task archon keys setup`                                                       |
+| a planned change of key (yearly, or a new PC)        | `deno task archon keys rotate` (approved by the current key), then `git push`       |
+| the daily key is lost                                | `deno task archon keys lost --recovery <file>` (approved by the recovery key), push |
+| the daily key may have been copied (a stolen laptop) | the same, with `--stolen`                                                           |
+
+Each of them continues where it stopped if interrupted. A new person becomes a signer when someone
+already listed adds them and signs that commit:
 
 ```sh
 deno task archon signers add <name> --role daily --key <their .pub file>
-git commit -S -m "<fleet> signers: add <name>" && git push
+git commit -m "<fleet> signers: add <name>" && git push
 ```
-
-Every fleet also has a **recovery** signer, whose key is kept apart, somewhere safe and encrypted
-(not with the backup ZIP), to replace a lost or stolen daily key. See `docs/disaster-recovery.md`.
 
 ## Troubleshooting
 
@@ -251,5 +266,5 @@ Every fleet also has a **recovery** signer, whose key is kept apart, somewhere s
 | `vX is older than the pinned vY`                                                       | going backwards                                                                        | if you mean it, add `--downgrade` (and say why in the commit)                                                                                                                                       |
 | `the repository has uncommitted changes`                                               | the upgrade must be a commit of its own                                                | commit or stash your other change first                                                                                                                                                             |
 | `Validate: fleet <id> does not validate with vX`                                       | the new engine expects something your model lacks                                      | run `ARCHON_FLEET=<id> deno task archon validate`, fix the model in its own commit, then upgrade again                                                                                              |
-| `Commit: the commit was not made`                                                      | signing failed or was cancelled                                                        | `deno task archon signers` shows what is missing in your setup                                                                                                                                      |
+| `Commit: the commit was not made`                                                      | signing failed or was cancelled                                                        | `deno task archon keys` shows what is missing in your setup                                                                                                                                         |
 | a host's journal says `refused ...: not signed` (`journalctl -t archon-approval`)      | someone pushed an unsigned tip                                                         | push a signed commit on top (`git commit -S --allow-empty -m "approve"` only if the unsigned work is right)                                                                                         |

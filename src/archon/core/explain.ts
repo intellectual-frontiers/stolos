@@ -49,7 +49,8 @@ export const EXPLAIN: Record<string, Explanation> = {
     what: "A host refused to move to the newest commit of main: it carries no signature.",
     why:
       "It was pushed without signing (git commit -S), or from a machine without your signing setup.",
-    fix: "Make a signed commit on top (git commit -S --allow-empty -m approve) and push it.",
+    fix:
+      "Make a signed commit on top (git commit -S --allow-empty -m approve) and push it; check this PC's signing with: deno task archon keys",
     doc: "docs/fleet-repository.md",
   },
   "E047-UNTRUSTED": {
@@ -58,7 +59,7 @@ export const EXPLAIN: Record<string, Explanation> = {
     why:
       "It was signed with another key (an agent's, a CI's, a new laptop's), or the signer was removed.",
     fix:
-      "Sign it again with a key in fleets/<fleet>/signers.ts (archon signers lists them); to add a key, archon signers add, in a commit signed by a key already listed.",
+      "Sign it again with a key in fleets/<fleet>/signers.ts (deno task archon keys shows yours); for a new PC's key, deno task archon keys setup, then a commit signed by a key already listed.",
     doc: "docs/fleet-repository.md",
   },
   "E047-ROLLBACK": {
@@ -73,7 +74,7 @@ export const EXPLAIN: Record<string, Explanation> = {
     title: "The fleet has no signer",
     what: "No change can be approved: signers.ts lists no daily signer.",
     why: "The fleet is new.",
-    fix: "deno task archon signers add <name> --role daily --key <public key file>",
+    fix: "deno task archon keys setup (it makes your keys and lists them)",
     doc: "docs/fleet-repository.md",
   },
   "E047-HOST-KEY": {
@@ -85,6 +86,81 @@ export const EXPLAIN: Record<string, Explanation> = {
     fix:
       "deno task archon fleet trust (writes the keys registered in Git into your known_hosts); if it still refuses, check that the address is the right machine.",
     doc: "docs/troubleshooting.md",
+  },
+  "E057-SSH": {
+    title: "OpenSSH cannot sign commits on this PC",
+    what: "Git signs commits with OpenSSH's ssh-keygen, which needs version 8.2 or newer.",
+    why: "OpenSSH is missing, or an old one comes first on the PATH.",
+    fix:
+      "Install a current OpenSSH (Windows: Settings > Optional features > OpenSSH Client; macOS: brew install openssh; Ubuntu: sudo apt install openssh-client), then: deno task archon keys",
+    doc: "docs/fleet-repository.md",
+  },
+  "E057-NO-KEY": {
+    title: "No daily signing key on this PC",
+    what: "Your daily key signs every change you push; without it, servers refuse your commits.",
+    why: "Signing was never set up on this PC, or the key file was moved or deleted.",
+    fix:
+      "deno task archon keys setup (it makes the key; if the old one was lost, use keys lost instead)",
+    doc: "docs/fleet-repository.md",
+  },
+  "E057-NO-PASSPHRASE": {
+    title: "The daily signing key has no passphrase",
+    what: "Anyone (or any program) with a copy of the file could approve changes to every server.",
+    why: "It was made with an empty passphrase.",
+    fix: "ssh-keygen -p -f <the key file> (choose a passphrase; it is never stored)",
+    doc: "docs/fleet-repository.md",
+  },
+  "E057-AGENT": {
+    title: "The daily signing key is loaded in an ssh-agent",
+    what:
+      "While it is loaded, anything running as you, an AI agent included, can sign without asking you.",
+    why: "It was added with ssh-add, or an agent loads keys automatically.",
+    fix: "ssh-add -d <the key file> (and turn off automatic loading)",
+    doc: "docs/fleet-repository.md",
+  },
+  "E057-GIT": {
+    title: "Git does not sign your commits in this repository",
+    what: "Unsigned commits are refused by every server (E047-UNSIGNED).",
+    why: "Git's signing settings are missing or point at another key.",
+    fix: "deno task archon keys setup",
+    doc: "docs/fleet-repository.md",
+  },
+  "E057-NOT-LISTED": {
+    title: "signers.ts does not list your daily key",
+    what: "Servers trust only the keys in signers.ts: they would refuse your commits.",
+    why: "The key is new (a new PC, or a rotation not committed yet).",
+    fix:
+      "deno task archon keys setup, then commit signed by a key already listed (or use keys lost with the recovery key)",
+    doc: "docs/fleet-repository.md",
+  },
+  "E057-NO-RECOVERY": {
+    title: "No recovery key",
+    what: "If the daily key is lost, only the recovery key can approve its replacement.",
+    why: "None was ever made, or it was removed from signers.ts.",
+    fix: "deno task archon keys setup (it makes one; then move it off this PC)",
+    doc: "docs/fleet-repository.md",
+  },
+  "E057-RECOVERY-ON-PC": {
+    title: "The recovery key's private file is on this PC",
+    what: "If this PC is lost or broken into, both keys go together, and nothing can replace them.",
+    why: "keys setup makes it here; it was not moved away yet.",
+    fix:
+      "Move the fleet-recovery folder to an encrypted USB drive or a password manager, then delete it here (keeping the .pub is fine).",
+    doc: "docs/fleet-repository.md",
+  },
+  "E057-RECOVERY-CHECK": {
+    title: "The recovery key has not been checked for six months",
+    what: "A recovery key you cannot use (a forgotten passphrase, a dead USB drive) is no key.",
+    why: "It is checked twice a year.",
+    fix: "deno task archon keys check-recovery --key <its private file>",
+    doc: "docs/fleet-repository.md",
+  },
+  "E057-HOOK": {
+    title: "Pushes are not checked on this PC first",
+    what: "A commit servers would refuse is found only after it is pushed.",
+    why: "The pre-push check is not installed (or another program owns the hook).",
+    fix: "deno task archon keys setup",
+    doc: "docs/fleet-repository.md",
   },
   "E004-SSH-KEY": {
     title: "SSH refused your key",
