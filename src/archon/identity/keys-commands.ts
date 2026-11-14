@@ -895,3 +895,36 @@ export async function keyChecksNow(): Promise<ReturnType<typeof keyChecks>> {
   const f: KeyFacts = await collectKeyFacts();
   return keyChecks(f);
 }
+
+/**
+ * What stops a signed commit (git commit -S) in `repo` right now, as checks:
+ * OpenSSH, Git set to sign with an SSH key that exists, and Git's identity.
+ * Empty: a commit can be made and signed. A fresh clone fails here until
+ * `vault restore` or `keys setup` ran in it.
+ */
+export async function signingBlockers(repo = P.repo): Promise<ReturnType<typeof keyChecks>> {
+  const f = await collectKeyFacts(repo);
+  const out: ReturnType<typeof keyChecks> = [];
+  const no = (code: string, what: string, fix: string) =>
+    out.push({ code, ok: false, level: "fail", what, fix });
+  const setup =
+    "a restored PC: deno task stolos vault restore <your backup ZIP>; otherwise: deno task stolos keys setup";
+  if (!f.ssh.ok) no("E057-SSH", "OpenSSH cannot sign here (8.2 or newer needed)", setup);
+  if (f.git.format !== "ssh" || !f.git.signingKey) {
+    no(
+      "E057-GIT",
+      "Git is not set up to sign with your SSH key in this checkout (a fresh clone)",
+      setup,
+    );
+  } else if (!f.daily.exists) {
+    no("E057-NO-KEY", `the signing key Git names is not here: ${f.paths.daily}`, setup);
+  }
+  if (!f.identity) {
+    no(
+      "E057-IDENTITY",
+      "Git does not know who you are in this checkout (user.name, user.email)",
+      setup,
+    );
+  }
+  return out;
+}

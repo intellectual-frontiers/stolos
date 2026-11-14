@@ -237,8 +237,22 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
       );
       e.done();
     } else {
-      upgradeTo = newest;
-      e.done(`${newest} is out (pinned: ${pin.tag}): upgrading`);
+      // The upgrade is a signed commit: only where one can be made (a fresh clone cannot
+      // until vault restore or keys setup ran in it).
+      const { signingBlockers } = await import("../identity/keys-commands.ts");
+      const blocking = await signingBlockers();
+      if (blocking.length) {
+        e.warn(
+          `${newest} is out (pinned: ${pin.tag}), but this checkout cannot sign a commit yet: ${
+            blocking.map((k) => k.code).join(", ")
+          }`,
+          "a restored PC: deno task stolos vault restore <your backup ZIP>; otherwise: deno task stolos keys setup. Then: deno task stolos update",
+        );
+        e.done();
+      } else {
+        upgradeTo = newest;
+        e.done(`${newest} is out (pinned: ${pin.tag}): upgrading`);
+      }
     }
   }
   let upgraded = false;

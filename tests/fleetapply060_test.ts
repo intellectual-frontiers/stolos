@@ -111,6 +111,25 @@ Deno.test("060: apply commits once (signed), verifies, pushes; push is the same;
       "lab: alpha: host.ts",
     );
     assertEquals(await sh(repo, "git", "status", "--porcelain"), "");
+
+    // A commit made elsewhere, not signed by a fleet signer (a tool, the website), on GitHub:
+    // apply lists it and approves it with one signed commit on top.
+    await Deno.writeTextFile(join(repo, "NOTES.md"), "made elsewhere\n");
+    await sh(repo, "git", "add", "-A");
+    await sh(repo, "git", "commit", "-q", "--no-gpg-sign", "-m", "notes, unsigned");
+    await sh(repo, "git", "push", "-q", "--no-verify", "origin", "main");
+    r = await stolos(["apply"]);
+    assertEquals(r.code, 0, r.out);
+    assertStringIncludes(r.out, "notes, unsigned (t)");
+    assertStringIncludes(r.out, "1 commit(s) here are not signed by a fleet signer");
+    const tip = await sh(origin, "git", "rev-parse", "main");
+    assert((await checkTip(origin, tip, "", allowed)).ok, "servers accept GitHub's tip again");
+    assertStringIncludes(
+      await sh(origin, "git", "log", "-1", "--format=%s", "main"),
+      "lab: approve 1 commit(s)",
+    );
+    r = await stolos(["apply"]);
+    assertStringIncludes(r.out, "up to date");
   } finally {
     await Deno.remove(sb.home, { recursive: true });
   }

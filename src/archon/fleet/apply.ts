@@ -162,20 +162,33 @@ export async function fleetApply(o: FleetApplyOptions = {}): Promise<number> {
   const s = ui.phase("Changes");
   const porcelain = (await git(["status", "--porcelain", "--untracked-files=all"])).stdout;
   const what = describeChanges(porcelain);
-  if (!what && !ahead) {
+  // Nothing changed here, but commits on top not signed by a fleet signer (made elsewhere,
+  // for example by a tool): servers refuse them until a signed commit lands on top.
+  const approve = what ? [] : await unapproved(git);
+  if (!what && !ahead && !approve.length) {
     s.done("nothing to commit or push: up to date");
     return 0;
   }
   if (what) s.done(what);
-  else s.done(`${ahead} commit(s) to push`);
-  const message = o.message?.trim() || `${P.fleetId}: ${what || "changes"}`.slice(0, 200);
+  else if (approve.length) {
+    console.log("\n  Not signed by a fleet signer (your signed commit approves them):");
+    for (const c of approve) console.log(`    ${c}`);
+    console.log("");
+    s.done(
+      `${approve.length} commit(s) here are not signed by a fleet signer (listed above): one signed commit approves them`,
+    );
+  } else s.done(`${ahead} commit(s) to push`);
+  const message = o.message?.trim() ||
+    (approve.length
+      ? `${P.fleetId}: approve ${approve.length} commit(s) not signed by a fleet signer`
+      : `${P.fleetId}: ${what || "changes"}`).slice(0, 200);
   if (o.check) {
     ui.next.push(`to commit and push it: deno task stolos apply -m "${message}"`);
     return 0;
   }
 
   // 5. One signed commit (one passphrase).
-  if (what) {
+  if (what || approve.length) {
     const k = ui.phase("Commit");
     const { gitIdentity } = await import("../identity/keys.ts");
     if (!(await gitIdentity(P.repo))) {
@@ -186,13 +199,22 @@ export async function fleetApply(o: FleetApplyOptions = {}): Promise<number> {
       );
       return fail();
     }
-    const add = await git(["add", "-A"]);
+    const add = what ? await git(["add", "-A"]) : { ok: true, stdout: "", stderr: "" };
     if (!add.ok) {
       k.fail(`git add: ${last(add)}`, "git status");
       return fail();
     }
     console.log("\n  Signing the commit: type your daily key's passphrase.\n");
-    if (!(await gitInteractive(["commit", "-q", "-S", "-m", message]))) {
+    if (
+      !(await gitInteractive([
+        "commit",
+        "-q",
+        "-S",
+        ...(what ? [] : ["--allow-empty"]),
+        "-m",
+        message,
+      ]))
+    ) {
       k.fail(
         "the commit was not made (a wrong passphrase, or it was cancelled)",
         "run this again: your changes are still here",
@@ -248,4 +270,33 @@ export async function fleetApply(o: FleetApplyOptions = {}): Promise<number> {
   }
   ui.next.push("watch them: deno task stolos fleet status");
   return 0;
+}
+
+/**
+ * The commits at the top of this checkout that are not signed by one of the
+ * fleet's signers (as servers check it), newest first, as "sha subject (author)";
+ * empty when the newest commit is signed by one, or the fleet lists no signer.
+ */
+export async function unapproved(
+  git: (args: string[]) => Promise<{ ok: boolean; stdout: string; stderr: string }>,
+  repo = P.repo,
+): Promise<string[]> {
+  const { allowedSignersText, checkTip, loadSigners } = await import("../identity/signers.ts");
+  const signers = await loadSigners().catch(() => []);
+  if (!signers.some((x) => x.role === "daily")) return [];
+  const dir = await Deno.makeTempDir({ prefix: "stolos-approve-" });
+  try {
+    const allowed = `${dir}/allowed_signers`;
+    await Deno.writeTextFile(allowed, allowedSignersText(signers));
+    const log = (await git(["log", "-50", "--format=%H%x09%s (%an)"])).stdout.trim().split("\n");
+    const out: string[] = [];
+    for (const line of log.filter(Boolean)) {
+      const [sha, rest] = line.split("\t");
+      if ((await checkTip(repo, sha, "", allowed)).ok) break;
+      out.push(`${sha.slice(0, 10)} ${rest}`);
+    }
+    return out;
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
 }

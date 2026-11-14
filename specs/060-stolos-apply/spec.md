@@ -23,6 +23,9 @@ before it changes anything, and ask for the passphrase once.
 - **FR-004** Every message that said `git push` (keys setup, rotate, lost, update, fleet upgrade,
   decide, host add, retire, workstation add, where, doctor) says `stolos apply`; the READMEs too.
 - **FR-005** No passphrase is remembered (a possible later spec: an opt-in, time-limited agent).
+- **FR-006** Nothing changed here, but commits at the top not signed by a fleet signer (made
+  elsewhere: a tool, the GitHub website): `apply` lists them and approves them with one signed
+  (empty) commit on top, verified and pushed, so servers accept GitHub's branch again.
 
 ## Success criteria
 

@@ -226,15 +226,14 @@ export async function fleetUpgrade(o: UpgradeOptions): Promise<number> {
   }
   p.done(`${pin.tag} → ${o.tag} (released; ${order < 0 ? "a downgrade" : "newer"})`);
 
-  // Who commits: checked before any file changes (a fresh clone has no identity).
-  {
-    const { gitIdentity } = await import("../identity/keys.ts");
-    if (!o.noCommit && !(await gitIdentity(repo))) {
-      ui.phase("Identity").fail(
-        "Git does not know who you are in this checkout, so the upgrade could not be committed (nothing was changed)",
-        "deno task stolos keys setup (sets it from your GitHub account), then run this again",
-        "E057-IDENTITY",
-      );
+  // A signed commit must be possible here, checked before any file changes: a fresh
+  // clone has no signing settings or identity until vault restore or keys setup ran in it.
+  if (!o.noCommit) {
+    const { signingBlockers } = await import("../identity/keys-commands.ts");
+    const blocking = await signingBlockers(repo);
+    if (blocking.length) {
+      const s = ui.phase("Signing");
+      for (const k of blocking) s.fail(`${k.what} (nothing was changed)`, k.fix, k.code);
       return ui.finish();
     }
   }
