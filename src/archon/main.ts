@@ -60,7 +60,11 @@ function usage(surface: Surface): string {
       ? "usage: deno task stolos <command> [options]   (in your fleet repository, on your PC)"
       : "usage: archon <command> [options]   (on this machine)",
     "",
-    ...cmds.map((c) => `  ${c.name.padEnd(width)}  ${c.summary}`),
+    ...cmds.map((c) =>
+      `  ${c.name.padEnd(width)}  ${c.summary}${
+        c.aliases ? ` (also: ${c.aliases.join(", ")})` : ""
+      }`
+    ),
     ...(surface === "pc"
       ? [
         "  " + "boot <sub>".padEnd(width) +

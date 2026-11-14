@@ -83,6 +83,7 @@ import "./doctor/probe.ts";
 import "./dotfiles/layers.ts";
 import "./dotfiles/report.ts";
 import "./dotfiles/sync.ts";
+import "./fleet/apply.ts";
 import "./fleet/decisions.ts";
 import "./fleet/registration.ts";
 import "./fleet/scaffold.ts";

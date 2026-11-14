@@ -376,9 +376,7 @@ export async function fleetInit(o: FleetInitOptions): Promise<void> {
   );
   ui.next.push(
     "next: your signing keys (spec 057): deno task stolos keys setup",
-    `then: git add -A; git commit -m "${
-      P.fleetId || "<fleet>"
-    }: the fleet and its signers"; git push`,
+    `then: deno task stolos apply -m "${P.fleetId || "<fleet>"}: the fleet and its signers"`,
     "then: deno task stolos (it shows the next step)",
   );
 }

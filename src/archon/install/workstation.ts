@@ -138,7 +138,7 @@ export async function workstationAdd(
     console.error(
       [
         "",
-        `next: git add -A; git commit -m "020-workstation: add workstation ${name}"; git push`,
+        `next: deno task stolos apply -m "020-workstation: add workstation ${name}"`,
         "then: open a new Ubuntu tab (fish with the Archon prompt); later: sudo archon update",
       ].join("\n"),
     );

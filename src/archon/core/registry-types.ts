@@ -18,6 +18,8 @@ export interface ArgSpec {
   description: string;
   /** Given without --name, in order. */
   positional?: boolean;
+  /** A one-letter form (-m for --message). */
+  short?: string;
   /** The command refuses to run without it. */
   required?: boolean;
   /** Its value when it is not given. */
@@ -98,6 +100,8 @@ export interface Command {
    * (`archon`, on each server or workstation), or "both".
    */
   place?: Place;
+  /** Other names for it (spec 060: stolos push is stolos apply). */
+  aliases?: string[];
   /** Runs it; returns the exit code. */
   run: (args: Parsed, ctx: RunContext) => Promise<number>;
 }
@@ -117,7 +121,14 @@ export function parseArgs(cmd: Command, argv: string[]): Parsed {
   const positionals = cmd.args.filter((a) => a.positional);
   let pi = 0;
   for (let i = 0; i < argv.length; i++) {
-    const a = argv[i];
+    let a = argv[i];
+    // A one-letter form: -m "text" is --message "text".
+    const short = /^-([a-zA-Z])$/.exec(a)?.[1];
+    if (short) {
+      const s = cmd.args.find((x) => x.short === short);
+      if (!s) throw new Error(`unknown option -${short} for '${cmd.name}'`);
+      a = `--${s.name}`;
+    }
     if (a.startsWith("--")) {
       const [k, inline] = a.slice(2).split("=", 2);
       const spec = cmd.args.find((x) => x.name === k && !x.positional);

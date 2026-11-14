@@ -45,7 +45,7 @@ Deno.test("047: stolos decide writes Git's decision; the model and the data clas
     assert(r.code !== 0, r.out);
     r = await archon(["decide", "pg", "on", "--durable", "--host", "beta"]);
     assertEquals(r.code, 0, r.out);
-    assertStringIncludes(r.out, "git commit -S");
+    assertStringIncludes(r.out, "deno task stolos apply");
     const text = await Deno.readTextFile(`${repo}/fleets/lab/hosts/beta/decisions.ts`);
     assertStringIncludes(text, '"pg": {\n      enabled: true,\n      data: "durable",');
     r = await archon(["validate"]);

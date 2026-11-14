@@ -51,11 +51,15 @@ export async function doctor(
       `${dirty.length} change(s) not committed (${
         dirty.map((l) => l.slice(3)).slice(0, 3).join(", ")
       }${dirty.length > 3 ? ", ..." : ""}): hosts install from GitHub and would not see them`,
-      'git add -A; git commit -m "<spec>: <what>"; git push',
+      'deno task stolos apply -m "<what changed>"',
     );
   }
-  if (ahead) g.fail(`${ahead} commit(s) not pushed: hosts would not see them`, "git push");
-  if (behind) g.warn(`${behind} new commit(s) on GitHub`, "git pull, then restart boot serve");
+  if (ahead) {
+    g.fail(`${ahead} commit(s) not pushed: hosts would not see them`, "deno task stolos apply");
+  }
+  if (behind) {
+    g.warn(`${behind} new commit(s) on GitHub`, "deno task stolos update, then restart boot serve");
+  }
   g.done(dirty.length || ahead || behind ? "needs attention" : `${branch}, in step with GitHub`);
 
   // --------------------------------------------------------------- model

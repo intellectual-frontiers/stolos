@@ -163,7 +163,7 @@ export function whereSteps(f: WhereFacts): Step[] {
       : f.unpushed
       ? `${f.unpushed} commit(s) not pushed (pushing is the approval)`
       : "everything committed and pushed",
-    command: f.dirty ? 'git add -A && git commit -S -m "<spec>: <what>" && git push' : "git push",
+    command: 'deno task stolos apply -m "<what changed>"',
   });
   return label(raw);
 }

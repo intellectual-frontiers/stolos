@@ -286,7 +286,7 @@ With Deno, Git, and `gh` installed (above) and `gh auth login` done:
 4. Commit and push (Git signs it; type your passphrase):
 
    ```sh
-   git add -A && git commit -m "<id>: the fleet" && git push
+   deno task stolos apply -m "<id>: the fleet"
    ```
 
 5. From here, `deno task stolos` shows where you are and the one command to run next: tokens, your
@@ -343,6 +343,16 @@ deno task stolos                  # where you are, and the one command to run ne
 deno task stolos fleet status     # every server, how it is
 ```
 
+Then, after changing anything in the fleet repository, one command sends it to every machine:
+
+```sh
+deno task stolos apply -m "what changed"   # (or: deno task stolos push)
+```
+
+It checks your keys and the model, catches up with GitHub, builds, makes **one** signed commit (your
+passphrase, once), checks that the servers will trust it, and pushes. With nothing new, it says so
+and does nothing; `--check` shows what it would do. Every machine applies it within 15 minutes.
+
 ## Common tasks, step by step
 
 The examples use `server-hostname` for a server and `my-fleet` for the fleet: put your own names in
@@ -375,7 +385,7 @@ within 15 minutes.
 5. Save what the machine reported about itself (its MAC address), signed:
 
    ```sh
-   git add -A && git commit -m "my-fleet: server-hostname installed" && git push
+   deno task stolos apply -m "my-fleet: server-hostname installed"
    ```
 
 6. Log in: `ssh server-hostname`. On the server, `archon` (no arguments) shows its state and
@@ -406,7 +416,7 @@ sudo mkdir -p /srv/archon && sudo chown "$USER": /srv/archon
 git clone https://github.com/<you>/<fleet repository>.git /srv/archon
 curl -fsSL https://deno.land/install.sh | sh -s -- -y && exec bash
 cd /srv/archon && deno task stolos workstation add
-git add -A && git commit -m "my-fleet: add workstation" && git push
+deno task stolos apply -m "my-fleet: add workstation"
 ```
 
 Open a new Ubuntu tab: the fleet's tools, prompt, and Claude Code are ready. Details:
@@ -421,8 +431,7 @@ Edit its file, `fleets/my-fleet/hosts/server-hostname/host.ts` (or `fleets/my-fl
 every server), then:
 
 ```sh
-deno task stolos build            # checks it; fix anything it shows
-git add -A && git commit -m "my-fleet: what changed" && git push
+deno task stolos apply -m "my-fleet: what changed"   # checks, builds, signs, pushes
 deno task stolos fleet status     # within 15 minutes, each server has applied it
 ```
 
@@ -443,7 +452,7 @@ There is no default: you choose.
 
 ```sh
 deno task stolos decide pg on --durable --host server-hostname
-git add -A && git commit -m "my-fleet: PostgreSQL on server-hostname" && git push
+deno task stolos apply -m "my-fleet: PostgreSQL on server-hostname"
 ```
 
 Check later: `ssh server-hostname archon data` lists each source of data and its choice. Going from
@@ -495,14 +504,14 @@ Its DNS names, deploy key, secrets, and files leave the fleet; the machine itsel
 <details>
 <summary><b>Keys: a new PC, a lost key, a yearly change</b></summary>
 
-| Situation                                 | Run                                                       |
-| ----------------------------------------- | --------------------------------------------------------- |
-| check everything                          | `deno task stolos keys`                                   |
-| a new PC, or anything is wrong            | `deno task stolos keys setup` (safe to run again)         |
-| a planned change of key                   | `deno task stolos keys rotate`, then `git push`           |
-| the daily key is lost                     | `deno task stolos keys lost --recovery <file>`, then push |
-| the laptop was stolen (key may be copied) | the same, with `--stolen`                                 |
-| twice a year                              | `deno task stolos keys check-recovery --key <file>`       |
+| Situation                                 | Run                                                           |
+| ----------------------------------------- | ------------------------------------------------------------- |
+| check everything                          | `deno task stolos keys`                                       |
+| a new PC, or anything is wrong            | `deno task stolos keys setup` (safe to run again)             |
+| a planned change of key                   | `deno task stolos keys rotate`, then `deno task stolos apply` |
+| the daily key is lost                     | `deno task stolos keys lost --recovery <file>`, then push     |
+| the laptop was stolen (key may be copied) | the same, with `--stolen`                                     |
+| twice a year                              | `deno task stolos keys check-recovery --key <file>`           |
 
 </details>
 
@@ -525,8 +534,9 @@ use it on a new PC.
 <summary><b>Adopt a newer engine</b></summary>
 
 `deno task stolos update` does it when a newer release is out: it checks the new version against
-your fleet, makes one signed commit, and tells you to `git push`; your servers pick it up within 15
-minutes. To choose a version yourself: `deno task stolos fleet upgrade v<version>`, then `git push`.
+your fleet, makes one signed commit, and tells you to run `deno task stolos apply`; your servers
+pick it up within 15 minutes. To choose a version yourself:
+`deno task stolos fleet upgrade v<version>`, then `deno task stolos apply`.
 
 </details>
 
@@ -538,7 +548,7 @@ Most messages end with `explain: archon explain <code>`: run it for what it mean
 | You see                                               | What to do                                                                                                                              |
 | ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | `no fleet chosen in ...`                              | the repository holds several fleets: `deno task stolos fleet use my-fleet` (once per checkout; remembered)                              |
-| `push refused here: ... is not signed`                | `git commit --amend --no-edit -S`, then push again. `deno task stolos keys` shows what is missing                                       |
+| `push refused here: ... is not signed`                | `git commit --amend --no-edit -S`, then `deno task stolos apply` again. `deno task stolos keys` shows what is missing                   |
 | a server does not pick up your change                 | `deno task stolos fleet status`; on the server, `journalctl -t archon-approval` says why it refused (usually `E047-UNSIGNED`)           |
 | the boot window shows nothing when the machine boots  | `deno task stolos boot doctor` (the firewall, and the router's network boot setting); is the machine booting from the network (F7/F12)? |
 | `disk is not blank` in the boot window                | it protected the disk. If it may be erased: `deno task stolos boot arm server-hostname --claim --confirm-destroy server-hostname`       |

@@ -53,6 +53,41 @@ export const COMMANDS: Command[] = [
     },
   },
   {
+    name: "apply",
+    aliases: ["push"],
+    summary: "Your changes to the fleet, to every machine: check, build, one signed commit, push",
+    description:
+      `One command instead of build, git add, git commit, and git push (spec 060; stolos push is the same command). In order, stopping at the first problem with its fix: checks (a fleet is chosen, this is its branch, your keys can sign); catches up with GitHub (fast-forward only; your uncommitted edits are kept); builds (validate and render: an invalid model commits nothing); shows what changes, by fleet and host; makes one signed commit (your passphrase, once; -m gives the message, else it is written from what changed); verifies that servers will trust it; and pushes. Every machine applies it within 15 minutes. With nothing new, it says so and does nothing. --check stops before the commit.`,
+    tier: "repo",
+    place: "pc",
+    operation: true,
+    noMcp: true,
+    args: [
+      {
+        name: "message",
+        short: "m",
+        type: "string",
+        description: "The commit message (default: written from what changed).",
+      },
+      {
+        name: "check",
+        type: "boolean",
+        description: "Checks, catch-up report, build, and what would be committed; change nothing.",
+      },
+    ],
+    examples: [
+      {
+        cmd: 'deno task stolos apply -m "fcr: olympia\'s packages"',
+        text: "Build, sign, and push.",
+      },
+      { cmd: "deno task stolos push", text: "The same (push is another name for apply)." },
+    ],
+    async run(a) {
+      const { fleetApply } = await import("../fleet/apply.ts");
+      return await fleetApply({ message: a.message as string | undefined, check: !!a.check });
+    },
+  },
+  {
     name: "fleet use",
     summary: "Choose which fleet of this repository archon works on (remembered here)",
     description:
@@ -2296,7 +2331,9 @@ export function findCommand(
   const longest = Math.max(...COMMANDS.map((c) => c.name.split(" ").length));
   for (let n = longest; n >= 1; n--) {
     const name = argv.slice(0, n).join(" ");
-    const cmd = COMMANDS.find((c) => c.name === name && offeredOn(c, place));
+    const cmd = COMMANDS.find((c) =>
+      (c.name === name || c.aliases?.includes(name)) && offeredOn(c, place)
+    );
     if (cmd) return { cmd, rest: argv.slice(n) };
   }
   return undefined;

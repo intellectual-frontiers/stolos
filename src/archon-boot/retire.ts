@@ -213,9 +213,7 @@ export async function retire(
   return ui.finish({
     next: [
       ...(published ? [] : [
-        `build, commit, and push the removal: deno task stolos build, then git add -A ${
-          removed.join(" ")
-        } .mcp.json, git commit, git push`,
+        `build, commit, and push the removal: deno task stolos apply -m "045-retire: retire ${name}"`,
       ]),
       ...(host.dnsName && site.includes(host.dnsName)
         ? [

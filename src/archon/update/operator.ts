@@ -126,18 +126,20 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
   let pulled: string[] = [];
   if (!behind) {
     p.done(
-      ahead ? `up to date; ${ahead} commit(s) of yours not pushed yet (git push)` : "up to date",
+      ahead
+        ? `up to date; ${ahead} commit(s) of yours not pushed yet (deno task stolos apply)`
+        : "up to date",
     );
   } else if (ahead) {
     p.warn(
       `your ${ahead} commit(s) and ${behind} new one(s) on GitHub went different ways`,
-      `git pull --rebase (puts yours on top), then git push`,
+      `git pull --rebase (puts yours on top), then deno task stolos apply`,
     );
     p.done();
   } else if (dirty) {
     p.warn(
       `${behind} new commit(s) on GitHub, but you have changes not committed`,
-      "commit them (git add -A; git commit -m ...) or set them aside (git stash), then run this again",
+      "send them first (deno task stolos apply), or set them aside (git stash), then run this again",
     );
     p.done();
   } else {
@@ -214,7 +216,7 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
         `${newest} is out (pinned: ${pin.tag})`,
         dirty || ahead
           ? `push or commit your own changes first, then: deno task stolos update`
-          : `deno task stolos fleet upgrade ${newest}, then git push`,
+          : `deno task stolos fleet upgrade ${newest}, then deno task stolos apply`,
       );
       e.done();
     } else {
@@ -233,7 +235,9 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
     if (code === 0) {
       upgraded = true;
       u.done(`pinned to ${upgradeTo} (one signed commit)`);
-      ui.next.push(`push it: git push (servers move to ${upgradeTo} within 15 minutes)`);
+      ui.next.push(
+        `push it: deno task stolos apply (servers move to ${upgradeTo} within 15 minutes)`,
+      );
     } else {
       u.fail(
         `fleet upgrade to ${upgradeTo} did not finish`,

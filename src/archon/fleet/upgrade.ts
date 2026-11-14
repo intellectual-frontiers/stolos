@@ -325,7 +325,7 @@ export async function fleetUpgrade(o: UpgradeOptions): Promise<number> {
   }
   c.done(`signed commit "stolos ${o.tag}: adopt the engine ${o.tag}"`);
   ui.next.push(
-    "push it: git push (pushing is the approval; hosts move to it within 15 minutes)",
+    "push it: deno task stolos apply (pushing is the approval; hosts move to it within 15 minutes)",
     "then watch them: stolos fleet status",
   );
   return ui.finish();

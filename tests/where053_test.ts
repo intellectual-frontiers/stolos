@@ -58,5 +58,5 @@ Deno.test("053: an armed host says to keep the boot server running; no server sa
   });
   assertStringIncludes(nextCommand(armed), "boot serve");
   assertStringIncludes(nextCommand(whereSteps({ ...ready, hosts: [] })), "host add <name> --claim");
-  assertStringIncludes(nextCommand(whereSteps({ ...ready, unpushed: 2 })), "git push");
+  assertStringIncludes(nextCommand(whereSteps({ ...ready, unpushed: 2 })), "stolos apply");
 });

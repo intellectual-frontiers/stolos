@@ -263,11 +263,10 @@ export function approvalSteps(
   const where = wsl
     ? "in Windows: open PowerShell, cd C:\\fleet (your fleet folder), deno task stolos update, then run:"
     : "on a PC whose key is already listed, in the fleet repository, after deno task stolos update, run:";
-  const sep = wsl ? ";" : " &&";
   return [
     `approve this PC's key ${where}`,
     `    deno task stolos signers add ${name} --role daily --key "${pub}"`,
-    `    git add -A${sep} git commit -m "${fleetId}: signers: add ${name}"${sep} git push`,
+    `    deno task stolos apply -m "${fleetId}: signers: add ${name}"`,
     `then back here: git checkout -- ${rel} && deno task stolos update`,
   ];
 }
@@ -457,7 +456,7 @@ export async function keysSetup(o: { test?: boolean } = {}): Promise<number> {
     }
   } else if (signersChanged) {
     ui.next.push(
-      `approve the new signers: git add ${rel} && git commit -m "${f.fleetId}: signers" && git push`,
+      `approve the new signers: deno task stolos apply -m "${f.fleetId}: signers"`,
     );
   }
   if (recoveryMade) {
@@ -594,7 +593,7 @@ export async function keysRotate(): Promise<number> {
   for (const ext of ["", ".pub"]) await Deno.rename(next + ext, f.paths.daily + ext);
   await renderAllowed(f.paths.allowedSigners);
   p.done(`${current.name} has a new key; the old one is kept as ${old} (never used again)`);
-  ui.next.push("push it: git push (servers accept the new key from that commit on)");
+  ui.next.push("push it: deno task stolos apply (servers accept the new key from that commit on)");
   ui.next.push("back up the new key: deno task stolos vault backup");
   return end();
 }
@@ -659,7 +658,9 @@ export async function keysLost(recovery: string, stolen = false): Promise<number
   await setLocal("user.signingkey", f.paths.daily);
   await renderAllowed(f.paths.allowedSigners);
   p.done(`${old.name} has a new key, approved by ${r.name}`);
-  ui.next.push("push it: git push (servers stop trusting the old key from that commit on)");
+  ui.next.push(
+    "push it: deno task stolos apply (servers stop trusting the old key from that commit on)",
+  );
   ui.next.push(`put the recovery key away again; back up: deno task stolos vault backup`);
   return end();
 }

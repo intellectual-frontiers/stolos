@@ -243,11 +243,11 @@ Deno.test("057: the approval steps, on WSL (Windows PowerShell) and elsewhere", 
   );
   assertStringIncludes(
     wsl[2],
-    'git add -A; git commit -m "fcr: signers: add owner-pc-daily"; git push',
+    'deno task stolos apply -m "fcr: signers: add owner-pc-daily"',
   );
   const other = approvalSteps("fcr", "fleets/fcr/signers.ts", "x", "ssh-ed25519 AAAA", false);
   assertStringIncludes(other[0], "a PC whose key is already listed");
-  assertStringIncludes(other[2], "git add -A && git commit");
+  assertStringIncludes(other[2], "deno task stolos apply");
 });
 
 Deno.test("057: the checks, from facts (no files, no prompts)", () => {

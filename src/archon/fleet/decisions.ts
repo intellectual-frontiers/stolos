@@ -106,11 +106,9 @@ export async function decide(
     }`,
   );
   ui.next.push(
-    `commit and push it signed: git add ${
-      repoRel(file)
-    } && git commit -S -m "${P.fleetId} decide: ${name} ${
+    `commit and push it: deno task stolos apply -m "${P.fleetId} decide: ${name} ${
       enabled ? "on" : "off"
-    } on ${hostName}" && git push`,
+    } on ${hostName}"`,
     `${hostName} applies it within 15 minutes (or now: archon update on it)`,
   );
   return ui.finish();

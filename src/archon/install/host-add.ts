@@ -227,7 +227,7 @@ export async function hostAdd(o: HostAddOptions): Promise<number> {
     await publishChange([repoRel(file), regFile], `004-install: add host ${name}`);
   ui.next.push(
     ...(published ? [] : [
-      `next: deno task stolos build, then git add -A fleets/<fleet>/hosts/${name}/host.ts .mcp.json, git commit -m "004-install: add host ${name}", git push`,
+      `next: deno task stolos apply -m "004-install: add host ${name}"`,
     ]),
     "then: deno task stolos boot serve (leave it running)",
     how.kind === "claim"

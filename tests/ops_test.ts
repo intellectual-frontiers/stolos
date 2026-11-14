@@ -25,11 +25,11 @@ Deno.test("059: every command says where it runs; stolos and archon do not overl
   const pc = names("pc");
   const machine = names("machine");
   const both = [...pc].filter((n) => machine.has(n)).sort();
-  assertEquals(both, ["explain", "update"], "update is two commands: one each");
+  assertEquals(both, ["apply", "explain", "update"], "apply and update are two commands: one each");
   for (const n of ["keys setup", "fleet init", "host add", "vault backup", "decide", "where"]) {
     assert(pc.has(n) && !machine.has(n), n);
   }
-  for (const n of ["apply", "verify", "pg on", "reboot", "mcp", "signers trust", "state"]) {
+  for (const n of ["verify", "pg on", "reboot", "mcp", "signers trust", "state"]) {
     assert(machine.has(n) && !pc.has(n), n);
   }
 });
@@ -50,13 +50,14 @@ Deno.test("059: each command points at the other for the other's commands", asyn
   let r = await run("src/archon/main.ts", ["keys", "setup"]);
   assertEquals(r.code, 2, r.out);
   assertStringIncludes(r.out, "deno task stolos keys setup");
-  r = await run("src/stolos/main.ts", ["apply"]);
+  r = await run("src/stolos/main.ts", ["verify"]);
   assertEquals(r.code, 2, r.out);
-  assertStringIncludes(r.out, "archon apply");
+  assertStringIncludes(r.out, "archon verify");
   r = await run("src/stolos/main.ts", ["help"]);
   assertStringIncludes(r.out, "deno task stolos <command>");
   assertStringIncludes(r.out, "boot <sub>");
-  assert(!r.out.includes("  apply "), "no machine commands in stolos help");
+  assert(!r.out.includes("  verify "), "no machine commands in stolos help");
+  assertStringIncludes(r.out, "(also: push)");
 });
 
 Deno.test("030: workstations reach each server over SSH as ops, one MCP server each", async () => {
@@ -114,7 +115,7 @@ Deno.test("030: ops' keys only start archon mcp at the fleet's tier", async () =
 });
 
 Deno.test("030: archon mcp serves only its tier, and never destructive", async () => {
-  const cmd = (n: string) => COMMANDS.find((c) => c.name === n)!;
+  const cmd = (n: string) => COMMANDS.find((c) => c.name === n && c.place !== "pc")!;
   assertEquals(parseTier(undefined), "mutate");
   let threw = false;
   try {
