@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>smbConf - archon/smb/config.ts - Stolos v0.57.0 documentation</title>
+  <title>smbConf - archon/smb/config.ts - Stolos v0.58.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;smb&#x2F;config.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.57.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.58.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -165,8 +165,8 @@
   </defs>
 </svg>
 </a>
-<span class="font-bold">smbConf</span><span class="font-medium">(<div class="ml-4"><div><span>fleet<span>: <a href="../../../.././archon/model/types.ts/~/FleetDef.html" class="link td-ref">FleetDef</a></span></span>,</div><div><span>host<span>: <a href="../../../.././archon/model/types.ts/~/HostDef.html" class="link td-ref">HostDef</a></span></span>,</div><div><span>users<span>: <a href="../../../.././archon/model/types.ts/~/UserDef.html" class="link td-ref">UserDef</a>[]</span></span></div></div>)<span>: <span class="td-kw">string</span></span> </span>
-      </code><div class="space-y-7" id=""><div class="markdown"><p>The rendered smb.conf: SMB3 only, no guests, no NetBIOS, local networks only, the shared folder and homes.</p>
+<span class="font-bold">smbConf</span><span class="font-medium">(<div class="ml-4"><div><span>_fleet<span>: <a href="../../../.././archon/model/types.ts/~/FleetDef.html" class="link td-ref">FleetDef</a></span></span>,</div><div><span>host<span>: <a href="../../../.././archon/model/types.ts/~/HostDef.html" class="link td-ref">HostDef</a></span></span>,</div><div><span>users<span>: <a href="../../../.././archon/model/types.ts/~/UserDef.html" class="link td-ref">UserDef</a>[]</span></span></div></div>)<span>: <span class="td-kw">string</span></span> </span>
+      </code><div class="space-y-7" id=""><div class="markdown"><p>The rendered smb.conf: SMB3 only, no guests, no NetBIOS, the shared folder and homes (the router decides who reaches it).</p>
 </div><section class="section"  id="parameters"><div>
       <h2 class="anchorable mb-1"><a href="#parameters" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
@@ -190,10 +190,10 @@
   </defs>
 </svg>
 </a>
-Parameters</h2></div><div class="space-y-8"><div class="anchorable docEntry" id="function_smbconf_0_parameter_fleet">
+Parameters</h2></div><div class="space-y-8"><div class="anchorable docEntry" id="function_smbconf_0_parameter__fleet">
 
   <div class="docEntryHeader">
-    <div><code><a href="#function_smbconf_0_parameter_fleet" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+    <div><code><a href="#function_smbconf_0_parameter__fleet" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
   height="16"
   viewBox="0 0 14 14"
@@ -215,7 +215,7 @@ Parameters</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   </defs>
 </svg>
 </a>
-<span class="font-bold font-lg">fleet</span><span class="font-medium text-stone-500 dark:text-stone-200"><span>: <a href="../../../.././archon/model/types.ts/~/FleetDef.html" class="link td-ref">FleetDef</a></span></span>
+<span class="font-bold font-lg">_fleet</span><span class="font-medium text-stone-500 dark:text-stone-200"><span>: <a href="../../../.././archon/model/types.ts/~/FleetDef.html" class="link td-ref">FleetDef</a></span></span>
       </code>
     </div><a
   class="sourceButton"
@@ -445,7 +445,7 @@ Return Type</h2></div><div class="space-y-8"><div class=" docEntry" id="function
 </svg>
 </button><code></code></pre>
 </div></div><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#parameters" title="Parameters">Parameters</a></li><li><ul><li><a href="#function_smbconf_0_parameter_fleet" title="fleet">fleet</a></li><li><a href="#function_smbconf_0_parameter_host" title="host">host</a></li><li><a href="#function_smbconf_0_parameter_users" title="users">users</a></li></ul></li><li><a href="#return-type" title="Return Type">Return Type</a></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#parameters" title="Parameters">Parameters</a></li><li><ul><li><a href="#function_smbconf_0_parameter__fleet" title="_fleet">_fleet</a></li><li><a href="#function_smbconf_0_parameter_host" title="host">host</a></li><li><a href="#function_smbconf_0_parameter_users" title="users">users</a></li></ul></li><li><a href="#return-type" title="Return Type">Return Type</a></li></ul></nav></div>
   </div></div>
 </div>
 </div>

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/capabilities/web.ts - Stolos v0.57.0 documentation</title>
+  <title>archon/capabilities/web.ts - Stolos v0.58.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.57.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.58.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -100,8 +100,9 @@
     <main><section>
   <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc"><div class="markdown"><p>032-web: every server is HTTPS-ready from its first boot. Traefik (the
 official release binary, installed by the tools sync) on 80 and 443, open
-to everyone at the server's firewall; every route behind it is limited to
-the local networks. A welcome page (archon web serve, loopback only)
+to everyone at the server's firewall, and no network allowlist behind it:
+who reaches the server is the router's decision (the firewall at the edge,
+outside the machine). A welcome page (archon web serve, loopback only)
 answers <a href="https://">https://</a>&lt;host&gt;.&lt;domain&gt; and any name or address nothing else
 claims. Podman (Ubuntu's package) is the container runtime: containers
 that carry traefik.enable=true get &lt;container&gt;.&lt;host&gt;.&lt;domain&gt;.</p>
@@ -210,7 +211,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_web" class=
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1220 symbols</span><svg
+              <span class="leading-none">view all 1221 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

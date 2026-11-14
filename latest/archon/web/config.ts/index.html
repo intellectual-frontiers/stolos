@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/web/config.ts - Stolos v0.57.0 documentation</title>
+  <title>archon/web/config.ts - Stolos v0.58.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.57.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.58.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -99,10 +99,10 @@
 <div id="searchResults"></div><div id="content">
     <main><section>
   <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc"><div class="markdown"><p>032-web: the server's HTTPS front door, as data. Traefik (an official
-release binary, spec 010) listens on 80 and 443; 80 only redirects. Every
-route on 443 is limited to the local networks at the entry point, so
-nothing on a server is reachable from outside the LAN through the proxy
-(the router decides what the internet sees, Article 21). Certificates come
+release binary, spec 010) listens on 80 and 443; 80 only redirects. No
+route is limited by network: who reaches the server is the router's
+decision (the firewall at the edge, outside the machine; Article 21 and
+spec 064). Certificates come
 from Let's Encrypt through Cloudflare's DNS challenge when fleet.web is set;
 until then (and without it) Traefik's self-signed certificate answers.</p>
 <p>Everything here is pure: the capability renders it, tests read it.</p>
@@ -150,15 +150,10 @@ its address. None without fleet.web.</p>
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;config.ts&#x2F;~&#x2F;hostRoutes.html" title="hostRoutes">
 			    <span>hostRoutes</span><span>(<span><span>host<span>: <span class="td-ref">HostDef</span></span></span></span>)<span>: <span class="td-ref">WebRoute</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Routes from the model: the host's own, and each guest that publishes a port.</p>
 </div></div></div>
-    </div><div id="namespace_lanranges" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<div class="namespaceItemContent">
-		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;config.ts&#x2F;~&#x2F;lanRanges.html" title="lanRanges">
-			    <span>lanRanges</span><span>(<span><span>fleet<span>: <span class="td-ref">FleetDef</span></span></span></span>)<span>: <span class="td-kw">string</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Who may reach anything behind the proxy: the local networks and loopback.</p>
-</div></div></div>
     </div><div id="namespace_traefikdynamic" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;config.ts&#x2F;~&#x2F;traefikDynamic.html" title="traefikDynamic">
-			    <span>traefikDynamic</span><span>(<span><span>plan<span>: <span class="td-ref">Pick</span>&lt;<span class="td-ref">HostPlan</span><span>, </span><span><span class="td-str">"host"</span><span class="td-op"> | </span><span class="td-str">"fleet"</span><span class="td-op"> | </span><span class="td-str">"routes"</span></span>&gt;</span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Traefik's dynamic configuration: the LAN middleware, the welcome page, every route.</p>
+			    <span>traefikDynamic</span><span>(<span><span>plan<span>: <span class="td-ref">Pick</span>&lt;<span class="td-ref">HostPlan</span><span>, </span><span><span class="td-str">"host"</span><span class="td-op"> | </span><span class="td-str">"fleet"</span><span class="td-op"> | </span><span class="td-str">"routes"</span></span>&gt;</span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Traefik's dynamic configuration: the welcome page and every route.</p>
 </div></div></div>
     </div><div id="namespace_traefikstatic" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -319,7 +314,7 @@ account whose name exists, and the group archon-web does.</p>
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1220 symbols</span><svg
+              <span class="leading-none">view all 1221 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -334,7 +329,7 @@ account whose name exists, and the group archon-web does.</p>
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/web/config_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_backendurl" title="backendUrl">backendUrl</a></li><li><a href="#namespace_dnsrecords" title="dnsRecords">dnsRecords</a></li><li><a href="#namespace_fqdn" title="fqdn">fqdn</a></li><li><a href="#namespace_hostroutes" title="hostRoutes">hostRoutes</a></li><li><a href="#namespace_lanranges" title="lanRanges">lanRanges</a></li><li><a href="#namespace_traefikdynamic" title="traefikDynamic">traefikDynamic</a></li><li><a href="#namespace_traefikstatic" title="traefikStatic">traefikStatic</a></li><li><a href="#namespace_zoneof" title="zoneOf">zoneOf</a></li></ul></li><li><a href="#archon/web/config_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_web" title="WEB">WEB</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/web/config_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_backendurl" title="backendUrl">backendUrl</a></li><li><a href="#namespace_dnsrecords" title="dnsRecords">dnsRecords</a></li><li><a href="#namespace_fqdn" title="fqdn">fqdn</a></li><li><a href="#namespace_hostroutes" title="hostRoutes">hostRoutes</a></li><li><a href="#namespace_traefikdynamic" title="traefikDynamic">traefikDynamic</a></li><li><a href="#namespace_traefikstatic" title="traefikStatic">traefikStatic</a></li><li><a href="#namespace_zoneof" title="zoneOf">zoneOf</a></li></ul></li><li><a href="#archon/web/config_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_web" title="WEB">WEB</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>hbaConf - archon/pg/config.ts - Stolos v0.57.0 documentation</title>
+  <title>hbaConf - archon/pg/config.ts - Stolos v0.58.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;pg&#x2F;config.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.57.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.58.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -169,7 +169,7 @@
       </code><div class="space-y-7" id=""><div class="markdown"><p>pg_hba.conf (spec 039): every login is a Linux account. On the socket, peer:
 the kernel says who is connecting, and that is the role (no password). On
 loopback, scram-sha-256. When published, TLS with scram-sha-256 from <code>from</code>
-(every address, or the local networks with --local-only). postgres never over a
+(every address: the router decides who reaches the server). postgres never over a
 network. Nothing weaker anywhere.</p>
 </div><section class="section"  id="parameters"><div>
       <h2 class="anchorable mb-1"><a href="#parameters" class="anchor" aria-label="Anchor" tabIndex="-1"><svg

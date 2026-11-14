@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/model/types.ts - Stolos v0.57.0 documentation</title>
+  <title>archon/model/types.ts - Stolos v0.58.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.57.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.58.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -839,8 +839,8 @@ Linux account (a person in the model, or a service account s-&lt;app&gt;) or</p>
                   <span>protected</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>psql turns AUTOCOMMIT off and warns in red.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;PgRecord.html#property_published">
-                  <span>published</span><span>: { at<span>: <span class="td-kw">string</span></span>; by<span>: <span class="td-kw">string</span></span>; localOnly<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Published: reachable on the server's address over TLS (scram-sha-256). From
-anywhere the router lets through, unless localOnly (archon pg publish --local-only).</p>
+                  <span>published</span><span>: { at<span>: <span class="td-kw">string</span></span>; by<span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Published: reachable on the server's address over TLS (scram-sha-256). From
+anywhere the router lets through (the machine restricts no network).</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;PgRecord.html#property_retired">
                   <span>retired</span><span>: <span class="td-kw">number</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Older clusters kept, stopped, after an upgrade (removed with archon pg remove --version).</p>
@@ -861,9 +861,6 @@ anywhere the router lets through, unless localOnly (archon pg publish --local-on
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;PortDef.html" title="PortDef">
 			    <span>PortDef</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A port opened in the host's firewall (ufw).</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;PortDef.html#property_from">
-                  <span>from</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Only from these networks (CIDR), for example the local networks; default: anywhere.</p>
-</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;PortDef.html#property_port">
                   <span>port</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The port number.</p>
 </div></div></li><li>
@@ -1147,7 +1144,7 @@ enabled and started; otherwise <code>state</code> applies (masked, for SMB).</p>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;WebRoute.html" title="WebRoute">
 			    <span>WebRoute</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A service published through the server's proxy (spec 032) as
-&lt;name&gt;.&lt;host&gt;.&lt;domain&gt;, from the local networks only.</p>
+&lt;name&gt;.&lt;host&gt;.&lt;domain&gt; (who reaches it is the router's decision).</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;WebRoute.html#property_address">
                   <span>address</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The backend's address (default 127.0.0.1).</p>
@@ -1388,7 +1385,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_brand-1" cl
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1220 symbols</span><svg
+              <span class="leading-none">view all 1221 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

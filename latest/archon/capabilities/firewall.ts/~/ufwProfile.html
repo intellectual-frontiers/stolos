@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ufwProfile - archon/capabilities/firewall.ts - Stolos v0.57.0 documentation</title>
+  <title>ufwProfile - archon/capabilities/firewall.ts - Stolos v0.58.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;capabilities&#x2F;firewall.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.57.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.58.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -166,7 +166,9 @@
 </svg>
 </a>
 <span class="font-bold">ufwProfile</span><span class="font-medium">(<span><span>plan<span>: <a href="../../../.././archon/model/types.ts/~/HostPlan.html" class="link td-ref">HostPlan</a></span></span></span>)<span>: <span class="td-kw">string</span></span> </span>
-      </code><div class="space-y-7" id=""><div class="markdown"><p>Ports open to everyone (profile Archon) and ports open to local networks only (Archon-LAN).</p>
+      </code><div class="space-y-7" id=""><div class="markdown"><p>The ports this host opens, every one to every network: who reaches the
+server is the router's decision (the firewall at the edge, outside the
+machine), never a per-network rule here.</p>
 </div><section class="section"  id="parameters"><div>
       <h2 class="anchorable mb-1"><a href="#parameters" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
