@@ -42,10 +42,15 @@ export interface KeyPaths {
   home: string;
   /** The daily key's private file (its public half is the same path plus .pub). */
   daily: string;
-  /** The folder `keys setup` makes the recovery key in (you move it away after). */
+  /**
+   * This PC's key store (%APPDATA%\\stolos\\keys; ~/.config/stolos/keys): where the
+   * recovery key lives, beside the secrets, so every backup ZIP holds it.
+   */
   recoveryDir: string;
-  /** The recovery key's private file, in that folder. */
+  /** The recovery key's private file, in the key store. */
   recovery: string;
+  /** Where earlier versions left the recovery key (Desktop or home, fleet-recovery): moved into the store by vault backup. */
+  looseRecoveryDir: string;
   /** Git's allowed signers for this checkout (so `git log --show-signature` works). */
   allowedSigners: string;
   /** This PC's record of key checks (when the recovery key was last checked). */
@@ -67,9 +72,10 @@ export function keyPaths(signingKey = "", repo = P.repo): KeyPaths {
   try {
     hasDesktop = Deno.statSync(desktop).isDirectory;
   } catch { /* none */ }
-  // Not under OneDrive: a Desktop backed up to OneDrive (its own folder, not this one) would
-  // upload the new recovery key at once; this folder is only where it waits to be moved.
-  const recoveryDir = join(hasDesktop ? desktop : home, "fleet-recovery");
+  // Spec 057: the recovery key lives in the key store, beside the secrets, so that every
+  // backup holds 100% of what a disaster needs (both keys, each locked by its passphrase).
+  const recoveryDir = join(P.secrets, "..", "..", "keys");
+  const looseRecoveryDir = join(hasDesktop ? desktop : home, "fleet-recovery");
   return {
     home,
     daily: signingKey && !signingKey.startsWith("key::")
@@ -77,6 +83,7 @@ export function keyPaths(signingKey = "", repo = P.repo): KeyPaths {
       : join(home, ".ssh", "fleet-signing"),
     recoveryDir,
     recovery: join(recoveryDir, "fleet-recovery"),
+    looseRecoveryDir,
     allowedSigners: join(repo, ".git", "stolos", "allowed_signers"),
     state: join(P.bootCache, "..", "keys", "state.json"),
     hook: join(repo, ".git", "hooks", "pre-push"),
@@ -155,8 +162,10 @@ export interface KeyFacts {
   signers: SignerDef[];
   /** The signer whose key is this PC's daily key, if listed. */
   dailySigner?: SignerDef;
-  /** Private files of a listed recovery key found on this PC (they should not be here). */
-  recoveryOnPc: string[];
+  /** Private files of a listed recovery key outside the key store (not in backups until vault backup moves them). */
+  recoveryLoose: string[];
+  /** A listed recovery key's private file is in the key store (so every backup holds it). */
+  recoveryInStore: boolean;
   /** The pre-push check is installed. */
   hook: boolean;
   /** This PC's record of key checks. */
@@ -241,10 +250,11 @@ export async function collectKeyFacts(repo = P.repo): Promise<KeyFacts> {
     allowedSignersCurrent: allowed === allowedSignersText(signers),
     signers,
     ...(pub ? { dailySigner: signers.find((s) => s.key.trim() === pub) } : {}),
-    recoveryOnPc: await privateFilesFor(recoveryPubs, [
+    recoveryLoose: await privateFilesFor(recoveryPubs, [
       join(paths.home, ".ssh"),
-      paths.recoveryDir,
+      paths.looseRecoveryDir,
     ]),
+    recoveryInStore: (await privateFilesFor(recoveryPubs, [paths.recoveryDir])).length > 0,
     hook: (await readTextOr(paths.hook)) === PRE_PUSH_HOOK,
     state: await readKeyState(paths.state),
   };
@@ -354,18 +364,27 @@ export function keyChecks(f: KeyFacts, now = Date.now()): KeyCheck[] {
   );
   if (recovery.length) {
     add(
-      "E057-RECOVERY-ON-PC",
-      f.recoveryOnPc.length === 0,
+      "E057-RECOVERY-LOOSE",
+      f.recoveryLoose.length === 0,
       "warn",
-      f.recoveryOnPc.length
-        ? `the recovery key's private file is on this PC: ${f.recoveryOnPc.join(", ")}`
-        : "the recovery key's private file is not on this PC",
-      f.recoveryOnPc.length
-        ? `move ${
-          f.recoveryOnPc[0]
-        } to an encrypted USB drive or a password manager, then delete it here (keep the .pub)`
-        : "",
+      f.recoveryLoose.length
+        ? `the recovery key is outside the key store, so backups miss it: ${
+          f.recoveryLoose.join(", ")
+        }`
+        : "the recovery key is in the key store (every backup holds it)",
+      "deno task stolos vault backup (it backs the key up, then moves it into the key store)",
     );
+    if (!f.recoveryLoose.length) {
+      add(
+        "E057-RECOVERY-MISSING",
+        f.recoveryInStore,
+        "warn",
+        f.recoveryInStore
+          ? `the recovery key is in ${f.paths.recoveryDir}`
+          : `the recovery key's private file is not in ${f.paths.recoveryDir}: backups cannot hold it`,
+        `put it back from your latest backup ZIP (signing/recovery/), or make a new one: deno task stolos keys rotate-recovery --old-lost`,
+      );
+    }
     const at = f.state.recoveryCheckedAt ? Date.parse(f.state.recoveryCheckedAt) : 0;
     const fresh = now - at < RECOVERY_CHECK_DAYS * 86_400_000;
     add(
@@ -379,7 +398,7 @@ export function keyChecks(f: KeyFacts, now = Date.now()): KeyCheck[] {
           f.state.recoveryCheckedAt!.slice(0, 10)
         } (over six months ago)`
         : "the recovery key has never been checked here",
-      "deno task stolos keys check-recovery --key <the recovery key's private file>",
+      "deno task stolos keys check-recovery",
     );
   }
   add(

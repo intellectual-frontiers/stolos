@@ -231,25 +231,27 @@ deno task stolos keys setup     # keys, Git's signing (this repository only), si
 deno task stolos keys           # every check, each with its fix; boot doctor shows the same
 ```
 
-`keys setup` makes your **daily** key (`~/.ssh/fleet-signing`) and a **recovery** key in a
-`fleet-recovery` folder on your Desktop. Move that folder to an encrypted USB drive or a password
-manager, then delete it from the PC: the recovery key exists only to replace a lost daily key, so it
-must not be lost with it. Prove it still works twice a year (`stolos keys` reminds you):
+`keys setup` makes your **daily** key (`~/.ssh/fleet-signing`) and a **recovery** key in this PC's
+key store (`%APPDATA%\stolos\keys`; Linux and macOS: `~/.config/stolos/keys`), each locked by its
+own passphrase. Every backup (`deno task stolos vault backup`) holds both keys with every secret, so
+one ZIP is everything a disaster needs: keep it somewhere safe and encrypted, since with it and your
+passphrases anyone could change your servers. Prove the recovery key still works twice a year
+(`stolos keys` reminds you):
 
 ```sh
-deno task stolos keys check-recovery --key <the recovery key's private file>
+deno task stolos keys check-recovery
 ```
 
 The pre-push check `keys setup` installs refuses, on your PC, a push that servers would refuse (an
 unsigned commit, or one signed by a key `signers.ts` does not list), with the fix.
 
-| When                                                 | Run                                                                                                    |
-| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| a new PC, or anything is wrong                       | `deno task stolos keys setup`                                                                          |
-| a planned change of key (yearly, or a new PC)        | `deno task stolos keys rotate` (approved by the current key), then `git push`                          |
-| the daily key is lost                                | `deno task stolos keys lost --recovery <file>` (approved by the recovery key), push                    |
-| the daily key may have been copied (a stolen laptop) | the same, with `--stolen`                                                                              |
-| a new recovery key (yearly, or a new USB drive)      | `deno task stolos keys rotate-recovery --recovery <old file>` (approved by the old recovery key), push |
+| When                                                 | Run                                                                              |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------- |
+| a new PC, or anything is wrong                       | `deno task stolos keys setup`                                                    |
+| a planned change of key (yearly, or a new PC)        | `deno task stolos keys rotate` (approved by the current key), then `git push`    |
+| the daily key is lost                                | `deno task stolos keys lost` (approved by the recovery key), push                |
+| the daily key may have been copied (a stolen laptop) | the same, with `--stolen`                                                        |
+| a new recovery key (yearly)                          | `deno task stolos keys rotate-recovery` (approved by the old recovery key), push |
 
 Each of them continues where it stopped if interrupted. A new person becomes a signer when someone
 already listed adds them and signs that commit:

@@ -77,7 +77,7 @@ Deno.test("057: setup makes and lists both keys, signs, and running it again cha
     assertStringIncludes(r.out, "signed and verified as");
     assertStringIncludes(r.out, "RECOVERY key's passphrase");
     assert(!r.out.includes(PASS), "a passphrase is never printed");
-    const recovery = join(s.home, "fleet-recovery", "fleet-recovery");
+    const recovery = join(s.home, "config", "stolos", "keys", "fleet-recovery");
     for (const f of [s.daily, s.daily + ".pub", recovery, recovery + ".pub"]) {
       assert(Deno.statSync(f).isFile, f);
     }
@@ -102,7 +102,7 @@ Deno.test("057: setup makes and lists both keys, signs, and running it again cha
     // The checks: signing works; the recovery key, tested at setup, is still here (a warning).
     r = await s.archon(["keys"]);
     assertEquals(r.code, 0, r.out);
-    assertStringIncludes(r.out, "E057-RECOVERY-ON-PC");
+    assert(!r.out.includes("E057-RECOVERY-LOOSE"), "the recovery key is in the key store");
     assert(!r.out.includes("E057-RECOVERY-CHECK"), "setup tested the recovery key: " + r.out);
 
     // The recovery check works on its own too.
@@ -181,7 +181,7 @@ Deno.test("057: rotate and lost replace the daily key, approved by the old key a
     for (const ext of ["", ".pub"]) await Deno.remove(s.daily + ext);
     r = await s.archon(["keys"]);
     assertStringIncludes(r.out, "E057-NO-KEY");
-    const recovery = join(s.home, "fleet-recovery", "fleet-recovery");
+    const recovery = join(s.home, "config", "stolos", "keys", "fleet-recovery");
     r = await s.archon(["keys", "lost", "--recovery", recovery]);
     assertEquals(r.code, 0, r.out);
     const replaced = await s.git("rev-parse", "HEAD");
@@ -202,7 +202,7 @@ async function exists(p: string) {
   return await Deno.stat(p).then(() => true).catch(() => false);
 }
 
-Deno.test("057: rotate-recovery: a new recovery key, tested, approved by the old one; again does nothing", async () => {
+Deno.test("057: rotate-recovery: a new recovery key, tested, approved by the old one, in the key store; again does nothing", async () => {
   const s = await keysSandbox();
   try {
     assertEquals((await s.archon(["keys", "setup"])).code, 0);
@@ -211,13 +211,13 @@ Deno.test("057: rotate-recovery: a new recovery key, tested, approved by the old
     const signersPath = join(s.repo, "fleets", "demo", "signers.ts");
     const before = await Deno.readTextFile(signersPath);
     const base = await s.git("rev-parse", "HEAD");
-    const old = join(s.home, "fleet-recovery", "fleet-recovery");
+    const stored = join(s.home, "config", "stolos", "keys", "fleet-recovery");
+    const oldPub = (await Deno.readTextFile(stored + ".pub")).trim().split(" ").slice(0, 2).join(
+      " ",
+    );
 
+    // No arguments: the old key is the one in the key store.
     let r = await s.archon(["keys", "rotate-recovery"]);
-    assertEquals(r.code, 1, r.out);
-    assertStringIncludes(r.out, "--recovery");
-
-    r = await s.archon(["keys", "rotate-recovery", "--recovery", old]);
     assertEquals(r.code, 0, r.out);
     assertStringIncludes(r.out, "NEW recovery key's passphrase");
     const head = await s.git("rev-parse", "HEAD");
@@ -228,16 +228,73 @@ Deno.test("057: rotate-recovery: a new recovery key, tested, approved by the old
     const t = await checkTip(s.repo, head, base, allowed);
     assert(t.ok, t.reason);
     assertStringIncludes(t.signer ?? "", "recovery");
-    const after = parseSignersSource(await Deno.readTextFile(signersPath));
-    const oldPub = (await Deno.readTextFile(old + ".pub")).trim().split(" ").slice(0, 2).join(" ");
-    const rec = after.filter((x) => x.role === "recovery");
+    const rec = parseSignersSource(await Deno.readTextFile(signersPath)).filter((x) =>
+      x.role === "recovery"
+    );
     assertEquals(rec.length, 1);
     assert(rec[0].key !== oldPub, "the old recovery key is no longer listed");
+    // The key store holds the new key; the old one is kept, retired.
+    const storedNow = (await Deno.readTextFile(stored + ".pub")).trim().split(" ").slice(0, 2).join(
+      " ",
+    );
+    assertEquals(storedNow, rec[0].key);
+    const retired = [...Deno.readDirSync(join(s.home, "config", "stolos", "keys"))]
+      .map((e) => e.name).filter((n) => n.startsWith("fleet-recovery.retired-"));
+    assertEquals(retired.length, 2, "the old pair, retired");
 
-    // Again: nothing to do; and the old key is no longer accepted.
-    r = await s.archon(["keys", "rotate-recovery", "--recovery", old]);
+    // Again: nothing to do.
+    r = await s.archon(["keys", "rotate-recovery"]);
     assertStringIncludes(r.out, "already changed today");
     assertEquals(await s.git("rev-parse", "HEAD"), head, "no new commit");
+  } finally {
+    await Deno.remove(s.home, { recursive: true });
+  }
+});
+
+Deno.test("057: one backup holds everything: both keys; a loose recovery folder moves into the key store", async () => {
+  const s = await keysSandbox();
+  try {
+    assertEquals((await s.archon(["keys", "setup"])).code, 0);
+    const store = join(s.home, "config", "stolos", "keys");
+    // As an earlier version left it: the recovery key in a loose folder in the home folder.
+    const loose = join(s.home, "fleet-recovery");
+    await Deno.mkdir(loose, { recursive: true });
+    for (const f of ["fleet-recovery", "fleet-recovery.pub"]) {
+      await Deno.rename(join(store, f), join(loose, f));
+    }
+    let r = await s.archon(["keys"]);
+    assertStringIncludes(r.out, "E057-RECOVERY-LOOSE");
+
+    r = await s.archon(["vault", "backup"]);
+    assertEquals(r.code, 0, r.out);
+    assertStringIncludes(r.out, "both signing keys");
+    const dir = join(s.home, "data", "stolos", "backup");
+    const zip = [...Deno.readDirSync(dir)].map((e) => e.name).find((n) => n.endsWith(".zip"))!;
+    const { unzipSync } = await import("npm:fflate@0.8.2");
+    const files = Object.keys(unzipSync(Deno.readFileSync(join(dir, zip))));
+    for (
+      const n of [
+        "signing/fleet-signing",
+        "signing/fleet-signing.pub",
+        "signing/recovery/fleet-recovery",
+        "signing/recovery/fleet-recovery.pub",
+      ]
+    ) assert(files.includes(n), `${n} in ${files.join(", ")}`);
+    // Backed up: moved into the key store, the loose folder gone; the checks are quiet about it.
+    assert(await exists(join(store, "fleet-recovery")), "in the key store");
+    assert(!(await exists(loose)), "the loose folder is gone");
+    r = await s.archon(["keys"]);
+    assert(!/E057-RECOVERY-(LOOSE|MISSING)/.test(r.out), r.out);
+    // The next backup holds it too.
+    await new Promise((x) => setTimeout(x, 1100));
+    r = await s.archon(["vault", "backup"]);
+    const zips = [...Deno.readDirSync(dir)].map((e) => e.name).filter((n) => n.endsWith(".zip"))
+      .sort();
+    const again = Object.keys(unzipSync(Deno.readFileSync(join(dir, zips.at(-1)!))));
+    assert(
+      again.includes("signing/recovery/fleet-recovery"),
+      "every backup holds the recovery key",
+    );
   } finally {
     await Deno.remove(s.home, { recursive: true });
   }
@@ -302,8 +359,9 @@ Deno.test("057: the checks, from facts (no files, no prompts)", () => {
   const paths = {
     home: "/h",
     daily: "/h/.ssh/fleet-signing",
-    recoveryDir: "/h/fleet-recovery",
-    recovery: "/h/fleet-recovery/fleet-recovery",
+    recoveryDir: "/c/stolos/keys",
+    recovery: "/c/stolos/keys/fleet-recovery",
+    looseRecoveryDir: "/h/Desktop/fleet-recovery",
     allowedSigners: "/r/.git/stolos/allowed_signers",
     state: "/s",
     hook: "/r/.git/hooks/pre-push",
@@ -323,7 +381,8 @@ Deno.test("057: the checks, from facts (no files, no prompts)", () => {
     allowedSignersCurrent: true,
     signers: list,
     dailySigner: list[0],
-    recoveryOnPc: [],
+    recoveryLoose: [],
+    recoveryInStore: true,
     hook: true,
     state: { recoveryCheckedAt: "2026-11-01T00:00:00Z" },
   };
@@ -337,9 +396,10 @@ Deno.test("057: the checks, from facts (no files, no prompts)", () => {
   assertEquals(codes({ ...good, daily: { ...good.daily, inAgent: true } }), ["E057-AGENT:fail"]);
   assertEquals(codes({ ...good, git: { ...good.git, gpgsign: "" } }), ["E057-GIT:fail"]);
   assertEquals(codes({ ...good, dailySigner: undefined }), ["E057-NOT-LISTED:fail"]);
-  assertEquals(codes({ ...good, recoveryOnPc: ["/h/fleet-recovery/fleet-recovery"] }), [
-    "E057-RECOVERY-ON-PC:warn",
+  assertEquals(codes({ ...good, recoveryLoose: ["/h/Desktop/fleet-recovery/fleet-recovery"] }), [
+    "E057-RECOVERY-LOOSE:warn",
   ]);
+  assertEquals(codes({ ...good, recoveryInStore: false }), ["E057-RECOVERY-MISSING:warn"]);
   assertEquals(codes({ ...good, state: { recoveryCheckedAt: "2026-01-01T00:00:00Z" } }), [
     "E057-RECOVERY-CHECK:warn",
   ]);

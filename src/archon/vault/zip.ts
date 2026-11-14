@@ -87,6 +87,51 @@ async function signingEntries(): Promise<{ entries: Entry[]; key?: string }> {
   return { entries, key: priv };
 }
 
+/**
+ * The recovery key (spec 057): everything in the key store (the current key,
+ * any retired one), and any loose fleet-recovery folder an earlier version left
+ * on the Desktop or in the home folder, all under signing/recovery/.
+ */
+async function recoveryEntries(): Promise<{ entries: Entry[]; loose: string[] }> {
+  const { keyPaths } = await import("../identity/keys.ts");
+  const paths = keyPaths();
+  const entries: Entry[] = [];
+  const loose: string[] = [];
+  for (
+    const [dir, isLoose] of [[paths.recoveryDir, false], [paths.looseRecoveryDir, true]] as const
+  ) {
+    let names: string[] = [];
+    try {
+      names = [...Deno.readDirSync(dir)].filter((e) => e.isFile).map((e) => e.name).sort();
+    } catch {
+      continue;
+    }
+    for (const n of names) {
+      if (entries.some((e) => e.name === `signing/recovery/${n}`)) continue;
+      entries.push({ name: `signing/recovery/${n}`, data: await Deno.readFile(join(dir, n)) });
+      if (isLoose) loose.push(join(dir, n));
+    }
+  }
+  return { entries, loose };
+}
+
+/** After a verified backup: move loose recovery key files into the key store, then remove their folder. */
+async function adoptLooseRecovery(loose: string[]): Promise<string | undefined> {
+  if (!loose.length) return undefined;
+  const { keyPaths } = await import("../identity/keys.ts");
+  const paths = keyPaths();
+  await Deno.mkdir(paths.recoveryDir, { recursive: true });
+  for (const f of loose) {
+    const to = join(paths.recoveryDir, f.split(/[\\/]/).pop()!);
+    if (!(await exists(to))) await Deno.copyFile(f, to);
+    await Deno.remove(f);
+  }
+  try {
+    await Deno.remove(paths.looseRecoveryDir); // empty now; left alone if something else is in it
+  } catch { /* other files in it: not ours to remove */ }
+  return paths.recoveryDir;
+}
+
 /** The restore instructions: printed by `vault restore`, and RESTORE.txt in every ZIP. */
 export function restoreText(fleets: string[] = []): string {
   const fl = fleets.length ? fleets.join(", ") : "<fleet>";
@@ -97,8 +142,10 @@ This ZIP holds what a boot machine needs again after a disaster:
   secrets/<fleet>/...   each fleet's secrets (${fl}): the admin password's hash,
                         each server's SSH host keys and deploy key, the Cloudflare
                         tokens (mail.json, web.json), carried certificates
-  signing/...           your signing key (both halves; the private half is still
+  signing/...           your daily signing key (both halves; the private half is
                         locked by its passphrase, which is not in here)
+  signing/recovery/...  your recovery key (locked by its own passphrase), and any
+                        retired one: this one ZIP holds everything a disaster needs
   manifest.json         every file's name, size, and SHA-256
 
 On the new or rebuilt PC (Windows, in PowerShell):
@@ -113,19 +160,24 @@ On the new or rebuilt PC (Windows, in PowerShell):
         icacls $env:APPDATA\\stolos\\secrets /inheritance:r /grant:r "$($env:USERNAME):(OI)(CI)F"
     (Linux: mkdir -p ~/.config/stolos/secrets && cp -r <unzipped>/secrets/* ~/.config/stolos/secrets/
      && chmod -R go-rwx ~/.config/stolos)
- 5. Put your signing key back, then let archon set up Git's signing (it keeps the key):
-        Copy-Item <unzipped>\\signing\\* $HOME\\.ssh\\
+ 5. Put both keys back, then let stolos set up Git's signing (it keeps the keys):
+        Copy-Item <unzipped>\\signing\\fleet-signing* $HOME\\.ssh\\
+        New-Item -ItemType Directory -Force $env:APPDATA\\stolos\\keys
+        Copy-Item <unzipped>\\signing\\recovery\\* $env:APPDATA\\stolos\\keys\\
         cd C:\\fleet
         deno task stolos keys setup
+    (Linux and macOS: cp <unzipped>/signing/fleet-signing* ~/.ssh/;
+     mkdir -p ~/.config/stolos/keys && cp <unzipped>/signing/recovery/* ~/.config/stolos/keys/)
  6. Delete the unzipped folder (the ZIP itself stays wherever you keep it safe).
  7. Check, in the fleet repository:
         deno task stolos vault status      every secret, back where it belongs
         deno task stolos                 where you are, and what next
         deno task stolos keys            your signing works
 
-If your daily signing key itself was lost (not in any backup), use your recovery key
-(kept apart) to add a new daily key: deno task stolos signers add ... in a commit
-signed with the recovery key. See the engine's docs/disaster-recovery.md.
+If you forgot the daily key's passphrase, the recovery key (in this ZIP) replaces the
+daily key: deno task stolos keys lost. If you forgot both passphrases, a person at
+each server must trust a new key there (archon signers trust). See the engine's
+docs/disaster-recovery.md.
 `;
 }
 
@@ -133,11 +185,19 @@ signed with the recovery key. See the engine's docs/disaster-recovery.md.
 export async function writeBackupZip(
   pc: string,
   now = new Date(),
-): Promise<{ path: string; manifest: ZipManifest; signingKey?: string; fleets: string[] }> {
+): Promise<{
+  path: string;
+  manifest: ZipManifest;
+  signingKey?: string;
+  recovery: boolean;
+  movedRecoveryTo?: string;
+  fleets: string[];
+}> {
   const { entries: secrets, active } = await secretEntries();
   const { entries: signing, key } = await signingEntries();
   const fleets = [...new Set(secrets.map((e) => e.name.split("/")[1]))].sort();
-  const files = [...secrets, ...signing];
+  const { entries: recovery, loose } = await recoveryEntries();
+  const files = [...secrets, ...signing, ...recovery];
   const manifest: ZipManifest = {
     format: ZIP_FORMAT,
     pc,
@@ -167,7 +227,17 @@ export async function writeBackupZip(
   if (Deno.build.os === "windows") await ownerOnly(path);
   else await Deno.chmod(path, 0o600);
   await markBackedUp(path.split(/[\\/]/).pop()!, active, manifest.created, BACKUP_DIR);
-  return { path, manifest, ...(key ? { signingKey: key } : {}), fleets };
+  // Backed up and verified: a loose recovery key moves into the key store, so every later
+  // backup holds it too, and its old folder goes.
+  const movedRecoveryTo = await adoptLooseRecovery(loose);
+  return {
+    path,
+    manifest,
+    ...(key ? { signingKey: key } : {}),
+    recovery: recovery.some((e) => !e.name.endsWith(".pub")),
+    ...(movedRecoveryTo ? { movedRecoveryTo } : {}),
+    fleets,
+  };
 }
 
 /** The manifest inside a backup ZIP, or undefined (not one, or unreadable). */

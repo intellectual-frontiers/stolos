@@ -281,8 +281,10 @@ With Deno, Git, and `gh` installed (above) and `gh auth login` done:
    deno task stolos keys setup
    ```
 
-   Then move the `fleet-recovery` folder it made on your Desktop to an encrypted USB drive or a
-   password manager, and delete it from the PC. `deno task stolos keys` checks everything later.
+   The recovery key lives in this PC's key store (`%APPDATA%\stolos\keys`; Linux and macOS:
+   `~/.config/stolos/keys`), and every backup (`deno task stolos vault backup`) holds both keys with
+   every secret: one ZIP is everything a disaster needs. `deno task stolos keys` checks everything
+   later.
 4. Commit and push (Git signs it; type your passphrase):
 
    ```sh
@@ -504,15 +506,15 @@ Its DNS names, deploy key, secrets, and files leave the fleet; the machine itsel
 <details>
 <summary><b>Keys: a new PC, a lost key, a yearly change</b></summary>
 
-| Situation                                       | Run                                                                                          |
-| ----------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| check everything                                | `deno task stolos keys`                                                                      |
-| a new PC, or anything is wrong                  | `deno task stolos keys setup` (safe to run again)                                            |
-| a planned change of key                         | `deno task stolos keys rotate`, then `deno task stolos apply`                                |
-| the daily key is lost                           | `deno task stolos keys lost --recovery <file>`, then push                                    |
-| the laptop was stolen (key may be copied)       | the same, with `--stolen`                                                                    |
-| a new recovery key (yearly, or a new USB drive) | `deno task stolos keys rotate-recovery --recovery <old file>`, then `deno task stolos apply` |
-| twice a year                                    | `deno task stolos keys check-recovery --key <file>`                                          |
+| Situation                                 | Run                                                                    |
+| ----------------------------------------- | ---------------------------------------------------------------------- |
+| check everything                          | `deno task stolos keys`                                                |
+| a new PC, or anything is wrong            | `deno task stolos keys setup` (safe to run again)                      |
+| a planned change of key                   | `deno task stolos keys rotate`, then `deno task stolos apply`          |
+| the daily key is lost                     | `deno task stolos keys lost`, then push                                |
+| the laptop was stolen (key may be copied) | the same, with `--stolen`                                              |
+| a new recovery key (yearly)               | `deno task stolos keys rotate-recovery`, then `deno task stolos apply` |
+| twice a year                              | `deno task stolos keys check-recovery`                                 |
 
 </details>
 
@@ -555,7 +557,7 @@ Most messages end with `explain: archon explain <code>`: run it for what it mean
 | `disk is not blank` in the boot window                | it protected the disk. If it may be erased: `deno task stolos boot arm server-hostname --claim --confirm-destroy server-hostname`       |
 | the install stops after `installer image`             | the machine has less than 8 GB of RAM: install from USB, then `host bootstrap` (above)                                                  |
 | `ssh server-hostname` warns that the host key changed | stop: do not accept it. `deno task stolos boot doctor`, then `archon explain E047-HOST-KEY`                                             |
-| you forgot your daily key's passphrase                | it cannot be recovered: `deno task stolos keys lost --recovery <file>`                                                                  |
+| you forgot your daily key's passphrase                | it cannot be recovered: `deno task stolos keys lost`                                                                                    |
 | `integrity check failed` or `lockfile is out of date` | stop: never regenerate `deno.lock` to make it go away. See [docs/fleet-repository.md](docs/fleet-repository.md#troubleshooting)         |
 | `the repository has uncommitted changes`              | commit (or `git stash`) your other change first                                                                                         |
 

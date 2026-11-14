@@ -228,15 +228,18 @@ only. It holds:
 
 - `secrets/<fleet>/...`: every fleet's secrets on this PC, as they are (not the install tokens,
   which are made again when needed);
-- `signing/...`: your signing key, both halves, from `git config user.signingkey` (the private half
-  is still locked by its passphrase, which is not in the ZIP);
+- `signing/...`: your daily signing key, both halves, from `git config user.signingkey` (the private
+  half is still locked by its passphrase, which is not in the ZIP);
+- `signing/recovery/...`: your recovery key, from the key store (`%APPDATA%\stolos\keys`; Linux and
+  macOS: `~/.config/stolos/keys`), locked by its own passphrase;
 - `manifest.json`: every file's name, size, and SHA-256 (never a value);
 - `RESTORE.txt`: the restore steps, the same as `vault restore` prints.
 
 It reads the ZIP back and checks every file before saying it worked. Then **move it** wherever you
 keep important things safe, for example your OneDrive Personal Vault, a password manager, or an
-encrypted USB drive, and keep an older one too. The ZIP is not encrypted itself: treat it like the
-keys to your servers. Keep your **recovery** signing key somewhere else, apart from it.
+encrypted USB drive, and keep an older one too. One ZIP is everything a disaster needs: every secret
+and both signing keys. It is not encrypted itself, and with it and your passphrases anyone could
+change your servers: treat it like the keys to them.
 
 A restore is never done by a command: Archon only explains it (`vault restore`), and you copy the
 files back by hand. See [disaster recovery](disaster-recovery.md).

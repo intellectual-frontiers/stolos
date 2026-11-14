@@ -140,12 +140,23 @@ export const EXPLAIN: Record<string, Explanation> = {
     fix: "deno task stolos keys setup (it makes one; then move it off this PC)",
     doc: "docs/fleet-repository.md",
   },
-  "E057-RECOVERY-ON-PC": {
-    title: "The recovery key's private file is on this PC",
-    what: "If this PC is lost or broken into, both keys go together, and nothing can replace them.",
-    why: "keys setup makes it here; it was not moved away yet.",
+  "E057-RECOVERY-LOOSE": {
+    title: "The recovery key is outside the key store",
+    what:
+      "Backups hold the recovery key from the key store (%APPDATA%\\stolos\\keys; ~/.config/stolos/keys); this one is elsewhere, so they miss it.",
+    why:
+      "An earlier version made it in a fleet-recovery folder on the Desktop or in the home folder.",
     fix:
-      "Move the fleet-recovery folder to an encrypted USB drive or a password manager, then delete it here (keeping the .pub is fine).",
+      "deno task stolos vault backup: it puts the key in the ZIP, checks the ZIP, then moves the key into the key store and removes the old folder.",
+    doc: "docs/fleet-repository.md",
+  },
+  "E057-RECOVERY-MISSING": {
+    title: "The recovery key's private file is not in the key store",
+    what:
+      "The fleet lists a recovery key, but this PC does not have it, so backups cannot hold it.",
+    why: "A new PC that was not restored from a backup, or the file was deleted.",
+    fix:
+      "Copy it back from your latest backup ZIP (signing/recovery/ into %APPDATA%\\stolos\\keys), or replace it: deno task stolos keys rotate-recovery --old-lost.",
     doc: "docs/fleet-repository.md",
   },
   "E057-RECOVERY-CHECK": {

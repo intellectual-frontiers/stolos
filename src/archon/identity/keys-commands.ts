@@ -491,12 +491,11 @@ export async function keysSetup(o: { test?: boolean } = {}): Promise<number> {
       `approve the new signers: deno task stolos apply -m "${f.fleetId}: signers"`,
     );
   }
-  if (recoveryMade) {
+  if (changed || recoveryMade) {
     ui.next.push(
-      `move the folder ${paths.recoveryDir} (the recovery key) to an encrypted USB drive or a password manager, then delete it from this PC; check it twice a year: deno task stolos keys check-recovery --key <its private file>`,
+      "back up: deno task stolos vault backup (one ZIP with every secret and both keys); keep the ZIP somewhere safe and encrypted",
     );
   }
-  if (changed) ui.next.push("back up (your daily key is in it): deno task stolos vault backup");
   return end();
 }
 
@@ -520,12 +519,16 @@ export async function repairKeys(): Promise<string[]> {
 // ---------------------------------------------------------- check-recovery
 
 /** `stolos keys check-recovery --key <file>`: prove the recovery key works; changes nothing else. */
-export async function keysCheckRecovery(key: string): Promise<number> {
+export async function keysCheckRecovery(given?: string): Promise<number> {
   const p = ui.phase("Recovery key check");
+  // The key store's recovery key unless another file is given (spec 057: it lives beside the secrets).
+  const key = given ?? keyPaths(
+    (await git(["config", "--get", "user.signingkey"])).stdout.trim(),
+  ).recovery;
   if (!(await exists(key))) {
     p.fail(
       `${key} is not there`,
-      "plug in or unlock where you keep it, then pass its private file",
+      "put it back from your latest backup ZIP (signing/recovery/), or pass --key <its private file>",
     );
     return end();
   }
@@ -556,10 +559,6 @@ export async function keysCheckRecovery(key: string): Promise<number> {
   const state = await readKeyState(paths.state);
   await writeKeyState({ ...state, recoveryCheckedAt: new Date().toISOString() }, paths.state);
   p.done(`${signer.name} works (checked ${today()}); next check in six months`);
-  const home = paths.home;
-  if (key.startsWith(join(home, ".ssh")) || key.startsWith(paths.recoveryDir)) {
-    ui.next.push(`${key} is on this PC: move it away again, then delete it here`);
-  } else ui.next.push("put the recovery key away again");
   return end();
 }
 
@@ -631,12 +630,17 @@ export async function keysRotate(): Promise<number> {
 }
 
 /** `stolos keys lost --recovery <file>`: replace a lost or stolen daily key, approved by the recovery key. */
-export async function keysLost(recovery: string, stolen = false): Promise<number> {
+export async function keysLost(given?: string, stolen = false): Promise<number> {
   const f = await collectKeyFacts();
   const p = ui.phase("Replace a lost daily key");
   const list = await loadSigners();
+  // The key store's recovery key unless another file is given.
+  const recovery = given ?? f.paths.recovery;
   if (!(await exists(recovery))) {
-    p.fail(`${recovery} is not there`, "plug in or unlock where you keep the recovery key");
+    p.fail(
+      `${recovery} is not there`,
+      "put it back from your latest backup ZIP (signing/recovery/), or pass --recovery <its private file>",
+    );
     return end();
   }
   const rpub = await publicOf(recovery);
@@ -716,40 +720,42 @@ export async function keysRotateRecovery(o: { old?: string; oldLost?: boolean })
     p.fail("no recovery key is listed", "deno task stolos keys setup", "E057-NO-RECOVERY");
     return end();
   }
-  if (!o.old && !o.oldLost) {
+  const stored = f.paths.recovery;
+  const fresh = `${stored}.next`;
+  const retired = `${stored}.retired-${today()}`;
+  // Done already today: the new key took the stored one's place, and is committed.
+  const rel = repoRel(signersFile()).replace(/\\/g, "/");
+  const committed = parseSignersSource((await git(["show", `HEAD:${rel}`])).stdout);
+  const storedPub = pubOf(await readTextOr(stored + ".pub"));
+  if (
+    !(await exists(fresh)) && (await exists(retired)) && storedPub &&
+    committed.some((x) => x.role === "recovery" && x.key.trim() === storedPub)
+  ) {
+    p.done(`the recovery key was already changed today (the old one is ${retired}): nothing to do`);
+    return end();
+  }
+  // The old key approves the change: the one in the key store, unless another is given.
+  const oldFile = o.old ?? ((await exists(stored)) ? stored : undefined);
+  if (!oldFile && !o.oldLost) {
     p.fail(
-      "say how the change is approved",
-      "--recovery <the OLD recovery key's private file> (best), or --old-lost when it is lost",
+      `the recovery key is not in ${f.paths.recoveryDir}`,
+      "put it back from your latest backup ZIP (signing/recovery/), pass --recovery <its private file>, or --old-lost when it is lost",
     );
     return end();
   }
-  const fresh = join(f.paths.recoveryDir, `fleet-recovery-${today()}`);
-  const rel = repoRel(signersFile()).replace(/\\/g, "/");
-  const committed = parseSignersSource((await git(["show", `HEAD:${rel}`])).stdout);
-  const freshPub = pubOf(await readTextOr(fresh + ".pub"));
-  if (freshPub && committed.some((x) => x.role === "recovery" && x.key.trim() === freshPub)) {
-    p.done(`the recovery key was already changed today (${fresh}): nothing to do`);
-    return end();
-  }
-  // Which recovery signer is replaced, and which key signs the change.
   let old = recovery.length === 1 ? recovery[0] : undefined;
   let signWith = f.paths.daily;
-  if (o.old) {
-    if (!(await exists(o.old))) {
-      p.fail(`${o.old} is not there`, "plug in or unlock where you keep the recovery key");
-      return end();
-    }
-    const pub = await publicOf(o.old);
+  if (!o.oldLost && oldFile) {
+    const pub = await publicOf(oldFile);
     old = recovery.find((x) => x.key.trim() === pub);
     if (!old) {
-      // Already replaced by an earlier run? Then the new key is listed and this one is not.
       p.fail(
-        `${o.old} is not the fleet's current recovery key`,
+        `${oldFile} is not the fleet's current recovery key`,
         "pass the OLD recovery key's private file",
       );
       return end();
     }
-    signWith = o.old;
+    signWith = oldFile;
   } else if (!old) {
     p.fail("several recovery keys are listed", "pass --recovery <the one to replace>");
     return end();
@@ -779,25 +785,28 @@ export async function keysRotateRecovery(o: { old?: string; oldLost?: boolean })
     );
   }
   console.log(
-    `\n  Approve it with the ${o.old ? "OLD RECOVERY" : "DAILY"} key: type its passphrase.\n`,
+    `\n  Approve it with the ${o.oldLost ? "DAILY" : "OLD RECOVERY"} key: type its passphrase.\n`,
   );
   const c = await commitSigners(signWith, `${f.fleetId}: change ${old!.name}'s recovery key`);
   if (c === "failed") {
     p.fail("the commit was not signed", "run this again (it continues from here)");
     return end();
   }
+  // 3. The key store: the new key takes the stored one's place; the old one is kept, retired.
+  for (const ext of ["", ".pub"]) {
+    if (await exists(stored + ext)) await Deno.rename(stored + ext, retired + ext);
+  }
+  for (const ext of ["", ".pub"]) await Deno.rename(fresh + ext, stored + ext);
   await renderAllowed(f.paths.allowedSigners);
   const state = await readKeyState(f.paths.state);
   await writeKeyState({ ...state, recoveryCheckedAt: new Date().toISOString() }, f.paths.state);
-  p.done(`${old!.name} has a new recovery key (${fresh}), tested`);
+  p.done(`${old!.name} has a new recovery key, tested, in ${stored}`);
   ui.next.push("push it: deno task stolos apply (servers trust the new recovery key from then on)");
   ui.next.push(
-    `move ${fresh} and ${fresh}.pub to where you keep the recovery key, then delete them here`,
+    "back up: deno task stolos vault backup (the new ZIP holds the new key); older ZIPs hold the old one, no longer trusted once pushed",
   );
-  if (o.old) {
-    ui.next.push(
-      `destroy the OLD recovery key (${o.old}) once the push is done: it is no longer trusted`,
-    );
+  if (o.old && o.old !== stored) {
+    ui.next.push(`${o.old} is no longer trusted once pushed: delete it`);
   }
   return end();
 }

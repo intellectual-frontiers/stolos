@@ -476,7 +476,7 @@ export const COMMANDS: Command[] = [
     name: "keys setup",
     summary: "Set up (or repair) signing on this PC: keys, Git, signers.ts, the push check",
     description:
-      `Does only what is missing, so it is safe to run again at any time (spec 057): checks OpenSSH; makes your daily key (~/.ssh/fleet-signing; ssh-keygen asks for its passphrase, which is never stored); sets Git, for this repository only, to sign every commit with it; lists it in signers.ts; makes a recovery key in a fleet-recovery folder on your Desktop and lists it (you then move that folder away); installs the pre-push check; and makes one test signature when anything changed (or with --test). Never overwrites a key.`,
+      `Does only what is missing, so it is safe to run again at any time (spec 057): checks OpenSSH; makes your daily key (~/.ssh/fleet-signing; ssh-keygen asks for its passphrase, which is never stored); sets Git, for this repository only, to sign every commit with it; lists it in signers.ts; makes a recovery key in this PC's key store (beside the secrets, so every backup holds it) and lists it; installs the pre-push check; and makes one test signature when anything changed (or with --test). Never overwrites a key.`,
     tier: "repo",
     operation: true,
     noMcp: true,
@@ -494,20 +494,19 @@ export const COMMANDS: Command[] = [
     name: "keys check-recovery",
     summary: "Prove the recovery key still works (a test signature; changes nothing)",
     description:
-      `Checks that the file you pass is the fleet's recovery key and that you still know its passphrase, by signing a test message and verifying it against signers.ts. Records the date on this PC: stolos keys and boot doctor remind you after six months (spec 057).`,
+      `Checks that the key store's recovery key (or --key <file>) is the fleet's recovery key and that you still know its passphrase, by signing a test message and verifying it against signers.ts. Records the date on this PC: stolos keys and boot doctor remind you after six months (spec 057).`,
     tier: "read",
     operation: true,
     noMcp: true,
     args: [{
       name: "key",
       type: "string",
-      required: true,
       human: true,
-      description: "The recovery key's private file (on the USB drive, or wherever you keep it).",
+      description: "The recovery key's private file (default: the one in the key store).",
     }],
     async run(a) {
       const { keysCheckRecovery } = await import("../identity/keys-commands.ts");
-      return await keysCheckRecovery(a.key as string);
+      return await keysCheckRecovery(a.key as string | undefined);
     },
   },
   {
@@ -535,9 +534,8 @@ export const COMMANDS: Command[] = [
     args: [{
       name: "recovery",
       type: "string",
-      required: true,
       human: true,
-      description: "The recovery key's private file.",
+      description: "The recovery key's private file (default: the one in the key store).",
     }, {
       name: "stolen",
       type: "boolean",
@@ -545,7 +543,7 @@ export const COMMANDS: Command[] = [
     }],
     async run(a) {
       const { keysLost } = await import("../identity/keys-commands.ts");
-      return await keysLost(a.recovery as string, !!a.stolen);
+      return await keysLost(a.recovery as string | undefined, !!a.stolen);
     },
   },
   {
@@ -553,7 +551,7 @@ export const COMMANDS: Command[] = [
     summary:
       "Replace the recovery key, approved by the old one (or by the daily key if it is lost)",
     description:
-      `Makes a new recovery key (fleet-recovery-<date>, in the recovery folder), tests it with a signature, puts it in signers.ts in place of the old one (same signer name), and commits that alone, signed with the OLD recovery key you pass (--recovery), which proves you still hold it. With --old-lost, the daily key signs instead, and it says so: a copied daily key could do the same. If interrupted, run it again: it continues; once done, it does nothing (spec 057).`,
+      `Makes a new recovery key in the key store, tests it with a signature, puts it in signers.ts in place of the old one (same signer name), and commits that alone, signed with the OLD recovery key (the key store's, or --recovery <file>), which proves you still hold it. The old pair stays in the key store as fleet-recovery.retired-<date>. With --old-lost, the daily key signs instead, and it says so: a copied daily key could do the same. If interrupted, run it again: it continues; once done, it does nothing (spec 057).`,
     tier: "repo",
     place: "pc",
     operation: true,
@@ -563,7 +561,7 @@ export const COMMANDS: Command[] = [
         name: "recovery",
         type: "string",
         human: true,
-        description: "The OLD recovery key's private file (it approves the change).",
+        description: "The OLD recovery key's private file (default: the one in the key store).",
       },
       {
         name: "old-lost",

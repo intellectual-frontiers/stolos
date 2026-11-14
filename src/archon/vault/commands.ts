@@ -115,27 +115,31 @@ export async function vaultStatus(o: { lost?: boolean; hook?: boolean }): Promis
 // ------------------------------------------------------------------ backup
 
 /** What to tell the person once the ZIP is written: where it is, and where to put it. */
-export function afterBackup(path: string, signingKey?: string): string[] {
+export function afterBackup(path: string, signingKey?: string, recovery = false): string[] {
+  const keys = signingKey && recovery
+    ? "both signing keys (daily and recovery, each locked by its own passphrase)"
+    : signingKey
+    ? `your daily signing key (${signingKey}, locked by its passphrase)`
+    : "";
   return [
     `Your backup is ${path}`,
     "",
-    "Now move it wherever you keep important things safe, for example your OneDrive",
-    "Personal Vault, a password manager, or an encrypted USB drive, and keep an older",
-    "one too. It is not encrypted itself: it holds every secret of every fleet on",
-    "this PC" +
-    (signingKey ? ` and your signing key (${signingKey}, still locked by its passphrase)` : "") +
-    ",",
-    "so treat it like the keys to your servers. Keep your recovery key somewhere else.",
+    "It is everything a disaster needs: every secret of every fleet on this PC" +
+    (keys ? `, and ${keys}` : "") + ".",
+    "Move it wherever you keep important things safe and encrypted (your OneDrive",
+    "Personal Vault, a password manager, an encrypted USB drive), and keep an older one",
+    "too. The ZIP itself is not encrypted: anyone with it and your passphrases could",
+    "change your servers, so treat it like the keys to them.",
     "",
     "To use it after a disaster: deno task stolos vault restore (it only explains;",
     "the same steps are RESTORE.txt in the ZIP).",
   ];
 }
 
-/** `vault backup`: one ZIP with every secret and your signing key, read back and recorded. */
+/** `vault backup`: one ZIP with every secret and both signing keys, read back and recorded. */
 export async function vaultBackup(): Promise<number> {
   const p = ui.phase("Backup");
-  p.status("zipping the secrets and your signing key");
+  p.status("zipping the secrets and both signing keys");
   let r;
   try {
     r = await writeBackupZip(pcName());
@@ -158,7 +162,12 @@ export async function vaultBackup(): Promise<number> {
     }), read back and checked`,
   );
   console.log("");
-  for (const l of afterBackup(r.path, r.signingKey)) console.log(l ? `  ${l}` : "");
+  if (r.movedRecoveryTo) {
+    p.note(
+      `the recovery key was moved into the key store (${r.movedRecoveryTo}): every backup holds it now`,
+    );
+  }
+  for (const l of afterBackup(r.path, r.signingKey, r.recovery)) console.log(l ? `  ${l}` : "");
   return 0;
 }
 

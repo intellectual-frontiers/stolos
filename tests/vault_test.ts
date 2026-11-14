@@ -57,8 +57,8 @@ Deno.test("vault: status, backup (one ZIP with the secrets and the signing key),
     r = await s.archon(["vault", "backup"], "", git);
     assertEquals(r.code, 0, r.out);
     assert(r.out.includes("read back and checked"), r.out);
-    assert(r.out.includes("move it wherever you keep important things safe"), r.out);
-    assert(r.out.includes("It is not encrypted itself"), r.out);
+    assert(r.out.includes("Move it wherever you keep important things safe"), r.out);
+    assert(r.out.includes("The ZIP itself is not encrypted"), r.out);
     const dir = join(s.home, "data", "stolos", "backup");
     const zips = [...Deno.readDirSync(dir)].map((e) => e.name);
     assertEquals(zips.length, 1, zips.join(","));
