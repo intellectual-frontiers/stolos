@@ -37,9 +37,13 @@ export const LIBPQ = {
 export interface PgpassEntry {
   /** 1-based line number in the file. */
   line: number;
+  /** The host field, as written ("*" matches any); empty when malformed. */
   host: string;
+  /** The port field, as written ("*" matches any); empty when malformed. */
   port: string;
+  /** The database field, as written ("*" matches any); empty when malformed. */
   database: string;
+  /** The user field, as written ("*" matches any); empty when malformed. */
   user: string;
   /** Whether the line has a fifth field (libpq's password); never the field itself. */
   hasPassword: boolean;
@@ -75,6 +79,10 @@ export function splitPgpassLine(line: string): { fields: string[]; hasPassword: 
   return { fields, hasPassword: true };
 }
 
+/**
+ * Parse a password file into its entries, skipping blank lines and comments.
+ * A malformed line keeps only its line number and why: none of its fields.
+ */
 export function parsePgpass(text: string): PgpassEntry[] {
   const out: PgpassEntry[] = [];
   const lines = text.split("\n");
@@ -108,8 +116,11 @@ export function parsePgpass(text: string): PgpassEntry[] {
 
 /** One service-file section, without any password. */
 export interface ServiceSection {
+  /** The service name: the text between the brackets. */
   name: string;
+  /** The service file it was read from. */
   file: string;
+  /** The account's own service file, or the system-wide one. */
   source: "user" | "system";
   /** Connection parameters, `password` removed. */
   params: Record<string, string>;
@@ -117,6 +128,10 @@ export interface ServiceSection {
   hadPassword: boolean;
 }
 
+/**
+ * Parse a service file into its sections (keys lowercased, comments skipped).
+ * A `password` key is dropped as it is read; only that it was there is kept.
+ */
 export function parseServiceFile(
   text: string,
   file: string,
@@ -162,6 +177,7 @@ export function lookupKey(
 
 const fieldMatches = (pattern: string, value: string) => pattern === "*" || pattern === value;
 
+/** Whether a password-file entry matches a lookup key, as libpq matches it ("*" matches any). */
 export function entryServes(e: PgpassEntry, key: ReturnType<typeof lookupKey>): boolean {
   return !e.malformed && fieldMatches(e.host, key.host) && fieldMatches(e.port, key.port) &&
     fieldMatches(e.database, key.database) && fieldMatches(e.user, key.user);
@@ -169,7 +185,9 @@ export function entryServes(e: PgpassEntry, key: ReturnType<typeof lookupKey>): 
 
 // ------------------------------------------------------------------ the report
 
+/** What `archon pg connections` reports: the password file, the service files, and how they match. */
 export interface ConnectionsReport {
+  /** The password file: where it is, its mode, and whether libpq would use it. */
   passwordFile: {
     path: string;
     exists: boolean;
@@ -178,7 +196,9 @@ export interface ConnectionsReport {
     usable: boolean;
     problem: string | null;
   };
+  /** The service files libpq reads, and whether each exists. */
   serviceFiles: Array<{ path: string; source: ServiceSection["source"]; exists: boolean }>;
+  /** Each password-file entry, the services it serves, and its problems. */
   entries: Array<{
     line: number;
     host: string;
@@ -189,6 +209,7 @@ export interface ConnectionsReport {
     usable: boolean;
     problems: string[];
   }>;
+  /** Each service section in effect (a user's section hides a system one of the same name). */
   services: Array<{
     name: string;
     file: string;
@@ -204,12 +225,21 @@ export interface ConnectionsReport {
   }>;
 }
 
+/** What {@link connectionsReport} reads: the account and its files, already loaded (text absent when missing). */
 export interface ConnectionsInput {
+  /** The account asking: libpq's default user. */
   me: string;
+  /** The password file: its path, text, mode bits, and whether it is a plain file. */
   pgpass: { path: string; text?: string; mode?: number; isFile?: boolean };
+  /** The user's and the system's service files, in the order libpq reads them. */
   serviceFiles: Array<{ path: string; source: ServiceSection["source"]; text?: string }>;
 }
 
+/**
+ * Match the password file against the service files as libpq would, and say
+ * what is wrong: a file libpq ignores, a password in a service file, network
+ * TLS that is not verify-full, an entry no service uses. Pure: no I/O.
+ */
 export function connectionsReport(input: ConnectionsInput): ConnectionsReport {
   const pf = input.pgpass;
   const exists = pf.text !== undefined;
@@ -316,6 +346,7 @@ export function connectionsReport(input: ConnectionsInput): ConnectionsReport {
   return report;
 }
 
+/** The report as text for the terminal (`archon pg connections`). */
 export function renderConnections(r: ConnectionsReport): string {
   const L: string[] = [];
   const pf = r.passwordFile;
@@ -388,6 +419,7 @@ export async function readConnections(): Promise<ConnectionsReport> {
   return connectionsReport({ me, pgpass, serviceFiles: files });
 }
 
+/** `archon pg connections`: print this account's report, as text or JSON; returns the exit code. */
 export async function pgConnections(json: boolean): Promise<number> {
   const r = await readConnections();
   if (json) console.log(JSON.stringify(r, null, 2));
@@ -397,6 +429,7 @@ export async function pgConnections(json: boolean): Promise<number> {
 
 // ------------------------------------------------------------------ show
 
+/** The forms `archon pg show --form` accepts (conninfo is the default). */
 export const FORMS = [
   "conninfo",
   "url",
@@ -416,14 +449,20 @@ export const ROOT_CRT = {
   windows: "%APPDATA%\\postgresql\\root.crt",
   unix: "~/.postgresql/root.crt",
 } as const;
+/** One of {@link FORMS}. */
 export type Form = typeof FORMS[number];
 
 /** Where an instance is, and as whom. Never a password. */
 export interface Target {
+  /** The instance's, cluster's, or service's name. */
   name: string;
+  /** The socket directory, or a host name for a network connection. */
   host: string;
+  /** The port it listens on. */
   port: number;
+  /** The database to connect to (the role's default). */
   database: string;
+  /** The role to connect as. */
   user: string;
   /** Over a network: verify-full against the system's roots. */
   network: boolean;
@@ -611,8 +650,10 @@ export function renderShow(t: Target, form: Form): string {
   }
 }
 
+/** A command line the user got wrong (for example an unknown form). */
 export class UsageError extends Error {}
 
+/** The form a --form value names (conninfo when absent); throws {@link UsageError} for an unknown one. */
 export function parseForm(form: string | undefined): Form {
   const f = (form ?? "conninfo") as Form;
   if (!FORMS.includes(f)) {
@@ -709,6 +750,11 @@ async function readConnectionsSections(): Promise<ServiceSection[]> {
   return out;
 }
 
+/**
+ * `archon pg show NAME`: how to reach an instance, in one form. Prints the text
+ * (or JSON) and returns the exit code: 0 on success, 1 when NAME cannot be
+ * shown that way, 2 for an unknown form.
+ */
 export async function pgShow(
   hostName: string,
   name: string,

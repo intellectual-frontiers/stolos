@@ -18,6 +18,7 @@ import { entryServes, findTarget, parsePgpass, readSecret, type Target } from ".
 /** Ubuntu's bundle of trusted roots (what libpq's sslrootcert=system means on Linux). */
 export const SYSTEM_ROOTS = "/etc/ssl/certs/ca-certificates.crt";
 
+/** The terminal tools: what each is for, and the command that starts it. */
 export const TUIS = {
   rainfrog: { what: "rainfrog (browse, query, edit)", command: "archon pg admin-tui" },
   pgcenter: {
@@ -25,6 +26,7 @@ export const TUIS = {
     command: "archon pg observe-tui",
   },
 } as const;
+/** A terminal tool's name: rainfrog or pgcenter. */
 export type Tui = keyof typeof TUIS;
 
 const enc = encodeURIComponent;
@@ -71,6 +73,10 @@ async function inPgpass(t: Target): Promise<boolean> {
   }
 }
 
+/**
+ * Start a terminal tool connected to NAME and return its exit code: 2 without
+ * a terminal or a password, 1 when the tool is missing or NAME is not found.
+ */
 export async function pgTui(
   hostName: string,
   tool: Tui,

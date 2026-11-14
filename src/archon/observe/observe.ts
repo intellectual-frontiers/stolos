@@ -23,6 +23,7 @@ export function parseSize(s: string): number {
   return Math.round(Number(m[1]) * 1024 ** exp);
 }
 
+/** A byte count for people: "512 B", "3.4 MB", "12 GB" (powers of 1024). */
 export function fmtBytes(n: number): string {
   const u = ["B", "KB", "MB", "GB", "TB"];
   let i = 0;
@@ -35,14 +36,19 @@ export function fmtBytes(n: number): string {
 
 /** One PCP archive: its files share a base name such as 20261111.00.10 or 20261110. */
 export interface Archive {
+  /** The folder that holds it. */
   dir: string;
+  /** The shared base name, for example 20261111.00.10. */
   base: string;
+  /** Its files' names (index, meta, and numbered volumes, possibly compressed). */
   files: string[];
+  /** Their total size, in bytes. */
   bytes: number;
 }
 
 const ARCHIVE_FILE = /^(\d{8}(?:\.\d{2}\.\d{2})?)\.(index|meta|\d+)(\.[a-z]+)?$/;
 
+/** Every PCP archive under `root`, grouped by base name. */
 export async function pcpArchives(root = OBSERVE.pcpArchives): Promise<Archive[]> {
   const out = new Map<string, Archive>();
   if (!(await exists(root))) return [];
@@ -95,6 +101,7 @@ export function pruneChoice(
   return drop;
 }
 
+/** `archon observe prune`: delete the oldest metric archives while over the size limit or the disk's free-space floor (`check`: only report). */
 export async function prune(host: HostDef, check = false): Promise<number> {
   const p = ui.phase("Metric archives");
   const o = observabilityPolicy(await loadFleet(), host);
@@ -136,6 +143,7 @@ async function sizeOf(dir: string): Promise<number | undefined> {
 
 const active = async (unit: string) => (await run(["systemctl", "is-active", unit])).stdout.trim();
 
+/** `archon observe`: what this host records about itself (metrics, logs, traces), where, and how much. */
 export async function observe(host: HostDef): Promise<number> {
   const o = observabilityPolicy(await loadFleet(), host);
 

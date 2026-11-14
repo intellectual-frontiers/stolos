@@ -11,15 +11,21 @@
 import { P } from "./paths.ts";
 import { run } from "./exec.ts";
 
+/** Where the status files live: `prompt`, `prompt-plain`, `last.json` and `verify.json`. */
 export const STATUS_DIR = "/var/lib/archon/status";
 
 // Nerd Font glyphs (the theme already needs a Nerd Font).
 const G = { ok: "", fail: "", warn: "", lock: "", push: "" };
 
+/** How an archon command's run went, as the prompt shows it. */
 export interface RunStatus {
+  /** The command that ran (`"update"`, `"apply"`). */
   command: string;
+  /** How many steps failed. */
   failures: number;
+  /** How many steps warned. */
   warnings: number;
+  /** How many disruptive changes wait for approval. */
   deferred: number;
 }
 
@@ -29,6 +35,7 @@ export async function pushPending(repo = P.repo): Promise<boolean> {
   return ahead.ok && Number(ahead.stdout.trim()) > 0;
 }
 
+/** The prompt segment with Nerd Font glyphs: the result, deferred changes, and a push marker. */
 export function promptLine(s: RunStatus, push: boolean): string {
   const parts = [
     s.failures
@@ -54,15 +61,21 @@ export function promptLinePlain(s: RunStatus, push: boolean): string {
 
 /** The last run, as data (the welcome page reads it; the prompt reads the line). */
 export interface LastRun extends RunStatus {
+  /** When it was written (ISO 8601). */
   at: string;
+  /** Whether the checkout had local commits not on GitHub. */
   push: boolean;
 }
 
 /** The last `archon verify` as root (spec 035): the welcome page's "checks now". */
 export interface LastVerify {
+  /** When it ran (ISO 8601). */
   at: string;
+  /** How many checks passed. */
   passed: number;
+  /** How many checks ran. */
   total: number;
+  /** The resources whose checks failed. */
   failed: string[];
 }
 
@@ -80,13 +93,17 @@ async function writeJson(name: string, data: unknown): Promise<void> {
   await Deno.rename(tmp, `${STATUS_DIR}/${name}`);
 }
 
+/** Save the last verify for the welcome page (`verify.json`). Best effort: errors are ignored. */
 export async function writeVerify(v: LastVerify): Promise<void> {
   try {
     await writeJson("verify.json", v);
   } catch { /* no status directory, or not writable */ }
 }
 
-/** Best effort: a host without /var/lib/archon (a workstation) has no segment. */
+/**
+ * Write the run's status: `last.json`, the plain line and the prompt line.
+ * Best effort: a host without /var/lib/archon (a workstation) has no segment.
+ */
 export async function writeStatus(s: RunStatus): Promise<void> {
   try {
     const push = await pushPending();

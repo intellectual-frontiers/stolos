@@ -28,6 +28,7 @@ export const NETWORK =
 const RELEASE_GONE = /no longer has a Release file|does not have a Release file/i;
 /** Backoff before each retry of a network-shaped failure (about 10 s, 30 s, 60 s). */
 export const NETWORK_BACKOFF_MS = [10_000, 30_000, 60_000];
+/** The warning shown when apt could not reach the Ubuntu archive for network reasons. */
 export const ARCHIVE_UNREACHABLE =
   "could not reach the Ubuntu archive; the next reconcile tries again";
 
@@ -41,9 +42,13 @@ const ENV = () => ({
   UCF_FORCE_CONFFOLD: "1",
 });
 
+/** One problem found in apt's output, worded for people, with a fix when there is one. */
 export interface AptIssue {
+  /** A warning (apt's `W:`) or a failure (`E:`, `Err:`). */
   level: "warn" | "fail";
+  /** What went wrong. */
   message: string;
+  /** What to run or check to fix it. */
   fix?: string;
   /** DNS, unreachable, or timed out: retried, then a warning (spec 009). */
   network?: boolean;
@@ -89,8 +94,11 @@ export function classifyAptLine(line: string): AptIssue | undefined {
   return { level, message: `apt: ${text}` };
 }
 
+/** A package dpkg failed to install or configure. */
 export interface DpkgFailure {
+  /** The package's name (without architecture). */
   pkg: string;
+  /** dpkg's reason, from the line after its error. */
   reason: string;
   /** The script's last output before dpkg gave up: usually the real cause. */
   cause?: string;
@@ -153,7 +161,9 @@ const LOCK_WAIT = ["-o", "DPkg::Lock::Timeout=300"];
 const LOCK_RETRIES = 30;
 const LOCK_PAUSE_MS = 10_000;
 
+/** How an apt run ended. */
 export interface AptResult {
+  /** Whether it succeeded (a network-only failure is not ok, but is only warned). */
   ok: boolean;
   /** It failed for network reasons only (warned, not failed). */
   network: boolean;

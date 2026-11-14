@@ -16,18 +16,32 @@ import { checkClock, describeSkew } from "../core/clock.ts";
 import { syncCheckout } from "../reconcile/reconcile.ts";
 import type { HostDef } from "../model/types.ts";
 
+/** What `archon update` does. */
 export interface UpdateOptions {
+  /** Only report: fetch without pulling, apply and sync tools in check mode, skip verify. */
   check: boolean;
+  /** Refresh tools (`archon tools sync`) after the apply. */
   tools: boolean;
+  /** Pull origin/main first (false in the process that continues after a pull). */
   pull: boolean;
 }
 
+/** One step of an update and how it went. */
 export interface UpdateStep {
+  /** The step: `"pull"`, `"validate"`, `"apply"`, `"tools"`, `"apply (dotfiles)"` or `"verify"`. */
   step: string;
+  /** Whether it succeeded. */
   ok: boolean;
+  /** Its one-line result. */
   detail: string;
 }
 
+/**
+ * `archon update`: pull, validate the model, apply, sync tools (and apply
+ * dotfiles again if a tool changed), then verify. After a pull that brought
+ * new commits, it runs the rest in the freshly pulled code and exits with
+ * that process's code. Stops after an invalid model without applying.
+ */
 export async function update(host: HostDef, opts: UpdateOptions): Promise<UpdateStep[]> {
   const steps: UpdateStep[] = [];
 

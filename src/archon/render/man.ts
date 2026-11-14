@@ -29,6 +29,7 @@ const TIER_TEXT: Record<Tier, string> = {
     "destructive; requires an approve: destructive marker in the governing spec and is never served over MCP.",
 };
 
+/** A command's man page name, for example archon-vault-backup. */
 export function pageName(cmd: Command): string {
   return `archon-${cmd.name.replace(/ /g, "-")}`;
 }
@@ -46,6 +47,7 @@ function synopsis(cmd: Command): string {
   return parts.join(" ");
 }
 
+/** One command's man page, in roff, from its registry entry. */
 export function commandPage(cmd: Command): string {
   const L = [th(pageName(cmd), 1, MAN_DATE).trimEnd()];
   L.push(".SH NAME", `${esc(pageName(cmd))} \\- ${esc(cmd.summary)}`);
@@ -92,6 +94,7 @@ export function commandPage(cmd: Command): string {
   return L.join("\n") + "\n";
 }
 
+/** archon(1): what Archon is, every command, and where things live. */
 export function mainPage(commands: Command[]): string {
   const L = [th("archon", 1, MAN_DATE).trimEnd()];
   L.push(
@@ -129,6 +132,7 @@ export function mainPage(commands: Command[]): string {
   return L.join("\n") + "\n";
 }
 
+/** archon-constitution(7): the constitution, as a man page. */
 export function constitutionPage(): string {
   const md = engineFile(".specify/memory/constitution.md");
   return th("archon-constitution", 7, MAN_DATE) +
@@ -205,6 +209,7 @@ export function telemetryMarkdown(): string {
   return L.join("\n") + "\n";
 }
 
+/** archon-telemetry(7): every span, metric, event, and attribute Archon emits. */
 export function telemetryPage(): string {
   return th("archon-telemetry", 7, MAN_DATE) +
     ".SH NAME\narchon\\-telemetry \\- the traces, metrics, and logs every archon run reports\n.SH DESCRIPTION\n" +
@@ -212,6 +217,7 @@ export function telemetryPage(): string {
     ".SH SEE ALSO\n\\fBarchon\\fR(1), \\fBarchon observe\\fR(1)\n";
 }
 
+/** archon-personas(7): who uses Archon, and what each one does. */
 export function personasPage(): string {
   const L = [th("archon-personas", 7, MAN_DATE).trimEnd()];
   L.push(".SH NAME", "archon\\-personas \\- composable user personas");
@@ -245,6 +251,7 @@ export function personasPage(): string {
   return L.join("\n") + "\n";
 }
 
+/** Every man page: file name to roff. */
 export function renderManPages(): Map<string, string> {
   const pages = new Map<string, string>();
   pages.set("man1/archon.1", mainPage(COMMANDS));

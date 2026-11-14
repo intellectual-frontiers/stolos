@@ -16,13 +16,19 @@ import { resolvePlan } from "./model/resolve.ts";
 import { type Problem, validateFleet, validatePlan } from "./model/validate.ts";
 import type { FleetDef, HostDef, HostPlan } from "./model/types.ts";
 
+/** The fleet as loaded, resolved, and validated. */
 export interface Model {
+  /** The fleet (fleets/<id>/fleet.ts). */
   fleet: FleetDef;
+  /** Every host. */
   hosts: HostDef[];
+  /** Each host's resolved plan (what it should have). */
   plans: HostPlan[];
+  /** Every problem found; empty when the model is valid. */
   problems: Problem[];
 }
 
+/** Every spec ID the model may name: the engine's and the fleet repository's own. */
 export async function knownSpecs(): Promise<Set<string>> {
   return new Set([...engineSpecs(), ...(await listDirs(join(P.fleetDir, "specs")))]);
 }
@@ -123,6 +129,7 @@ export function report(phase: ReturnType<typeof ui.phase>, m: Model): boolean {
   return m.problems.length === 0;
 }
 
+/** One host's resolved plan. */
 export async function planFor(host: HostDef): Promise<HostPlan> {
   return resolvePlan(host, await loadFleet());
 }
@@ -185,6 +192,7 @@ export async function renderSite(m: Model): Promise<number> {
   return (await writeIfChanged(join(P.out, "site", "network-reference.html"), html)) ? 1 : 0;
 }
 
+/** `archon build`: validate the model, then render every target into out/; true when it is valid. */
 export async function build(): Promise<boolean> {
   const p = ui.phase("Model");
   let m: Model;

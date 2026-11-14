@@ -128,6 +128,11 @@ async function json<T>(path: string): Promise<T | undefined> {
   }
 }
 
+/**
+ * Gather what the welcome page shows for this host: the model, status files,
+ * install record, certificate, updates, backups, routes and open ports.
+ * Throws when the host is not in the model.
+ */
 export async function welcomeData(hostName: string): Promise<WelcomeData> {
   const fleet = await loadFleet();
   const host = (await loadHosts()).find((h) => h.name === hostName);
@@ -213,6 +218,7 @@ export async function welcomeData(hostName: string): Promise<WelcomeData> {
   };
 }
 
+/** The page for one served guide (docs/<name>.md); undefined when it is not served or not found. */
 export async function guidePage(hostName: string, docName: string): Promise<string | undefined> {
   const g = GUIDES.find((x) => x.name === docName);
   if (!g) return undefined;
@@ -226,6 +232,11 @@ export async function guidePage(hostName: string, docName: string): Promise<stri
   return renderGuide(hostName, g.title, html);
 }
 
+/**
+ * archon web serve: answer on 127.0.0.1:8090 until stopped. `/` is the welcome
+ * page, `/guide/<name>` a guide, `/healthz` says ok; anything else is 404, and
+ * an error is a 500 with its message.
+ */
 export async function webServe(hostName: string): Promise<number> {
   const html = (body: string, status = 200) =>
     new Response(body, {

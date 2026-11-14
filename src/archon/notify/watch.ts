@@ -33,23 +33,39 @@ import { localNetworks } from "../capabilities/ssh.ts";
 import type { Event } from "./notify.ts";
 import { notify } from "./events.ts";
 
+/** Where the watch keeps its state, and the systemd service that runs it. */
 export const WATCH = {
+  /** Its state file (root only): journal cursor, seen addresses, pending summaries. */
   state: "/var/lib/archon/status/watch.json",
+  /** The service that runs `archon notify watch`. */
   unit: "archon-notify-watch.service",
 };
 
 /** One journal entry, as journalctl -o json prints it (only the fields used). */
 export interface Entry {
+  /** The message text, or its bytes when it is not valid UTF-8. */
   MESSAGE?: string | number[];
+  /** The program that logged it (for example `sshd`, `sudo`, `postfix/smtp`). */
   SYSLOG_IDENTIFIER?: string;
+  /** The process name: used when there is no SYSLOG_IDENTIFIER. */
   _COMM?: string;
+  /** How it reached the journal (`kernel` for kernel messages). */
   _TRANSPORT?: string;
+  /** The unit a systemd message is about (for example a failed service). */
   UNIT?: string;
+  /** The unit of the process that logged it. */
   _SYSTEMD_UNIT?: string;
+  /** When it was logged, microseconds since the epoch, as a string. */
   __REALTIME_TIMESTAMP?: string;
+  /** Its position in the journal: the watch resumes after it. */
   __CURSOR?: string;
 }
 
+/**
+ * A journal entry that matters, by kind: an ssh login, failed logins, a
+ * console login, su, a refused sudo, an account change, a kernel error, a
+ * failed unit, or bounced mail.
+ */
 export type Signal =
   | { kind: "login"; user: string; from: string; method: string; key?: string }
   | { kind: "login-failed"; user: string; from: string; invalidUser: boolean }
@@ -178,13 +194,17 @@ export function inNetworks(ip: string, cidrs: string[]): boolean {
 
 // ---------------------------------------------------------------- state
 
+/** What the watch remembers between runs (WATCH.state). */
 export interface WatchState {
+  /** The journal cursor of the last entry read; unset at first (it starts from now). */
   cursor?: string;
+  /** The boot id last seen, so each boot is reported once. */
   bootId?: string;
   /** user -> addresses that user has logged in from. */
   seen: Record<string, string[]>;
   /** Failed logins not yet reported: address -> { count, users }. */
   failed: Record<string, { count: number; users: string[]; first: string; last: string }>;
+  /** When failed logins were last summarized (ISO 8601): at most one summary an hour. */
   failedReportedAt?: string;
   /** authorized_keys path -> its lines' fingerprints. */
   keys: Record<string, string[]>;
@@ -192,6 +212,7 @@ export interface WatchState {
   disk: Record<string, string>;
 }
 
+/** Read the watch state; empty (nothing seen) when missing or not JSON. */
 export async function readWatch(path = WATCH.state): Promise<WatchState> {
   try {
     return {
@@ -516,6 +537,13 @@ async function archonConverging(): Promise<boolean> {
   return r.ok && /archon(\S*)? (apply|update|reconcile|first-boot)\b/.test(r.stdout);
 }
 
+/**
+ * archon notify watch (the watch service): check keys, boot and disk, then
+ * follow the journal and send a message for each signal that matters. Every
+ * ten minutes it checks keys and disk again and summarizes failed logins (at
+ * most one summary an hour); it exits 0 to restart on a new checkout. Returns
+ * 1 if journalctl ends, so systemd restarts it.
+ */
 export async function watch(hostName: string): Promise<number> {
   const fleet = await loadFleet();
   const local = localNetworks(fleet);

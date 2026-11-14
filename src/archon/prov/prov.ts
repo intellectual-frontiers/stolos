@@ -9,26 +9,42 @@ import { listRecords, putRecord } from "../state/store.ts";
 import { P } from "../core/paths.ts";
 import { run } from "../core/exec.ts";
 
+/** One apply, recorded as a PROV activity (spec 014). */
 export interface Activity {
+  /** The host it ran on. */
   host: string;
+  /** When it started (ISO 8601). */
   started: string;
+  /** When it ended (ISO 8601). */
   ended: string;
+  /** Who ran it: `agentName()`. */
   agent: string;
+  /** The checkout's commit at the time (`"unknown"` when git cannot say). */
   commit: string;
+  /** What it changed, one line each. */
   changes: string[];
+  /** Whether it failed. */
   failed: boolean;
+  /** The path of the run's log, when there is one. */
   log?: string;
 }
 
+/** Who is acting: `ARCHON_AGENT`, else `SUDO_USER`, else `USER`, else `"unknown"`. */
 export function agentName(): string {
   return Deno.env.get("ARCHON_AGENT") ?? Deno.env.get("SUDO_USER") ?? Deno.env.get("USER") ??
     "unknown";
 }
 
+/** The checkout's HEAD commit, or `"unknown"`. */
 export async function headCommit(): Promise<string> {
   return (await run(["git", "-C", P.repo, "rev-parse", "HEAD"])).stdout.trim() || "unknown";
 }
 
+/**
+ * Record an apply in this machine's archon.sql (spec 048) as a `prov` record
+ * keyed by its start time, which is returned. An apply that changed nothing
+ * and did not fail is not recorded (returns `undefined`).
+ */
 export async function recordActivity(
   host: string,
   a: { started: Date; ended: Date; changes: string[]; failed: boolean; log?: string },
@@ -63,6 +79,7 @@ export async function recordActivity(
   return run;
 }
 
+/** A host's recorded activities, oldest first. */
 export async function loadActivities(host: string, root = P.state): Promise<Activity[]> {
   return (await listRecords<Activity & { detail?: string[] }>(host, "prov", root)).map((r) => ({
     ...r.body,

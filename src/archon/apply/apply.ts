@@ -21,7 +21,9 @@ import { groupsFor } from "../personas/mod.ts";
 import type { Action, FileDef, HostDef, HostPlan, UnitDef, UserDef } from "../model/types.ts";
 import { homeOf } from "../model/load.ts";
 
+/** What `archon apply` does. */
 export interface ApplyOptions {
+  /** Only report what would change; change nothing. */
   check: boolean;
   /** Alternate root for files (testing). Skips packages, accounts, units, actions. */
   root?: string;
@@ -31,11 +33,17 @@ export interface ApplyOptions {
   >;
 }
 
+/** What an apply did. */
 export interface ApplyResult {
+  /** The host's name. */
   host: string;
+  /** Whether it was a check (nothing changed). */
   check: boolean;
+  /** Every change made (or, in a check, that would be made), one line each. */
   changes: string[];
+  /** Steps left for a later run (for example a file whose owner does not exist yet). */
   skipped: string[];
+  /** Whether any step failed. */
   failed: boolean;
 }
 
@@ -108,6 +116,13 @@ class Runner {
   }
 }
 
+/**
+ * `archon apply`: converge the host to its plan. Must run as root unless
+ * `check` or `root` is set. A real run also records provenance (spec 014),
+ * restarts Archon's daemons when the code changed, commits /etc with
+ * etckeeper (spec 033), settles the install record after a success (spec
+ * 009), and, for a full apply, reports a change of state (spec 025).
+ */
 export async function apply(host: HostDef, opts: ApplyOptions): Promise<ApplyResult> {
   if (!opts.check && !opts.root && !isRoot()) {
     throw new Error("archon apply must run as root (it elevates through sudo automatically)");

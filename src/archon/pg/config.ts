@@ -19,22 +19,28 @@ import type {
 import { fqdn } from "../web/config.ts";
 import { LOCAL_NETWORKS, localNetworks } from "../capabilities/ssh.ts";
 
+/** The spec that governs PostgreSQL instances. */
 export const SPEC = "038-pg" as const;
 /** Linux identities are PostgreSQL identities (spec 039). */
 export const IDENTITY_SPEC = "039-pg-identity" as const;
 
+/** Fixed paths, names, and numbers for PostgreSQL on a host (spec 038). */
 export const PG = {
   /** Ubuntu 26.04's PostgreSQL; other versions come from PGDG (FR-002). */
   ubuntuVersion: 18,
+  /** The default instance's name. */
   defaultName: "prime",
+  /** The first port tried when allocating one to a new instance. */
   firstPort: 5432,
   /** Passwords, root-only except the role's own account (FR-012). */
   secrets: "/var/lib/archon-keys/pg",
   /** Dumps (spec 016 archives them nightly with the rest of the target). */
   dumps: "/var/backups/archon/pg",
+  /** How many dumps of each database are kept. */
   keepDumps: 7,
   /** Stops Ubuntu's package from creating a `main` cluster Archon does not own. */
   createclusterConf: "/etc/postgresql-common/createcluster.d/50-archon.conf",
+  /** The apt source file for PGDG (only for versions Ubuntu does not ship). */
   pgdgSource: "/etc/apt/sources.list.d/archon-pgdg.sources",
   /** The PGDG signing key as Ubuntu's own postgresql-common ships it (Article 12). */
   pgdgKey: "/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc",
@@ -42,7 +48,9 @@ export const PG = {
   stateFile: "pg.json",
   /** libpq's system-wide services (Debian's PGSYSCONFDIR): every instance, no secrets. */
   systemServices: "/etc/postgresql-common/pg_service.conf",
+  /** The sudoers file that lets operators run psql as postgres or an app's account. */
   sudoers: "/etc/sudoers.d/archon-pg",
+  /** The directory of the clusters' Unix sockets (peer authentication). */
   socketDir: "/var/run/postgresql",
   /** PBKDF2 rounds for a person's synced Linux password (services' random passwords use 4096). */
   humanIterations: 100_000,
@@ -50,8 +58,10 @@ export const PG = {
 
 /** Names: lowercase letters, digits, and dashes; a DNS label and a cluster name. */
 export const NAME_RE = /^[a-z][a-z0-9-]{0,30}$/;
+/** Role names: lowercase letters, digits, and underscores, at most 63 characters. */
 export const ROLE_RE = /^[a-z_][a-z0-9_]{0,62}$/;
 
+/** Why an instance name is invalid, or undefined when it matches {@link NAME_RE}. */
 export function checkName(name: string): string | undefined {
   return NAME_RE.test(name)
     ? undefined
@@ -63,36 +73,50 @@ export const PRIME: PgInstanceDef = { name: "prime", version: 18 };
 
 /** Service account names: s-<app> (spec 039). */
 export const SERVICE_RE = /^s-[a-z0-9][a-z0-9-]{0,28}$/;
+/** The UID range of service accounts (spec 039). */
 export const SERVICE_UIDS = { min: 800, max: 899 } as const;
 
 /** A login role: a person in the model, or a service account (spec 039). */
 export interface Role {
+  /** The role's name: the Linux account's name. */
   name: string;
+  /** A person in the model, or a service account. */
   kind: "human" | "service";
   /** A fleet admin: may create databases and watch and signal sessions; never a superuser. */
   admin: boolean;
 }
 
+/**
+ * One instance a host keeps, resolved from the model and the host's record
+ * (see {@link instancesOf}).
+ */
 export interface Instance {
+  /** The instance's name (its Debian cluster name). */
   name: string;
+  /** Its major version: the record's, else the model's, else Ubuntu's. */
   version: number;
   /** undefined until allocated (first ensure). */
   port?: number;
+  /** Shown in the psql prompt (default production). */
   environment: string;
+  /** psql turns AUTOCOMMIT off and warns (default true for production). */
   protected: boolean;
+  /** The databases the model puts in it (empty when only recorded). */
   databases: PgDatabaseDef[];
   /** Login roles: every person on the host, and each service a database names. */
   roles: Role[];
   /** In the host's model file (else only recorded by an operator's ensure). */
   inModel: boolean;
+  /** The host's record of it, when Archon created it. */
   record?: PgRecord;
+  /** Whether it is published: reachable on the server's address over TLS. */
   published: boolean;
   /** Published for the local networks only (archon pg publish --local-only). */
   localOnly: boolean;
 }
 
 /** Whether an operator turned PostgreSQL on for this host (an opt-in service, spec 040). */
-export const pgOn = (host: HostDef) => host.optIn?.pg?.enabled === true;
+export const pgOn = (host: HostDef): boolean => host.optIn?.pg?.enabled === true;
 /** postgresql-common's umbrella unit: every cluster is PartOf it; the opt-in switch masks it. */
 export const PG_UNIT = "postgresql.service";
 
@@ -231,11 +255,13 @@ export function hbaConf(published: boolean, from: string[]): string {
   return rows.join("\n");
 }
 
-export const quoteIdent = (s: string) => `"${s.replace(/"/g, '""')}"`;
-export const quoteLit = (s: string) => `'${s.replace(/'/g, "''")}'`;
+/** Quote an SQL identifier (doubles any double quote). */
+export const quoteIdent = (s: string): string => `"${s.replace(/"/g, '""')}"`;
+/** Quote an SQL string literal (doubles any single quote). */
+export const quoteLit = (s: string): string => `'${s.replace(/'/g, "''")}'`;
 
 /** The comment that marks a role as Archon's (spec 039), and its kind. */
-export const roleComment = (kind: Role["kind"] | "group") => `archon: ${kind} (spec 039)`;
+export const roleComment = (kind: Role["kind"] | "group"): string => `archon: ${kind} (spec 039)`;
 
 /**
  * SQL that makes a login role what the model says (idempotent; never a
@@ -265,8 +291,12 @@ export function roleSql(r: Role): string {
 }
 
 /** A database's two group roles: read-write and read-only (NOLOGIN). */
-export const accessRoles = (db: string) => ({ write: `${db}_rw`, read: `${db}_ro` });
+export const accessRoles = (db: string): { write: string; read: string } => ({
+  write: `${db}_rw`,
+  read: `${db}_ro`,
+});
 
+/** SQL that creates a NOLOGIN group role if missing, and marks it as Archon's (idempotent). */
 export function groupRoleSql(name: string): string {
   return [
     `DO $$ BEGIN`,
@@ -279,7 +309,7 @@ export function groupRoleSql(name: string): string {
 }
 
 /** CREATE DATABASE (its own statement: it cannot run inside a transaction block). */
-export const createDatabaseSql = (d: PgDatabaseDef) =>
+export const createDatabaseSql = (d: PgDatabaseDef): string =>
   `CREATE DATABASE ${quoteIdent(d.name)} OWNER ${quoteIdent(d.owner)}`;
 
 /** Ownership and CONNECT, run in the postgres database. */
@@ -341,6 +371,7 @@ export function membershipSql(group: string, want: string[], have: string[]): st
   ];
 }
 
+/** SQL that creates an extension if it is not there yet. */
 export function extensionSql(ext: string): string {
   return `CREATE EXTENSION IF NOT EXISTS ${quoteIdent(ext)}`;
 }
@@ -402,15 +433,21 @@ export function newPassword(): string {
 
 /** The app contract's JSON (spec 038 FR-019, spec 039): stable keys, nothing secret. */
 export interface ConnectInfo {
+  /** The libpq service name: the instance's name. */
   service: string;
   /** The socket directory (peer: no password), or the published name with --remote. */
   host: string;
+  /** The instance's port. */
   port: number;
+  /** The role to connect as. */
   user: string;
+  /** The role's default database (see {@link defaultDatabase}). */
   database: string;
+  /** libpq's sslmode: "disable" on the socket, "verify-full" with --remote. */
   sslmode: string;
   /** Present when the instance is published on the local networks. */
   published?: { host: string; port: number; sslmode: "verify-full" };
+  /** The files written for the role: its service file, and its .pgpass when it has a password. */
   files?: { service: string; pgpass?: string };
 }
 
@@ -427,6 +464,10 @@ export function defaultDatabase(
   return d?.name ?? "postgres";
 }
 
+/**
+ * How a role reaches an instance: the socket by default, or the published name
+ * when `remote` is set and the instance is published.
+ */
 export function connectInfo(
   i: Pick<Instance, "name" | "port" | "published" | "databases">,
   role: string,
@@ -537,15 +578,23 @@ export function upsertPgpass(file: string, line: string): string {
 
 /** A row of `pg_lsclusters --no-header`: version, name, port, status, owner, data, log. */
 export interface Cluster {
+  /** Its major version. */
   version: number;
+  /** Its cluster name. */
   name: string;
+  /** The port it listens on. */
   port: number;
+  /** "online", "down", and so on, as pg_lsclusters prints it. */
   status: string;
+  /** The Linux account that owns it (normally postgres). */
   owner: string;
+  /** Its data directory. */
   data: string;
+  /** Its log file (empty when pg_lsclusters printed none). */
   log: string;
 }
 
+/** Parse `pg_lsclusters --no-header` output, skipping lines that are not clusters. */
 export function parseClusters(out: string): Cluster[] {
   return out.split("\n").map((l) => l.trim().split(/\s+/)).filter((f) =>
     f.length >= 6 && /^\d+$/.test(f[0])
@@ -617,4 +666,5 @@ export function approvedInSpec(spec: string): boolean {
 }
 
 /** The unit of a cluster, from postgresql-common. */
-export const unitOf = (version: number, name: string) => `postgresql@${version}-${name}.service`;
+export const unitOf = (version: number, name: string): string =>
+  `postgresql@${version}-${name}.service`;

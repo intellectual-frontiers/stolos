@@ -12,8 +12,10 @@ import { ensureDir, exists } from "../archon/core/fsx.ts";
 import type { Phase } from "../archon/core/ui.ts";
 import { UBUNTU } from "./pins.ts";
 
-export const cacheDir = () => join(P.bootCache, UBUNTU.point);
+/** The folder that caches this Ubuntu point release's boot files and image. */
+export const cacheDir = (): string => join(P.bootCache, UBUNTU.point);
 
+/** A file's SHA-256, in hex, read in chunks (installer images are several GB). */
 export async function sha256File(path: string): Promise<string> {
   const h = createHash("sha256");
   const f = await Deno.open(path);
@@ -64,11 +66,15 @@ async function ensure(name: string, url: string, sha: string, p: Phase): Promise
   return path;
 }
 
+/** The verified files the boot server serves. */
 export interface Assets {
+  /** Netboot file name (for example "grubx64.efi", "linux") to its path in the cache. */
   files: Record<string, string>;
+  /** The installer image's path in the cache. */
   iso: string;
 }
 
+/** Download (once) and verify every boot file and the installer image against their pinned SHA-256. */
 export async function ensureAssets(p: Phase): Promise<Assets> {
   const files: Record<string, string> = {};
   for (const [name, sha] of Object.entries(UBUNTU.files)) {

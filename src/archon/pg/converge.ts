@@ -10,7 +10,7 @@ import { getRecord, putRecord } from "../state/store.ts";
 import { dirname, join } from "../core/path.ts";
 import { ensureDir, exists, readTextOr } from "../core/fsx.ts";
 import { P } from "../core/paths.ts";
-import { run } from "../core/exec.ts";
+import { run, type RunResult } from "../core/exec.ts";
 import type { FleetDef, HostDef, PgRecord, PgState } from "../model/types.ts";
 import {
   allocatePort,
@@ -43,9 +43,13 @@ import { ACME_STORE } from "../web/acme.ts";
 
 /** Where converge reports (apply's Runner, or a command's phase). */
 export interface Sink {
+  /** A read-only check: report what would change, change nothing. */
   check: boolean;
+  /** Report a change made (or, in a check, one that would be made). */
   change(msg: string): void;
+  /** Report a problem that does not stop converge, with an optional fix to suggest. */
   warn(msg: string, fix?: string): void;
+  /** Report a failure, with an optional fix to suggest. */
   fail(msg: string, fix?: string): void;
   /** A read-only check could not read this file as the calling user. */
   unreadable?(path: string): void;
@@ -68,16 +72,18 @@ async function readFor(s: Sink, path: string): Promise<string | undefined | null
   }
 }
 
+/** The host's PostgreSQL clusters, from pg_lsclusters (empty when it fails). */
 export async function clusters(): Promise<Cluster[]> {
   const r = await run(["pg_lsclusters", "--no-header"]);
   return r.ok ? parseClusters(r.stdout) : [];
 }
 
 const confDir = (v: number, n: string) => `/etc/postgresql/${v}/${n}`;
-export const secretPath = (inst: string, role: string) => join(PG.secrets, inst, role);
+/** Where a role's password for an instance is kept, under {@link PG}.secrets. */
+export const secretPath = (inst: string, role: string): string => join(PG.secrets, inst, role);
 
 /** psql as postgres against one cluster (Debian's wrapper picks it by --cluster). */
-export function psql(v: number, n: string, sql: string, db = "postgres") {
+export function psql(v: number, n: string, sql: string, db = "postgres"): Promise<RunResult> {
   return run(
     ["psql", "--cluster", `${v}/${n}`, "-X", "-q", "-A", "-t", "-v", "ON_ERROR_STOP=1", "-d", db],
     { asUser: "postgres", stdin: sql },
@@ -87,6 +93,7 @@ export function psql(v: number, n: string, sql: string, db = "postgres") {
 // ------------------------------------------------------------- the record
 
 // Spec 048: the record is the opt-in "pg" in this machine's archon.sql.
+/** Read the host's pg record (the switch and the instances); no instances when there is none. */
 export async function readState(host: string, root = P.state): Promise<PgState> {
   const s = (await getRecord<PgState>(host, "optin", "pg", root))?.body;
   // The switch alone (archon pg on, before any instance exists) is a record too.
@@ -106,6 +113,7 @@ export async function writeState(host: string, st: PgState, root = P.state): Pro
   await putRecord(host, "optin", "pg", sorted, root);
 }
 
+/** Set one instance's record, or remove it when `rec` is undefined. */
 export async function writeRecord(
   host: string,
   name: string,

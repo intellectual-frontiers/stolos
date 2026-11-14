@@ -52,15 +52,25 @@ export async function notify(ev: Event, hostName?: string): Promise<string> {
 
 // ------------------------------------------------------- state changes
 
+/** The host's last known health (root only), so a message goes out on a change, not on every run. */
 const HEALTH = "/var/lib/archon/status/health.json";
 
-interface Health {
+/** What HEALTH holds: the last known state of each thing that sends on a change. */
+export interface Health {
+  /**
+   * The last full apply: ok or failing, since when (ISO 8601), and when a
+   * "failing" message was last sent (for the daily reminder).
+   */
   apply?: { state: "ok" | "failing"; since: string; notified?: string };
+  /** The verify checks (resources) failing at the last run; unset before the first. */
   verifyFailing?: string[];
+  /** The boot id the "needs a reboot" message was sent for (one per boot). */
   rebootNotified?: string;
+  /** When the last weekly backup summary was sent (ISO 8601). */
   backupSummaryAt?: string;
 }
 
+/** Read HEALTH (or another path, in tests); empty when missing or not JSON. */
 async function readHealth(path = HEALTH): Promise<Health> {
   try {
     return JSON.parse((await readTextOr(path)) ?? "{}");
@@ -226,4 +236,5 @@ export async function backupOutcome(
 }
 
 export { HEALTH, readHealth };
+/** Internals kept reachable for tests (the path helpers this module uses). */
 export const _test = { join, P };

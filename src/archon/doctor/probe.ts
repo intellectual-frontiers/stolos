@@ -8,19 +8,29 @@
 
 import { run } from "../core/exec.ts";
 
+/** The result of one curl probe of a URL. */
 export interface Probe {
+  /** The URL probed. */
   url: string;
   /** Any HTTP answer (even 404) means the path works; `ok` is false only without one. */
   ok: boolean;
+  /** The HTTP status code; 0 without an answer. */
   http: number;
+  /** curl's exit code (0 on success; see `explainCurl`). */
   curlExit: number;
+  /** The address curl connected to. */
   ip?: string;
   /** Seconds, cumulative as curl reports them. */
   dns?: number;
+  /** Seconds until the TCP connection was made. */
   connect?: number;
+  /** Seconds until the TLS handshake finished. */
   tls?: number;
+  /** Seconds for the whole request. */
   total?: number;
+  /** The final URL, after any redirects followed. */
   effective?: string;
+  /** curl's error message, without its `curl: (N)` prefix. */
   error?: string;
 }
 
@@ -52,6 +62,7 @@ export async function probe(
   return parseProbe(url, r.code, r.stdout, r.stderr);
 }
 
+/** Build a `Probe` from curl's `-w` output (status, IP, timings, final URL), exit code and stderr. */
 export function parseProbe(url: string, code: number, stdout: string, stderr: string): Probe {
   const [http, ip, dns, connect, tls, total, effective] = stdout.trim().split(" ");
   const h = Number(http) || 0;

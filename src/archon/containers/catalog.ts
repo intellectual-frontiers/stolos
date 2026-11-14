@@ -9,10 +9,13 @@
 
 import type { SpecId } from "../model/types.ts";
 
+/** One container Archon can run as an opt-in (Podman, through a systemd quadlet). */
 export interface ContainerDef {
   /** The opt-in's name: its switch, archon-<name>.service, archon-<name> container. */
   name: string;
+  /** What it is, in a few words, for people. */
   title: string;
+  /** The spec that describes it. */
   spec: SpecId;
   /** registry/repository:tag@sha256:digest */
   image: string;
@@ -83,8 +86,12 @@ export const OTEL_UI: ContainerDef = {
   health: "http://127.0.0.1:5080/healthz",
 };
 
+/** Every container Archon knows. */
 export const CONTAINERS: ContainerDef[] = [S3, OTEL_UI];
 
-export const unitOfContainer = (c: Pick<ContainerDef, "name">) => `archon-${c.name}.service`;
-export const quadletPath = (c: Pick<ContainerDef, "name">) =>
+/** The systemd unit that runs a container. */
+export const unitOfContainer = (c: Pick<ContainerDef, "name">): string =>
+  `archon-${c.name}.service`;
+/** The quadlet file that describes a container to systemd. */
+export const quadletPath = (c: Pick<ContainerDef, "name">): string =>
   `/etc/containers/systemd/archon-${c.name}.container`;

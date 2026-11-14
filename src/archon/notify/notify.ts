@@ -7,6 +7,19 @@
  * duplicates dropped by key within an hour, and one summary after a long
  * outage. Nothing secret is ever sent (redact.ts).
  *
+ * ```mermaid
+ * flowchart LR
+ *   ev["an event<br/>(apply, verify, backup, watch, notify send)"] --> enq["enqueue<br/>dedupe by key, compose, redact"]
+ *   enq --> spool["spool<br/>one JSON file per message"]
+ *   enq --> kick["kick<br/>start the flush service"]
+ *   kick --> flush["flush<br/>collapse after an outage"]
+ *   spool --> flush
+ *   flush -->|"SMTP, implicit TLS"| relay["Cloudflare relay"]
+ *   relay --> box["the fleet's mailbox"]
+ *   flush -->|"relay fails"| back["backoff: 1, 5, 15, 60, then 180 min"]
+ *   back --> spool
+ * ```
+ *
  * @module
  */
 
@@ -28,31 +41,50 @@ import {
   sendSmtp,
 } from "./transport.ts";
 
+/** How serious a message is: sets the heading color and the `X-Archon-Level` header. */
 export type Level = "info" | "warn" | "fail";
 
 /** Where this machine keeps its credential, queue, and status. */
 export interface Site {
+  /** What this machine is: a server, a workstation, or the boot machine. */
   role: "server" | "workstation" | "boot";
+  /** Its short name, as it appears in subjects and in the From display name. */
   name: string;
+  /** Path of the credential file (Postfix's sasl_passwd on hosts, JSON on the boot machine). */
   credential: string;
+  /** Folder of queued messages, one JSON file each. */
   spool: string;
+  /** Path of the status file (`archon notify status` reads it). */
   status: string;
+  /** The fleet's mailbox (`fleet.mail.to`); unset when the fleet has no mail. */
   to?: string;
+  /** The sender address (spec 027); unset when the fleet has no mail. */
   from?: string;
   /** host:port of the SMTP relay (Cloudflare Email Service). */
   relay: string;
+  /** Reach the relay over IPv4 only (the network has no IPv6). */
   ipv4: boolean;
+  /** The fleet's IANA time zone, for local times in messages. */
   timezone: string;
 }
 
+/** Where a host (server or workstation) keeps its notify files, and its flush unit. */
 export const HOST_NOTIFY = {
   /** Postfix's credential file; archon's own sends use the same token. */
   credential: SASL_PASSWD,
+  /** The queue, one JSON file per message (mode 0700, root only). */
   spool: "/var/spool/archon/notify",
+  /** The status file. */
   status: "/var/lib/archon/status/notify.json",
+  /** The systemd service that sends what is queued (`archon notify flush`). */
   flushUnit: "archon-notify-flush.service",
 };
 
+/**
+ * A host as a notify site: the fixed host paths, the fleet's mailbox, and
+ * `root+<host>.<tag>@<domain>` as sender (spec 027). `ipv6` is whether the
+ * host's network has IPv6 (without it, the relay is reached over IPv4).
+ */
 export function hostSite(
   fleet: FleetDef,
   name: string,
@@ -80,6 +112,10 @@ export function bootUser(): string {
   return u.replace(/[^a-z0-9._-]/g, "") || "archon";
 }
 
+/**
+ * The boot machine as a notify site: its queue next to the boot cache, the
+ * credential in its secrets folder, and `<user>+<pc>.<tag>@<domain>` as sender.
+ */
 export function bootSite(fleet: FleetDef): Site {
   const name = Deno.hostname().split(".")[0].toLowerCase();
   const dir = join(P.bootCache, "..", "notify");
@@ -98,6 +134,10 @@ export function bootSite(fleet: FleetDef): Site {
   };
 }
 
+/**
+ * The relay credential: parsed from sasl_passwd on hosts, JSON on the boot
+ * machine; undefined when missing or unreadable.
+ */
 export async function loadCredential(site: Site): Promise<Credential | undefined> {
   const text = (await readTextOr(site.credential)) ?? "";
   // Hosts: Postfix's sasl_passwd line; the boot machine: JSON in its secrets folder.
@@ -112,15 +152,19 @@ export async function loadCredential(site: Site): Promise<Credential | undefined
 
 // ---------------------------------------------------------------- compose
 
+/** Something to report: what `notify` and `enqueue` take. */
 export interface Event {
   /** What happened, short: "✗ apply failing since 14:04". */
   event: string;
+  /** How serious it is; `"info"` by default. */
   level?: Level;
   /** The details: a few lines. */
   what: string;
   /** What a person or assistant should do, if anything. */
   todo?: string;
+  /** Path of the full log, named in the message (not attached by itself). */
   log?: string;
+  /** Files to attach (redacted, trimmed, about 1 MB in all). */
   attach?: string[];
   /** Messages with the same key within an hour are sent once. */
   key?: string;
@@ -131,17 +175,29 @@ export interface Event {
   subject?: string;
 }
 
+/** A composed message waiting in the spool (one JSON file, named by its id). */
 export interface Queued {
+  /** `<epoch ms>-<8 hex>`: sorts by time and names the file. */
   id: string;
+  /** When it was composed (ISO 8601). */
   created: string;
+  /** The subject, redacted. */
   subject: string;
+  /** The plain-text body, redacted. */
   text: string;
+  /** The HTML body, redacted. */
   html: string;
+  /** How serious it is. */
   level: Level;
+  /** The deduplication key, if any (sent as `X-Archon-Key`). */
   key?: string;
+  /** Attached files, contents in base64. */
   attachments: Array<{ name: string; type: string; b64: string }>;
+  /** How many sends have failed so far. */
   attempts: number;
+  /** When to try next (ISO 8601); see BACKOFF_MIN. */
   nextAt: string;
+  /** The last send error, redacted. */
   lastError?: string;
 }
 
@@ -188,6 +244,12 @@ export async function attachments(
   return out;
 }
 
+/**
+ * Build the message for an event: subject, plain text and HTML, all redacted
+ * (known secret shapes and the `exact` strings). With `ev.subject` the body is
+ * `ev.what` as given; otherwise a report with host, time, Archon commit, what
+ * happened and what to do.
+ */
 export async function compose(site: Site, ev: Event, exact: string[] = []): Promise<Queued> {
   const now = new Date();
   const local = now.toLocaleString("en-US", {
@@ -309,6 +371,7 @@ export async function enqueue(
   }
 }
 
+/** The messages in the spool, oldest first, with their file paths. */
 export async function queued(site: Site): Promise<Array<{ path: string; q: Queued }>> {
   const out: Array<{ path: string; q: Queued }> = [];
   if (!(await exists(site.spool))) return out;
@@ -321,15 +384,23 @@ export async function queued(site: Site): Promise<Array<{ path: string; q: Queue
   return out.sort((a, b) => a.q.created.localeCompare(b.q.created));
 }
 
+/** What `archon notify status` shows: written after every flush. */
 export interface Status {
+  /** A credential and a mailbox are both set. */
   configured: boolean;
+  /** The mailbox messages go to. */
   to?: string;
+  /** How mail is sent (`"cloudflare"`), unset without a credential. */
   method?: string;
+  /** The last send attempt: when, whether it worked, its subject, and the error if not. */
   lastSend?: { at: string; ok: boolean; subject: string; error?: string };
+  /** How many messages are waiting. */
   queue: number;
+  /** When the oldest waiting message was composed (ISO 8601). */
   oldest?: string;
 }
 
+/** The site's status file, or "not configured, empty queue" when there is none. */
 export async function readStatus(site: Site): Promise<Status> {
   return await readJson<Status>(site.status, { configured: false, queue: 0 });
 }

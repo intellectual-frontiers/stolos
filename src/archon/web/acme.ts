@@ -20,8 +20,11 @@ export const ACME_STORE = "/var/lib/traefik/acme.json";
 /** Where an install delivers the carried store (first boot moves it, then deletes this). */
 export const ACME_DELIVERED = "/etc/archon/acme.json";
 
+/** One certificate in a carried store: its names and when it expires. */
 export interface CarriedCertificate {
+  /** Its main name (for example `alpha.lab.example.net`). */
   main: string;
+  /** Its other names (for example `*.alpha.lab.example.net`). */
   sans: string[];
   /** ISO time the certificate expires. */
   notAfter: string;
@@ -29,8 +32,11 @@ export interface CarriedCertificate {
 
 /** What `archon web acme-export` prints and the boot machine keeps (hosts/<host>/acme.json). */
 export interface AcmeCarry {
+  /** The server it was exported from. */
   host: string;
+  /** When it was exported (ISO 8601). */
   exported: string;
+  /** The certificates in the store with a readable expiry; none when the store had none. */
   certificates: CarriedCertificate[];
   /** Traefik's acme.json as it was on the server. */
   acme: string;

@@ -18,22 +18,36 @@ import {
   type GuideItem,
 } from "../guide/guide.ts";
 
+/** An app or page on the server, listed on the welcome page. */
 export interface Service {
+  /** Its name, also the first label of its address (for example `cockpit`). */
   name: string;
+  /** Its HTTPS address (for example `https://cockpit.alpha.lab.example.net`). */
   url: string;
+  /** What it is, in a few words. */
   description?: string;
   /** Where it comes from: the server itself, its model, or a container's label. */
   source: "system" | "model" | "container";
 }
 
+/** Everything the welcome page shows, gathered per request by `archon web serve`. */
 export interface WelcomeData {
+  /** The host's name in the model. */
   host: string;
+  /** Its full name (for example `alpha.lab.example.net`); unset without fleet.web. */
   fqdn?: string;
+  /** The fleet's title. */
   title: string;
   /** "Ubuntu 26.04.1 LTS" */
   os: string;
+  /** The server's address on the local network, if known. */
   address?: string;
+  /** The fleet repository: `owner/name` and its GitHub URL. */
   repo: { slug: string; url: string };
+  /**
+   * Archon's last run on this host (its status file): the command, its
+   * counts, whether commits wait to be pushed, and when.
+   */
   lastRun?: {
     command: string;
     failures: number;
@@ -42,23 +56,36 @@ export interface WelcomeData {
     push: boolean;
     at: string;
   };
+  /** The last archon verify: when, how many checks passed of how many, and which failed. */
   verify?: { at: string; passed: number; total: number; failed: string[] };
+  /** The install record (spec 048): when, whether it succeeded, and its checks. */
   installed?: { at?: string; ok?: boolean; checks?: { passed: number; total: number } };
+  /** The certificate Traefik serves on 443: its issuer and expiry, as openssl prints them. */
   certificate?: { issuer: string; notAfter: string };
+  /**
+   * Ubuntu's updates: how many wait (unset when unknown), whether a reboot is
+   * needed and for which packages, and when they last installed by themselves.
+   */
   updates?: { pending?: number; reboot: boolean; rebootPackages: string[]; lastRun?: string };
+  /** The last backup run, when the host has the backup timer: when it ended and whether it succeeded. */
   backup?: { last?: string; ok?: boolean };
   /** Article 23 (spec 044): durable or ephemeral, and why. */
   data?: { class: "durable" | "ephemeral"; reasons: string[] };
+  /** The apps and pages behind the proxy (none without fleet.web). */
   services: Service[];
   /** Ports open to the network with nothing published (internal ones excluded). */
   unrouted: number[];
+  /** What is installed and how to use it, from the host's plan (spec 035). */
   guide: GuideItem[];
   /** How an AI agent reaches this server (spec 035); servers only. */
   agent?: AgentSetup;
   /** Guides served at /guide/<name>. */
   guides: Array<{ name: string; title: string }>;
+  /** The fleet admin's username (for the ssh command shown). */
   admin: string;
+  /** The fleet's mailbox, where alerts go; unset without mail. */
   mailbox?: string;
+  /** When the data was gathered: `YYYY-MM-DD HH:MM UTC`. */
   generated: string;
 }
 
@@ -69,7 +96,7 @@ const esc = (s: string) =>
   );
 
 /** Nerd Font and other private-use glyphs, which browsers show as boxes. */
-export const stripGlyphs = (s: string) =>
+export const stripGlyphs = (s: string): string =>
   s.replace(/[-]|\uDB80[\uDC00-\uDFFF]|[\u{F0000}-\u{FFFFD}]/gu, "").replace(
     /\s{2,}/g,
     " ",
@@ -87,6 +114,7 @@ function when(iso: string | undefined, now: Date): string {
   return `${Math.round(hours / 24)} days ago`;
 }
 
+/** The server's health, as the page shows it: healthy, something to look at, or failed. */
 export type Level = "ok" | "warn" | "fail";
 
 /** One plain sentence about the server's health, and what to do. */
@@ -149,6 +177,7 @@ const GLOSSARY: Array<[string, string]> = [
   ["Local networks", "the networks at this site (home or office), not the internet"],
 ];
 
+/** The stylesheet every page shares (light and dark, by the browser's preference). */
 export const STYLE = `
 :root { --bg: #f7f7f5; --fg: #1d1d1b; --muted: #66665f; --card: #ffffff; --line: #e3e3de; --ok: #2e7d32; --warn: #a15c00; --fail: #c62828; --link: #1a5fb4; --chip: #eef3fb; }
 @media (prefers-color-scheme: dark) { :root { --bg: #161615; --fg: #ecece8; --muted: #a2a29b; --card: #1f1f1d; --line: #33332f; --ok: #81c784; --warn: #ffb74d; --fail: #ef9a9a; --link: #8ab4f8; --chip: #22303f; } }
@@ -297,6 +326,7 @@ ${
 </div>`;
 }
 
+/** The welcome page, as a full HTML document; `now` is used for "5 minutes ago" style times. */
 export function renderWelcome(d: WelcomeData, now = new Date()): string {
   const h = health(d);
   const name = d.fqdn ?? d.host;

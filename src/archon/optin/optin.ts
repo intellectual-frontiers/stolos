@@ -30,21 +30,33 @@ import {
 } from "../model/durable.ts";
 import { fqdn } from "../web/config.ts";
 
+/** The spec this module implements. */
 export const SPEC = "040-opt-in" as const;
 
+/** One opt-in service or container: its switch, unit, commands and how to use it. */
 export interface OptInDef {
   /** The switch: this machine's archon.sql<name>.json, and UnitDef.switch. */
   name: string;
+  /** A system service, or a container Archon runs. */
   kind: "service" | "container";
+  /** Its name for people. */
   title: string;
   /** The unit the switch masks or enables. */
   unit: string;
   /** Commands that turn it on, off, and show it. */
-  commands: { on: string; off: string; status: string };
+  commands: {
+    /** The command that turns it on. */
+    on: string;
+    /** The command that turns it off. */
+    off: string;
+    /** The command that shows it. */
+    status: string;
+  };
   /** What people should know once it is on (addresses, how to connect). */
   howTo(fleet: FleetDef, host: HostDef): string[];
 }
 
+/** Every opt-in: SMB, PostgreSQL, S3 and the telemetry web UI. */
 export const OPT_INS: OptInDef[] = [
   {
     name: "smb",
@@ -112,13 +124,15 @@ export const OPT_INS: OptInDef[] = [
   },
 ];
 
-export const optInDef = (name: string) => OPT_INS.find((o) => o.name === name);
+/** The opt-in with this name, or `undefined`. */
+export const optInDef = (name: string): OptInDef | undefined =>
+  OPT_INS.find((o) => o.name === name);
 
 /** Whether an opt-in is on for this host (the model's view; absent means off). */
-export const isOn = (host: HostDef, name: string) => host.optIn?.[name]?.enabled === true;
+export const isOn = (host: HostDef, name: string): boolean => host.optIn?.[name]?.enabled === true;
 
 /** Who asked: the person behind sudo, else the current user. */
-export const caller = () => Deno.env.get("SUDO_USER") || currentUser() || "root";
+export const caller = (): string => Deno.env.get("SUDO_USER") || currentUser() || "root";
 
 /**
  * Write the decision, keeping anything else the record holds (pg.json also
@@ -147,7 +161,7 @@ export async function writeOptIn(
 }
 
 /** Whether this opt-in can hold end users' data (and so needs a choice). */
-export const holdsUserData = (name: string) => name in USER_DATA_OPT_INS;
+export const holdsUserData = (name: string): boolean => name in USER_DATA_OPT_INS;
 
 /**
  * The rule every change of choice follows: from durable (or no choice) to

@@ -14,6 +14,7 @@ const esc = (s: string) =>
     (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!,
   );
 
+/** Where a guide's relative links go: guides served here, or the repository on GitHub. */
 export interface LinkContext {
   /** Guides served here: docs/<name>.md -> /guide/<name>. */
   served: string[];
@@ -50,6 +51,7 @@ export function inline(text: string, ctx: LinkContext): string {
 const slug = (s: string) =>
   s.toLowerCase().replace(/<[^>]+>/g, "").replace(/[^a-z0-9 -]/g, "").trim().replace(/\s+/g, "-");
 
+/** A guide's Markdown as HTML (the subset described above); headings get ids for `#` links. */
 export function markdownToHtml(md: string, ctx: LinkContext): string {
   const out: string[] = [];
   const lines = md.replace(/\r/g, "").split("\n");

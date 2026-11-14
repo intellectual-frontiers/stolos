@@ -9,15 +9,23 @@
 
 import type { ArchonEvent } from "../archon/telemetry/events.ts";
 
+/** One report posted to the boot server: from Ubuntu's installer (`reporting` webhook) or from Archon's first boot. */
 export interface InstallerEvent {
+  /** The installer's step name, for example "subiquity/Install/install/curthooks". */
   name?: string;
+  /** The installer's description of the step. */
   description?: string;
+  /** "start" or "finish". */
   event_type?: string;
+  /** For a finish: "SUCCESS", "WARN", or "FAIL". */
   result?: string;
+  /** "archon" for first-boot events; absent for the installer's. */
   origin?: string;
   /** First-boot events (origin "archon"). */
   phase?: string;
+  /** First-boot events: "ok", "warn", or "fail". */
   level?: string;
+  /** First-boot events: the phase's one-line result. */
   summary?: string;
 }
 

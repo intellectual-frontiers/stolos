@@ -22,19 +22,38 @@ import type { HostDef, ToolDef } from "../model/types.ts";
 import { expandPersonas } from "../personas/mod.ts";
 import { homeOf, loadFleet, usersFor } from "../model/load.ts";
 
-interface Release {
+/** A tool's latest stable GitHub release, as `latestRelease` reads it. */
+export interface Release {
+  /** The release's git tag, as published (for example `"v2.1.0"`). */
   tag: string;
+  /** The version: the tag without the tool's tag prefix. */
   version: string;
-  assets: Array<{ name: string; url: string; digest?: string }>;
+  /** The release's downloadable files, each with its published digest when GitHub has one. */
+  assets: Array<{
+    /** The file name. */
+    name: string;
+    /** Where to download it. */
+    url: string;
+    /** GitHub's digest for it, `sha256:<hex>`, when published. */
+    digest?: string;
+  }>;
 }
 
+/** One tool's row in a `archon tools sync` run: what is installed, what is latest, what was done. */
 export interface ToolStatus {
+  /** The tool's id. */
   id: string;
+  /** Where it comes from: `upstream-binary`, `apt` or `self-updating`. */
   source: ToolDef["source"];
+  /** The installed version (for self-updating tools, one entry per user, joined by `; `). */
   installed?: string;
+  /** The latest version: the GitHub release, the apt candidate, or `"self-updating"`. */
   latest?: string;
+  /** The candidate version in Ubuntu's archive, for apt tools (the report's "Trixie" column). */
   debian?: string;
+  /** What the run did or would do (`"current"`, `"upgraded a -> b"`, `"FAILED: ..."`, and so on). */
   action: string;
+  /** False when the tool failed to sync. */
   ok: boolean;
 }
 
@@ -92,6 +111,11 @@ export async function githubToken(): Promise<string | undefined> {
   return cachedToken;
 }
 
+/**
+ * The latest stable release of a GitHub repository (`owner/name`), read from
+ * the releases API (or the mirror in `ARCHON_GITHUB_API`). `tagPrefix` is cut
+ * from the tag to give the version. Throws on an HTTP error or a pre-release.
+ */
 export async function latestRelease(repo: string, tagPrefix = ""): Promise<Release> {
   const headers: Record<string, string> = {
     accept: "application/vnd.github+json",
@@ -364,7 +388,16 @@ function isoWeek(d = new Date()): string {
   return `${y}-W${String(week).padStart(2, "0")}`;
 }
 
-export async function syncTools(host: HostDef, opts: { reportOnly: boolean }) {
+/**
+ * `archon tools sync`: bring every tool in the host's plan up to date (or,
+ * with `reportOnly`, only report what would change). As root, it also writes
+ * the week's Markdown report under the state directory's `reports/` and logs
+ * a summary to the journal. Must run as root unless `reportOnly`.
+ */
+export async function syncTools(
+  host: HostDef,
+  opts: { reportOnly: boolean },
+): Promise<{ rows: ToolStatus[]; report: string; failed: boolean }> {
   if (!opts.reportOnly && !isRoot()) throw new Error("tools sync must run as root");
   const plan = await planFor(host);
   const rows: ToolStatus[] = [];
@@ -409,7 +442,15 @@ export async function syncTools(host: HostDef, opts: { reportOnly: boolean }) {
   return { rows, report, failed: rows.some((r) => !r.ok) };
 }
 
-export async function listTools(host: HostDef, opts: { latest: boolean }) {
+/**
+ * Each tool in the host's plan with its installed
+ * version and, when `latest` is set, the latest GitHub release (upstream
+ * tools only; a lookup error is shown in place of the version).
+ */
+export async function listTools(
+  host: HostDef,
+  opts: { latest: boolean },
+): Promise<Array<{ id: string; source: string; installed?: string; latest?: string }>> {
   const plan = await planFor(host);
   const rows: Array<{ id: string; source: string; installed?: string; latest?: string }> = [];
   for (const t of plan.tools) {

@@ -122,17 +122,29 @@ async function notifyOwner(event: string, what: string, key: string) {
 
 // ------------------------------------------------------------------ read
 
+/** One instance as `archon pg list` and `archon pg status` show it (stable JSON). */
 export interface InstanceView {
+  /** The instance's name. */
   name: string;
+  /** Its major version. */
   version: number;
+  /** The port it listens on (null until allocated). */
   port: number | null;
+  /** pg_lsclusters' status, "not created", or "missing" (recorded but no cluster). */
   status: string;
+  /** Its systemd unit, postgresql@<version>-<name>.service. */
   unit: string;
+  /** Shown in the psql prompt. */
   environment: string;
+  /** psql turns AUTOCOMMIT off and warns. */
   protected: boolean;
+  /** Whether the host's model names it. */
   inModel: boolean;
+  /** Whether Archon created it (the host's record has it). */
   owned: boolean;
+  /** The name it is published at (the host's name when the fleet has no web domain), or null when private. */
   published: string | null;
+  /** Its data directory, when the cluster exists. */
   data: string | null;
 }
 
@@ -164,6 +176,7 @@ async function views(
   return { mine, foreign };
 }
 
+/** `archon pg list`: every instance on the host, and the clusters that are not Archon's. */
 export function pgList(hostName: string, json: boolean): Promise<number> {
   return guarded(json, async () => {
     const { fleet, host } = await server(hostName);
@@ -191,6 +204,7 @@ export function pgList(hostName: string, json: boolean): Promise<number> {
   });
 }
 
+/** `archon pg status NAME`: exit code 0 only when the instance is online and accepting connections. */
 export function pgStatus(hostName: string, name: string, json: boolean): Promise<number> {
   return guarded(json, async () => {
     const { fleet, host } = await server(hostName);
@@ -218,13 +232,21 @@ export function pgStatus(hostName: string, name: string, json: boolean): Promise
 
 /** The ensure document (stable; apps read it). */
 export interface EnsureResult {
+  /** Always true: a failure prints `{ ok: false, error }` instead. */
   ok: true;
+  /** The instance's name. */
   name: string;
+  /** Its major version. */
   version: number;
+  /** The port it listens on. */
   port: number;
+  /** pg_lsclusters' status ("online" when ready), or "unknown". */
   status: string;
+  /** Its systemd unit. */
   unit: string;
+  /** Whether this call created it. */
   created: boolean;
+  /** What this call changed, one sentence each. */
   changes: string[];
 }
 
@@ -294,6 +316,10 @@ function print(json: boolean, r: EnsureResult) {
   }
 }
 
+/**
+ * `archon pg ensure NAME`: create the instance if needed and converge it to
+ * the model. PostgreSQL must be on for the host. Exit code 0 when it is online.
+ */
 export function pgEnsure(
   hostName: string,
   name: string,
@@ -365,6 +391,7 @@ export function pgEnsure(
 
 // ------------------------------------------------------------------ lifecycle
 
+/** `archon pg start|stop|restart|reload NAME`, through pg_ctlcluster; journaled. */
 export function pgControl(
   hostName: string,
   name: string,
@@ -461,6 +488,7 @@ export async function dumpInstance(i: Instance & { record: PgRecord }): Promise<
   return file;
 }
 
+/** `archon pg backup NAME` (or every instance Archon created): dump each with {@link dumpInstance}. */
 export function pgBackup(
   hostName: string,
   name: string,
@@ -487,6 +515,11 @@ export function pgBackup(
   });
 }
 
+/**
+ * `archon pg restore NAME` (destructive): load a dump (the newest, or --from)
+ * after dumping what is there now, then converge again so Archon's passwords
+ * are set anew.
+ */
 export function pgRestore(
   hostName: string,
   name: string,
@@ -550,6 +583,10 @@ export function pgRestore(
 
 // ------------------------------------------------------------------ upgrade / remove
 
+/**
+ * `archon pg upgrade NAME --to V` (destructive): dump first, install the new
+ * version, run pg_upgradecluster, and keep the old cluster stopped (retired).
+ */
 export function pgUpgrade(
   hostName: string,
   name: string,
@@ -609,6 +646,11 @@ export function pgUpgrade(
   });
 }
 
+/**
+ * `archon pg remove NAME` (destructive): drop the instance (dumped first) and
+ * its record and passwords, or with --version only a retired cluster. An
+ * instance still in the model is refused.
+ */
 export function pgRemove(
   hostName: string,
   name: string,
@@ -657,6 +699,7 @@ export function pgRemove(
 
 // ------------------------------------------------------------------ maintain
 
+/** The queries `archon pg maintain` reports: connections, max_connections, database sizes, and dead rows. */
 export const MAINTAIN_SQL = {
   connections:
     `SELECT coalesce(datname, '-') || ' ' || coalesce(state, 'background') || ' ' || count(*) FROM pg_stat_activity GROUP BY datname, state ORDER BY 1`,
@@ -667,6 +710,10 @@ export const MAINTAIN_SQL = {
     `SELECT schemaname || '.' || relname || ' ' || n_dead_tup || ' dead of ' || (n_live_tup + n_dead_tup) || ' (' || round(100.0 * n_dead_tup / greatest(n_live_tup + n_dead_tup, 1)) || '%)' FROM pg_stat_user_tables WHERE n_dead_tup > 1000 ORDER BY n_dead_tup DESC LIMIT 10`,
 };
 
+/**
+ * `archon pg maintain NAME` (root): VACUUM ANALYZE every database, then report
+ * connections, sizes, and the tables with the most dead rows.
+ */
 export function pgMaintain(hostName: string, name: string, json: boolean): Promise<number> {
   return guarded(json, async () => {
     if (!isRoot()) throw new PgError("archon pg maintain runs as root (sudo archon pg maintain).");
@@ -713,6 +760,10 @@ export function pgMaintain(hostName: string, name: string, json: boolean): Promi
 
 // ------------------------------------------------------------------ publish
 
+/**
+ * `archon pg publish|unpublish NAME`: record the change, then apply the files
+ * and databases phases now (firewall, listen_addresses, pg_hba.conf, TLS).
+ */
 export function pgPublish(
   hostName: string,
   name: string,
@@ -868,14 +919,21 @@ export function pgConnect(
 
 // ------------------------------------------------------------------ who
 
+/** One role as `archon pg who` shows it. */
 export interface RoleView {
+  /** The role's name. */
   role: string;
+  /** "superuser" (postgres), the kind Archon's comment names (human, service, group), or "unmanaged". */
   kind: string;
+  /** Whether a Linux account of the same name exists. */
   linuxAccount: boolean;
+  /** Whether the role may log in. */
   login: boolean;
+  /** Whether the role is a superuser. */
   superuser: boolean;
   /** null when not root (only the superuser may see whether a password is set). */
   password: boolean | null;
+  /** The roles it is a member of, sorted. */
   memberOf: string[];
 }
 

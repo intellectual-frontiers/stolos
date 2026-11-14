@@ -15,11 +15,17 @@
 import type { FleetDef, HostDef, HostPlan, WebRoute } from "../model/types.ts";
 import { LOCAL_NETWORKS, localNetworks } from "../capabilities/ssh.ts";
 import { ACME_DIRECTORIES, providersOf } from "../model/providers.ts";
+import type { ARecord } from "./cloudflare.ts";
 
+/** The web front door's fixed paths, units, accounts and ports on a server (spec 032). */
 export const WEB = {
+  /** Traefik's static configuration (traefikStatic). */
   staticConfig: "/etc/traefik/traefik.yml",
+  /** The folder Traefik watches for dynamic configuration. */
   dynamicDir: "/etc/traefik/dynamic",
+  /** Archon's dynamic configuration file in it (traefikDynamic). */
   dynamicConfig: "/etc/traefik/dynamic/archon.yml",
+  /** Traefik's systemd service. */
   unit: "traefik.service",
   /** The welcome page: archon web serve, on loopback only. */
   welcomeUnit: "archon-web.service",
@@ -28,7 +34,9 @@ export const WEB = {
    * account whose name exists, and the group archon-web does.
    */
   welcomeUser: "archon-welcome",
+  /** The welcome page listens here (loopback: only Traefik reaches it). */
   welcomeAddress: "127.0.0.1",
+  /** The welcome page's TCP port. */
   welcomePort: 8090,
   /** Root only: the Cloudflare token for archon web dns. */
   credential: "/etc/archon/web/cloudflare.json",
@@ -38,8 +46,11 @@ export const WEB = {
   delivered: "/etc/archon/web_credential.json",
   /** May use the Podman socket (Traefik reads container labels there). */
   group: "archon-web",
+  /** Podman's Docker-compatible API socket. */
   podmanSocket: "/run/podman/podman.sock",
+  /** Traefik's ACME store: the Let's Encrypt account, certificates and keys. */
   acmeStorage: "/var/lib/traefik/acme.json",
+  /** The name of Traefik's certificate resolver. */
   resolver: "letsencrypt",
 } as const;
 
@@ -75,6 +86,7 @@ export function hostRoutes(host: HostDef): WebRoute[] {
   ];
 }
 
+/** The URL Traefik forwards a route to: http or https, its address (127.0.0.1 by default), and its port. */
 export function backendUrl(r: Pick<WebRoute, "address" | "port" | "https">): string {
   return `${r.https ? "https" : "http"}://${r.address ?? "127.0.0.1"}:${r.port}`;
 }
@@ -181,8 +193,11 @@ export function traefikDynamic(
   return JSON.stringify(config, null, 2) + "\n";
 }
 
-/** The A records a server keeps in Cloudflare: its name and its wildcard, to its address. */
-export function dnsRecords(fleet: FleetDef, host: HostDef, address: string) {
+/**
+ * The A records a server keeps in Cloudflare: its name and its wildcard, to
+ * its address. None without fleet.web.
+ */
+export function dnsRecords(fleet: FleetDef, host: HostDef, address: string): ARecord[] {
   const name = fqdn(fleet, host);
   if (!name) return [];
   return [name, `*.${name}`].map((n) => ({ type: "A" as const, name: n, content: address }));

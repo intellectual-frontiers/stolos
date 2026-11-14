@@ -21,19 +21,24 @@
 
 import { join } from "../core/path.ts";
 
+/** Where `archon apply` writes each user's composed chezmoi source (one directory per user). */
 export const COMPOSED_ROOT = "/var/lib/archon-dotfiles";
 
+/** Which layer it is, most general first: engine, fleet, host, user, host-user. */
 export type LayerKind = "engine" | "fleet" | "host" | "user" | "host-user";
 
 /** The engine's base layer: read from the engine's own files (assets.auto.ts), not the repository. */
 export const ENGINE_LAYER = "@engine/home";
 
+/** One layer of a user's dotfiles. */
 export interface Layer {
+  /** Which layer it is. */
   kind: LayerKind;
   /** Repository-relative directory (forward slashes). */
   dir: string;
 }
 
+/** The five layers for one user on one host in a fleet, most general first. */
 export function layersFor(host: string, user: string, fleet: string): Layer[] {
   const f = `fleets/${fleet}`;
   return [
@@ -45,6 +50,7 @@ export function layersFor(host: string, user: string, fleet: string): Layer[] {
   ];
 }
 
+/** The composed source directory for a user, under `COMPOSED_ROOT`. */
 export function composedDir(user: string): string {
   return join(COMPOSED_ROOT, user);
 }
@@ -120,28 +126,35 @@ export function forbidden(sourceRel: string): string | undefined {
   return undefined;
 }
 
+/** One file of the composed source, from the most specific layer that has its target. */
 export interface ComposedFile {
   /** Path in the composed source. */
   source: string;
   /** Repository-relative path it comes from. */
   from: string;
+  /** The layer it comes from. */
   layer: Layer;
   /** Target path relative to the home directory. */
   target: string;
 }
 
+/** A user's composed dotfiles source, with any problems found on the way. */
 export interface Composition {
+  /** Every layer considered, most general first. */
   layers: Layer[];
   /** Layers that exist (have at least one file). */
   present: Layer[];
+  /** The files that won, sorted by source path. */
   files: ComposedFile[];
   /** Concatenated special files (.chezmoiignore, .chezmoiremove) and their text. */
   concatenated: Map<string, string>;
+  /** Files left out and why (forbidden kinds, two sources for one target in a layer). */
   problems: string[];
 }
 
 /** Read a layer's files: repository-relative paths below its directory. */
 export type LayerReader = (dir: string) => Promise<string[]>;
+/** Read one file's text, by repository-relative path. */
 export type TextReader = (repoRel: string) => Promise<string>;
 
 /** Compose a user's source on a host from the layers (pure apart from the readers). */

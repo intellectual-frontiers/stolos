@@ -21,12 +21,19 @@ interface OtlpSpan {
   attributes?: Array<{ key: string; value: { stringValue?: string } }>;
 }
 
+/** One install, from its root span "install <host>". */
 export interface Install {
+  /** The host's name. */
   name: string;
+  /** When it started. */
   start: Date;
+  /** How long it took, in seconds. */
   seconds: number;
+  /** Whether the root span ended without an error. */
   ok: boolean;
+  /** Its archon.result attribute (for example "Ready"), if any. */
   result?: string;
+  /** Its steps (the root's children), in order, with their durations and any problem. */
   steps: Array<{ name: string; seconds: number; ok: boolean; problem?: string }>;
 }
 
@@ -71,6 +78,7 @@ const dur = (s: number) =>
     ? `${Math.floor(s / 60)}m${String(Math.round(s % 60)).padStart(2, "0")}s`
     : `${s.toFixed(s < 10 ? 1 : 0)}s`;
 
+/** `deno task boot observe`: the newest `count` installs, each with its slowest and failed steps. */
 export async function bootObserve(o: { count: number }): Promise<number> {
   if (!(await exists(TELEMETRY_DIR))) {
     console.log(`No telemetry yet: deno task boot serve writes it to ${TELEMETRY_DIR}.`);

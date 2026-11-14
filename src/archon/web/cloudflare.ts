@@ -9,18 +9,26 @@
 
 const API = "https://api.cloudflare.com/client/v4";
 
+/** The server's Cloudflare credential: an API token with Zone: Read and DNS: Edit on the zone. */
 export interface CfCredential {
+  /** The API token. A secret: never logged or sent anywhere but Cloudflare's API. */
   token: string;
+  /** When it was made (ISO 8601), if known. */
   created?: string;
 }
 
+/** A DNS A record to keep (always TTL 60, not proxied). */
 export interface ARecord {
+  /** The record type: only A records are kept. */
   type: "A";
+  /** Its full name (for example `alpha.lab.example.net`, or `*.alpha.lab.example.net`). */
   name: string;
+  /** The IPv4 address it points to. */
   content: string;
 }
 
-type Fetch = typeof fetch;
+/** The fetch function the calls use: the global `fetch`, or a fake in tests. */
+export type Fetch = typeof fetch;
 
 async function call<T>(
   f: Fetch,
@@ -65,8 +73,11 @@ export async function zoneId(token: string, zone: string, f: Fetch = fetch): Pro
   return z.id;
 }
 
+/** What upsertRecords did for one record. */
 export interface Upserted {
+  /** The record's name. */
   name: string;
+  /** Left as it was, changed in place, or added. */
   action: "unchanged" | "updated" | "created";
 }
 

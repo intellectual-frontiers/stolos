@@ -48,15 +48,30 @@ async function site(): Promise<Site> {
   return s;
 }
 
+/** The options of `archon notify send`. */
 export interface SendArgs {
+  /**
+   * The subject. One that starts with `[` or `Lab ` is sent as given, with the
+   * body as the whole message; a short one becomes `[Archon] <host>: <subject>`.
+   */
   subject: string;
+  /** The body text (with a short subject, the subject itself when empty). */
   body?: string;
+  /** Read the body from this file instead (it wins over `body`). */
   bodyFile?: string;
+  /** Files to attach. */
   attach?: string[];
+  /** How serious it is; `"info"` by default. */
   level?: Level;
+  /** Deduplication key: the same key within an hour is sent once. */
   key?: string;
 }
 
+/**
+ * archon notify send: queue a message from this machine. With `wait`, send it
+ * now and report whether it went; otherwise start the sender and return.
+ * Exit code 0 when queued (or sent, with `wait`) or a duplicate, else 1.
+ */
 export async function notifySend(a: SendArgs, o: { wait: boolean }): Promise<number> {
   const s = await site();
   const p = ui.phase("Notify");
@@ -103,6 +118,7 @@ export async function notifySend(a: SendArgs, o: { wait: boolean }): Promise<num
   return f.sent ? 0 : 1;
 }
 
+/** archon notify test: send a test message now and wait for the relay (exit code 0 when sent). */
 export async function notifyTest(): Promise<number> {
   const s = await site();
   return await notifySend({
@@ -112,6 +128,12 @@ export async function notifyTest(): Promise<number> {
   }, { wait: true });
 }
 
+/**
+ * archon notify status: mailbox, sender, relay, credential, last send and
+ * queue. With `check` (archon verify), one line instead, and exit code 1 when
+ * mail is not configured, the last send failed, or a message has waited more
+ * than 6 hours.
+ */
 export async function notifyStatus(o: { check: boolean }): Promise<number> {
   const s = await site();
   const st = await readStatus(s);
@@ -151,6 +173,10 @@ export async function notifyStatus(o: { check: boolean }): Promise<number> {
   return 0;
 }
 
+/**
+ * archon notify flush (the flush service): send what is due. Prints counts
+ * only when something was tried. Always exit code 0.
+ */
 export async function notifyFlush(): Promise<number> {
   const s = await site();
   const f = await flush(s);

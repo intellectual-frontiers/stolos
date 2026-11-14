@@ -16,6 +16,7 @@
 
 import { run } from "../core/exec.ts";
 
+/** The SMTP relay, host:port, when the fleet names none (`fleet.mail.relay`): Cloudflare, implicit TLS. */
 export const DEFAULT_RELAY = "smtp.mx.cloudflare.net:465";
 /** Cloudflare's SMTP user name: the literal string api_token. */
 export const RELAY_USER = "api_token";
@@ -33,12 +34,14 @@ export function senderAddress(
 }
 
 /** The detail part of the subaddress: alpha.lab. */
-export const hostLabel = (mail: { tag?: string }, host: string) =>
+export const hostLabel = (mail: { tag?: string }, host: string): string =>
   mail.tag ? `${host}.${mail.tag}` : host;
 
 /** The credential: a Cloudflare API token with the Email Sending: Edit permission. */
 export interface Credential {
+  /** The API token (the SMTP password). A secret: never logged or sent. */
   token: string;
+  /** When it was made (ISO 8601); empty when read back from sasl_passwd. */
   created: string;
 }
 
@@ -49,6 +52,7 @@ export function secretsOf(c: Credential | undefined): string[] {
 
 const quote = (s: string) => `"${s.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
 
+/** Split `host:port`; the port is 465 when missing or not a number. */
 export function relayParts(relay = DEFAULT_RELAY): { host: string; port: number } {
   const [host, port] = relay.split(":");
   return { host, port: Number(port) || 465 };
@@ -126,6 +130,10 @@ export async function probeSmtp(
 /** Postfix's SMTP client credential: one line, root only (capabilities/mail.ts). */
 export const SASL_PASSWD = "/etc/postfix/sasl_passwd";
 
+/**
+ * The text of Postfix's sasl_passwd for this credential: a comment, then
+ * `[host]:port api_token:<token>`. It holds the token: write it root only.
+ */
 export function saslPasswd(c: Credential, relay = DEFAULT_RELAY): string {
   const { host, port } = relayParts(relay);
   return `# Written by archon mail credential (spec 027). Root only.\n[${host}]:${port} ${RELAY_USER}:${c.token}\n`;

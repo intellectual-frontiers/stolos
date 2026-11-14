@@ -14,6 +14,7 @@
 
 import type { DataClass, HostDef } from "./types.ts";
 
+/** The spec this module implements. */
 export const SPEC = "044-durable" as const;
 
 /** The opt-ins whose data can come from end users (spec 040's names). */
@@ -37,22 +38,36 @@ export const DATA_PATHS: Record<string, string[]> = {
   "otel-ui": ["/srv/otel-ui"],
 };
 
+/** One source of end users' data on a host: an opt-in or a guest, with its recorded class. */
 export interface DataSource {
+  /** Whether it is an opt-in (spec 040) or a guest. */
   kind: "opt-in" | "guest";
+  /** The opt-in's name (`"pg"`) or the guest's name. */
   name: string;
+  /** Its name for people (`"PostgreSQL"`, `"guest db"`). */
   title: string;
   /** "unchosen": the record has no choice; it counts as durable. */
   data: DataClass | "unchosen";
+  /** Whether it is on now (a guest always is; an opt-in may be off with its data kept). */
   on: boolean;
 }
 
+/** A host's data class, worked out from its sources (Article 23). */
 export interface HostData {
+  /** The host's name. */
   host: string;
+  /** Durable when any source is durable or unchosen; ephemeral otherwise. */
   class: DataClass;
   /** Why it is durable ("PostgreSQL", "guest db"); empty when ephemeral. */
   reasons: string[];
   /** Sources without a recorded choice, and the command that records one. */
-  unchosen: Array<{ name: string; fix: string }>;
+  unchosen: Array<{
+    /** The source's name. */
+    name: string;
+    /** What to run or change to record a choice. */
+    fix: string;
+  }>;
+  /** Every source found, as `dataSources` returns them. */
   sources: DataSource[];
 }
 
@@ -91,6 +106,11 @@ export function dataSources(host: HostDef, onDisk: string[] = []): DataSource[] 
   return out;
 }
 
+/**
+ * The host's data class with its reasons and the sources still missing a
+ * choice (each with the command or model change that records one). `onDisk`
+ * is as for `dataSources`.
+ */
 export function hostData(host: HostDef, onDisk: string[] = []): HostData {
   const sources = dataSources(host, onDisk);
   const kept = sources.filter((s) => s.data !== "ephemeral");
@@ -116,7 +136,7 @@ export function durablePaths(host: HostDef): string[] {
 }
 
 /** The guests backed up with `lxc export`: durable ones (or unchosen). */
-export const durableGuests = (host: HostDef) =>
+export const durableGuests = (host: HostDef): string[] =>
   (host.guests ?? []).filter((g) => g.data !== "ephemeral").map((g) => g.name);
 
 /** "durable (PostgreSQL, S3)" or "ephemeral". */
@@ -165,7 +185,7 @@ export function confirmDestroy(
 }
 
 /** The command-line flags every forced choice uses. */
-export const CHOICE_ARGS = [
+export const CHOICE_ARGS: Array<{ name: string; type: "boolean"; description: string }> = [
   {
     name: "durable",
     type: "boolean" as const,
@@ -178,7 +198,14 @@ export const CHOICE_ARGS = [
   },
 ];
 
-export const CONFIRM_DESTROY_ARG = (what: string) => ({
+/**
+ * The `--confirm-destroy` flag for a command that may lose durable data;
+ * `what` names what must be repeated (usually the host's name). Marked
+ * `human`: only a person may give it.
+ */
+export const CONFIRM_DESTROY_ARG = (
+  what: string,
+): { name: string; type: "string"; human: boolean; description: string } => ({
   name: "confirm-destroy",
   type: "string" as const,
   human: true,

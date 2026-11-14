@@ -16,12 +16,17 @@ import { loadFleet, loadHosts } from "../model/load.ts";
 import type { DataClass, FleetDef, HostDef } from "../model/types.ts";
 import { SMB, smbName, smbUsers } from "./config.ts";
 
+/** The host's SMB switch record (spec 040's opt-in record). */
 export interface SmbRecord {
+  /** Whether SMB is on. */
   enabled: boolean;
+  /** Who last turned it on or off. */
   by: string;
+  /** When (ISO 8601). */
   at: string;
 }
 
+/** The host's SMB switch record in archon.sql, or `undefined` when it was never turned on. */
 export async function readRecord(host: string, root = P.state): Promise<SmbRecord | undefined> {
   return (await getRecord<SmbRecord>(host, "optin", SMB.switch, root))?.body;
 }
@@ -48,11 +53,20 @@ export function howToConnect(name: string, user = "<you>"): string[] {
 }
 
 // On and off are the shared opt-in switch (spec 040).
-export const smbOn = async (host: string, data: DataClass, confirm?: unknown) =>
+/**
+ * `archon fs smb on`: turn SMB on with the forced data choice (spec 044).
+ * `confirm` is the `--confirm-destroy` value. Resolves to the exit code.
+ */
+export const smbOn = async (host: string, data: DataClass, confirm?: unknown): Promise<number> =>
   (await import("../optin/optin.ts")).setOptIn(host, "smb", true, { data, confirm });
-export const smbOff = async (host: string) =>
+/** `archon fs smb off`: turn SMB off (its data is kept). Resolves to the exit code. */
+export const smbOff = async (host: string): Promise<number> =>
   (await import("../optin/optin.ts")).setOptIn(host, "smb", false);
 
+/**
+ * `archon fs smb status`: the switch, smbd and port 445, the shares, and who
+ * has an SMB password (as root). Returns 1 when a check failed, else 0.
+ */
 export async function smbStatus(hostName: string): Promise<number> {
   const { fleet, host } = await server(hostName);
   const plan = (await import("../model/resolve.ts")).resolvePlan(host, fleet);

@@ -9,15 +9,21 @@
 
 import { run } from "../archon/core/exec.ts";
 
+/** A port the boot server needs reachable from the network. */
 export interface Need {
+  /** TCP (HTTP) or UDP (TFTP). */
   protocol: "TCP" | "UDP";
+  /** The port number. */
   port: number;
+  /** What it is for, in words ("HTTP", "TFTP"). */
   what: string;
 }
 
 /** One Windows inbound rule, as the PowerShell probe reports it. */
 export interface WinRule {
+  /** The rule's display name. */
   name: string;
+  /** Allow or Block. */
   action: "Allow" | "Block";
   /** "Any", or a comma list of Domain, Private, Public. */
   profile: string;
@@ -33,11 +39,13 @@ export interface WinRule {
   scoped?: boolean;
 }
 
+/** Windows Defender Firewall's state, as the PowerShell probe reports it. */
 export interface WinState {
   /** Firewall profiles that are on, e.g. ["Domain", "Private", "Public"]. */
   enabled: string[];
   /** Categories of the connected networks, e.g. ["Public"]. */
   active: string[];
+  /** The enabled inbound rules. */
   rules: WinRule[];
 }
 

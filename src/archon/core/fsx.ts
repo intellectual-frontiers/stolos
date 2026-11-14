@@ -6,6 +6,7 @@
 
 import { dirname } from "./path.ts";
 
+/** Whether something is at `path` (a file, folder, or link; a broken link counts). Other errors are thrown. */
 export async function exists(path: string): Promise<boolean> {
   try {
     await Deno.lstat(path);
@@ -16,7 +17,11 @@ export async function exists(path: string): Promise<boolean> {
   }
 }
 
-export async function readTextOr(path: string, fallback: string | undefined = undefined) {
+/** A text file's content, or `fallback` (default undefined) when it does not exist. Other errors are thrown. */
+export async function readTextOr(
+  path: string,
+  fallback: string | undefined = undefined,
+): Promise<string | undefined> {
   try {
     return await Deno.readTextFile(path);
   } catch (e) {
@@ -25,7 +30,8 @@ export async function readTextOr(path: string, fallback: string | undefined = un
   }
 }
 
-export async function ensureDir(path: string) {
+/** Create a folder and its parents, if missing. */
+export async function ensureDir(path: string): Promise<void> {
   await Deno.mkdir(path, { recursive: true });
 }
 
@@ -40,6 +46,7 @@ export async function writeIfChanged(path: string, content: string): Promise<boo
   return true;
 }
 
+/** The names of the folders directly in `path`, sorted; empty when it does not exist. */
 export async function listDirs(path: string): Promise<string[]> {
   const out: string[] = [];
   try {
@@ -50,6 +57,7 @@ export async function listDirs(path: string): Promise<string[]> {
   return out.sort();
 }
 
+/** The names of the files directly in `path` ending in `suffix`, sorted; empty when it does not exist. */
 export async function listFiles(path: string, suffix = ""): Promise<string[]> {
   const out: string[] = [];
   try {

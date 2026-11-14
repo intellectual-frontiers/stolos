@@ -12,16 +12,23 @@ import { P } from "../core/paths.ts";
 import { type Ledger, readLedger, VAULT_LOCAL, writeLedger } from "../core/secret-ledger.ts";
 import { secretFor, type SecretRef } from "../model/secret-inventory.ts";
 
+/** One secret file as it is now on the boot machine (no value: only its name, size and digest). */
 export interface LiveSecret {
   /** Path inside the secrets folder, forward slashes. */
   name: string;
+  /** Its full path on this machine. */
   path: string;
+  /** Its inventory entry, when the inventory knows the path. */
   ref?: SecretRef;
+  /** SHA-256 of its contents, hex. */
   sha256: string;
+  /** Its size in bytes. */
   size: number;
+  /** When it last changed (ISO 8601): the ledger's record, else the file's mtime. */
   changedAt: string;
 }
 
+/** SHA-256 of some bytes, as lowercase hex. */
 export async function sha256(data: Uint8Array<ArrayBuffer>): Promise<string> {
   const d = await crypto.subtle.digest("SHA-256", data);
   return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -79,7 +86,9 @@ export async function checkLastBackup(lb: Ledger["lastBackup"]): Promise<BackupC
   return { state: "ok", where: here ? "here" : "moved" };
 }
 
+/** The vault's state: every secret, what the last backup lacks, and how urgent that is. */
 export interface Assessment {
+  /** Every secret, with whether the last recorded backup holds it as it is now. */
   items: Array<LiveSecret & { backedUp: boolean }>;
   /** Not ephemeral, and not in the last backup as it is now. */
   unbacked: Array<LiveSecret & { backedUp: boolean }>;
@@ -95,6 +104,12 @@ export interface Assessment {
 
 const DAY = 86_400_000;
 
+/**
+ * Compare the secrets folder with the ledger's last backup record (spec 056:
+ * the record counts, wherever the ZIP is kept). Amber when anything is
+ * unbacked or removed; red when a change is more than 7 days old, or host
+ * identity keys have never been backed up.
+ */
 export async function assess(dir = P.secrets, now = Date.now()): Promise<Assessment> {
   const ledger = await readLedger();
   // Spec 056: the ZIP lives wherever you keep it; the record counts.
@@ -125,8 +140,9 @@ export async function assess(dir = P.secrets, now = Date.now()): Promise<Assessm
 // ------------------------------------------------------------ the prompt
 
 /** The prompt's vault token (spec 011): "🔐 backup" while anything is unbacked, else empty. */
-export const PROMPT_STATUS = join(P.bootCache, "..", "status", "prompt-vault");
+export const PROMPT_STATUS: string = join(P.bootCache, "..", "status", "prompt-vault");
 
+/** Write the prompt's vault token from an assessment. Best effort: errors are ignored. */
 export async function writePromptStatus(a: Assessment): Promise<void> {
   try {
     await Deno.mkdir(join(PROMPT_STATUS, ".."), { recursive: true });
