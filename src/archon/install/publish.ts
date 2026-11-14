@@ -19,6 +19,26 @@ const last = (r: { stderr: string; stdout: string }) =>
   (r.stderr || r.stdout).trim().split("\n").pop() ?? "";
 
 /**
+ * Git with the terminal: signing asks for the key's passphrase through
+ * OpenSSH, which needs one (without it, git says only "failed to write commit
+ * object"). Returns whether it worked.
+ */
+async function gitWithTerminal(repo: string, args: string[]): Promise<boolean> {
+  ui.pause();
+  try {
+    const r = await new Deno.Command("git", {
+      args: ["-C", repo, ...args],
+      stdin: "inherit",
+      stdout: "inherit",
+      stderr: "inherit",
+    }).output();
+    return r.success;
+  } finally {
+    ui.resume();
+  }
+}
+
+/**
  * Git's author when this checkout has none configured (a fresh boot machine):
  * the fleet admin's GitHub name and no-reply address, from the model.
  */
@@ -75,9 +95,19 @@ export async function publishChange(
   const staged = await git(["diff", "--cached", "--quiet"]);
   if (staged.ok) c.done("nothing to commit");
   else {
-    const ci = await git([...(await identity(git, o.identity)), "commit", "-q", "-m", message]);
-    if (!ci.ok) {
-      c.fail(`git commit: ${last(ci)}`, "git status");
+    console.log("\n  Signing the commit: type your daily key's passphrase.\n");
+    const ok = await gitWithTerminal(o.repo ?? P.repo, [
+      ...(await identity(git, o.identity)),
+      "commit",
+      "-q",
+      "-m",
+      message,
+    ]);
+    if (!ok) {
+      c.fail(
+        "the commit was not made (a wrong passphrase, or it was cancelled)",
+        `nothing is lost: deno task stolos apply -m "${message}"`,
+      );
       return false;
     }
     c.done(`"${message}"`);
@@ -91,12 +121,12 @@ export async function publishChange(
       return true;
     }
     // Someone (a host's own state) pushed first: rebase onto it and try again.
-    const pull = await git(["pull", "-q", "--rebase", "--autostash"]);
-    if (!pull.ok) {
-      p.fail(`git pull --rebase: ${last(pull)}`, "git status; then git push");
+    // Rebasing signs the commit again: with the terminal, for the passphrase.
+    if (!(await gitWithTerminal(o.repo ?? P.repo, ["pull", "-q", "--rebase", "--autostash"]))) {
+      p.fail("git pull --rebase did not finish", "git status; then deno task stolos apply");
       return false;
     }
   }
-  p.fail("git push failed three times", "git push");
+  p.fail("git push failed three times", "deno task stolos apply");
   return false;
 }

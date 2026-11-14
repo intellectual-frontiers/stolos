@@ -162,12 +162,12 @@ export async function hostAdd(o: HostAddOptions): Promise<number> {
   }
   const m = ui.phase("Host model");
   if ((await exists(file)) && !o.force) {
-    m.done(`fleets/<fleet>/hosts/${name}/host.ts exists (kept; --force rewrites it)`);
+    m.done(`fleets/${P.fleetId}/hosts/${name}/host.ts exists (kept; --force rewrites it)`);
   } else {
     await ensureDir(join(P.hosts, name));
     const disk: DiskDef = { match: o.disk ?? "largest", layout: o.layout ?? "lvm" };
     await Deno.writeTextFile(file, hostSource({ name, disk }));
-    m.done(`fleets/<fleet>/hosts/${name}/host.ts · ${disk.layout} on ${disk.match} disk`);
+    m.done(`fleets/${P.fleetId}/hosts/${name}/host.ts · ${disk.layout} on ${disk.match} disk`);
   }
 
   const k = ui.phase("Deploy key");
@@ -215,7 +215,7 @@ export async function hostAdd(o: HostAddOptions): Promise<number> {
   await notify({
     event: `host added: ${name}`,
     what:
-      `Host ${name} was added to the fleet (fleets/<fleet>/hosts/${name}/host.ts) and armed for one install.`,
+      `Host ${name} was added to the fleet (fleets/${P.fleetId}/hosts/${name}/host.ts) and armed for one install.`,
     todo: `Install it: network-boot it while the boot server runs (deno task stolos boot serve).`,
     key: `host-add:${name}`,
   });

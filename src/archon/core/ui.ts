@@ -247,6 +247,8 @@ export class Ui {
   readonly started: number;
   /** Every problem so far. */
   readonly problems: Problem[] = [];
+  /** The closing summary was printed (once per run). */
+  private finished = false;
   /** Every disruptive change left for later. */
   readonly deferred: string[] = [];
   /** How to run the deferred changes. */
@@ -549,6 +551,10 @@ export class Ui {
     if (this.current) this.endPhase(this.current);
     this.stopSpinner();
     const fails = this.problems.filter((p) => p.level === "fail");
+    // Once per run: a command that ends with its own summary, run by main (which
+    // ends every operation with one), would otherwise print it twice.
+    if (this.finished) return fails.length ? 1 : 0;
+    this.finished = true;
     // A caller that ran this as a step (stolos update runs boot doctor) reads the counts.
     const summaryFile = env("STOLOS_SUMMARY");
     if (summaryFile) {
