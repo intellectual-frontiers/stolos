@@ -8,6 +8,7 @@
  * @module
  */
 
+import { lf } from "../core/fsx.ts";
 import { P, repoRel } from "../core/paths.ts";
 import { join, toFileUrl } from "../core/path.ts";
 import { ensureDir, exists, readTextOr } from "../core/fsx.ts";
@@ -68,7 +69,8 @@ export async function registrationProblems(
     if (text === undefined) continue;
     const r = await loadRegistration(h, file);
     const where = repoRel(file);
-    if (!r || text !== registrationSource(r)) {
+    // Line endings are Git's business (CRLF on a Windows checkout): the form is the text.
+    if (!r || lf(text) !== registrationSource(r)) {
       out.push({ where, message: "not in the form stolos host add writes" });
       continue;
     }

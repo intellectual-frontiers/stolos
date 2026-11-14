@@ -84,3 +84,8 @@ export async function walkFiles(root: string, rel = ""): Promise<string[]> {
   }
   return out.sort();
 }
+
+/** Text with Windows line endings (CRLF, as Git for Windows checks files out) made LF. */
+export function lf(text: string): string {
+  return text.replace(/\r\n/g, "\n");
+}

@@ -41,7 +41,7 @@ Deno.test("062: a fleet's copy has its repository; without one it asks for --rep
   assertStringIncludes(bootstrapFiles()["bin/bootstrap.sh"], 'DEFAULT_REPO=""');
   const s = scaffoldFiles("v1.0.0", undefined, "example/fleet");
   assertEquals(s["bin/bootstrap.sh"], f["bin/bootstrap.sh"]);
-  assertStringIncludes(s[".gitattributes"], "*.sh text eol=lf");
+  assertStringIncludes(s[".gitattributes"], "* text=auto eol=lf");
   for (
     const [url, slug] of [
       ["https://github.com/example/fleet.git", "example/fleet"],

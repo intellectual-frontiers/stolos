@@ -88,3 +88,33 @@ Deno.test("047: stolos decide writes Git's decision; the model and the data clas
     await Deno.remove(sb.home, { recursive: true });
   }
 });
+
+Deno.test("062: a Windows checkout (CRLF line endings) passes the fixed-form checks", async () => {
+  const sb = await sandbox("archon-crlf-test-");
+  const repo = `${sb.home}/fleet`;
+  try {
+    await Deno.mkdir(`${repo}/fleets`, { recursive: true });
+    await new Deno.Command("cp", {
+      args: ["-r", `${ENGINE}/examples/fleets/lab`, `${repo}/fleets/lab`],
+    }).output();
+    const env = { ARCHON_REPO: repo, ARCHON_FLEET: "lab" };
+    const archon = (args: string[]) => sb.run(`${ENGINE}/src/stolos/main.ts`, args, "", env);
+    assertEquals((await archon(["decide", "pg", "on", "--durable", "--host", "beta"])).code, 0);
+    // As Git for Windows checks them out without .gitattributes: CRLF everywhere.
+    const crlf = async (dir: string) => {
+      for await (const e of Deno.readDir(dir)) {
+        const p = `${dir}/${e.name}`;
+        if (e.isDirectory) await crlf(p);
+        else if (p.endsWith(".ts")) {
+          await Deno.writeTextFile(p, (await Deno.readTextFile(p)).replace(/\r?\n/g, "\r\n"));
+        }
+      }
+    };
+    await crlf(`${repo}/fleets/lab`);
+    const r = await archon(["validate"]);
+    assertEquals(r.code, 0, r.out);
+    assert(!r.out.includes("not in the form"), r.out);
+  } finally {
+    await Deno.remove(sb.home, { recursive: true });
+  }
+});

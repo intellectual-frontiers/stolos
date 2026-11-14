@@ -102,12 +102,15 @@ export const VSCODE_EXTENSIONS_TEXT =
   '{\n  "recommendations": [\n    "denoland.vscode-deno",\n    "bierner.markdown-mermaid",\n    "github.vscode-github-actions",\n    "redhat.vscode-yaml"\n  ],\n  "unwantedRecommendations": [\n    "esbenp.prettier-vscode",\n    "dbaeumer.vscode-eslint"\n  ]\n}\n';
 
 /**
- * Line endings Git keeps whatever the PC (spec 062): a shell script with
- * Windows line endings does not run on Linux or macOS.
+ * Line endings Git keeps whatever the PC (spec 062): every text file LF, as
+ * stolos and deno fmt write them. Git for Windows would otherwise check files
+ * out with CRLF: a shell script would not run on Linux or macOS, and a file in
+ * stolos's fixed form (signers.ts, registration.ts) would not read back as it.
  */
 export const GITATTRIBUTES_TEXT =
-  `# Written by stolos (spec 062): shell scripts keep LF on every system.
-*.sh text eol=lf
+  `# Written by stolos (spec 062): every text file keeps LF on every system, as stolos
+# and deno fmt write them (Git for Windows would otherwise check them out with CRLF).
+* text=auto eol=lf
 `;
 
 /** The files of a fleet repository, by path relative to its root; `slug` is its GitHub owner/name. */

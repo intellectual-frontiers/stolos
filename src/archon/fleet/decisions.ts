@@ -9,6 +9,7 @@
  * @module
  */
 
+import { lf } from "../core/fsx.ts";
 import { tsKey } from "../core/ts-literal.ts";
 import { P, repoRel } from "../core/paths.ts";
 import { join } from "../core/path.ts";
@@ -59,7 +60,8 @@ export async function decisionProblems(hosts: string[]): Promise<string[]> {
     const file = decisionsFile(h);
     const text = await readTextOr(file);
     if (text === undefined) continue;
-    if (text !== decisionsSource(await loadDecisions(h, file))) out.push(repoRel(file));
+    // Line endings are Git's business (CRLF on a Windows checkout): the form is the text.
+    if (lf(text) !== decisionsSource(await loadDecisions(h, file))) out.push(repoRel(file));
   }
   return out;
 }

@@ -6,6 +6,7 @@
  * @module
  */
 
+import { lf } from "./core/fsx.ts";
 import { listFleets, P } from "./core/paths.ts";
 import { engineSpecs } from "./core/assets.ts";
 import { join } from "./core/path.ts";
@@ -221,7 +222,8 @@ async function signersFileProblems(fleet: FleetDef): Promise<Problem[]> {
   const list = fleet.signers ?? [];
   const out: Problem[] = signerProblems(list).map((p) => ({ where: "signers", ...p }));
   const text = await readTextOr(signersFile());
-  if (text !== undefined && text !== signersSource(list)) {
+  // Line endings are Git's business (CRLF on a Windows checkout): the form is the text.
+  if (text !== undefined && lf(text) !== signersSource(list)) {
     out.push({
       where: "signers",
       message: "signers.ts is not in the form archon writes",
