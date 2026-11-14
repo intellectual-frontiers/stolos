@@ -144,8 +144,14 @@ async function main(args: string[]): Promise<number> {
     return await retire(args[1], opt(args, "confirm-destroy"), !args.includes("--no-push"));
   }
   if (cmd === "reinstall") {
+    if (args.includes("--force")) {
+      // Never did anything; the decision it stood for is --confirm-destroy.
+      console.error(
+        "boot reinstall has no --force: to reinstall a durable host, or one that cannot be reached, repeat its name: --confirm-destroy <host>",
+      );
+      return 2;
+    }
     return await reinstall(args[1], {
-      force: args.includes("--force"),
       port: Number(opt(args, "port") ?? 8080),
       confirmDestroy: opt(args, "confirm-destroy"),
     });
@@ -215,7 +221,7 @@ async function main(args: string[]): Promise<number> {
   if (cmd !== "serve") {
     console.error(
       "usage: deno task boot serve [--address <this-pc>] [--port 8080] [--tftp-port 69 | --no-tftp] [--stall-watch]\n" +
-        "       deno task boot reinstall <host> [--force] [--confirm-destroy <host>]\n" +
+        "       deno task boot reinstall <host> [--confirm-destroy <host>]\n" +
         "       deno task boot arm <host> --claim | --mac-address <mac> [--confirm-destroy <host>]\n" +
         "       deno task boot retire <host> --confirm-destroy <host> [--no-push]\n" +
         "       deno task boot status | doctor | observe [--last 5]\n" +

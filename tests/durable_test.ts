@@ -334,3 +334,14 @@ Deno.test("fleet status's source: the latest verify, rewritten only when the res
     await Deno.remove(root, { recursive: true });
   }
 });
+
+Deno.test("044: boot reinstall has no --force; it says to use --confirm-destroy", async () => {
+  const r = await new Deno.Command(Deno.execPath(), {
+    args: ["run", "-A", "src/archon-boot/main.ts", "reinstall", "alpha", "--force"],
+    stdout: "piped",
+    stderr: "piped",
+    stdin: "null",
+  }).output();
+  assertEquals(r.code, 2);
+  assertStringIncludes(new TextDecoder().decode(r.stderr), "--confirm-destroy <host>");
+});

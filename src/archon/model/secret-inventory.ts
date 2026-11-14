@@ -53,7 +53,7 @@ export const SECRET_INVENTORY: SecretRef[] = [
     purpose: "<host>'s GitHub deploy key (pulls and pushes its state as ops)",
     holder: "boot-machine",
     recreate:
-      "while the host runs: deno task boot vault recover-host-keys <host> (the same key comes back); otherwise deno task archon host add <host> (keeps its model, registers a new key on GitHub), then deno task boot reinstall <host> --force",
+      "while the host runs: deno task boot vault recover-host-keys <host> (the same key comes back); otherwise deno task archon host add <host> (keeps its model, registers a new key on GitHub), then deno task boot reinstall <host> --confirm-destroy <host>",
     spec: "004-install",
   },
   {

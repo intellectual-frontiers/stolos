@@ -194,18 +194,18 @@ const KEY_CHANGED = /REMOTE HOST IDENTIFICATION HAS CHANGED|Host key verificatio
 /**
  * `deno task boot reinstall <host>`: re-install a running host over the
  * network in the steps the module describes. `port` is the boot server's HTTP
- * port and `confirmDestroy` is the repeated name a durable host needs. `force`
- * (--force) is accepted but not read here. Returns the exit code (2 for an
+ * port and `confirmDestroy` is the repeated name a durable host needs. A host
+ * that cannot be asked needs it too. Returns the exit code (2 for an
  * unknown host).
  */
 export async function reinstall(
   name: string | undefined,
-  o: { force: boolean; port: number; confirmDestroy?: string },
+  o: { port: number; confirmDestroy?: string },
 ): Promise<number> {
   const hosts = await loadServers();
   if (!name || !hosts.some((h) => h.name === name)) {
     console.error(
-      `usage: deno task boot reinstall <host> [--force] [--confirm-destroy <host>]  (known: ${
+      `usage: deno task boot reinstall <host> [--confirm-destroy <host>]  (known: ${
         hosts.map((h) => h.name).join(", ") || "none"
       })`,
     );
