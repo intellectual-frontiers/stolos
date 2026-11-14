@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/identity/keys-commands.ts - Stolos v0.38.0 documentation</title>
+  <title>archon/identity/keys-commands.ts - Stolos v0.39.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.38.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.39.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -241,6 +241,13 @@ standard input (&quot;&lt;local ref&gt; &lt;local sha&gt; &lt;remote ref&gt; &lt
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys-commands.ts&#x2F;~&#x2F;keysStatus.html" title="keysStatus">
 			    <span>keysStatus</span><span>(<span><span>json<span>: <span class="td-kw">boolean</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon keys</code>: every check, with its fix; exit 1 when signing does not work.</p>
 </div></div></div>
+    </div><div id="namespace_repairkeys" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys-commands.ts&#x2F;~&#x2F;repairKeys.html" title="repairKeys">
+			    <span>repairKeys</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">string</span>[]&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The parts of <code>keys setup</code> that need no passphrase and make no key (spec 058:
+run by <code>archon update</code> after every pull): Git's allowed signers from the
+current signers.ts, and the pre-push check. Returns what it changed.</p>
+</div></div></div>
     </div></div>
 </section>
 </div>
@@ -314,7 +321,7 @@ standard input (&quot;&lt;local ref&gt; &lt;local sha&gt; &lt;remote ref&gt; &lt
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1175 symbols</span><svg
+              <span class="leading-none">view all 1182 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -329,7 +336,7 @@ standard input (&quot;&lt;local ref&gt; &lt;local sha&gt; &lt;remote ref&gt; &lt
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/identity/keys-commands_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_approvalsteps" title="approvalSteps">approvalSteps</a></li><li><a href="#namespace_keychecksnow" title="keyChecksNow">keyChecksNow</a></li><li><a href="#namespace_keyscheckpush" title="keysCheckPush">keysCheckPush</a></li><li><a href="#namespace_keyscheckrecovery" title="keysCheckRecovery">keysCheckRecovery</a></li><li><a href="#namespace_keyslost" title="keysLost">keysLost</a></li><li><a href="#namespace_keysrotate" title="keysRotate">keysRotate</a></li><li><a href="#namespace_keyssetup" title="keysSetup">keysSetup</a></li><li><a href="#namespace_keysstatus" title="keysStatus">keysStatus</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/identity/keys-commands_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_approvalsteps" title="approvalSteps">approvalSteps</a></li><li><a href="#namespace_keychecksnow" title="keyChecksNow">keyChecksNow</a></li><li><a href="#namespace_keyscheckpush" title="keysCheckPush">keysCheckPush</a></li><li><a href="#namespace_keyscheckrecovery" title="keysCheckRecovery">keysCheckRecovery</a></li><li><a href="#namespace_keyslost" title="keysLost">keysLost</a></li><li><a href="#namespace_keysrotate" title="keysRotate">keysRotate</a></li><li><a href="#namespace_keyssetup" title="keysSetup">keysSetup</a></li><li><a href="#namespace_keysstatus" title="keysStatus">keysStatus</a></li><li><a href="#namespace_repairkeys" title="repairKeys">repairKeys</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>

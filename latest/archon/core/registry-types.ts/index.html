@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/core/registry-types.ts - Stolos v0.38.0 documentation</title>
+  <title>archon/core/registry-types.ts - Stolos v0.39.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.38.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.39.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -129,6 +129,11 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_effectiveti
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;effectiveTier.html" title="effectiveTier">
 			    <span>effectiveTier</span><span>(<div class="ml-4"><div><span>cmd<span>: <span class="td-ref">Command</span></span></span>,</div><div><span>args<span>: <span class="td-ref">Parsed</span></span></span></div></div>)<span>: <span class="td-ref">Tier</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The tier this run needs (a command's tier can depend on its arguments, for example --check).</p>
 </div></div></div>
+    </div><div id="namespace_installedhost" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;installedHost.html" title="installedHost">
+			    <span>installedHost</span><span>()<span>: <span class="td-kw">boolean</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Whether this machine is a host Archon installed (it has /etc/archon/fleet).</p>
+</div></div></div>
     </div><div id="namespace_parseargs" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;parseArgs.html" title="parseArgs">
@@ -207,6 +212,10 @@ admin are in archon-ops, so sudo does not prompt (spec 006).</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;Command.html#property_examples">
                   <span>examples</span><span>: <span class="td-ref">Array</span>&lt;{ cmd<span>: <span class="td-kw">string</span></span>; text<span>: <span class="td-kw">string</span></span>;  }&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Examples, for its man page.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;Command.html#property_hostonlytier">
+                  <span>hostOnlyTier</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its tier applies only on an installed host (/etc/archon/fleet): elsewhere
+(your PC's checkout) it runs as you, at the repo tier (spec 058: archon update).</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;Command.html#property_mutatewith">
                   <span>mutateWith</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The reverse: read-only, except with this flag, which changes the host
@@ -402,7 +411,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_global_args
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1175 symbols</span><svg
+              <span class="leading-none">view all 1182 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -417,7 +426,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_global_args
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/core/registry-types_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_effectivetier" title="effectiveTier">effectiveTier</a></li><li><a href="#namespace_parseargs" title="parseArgs">parseArgs</a></li></ul></li><li><a href="#archon/core/registry-types_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_argspec" title="ArgSpec">ArgSpec</a></li><li><a href="#namespace_command" title="Command">Command</a></li><li><a href="#namespace_runcontext" title="RunContext">RunContext</a></li></ul></li><li><a href="#archon/core/registry-types_ts_type-aliases" title="Type Aliases">Type Aliases</a></li><li><ul><li><a href="#namespace_parsed" title="Parsed">Parsed</a></li><li><a href="#namespace_tier" title="Tier">Tier</a></li></ul></li><li><a href="#archon/core/registry-types_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_global_args" title="GLOBAL_ARGS">GLOBAL_ARGS</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/core/registry-types_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_effectivetier" title="effectiveTier">effectiveTier</a></li><li><a href="#namespace_installedhost" title="installedHost">installedHost</a></li><li><a href="#namespace_parseargs" title="parseArgs">parseArgs</a></li></ul></li><li><a href="#archon/core/registry-types_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_argspec" title="ArgSpec">ArgSpec</a></li><li><a href="#namespace_command" title="Command">Command</a></li><li><a href="#namespace_runcontext" title="RunContext">RunContext</a></li></ul></li><li><a href="#archon/core/registry-types_ts_type-aliases" title="Type Aliases">Type Aliases</a></li><li><ul><li><a href="#namespace_parsed" title="Parsed">Parsed</a></li><li><a href="#namespace_tier" title="Tier">Tier</a></li></ul></li><li><a href="#archon/core/registry-types_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_global_args" title="GLOBAL_ARGS">GLOBAL_ARGS</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>
