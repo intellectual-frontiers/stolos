@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>All Symbols - Stolos v0.43.0 documentation</title>
+  <title>All Symbols - Stolos v0.44.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href=".&#x2F;" class="contextLink">Stolos v0.43.0</a>
+    <a href=".&#x2F;" class="contextLink">Stolos v0.44.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -6210,7 +6210,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_global_args
       <div class="ml-4 mt-2"><section>
   <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-69"><div class="markdown_summary"><p>The secret ledger (spec 029): when each boot-machine secret last changed,
 by name only. It holds no secret: it is what tells <code>deno task stolos vault status</code> (and the reminders) that something is newer than the last backup.
-%LOCALAPPDATA%\archon\vault\ledger.json (Linux: ~/.local/share/archon/vault).</p>
+%LOCALAPPDATA%\stolos\vault\ledger.json (Linux: ~/.local/share/stolos/vault).</p>
 </div><section class="section"  id="archon&#x2F;core&#x2F;secret-ledger_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;core&#x2F;secret-ledger_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
@@ -6363,8 +6363,8 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_changedthis
 
       <div class="ml-4 mt-2"><section>
   <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-70"><div class="markdown_summary"><p>The boot machine's secret store (spec 003, Article 13): a per-user folder
-outside the repository (%APPDATA%\archon\secrets on Windows,
-~/.config/archon/secrets elsewhere). Holds the admin password hash, each
+outside the repository (%APPDATA%\stolos\secrets on Windows,
+~/.config/stolos/secrets elsewhere). Holds the admin password hash, each
 host's deploy key, and install tokens. Nothing here is ever committed.</p>
 </div><section class="section"  id="archon&#x2F;core&#x2F;secrets_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;core&#x2F;secrets_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
@@ -7229,7 +7229,8 @@ Classes</h2></div><div class="namespaceSection"><div id="namespace_phase" class=
 Functions</h2></div><div class="namespaceSection"><div id="namespace_defaultlogpath" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;defaultLogPath.html" title="defaultLogPath">
-			    <span>defaultLogPath</span><span>()<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">null</span></span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where this run's log goes: /var/log/archon as root, else ~/.local/state.</p>
+			    <span>defaultLogPath</span><span>()<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">null</span></span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where this run's log goes: /var/log/archon as root; else the program's folder
+(Windows: %LOCALAPPDATA%\stolos\log; Linux: ~/.local/state/&lt;program&gt;/log).</p>
 </div></div></div>
     </div><div id="namespace_emojiterminal" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -7243,6 +7244,11 @@ ARCHON_PLAIN=1 turns them off; ARCHON_EMOJI=1 turns them on.</p>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;fmtDuration.html" title="fmtDuration">
 			    <span>fmtDuration</span><span>(<span><span>ms<span>: <span class="td-kw">number</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A duration for people: &quot;850ms&quot;, &quot;12s&quot;, &quot;3m05s&quot;.</p>
+</div></div></div>
+    </div><div id="namespace_setlogprogram" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;setLogProgram.html" title="setLogProgram">
+			    <span>setLogProgram</span><span>(<span><span>name<span>: <span><span class="td-str">"stolos"</span><span class="td-op"> | </span><span class="td-str">"archon"</span></span></span></span></span>)<span>: <span class="td-kw">void</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Set which program writes the run log (its folder is named after it).</p>
 </div></div></div>
     </div><div id="namespace_truncate" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -8596,7 +8602,7 @@ import "@stolos/archon/modules.auto.ts";
 
       <div class="ml-4 mt-2"><section>
   <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-86"><div class="markdown_summary"><p><code>stolos fleet use &lt;id&gt;</code>: which fleet of this repository every <code>archon</code>
-command in this checkout is for, remembered in <code>.git/archon/fleet</code> (never
+command in this checkout is for, remembered in <code>.git/stolos/fleet</code> (never
 committed, so each checkout chooses its own). It takes effect at once, in
 every terminal, on every system: no environment variable to set and no new
 window to open. <code>--fleet &lt;id&gt;</code> (or ARCHON_FLEET) still wins for one command.</p>
@@ -11748,7 +11754,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_secretref"
                   <span>label</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Short name for tables and the backup panel; &lt;host&gt; and &lt;type&gt; are filled in.</p>
 </div></div></li><li>
                 <a href=".&#x2F;.&#x2F;archon&#x2F;model&#x2F;secret-inventory.ts&#x2F;~&#x2F;SecretRef.html#property_path">
-                  <span>path</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Boot machine: the path inside its secrets folder (%APPDATA%\archon\secrets),
+                  <span>path</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Boot machine: the path inside its secrets folder (%APPDATA%\stolos\secrets),
 with &lt;host&gt; and &lt;type&gt; placeholders. Owner: where it is kept.</p>
 </div></div></li><li>
                 <a href=".&#x2F;.&#x2F;archon&#x2F;model&#x2F;secret-inventory.ts&#x2F;~&#x2F;SecretRef.html#property_purpose">
@@ -20659,7 +20665,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_updateopti
       <div class="ml-4 mt-2"><section>
   <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-170"><div class="markdown_summary"><p><code>deno task stolos vault &lt;sub&gt;</code> (specs 029 and 056): the boot machine's secrets,
 and their backup. A backup is one ZIP file (see writeBackupZip),
-written into archon's backup folder; you then move it wherever you keep
+written into stolos's backup folder; you then move it wherever you keep
 important things safe. A restore is never done by a command: <code>vault restore</code>
 prints what to do with the ZIP, by hand (constitution Articles 13 and 22).</p>
 </div><section class="section"  id="archon&#x2F;vault&#x2F;commands_ts_functions"><div>
@@ -21082,7 +21088,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_prompt_stat
 
       <div class="ml-4 mt-2"><section>
   <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-174"><div class="markdown_summary"><p>Spec 056: the boot machine's backup is one ZIP file. <code>deno task stolos vault backup</code> writes it into the backup folder where archon keeps its data
-(Windows: <code>%LOCALAPPDATA%\archon\backup</code>; Linux: <code>~/.local/share/archon/backup</code>),
+(Windows: <code>%LOCALAPPDATA%\stolos\backup</code>; Linux: <code>~/.local/share/stolos/backup</code>),
 reads it back to check every file, and tells you to put it wherever you keep
 important things safe. It holds everything this PC would need again after a
 disaster: every fleet's secrets (the admin password's hash, each server's SSH
@@ -21208,12 +21214,12 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_zipmanifes
 Variables</h2></div><div class="namespaceSection"><div id="namespace_backup_dir" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;vault&#x2F;zip.ts&#x2F;~&#x2F;BACKUP_DIR.html" title="BACKUP_DIR">
-			    <span>BACKUP_DIR</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where backups are written (beside the boot cache, in archon's data folder).</p>
+			    <span>BACKUP_DIR</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where backups are written (beside the boot cache, in stolos's data folder).</p>
 </div></div></div>
     </div><div id="namespace_zip_format" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;vault&#x2F;zip.ts&#x2F;~&#x2F;ZIP_FORMAT.html" title="ZIP_FORMAT">
-			    <span>ZIP_FORMAT</span><span>: <span class="td-str">"archon-backup/1"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The ZIP's format, in its manifest.</p>
+			    <span>ZIP_FORMAT</span><span>: <span class="td-str">"stolos-backup/1"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The ZIP's format, in its manifest.</p>
 </div></div></div>
     </div></div>
 </section>
@@ -21262,7 +21268,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_tag" class=
     </div><div id="namespace_version" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;version.ts&#x2F;~&#x2F;VERSION.html" title="VERSION">
-			    <span>VERSION</span><span>: <span class="td-str">"0.43.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
+			    <span>VERSION</span><span>: <span class="td-str">"0.44.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
 from GitHub (<code>@stolos/</code> → raw.githubusercontent.com/.../v&lt;VERSION&gt;/src/), so
 every push to main raises it and the release workflow tags that commit
 v&lt;VERSION&gt;. <code>deno task version bump</code> raises the minor number (0.1.0, 0.2.0,
@@ -22557,7 +22563,7 @@ never written in a host file.</p>
 Variables</h2></div><div class="namespaceSection"><div id="namespace_version-1" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;version.ts&#x2F;~&#x2F;VERSION.html" title="VERSION">
-			    <span>VERSION</span><span>: <span class="td-str">"0.43.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
+			    <span>VERSION</span><span>: <span class="td-str">"0.44.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
 from GitHub (<code>@stolos/</code> → raw.githubusercontent.com/.../v&lt;VERSION&gt;/src/), so
 every push to main raises it and the release workflow tags that commit
 v&lt;VERSION&gt;. <code>deno task version bump</code> raises the minor number (0.1.0, 0.2.0,

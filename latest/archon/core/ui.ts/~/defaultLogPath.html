@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>defaultLogPath - archon/core/ui.ts - Stolos v0.43.0 documentation</title>
+  <title>defaultLogPath - archon/core/ui.ts - Stolos v0.44.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;core&#x2F;ui.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.43.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.44.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -166,7 +166,8 @@
 </svg>
 </a>
 <span class="font-bold">defaultLogPath</span><span class="font-medium">()<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">null</span></span></span> </span>
-      </code><div class="space-y-7" id=""><div class="markdown"><p>Where this run's log goes: /var/log/archon as root, else ~/.local/state.</p>
+      </code><div class="space-y-7" id=""><div class="markdown"><p>Where this run's log goes: /var/log/archon as root; else the program's folder
+(Windows: %LOCALAPPDATA%\stolos\log; Linux: ~/.local/state/&lt;program&gt;/log).</p>
 </div><section class="section"  id="return-type"><div>
       <h2 class="anchorable mb-1"><a href="#return-type" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"

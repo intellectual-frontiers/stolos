@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/vault/zip.ts - Stolos v0.43.0 documentation</title>
+  <title>archon/vault/zip.ts - Stolos v0.44.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.43.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.44.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -99,7 +99,7 @@
 <div id="searchResults"></div><div id="content">
     <main><section>
   <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc"><div class="markdown"><p>Spec 056: the boot machine's backup is one ZIP file. <code>deno task stolos vault backup</code> writes it into the backup folder where archon keeps its data
-(Windows: <code>%LOCALAPPDATA%\archon\backup</code>; Linux: <code>~/.local/share/archon/backup</code>),
+(Windows: <code>%LOCALAPPDATA%\stolos\backup</code>; Linux: <code>~/.local/share/stolos/backup</code>),
 reads it back to check every file, and tells you to put it wherever you keep
 important things safe. It holds everything this PC would need again after a
 disaster: every fleet's secrets (the admin password's hash, each server's SSH
@@ -108,12 +108,12 @@ your signing key (both halves; the private half stays locked by its
 passphrase). A restore is never done by a command: <code>vault restore</code> (and
 <code>RESTORE.txt</code> in every ZIP) says what to do with the ZIP, by hand.</p>
 <pre class="highlight"><code class="language-mermaid">flowchart LR
-  secrets[&quot;%APPDATA%\archon\secrets\&amp;lt;fleet&amp;gt;\*&quot;] --&gt; zip[&quot;archon-backup-&amp;lt;pc&amp;gt;-&amp;lt;time&amp;gt;.zip&lt;br/&gt;manifest.json, RESTORE.txt&quot;]
+  secrets[&quot;%APPDATA%\stolos\secrets\&amp;lt;fleet&amp;gt;\*&quot;] --&gt; zip[&quot;stolos-backup-&amp;lt;pc&amp;gt;-&amp;lt;time&amp;gt;.zip&lt;br/&gt;manifest.json, RESTORE.txt&quot;]
   key[&quot;your signing key&lt;br/&gt;(git config user.signingkey)&quot;] --&gt; zip
   zip --&gt; check[&quot;read back: every SHA-256&quot;]
   check --&gt; you[&quot;you move it somewhere safe&lt;br/&gt;(encrypted: OneDrive Personal Vault, a password manager)&quot;]
 </code><button class="copyButton" data-copy="flowchart LR
-  secrets[&quot;%APPDATA%\archon\secrets\&amp;lt;fleet&amp;gt;\*&quot;] --&gt; zip[&quot;archon-backup-&amp;lt;pc&amp;gt;-&amp;lt;time&amp;gt;.zip&lt;br/&gt;manifest.json, RESTORE.txt&quot;]
+  secrets[&quot;%APPDATA%\stolos\secrets\&amp;lt;fleet&amp;gt;\*&quot;] --&gt; zip[&quot;stolos-backup-&amp;lt;pc&amp;gt;-&amp;lt;time&amp;gt;.zip&lt;br/&gt;manifest.json, RESTORE.txt&quot;]
   key[&quot;your signing key&lt;br/&gt;(git config user.signingkey)&quot;] --&gt; zip
   zip --&gt; check[&quot;read back: every SHA-256&quot;]
   check --&gt; you[&quot;you move it somewhere safe&lt;br/&gt;(encrypted: OneDrive Personal Vault, a password manager)&quot;]
@@ -266,12 +266,12 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_zipmanifes
 Variables</h2></div><div class="namespaceSection"><div id="namespace_backup_dir" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;vault&#x2F;zip.ts&#x2F;~&#x2F;BACKUP_DIR.html" title="BACKUP_DIR">
-			    <span>BACKUP_DIR</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where backups are written (beside the boot cache, in archon's data folder).</p>
+			    <span>BACKUP_DIR</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where backups are written (beside the boot cache, in stolos's data folder).</p>
 </div></div></div>
     </div><div id="namespace_zip_format" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;vault&#x2F;zip.ts&#x2F;~&#x2F;ZIP_FORMAT.html" title="ZIP_FORMAT">
-			    <span>ZIP_FORMAT</span><span>: <span class="td-str">"archon-backup/1"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The ZIP's format, in its manifest.</p>
+			    <span>ZIP_FORMAT</span><span>: <span class="td-str">"stolos-backup/1"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The ZIP's format, in its manifest.</p>
 </div></div></div>
     </div></div>
 </section>
@@ -346,7 +346,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_backup_dir"
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1192 symbols</span><svg
+              <span class="leading-none">view all 1193 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

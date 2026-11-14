@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/core/paths.ts - Stolos v0.43.0 documentation</title>
+  <title>archon/core/paths.ts - Stolos v0.44.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.43.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.44.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -109,7 +109,7 @@ one hosts check out at /srv/archon. One fleet of it is active per run.</li>
 directory that holds <code>fleets/</code>, else /srv/archon, else (in an engine
 checkout) its <code>examples/</code>. The fleet is ARCHON_FLEET (or --fleet), else
 /etc/archon/fleet (written at install), else this checkout's choice
-(<code>stolos fleet use &lt;id&gt;</code>, in .git/archon/fleet, never committed), else the
+(<code>stolos fleet use &lt;id&gt;</code>, in .git/stolos/fleet, never committed), else the
 instance's only fleet.</p>
 <pre class="highlight"><code class="language-mermaid">flowchart TD
   repo{&quot;ARCHON_REPO?&quot;} --&gt;|set| inst[&quot;that folder&quot;]
@@ -120,7 +120,7 @@ instance's only fleet.</p>
   srv --&gt;|no| ex[&quot;the engine's examples/&quot;]
   inst --&gt; fleet{&quot;--fleet / ARCHON_FLEET?&quot;}
   fleet --&gt;|unset| etc{&quot;/etc/archon/fleet?&quot;}
-  etc --&gt;|unset| use{&quot;stolos fleet use&lt;br/&gt;(.git/archon/fleet)?&quot;}
+  etc --&gt;|unset| use{&quot;stolos fleet use&lt;br/&gt;(.git/stolos/fleet)?&quot;}
   use --&gt;|unset| only[&quot;the only fleet&quot;]
 </code><button class="copyButton" data-copy="flowchart TD
   repo{&quot;ARCHON_REPO?&quot;} --&gt;|set| inst[&quot;that folder&quot;]
@@ -131,7 +131,7 @@ instance's only fleet.</p>
   srv --&gt;|no| ex[&quot;the engine's examples/&quot;]
   inst --&gt; fleet{&quot;--fleet / ARCHON_FLEET?&quot;}
   fleet --&gt;|unset| etc{&quot;/etc/archon/fleet?&quot;}
-  etc --&gt;|unset| use{&quot;stolos fleet use&lt;br/&gt;(.git/archon/fleet)?&quot;}
+  etc --&gt;|unset| use{&quot;stolos fleet use&lt;br/&gt;(.git/stolos/fleet)?&quot;}
   use --&gt;|unset| only[&quot;the only fleet&quot;]
 "><svg
   class="copy"
@@ -383,7 +383,7 @@ operator on a workstation cannot write /var/lib/archon.</p>
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1192 symbols</span><svg
+              <span class="leading-none">view all 1193 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
