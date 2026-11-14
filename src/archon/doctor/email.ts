@@ -162,7 +162,21 @@ export async function emailChecks(
     }
   }
 
-  if (o.send && cred) await sendTests(site, o.send, found, p);
+  // A mailbox that is no address is refused by every relay: say so, and send nothing.
+  const { EMAIL } = await import("../notify/transport.ts");
+  const boot = site.role === "boot";
+  const cmd = (sub: string) =>
+    boot ? `deno task stolos boot notify ${sub}` : `sudo archon notify ${sub}`;
+  const goodTo = !!site.to && EMAIL.test(site.to);
+  if (site.to && !goodTo) {
+    p.fail(
+      `the shared mailbox ${JSON.stringify(site.to)} is not an email address${
+        /[<>]/.test(site.to) ? " (still a placeholder?)" : ""
+      }: the relay refuses it`,
+      `set fleet.mail.to in fleets/<fleet>/fleet.ts (for example ops@example.com), then deno task stolos apply; waiting messages go to the new address`,
+    );
+  }
+  if (o.send && cred && goodTo) await sendTests(site, o.send, found, p);
 
   // archon notify's own queue.
   const st = await readStatus(site);
@@ -170,13 +184,13 @@ export async function emailChecks(
   if (st.lastSend && !st.lastSend.ok) {
     p.warn(
       `archon notify's last send failed (${st.lastSend.at}): ${st.lastSend.error}`,
-      "archon notify status; it is retried with backoff",
+      `${cmd("status")}; it is retried with backoff, to fleet.mail.to as it is then`,
     );
   }
   if (n) {
     p.warn(
       `${n} archon message(s) waiting${st.oldest ? ` since ${st.oldest}` : ""}`,
-      "sudo archon notify flush",
+      `${cmd("flush")} (sends them now)`,
     );
   }
   p.done(
@@ -216,7 +230,9 @@ async function sendTests(
   else {
     p.fail(
       `the test message was not sent: ${f?.error ?? r}`,
-      "archon notify status; it is retried with backoff",
+      `${
+        site.role === "boot" ? "deno task stolos boot notify status" : "archon notify status"
+      }; it is retried with backoff`,
     );
   }
   if (site.role === "boot" || !(await exists("/usr/sbin/sendmail"))) return;

@@ -21,7 +21,7 @@ import {
   probeSmtp,
   senderAddress,
 } from "../archon/notify/transport.ts";
-import { notifySend, notifyStatus, notifyTest } from "../archon/notify/commands.ts";
+import { notifyFlush, notifySend, notifyStatus, notifyTest } from "../archon/notify/commands.ts";
 
 function opt(args: string[], name: string): string | undefined {
   const i = args.indexOf(`--${name}`);
@@ -152,11 +152,12 @@ export async function mailPush(name: string | undefined): Promise<number> {
 export async function bootNotify(args: string[]): Promise<number> {
   if (args[0] === "test") return await notifyTest();
   if (args[0] === "status") return await notifyStatus({ check: args.includes("--check") });
+  if (args[0] === "flush") return await notifyFlush();
   const subject = opt(args, "subject");
   if (!subject) {
     console.error(
       "usage: deno task stolos boot notify --subject <s> [--body <text> | --body-file <f>] [--attach <file>...] [--level info|warn|fail] [--key <k>]\n" +
-        "       deno task stolos boot notify test | status",
+        "       deno task stolos boot notify test | status | flush",
     );
     return 2;
   }

@@ -1,6 +1,6 @@
 // Spec 025: archon notify. Messages are built, redacted, queued, deduplicated,
 // collapsed, and sent through a fake transport; the watcher's journal parsing.
-import { assert, assertEquals } from "./assert.ts";
+import { assert, assertEquals, assertStringIncludes } from "./assert.ts";
 import { buildMime } from "../src/archon/notify/mime.ts";
 import { redact } from "../src/archon/notify/redact.ts";
 import {
@@ -413,7 +413,7 @@ Deno.test("relay: curl's config carries the token (stdin), Cloudflare's endpoint
   const probe = smtpConfig(SECRET, { ipv4: false });
   assert(probe.includes('request = "NOOP"') && !probe.includes("mail-from"));
   assert(smtpError(67, "curl: (67) Login denied").includes("refused the API token"));
-  assert(smtpError(55, "curl: (55) MAIL failed: 550").includes("not onboarded"));
+  assert(smtpError(55, "curl: (55) MAIL failed: 550").includes("onboarded for Email Sending"));
 });
 
 Deno.test("relay: Postfix's sasl_passwd round trip, root-only content", () => {
@@ -570,3 +570,33 @@ function decodeParts(mime: string): string {
     )
     .join("\n");
 }
+
+Deno.test("025: an SMTP failure says which step, what was tried, the server's answer, and the fix", async () => {
+  const { smtpError } = await import("../src/archon/notify/transport.ts");
+  const ctx = { from: "ops+alpha.lab@example.net", to: "<the shared mailbox>" };
+  let m = smtpError(55, "curl: (55) RCPT failed: 500", ctx);
+  assertStringIncludes(m, 'refused the recipient "<the shared mailbox>" (the server answered 500)');
+  assertStringIncludes(m, "not an email address");
+  assertStringIncludes(m, "fleet.mail.to");
+  m = smtpError(55, "curl: (55) RCPT failed: 550", { ...ctx, to: "fleet@example.net" });
+  assertStringIncludes(m, "refused the recipient fleet@example.net");
+  assertStringIncludes(m, "typo");
+  m = smtpError(55, "curl: (55) MAIL failed: 550", ctx);
+  assertStringIncludes(m, "refused the sender ops+alpha.lab@example.net");
+  assertStringIncludes(m, "example.net onboarded");
+  m = smtpError(67, "curl: (67) Login denied", ctx);
+  assertStringIncludes(m, "refused the API token");
+  m = smtpError(7, "curl: (7) Failed to connect", ctx);
+  assertStringIncludes(m, "outbound port 465");
+});
+
+Deno.test("025: build refuses a mailbox that is not an address (a placeholder left in)", async () => {
+  const { fleet } = await import("./fixtures.ts");
+  const { validateFleet } = await import("../src/archon/model/validate.ts");
+  const f = fleet();
+  const bad = { ...f, mail: { ...f.mail!, to: "<the shared mailbox>" } };
+  const p = validateFleet(bad, []).find((x) => x.where === "fleet.mail.to");
+  assert(p, "a problem for fleet.mail.to");
+  assertStringIncludes(p!.message, "still a placeholder?");
+  assert(!validateFleet(f, []).some((x) => x.where === "fleet.mail.to"), "a real address passes");
+});

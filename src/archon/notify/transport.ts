@@ -87,16 +87,53 @@ export function smtpConfig(
   return lines.join("\n") + "\n";
 }
 
-/** What curl's SMTP failures mean. */
-export function smtpError(exit: number, stderr: string): string {
+/** A plausible email address (one @, a dot in the domain, no spaces or angle brackets). */
+export const EMAIL: RegExp = /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/;
+
+/**
+ * What a failed SMTP session means, in plain words: the step that failed (log
+ * in, the sender, the recipient, the message), what was tried there, the
+ * server's reply code, and the likely fix. curl reports the step and the code
+ * ("RCPT failed: 500"); the token is never part of it.
+ */
+export function smtpError(
+  exit: number,
+  stderr: string,
+  ctx: { from?: string; to?: string; relay?: string } = {},
+): string {
   const msg = stderr.trim().replace(/^curl: \(\d+\) /, "");
+  const relay = ctx.relay ?? DEFAULT_RELAY;
+  const code = msg.match(/failed: (\d{3})/)?.[1];
+  const said = code ? ` (the server answered ${code})` : "";
   if (exit === 67 || /535|Login denied/i.test(msg)) {
-    return "Cloudflare refused the API token (revoked, expired, or without Email Sending: Edit)";
+    return `logging in to ${relay} failed: Cloudflare refused the API token${said}. It is revoked, expired, or lacks Email Sending: Edit; make a new one: deno task stolos boot mail-setup`;
   }
-  if (/\b550\b/.test(msg)) {
-    return `Cloudflare refused the sender: its domain is not onboarded for Email Sending (${msg})`;
+  if (/RCPT failed/i.test(msg)) {
+    const to = ctx.to ?? "?";
+    return EMAIL.test(to)
+      ? `${relay} refused the recipient ${to}${said}: check the address in fleet.mail.to (fleets/<fleet>/fleet.ts) for a typo, or a mailbox that does not exist`
+      : `${relay} refused the recipient ${
+        JSON.stringify(to)
+      }${said}: it is not an email address. Set fleet.mail.to in fleets/<fleet>/fleet.ts to the shared mailbox (for example ops@example.com)`;
   }
-  return msg || `curl exit ${exit}`;
+  if (/MAIL failed|\b550\b/i.test(msg)) {
+    const domain = ctx.from?.split("@")[1] ?? "the sender's domain";
+    return `${relay} refused the sender ${
+      ctx.from ?? "?"
+    }${said}: is ${domain} onboarded for Email Sending in Cloudflare (Compute > Email Service > Email Sending)?`;
+  }
+  if (/DATA failed|upload|\b55[24]\b/i.test(msg)) {
+    return `${relay} refused the message itself${said}: too large, or its content was rejected (${msg})`;
+  }
+  if (exit === 6) return `${relay}'s name could not be resolved: check this machine's DNS (${msg})`;
+  if (exit === 7) {
+    return `could not connect to ${relay}: the network or a firewall blocks it (outbound port ${
+      relayParts(relay).port
+    }) (${msg})`;
+  }
+  if (exit === 28) return `${relay} did not answer in time: check the network (${msg})`;
+  if (exit === 35 || exit === 60) return `the TLS connection to ${relay} failed (${msg})`;
+  return `sending through ${relay} failed: ${msg || `curl exit ${exit}`}`;
 }
 
 /** Send one RFC 5322 message (CRLF line ends) through the relay. */
@@ -109,7 +146,7 @@ export async function sendSmtp(
   try {
     await Deno.writeTextFile(file, mime, { mode: 0o600 });
     const r = await run(["curl", "-K", "-"], { stdin: smtpConfig(c, { ...o, file }) });
-    if (!r.ok) throw new Error(smtpError(r.code, r.stderr));
+    if (!r.ok) throw new Error(smtpError(r.code, r.stderr, o));
     return "sent";
   } finally {
     await Deno.remove(file).catch(() => {});
@@ -122,7 +159,7 @@ export async function probeSmtp(
   o: { relay?: string; ipv4: boolean },
 ): Promise<void> {
   const r = await run(["curl", "-K", "-"], { stdin: smtpConfig(c, o) });
-  if (!r.ok) throw new Error(smtpError(r.code, r.stderr));
+  if (!r.ok) throw new Error(smtpError(r.code, r.stderr, o));
 }
 
 // ------------------------------------------------------------- on hosts

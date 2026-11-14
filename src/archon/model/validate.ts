@@ -82,6 +82,26 @@ export function validateFleet(fleet: FleetDef, hosts: HostDef[]): Problem[] {
       "use 1000 (Ubuntu's first user)",
     );
   }
+  // Spec 025: the shared mailbox is a real address (a README placeholder left in is the usual slip).
+  if (fleet.mail) {
+    const to = fleet.mail.to ?? "";
+    if (!/^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(to)) {
+      add(
+        "fleet.mail.to",
+        `${JSON.stringify(to)} is not an email address${
+          /[<>]/.test(to) ? " (still a placeholder?)" : ""
+        }: every server's mail would be refused`,
+        "put the shared mailbox's address there, for example ops@example.com",
+      );
+    }
+    if (!/^[a-z0-9-]+(\.[a-z0-9-]+)+$/i.test(fleet.mail.domain ?? "")) {
+      add(
+        "fleet.mail.domain",
+        `${JSON.stringify(fleet.mail.domain)} is not a domain name`,
+        "the domain onboarded for Email Sending in Cloudflare, for example example.com",
+      );
+    }
+  }
   const gh = a.github;
   if (gh.email !== `${gh.id}+${gh.login}@users.noreply.github.com`) {
     add(
