@@ -30,6 +30,67 @@ flowchart LR
 
 Ubuntu decides; Stolos only adds (see the [constitution](.specify/memory/constitution.md)).
 
+## Why Stolos, and where it fits
+
+Infrastructure as code is a crowded field, and each tool covers part of the job:
+
+| Tool                    | What it does well                          | What it leaves to you                                        |
+| ----------------------- | ------------------------------------------ | ------------------------------------------------------------ |
+| Ansible                 | runs steps on machines over SSH (YAML)     | the order of steps, drift between runs, installing the OS    |
+| Terraform, OpenTofu     | creates cloud resources from a plan        | what happens inside each machine                             |
+| Puppet, Chef, Salt      | an agent keeps a machine converged (a DSL) | a server or master to run, the OS install, a second language |
+| cloud-init, autoinstall | sets up a machine on its first boot        | everything after the first boot                              |
+| NixOS                   | a fully declared system                    | a different distribution from the one you run elsewhere      |
+
+Shahid Shah created Stolos because he wanted **one unified experience** from bare metal to a
+verified server: state the intent once, then let every machine converge to it and prove that it did.
+No control server, no agent to install, no second language: one command (`archon`) run by **Deno**,
+a single binary, and **GitHub** as the only state, fully versioned. Every change is a signed commit,
+so the history of each server is the history of its repository.
+
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#EEF2FF"
+    primaryBorderColor: "#6366F1"
+    primaryTextColor: "#1E1B4B"
+    lineColor: "#64748B"
+    edgeLabelBackground: "#F8FAFC"
+    clusterBkg: "#F8FAFC"
+    clusterBorder: "#CBD5E1"
+---
+flowchart LR
+  I["<b>Intent</b><br/>specs and a typed model<br/>(TypeScript, in Git)"]:::you
+  A["<b>Approve</b><br/>a signed commit"]:::you
+  C["<b>Converge</b><br/>each machine pulls and<br/>makes itself match"]:::gh
+  V["<b>Verify</b><br/>every check, on the machine"]:::ok
+  E["<b>Evidence</b><br/>what ran, when, by whom:<br/>Git history and archon.sql"]:::ok
+  I --> A --> C --> V --> E
+  E -. "drift or a new need" .-> I
+  classDef you fill:#EEF2FF,stroke:#6366F1,stroke-width:2px,color:#1E1B4B
+  classDef gh fill:#F1F5F9,stroke:#475569,stroke-width:2px,color:#0F172A
+  classDef ok fill:#ECFDF5,stroke:#10B981,stroke-width:2px,color:#064E3B
+  classDef no fill:#FEF2F2,stroke:#EF4444,stroke-width:2px,color:#7F1D1D
+```
+
+**Why Ubuntu 26.04, for now.** Stolos is built for an **AI-native era**: people decide what their
+servers and workspaces should be, and AI agents carry out most of the operations. An agent that
+works from loose notes drifts, so the intent has to be precise and checkable: specs (Spec Kit, in
+`specs/`), a constitution, and a typed ontology of fleets, hosts, capabilities, and checks. Doing
+that well for one operating system matters more than doing it loosely for many, so Stolos targets
+Ubuntu 26.04 LTS servers (and Ubuntu on WSL as a workstation), and Ubuntu decides everything it does
+not need to add. Agents reach servers only through `archon`'s MCP server, limited by each server,
+and can never approve a change: only a signature can.
+
+**Compliance as code.** Because the intent and the infrastructure (physical machines, VMs,
+containers, workstations) are all type-safe TypeScript, they can be read as data, not just run. The
+same model that installs a server says what it should be, its checks say whether it is, and the
+signed history says who approved each change and when. That is the raw material of SOC 2, HIPAA, and
+similar audits; Stolos is designed so that their controls and evidence can be generated from code
+rather than written by hand. (Generating those reports is the direction, not yet a command.)
+
 ## What you need
 
 `archon` runs on **Windows, macOS, or Linux**. All it needs is **[Deno](https://deno.com) 2.9.6 or
