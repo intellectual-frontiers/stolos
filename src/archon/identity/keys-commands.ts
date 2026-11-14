@@ -51,6 +51,7 @@ import {
 } from "./signers.ts";
 import {
   collectKeyFacts,
+  gitIdentity,
   hasPassphrase,
   keyChecks,
   type KeyFacts,
@@ -149,6 +150,19 @@ async function setLocal(key: string, value: string): Promise<boolean> {
   const r = await git(["config", "--local", key, value]);
   if (!r.ok) throw new Error(`git config ${key}: ${r.stderr.trim()}`);
   return true;
+}
+
+/**
+ * Your GitHub name and its no-reply address (as GitHub's own commits use), from
+ * gh; undefined when gh is missing or not signed in.
+ */
+async function githubIdentity(): Promise<{ name: string; email: string } | undefined> {
+  const r = await run(["gh", "api", "user", "--jq", "[.name // .login, .login, .id] | @tsv"]);
+  if (!r.ok) return undefined;
+  const [name, login, id] = r.stdout.trim().split("\t");
+  return login && id
+    ? { name: name || login, email: `${id}+${login}@users.noreply.github.com` }
+    : undefined;
 }
 
 /** Render the checkout's allowed signers from signers.ts; true when changed. */
@@ -418,6 +432,24 @@ export async function keysSetup(o: { test?: boolean } = {}): Promise<number> {
   // Git's settings, this checkout only.
   const g = ui.phase("Git signing");
   let gitChanged = false;
+  // Who commits: a fresh clone (a new or restored PC) has no identity; take it from GitHub.
+  if (!(await gitIdentity(P.repo))) {
+    const me = await githubIdentity();
+    if (!me) {
+      g.fail(
+        "Git does not know who you are here, and GitHub could not be asked (gh auth status)",
+        'git config user.name "Your Name"; git config user.email "you@example.com"; then run this again',
+        "E057-IDENTITY",
+      );
+      return end();
+    }
+    await setLocal("user.name", me.name);
+    await setLocal("user.email", me.email);
+    gitChanged = true;
+    g.note(
+      `commits are made as ${me.name} <${me.email}> (your GitHub account; this checkout only)`,
+    );
+  }
   for (
     const [k, v] of [
       ["gpg.format", "ssh"],

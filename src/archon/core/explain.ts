@@ -166,6 +166,14 @@ export const EXPLAIN: Record<string, Explanation> = {
     fix: "deno task stolos keys check-recovery --key <its private file>",
     doc: "docs/fleet-repository.md",
   },
+  "E057-IDENTITY": {
+    title: "Git does not know who you are in this checkout",
+    what: 'No commit can be made here, signed or not (Git says "Author identity unknown").',
+    why:
+      "A fresh clone (a new or restored PC) has no user.name and user.email, and none is set for every repository on this PC.",
+    fix: "deno task stolos keys setup (it sets them from your GitHub account, for this checkout)",
+    doc: "docs/fleet-repository.md",
+  },
   "E057-HOOK": {
     title: "Pushes are not checked on this PC first",
     what: "A commit servers would refuse is found only after it is pushed.",

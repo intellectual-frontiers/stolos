@@ -226,6 +226,19 @@ export async function fleetUpgrade(o: UpgradeOptions): Promise<number> {
   }
   p.done(`${pin.tag} → ${o.tag} (released; ${order < 0 ? "a downgrade" : "newer"})`);
 
+  // Who commits: checked before any file changes (a fresh clone has no identity).
+  {
+    const { gitIdentity } = await import("../identity/keys.ts");
+    if (!o.noCommit && !(await gitIdentity(repo))) {
+      ui.phase("Identity").fail(
+        "Git does not know who you are in this checkout, so the upgrade could not be committed (nothing was changed)",
+        "deno task stolos keys setup (sets it from your GitHub account), then run this again",
+        "E057-IDENTITY",
+      );
+      return ui.finish();
+    }
+  }
+
   // 2. The pin, engine.ts, and the lock.
   const l = ui.phase("Lock");
   await Deno.writeTextFile(denoJsonPath, writePin(text, pin, o.tag));

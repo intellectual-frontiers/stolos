@@ -394,6 +394,33 @@ Deno.test("063: boot arm refuses until GitHub's tip is signed by a fleet signer 
   }
 });
 
+Deno.test("057: a fresh clone has no Git identity: keys setup takes it from GitHub (gh)", async () => {
+  const s = await keysSandbox();
+  try {
+    // No identity anywhere (a new PC): the global config loses it.
+    await Deno.writeTextFile(join(s.home, "gitconfig"), "");
+    let r = await s.archon(["keys"]);
+    assertStringIncludes(r.out, "E057-IDENTITY");
+    // gh, as GitHub answers `gh api user --jq ...` (name, login, id).
+    const bin = join(s.home, "bin");
+    await Deno.mkdir(bin);
+    await Deno.writeTextFile(join(bin, "gh"), `#!/bin/sh\nprintf 'Test Person\\ttester\\t42\\n'\n`);
+    await Deno.chmod(join(bin, "gh"), 0o755);
+    const withGh = { PATH: `${bin}:${Deno.env.get("PATH")}` };
+    r = await s.archon(["keys", "setup"], "", withGh);
+    assertEquals(r.code, 0, r.out);
+    assertEquals(await s.git("config", "--local", "user.name"), "Test Person");
+    assertEquals(
+      await s.git("config", "--local", "user.email"),
+      "42+tester@users.noreply.github.com",
+    );
+    r = await s.archon(["keys"], "", withGh);
+    assert(!r.out.includes("E057-IDENTITY"), r.out);
+  } finally {
+    await Deno.remove(s.home, { recursive: true });
+  }
+});
+
 Deno.test("057: a second PC's key: setup prints the exact command that approves it", async () => {
   const s = await keysSandbox();
   try {
@@ -466,6 +493,7 @@ Deno.test("057: the checks, from facts (no files, no prompts)", () => {
     fleetId: "demo",
     ssh: { found: true, version: "9.6", ok: true },
     daily: { exists: true, pub: "ssh-ed25519 AAAA", passphrase: true, inAgent: false },
+    identity: "A Person <1+a@users.noreply.github.com>",
     git: {
       format: "ssh",
       signingKey: paths.daily,

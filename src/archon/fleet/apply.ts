@@ -177,6 +177,15 @@ export async function fleetApply(o: FleetApplyOptions = {}): Promise<number> {
   // 5. One signed commit (one passphrase).
   if (what) {
     const k = ui.phase("Commit");
+    const { gitIdentity } = await import("../identity/keys.ts");
+    if (!(await gitIdentity(P.repo))) {
+      k.fail(
+        "Git does not know who you are in this checkout, so nothing can be committed",
+        "deno task stolos keys setup (sets it from your GitHub account), then run this again",
+        "E057-IDENTITY",
+      );
+      return fail();
+    }
     const add = await git(["add", "-A"]);
     if (!add.ok) {
       k.fail(`git add: ${last(add)}`, "git status");

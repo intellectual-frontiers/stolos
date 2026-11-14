@@ -156,6 +156,8 @@ export interface KeyFacts {
   daily: { exists: boolean; pub?: string; passphrase?: boolean; inAgent?: boolean };
   /** Git's effective settings in this checkout. */
   git: { format: string; signingKey: string; gpgsign: string; allowedSignersFile: string };
+  /** Who Git records as the author here ("Name <email>"); absent: Git cannot commit. */
+  identity?: string;
   /** The allowed signers file matches signers.ts. */
   allowedSignersCurrent: boolean;
   /** The fleet's signers (signers.ts in the working tree). */
@@ -208,6 +210,16 @@ async function privateFilesFor(pubs: string[], dirs: string[]): Promise<string[]
   return out.sort();
 }
 
+/**
+ * Who Git records as a commit's author in this checkout ("Name <email>"), or
+ * undefined when Git does not know (no user.name or user.email in this checkout
+ * or globally): then no commit can be made, signed or not.
+ */
+export async function gitIdentity(repo = P.repo): Promise<string | undefined> {
+  const r = await run(["git", "-C", repo, "var", "GIT_AUTHOR_IDENT"]);
+  return r.ok ? r.stdout.trim().replace(/\s+\d+\s+[+-]\d{4}$/, "") : undefined;
+}
+
 /** Gather the facts (no prompt; nothing is written). */
 export async function collectKeyFacts(repo = P.repo): Promise<KeyFacts> {
   const git = (args: string[]) => run(["git", "-C", repo, ...args]);
@@ -247,6 +259,7 @@ export async function collectKeyFacts(repo = P.repo): Promise<KeyFacts> {
     ssh,
     daily,
     git: g,
+    ...(isRepo ? { identity: await gitIdentity(repo) } : {}),
     allowedSignersCurrent: allowed === allowedSignersText(signers),
     signers,
     ...(pub ? { dailySigner: signers.find((s) => s.key.trim() === pub) } : {}),
@@ -399,6 +412,17 @@ export function keyChecks(f: KeyFacts, now = Date.now()): KeyCheck[] {
         } (over six months ago)`
         : "the recovery key has never been checked here",
       "deno task stolos keys check-recovery",
+    );
+  }
+  if (f.repo) {
+    add(
+      "E057-IDENTITY",
+      !!f.identity,
+      "fail",
+      f.identity
+        ? `commits are made as ${f.identity}`
+        : "Git does not know who you are here (no user.name and user.email): no commit can be made",
+      SETUP,
     );
   }
   add(
