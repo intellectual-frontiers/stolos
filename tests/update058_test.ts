@@ -66,7 +66,8 @@ Deno.test("058: update pulls, warns about an unsigned tip, and is safe to run ag
     await sh(theirs, "git", "push", "-q", "origin", "main");
     r = await archon(["update", "--no-doctor"]);
     assertStringIncludes(r.out, "1 new commit(s)");
-    assertStringIncludes(r.out, "servers will refuse what you pulled");
+    assertStringIncludes(r.out, "servers wait for your approval");
+    assertStringIncludes(r.out, "deno task stolos apply (it lists those commits");
     assertEquals(await sh(mine, "git", "log", "-1", "--format=%s"), "unsigned change");
 
     // Again: nothing new; nothing changes.

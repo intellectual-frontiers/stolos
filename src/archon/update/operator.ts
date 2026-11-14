@@ -191,8 +191,10 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
         if (t.ok) a.done(`signed by ${t.signer}`);
         else {
           a.warn(
-            `servers will refuse what you pulled: ${t.reason}`,
-            "whoever pushed it signs it; or approve it yourself: git commit -S --allow-empty -m approve, then deno task stolos apply",
+            `what you pulled was made elsewhere, not signed by a fleet signer (${
+              head.slice(0, 10)
+            }): servers wait for your approval`,
+            "deno task stolos apply (it lists those commits and approves them with one signed commit)",
             `E047-${(t.code ?? "untrusted").toUpperCase()}`,
           );
           a.done();

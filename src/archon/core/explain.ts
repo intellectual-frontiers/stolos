@@ -50,7 +50,7 @@ export const EXPLAIN: Record<string, Explanation> = {
     why:
       "It was pushed without signing (git commit -S), or from a machine without your signing setup.",
     fix:
-      "Make a signed commit on top (git commit -S --allow-empty -m approve) and push it; check this PC's signing with: deno task stolos keys",
+      "Approve it on your PC: deno task stolos apply lists the unsigned commits and approves them with one signed commit on top; check this PC's signing with: deno task stolos keys",
     doc: "docs/fleet-repository.md",
   },
   "E047-UNTRUSTED": {
@@ -59,7 +59,7 @@ export const EXPLAIN: Record<string, Explanation> = {
     why:
       "It was signed with another key (an agent's, a CI's, a new laptop's), or the signer was removed.",
     fix:
-      "Sign it again with a key in fleets/<fleet>/signers.ts (deno task stolos keys shows yours); for a new PC's key, deno task stolos keys setup, then a commit signed by a key already listed.",
+      "Approve it on your PC: deno task stolos apply lists the commits not signed by a fleet signer and approves them with one commit signed by your key (servers check the newest commit). For a new PC's own key: deno task stolos keys setup, then approval from a PC whose key is listed.",
     doc: "docs/fleet-repository.md",
   },
   "E047-ROLLBACK": {
