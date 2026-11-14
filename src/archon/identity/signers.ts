@@ -199,6 +199,6 @@ export async function signingSetup(): Promise<Array<{ ok: boolean; what: string;
   return (await keyChecksNow()).map((c) => ({
     ok: c.ok,
     what: c.what,
-    ...(c.ok ? {} : { fix: `${c.fix} (archon explain ${c.code})` }),
+    ...(c.ok ? {} : { fix: `${c.fix} (deno task stolos explain ${c.code})` }),
   }));
 }

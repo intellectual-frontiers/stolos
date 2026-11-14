@@ -549,6 +549,22 @@ export class Ui {
     if (this.current) this.endPhase(this.current);
     this.stopSpinner();
     const fails = this.problems.filter((p) => p.level === "fail");
+    // A caller that ran this as a step (stolos update runs boot doctor) reads the counts.
+    const summaryFile = env("STOLOS_SUMMARY");
+    if (summaryFile) {
+      try {
+        Deno.writeTextFileSync(
+          summaryFile,
+          JSON.stringify({
+            fails: fails.length,
+            warns: this.problems.filter((p) => p.level === "warn").length,
+            pending: this.problems.filter((p) => p.level === "pending").length,
+          }),
+        );
+      } catch (e) {
+        console.error(`could not write ${summaryFile}: ${(e as Error).message}`);
+      }
+    }
     if (this.deferred.length) {
       this.out("");
       this.out(
@@ -572,7 +588,7 @@ export class Ui {
           `   ${" ".repeat(14)} ${this.dim(`${p.level === "pending" ? "next" : "fix"}: ${p.fix}`)}`,
         );
       }
-      if (p.code) this.out(`   ${" ".repeat(14)} ${this.dim(`explain: archon explain ${p.code}`)}`);
+      if (p.code) this.out(`   ${" ".repeat(14)} ${this.dim(`explain: ${explainHint(p.code)}`)}`);
       if (this.logPath && p.logLine && p.level !== "pending") {
         this.out(`   ${" ".repeat(14)} ${this.dim(`log: ${this.logPath}:${p.logLine}`)}`);
       }
@@ -639,9 +655,14 @@ export function truncate(s: string, width: number, ansi = true): string {
 
 /** The program writing logs: "stolos" on your PC, "archon" on a machine (spec 059). */
 let logProgram = Deno.build.os === "windows" ? "stolos" : "archon";
-/** Set which program writes the run log (its folder is named after it). */
+/** Set which program writes the run log (its folder is named after it), and names it in hints. */
 export function setLogProgram(name: "stolos" | "archon"): void {
   logProgram = name;
+}
+
+/** How to explain a code where this runs: `deno task stolos explain <code>` on your PC, else `archon explain <code>`. */
+export function explainHint(code: string): string {
+  return logProgram === "stolos" ? `deno task stolos explain ${code}` : `archon explain ${code}`;
 }
 
 /**

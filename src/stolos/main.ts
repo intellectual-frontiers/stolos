@@ -16,7 +16,7 @@
  */
 
 import { main } from "../archon/main.ts";
-import { ui } from "../archon/core/ui.ts";
+import { setLogProgram, ui } from "../archon/core/ui.ts";
 import { exists } from "../archon/core/fsx.ts";
 
 /** The boot server's telemetry settings (spec 023): set for `stolos boot ...` only. */
@@ -45,6 +45,7 @@ async function bootAgain(argv: string[]): Promise<number> {
 
 /** The stolos CLI: `boot ...` is the boot server; everything else is a fleet command. */
 export async function stolosMain(argv: string[]): Promise<number> {
+  setLogProgram("stolos"); // logs and hints name stolos, on every system
   const at = argv.findIndex((a) => !a.startsWith("-"));
   if (argv[at] === "boot") {
     if (Deno.env.get("OTEL_DENO") !== "true") return await bootAgain(argv);

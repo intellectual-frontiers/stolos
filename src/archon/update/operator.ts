@@ -61,21 +61,39 @@ export function atLeast(have: string, want: string): boolean {
   return true;
 }
 
-/** Run `deno task <args>` in the checkout, with the terminal (it may ask for a passphrase). */
-async function task(args: string[]): Promise<number> {
+/** What a step run as its own command found (from its STOLOS_SUMMARY). */
+interface StepSummary {
+  code: number;
+  fails: number;
+  warns: number;
+  pending: number;
+}
+
+/** Run `deno task -q <args>` in the checkout, with the terminal (it may ask for a passphrase). */
+async function task(args: string[]): Promise<StepSummary> {
+  const summary = await Deno.makeTempFile({ prefix: "stolos-summary-" });
   ui.pause();
   try {
     const r = await new Deno.Command(Deno.execPath(), {
-      args: ["task", ...args],
+      args: ["task", "-q", ...args],
       cwd: P.repo,
       stdin: "inherit",
       stdout: "inherit",
       stderr: "inherit",
-      env: P.fleetId ? { ARCHON_FLEET: P.fleetId } : {},
+      env: { ...(P.fleetId ? { ARCHON_FLEET: P.fleetId } : {}), STOLOS_SUMMARY: summary },
     }).output();
-    return r.code;
+    let counts = { fails: 0, warns: 0, pending: 0 };
+    try {
+      counts = { ...counts, ...JSON.parse((await Deno.readTextFile(summary)) || "{}") };
+    } catch { /* the step wrote no summary: its exit code says enough */ }
+    return { code: r.code, ...counts };
   } finally {
     ui.resume();
+    try {
+      await Deno.remove(summary);
+    } catch (e) {
+      console.error(`stolos: could not remove ${summary}: ${(e as Error).message}`);
+    }
   }
 }
 
@@ -161,8 +179,9 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
     const { parseSignersSource } = await import("../identity/keys.ts");
     const rel = repoRel(join(P.fleetDir, "signers.ts")).replace(/\\/g, "/");
     const signers = parseSignersSource((await git(["show", `${before}:${rel}`])).stdout);
-    if (!signers.some((s) => s.role === "daily")) a.done("the fleet had no signers yet");
-    else {
+    if (!signers.some((s) => s.role === "daily")) {
+      a.done("nothing to check yet (the fleet has no signers on GitHub yet)");
+    } else {
       const dir = await Deno.makeTempDir({ prefix: "archon-update-" });
       try {
         const allowed = join(dir, "allowed_signers");
@@ -173,9 +192,7 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
         else {
           a.warn(
             `servers will refuse what you pulled: ${t.reason}`,
-            `whoever pushed it signs it; or approve it yourself: git commit -S --allow-empty -m approve, then git push (archon explain E047-${
-              (t.code ?? "untrusted").toUpperCase()
-            })`,
+            "whoever pushed it signs it; or approve it yourself: git commit -S --allow-empty -m approve, then deno task stolos apply",
             `E047-${(t.code ?? "untrusted").toUpperCase()}`,
           );
           a.done();
@@ -230,7 +247,7 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
     console.log(
       `\n  Upgrading the engine to ${upgradeTo}: Git asks for your passphrase to sign it.\n`,
     );
-    const code = await task(["stolos", "fleet", "upgrade", upgradeTo]);
+    const { code } = await task(["stolos", "fleet", "upgrade", upgradeTo]);
     const u = ui.phase("Upgrade");
     if (code === 0) {
       upgraded = true;
@@ -260,16 +277,20 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
   if (!o.noDoctor) {
     const boot = await exists(SECRETS.adminPasswordHash);
     console.log("");
-    const code = boot ? await task(["stolos", "boot", "doctor"]) : await task(["stolos", "keys"]);
+    const r = boot ? await task(["stolos", "boot", "doctor"]) : await task(["stolos", "keys"]);
     const dr = ui.phase("Doctor");
-    if (code === 0) dr.done(boot ? "boot doctor: all well" : "stolos keys: all well");
-    else {
-      dr.warn(
-        `${boot ? "boot doctor" : "stolos keys"} found something (above), each with its fix`,
-        boot ? "deno task stolos boot doctor" : "deno task stolos keys",
+    const what = boot ? "boot doctor" : "stolos keys";
+    const again = boot ? "deno task stolos boot doctor" : "deno task stolos keys";
+    const notYet = r.pending ? `; ${r.pending} thing(s) not set up yet` : "";
+    if (r.code !== 0 || r.fails) {
+      dr.fail(
+        `${what}: ${r.fails || "some"} problem(s), each with its fix (above)${notYet}`,
+        again,
       );
-      dr.done();
-    }
+    } else if (r.warns) {
+      dr.warn(`${what}: ${r.warns} warning(s), each with its fix (above)${notYet}`, again);
+    } else dr.done(`${what}: all well${notYet}`);
+    if (!dr.level || dr.level !== "ok") dr.done();
   }
   if (!upgraded && !pulled.length) ui.next.push("next: deno task stolos (where you are)");
   return ui.problems.some((x) => x.level === "fail") ? 1 : 0;

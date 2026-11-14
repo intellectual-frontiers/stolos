@@ -245,7 +245,7 @@ async function main(args: string[]): Promise<number> {
   const proxy = opt(args, "proxy") ?? Deno.env.get("ARCHON_BOOT_PROXY");
   const caFile = opt(args, "ca-file") ?? Deno.env.get("ARCHON_BOOT_CA_FILE");
   const githubApi = opt(args, "github-api") ?? Deno.env.get("ARCHON_GITHUB_API");
-  ui.header("Archon boot", `Ubuntu ${UBUNTU.point} · port ${port}`);
+  ui.header("Stolos boot serve", `Ubuntu ${UBUNTU.point} · port ${port}`);
   // Spec 029: the backup panel at the start, and the reminders hourly while serving.
   {
     const { showPanelNow, remind } = await import("../archon/vault/reminder.ts");

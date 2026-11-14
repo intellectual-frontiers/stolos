@@ -211,7 +211,7 @@ export async function reinstall(
     );
     return 2;
   }
-  ui.header("Archon reinstall", name);
+  ui.header("Stolos reinstall", name);
 
   const b = ui.phase("Boot server");
   const up = await fetch(`http://127.0.0.1:${o.port}/health`, { signal: AbortSignal.timeout(3000) })

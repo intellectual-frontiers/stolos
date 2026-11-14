@@ -840,7 +840,7 @@ export async function keysCheckPush(input?: string): Promise<number> {
             ? "  it was signed by a key signers.ts does not list: deno task stolos keys"
             : "  pull first: git pull --rebase",
         );
-        console.error(`  (archon explain E047-${(t.code ?? "untrusted").toUpperCase()})`);
+        console.error(`  (deno task stolos explain E047-${(t.code ?? "untrusted").toUpperCase()})`);
       }
     } finally {
       await dropTemp(dir);

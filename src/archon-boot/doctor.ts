@@ -31,7 +31,7 @@ export async function doctor(
 ): Promise<number> {
   // Embedded (vault restore runs it): its phases join the caller's run and summary.
   if (o.embedded) ui.say(`${ui.emoji ? "🩺" : "*"} ${ui.dim("boot doctor")}`);
-  else ui.header("Archon boot doctor", "read-only");
+  else ui.header("Stolos boot doctor", "read-only");
 
   // ------------------------------------------------------------ checkout
   const g = ui.phase("Checkout");
@@ -39,7 +39,8 @@ export async function doctor(
   g.status("fetching origin");
   const fetched = (await git(["fetch", "--quiet", "origin"])).ok;
   const branch = (await git(["rev-parse", "--abbrev-ref", "HEAD"])).stdout.trim();
-  const dirty = (await git(["status", "--porcelain", "--", "src/", "specs/", "home/"])).stdout
+  // The whole repository, new files included (fleets/<fleet>/ first of all); .gitignore keeps out/ out.
+  const dirty = (await git(["status", "--porcelain", "--untracked-files=all"])).stdout
     .split("\n").filter(Boolean);
   const ahead = Number((await git(["rev-list", "--count", `origin/${branch}..HEAD`])).stdout) || 0;
   const behind = Number((await git(["rev-list", "--count", `HEAD..origin/${branch}`])).stdout) || 0;
@@ -131,9 +132,9 @@ export async function doctor(
     if (!(await exists(join(cacheDir(), name)))) missing.push(name);
   }
   if (missing.length) {
-    u.warn(
-      `not downloaded yet: ${missing.join(", ")}`,
-      "deno task stolos boot serve downloads and verifies them",
+    u.pending(
+      `not downloaded yet: ${missing.join(", ")} (about 3 GB, once)`,
+      "deno task stolos boot serve downloads and verifies them the first time it starts",
     );
   }
   u.done(

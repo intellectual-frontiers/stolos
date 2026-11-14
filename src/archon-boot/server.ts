@@ -16,6 +16,7 @@
  * @module
  */
 
+import { explainHint } from "../archon/core/ui.ts";
 import type { ArchonEvent } from "../archon/telemetry/events.ts";
 import {
   FLEET_KEEP,
@@ -142,7 +143,7 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
           severity: "warn",
           address,
           host,
-          message: `${stallMessage(host)} (archon explain E051-INSTALLER-STALLED)`,
+          message: `${stallMessage(host)} (${explainHint("E051-INSTALLER-STALLED")})`,
           attrs: { code: "E051-INSTALLER-STALLED" },
         });
         if (host) {
@@ -338,7 +339,7 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
                 menu[1]
               } network-booted while ${h.name} waits for ${h.mac}. If it is ${h.name}, its MAC was mistyped: deno task stolos boot arm ${h.name} --mac-address ${
                 menu[1]
-              } (or --claim). Nothing was installed. (archon explain E051-MAC-MISMATCH)`,
+              } (or --claim). Nothing was installed. (${explainHint("E051-MAC-MISMATCH")})`,
             });
           }
         }
@@ -551,7 +552,7 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
             severity: "warn",
             address: from,
             host: name,
-            message: `install stopped: ${d.why}. ${d.fix} (archon explain E051-DISK-NOT-BLANK)`,
+            message: `install stopped: ${d.why}. ${d.fix} (${explainHint("E051-DISK-NOT-BLANK")})`,
             attrs: { code: "E051-DISK-NOT-BLANK" },
           });
           installProblem(name, `install stopped by the blank-disk guard: ${d.why}`);

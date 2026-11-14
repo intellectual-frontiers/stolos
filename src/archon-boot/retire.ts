@@ -89,7 +89,7 @@ export async function retire(
   const host = hosts.find((h) => h.name === name);
   if (name && !host && push && await removedButCommitted(name)) {
     // Run again after a retirement left uncommitted: finish it.
-    ui.header("Archon retire", name);
+    ui.header("Stolos retire", name);
     const refusal = retireRefusal(name, confirm);
     if (refusal) {
       ui.phase("Repository").fail(refusal);
@@ -111,7 +111,7 @@ export async function retire(
     );
     return 2;
   }
-  ui.header("Archon retire", name);
+  ui.header("Stolos retire", name);
   const fleet = await loadFleet();
   const tokens = await loadTokens().catch(() => []);
   const addresses = tokens.find((t) => t.host === name)?.addresses ?? [];
