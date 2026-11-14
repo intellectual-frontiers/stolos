@@ -239,6 +239,39 @@ export async function keysStatus(json: boolean): Promise<number> {
 
 // ------------------------------------------------------------------ setup
 
+/** Whether this is Ubuntu on WSL (Windows is then the PC whose key is already listed, usually). */
+function onWsl(): boolean {
+  if (Deno.env.get("WSL_DISTRO_NAME")) return true;
+  try {
+    return /microsoft/i.test(Deno.readTextFileSync("/proc/version"));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The exact commands that approve a new PC's daily key: run where a listed key
+ * signs (on WSL, Windows PowerShell in the fleet folder), then pull here.
+ */
+export function approvalSteps(
+  fleetId: string,
+  rel: string,
+  name: string,
+  pub: string,
+  wsl = onWsl(),
+): string[] {
+  const where = wsl
+    ? "in Windows: open PowerShell, cd C:\\fleet (your fleet folder), git pull, then run:"
+    : "on a PC whose key is already listed, in the fleet repository, after git pull, run:";
+  const sep = wsl ? ";" : " &&";
+  return [
+    `approve this PC's key ${where}`,
+    `    deno task archon signers add ${name} --role daily --key "${pub}"`,
+    `    git add -A${sep} git commit -m "${fleetId}: signers: add ${name}"${sep} git push`,
+    `then back here: git checkout -- ${rel} && git pull && deno task archon keys`,
+  ];
+}
+
 /** `archon keys setup`: everything, idempotent. */
 export async function keysSetup(o: { test?: boolean } = {}): Promise<number> {
   let f = await collectKeyFacts();
@@ -310,6 +343,11 @@ export async function keysSetup(o: { test?: boolean } = {}): Promise<number> {
   const dailyPub = pubOf(await readTextOr(paths.daily + ".pub"))!;
   const listedDaily = list.find((x) => x.key.trim() === dailyPub);
   let signersChanged = false;
+  // A fleet whose committed signers.ts already lists a daily key accepts a new
+  // one only from a commit signed by a listed key: that approval happens elsewhere.
+  const rel = repoRel(signersFile()).replace(/\\/g, "/");
+  const committed = parseSignersSource((await git(["show", `HEAD:${rel}`])).stdout);
+  let approval: { name: string; pub: string } | undefined;
   if (listedDaily) s.note(`your daily key is listed as ${listedDaily.name}`);
   else {
     const taken = new Set(list.map((x) => x.name));
@@ -318,12 +356,21 @@ export async function keysSetup(o: { test?: boolean } = {}): Promise<number> {
     await writeSigners(list);
     signersChanged = true;
     s.note(`added your daily key as ${name}`);
-    if (list.filter((x) => x.role === "daily").length > 1) {
+    if (committed.some((x) => x.role === "daily")) {
+      approval = { name, pub: dailyPub };
       s.warn(
-        "this is another daily key: servers accept it only from a commit signed by a key already listed",
-        "have that key's owner sign the commit, or use: deno task archon keys lost --recovery <file>",
+        "this PC's key must be approved by a key already listed (the commands are below)",
+        "approve it from a PC whose key is listed, then pull here",
+        "E057-NOT-LISTED",
       );
     }
+  }
+  // Still waiting for approval (an earlier run added it here, not committed elsewhere yet).
+  if (
+    !approval && listedDaily && committed.some((x) => x.role === "daily") &&
+    !committed.some((x) => x.key.trim() === dailyPub)
+  ) {
+    approval = { name: listedDaily.name, pub: dailyPub };
   }
   let recoveryMade = false;
   if (list.some((x) => x.role === "recovery")) {
@@ -404,11 +451,13 @@ export async function keysSetup(o: { test?: boolean } = {}): Promise<number> {
     }
   } else ts.done("nothing changed (run with --test to sign once anyway)");
 
-  if (signersChanged) {
+  if (approval) {
+    for (const line of approvalSteps(f.fleetId, rel, approval.name, approval.pub)) {
+      ui.next.push(line);
+    }
+  } else if (signersChanged) {
     ui.next.push(
-      `approve the new signers: git add ${
-        repoRel(signersFile())
-      } && git commit -m "${f.fleetId}: signers" && git push`,
+      `approve the new signers: git add ${rel} && git commit -m "${f.fleetId}: signers" && git push`,
     );
   }
   if (recoveryMade) {

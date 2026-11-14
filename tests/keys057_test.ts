@@ -203,6 +203,50 @@ async function exists(p: string) {
   return await Deno.stat(p).then(() => true).catch(() => false);
 }
 
+Deno.test("057: a second PC's key: setup prints the exact command that approves it", async () => {
+  const s = await keysSandbox();
+  try {
+    assertEquals((await s.archon(["keys", "setup"])).code, 0);
+    await s.git("add", "-A");
+    await s.git("commit", "-q", "-m", "demo: signers");
+    // Another PC: no daily key here yet (this one's moved aside).
+    for (const ext of ["", ".pub"]) await Deno.rename(s.daily + ext, `${s.daily}.first${ext}`);
+    const r = await s.archon(["keys", "setup"]);
+    const pub = (await Deno.readTextFile(s.daily + ".pub")).trim().split(" ").slice(0, 2).join(" ");
+    assertStringIncludes(r.out, "must be approved by a key already listed");
+    assertStringIncludes(r.out, `--role daily --key "${pub}"`);
+    assertStringIncludes(r.out, "git checkout -- fleets/demo/signers.ts && git pull");
+    // Running it again still shows the commands (the approval is still missing).
+    const again = await s.archon(["keys", "setup"]);
+    assertStringIncludes(again.out, `--key "${pub}"`);
+  } finally {
+    await Deno.remove(s.home, { recursive: true });
+  }
+});
+
+Deno.test("057: the approval steps, on WSL (Windows PowerShell) and elsewhere", async () => {
+  const { approvalSteps } = await import("../src/archon/identity/keys-commands.ts");
+  const wsl = approvalSteps(
+    "fcr",
+    "fleets/fcr/signers.ts",
+    "owner-pc-daily",
+    "ssh-ed25519 AAAA",
+    true,
+  );
+  assertStringIncludes(wsl[0], "PowerShell, cd C:\\fleet");
+  assertEquals(
+    wsl[1],
+    '    deno task archon signers add owner-pc-daily --role daily --key "ssh-ed25519 AAAA"',
+  );
+  assertStringIncludes(
+    wsl[2],
+    'git add -A; git commit -m "fcr: signers: add owner-pc-daily"; git push',
+  );
+  const other = approvalSteps("fcr", "fleets/fcr/signers.ts", "x", "ssh-ed25519 AAAA", false);
+  assertStringIncludes(other[0], "a PC whose key is already listed");
+  assertStringIncludes(other[2], "git add -A && git commit");
+});
+
 Deno.test("057: the checks, from facts (no files, no prompts)", () => {
   assertEquals(parseOpenSshVersion("OpenSSH_for_Windows_9.5p1, LibreSSL 3.8.2"), [9, 5]);
   assertEquals(parseOpenSshVersion("OpenSSH_7.4p1"), [7, 4]);
