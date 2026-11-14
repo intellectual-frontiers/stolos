@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Phase - archon/core/ui.ts - Stolos v0.26.0 documentation</title>
+  <title>Phase - archon/core/ui.ts - Stolos v0.27.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;core&#x2F;ui.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.26.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.27.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -142,7 +142,8 @@
   />
 </svg>
 </a>
-</div><div><div class="space-y-7" id=""><section class="section"  id="constructors"><div>
+</div><div><div class="space-y-7" id=""><div class="markdown"><p>One phase of a run (&quot;Packages&quot;, &quot;Verify&quot;, ...): its progress, its items, its problems, and its one-line result.</p>
+</div><section class="section"  id="constructors"><div>
       <h2 class="anchorable mb-1"><a href="#constructors" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
   height="16"
@@ -217,7 +218,8 @@ Constructors</h2></div><div class="space-y-8"><div class="anchorable docEntry" i
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>A phase of <code>ui</code>, named <code>name</code>; started by Ui.phase.</p>
+</div></div></div>
 </div></section>
 <section class="section"  id="properties"><div>
       <h2 class="anchorable mb-1"><a href="#properties" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
@@ -294,7 +296,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>How many changes it made.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_deferred">
 
   <div class="docEntryHeader">
@@ -347,7 +350,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>How many disruptive changes it left for later.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_fails">
 
   <div class="docEntryHeader">
@@ -400,7 +404,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>How many failures.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="accessor_level">
 
   <div class="docEntryHeader">
@@ -454,7 +459,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>How it ended: fail when anything failed, else warn, else ok.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_oks">
 
   <div class="docEntryHeader">
@@ -507,7 +513,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>How many items were already right.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_pendings">
 
   <div class="docEntryHeader">
@@ -560,7 +567,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>How many items are not set up yet.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_progress">
 
   <div class="docEntryHeader">
@@ -614,7 +622,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Its progress bar's state.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_result">
 
   <div class="docEntryHeader">
@@ -668,7 +677,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Its one-line result, when set.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_skipped">
 
   <div class="docEntryHeader">
@@ -721,7 +731,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>How many items it skipped.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_started">
 
   <div class="docEntryHeader">
@@ -775,7 +786,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>When it started (the Ui's clock).</p>
+</div></div></div>
 <div class="anchorable docEntry" id="property_warns">
 
   <div class="docEntryHeader">
@@ -828,7 +840,8 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>How many warnings.</p>
+</div></div></div>
 </div></section>
 <section class="section"  id="methods"><div>
       <h2 class="anchorable mb-1"><a href="#methods" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
@@ -905,7 +918,8 @@ Methods</h2></div><div class="space-y-8"><div class="anchorable docEntry" id="me
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>A change it made.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="method_defer_0">
 
   <div class="docEntryHeader">
@@ -958,7 +972,8 @@ Methods</h2></div><div class="space-y-8"><div class="anchorable docEntry" id="me
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>A disruptive change left for later (shown with how to run it).</p>
+</div></div></div>
 <div class="anchorable docEntry" id="method_done_0">
 
   <div class="docEntryHeader">
@@ -1065,7 +1080,8 @@ Methods</h2></div><div class="space-y-8"><div class="anchorable docEntry" id="me
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>A failure: shown, with its fix and code; the run exits 1.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="method_note_0">
 
   <div class="docEntryHeader">
@@ -1172,7 +1188,8 @@ Methods</h2></div><div class="space-y-8"><div class="anchorable docEntry" id="me
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>An item already right.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="method_pending_0">
 
   <div class="docEntryHeader">
@@ -1279,7 +1296,8 @@ Methods</h2></div><div class="space-y-8"><div class="anchorable docEntry" id="me
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>An item it skipped.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="method_status_0">
 
   <div class="docEntryHeader">
@@ -1440,7 +1458,8 @@ Methods</h2></div><div class="space-y-8"><div class="anchorable docEntry" id="me
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Its one-line result: set by done(), or counted from its items.</p>
+</div></div></div>
 <div class="anchorable docEntry" id="method_warn_0">
 
   <div class="docEntryHeader">
@@ -1493,7 +1512,8 @@ Methods</h2></div><div class="space-y-8"><div class="anchorable docEntry" id="me
   />
 </svg>
 </a>
-</div></div>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>A warning: shown, with its fix and code; never fails the run.</p>
+</div></div></div>
 </div></section>
 </div>
 </div>

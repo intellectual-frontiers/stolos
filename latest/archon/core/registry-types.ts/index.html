@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/core/registry-types.ts - Stolos v0.26.0 documentation</title>
+  <title>archon/core/registry-types.ts - Stolos v0.27.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.26.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.27.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -127,11 +127,13 @@ permission rules.</p>
 Functions</h2></div><div class="namespaceSection"><div id="namespace_effectivetier" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;effectiveTier.html" title="effectiveTier">
-			    <span>effectiveTier</span><span>(<div class="ml-4"><div><span>cmd<span>: <span class="td-ref">Command</span></span></span>,</div><div><span>args<span>: <span class="td-ref">Parsed</span></span></span></div></div>)<span>: <span class="td-ref">Tier</span></span></span></a></div>
+			    <span>effectiveTier</span><span>(<div class="ml-4"><div><span>cmd<span>: <span class="td-ref">Command</span></span></span>,</div><div><span>args<span>: <span class="td-ref">Parsed</span></span></span></div></div>)<span>: <span class="td-ref">Tier</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The tier this run needs (a command's tier can depend on its arguments, for example --check).</p>
+</div></div></div>
     </div><div id="namespace_parseargs" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;parseArgs.html" title="parseArgs">
-			    <span>parseArgs</span><span>(<div class="ml-4"><div><span>cmd<span>: <span class="td-ref">Command</span></span></span>,</div><div><span>argv<span>: <span class="td-kw">string</span>[]</span></span></div></div>)<span>: <span class="td-ref">Parsed</span></span></span></a></div>
+			    <span>parseArgs</span><span>(<div class="ml-4"><div><span>cmd<span>: <span class="td-ref">Command</span></span></span>,</div><div><span>argv<span>: <span class="td-kw">string</span>[]</span></span></div></div>)<span>: <span class="td-ref">Parsed</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Parse argv for this command, or throw a message naming the problem (a person-only option from an agent is refused).</p>
+</div></div></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;core&#x2F;registry-types_ts_interfaces"><div>
@@ -160,32 +162,41 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_effectiveti
 Interfaces</h2></div><div class="namespaceSection"><div id="namespace_argspec" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;ArgSpec.html" title="ArgSpec">
-			    <span>ArgSpec</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>ArgSpec</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One argument of a command: an option (--name) or a positional value.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;ArgSpec.html#property_default">
-                  <span>default</span><span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">boolean</span></span></span></a></li><li>
+                  <span>default</span><span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">boolean</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its value when it is not given.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;ArgSpec.html#property_description">
-                  <span>description</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>description</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What it does, in one line (help, man page, MCP).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;ArgSpec.html#property_human">
                   <span>human</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Only a person types it (--confirm-destroy, Article 23; --show for a secret): never offered over
 MCP, and refused when an agent runs the command (ARCHON_AGENT is set).</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;ArgSpec.html#property_name">
-                  <span>name</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>name</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its name (the option is --name).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;ArgSpec.html#property_positional">
-                  <span>positional</span><span>: <span class="td-kw">boolean</span></span></a></li><li>
+                  <span>positional</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Given without --name, in order.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;ArgSpec.html#property_repeatable">
                   <span>repeatable</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>May be given more than once; the values are joined with newlines.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;ArgSpec.html#property_required">
-                  <span>required</span><span>: <span class="td-kw">boolean</span></span></a></li><li>
+                  <span>required</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The command refuses to run without it.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;ArgSpec.html#property_type">
-                  <span>type</span><span>: <span><span class="td-str">"string"</span><span class="td-op"> | </span><span class="td-str">"boolean"</span></span></span></a></li></ul></div>
+                  <span>type</span><span>: <span><span class="td-str">"string"</span><span class="td-op"> | </span><span class="td-str">"boolean"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A value, or a flag.</p>
+</div></div></li></ul></div>
     </div><div id="namespace_command" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;Command.html" title="Command">
-			    <span>Command</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>Command</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One archon command: its name, help, tier, arguments, and what it runs. The man pages, the MCP tools, and <code>archon help</code> all come from these.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;Command.html#property_args">
-                  <span>args</span><span>: <span class="td-ref">ArgSpec</span>[]</span></a></li><li>
+                  <span>args</span><span>: <span class="td-ref">ArgSpec</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its arguments.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;Command.html#property_asowner">
                   <span>asOwner</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Always runs elevated, even when read-only, because it works through the
 checkout's owner (ops and the host's deploy key): push. Operators and the
@@ -195,7 +206,8 @@ admin are in archon-ops, so sudo does not prompt (spec 006).</p>
                   <span>description</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Paragraphs separated by blank lines.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;Command.html#property_examples">
-                  <span>examples</span><span>: <span class="td-ref">Array</span>&lt;{ cmd<span>: <span class="td-kw">string</span></span>; text<span>: <span class="td-kw">string</span></span>;  }&gt;</span></a></li><li>
+                  <span>examples</span><span>: <span class="td-ref">Array</span>&lt;{ cmd<span>: <span class="td-kw">string</span></span>; text<span>: <span class="td-kw">string</span></span>;  }&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Examples, for its man page.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;Command.html#property_mutatewith">
                   <span>mutateWith</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The reverse: read-only, except with this flag, which changes the host
 (fs s3 key --rotate). It then elevates, and counts as mutate over MCP.</p>
@@ -220,13 +232,17 @@ work is done.</p>
                   <span>readOnlyWith</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Tier when this flag is set (for example apply --check is read-only).</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;Command.html#property_run">
-                  <span>run</span><span>: (<div class="ml-4"><div><span>args<span>: <span class="td-ref">Parsed</span></span></span>,</div><div><span>ctx<span>: <span class="td-ref">RunContext</span></span></span></div></div>) =&gt; <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></a></li><li>
+                  <span>run</span><span>: (<div class="ml-4"><div><span>args<span>: <span class="td-ref">Parsed</span></span></span>,</div><div><span>ctx<span>: <span class="td-ref">RunContext</span></span></span></div></div>) =&gt; <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Runs it; returns the exit code.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;Command.html#property_seealso">
-                  <span>seeAlso</span><span>: <span class="td-kw">string</span>[]</span></a></li><li>
+                  <span>seeAlso</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Related man pages.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;Command.html#property_summary">
-                  <span>summary</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>summary</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One line, for archon help.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;Command.html#property_tier">
-                  <span>tier</span><span>: <span class="td-ref">Tier</span></span></a></li><li>
+                  <span>tier</span><span>: <span class="td-ref">Tier</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What it may do: read, write the repository, change the host, or destroy (spec 030: MCP serves up to the fleet's tier).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;Command.html#property_unlocked">
                   <span>unlocked</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Touches only its own files (archon notify's spool): no host lock, so it
 never waits for or blocks an apply, and it leaves the prompt's last-run
@@ -235,14 +251,17 @@ segment alone.</p>
     </div><div id="namespace_runcontext" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;RunContext.html" title="RunContext">
-			    <span>RunContext</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>RunContext</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What every command is given besides its arguments.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;RunContext.html#property_hostname">
                   <span>hostName</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The host this invocation operates on.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;RunContext.html#property_json">
-                  <span>json</span><span>: <span class="td-kw">boolean</span></span></a></li><li>
+                  <span>json</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>--json: machine-readable output, nothing drawn.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;RunContext.html#property_verbose">
-                  <span>verbose</span><span>: <span class="td-kw">boolean</span></span></a></li></ul></div>
+                  <span>verbose</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>-v: every item, as it happens.</p>
+</div></div></li></ul></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;core&#x2F;registry-types_ts_type-aliases"><div>
@@ -271,7 +290,8 @@ segment alone.</p>
 Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_parsed" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;Parsed.html" title="Parsed">
-			    <span>Parsed</span><span> = <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">boolean</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span>&gt;</span></a></div>
+			    <span>Parsed</span><span> = <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">boolean</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A command's arguments, parsed: name to value.</p>
+</div></div></div>
     </div><div id="namespace_tier" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;Tier.html" title="Tier">
