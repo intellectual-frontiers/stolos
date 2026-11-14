@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon-boot/tftp.ts - Stolos v0.31.0 documentation</title>
+  <title>archon-boot/tftp.ts - Stolos v0.32.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
+    <a href="..&#x2F;..&#x2F;" class="contextLink">Stolos v0.32.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -130,16 +130,21 @@ numbers roll over past 65535 (Ubuntu's initrd is ~100 MB).</p>
 Functions</h2></div><div class="namespaceSection"><div id="namespace_negotiate" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;tftp.ts&#x2F;~&#x2F;negotiate.html" title="negotiate">
-			    <span>negotiate</span><span>(<div class="ml-4"><div><span>opts<span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></span>,</div><div><span>size<span>: <span class="td-kw">number</span></span></span></div></div>)</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Negotiate options: what we accept, as sent back in the OACK.</p>
+			    <span>negotiate</span><span>(<div class="ml-4"><div><span>opts<span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></span>,</div><div><span>size<span>: <span class="td-kw">number</span></span></span></div></div>)<span>: { out<span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span>; blksize<span>: <span class="td-kw">number</span></span>; timeout<span>: <span class="td-kw">number</span></span>; window<span>: <span class="td-kw">number</span></span>;  }</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Negotiate options: what we accept, as sent back in the OACK.</p>
 </div></div></div>
     </div><div id="namespace_parserequest" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;tftp.ts&#x2F;~&#x2F;parseRequest.html" title="parseRequest">
-			    <span>parseRequest</span><span>(<span><span>msg<span>: <span class="td-ref">Uint8Array</span></span></span></span>)<span>: <div class="ml-indent"><span>{ file<span>: <span class="td-kw">string</span></span>; mode<span>: <span class="td-kw">string</span></span>; opts<span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span>;  }</span><br /><span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></div></span></span></a></div>
+			    <span>parseRequest</span><span>(<span><span>msg<span>: <span class="td-ref">Uint8Array</span></span></span></span>)<span>: <div class="ml-indent"><span>{ file<span>: <span class="td-kw">string</span></span>; mode<span>: <span class="td-kw">string</span></span>; opts<span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span>;  }</span><br /><span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></div></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Parse a TFTP read request (RRQ): the file, the transfer mode (lowercased)
+and the options (names lowercased). Undefined for anything else.</p>
+</div></div></div>
     </div><div id="namespace_servetftp" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;tftp.ts&#x2F;~&#x2F;serveTftp.html" title="serveTftp">
-			    <span>serveTftp</span><span>(<span><span>o<span>: <span class="td-ref">TftpOptions</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;{ close<span>: () =&gt; <span class="td-kw">void</span></span>;  }&gt;</span></span></a></div>
+			    <span>serveTftp</span><span>(<span><span>o<span>: <span class="td-ref">TftpOptions</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;{ close<span>: () =&gt; <span class="td-kw">void</span></span>;  }&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Serve TFTP reads on <code>o.port</code> (all IPv4 addresses). Resolves once bound, with
+a <code>close</code> to stop it; rejects with a plain explanation when the port is in
+use or needs privileges.</p>
+</div></div></div>
     </div></div>
 </section>
 <section class="section"  id="archon-boot&#x2F;tftp_ts_interfaces"><div>
@@ -168,12 +173,14 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_negotiate" 
 Interfaces</h2></div><div class="namespaceSection"><div id="namespace_tftpoptions" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;tftp.ts&#x2F;~&#x2F;TftpOptions.html" title="TftpOptions">
-			    <span>TftpOptions</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>TftpOptions</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Options for the TFTP server.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;tftp.ts&#x2F;~&#x2F;TftpOptions.html#property_emit">
                   <span>emit</span><span>: (<span><span>e<span>: <span class="td-ref">ArchonEvent</span></span></span></span>) =&gt; <span class="td-kw">void</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Spec 049: structured events; the window and boot.log render them.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;tftp.ts&#x2F;~&#x2F;TftpOptions.html#property_port">
-                  <span>port</span><span>: <span class="td-kw">number</span></span></a></li><li>
+                  <span>port</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The UDP port to listen on (69 is TFTP's standard port).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;tftp.ts&#x2F;~&#x2F;TftpOptions.html#property_read">
                   <span>read</span><span>: (<div class="ml-4"><div><span>path<span>: <span class="td-kw">string</span></span></span>,</div><div><span>from<span>: <span class="td-kw">string</span></span></span></div></div>) =&gt; <span class="td-ref">Promise</span>&lt;<span><span class="td-ref">Uint8Array</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Read a file for a client: bytes, or undefined when there is none.</p>
 </div></div></li></ul></div>
@@ -250,7 +257,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_tftpoption
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1135 symbols</span><svg
+              <span class="leading-none">view all 1145 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

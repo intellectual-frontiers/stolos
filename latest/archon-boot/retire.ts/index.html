@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon-boot/retire.ts - Stolos v0.31.0 documentation</title>
+  <title>archon-boot/retire.ts - Stolos v0.32.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
+    <a href="..&#x2F;..&#x2F;" class="contextLink">Stolos v0.32.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -140,12 +140,16 @@ What the router holds (its local DNS record) is the owner's to change
 Functions</h2></div><div class="namespaceSection"><div id="namespace_publishednames" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;retire.ts&#x2F;~&#x2F;publishedNames.html" title="publishedNames">
-			    <span>publishedNames</span><span>(<div class="ml-4"><div><span>host<span>: <span class="td-kw">string</span></span></span>,</div><div><span>domain<span>: <span class="td-kw">string</span></span></span></div></div>)</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The DNS names a server publishes (spec 032).</p>
+			    <span>publishedNames</span><span>(<div class="ml-4"><div><span>host<span>: <span class="td-kw">string</span></span></span>,</div><div><span>domain<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">string</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The DNS names a server publishes (spec 032).</p>
 </div></div></div>
     </div><div id="namespace_retire" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;retire.ts&#x2F;~&#x2F;retire.html" title="retire">
-			    <span>retire</span><span>(<div class="ml-4"><div><span>name<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span>,</div><div><span>confirm<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span>,</div><div><span>push<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span></span></div></div>)</span></a></div>
+			    <span>retire</span><span>(<div class="ml-4"><div><span>name<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span>,</div><div><span>confirm<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span>,</div><div><span>push<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>deno task boot retire &lt;host&gt; --confirm-destroy &lt;host&gt;</code>: remove a server
+from the fleet in the steps the module describes. <code>push</code> false leaves the
+commit for the owner to push (--no-push). Returns the exit code (2 for an
+unknown host).</p>
+</div></div></div>
     </div><div id="namespace_retirerefusal" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;retire.ts&#x2F;~&#x2F;retireRefusal.html" title="retireRefusal">
@@ -224,7 +228,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_publishedna
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1135 symbols</span><svg
+              <span class="leading-none">view all 1145 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

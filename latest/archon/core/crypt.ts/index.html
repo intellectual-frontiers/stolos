@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/core/crypt.ts - Stolos v0.31.0 documentation</title>
+  <title>archon/core/crypt.ts - Stolos v0.32.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.32.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -128,11 +128,15 @@ it runs the same on the Windows boot machine. Algorithm: Ulrich Drepper,
 Functions</h2></div><div class="namespaceSection"><div id="namespace_randomsalt" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;crypt.ts&#x2F;~&#x2F;randomSalt.html" title="randomSalt">
-			    <span>randomSalt</span><span>(<span><span>len<span class="td-op">?</span><span>: <span class="td-kw">number</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a></div>
+			    <span>randomSalt</span><span>(<span><span>len<span class="td-op">?</span><span>: <span class="td-kw">number</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A random salt of <code>len</code> characters from crypt's base-64 alphabet (<code>./0-9A-Za-z</code>).</p>
+</div></div></div>
     </div><div id="namespace_sha512crypt" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;crypt.ts&#x2F;~&#x2F;sha512Crypt.html" title="sha512Crypt">
-			    <span>sha512Crypt</span><span>(<div class="ml-4"><div><span>password<span>: <span class="td-kw">string</span></span></span>,</div><div><span>salt<span class="td-op">?</span></span>,</div><div><span>rounds<span class="td-op">?</span><span>: <span class="td-kw">number</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">string</span>&gt;</span></span></a></div>
+			    <span>sha512Crypt</span><span>(<div class="ml-4"><div><span>password<span>: <span class="td-kw">string</span></span></span>,</div><div><span>salt<span class="td-op">?</span></span>,</div><div><span>rounds<span class="td-op">?</span><span>: <span class="td-kw">number</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">string</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Hash <code>password</code> as SHA-512 crypt: <code>$6$&lt;salt&gt;$&lt;hash&gt;</code>, with <code>rounds=&lt;n&gt;$</code>
+after <code>$6$</code> when <code>rounds</code> is not the default 5000. Only the first 16
+characters of <code>salt</code> are used (a random one by default).</p>
+</div></div></div>
     </div></div>
 </section>
 </div>
@@ -206,7 +210,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_randomsalt"
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1135 symbols</span><svg
+              <span class="leading-none">view all 1145 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

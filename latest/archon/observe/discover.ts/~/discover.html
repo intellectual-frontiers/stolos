@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>discover - archon/observe/discover.ts - Stolos v0.31.0 documentation</title>
+  <title>discover - archon/observe/discover.ts - Stolos v0.32.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;observe&#x2F;discover.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.32.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -166,7 +166,11 @@
 </svg>
 </a>
 <span class="font-bold">discover</span><span class="font-medium">(<div class="ml-4"><div><span>host<span>: <a href="../../../.././archon/model/types.ts/~/HostDef.html" class="link td-ref">HostDef</a></span></span>,</div><div><span>check<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span> </span>
-      </code><div class="space-y-7" id=""><section class="section"  id="parameters"><div>
+      </code><div class="space-y-7" id=""><div class="markdown"><p><code>archon observe discover</code>: try each candidate, write the forwarding config
+for the first that answers (or <code>{}</code> for none) and restart the Collector when
+it changed, then record the result. With <code>check</code>, only report what would
+change. Returns 0.</p>
+</div><section class="section"  id="parameters"><div>
       <h2 class="anchorable mb-1"><a href="#parameters" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
   height="16"

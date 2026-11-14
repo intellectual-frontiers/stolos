@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/render/systemd.ts - Stolos v0.31.0 documentation</title>
+  <title>archon/render/systemd.ts - Stolos v0.32.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.32.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -131,15 +131,18 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_archonservi
     </div><div id="namespace_header" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;render&#x2F;systemd.ts&#x2F;~&#x2F;header.html" title="header">
-			    <span>header</span><span>(<span><span>spec<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a></div>
+			    <span>header</span><span>(<span><span>spec<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The &quot;Rendered by archon&quot; comment line naming the spec.</p>
+</div></div></div>
     </div><div id="namespace_ini" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;render&#x2F;systemd.ts&#x2F;~&#x2F;ini.html" title="ini">
-			    <span>ini</span><span>(<div class="ml-4"><div><span>sections<span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-ref">Section</span>&gt;</span></span>,</div><div><span>spec<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a></div>
+			    <span>ini</span><span>(<div class="ml-4"><div><span>sections<span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-ref">Section</span>&gt;</span></span>,</div><div><span>spec<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Renders INI sections (systemd style), with the header line first when <code>spec</code> is given.</p>
+</div></div></div>
     </div><div id="namespace_timer" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;render&#x2F;systemd.ts&#x2F;~&#x2F;timer.html" title="timer">
-			    <span>timer</span><span>(<span><span>opts<span>: { description<span>: <span class="td-kw">string</span></span>; onCalendar<span>: <span class="td-kw">string</span></span>; spec<span>: <span class="td-kw">string</span></span>; randomizedDelay<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></span></span>)<span>: <span class="td-kw">string</span></span></span></a></div>
+			    <span>timer</span><span>(<span><span>opts<span>: { description<span>: <span class="td-kw">string</span></span>; onCalendar<span>: <span class="td-kw">string</span></span>; spec<span>: <span class="td-kw">string</span></span>; randomizedDelay<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A timer unit for timers.target: persistent, with a randomized delay (default 10min).</p>
+</div></div></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;render&#x2F;systemd_ts_type-aliases"><div>
@@ -168,12 +171,12 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_archonservi
 Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_section" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;render&#x2F;systemd.ts&#x2F;~&#x2F;Section.html" title="Section">
-			    <span>Section</span><span> = <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-ref">Value</span>&gt;</span></a></div>
+			    <span>Section</span><span> = <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-ref">Value</span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One INI section: its keys and values.</p>
+</div></div></div>
     </div><div id="namespace_value" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;render&#x2F;systemd.ts&#x2F;~&#x2F;Value.html" title="Value">
-			    <span>Value</span><span> = <div class="ml-indent"><span><span class="td-kw">string</span></span><br /><span><span class="td-op"> | </span><span class="td-kw">number</span></span><br /><span><span class="td-op"> | </span><span class="td-kw">boolean</span></span><br /><span><span class="td-op"> | </span><span class="td-kw">undefined</span></span><br /><span><span class="td-op"> | </span><span class="td-ref">Array</span>&lt;<span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">number</span></span>&gt;</span></div></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Render systemd unit files (and other INI-style systemd configuration) from
-TypeScript objects. Article IV: the unit is code; the INI file is output.</p>
+			    <span>Value</span><span> = <div class="ml-indent"><span><span class="td-kw">string</span></span><br /><span><span class="td-op"> | </span><span class="td-kw">number</span></span><br /><span><span class="td-op"> | </span><span class="td-kw">boolean</span></span><br /><span><span class="td-op"> | </span><span class="td-kw">undefined</span></span><br /><span><span class="td-op"> | </span><span class="td-ref">Array</span>&lt;<span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">number</span></span>&gt;</span></div></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One INI value: a boolean renders as yes/no, an array as one line per item, undefined is skipped.</p>
 </div></div></div>
     </div></div>
 </section>
@@ -248,7 +251,7 @@ TypeScript objects. Article IV: the unit is code; the INI file is output.</p>
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1135 symbols</span><svg
+              <span class="leading-none">view all 1145 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

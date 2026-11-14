@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon-boot/reinstall.ts - Stolos v0.31.0 documentation</title>
+  <title>archon-boot/reinstall.ts - Stolos v0.32.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
+    <a href="..&#x2F;..&#x2F;" class="contextLink">Stolos v0.32.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -149,12 +149,17 @@ refusal, or undefined when it may go ahead.</p>
     </div><div id="namespace_recordeddata" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;reinstall.ts&#x2F;~&#x2F;recordedData.html" title="recordedData">
-			    <span>recordedData</span><span>(<span><span>host<span>: <span><span class="td-ref">HostDef</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span></span>)</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The class the repository's records give (no SSH): for arming a host that may not answer.</p>
+			    <span>recordedData</span><span>(<span><span>host<span>: <span><span class="td-ref">HostDef</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span></span>)<span>: <span><span class="td-ref">Pick</span>&lt;<span class="td-ref">HostData</span><span>, </span><span><span class="td-str">"class"</span><span class="td-op"> | </span><span class="td-str">"reasons"</span></span>&gt;<span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The class the repository's records give (no SSH): for arming a host that may not answer.</p>
 </div></div></div>
     </div><div id="namespace_reinstall" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;reinstall.ts&#x2F;~&#x2F;reinstall.html" title="reinstall">
-			    <span>reinstall</span><span>(<div class="ml-4"><div><span>name<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span>,</div><div><span>o<span>: { force<span>: <span class="td-kw">boolean</span></span>; port<span>: <span class="td-kw">number</span></span>; confirmDestroy<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a></div>
+			    <span>reinstall</span><span>(<div class="ml-4"><div><span>name<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span>,</div><div><span>o<span>: { force<span>: <span class="td-kw">boolean</span></span>; port<span>: <span class="td-kw">number</span></span>; confirmDestroy<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>deno task boot reinstall &lt;host&gt;</code>: re-install a running host over the
+network in the steps the module describes. <code>port</code> is the boot server's HTTP
+port and <code>confirmDestroy</code> is the repeated name a durable host needs. <code>force</code>
+(--force) is accepted but not read here. Returns the exit code (2 for an
+unknown host).</p>
+</div></div></div>
     </div></div>
 </section>
 </div>
@@ -228,7 +233,7 @@ refusal, or undefined when it may go ahead.</p>
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1135 symbols</span><svg
+              <span class="leading-none">view all 1145 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

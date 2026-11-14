@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/doctor/email.ts - Stolos v0.31.0 documentation</title>
+  <title>archon/doctor/email.ts - Stolos v0.32.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.32.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -132,11 +132,16 @@ through each path: archon's own sender, and on servers Postfix.</p>
 Functions</h2></div><div class="namespaceSection"><div id="namespace_domainrecords" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;doctor&#x2F;email.ts&#x2F;~&#x2F;domainRecords.html" title="domainRecords">
-			    <span>domainRecords</span><span>(<span><span>domain<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">string</span>[]&gt;</span></span></a></div>
+			    <span>domainRecords</span><span>(<span><span>domain<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">string</span>[]&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Looks up a sending domain's SPF, DKIM, DMARC, and bounce MX in DNS and returns the ones missing.</p>
+</div></div></div>
     </div><div id="namespace_emailchecks" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;doctor&#x2F;email.ts&#x2F;~&#x2F;emailChecks.html" title="emailChecks">
-			    <span>emailChecks</span><span>(<div class="ml-4"><div><span>site<span>: <span><span class="td-ref">Site</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span>,</div><div><span>phase<span>: <span class="td-ref">Phase</span></span></span>,</div><div><span>fixCredential<span>: <span class="td-kw">string</span></span></span>,</div><div><span>o<span class="td-op">?</span><span>: { send<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">void</span>&gt;</span></span></a></div>
+			    <span>emailChecks</span><span>(<div class="ml-4"><div><span>site<span>: <span><span class="td-ref">Site</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span>,</div><div><span>phase<span>: <span class="td-ref">Phase</span></span></span>,</div><div><span>fixCredential<span>: <span class="td-kw">string</span></span></span>,</div><div><span>o<span class="td-op">?</span><span>: { send<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">void</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The Email phase of archon doctor: the sending domain's records, a login to
+the relay with its credential (<code>fixCredential</code> is the fix shown when it is
+missing or refused), and on servers Postfix. With <code>send</code>, also mails the
+findings. Reports into <code>phase</code>; does nothing when the site has no mail.</p>
+</div></div></div>
     </div><div id="namespace_missingrecords" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;doctor&#x2F;email.ts&#x2F;~&#x2F;missingRecords.html" title="missingRecords">
@@ -215,7 +220,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_domainrecor
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1135 symbols</span><svg
+              <span class="leading-none">view all 1145 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

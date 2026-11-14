@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/doctor/doctor.ts - Stolos v0.31.0 documentation</title>
+  <title>archon/doctor/doctor.ts - Stolos v0.32.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.32.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -130,7 +130,11 @@ fleet model), never from a list kept here. It changes nothing.</p>
 Functions</h2></div><div class="namespaceSection"><div id="namespace_doctor" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;doctor&#x2F;doctor.ts&#x2F;~&#x2F;doctor.html" title="doctor">
-			    <span>doctor</span><span>(<div class="ml-4"><div><span>host<span>: <span class="td-ref">HostDef</span></span></span>,</div><div><span>o<span>: { trace<span>: <span class="td-kw">boolean</span></span>; send<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a></div>
+			    <span>doctor</span><span>(<div class="ml-4"><div><span>host<span>: <span class="td-ref">HostDef</span></span></span>,</div><div><span>o<span>: { trace<span>: <span class="td-kw">boolean</span></span>; send<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon doctor</code>: runs each read-only phase (link, Internet, endpoints, email)
+and prints what it finds. With <code>trace</code>, adds a path trace to unreachable
+endpoints; with <code>send</code>, mails the email findings. Returns 0: the closing
+summary counts the problems.</p>
+</div></div></div>
     </div></div>
 </section>
 </div>
@@ -204,7 +208,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_doctor" cla
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1135 symbols</span><svg
+              <span class="leading-none">view all 1145 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

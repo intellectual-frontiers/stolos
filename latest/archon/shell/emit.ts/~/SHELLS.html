@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>SHELLS - archon/shell/emit.ts - Stolos v0.31.0 documentation</title>
+  <title>SHELLS - archon/shell/emit.ts - Stolos v0.32.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;shell&#x2F;emit.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.32.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -142,21 +142,7 @@
   />
 </svg>
 </a>
-</div><div><div class="space-y-7" id=""><div class="markdown"><p>036-cli-comforts: <code>archon shell emit [bash|zsh|fish]</code> prints the shell code
-for Archon's aliases, key bindings, prompt, and titles. One line in a
-shell's startup file turns it all on; without that line a shell gets none
-of it (Ubuntu's defaults only).</p>
-<p>bash  ~/.bashrc                  eval &quot;$(archon shell emit bash)&quot;
-zsh   ~/.zshrc                   eval &quot;$(archon shell emit zsh)&quot;
-fish  ~/.config/fish/config.fish archon shell emit fish | source</p>
-<p>The output is code (Article 4), generated here from one table. <code>archon apply</code>
-renders it into /usr/local/share/archon/shell/init.&lt;shell&gt;, and the archon
-launcher prints that file without starting Deno, so a new shell pays about
-the cost of <code>cat</code>. Everything is guarded: it does nothing in a
-non-interactive shell, and each piece only when its tool is installed.</p>
-<p>The prompt: plain (no icons) on a console terminal (the physical console,
-a serial line, or AMT's), where no Nerd Font exists; Oh My Posh everywhere
-else. ARCHON_PROMPT=plain or ARCHON_PROMPT=pretty overrides that.</p>
+</div><div><div class="space-y-7" id=""><div class="markdown"><p>The shells Archon emits code for.</p>
 </div><section class="section"  id="type"><div>
       <h2 class="anchorable mb-1"><a href="#type" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"

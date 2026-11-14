@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon-boot/http.ts - Stolos v0.31.0 documentation</title>
+  <title>archon-boot/http.ts - Stolos v0.32.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
+    <a href="..&#x2F;..&#x2F;" class="contextLink">Stolos v0.32.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -129,7 +129,9 @@ This transport writes canonical header names, keeps connections alive
 Functions</h2></div><div class="namespaceSection"><div id="namespace_listen" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;http.ts&#x2F;~&#x2F;listen.html" title="listen">
-			    <span>listen</span><span>(<div class="ml-4"><div><span>port<span>: <span class="td-kw">number</span></span></span>,</div><div><span>handler<span>: <span class="td-ref">Handler</span></span></span></div></div>)<span>: <span class="td-ref">Deno.Listener</span></span></span></a></div>
+			    <span>listen</span><span>(<div class="ml-4"><div><span>port<span>: <span class="td-kw">number</span></span></span>,</div><div><span>handler<span>: <span class="td-ref">Handler</span></span></span></div></div>)<span>: <span class="td-ref">Deno.Listener</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Listen on <code>port</code> on every IPv4 address and serve each connection with
+<code>handler</code> in the background. Returns the listener so the caller can close it.</p>
+</div></div></div>
     </div></div>
 </section>
 <section class="section"  id="archon-boot&#x2F;http_ts_type-aliases"><div>
@@ -158,11 +160,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_listen" cla
 Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_handler" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;.&#x2F;archon-boot&#x2F;http.ts&#x2F;~&#x2F;Handler.html" title="Handler">
-			    <span>Handler</span><span> = (<div class="ml-4"><div><span>req<span>: <span class="td-ref">Request</span></span></span>,</div><div><span>from<span>: <span class="td-kw">string</span></span></span></div></div>) =&gt; <span class="td-ref">Promise</span>&lt;<span class="td-ref">Response</span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A small HTTP/1.1 server for archon-boot (spec 004). Deno.serve sends header
-names in lowercase, which HTTP allows, but GRUB's HTTP client compares
-&quot;Content-Length: &quot; case-sensitively and then reads every file as empty.
-This transport writes canonical header names, keeps connections alive
-(GRUB sends HEAD then GET on one connection), and streams bodies.</p>
+			    <span>Handler</span><span> = (<div class="ml-4"><div><span>req<span>: <span class="td-ref">Request</span></span></span>,</div><div><span>from<span>: <span class="td-kw">string</span></span></span></div></div>) =&gt; <span class="td-ref">Promise</span>&lt;<span class="td-ref">Response</span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Answers one request; <code>from</code> is the client's address.</p>
 </div></div></div>
     </div></div>
 </section>
@@ -237,7 +235,7 @@ This transport writes canonical header names, keeps connections alive
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1135 symbols</span><svg
+              <span class="leading-none">view all 1145 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

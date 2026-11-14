@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/s3/s3.ts - Stolos v0.31.0 documentation</title>
+  <title>archon/s3/s3.ts - Stolos v0.32.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.32.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -155,7 +155,8 @@ by you. --write puts an AWS profile s3-&lt;host&gt; in ~/.aws/credentials and
     </div><div id="namespace_s3name" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;s3&#x2F;s3.ts&#x2F;~&#x2F;s3Name.html" title="s3Name">
-			    <span>s3Name</span><span>(<div class="ml-4"><div><span>fleet<span>: <span class="td-ref">FleetDef</span></span></span>,</div><div><span>host<span>: <span class="td-ref">HostDef</span></span></span></div></div>)</span></a></div>
+			    <span>s3Name</span><span>(<div class="ml-4"><div><span>fleet<span>: <span class="td-ref">FleetDef</span></span></span>,</div><div><span>host<span>: <span class="td-ref">HostDef</span></span></span></div></div>)<span>: { api<span>: <span class="td-kw">string</span></span>; console<span>: <span class="td-kw">string</span></span>;  }</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The S3 API and console host names: s3.&lt;fqdn&gt; and s3-console.&lt;fqdn&gt;, else under the host name.</p>
+</div></div></div>
     </div><div id="namespace_s3policy" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;s3&#x2F;s3.ts&#x2F;~&#x2F;s3Policy.html" title="s3Policy">
@@ -202,13 +203,17 @@ never printed, logged, or journaled; only that it changed.</p>
 Variables</h2></div><div class="namespaceSection"><div id="namespace_s3_paths" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;s3&#x2F;s3.ts&#x2F;~&#x2F;S3_PATHS.html" title="S3_PATHS">
-			    <span>S3_PATHS</span><span>: { dir; rcEnv; keys<span>: <span class="td-kw">string</span></span>; admin<span>: <span class="td-kw">string</span></span>; alias<span>: <span class="td-kw">string</span></span>;  }</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>S3_PATHS</span><span>: { dir; rcEnv; keys<span>: <span class="td-kw">string</span></span>; admin<span>: <span class="td-kw">string</span></span>; alias<span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where S3's credentials live, and the names Archon uses with it.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;s3&#x2F;s3.ts&#x2F;~&#x2F;S3_PATHS.html#property_admin">
-                  <span>admin</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>admin</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The admin's access key (user name).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;s3&#x2F;s3.ts&#x2F;~&#x2F;S3_PATHS.html#property_alias">
-                  <span>alias</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>alias</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>rc's alias for the local server.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;s3&#x2F;s3.ts&#x2F;~&#x2F;S3_PATHS.html#property_dir">
-                  <span>dir</span></a></li><li>
+                  <span>dir</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The directory holding the admin credentials (0700).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;s3&#x2F;s3.ts&#x2F;~&#x2F;S3_PATHS.html#property_keys">
                   <span>keys</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Each account's own secret, 0400 (P.keys: anyone may pass, nobody may list).</p>
 </div></div></li><li>
@@ -288,7 +293,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_s3_paths" c
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1135 symbols</span><svg
+              <span class="leading-none">view all 1145 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

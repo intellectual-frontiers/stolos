@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>serveTftp - archon-boot/tftp.ts - Stolos v0.31.0 documentation</title>
+  <title>serveTftp - archon-boot/tftp.ts - Stolos v0.32.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon-boot&#x2F;tftp.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.32.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -166,7 +166,10 @@
 </svg>
 </a>
 <span class="font-bold">serveTftp</span><span class="font-medium">(<span><span>o<span>: <a href="../../.././archon-boot/tftp.ts/~/TftpOptions.html" class="link td-ref">TftpOptions</a></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;{ close<span>: () =&gt; <span class="td-kw">void</span></span>;  }&gt;</span> </span>
-      </code><div class="space-y-7" id=""><section class="section"  id="parameters"><div>
+      </code><div class="space-y-7" id=""><div class="markdown"><p>Serve TFTP reads on <code>o.port</code> (all IPv4 addresses). Resolves once bound, with
+a <code>close</code> to stop it; rejects with a plain explanation when the port is in
+use or needs privileges.</p>
+</div><section class="section"  id="parameters"><div>
       <h2 class="anchorable mb-1"><a href="#parameters" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
   height="16"

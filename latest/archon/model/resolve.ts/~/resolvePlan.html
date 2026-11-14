@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>resolvePlan - archon/model/resolve.ts - Stolos v0.31.0 documentation</title>
+  <title>resolvePlan - archon/model/resolve.ts - Stolos v0.32.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;model&#x2F;resolve.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.32.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -166,7 +166,10 @@
 </svg>
 </a>
 <span class="font-bold">resolvePlan</span><span class="font-medium">(<div class="ml-4"><div><span>host<span>: <a href="../../../.././archon/model/types.ts/~/HostDef.html" class="link td-ref">HostDef</a></span></span>,</div><div><span>fleet<span>: <a href="../../../.././archon/model/types.ts/~/FleetDef.html" class="link td-ref">FleetDef</a></span></span></div></div>)<span>: <a href="../../../.././archon/model/types.ts/~/HostPlan.html" class="link td-ref">HostPlan</a></span> </span>
-      </code><div class="space-y-7" id=""><section class="section"  id="parameters"><div>
+      </code><div class="space-y-7" id=""><div class="markdown"><p>A host's plan: its users, then every capability's packages, units, files,
+ports, tools, apt repositories, checks, routes and notes merged, then the
+derived files. Throws on conflicting definitions of the same item.</p>
+</div><section class="section"  id="parameters"><div>
       <h2 class="anchorable mb-1"><a href="#parameters" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
   height="16"

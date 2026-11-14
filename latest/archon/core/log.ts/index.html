@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/core/log.ts - Stolos v0.31.0 documentation</title>
+  <title>archon/core/log.ts - Stolos v0.32.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.32.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -129,7 +129,8 @@ that mention &quot;disruptive&quot; are collected into the single Deferred line.
 Functions</h2></div><div class="namespaceSection"><div id="namespace_journal" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;log.ts&#x2F;~&#x2F;journal.html" title="journal">
-			    <span>journal</span><span>(<div class="ml-4"><div><span>tag<span>: <span class="td-kw">string</span></span></span>,</div><div><span>message<span>: <span class="td-kw">string</span></span></span>,</div><div><span>priority<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">void</span>&gt;</span></span></a></div>
+			    <span>journal</span><span>(<div class="ml-4"><div><span>tag<span>: <span class="td-kw">string</span></span></span>,</div><div><span>message<span>: <span class="td-kw">string</span></span></span>,</div><div><span>priority<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">void</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Write <code>message</code> to the systemd journal with logger(1), tagged <code>tag</code> at syslog <code>priority</code>.</p>
+</div></div></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;core&#x2F;log_ts_variables"><div>
@@ -158,7 +159,10 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_journal" cl
 Variables</h2></div><div class="namespaceSection"><div id="namespace_log" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;log.ts&#x2F;~&#x2F;log.html" title="log">
-			    <span>log</span><span>: { info<span>: (<span><span>msg<span>: <span class="td-kw">string</span></span></span></span>) =&gt; <span class="td-kw">unknown</span></span>; step<span>: (<span><span>msg<span>: <span class="td-kw">string</span></span></span></span>) =&gt; <span class="td-kw">unknown</span></span>; ok<span>: (<span><span>msg<span>: <span class="td-kw">string</span></span></span></span>) =&gt; <span class="td-kw">unknown</span></span>; change<span>: (<span><span>msg<span>: <span class="td-kw">string</span></span></span></span>) =&gt; <span class="td-kw">unknown</span></span>; skip<span>: (<span><span>msg<span>: <span class="td-kw">string</span></span></span></span>) =&gt; <span class="td-kw">unknown</span></span>; warn<span>: (<div class="ml-4"><div><span>msg<span>: <span class="td-kw">string</span></span></span>,</div><div><span>fix<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>) =&gt; <span class="td-kw">unknown</span></span>; error<span>: (<div class="ml-4"><div><span>msg<span>: <span class="td-kw">string</span></span></span>,</div><div><span>fix<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>) =&gt; <span class="td-kw">unknown</span></span>;  }</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>log</span><span>: { info<span>: (<span><span>msg<span>: <span class="td-kw">string</span></span></span></span>) =&gt; <span class="td-kw">unknown</span></span>; step<span>: (<span><span>msg<span>: <span class="td-kw">string</span></span></span></span>) =&gt; <span class="td-kw">unknown</span></span>; ok<span>: (<span><span>msg<span>: <span class="td-kw">string</span></span></span></span>) =&gt; <span class="td-kw">unknown</span></span>; change<span>: (<span><span>msg<span>: <span class="td-kw">string</span></span></span></span>) =&gt; <span class="td-kw">unknown</span></span>; skip<span>: (<span><span>msg<span>: <span class="td-kw">string</span></span></span></span>) =&gt; <span class="td-kw">unknown</span></span>; warn<span>: (<div class="ml-4"><div><span>msg<span>: <span class="td-kw">string</span></span></span>,</div><div><span>fix<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>) =&gt; <span class="td-kw">unknown</span></span>; error<span>: (<div class="ml-4"><div><span>msg<span>: <span class="td-kw">string</span></span></span>,</div><div><span>fix<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>) =&gt; <span class="td-kw">unknown</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The logger the engine uses: <code>step</code> starts a phase, <code>info</code> notes, <code>ok</code>,
+<code>change</code> and <code>skip</code> are counted, <code>warn</code> and <code>error</code> (with an optional fix)
+are always shown. A skip that mentions &quot;disruptive&quot; becomes a deferral.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;log.ts&#x2F;~&#x2F;log.html#property_change">
                   <span>change</span><span>: (<span><span>msg<span>: <span class="td-kw">string</span></span></span></span>) =&gt; <span class="td-kw">unknown</span></span></a></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;log.ts&#x2F;~&#x2F;log.html#property_error">
@@ -246,7 +250,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_log" class=
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1135 symbols</span><svg
+              <span class="leading-none">view all 1145 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

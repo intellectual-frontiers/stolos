@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/observe/fleet-query.ts - Stolos v0.31.0 documentation</title>
+  <title>archon/observe/fleet-query.ts - Stolos v0.32.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.32.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -126,7 +126,10 @@ each server's MCP server over SSH (the server limits what it answers).</p>
 Functions</h2></div><div class="namespaceSection"><div id="namespace_fleetquery" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;observe&#x2F;fleet-query.ts&#x2F;~&#x2F;fleetQuery.html" title="fleetQuery">
-			    <span>fleetQuery</span><span>(<div class="ml-4"><div><span>sql<span>: <span class="td-kw">string</span></span></span>,</div><div><span>json<span>: <span class="td-kw">boolean</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a></div>
+			    <span>fleetQuery</span><span>(<div class="ml-4"><div><span>sql<span>: <span class="td-kw">string</span></span></span>,</div><div><span>json<span>: <span class="td-kw">boolean</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Ask every server <code>sql</code> (refused unless it is a read-only query) and print
+the rows, each with its host, as a table or, with <code>json</code>, as JSON with the
+unreachable servers. Returns 1 when any server did not answer, else 0.</p>
+</div></div></div>
     </div></div>
 </section>
 </div>
@@ -200,7 +203,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_fleetquery"
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1135 symbols</span><svg
+              <span class="leading-none">view all 1145 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

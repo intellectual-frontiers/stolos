@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/install/workstation.ts - Stolos v0.31.0 documentation</title>
+  <title>archon/install/workstation.ts - Stolos v0.32.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.32.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -129,11 +129,16 @@ archon command, Ubuntu's daily updates (archon update --no-pull).</p>
 Functions</h2></div><div class="namespaceSection"><div id="namespace_workstationadd" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;workstation.ts&#x2F;~&#x2F;workstationAdd.html" title="workstationAdd">
-			    <span>workstationAdd</span><span>(<span><span>o<span>: { name<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; user<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; force<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>;  }</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a></div>
+			    <span>workstationAdd</span><span>(<span><span>o<span>: { name<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; user<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; force<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>;  }</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon workstation add</code>: checks this machine (Linux, not root, the fleet's
+Ubuntu release, systemd, the /srv/archon checkout), writes the host model
+(kept unless <code>force</code>), then runs archon update through sudo. Returns the
+exit code: 1 when a check fails, else update's.</p>
+</div></div></div>
     </div><div id="namespace_workstationsource" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;install&#x2F;workstation.ts&#x2F;~&#x2F;workstationSource.html" title="workstationSource">
-			    <span>workstationSource</span><span>(<span><span>o<span>: { name<span>: <span class="td-kw">string</span></span>; user<span>: <span class="td-kw">string</span></span>; desktop<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>;  }</span></span></span>)<span>: <span class="td-kw">string</span></span></span></a></div>
+			    <span>workstationSource</span><span>(<span><span>o<span>: { name<span>: <span class="td-kw">string</span></span>; user<span>: <span class="td-kw">string</span></span>; desktop<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>;  }</span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The TypeScript source of a new workstation's host.ts (kind &quot;workstation&quot;).</p>
+</div></div></div>
     </div></div>
 </section>
 </div>
@@ -207,7 +212,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_workstation
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1135 symbols</span><svg
+              <span class="leading-none">view all 1145 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

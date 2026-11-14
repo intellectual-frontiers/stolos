@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>workstationAdd - archon/install/workstation.ts - Stolos v0.31.0 documentation</title>
+  <title>workstationAdd - archon/install/workstation.ts - Stolos v0.32.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;install&#x2F;workstation.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.32.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -166,7 +166,11 @@
 </svg>
 </a>
 <span class="font-bold">workstationAdd</span><span class="font-medium">(<span><span>o<span>: { name<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; user<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; force<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>;  }</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span> </span>
-      </code><div class="space-y-7" id=""><section class="section"  id="parameters"><div>
+      </code><div class="space-y-7" id=""><div class="markdown"><p><code>archon workstation add</code>: checks this machine (Linux, not root, the fleet's
+Ubuntu release, systemd, the /srv/archon checkout), writes the host model
+(kept unless <code>force</code>), then runs archon update through sudo. Returns the
+exit code: 1 when a check fails, else update's.</p>
+</div><section class="section"  id="parameters"><div>
       <h2 class="anchorable mb-1"><a href="#parameters" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
   height="16"

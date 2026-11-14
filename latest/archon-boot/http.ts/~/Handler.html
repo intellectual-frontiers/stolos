@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Handler - archon-boot/http.ts - Stolos v0.31.0 documentation</title>
+  <title>Handler - archon-boot/http.ts - Stolos v0.32.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon-boot&#x2F;http.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.32.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -142,11 +142,7 @@
   />
 </svg>
 </a>
-</div><div><div class="space-y-7" id=""><div class="markdown"><p>A small HTTP/1.1 server for archon-boot (spec 004). Deno.serve sends header
-names in lowercase, which HTTP allows, but GRUB's HTTP client compares
-&quot;Content-Length: &quot; case-sensitively and then reads every file as empty.
-This transport writes canonical header names, keeps connections alive
-(GRUB sends HEAD then GET on one connection), and streams bodies.</p>
+</div><div><div class="space-y-7" id=""><div class="markdown"><p>Answers one request; <code>from</code> is the client's address.</p>
 </div><section class="section"  id="definition"><div>
       <h2 class="anchorable mb-1"><a href="#definition" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"

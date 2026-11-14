@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/observe/discover.ts - Stolos v0.31.0 documentation</title>
+  <title>archon/observe/discover.ts - Stolos v0.32.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.31.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.32.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -137,7 +137,9 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_acceptsotlp
     </div><div id="namespace_candidates" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;observe&#x2F;discover.ts&#x2F;~&#x2F;candidates.html" title="candidates">
-			    <span>candidates</span><span>(<div class="ml-4"><div><span>fleet<span>: <span class="td-ref">FleetDef</span></span></span>,</div><div><span>host<span>: <span class="td-ref">HostDef</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">Found</span>[]&gt;</span></span></a></div>
+			    <span>candidates</span><span>(<div class="ml-4"><div><span>fleet<span>: <span class="td-ref">FleetDef</span></span></span>,</div><div><span>host<span>: <span class="td-ref">HostDef</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">Found</span>[]&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The collectors to try, in order: the web UI on this server when opted in,
+the model's collector, the DNS name when it resolves, then the boot server.</p>
+</div></div></div>
     </div><div id="namespace_centralconfig" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;observe&#x2F;discover.ts&#x2F;~&#x2F;centralConfig.html" title="centralConfig">
@@ -146,7 +148,11 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_acceptsotlp
     </div><div id="namespace_discover" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;observe&#x2F;discover.ts&#x2F;~&#x2F;discover.html" title="discover">
-			    <span>discover</span><span>(<div class="ml-4"><div><span>host<span>: <span class="td-ref">HostDef</span></span></span>,</div><div><span>check<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a></div>
+			    <span>discover</span><span>(<div class="ml-4"><div><span>host<span>: <span class="td-ref">HostDef</span></span></span>,</div><div><span>check<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>archon observe discover</code>: try each candidate, write the forwarding config
+for the first that answers (or <code>{}</code> for none) and restart the Collector when
+it changed, then record the result. With <code>check</code>, only report what would
+change. Returns 0.</p>
+</div></div></div>
     </div><div id="namespace_lastdiscovery" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;observe&#x2F;discover.ts&#x2F;~&#x2F;lastDiscovery.html" title="lastDiscovery">
@@ -180,11 +186,15 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_acceptsotlp
 Interfaces</h2></div><div class="namespaceSection"><div id="namespace_found" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;observe&#x2F;discover.ts&#x2F;~&#x2F;Found.html" title="Found">
-			    <span>Found</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>Found</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A collector candidate: where it is and how it was found.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;observe&#x2F;discover.ts&#x2F;~&#x2F;Found.html#property_endpoint">
-                  <span>endpoint</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                  <span>endpoint</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its OTLP/HTTP base URL (for example <code>http://otel.localdomain:4318</code>).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;observe&#x2F;discover.ts&#x2F;~&#x2F;Found.html#property_source">
-                  <span>source</span><span>: <span><span class="td-str">"local-ui"</span><span class="td-op"> | </span><span class="td-str">"model"</span><span class="td-op"> | </span><span class="td-str">"dns"</span><span class="td-op"> | </span><span class="td-str">"boot"</span></span></span></a></li></ul></div>
+                  <span>source</span><span>: <span><span class="td-str">"local-ui"</span><span class="td-op"> | </span><span class="td-str">"model"</span><span class="td-op"> | </span><span class="td-str">"dns"</span><span class="td-op"> | </span><span class="td-str">"boot"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How it was found: the telemetry web UI on this server (spec 050), the
+fleet model's address, the DNS name, or the boot PC's boot server (spec 049).</p>
+</div></div></li></ul></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;observe&#x2F;discover_ts_variables"><div>
@@ -213,11 +223,14 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_found" cla
 Variables</h2></div><div class="namespaceSection"><div id="namespace_central" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;observe&#x2F;discover.ts&#x2F;~&#x2F;CENTRAL.html" title="CENTRAL">
-			    <span>CENTRAL</span><span>: { config; status<span>: <span class="td-kw">string</span></span>;  }</span></a><ul class="namespaceItemContentSubItems"><li>
+			    <span>CENTRAL</span><span>: { config; status<span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where discovery writes its result.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;observe&#x2F;discover.ts&#x2F;~&#x2F;CENTRAL.html#property_config">
-                  <span>config</span></a></li><li>
+                  <span>config</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The second Collector config file: the forwarding to the central collector, or <code>{}</code>.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;observe&#x2F;discover.ts&#x2F;~&#x2F;CENTRAL.html#property_status">
-                  <span>status</span><span>: <span class="td-kw">string</span></span></a></li></ul></div>
+                  <span>status</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>JSON: the endpoint and source last found (null when none) and when it was checked.</p>
+</div></div></li></ul></div>
     </div><div id="namespace_default_collector_name" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;observe&#x2F;discover.ts&#x2F;~&#x2F;DEFAULT_COLLECTOR_NAME.html" title="DEFAULT_COLLECTOR_NAME">
@@ -296,7 +309,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_central" cl
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1135 symbols</span><svg
+              <span class="leading-none">view all 1145 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
