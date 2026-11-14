@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/identity/keys-commands.ts - Stolos v0.60.0 documentation</title>
+  <title>archon/identity/keys-commands.ts - Stolos v0.61.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.60.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.61.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -258,6 +258,14 @@ it again continues an interrupted change, or does nothing.</p>
 run by <code>archon update</code> after every pull): Git's allowed signers from the
 current signers.ts, and the pre-push check. Returns what it changed.</p>
 </div></div></div>
+    </div><div id="namespace_signingblockers" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;identity&#x2F;keys-commands.ts&#x2F;~&#x2F;signingBlockers.html" title="signingBlockers">
+			    <span>signingBlockers</span><span>(<span><span>repo<span class="td-op">?</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">ReturnType</span>&lt;<span class="td-ref">keyChecks</span>&gt;&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What stops a signed commit (git commit -S) in <code>repo</code> right now, as checks:
+OpenSSH, Git set to sign with an SSH key that exists, and Git's identity.
+Empty: a commit can be made and signed. A fresh clone fails here until
+<code>vault restore</code> or <code>keys setup</code> ran in it.</p>
+</div></div></div>
     </div></div>
 </section>
 </div>
@@ -331,7 +339,7 @@ current signers.ts, and the pre-push check. Returns what it changed.</p>
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1222 symbols</span><svg
+              <span class="leading-none">view all 1224 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -346,7 +354,7 @@ current signers.ts, and the pre-push check. Returns what it changed.</p>
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/identity/keys-commands_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_approvalsteps" title="approvalSteps">approvalSteps</a></li><li><a href="#namespace_keychecksnow" title="keyChecksNow">keyChecksNow</a></li><li><a href="#namespace_keyscheckpush" title="keysCheckPush">keysCheckPush</a></li><li><a href="#namespace_keyscheckrecovery" title="keysCheckRecovery">keysCheckRecovery</a></li><li><a href="#namespace_keyslost" title="keysLost">keysLost</a></li><li><a href="#namespace_keysrotate" title="keysRotate">keysRotate</a></li><li><a href="#namespace_keysrotaterecovery" title="keysRotateRecovery">keysRotateRecovery</a></li><li><a href="#namespace_keyssetup" title="keysSetup">keysSetup</a></li><li><a href="#namespace_keysstatus" title="keysStatus">keysStatus</a></li><li><a href="#namespace_repairkeys" title="repairKeys">repairKeys</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/identity/keys-commands_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_approvalsteps" title="approvalSteps">approvalSteps</a></li><li><a href="#namespace_keychecksnow" title="keyChecksNow">keyChecksNow</a></li><li><a href="#namespace_keyscheckpush" title="keysCheckPush">keysCheckPush</a></li><li><a href="#namespace_keyscheckrecovery" title="keysCheckRecovery">keysCheckRecovery</a></li><li><a href="#namespace_keyslost" title="keysLost">keysLost</a></li><li><a href="#namespace_keysrotate" title="keysRotate">keysRotate</a></li><li><a href="#namespace_keysrotaterecovery" title="keysRotateRecovery">keysRotateRecovery</a></li><li><a href="#namespace_keyssetup" title="keysSetup">keysSetup</a></li><li><a href="#namespace_keysstatus" title="keysStatus">keysStatus</a></li><li><a href="#namespace_repairkeys" title="repairKeys">repairKeys</a></li><li><a href="#namespace_signingblockers" title="signingBlockers">signingBlockers</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>

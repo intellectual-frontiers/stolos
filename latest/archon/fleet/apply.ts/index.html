@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/fleet/apply.ts - Stolos v0.60.0 documentation</title>
+  <title>archon/fleet/apply.ts - Stolos v0.61.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.60.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.61.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -181,6 +181,13 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_describecha
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;apply.ts&#x2F;~&#x2F;fleetApply.html" title="fleetApply">
 			    <span>fleetApply</span><span>(<span><span>o<span class="td-op">?</span><span>: <span class="td-ref">FleetApplyOptions</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos apply</code>: check, catch up, build, commit (signed), verify, push.</p>
 </div></div></div>
+    </div><div id="namespace_unapproved" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;apply.ts&#x2F;~&#x2F;unapproved.html" title="unapproved">
+			    <span>unapproved</span><span>(<div class="ml-4"><div><span>git<span>: (<span><span>args<span>: <span class="td-kw">string</span>[]</span></span></span>) =&gt; <span class="td-ref">Promise</span>&lt;{ ok<span>: <span class="td-kw">boolean</span></span>; stdout<span>: <span class="td-kw">string</span></span>; stderr<span>: <span class="td-kw">string</span></span>;  }&gt;</span></span>,</div><div><span>repo<span class="td-op">?</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">string</span>[]&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The commits at the top of this checkout that are not signed by one of the
+fleet's signers (as servers check it), newest first, as &quot;sha subject (author)&quot;;
+empty when the newest commit is signed by one, or the fleet lists no signer.</p>
+</div></div></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;fleet&#x2F;apply_ts_interfaces"><div>
@@ -290,7 +297,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_fleetapply
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1222 symbols</span><svg
+              <span class="leading-none">view all 1224 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -305,7 +312,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_fleetapply
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/fleet/apply_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_describechanges" title="describeChanges">describeChanges</a></li><li><a href="#namespace_fleetapply" title="fleetApply">fleetApply</a></li></ul></li><li><a href="#archon/fleet/apply_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_fleetapplyoptions" title="FleetApplyOptions">FleetApplyOptions</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/fleet/apply_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_describechanges" title="describeChanges">describeChanges</a></li><li><a href="#namespace_fleetapply" title="fleetApply">fleetApply</a></li><li><a href="#namespace_unapproved" title="unapproved">unapproved</a></li></ul></li><li><a href="#archon/fleet/apply_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_fleetapplyoptions" title="FleetApplyOptions">FleetApplyOptions</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>
