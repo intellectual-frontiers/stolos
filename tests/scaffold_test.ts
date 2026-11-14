@@ -16,6 +16,11 @@ Deno.test("the scaffolded deno.json is a pin fleet upgrade can read, and runs fr
     f["stolos.ts"].includes("@stolos/stolos/main.ts") && f["archon.ts"].includes("archon/main.ts"),
   );
   assertEquals(f["engine.ts"], ENGINE_ENTRY_TEXT);
+  // VS Code: Deno checks and formats on save; Deno is the suggested extension.
+  const vs = JSON.parse(f[".vscode/settings.json"]);
+  assert(vs["deno.enable"] && vs["editor.formatOnSave"]);
+  assertEquals(vs["[markdown]"]["editor.defaultFormatter"], "denoland.vscode-deno");
+  assert(JSON.parse(f[".vscode/extensions.json"]).recommendations.includes("denoland.vscode-deno"));
 });
 
 Deno.test("scaffolding writes only missing files", async () => {
