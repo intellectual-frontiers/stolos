@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>reinstall - archon-boot/reinstall.ts - Stolos v0.36.0 documentation</title>
+  <title>reinstall - archon-boot/reinstall.ts - Stolos v0.37.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon-boot&#x2F;reinstall.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.36.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.37.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -165,11 +165,11 @@
   </defs>
 </svg>
 </a>
-<span class="font-bold">reinstall</span><span class="font-medium">(<div class="ml-4"><div><span>name<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span>,</div><div><span>o<span>: { force<span>: <span class="td-kw">boolean</span></span>; port<span>: <span class="td-kw">number</span></span>; confirmDestroy<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span> </span>
+<span class="font-bold">reinstall</span><span class="font-medium">(<div class="ml-4"><div><span>name<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span>,</div><div><span>o<span>: { port<span>: <span class="td-kw">number</span></span>; confirmDestroy<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span> </span>
       </code><div class="space-y-7" id=""><div class="markdown"><p><code>deno task boot reinstall &lt;host&gt;</code>: re-install a running host over the
 network in the steps the module describes. <code>port</code> is the boot server's HTTP
-port and <code>confirmDestroy</code> is the repeated name a durable host needs. <code>force</code>
-(--force) is accepted but not read here. Returns the exit code (2 for an
+port and <code>confirmDestroy</code> is the repeated name a durable host needs. A host
+that cannot be asked needs it too. Returns the exit code (2 for an
 unknown host).</p>
 </div><section class="section"  id="parameters"><div>
       <h2 class="anchorable mb-1"><a href="#parameters" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
@@ -272,7 +272,7 @@ Parameters</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   </defs>
 </svg>
 </a>
-<span class="font-bold font-lg">o</span><span class="font-medium text-stone-500 dark:text-stone-200"><span>: { force<span>: <span class="td-kw">boolean</span></span>; port<span>: <span class="td-kw">number</span></span>; confirmDestroy<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></span>
+<span class="font-bold font-lg">o</span><span class="font-medium text-stone-500 dark:text-stone-200"><span>: { port<span>: <span class="td-kw">number</span></span>; confirmDestroy<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></span>
       </code>
     </div><a
   class="sourceButton"
