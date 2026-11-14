@@ -261,14 +261,14 @@ export function approvalSteps(
   wsl = onWsl(),
 ): string[] {
   const where = wsl
-    ? "in Windows: open PowerShell, cd C:\\fleet (your fleet folder), git pull, then run:"
-    : "on a PC whose key is already listed, in the fleet repository, after git pull, run:";
+    ? "in Windows: open PowerShell, cd C:\\fleet (your fleet folder), deno task archon update, then run:"
+    : "on a PC whose key is already listed, in the fleet repository, after deno task archon update, run:";
   const sep = wsl ? ";" : " &&";
   return [
     `approve this PC's key ${where}`,
     `    deno task archon signers add ${name} --role daily --key "${pub}"`,
     `    git add -A${sep} git commit -m "${fleetId}: signers: add ${name}"${sep} git push`,
-    `then back here: git checkout -- ${rel} && git pull && deno task archon keys`,
+    `then back here: git checkout -- ${rel} && deno task archon update`,
   ];
 }
 
@@ -467,6 +467,23 @@ export async function keysSetup(o: { test?: boolean } = {}): Promise<number> {
   }
   if (changed) ui.next.push("back up (your daily key is in it): deno task boot vault backup");
   return end();
+}
+
+/**
+ * The parts of `keys setup` that need no passphrase and make no key (spec 058:
+ * run by `archon update` after every pull): Git's allowed signers from the
+ * current signers.ts, and the pre-push check. Returns what it changed.
+ */
+export async function repairKeys(): Promise<string[]> {
+  const paths = keyPaths((await git(["config", "--get", "user.signingkey"])).stdout.trim());
+  const out: string[] = [];
+  if (await renderAllowed(paths.allowedSigners)) out.push("Git's allowed signers updated");
+  if (await setLocal("gpg.ssh.allowedSignersFile", paths.allowedSigners)) {
+    out.push("Git reads them (gpg.ssh.allowedSignersFile)");
+  }
+  const hook = await installHook(paths.hook);
+  if (hook === "written") out.push("the pre-push check installed");
+  return out;
 }
 
 // ---------------------------------------------------------- check-recovery

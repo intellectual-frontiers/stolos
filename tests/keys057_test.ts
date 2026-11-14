@@ -215,7 +215,10 @@ Deno.test("057: a second PC's key: setup prints the exact command that approves 
     const pub = (await Deno.readTextFile(s.daily + ".pub")).trim().split(" ").slice(0, 2).join(" ");
     assertStringIncludes(r.out, "must be approved by a key already listed");
     assertStringIncludes(r.out, `--role daily --key "${pub}"`);
-    assertStringIncludes(r.out, "git checkout -- fleets/demo/signers.ts && git pull");
+    assertStringIncludes(
+      r.out,
+      "git checkout -- fleets/demo/signers.ts && deno task archon update",
+    );
     // Running it again still shows the commands (the approval is still missing).
     const again = await s.archon(["keys", "setup"]);
     assertStringIncludes(again.out, `--key "${pub}"`);

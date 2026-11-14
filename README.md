@@ -297,7 +297,8 @@ typed by a person).
 Open a terminal in your fleet repository (on Windows: PowerShell, `cd C:\fleet`), then:
 
 ```sh
-git pull                          # what others (or you, elsewhere) changed
+deno task archon update           # instead of git pull: pulls, checks signatures, moves to a newer
+                                  # engine release, repairs keys, and runs the doctor
 deno task archon                  # where you are, and the one command to run next
 deno task archon fleet status     # every server, how it is
 ```
@@ -334,7 +335,6 @@ within 15 minutes.
 5. Save what the machine reported about itself (its MAC address), signed:
 
    ```sh
-   git pull
    git add -A && git commit -m "my-fleet: server-hostname installed" && git push
    ```
 
@@ -484,12 +484,9 @@ it on a new PC.
 <details>
 <summary><b>Adopt a newer engine</b></summary>
 
-```sh
-deno task archon fleet upgrade v<version>
-git push
-```
-
-It checks the new version against your fleet first; your servers pick it up within 15 minutes.
+`deno task archon update` does it when a newer release is out: it checks the new version against
+your fleet, makes one signed commit, and tells you to `git push`; your servers pick it up within 15
+minutes. To choose a version yourself: `deno task archon fleet upgrade v<version>`, then `git push`.
 
 </details>
 

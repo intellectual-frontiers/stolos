@@ -169,6 +169,7 @@ import "./tools/keys/github-cli.ts";
 import "./tools/keys/microsoft.ts";
 import "./tools/keys/osquery.ts";
 import "./tools/sync.ts";
+import "./update/operator.ts";
 import "./update/update.ts";
 import "./vault/commands.ts";
 import "./vault/panel.ts";

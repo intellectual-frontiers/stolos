@@ -2002,10 +2002,11 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "update",
-    summary: "Bring this host up to date with GitHub",
+    summary: "Bring this machine up to date with GitHub (use it instead of git pull)",
     description:
-      `Pulls the repository (as its owner), then with the freshly pulled code validates the model, applies, syncs tools, applies dotfiles again when tools changed, and verifies (spec 015). An invalid model stops before anything is applied (Article 10). With --check, shows incoming commits and the plan.`,
+      `On your PC (the boot machine, or any checkout of the fleet repository), instead of git pull (spec 058): fetches and fast-forwards a clean checkout (never a merge); checks that what arrived is signed by a key the fleet trusted (as servers will); upgrades the pinned engine when a newer Stolos release is out (fleet upgrade: one signed commit you push; --no-upgrade only reports); repairs Git's allowed signers and the pre-push check; then runs boot doctor (on a boot machine) or archon keys. On an installed host: pulls the repository (as its owner), then with the freshly pulled code validates the model, applies, syncs tools, applies dotfiles again when tools changed, and verifies (spec 015); an invalid model stops before anything is applied (Article 10); --check shows incoming commits and the plan. Every step is safe to run again.`,
     tier: "mutate",
+    hostOnlyTier: true,
     operation: true,
     readOnlyWith: "check",
     args: [
@@ -2016,8 +2017,23 @@ export const COMMANDS: Command[] = [
       },
       { name: "no-tools", type: "boolean", description: "Skip the tools sync." },
       { name: "no-pull", type: "boolean", description: "Use the local checkout as it is." },
+      {
+        name: "no-upgrade",
+        type: "boolean",
+        description: "On your PC: report a newer engine release, without upgrading.",
+      },
+      {
+        name: "no-doctor",
+        type: "boolean",
+        description: "On your PC: skip the doctor at the end.",
+      },
     ],
     async run(a, ctx) {
+      const { installedHost } = await import("../core/registry-types.ts");
+      if (!installedHost()) {
+        const { operatorUpdate } = await import("../update/operator.ts");
+        return await operatorUpdate({ noUpgrade: !!a["no-upgrade"], noDoctor: !!a["no-doctor"] });
+      }
       const { update } = await import("../update/update.ts");
       const steps = await update(await requireHost(ctx.hostName), {
         check: !!a.check,
