@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/fleet/scaffold.ts - Stolos v0.55.0 documentation</title>
+  <title>archon/fleet/scaffold.ts - Stolos v0.57.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.55.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.57.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -139,7 +139,7 @@ the engine's types) would otherwise never be fetched. Returns why not, if not.</
     </div><div id="namespace_scaffoldfiles" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;scaffold.ts&#x2F;~&#x2F;scaffoldFiles.html" title="scaffoldFiles">
-			    <span>scaffoldFiles</span><span>(<div class="ml-4"><div><span>tag<span>: <span class="td-kw">string</span></span></span>,</div><div><span>base<span class="td-op">?</span></span></div></div>)<span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The files of a fleet repository, by path relative to its root.</p>
+			    <span>scaffoldFiles</span><span>(<div class="ml-4"><div><span>tag<span>: <span class="td-kw">string</span></span></span>,</div><div><span>base<span class="td-op">?</span></span>,</div><div><span>slug<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The files of a fleet repository, by path relative to its root; <code>slug</code> is its GitHub owner/name.</p>
 </div></div></div>
     </div><div id="namespace_scaffoldrepository" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -186,6 +186,14 @@ await run();
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;scaffold.ts&#x2F;~&#x2F;ENGINE_BASE.html" title="ENGINE_BASE">
 			    <span>ENGINE_BASE</span><span>: <span class="td-str">"https://raw.githubusercontent.com/intellectual-frontiers/stolos/"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where released engines are served from; the tag is appended.</p>
+</div></div></div>
+    </div><div id="namespace_gitattributes_text" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;scaffold.ts&#x2F;~&#x2F;GITATTRIBUTES_TEXT.html" title="GITATTRIBUTES_TEXT">
+			    <span>GITATTRIBUTES_TEXT</span><span>: <span class="td-str">`# Written by stolos (spec 062): shell scripts keep LF on every system.
+*.sh text eol=lf
+`</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Line endings Git keeps whatever the PC (spec 062): a shell script with
+Windows line endings does not run on Linux or macOS.</p>
 </div></div></div>
     </div><div id="namespace_gitignore_text" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
@@ -292,7 +300,7 @@ JSON, Markdown, YAML, CSS, HTML), with the fleet's deno.json settings.</p>
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1212 symbols</span><svg
+              <span class="leading-none">view all 1220 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -307,7 +315,7 @@ JSON, Markdown, YAML, CSS, HTML), with the fleet's deno.json settings.</p>
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/fleet/scaffold_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_cacheengine" title="cacheEngine">cacheEngine</a></li><li><a href="#namespace_denojsontext" title="denoJsonText">denoJsonText</a></li><li><a href="#namespace_scaffoldfiles" title="scaffoldFiles">scaffoldFiles</a></li><li><a href="#namespace_scaffoldrepository" title="scaffoldRepository">scaffoldRepository</a></li></ul></li><li><a href="#archon/fleet/scaffold_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_archon_entry_text" title="ARCHON_ENTRY_TEXT">ARCHON_ENTRY_TEXT</a></li><li><a href="#namespace_engine_base" title="ENGINE_BASE">ENGINE_BASE</a></li><li><a href="#namespace_gitignore_text" title="GITIGNORE_TEXT">GITIGNORE_TEXT</a></li><li><a href="#namespace_stolos_entry_text" title="STOLOS_ENTRY_TEXT">STOLOS_ENTRY_TEXT</a></li><li><a href="#namespace_vscode_extensions_text" title="VSCODE_EXTENSIONS_TEXT">VSCODE_EXTENSIONS_TEXT</a></li><li><a href="#namespace_vscode_settings_text" title="VSCODE_SETTINGS_TEXT">VSCODE_SETTINGS_TEXT</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/fleet/scaffold_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_cacheengine" title="cacheEngine">cacheEngine</a></li><li><a href="#namespace_denojsontext" title="denoJsonText">denoJsonText</a></li><li><a href="#namespace_scaffoldfiles" title="scaffoldFiles">scaffoldFiles</a></li><li><a href="#namespace_scaffoldrepository" title="scaffoldRepository">scaffoldRepository</a></li></ul></li><li><a href="#archon/fleet/scaffold_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_archon_entry_text" title="ARCHON_ENTRY_TEXT">ARCHON_ENTRY_TEXT</a></li><li><a href="#namespace_engine_base" title="ENGINE_BASE">ENGINE_BASE</a></li><li><a href="#namespace_gitattributes_text" title="GITATTRIBUTES_TEXT">GITATTRIBUTES_TEXT</a></li><li><a href="#namespace_gitignore_text" title="GITIGNORE_TEXT">GITIGNORE_TEXT</a></li><li><a href="#namespace_stolos_entry_text" title="STOLOS_ENTRY_TEXT">STOLOS_ENTRY_TEXT</a></li><li><a href="#namespace_vscode_extensions_text" title="VSCODE_EXTENSIONS_TEXT">VSCODE_EXTENSIONS_TEXT</a></li><li><a href="#namespace_vscode_settings_text" title="VSCODE_SETTINGS_TEXT">VSCODE_SETTINGS_TEXT</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>
