@@ -30,12 +30,15 @@
       "src/archon/modules.auto.ts",
       "state/",
       ".specify/",
-      "home/"
+      "home/",
+      "vendor/"
     ]
   },
   "lint": {
     "rules": {
-      "exclude": ["no-import-prefix"]
+      "exclude": [
+        "no-import-prefix"
+      ]
     },
     "exclude": [
       "out/",
@@ -44,7 +47,8 @@
       "src/archon/modules.auto.ts",
       "state/",
       ".specify/",
-      "home/"
+      "home/",
+      "vendor/"
     ]
   }
 }

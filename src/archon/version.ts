@@ -8,7 +8,7 @@
  * @module
  */
 
-export const VERSION = "0.63.0";
+export const VERSION = "0.64.0";
 
 /** The git tag a fleet pins: "v0.1.0". */
 export const TAG = `v${VERSION}`;
