@@ -54,7 +54,7 @@ export function nextSteps(o: NextOptions): string[] {
   );
   if (server && o.fleet.web) {
     lines.push(
-      `https     https://${name}.${o.fleet.web.domain}   the welcome page; archon web status`,
+      `https     https://${name}.${o.fleet.web.domain}   the Archon Console (sign in); archon web status`,
     );
   }
   if (server) {

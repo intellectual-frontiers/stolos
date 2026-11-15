@@ -501,3 +501,10 @@ Deno.test("065: the console runs as archon-console (shadow, archon-ops), as a pe
   const pam = plan.files.find((x) => x.path === "/etc/pam.d/archon-console")!.content!;
   assertStringIncludes(pam, "@include common-auth\n@include common-account");
 });
+
+Deno.test("065: verify checks the Archon Console's sign-in page, not an open page", () => {
+  const plan = resolvePlan(host(), webFleet());
+  const c = plan.checks.find((x) => x.name === "HTTPS answers with the Archon Console")!;
+  assertStringIncludes(c.command, "https://127.0.0.1/signin");
+  assertStringIncludes(c.command, "Sign in to");
+});

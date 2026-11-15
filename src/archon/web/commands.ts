@@ -196,7 +196,7 @@ export async function webStatus(hostName: string): Promise<number> {
     s.fail(`${WEB.welcomeUnit} is ${w}`, `journalctl -u ${WEB.welcomeUnit} -n 50`);
   }
   s.done(
-    `Traefik ${t} · welcome page ${w} · ports 80, 443 (open: the router decides who reaches them)`,
+    `Traefik ${t} · Archon Console ${w} · ports 80, 443 (open: the router decides who reaches them)`,
   );
 
   const c = ui.phase("Certificate");
@@ -226,7 +226,7 @@ export async function webStatus(hostName: string): Promise<number> {
 
   const rt = ui.phase("Routes");
   const lines = [
-    `https://${name ?? host.name}   welcome page`,
+    `https://${name ?? host.name}   the Archon Console (sign in with your account)`,
     ...(name ? [`https://traefik.${name}   Traefik's dashboard`] : []),
     ...(name
       ? plan.routes.map((r) =>

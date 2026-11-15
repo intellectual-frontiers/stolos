@@ -3,7 +3,7 @@
  * official release binary, installed by the tools sync) on 80 and 443, open
  * to everyone at the server's firewall, and no network allowlist behind it:
  * who reaches the server is the router's decision (the firewall at the edge,
- * outside the machine). A welcome page (archon web serve, loopback only)
+ * outside the machine). The Archon Console (archon web serve, loopback only, spec 065)
  * answers https://<host>.<domain> and any name or address nothing else
  * claims. Podman (Ubuntu's package) is the container runtime: containers
  * that carry traefik.enable=true get <container>.<host>.<domain>.
@@ -22,7 +22,7 @@ import { fqdn, hostRoutes, traefikDynamic, traefikStatic, WEB } from "../web/con
 
 const SPEC = "032-web" as const;
 
-/** HTTPS from the first boot: Traefik, the welcome page, and Cloudflare DNS (spec 032). */
+/** HTTPS from the first boot: Traefik, the Archon Console, and Cloudflare DNS (spec 032). */
 export const web = (): Capability => ({ host, fleet }) => {
   const name = fqdn(fleet, host);
   const units: UnitDef[] = [
@@ -213,9 +213,9 @@ export const web = (): Capability => ({ host, fleet }) => {
     ],
     checks: [
       {
-        name: "HTTPS answers with the welcome page",
-        command:
-          `sh -c 'curl -sk --max-time 5 -o /dev/null -w "%{http_code}" https://127.0.0.1/ | grep -q 200'`,
+        name: "HTTPS answers with the Archon Console",
+        // Spec 065: its sign-in page (every other page needs a session: "/" redirects there).
+        command: `sh -c 'curl -sk --max-time 5 https://127.0.0.1/signin | grep -q "Sign in to"'`,
         level: "fail",
         fix: `systemctl status ${WEB.unit} ${WEB.welcomeUnit}; archon web status`,
         spec: SPEC,
@@ -265,7 +265,7 @@ export const web = (): Capability => ({ host, fleet }) => {
     ],
     notes: [
       name
-        ? `HTTPS: https://${name} (welcome page), apps at <app>.${name}, Traefik's dashboard at traefik.${name}; who reaches them is the router's decision.`
+        ? `HTTPS: https://${name} (the Archon Console: sign in with your account), apps at <app>.${name}, Traefik's dashboard at traefik.${name}; who reaches them is the router's decision.`
         : "HTTPS: https://<this server>/ with a self-signed certificate (set fleet.web for names and Let's Encrypt).",
       "Ports 80 and 443 are open; 80 redirects to 443. Containers publish with the label traefik.enable=true (Podman).",
     ],

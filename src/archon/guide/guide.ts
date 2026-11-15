@@ -62,7 +62,7 @@ export interface GuideItem {
   use?: Array<{ cmd: string; why: string }>;
   /** Live places to open (Cockpit pages, dashboards, the repository). */
   links?: Array<{ label: string; href: string }>;
-  /** A longer guide on the welcome page (/guide/<name>) and in the repository. */
+  /** A longer guide in the Archon Console (/guide/<name>) and in the repository. */
   guide?: string;
 }
 
