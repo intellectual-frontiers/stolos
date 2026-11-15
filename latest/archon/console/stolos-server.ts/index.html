@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/console/stolos-server.ts - Stolos v0.113.0 documentation</title>
+  <title>archon/console/stolos-server.ts - Stolos v0.114.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.113.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.114.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -113,6 +113,9 @@ time, with this terminal as their input: a passphrase or token is typed
 there, never in the browser.</li>
 <li>Under <code>/v1/</code>, a read-only REST API for the estate (spec 094,
 <code>../api/handler.ts</code>): GET and HEAD only, for the same signed-in session.</li>
+<li>Under <code>/audit/&lt;id&gt;/</code> and <code>/v1/audit/&lt;id&gt;/</code>, the auditor portal (spec 083,
+<code>../audit/portal.ts</code>), behind its own one-time link (<code>/audit/launch</code>): an
+audit-scoped session sees that engagement's routes only.</li>
 </ul>
 </div><section class="section"  id="archon&#x2F;console&#x2F;stolos-server_ts_classes"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;console&#x2F;stolos-server_ts_classes" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
@@ -220,6 +223,9 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_stolosdeps
 </div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;stolos-server.ts&#x2F;~&#x2F;StolosDeps.html#property_activity">
                   <span>activity</span><span>: { add(<span><span>e<span>: <span class="td-ref">ActivityEntry</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">void</span>&gt;</span>; recent(<span><span>n<span>: <span class="td-kw">number</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">ActivityEntry</span>[]&gt;</span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The activity record.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;stolos-server.ts&#x2F;~&#x2F;StolosDeps.html#property_audit">
+                  <span>audit</span><span>: <span class="td-ref">AuditDeps</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Spec 083: the auditor portal's engagements and links (none: no portal).</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;stolos-server.ts&#x2F;~&#x2F;StolosDeps.html#method_bootlog_0">
                   <span>bootLog</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">string</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The boot server's log (boot.log), or &quot;&quot; when it has none.</p>
@@ -411,7 +417,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_launch_ms" 
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 2542 symbols</span><svg
+              <span class="leading-none">view all 2665 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

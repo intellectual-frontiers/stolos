@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CONSOLE_CSS - archon/console/assets.ts - Stolos v0.114.0 documentation</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="doc-current-file" content="archon&#x2F;console&#x2F;assets.ts">
+  <link rel="stylesheet" href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;styles.css">
+  <link rel="stylesheet" href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;page.css">
+  <link id="ddocResetStylesheet" rel="stylesheet" href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;reset.css"><link href="../../../../comrak.css" rel="stylesheet" /><link href="../../../../prism.css" rel="stylesheet" /><script src="../../../../prism.js"></script><script src="..&#x2F;..&#x2F;..&#x2F;..&#x2F;script.js" defer></script>
+  <script src="..&#x2F;..&#x2F;..&#x2F;..&#x2F;darkmode_toggle.js"></script><script src="..&#x2F;..&#x2F;..&#x2F;..&#x2F;search_index.js" defer></script>
+    <script src="..&#x2F;..&#x2F;..&#x2F;..&#x2F;fuse.js" defer></script>
+    <script src="..&#x2F;..&#x2F;..&#x2F;..&#x2F;search.js" defer></script></head>
+<body>
+<div class="ddoc">
+<div><nav id="topnav">
+  <div class="h-full">
+    <div class="flex items-center"><ul class="breadcrumbs">
+  <li>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.114.0</a>
+  </li><span class="text-black dark:text-white"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 16 16"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <path
+    fill-rule="evenodd"
+    clip-rule="evenodd"
+    d="M5.76748 11.8159C5.5378 11.577 5.54525 11.1972 5.78411 10.9675L8.93431 8L5.78411 5.0325C5.54525 4.80282 5.5378 4.423 5.76748 4.18413C5.99715 3.94527 6.37698 3.93782 6.61584 4.1675L10.2158 7.5675C10.3335 7.68062 10.4 7.83679 10.4 8C10.4 8.16321 10.3335 8.31938 10.2158 8.4325L6.61584 11.8325C6.37698 12.0622 5.99715 12.0547 5.76748 11.8159Z"
+    fill="currentColor"
+  />
+</svg>
+</span><a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;assets.ts&#x2F;index.html" class="contextLink">archon&#x2F;console&#x2F;assets.ts</a><span class="text-black dark:text-white"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 16 16"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <path
+    fill-rule="evenodd"
+    clip-rule="evenodd"
+    d="M5.76748 11.8159C5.5378 11.577 5.54525 11.1972 5.78411 10.9675L8.93431 8L5.78411 5.0325C5.54525 4.80282 5.5378 4.423 5.76748 4.18413C5.99715 3.94527 6.37698 3.93782 6.61584 4.1675L10.2158 7.5675C10.3335 7.68062 10.4 7.83679 10.4 8C10.4 8.16321 10.3335 8.31938 10.2158 8.4325L6.61584 11.8325C6.37698 12.0622 5.99715 12.0547 5.76748 11.8159Z"
+    fill="currentColor"
+  />
+</svg>
+</span>
+
+    <ul><li>CONSOLE_CSS</li></ul></ul>
+</div>
+
+    <div class="flex items-center gap-2">
+      <button id="theme-toggle" type="button" aria-label="Toggle dark mode" style="display: none;"><svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="14"
+  height="14"
+  viewBox="0 0 24 24"
+  fill="currentColor"
+>
+  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+  <path
+    d="M12 1.992a10 10 0 1 0 9.236 13.838c.341 -.82 -.476 -1.644 -1.298 -1.31a6.5 6.5 0 0 1 -6.864 -10.787l.077 -.08c.551 -.63 .113 -1.653 -.758 -1.653h-.266l-.068 -.006l-.06 -.002z"
+  />
+</svg>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="14"
+  height="14"
+  viewBox="0 0 24 24"
+  fill="currentColor"
+  class="hidden"
+>
+  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+  <path
+    d="M12 19a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"
+  />
+  <path
+    d="M18.313 16.91l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.218 -1.567l.102 .07z"
+  />
+  <path
+    d="M7.007 16.993a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"
+  />
+  <path
+    d="M4 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"
+  />
+  <path
+    d="M21 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"
+  />
+  <path
+    d="M6.213 4.81l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.217 -1.567l.102 .07z"
+  />
+  <path
+    d="M19.107 4.893a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"
+  />
+  <path
+    d="M12 2a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"
+  />
+  <path
+    d="M12 7a5 5 0 1 1 -4.995 5.217l-.005 -.217l.005 -.217a5 5 0 0 1 4.995 -4.783z"
+  />
+</svg>
+</button>
+
+        <input
+          type="text"
+          id="searchbar"
+          style="display: none;"
+          class="py-2 px-2.5 mx-1 rounded text-sm border border-gray-300 bg-transparent dark:bg-gray-800 dark:border-gray-700"
+          />
+    </div>
+  </div>
+</nav>
+<div id="searchResults"></div><div id="content"><main class="symbolGroup" id="symbol_CONSOLE_CSS"><article>
+      <div class="symbolTitle">
+        <div>
+          <div class="text-2xl leading-none break-all">
+            <span class="text-Variable">variable</span>&nbsp;<span class="font-bold">CONSOLE_CSS</span>
+          </div></div><a
+  class="sourceButton"
+  href="file:&#x2F;&#x2F;&#x2F;home&#x2F;runner&#x2F;work&#x2F;stolos&#x2F;stolos&#x2F;src&#x2F;archon&#x2F;console&#x2F;assets.ts"><svg
+  width="14"
+  height="14"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <path
+    d="M3.16675 12.6667H11.3334C11.6428 12.6667 11.9396 12.5438 12.1584 12.325C12.3772 12.1062 12.5001 11.8094 12.5001 11.5V4.20834L9.29175 1H4.33342C4.024 1 3.72725 1.12292 3.50846 1.34171C3.28966 1.5605 3.16675 1.85725 3.16675 2.16667V4.5"
+    stroke="currentColor"
+    stroke-width="1.4"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M6.08334 10.3333L7.83334 8.58334L6.08334 6.83334M3.75 6.83334L2 8.58334L3.75 10.3333M9.00001 1V4.5H12.5L9.00001 1Z"
+    stroke="currentColor"
+    stroke-width="1.4"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>
+</a>
+</div><div><div class="space-y-7" id=""><div class="markdown"><p>Both consoles' stylesheet: tokens first (light, then dark), then the parts. Served at <a href="../../../.././archon/console/assets.ts/~/CSS_URL.html">CSS_URL</a>.</p>
+</div><section class="section"  id="type"><div>
+      <h2 class="anchorable mb-1"><a href="#type" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Type</h2></div><div class="space-y-8"><div class=" docEntry" id="variable_console_css">
+
+  <div class="docEntryHeader">
+    <div><code><span class="font-medium text-stone-500 dark:text-stone-200"><span class="td-str">`
+@font-face { font-family: "JetBrainsMono NF"; font-weight: 400; font-display: swap; src: url("/static/fonts/JetBrainsMonoNerdFontMono-Regular.woff2") format("woff2"); }
+@font-face { font-family: "JetBrainsMono NF"; font-weight: 700; font-display: swap; src: url("/static/fonts/JetBrainsMonoNerdFontMono-Bold.woff2") format("woff2"); }
+:root {
+  --bg: #F6F7FB; --panel: #FFFFFF; --rail: #EEF0F7; --ink: #161A2E; --muted: #5B6178; --line: #DDE1EC;
+  --accent: #4F46E5; --accent-soft: #EEF2FF; --on-accent: #FFFFFF; --ok: #0B6E4C; --ok-soft: #E6F6EF; --warn: #A15C00;
+  --warn-soft: #FFF4E0; --bad: #C2283A; --bad-soft: #FDECEE; --code: #F1F3F9;
+  --shadow: 0 1px 2px rgba(22,26,46,.06), 0 8px 24px rgba(22,26,46,.06);
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+  --term: "JetBrainsMono NF", "JetBrainsMono Nerd Font", "Cascadia Code", ui-monospace, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0F1220; --panel: #171B2D; --rail: #13172A; --ink: #E7E9F3; --muted: #9AA0B8; --line: #2A3048;
+    --accent: #8B87FF; --accent-soft: #23264A; --on-accent: #0F1220; --ok: #3CC98F; --ok-soft: #12302A; --warn: #F0B054; --warn-soft: #34290F;
+    --bad: #FF6B7D; --bad-soft: #3A1820; --code: #1D2236; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.3);
+    color-scheme: dark; }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 14px/1.5 var(--sans); }
+a { color: var(--accent); }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+h1 { font-size: 22px; font-weight: 600; } h2 { font-size: 15px; font-weight: 600; } h3 { font-size: 13px; font-weight: 600; }
+code, .mono { font-family: var(--mono); font-size: 12.5px; }
+code { background: var(--code); padding: 1px 5px; border-radius: 4px; }
+button { font: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+.top { position: sticky; top: 0; z-index: 5; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px;
+  height: 56px; padding: 0 max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));
+  background: var(--panel); border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; color: var(--ink); text-decoration: none; }
+.brand b { font-weight: 700; } .brand small { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fleetmark { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; }
+.fleetmark b { color: var(--ink); font-weight: 600; letter-spacing: .14em; text-transform: uppercase; font-size: 12px; }
+.me { justify-self: end; display: flex; align-items: center; gap: 10px; }
+.me .who { text-align: right; line-height: 1.2; } .me .who small { color: var(--muted); font-size: 11.5px; }
+.avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid;
+  place-items: center; font-weight: 600; font-size: 13px; border: 1px solid var(--line); }
+.shell { display: grid; grid-template-columns: 220px minmax(0, 1fr); min-height: calc(100vh - 56px); }
+.rail { background: var(--rail); border-right: 1px solid var(--line); padding: 14px 10px; display: flex; flex-direction: column; gap: 2px; }
+.rail .group { font-size: 11px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; padding: 12px 10px 4px; }
+.rail a { display: flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; padding: 7px 10px; border-radius: 8px; }
+.rail a:hover { background: var(--panel); }
+.rail a[aria-current="page"] { background: var(--panel); box-shadow: var(--shadow); color: var(--accent); font-weight: 600; }
+main { padding: 22px max(16px, env(safe-area-inset-right, 0px)) 40px max(16px, env(safe-area-inset-left, 0px)); min-width: 0; }
+.pagehead { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.pagehead p { margin: 4px 0 0; color: var(--muted); max-width: 70ch; }
+.crumb { font-size: 12px; color: var(--muted); }
+.grid { display: grid; gap: 14px; } .cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } .cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; min-width: 0; }
+.k { font-size: 11.5px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+.v { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.sub { color: var(--muted); font-size: 12.5px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 2px 9px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+.pill.ok { background: var(--ok-soft); color: var(--ok); } .pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.bad { background: var(--bad-soft); color: var(--bad); } .pill.off { background: var(--code); color: var(--muted); }
+.pill.tier { background: var(--accent-soft); color: var(--accent); }
+.btn { display: inline-block; border: 1px solid var(--accent); background: var(--accent); color: var(--on-accent); border-radius: 8px; padding: 7px 14px; font-weight: 500; text-decoration: none; }
+.btn.ghost { background: transparent; color: var(--accent); } .btn.danger { background: var(--bad); border-color: var(--bad); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-size: 11.5px; color: var(--muted); font-weight: 500; letter-spacing: .04em; text-transform: uppercase; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+.scroll { overflow-x: auto; background-color: var(--panel);
+  /* Shadows at an edge with more to see: a hint to scroll sideways on a narrow screen. */
+  background-image: linear-gradient(90deg, var(--panel) 30%, transparent), linear-gradient(270deg, var(--panel) 30%, transparent),
+    radial-gradient(farthest-side at 0 50%, rgba(0,0,0,.2), transparent), radial-gradient(farthest-side at 100% 50%, rgba(0,0,0,.2), transparent);
+  background-position: left, right, left, right; background-size: 40px 100%, 40px 100%, 12px 100%, 12px 100%;
+  background-repeat: no-repeat; background-attachment: local, local, scroll, scroll; }
+.diagram { overflow-x: auto; }
+@media (max-width: 640px) { .diagram svg { min-width: 620px; } }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; } .spread { justify-content: space-between; }
+.stack { display: flex; flex-direction: column; gap: 10px; }
+.ring { width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center; flex: none; }
+.ring span { width: 60px; height: 60px; border-radius: 50%; background: var(--panel); display: grid; place-items: center; font-weight: 600; font-variant-numeric: tabular-nums; }
+.grid.actions { grid-template-columns: minmax(240px, 300px) minmax(0, 1fr); align-items: start; }
+.grid.actions &gt; .cmdlist { position: sticky; top: 70px; max-height: calc(100vh - 90px); overflow: auto; padding: 6px; }
+.diagram pre.mermaid svg { max-height: 300px; }
+.cmdlist a { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--line); padding: 7px 8px; border-radius: 6px; }
+.cmdlist a .pill { font-size: 11px; padding: 1px 7px; }
+.cmdlist .sub { font-size: 12px; line-height: 1.35; }
+.cmdlist input[type=search] { width: 100%; margin-bottom: 6px; }
+.nowrap { white-space: nowrap; }
+.skip { position: absolute; left: -9999px; }
+.skip:focus { left: 8px; top: 8px; z-index: 10; background: var(--panel); padding: 8px 12px; border-radius: 8px; }
+.steps { display: flex; flex-wrap: wrap; gap: 4px; list-style: none; padding: 0; margin: 10px 0; counter-reset: step; }
+.steps li { counter-increment: step; font-size: 12px; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+.steps li::before { content: counter(step) ". "; }
+.steps li.ok { background: color-mix(in srgb, var(--ok) 14%, transparent); border-color: transparent; color: var(--ink); }
+.steps li.now { border-color: var(--warn); color: var(--ink); font-weight: 600; }
+.steps li.bad { background: color-mix(in srgb, var(--bad) 16%, transparent); border-color: var(--bad); color: var(--ink); }
+.me form .btn { white-space: nowrap; }
+@media (max-width: 640px) { .me .who { display: none; } .fleetmark span { display: none; } }
+.cmdlist a:hover, .cmdlist a[aria-current="true"] { background: var(--accent-soft); }
+.cmdlist .sub { grid-column: 1 / -1; }
+label.field { display: grid; gap: 4px; } label.field span { font-size: 12.5px; font-weight: 500; }
+label.check { display: flex; gap: 8px; align-items: center; }
+input[type=text], input[type=password], input[type=search], select { font: inherit; width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--panel); color: var(--ink); }
+.term { background: #0E1120; color: #D8DCEE; border-radius: 10px; padding: 14px 16px; font-family: var(--term); font-size: 13px; line-height: 1.45;
+  height: max(420px, 62vh); overflow: auto; overscroll-behavior: contain; white-space: pre-wrap; word-break: break-word; resize: vertical; }
+.term &gt; div { min-height: 1.45em; }
+.term .ok { color: #3CC98F; } .term .w { color: #F0B054; } .term .bad { color: #FF6B7D; } .term .dim { color: #8189A8; }
+.help { border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 0 10px 10px 0; padding: 12px 14px; }
+.help h3 { color: var(--accent); } .help p { margin: 6px 0 0; }
+.notice { border-radius: 10px; padding: 10px 12px; } .notice.bad { background: var(--bad-soft); color: var(--bad); } .notice.ok { background: var(--ok-soft); color: var(--ok); } .notice.warn { background: var(--warn-soft); color: var(--warn); }
+.signin { min-height: 100vh; display: grid; place-items: center; padding: 40px max(16px, env(safe-area-inset-right, 0px)) 40px max(16px, env(safe-area-inset-left, 0px)); }
+.signin .card { width: min(400px, 100%); padding: 28px; box-shadow: var(--shadow); }
+.signin .logos { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.diagram { margin: 0; overflow-x: auto; } .diagram pre.mermaid { margin: 0; background: transparent; text-align: center; }
+.diagram pre.mermaid.plain { text-align: left; font-family: var(--mono); font-size: 12px; white-space: pre; }
+.diagram figcaption { margin-top: 8px; }
+.prose { max-width: 78ch; } .prose pre { background: var(--code); padding: 10px; border-radius: 8px; overflow-x: auto; }
+@media (max-width: 860px) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .rail { flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--line); padding: 8px; }
+  .rail .group { display: none; } .rail a { white-space: nowrap; }
+  .cols-3, .cols-2, .grid.actions { grid-template-columns: minmax(0, 1fr); }
+  .grid.actions &gt; .cmdlist { position: static; max-height: 40vh; }
+  .fleetmark span, .brand small, .me .who { display: none; }
+}
+`</span></span>
+      </code>
+    </div><a
+  class="sourceButton"
+  href="file:&#x2F;&#x2F;&#x2F;home&#x2F;runner&#x2F;work&#x2F;stolos&#x2F;stolos&#x2F;src&#x2F;archon&#x2F;console&#x2F;assets.ts"><svg
+  width="14"
+  height="14"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <path
+    d="M3.16675 12.6667H11.3334C11.6428 12.6667 11.9396 12.5438 12.1584 12.325C12.3772 12.1062 12.5001 11.8094 12.5001 11.5V4.20834L9.29175 1H4.33342C4.024 1 3.72725 1.12292 3.50846 1.34171C3.28966 1.5605 3.16675 1.85725 3.16675 2.16667V4.5"
+    stroke="currentColor"
+    stroke-width="1.4"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M6.08334 10.3333L7.83334 8.58334L6.08334 6.83334M3.75 6.83334L2 8.58334L3.75 10.3333M9.00001 1V4.5H12.5L9.00001 1Z"
+    stroke="currentColor"
+    stroke-width="1.4"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>
+</a>
+</div></div>
+</div></section>
+</div>
+</div>
+    </article></main>
+<div class="toc">
+    <div><div class="usageContent">
+    <h3>Usage</h3><div class="markdown"><pre class="highlight"><code class="language-typescript">import { CONSOLE_CSS } from &quot;archon/console/assets.ts&quot;;
+</code><button class="copyButton" data-copy="import { CONSOLE_CSS } from &quot;archon/console/assets.ts&quot;;
+"><svg
+  class="copy"
+  width="15"
+  height="15"
+  viewBox="0 0 15 15"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <rect x="2" y="2" width="7" height="7" fill="none" />
+  <rect x="6" y="6" width="7" height="7" fill="none" />
+  <path
+    d="M1.55566 2.7C1.55566 2.03726 2.09292 1.5 2.75566 1.5H8.75566C9.41841 1.5 9.95566 2.03726 9.95566 2.7V5.1H12.3557C13.0184 5.1 13.5557 5.63726 13.5557 6.3V12.3C13.5557 12.9627 13.0184 13.5 12.3557 13.5H6.35566C5.69292 13.5 5.15566 12.9627 5.15566 12.3V9.9H2.75566C2.09292 9.9 1.55566 9.36274 1.55566 8.7V2.7ZM6.35566 9.9V12.3H12.3557V6.3H9.95566V8.7C9.95566 9.36274 9.41841 9.9 8.75566 9.9H6.35566ZM8.75566 8.7V2.7H2.75566V8.7H8.75566Z"
+    fill="currentColor"
+  />
+</svg>
+<svg
+  class="check"
+  width="15"
+  height="15"
+  viewBox="0 0 24 24"
+  stroke-width="2"
+  stroke="currentColor"
+  fill="none"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+  <path d="M5 12l5 5l10 -10" />
+</svg>
+</button><code></code></pre>
+</div></div><nav class="documentNavigation">
+          <h3>Document Navigation</h3><ul><li><a href="#type" title="Type">Type</a></li></ul></nav></div>
+  </div></div>
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>archon/pg/config.ts - Stolos v0.114.0 documentation</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="doc-current-file" content="">
+  <link rel="stylesheet" href="..&#x2F;..&#x2F;..&#x2F;styles.css">
+  <link rel="stylesheet" href="..&#x2F;..&#x2F;..&#x2F;page.css">
+  <link id="ddocResetStylesheet" rel="stylesheet" href="..&#x2F;..&#x2F;..&#x2F;reset.css"><link href="../../../comrak.css" rel="stylesheet" /><link href="../../../prism.css" rel="stylesheet" /><script src="../../../prism.js"></script><script src="..&#x2F;..&#x2F;..&#x2F;script.js" defer></script>
+  <script src="..&#x2F;..&#x2F;..&#x2F;darkmode_toggle.js"></script><script src="..&#x2F;..&#x2F;..&#x2F;search_index.js" defer></script>
+    <script src="..&#x2F;..&#x2F;..&#x2F;fuse.js" defer></script>
+    <script src="..&#x2F;..&#x2F;..&#x2F;search.js" defer></script></head>
+<body>
+<div class="ddoc">
+<div><nav id="topnav">
+  <div class="h-full">
+    <div class="flex items-center"><ul class="breadcrumbs">
+  <li>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.114.0</a>
+  </li><span class="text-black dark:text-white"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 16 16"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <path
+    fill-rule="evenodd"
+    clip-rule="evenodd"
+    d="M5.76748 11.8159C5.5378 11.577 5.54525 11.1972 5.78411 10.9675L8.93431 8L5.78411 5.0325C5.54525 4.80282 5.5378 4.423 5.76748 4.18413C5.99715 3.94527 6.37698 3.93782 6.61584 4.1675L10.2158 7.5675C10.3335 7.68062 10.4 7.83679 10.4 8C10.4 8.16321 10.3335 8.31938 10.2158 8.4325L6.61584 11.8325C6.37698 12.0622 5.99715 12.0547 5.76748 11.8159Z"
+    fill="currentColor"
+  />
+</svg>
+</span>archon&#x2F;pg&#x2F;config.ts</ul>
+</div>
+
+    <div class="flex items-center gap-2">
+      <button id="theme-toggle" type="button" aria-label="Toggle dark mode" style="display: none;"><svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="14"
+  height="14"
+  viewBox="0 0 24 24"
+  fill="currentColor"
+>
+  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+  <path
+    d="M12 1.992a10 10 0 1 0 9.236 13.838c.341 -.82 -.476 -1.644 -1.298 -1.31a6.5 6.5 0 0 1 -6.864 -10.787l.077 -.08c.551 -.63 .113 -1.653 -.758 -1.653h-.266l-.068 -.006l-.06 -.002z"
+  />
+</svg>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="14"
+  height="14"
+  viewBox="0 0 24 24"
+  fill="currentColor"
+  class="hidden"
+>
+  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+  <path
+    d="M12 19a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"
+  />
+  <path
+    d="M18.313 16.91l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.218 -1.567l.102 .07z"
+  />
+  <path
+    d="M7.007 16.993a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"
+  />
+  <path
+    d="M4 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"
+  />
+  <path
+    d="M21 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"
+  />
+  <path
+    d="M6.213 4.81l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.217 -1.567l.102 .07z"
+  />
+  <path
+    d="M19.107 4.893a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"
+  />
+  <path
+    d="M12 2a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"
+  />
+  <path
+    d="M12 7a5 5 0 1 1 -4.995 5.217l-.005 -.217l.005 -.217a5 5 0 0 1 4.995 -4.783z"
+  />
+</svg>
+</button>
+
+        <input
+          type="text"
+          id="searchbar"
+          style="display: none;"
+          class="py-2 px-2.5 mx-1 rounded text-sm border border-gray-300 bg-transparent dark:bg-gray-800 dark:border-gray-700"
+          />
+    </div>
+  </div>
+</nav>
+<div id="searchResults"></div><div id="content">
+    <main><section>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc"><div class="markdown"><p>038-pg: PostgreSQL instances as data. Pure functions only (tested without a
+server): which instances a host keeps, their ports, configuration, client
+authentication, roles, the libpq service block, and the SCRAM verifier that
+sets a password without the password ever reaching PostgreSQL or its logs.</p>
+</div><section class="section"  id="archon&#x2F;pg&#x2F;config_ts_functions"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;pg&#x2F;config_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Functions</h2></div><div class="namespaceSection"><div id="namespace_accessroles" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;accessRoles.html" title="accessRoles">
+			    <span>accessRoles</span><span>(<span><span>db<span>: <span class="td-kw">string</span></span></span></span>)<span>: { write<span>: <span class="td-kw">string</span></span>; read<span>: <span class="td-kw">string</span></span>;  }</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A database's two group roles: read-write and read-only (NOLOGIN).</p>
+</div></div></div>
+    </div><div id="namespace_allocateport" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;allocatePort.html" title="allocatePort">
+			    <span>allocatePort</span><span>(<div class="ml-4"><div><span>used<span>: <span class="td-ref">Iterable</span>&lt;<span class="td-kw">number</span>&gt;</span></span>,</div><div><span>from<span class="td-op">?</span><span>: <span class="td-kw">number</span></span></span></div></div>)<span>: <span class="td-kw">number</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The first free port from 5432, skipping those in use by any cluster or listener.</p>
+</div></div></div>
+    </div><div id="namespace_approvedinspec" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;approvedInSpec.html" title="approvedInSpec">
+			    <span>approvedInSpec</span><span>(<span><span>spec<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">boolean</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Whether the owner approved destructive pg operations in the governing spec (Article: Never).</p>
+</div></div></div>
+    </div><div id="namespace_archonconf" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;archonConf.html" title="archonConf">
+			    <span>archonConf</span><span>(<div class="ml-4"><div><span>i<span>: <span class="td-ref">Pick</span>&lt;<div class="ml-indent"><div><span class="td-ref">Instance</span>,</div><div><span><span class="td-str">"name"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"version"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"environment"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"protected"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"published"</span></span></div></div>&gt;</span></span>,</div><div><span>opts<span class="td-op">?</span><span>: { address<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; tls<span class="td-op">?</span><span>: { cert<span>: <span class="td-kw">string</span></span>; key<span>: <span class="td-kw">string</span></span>;  }</span>;  }</span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>conf.d/50-archon.conf: everything Archon sets; the rest is Ubuntu's (Article 2).</p>
+</div></div></div>
+    </div><div id="namespace_checkname" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;checkName.html" title="checkName">
+			    <span>checkName</span><span>(<span><span>name<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Why an instance name is invalid, or undefined when it matches <a href="../../.././archon/pg/config.ts/~/NAME_RE.html">NAME_RE</a>.</p>
+</div></div></div>
+    </div><div id="namespace_connectinfo" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;connectInfo.html" title="connectInfo">
+			    <span>connectInfo</span><span>(<div class="ml-4"><div><span>i<span>: <span class="td-ref">Pick</span>&lt;<span class="td-ref">Instance</span><span>, </span><span><span class="td-str">"name"</span><span class="td-op"> | </span><span class="td-str">"port"</span><span class="td-op"> | </span><span class="td-str">"published"</span><span class="td-op"> | </span><span class="td-str">"databases"</span></span>&gt;</span></span>,</div><div><span>role<span>: <span class="td-kw">string</span></span></span>,</div><div><span>o<span class="td-op">?</span><span>: { publishedHost<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; remote<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>; inGroup<span class="td-op">?</span><span>: (<span><span>g<span>: <span class="td-kw">string</span></span></span></span>) =&gt; <span class="td-kw">boolean</span></span>;  }</span></span></div></div>)<span>: <span class="td-ref">ConnectInfo</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How a role reaches an instance: the socket by default, or the published name
+when <code>remote</code> is set and the instance is published.</p>
+</div></div></div>
+    </div><div id="namespace_createargv" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;createArgv.html" title="createArgv">
+			    <span>createArgv</span><span>(<div class="ml-4"><div><span>version<span>: <span class="td-kw">number</span></span></span>,</div><div><span>name<span>: <span class="td-kw">string</span></span></span>,</div><div><span>port<span>: <span class="td-kw">number</span></span></span></div></div>)<span>: <span class="td-kw">string</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>pg_createcluster's arguments for a new instance (peer locally, scram over TCP).</p>
+</div></div></div>
+    </div><div id="namespace_createdatabasesql" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;createDatabaseSql.html" title="createDatabaseSql">
+			    <span>createDatabaseSql</span><span>(<span><span>d<span>: <span class="td-ref">PgDatabaseDef</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>CREATE DATABASE (its own statement: it cannot run inside a transaction block).</p>
+</div></div></div>
+    </div><div id="namespace_databaseaccesssql" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;databaseAccessSql.html" title="databaseAccessSql">
+			    <span>databaseAccessSql</span><span>(<span><span>d<span>: <span class="td-ref">PgDatabaseDef</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Ownership and CONNECT, run in the postgres database.</p>
+</div></div></div>
+    </div><div id="namespace_defaultdatabase" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;defaultDatabase.html" title="defaultDatabase">
+			    <span>defaultDatabase</span><span>(<div class="ml-4"><div><span>i<span>: <span class="td-ref">Pick</span>&lt;<span class="td-ref">Instance</span><span>, </span><span class="td-str">"databases"</span>&gt;</span></span>,</div><div><span>role<span>: <span class="td-kw">string</span></span></span>,</div><div><span>inGroup<span class="td-op">?</span><span>: (<span><span>group<span>: <span class="td-kw">string</span></span></span></span>) =&gt; <span class="td-kw">boolean</span></span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The database a role gets by default: the first it owns, may write, or may read.</p>
+</div></div></div>
+    </div><div id="namespace_desiredmembers" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;desiredMembers.html" title="desiredMembers">
+			    <span>desiredMembers</span><span>(<div class="ml-4"><div><span>d<span>: <span class="td-ref">PgDatabaseDef</span></span></span>,</div><div><span>members<span>: (<span><span>group<span>: <span class="td-kw">string</span></span></span></span>) =&gt; <span class="td-kw">string</span>[]</span></span>,</div><div><span>roles<span>: <span class="td-ref">Role</span>[]</span></span></div></div>)<span>: { write<span>: <span class="td-kw">string</span>[]</span>; read<span>: <span class="td-kw">string</span>[]</span>;  }</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Who belongs in each group role, with @groups expanded to their Linux members
+(members(group) answers from the account database). Only roles Archon keeps
+count; the owner is in neither (it owns).</p>
+</div></div></div>
+    </div><div id="namespace_extensionsql" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;extensionSql.html" title="extensionSql">
+			    <span>extensionSql</span><span>(<span><span>ext<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>SQL that creates an extension if it is not there yet.</p>
+</div></div></div>
+    </div><div id="namespace_grouprolesql" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;groupRoleSql.html" title="groupRoleSql">
+			    <span>groupRoleSql</span><span>(<span><span>name<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>SQL that creates a NOLOGIN group role if missing, and marks it as Archon's (idempotent).</p>
+</div></div></div>
+    </div><div id="namespace_hbaconf" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;hbaConf.html" title="hbaConf">
+			    <span>hbaConf</span><span>(<div class="ml-4"><div><span>published<span>: <span class="td-kw">boolean</span></span></span>,</div><div><span>from<span>: <span class="td-kw">string</span>[]</span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>pg_hba.conf (spec 039): every login is a Linux account. On the socket, peer:
+the kernel says who is connecting, and that is the role (no password). On
+loopback, scram-sha-256. When published, TLS with scram-sha-256 from <code>from</code>
+(every address: the router decides who reaches the server). postgres never over a
+network. Nothing weaker anywhere.</p>
+</div></div></div>
+    </div><div id="namespace_instancesof" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;instancesOf.html" title="instancesOf">
+			    <span>instancesOf</span><span>(<div class="ml-4"><div><span>host<span>: <span class="td-ref">HostDef</span></span></span>,</div><div><span>users<span>: <span class="td-ref">UserDef</span>[]</span></span>,</div><div><span>fleet<span>: <span class="td-ref">FleetDef</span></span></span></div></div>)<span>: <span class="td-ref">Instance</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Every instance this host keeps: the model's and the ones operators recorded
+(FR-004). A record's version and port win: they are what the cluster is.</p>
+</div></div></div>
+    </div><div id="namespace_membershipsql" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;membershipSql.html" title="membershipSql">
+			    <span>membershipSql</span><span>(<div class="ml-4"><div><span>group<span>: <span class="td-kw">string</span></span></span>,</div><div><span>want<span>: <span class="td-kw">string</span>[]</span></span>,</div><div><span>have<span>: <span class="td-kw">string</span>[]</span></span></div></div>)<span>: <span class="td-kw">string</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>GRANT and REVOKE so a group role's members are exactly <code>want</code>.</p>
+</div></div></div>
+    </div><div id="namespace_newpassword" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;newPassword.html" title="newPassword">
+			    <span>newPassword</span><span>()<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A new password: 32 random bytes, URL-safe, no characters .pgpass would need escaped.</p>
+</div></div></div>
+    </div><div id="namespace_ownership" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;ownership.html" title="ownership">
+			    <span>ownership</span><span>(<div class="ml-4"><div><span>i<span>: <span class="td-ref">Pick</span>&lt;<span class="td-ref">Instance</span><span>, </span><span><span class="td-str">"name"</span><span class="td-op"> | </span><span class="td-str">"record"</span></span>&gt;</span></span>,</div><div><span>clusters<span>: <span class="td-ref">Cluster</span>[]</span></span></div></div>)<span>: <div class="ml-indent"><span>{ kind<span>: <span class="td-str">"owned"</span></span>; cluster<span class="td-op">?</span><span>: <span class="td-ref">Cluster</span></span>;  }</span><br /><span><span class="td-op"> | </span>{ kind<span>: <span class="td-str">"absent"</span></span>;  }</span><br /><span><span class="td-op"> | </span>{ kind<span>: <span class="td-str">"foreign"</span></span>; cluster<span>: <span class="td-ref">Cluster</span></span>;  }</span></div></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Archon owns a cluster only when the host's record says Archon created it
+(FR-003). Anything else with the same name is refused, never touched.</p>
+</div></div></div>
+    </div><div id="namespace_parseclusters" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;parseClusters.html" title="parseClusters">
+			    <span>parseClusters</span><span>(<span><span>out<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Cluster</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Parse <code>pg_lsclusters --no-header</code> output, skipping lines that are not clusters.</p>
+</div></div></div>
+    </div><div id="namespace_pgdgsource" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;pgdgSource.html" title="pgdgSource">
+			    <span>pgdgSource</span><span>(<div class="ml-4"><div><span>codename<span>: <span class="td-kw">string</span></span></span>,</div><div><span>arch<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The PGDG source, for versions Ubuntu does not ship (FR-002).</p>
+</div></div></div>
+    </div><div id="namespace_pgon" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;pgOn.html" title="pgOn">
+			    <span>pgOn</span><span>(<span><span>host<span>: <span class="td-ref">HostDef</span></span></span></span>)<span>: <span class="td-kw">boolean</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Whether an operator turned PostgreSQL on for this host (an opt-in service, spec 040).</p>
+</div></div></div>
+    </div><div id="namespace_pgpassline" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;pgpassLine.html" title="pgpassLine">
+			    <span>pgpassLine</span><span>(<div class="ml-4"><div><span>c<span>: <span class="td-ref">Pick</span>&lt;<span class="td-ref">ConnectInfo</span><span>, </span><span><span class="td-str">"host"</span><span class="td-op"> | </span><span class="td-str">"port"</span><span class="td-op"> | </span><span class="td-str">"user"</span></span>&gt;</span></span>,</div><div><span>password<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The ~/.pgpass line (host:port:database:user:password; database is * so \c works).</p>
+</div></div></div>
+    </div><div id="namespace_principals" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;principals.html" title="principals">
+			    <span>principals</span><span>(<span><span>d<span>: <span class="td-ref">PgDatabaseDef</span></span></span></span>)<span>: <span class="td-kw">string</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Every principal a database names (owner, write, read), groups as @name.</p>
+</div></div></div>
+    </div><div id="namespace_publishedname" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;publishedName.html" title="publishedName">
+			    <span>publishedName</span><span>(<div class="ml-4"><div><span>fleet<span>: <span class="td-ref">FleetDef</span></span></span>,</div><div><span>host<span>: <span class="td-ref">HostDef</span></span></span>,</div><div><span>name<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The published name: pg-&lt;name&gt;.&lt;host&gt;.&lt;domain&gt; (FR-014).</p>
+</div></div></div>
+    </div><div id="namespace_quoteident" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;quoteIdent.html" title="quoteIdent">
+			    <span>quoteIdent</span><span>(<span><span>s<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Quote an SQL identifier (doubles any double quote).</p>
+</div></div></div>
+    </div><div id="namespace_quotelit" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;quoteLit.html" title="quoteLit">
+			    <span>quoteLit</span><span>(<span><span>s<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Quote an SQL string literal (doubles any single quote).</p>
+</div></div></div>
+    </div><div id="namespace_rolecomment" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;roleComment.html" title="roleComment">
+			    <span>roleComment</span><span>(<span><span>kind<span>: <span><span class="td-ref">Role</span>[<span class="td-str">"kind"</span>]<span class="td-op"> | </span><span class="td-str">"group"</span></span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The comment that marks a role as Archon's (spec 039), and its kind.</p>
+</div></div></div>
+    </div><div id="namespace_rolesfor" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;rolesFor.html" title="rolesFor">
+			    <span>rolesFor</span><span>(<div class="ml-4"><div><span>dbs<span>: <span class="td-ref">PgDatabaseDef</span>[]</span></span>,</div><div><span>users<span>: <span class="td-ref">UserDef</span>[]</span></span>,</div><div><span>services<span>: <span class="td-ref">ServiceDef</span>[]</span></span></div></div>)<span>: <span class="td-ref">Role</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Login roles: every person on the host (not ops, which serves agents and is
+no database user), then each service account a database names. Groups are
+not roles: their members are.</p>
+</div></div></div>
+    </div><div id="namespace_rolesql" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;roleSql.html" title="roleSql">
+			    <span>roleSql</span><span>(<span><span>r<span>: <span class="td-ref">Role</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>SQL that makes a login role what the model says (idempotent; never a
+password). Nobody but postgres is a superuser; admins may create databases
+and watch and signal sessions.</p>
+</div></div></div>
+    </div><div id="namespace_schemaaccesssql" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;schemaAccessSql.html" title="schemaAccessSql">
+			    <span>schemaAccessSql</span><span>(<span><span>d<span>: <span class="td-ref">PgDatabaseDef</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Table and sequence rights, now and for what the owner creates later; run in the database.</p>
+</div></div></div>
+    </div><div id="namespace_scrammatches" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;scramMatches.html" title="scramMatches">
+			    <span>scramMatches</span><span>(<div class="ml-4"><div><span>verifier<span>: <span class="td-kw">string</span></span></span>,</div><div><span>password<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">boolean</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Whether a stored SCRAM verifier was made from this password (its own salt and rounds).</p>
+</div></div></div>
+    </div><div id="namespace_scramverifier" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;scramVerifier.html" title="scramVerifier">
+			    <span>scramVerifier</span><span>(<div class="ml-4"><div><span>password<span>: <span class="td-kw">string</span></span></span>,</div><div><span>salt<span class="td-op">?</span><span>: <span class="td-ref">Uint8Array</span></span></span>,</div><div><span>iterations<span class="td-op">?</span><span>: <span class="td-kw">number</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">string</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A SCRAM password verifier as PostgreSQL stores it (RFC 5802, RFC 7677).</p>
+</div></div></div>
+    </div><div id="namespace_serviceblock" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;serviceBlock.html" title="serviceBlock">
+			    <span>serviceBlock</span><span>(<span><span>c<span>: <span class="td-ref">ConnectInfo</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The libpq service block for ~/.pg_service.conf.</p>
+</div></div></div>
+    </div><div id="namespace_sudoerspg" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;sudoersPg.html" title="sudoersPg">
+			    <span>sudoersPg</span><span>(<span><span>services<span>: <span class="td-kw">string</span>[]</span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>sudoers: operators become postgres (the only superuser) or an app's account,
+for psql, with their own password; every use is in sudo's log. Admins are in
+Ubuntu's sudo group already.</p>
+</div></div></div>
+    </div><div id="namespace_systemservices" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;systemServices.html" title="systemServices">
+			    <span>systemServices</span><span>(<span><span>instances<span>: <span class="td-ref">Array</span>&lt;<span class="td-ref">Pick</span>&lt;<span class="td-ref">Instance</span><span>, </span><span><span class="td-str">"name"</span><span class="td-op"> | </span><span class="td-str">"port"</span></span>&gt;&gt;</span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>libpq's system-wide service file: every instance on its socket, no user and
+no secret, so psql service=prime works for everyone (their own role, peer).</p>
+</div></div></div>
+    </div><div id="namespace_unitof" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;unitOf.html" title="unitOf">
+			    <span>unitOf</span><span>(<div class="ml-4"><div><span>version<span>: <span class="td-kw">number</span></span></span>,</div><div><span>name<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The unit of a cluster, from postgresql-common.</p>
+</div></div></div>
+    </div><div id="namespace_upsertpgpass" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;upsertPgpass.html" title="upsertPgpass">
+			    <span>upsertPgpass</span><span>(<div class="ml-4"><div><span>file<span>: <span class="td-kw">string</span></span></span>,</div><div><span>line<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Replace (or add) the .pgpass line for host:port:*:user.</p>
+</div></div></div>
+    </div><div id="namespace_upsertsection" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;upsertSection.html" title="upsertSection">
+			    <span>upsertSection</span><span>(<div class="ml-4"><div><span>file<span>: <span class="td-kw">string</span></span></span>,</div><div><span>name<span>: <span class="td-kw">string</span></span></span>,</div><div><span>block<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Replace (or add) one [section] of an ini-like file, leaving every other
+line the user wrote alone.</p>
+</div></div></div>
+    </div></div>
+</section>
+<section class="section"  id="archon&#x2F;pg&#x2F;config_ts_interfaces"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;pg&#x2F;config_ts_interfaces" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Interfaces</h2></div><div class="namespaceSection"><div id="namespace_cluster" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;Cluster.html" title="Cluster">
+			    <span>Cluster</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A row of <code>pg_lsclusters --no-header</code>: version, name, port, status, owner, data, log.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;Cluster.html#property_data">
+                  <span>data</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its data directory.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;Cluster.html#property_log">
+                  <span>log</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its log file (empty when pg_lsclusters printed none).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;Cluster.html#property_name">
+                  <span>name</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its cluster name.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;Cluster.html#property_owner">
+                  <span>owner</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The Linux account that owns it (normally postgres).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;Cluster.html#property_port">
+                  <span>port</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The port it listens on.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;Cluster.html#property_status">
+                  <span>status</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>&quot;online&quot;, &quot;down&quot;, and so on, as pg_lsclusters prints it.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;Cluster.html#property_version">
+                  <span>version</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its major version.</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_connectinfo-1" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;ConnectInfo.html" title="ConnectInfo">
+			    <span>ConnectInfo</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The app contract's JSON (spec 038 FR-019, spec 039): stable keys, nothing secret.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;ConnectInfo.html#property_database">
+                  <span>database</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The role's default database (see <a href="../../.././archon/pg/config.ts/~/defaultDatabase.html">defaultDatabase</a>).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;ConnectInfo.html#property_files">
+                  <span>files</span><span>: { service<span>: <span class="td-kw">string</span></span>; pgpass<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The files written for the role: its service file, and its .pgpass when it has a password.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;ConnectInfo.html#property_host">
+                  <span>host</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The socket directory (peer: no password), or the published name with --remote.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;ConnectInfo.html#property_port">
+                  <span>port</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The instance's port.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;ConnectInfo.html#property_published">
+                  <span>published</span><span>: { host<span>: <span class="td-kw">string</span></span>; port<span>: <span class="td-kw">number</span></span>; sslmode<span>: <span class="td-str">"verify-full"</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Present when the instance is published (open to every network; the router filters).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;ConnectInfo.html#property_service">
+                  <span>service</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The libpq service name: the instance's name.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;ConnectInfo.html#property_sslmode">
+                  <span>sslmode</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>libpq's sslmode: &quot;disable&quot; on the socket, &quot;verify-full&quot; with --remote.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;ConnectInfo.html#property_user">
+                  <span>user</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The role to connect as.</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_instance" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;Instance.html" title="Instance">
+			    <span>Instance</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One instance a host keeps, resolved from the model and the host's record
+(see <a href="../../.././archon/pg/config.ts/~/instancesOf.html">instancesOf</a>).</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;Instance.html#property_databases">
+                  <span>databases</span><span>: <span class="td-ref">PgDatabaseDef</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The databases the model puts in it (empty when only recorded).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;Instance.html#property_environment">
+                  <span>environment</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Shown in the psql prompt (default production).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;Instance.html#property_inmodel">
+                  <span>inModel</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>In the host's model file (else only recorded by an operator's ensure).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;Instance.html#property_name">
+                  <span>name</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The instance's name (its Debian cluster name).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;Instance.html#property_port">
+                  <span>port</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>undefined until allocated (first ensure).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;Instance.html#property_protected">
+                  <span>protected</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>psql turns AUTOCOMMIT off and warns (default true for production).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;Instance.html#property_published">
+                  <span>published</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Whether it is published: reachable on the server's address over TLS.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;Instance.html#property_record">
+                  <span>record</span><span>: <span class="td-ref">PgRecord</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The host's record of it, when Archon created it.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;Instance.html#property_roles">
+                  <span>roles</span><span>: <span class="td-ref">Role</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Login roles: every person on the host, and each service a database names.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;Instance.html#property_version">
+                  <span>version</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its major version: the record's, else the model's, else Ubuntu's.</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_role" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;Role.html" title="Role">
+			    <span>Role</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A login role: a person in the model, or a service account (spec 039).</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;Role.html#property_admin">
+                  <span>admin</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A fleet admin: may create databases and watch and signal sessions; never a superuser.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;Role.html#property_kind">
+                  <span>kind</span><span>: <span><span class="td-str">"human"</span><span class="td-op"> | </span><span class="td-str">"service"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A person in the model, or a service account.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;Role.html#property_name">
+                  <span>name</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The role's name: the Linux account's name.</p>
+</div></div></li></ul></div>
+    </div></div>
+</section>
+<section class="section"  id="archon&#x2F;pg&#x2F;config_ts_variables"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;pg&#x2F;config_ts_variables" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Variables</h2></div><div class="namespaceSection"><div id="namespace_anywhere" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;ANYWHERE.html" title="ANYWHERE">
+			    <span>ANYWHERE</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Every address: a published instance is open to whatever the router lets through.</p>
+</div></div></div>
+    </div><div id="namespace_identity_spec" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;IDENTITY_SPEC.html" title="IDENTITY_SPEC">
+			    <span>IDENTITY_SPEC</span><span>: <span class="td-str">"039-pg-identity"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Linux identities are PostgreSQL identities (spec 039).</p>
+</div></div></div>
+    </div><div id="namespace_name_re" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;NAME_RE.html" title="NAME_RE">
+			    <span>NAME_RE</span><span>: <span class="td-ref">RegExp</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Names: lowercase letters, digits, and dashes; a DNS label and a cluster name.</p>
+</div></div></div>
+    </div><div id="namespace_pg" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;PG.html" title="PG">
+			    <span>PG</span><span>: { ubuntuVersion<span>: <span class="td-kw">number</span></span>; defaultName<span>: <span class="td-kw">string</span></span>; firstPort<span>: <span class="td-kw">number</span></span>; secrets<span>: <span class="td-kw">string</span></span>; dumps<span>: <span class="td-kw">string</span></span>; keepDumps<span>: <span class="td-kw">number</span></span>; createclusterConf<span>: <span class="td-kw">string</span></span>; pgdgSource<span>: <span class="td-kw">string</span></span>; pgdgKey<span>: <span class="td-kw">string</span></span>; stateFile<span>: <span class="td-kw">string</span></span>; systemServices<span>: <span class="td-kw">string</span></span>; sudoers<span>: <span class="td-kw">string</span></span>; socketDir<span>: <span class="td-kw">string</span></span>; humanIterations<span>: <span class="td-kw">number</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Fixed paths, names, and numbers for PostgreSQL on a host (spec 038).</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;PG.html#property_createclusterconf">
+                  <span>createclusterConf</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Stops Ubuntu's package from creating a <code>main</code> cluster Archon does not own.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;PG.html#property_defaultname">
+                  <span>defaultName</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The default instance's name.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;PG.html#property_dumps">
+                  <span>dumps</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Dumps (spec 016 archives them nightly with the rest of the target).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;PG.html#property_firstport">
+                  <span>firstPort</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The first port tried when allocating one to a new instance.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;PG.html#property_humaniterations">
+                  <span>humanIterations</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>PBKDF2 rounds for a person's synced Linux password (services' random passwords use 4096).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;PG.html#property_keepdumps">
+                  <span>keepDumps</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How many dumps of each database are kept.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;PG.html#property_pgdgkey">
+                  <span>pgdgKey</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The PGDG signing key as Ubuntu's own postgresql-common ships it (Article 12).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;PG.html#property_pgdgsource">
+                  <span>pgdgSource</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The apt source file for PGDG (only for versions Ubuntu does not ship).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;PG.html#property_secrets">
+                  <span>secrets</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Passwords, root-only except the role's own account (FR-012).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;PG.html#property_socketdir">
+                  <span>socketDir</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The directory of the clusters' Unix sockets (peer authentication).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;PG.html#property_statefile">
+                  <span>stateFile</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The operator's record: the host's own archon.sql (opt-in pg).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;PG.html#property_sudoers">
+                  <span>sudoers</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The sudoers file that lets operators run psql as postgres or an app's account.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;PG.html#property_systemservices">
+                  <span>systemServices</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>libpq's system-wide services (Debian's PGSYSCONFDIR): every instance, no secrets.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;PG.html#property_ubuntuversion">
+                  <span>ubuntuVersion</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Ubuntu 26.04's PostgreSQL; other versions come from PGDG (FR-002).</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_pg_unit" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;PG_UNIT.html" title="PG_UNIT">
+			    <span>PG_UNIT</span><span>: <span class="td-str">"postgresql.service"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>postgresql-common's umbrella unit: every cluster is PartOf it; the opt-in switch masks it.</p>
+</div></div></div>
+    </div><div id="namespace_prime" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;PRIME.html" title="PRIME">
+			    <span>PRIME</span><span>: <span class="td-ref">PgInstanceDef</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The default instance: PostgreSQL 18 named prime (a host's model adds its databases).</p>
+</div></div></div>
+    </div><div id="namespace_role_re" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;ROLE_RE.html" title="ROLE_RE">
+			    <span>ROLE_RE</span><span>: <span class="td-ref">RegExp</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Role names: lowercase letters, digits, and underscores, at most 63 characters.</p>
+</div></div></div>
+    </div><div id="namespace_service_re" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;SERVICE_RE.html" title="SERVICE_RE">
+			    <span>SERVICE_RE</span><span>: <span class="td-ref">RegExp</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Service account names: s-&lt;app&gt; (spec 039).</p>
+</div></div></div>
+    </div><div id="namespace_service_uids" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;SERVICE_UIDS.html" title="SERVICE_UIDS">
+			    <span>SERVICE_UIDS</span><span>: { min<span>: <span class="td-kw">number</span></span>; max<span>: <span class="td-kw">number</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The UID range of service accounts (spec 039).</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;SERVICE_UIDS.html#property_max">
+                  <span>max</span><span>: <span class="td-kw">number</span></span></a></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;SERVICE_UIDS.html#property_min">
+                  <span>min</span><span>: <span class="td-kw">number</span></span></a></li></ul></div>
+    </div><div id="namespace_spec" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;pg&#x2F;config.ts&#x2F;~&#x2F;SPEC.html" title="SPEC">
+			    <span>SPEC</span><span>: <span class="td-str">"038-pg"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The spec that governs PostgreSQL instances.</p>
+</div></div></div>
+    </div></div>
+</section>
+</div>
+</div>
+</section>
+</main><div class="toc">
+    <div><div class="usageContent">
+    <h3>Usage</h3><div class="markdown"><pre class="highlight"><code class="language-typescript">import * as mod from &quot;archon/pg/config.ts&quot;;
+</code><button class="copyButton" data-copy="import * as mod from &quot;archon/pg/config.ts&quot;;
+"><svg
+  class="copy"
+  width="15"
+  height="15"
+  viewBox="0 0 15 15"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <rect x="2" y="2" width="7" height="7" fill="none" />
+  <rect x="6" y="6" width="7" height="7" fill="none" />
+  <path
+    d="M1.55566 2.7C1.55566 2.03726 2.09292 1.5 2.75566 1.5H8.75566C9.41841 1.5 9.95566 2.03726 9.95566 2.7V5.1H12.3557C13.0184 5.1 13.5557 5.63726 13.5557 6.3V12.3C13.5557 12.9627 13.0184 13.5 12.3557 13.5H6.35566C5.69292 13.5 5.15566 12.9627 5.15566 12.3V9.9H2.75566C2.09292 9.9 1.55566 9.36274 1.55566 8.7V2.7ZM6.35566 9.9V12.3H12.3557V6.3H9.95566V8.7C9.95566 9.36274 9.41841 9.9 8.75566 9.9H6.35566ZM8.75566 8.7V2.7H2.75566V8.7H8.75566Z"
+    fill="currentColor"
+  />
+</svg>
+<svg
+  class="check"
+  width="15"
+  height="15"
+  viewBox="0 0 24 24"
+  stroke-width="2"
+  stroke="currentColor"
+  fill="none"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+  <path d="M5 12l5 5l10 -10" />
+</svg>
+</button><code></code></pre>
+</div></div><nav class="topSymbols">
+          <h3>Symbols</h3>
+          <ul><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;ensureHome.html" title="ensureHome"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
+                    ensureHome
+                  </span>
+                </a>
+              </li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;localHostName.html" title="localHostName"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
+                    localHostName
+                  </span>
+                </a>
+              </li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;Surface.html" title="Surface"><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
+<span class="hover:bg-TypeAlias/15 hover:bg-TypeAliasDark/15">
+                    Surface
+                  </span>
+                </a>
+              </li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;commandName.html" title="commandName"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
+                    commandName
+                  </span>
+                </a>
+              </li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;main.html" title="main"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
+                    main
+                  </span>
+                </a>
+              </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
+              <span class="leading-none">view all 2665 symbols</span><svg
+  width="16"
+  height="16"
+  viewBox="0 0 16 16"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <path
+    fill-rule="evenodd"
+    clip-rule="evenodd"
+    d="M5.76748 11.8159C5.5378 11.577 5.54525 11.1972 5.78411 10.9675L8.93431 8L5.78411 5.0325C5.54525 4.80282 5.5378 4.423 5.76748 4.18413C5.99715 3.94527 6.37698 3.93782 6.61584 4.1675L10.2158 7.5675C10.3335 7.68062 10.4 7.83679 10.4 8C10.4 8.16321 10.3335 8.31938 10.2158 8.4325L6.61584 11.8325C6.37698 12.0622 5.99715 12.0547 5.76748 11.8159Z"
+    fill="currentColor"
+  />
+</svg>
+</a></nav><nav class="documentNavigation">
+          <h3>Document Navigation</h3><ul><li><a href="#archon/pg/config_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_accessroles" title="accessRoles">accessRoles</a></li><li><a href="#namespace_allocateport" title="allocatePort">allocatePort</a></li><li><a href="#namespace_approvedinspec" title="approvedInSpec">approvedInSpec</a></li><li><a href="#namespace_archonconf" title="archonConf">archonConf</a></li><li><a href="#namespace_checkname" title="checkName">checkName</a></li><li><a href="#namespace_connectinfo" title="connectInfo">connectInfo</a></li><li><a href="#namespace_createargv" title="createArgv">createArgv</a></li><li><a href="#namespace_createdatabasesql" title="createDatabaseSql">createDatabaseSql</a></li><li><a href="#namespace_databaseaccesssql" title="databaseAccessSql">databaseAccessSql</a></li><li><a href="#namespace_defaultdatabase" title="defaultDatabase">defaultDatabase</a></li><li><a href="#namespace_desiredmembers" title="desiredMembers">desiredMembers</a></li><li><a href="#namespace_extensionsql" title="extensionSql">extensionSql</a></li><li><a href="#namespace_grouprolesql" title="groupRoleSql">groupRoleSql</a></li><li><a href="#namespace_hbaconf" title="hbaConf">hbaConf</a></li><li><a href="#namespace_instancesof" title="instancesOf">instancesOf</a></li><li><a href="#namespace_membershipsql" title="membershipSql">membershipSql</a></li><li><a href="#namespace_newpassword" title="newPassword">newPassword</a></li><li><a href="#namespace_ownership" title="ownership">ownership</a></li><li><a href="#namespace_parseclusters" title="parseClusters">parseClusters</a></li><li><a href="#namespace_pgdgsource" title="pgdgSource">pgdgSource</a></li><li><a href="#namespace_pgon" title="pgOn">pgOn</a></li><li><a href="#namespace_pgpassline" title="pgpassLine">pgpassLine</a></li><li><a href="#namespace_principals" title="principals">principals</a></li><li><a href="#namespace_publishedname" title="publishedName">publishedName</a></li><li><a href="#namespace_quoteident" title="quoteIdent">quoteIdent</a></li><li><a href="#namespace_quotelit" title="quoteLit">quoteLit</a></li><li><a href="#namespace_rolecomment" title="roleComment">roleComment</a></li><li><a href="#namespace_rolesfor" title="rolesFor">rolesFor</a></li><li><a href="#namespace_rolesql" title="roleSql">roleSql</a></li><li><a href="#namespace_schemaaccesssql" title="schemaAccessSql">schemaAccessSql</a></li><li><a href="#namespace_scrammatches" title="scramMatches">scramMatches</a></li><li><a href="#namespace_scramverifier" title="scramVerifier">scramVerifier</a></li><li><a href="#namespace_serviceblock" title="serviceBlock">serviceBlock</a></li><li><a href="#namespace_sudoerspg" title="sudoersPg">sudoersPg</a></li><li><a href="#namespace_systemservices" title="systemServices">systemServices</a></li><li><a href="#namespace_unitof" title="unitOf">unitOf</a></li><li><a href="#namespace_upsertpgpass" title="upsertPgpass">upsertPgpass</a></li><li><a href="#namespace_upsertsection" title="upsertSection">upsertSection</a></li></ul></li><li><a href="#archon/pg/config_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_cluster" title="Cluster">Cluster</a></li><li><a href="#namespace_connectinfo-1" title="ConnectInfo">ConnectInfo</a></li><li><a href="#namespace_instance" title="Instance">Instance</a></li><li><a href="#namespace_role" title="Role">Role</a></li></ul></li><li><a href="#archon/pg/config_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_anywhere" title="ANYWHERE">ANYWHERE</a></li><li><a href="#namespace_identity_spec" title="IDENTITY_SPEC">IDENTITY_SPEC</a></li><li><a href="#namespace_name_re" title="NAME_RE">NAME_RE</a></li><li><a href="#namespace_pg" title="PG">PG</a></li><li><a href="#namespace_pg_unit" title="PG_UNIT">PG_UNIT</a></li><li><a href="#namespace_prime" title="PRIME">PRIME</a></li><li><a href="#namespace_role_re" title="ROLE_RE">ROLE_RE</a></li><li><a href="#namespace_service_re" title="SERVICE_RE">SERVICE_RE</a></li><li><a href="#namespace_service_uids" title="SERVICE_UIDS">SERVICE_UIDS</a></li><li><a href="#namespace_spec" title="SPEC">SPEC</a></li></ul></li></ul></nav></div>
+  </div></div>
+</div>
+</div>
+</body>
+</html>
