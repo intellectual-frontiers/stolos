@@ -344,7 +344,7 @@ deno run -A --frozen stolos.ts --fleet $FLEET workstation add $WS"
   log "$WS: set up; now the agent's path to $SERVER"
   scp -i "$W/admin" -o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
     -o LogLevel=ERROR "$W/admin" "$ADMIN@$ip:.ssh/id_ed25519"
-  ssh_to "$ADMIN@$ip" "chmod 600 ~/.ssh/id_ed25519; archon verify && cd /srv/archon && /usr/local/bin/deno run -A --frozen stolos.ts --fleet $FLEET fleet query 'select host, ok from archon_install'" \
+  ssh_to "$ADMIN@$ip" "chmod 600 ~/.ssh/id_ed25519; archon verify && cd /srv/archon && /usr/local/bin/deno run -A --frozen stolos.ts --fleet $FLEET fleet query 'select ok from archon_install'" \
     2>&1 | plain | tee "$OUT/workstation-query.txt" || fail "the workstation could not query $SERVER"
   answered "$OUT/workstation-query.txt" || fail "the workstation's fleet query did not answer ok for $SERVER"
   log "$WS reached $SERVER over MCP"
