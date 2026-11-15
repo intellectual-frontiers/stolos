@@ -123,6 +123,9 @@ input[type=text], input[type=password], select { font: inherit; width: 100%; bor
 .signin { min-height: 100vh; display: grid; place-items: center; padding: 40px max(16px, env(safe-area-inset-right, 0px)) 40px max(16px, env(safe-area-inset-left, 0px)); }
 .signin .card { width: min(400px, 100%); padding: 28px; box-shadow: var(--shadow); }
 .signin .logos { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.diagram { margin: 0; overflow-x: auto; } .diagram pre.mermaid { margin: 0; background: transparent; text-align: center; }
+.diagram pre.mermaid.plain { text-align: left; font-family: var(--mono); font-size: 12px; white-space: pre; }
+.diagram figcaption { margin-top: 8px; }
 .prose { max-width: 78ch; } .prose pre { background: var(--code); padding: 10px; border-radius: 8px; overflow-x: auto; }
 @media (max-width: 860px) {
   .shell { grid-template-columns: minmax(0, 1fr); }
@@ -132,3 +135,50 @@ input[type=text], input[type=password], select { font: inherit; width: 100%; bor
   .fleetmark span, .brand small, .me .who { display: none; }
 }
 `;
+
+/** Mermaid's browser bundle in the engine's repository, and its SHA-256 (5.5 MB: never in the modules). */
+export const MERMAID = {
+  path: "vendor/mermaid/mermaid-12.2.0.min.js",
+  sha256: "a8a6a6f805b074a8261a2825c86f99c8054acb3b35f50bb7e24a4f9f2c3c3b9f",
+  /** Where the consoles serve it. */
+  url: "/static/mermaid-12.2.0.min.js",
+} as const;
+
+/** SHA-256 of some bytes, as lowercase hex. */
+export async function sha256Hex(data: Uint8Array<ArrayBuffer>): Promise<string> {
+  const d = await crypto.subtle.digest("SHA-256", data);
+  return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+/**
+ * A large vendored file, from beside this engine (the checkout, or the
+ * release on GitHub this engine was imported from), checked against its
+ * SHA-256 and kept in `cacheDir` (fetched once per version). Undefined when it
+ * cannot be had or does not match: the page then works without it.
+ */
+export async function vendored(
+  file: { path: string; sha256: string },
+  cacheDir: string,
+  base: string = new URL("../../../", import.meta.url).href,
+): Promise<Uint8Array<ArrayBuffer> | undefined> {
+  const cached = `${cacheDir}/${file.path.split("/").pop()}`;
+  try {
+    const b = await Deno.readFile(cached);
+    if ((await sha256Hex(b)) === file.sha256) return b;
+  } catch { /* not cached yet */ }
+  let bytes: Uint8Array<ArrayBuffer> | undefined;
+  try {
+    const url = new URL(file.path, base);
+    bytes = url.protocol === "file:" ? await Deno.readFile(url) : new Uint8Array(
+      await (await fetch(url, { signal: AbortSignal.timeout(30_000) })).arrayBuffer(),
+    );
+  } catch {
+    return undefined;
+  }
+  if ((await sha256Hex(bytes)) !== file.sha256) return undefined;
+  try {
+    await Deno.mkdir(cacheDir, { recursive: true });
+    await Deno.writeFile(cached, bytes);
+  } catch { /* serve it anyway; fetched again next time */ }
+  return bytes;
+}
