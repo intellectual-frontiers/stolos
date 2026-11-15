@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>All Symbols - Stolos v0.112.0 documentation</title>
+  <title>All Symbols - Stolos v0.113.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href=".&#x2F;" class="contextLink">Stolos v0.112.0</a>
+    <a href=".&#x2F;" class="contextLink">Stolos v0.113.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -20505,7 +20505,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_item" clas
 Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_itemkind" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;evidence&#x2F;bundle.ts&#x2F;~&#x2F;ItemKind.html" title="ItemKind">
-			    <span>ItemKind</span><span> = <div class="ml-indent"><span><span class="td-str">"observation"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"verify"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"commit"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"oscal"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"signers"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"people"</span></span></div></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What an item is.</p>
+			    <span>ItemKind</span><span> = <div class="ml-indent"><span><span class="td-str">"observation"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"verify"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"commit"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"oscal"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"signers"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"people"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"summary"</span></span></div></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What an item is.</p>
 </div></div></div>
     </div><div id="namespace_signer" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
 <div class="namespaceItemContent">
@@ -48090,10 +48090,819 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_release" c
 </div>
     </div>
     <div>
+      <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;commands.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;trust&#x2F;commands.ts</a>
+
+      <div class="ml-4 mt-2"><section>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-311"><div class="markdown_summary"><p>Spec 081: <code>stolos trust build --bundle &lt;zip&gt;</code>: verify an evidence bundle,
+then write a Trust Center from it: <code>index.html</code>, and under <code>evidence/</code> the
+bundle it links to (the full one when gated; a signed public summary when
+public), unpacked so that each claim's link is the item itself.</p>
+</div><section class="section"  id="archon&#x2F;trust&#x2F;commands_ts_functions"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;trust&#x2F;commands_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Functions</h2></div><div class="namespaceSection"><div id="namespace_buildtrustsite" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;commands.ts&#x2F;~&#x2F;buildTrustSite.html" title="buildTrustSite">
+			    <span>buildTrustSite</span><span>(<div class="ml-4"><div><span>zip<span>: <span class="td-ref">Uint8Array</span></span></span>,</div><div><span>fileName<span>: <span class="td-kw">string</span></span></span>,</div><div><span>o<span class="td-op">?</span><span>: <span class="td-ref">TrustOptions</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">TrustSite</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Verify the bundle, then build its Trust Center's files (index.html and evidence/...).</p>
+</div></div></div>
+    </div><div id="namespace_iscontact" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;commands.ts&#x2F;~&#x2F;isContact.html" title="isContact">
+			    <span>isContact</span><span>(<span><span>s<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">boolean</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Whether a link is one the company may put on its page: https: or mailto:.</p>
+</div></div></div>
+    </div><div id="namespace_parseframeworks" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;commands.ts&#x2F;~&#x2F;parseFrameworks.html" title="parseFrameworks">
+			    <span>parseFrameworks</span><span>(<span><span>s<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span></span>)<span>: <span><span class="td-ref">FrameworkId</span>[]<span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Parse --frameworks (soc2,hipaa), or throw naming the unknown one.</p>
+</div></div></div>
+    </div><div id="namespace_trustbuild" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;commands.ts&#x2F;~&#x2F;trustBuild.html" title="trustBuild">
+			    <span>trustBuild</span><span>(<span><span>o<span>: { bundle<span>: <span class="td-kw">string</span></span>; out<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; frameworks<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; public<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>; gated<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>; onRequest<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>; key<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; signers<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; contact<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; catalog<span class="td-op">?</span><span>: <span><span class="td-ref">ScfCatalog</span><span class="td-op"> | </span><span class="td-kw">null</span></span></span>; sign<span class="td-op">?</span><span>: <span class="td-ref">Signer</span></span>; now<span class="td-op">?</span><span>: <span class="td-ref">Date</span></span>;  }</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos trust build</code>: verify, build, and write the Trust Center; exit 1 with the reason when refused.</p>
+</div></div></div>
+    </div></div>
+</section>
+<section class="section"  id="archon&#x2F;trust&#x2F;commands_ts_interfaces"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;trust&#x2F;commands_ts_interfaces" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Interfaces</h2></div><div class="namespaceSection"><div id="namespace_trustoptions" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;commands.ts&#x2F;~&#x2F;TrustOptions.html" title="TrustOptions">
+			    <span>TrustOptions</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How to build a Trust Center.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;commands.ts&#x2F;~&#x2F;TrustOptions.html#property_allowedsigners">
+                  <span>allowedSigners</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>An allowed_signers text to verify the bundle with instead of its own.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;commands.ts&#x2F;~&#x2F;TrustOptions.html#property_catalog">
+                  <span>catalog</span><span>: <span class="td-ref">ScfCatalog</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The SCF catalog (only the release the bundle names is used).</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;commands.ts&#x2F;~&#x2F;TrustOptions.html#property_contact">
+                  <span>contact</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The company's link for questions and access requests (https: or mailto:).</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;commands.ts&#x2F;~&#x2F;TrustOptions.html#property_frameworks">
+                  <span>frameworks</span><span>: <span class="td-ref">FrameworkId</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The frameworks to show (default: every one the mappings reach).</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;commands.ts&#x2F;~&#x2F;TrustOptions.html#property_mode">
+                  <span>mode</span><span>: <span><span class="td-str">"public"</span><span class="td-op"> | </span><span class="td-str">"gated"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Public (the default: redacted, a summary bundle) or gated (everything, the full bundle).</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;commands.ts&#x2F;~&#x2F;TrustOptions.html#property_now">
+                  <span>now</span><span>: <span class="td-ref">Date</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When the page is built.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;commands.ts&#x2F;~&#x2F;TrustOptions.html#property_sign">
+                  <span>sign</span><span>: <span class="td-ref">Signer</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Public: sign the summary bundle (as the full bundle's signer). Absent: the evidence is on request.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;commands.ts&#x2F;~&#x2F;TrustOptions.html#property_stolos">
+                  <span>stolos</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The Stolos version building it.</p>
+</div></div></li></ul></div>
+    </div></div>
+</section>
+<section class="section"  id="archon&#x2F;trust&#x2F;commands_ts_type-aliases"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;trust&#x2F;commands_ts_type-aliases" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_trustsite" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;commands.ts&#x2F;~&#x2F;TrustSite.html" title="TrustSite">
+			    <span>TrustSite</span><span> = <div class="ml-indent"><span>{ ok<span>: <span class="td-lit">false</span></span>; problems<span>: <span class="td-kw">string</span>[]</span>;  }</span><br /><span><span class="td-op"> | </span>{ ok<span>: <span class="td-lit">true</span></span>; model<span>: <span class="td-ref">TrustModel</span></span>; files<span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-ref">Uint8Array</span>&gt;</span>;  }</span></div></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A Trust Center, built, or why not.</p>
+</div></div></div>
+    </div></div>
+</section>
+<section class="section"  id="archon&#x2F;trust&#x2F;commands_ts_variables"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;trust&#x2F;commands_ts_variables" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Variables</h2></div><div class="namespaceSection"><div id="namespace_marker" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;commands.ts&#x2F;~&#x2F;MARKER.html" title="MARKER">
+			    <span>MARKER</span><span>: <span class="td-str">".stolos-trust"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The file a Trust Center's output folder holds, so a rebuild may replace it (and nothing else).</p>
+</div></div></div>
+    </div></div>
+</section>
+</div>
+</div>
+</section>
+</div>
+    </div>
+    <div>
+      <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;mod.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;trust&#x2F;mod.ts</a>
+
+      <div class="ml-4 mt-2"><section>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-312"><div class="markdown_summary"><h1>Trust Center</h1>
+</div></div>
+</div>
+</section>
+</div>
+    </div>
+    <div>
+      <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;trust&#x2F;model.ts</a>
+
+      <div class="ml-4 mt-2"><section>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-313"><div class="markdown_summary"><p>Spec 081: what a Trust Center says, read from a verified evidence bundle
+(spec 072) and nothing else. The bundle's OSCAL assessment results (spec
+071) give every check Stolos made and the SCF controls it is evidence for;
+the bundle's other items (verify results, observations, commits) say when
+each source was last observed; the SCF Council's mappings (STRM), from the
+catalog release the bundle names, carry each control to each framework's
+requirements. Freshness is spec 073's: each source held to its default
+cadence as of the moment the bundle was signed, and the bundle as a whole
+held to FedRAMP 20x's longest validation interval (7 days) as of the
+moment the page is built.</p>
+</div><section class="section"  id="archon&#x2F;trust&#x2F;model_ts_functions"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;trust&#x2F;model_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Functions</h2></div><div class="namespaceSection"><div id="namespace_assessmentitem" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;assessmentItem.html" title="assessmentItem">
+			    <span>assessmentItem</span><span>(<span><span>m<span>: <span class="td-ref">Manifest</span></span></span></span>)<span>: <span><span class="td-ref">ManifestItem</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The bundle's assessment results (its newest &quot;oscal&quot; item named assessment-results.json).</p>
+</div></div></div>
+    </div><div id="namespace_findingscatalog" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;findingsCatalog.html" title="findingsCatalog">
+			    <span>findingsCatalog</span><span>(<div class="ml-4"><div><span>ar<span>: <span class="td-ref">OscalResults</span></span></span>,</div><div><span>version<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">ScfCatalog</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>SP 800-53 mappings from the bundle's own OSCAL findings (each finding names
+its control and the SCF controls that reach it), as a catalog with only
+that framework: used when the SCF catalog of the bundle's release is not on
+this PC.</p>
+</div></div></div>
+    </div><div id="namespace_oscalchecks" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;oscalChecks.html" title="oscalChecks">
+			    <span>oscalChecks</span><span>(<span><span>ar<span>: <span class="td-ref">OscalResults</span></span></span></span>)<span>: <span class="td-ref">Array</span>&lt;<span><span class="td-ref">Evidence</span><span class="td-op"> & </span>{ observation<span>: <span class="td-kw">string</span></span>;  }</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The checks an OSCAL assessment-results document records, as evidence.</p>
+</div></div></div>
+    </div><div id="namespace_scfversionof" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;scfVersionOf.html" title="scfVersionOf">
+			    <span>scfVersionOf</span><span>(<span><span>ar<span>: <span class="td-ref">OscalResults</span></span></span></span>)<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The SCF release an OSCAL document's back-matter names (its STRM resource), or undefined.</p>
+</div></div></div>
+    </div><div id="namespace_trustmodel" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;trustModel.html" title="trustModel">
+			    <span>trustModel</span><span>(<span><span>i<span>: <span class="td-ref">TrustInput</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">TrustModel</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The Trust Center's model of a verified bundle; throws with the reason when
+the bundle cannot back one (not verified, no assessment results, a
+framework asked for that its mappings do not reach).</p>
+</div></div></div>
+    </div></div>
+</section>
+<section class="section"  id="archon&#x2F;trust&#x2F;model_ts_interfaces"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;trust&#x2F;model_ts_interfaces" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Interfaces</h2></div><div class="namespaceSection"><div id="namespace_oscalfinding" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;OscalFinding.html" title="OscalFinding">
+			    <span>OscalFinding</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>An OSCAL finding, as Stolos reads it.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;OscalFinding.html#property_props">
+                  <span>props</span><span>: <span class="td-ref">OscalProp</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its SCF controls.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;OscalFinding.html#property_title">
+                  <span>title</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>&quot;&lt;control id&gt; &lt;title&gt;&quot;.</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_oscalobservation" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;OscalObservation.html" title="OscalObservation">
+			    <span>OscalObservation</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>An OSCAL observation, as Stolos reads it.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;OscalObservation.html#property_collected">
+                  <span>collected</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When it was collected.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;OscalObservation.html#property_description">
+                  <span>description</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>&quot;&lt;result&gt;: &lt;detail&gt;&quot;.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;OscalObservation.html#property_props">
+                  <span>props</span><span>: <span class="td-ref">OscalProp</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its SCF controls, result, and source.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;OscalObservation.html#property_remarks">
+                  <span>remarks</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>&quot;Fix: ...&quot;, when failing.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;OscalObservation.html#property_title">
+                  <span>title</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>&quot;&lt;subject&gt;: &lt;check&gt;&quot;.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;OscalObservation.html#property_uuid">
+                  <span>uuid</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its UUID.</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_oscalprop" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;OscalProp.html" title="OscalProp">
+			    <span>OscalProp</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>An OSCAL property, as Stolos reads it.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;OscalProp.html#property_name">
+                  <span>name</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its name.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;OscalProp.html#property_ns">
+                  <span>ns</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its namespace.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;OscalProp.html#property_value">
+                  <span>value</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its value.</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_oscalresults" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;OscalResults.html" title="OscalResults">
+			    <span>OscalResults</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The parts of an OSCAL assessment-results document a Trust Center reads.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;OscalResults.html#property_assessment-results">
+                  <span>assessment-results</span><span>: { results<span class="td-op">?</span><span>: <span class="td-ref">Array</span>&lt;<div class="ml-indent"><div>{ observations<span class="td-op">?</span><span>: <span class="td-ref">OscalObservation</span>[]</span>; findings<span class="td-op">?</span><span>: <span class="td-ref">OscalFinding</span>[]</span>;  }</div></div>&gt;</span>; back-matter<span class="td-op">?</span><span>: { resources<span class="td-op">?</span><span>: <span class="td-ref">Array</span>&lt;{ title<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }&gt;</span>;  }</span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The document.</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_trustcheck" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustCheck.html" title="TrustCheck">
+			    <span>TrustCheck</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One check from the bundle's OSCAL assessment results, with the bundle items behind it.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustCheck.html#property_items">
+                  <span>items</span><span>: <span class="td-ref">ManifestItem</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The bundle items that bear on it (the OSCAL results, and its source's own items).</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustCheck.html#property_observation">
+                  <span>observation</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its OSCAL observation's UUID.</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_trustcontrol" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustControl.html" title="TrustControl">
+			    <span>TrustControl</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One SCF control, as the Trust Center shows it.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustControl.html#property_checks">
+                  <span>checks</span><span>: <span class="td-ref">TrustCheck</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its checks.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustControl.html#property_counts">
+                  <span>counts</span><span>: <span class="td-ref">Record</span>&lt;<span><span class="td-ref">Evidence</span>[<span class="td-str">"status"</span>]<span class="td-op"> | </span><span class="td-str">"stale"</span></span><span>, </span><span class="td-kw">number</span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How many checks have each result, and how many are stale.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustControl.html#property_freshness">
+                  <span>freshness</span><span>: <span class="td-ref">ControlFreshness</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its evidence's age as of the bundle's signing.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustControl.html#property_how">
+                  <span>how</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What Stolos looks at for it, in plain words.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustControl.html#property_id">
+                  <span>id</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its SCF id (CRY-07).</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustControl.html#property_items">
+                  <span>items</span><span>: <span class="td-ref">ManifestItem</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The bundle items that back it, once each, in manifest order.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustControl.html#property_name">
+                  <span>name</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its name (SCF's).</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustControl.html#property_status">
+                  <span>status</span><span>: <span class="td-ref">Coverage</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its status from its checks, stale checks counted as failing (spec 073).</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_trustframework" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustFramework.html" title="TrustFramework">
+			    <span>TrustFramework</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One framework, by its requirements.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustFramework.html#property_id">
+                  <span>id</span><span>: <span class="td-ref">FrameworkId</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its id (soc2).</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustFramework.html#property_requirements">
+                  <span>requirements</span><span>: <span class="td-ref">TrustRequirement</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its requirements.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustFramework.html#property_short">
+                  <span>short</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its short name.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustFramework.html#property_title">
+                  <span>title</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its full title.</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_trustinput" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustInput.html" title="TrustInput">
+			    <span>TrustInput</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What a Trust Center is built from: a bundle, its verification, and the catalog.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustInput.html#property_catalog">
+                  <span>catalog</span><span>: <span class="td-ref">ScfCatalog</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The SCF catalog, when this PC has it (only the release the bundle names is used).</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustInput.html#property_filename">
+                  <span>fileName</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The bundle's file name.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustInput.html#property_frameworks">
+                  <span>frameworks</span><span>: <span class="td-ref">FrameworkId</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The frameworks to show (default: every one the mappings reach).</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustInput.html#property_now">
+                  <span>now</span><span>: <span class="td-ref">Date</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When the page is built.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustInput.html#property_verified">
+                  <span>verified</span><span>: <span class="td-ref">VerifyResult</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What <code>verifyBundle</code> found (it must be ok).</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustInput.html#property_zip">
+                  <span>zip</span><span>: <span class="td-ref">Uint8Array</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The bundle's bytes.</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_trustmodel-1" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustModel.html" title="TrustModel">
+			    <span>TrustModel</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Everything a Trust Center page says, from one bundle.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustModel.html#property_agems">
+                  <span>ageMs</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The bundle's age when the page was built.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustModel.html#property_asof">
+                  <span>asOf</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When the page was built (ISO).</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustModel.html#property_bundle">
+                  <span>bundle</span><span>: { fileName<span>: <span class="td-kw">string</span></span>; sha256<span>: <span class="td-kw">string</span></span>; head<span>: <span class="td-kw">string</span></span>; items<span>: <span class="td-kw">number</span></span>; commits<span>: <span class="td-kw">number</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The bundle itself.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustModel.html#property_bundlestale">
+                  <span>bundleStale</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Older than FedRAMP 20x's longest validation interval when the page was built: every status is stale.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustModel.html#property_company">
+                  <span>company</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The company (the fleet's title).</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustModel.html#property_controls">
+                  <span>controls</span><span>: <span class="td-ref">TrustControl</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Every SCF control Stolos gives evidence for, with or without evidence in this bundle.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustModel.html#property_created">
+                  <span>created</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When the bundle was made and signed.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustModel.html#property_fleetid">
+                  <span>fleetId</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fleet's id (the bundle's hash chain starts from it).</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustModel.html#property_frameworks">
+                  <span>frameworks</span><span>: <span class="td-ref">TrustFramework</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The frameworks shown.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustModel.html#property_maxagedays">
+                  <span>maxAgeDays</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>That interval, in days.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustModel.html#property_omitted">
+                  <span>omitted</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Evidence the bundle says it could not include.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustModel.html#property_period">
+                  <span>period</span><span>: { from<span>: <span class="td-kw">string</span></span>; to<span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The period the evidence covers (ISO dates).</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustModel.html#property_repo">
+                  <span>repo</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fleet repository (owner/name): shown only behind access (gated).</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustModel.html#property_scf">
+                  <span>scf</span><span>: { version<span>: <span class="td-kw">string</span></span>; mappings<span>: <span><span class="td-str">"catalog"</span><span class="td-op"> | </span><span class="td-str">"bundle"</span></span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The SCF release the bundle's mappings name, and where the framework mappings came from.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustModel.html#property_signer">
+                  <span>signer</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fleet signer who signed it (verified).</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustModel.html#property_stolos">
+                  <span>stolos</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The Stolos version that made the bundle.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustModel.html#property_unavailable">
+                  <span>unavailable</span><span>: <span class="td-ref">Array</span>&lt;{ id<span>: <span class="td-ref">FrameworkId</span></span>; reason<span>: <span class="td-kw">string</span></span>;  }&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Frameworks that cannot be shown from this bundle, and why.</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_trustrequirement" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustRequirement.html" title="TrustRequirement">
+			    <span>TrustRequirement</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One framework requirement and the SCF controls that reach it.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustRequirement.html#property_controls">
+                  <span>controls</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The SCF controls mapped to it.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustRequirement.html#property_id">
+                  <span>id</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The requirement as its framework writes it (CC6.1, 164.312(a)(2)(iv)).</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;model.ts&#x2F;~&#x2F;TrustRequirement.html#property_status">
+                  <span>status</span><span>: <span class="td-ref">Coverage</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What its controls add up to.</p>
+</div></div></li></ul></div>
+    </div></div>
+</section>
+</div>
+</div>
+</section>
+</div>
+    </div>
+    <div>
+      <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;publish.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;trust&#x2F;publish.ts</a>
+
+      <div class="ml-4 mt-2"><section>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-314"><div class="markdown_summary"><p>Spec 081: what a Trust Center publishes next to its page, and what a public
+one leaves out.</p>
+</div><section class="section"  id="archon&#x2F;trust&#x2F;publish_ts_functions"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;trust&#x2F;publish_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Functions</h2></div><div class="namespaceSection"><div id="namespace_controlitemname" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;publish.ts&#x2F;~&#x2F;controlItemName.html" title="controlItemName">
+			    <span>controlItemName</span><span>(<span><span>id<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The item name of a control's summary in the summary bundle.</p>
+</div></div></div>
+    </div><div id="namespace_publiccontrol" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;publish.ts&#x2F;~&#x2F;publicControl.html" title="publicControl">
+			    <span>publicControl</span><span>(<span><span>c<span>: <span class="td-ref">TrustControl</span></span></span></span>)<span>: <span class="td-ref">PublicControl</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One control, redacted for the public.</p>
+</div></div></div>
+    </div><div id="namespace_publicindex" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;publish.ts&#x2F;~&#x2F;publicIndex.html" title="publicIndex">
+			    <span>publicIndex</span><span>(<span><span>m<span>: <span class="td-ref">TrustModel</span></span></span></span>)<span>: <span class="td-ref">PublicIndex</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The public index of a model.</p>
+</div></div></div>
+    </div><div id="namespace_signerlines" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;publish.ts&#x2F;~&#x2F;signerLines.html" title="signerLines">
+			    <span>signerLines</span><span>(<div class="ml-4"><div><span>allowed<span>: <span class="td-kw">string</span></span></span>,</div><div><span>signer<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The full bundle's allowed signers, reduced to the one who signed it: its
+principal and key only (a key's comment is often an email address), for
+the namespace bundles are signed in.</p>
+</div></div></div>
+    </div><div id="namespace_summarybundle" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;publish.ts&#x2F;~&#x2F;summaryBundle.html" title="summaryBundle">
+			    <span>summaryBundle</span><span>(<div class="ml-4"><div><span>m<span>: <span class="td-ref">TrustModel</span></span></span>,</div><div><span>full<span>: <span class="td-ref">Uint8Array</span></span></span>,</div><div><span>sign<span>: <span class="td-ref">Signer</span></span></span>,</div><div><span>o<span>: { stolos<span>: <span class="td-kw">string</span></span>; now<span>: <span class="td-ref">Date</span></span>;  }</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">SummaryBundle</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The public summary bundle: the redacted items, in a spec 072 bundle signed
+through <code>sign</code>. Refused unless it verifies and its signer is the full
+bundle's (by the full bundle's own allowed signers).</p>
+</div></div></div>
+    </div><div id="namespace_summaryitems" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;publish.ts&#x2F;~&#x2F;summaryItems.html" title="summaryItems">
+			    <span>summaryItems</span><span>(<span><span>m<span>: <span class="td-ref">TrustModel</span></span></span></span>)<span>: <span class="td-ref">Item</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The summary bundle's items: the index, then each control with evidence.</p>
+</div></div></div>
+    </div><div id="namespace_unpacked" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;publish.ts&#x2F;~&#x2F;unpacked.html" title="unpacked">
+			    <span>unpacked</span><span>(<span><span>zip<span>: <span class="td-ref">Uint8Array</span></span></span></span>)<span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-ref">Uint8Array</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A bundle's files, to publish unzipped beside it (so each item is a link: objects/&lt;sha256&gt;).</p>
+</div></div></div>
+    </div></div>
+</section>
+<section class="section"  id="archon&#x2F;trust&#x2F;publish_ts_interfaces"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;trust&#x2F;publish_ts_interfaces" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Interfaces</h2></div><div class="namespaceSection"><div id="namespace_publiccontrol-1" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;publish.ts&#x2F;~&#x2F;PublicControl.html" title="PublicControl">
+			    <span>PublicControl</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What a public Trust Center says about one control (and nothing else: see the table above).</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;publish.ts&#x2F;~&#x2F;PublicControl.html#property_backedby">
+                  <span>backedBy</span><span>: <span class="td-ref">Array</span>&lt;{ sha256<span>: <span class="td-kw">string</span></span>; kind<span>: <span class="td-kw">string</span></span>; at<span>: <span class="td-kw">string</span></span>;  }&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The full bundle's items behind it: SHA-256, kind, and time only.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;publish.ts&#x2F;~&#x2F;PublicControl.html#property_checks">
+                  <span>checks</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How many checks it has.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;publish.ts&#x2F;~&#x2F;PublicControl.html#property_counts">
+                  <span>counts</span><span>: <span class="td-ref">TrustControl</span>[<span class="td-str">"counts"</span>]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How many have each result, and how many are stale.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;publish.ts&#x2F;~&#x2F;PublicControl.html#property_format">
+                  <span>format</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>SUMMARY_FORMAT.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;publish.ts&#x2F;~&#x2F;PublicControl.html#property_how">
+                  <span>how</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What Stolos looks at for it, in plain words (Stolos's text, the same for every fleet).</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;publish.ts&#x2F;~&#x2F;PublicControl.html#property_id">
+                  <span>id</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its SCF id.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;publish.ts&#x2F;~&#x2F;PublicControl.html#property_name">
+                  <span>name</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its SCF name.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;publish.ts&#x2F;~&#x2F;PublicControl.html#property_observed">
+                  <span>observed</span><span>: { newest<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; oldest<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; untimed<span>: <span class="td-kw">number</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When its newest and oldest evidence was observed, and how many checks have no time.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;publish.ts&#x2F;~&#x2F;PublicControl.html#property_status">
+                  <span>status</span><span>: <span class="td-ref">TrustControl</span>[<span class="td-str">"status"</span>]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its status.</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_publicindex-1" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;publish.ts&#x2F;~&#x2F;PublicIndex.html" title="PublicIndex">
+			    <span>PublicIndex</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The public index: the bundle it summarizes, and each framework's requirements.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;publish.ts&#x2F;~&#x2F;PublicIndex.html#property_company">
+                  <span>company</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The company.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;publish.ts&#x2F;~&#x2F;PublicIndex.html#property_format">
+                  <span>format</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>SUMMARY_FORMAT.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;publish.ts&#x2F;~&#x2F;PublicIndex.html#property_frameworks">
+                  <span>frameworks</span><span>: <span class="td-ref">Array</span>&lt;<div class="ml-indent"><div>{ id<span>: <span class="td-kw">string</span></span>; title<span>: <span class="td-kw">string</span></span>; requirements<span>: <span class="td-ref">Array</span>&lt;{ id<span>: <span class="td-kw">string</span></span>; status<span>: <span class="td-kw">string</span></span>; controls<span>: <span class="td-kw">string</span>[]</span>;  }&gt;</span>;  }</div></div>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Each framework's requirements, with their status and SCF controls.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;publish.ts&#x2F;~&#x2F;PublicIndex.html#property_period">
+                  <span>period</span><span>: { from<span>: <span class="td-kw">string</span></span>; to<span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The period.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;publish.ts&#x2F;~&#x2F;PublicIndex.html#property_scf">
+                  <span>scf</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The SCF release the mappings are from.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;publish.ts&#x2F;~&#x2F;PublicIndex.html#property_source">
+                  <span>source</span><span>: { sha256<span>: <span class="td-kw">string</span></span>; head<span>: <span class="td-kw">string</span></span>; signer<span>: <span class="td-kw">string</span></span>; created<span>: <span class="td-kw">string</span></span>; items<span>: <span class="td-kw">number</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The full bundle: its file's SHA-256, its manifest's head, its signer, when signed, how many items.</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_summarybundle-1" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;publish.ts&#x2F;~&#x2F;SummaryBundle.html" title="SummaryBundle">
+			    <span>SummaryBundle</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A summary bundle, made and checked.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;publish.ts&#x2F;~&#x2F;SummaryBundle.html#property_manifest">
+                  <span>manifest</span><span>: <span class="td-ref">Manifest</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its manifest.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;publish.ts&#x2F;~&#x2F;SummaryBundle.html#property_zip">
+                  <span>zip</span><span>: <span class="td-ref">Uint8Array</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its bytes (a ZIP).</p>
+</div></div></li></ul></div>
+    </div></div>
+</section>
+<section class="section"  id="archon&#x2F;trust&#x2F;publish_ts_variables"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;trust&#x2F;publish_ts_variables" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Variables</h2></div><div class="namespaceSection"><div id="namespace_index_item" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;publish.ts&#x2F;~&#x2F;INDEX_ITEM.html" title="INDEX_ITEM">
+			    <span>INDEX_ITEM</span><span>: <span class="td-str">"trust/index.json"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The item name of the summary bundle's index.</p>
+</div></div></div>
+    </div><div id="namespace_summary_format" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;publish.ts&#x2F;~&#x2F;SUMMARY_FORMAT.html" title="SUMMARY_FORMAT">
+			    <span>SUMMARY_FORMAT</span><span>: <span class="td-str">"stolos-trust/1"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The summary documents' format.</p>
+</div></div></div>
+    </div></div>
+</section>
+</div>
+</div>
+</section>
+</div>
+    </div>
+    <div>
+      <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;site.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;trust&#x2F;site.ts</a>
+
+      <div class="ml-4 mt-2"><section>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-315"><div class="markdown_summary"><p>Spec 081: the Trust Center's page. One self-contained HTML file: its
+stylesheet and its one small script are inline (and pinned by SHA-256 in
+its Content-Security-Policy, which also forbids every request to anywhere
+else); it uses the system's fonts; it follows the reader's light or dark
+setting; it reads at phone width; and every status is written in words, not
+only in color. The script only turns &quot;N before this page was built&quot; into
+&quot;N ago&quot; by the reader's clock, and shows the stale-bundle banner when the
+page has aged past it; the page says the same without it.</p>
+</div><section class="section"  id="archon&#x2F;trust&#x2F;site_ts_functions"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;trust&#x2F;site_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Functions</h2></div><div class="namespaceSection"><div id="namespace_trustpage-1" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;site.ts&#x2F;~&#x2F;trustPage.html" title="trustPage">
+			    <span>trustPage</span><span>(<div class="ml-4"><div><span>m<span>: <span class="td-ref">TrustModel</span></span></span>,</div><div><span>o<span>: <span class="td-ref">PageOptions</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">string</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The Trust Center's page for a model.</p>
+</div></div></div>
+    </div></div>
+</section>
+<section class="section"  id="archon&#x2F;trust&#x2F;site_ts_interfaces"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;trust&#x2F;site_ts_interfaces" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Interfaces</h2></div><div class="namespaceSection"><div id="namespace_pageoptions" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;site.ts&#x2F;~&#x2F;PageOptions.html" title="PageOptions">
+			    <span>PageOptions</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What the page links to and how much it shows.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;site.ts&#x2F;~&#x2F;PageOptions.html#property_contact">
+                  <span>contact</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The company's own link for questions and access requests (https: or mailto:).</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;site.ts&#x2F;~&#x2F;PageOptions.html#property_mode">
+                  <span>mode</span><span>: <span><span class="td-str">"public"</span><span class="td-op"> | </span><span class="td-str">"gated"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Public (no subjects, details, or item names) or gated (everything in the bundle).</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;site.ts&#x2F;~&#x2F;PageOptions.html#property_published">
+                  <span>published</span><span>: { zip<span>: <span class="td-kw">string</span></span>; items<span>: <span class="td-ref">ManifestItem</span>[]</span>; signer<span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The bundle published beside the page, unzipped under <code>evidence/</code>: the
+full bundle (gated) or the summary bundle (public). Absent: the evidence
+is available on request, and the page says so.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;site.ts&#x2F;~&#x2F;PageOptions.html#property_stolos">
+                  <span>stolos</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The Stolos version building the page.</p>
+</div></div></li></ul></div>
+    </div></div>
+</section>
+<section class="section"  id="archon&#x2F;trust&#x2F;site_ts_variables"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;trust&#x2F;site_ts_variables" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Variables</h2></div><div class="namespaceSection"><div id="namespace_evidence_dir" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;trust&#x2F;site.ts&#x2F;~&#x2F;EVIDENCE_DIR.html" title="EVIDENCE_DIR">
+			    <span>EVIDENCE_DIR</span><span>: <span class="td-str">"evidence"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where the published evidence is, relative to the page.</p>
+</div></div></div>
+    </div></div>
+</section>
+</div>
+</div>
+</section>
+</div>
+    </div>
+    <div>
       <a href=".&#x2F;.&#x2F;archon&#x2F;update&#x2F;operator.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;update&#x2F;operator.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-311"><div class="markdown_summary"><p>Spec 058: <code>archon update</code> on your PC (the boot machine, or any checkout of
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-316"><div class="markdown_summary"><p>Spec 058: <code>archon update</code> on your PC (the boot machine, or any checkout of
 the fleet repository that is not an installed host). One command instead of
 <code>git pull</code>, and everything that should follow it, every step idempotent:</p>
 </div><section class="section"  id="archon&#x2F;update&#x2F;operator_ts_functions"><div>
@@ -48211,7 +49020,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_min_deno" c
       <a href=".&#x2F;.&#x2F;archon&#x2F;update&#x2F;update.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;update&#x2F;update.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-312"><div class="markdown_summary"><p><code>archon update</code> (spec 015): bring everything up to date from GitHub in one
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-317"><div class="markdown_summary"><p><code>archon update</code> (spec 015): bring everything up to date from GitHub in one
 command. Pull origin/main, then (in the freshly pulled code) validate,
 converge, refresh tools, re-converge for dotfiles, and verify.</p>
 </div><section class="section"  id="archon&#x2F;update&#x2F;update_ts_functions"><div>
@@ -48309,7 +49118,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_updateopti
       <a href=".&#x2F;.&#x2F;archon&#x2F;vault&#x2F;commands.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;vault&#x2F;commands.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-313"><div class="markdown_summary"><p><code>deno task stolos vault &lt;sub&gt;</code> (specs 029 and 056): the boot machine's secrets,
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-318"><div class="markdown_summary"><p><code>deno task stolos vault &lt;sub&gt;</code> (specs 029 and 056): the boot machine's secrets,
 and their backup. A backup is one ZIP file (see writeBackupZip),
 written into stolos's backup folder; you then move it wherever you keep
 important things safe. <code>vault restore &lt;zip&gt;</code> (spec 061) puts it back on a
@@ -48385,7 +49194,7 @@ holds the same ones (nothing changes on GitHub, and clients see the same host).<
       <a href=".&#x2F;.&#x2F;archon&#x2F;vault&#x2F;mod.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;vault&#x2F;mod.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-314"><div class="markdown_summary"><h1>Disaster recovery: losing the boot machine</h1>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-319"><div class="markdown_summary"><h1>Disaster recovery: losing the boot machine</h1>
 </div></div>
 </div>
 </section>
@@ -48395,7 +49204,7 @@ holds the same ones (nothing changes on GitHub, and clients see the same host).<
       <a href=".&#x2F;.&#x2F;archon&#x2F;vault&#x2F;panel.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;vault&#x2F;panel.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-315"><div class="markdown_summary"><p>The backup panel (spec 029, Article 19 and 22): one framed panel, amber, red
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-320"><div class="markdown_summary"><p>The backup panel (spec 029, Article 19 and 22): one framed panel, amber, red
 when anything has been unbacked for more than 7 days or host identity keys
 were never backed up. Shown at the end of any command that changed a
 secret, and at the start of <code>boot serve</code> and <code>boot status</code>, until the
@@ -48444,7 +49253,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_panellines"
       <a href=".&#x2F;.&#x2F;archon&#x2F;vault&#x2F;reminder.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;vault&#x2F;reminder.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-316"><div class="markdown_summary"><p>Backup reminders (spec 029, Article 22): hard to miss, calm (Article 19).</p>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-321"><div class="markdown_summary"><p>Backup reminders (spec 029, Article 22): hard to miss, calm (Article 19).</p>
 </div><section class="section"  id="archon&#x2F;vault&#x2F;reminder_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;vault&#x2F;reminder_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
@@ -48543,7 +49352,7 @@ exit 0
       <a href=".&#x2F;.&#x2F;archon&#x2F;vault&#x2F;restore.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;vault&#x2F;restore.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-317"><div class="markdown_summary"><p>Spec 061: <code>deno task stolos vault restore &lt;zip&gt;</code> makes a freshly cloned PC
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-322"><div class="markdown_summary"><p>Spec 061: <code>deno task stolos vault restore &lt;zip&gt;</code> makes a freshly cloned PC
 the boot machine again from one backup ZIP (spec 056). It reads the ZIP and
 checks every file against its manifest, puts each file back where stolos
 keeps it (the secrets, readable by you only; the daily key in <code>.ssh</code>; the
@@ -48705,7 +49514,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_restorefil
       <a href=".&#x2F;.&#x2F;archon&#x2F;vault&#x2F;state.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;vault&#x2F;state.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-318"><div class="markdown_summary"><p>The vault's view of the boot machine's secrets (spec 029): what is there,
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-323"><div class="markdown_summary"><p>The vault's view of the boot machine's secrets (spec 029): what is there,
 what the inventory says each one is, and whether the last backup holds it
 as it is now. Names, sizes, and SHA-256 only; never a value.</p>
 </div><section class="section"  id="archon&#x2F;vault&#x2F;state_ts_functions"><div>
@@ -48905,7 +49714,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_prompt_stat
       <a href=".&#x2F;.&#x2F;archon&#x2F;vault&#x2F;zip.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;vault&#x2F;zip.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-319"><div class="markdown_summary"><p>Spec 056: the boot machine's backup is one ZIP file. <code>deno task stolos vault backup</code> writes it into the backup folder where archon keeps its data
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-324"><div class="markdown_summary"><p>Spec 056: the boot machine's backup is one ZIP file. <code>deno task stolos vault backup</code> writes it into the backup folder where archon keeps its data
 (Windows: <code>%LOCALAPPDATA%\stolos\backup</code>; Linux: <code>~/.local/share/stolos/backup</code>),
 reads it back to check every file, and tells you to put it wherever you keep
 important things safe. It holds everything this PC would need again after a
@@ -49050,7 +49859,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_backup_dir"
       <a href=".&#x2F;.&#x2F;archon&#x2F;version.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;version.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-320"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-325"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
 from GitHub (<code>@stolos/</code> → raw.githubusercontent.com/.../v&lt;VERSION&gt;/src/), so
 every push to main raises it and the release workflow tags that commit
 v&lt;VERSION&gt;. <code>deno task version bump</code> raises the minor number (0.1.0, 0.2.0,
@@ -49086,7 +49895,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_tag-1" clas
     </div><div id="namespace_version" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;version.ts&#x2F;~&#x2F;VERSION.html" title="VERSION">
-			    <span>VERSION</span><span>: <span class="td-str">"0.112.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
+			    <span>VERSION</span><span>: <span class="td-str">"0.113.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
 from GitHub (<code>@stolos/</code> → raw.githubusercontent.com/.../v&lt;VERSION&gt;/src/), so
 every push to main raises it and the release workflow tags that commit
 v&lt;VERSION&gt;. <code>deno task version bump</code> raises the minor number (0.1.0, 0.2.0,
@@ -49103,7 +49912,7 @@ v&lt;VERSION&gt;. <code>deno task version bump</code> raises the minor number (0
       <a href=".&#x2F;.&#x2F;archon&#x2F;web&#x2F;acme.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;web&#x2F;acme.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-321"><div class="markdown_summary"><p>032-web: a server's Let's Encrypt certificates survive its re-install. Before
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-326"><div class="markdown_summary"><p>032-web: a server's Let's Encrypt certificates survive its re-install. Before
 <code>deno task stolos boot reinstall</code> reboots a server, it copies Traefik's ACME store
 (the Let's Encrypt account, the certificates, and their keys) to the boot
 machine; the install hands it back, and the first boot puts it in place
@@ -49268,7 +50077,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_acme_delive
       <a href=".&#x2F;.&#x2F;archon&#x2F;web&#x2F;cloudflare.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;web&#x2F;cloudflare.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-322"><div class="markdown_summary"><p>032-web: the few Cloudflare API calls a server needs to keep its own DNS
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-327"><div class="markdown_summary"><p>032-web: the few Cloudflare API calls a server needs to keep its own DNS
 records (its name and wildcard, both to its private address, not proxied).
 The token needs Zone: Read and DNS: Edit on the zone (the same token
 Traefik uses for Let's Encrypt's DNS challenge).</p>
@@ -49412,7 +50221,7 @@ Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_fetch" c
       <a href=".&#x2F;.&#x2F;archon&#x2F;web&#x2F;commands.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;web&#x2F;commands.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-323"><div class="markdown_summary"><p>032-web on a server: archon web credential | dns | status.</p>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-328"><div class="markdown_summary"><p>032-web on a server: archon web credential | dns | status.</p>
 </div><section class="section"  id="archon&#x2F;web&#x2F;commands_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;web&#x2F;commands_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
@@ -49522,7 +50331,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_dns_state" 
       <a href=".&#x2F;.&#x2F;archon&#x2F;web&#x2F;config.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;web&#x2F;config.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-324"><div class="markdown_summary"><p>032-web: the server's HTTPS front door, as data. Traefik (an official
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-329"><div class="markdown_summary"><p>032-web: the server's HTTPS front door, as data. Traefik (an official
 release binary, spec 010) listens on 80 and 443; 80 only redirects. No
 route is limited by network: who reaches the server is the router's
 decision (the firewall at the edge, outside the machine; Article 21 and
@@ -49679,7 +50488,7 @@ command to <code>archon console exec</code> through sudo).</p>
       <a href=".&#x2F;.&#x2F;archon&#x2F;web&#x2F;markdown.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;web&#x2F;markdown.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-325"><div class="markdown_summary"><p>035-welcome-guide: the engine's guides (each module's @module JSDoc, src/archon/core/guides.ts) as HTML on the welcome
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-330"><div class="markdown_summary"><p>035-welcome-guide: the engine's guides (each module's @module JSDoc, src/archon/core/guides.ts) as HTML on the welcome
 page, so one text serves the repository, the man pages, and the server.
 Handles what those guides use: headings, paragraphs, lists, tables, code
 blocks, blockquotes, inline code, bold, italics, and links. Everything is
@@ -49764,7 +50573,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_linkcontex
       <a href=".&#x2F;.&#x2F;archon&#x2F;web&#x2F;mod.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;web&#x2F;mod.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-326"><div class="markdown_summary"><h1>HTTPS on every server</h1>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-331"><div class="markdown_summary"><h1>HTTPS on every server</h1>
 </div></div>
 </div>
 </section>
@@ -49774,7 +50583,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_linkcontex
       <a href=".&#x2F;.&#x2F;archon&#x2F;web&#x2F;serve.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;web&#x2F;serve.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-327"><div class="markdown_summary"><p><code>archon web serve</code> (specs 032, 035): the welcome page and the guides on
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-332"><div class="markdown_summary"><p><code>archon web serve</code> (specs 032, 035): the welcome page and the guides on
 127.0.0.1:8090, behind Traefik. Read-only: the model, Archon's status files,
 the install record, the timers' last runs, the update state, the listening
 ports, and Traefik's own list of routes (to show containers as they start).
@@ -49878,7 +50687,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_guides-1" c
       <a href=".&#x2F;.&#x2F;archon&#x2F;web&#x2F;welcome.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;web&#x2F;welcome.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-328"><div class="markdown_summary"><p>032-web and 035-welcome-guide: the welcome page every server shows at
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-333"><div class="markdown_summary"><p>032-web and 035-welcome-guide: the welcome page every server shows at
 <a href="https://">https://</a>&lt;host&gt;.&lt;domain&gt; (and at any name or address nothing else claims),
 written for someone new to the server: what it is, whether it's healthy, its
 apps, what's installed and how to use it, and how changes are made. Rendered
@@ -50165,7 +50974,7 @@ footer { color: var(--muted); font-size: 0.85rem; margin-top: 30px; }
       <a href=".&#x2F;.&#x2F;mod.ts&#x2F;index.html" class="link text-xl font-bold">mod.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-329"><div class="markdown_summary"><h1>Stolos: the fleet engine</h1>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-334"><div class="markdown_summary"><h1>Stolos: the fleet engine</h1>
 </div><section class="section"  id="mod_ts_interfaces"><div>
       <h2 class="anchorable mb-1"><a href="#mod_ts_interfaces" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
@@ -50404,7 +51213,7 @@ never written in a host file.</p>
 Variables</h2></div><div class="namespaceSection"><div id="namespace_version-1" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;version.ts&#x2F;~&#x2F;VERSION.html" title="VERSION">
-			    <span>VERSION</span><span>: <span class="td-str">"0.112.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
+			    <span>VERSION</span><span>: <span class="td-str">"0.113.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
 from GitHub (<code>@stolos/</code> → raw.githubusercontent.com/.../v&lt;VERSION&gt;/src/), so
 every push to main raises it and the release workflow tags that commit
 v&lt;VERSION&gt;. <code>deno task version bump</code> raises the minor number (0.1.0, 0.2.0,
@@ -50421,7 +51230,7 @@ v&lt;VERSION&gt;. <code>deno task version bump</code> raises the minor number (0
       <a href=".&#x2F;.&#x2F;releasing.ts&#x2F;index.html" class="link text-xl font-bold">releasing.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-330"><div class="markdown_summary"><h1>Changing and releasing the engine</h1>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-335"><div class="markdown_summary"><h1>Changing and releasing the engine</h1>
 </div></div>
 </div>
 </section>
@@ -50431,7 +51240,7 @@ v&lt;VERSION&gt;. <code>deno task version bump</code> raises the minor number (0
       <a href=".&#x2F;.&#x2F;stolos&#x2F;main.ts&#x2F;index.html" class="link text-xl font-bold">stolos&#x2F;main.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-331"><div class="markdown_summary"><p><code>stolos</code> (spec 059): the fleet's command, on your PC, in the fleet
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-336"><div class="markdown_summary"><p><code>stolos</code> (spec 059): the fleet's command, on your PC, in the fleet
 repository (<code>deno task stolos ...</code>). Everything about the fleet as a whole:
 creating it, keys and signers, adding and installing machines (<code>stolos boot ...</code>, the boot server), backups, and keeping this checkout up to date. Each
 machine has its own command, <code>archon</code>, for itself.</p>

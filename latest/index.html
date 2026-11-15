@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Stolos v0.112.0</title>
+<title>Stolos v0.113.0</title>
 <link rel="stylesheet" href="./styles.css">
 <link rel="stylesheet" href="./page.css">
 <script src="./darkmode_toggle.js"></script>
@@ -17,7 +17,7 @@
 </head>
 <body>
 <main>
-<h1>Stolos v0.112.0</h1>
+<h1>Stolos v0.113.0</h1>
 <p>The fleet engine (its command is <code>archon</code>), documented from its TypeScript.</p>
 <p class="start">Start here: <a href="./mod.ts/index.html">the overview</a>, with how the
 pieces fit, in diagrams. Then the model: <a href="./archon/model/types.ts/index.html">types.ts</a>.
@@ -38,6 +38,7 @@ Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 <li><a href="./archon/risk/mod.ts/index.html">Risks and vendors</a> The risk register and vendor inventory as code, reviewed through signed pull requests.</li>
 <li><a href="./archon/people/mod.ts/index.html">People controls</a> Joiners and leavers, access reviews, policies, training, and screening, as code.</li>
 <li><a href="./archon/evidence/mod.ts/index.html">Evidence bundles</a> A period's evidence, signed, for an auditor to check offline.</li>
+<li><a href="./archon/trust/mod.ts/index.html">Trust Center</a> A status page for customers, built from a verified evidence bundle.</li>
 <li><a href="./archon/web/mod.ts/index.html">HTTPS on every server</a> Publishing services, certificates, the Archon Console.</li>
 <li><a href="./archon/telemetry/mod.ts/index.html">Telemetry</a> Where logs, metrics, and traces go.</li>
 <li><a href="./archon/mcp/mod.ts/index.html">The agent layer</a> AI agents and other MCP clients, limited by each server.</li>
@@ -512,6 +513,14 @@ Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 <li><a href="./archon/tools/keys/github-cli.ts/index.html"><code>github-cli.ts</code></a> GitHub CLI's apt signing key (spec 010, Article 12), pinned.</li>
 <li><a href="./archon/tools/keys/microsoft.ts/index.html"><code>microsoft.ts</code></a> Microsoft's apt signing key (spec 036, Article 12), pinned: &quot;Microsoft (Release signing) &lt;gpgsecurity@microsoft.com&gt;&quot;, fingerprint BC528686B50D79E339D3721CEB3E94ADBE1229CF, from…</li>
 <li><a href="./archon/tools/keys/osquery.ts/index.html"><code>osquery.ts</code></a> osquery's apt signing key (spec 042, Article 12), pinned: &quot;osquery (osquery) &lt;osquery@fb.com&gt;&quot;, fingerprint 1484120AC4E9F8A1A577AEEE97A80C63C9D8B80B (RSA 4096, 2015-01-24), fetched from…</li>
+</ul>
+<h2>archon/trust/</h2>
+<ul>
+<li><a href="./archon/trust/commands.ts/index.html"><code>commands.ts</code></a> Spec 081: stolos trust build --bundle &lt;zip&gt;: verify an evidence bundle, then write a Trust Center from it: index.html, and under evidence/ the bundle it links to (the full one when gated; a signed…</li>
+<li><a href="./archon/trust/mod.ts/index.html"><code>mod.ts</code></a> Your customers ask how you are doing on SOC 2, HIPAA, or the controls they care about.</li>
+<li><a href="./archon/trust/model.ts/index.html"><code>model.ts</code></a> Spec 081: what a Trust Center says, read from a verified evidence bundle (spec 072) and nothing else.</li>
+<li><a href="./archon/trust/publish.ts/index.html"><code>publish.ts</code></a> Spec 081: what a Trust Center publishes next to its page, and what a public one leaves out.</li>
+<li><a href="./archon/trust/site.ts/index.html"><code>site.ts</code></a> Spec 081: the Trust Center's page.</li>
 </ul>
 <h2>archon/update/</h2>
 <ul>
