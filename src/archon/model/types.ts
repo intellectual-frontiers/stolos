@@ -209,7 +209,8 @@ export interface FleetDef {
    * The estate graph (spec 090). `personSources`: the connectors that may
    * create people, in order; the first one connected is the source of truth
    * and the others only link to its people. Default: bamboohr, rippling,
-   * okta, microsoft, google (HR systems, then identity providers).
+   * gusto, deel, justworks, okta, jumpcloud, microsoft, google (HR systems,
+   * then identity providers).
    */
   estate?: { personSources?: string[] };
   /** Local observability limits for every host and workstation (spec 021). */

@@ -92,6 +92,8 @@ export interface Ctx<F extends Record<string, FieldDef>> {
   headers: Record<string, string>;
   /** Run `f`; a denied call becomes a gap named `what`, and `fallback` (a part read, the rest kept). */
   orGap<T>(what: string, fallback: T, f: () => Promise<T>): Promise<T>;
+  /** Record a posture fact read beside the records (an organization's setting, say): `posture` may override it. */
+  fact(name: string, value: string | number | boolean): void;
   /** A JSON body from a GET, or AccessDenied on 401 and 403. */
   json<T>(url: string, headers?: Record<string, string>): Promise<T>;
   /** Every item of a list that pages with `Link: rel="next"`. */
@@ -204,6 +206,7 @@ function ctxFor<F extends Record<string, FieldDef>>(
   now: Date,
   headers: Record<string, string>,
   gaps: string[],
+  facts: Observation["posture"] = {},
 ): Ctx<F> {
   const get = async <T>(url: string, h = headers): Promise<{ body: T; link?: string }> => {
     const r = await http(url, { headers: h });
@@ -233,6 +236,9 @@ function ctxFor<F extends Record<string, FieldDef>>(
         }
         throw e;
       }
+    },
+    fact(name: string, value: string | number | boolean) {
+      facts[name] = value;
     },
     async json<T>(url: string, h?: Record<string, string>) {
       return (await get<T>(url, h ?? headers)).body;
@@ -280,7 +286,8 @@ export function defineConnector<F extends Record<string, FieldDef>>(
       const guarded = withBackoff(readOnly(http, def.tokenEndpoints?.(cred) ?? []));
       const headers = await def.auth(cred, guarded, now);
       const gaps: string[] = [];
-      const ctx = ctxFor(cred, guarded, now, headers, gaps);
+      const facts: Observation["posture"] = {};
+      const ctx = ctxFor(cred, guarded, now, headers, gaps, facts);
       const records: ObservedRecord[] = [];
       const assets: Asset[] = [];
       for (const [name, r] of Object.entries(def.resources)) {
@@ -319,7 +326,7 @@ export function defineConnector<F extends Record<string, FieldDef>>(
         provider: def.id,
         account: def.account(cred, records),
         assets,
-        posture: def.posture(records, cred, seen),
+        posture: { ...facts, ...def.posture(records, cred, seen) },
         gaps: seen.gaps,
         ...(Object.keys(entities).length ? { entities } : {}),
         ...(rest.length ? { records: rest } : {}),

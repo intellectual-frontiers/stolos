@@ -135,8 +135,12 @@
  * | Hetzner Cloud           | servers, volumes, firewalls, primary IPs, load balancers                      | backups, a firewall on every server, deletion protection            |
  * | Google Workspace        | users, administrators, 2-Step Verification                                    | 2-Step Verification used and enforced, 2 to 4 super administrators |
  * | Okta                    | users, administrator roles, second factors                                    | every active user has a second factor, 2 to 4 administrators       |
+ * | JumpCloud               | users, administrators, second factors, devices and their disk encryption      | second factors for users and admins, 2 to 4 admins, encrypted disks |
  * | GitHub                  | members, owners, members without 2FA, repositories and their branch rules     | 2FA required, protected and reviewed branches, secret scanning     |
+ * | GitLab                  | the group's 2FA rule, members (owners, 2FA), projects and protected branches  | 2FA required, protected and reviewed branches, secret push protection |
+ * | Bitbucket Cloud         | members, owners, repositories and their branch restrictions                   | protected branches, required approvals, 2 to 4 owners               |
  * | BambooHR, Rippling      | the roster only: name, work email, status, start and end dates, manager       | (the estate graph checks every account against it)                 |
+ * | Gusto, Deel, Justworks  | the roster only: name, work email, status, start and end dates, manager       | every leaver has an end date (the estate graph checks the rest)     |
  *
  * ```bash
  * deno task stolos connect github

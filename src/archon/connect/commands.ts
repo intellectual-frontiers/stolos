@@ -24,6 +24,12 @@ import { cloudflare } from "./cloudflare.ts";
 import { github } from "./github.ts";
 import { google } from "./google.ts";
 import { bamboohr, rippling } from "./hris.ts";
+import { bitbucket } from "./bitbucket.ts";
+import { deel } from "./deel.ts";
+import { gitlab } from "./gitlab.ts";
+import { gusto } from "./gusto.ts";
+import { jumpcloud } from "./jumpcloud.ts";
+import { justworks } from "./justworks.ts";
 import { okta } from "./okta.ts";
 import { hetzner } from "./hetzner.ts";
 import { microsoft } from "./microsoft.ts";
@@ -34,9 +40,15 @@ export const CONNECTORS: Connector[] = [
   microsoft,
   google,
   okta,
+  jumpcloud,
   github,
+  gitlab,
+  bitbucket,
   bamboohr,
   rippling,
+  gusto,
+  deel,
+  justworks,
   aws,
   hetzner,
 ];

@@ -55,7 +55,17 @@ import {
 import type { SeenTimes, Snapshot } from "./snapshot.ts";
 
 /** The default source-of-truth order for people: HR systems, then identity providers. */
-export const PERSON_SOURCES = ["bamboohr", "rippling", "okta", "microsoft", "google"];
+export const PERSON_SOURCES = [
+  "bamboohr",
+  "rippling",
+  "gusto",
+  "deel",
+  "justworks",
+  "okta",
+  "jumpcloud",
+  "microsoft",
+  "google",
+];
 
 /** The estate graph. */
 export interface Estate {
