@@ -173,7 +173,7 @@ Deno.test("066: every page answers, and the downloads are for auditors", async (
   }
   assertEquals((await get("/machines/nobody")).status, 404);
   const csv = await (await get("/export/machines.csv")).text();
-  assertStringIncludes(csv.split("\r\n")[0], "name,kind,os");
+  assertStringIncludes(csv.split("\r\n")[0], "name,title,kind,os");
   assertEquals(csv.trim().split("\r\n").length, FACTS.machines.length + 1);
   const ev = JSON.parse(await (await get("/export/evidence.json")).text());
   assertEquals(ev.adopted.length, 2);

@@ -38,6 +38,12 @@ const machines = [
     hostKeys: [],
     adopted: "2026-11-02",
     owner: "bob",
+    accepted: [{
+      policy: "firewall",
+      reason: "the office router filters; this desktop serves nothing",
+      by: "Alice Example",
+      until: "2099-01-01",
+    }],
   },
 ];
 const cf: CloudObserved = {

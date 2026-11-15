@@ -44,6 +44,11 @@ should answer for every machine, while managing only the ones it installed.
 - **SC-002** Against a real sshd: adopt, observe, check, query, release; the probe key opens no
   shell, runs no other command, and forwards no port.
 
+- **FR-013** `stolos host accept <name> <policy> --reason ... --until <date>` records an accepted
+  risk in machine.ts (who, from git user.name; why, at least a sentence; until a date at most a year
+  away). The policy shows as accepted, never as passing; Compliance counts it as partial; after the
+  date it fails again.
+
 ## Clouds (visibility only)
 
 - **FR-007** `stolos cloud connect <provider>` (cloudflare, microsoft, aws, hetzner, in that order

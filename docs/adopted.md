@@ -39,6 +39,19 @@ nothing.
 `fleet query` needs osquery on the machine (`brew install --cask osquery` on a Mac); the policies do
 not.
 
+## When a policy cannot pass
+
+Sometimes a policy cannot pass, for a good reason: a Linux desktop installed without disk encryption
+that holds no customer data, say. Record that decision instead of living with a red line:
+
+```bash
+deno task stolos host accept bob-desk disk-encryption --reason "holds only open-source code; no customer data" --until 2027-06-30
+```
+
+The policy then shows as **accepted** (not as passing), with who accepted it, why, and until when;
+Compliance counts it as partial. After the date it fails again, so the decision is reviewed at least
+yearly. The signed commit that keeps it is the auditor's record.
+
 ## Discovered machines
 
 `deno task stolos discover` lists the machines this PC has seen on its network (its neighbor table)

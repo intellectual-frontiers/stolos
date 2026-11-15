@@ -210,3 +210,28 @@ Deno.test("067: discover reads Linux, macOS, and Windows neighbor tables; knows 
   });
   assertEquals(left.map((d) => d.id), ["2"]);
 });
+
+Deno.test("067: an accepted risk shows as accepted until its date, then fails again", async () => {
+  const { accept } = await import("../src/archon/adopt/policy.ts");
+  const m = {
+    ...machine,
+    accepted: [{
+      policy: "disk-encryption",
+      reason: "no customer data here",
+      by: "Alice",
+      until: "2026-12-31",
+    }],
+  };
+  const fail = {
+    id: "disk-encryption",
+    title: "The disk is encrypted",
+    scf: ["CRY-05"],
+    status: "fail" as const,
+    detail: "off",
+  };
+  const before = accept(m, [fail], Date.parse("2026-11-20T00:00:00Z"))[0];
+  assertEquals(before.status, "accepted");
+  assertStringIncludes(before.detail, "accepted by Alice until 2026-12-31: no customer data here");
+  assertEquals(accept(m, [fail], Date.parse("2027-01-02T00:00:00Z"))[0].status, "fail");
+  assertEquals(accept(m, [{ ...fail, status: "pass" }])[0].status, "pass");
+});

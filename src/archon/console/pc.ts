@@ -29,6 +29,10 @@ export interface PcMachine {
   where?: string;
   /** Who it belongs to (adopted machines). */
   owner?: string;
+  /** What it is, for people (an adopted machine's title). */
+  title?: string;
+  /** Its serial number, when the probe could read it. */
+  serial?: string;
   /** When it was last installed (managed) or observed (adopted, cloud). */
   seen?: string;
   /** Its checks or policies: how many pass, of how many. */
@@ -147,6 +151,8 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
       ...(a.observed ? { os: `${a.observed.os.name} ${a.observed.os.version}`.trim() } : {}),
       where: a.machine.ssh.address,
       ...(a.machine.owner ? { owner: a.machine.owner } : {}),
+      ...(a.machine.title ? { title: a.machine.title } : {}),
+      ...(a.observed?.os.serial ? { serial: a.observed.os.serial } : {}),
       ...(a.observed ? { seen: a.observed.at } : {}),
       score: { pass, total: a.results.length },
       failing: a.results.filter((r) => r.status === "fail").map((r) => r.title),

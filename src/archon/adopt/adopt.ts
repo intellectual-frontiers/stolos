@@ -48,6 +48,24 @@ export interface AdoptedDef {
   until?: string;
   /** When it was adopted (ISO time). */
   adopted: string;
+  /**
+   * Risks the owner accepted, each for a while: a policy that fails is shown
+   * as accepted (not as passing) until the date, with who and why (for an
+   * auditor). Written by `stolos host accept`.
+   */
+  accepted?: Acceptance[];
+}
+
+/** One accepted risk: a policy that may fail, why, who said so, and until when. */
+export interface Acceptance {
+  /** The policy's id (disk-encryption, firewall, ...). */
+  policy: string;
+  /** Why, in words an auditor reads. */
+  reason: string;
+  /** Who accepted it. */
+  by: string;
+  /** Until when (YYYY-MM-DD); after it the policy fails again. */
+  until: string;
 }
 
 /** What the probe found on an adopted machine (observed.ts). */

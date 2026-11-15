@@ -140,6 +140,7 @@ export const STOLOS_GROUPS: StolosGroup[] = [
       "host adopt",
       "host observe",
       "host check",
+      "host accept",
       "host release",
       "fleet query",
     ],
@@ -327,7 +328,9 @@ export function machinesPage(f: PcFacts, now = Date.now()): Html {
       <table>
         <thead><tr><th>Name</th><th>Kind</th><th>OS</th><th>Where</th><th>Owner</th><th>Checks</th><th>Last record</th><th></th></tr></thead>
         <tbody>${f.machines.map((x) => {
-          const text = `${x.name} ${x.kind} ${x.os ?? ""} ${x.owner ?? ""} ${x.where ?? ""}`
+          const text = `${x.name} ${x.title ?? ""} ${x.kind} ${x.os ?? ""} ${x.owner ?? ""} ${
+            x.where ?? ""
+          } ${x.failing.join(" ")}`
             .toLowerCase().replace(/[^a-z0-9 .:-]/g, " ");
           return html`
             <tr data-show="'${text}'.includes($q.trim().toLowerCase())">
@@ -362,7 +365,7 @@ export function fixText(fix?: string): Html | string {
 function policyTable(rs: PolicyResult[]): Html {
   const pill = (s: PolicyResult["status"]) =>
     html`<span class="pill ${
-      s === "pass" ? "ok" : s === "fail" ? "bad" : s === "warn" ? "warn" : "off"
+      s === "pass" ? "ok" : s === "fail" ? "bad" : s === "warn" || s === "accepted" ? "warn" : "off"
     }">${s}</span>`;
   return html`
     <table>
@@ -787,10 +790,12 @@ const cell = (v: unknown) => {
 export function machinesCsv(f: PcFacts): string {
   const head = [
     "name",
+    "title",
     "kind",
     "os",
     "where",
     "owner",
+    "serial",
     "checks_passed",
     "checks_total",
     "not_met",
@@ -799,10 +804,12 @@ export function machinesCsv(f: PcFacts): string {
   const rows = f.machines.map((x) =>
     [
       x.name,
+      x.title,
       x.kind,
       x.os,
       x.where,
       x.owner,
+      x.serial,
       x.score?.pass,
       x.score?.total,
       x.failing.join("; "),

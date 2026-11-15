@@ -98,6 +98,7 @@ export function page(f: Frame, body: Html): string {
     <html lang="en">
       <head>${head(`${f.title} · ${f.subtitle.split(" ")[0]}`)}</head>
       <body>
+        <a class="skip" href="#main">Skip to the page</a>
         <header class="top">
           ${f.product === "stolos"
             ? html`

@@ -674,6 +674,55 @@ export const COMMANDS: Command[] = [
     },
   },
   {
+    name: "host accept",
+    summary: "Record an accepted risk: a policy an adopted machine may fail, why, and until when",
+    description:
+      `Spec 067. Writes the acceptance into the machine's machine.ts (who, from git user.name; why; until a date at most a year away). Until then the policy shows as accepted, not as passing, and Compliance counts it as partial; after it, it fails again. Keep it with deno task stolos apply: the signed commit is the auditor's record.`,
+    tier: "repo",
+    args: [
+      {
+        name: "name",
+        type: "string",
+        positional: true,
+        required: true,
+        description: "The adopted machine.",
+      },
+      {
+        name: "policy",
+        type: "string",
+        positional: true,
+        required: true,
+        description: "The policy's id (disk-encryption, firewall, auto-updates, ...).",
+      },
+      {
+        name: "reason",
+        type: "string",
+        required: true,
+        description: "Why, in words an auditor reads.",
+      },
+      {
+        name: "until",
+        type: "string",
+        required: true,
+        description: "Until when (YYYY-MM-DD, within a year).",
+      },
+    ],
+    examples: [{
+      cmd:
+        'deno task stolos host accept bob-desk disk-encryption --reason "holds only open-source code; no customer data" --until 2027-06-30',
+      text: "An accepted risk, recorded.",
+    }],
+    async run(a) {
+      const { hostAccept } = await import("../adopt/commands.ts");
+      return await hostAccept(
+        a.name as string,
+        a.policy as string,
+        a.reason as string,
+        a.until as string,
+      );
+    },
+  },
+  {
     name: "host release",
     summary: "Stop adopting a machine: remove its probe, its model, and its probe key",
     description:
@@ -2635,6 +2684,7 @@ On a server, workstations reach it as ops over SSH (spec 030): ops' authorized_k
  */
 /** Commands run with `stolos` on your PC (the rest run with `archon` on each machine). */
 const PC_COMMANDS = new Set([
+  "host accept",
   "compliance",
   "console",
   "discover",

@@ -121,6 +121,8 @@ tr:last-child td { border-bottom: 0; }
 .cmdlist .sub { font-size: 12px; line-height: 1.35; }
 .cmdlist input[type=search] { width: 100%; margin-bottom: 6px; }
 .nowrap { white-space: nowrap; }
+.skip { position: absolute; left: -9999px; }
+.skip:focus { left: 8px; top: 8px; z-index: 10; background: var(--panel); padding: 8px 12px; border-radius: 8px; }
 .steps { display: flex; flex-wrap: wrap; gap: 4px; list-style: none; padding: 0; margin: 10px 0; counter-reset: step; }
 .steps li { counter-increment: step; font-size: 12px; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
 .steps li::before { content: counter(step) ". "; }

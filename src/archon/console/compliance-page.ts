@@ -12,7 +12,13 @@ import { diagram } from "./layout.ts";
 
 const pill = (s: Coverage | string) =>
   html`<span class="pill ${
-    s === "pass" ? "ok" : s === "fail" ? "bad" : s === "partial" || s === "warn" ? "warn" : "off"
+    s === "pass"
+      ? "ok"
+      : s === "fail"
+      ? "bad"
+      : s === "partial" || s === "warn" || s === "accepted"
+      ? "warn"
+      : "off"
   }">${s}</span>`;
 
 function count(ss: Coverage[]): Html {

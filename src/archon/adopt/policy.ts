@@ -19,8 +19,8 @@ export interface PolicyResult {
   title: string;
   /** The SCF controls it gives evidence for. */
   scf: string[];
-  /** pass, fail, unknown (cannot tell), or warn (not required, but worth doing). */
-  status: "pass" | "fail" | "warn" | "unknown";
+  /** pass, fail, unknown (cannot tell), warn (not required, but worth doing), or accepted (fails, by a recorded decision). */
+  status: "pass" | "fail" | "warn" | "unknown" | "accepted";
   /** What was found. */
   detail: string;
   /** How to make it pass, on this machine's OS. */
@@ -39,6 +39,21 @@ export function supportedOs(o: Observed): boolean | undefined {
   if (f === "fedora") return v >= 41;
   if (f === "arch" || o.os.version === "rolling") return true;
   return undefined;
+}
+
+/** Failing policies the owner accepted (until a date) become "accepted", with who, why, and until when. */
+export function accept(m: AdoptedDef, rs: PolicyResult[], now = Date.now()): PolicyResult[] {
+  const today = new Date(now).toISOString().slice(0, 10);
+  return rs.map((r) => {
+    const a = (m.accepted ?? []).find((x) => x.policy === r.id);
+    if (!a || r.status === "pass" || r.status === "unknown") return r;
+    if (a.until < today) return { ...r, detail: `${r.detail}; the accepted risk ended ${a.until}` };
+    return {
+      ...r,
+      status: "accepted",
+      detail: `${r.detail}; accepted by ${a.by} until ${a.until}: ${a.reason}`,
+    };
+  });
 }
 
 /** Every policy, for one machine. */
@@ -181,5 +196,5 @@ export function policies(m: AdoptedDef, o: Observed | undefined, now = Date.now(
       fix: `deno task stolos host release ${m.name}, or extend until in machine.ts`,
     });
   }
-  return out;
+  return accept(m, out, now);
 }

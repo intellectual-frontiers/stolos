@@ -150,7 +150,9 @@ export function report(name: string, rs: PolicyResult[]): void {
         r.fix ?? "",
         `P067-${r.id.toUpperCase()}`,
       );
-    } else if (r.status === "warn" || r.status === "unknown") p.note(`${r.title}: ${r.detail}`);
+    } else if (r.status !== "pass") {
+      p.note(`${r.title}: ${r.status === "accepted" ? "accepted: " : ""}${r.detail}`);
+    }
   }
   const pass = rs.filter((r) => r.status === "pass").length;
   p.done(`${pass} of ${rs.length} pass`);
@@ -383,5 +385,58 @@ export async function discover(json = false): Promise<number> {
       "adopt one you are responsible for: deno task stolos host adopt <name> --ssh <user>@<address>",
     );
   }
+  return 0;
+}
+
+/** `stolos host accept <name> <policy> --reason ... --until YYYY-MM-DD`: record an accepted risk in machine.ts. */
+export async function hostAccept(
+  name: string,
+  policy: string,
+  reason: string,
+  until: string,
+): Promise<number> {
+  const p = ui.phase("Accept");
+  const a = (await loadAdopted()).find((x) => x.machine.name === name);
+  if (!a) {
+    p.fail(`no adopted machine ${name}`, "deno task stolos host check (lists them)");
+    return fail();
+  }
+  const ids = policies(a.machine, a.observed).map((r) => r.id);
+  if (!ids.includes(policy)) {
+    p.fail(`${name} has no policy ${policy}`, `one of: ${ids.join(", ")}`);
+    return fail();
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  const limit = new Date(Date.now() + 366 * 86_400_000).toISOString().slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(until) || until <= today || until > limit) {
+    p.fail(
+      `--until ${until}: a date after today and within a year`,
+      "accepted risks are reviewed at least yearly",
+    );
+    return fail();
+  }
+  if (reason.trim().length < 10) {
+    p.fail(
+      "--reason: say why, in words an auditor reads",
+      'for example --reason "holds only open-source code; no customer data"',
+    );
+    return fail();
+  }
+  const { run } = await import("../core/exec.ts");
+  const by = (await run(["git", "-C", P.repo, "config", "user.name"])).stdout.trim() || "unknown";
+  const accepted = [...(a.machine.accepted ?? []).filter((x) => x.policy !== policy), {
+    policy,
+    reason: reason.trim(),
+    by,
+    until,
+  }];
+  await Deno.writeTextFile(
+    join(adoptedDir(name), "machine.ts"),
+    machineSource({ ...a.machine, accepted }),
+  );
+  p.done(`${name}: ${policy} accepted by ${by} until ${until}`);
+  ui.next.push(
+    `keep it (the signed commit is the record): deno task stolos apply -m "067-adopt: ${name} accepts ${policy}"`,
+  );
   return 0;
 }

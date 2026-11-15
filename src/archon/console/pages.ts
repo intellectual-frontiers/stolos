@@ -592,7 +592,7 @@ export function activityPage(entries: ActivityEntry[], host: string): Html {
       <table>
         <thead>
           <tr>
-            <th>When</th>
+            <th>When (UTC)</th>
             <th>Who</th>
             <th>From</th>
             <th>What</th>

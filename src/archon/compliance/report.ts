@@ -60,6 +60,7 @@ export function combine(ss: Array<PolicyResult["status"] | Coverage>): Coverage 
   if (!real.length) return "no evidence";
   if (real.some((s) => s === "fail")) return "fail";
   if (real.every((s) => s === "pass")) return "pass";
+  // A warning, an unknown, or an accepted risk: in place, but not fully.
   return "partial";
 }
 
