@@ -83,7 +83,7 @@
  *    to `main`.
  * 4. `archon update` on the host, or wait for the reconcile timer (15 minutes).
  *
- * Run `deno task stolos build` before pushing: it checks every layer.
+ * Run `bun run stolos build` before pushing: it checks every layer.
  *
  * ## This machine only
  *

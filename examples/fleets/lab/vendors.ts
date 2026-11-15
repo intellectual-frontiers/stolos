@@ -1,8 +1,12 @@
-// An example vendor triage file (spec 080): each vendor's criticality (FIPS 199) and the data it
-// holds (OCSF data categories). Vendors are discovered from SSO applications, DNS, and connected
-// accounts; deno task stolos vendors triage --write adds new ones here, in a pull request.
+/**
+ * An example vendor triage file (spec 080): each vendor's criticality (FIPS 199) and the data it
+ * holds (OCSF data categories). Vendors are discovered from SSO applications, DNS, and connected
+ * accounts; bun run stolos vendors triage --write adds new ones here, in a pull request.
+ *
+ * @module
+ */
 
-import { defineVendors } from "@stolos/archon/risk/mod.ts";
+import { defineVendors } from "@intellectual-frontiers/stolos/archon/risk/mod";
 
 export const vendors = defineVendors([
   {

@@ -8,7 +8,7 @@
  * @module
  */
 
-import { readTextOr } from "../core/fsx.ts";
+import { fs } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
 
@@ -27,10 +27,10 @@ export interface BootEntry {
 export function parseEfibootmgr(out: string): { current?: string; entries: BootEntry[] } {
   const current = out.match(/^BootCurrent:\s*([0-9A-Fa-f]{4})/m)?.[1];
   const entries = [...out.matchAll(/^Boot([0-9A-Fa-f]{4})\*?\s+(.*)$/gm)].map((m) => ({
-    id: m[1],
-    label: m[2].split("\t")[0].trim(),
+    id: m[1] ?? "",
+    label: (m[2] ?? "").split("\t")[0]?.trim() ?? "",
   }));
-  return { current, entries };
+  return { ...(current === undefined ? {} : { current }), entries };
 }
 
 /** The recorded entry if it still exists, else the best-looking network entry. */
@@ -39,20 +39,25 @@ export function pickNetbootEntry(entries: BootEntry[], recorded?: string): BootE
   const byId = r ? entries.find((e) => e.id.toUpperCase() === r) : undefined;
   if (byId) return byId;
   const net = entries.filter((e) => /PXE|HTTP|Network|IPv4|NIC|LAN/i.test(e.label));
-  return net.find((e) => /PXE/i.test(e.label) && /IPv4|IP4/i.test(e.label)) ??
-    net.find((e) => /IPv4|IP4/i.test(e.label)) ?? net[0];
+  return (
+    net.find((e) => /PXE/i.test(e.label) && /IPv4|IP4/i.test(e.label)) ??
+    net.find((e) => /IPv4|IP4/i.test(e.label)) ??
+    net[0]
+  );
 }
 
 /** archon reboot (and poweroff): wait for apt and dpkg, then reboot (once from the network, with --netboot) or shut down. */
-export async function reboot(
-  opts: { netboot: boolean; now?: boolean; poweroff?: boolean },
-): Promise<number> {
+export async function reboot(opts: {
+  netboot: boolean;
+  now?: boolean;
+  poweroff?: boolean;
+}): Promise<number> {
   // Spec 054: never in the middle of apt or dpkg (it can break dpkg's state).
   if (!opts.now) {
     const w = ui.phase("Packages");
     const { waitForPackages } = await import("./apt-busy.ts");
     const quiet = await waitForPackages((what, s) =>
-      w.status(`waiting for ${what.join(", ")} to finish (${s}s; Ctrl+C is safe)`)
+      w.status(`waiting for ${what.join(", ")} to finish (${s}s; Ctrl+C is safe)`),
     );
     if (!quiet) {
       w.fail(
@@ -99,7 +104,7 @@ export async function reboot(
       return 1;
     }
     const { entries } = parseEfibootmgr(list.stdout);
-    const e = pickNetbootEntry(entries, await readTextOr(NETBOOT_ENTRY));
+    const e = pickNetbootEntry(entries, await fs.readTextOr(NETBOOT_ENTRY));
     if (!e) {
       p.fail(
         "no network boot entry found in the firmware",

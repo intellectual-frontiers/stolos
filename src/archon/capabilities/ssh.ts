@@ -49,32 +49,39 @@ export function sshdConfig(passwordFrom: string[]): string {
 }
 
 /** OpenSSH hardening (spec 007). */
-export const ssh = (): Capability => ({ fleet }) => ({
-  spec: SPEC,
-  packages: [{ name: "openssh-server", spec: SPEC }],
-  ports: [{ port: 22, protocol: "tcp", spec: SPEC }],
-  files: [{
-    // GitHub's published host key for every account (api.github.com/meta), so
-    // no one is asked to trust github.com by hand.
-    path: "/etc/ssh/ssh_known_hosts",
-    content: GITHUB_KNOWN_HOSTS,
-    mode: "0644",
-    owner: "root",
+export const ssh =
+  (): Capability =>
+  ({ fleet }) => ({
     spec: SPEC,
-  }, {
-    path: "/etc/ssh/sshd_config.d/50-archon.conf",
-    content: header(SPEC) + sshdConfig(localNetworks(fleet)),
-    mode: "0644",
-    owner: "root",
-    spec: SPEC,
-    postValidate: ["sshd", "-t"],
-    onChange: [{ kind: "reload-or-restart", unit: "ssh.service" }],
-  }],
-  units: [{
-    unitName: "ssh.service",
-    managed: false,
-    state: "ignore",
-    verify: "systemctl is-enabled ssh.socket ssh.service",
-    spec: SPEC,
-  }],
-});
+    packages: [{ name: "openssh-server", spec: SPEC }],
+    ports: [{ port: 22, protocol: "tcp", spec: SPEC }],
+    files: [
+      {
+        // GitHub's published host key for every account (api.github.com/meta), so
+        // no one is asked to trust github.com by hand.
+        path: "/etc/ssh/ssh_known_hosts",
+        content: GITHUB_KNOWN_HOSTS,
+        mode: "0644",
+        owner: "root",
+        spec: SPEC,
+      },
+      {
+        path: "/etc/ssh/sshd_config.d/50-archon.conf",
+        content: header(SPEC) + sshdConfig(localNetworks(fleet)),
+        mode: "0644",
+        owner: "root",
+        spec: SPEC,
+        postValidate: ["sshd", "-t"],
+        onChange: [{ kind: "reload-or-restart", unit: "ssh.service" }],
+      },
+    ],
+    units: [
+      {
+        unitName: "ssh.service",
+        managed: false,
+        state: "ignore",
+        verify: "systemctl is-enabled ssh.socket ssh.service",
+        spec: SPEC,
+      },
+    ],
+  });

@@ -6,13 +6,11 @@
  * @module
  */
 
+import { fs, path } from "@intellectual-frontiers/ifc-ts/runtime";
 import { P, repoRel } from "../core/paths.ts";
-import { join } from "../core/path.ts";
-import { exists, readTextOr } from "../core/fsx.ts";
 import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
 import { armHost, SECRETS, writeSecret } from "../core/secrets.ts";
-import { ensureDir } from "../core/fsx.ts";
 import { hostFile, loadFleet } from "../model/load.ts";
 import { BOOT_PORT, bootUri, lanAddresses } from "../core/net.ts";
 import { ensureHostKeys } from "./host-keys.ts";
@@ -45,9 +43,9 @@ export function hostSource(o: { name: string; disk: DiskDef }): string {
   return `// Host ${o.name} (spec 004). Written by \`stolos host add\`; edit freely, then
 // \`stolos build\`. Capabilities come from foundation(); add more per spec.
 
-import type { HostDef } from "@stolos/archon/model/types.ts";
-import { foundation } from "@stolos/archon/capabilities/mod.ts";
-import { PRIME } from "@stolos/archon/pg/config.ts";
+import type { HostDef } from "@intellectual-frontiers/stolos/archon/model/types";
+import { foundation } from "@intellectual-frontiers/stolos/archon/capabilities/mod";
+import { PRIME } from "@intellectual-frontiers/stolos/archon/pg/config";
 
 export const host: HostDef = {
   name: ${JSON.stringify(o.name)},
@@ -64,10 +62,10 @@ export const host: HostDef = {
 /** Create (once) the host's ed25519 deploy key with the OpenSSH that ships with Windows and Ubuntu. */
 export async function ensureDeployKey(host: string): Promise<string> {
   const key = SECRETS.deployKey(host);
-  if (!(await exists(key))) {
+  if (!(await fs.exists(key))) {
     // ssh-keygen writes into a private temporary folder; writeSecret stores
     // both halves (spec 029: every secret write is recorded for the vault).
-    const tmp = await Deno.makeTempDir({ prefix: "archon-key-" });
+    const tmp = await fs.makeTempDir({ prefix: "archon-key-" });
     try {
       const r = await run([
         "ssh-keygen",
@@ -79,16 +77,22 @@ export async function ensureDeployKey(host: string): Promise<string> {
         "-C",
         `archon-${host}`,
         "-f",
-        join(tmp, "key"),
+        path.join(tmp, "key"),
       ]);
       if (!r.ok) throw new Error(`ssh-keygen failed: ${(r.stderr || r.stdout).trim()}`);
-      await writeSecret(key, await Deno.readTextFile(join(tmp, "key")));
-      await writeSecret(SECRETS.deployKeyPub(host), await Deno.readTextFile(join(tmp, "key.pub")));
+      await writeSecret(key, await fs.readTextFile(path.join(tmp, "key")));
+      await writeSecret(
+        SECRETS.deployKeyPub(host),
+        await fs.readTextFile(path.join(tmp, "key.pub")),
+      );
     } finally {
-      await Deno.remove(tmp, { recursive: true }).catch(() => {});
+      await fs.remove(tmp, { recursive: true }).catch(() => {});
     }
   }
-  return (await readTextOr(SECRETS.deployKeyPub(host)))!.trim();
+  const pub = await fs.readTextOr(SECRETS.deployKeyPub(host));
+  if (pub === undefined)
+    throw new Error(`no deploy key for ${host} (${SECRETS.deployKeyPub(host)})`);
+  return pub.trim();
 }
 
 /** Register the key on the repository (read-only, spec 048), replacing an older key for this host. */
@@ -129,9 +133,9 @@ export async function hostAdd(o: HostAddOptions): Promise<number> {
   // Spec 051: refused before anything is written.
   const { recognition, describeRecognition, CLAIM_MINUTES } = await import("./recognize.ts");
   const how = recognition(name, {
-    claim: o.claim,
-    macAddress: o.macAddress,
-    command: "deno task stolos host add",
+    ...(o.claim === undefined ? {} : { claim: o.claim }),
+    ...(o.macAddress === undefined ? {} : { macAddress: o.macAddress }),
+    command: "bun run stolos host add",
   });
   const c = ui.phase("Recognition");
   if ("refusal" in how) {
@@ -156,17 +160,17 @@ export async function hostAdd(o: HostAddOptions): Promise<number> {
   if (!(await loadSigners().catch(() => [])).some((x) => x.role === "daily")) {
     c.warn(
       `the fleet has no daily signer: ${name} will install, but refuse every change after`,
-      "deno task stolos signers add <your name> --role daily --key <your public key file>",
+      "bun run stolos signers add <your name> --role daily --key <your public key file>",
       "E047-NO-SIGNERS",
     );
   }
   const m = ui.phase("Host model");
-  if ((await exists(file)) && !o.force) {
+  if ((await fs.exists(file)) && !o.force) {
     m.done(`fleets/${P.fleetId}/hosts/${name}/host.ts exists (kept; --force rewrites it)`);
   } else {
-    await ensureDir(join(P.hosts, name));
+    await fs.ensureDir(path.join(P.hosts, name));
     const disk: DiskDef = { match: o.disk ?? "largest", layout: o.layout ?? "lvm" };
-    await Deno.writeTextFile(file, hostSource({ name, disk }));
+    await fs.writeTextFile(file, hostSource({ name, disk }));
     m.done(`fleets/${P.fleetId}/hosts/${name}/host.ts · ${disk.layout} on ${disk.match} disk`);
   }
 
@@ -184,7 +188,7 @@ export async function hostAdd(o: HostAddOptions): Promise<number> {
   const keys = await ensureHostKeys(name);
   // Spec 047: who the host is, in Git: its public keys (operators trust these), its card, its deploy key.
   const { writeRegistration, loadRegistration } = await import("../fleet/registration.ts");
-  const deployPub = await readTextOr(SECRETS.deployKeyPub(name));
+  const deployPub = await fs.readTextOr(SECRETS.deployKeyPub(name));
   const fingerprint = deployPub
     ? (await run(["ssh-keygen", "-lf", "-"], { stdin: deployPub })).stdout.split(/\s+/)[1]
     : undefined;
@@ -195,15 +199,15 @@ export async function hostAdd(o: HostAddOptions): Promise<number> {
     ...(mac
       ? { mac, macSource: "operator" as const }
       : before?.mac
-      ? { mac: before.mac, ...(before.macSource ? { macSource: before.macSource } : {}) }
-      : {}),
+        ? { mac: before.mac, ...(before.macSource ? { macSource: before.macSource } : {}) }
+        : {}),
     ...(fingerprint ? { deployKey: fingerprint } : {}),
     added: before?.added ?? new Date().toISOString().slice(0, 10),
   });
   hk.done(
-    `${
-      keys.map((k) => k.type).join(", ")
-    } host keys; private halves on this machine only, public halves in ${regFile}`,
+    `${keys
+      .map((k) => k.type)
+      .join(", ")} host keys; private halves on this machine only, public halves in ${regFile}`,
   );
 
   const a = ui.phase("Install");
@@ -214,24 +218,22 @@ export async function hostAdd(o: HostAddOptions): Promise<number> {
   const { notify } = await import("../notify/events.ts");
   await notify({
     event: `host added: ${name}`,
-    what:
-      `Host ${name} was added to the fleet (fleets/${P.fleetId}/hosts/${name}/host.ts) and armed for one install.`,
-    todo: `Install it: network-boot it while the boot server runs (deno task stolos boot serve).`,
+    what: `Host ${name} was added to the fleet (fleets/${P.fleetId}/hosts/${name}/host.ts) and armed for one install.`,
+    todo: `Install it: network-boot it while the boot server runs (bun run stolos boot serve).`,
     key: `host-add:${name}`,
   });
   const uri = bootUri(lanAddresses()[0] ?? "<this-pc>", BOOT_PORT, name);
   a.done(`${name} is armed for one install`);
   // The install clones main: the new host's model must be there first.
   const { publishChange } = await import("./publish.ts");
-  const published = o.push !== false &&
-    await publishChange([repoRel(file), regFile], `004-install: add host ${name}`);
+  const published =
+    o.push !== false &&
+    (await publishChange([repoRel(file), regFile], `004-install: add host ${name}`));
   ui.next.push(
-    ...(published ? [] : [
-      `next: deno task stolos apply -m "004-install: add host ${name}"`,
-    ]),
-    "then: deno task stolos boot serve (leave it running)",
+    ...(published ? [] : [`next: bun run stolos apply -m "004-install: add host ${name}"`]),
+    "then: bun run stolos boot serve (leave it running)",
     how.kind === "claim"
-      ? `then: within ${CLAIM_MINUTES} minutes, power on ${name}'s machine and let it network-boot (re-open the window: deno task stolos boot arm ${name} --claim)`
+      ? `then: within ${CLAIM_MINUTES} minutes, power on ${name}'s machine and let it network-boot (re-open the window: bun run stolos boot arm ${name} --claim)`
       : `then: power on ${name}; it network-boots and is recognized by its network card (${mac})`,
     `  or, for UEFI HTTP Boot with a Boot URI field: ${uri}`,
   );

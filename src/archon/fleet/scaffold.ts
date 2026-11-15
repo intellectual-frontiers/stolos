@@ -6,48 +6,46 @@
  * @module
  */
 
+import { fs, path as paths, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import type { RunResult } from "../core/exec.ts";
 import { bootstrapFiles, repoSlug } from "./bootstrap.ts";
-import { join } from "../core/path.ts";
-import { exists } from "../core/fsx.ts";
-import { ENGINE_ENTRY, ENGINE_ENTRY_TEXT } from "./upgrade.ts";
+import { ENGINE_PACKAGE, ENGINE_RELEASES, tarballUrl } from "./upgrade.ts";
+import { installDependencies } from "../install/bun.ts";
 import { IMPACT_WORKFLOW_PATH, IMPACT_WORKFLOW_TEXT } from "../compliance/workflow.ts";
 
-/** Where released engines are served from; the tag is appended. */
-export const ENGINE_BASE = "https://raw.githubusercontent.com/intellectual-frontiers/stolos/";
-
-/** A fleet repository's deno.json: the engine pinned at tag, and the stolos task (run frozen; spec 059). */
-export function denoJsonText(tag: string, base = ENGINE_BASE): string {
-  return JSON.stringify(
-    {
-      imports: { "@stolos/": `${base}${tag}/src/` },
-      tasks: {
-        stolos: "deno run -A --frozen stolos.ts",
+/**
+ * A fleet repository's package.json (spec 096 FR-006): the engine pinned by its release's tarball
+ * (bun.lock holds its integrity), and the commands `bun run stolos ...` and `bun run archon ...`.
+ */
+export function packageJsonText(tag: string, base: string = ENGINE_RELEASES): string {
+  return (
+    JSON.stringify(
+      {
+        name: "fleet",
+        private: true,
+        type: "module",
+        scripts: { stolos: "bun stolos.ts", archon: "bun archon.ts" },
+        dependencies: { [ENGINE_PACKAGE]: tarballUrl(tag, base) },
       },
-      compilerOptions: { strict: true },
-      fmt: { lineWidth: 100, exclude: ["out/"] },
-      lint: { exclude: ["out/"] },
-    },
-    null,
-    2,
-  ) + "\n";
+      null,
+      2,
+    ) + "\n"
+  );
 }
 
 /** A fleet repository's archon.ts: each machine's archon, from the pinned engine. */
-export const ARCHON_ENTRY_TEXT =
-  `// Each machine's \`archon\` command: the engine pinned in deno.json (\`@stolos/\`),
-// checked against deno.lock. Servers and workstations run this file from
-// /srv/archon through /usr/local/bin/archon. On your PC, use \`deno task stolos\`.
-import { run } from "@stolos/archon/main.ts";
+export const ARCHON_ENTRY_TEXT = `// Each machine's \`archon\` command: the engine package.json pins, as bun.lock holds it.
+// Servers and workstations run this file from /srv/archon through /usr/local/bin/archon
+// (Bun, or Node where Bun is not installed). On your PC, use \`bun run stolos\`.
+import { run } from "${ENGINE_PACKAGE}/archon/main";
 
 await run();
 `;
 
 /** A fleet repository's stolos.ts: the fleet's command on your PC (spec 059). */
-export const STOLOS_ENTRY_TEXT =
-  `// The fleet's command on your PC: \`deno task stolos ...\` (with no arguments: where
-// you are, and what to do next). The engine pinned in deno.json (\`@stolos/\`),
-// checked against deno.lock.
-import { run } from "@stolos/stolos/main.ts";
+export const STOLOS_ENTRY_TEXT = `// The fleet's command on your PC: \`bun run stolos ...\` (with no arguments: where
+// you are, and what to do next). The engine package.json pins, as bun.lock holds it.
+import { run } from "${ENGINE_PACKAGE}/stolos/main";
 
 await run();
 `;
@@ -56,73 +54,57 @@ await run();
 export const GITIGNORE_TEXT = `# Rendered by stolos build on each machine; never committed.
 out/
 *.log
+# The engine, installed from package.json and bun.lock (bun install --frozen-lockfile).
+node_modules/
 `;
 
 /**
- * VS Code for a fleet repository: Deno for TypeScript (checks, lint; the engine's
- * files downloaded when a file that imports them is saved) and as the
- * formatter, on save, for everything deno fmt formats (TypeScript, JavaScript,
- * JSON, Markdown, YAML, CSS, HTML), with the fleet's deno.json settings.
+ * VS Code for a fleet repository: its own TypeScript checks the fleet's files against the installed
+ * engine's types (node_modules); every text file LF, ending with one newline.
  */
-export const VSCODE_SETTINGS_TEXT: string = JSON.stringify(
-  {
-    "deno.enable": true,
-    "deno.lint": true,
-    // Saving a file downloads what it imports (the engine's types, for fleet.ts).
-    "deno.cacheOnSave": true,
-    "editor.formatOnSave": true,
-    "editor.defaultFormatter": "denoland.vscode-deno",
-    ...Object.fromEntries(
-      [
-        "typescript",
-        "typescriptreact",
-        "javascript",
-        "javascriptreact",
-        "json",
-        "jsonc",
-        "markdown",
-        "yaml",
-        "css",
-        "scss",
-        "less",
-        "html",
-      ]
-        .map((l) => [`[${l}]`, { "editor.defaultFormatter": "denoland.vscode-deno" }]),
-    ),
-    "files.eol": "\n",
-    "files.insertFinalNewline": true,
-    "files.trimFinalNewlines": true,
-    "files.trimTrailingWhitespace": true,
-  },
-  null,
-  2,
-) + "\n";
+export const VSCODE_SETTINGS_TEXT: string =
+  JSON.stringify(
+    {
+      "files.eol": "\n",
+      "files.insertFinalNewline": true,
+      "files.trimFinalNewlines": true,
+      "files.trimTrailingWhitespace": true,
+      "files.exclude": { "node_modules/": true },
+    },
+    null,
+    2,
+  ) + "\n";
 
-/** VS Code's suggested extensions: Deno, Mermaid in Markdown previews, GitHub Actions, YAML. */
+/** VS Code's suggested extensions: Mermaid in Markdown previews, GitHub Actions, YAML. */
 export const VSCODE_EXTENSIONS_TEXT =
-  '{\n  "recommendations": [\n    "denoland.vscode-deno",\n    "bierner.markdown-mermaid",\n    "github.vscode-github-actions",\n    "redhat.vscode-yaml"\n  ],\n  "unwantedRecommendations": [\n    "esbenp.prettier-vscode",\n    "dbaeumer.vscode-eslint"\n  ]\n}\n';
+  '{\n  "recommendations": [\n    "bierner.markdown-mermaid",\n    "github.vscode-github-actions",\n    "redhat.vscode-yaml"\n  ],\n  "unwantedRecommendations": [\n    "esbenp.prettier-vscode",\n    "dbaeumer.vscode-eslint"\n  ]\n}\n';
 
 /**
  * Line endings Git keeps whatever the PC (spec 062): every text file LF, as
- * stolos and deno fmt write them. Git for Windows would otherwise check files
+ * stolos and bun fmt write them. Git for Windows would otherwise check files
  * out with CRLF: a shell script would not run on Linux or macOS, and a file in
  * stolos's fixed form (signers.ts, registration.ts) would not read back as it.
  */
-export const GITATTRIBUTES_TEXT =
-  `# Written by stolos (spec 062): every text file keeps LF on every system, as stolos
-# and deno fmt write them (Git for Windows would otherwise check them out with CRLF).
+export const GITATTRIBUTES_TEXT = `# Written by stolos (spec 062): every text file keeps LF on every system, as stolos
+# and bun fmt write them (Git for Windows would otherwise check them out with CRLF).
 * text=auto eol=lf
 `;
 
-/** The files of a fleet repository, by path relative to its root; `slug` is its GitHub owner/name. */
-export function scaffoldFiles(tag: string, base = ENGINE_BASE, slug = ""): Record<string, string> {
+/**
+ * The files of a fleet repository, by path relative to its root; `slug` is its GitHub owner/name.
+ * `bun.lock` is not among them: `bun install` writes it (scaffoldRepository's caller runs it).
+ */
+export function scaffoldFiles(
+  tag: string,
+  base: string = ENGINE_RELEASES,
+  slug = "",
+): Record<string, string> {
   return {
     ...bootstrapFiles(slug),
     ".gitattributes": GITATTRIBUTES_TEXT,
-    "deno.json": denoJsonText(tag, base),
+    "package.json": packageJsonText(tag, base),
     "archon.ts": ARCHON_ENTRY_TEXT,
     "stolos.ts": STOLOS_ENTRY_TEXT,
-    [ENGINE_ENTRY]: ENGINE_ENTRY_TEXT,
     ".gitignore": GITIGNORE_TEXT,
     ".vscode/settings.json": VSCODE_SETTINGS_TEXT,
     ".vscode/extensions.json": VSCODE_EXTENSIONS_TEXT,
@@ -135,39 +117,29 @@ export function scaffoldFiles(tag: string, base = ENGINE_BASE, slug = ""): Recor
 export async function scaffoldRepository(
   repo: string,
   tag: string,
-  base = ENGINE_BASE,
+  base: string = ENGINE_RELEASES,
 ): Promise<string[]> {
   const written: string[] = [];
   const slug = await repoSlug(repo);
   for (const [rel, text] of Object.entries(scaffoldFiles(tag, base, slug))) {
-    const p = join(repo, rel);
-    if (await exists(p)) continue;
-    await Deno.mkdir(join(p, ".."), { recursive: true });
-    await Deno.writeTextFile(p, text);
-    if (rel.endsWith(".sh") && Deno.build.os !== "windows") await Deno.chmod(p, 0o755);
+    const p = paths.join(repo, rel);
+    if (await fs.exists(p)) continue;
+    await fs.mkdir(paths.join(p, ".."), { recursive: true });
+    await fs.writeTextFile(p, text);
+    if (rel.endsWith(".sh") && proc.build.os !== "windows") await fs.chmod(p, 0o755);
     written.push(rel);
   }
   return written;
 }
 
 /**
- * Download every engine file the pin names, checked against deno.lock, into
- * Deno's cache: what VS Code's Deno extension reads to check fleet.ts. Running
- * a command downloads only what it runs; a type-only import (fleet.ts imports
- * the engine's types) would otherwise never be fetched. Returns why not, if not.
+ * Install the engine the checkout pins, exactly as bun.lock holds it (`bun install
+ * --frozen-lockfile`): what runs `bun run stolos`, and what VS Code reads to check fleet.ts.
+ * Returns why not, if not (an integrity error is E046-LOCK-INTEGRITY).
  */
-export async function cacheEngine(repo: string): Promise<{ ok: boolean; why?: string }> {
-  if (!(await exists(join(repo, "deno.lock")))) return { ok: true }; // an engine checkout
-  const entries: string[] = [];
-  for (const f of ["archon.ts", "stolos.ts", ENGINE_ENTRY]) {
-    if (await exists(join(repo, f))) entries.push(f);
-  }
-  const r = await new Deno.Command(Deno.execPath(), {
-    args: ["cache", "--frozen", "--allow-import", ...entries],
-    cwd: repo,
-    stdout: "piped",
-    stderr: "piped",
-  }).output();
-  const err = new TextDecoder().decode(r.stderr).trim().split("\n").pop() ?? "";
-  return r.success ? { ok: true } : { ok: false, why: err };
+export async function installEngine(repo: string): Promise<{ ok: boolean; why?: string }> {
+  if (!(await fs.exists(paths.join(repo, "package.json")))) return { ok: true }; // not a fleet repository
+  const r: RunResult = await installDependencies(repo);
+  const why = r.stderr.trim().split("\n").pop() ?? `exit ${r.code}`;
+  return r.ok ? { ok: true } : { ok: false, why };
 }

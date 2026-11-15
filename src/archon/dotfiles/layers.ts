@@ -19,7 +19,7 @@
  * @module
  */
 
-import { join } from "../core/path.ts";
+import { path as paths } from "@intellectual-frontiers/ifc-ts/runtime";
 
 /** Where `archon apply` writes each user's composed chezmoi source (one directory per user). */
 export const COMPOSED_ROOT = "/var/lib/archon-dotfiles";
@@ -52,7 +52,7 @@ export function layersFor(host: string, user: string, fleet: string): Layer[] {
 
 /** The composed source directory for a user, under `COMPOSED_ROOT`. */
 export function composedDir(user: string): string {
-  return join(COMPOSED_ROOT, user);
+  return paths.join(COMPOSED_ROOT, user);
 }
 
 /** Root files of a layer whose contents are concatenated, not replaced. */
@@ -113,7 +113,7 @@ export function targetOf(sourceRel: string): string {
  */
 export function forbidden(sourceRel: string): string | undefined {
   const parts = sourceRel.split("/");
-  const top = parts[0];
+  const top = parts[0] ?? "";
   if (top === ".chezmoiscripts") return "scripts are not allowed in dotfiles (use the model)";
   if (top.startsWith(".chezmoiexternal")) return "externals download unpinned files (Article 12)";
   if (top === ".chezmoiroot") return "a layer cannot move chezmoi's source";
@@ -206,13 +206,15 @@ export async function compose(
       for (let i = 1; i < src.length; i++) {
         const td = tgt.slice(0, i).join("/");
         if (!dirSource.has(td)) {
-          const parent = dirSource.get(tgt.slice(0, i - 1).join("/"))!;
-          dirSource.set(td, parent ? `${parent}/${src[i - 1]}` : src[i - 1]);
+          const parent = dirSource.get(tgt.slice(0, i - 1).join("/"));
+          const name = src[i - 1] ?? "";
+          dirSource.set(td, parent ? `${parent}/${name}` : name);
         }
       }
-      const dir = dirSource.get(tgt.slice(0, -1).join("/"))!;
+      const dir = dirSource.get(tgt.slice(0, -1).join("/"));
+      const last = src.at(-1) ?? "";
       byTarget.set(target, {
-        source: dir ? `${dir}/${src.at(-1)}` : src.at(-1)!,
+        source: dir ? `${dir}/${last}` : last,
         from,
         layer,
         target,
@@ -249,7 +251,8 @@ export function strayLayers(
     if (!allUsers.has(u)) out.push(`${f}/users/${u}: no user ${u} on any host`);
   }
   for (const [h, u] of dirs.hostUsers) {
-    if (hostUsers.has(h) && !hostUsers.get(h)!.includes(u)) {
+    const users = hostUsers.get(h);
+    if (users !== undefined && !users.includes(u)) {
       out.push(`${f}/hosts/${h}/users/${u}: ${h} has no user ${u}`);
     }
   }

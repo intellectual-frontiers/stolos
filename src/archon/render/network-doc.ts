@@ -1,7 +1,7 @@
 /**
  * The network reference (spec 028), rendered from the site model by
  * `stolos build` into out/site/network-reference.html: the document the owner
- * sends with each network change log (deno task stolos boot notify --subject "Lab
+ * sends with each network change log (bun run stolos boot notify --subject "Lab
  * Network Runbook Change Log <dates>" --attach out/site/network-reference.html).
  * Generated: edit fleets/<fleet>/site.ts, never this output. Names only, no secrets.
  *
@@ -12,16 +12,17 @@ import type { HostDef } from "../model/types.ts";
 import type { FirewallPolicy, SiteDef } from "../model/site.ts";
 import { SECRET_INVENTORY } from "../model/secret-inventory.ts";
 
-const esc = (s: unknown) =>
-  String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(
-    /"/g,
-    "&quot;",
-  );
+const esc = (s: string | number | undefined): string =>
+  String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 
-function table(head: string[], rows: unknown[][]): string {
-  return `<table><thead><tr>${head.map((h) => `<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${
-    rows.map((r) => `<tr>${r.map((c) => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")
-  }</tbody></table>`;
+function table(head: string[], rows: (string | number | undefined)[][]): string {
+  return `<table><thead><tr>${head.map((h) => `<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${rows
+    .map((r) => `<tr>${r.map((c) => `<td>${esc(c)}</td>`).join("")}</tr>`)
+    .join("")}</tbody></table>`;
 }
 
 const action = (a: FirewallPolicy["action"]) =>
@@ -32,8 +33,8 @@ function match(p: FirewallPolicy): string {
   const ports = p.ports?.length
     ? ` ${p.ports.join(", ")}`
     : p.exceptPorts?.length
-    ? `, all ports except ${p.exceptPorts.join(", ")}`
-    : "";
+      ? `, all ports except ${p.exceptPorts.join(", ")}`
+      : "";
   return `${proto}${ports}${p.ipVersion === "ipv4" ? ", IPv4" : ""}`;
 }
 
@@ -56,26 +57,29 @@ export function renderNetworkDoc(
     "glance",
     "At a glance",
     `<dl class="glance">
-      <div><dt>Gateway</dt><dd>${esc(site.gateway.model)}<br>${
-      esc(n(site.gateway.network)?.gateway)
-    } · ${esc(site.gateway.name)}</dd></div>
+      <div><dt>Gateway</dt><dd>${esc(site.gateway.model)}<br>${esc(
+        n(site.gateway.network)?.gateway,
+      )} · ${esc(site.gateway.name)}</dd></div>
       <div><dt>Networks</dt><dd>${site.networks.filter((x) => x.vlan).length} VLANs${
-      site.wireguard ? " + VPN" : ""
-    }<br>${
-      esc(site.networks.filter((x) => x.vlan).map((x) => `${x.name} ${x.vlan}`).join(" · "))
-    }</dd></div>
-      <div><dt>Wi-Fi</dt><dd>${site.wifi.length} SSIDs<br>${
-      esc(site.wifi.map((w) => w.ssid).join(" · "))
-    }</dd></div>
-      <div><dt>Inbound from internet</dt><dd>${
-      esc(site.security.inbound)
-    }<br>${site.security.portForwards} port forwards · UPnP ${
-      site.security.upnp ? "on" : "off"
-    }</dd></div>
+        site.wireguard ? " + VPN" : ""
+      }<br>${esc(
+        site.networks
+          .filter((x) => x.vlan)
+          .map((x) => `${x.name} ${x.vlan}`)
+          .join(" · "),
+      )}</dd></div>
+      <div><dt>Wi-Fi</dt><dd>${site.wifi.length} SSIDs<br>${esc(
+        site.wifi.map((w) => w.ssid).join(" · "),
+      )}</dd></div>
+      <div><dt>Inbound from internet</dt><dd>${esc(
+        site.security.inbound,
+      )}<br>${site.security.portForwards} port forwards · UPnP ${
+        site.security.upnp ? "on" : "off"
+      }</dd></div>
       <div><dt>Intrusion prevention</dt><dd>${esc(site.security.ips)}</dd></div>
-      <div><dt>Network boot</dt><dd>${esc(boot.host)} ${
-      esc(boot.address)
-    }<br>TFTP ${boot.tftp} + HTTP ${boot.http}</dd></div>
+      <div><dt>Network boot</dt><dd>${esc(boot.host)} ${esc(
+        boot.address,
+      )}<br>TFTP ${boot.tftp} + HTTP ${boot.http}</dd></div>
     </dl>`,
   );
 
@@ -115,9 +119,7 @@ export function renderNetworkDoc(
     "Wi-Fi",
     table(
       ["SSID", "Network", "Bands (GHz)", "Security", "PMF", "Notes"],
-      site.wifi.map((
-        w,
-      ) => [
+      site.wifi.map((w) => [
         w.ssid,
         w.network,
         w.bands.join(" · "),
@@ -131,9 +133,9 @@ export function renderNetworkDoc(
   add(
     "policies",
     "Firewall zones and policies",
-    `<p>Zones: ${
-      esc(site.zones.join(", "))
-    }. Each network belongs to exactly one zone; UniFi's zone defaults apply, and these are the custom policies.</p>` +
+    `<p>Zones: ${esc(
+      site.zones.join(", "),
+    )}. Each network belongs to exactly one zone; UniFi's zone defaults apply, and these are the custom policies.</p>` +
       table(
         ["#", "Name", "From", "To", "Match", "Action", "Purpose"],
         site.policies.map((p) => [
@@ -160,11 +162,11 @@ export function renderNetworkDoc(
         ["Local DNS record", "Address"],
         site.dns.localRecords.map((r) => [r.name, r.address]),
       ) +
-      `<h3>mDNS proxy</h3><p>Scope: ${
-        esc(site.mdnsProxy.networks.join(", "))
-      }. Repeated services: ${
-        esc(site.mdnsProxy.services.join(", "))
-      }. Servers and DMZ are never in the scope.</p>`,
+      `<h3>mDNS proxy</h3><p>Scope: ${esc(
+        site.mdnsProxy.networks.join(", "),
+      )}. Repeated services: ${esc(
+        site.mdnsProxy.services.join(", "),
+      )}. Servers and DMZ are never in the scope.</p>`,
   );
 
   if (site.wireguard || site.ddns) {
@@ -173,51 +175,59 @@ export function renderNetworkDoc(
       "remote",
       "Remote access",
       (wg
-        ? table(["WireGuard", ""], [
-          ["Server", wg.name],
-          ["Listen", `UDP ${wg.listen}`],
-          ["Endpoint for clients", `${wg.endpoint}:${wg.listen}`],
-          ["Tunnel network", `${wg.network} (${n(wg.network)?.cidr ?? "?"})`],
-          ["Clients", wg.clients.map((c) => `${c.name} ${c.address}`).join("; ")],
-          ["Reaches", wg.reach.join(", ")],
-        ])
+        ? table(
+            ["WireGuard", ""],
+            [
+              ["Server", wg.name],
+              ["Listen", `UDP ${wg.listen}`],
+              ["Endpoint for clients", `${wg.endpoint}:${wg.listen}`],
+              ["Tunnel network", `${wg.network} (${n(wg.network)?.cidr ?? "?"})`],
+              ["Clients", wg.clients.map((c) => `${c.name} ${c.address}`).join("; ")],
+              ["Reaches", wg.reach.join(", ")],
+            ],
+          )
         : "") +
         (site.ddns
-          ? table(["Dynamic DNS", ""], [
-            ["Provider", site.ddns.provider],
-            [
-              "Record",
-              `${site.ddns.record} ${site.ddns.type} (${
-                site.ddns.proxied ? "proxied" : "DNS only"
-              })`,
-            ],
-            ["Zone", site.ddns.zone],
-          ])
+          ? table(
+              ["Dynamic DNS", ""],
+              [
+                ["Provider", site.ddns.provider],
+                [
+                  "Record",
+                  `${site.ddns.record} ${site.ddns.type} (${
+                    site.ddns.proxied ? "proxied" : "DNS only"
+                  })`,
+                ],
+                ["Zone", site.ddns.zone],
+              ],
+            )
           : "") +
         `<p class="note">Keys and tokens stay in UniFi and on the clients.</p>`,
     );
   }
 
-  const bootNets = site.networks.filter((x) => x.netboot);
+  const bootNets = site.networks.flatMap((x) => (x.netboot ? [{ ...x, netboot: x.netboot }] : []));
   add(
     "boot",
     "Network boot (Archon)",
-    `<p>Boot server: ${esc(boot.host)} at ${esc(boot.address)} on ${
-      esc(boot.network)
-    }, TFTP UDP ${boot.tftp} and HTTP TCP ${boot.http}. A network that boots from it needs Network Boot (${
-      esc(boot.address)
-    } / bootx64.efi) and, outside the boot server's zone, two policies to ${
-      esc(boot.address)
-    }: UDP ${boot.tftp} and TCP ${boot.http}.</p>` +
+    `<p>Boot server: ${esc(boot.host)} at ${esc(boot.address)} on ${esc(
+      boot.network,
+    )}, TFTP UDP ${boot.tftp} and HTTP TCP ${boot.http}. A network that boots from it needs Network Boot (${esc(
+      boot.address,
+    )} / bootx64.efi) and, outside the boot server's zone, two policies to ${esc(
+      boot.address,
+    )}: UDP ${boot.tftp} and TCP ${boot.http}.</p>` +
       table(
         ["Network", "Next server / file", "Policies"],
         bootNets.map((x) => [
           x.name,
-          `${x.netboot!.server} / ${x.netboot!.file}`,
+          `${x.netboot.server} / ${x.netboot.file}`,
           x.zone === n(boot.network)?.zone
             ? "same zone as the boot server"
-            : site.policies.filter((p) => p.from.zone === x.zone && p.to.address === boot.address)
-              .map((p) => `#${p.id}`).join(", ") || "MISSING",
+            : site.policies
+                .filter((p) => p.from.zone === x.zone && p.to.address === boot.address)
+                .map((p) => `#${p.id}`)
+                .join(", ") || "MISSING",
         ]),
       ),
   );
@@ -228,19 +238,24 @@ export function renderNetworkDoc(
     table(
       ["Name", "Address", "Network", "How", "DNS name", "Switch port"],
       [
-        ...site.devices.map((
-          d,
-        ) => [d.name, d.address, d.network, d.how.replace(/-/g, " "), "", ""]),
-        ...hosts.filter((h) => h.network || h.ip).map((
-          h,
-        ) => [
-          h.name,
-          h.ip ?? "-",
-          h.network ?? "-",
-          "fixed (Archon host)",
-          h.dnsName ?? "-",
-          h.switchPort ?? "-",
+        ...site.devices.map((d) => [
+          d.name,
+          d.address,
+          d.network,
+          d.how.replace(/-/g, " "),
+          "",
+          "",
         ]),
+        ...hosts
+          .filter((h) => h.network || h.ip)
+          .map((h) => [
+            h.name,
+            h.ip ?? "-",
+            h.network ?? "-",
+            "fixed (Archon host)",
+            h.dnsName ?? "-",
+            h.switchPort ?? "-",
+          ]),
       ],
     ),
   );
@@ -248,12 +263,10 @@ export function renderNetworkDoc(
   add(
     "secrets",
     "Where secrets live",
-    `<p>Names and places only. Boot-machine secrets are backed up as one ZIP (deno task stolos vault backup) that the owner keeps somewhere safe and encrypted.</p>` +
+    `<p>Names and places only. Boot-machine secrets are backed up as one ZIP (bun run stolos vault backup) that the owner keeps somewhere safe and encrypted.</p>` +
       table(
         ["Secret", "Holder", "Where", "If lost"],
-        SECRET_INVENTORY.map((
-          s,
-        ) => [
+        SECRET_INVENTORY.map((s) => [
           s.purpose,
           s.holder === "owner" ? "owner" : "boot machine",
           s.holder === "owner" ? s.path : `%APPDATA%\\stolos\\secrets\\${s.path}`,
@@ -271,9 +284,12 @@ export function renderNetworkDoc(
   }
 
   const nav = sections.map(([id, t], i) => `<a href="#${id}">${i + 1} ${esc(t)}</a>`).join("");
-  const body = sections.map(([id, t, b], i) =>
-    `<section id="${id}"><h2><span>${i + 1}</span> ${esc(t)}</h2>${b}</section>`
-  ).join("\n");
+  const body = sections
+    .map(
+      ([id, t, b], i) =>
+        `<section id="${id}"><h2><span>${i + 1}</span> ${esc(t)}</h2>${b}</section>`,
+    )
+    .join("\n");
   return `<!doctype html>
 <!-- GENERATED by stolos build from fleets/<fleet>/site.ts (spec 028). Do not edit. -->
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">

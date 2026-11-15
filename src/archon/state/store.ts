@@ -24,10 +24,10 @@
  * @module
  */
 
+import { formatDecodeError, object, string } from "@intellectual-frontiers/ifc-ts/kernel";
+import { fs, path } from "@intellectual-frontiers/ifc-ts/runtime";
 import { count } from "../core/telemetry.ts";
 import { DatabaseSync } from "node:sqlite";
-import { join } from "../core/path.ts";
-import { ensureDir, readTextOr } from "../core/fsx.ts";
 import { P } from "../core/paths.ts";
 
 /** The canonical state file: readable SQL. */
@@ -153,55 +153,70 @@ function open(text: string): DatabaseSync {
 
 /** archon.sql for these records: a header, the schema, and one INSERT per record, in order. */
 export function dump(db: DatabaseSync): string {
-  const rows = db.prepare(
-    "SELECT host, kind, name, at, body FROM archon_record ORDER BY host, kind, name",
-  ).all() as unknown as Array<Record<string, string>>;
+  const rows = db
+    .prepare("SELECT host, kind, name, at, body FROM archon_record ORDER BY host, kind, name")
+    .all()
+    .map(row);
   return [
     "-- archon.sql (spec 048): this machine's own state. Written by archon; readable; never",
     "-- pushed. archon.auto.sqlite.db is built from it for osquery (archon query).",
     "",
     SCHEMA.trim(),
     "",
-    ...rows.map((r) =>
-      `INSERT INTO archon_record VALUES (${
-        [r.host, r.kind, r.name, r.at, r.body].map(q).join(", ")
-      });`
+    ...rows.map(
+      (r) =>
+        `INSERT INTO archon_record VALUES (${[r.host, r.kind, r.name, r.at, r.body]
+          .map(q)
+          .join(", ")});`,
     ),
     "",
   ].join("\n");
 }
 
 async function load(dir: string): Promise<DatabaseSync> {
-  return open((await readTextOr(join(dir, STATE_SQL))) ?? "");
+  return open((await fs.readTextOr(path.join(dir, STATE_SQL))) ?? "");
 }
 
 async function save(dir: string, db: DatabaseSync): Promise<void> {
-  await ensureDir(dir);
+  await fs.ensureDir(dir);
   const sql = dump(db);
-  const file = join(dir, STATE_SQL);
-  if ((await readTextOr(file)) === sql) return;
+  const file = path.join(dir, STATE_SQL);
+  if ((await fs.readTextOr(file)) === sql) return;
   const tmp = `${file}.tmp`;
-  await Deno.writeTextFile(tmp, sql);
-  await Deno.rename(tmp, file);
+  await fs.writeTextFile(tmp, sql);
+  await fs.rename(tmp, file);
   await rebuild(dir, sql);
 }
 
 /** Build archon.auto.sqlite.db from archon.sql (also after a person edited it). */
 export async function rebuild(dir: string, sql?: string): Promise<void> {
-  const text = sql ?? (await readTextOr(join(dir, STATE_SQL))) ?? "";
-  const target = join(dir, STATE_DB);
+  const text = sql ?? (await fs.readTextOr(path.join(dir, STATE_SQL))) ?? "";
+  const target = path.join(dir, STATE_DB);
   const tmp = `${target}.tmp`;
-  await Deno.remove(tmp).catch(() => {});
+  await fs.remove(tmp).catch(() => {});
   const db = new DatabaseSync(tmp);
   db.exec(SCHEMA);
   if (text.trim()) db.exec(text);
   db.close();
-  await Deno.chmod(tmp, 0o644).catch(() => {});
-  await Deno.rename(tmp, target);
+  await fs.chmod(tmp, 0o644).catch(() => {});
+  await fs.rename(tmp, target);
 }
 
-function rec<T>(r: Record<string, string>): StateRecord<T> {
-  return { host: r.host, kind: r.kind as Kind, name: r.name, at: r.at, body: JSON.parse(r.body) };
+/** A row of archon_record, as SQLite gives it. */
+const ROW = object({ host: string, kind: string, name: string, at: string, body: string });
+
+/** A row of archon_record, checked (archon writes every one; a hand-edited file may not be). */
+function row(r: unknown): { host: string; kind: string; name: string; at: string; body: string } {
+  const d = ROW(r);
+  if (d.kind === "err")
+    throw new Error(`archon.sql: a malformed record: ${formatDecodeError(d.error)}`);
+  return d.value;
+}
+
+function rec<T>(r: unknown): StateRecord<T> {
+  const { host, kind, name, at, body } = row(r);
+  // The kind and the body are what putRecord wrote for this kind.
+  return { host, kind: kind as Kind, name, at, body: JSON.parse(body) as T };
 }
 
 /** One record, or undefined. */
@@ -212,9 +227,9 @@ export async function getRecord<T = unknown>(
   dir = stateDir(),
 ): Promise<StateRecord<T> | undefined> {
   const db = await load(dir);
-  const r = db.prepare(
-    "SELECT * FROM archon_record WHERE host = ? AND kind = ? AND name = ?",
-  ).get(host, kind, name) as Record<string, string> | undefined;
+  const r = db
+    .prepare("SELECT * FROM archon_record WHERE host = ? AND kind = ? AND name = ?")
+    .get(host, kind, name);
   return r ? rec<T>(r) : undefined;
 }
 
@@ -225,9 +240,10 @@ export async function listRecords<T = unknown>(
   dir = stateDir(),
 ): Promise<StateRecord<T>[]> {
   const db = await load(dir);
-  return (db.prepare(
-    "SELECT * FROM archon_record WHERE host = ? AND kind = ? ORDER BY name",
-  ).all(host, kind) as unknown as Array<Record<string, string>>).map((r) => rec<T>(r));
+  return db
+    .prepare("SELECT * FROM archon_record WHERE host = ? AND kind = ? ORDER BY name")
+    .all(host, kind)
+    .map((r) => rec<T>(r));
 }
 
 /** Write one record (replacing the one with the same key). */
@@ -309,8 +325,9 @@ export async function removeRecords(
 /** For tests and `archon state`: every record. */
 export async function allRecords(dir = stateDir()): Promise<StateRecord[]> {
   const db = await load(dir);
-  return (db.prepare("SELECT * FROM archon_record ORDER BY host, kind, name")
-    .all() as unknown as Array<
+  return (
+    db.prepare("SELECT * FROM archon_record ORDER BY host, kind, name").all() as unknown as Array<
       Record<string, string>
-    >).map((r) => rec(r));
+    >
+  ).map((r) => rec(r));
 }

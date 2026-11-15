@@ -1,7 +1,7 @@
 /**
  * The secret inventory (spec 028, constitution Article 13): every secret the
  * fleet depends on, by name, where it lives, and how to make it again. Values
- * never. The boot machine's secrets are what `deno task stolos vault` backs up
+ * never. The boot machine's secrets are what `bun run stolos vault` backs up
  * and restores (spec 029); the owner's are listed so a lost one is not a
  * surprise. A test checks that every path the code writes is listed here.
  *
@@ -43,7 +43,7 @@ export const SECRET_INVENTORY: SecretRef[] = [
     purpose: "the fleet admin's password (SHA-512 crypt), set on every host at install",
     holder: "boot-machine",
     recreate:
-      "deno task stolos fleet init (keeps fleets/<fleet>/fleet.ts; asks for the password again; the same password keeps the hosts as they are)",
+      "bun run stolos fleet init (keeps fleets/<fleet>/fleet.ts; asks for the password again; the same password keeps the hosts as they are)",
     spec: "003-identity",
   },
   {
@@ -53,7 +53,7 @@ export const SECRET_INVENTORY: SecretRef[] = [
     purpose: "<host>'s GitHub deploy key (pulls and pushes its state as ops)",
     holder: "boot-machine",
     recreate:
-      "while the host runs: deno task stolos vault recover-host-keys <host> (the same key comes back); otherwise deno task stolos host add <host> (keeps its model, registers a new key on GitHub), then deno task stolos boot reinstall <host> --confirm-destroy <host>",
+      "while the host runs: bun run stolos vault recover-host-keys <host> (the same key comes back); otherwise bun run stolos host add <host> (keeps its model, registers a new key on GitHub), then bun run stolos boot reinstall <host> --confirm-destroy <host>",
     spec: "004-install",
   },
   {
@@ -64,7 +64,7 @@ export const SECRET_INVENTORY: SecretRef[] = [
       "reads facts from the adopted machine <host>: its authorized_keys lets this key run the read-only probe and nothing else (spec 067)",
     holder: "boot-machine",
     recreate:
-      "deno task stolos host adopt <host> --ssh <user>@<address> again (it makes a new key and replaces the old line)",
+      "bun run stolos host adopt <host> --ssh <user>@<address> again (it makes a new key and replaces the old line)",
     spec: "067-adopt",
   },
   {
@@ -75,7 +75,7 @@ export const SECRET_INVENTORY: SecretRef[] = [
       "reads one cloud account (cloudflare, microsoft, aws, hetzner) for stolos estate observe: read-only, never changes the cloud (spec 067)",
     holder: "boot-machine",
     recreate:
-      "make a new read-only credential in the provider's console; deno task stolos connect <provider>",
+      "make a new read-only credential in the provider's console; bun run stolos connect <provider>",
     spec: "067-adopt",
   },
   {
@@ -86,7 +86,7 @@ export const SECRET_INVENTORY: SecretRef[] = [
       "read the device <host> over SNMPv3 (authentication and privacy passphrases of a read-only user made on it; spec 069)",
     holder: "boot-machine",
     recreate:
-      "make a new read-only SNMPv3 user on the device; deno task stolos device add <host> ... again",
+      "make a new read-only SNMPv3 user on the device; bun run stolos device add <host> ... again",
     spec: "069-integrate",
   },
   {
@@ -115,7 +115,7 @@ export const SECRET_INVENTORY: SecretRef[] = [
     holder: "boot-machine",
     identity: true,
     recreate:
-      "deno task stolos vault recover-host-keys <host> while it runs; otherwise a re-install makes new keys and every client sees a changed host identity",
+      "bun run stolos vault recover-host-keys <host> while it runs; otherwise a re-install makes new keys and every client sees a changed host identity",
     spec: "004-install",
   },
   {
@@ -134,7 +134,7 @@ export const SECRET_INVENTORY: SecretRef[] = [
     purpose: "Cloudflare Email Sending token for the mail relay (Postfix and archon notify)",
     holder: "boot-machine",
     recreate:
-      "Cloudflare: create an API token with Email Sending: Edit; deno task stolos boot mail-setup; deno task stolos boot mail-push <host> for each server",
+      "Cloudflare: create an API token with Email Sending: Edit; bun run stolos boot mail-setup; bun run stolos boot mail-push <host> for each server",
     spec: "027-mail",
   },
   {
@@ -145,7 +145,7 @@ export const SECRET_INVENTORY: SecretRef[] = [
       "a send-only SMTP credential for export jobs that send through their own account (email.credential in estate.exports; spec 092)",
     holder: "boot-machine",
     recreate:
-      "make a new send-only credential with the provider (Cloudflare: an API token with only Email Sending: Edit); deno task stolos export credential <name>",
+      "make a new send-only credential with the provider (Cloudflare: an API token with only Email Sending: Edit); bun run stolos export credential <name>",
     spec: "092-exporters",
   },
   {
@@ -168,7 +168,7 @@ export const SECRET_INVENTORY: SecretRef[] = [
       "Cloudflare API token (Zone Read, DNS Edit on the fleet's zone): each server's DNS records and its Let's Encrypt certificate",
     holder: "boot-machine",
     recreate:
-      "Cloudflare: create a token with Zone: Read and DNS: Edit for the zone; deno task stolos boot web-setup; deno task stolos boot web-push <host> for each server",
+      "Cloudflare: create a token with Zone: Read and DNS: Edit for the zone; bun run stolos boot web-setup; bun run stolos boot web-push <host> for each server",
     spec: "032-web",
   },
   {
@@ -178,7 +178,7 @@ export const SECRET_INVENTORY: SecretRef[] = [
     purpose: "one-time install tokens for armed hosts, and MACs learned at install",
     holder: "boot-machine",
     ephemeral: true,
-    recreate: "deno task stolos boot arm <host> makes a new one when needed",
+    recreate: "bun run stolos boot arm <host> makes a new one when needed",
     spec: "004-install",
   },
 
@@ -186,8 +186,7 @@ export const SECRET_INVENTORY: SecretRef[] = [
   {
     id: "unifi-backup",
     label: "UniFi backup",
-    path:
-      "UniFi: Settings > Management > Backup Files (cloud), and the downloaded .unifi file kept offline",
+    path: "UniFi: Settings > Management > Backup Files (cloud), and the downloaded .unifi file kept offline",
     purpose: "the whole router configuration, Wi-Fi keys and VPN keys included",
     holder: "owner",
     recreate: "download a fresh backup from the console after any major change",
@@ -235,19 +234,21 @@ export const SECRET_INVENTORY: SecretRef[] = [
 
 /** A path pattern ("hosts/<host>/deploy_key") as a regular expression. */
 export function patternOf(path: string): RegExp {
-  const esc = path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-    .replace(/<host>/g, "(?<host>[a-z0-9-]+)").replace(/<type>/g, "(?<type>[a-z0-9]+)").replace(
-      /<name>/g,
-      "(?<name>[a-z0-9-]+)",
-    );
+  const esc = path
+    .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    .replace(/<host>/g, "(?<host>[a-z0-9-]+)")
+    .replace(/<type>/g, "(?<type>[a-z0-9]+)")
+    .replace(/<name>/g, "(?<name>[a-z0-9-]+)");
   return new RegExp(`^${esc}$`);
 }
 
 /** The entry's label for one file: "hermes deploy key". */
 export function labelFor(ref: SecretRef, rel: string): string {
   const g = patternOf(ref.path).exec(rel.replace(/\\/g, "/"))?.groups ?? {};
-  return ref.label.replace("<host>", g.host ?? "<host>").replace("<type>", g.type ?? "<type>")
-    .replace("<name>", g.name ?? "<name>");
+  return ref.label
+    .replace("<host>", g["host"] ?? "<host>")
+    .replace("<type>", g["type"] ?? "<type>")
+    .replace("<name>", g["name"] ?? "<name>");
 }
 
 /** The inventory entry for a path relative to the secrets folder (forward slashes). */

@@ -8,7 +8,7 @@
  * @module
  */
 
-import { readTextOr } from "../core/fsx.ts";
+import { fs } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "../core/exec.ts";
 import { P } from "../core/paths.ts";
 import { getRecord, putRecord } from "./store.ts";
@@ -36,39 +36,48 @@ const FILLER =
 
 async function dmi(key: string): Promise<string | undefined> {
   // product_serial is readable by root only: without root, the serial is left out.
-  const v = (await readTextOr(`/sys/class/dmi/id/${key}`).catch(() => undefined))?.trim() ?? "";
+  const v = (await fs.readTextOr(`/sys/class/dmi/id/${key}`).catch(() => undefined))?.trim() ?? "";
   return FILLER.test(v) ? undefined : v;
 }
 
 /** Read the machine's inventory from /sys, /proc, and lsblk. */
 export async function collectInventory(): Promise<Inventory> {
-  const mem = (await readTextOr("/proc/meminfo").catch(() => undefined))?.match(
+  const mem = (await fs.readTextOr("/proc/meminfo").catch(() => undefined))?.match(
     /^MemTotal:\s+(\d+) kB/m,
   )?.[1];
   const lsblk = await run(["lsblk", "-dnbro", "NAME,SIZE,TYPE,TRAN", "-e", "1,7,11"]);
-  const disks = lsblk.stdout.split("\n").map((l) => l.split(" "))
-    .filter((f) => f[2] === "disk" && !f[0].startsWith("zram"))
-    .map(([name, bytes, , tran]) =>
-      `${name} ${Math.round(Number(bytes) / 1e9)} GB${tran ? ` ${tran}` : ""}`
+  const disks = lsblk.stdout
+    .split("\n")
+    .map((l) => l.split(" "))
+    .filter((f) => f[2] === "disk" && !(f[0] ?? "").startsWith("zram"))
+    .map(
+      ([name, bytes, , tran]) =>
+        `${name} ${Math.round(Number(bytes) / 1e9)} GB${tran ? ` ${tran}` : ""}`,
     );
   const macs: string[] = [];
   try {
-    for (const e of Deno.readDirSync("/sys/class/net")) {
+    for (const e of fs.readDirSync("/sys/class/net")) {
       // A physical card has a device behind it.
       try {
-        Deno.statSync(`/sys/class/net/${e.name}/device`);
+        fs.statSync(`/sys/class/net/${e.name}/device`);
       } catch {
         continue;
       }
-      const a = (await readTextOr(`/sys/class/net/${e.name}/address`).catch(() => undefined))
-        ?.trim();
+      const a = (
+        await fs.readTextOr(`/sys/class/net/${e.name}/address`).catch(() => undefined)
+      )?.trim();
       if (a) macs.push(a.toLowerCase());
     }
-  } catch { /* no /sys */ }
+  } catch {
+    /* no /sys */
+  }
+  const vendor = (await dmi("sys_vendor")) ?? (await dmi("board_vendor"));
+  const model = (await dmi("product_name")) ?? (await dmi("board_name"));
+  const serial = await dmi("product_serial");
   return {
-    vendor: (await dmi("sys_vendor")) ?? (await dmi("board_vendor")),
-    model: (await dmi("product_name")) ?? (await dmi("board_name")),
-    serial: await dmi("product_serial"),
+    ...(vendor === undefined ? {} : { vendor }),
+    ...(model === undefined ? {} : { model }),
+    ...(serial === undefined ? {} : { serial }),
     cpus: navigator.hardwareConcurrency,
     ...(mem ? { memMiB: Math.round(Number(mem) / 1024) } : {}),
     disks,
@@ -84,7 +93,9 @@ export function describeInventory(i: Inventory): string {
     `${i.cpus} CPUs`,
     i.memMiB ? `${(i.memMiB / 1024).toFixed(1)} GiB RAM` : "",
     i.disks.join(", "),
-  ].filter(Boolean).join(", ");
+  ]
+    .filter(Boolean)
+    .join(", ");
 }
 
 /** Record it unless the same is already there; true when written. */

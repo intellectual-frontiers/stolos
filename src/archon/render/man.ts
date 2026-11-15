@@ -38,11 +38,13 @@ function synopsis(cmd: Command): string {
   const parts = [`\\fBarchon ${esc(cmd.name)}\\fR`];
   for (const a of cmd.args) {
     if (a.positional) parts.push(a.required ? `\\fI${a.name}\\fR` : `[\\fI${a.name}\\fR]`);
-    else {parts.push(
+    else {
+      parts.push(
         a.type === "boolean"
           ? `[\\fB\\-\\-${a.name}\\fR]`
           : `[\\fB\\-\\-${a.name}\\fR \\fIvalue\\fR]`,
-      );}
+      );
+    }
   }
   return parts.join(" ");
 }
@@ -81,15 +83,16 @@ export function commandPage(cmd: Command): string {
   }
   L.push(
     ".SH MCP",
-    `Available to agents as the MCP tool \\fBarchon_${
-      cmd.name.replace(/ /g, "_")
-    }\\fR (archon mcp, within the fleet's tier).`,
+    `Available to agents as the MCP tool \\fBarchon_${cmd.name.replace(
+      / /g,
+      "_",
+    )}\\fR (archon mcp, within the fleet's tier).`,
   );
   L.push(
     ".SH SEE ALSO",
-    ["archon(1)", ...(cmd.seeAlso ?? [])].map((s) =>
-      `\\fB${esc(s.replace(/\(.*/, ""))}\\fR${esc(s.match(/\(.*\)/)?.[0] ?? "")}`
-    ).join(", "),
+    ["archon(1)", ...(cmd.seeAlso ?? [])]
+      .map((s) => `\\fB${esc(s.replace(/\(.*/, ""))}\\fR${esc(s.match(/\(.*\)/)?.[0] ?? "")}`)
+      .join(", "),
   );
   return L.join("\n") + "\n";
 }
@@ -118,13 +121,12 @@ export function mainPage(commands: Command[]): string {
     );
   }
   L.push(".SH FILES");
-  for (
-    const [f, d] of [
-      ["/srv/archon", "the repository: model, specs, rendered output"],
-      ["/var/lib/archon", "runtime state written by timers: reports, prov, snapshots"],
-      ["/opt/tools", "side-by-side installs of user-tier tools"],
-    ]
-  ) L.push(".TP", `\\fI${f}\\fR`, esc(d));
+  for (const [f, d] of [
+    ["/srv/archon", "the repository: model, specs, rendered output"],
+    ["/var/lib/archon", "runtime state written by timers: reports, prov, snapshots"],
+    ["/opt/tools", "side-by-side installs of user-tier tools"],
+  ] as const)
+    L.push(".TP", `\\fI${f}\\fR`, esc(d));
   L.push(
     ".SH SEE ALSO",
     "\\fBarchon\\-constitution\\fR(7), \\fBarchon\\-dotfiles\\fR(7), \\fBarchon\\-personas\\fR(7), \\fBsystemd.directives\\fR(7)",
@@ -135,51 +137,61 @@ export function mainPage(commands: Command[]): string {
 /** archon-constitution(7): the constitution, as a man page. */
 export function constitutionPage(): string {
   const md = engineFile(".specify/memory/constitution.md");
-  return th("archon-constitution", 7, MAN_DATE) +
+  return (
+    th("archon-constitution", 7, MAN_DATE) +
     ".SH NAME\narchon\\-constitution \\- the articles that govern every Archon change\n.SH DESCRIPTION\n" +
-    markdownToRoff(md.replace(/^# .*\n/, ""));
+    markdownToRoff(md.replace(/^# .*\n/, ""))
+  );
 }
 
 /** Spec 035: the newcomer's guide, from the guide module src/archon/guide/mod.ts (also on the welcome page). */
 export function guidePage(): string {
   const md = engineFile("docs/guide.md");
-  return th("archon-guide", 7, MAN_DATE) +
+  return (
+    th("archon-guide", 7, MAN_DATE) +
     ".SH NAME\narchon\\-guide \\- your Archon server, for newcomers\n.SH DESCRIPTION\n" +
     markdownToRoff(md.replace(/^# .*\n/, "")) +
-    ".SH SEE ALSO\n\\fBarchon\\fR(1), \\fBarchon\\-guide\\fR(1), \\fBarchon\\-dotfiles\\fR(7), \\fBarchon\\-constitution\\fR(7)\n";
+    ".SH SEE ALSO\n\\fBarchon\\fR(1), \\fBarchon\\-guide\\fR(1), \\fBarchon\\-dotfiles\\fR(7), \\fBarchon\\-constitution\\fR(7)\n"
+  );
 }
 
 /** Spec 031: how dotfiles work, from src/archon/dotfiles/mod.ts (one source for both). */
 export function dotfilesPage(): string {
   const md = engineFile("docs/dotfiles.md");
-  return th("archon-dotfiles", 7, MAN_DATE) +
+  return (
+    th("archon-dotfiles", 7, MAN_DATE) +
     ".SH NAME\narchon\\-dotfiles \\- how your dotfiles are composed, applied, and changed\n.SH DESCRIPTION\n" +
     markdownToRoff(md.replace(/^# .*\n/, "").replace(/\nSee also .*\n?$/, "\n")) +
-    ".SH SEE ALSO\n\\fBarchon\\fR(1), \\fBarchon\\-dotfiles\\fR(1), \\fBarchon\\-personas\\fR(7), \\fBchezmoi\\fR(1)\n";
+    ".SH SEE ALSO\n\\fBarchon\\fR(1), \\fBarchon\\-dotfiles\\fR(1), \\fBarchon\\-personas\\fR(7), \\fBchezmoi\\fR(1)\n"
+  );
 }
 
 /** Spec 038: PostgreSQL instances, from src/archon/pg/mod.ts (also served at /guide/pg). */
 export function pgPage(): string {
   const md = engineFile("docs/pg.md");
-  return th("archon-pg", 7, MAN_DATE) +
+  return (
+    th("archon-pg", 7, MAN_DATE) +
     ".SH NAME\narchon\\-pg \\- PostgreSQL instances on an Archon server\n.SH DESCRIPTION\n" +
     markdownToRoff(md.replace(/^# .*\n/, "")) +
-    ".SH SEE ALSO\n\\fBarchon\\fR(1), \\fBpg_lsclusters\\fR(1), \\fBpg_createcluster\\fR(1), \\fBpsql\\fR(1)\n";
+    ".SH SEE ALSO\n\\fBarchon\\fR(1), \\fBpg_lsclusters\\fR(1), \\fBpg_createcluster\\fR(1), \\fBpsql\\fR(1)\n"
+  );
 }
 
 /** Spec 042: SQL over infrastructure, from src/archon/state/mod.ts (also served at /guide/sql). */
 export function sqlPage(): string {
   const md = engineFile("docs/sql.md");
-  return th("archon-sql", 7, MAN_DATE) +
+  return (
+    th("archon-sql", 7, MAN_DATE) +
     ".SH NAME\narchon\\-sql \\- SQL over your infrastructure: osquery, DuckDB, jc, Steampipe\n.SH DESCRIPTION\n" +
     markdownToRoff(md.replace(/^# .*\n/, "")) +
-    ".SH SEE ALSO\n\\fBarchon\\fR(1), \\fBarchon\\-pg\\fR(7), \\fBosqueryi\\fR(1), \\fBduckdb\\fR(1)\n";
+    ".SH SEE ALSO\n\\fBarchon\\fR(1), \\fBarchon\\-pg\\fR(7), \\fBosqueryi\\fR(1), \\fBduckdb\\fR(1)\n"
+  );
 }
 
 /** Spec 049: every signal Archon emits, from telemetry/signals.ts. */
 export function telemetryMarkdown(): string {
   const L: string[] = [
-    "Every archon run reports through Deno's built-in OpenTelemetry to the host's local Collector (127.0.0.1:4318): a trace per command with a span per phase, and the metrics below. Logs: what archon writes to the journal (identifiers archon-*) reaches the Collector through its journald receiver; what it prints through the console (errors, --json) is exported as logs linked to the trace. A run continues a trace begun elsewhere when TRACEPARENT is set (MCP calls and SSH commands from the boot machine pass it). Nothing secret is ever sent (Article 13).",
+    "Every archon run reports through IFC TypeScript's OpenTelemetry (configured by OpenTelemetry's own OTEL_* variables) to the host's local Collector (127.0.0.1:4318): a trace per command (an archon.run span) with an archon.phase span per phase, and the metrics below. Logs: what archon writes to the journal (identifiers archon-*) reaches the Collector through its journald receiver; what it prints through the console (errors, --json) is exported as logs linked to the trace. A run continues a trace begun elsewhere when TRACEPARENT is set (MCP calls and SSH commands from the boot machine pass it). Nothing secret is ever sent (Article 13).",
     "",
     "## Metrics",
     "",
@@ -211,10 +223,12 @@ export function telemetryMarkdown(): string {
 
 /** archon-telemetry(7): every span, metric, event, and attribute Archon emits. */
 export function telemetryPage(): string {
-  return th("archon-telemetry", 7, MAN_DATE) +
+  return (
+    th("archon-telemetry", 7, MAN_DATE) +
     ".SH NAME\narchon\\-telemetry \\- the traces, metrics, and logs every archon run reports\n.SH DESCRIPTION\n" +
     markdownToRoff(telemetryMarkdown()) +
-    ".SH SEE ALSO\n\\fBarchon\\fR(1), \\fBarchon observe\\fR(1)\n";
+    ".SH SEE ALSO\n\\fBarchon\\fR(1), \\fBarchon observe\\fR(1)\n"
+  );
 }
 
 /** archon-personas(7): who uses Archon, and what each one does. */
@@ -239,11 +253,12 @@ export function personasPage(): string {
       ".br",
     );
     L.push(
-      `FEATURES: ${
-        esc(
-          Object.entries(p.features).filter(([, v]) => v).map(([k]) => k).join(", ") || "none",
-        )
-      }`,
+      `FEATURES: ${esc(
+        Object.entries(p.features)
+          .filter(([, v]) => v)
+          .map(([k]) => k)
+          .join(", ") || "none",
+      )}`,
       ".RE",
     );
   }

@@ -39,50 +39,57 @@ export function backupPolicy(host: HostDef): BackupDef {
 }
 
 /** Daily, restore-tested archives of the host's own state (spec 016). */
-export const backup = (): Capability => ({ host }) => {
-  const p = backupPolicy(host);
-  return {
-    spec: "016-backups",
-    packages: [{ name: "zstd", spec: "016-backups" }],
-    files: [{
-      path: "/etc/tmpfiles.d/archon-backup.conf",
-      content:
-        `# Rendered by archon from spec 016-backups. Do not edit.\nd ${p.target} 0700 root root -\n`,
-      mode: "0644",
-      owner: "root",
+export const backup =
+  (): Capability =>
+  ({ host }) => {
+    const p = backupPolicy(host);
+    return {
       spec: "016-backups",
-      onChange: [{
-        kind: "run",
-        argv: ["systemd-tmpfiles", "--create", "/etc/tmpfiles.d/archon-backup.conf"],
-      }],
-    }],
-    units: [
-      ...timedJob({
-        name: "backup",
-        description: "daily backup",
-        argv: ["backup", "run"],
-        onCalendar: p.onCalendar,
-        spec: "016-backups",
-      }),
-    ],
-    checks: hostData(host).class === "durable"
-      ? [{
-        name: "off-host copy of durable data",
-        // No destination yet (spec 044): a later spec adds one and makes this a failure.
-        command:
-          `sh -c 'echo "none yet: the destination is not chosen, so the local archive is the only copy"; exit 1'`,
-        level: "warn",
-        fix: `${host.name} is ${
-          describeData(hostData(host))
-        }; a later spec adds the off-host destination (a NAS)`,
-        spec: "044-durable",
-      }]
-      : [],
-    notes: [
-      `Daily archives of ${p.paths.join(", ")} into ${p.target}, keeping ${p.keep}.`,
-      ...(durableGuests(host).length
-        ? [`Durable guests exported daily (lxc export): ${durableGuests(host).join(", ")}.`]
-        : []),
-    ],
+      packages: [{ name: "zstd", spec: "016-backups" }],
+      files: [
+        {
+          path: "/etc/tmpfiles.d/archon-backup.conf",
+          content: `# Rendered by archon from spec 016-backups. Do not edit.\nd ${p.target} 0700 root root -\n`,
+          mode: "0644",
+          owner: "root",
+          spec: "016-backups",
+          onChange: [
+            {
+              kind: "run",
+              argv: ["systemd-tmpfiles", "--create", "/etc/tmpfiles.d/archon-backup.conf"],
+            },
+          ],
+        },
+      ],
+      units: [
+        ...timedJob({
+          name: "backup",
+          description: "daily backup",
+          argv: ["backup", "run"],
+          onCalendar: p.onCalendar,
+          spec: "016-backups",
+        }),
+      ],
+      checks:
+        hostData(host).class === "durable"
+          ? [
+              {
+                name: "off-host copy of durable data",
+                // No destination yet (spec 044): a later spec adds one and makes this a failure.
+                command: `sh -c 'echo "none yet: the destination is not chosen, so the local archive is the only copy"; exit 1'`,
+                level: "warn",
+                fix: `${host.name} is ${describeData(
+                  hostData(host),
+                )}; a later spec adds the off-host destination (a NAS)`,
+                spec: "044-durable",
+              },
+            ]
+          : [],
+      notes: [
+        `Daily archives of ${p.paths.join(", ")} into ${p.target}, keeping ${p.keep}.`,
+        ...(durableGuests(host).length
+          ? [`Durable guests exported daily (lxc export): ${durableGuests(host).join(", ")}.`]
+          : []),
+      ],
+    };
   };
-};

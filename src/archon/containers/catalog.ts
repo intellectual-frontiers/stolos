@@ -69,12 +69,14 @@ export const OTEL_UI: ContainerDef = {
   image:
     "docker.io/openobserve/openobserve:v1.1.2@sha256:4a154849432f75c4fb024de32fe34163c02406c905dab22bf8d213d2e3386392",
   uid: 10002,
-  ports: [{
-    host: 5080,
-    container: 5080,
-    route: "otel",
-    description: "the telemetry web UI (OpenObserve)",
-  }],
+  ports: [
+    {
+      host: 5080,
+      container: 5080,
+      route: "otel",
+      description: "the telemetry web UI (OpenObserve)",
+    },
+  ],
   volumes: [{ host: "/srv/otel-ui", container: "/data" }],
   environment: {
     ZO_DATA_DIR: "/data",

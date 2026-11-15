@@ -8,34 +8,41 @@
  * @module
  */
 
-import { lf } from "../core/fsx.ts";
+import { fs, path as paths, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { lf } from "@intellectual-frontiers/ifc-ts/kernel";
 import { P, repoRel } from "../core/paths.ts";
-import { join, toFileUrl } from "../core/path.ts";
-import { ensureDir, exists, readTextOr } from "../core/fsx.ts";
 import type { FleetDef, HostDef, HostRegistration } from "../model/types.ts";
 
 const KEY = /^(ssh-ed25519|ecdsa-sha2-nistp(256|384|521)|ssh-rsa) [A-Za-z0-9+/]+={0,2}$/;
 
 /** fleets/<id>/hosts/<host>/registration.ts. */
 export function registrationFile(host: string): string {
-  return join(P.hosts, host, "registration.ts");
+  return paths.join(P.hosts, host, "registration.ts");
 }
 
-/** registration.ts's one form (sorted keys; checked by build). */
+/**
+ * registration.ts's one form (sorted keys; checked by build), as `bun fmt` keeps it (width 100):
+ * the keys on one line where they fit, else one per line.
+ */
 export function registrationSource(r: HostRegistration): string {
-  const keys = [...r.sshHostKeys].sort().map((k) => `    ${JSON.stringify(k)},\n`).join("");
-  return `// Written by stolos host add (spec 047): who this host is. Public facts only.
-// Its SSH host public keys are what operators' machines trust (known_hosts.auto).
-import type { HostRegistration } from "@stolos/archon/model/types.ts";
+  const list = [...r.sshHostKeys].sort().map((k) => JSON.stringify(k));
+  const one = `  sshHostKeys: [${list.join(", ")}],\n`;
+  const keys =
+    one.length <= 101 ? one : `  sshHostKeys: [\n${list.map((k) => `    ${k},\n`).join("")}  ],\n`;
+  return `/**
+ * Written by stolos host add (spec 047): who this host is. Public facts only.
+ * Its SSH host public keys are what operators' machines trust (known_hosts.auto).
+ *
+ * @module
+ */
+import type { HostRegistration } from "@intellectual-frontiers/stolos/archon/model/types";
 
 export default {
-  sshHostKeys: [
-${keys}  ],
-${r.mac ? `  mac: ${JSON.stringify(r.mac)},\n` : ""}${
+${keys}${r.mac ? `  mac: ${JSON.stringify(r.mac)},\n` : ""}${
     r.mac && r.macSource ? `  macSource: ${JSON.stringify(r.macSource)},\n` : ""
-  }${r.deployKey ? `  deployKey: ${JSON.stringify(r.deployKey)},\n` : ""}  added: ${
-    JSON.stringify(r.added)
-  },
+  }${r.deployKey ? `  deployKey: ${JSON.stringify(r.deployKey)},\n` : ""}  added: ${JSON.stringify(
+    r.added,
+  )},
 } satisfies HostRegistration;
 `;
 }
@@ -45,16 +52,16 @@ export async function loadRegistration(
   host: string,
   file = registrationFile(host),
 ): Promise<HostRegistration | undefined> {
-  if (!(await exists(file))) return undefined;
-  const mod = await import(toFileUrl(file).href + `?t=${Date.now()}`);
-  return mod.default as HostRegistration;
+  if (!(await fs.exists(file))) return undefined;
+  const { fleetExport } = await import("../model/load.ts");
+  return await fleetExport<HostRegistration>(file, "default", true);
 }
 
 /** Write a host's registration; returns its path in the repository. */
 export async function writeRegistration(host: string, r: HostRegistration): Promise<string> {
   const file = registrationFile(host);
-  await ensureDir(join(file, ".."));
-  await Deno.writeTextFile(file, registrationSource(r));
+  await fs.ensureDir(paths.join(file, ".."));
+  await fs.writeTextFile(file, registrationSource(r));
   return repoRel(file);
 }
 
@@ -65,7 +72,7 @@ export async function registrationProblems(
   const out: Array<{ where: string; message: string }> = [];
   for (const h of hosts) {
     const file = registrationFile(h);
-    const text = await readTextOr(file);
+    const text = await fs.readTextOr(file);
     if (text === undefined) continue;
     const r = await loadRegistration(h, file);
     const where = repoRel(file);
@@ -99,7 +106,7 @@ export function parseMac(raw: string): string | undefined {
   const sep = raw.trim().match(/[:.-]/g);
   // Mixed separators are a typo, not a spelling.
   if (sep && new Set(sep).size > 1) return undefined;
-  return hex.match(/../g)!.join(":");
+  return (hex.match(/../g) ?? []).join(":");
 }
 
 /** The names an operator reaches a host by. */
@@ -128,8 +135,8 @@ export function knownHostsText(
 export function knownHostsAutoFile(): string {
   // Root (a host's own runs) keeps it with the host's state; anyone else in
   // their own user data (a workstation's operator cannot write /var/lib/archon).
-  return join(
-    Deno.build.os !== "windows" && Deno.uid() === 0 ? P.state : P.userState,
+  return paths.join(
+    proc.build.os !== "windows" && proc.uid() === 0 ? P.state : P.userState,
     "known_hosts.auto",
   );
 }
@@ -140,9 +147,9 @@ export async function writeKnownHosts(): Promise<string> {
   const fleet = await loadFleet();
   const hosts = await loadHosts();
   const file = knownHostsAutoFile();
-  await ensureDir(join(file, ".."));
+  await fs.ensureDir(paths.join(file, ".."));
   const text = knownHostsText(fleet, hosts);
-  if ((await readTextOr(file)) !== text) await Deno.writeTextFile(file, text);
+  if ((await fs.readTextOr(file)) !== text) await fs.writeTextFile(file, text);
   return file;
 }
 

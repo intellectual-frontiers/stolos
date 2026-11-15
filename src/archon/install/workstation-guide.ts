@@ -6,7 +6,7 @@
  *
  * | A workstation gets                                                                                                              | A workstation does not get                       |
  * | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
- * | the tools at their newest releases (git and fish from their PPAs, gh from GitHub's repository, Deno, chezmoi, oh-my-posh, tmux) | an installer, netplan, or anything about booting |
+ * | the tools at their newest releases (git and fish from their PPAs, gh from GitHub's repository, Bun, chezmoi, oh-my-posh, tmux) | an installer, netplan, or anything about booting |
  * | your dotfiles: fish with the Archon prompt, tmux, git with your GitHub identity                                                 | the firewall or SSH server hardening             |
  * | Claude Code, for your own account: the agent layer, which reaches the servers over MCP ([agent.md](agent.md))                   | the `ops` account                                |
  * | the `archon` command, its man pages and completions                                                                             | the converge, capture, and backup timers         |
@@ -37,7 +37,7 @@
  *
  * then in PowerShell `wsl --shutdown`, and open Ubuntu again.
  *
- * **3. Get the repository and Deno**, in Ubuntu:
+ * **3. Get the repository and Bun**, in Ubuntu:
  *
  * ```sh
  * sudo apt update && sudo apt install -y git gh unzip
@@ -45,18 +45,18 @@
  * gh auth setup-git
  * sudo mkdir -p /srv/archon && sudo chown "$USER": /srv/archon
  * git clone https://github.com/example/fleet.git /srv/archon
- * curl -fsSL https://deno.land/install.sh | sh -s -- -y
+ * curl -fsSL https://bun.sh/install | bash -s "bun-v1.4.4"
  * exec bash
  * ```
  *
  * The checkout must be `/srv/archon` (the `archon` command runs from there) and belongs to you. The
- * Deno installed here only starts things off: Archon installs its own copy in `/usr/local/bin`.
+ * Bun installed here only starts things off: Archon installs the pinned Bun in `/usr/local/bin`.
  *
  * **4. Set it up as a workstation:**
  *
  * ```sh
  * cd /srv/archon
- * deno task stolos workstation add
+ * bun run stolos workstation add
  * ```
  *
  * It checks that this is Ubuntu 26.04 with systemd and the checkout in `/srv/archon`, writes

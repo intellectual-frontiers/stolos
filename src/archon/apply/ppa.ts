@@ -7,6 +7,7 @@
  * @module
  */
 
+import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "../core/exec.ts";
 
 /** "git-core/ppa" -> the source file add-apt-repository writes. */
@@ -40,8 +41,8 @@ export async function ppaHasRelease(
 ): Promise<{ answer: "yes" | "no" | "unreachable"; reason?: string }> {
   const { NETWORK_BACKOFF_MS, aptDeps } = await import("./apt.ts");
   const waits = o.retries === false ? [] : NETWORK_BACKOFF_MS;
-  let reason = "";
-  for (let attempt = 0;; attempt++) {
+  let reason: string;
+  for (let attempt = 0; ; attempt++) {
     const r = await run([
       "curl",
       "-sS",
@@ -62,9 +63,9 @@ export async function ppaHasRelease(
     if (status === 404) return { answer: "no" };
     reason = status
       ? `HTTP ${status}`
-      : (r.stderr.trim().replace(/^curl: \(\d+\) /, "") || "no answer");
+      : r.stderr.trim().replace(/^curl: \(\d+\) /, "") || "no answer";
     if (attempt >= waits.length) break;
-    await aptDeps.sleep(waits[attempt]);
+    await aptDeps.sleep(waits[attempt] ?? 0);
   }
   return { answer: "unreachable", reason };
 }
@@ -73,12 +74,14 @@ export async function ppaHasRelease(
 export async function ppaPresent(ppa: string, _codename?: string): Promise<boolean> {
   const url = `ppa.launchpadcontent.net/${ppa}/ubuntu`;
   try {
-    for await (const e of Deno.readDir("/etc/apt/sources.list.d")) {
+    for await (const e of fs.readDir("/etc/apt/sources.list.d")) {
       if (!e.isFile || !/\.(sources|list)$/.test(e.name)) continue;
-      const text = await Deno.readTextFile(`/etc/apt/sources.list.d/${e.name}`).catch(() => "");
+      const text = await fs.readTextFile(`/etc/apt/sources.list.d/${e.name}`).catch(() => "");
       if (text.split("\n").some((l) => l.includes(url) && !/^\s*#/.test(l))) return true;
     }
-  } catch { /* no sources directory */ }
+  } catch {
+    /* no sources directory */
+  }
   return false;
 }
 
@@ -88,7 +91,7 @@ export async function ppaPresent(ppa: string, _codename?: string): Promise<boole
  */
 export async function addPpa(ppa: string): Promise<{ ok: boolean; output: string }> {
   const r = await run(["add-apt-repository", "--yes", "--no-update", `ppa:${ppa}`], {
-    env: { DEBIAN_FRONTEND: "noninteractive", PATH: Deno.env.get("PATH") ?? "/usr/bin:/bin" },
+    env: { DEBIAN_FRONTEND: "noninteractive", PATH: proc.env.get("PATH") ?? "/usr/bin:/bin" },
   });
   return { ok: r.ok, output: (r.stderr || r.stdout).trim() };
 }
@@ -98,9 +101,14 @@ export async function aptVersions(
   pkg: string,
 ): Promise<{ installed?: string; candidate?: string }> {
   const r = await run(["apt-cache", "policy", pkg]);
-  const get = (k: string) => {
+  const get = (k: string): string | undefined => {
     const v = r.stdout.match(new RegExp(`${k}:\\s*(\\S+)`))?.[1];
     return v && v !== "(none)" ? v : undefined;
   };
-  return { installed: get("Installed"), candidate: get("Candidate") };
+  const installed = get("Installed");
+  const candidate = get("Candidate");
+  return {
+    ...(installed === undefined ? {} : { installed }),
+    ...(candidate === undefined ? {} : { candidate }),
+  };
 }

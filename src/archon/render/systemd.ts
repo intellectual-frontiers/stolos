@@ -34,38 +34,51 @@ export function ini(sections: Record<string, Section>, spec?: string): string {
 }
 
 /** A oneshot service that runs an archon subcommand. */
-export function archonService(
-  opts: { description: string; argv: string[]; spec: string; user?: string; after?: string[] },
-): string {
-  return ini({
-    Unit: {
-      Description: opts.description,
-      Documentation: "man:archon(1)",
-      After: opts.after ?? ["network-online.target"],
-      Wants: "network-online.target",
+export function archonService(opts: {
+  description: string;
+  argv: string[];
+  spec: string;
+  user?: string;
+  after?: string[];
+}): string {
+  return ini(
+    {
+      Unit: {
+        Description: opts.description,
+        Documentation: "man:archon(1)",
+        After: opts.after ?? ["network-online.target"],
+        Wants: "network-online.target",
+      },
+      Service: {
+        Type: "oneshot",
+        ExecStart: ["/usr/local/bin/archon", ...opts.argv].join(" "),
+        User: opts.user,
+        Environment: "ARCHON_AGENT=timer",
+        StateDirectory: "archon",
+        Nice: 10,
+      },
     },
-    Service: {
-      Type: "oneshot",
-      ExecStart: ["/usr/local/bin/archon", ...opts.argv].join(" "),
-      User: opts.user,
-      Environment: "ARCHON_AGENT=timer",
-      StateDirectory: "archon",
-      Nice: 10,
-    },
-  }, opts.spec);
+    opts.spec,
+  );
 }
 
 /** A timer unit for timers.target: persistent, with a randomized delay (default 10min). */
-export function timer(
-  opts: { description: string; onCalendar: string; spec: string; randomizedDelay?: string },
-): string {
-  return ini({
-    Unit: { Description: opts.description, Documentation: "man:archon(1)" },
-    Timer: {
-      OnCalendar: opts.onCalendar,
-      Persistent: true,
-      RandomizedDelaySec: opts.randomizedDelay ?? "10min",
+export function timer(opts: {
+  description: string;
+  onCalendar: string;
+  spec: string;
+  randomizedDelay?: string;
+}): string {
+  return ini(
+    {
+      Unit: { Description: opts.description, Documentation: "man:archon(1)" },
+      Timer: {
+        OnCalendar: opts.onCalendar,
+        Persistent: true,
+        RandomizedDelaySec: opts.randomizedDelay ?? "10min",
+      },
+      Install: { WantedBy: "timers.target" },
     },
-    Install: { WantedBy: "timers.target" },
-  }, opts.spec);
+    opts.spec,
+  );
 }

@@ -3,13 +3,13 @@
  * from. No name is Stolos's own: each table or view cites the standard each
  * part of its name comes from, and a test checks the term is in that
  * standard. OCSF's object and class names and MITRE D3FEND's artifact names
- * are generated from their published schemas (`deno task ocsf`); the others
+ * are generated from their published schemas (`bun run ocsf`); the others
  * are short lists, each with its source.
  *
  * @module
  */
 
-import { OCSF_CLASSES, OCSF_OBJECT_NAMES } from "../ocsf/types.auto.ts";
+import { OCSF_CLASSES, OCSF_OBJECT_NAMES } from "../ocsf/classes.ts";
 import { D3FEND_ARTIFACTS } from "./d3fend.auto.ts";
 
 /** A vocabulary a name may come from. */
@@ -102,8 +102,9 @@ export interface TermRef {
  * the canonical SQL is loaded elsewhere.
  */
 export const SQL_KEYWORDS: ReadonlySet<string> = new Set(
-  `abort action add after all alter always analyze and as asc attach autoincrement before begin between by cascade case cast check collate column commit conflict constraint create cross current current_date current_time current_timestamp database default deferrable deferred delete desc detach distinct do drop each else end escape except exclude exclusive exists explain fail filter first following for foreign from full generated glob group groups having if ignore immediate in index indexed initially inner insert instead intersect into is isnull join key last left like limit match materialized natural no not nothing notnull null nulls of offset on or order others outer over partition plan pragma preceding primary query raise range recursive references regexp reindex release rename replace restrict returning right rollback row rows savepoint select set table temp temporary then ties to transaction trigger unbounded union unique update using vacuum values view virtual when where window with without user current_user session_user authorization grant role analyse array asymmetric both leading trailing only placing symmetric variadic`
-    .split(/\s+/),
+  `abort action add after all alter always analyze and as asc attach autoincrement before begin between by cascade case cast check collate column commit conflict constraint create cross current current_date current_time current_timestamp database default deferrable deferred delete desc detach distinct do drop each else end escape except exclude exclusive exists explain fail filter first following for foreign from full generated glob group groups having if ignore immediate in index indexed initially inner insert instead intersect into is isnull join key last left like limit match materialized natural no not nothing notnull null nulls of offset on or order others outer over partition plan pragma preceding primary query raise range recursive references regexp reindex release rename replace restrict returning right rollback row rows savepoint select set table temp temporary then ties to transaction trigger unbounded union unique update using vacuum values view virtual when where window with without user current_user session_user authorization grant role analyse array asymmetric both leading trailing only placing symmetric variadic`.split(
+    /\s+/,
+  ),
 );
 
 const SNAKE = /^[a-z][a-z0-9]*(_[a-z0-9]+)*$/;

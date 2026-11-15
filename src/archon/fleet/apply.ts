@@ -18,6 +18,7 @@
  * @module
  */
 
+import { fs, proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "../core/exec.ts";
 import { P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";
@@ -47,12 +48,13 @@ export function describeChanges(porcelain: string): string {
   const groups = new Map<string, Set<string>>();
   for (const line of porcelain.split("\n").filter((l) => l.trim())) {
     let path = line.slice(3).trim().replace(/^"|"$/g, "");
-    if (path.includes(" -> ")) path = path.split(" -> ")[1];
+    if (path.includes(" -> ")) path = path.split(" -> ")[1] ?? path;
     const host = path.match(/^fleets\/[^/]+\/hosts\/([^/]+)\/(.+)$/);
     const fleet = path.match(/^fleets\/([^/]+)\/(.+)$/);
-    const [key, file] = host ? [host[1], host[2]] : fleet ? [fleet[1], fleet[2]] : ["", path];
-    if (!groups.has(key)) groups.set(key, new Set());
-    groups.get(key)!.add(file);
+    const [, key = "", file = path] = host ?? fleet ?? ["", "", path];
+    const group = groups.get(key) ?? new Set<string>();
+    groups.set(key, group);
+    group.add(file);
   }
   const parts = [...groups.entries()].map(([k, files]) => {
     const list = [...files].sort();
@@ -68,12 +70,11 @@ export function describeChanges(porcelain: string): string {
 async function gitInteractive(args: string[]): Promise<boolean> {
   ui.pause();
   try {
-    const r = await new Deno.Command("git", {
-      args: ["-C", P.repo, ...args],
+    const r = await proc.output(["git", "-C", P.repo, ...args], {
       stdin: "inherit",
       stdout: "inherit",
       stderr: "inherit",
-    }).output();
+    });
     return r.success;
   } finally {
     ui.resume();
@@ -92,7 +93,7 @@ export async function fleetApply(o: FleetApplyOptions = {}): Promise<number> {
     return fail();
   }
   if (!P.fleetId) {
-    c.fail("no fleet chosen", "deno task stolos fleet use <id>");
+    c.fail("no fleet chosen", "bun run stolos fleet use <id>");
     return fail();
   }
   const { loadFleet } = await import("../model/load.ts");
@@ -127,12 +128,12 @@ export async function fleetApply(o: FleetApplyOptions = {}): Promise<number> {
   const count = async (range: string) =>
     exists ? Number((await git(["rev-list", "--count", range])).stdout.trim()) || 0 : 0;
   const hasHead = (await git(["rev-parse", "--verify", "--quiet", "HEAD"])).ok;
-  let behind = hasHead ? await count(`HEAD..${remote}`) : 0;
+  const behind = hasHead ? await count(`HEAD..${remote}`) : 0;
   const ahead = !hasHead
     ? 0
     : exists
-    ? await count(`${remote}..HEAD`)
-    : Number((await git(["rev-list", "--count", "HEAD"])).stdout.trim()) || 0;
+      ? await count(`${remote}..HEAD`)
+      : Number((await git(["rev-list", "--count", "HEAD"])).stdout.trim()) || 0;
   if (behind && ahead) {
     u.fail(
       `your ${ahead} commit(s) and ${behind} new one(s) on GitHub went different ways`,
@@ -145,19 +146,18 @@ export async function fleetApply(o: FleetApplyOptions = {}): Promise<number> {
     if (!ff.ok) {
       u.fail(
         `GitHub's ${behind} new commit(s) touch files you changed: ${last(ff)}`,
-        "commit or set aside your change (git stash), deno task stolos update, then put it back (git stash pop)",
+        "commit or set aside your change (git stash), bun run stolos update, then put it back (git stash pop)",
       );
       return fail();
     }
     u.done(`${behind} new commit(s) from GitHub first`);
-    behind = 0;
   } else {
     u.done(
       !exists
         ? `GitHub has no ${branch} yet: this will be its first push`
         : behind
-        ? `${behind} new commit(s) on GitHub (not pulled: --check)`
-        : "up to date",
+          ? `${behind} new commit(s) on GitHub (not pulled: --check)`
+          : "up to date",
     );
   }
 
@@ -178,17 +178,21 @@ export async function fleetApply(o: FleetApplyOptions = {}): Promise<number> {
   }
   if (what) s.done(what);
   else if (approve.length) {
-    console.log("\n  Not signed by a fleet signer (your signed commit approves them):");
-    for (const c of approve) console.log(`    ${c}`);
-    console.log("");
+    stdio.stdout.writeSync(
+      "\n  Not signed by a fleet signer (your signed commit approves them):\n",
+    );
+    for (const c of approve) stdio.stdout.writeSync(`    ${c}\n`);
+    stdio.stdout.writeSync("\n");
     s.done(
       `${approve.length} commit(s) here are not signed by a fleet signer (listed above): one signed commit approves them`,
     );
   } else s.done(`${ahead} commit(s) to push`);
-  const message = o.message?.trim() ||
+  const message =
+    o.message?.trim() ||
     (approve.length
       ? `${P.fleetId}: approve ${approve.length} commit(s) not signed by a fleet signer`
-      : `${P.fleetId}: ${what || "changes"}`).slice(0, 200);
+      : `${P.fleetId}: ${what || "changes"}`
+    ).slice(0, 200);
 
   // 4b. Spec 074: the controls this change weakens or strengthens, and the fleet's gate.
   if (what || ahead) {
@@ -200,7 +204,7 @@ export async function fleetApply(o: FleetApplyOptions = {}): Promise<number> {
     if (!pass && !o.check) return fail();
   }
   if (o.check) {
-    ui.next.push(`to commit and push it: deno task stolos apply -m "${message}"`);
+    ui.next.push(`to commit and push it: bun run stolos apply -m "${message}"`);
     return 0;
   }
 
@@ -211,7 +215,7 @@ export async function fleetApply(o: FleetApplyOptions = {}): Promise<number> {
     if (!(await gitIdentity(P.repo))) {
       k.fail(
         "Git does not know who you are in this checkout, so nothing can be committed",
-        "deno task stolos keys setup (sets it from your GitHub account), then run this again",
+        "bun run stolos keys setup (sets it from your GitHub account), then run this again",
         "E057-IDENTITY",
       );
       return fail();
@@ -221,7 +225,7 @@ export async function fleetApply(o: FleetApplyOptions = {}): Promise<number> {
       k.fail(`git add: ${last(add)}`, "git status");
       return fail();
     }
-    console.log("\n  Signing the commit: type your daily key's passphrase.\n");
+    stdio.stdout.writeSync("\n  Signing the commit: type your daily key's passphrase.\n\n");
     if (
       !(await gitInteractive([
         "commit",
@@ -251,7 +255,7 @@ export async function fleetApply(o: FleetApplyOptions = {}): Promise<number> {
   if (await keysCheckPush(`refs/heads/${branch} ${head} refs/heads/${branch} ${base}\n`)) {
     v.fail(
       "servers would refuse this commit (above)",
-      "git commit --amend --no-edit -S, then: deno task stolos apply",
+      "git commit --amend --no-edit -S, then: bun run stolos apply",
     );
     return fail();
   }
@@ -262,21 +266,20 @@ export async function fleetApply(o: FleetApplyOptions = {}): Promise<number> {
   const push = await git(["push", "-q", "-u", "origin", `HEAD:${branch}`]);
   if (!push.ok) {
     // The pre-push check (or Git) says why: show its own words, not only Git's last line.
-    for (
-      const l of push.stderr.split("\n").filter((x) =>
-        x.trim() && !/^error: failed to push/.test(x)
-      )
-        .slice(-6)
-    ) p.note(l);
+    for (const l of push.stderr
+      .split("\n")
+      .filter((x) => x.trim() && !/^error: failed to push/.test(x))
+      .slice(-6))
+      p.note(l);
     p.fail(
       /rejected|fetch first|non-fast-forward/.test(push.stderr)
         ? "GitHub moved while this ran: nothing is lost"
         : /pre-push|archon: push refused/.test(push.stderr)
-        ? `the push check refused it: ${
-          push.stderr.match(/archon: push refused here: (.*)/)?.[1] ?? last(push)
-        }`
-        : `git push: ${last(push)}`,
-      "run this again: deno task stolos apply",
+          ? `the push check refused it: ${
+              push.stderr.match(/archon: push refused here: (.*)/)?.[1] ?? last(push)
+            }`
+          : `git push: ${last(push)}`,
+      "run this again: bun run stolos apply",
     );
     return fail();
   }
@@ -285,9 +288,9 @@ export async function fleetApply(o: FleetApplyOptions = {}): Promise<number> {
   // 8. After.
   const { assess } = await import("../vault/state.ts");
   if ((await assess().catch(() => undefined))?.unbacked.length) {
-    ui.next.push("a secret changed: deno task stolos vault backup");
+    ui.next.push("a secret changed: bun run stolos vault backup");
   }
-  ui.next.push("watch them: deno task stolos fleet status");
+  ui.next.push("watch them: bun run stolos fleet status");
   return 0;
 }
 
@@ -303,19 +306,19 @@ export async function unapproved(
   const { allowedSignersText, checkTip, loadSigners } = await import("../identity/signers.ts");
   const signers = await loadSigners().catch(() => []);
   if (!signers.some((x) => x.role === "daily")) return [];
-  const dir = await Deno.makeTempDir({ prefix: "stolos-approve-" });
+  const dir = await fs.makeTempDir({ prefix: "stolos-approve-" });
   try {
     const allowed = `${dir}/allowed_signers`;
-    await Deno.writeTextFile(allowed, allowedSignersText(signers));
+    await fs.writeTextFile(allowed, allowedSignersText(signers));
     const log = (await git(["log", "-50", "--format=%H%x09%s (%an)"])).stdout.trim().split("\n");
     const out: string[] = [];
     for (const line of log.filter(Boolean)) {
-      const [sha, rest] = line.split("\t");
+      const [sha = "", rest = ""] = line.split("\t");
       if ((await checkTip(repo, sha, "", allowed)).ok) break;
       out.push(`${sha.slice(0, 10)} ${rest}`);
     }
     return out;
   } finally {
-    await Deno.remove(dir, { recursive: true });
+    await fs.remove(dir, { recursive: true });
   }
 }

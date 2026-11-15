@@ -18,16 +18,18 @@ const COLORS = [
 ];
 
 function script(spec: string, body: string[]): string {
-  return [
-    "#!/bin/sh",
-    `# Rendered by archon from spec ${spec}. Do not edit.`,
-    ...COLORS,
-    // Unquoted: ${b}, ${c}, ... expand; nothing else in the text does.
-    "cat <<EOF",
-    "",
-    ...body,
-    "EOF",
-  ].join("\n") + "\n";
+  return (
+    [
+      "#!/bin/sh",
+      `# Rendered by archon from spec ${spec}. Do not edit.`,
+      ...COLORS,
+      // Unquoted: ${b}, ${c}, ... expand; nothing else in the text does.
+      "cat <<EOF",
+      "",
+      ...body,
+      "EOF",
+    ].join("\n") + "\n"
+  );
 }
 
 /** 70-archon (specs 021, 022, 032): this server, how to observe it, where it answers. */
@@ -36,16 +38,14 @@ export function archonMotd(fleet: FleetDef, host: HostDef, cockpitFromLan: boole
   return script("022-cockpit", [
     ` 🛰️  \${b}Archon\${r} \${d}·\${r} \${b}${host.name}\${r} \${d}managed from the fleet repository (${fleet.repository.slug})\${r}`,
     ...(name
-      ? [
-        `    🌐 \${c}https://${name}\${r}   \${d}welcome page, services, health\${r}`,
-      ]
+      ? [`    🌐 \${c}https://${name}\${r}   \${d}welcome page, services, health\${r}`]
       : []),
     ...(cockpitFromLan
       ? [
-        `    🖥️  \${c}${
-          name ? `https://cockpit.${name}` : `https://${host.name}:9090`
-        }\${r}   \${d}Cockpit: system, services, logs, metric history\${r}`,
-      ]
+          `    🖥️  \${c}${
+            name ? `https://cockpit.${name}` : `https://${host.name}:9090`
+          }\${r}   \${d}Cockpit: system, services, logs, metric history\${r}`,
+        ]
       : []),
     `    📊 \${c}archon observe\${r} \${d}·\${r} \${c}btop\${r} \${d}·\${r} \${c}archon observe tui\${r}   \${d}logs, metrics, limits\${r}`,
     `    ✅ \${c}archon verify\${r} \${d}·\${r} \${c}archon web status\${r}   \${d}every check, with a fix for each\${r}`,
@@ -69,9 +69,9 @@ export function dotfilesMotd(): string {
 export function dataMotd(d: HostData): string {
   return script("044-durable", [
     d.class === "durable"
-      ? ` 🛡️  \${b}\${y}durable\${r} \${d}·\${r} ${
-        d.reasons.join(", ")
-      } \${d}holds data that exists nowhere else: reinstalls and wipes need --confirm-destroy\${r}`
+      ? ` 🛡️  \${b}\${y}durable\${r} \${d}·\${r} ${d.reasons.join(
+          ", ",
+        )} \${d}holds data that exists nowhere else: reinstalls and wipes need --confirm-destroy\${r}`
       : ` 🫧 \${b}ephemeral\${r} \${d}·\${r} \${d}nothing here holds end users' data that exists nowhere else\${r}`,
     `    🏠 \${d}your home directory is not kept across a reinstall: keep data in a share, a bucket, or a database\${r}   \${c}archon data\${r}`,
   ]);

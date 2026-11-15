@@ -23,253 +23,269 @@ import { fqdn, hostRoutes, traefikDynamic, traefikStatic, WEB } from "../web/con
 const SPEC = "032-web" as const;
 
 /** HTTPS from the first boot: Traefik, the Archon Console, and Cloudflare DNS (spec 032). */
-export const web = (): Capability => ({ host, fleet }) => {
-  const name = fqdn(fleet, host);
-  const units: UnitDef[] = [
-    {
-      unitName: "podman.socket",
-      managed: false,
-      state: "enabled",
-      start: true,
-      verify: "systemctl is-active podman.socket",
-      spec: SPEC,
-    },
-    {
-      unitName: WEB.unit,
-      managed: true,
-      content: ini({
-        Unit: {
-          Description: "Archon: Traefik, the HTTPS front door",
-          Documentation: ["man:archon-web(1)", "https://doc.traefik.io/traefik/"],
-          After: ["network-online.target", "podman.socket"],
-          Wants: "network-online.target",
-          // Installed by the tools sync, which then restarts this unit.
-          ConditionPathExists: "/usr/local/bin/traefik",
-          // A broken setup fails after 5 tries in a minute instead of looping forever.
-          StartLimitIntervalSec: 60,
-          StartLimitBurst: 5,
-        },
-        Service: {
-          ExecStart: `/usr/local/bin/traefik --configFile=${WEB.staticConfig}`,
-          // The Cloudflare token, when the boot machine has delivered it (root only; read by systemd).
-          EnvironmentFile: `-${WEB.env}`,
-          User: "traefik",
-          Group: "traefik",
-          SupplementaryGroups: WEB.group,
-          AmbientCapabilities: "CAP_NET_BIND_SERVICE",
-          CapabilityBoundingSet: "CAP_NET_BIND_SERVICE",
-          NoNewPrivileges: true,
-          StateDirectory: "traefik",
-          StateDirectoryMode: "0700",
-          ProtectSystem: "strict",
-          ProtectHome: true,
-          PrivateTmp: true,
-          Restart: "on-failure",
-          RestartSec: 5,
-          LimitNOFILE: 65536,
-        },
-        Install: { WantedBy: "multi-user.target" },
-      }, SPEC),
-      state: "enabled",
-      start: true,
-      verify: `systemctl is-active ${WEB.unit}`,
-      spec: SPEC,
-    },
-    {
-      unitName: WEB.welcomeUnit,
-      managed: true,
-      content: ini({
-        Unit: {
-          Description: "Archon Console: this server in the browser (loopback, behind Traefik)",
-          Documentation: "man:archon-web-serve(1)",
-          After: "network.target",
-        },
-        Service: {
-          ExecStart: "/usr/local/bin/archon web serve",
-          // A person's interface, not an agent's: no ARCHON_AGENT (a person may type --confirm-destroy).
-          Environment: [
-            "NO_COLOR=1",
-            "OTEL_DENO=false",
-            // Deno's cache, writable under ProtectSystem=strict.
-            "HOME=/var/cache/archon-web",
-            "DENO_DIR=/var/cache/archon-web/deno",
-          ],
-          CacheDirectory: "archon-web",
-          // The activity record (sign-ins and runs).
-          StateDirectory: "archon-console",
-          // Spec 065: its own account. Commands run through sudo (archon console exec checks
-          // them again and runs them outside this sandbox), so new privileges are allowed;
-          // /etc and /usr stay read-only here.
-          User: WEB.welcomeUser,
-          Group: WEB.welcomeUser,
-          // systemd-journal: the Logs page reads the journal.
-          SupplementaryGroups: ["archon", "archon-ops", "shadow", "systemd-journal"],
-          ProtectSystem: "full",
-          // No ProtectHome: the root step (sudo archon console exec) runs Deno from root's
-          // module cache in /root/.cache/deno. archon-console itself cannot read /root (0700).
-          PrivateTmp: true,
-          MemoryMax: "256M",
-          Restart: "on-failure",
-          RestartSec: 5,
-        },
-        Install: { WantedBy: "multi-user.target" },
-      }, SPEC),
-      state: "enabled",
-      start: true,
-      verify: `systemctl is-active ${WEB.welcomeUnit}`,
-      spec: SPEC,
-    },
-  ];
-  if (name) {
-    // Keep <host>.<domain> and its wildcard pointing at this server in Cloudflare.
-    units.push(
+export const web =
+  (): Capability =>
+  ({ host, fleet }) => {
+    const name = fqdn(fleet, host);
+    const units: UnitDef[] = [
       {
-        unitName: "archon-web-dns.service",
-        managed: true,
-        content: ini({
-          Unit: {
-            Description: "Archon: this server's DNS records in Cloudflare",
-            Documentation: "man:archon-web-dns(1)",
-            After: "network-online.target",
-            Wants: "network-online.target",
-            ConditionPathExists: WEB.credential,
-          },
-          Service: {
-            Type: "oneshot",
-            // Quiet unless the address changed (a new DHCP lease) or a day passed.
-            ExecStart: "/usr/local/bin/archon web dns-check",
-            Environment: "ARCHON_AGENT=timer",
-          },
-        }, SPEC),
-        state: "ignore",
-        verify: "systemctl cat archon-web-dns.service",
-        spec: SPEC,
-      },
-      {
-        unitName: "archon-web-dns.timer",
-        managed: true,
-        content: ini({
-          Unit: {
-            Description: "Archon: follow this server's address in Cloudflare (no reserved IPs)",
-          },
-          // At boot, then every 5 minutes: a new lease reaches Cloudflare within
-          // minutes, and its records' TTL is 60 seconds.
-          Timer: { OnBootSec: "30s", OnUnitActiveSec: "5min", AccuracySec: "30s" },
-          Install: { WantedBy: "timers.target" },
-        }, SPEC),
+        unitName: "podman.socket",
+        managed: false,
         state: "enabled",
-        verify: "systemctl is-enabled archon-web-dns.timer",
-        spec: SPEC,
-      },
-    );
-  }
-  return {
-    spec: SPEC,
-    packages: [{ name: "podman", spec: SPEC }],
-    ports: [
-      { port: 80, protocol: "tcp", spec: SPEC },
-      { port: 443, protocol: "tcp", spec: SPEC },
-      { port: 443, protocol: "udp", spec: SPEC },
-    ],
-    routes: hostRoutes(host),
-    units,
-    files: [
-      {
-        path: "/etc/sysusers.d/archon-web.conf",
-        // Traefik's own account (its state directory, the ACME store), in the
-        // group that may read Podman's socket.
-        content: header(SPEC) +
-          [
-            `g ${WEB.group} - - -`,
-            `u traefik - "Archon Traefik" /var/lib/traefik /usr/sbin/nologin`,
-            `m traefik ${WEB.group}`,
-            // Spec 065: the Archon Console's account and its groups.
-            `u ${WEB.welcomeUser} - "Archon Console" /var/lib/${WEB.welcomeUser} /usr/sbin/nologin`,
-            `m ${WEB.welcomeUser} archon`,
-            `m ${WEB.welcomeUser} archon-ops`,
-            `m ${WEB.welcomeUser} shadow`,
-          ].join("\n") + "\n",
-        mode: "0644",
-        owner: "root",
-        spec: SPEC,
-        onChange: [{ kind: "run", argv: ["systemd-sysusers", "/etc/sysusers.d/archon-web.conf"] }],
-      },
-      {
-        // Spec 065: the console checks passwords as Ubuntu's own services do.
-        path: `/etc/pam.d/${WEB.pamService}`,
-        content:
-          "# Rendered by archon from spec 065-console. Do not edit.\n@include common-auth\n@include common-account\n",
-        mode: "0644",
-        owner: "root",
+        start: true,
+        verify: "systemctl is-active podman.socket",
         spec: SPEC,
       },
       {
-        // Traefik reads container labels from Podman's Docker-compatible socket.
-        path: "/etc/systemd/system/podman.socket.d/50-archon.conf",
-        content: ini({ Socket: { SocketGroup: WEB.group, SocketMode: "0660" } }, SPEC),
-        mode: "0644",
-        owner: "root",
-        spec: SPEC,
-        onChange: [{ kind: "daemon-reload" }, { kind: "restart", unit: "podman.socket" }],
-      },
-    ],
-    checks: [
-      {
-        name: "HTTPS answers with the Archon Console",
-        // Spec 065: its sign-in page (every other page needs a session: "/" redirects there).
-        command: `sh -c 'curl -sk --max-time 5 https://127.0.0.1/signin | grep -q "Sign in to"'`,
-        level: "fail",
-        fix: `systemctl status ${WEB.unit} ${WEB.welcomeUnit}; archon web status`,
-        spec: SPEC,
-      },
-      ...(name
-        ? [
+        unitName: WEB.unit,
+        managed: true,
+        content: ini(
           {
-            name: `${name} has a trusted certificate`,
-            // Spec 052: without the Cloudflare token, not set up yet (exit 3).
-            command:
-              `sh -c 'test -s ${WEB.credential} || exit 3; curl -s --max-time 5 -o /dev/null --resolve ${name}:443:127.0.0.1 https://${name}/'`,
-            level: "warn" as const,
-            code: "P032-WEB-TOKEN",
-            fix:
-              "archon web status (the Cloudflare token: deno task stolos boot web-setup, then web-push <host>)",
-            spec: SPEC,
+            Unit: {
+              Description: "Archon: Traefik, the HTTPS front door",
+              Documentation: ["man:archon-web(1)", "https://doc.traefik.io/traefik/"],
+              After: ["network-online.target", "podman.socket"],
+              Wants: "network-online.target",
+              // Installed by the tools sync, which then restarts this unit.
+              ConditionPathExists: "/usr/local/bin/traefik",
+              // A broken setup fails after 5 tries in a minute instead of looping forever.
+              StartLimitIntervalSec: 60,
+              StartLimitBurst: 5,
+            },
+            Service: {
+              ExecStart: `/usr/local/bin/traefik --configFile=${WEB.staticConfig}`,
+              // The Cloudflare token, when the boot machine has delivered it (root only; read by systemd).
+              EnvironmentFile: `-${WEB.env}`,
+              User: "traefik",
+              Group: "traefik",
+              SupplementaryGroups: WEB.group,
+              AmbientCapabilities: "CAP_NET_BIND_SERVICE",
+              CapabilityBoundingSet: "CAP_NET_BIND_SERVICE",
+              NoNewPrivileges: true,
+              StateDirectory: "traefik",
+              StateDirectoryMode: "0700",
+              ProtectSystem: "strict",
+              ProtectHome: true,
+              PrivateTmp: true,
+              Restart: "on-failure",
+              RestartSec: 5,
+              LimitNOFILE: 65536,
+            },
+            Install: { WantedBy: "multi-user.target" },
           },
+          SPEC,
+        ),
+        state: "enabled",
+        start: true,
+        verify: `systemctl is-active ${WEB.unit}`,
+        spec: SPEC,
+      },
+      {
+        unitName: WEB.welcomeUnit,
+        managed: true,
+        content: ini(
           {
-            name: `${name} resolves to this server`,
-            command:
-              `sh -c 'test -s ${WEB.credential} || exit 3; getent ahostsv4 ${name} | grep -q .'`,
-            level: "warn" as const,
-            code: "P032-WEB-TOKEN",
-            fix: "sudo archon web dns",
-            spec: SPEC,
+            Unit: {
+              Description: "Archon Console: this server in the browser (loopback, behind Traefik)",
+              Documentation: "man:archon-web-serve(1)",
+              After: "network.target",
+            },
+            Service: {
+              ExecStart: "/usr/local/bin/archon web serve",
+              // A person's interface, not an agent's: no ARCHON_AGENT (a person may type --confirm-destroy).
+              Environment: [
+                "NO_COLOR=1",
+                // No telemetry from the console's own server.
+                "OTEL_SDK_DISABLED=true",
+                // Bun's transpiler cache, writable under ProtectSystem=strict.
+                "HOME=/var/cache/archon-web",
+                "BUN_RUNTIME_TRANSPILER_CACHE_PATH=/var/cache/archon-web/bun",
+              ],
+              CacheDirectory: "archon-web",
+              // The activity record (sign-ins and runs).
+              StateDirectory: "archon-console",
+              // Spec 065: its own account. Commands run through sudo (archon console exec checks
+              // them again and runs them outside this sandbox), so new privileges are allowed;
+              // /etc and /usr stay read-only here.
+              User: WEB.welcomeUser,
+              Group: WEB.welcomeUser,
+              // systemd-journal: the Logs page reads the journal.
+              SupplementaryGroups: ["archon", "archon-ops", "shadow", "systemd-journal"],
+              ProtectSystem: "full",
+              // No ProtectHome: the root step (sudo archon console exec) runs the engine as root,
+              // with root's home. archon-console itself cannot read /root (0700).
+              PrivateTmp: true,
+              MemoryMax: "256M",
+              Restart: "on-failure",
+              RestartSec: 5,
+            },
+            Install: { WantedBy: "multi-user.target" },
           },
-        ]
-        : []),
-    ],
-    derive: (plan) => [
-      {
-        path: WEB.staticConfig,
-        content: traefikStatic(plan),
-        mode: "0644",
-        owner: "root",
-        spec: SPEC,
-        onChange: [{ kind: "restart", unit: WEB.unit }],
-      },
-      {
-        // Traefik watches this directory: no restart needed.
-        path: WEB.dynamicConfig,
-        content: traefikDynamic(plan),
-        mode: "0644",
-        owner: "root",
+          SPEC,
+        ),
+        state: "enabled",
+        start: true,
+        verify: `systemctl is-active ${WEB.welcomeUnit}`,
         spec: SPEC,
       },
-    ],
-    notes: [
-      name
-        ? `HTTPS: https://${name} (the Archon Console: sign in with your account), apps at <app>.${name}, Traefik's dashboard at traefik.${name}; who reaches them is the router's decision.`
-        : "HTTPS: https://<this server>/ with a self-signed certificate (set fleet.web for names and Let's Encrypt).",
-      "Ports 80 and 443 are open; 80 redirects to 443. Containers publish with the label traefik.enable=true (Podman).",
-    ],
+    ];
+    if (name) {
+      // Keep <host>.<domain> and its wildcard pointing at this server in Cloudflare.
+      units.push(
+        {
+          unitName: "archon-web-dns.service",
+          managed: true,
+          content: ini(
+            {
+              Unit: {
+                Description: "Archon: this server's DNS records in Cloudflare",
+                Documentation: "man:archon-web-dns(1)",
+                After: "network-online.target",
+                Wants: "network-online.target",
+                ConditionPathExists: WEB.credential,
+              },
+              Service: {
+                Type: "oneshot",
+                // Quiet unless the address changed (a new DHCP lease) or a day passed.
+                ExecStart: "/usr/local/bin/archon web dns-check",
+                Environment: "ARCHON_AGENT=timer",
+              },
+            },
+            SPEC,
+          ),
+          state: "ignore",
+          verify: "systemctl cat archon-web-dns.service",
+          spec: SPEC,
+        },
+        {
+          unitName: "archon-web-dns.timer",
+          managed: true,
+          content: ini(
+            {
+              Unit: {
+                Description: "Archon: follow this server's address in Cloudflare (no reserved IPs)",
+              },
+              // At boot, then every 5 minutes: a new lease reaches Cloudflare within
+              // minutes, and its records' TTL is 60 seconds.
+              Timer: { OnBootSec: "30s", OnUnitActiveSec: "5min", AccuracySec: "30s" },
+              Install: { WantedBy: "timers.target" },
+            },
+            SPEC,
+          ),
+          state: "enabled",
+          verify: "systemctl is-enabled archon-web-dns.timer",
+          spec: SPEC,
+        },
+      );
+    }
+    return {
+      spec: SPEC,
+      packages: [{ name: "podman", spec: SPEC }],
+      ports: [
+        { port: 80, protocol: "tcp", spec: SPEC },
+        { port: 443, protocol: "tcp", spec: SPEC },
+        { port: 443, protocol: "udp", spec: SPEC },
+      ],
+      routes: hostRoutes(host),
+      units,
+      files: [
+        {
+          path: "/etc/sysusers.d/archon-web.conf",
+          // Traefik's own account (its state directory, the ACME store), in the
+          // group that may read Podman's socket.
+          content:
+            header(SPEC) +
+            [
+              `g ${WEB.group} - - -`,
+              `u traefik - "Archon Traefik" /var/lib/traefik /usr/sbin/nologin`,
+              `m traefik ${WEB.group}`,
+              // Spec 065: the Archon Console's account and its groups.
+              `u ${WEB.welcomeUser} - "Archon Console" /var/lib/${WEB.welcomeUser} /usr/sbin/nologin`,
+              `m ${WEB.welcomeUser} archon`,
+              `m ${WEB.welcomeUser} archon-ops`,
+              `m ${WEB.welcomeUser} shadow`,
+            ].join("\n") +
+            "\n",
+          mode: "0644",
+          owner: "root",
+          spec: SPEC,
+          onChange: [
+            { kind: "run", argv: ["systemd-sysusers", "/etc/sysusers.d/archon-web.conf"] },
+          ],
+        },
+        {
+          // Spec 065: the console checks passwords as Ubuntu's own services do.
+          path: `/etc/pam.d/${WEB.pamService}`,
+          content:
+            "# Rendered by archon from spec 065-console. Do not edit.\n@include common-auth\n@include common-account\n",
+          mode: "0644",
+          owner: "root",
+          spec: SPEC,
+        },
+        {
+          // Traefik reads container labels from Podman's Docker-compatible socket.
+          path: "/etc/systemd/system/podman.socket.d/50-archon.conf",
+          content: ini({ Socket: { SocketGroup: WEB.group, SocketMode: "0660" } }, SPEC),
+          mode: "0644",
+          owner: "root",
+          spec: SPEC,
+          onChange: [{ kind: "daemon-reload" }, { kind: "restart", unit: "podman.socket" }],
+        },
+      ],
+      checks: [
+        {
+          name: "HTTPS answers with the Archon Console",
+          // Spec 065: its sign-in page (every other page needs a session: "/" redirects there).
+          command: `sh -c 'curl -sk --max-time 5 https://127.0.0.1/signin | grep -q "Sign in to"'`,
+          level: "fail",
+          fix: `systemctl status ${WEB.unit} ${WEB.welcomeUnit}; archon web status`,
+          spec: SPEC,
+        },
+        ...(name
+          ? [
+              {
+                name: `${name} has a trusted certificate`,
+                // Spec 052: without the Cloudflare token, not set up yet (exit 3).
+                command: `sh -c 'test -s ${WEB.credential} || exit 3; curl -s --max-time 5 -o /dev/null --resolve ${name}:443:127.0.0.1 https://${name}/'`,
+                level: "warn" as const,
+                code: "P032-WEB-TOKEN",
+                fix: "archon web status (the Cloudflare token: bun run stolos boot web-setup, then web-push <host>)",
+                spec: SPEC,
+              },
+              {
+                name: `${name} resolves to this server`,
+                command: `sh -c 'test -s ${WEB.credential} || exit 3; getent ahostsv4 ${name} | grep -q .'`,
+                level: "warn" as const,
+                code: "P032-WEB-TOKEN",
+                fix: "sudo archon web dns",
+                spec: SPEC,
+              },
+            ]
+          : []),
+      ],
+      derive: (plan) => [
+        {
+          path: WEB.staticConfig,
+          content: traefikStatic(plan),
+          mode: "0644",
+          owner: "root",
+          spec: SPEC,
+          onChange: [{ kind: "restart", unit: WEB.unit }],
+        },
+        {
+          // Traefik watches this directory: no restart needed.
+          path: WEB.dynamicConfig,
+          content: traefikDynamic(plan),
+          mode: "0644",
+          owner: "root",
+          spec: SPEC,
+        },
+      ],
+      notes: [
+        name
+          ? `HTTPS: https://${name} (the Archon Console: sign in with your account), apps at <app>.${name}, Traefik's dashboard at traefik.${name}; who reaches them is the router's decision.`
+          : "HTTPS: https://<this server>/ with a self-signed certificate (set fleet.web for names and Let's Encrypt).",
+        "Ports 80 and 443 are open; 80 redirects to 443. Containers publish with the label traefik.enable=true (Podman).",
+      ],
+    };
   };
-};

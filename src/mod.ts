@@ -4,30 +4,30 @@
  * Stolos installs, converges, and verifies a fleet of Ubuntu servers and
  * workstations from a model written in TypeScript. Its command is `archon`.
  * The engine (this repository, public) holds no fleet: each fleet lives in a
- * fleet repository (private), under `fleets/<id>/`, and imports the engine at
- * a released tag.
+ * fleet repository (private), under `fleets/<id>/`, and depends on the
+ * engine's package of a released tag.
  *
- * Start with: `deno task stolos` in a fleet repository (where you are, and the
+ * Start with: `bun run stolos` in a fleet repository (where you are, and the
  * one thing to do next), then the model's types ({@link FleetDef} and
  * {@link HostDef} in `archon/model/types.ts`), then the guides: each folder's `mod.ts`
- * documents it (listed in `archon/core/guides.ts`; offline: `deno task stolos docs`).
+ * documents it (listed in `archon/core/guides.ts`; offline: `bun run stolos docs`).
  *
  * ## Two repositories, one approval
  *
  * ```mermaid
  * flowchart TB
  *   subgraph engine["intellectual-frontiers/stolos (public)"]
- *     src["src/: the engine"] --> tag["tag vX.Y.Z<br/>(immutable)"]
+ *     src["src/: the engine"] --> tag["tag vX.Y.Z<br/>(immutable), its package<br/>on the release"]
  *   end
  *   subgraph fleet["fleet repository (private)"]
- *     pin["deno.json: @stolos/ to vX.Y.Z"] --- lock["deno.lock: a hash of<br/>every engine file"]
+ *     pin["package.json: the release's<br/>tarball (vX.Y.Z)"] --- lock["bun.lock: the<br/>tarball's integrity"]
  *     model["fleets/&lt;id&gt;/: fleet.ts, hosts/, signers.ts,<br/>registration.ts, decisions.ts"]
  *     tip["main: its tip signed by<br/>a key in signers.ts"]
  *   end
  *   tag -->|"stolos fleet upgrade"| pin
  *   model --> tip
  *   lock --> tip
- *   tip -->|"read-only deploy key"| hosts["hosts: /srv/archon<br/>deno run --frozen"]
+ *   tip -->|"read-only deploy key"| hosts["hosts: /srv/archon<br/>bun install --frozen-lockfile"]
  *   hosts -->|"refuse unsigned,<br/>untrusted, or rolled back"| tip
  * ```
  *

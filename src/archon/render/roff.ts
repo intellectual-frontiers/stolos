@@ -59,13 +59,14 @@ export function markdownToRoff(md: string): string {
     const h = line.match(/^(#{1,4})\s+(.*)$/);
     if (h) {
       flush();
-      out.push(h[1].length <= 2 ? `.SH "${esc(h[2]).toUpperCase()}"` : `.SS "${esc(h[2])}"`);
+      const [, marks = "", title = ""] = h;
+      out.push(marks.length <= 2 ? `.SH "${esc(title).toUpperCase()}"` : `.SS "${esc(title)}"`);
       continue;
     }
     const li = line.match(/^\s*(?:[-*]|\d+\.)\s+(.*)$/);
     if (li) {
       flush();
-      out.push(".IP \\(bu 2", inline(li[1]));
+      out.push(".IP \\(bu 2", inline(li[1] ?? ""));
       continue;
     }
     if (line.startsWith(">")) {
@@ -82,7 +83,13 @@ export function markdownToRoff(md: string): string {
       if (/^\|[\s:|-]+\|$/.test(line.trim())) continue;
       out.push(
         ".IP \\(bu 2",
-        inline(line.split("|").map((c) => c.trim()).filter(Boolean).join(": ")),
+        inline(
+          line
+            .split("|")
+            .map((c) => c.trim())
+            .filter(Boolean)
+            .join(": "),
+        ),
       );
       continue;
     }

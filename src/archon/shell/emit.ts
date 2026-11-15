@@ -10,7 +10,7 @@
  *
  * The output is code (Article 4), generated here from one table. `archon apply`
  * renders it into /usr/local/share/archon/shell/init.<shell>, and the archon
- * launcher prints that file without starting Deno, so a new shell pays about
+ * launcher prints that file without starting the engine, so a new shell pays about
  * the cost of `cat`. Everything is guarded: it does nothing in a
  * non-interactive shell, and each piece only when its tool is installed.
  *
@@ -21,10 +21,12 @@
  * @module
  */
 
+import { fs, proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
+
 /** The shells Archon emits code for. */
 export const SHELLS = ["bash", "zsh", "fish"] as const;
 /** One of SHELLS. */
-export type Shell = typeof SHELLS[number];
+export type Shell = (typeof SHELLS)[number];
 
 /** Where `archon apply` renders each shell's init file (`init.<shell>`) and the prompt theme. */
 export const SHELL_DIR = "/usr/local/share/archon/shell";
@@ -108,7 +110,9 @@ function posix(shell: "bash" | "zsh"): string {
     `__archon_has fzf && eval "$(fzf --${shell})"`,
     `__archon_has zoxide && eval "$(zoxide init ${shell})"`,
     "__archon_has delta && export GIT_PAGER=delta",
-    `unset ${Object.keys(TOOLS).map((t) => `__archon_${t}`).join(" ")}`,
+    `unset ${Object.keys(TOOLS)
+      .map((t) => `__archon_${t}`)
+      .join(" ")}`,
   );
   if (shell === "bash") {
     L.push(
@@ -141,11 +145,7 @@ function posix(shell: "bash" | "zsh"): string {
       `fi`,
     );
   }
-  L.push(
-    "unset __archon_prompt __archon_icons; unset -f __archon_first",
-    "fi",
-    "",
-  );
+  L.push("unset __archon_prompt __archon_icons; unset -f __archon_first", "fi", "");
   return L.join("\n");
 }
 
@@ -177,9 +177,9 @@ function fish(): string {
   ];
   for (const [tool, names] of Object.entries(TOOLS)) {
     L.push(
-      `    set --local __archon_${tool} (command --search ${
-        names.join(" ")
-      } | head -n 1 | string replace --regex '.*/' '')`,
+      `    set --local __archon_${tool} (command --search ${names.join(
+        " ",
+      )} | head -n 1 | string replace --regex '.*/' '')`,
     );
   }
   for (const a of ALIASES) {
@@ -252,39 +252,45 @@ export function renderEmit(shell: Shell): string {
 export async function detectShell(explicit?: string): Promise<Shell | undefined> {
   const pick = (s?: string) => {
     const n = (s ?? "").trim().replace(/^-/, "").split("/").pop() ?? "";
-    return (SHELLS as readonly string[]).includes(n) ? n as Shell : undefined;
+    return (SHELLS as readonly string[]).includes(n) ? (n as Shell) : undefined;
   };
   if (explicit) return pick(explicit);
   try {
-    const stat = await Deno.readTextFile(`/proc/${Deno.ppid}/comm`);
+    const stat = await fs.readTextFile(`/proc/${proc.ppid()}/comm`);
     const p = pick(stat);
     if (p) return p;
-  } catch { /* no /proc */ }
-  return pick(Deno.env.get("SHELL"));
+  } catch {
+    /* no /proc */
+  }
+  return pick(proc.env.get("SHELL"));
 }
 
 /** `archon shell emit`: print the code (the launcher prints the rendered file directly). */
 export async function shellEmit(name?: string): Promise<number> {
   const shell = await detectShell(name);
   if (!shell) {
-    console.error(
-      `archon shell emit: name the shell (bash, zsh, or fish)${name ? `, not ${name}` : ""}.\n` +
-        Object.values(LINES).map((l) => `  ${l.file}: ${l.line}`).join("\n"),
+    stdio.stderr.writeSync(
+      `${
+        `archon shell emit: name the shell (bash, zsh, or fish)${name ? `, not ${name}` : ""}.\n` +
+        Object.values(LINES)
+          .map((l) => `  ${l.file}: ${l.line}`)
+          .join("\n")
+      }\n`,
     );
     return 2;
   }
-  await Deno.stdout.write(new TextEncoder().encode(renderEmit(shell)));
+  await stdio.stdout.write(renderEmit(shell));
   return 0;
 }
 
 /** `archon shell status`: which startup files carry the line. */
 export async function shellStatus(): Promise<number> {
-  const home = Deno.env.get("HOME") ?? "";
+  const home = proc.env.get("HOME") ?? "";
   const out: string[] = [];
   let any = false;
   for (const s of SHELLS) {
     const path = LINES[s].file.replace(/^~/, home);
-    const text = await Deno.readTextFile(path).catch(() => undefined);
+    const text = await fs.readTextFile(path).catch(() => undefined);
     const on = !!text && /archon shell emit/.test(text);
     any ||= on;
     out.push(
@@ -293,13 +299,13 @@ export async function shellStatus(): Promise<number> {
       }`,
     );
   }
-  console.log(
-    [
+  stdio.stdout.writeSync(
+    `${[
       "Archon's shell features (aliases, fzf keys, zoxide, the prompt, titles) are on where",
       "a startup file runs archon shell emit:",
       ...out,
       any ? "" : "None of your startup files has the line: add it to the one for your shell.",
-    ].join("\n"),
+    ].join("\n")}\n`,
   );
   return 0;
 }

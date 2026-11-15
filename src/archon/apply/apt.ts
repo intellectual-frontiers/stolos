@@ -7,13 +7,14 @@
  * @module
  */
 
+import { proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { stream as realStream } from "../core/exec.ts";
 import type { Phase } from "../core/ui.ts";
 
 /** apt's runner and the pause between retries, replaceable in tests (spec 009). */
 export const aptDeps = {
   stream: realStream,
-  sleep: (ms: number) => new Promise<void>((r) => setTimeout(r, ms)),
+  sleep: (ms: number): Promise<void> => new Promise<void>((r) => setTimeout(r, ms)),
 };
 const stream = (...a: Parameters<typeof realStream>) => aptDeps.stream(...a);
 
@@ -34,7 +35,7 @@ export const ARCHIVE_UNREACHABLE =
 
 const ENV = () => ({
   DEBIAN_FRONTEND: "noninteractive",
-  PATH: Deno.env.get("PATH") ?? "/usr/sbin:/usr/bin:/sbin:/bin",
+  PATH: proc.env.get("PATH") ?? "/usr/sbin:/usr/bin:/sbin:/bin",
   LANG: "C.UTF-8",
   // Package scripts that manage config with ucf (unattended-upgrades owns
   // 20auto-upgrades this way) must keep the file Archon wrote, not stop to
@@ -60,11 +61,13 @@ export function classifyAptLine(line: string): AptIssue | undefined {
   if (/^Err:\d+\s/.test(line)) return undefined;
   const m = line.match(/^(W|E|Err):\s*(.*)$/);
   if (!m) return undefined;
-  const text = m[2];
-  const level = m[1] === "W" ? "warn" : "fail";
+  const [, kind, text = ""] = m;
+  const level = kind === "W" ? "warn" : "fail";
   if (/Not live until|is not valid yet/i.test(text)) {
-    const repo = text.match(/https?:\/\/\S+?\s+(\S+)\s+InRelease/)?.[1] ??
-      text.match(/\/dists\/([^/\s]+)\/InRelease/)?.[1] ?? "a Debian repository";
+    const repo =
+      text.match(/https?:\/\/\S+?\s+(\S+)\s+InRelease/)?.[1] ??
+      text.match(/\/dists\/([^/\s]+)\/InRelease/)?.[1] ??
+      "a Debian repository";
     return {
       level: "warn",
       message: `${repo} not refreshed: the system clock is behind`,
@@ -80,8 +83,7 @@ export function classifyAptLine(line: string): AptIssue | undefined {
     return {
       level: "warn",
       message: ARCHIVE_UNREACHABLE,
-      fix:
-        "check networking: resolvectl query archive.ubuntu.com; getent ahostsv4 archive.ubuntu.com",
+      fix: "check networking: resolvectl query archive.ubuntu.com; getent ahostsv4 archive.ubuntu.com",
       network: true,
     };
   }
@@ -131,13 +133,21 @@ export function dpkgFailureParser(): {
     feed(line: string) {
       const m = line.match(/^dpkg: error processing (?:package|archive) (\S+?)(?::\w+)? \(/);
       if (m) {
-        pending = { pkg: m[1], reason: "", ...(lastOutput ? { cause: lastOutput } : {}) };
+        const [, pkg = ""] = m;
+        const fresh: DpkgFailure = {
+          pkg,
+          reason: "",
+          ...(lastOutput ? { cause: lastOutput } : {}),
+        };
         lastOutput = "";
-        const f = failures.find((x) => x.pkg === m[1]);
+        const f = failures.find((x) => x.pkg === pkg);
         if (f) {
-          f.cause ??= pending.cause;
+          if (f.cause === undefined && fresh.cause !== undefined) f.cause = fresh.cause;
           pending = f;
-        } else failures.push(pending);
+        } else {
+          pending = fresh;
+          failures.push(fresh);
+        }
         return;
       }
       if (pending && line.trim()) {
@@ -186,8 +196,8 @@ export async function aptUpdate(p: Phase): Promise<AptResult> {
       lockTries
         ? "waiting for another apt to finish"
         : netTries
-        ? `refreshing package lists (retry ${netTries})`
-        : "refreshing package lists",
+          ? `refreshing package lists (retry ${netTries})`
+          : "refreshing package lists",
     );
     const code = await stream(["apt-get", "update", "-q", ...LOCK_WAIT], {
       env: ENV(),
@@ -202,13 +212,14 @@ export async function aptUpdate(p: Phase): Promise<AptResult> {
         const issue = classifyAptLine(line);
         if (issue) issues.push(issue);
         const hit = line.match(/^(Get|Hit|Ign):\d+\s+(\S+)\s+(\S+)/);
-        if (hit) p.status(`${hit[1].toLowerCase()} ${hit[3]}`);
+        if (hit) p.status(`${(hit[1] ?? "").toLowerCase()} ${hit[3] ?? ""}`);
       },
     });
     // A Release file "gone" right after connection errors is the network, not the archive.
-    const networkOnly = netError &&
-      issues.every((i) =>
-        i.network || (releaseGone && RELEASE_GONE.test(i.message)) || i.level === "warn"
+    const networkOnly =
+      netError &&
+      issues.every(
+        (i) => i.network || (releaseGone && RELEASE_GONE.test(i.message)) || i.level === "warn",
       );
     if (code !== 0 && locked && lockTries < LOCK_RETRIES) {
       lockTries++;
@@ -216,7 +227,7 @@ export async function aptUpdate(p: Phase): Promise<AptResult> {
       continue;
     }
     if (code !== 0 && networkOnly && netTries < NETWORK_BACKOFF_MS.length) {
-      await aptDeps.sleep(NETWORK_BACKOFF_MS[netTries++]);
+      await aptDeps.sleep(NETWORK_BACKOFF_MS[netTries++] ?? 0);
       continue;
     }
     if (code === 0) {
@@ -228,8 +239,8 @@ export async function aptUpdate(p: Phase): Promise<AptResult> {
       p.warn(ARCHIVE_UNREACHABLE, issues.find((i) => i.network)?.fix);
       return { ok: false, network: true };
     }
-    const real = dedupe(issues).filter((i) =>
-      !netError || (!i.network && !RELEASE_GONE.test(i.message))
+    const real = dedupe(issues).filter(
+      (i) => !netError || (!i.network && !RELEASE_GONE.test(i.message)),
     );
     for (const issue of real) {
       issue.level === "fail" ? p.fail(issue.message, issue.fix) : p.warn(issue.message, issue.fix);
@@ -287,7 +298,7 @@ async function installOnce(p: Phase, pkgs: string[]): Promise<Attempt> {
         const err = line.match(/^pmerror:([^:]*):[\d.]+:(.*)$/);
         if (err) {
           p.note(line);
-          dpkg.error(err[1], err[2]);
+          dpkg.error(err[1] ?? "", err[2] ?? "");
           return;
         }
         const st = line.match(/^(pm|dl)status:([^:]*):([\d.]+):(.*)$/);
@@ -298,7 +309,7 @@ async function installOnce(p: Phase, pkgs: string[]): Promise<Attempt> {
             100,
             st[1] === "dl"
               ? `downloading ${st[2] || "packages"}`
-              : st[4].replace(/^Installing |^Configuring /, "").slice(0, 60),
+              : (st[4] ?? "").replace(/^Installing |^Configuring /, "").slice(0, 60),
           );
           return;
         }
@@ -344,13 +355,16 @@ export async function aptInstall(p: Phase, pkgs: string[]): Promise<AptResult> {
   // Downloads that failed for network reasons (spec 009): retry with backoff,
   // then warn and leave the packages for the next reconcile.
   const netOnly = (x: Attempt) =>
-    x.code !== 0 && !x.failures.length && x.issues.some((i) => i.network) &&
-    x.issues.every((i) =>
-      i.network || i.level === "warn" || /Failed to fetch|fetch some archives/i.test(i.message)
+    x.code !== 0 &&
+    !x.failures.length &&
+    x.issues.some((i) => i.network) &&
+    x.issues.every(
+      (i) =>
+        i.network || i.level === "warn" || /Failed to fetch|fetch some archives/i.test(i.message),
     );
   for (let n = 0; netOnly(a) && n < NETWORK_BACKOFF_MS.length; n++) {
     p.status(`downloading again (retry ${n + 1})`);
-    await aptDeps.sleep(NETWORK_BACKOFF_MS[n]);
+    await aptDeps.sleep(NETWORK_BACKOFF_MS[n] ?? 0);
     a = await installOnce(p, pkgs);
   }
   if (netOnly(a)) {

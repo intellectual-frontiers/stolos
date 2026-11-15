@@ -10,6 +10,7 @@
  * @module
  */
 
+import { proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";
 import { checkClock, describeSkew } from "../core/clock.ts";
@@ -57,18 +58,18 @@ export async function update(host: HostDef, opts: UpdateOptions): Promise<Update
         /cannot lock ref|unable to update local ref/.test(s.blocked)
           ? "another git process held the ref; run sudo archon update again"
           : /Authentication|could not read Username|403|401/.test(s.blocked)
-          ? "as the checkout's owner (ops on a server, you on a workstation): gh auth status; gh auth setup-git"
-          : s.blocked.startsWith("fetch failed")
-          ? "check the network (curl -sI https://github.com), then sudo archon update"
-          : "commit or stash local changes, then archon update",
+            ? "as the checkout's owner (ops on a server, you on a workstation): gh auth status; gh auth setup-git"
+            : s.blocked.startsWith("fetch failed")
+              ? "check the network (curl -sI https://github.com), then sudo archon update"
+              : "commit or stash local changes, then archon update",
       );
     }
     p.done(
       s.blocked
         ? "using the local checkout"
         : n
-        ? `${n} ${opts.check ? "incoming" : "new"} commit(s)`
-        : "already current",
+          ? `${n} ${opts.check ? "incoming" : "new"} commit(s)`
+          : "already current",
     );
     steps.push({ step: "pull", ok: !s.blocked, detail: p.summary() });
 
@@ -78,19 +79,21 @@ export async function update(host: HostDef, opts: UpdateOptions): Promise<Update
       const args = ["update", "--no-pull", "--host", host.name];
       if (!opts.tools) args.push("--no-tools");
       if (ui.verbose) args.push("--verbose");
-      const code = await new Deno.Command(Deno.env.get("ARCHON_SELF") ?? "/usr/local/bin/archon", {
-        args,
-        stdin: "inherit",
-        stdout: "inherit",
-        stderr: "inherit",
-        env: {
-          ARCHON_UI_CONTINUE: "1",
-          ARCHON_UI_START: String(ui.started),
-          ...(ui.logPath ? { ARCHON_LOG: ui.logPath } : {}),
+      const code = await proc.output(
+        [proc.env.get("ARCHON_SELF") ?? "/usr/local/bin/archon", ...args],
+        {
+          stdin: "inherit",
+          stdout: "inherit",
+          stderr: "inherit",
+          env: {
+            ARCHON_UI_CONTINUE: "1",
+            ARCHON_UI_START: String(ui.started),
+            ...(ui.logPath ? { ARCHON_LOG: ui.logPath } : {}),
+          },
         },
-      }).spawn().status;
+      );
       ui.quiet = true; // the child printed the summary
-      Deno.exit(code.code);
+      proc.exit(code.code);
     }
   }
 

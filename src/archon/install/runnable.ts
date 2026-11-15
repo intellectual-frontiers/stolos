@@ -6,7 +6,7 @@
  * that commit. Either one missing used to surface only after a full install,
  * as "the repository tip is not signed by a fleet signer: nothing was run".
  * `boot arm` refuses, and `boot serve` warns, before anything boots, each with
- * the fix (`deno task stolos apply`).
+ * the fix (`bun run stolos apply`).
  *
  * ```mermaid
  * flowchart LR
@@ -20,7 +20,7 @@
  * @module
  */
 
-import { join, relative } from "../core/path.ts";
+import { fs, path } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "../core/exec.ts";
 import { P } from "../core/paths.ts";
 
@@ -61,41 +61,42 @@ export async function checkRunnable(hosts: string[], repo = P.repo): Promise<Run
   const out: Runnable = { problems: [] };
   const f = await git(["fetch", "-q", "origin", branch]);
   if (!f.ok) out.unreachable = f.stderr.trim().split("\n").pop() || "git fetch failed";
-  const tip = (await git(["rev-parse", "-q", "--verify", `refs/remotes/origin/${branch}`])).stdout
-    .trim();
+  const tip = (
+    await git(["rev-parse", "-q", "--verify", `refs/remotes/origin/${branch}`])
+  ).stdout.trim();
   if (!tip) return out;
   out.tip = tip;
   const short = tip.slice(0, 10);
 
   // Signed by a fleet signer, as servers check it (spec 047).
   const { allowedSignersText, checkTip, loadSigners } = await import("../identity/signers.ts");
-  const dir = await Deno.makeTempDir({ prefix: "stolos-runnable-" });
+  const dir = await fs.makeTempDir({ prefix: "stolos-runnable-" });
   try {
-    const allowed = join(dir, "allowed_signers");
-    await Deno.writeTextFile(allowed, allowedSignersText(await loadSigners()));
+    const allowed = path.join(dir, "allowed_signers");
+    await fs.writeTextFile(allowed, allowedSignersText(await loadSigners()));
     const t = await checkTip(repo, tip, "", allowed);
-    if (t.ok) out.signer = t.signer;
-    else {
+    if (t.ok) {
+      if (t.signer !== undefined) out.signer = t.signer;
+    } else {
       out.problems.push({
         what: `GitHub's ${branch} (${short}) is not signed by a fleet signer (${
           t.reason ?? t.code
         }): a server installed now would refuse to run it`,
-        fix: `deno task stolos apply (one commit, signed by your key, on top), then arm again`,
+        fix: `bun run stolos apply (one commit, signed by your key, on top), then arm again`,
         code: "E063-TIP-UNSIGNED",
       });
     }
   } finally {
-    await Deno.remove(dir, { recursive: true });
+    await fs.remove(dir, { recursive: true });
   }
 
   // Each host's own model, in that commit.
   for (const h of hosts) {
-    const rel = relative(repo, join(P.hosts, h, "host.ts")).replace(/\\/g, "/");
+    const rel = path.relative(repo, path.join(P.hosts, h, "host.ts")).replace(/\\/g, "/");
     if (!(await git(["cat-file", "-e", `${tip}:${rel}`])).ok) {
       out.problems.push({
-        what:
-          `${h}'s model (${rel}) is not on GitHub's ${branch} yet: its first boot would find no ${h}`,
-        fix: `deno task stolos apply -m "004-install: add host ${h}", then arm again`,
+        what: `${h}'s model (${rel}) is not on GitHub's ${branch} yet: its first boot would find no ${h}`,
+        fix: `bun run stolos apply -m "004-install: add host ${h}", then arm again`,
         code: "E063-HOST-NOT-PUSHED",
       });
     }

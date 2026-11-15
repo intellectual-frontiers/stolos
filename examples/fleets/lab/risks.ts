@@ -1,8 +1,12 @@
-// An example risk register (spec 080): the lab's risks, in TypeScript. Likelihood and impact use NIST
-// SP 800-30 Rev 1's scale; treatment is accept, mitigate, transfer, or avoid. Change it through a
-// pull request (deno task stolos risks review <id>); a fleet signer approves with a signed merge.
+/**
+ * An example risk register (spec 080): the lab's risks, in TypeScript. Likelihood and impact use NIST
+ * SP 800-30 Rev 1's scale; treatment is accept, mitigate, transfer, or avoid. Change it through a
+ * pull request (bun run stolos risks review <id>); a fleet signer approves with a signed merge.
+ *
+ * @module
+ */
 
-import { defineRisks } from "@stolos/archon/risk/mod.ts";
+import { defineRisks } from "@intellectual-frontiers/stolos/archon/risk/mod";
 
 export const risks = defineRisks([
   {

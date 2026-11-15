@@ -15,73 +15,80 @@ import { quadlet } from "../containers/quadlet.ts";
 const SPEC = "040-opt-in" as const;
 
 /** Opt-in containers (Podman Quadlet), off until an operator turns them on (spec 040). */
-export const containers = (): Capability => ({ host }) => {
-  if (host.kind === "workstation") return { spec: SPEC };
-  const files: FileDef[] = [];
-  const units: UnitDef[] = [];
-  const routes: WebRoute[] = [];
-  for (const c of CONTAINERS) {
-    const on = host.optIn?.[c.name]?.enabled === true;
-    files.push(
-      {
-        path: quadletPath(c),
-        content: quadlet(c),
-        mode: "0644",
-        owner: "root",
+export const containers =
+  (): Capability =>
+  ({ host }) => {
+    if (host.kind === "workstation") return { spec: SPEC };
+    const files: FileDef[] = [];
+    const units: UnitDef[] = [];
+    const routes: WebRoute[] = [];
+    for (const c of CONTAINERS) {
+      const on = host.optIn?.[c.name]?.enabled === true;
+      files.push(
+        {
+          path: quadletPath(c),
+          content: quadlet(c),
+          mode: "0644",
+          owner: "root",
+          spec: c.spec,
+          onChange: [{ kind: "daemon-reload" }],
+        },
+        {
+          path: `/etc/tmpfiles.d/archon-${c.name}.conf`,
+          content:
+            header(c.spec) +
+            [
+              ...c.volumes.map((v) => `d ${v.host} 0750 ${c.uid} ${c.uid} -`),
+              `d ${c.secrets.replace(/\/[^/]+$/, "")} 0700 root root -`,
+            ].join("\n") +
+            "\n",
+          mode: "0644",
+          owner: "root",
+          spec: c.spec,
+          onChange: [
+            {
+              kind: "run",
+              argv: ["systemd-tmpfiles", "--create", `/etc/tmpfiles.d/archon-${c.name}.conf`],
+            },
+          ],
+        },
+      );
+      units.push({
+        unitName: unitOfContainer(c),
+        managed: false,
+        generated: true,
+        state: "masked",
+        switch: c.name,
+        verify:
+          // Rendered from the host's own record (spec 048).
+          on
+            ? `sh -c 'systemctl is-active --quiet ${unitOfContainer(
+                c,
+              )} && curl -fsS -o /dev/null --max-time 5 ${c.health}'`
+            : `sh -c '! systemctl is-active --quiet ${unitOfContainer(c)}'`,
         spec: c.spec,
-        onChange: [{ kind: "daemon-reload" }],
-      },
-      {
-        path: `/etc/tmpfiles.d/archon-${c.name}.conf`,
-        content: header(c.spec) + [
-          ...c.volumes.map((v) => `d ${v.host} 0750 ${c.uid} ${c.uid} -`),
-          `d ${c.secrets.replace(/\/[^/]+$/, "")} 0700 root root -`,
-        ].join("\n") + "\n",
-        mode: "0644",
-        owner: "root",
-        spec: c.spec,
-        onChange: [{
-          kind: "run",
-          argv: ["systemd-tmpfiles", "--create", `/etc/tmpfiles.d/archon-${c.name}.conf`],
-        }],
-      },
-    );
-    units.push({
-      unitName: unitOfContainer(c),
-      managed: false,
-      generated: true,
-      state: "masked",
-      switch: c.name,
-      verify:
-        // Rendered from the host's own record (spec 048).
-        on
-          ? `sh -c 'systemctl is-active --quiet ${
-            unitOfContainer(c)
-          } && curl -fsS -o /dev/null --max-time 5 ${c.health}'`
-          : `sh -c '! systemctl is-active --quiet ${unitOfContainer(c)}'`,
-      spec: c.spec,
-    });
-    if (on) {
-      routes.push(...c.ports.map((p) => ({
-        name: p.route,
-        port: p.host,
-        description: p.description,
-        spec: c.spec,
-      })));
+      });
+      if (on) {
+        routes.push(
+          ...c.ports.map((p) => ({
+            name: p.route,
+            port: p.host,
+            description: p.description,
+            spec: c.spec,
+          })),
+        );
+      }
     }
-  }
-  return {
-    spec: SPEC,
-    // Podman itself comes with the web front door (spec 032).
-    files,
-    units,
-    routes,
-    notes: [
-      `Opt-in containers (off until an operator turns one on): ${
-        CONTAINERS.map((c) => `${c.title}${host.optIn?.[c.name]?.enabled ? " (on)" : ""}`).join(
-          ", ",
-        )
-      }.`,
-    ],
+    return {
+      spec: SPEC,
+      // Podman itself comes with the web front door (spec 032).
+      files,
+      units,
+      routes,
+      notes: [
+        `Opt-in containers (off until an operator turns one on): ${CONTAINERS.map(
+          (c) => `${c.title}${host.optIn?.[c.name]?.enabled ? " (on)" : ""}`,
+        ).join(", ")}.`,
+      ],
+    };
   };
-};

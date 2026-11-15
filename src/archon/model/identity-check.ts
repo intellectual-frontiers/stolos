@@ -12,8 +12,7 @@ export function registeredCardCheck(mac: string): CheckDef {
     name: "identity:registered-network-card",
     command: `sh -c 'cat /sys/class/net/*/address | grep -qix ${mac}'`,
     level: "warn",
-    fix:
-      `the network card registered for this host (${mac}, registration.ts) is not in this machine: a replaced card or board? Record the new one from the boot machine: deno task stolos boot arm <host> --mac-address <new mac> (or reinstall it with --claim)`,
+    fix: `the network card registered for this host (${mac}, registration.ts) is not in this machine: a replaced card or board? Record the new one from the boot machine: bun run stolos boot arm <host> --mac-address <new mac> (or reinstall it with --claim)`,
     spec: "051-machine-identity",
   };
 }

@@ -6,8 +6,10 @@
  * @module
  */
 
+import { proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { splitArgs } from "@intellectual-frontiers/ifc-ts/kernel";
 import { getRecord, putRecord } from "./store.ts";
-import { currentUser, isRoot, run, splitArgs } from "../core/exec.ts";
+import { currentUser, run } from "../core/exec.ts";
 import { homeOf } from "../model/load.ts";
 import { expandPersonas } from "../personas/mod.ts";
 import { ui } from "../core/ui.ts";
@@ -95,26 +97,40 @@ export async function recordVerify(
 export const failedChecks = (checks: Check[]): Check[] =>
   checks.filter((c) => !c.ok && c.level !== "warn" && c.level !== "pending");
 
+/** One check to run: what it checks, the command, and how to read it. */
+type Target = {
+  readonly resource: string;
+  readonly command: string;
+  readonly expect?: RegExp | undefined;
+  readonly asUser?: string | undefined;
+  readonly level?: "fail" | "warn" | undefined;
+  readonly fix?: string | undefined;
+  readonly code?: string | undefined;
+};
+
 /** archon verify: every check of the host's plan, each shown at its level. */
 export async function verify(host: HostDef): Promise<Check[]> {
   const plan = await planFor(host);
-  const targets = [
+  const targets: Target[] = [
     ...plan.packages.map((p) => ({
       resource: `package:${p.name}`,
-      command: p.source === "snap"
-        ? `snap list ${p.name}`
-        : `dpkg-query -W -f=\${db:Status-Abbrev} ${p.name}`,
+      command:
+        p.source === "snap"
+          ? `snap list ${p.name}`
+          : `dpkg-query -W -f=\${db:Status-Abbrev} ${p.name}`,
       expect: p.source === "snap" ? undefined : /^ii/,
     })),
     ...plan.units.map((u) => ({ resource: u.unitName, command: u.verify, expect: undefined })),
     ...plan.tools.flatMap((t) => {
       if (t.source !== "self-updating") {
-        return [{
-          resource: `tool:${t.id}`,
-          command: t.verify,
-          expect: undefined,
-          asUser: t.unprivileged && isRoot() ? "nobody" : undefined,
-        }];
+        return [
+          {
+            resource: `tool:${t.id}`,
+            command: t.verify,
+            expect: undefined,
+            asUser: t.unprivileged && proc.isRoot() ? "nobody" : undefined,
+          },
+        ];
       }
       // Self-updating tools (on workstations) live in each holder's ~/.local/bin,
       // not on root's PATH: check each copy as its user, by full path.
@@ -123,12 +139,12 @@ export async function verify(host: HostDef): Promise<Check[]> {
       const me = currentUser();
       return plan.users
         .filter((u) => t.forPersona && expandPersonas(u.personas).includes(t.forPersona))
-        .filter((u) => isRoot() || u.name === me)
+        .filter((u) => proc.isRoot() || u.name === me)
         .map((u) => ({
           resource: `tool:${t.id}:${u.name}`,
           command: `${homeOf(u)}/.local/bin/${t.bins[0]} --version`,
           expect: undefined,
-          asUser: isRoot() ? u.name : undefined,
+          asUser: proc.isRoot() ? u.name : undefined,
         }));
     }),
     // Checks the model declares (specs 001, 009, 025), each with its level and fix.
@@ -136,8 +152,7 @@ export async function verify(host: HostDef): Promise<Check[]> {
     // rules (as root; iptables needs it). Spec 008.
     ...plan.ports.map((p) => ({
       resource: `firewall:${p.port}/${p.protocol}`,
-      command:
-        `sh -c '[ "$(id -u)" = 0 ] || exit 0; iptables -S ufw-user-input 2>/dev/null | grep -- "-p ${p.protocol}" | grep -Eq -- "--dports? ([0-9:,]*,)?${p.port}(,|[[:space:]]|$)"'`,
+      command: `sh -c '[ "$(id -u)" = 0 ] || exit 0; iptables -S ufw-user-input 2>/dev/null | grep -- "-p ${p.protocol}" | grep -Eq -- "--dports? ([0-9:,]*,)?${p.port}(,|[[:space:]]|$)"'`,
       expect: undefined,
       asUser: undefined,
       level: "fail" as const,
@@ -164,18 +179,28 @@ export async function verify(host: HostDef): Promise<Check[]> {
   const checks: Check[] = [];
   for (const [i, t] of targets.entries()) {
     p.step(i + 1, targets.length, t.resource);
-    const asUser = (t as { asUser?: string }).asUser;
+    const asUser = t.asUser;
+    const argv = splitArgs(t.command);
     // nobody's home does not exist: start where every account can.
-    const r = await run(splitArgs(t.command), {
-      asUser,
-      cwd: asUser === "nobody" ? "/" : undefined,
-    });
+    const r =
+      argv.kind === "ok"
+        ? await run(argv.value, {
+            ...(asUser === undefined ? {} : { asUser }),
+            ...(asUser === "nobody" ? { cwd: "/" } : {}),
+          })
+        : { ok: false, code: 2, stdout: "", stderr: `${t.command}: ${argv.error}` };
     const output = (r.stdout + r.stderr).trim().split("\n")[0] ?? "";
     const ok = r.ok && (!t.expect || t.expect.test(r.stdout));
-    const extra = t as { level?: "fail" | "warn"; fix?: string; code?: string };
+    const extra = t;
     const pending = !ok && r.code === PENDING_EXIT && !!extra.level;
     const level = pending ? "pending" : extra.level;
-    checks.push({ resource: t.resource, command: t.command, ok, output, level });
+    checks.push({
+      resource: t.resource,
+      command: t.command,
+      ok,
+      output,
+      ...(level === undefined ? {} : { level }),
+    });
     if (ok) p.ok(`${t.resource}: ${t.command}`);
     // Spec 052: shown as what it is, and counted the same way.
     else if (pending) {
@@ -186,11 +211,13 @@ export async function verify(host: HostDef): Promise<Check[]> {
         extra.fix ?? t.command,
         extra.code,
       );
-    } else {p.fail(
+    } else {
+      p.fail(
         `${t.resource}: ${output || `${t.command} failed`}`,
         extra.fix ?? t.command,
         extra.code,
-      );}
+      );
+    }
   }
   const passed = checks.filter((c) => c.ok).length;
   const failed = failedChecks(checks).length;
@@ -198,7 +225,7 @@ export async function verify(host: HostDef): Promise<Check[]> {
   const warned = checks.length - passed - failed - pendingCount;
   recordChecks(passed, failed);
   // Spec 035: the welcome page shows the checks as they are now, not at install.
-  if (isRoot()) {
+  if (proc.isRoot()) {
     const { writeVerify } = await import("../core/status.ts");
     await writeVerify({
       at: new Date().toISOString(),

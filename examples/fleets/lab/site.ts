@@ -1,8 +1,18 @@
-// The example lab's site (spec 028): a UniFi network as typed data. The router
-// is the authority (Article 21): change the router first, then this file.
-// Names and addresses only, never secrets (Article 13).
+/**
+ * The example lab's site (spec 028): a UniFi network as typed data. The router
+ * is the authority (Article 21): change the router first, then this file.
+ * Names and addresses only, never secrets (Article 13).
+ *
+ * @module
+ */
 
-import { cidr, ipv4, port, type SiteDef, vlan } from "@stolos/archon/model/site.ts";
+import {
+  cidr,
+  ipv4,
+  port,
+  type SiteDef,
+  vlan,
+} from "@intellectual-frontiers/stolos/archon/model/site";
 
 export const site: SiteDef = {
   name: "Example Lab",

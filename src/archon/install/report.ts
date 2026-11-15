@@ -6,16 +6,18 @@
  * @module
  */
 
-import { readTextOr } from "../core/fsx.ts";
+import { fs } from "@intellectual-frontiers/ifc-ts/runtime";
 
 /** The file holding the boot server's event URL, left by the install. */
 export const BOOT_EVENTS: string = "/etc/archon/boot-events";
 
 /** Posts a first-boot event (a phase, its level and summary) to the boot server; best effort, 5 s timeout. */
-export async function bootEvent(
-  e: { phase: string; level?: string; summary?: string },
-): Promise<void> {
-  const url = (await readTextOr(BOOT_EVENTS))?.trim();
+export async function bootEvent(e: {
+  phase: string;
+  level?: string;
+  summary?: string;
+}): Promise<void> {
+  const url = (await fs.readTextOr(BOOT_EVENTS))?.trim();
   if (!url) return;
   try {
     await fetch(url, {
@@ -24,5 +26,7 @@ export async function bootEvent(
       body: JSON.stringify({ origin: "archon", ...e }),
       signal: AbortSignal.timeout(5000),
     });
-  } catch { /* the boot server may be off */ }
+  } catch {
+    /* the boot server may be off */
+  }
 }

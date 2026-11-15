@@ -19,9 +19,11 @@
  * @module
  */
 
+import { boolean, type Decoder, object, string } from "@intellectual-frontiers/ifc-ts/kernel";
+import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { count } from "../core/telemetry.ts";
 import { P } from "../core/paths.ts";
-import { currentUser, isRoot, run } from "../core/exec.ts";
+import { currentUser, run } from "../core/exec.ts";
 import { journal, log } from "../core/log.ts";
 import type { HostDef } from "../model/types.ts";
 
@@ -43,7 +45,10 @@ export interface SyncResult {
 
 /** `git status --porcelain` lines that block a pull: any (spec 048: hosts record nothing in the checkout). */
 export function blockingChanges(porcelain: string): string {
-  return porcelain.split("\n").filter((l) => l.trim()).join("\n");
+  return porcelain
+    .split("\n")
+    .filter((l) => l.trim())
+    .join("\n");
 }
 
 /** What the last pull did, for the PC (archon state, spec 066): when, the commits, and why not. */
@@ -60,6 +65,12 @@ export interface SyncStatus {
   blocked?: string;
 }
 
+/** Reads a recorded `SyncStatus` (SYNC_STATUS). */
+export const syncStatusDecoder: Decoder<SyncStatus> = object(
+  { at: string, head: string, remote: string, current: boolean },
+  { blocked: string },
+);
+
 /** Where the last pull is recorded. */
 export const SYNC_STATUS = "/var/lib/archon/status/sync.json";
 
@@ -70,7 +81,7 @@ export const SYNC_STATUS = "/var/lib/archon/status/sync.json";
  */
 export async function syncCheckout(opts: { check?: boolean } = {}): Promise<SyncResult> {
   const r = await syncOnce(opts);
-  if (!opts.check && isRoot()) {
+  if (!opts.check && proc.isRoot()) {
     const s: SyncStatus = {
       at: new Date().toISOString(),
       head: r.head,
@@ -78,9 +89,11 @@ export async function syncCheckout(opts: { check?: boolean } = {}): Promise<Sync
       current: r.current || (!r.blocked && r.pulled.length > 0),
       ...(r.blocked ? { blocked: r.blocked } : {}),
     };
-    await Deno.writeTextFile(SYNC_STATUS, JSON.stringify(s) + "\n").catch((e) =>
-      log.warn(`${SYNC_STATUS} not written: ${(e as Error).message}`)
-    );
+    await fs
+      .writeTextFile(SYNC_STATUS, JSON.stringify(s) + "\n")
+      .catch((e: unknown) =>
+        log.warn(`${SYNC_STATUS} not written: ${e instanceof Error ? e.message : String(e)}`),
+      );
   }
   return r;
 }
@@ -90,9 +103,9 @@ async function syncOnce(opts: { check?: boolean }): Promise<SyncResult> {
   const owner = (await run(["stat", "-c", "%U", repo])).stdout.trim() || "root";
   // As root, act as the owner (who holds the gh login); otherwise as yourself
   // (operators share the checkout through the archon-ops group).
-  const git = (args: string[]) =>
+  const git = (args: string[]): ReturnType<typeof run> =>
     run(["git", "-C", repo, ...args], {
-      asUser: isRoot() ? owner : undefined,
+      ...(proc.isRoot() ? { asUser: owner } : {}),
       // Never wait at a hidden username prompt: fail and say how to fix it.
       env: { GIT_TERMINAL_PROMPT: "0" },
     });
@@ -113,9 +126,10 @@ async function syncOnce(opts: { check?: boolean }): Promise<SyncResult> {
       incoming: [],
       head: head0,
       remote: "",
-      blocked: `fetch failed as ${isRoot() ? owner : currentUser()}: ${
-        fetch.stderr.trim().split("\n").pop()
-      }`,
+      blocked: `fetch failed as ${proc.isRoot() ? owner : currentUser()}: ${fetch.stderr
+        .trim()
+        .split("\n")
+        .pop()}`,
     };
   }
   const remote = (await git(["rev-parse", `origin/${branch}`])).stdout.trim();
@@ -145,7 +159,7 @@ async function syncOnce(opts: { check?: boolean }): Promise<SyncResult> {
   // Spec 047 (Article 9): move only to a tip signed by a signer this host trusts.
   const { checkTip, enforcing } = await import("../identity/signers.ts");
   if (await enforcing()) {
-    const t = await checkTip(repo, remote, head0, undefined, isRoot() ? owner : undefined);
+    const t = await checkTip(repo, remote, head0, undefined, proc.isRoot() ? owner : undefined);
     if (!t.ok) {
       count("archon.update.outcome", 1, { "archon.outcome": `refused-${t.code}` });
       await journal(
@@ -177,6 +191,36 @@ async function syncOnce(opts: { check?: boolean }): Promise<SyncResult> {
       blocked: `fast-forward failed: ${merge.stderr.trim()}`,
     };
   }
+  // Spec 096: the engine the new commit pins, exactly as its bun.lock holds it; a package that
+  // does not match the lock stops the move (E046-LOCK-INTEGRITY), and the checkout stays where it was.
+  const changed = await git([
+    "diff",
+    "--name-only",
+    head0,
+    remote,
+    "--",
+    "package.json",
+    "bun.lock",
+  ]);
+  if (!changed.ok || changed.stdout.trim() !== "") {
+    const { installDependencies } = await import("../install/bun.ts");
+    const install = await installDependencies(repo, proc.isRoot() ? { asUser: owner } : {});
+    if (!install.ok) {
+      await git(["reset", "--keep", head0]);
+      await installDependencies(repo, proc.isRoot() ? { asUser: owner } : {});
+      count("archon.update.outcome", 1, { "archon.outcome": "refused-lock" });
+      return {
+        current: false,
+        pulled: [],
+        incoming,
+        head: head0,
+        remote,
+        blocked: `bun install --frozen-lockfile refused the engine at ${remote.slice(0, 10)}: ${
+          install.stderr.trim().split("\n").pop() ?? `exit ${install.code}`
+        } (archon explain E046-LOCK-INTEGRITY)`,
+      };
+    }
+  }
   count("archon.update.outcome", 1, { "archon.outcome": "applied" });
   return { current: true, pulled: incoming, incoming: [], head: remote, remote };
 }
@@ -191,12 +235,12 @@ export async function reconcile(host: HostDef): Promise<number> {
   }
   if (s.pulled.length) log.ok(`fast-forwarded to ${s.remote.slice(0, 10)}`);
   const applied = await run(["/usr/local/bin/archon", "apply", "--host", host.name], {
-    env: { ...Deno.env.toObject(), ARCHON_AGENT: "reconciler" },
+    env: { ...proc.env.toObject(), ARCHON_AGENT: "reconciler" },
   });
   await journal(
     "archon-reconcile",
     `${applied.ok ? "applied" : "apply FAILED"} at ${s.remote.slice(0, 10)}: ${
-      (applied.stderr.match(/(\d+) change\(s\)/)?.[0]) ?? ""
+      applied.stderr.match(/(\d+) change\(s\)/)?.[0] ?? ""
     }`,
     applied.ok ? "user.info" : "user.err",
   );

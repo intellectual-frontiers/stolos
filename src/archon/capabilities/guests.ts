@@ -66,61 +66,67 @@ WantedBy=sys-subsystem-net-devices-lxdbr0.device
 `;
 
 /** LXD and the host's guests (spec 017). */
-export const guests = (): Capability => ({ host }) => {
-  const list = host.guests ?? [];
-  if (!list.length) return { spec: SPEC };
-  return {
-    spec: SPEC,
+export const guests =
+  (): Capability =>
+  ({ host }) => {
+    const list = host.guests ?? [];
+    if (!list.length) return { spec: SPEC };
+    return {
+      spec: SPEC,
 
-    packages: [{ name: "lxd", source: "snap", spec: SPEC }],
-    files: [
-      {
-        path: "/etc/archon/lxd-preseed.yaml",
-        content: LXD_PRESEED,
-        mode: "0644",
-        owner: "root",
-        spec: SPEC,
-        // Only on a host where LXD was never initialized (no storage pool yet).
-        onChange: [{
-          kind: "run",
-          argv: [
-            "sh",
-            "-c",
-            "lxc storage list -f csv 2>/dev/null | grep -q . || lxd init --preseed < /etc/archon/lxd-preseed.yaml",
-          ],
-        }],
-      },
-      {
-        path: "/etc/archon/guests",
-        content: guestsManifest(list),
-        mode: "0644",
-        owner: "root",
-        spec: SPEC,
-        onChange: [{ kind: "run", argv: ["/usr/local/bin/archon", "guest", "sync"] }],
-      },
-    ],
-    units: [
-      {
-        unitName: "snap.lxd.daemon.service",
-        managed: false,
-        state: "ignore",
-        verify: "lxc list --format csv",
-        spec: SPEC,
-      },
-      ...(list.some((g) => g.web)
-        ? [{
-          unitName: "archon-lxd-dns.service",
-          managed: true,
-          content: LXD_DNS_UNIT,
-          state: "enabled" as const,
-          start: true,
-          verify: "systemctl is-active archon-lxd-dns.service",
+      packages: [{ name: "lxd", source: "snap", spec: SPEC }],
+      files: [
+        {
+          path: "/etc/archon/lxd-preseed.yaml",
+          content: LXD_PRESEED,
+          mode: "0644",
+          owner: "root",
           spec: SPEC,
-        }]
-        : []),
-    ],
-    notes: [
-      "Guests are reached from the host over lxdbr0; a guest with web: { port } is published as <guest>.<host>.<domain> through the proxy (spec 032).",
-    ],
+          // Only on a host where LXD was never initialized (no storage pool yet).
+          onChange: [
+            {
+              kind: "run",
+              argv: [
+                "sh",
+                "-c",
+                "lxc storage list -f csv 2>/dev/null | grep -q . || lxd init --preseed < /etc/archon/lxd-preseed.yaml",
+              ],
+            },
+          ],
+        },
+        {
+          path: "/etc/archon/guests",
+          content: guestsManifest(list),
+          mode: "0644",
+          owner: "root",
+          spec: SPEC,
+          onChange: [{ kind: "run", argv: ["/usr/local/bin/archon", "guest", "sync"] }],
+        },
+      ],
+      units: [
+        {
+          unitName: "snap.lxd.daemon.service",
+          managed: false,
+          state: "ignore",
+          verify: "lxc list --format csv",
+          spec: SPEC,
+        },
+        ...(list.some((g) => g.web)
+          ? [
+              {
+                unitName: "archon-lxd-dns.service",
+                managed: true,
+                content: LXD_DNS_UNIT,
+                state: "enabled" as const,
+                start: true,
+                verify: "systemctl is-active archon-lxd-dns.service",
+                spec: SPEC,
+              },
+            ]
+          : []),
+      ],
+      notes: [
+        "Guests are reached from the host over lxdbr0; a guest with web: { port } is published as <guest>.<host>.<domain> through the proxy (spec 032).",
+      ],
+    };
   };
-};

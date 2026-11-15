@@ -159,7 +159,8 @@ export function validateFleet(fleet: FleetDef, hosts: HostDef[]): Problem[] {
     }
   }
   if (
-    fleet.telemetry?.collector && !/^https?:\/\/[^\s/]+(:\d+)?\/?$/.test(fleet.telemetry.collector)
+    fleet.telemetry?.collector &&
+    !/^https?:\/\/[^\s/]+(:\d+)?\/?$/.test(fleet.telemetry.collector)
   ) {
     add(
       "fleet.telemetry.collector",
@@ -195,12 +196,10 @@ export function validateFleet(fleet: FleetDef, hosts: HostDef[]): Problem[] {
   for (const h of hosts) {
     const w = `hosts/${h.name}`;
     const routeNames = new Set<string>(["traefik", "cockpit"]);
-    for (
-      const r of [
-        ...(h.web?.routes ?? []),
-        ...(h.guests ?? []).filter((g) => g.web).map((g) => ({ name: g.name, port: g.web!.port })),
-      ]
-    ) {
+    for (const r of [
+      ...(h.web?.routes ?? []),
+      ...(h.guests ?? []).flatMap((g) => (g.web ? [{ name: g.name, port: g.web.port }] : [])),
+    ]) {
       if (!/^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/.test(r.name)) {
         add(
           `${w}.web`,
@@ -235,12 +234,13 @@ export function validateFleet(fleet: FleetDef, hosts: HostDef[]): Problem[] {
     }
     if (h.kind === "workstation") {
       // Spec 020: only the user-level parts apply; nothing is installed over the network.
-      for (
-        const [field, set] of [["mac", h.mac], ["disk", h.disk], ["guests", h.guests?.length], [
-          "backup",
-          h.backup,
-        ], ["users", h.users?.length]] as const
-      ) {
+      for (const [field, set] of [
+        ["mac", h.mac],
+        ["disk", h.disk],
+        ["guests", h.guests?.length],
+        ["backup", h.backup],
+        ["users", h.users?.length],
+      ] as const) {
         if (set) add(w, `a workstation has no ${field}`, `remove ${field} (spec 020)`);
       }
       if (h.user !== undefined && (!USER.test(h.user) || RESERVED_USERS.has(h.user))) {
@@ -378,7 +378,11 @@ export function validateFleet(fleet: FleetDef, hosts: HostDef[]): Problem[] {
     }
     const c = fleet.telemetry?.collector?.match(/^https?:\/\/([^:/]+)/)?.[1];
     const collector = c && !/^\d+\.\d+\.\d+\.\d+$/.test(c) ? c : undefined;
-    for (const sp of validateSite(fleet.site, hosts, { collector })) {
+    for (const sp of validateSite(
+      fleet.site,
+      hosts,
+      collector === undefined ? {} : { collector },
+    )) {
       add(sp.where, sp.message, sp.fix);
     }
   }

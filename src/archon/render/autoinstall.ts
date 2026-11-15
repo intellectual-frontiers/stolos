@@ -10,6 +10,7 @@
 
 import { allowedSignersText } from "../identity/signers.ts";
 import type { DiskDef, FleetDef, HostDef } from "../model/types.ts";
+import { BUN_BIN, bunInstallShell } from "../install/bun.ts";
 
 const DEFAULT_DISK: DiskDef = { match: "largest", layout: "lvm" };
 
@@ -57,54 +58,45 @@ export function firstBootTelemetry(
   c: Pick<InstallContext, "base" | "traceparent" | "fleet" | "host">,
 ): string {
   const origin = new URL(c.base).origin;
-  return [
-    "# Written by archon-boot (spec 049): the first boot's telemetry, to the boot server.",
-    "OTEL_DENO=true",
-    "OTEL_SERVICE_NAME=archon",
-    "OTEL_EXPORTER_OTLP_PROTOCOL=http/json",
-    `OTEL_EXPORTER_OTLP_ENDPOINT=${origin}/otlp`,
-    `OTEL_RESOURCE_ATTRIBUTES=service.namespace=${c.fleet.id},host.name=${c.host.name}`,
-    ...(c.traceparent ? [`TRACEPARENT=${c.traceparent}`] : []),
-  ].join("\n") + "\n";
+  return (
+    [
+      "# Written by archon-boot (spec 049): the first boot's telemetry, to the boot server.",
+      "OTEL_SERVICE_NAME=archon",
+      "OTEL_EXPORTER_OTLP_PROTOCOL=http/json",
+      `OTEL_EXPORTER_OTLP_ENDPOINT=${origin}/otlp`,
+      `OTEL_RESOURCE_ATTRIBUTES=service.namespace=${c.fleet.id},host.name=${c.host.name}`,
+      ...(c.traceparent ? [`TRACEPARENT=${c.traceparent}`] : []),
+    ].join("\n") + "\n"
+  );
 }
 
 /** GitHub's published SSH host keys (https://api.github.com/meta), for the first clone. */
-export const GITHUB_KNOWN_HOSTS: string = [
-  "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl",
-].join("\n") + "\n";
+export const GITHUB_KNOWN_HOSTS: string =
+  [
+    "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl",
+  ].join("\n") + "\n";
 
-/** The first-boot script (spec 005). Shell only because Deno is not there yet; it hands over at once. */
+/** The first-boot script (spec 005). Shell only because Bun is not there yet; it hands over at once. */
 export function firstBootScript(fleet: FleetDef, host: HostDef): string {
   const branch = fleet.repository.branch ?? "main";
   return `#!/bin/sh
-# Archon first boot (spec 005), rendered by archon. Installs Deno (upstream
-# binary, checksum verified, Article 12), clones ${fleet.repository.slug} with this
-# host's deploy key, then hands over to \`archon first-boot\`.
+# Archon first boot (spec 005), rendered by archon. Installs the pinned Bun
+# (spec 096: its SHA-256 checked before it is unpacked, Article 12), clones
+# ${fleet.repository.slug} with this host's deploy key, installs the engine bun.lock
+# holds (--frozen-lockfile), then hands over to \`archon first-boot\`.
 set -eu
 exec >>/var/log/archon-first-boot.log 2>&1
 echo "== archon first boot $(date -Is)"
 # Progress to the boot server's window (spec 004); never fatal.
 [ -f /etc/archon/boot-events ] && curl -fsS --noproxy "*" -m 5 -X POST -H 'content-type: application/json' \
-  -d '{"origin":"archon","phase":"First boot","summary":"installing Deno, cloning the repository"}' \
+  -d '{"origin":"archon","phase":"First boot","summary":"installing Bun, cloning the repository"}' \
   "$(cat /etc/archon/boot-events)" >/dev/null 2>&1 || true
 export DEBIAN_FRONTEND=noninteractive
 [ -f /etc/archon/proxy.env ] && . /etc/archon/proxy.env
-if ! command -v deno >/dev/null 2>&1; then
-  # Deno ships as a zip; unzip comes from Ubuntu (installed here, not by the
-  # installer, so a slow mirror can never fail the install itself).
-  command -v unzip >/dev/null 2>&1 || { apt-get update -q && apt-get install -y -q unzip; }
-  V=$(curl -fsSL https://dl.deno.land/release-latest.txt)
-  B="https://github.com/denoland/deno/releases/download/$V/deno-x86_64-unknown-linux-gnu.zip"
-  T=$(mktemp -d)
-  curl -fsSL -o "$T/deno.zip" "$B"
-  curl -fsSL -o "$T/deno.zip.sha256sum" "$B.sha256sum"
-  [ "$(sha256sum "$T/deno.zip" | cut -d' ' -f1)" = "$(cut -d' ' -f1 "$T/deno.zip.sha256sum" | tr A-F a-f)" ]
-  D="/opt/tools/deno/\${V#v}/bin"
-  mkdir -p "$D"
-  unzip -q -o "$T/deno.zip" -d "$D"
-  ln -sfn "$D/deno" /usr/local/bin/deno
-  rm -rf "$T"
-fi
+# Bun ships as a zip; unzip comes from Ubuntu (installed here, not by the
+# installer, so a slow mirror can never fail the install itself).
+command -v unzip >/dev/null 2>&1 || { apt-get update -q && apt-get install -y -q unzip; }
+${bunInstallShell()}
 # The deploy key, for these two git commands only (archon sets up its own later).
 DEPLOY_SSH="ssh -i /etc/archon/deploy_key -o IdentitiesOnly=yes -o UserKnownHostsFile=/etc/archon/github_known_hosts"
 if [ ! -d /srv/archon/.git ]; then
@@ -129,16 +121,19 @@ fi
 if ! git -C /srv/archon -c gpg.format=ssh -c gpg.ssh.program=ssh-keygen -c gpg.ssh.allowedSignersFile=/etc/archon/allowed_signers \\
   verify-commit HEAD >/dev/null 2>&1; then
   [ -f /etc/archon/boot-events ] && curl -fsS --noproxy "*" -m 5 -X POST -H 'content-type: application/json' \\
-    -d '{"origin":"archon","phase":"First boot","level":"fail","summary":"the repository tip is not signed by a fleet signer: nothing was run. Fix: on your PC, deno task stolos apply (a commit signed by your key on top); then on this host: sudo /usr/local/sbin/archon-first-boot"}' \\
+    -d '{"origin":"archon","phase":"First boot","level":"fail","summary":"the repository tip is not signed by a fleet signer: nothing was run. Fix: on your PC, bun run stolos apply (a commit signed by your key on top); then on this host: sudo /usr/local/sbin/archon-first-boot"}' \\
     "$(cat /etc/archon/boot-events)" >/dev/null 2>&1 || true
   echo "archon: /srv/archon HEAD is not signed by a fleet signer; refusing to run it" >&2
-  echo "archon: fix: on your PC, deno task stolos apply (a commit signed by your key on top);" >&2
+  echo "archon: fix: on your PC, bun run stolos apply (a commit signed by your key on top);" >&2
   echo "archon:      then here: sudo /usr/local/sbin/archon-first-boot (it fetches the branch again)" >&2
   exit 1
 fi
+# Spec 096: the engine the signed commit pins, exactly as its bun.lock holds it
+# (an integrity error stops here: E046-LOCK-INTEGRITY).
+(cd /srv/archon && ${BUN_BIN} install --frozen-lockfile)
 # Spec 049: the first boot continues the install's trace, reported to the boot server.
 if [ -f /etc/archon/first-boot.env ]; then set -a; . /etc/archon/first-boot.env; set +a; fi
-exec /usr/local/bin/deno run -A --quiet --frozen --config /srv/archon/deno.json /srv/archon/archon.ts first-boot --host ${host.name}
+exec ${BUN_BIN} /srv/archon/archon.ts first-boot --host ${host.name}
 `;
 }
 
@@ -210,8 +205,8 @@ export function userData(c: InstallContext, s: InstallSecrets): string {
     );
   }
   if (c.githubApi) site.push(`export ARCHON_GITHUB_API=${c.githubApi}`);
-  // Deno trusts the site CA only through the system store (cloud-init adds it there).
-  if (c.caPem) site.push("export DENO_TLS_CA_STORE=system");
+  // Bun and Node trust the site CA only through the system store (cloud-init adds it there).
+  if (c.caPem) site.push("export NODE_USE_SYSTEM_CA=1");
   if (site.length) {
     files.push({
       path: "/etc/archon/proxy.env",
@@ -228,13 +223,14 @@ export function userData(c: InstallContext, s: InstallSecrets): string {
     // (the installer's schema rejects an empty ssh_genkeytypes).
     ...(s.hostKeys?.length
       ? {
-        ssh_deletekeys: true,
-        ssh_keys: Object.fromEntries(
-          s.hostKeys.flatMap((
-            k,
-          ) => [[`${k.type}_private`, k.private], [`${k.type}_public`, k.public]]),
-        ),
-      }
+          ssh_deletekeys: true,
+          ssh_keys: Object.fromEntries(
+            s.hostKeys.flatMap((k) => [
+              [`${k.type}_private`, k.private],
+              [`${k.type}_public`, k.public],
+            ]),
+          ),
+        }
       : {}),
   };
   // Spec 051: first, before anything touches a disk, the blank-disk guard: the
@@ -262,11 +258,11 @@ export function userData(c: InstallContext, s: InstallSecrets): string {
       // Behind a proxy, use Ubuntu's HTTPS mirrors (many proxies tunnel HTTPS only).
       ...(c.proxy
         ? {
-          apt: {
-            primary: [{ arches: ["default"], uri: "https://archive.ubuntu.com/ubuntu" }],
-            security: [{ arches: ["default"], uri: "https://security.ubuntu.com/ubuntu" }],
-          },
-        }
+            apt: {
+              primary: [{ arches: ["default"], uri: "https://archive.ubuntu.com/ubuntu" }],
+              security: [{ arches: ["default"], uri: "https://security.ubuntu.com/ubuntu" }],
+            },
+          }
         : {}),
       network: {
         version: 2,
@@ -290,9 +286,10 @@ export function userData(c: InstallContext, s: InstallSecrets): string {
       storage: {
         layout: {
           name: (host.disk ?? DEFAULT_DISK).layout,
-          match: (host.disk ?? DEFAULT_DISK).match === "largest"
-            ? { size: "largest" }
-            : { path: (host.disk ?? DEFAULT_DISK).match },
+          match:
+            (host.disk ?? DEFAULT_DISK).match === "largest"
+              ? { size: "largest" }
+              : { path: (host.disk ?? DEFAULT_DISK).match },
         },
       },
       updates: "security",

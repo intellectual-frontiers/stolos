@@ -34,9 +34,16 @@ export const MAIL = {
 
 const re = (s: string) => s.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&");
 
+/** The fleet's mail settings: only hosts of a fleet with them render mail. */
+function mailOf(fleet: FleetDef): NonNullable<FleetDef["mail"]> {
+  if (fleet.mail === undefined)
+    throw new Error(`fleet ${fleet.id} has no mail settings (fleet.mail)`);
+  return fleet.mail;
+}
+
 /** Postfix's main.cf for this host. */
 export function mainCf(fleet: FleetDef, host: HostDef): string {
-  const m = fleet.mail!;
+  const m = mailOf(fleet);
   const { host: relayHost, port } = relayParts(m.relay ?? DEFAULT_RELAY);
   const ipv6 = networkOf(fleet, host).ipv6;
   return [
@@ -83,7 +90,7 @@ export function mainCf(fleet: FleetDef, host: HostDef): string {
 
 /** This host's internal mail name (myhostname, myorigin): alpha.lab.example.net. Never a sender. */
 export const hostMailName = (fleet: FleetDef, host: { name: string }): string =>
-  `${hostLabel(fleet.mail!, host.name)}.${fleet.mail!.domain}`;
+  `${hostLabel(mailOf(fleet), host.name)}.${mailOf(fleet).domain}`;
 
 /**
  * Any sender keeps its user, drops any subaddress it had, and gets the host as
@@ -91,9 +98,9 @@ export const hostMailName = (fleet: FleetDef, host: { name: string }): string =>
  * www-data+alpha.lab@example.net. Applying it twice changes nothing.
  */
 export function senderMap(fleet: FleetDef, host: HostDef): string {
-  const label = hostLabel(fleet.mail!, host.name);
+  const label = hostLabel(mailOf(fleet), host.name);
   return `# Rendered by archon from spec ${SPEC}. Do not edit.\n/^([^@+]+)(\\+[^@]*)?(@.*)?$/ \${1}+${label}@${
-    fleet.mail!.domain
+    mailOf(fleet).domain
   }\n`;
 }
 
@@ -103,66 +110,69 @@ export function senderMap(fleet: FleetDef, host: HostDef): string {
  * sending domain (it may be an organization's own, like example.net) are relayed as written.
  */
 export function recipientMap(fleet: FleetDef, host: HostDef): string {
-  const m = fleet.mail!;
-  const local = [
-    "localhost",
-    host.name,
-    `${host.name}.localdomain`,
-    hostMailName(fleet, host),
-  ]
-    .map(re).join("|");
+  const m = mailOf(fleet);
+  const local = ["localhost", host.name, `${host.name}.localdomain`, hostMailName(fleet, host)]
+    .map(re)
+    .join("|");
   return `# Rendered by archon from spec ${SPEC}. Do not edit.\n/^[^@]+@(${local})$/ ${m.to}\n`;
 }
 
 /** Every server can send mail through Cloudflare Email Service (spec 027). */
-export const mail = (): Capability => ({ fleet, host }) => {
-  if (!fleet.mail) return { spec: SPEC };
-  const file = (path: string, content: string) => ({
-    path,
-    content,
-    mode: "0644",
-    owner: "root",
-    spec: SPEC,
-    onChange: [{ kind: "restart" as const, unit: "postfix.service" }],
-  });
-  return {
-    spec: SPEC,
-    packages: [
-      {
-        name: "postfix",
-        // Ubuntu's own installer question: write no configuration; archon's main.cf is the one.
-        debconf: ["postfix postfix/main_mailer_type select No configuration"],
-        spec: SPEC,
-      },
-      // The SASL PLAIN and LOGIN mechanisms Postfix's SMTP client uses.
-      { name: "libsasl2-modules", spec: SPEC },
-    ],
-    files: [
-      { ...file(MAIL.mainCf, mainCf(fleet, host)), postValidate: ["postfix", "check"] },
-      file(MAIL.sender, senderMap(fleet, host)),
-      file(MAIL.recipients, recipientMap(fleet, host)),
-    ],
-    units: [{
-      unitName: "postfix.service",
-      managed: false,
-      state: "enabled",
-      verify: "systemctl is-active postfix.service",
+export const mail =
+  (): Capability =>
+  ({ fleet, host }) => {
+    if (!fleet.mail) return { spec: SPEC };
+    const file = (path: string, content: string) => ({
+      path,
+      content,
+      mode: "0644",
+      owner: "root",
       spec: SPEC,
-    }],
-    checks: [{
-      name: "mail:credential",
-      // Spec 052: no token yet is "not set up yet" (exit 3), not a problem.
-      command: `sh -c 'test -s ${SASL_PASSWD} || exit 3'`,
-      level: "warn",
-      code: "P027-MAIL-TOKEN",
-      fix:
-        "on the boot machine: deno task stolos boot mail-push <host> (after deno task stolos boot mail-setup)",
+      onChange: [{ kind: "restart" as const, unit: "postfix.service" }],
+    });
+    return {
       spec: SPEC,
-    }],
-    notes: [
-      `Mail from this host (sendmail, localhost:25) goes through Cloudflare Email Service as ${
-        senderAddress(fleet.mail, host.name, "<user>")
-      }; mail for root and ops goes to ${fleet.mail.to}.`,
-    ],
+      packages: [
+        {
+          name: "postfix",
+          // Ubuntu's own installer question: write no configuration; archon's main.cf is the one.
+          debconf: ["postfix postfix/main_mailer_type select No configuration"],
+          spec: SPEC,
+        },
+        // The SASL PLAIN and LOGIN mechanisms Postfix's SMTP client uses.
+        { name: "libsasl2-modules", spec: SPEC },
+      ],
+      files: [
+        { ...file(MAIL.mainCf, mainCf(fleet, host)), postValidate: ["postfix", "check"] },
+        file(MAIL.sender, senderMap(fleet, host)),
+        file(MAIL.recipients, recipientMap(fleet, host)),
+      ],
+      units: [
+        {
+          unitName: "postfix.service",
+          managed: false,
+          state: "enabled",
+          verify: "systemctl is-active postfix.service",
+          spec: SPEC,
+        },
+      ],
+      checks: [
+        {
+          name: "mail:credential",
+          // Spec 052: no token yet is "not set up yet" (exit 3), not a problem.
+          command: `sh -c 'test -s ${SASL_PASSWD} || exit 3'`,
+          level: "warn",
+          code: "P027-MAIL-TOKEN",
+          fix: "on the boot machine: bun run stolos boot mail-push <host> (after bun run stolos boot mail-setup)",
+          spec: SPEC,
+        },
+      ],
+      notes: [
+        `Mail from this host (sendmail, localhost:25) goes through Cloudflare Email Service as ${senderAddress(
+          fleet.mail,
+          host.name,
+          "<user>",
+        )}; mail for root and ops goes to ${fleet.mail.to}.`,
+      ],
+    };
   };
-};

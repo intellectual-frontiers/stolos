@@ -12,33 +12,35 @@ import { hostData, SPEC } from "../model/durable.ts";
 import { dataMotd } from "../render/motd.ts";
 
 /** The server's data class (durable or ephemeral), where people see it (spec 044). */
-export const data = (): Capability => ({ host }) => {
-  if (host.kind === "workstation") return { spec: SPEC };
-  const d = hostData(host);
-  return {
-    spec: SPEC,
-    files: [
-      {
-        path: "/etc/archon/data",
-        content: `${d.class}\n`,
-        mode: "0644",
-        owner: "root",
-        spec: SPEC,
-      },
-      {
-        path: "/etc/update-motd.d/72-archon-data",
-        content: dataMotd(d),
-        mode: "0755",
-        owner: "root",
-        spec: SPEC,
-      },
-    ],
-    notes: [
-      d.class === "durable"
-        ? `Durable (${
-          d.reasons.join(", ")
-        }): archived nightly; reinstalls and wipes need --confirm-destroy.`
-        : "Ephemeral: nothing here holds end users' data that exists nowhere else.",
-    ],
+export const data =
+  (): Capability =>
+  ({ host }) => {
+    if (host.kind === "workstation") return { spec: SPEC };
+    const d = hostData(host);
+    return {
+      spec: SPEC,
+      files: [
+        {
+          path: "/etc/archon/data",
+          content: `${d.class}\n`,
+          mode: "0644",
+          owner: "root",
+          spec: SPEC,
+        },
+        {
+          path: "/etc/update-motd.d/72-archon-data",
+          content: dataMotd(d),
+          mode: "0755",
+          owner: "root",
+          spec: SPEC,
+        },
+      ],
+      notes: [
+        d.class === "durable"
+          ? `Durable (${d.reasons.join(
+              ", ",
+            )}): archived nightly; reinstalls and wipes need --confirm-destroy.`
+          : "Ephemeral: nothing here holds end users' data that exists nowhere else.",
+      ],
+    };
   };
-};

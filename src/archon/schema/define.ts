@@ -41,11 +41,15 @@ export interface Column {
 }
 
 /** The TypeScript type of a column's value. */
-export type ValueOf<C extends Column> = C["type"] extends "integer" | "real" ? number
-  : C["type"] extends "boolean" ? boolean
-  : C["type"] extends "json" ? unknown
-  : C["values"] extends readonly string[] ? C["values"][number]
-  : string;
+export type ValueOf<C extends Column> = C["type"] extends "integer" | "real"
+  ? number
+  : C["type"] extends "boolean"
+    ? boolean
+    : C["type"] extends "json"
+      ? unknown
+      : C["values"] extends readonly string[]
+        ? C["values"][number]
+        : string;
 
 /** The columns of a table that are required (NOT NULL). */
 export type RequiredKeys<C extends Record<string, Column>> = {
@@ -53,9 +57,9 @@ export type RequiredKeys<C extends Record<string, Column>> = {
 }[keyof C];
 
 /** A row of a table: required columns required, the rest optional. */
-export type RowOf<C extends Record<string, Column>> =
-  & { [K in RequiredKeys<C>]: ValueOf<C[K]> }
-  & { [K in Exclude<keyof C, RequiredKeys<C>>]?: ValueOf<C[K]> | null };
+export type RowOf<C extends Record<string, Column>> = { [K in RequiredKeys<C>]: ValueOf<C[K]> } & {
+  [K in Exclude<keyof C, RequiredKeys<C>>]?: ValueOf<C[K]> | null;
+};
 
 /** A table, as declared. */
 export interface TableDef<C extends Record<string, Column> = Record<string, Column>> {
@@ -176,10 +180,12 @@ export function defineLabel<P extends Record<string, Column>>(d: LabelDef<P>): L
       tenant_uid: { type: "text", doc: "The tenant it belongs to.", required: true },
       native_id: { type: "text", doc: "Its id in the source system.", required: true },
       display_name: "Its name for people.",
-      ...Object.fromEntries(cols.map((c): [string, ViewColumn] => {
-        const p = d.props[c];
-        return [c, { type: p.type, doc: p.doc, ...(p.values ? { values: p.values } : {}) }];
-      })),
+      ...Object.fromEntries(
+        Object.entries(d.props).map(([c, p]): [string, ViewColumn] => [
+          c,
+          { type: p.type, doc: p.doc, ...(p.values ? { values: p.values } : {}) },
+        ]),
+      ),
     },
     select: [
       `SELECT n.node_uid AS ${d.name}_uid, t.connector, n.tenant_uid, n.native_id, n.display_name`,
@@ -212,9 +218,9 @@ export function tableSql(t: AnyTable): string {
     return `${parts.join(" ")}, -- ${c.doc.replace(/\n/g, " ")}`;
   });
   lines.push(`  PRIMARY KEY (${t.key.join(", ")})`);
-  const idx = Object.entries(t.columns).filter(([, c]) => c.index).map(([n]) =>
-    `CREATE INDEX IF NOT EXISTS ${t.name}_${n}_idx ON ${t.name} (${n});`
-  );
+  const idx = Object.entries(t.columns)
+    .filter(([, c]) => c.index)
+    .map(([n]) => `CREATE INDEX IF NOT EXISTS ${t.name}_${n}_idx ON ${t.name} (${n});`);
   return [
     `-- ${t.doc.replace(/\n/g, " ")}`,
     `CREATE TABLE IF NOT EXISTS ${t.name} (`,
@@ -230,8 +236,7 @@ export function viewSql(v: ViewDef): string {
     `-- ${v.doc.replace(/\n/g, " ")}`,
     `CREATE VIEW IF NOT EXISTS ${v.name} AS`,
     `${v.select};`,
-  ]
-    .join("\n");
+  ].join("\n");
 }
 
 /** Tables in an order where each comes after the tables it references, then views likewise. */
@@ -240,8 +245,8 @@ export function ordered(defs: ReadonlyArray<AnyTable | ViewDef>): Array<AnyTable
   const deps = (d: AnyTable | ViewDef) =>
     d.kind === "table"
       ? Object.values(d.columns).flatMap((c) =>
-        c.references ? [c.references.split("(")[0].trim()] : []
-      )
+          c.references ? [(c.references.split("(")[0] ?? "").trim()] : [],
+        )
       : [...d.reads];
   const out: Array<AnyTable | ViewDef> = [];
   const state = new Map<string, "visiting" | "done">();
@@ -275,11 +280,13 @@ export function schemaSql(title: string, defs: ReadonlyArray<AnyTable | ViewDef>
 export function upsertSql(t: AnyTable): string {
   const cols = Object.keys(t.columns);
   const rest = cols.filter((c) => !t.key.includes(c));
-  return `INSERT INTO ${t.name} (${cols.join(", ")}) VALUES (${cols.map(() => "?").join(", ")})` +
+  return (
+    `INSERT INTO ${t.name} (${cols.join(", ")}) VALUES (${cols.map(() => "?").join(", ")})` +
     ` ON CONFLICT (${t.key.join(", ")}) ` +
     (rest.length
       ? `DO UPDATE SET ${rest.map((c) => `${c} = excluded.${c}`).join(", ")}`
-      : "DO NOTHING");
+      : "DO NOTHING")
+  );
 }
 
 /** A row's parameters for {@link upsertSql}, in column order; refuses a missing required value. */
@@ -295,8 +302,8 @@ export function rowParams<C extends Record<string, Column>>(
     }
     if (c.type === "boolean") return v ? 1 : 0;
     if (c.type === "json") return JSON.stringify(v);
-    if (c.values && !c.values.includes(String(v))) {
-      throw new Error(`${t.name}.${n}: "${v}" is not one of ${c.values.join(", ")}`);
+    if (c.values && !c.values.includes(typeof v === "string" ? v : JSON.stringify(v))) {
+      throw new Error(`${t.name}.${n}: ${JSON.stringify(v)} is not one of ${c.values.join(", ")}`);
     }
     return v as string | number;
   });
@@ -316,7 +323,7 @@ export function schemaProblems(defs: ReadonlyArray<AnyTable | ViewDef>): string[
     if (d.kind === "table") {
       for (const k of d.key) if (!(k in d.columns)) out.push(`${d.name}: key ${k} is not a column`);
       for (const [n, c] of Object.entries(d.columns)) {
-        const ref = c.references?.split("(")[0].trim();
+        const ref = c.references?.split("(")[0]?.trim();
         if (ref && !defs.some((x) => x.name === ref)) {
           out.push(`${d.name}.${n}: references ${ref}, which is not declared`);
         }
@@ -357,14 +364,15 @@ export function typedColumns(d: AnyTable | ViewDef): TypedColumn[] {
 /** The schema's documentation: each table and view, its columns, and an ER diagram. */
 export function schemaDoc(title: string, defs: ReadonlyArray<AnyTable | ViewDef>): string {
   const er = ["erDiagram"];
-  for (const d of ordered(defs).filter((x) => x.kind === "table") as AnyTable[]) {
+  for (const d of ordered(defs)) {
+    if (d.kind !== "table") continue;
     er.push(`  ${d.name} {`);
     for (const [n, c] of Object.entries(d.columns)) {
       er.push(`    ${c.type} ${n}${d.key.includes(n) ? " PK" : c.references ? " FK" : ""}`);
     }
     er.push("  }");
     for (const c of Object.values(d.columns)) {
-      const ref = c.references?.split("(")[0].trim();
+      const ref = c.references?.split("(")[0]?.trim();
       if (ref) er.push(`  ${ref} ||--o{ ${d.name} : ""`);
     }
   }
@@ -378,11 +386,11 @@ export function schemaDoc(title: string, defs: ReadonlyArray<AnyTable | ViewDef>
       "",
       "| Column | Holds |",
       "| --- | --- |",
-      ...Object.entries(d.columns).map(([n, c]) =>
-        `| \`${n}\` | ${(typeof c === "string" ? c : c.doc).replace(/\|/g, "\\|")} |`
+      ...Object.entries(d.columns).map(
+        ([n, c]) => `| \`${n}\` | ${(typeof c === "string" ? c : c.doc).replace(/\|/g, "\\|")} |`,
       ),
       "",
-    ].join("\n")
+    ].join("\n"),
   );
   return [`## ${title}`, "", "```mermaid", ...er, "```", "", ...sections].join("\n");
 }

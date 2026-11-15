@@ -5,9 +5,8 @@
  * @module
  */
 
+import { fs, path as paths, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
 import { P } from "../core/paths.ts";
-import { exists } from "../core/fsx.ts";
-import { join } from "../core/path.ts";
 import { currentUser } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
 import { composedDir } from "./layers.ts";
@@ -27,30 +26,31 @@ export async function dotfilesReport(
   const p = ui.phase(`Dotfiles of ${user} on ${host}`);
   for (const l of c.layers) {
     const n = c.files.filter((f) => f.layer.dir === l.dir).length;
-    const there = l.kind === "engine" || await exists(join(P.repo, l.dir));
-    console.log(
-      `  ${there ? "●" : "○"} ${l.dir.padEnd(44)} ${there ? `${n} file(s) win here` : "(none)"}`,
+    const there = l.kind === "engine" || (await fs.exists(paths.join(P.repo, l.dir)));
+    stdio.stdout.writeSync(
+      `  ${there ? "●" : "○"} ${l.dir.padEnd(44)} ${there ? `${n} file(s) win here` : "(none)"}\n`,
     );
   }
   for (const pr of c.problems) p.fail(pr, "fix the file in the repository, then stolos build");
   if (path) {
-    const t = path.replace(/^~\//, "").replace(/^\$HOME\//, "").replace(/^\.\//, "");
+    const t = path
+      .replace(/^~\//, "")
+      .replace(/^\$HOME\//, "")
+      .replace(/^\.\//, "");
     const f = c.files.find((x) => x.target === t);
     if (!f) {
       p.done(`~/${t} is not managed: it is yours, and archon leaves it alone`);
       return 0;
     }
-    console.log(`\n  ~/${t}\n    from   ${f.from}\n    layer  ${f.layer.kind}`);
+    stdio.stdout.writeSync(`\n  ~/${t}\n    from   ${f.from}\n    layer  ${f.layer.kind}\n`);
     p.done(`edit ${f.from} (or add it to a more specific layer), commit, push`);
     return c.problems.length ? 1 : 0;
   }
-  console.log("");
+  stdio.stdout.writeSync("\n");
   for (const f of c.files) {
     if (f.target.startsWith(".chezmoi")) continue;
-    console.log(`  ~/${f.target.padEnd(40)} ${f.layer.kind.padEnd(9)} ${f.from}`);
+    stdio.stdout.writeSync(`  ~/${f.target.padEnd(40)} ${f.layer.kind.padEnd(9)} ${f.from}\n`);
   }
-  p.done(
-    `${c.files.length} file(s) · composed source ${composedDir(user)} · man archon-dotfiles`,
-  );
+  p.done(`${c.files.length} file(s) · composed source ${composedDir(user)} · man archon-dotfiles`);
   return c.problems.length ? 1 : 0;
 }

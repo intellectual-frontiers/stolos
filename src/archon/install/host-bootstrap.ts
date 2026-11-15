@@ -22,7 +22,7 @@
  * @module
  */
 
-import { join } from "../core/path.ts";
+import { fs, path, proc, stdio, tty } from "@intellectual-frontiers/ifc-ts/runtime";
 import { ui } from "../core/ui.ts";
 import { readSecret, SECRETS } from "../core/secrets.ts";
 import { loadFleet, loadHosts } from "../model/load.ts";
@@ -73,8 +73,7 @@ fi
  * anything is copied: its Ubuntu release, its facts (as the installer's guard
  * reports them), and its network cards (the default route's first).
  */
-export const BOOTSTRAP_FACTS =
-  `. /etc/os-release; echo "version_id=$VERSION_ID"; echo "hostname=$(hostname)"
+export const BOOTSTRAP_FACTS = `. /etc/os-release; echo "version_id=$VERSION_ID"; echo "hostname=$(hostname)"
 for k in sys_vendor product_name product_serial; do echo "$k=$(cat /sys/class/dmi/id/$k 2>/dev/null)"; done
 echo "mem_kib=$(awk '/^MemTotal:/ { print $2 }' /proc/meminfo)"; echo "cpus=$(nproc)"
 d=$(ip -o route get 1.1.1.1 2>/dev/null | sed -n 's/.* dev \\([^ ]*\\).*/\\1/p')
@@ -98,14 +97,18 @@ export interface BootstrapFacts {
 
 /** Parse the probe's key=value lines. */
 export function parseBootstrapFacts(text: string): BootstrapFacts {
-  const get = (k: string) => text.match(new RegExp(`^${k}=(.*)$`, "m"))?.[1]?.trim() || undefined;
-  const nics = [...text.matchAll(/^nic=(.+)$/gm)].map((m) => m[1].trim().toLowerCase());
+  const get = (k: string): string | undefined =>
+    text.match(new RegExp(`^${k}=(.*)$`, "m"))?.[1]?.trim() || undefined;
+  const nics = [...text.matchAll(/^nic=(.+)$/gm)].map((m) => (m[1] ?? "").trim().toLowerCase());
   const mem = Number(get("mem_kib") ?? 0);
   const who = [get("sys_vendor"), get("product_name")].filter(Boolean).join(" ") || "a machine";
+  const versionId = get("version_id");
+  const hostname = get("hostname");
+  const uplink = get("uplink")?.toLowerCase();
   return {
-    versionId: get("version_id"),
-    hostname: get("hostname"),
-    uplink: get("uplink")?.toLowerCase(),
+    ...(versionId === undefined ? {} : { versionId }),
+    ...(hostname === undefined ? {} : { hostname }),
+    ...(uplink === undefined ? {} : { uplink }),
     nics,
     summary: `${who}, Ubuntu ${get("version_id") ?? "?"}, ${get("cpus") ?? "?"} CPUs, ${
       mem ? (mem / 1048576).toFixed(1) : "?"
@@ -128,7 +131,7 @@ export function bootstrapRefusal(
   if (registeredMac && !f.nics.includes(registeredMac) && f.uplink !== registeredMac) {
     return `${host} is registered with network card ${registeredMac}, which this machine does not have (it has ${
       f.nics.join(", ") || "none"
-    }): the wrong machine, or a typo in --mac-address. If it is ${host}: deno task stolos host add ${host} --mac-address ${
+    }): the wrong machine, or a typo in --mac-address. If it is ${host}: bun run stolos host add ${host} --mac-address ${
       f.uplink ?? "<mac>"
     } --force`;
   }
@@ -136,13 +139,12 @@ export function bootstrapRefusal(
 }
 
 async function ssh(args: string[], interactive = false): Promise<number> {
-  const p = new Deno.Command("ssh", {
-    args,
+  const p = await proc.output(["ssh", ...args], {
     stdin: interactive ? "inherit" : "null",
     stdout: "inherit",
     stderr: "inherit",
-  }).spawn();
-  return (await p.status).code;
+  });
+  return p.code;
 }
 
 /** stolos host bootstrap: check the machine, copy what a network install would have handed it, run the first boot. */
@@ -155,28 +157,19 @@ export async function hostBootstrap(o: HostBootstrapOptions): Promise<number> {
 
   // Spec 051: the machine first, from itself.
   const m = ui.phase("Machine");
-  const probe = await new Deno.Command("ssh", {
-    args: [o.ssh, "sh", "-s"],
-    stdin: "piped",
-    stdout: "piped",
-    stderr: "piped",
-  }).spawn();
-  const w = probe.stdin.getWriter();
-  await w.write(new TextEncoder().encode(BOOTSTRAP_FACTS + "\n"));
-  await w.close();
-  const out = await probe.output();
+  const out = await proc.run(["ssh", o.ssh, "sh", "-s"], { input: BOOTSTRAP_FACTS + "\n" });
   if (!out.success) {
-    const why = new TextDecoder().decode(out.stderr).trim().split("\n").pop() ?? "";
+    const why = out.stderr.trim().split("\n").pop() ?? "";
     // ssh's own failures are 255; anything else is the probe's.
     throw new Error(
       out.code === 255
         ? `cannot reach ${o.ssh} over SSH (${why}): check the address and that your key is installed`
         : `${o.ssh} answered, but reading its facts failed (exit ${out.code}${
-          why ? `: ${why}` : ""
-        })`,
+            why ? `: ${why}` : ""
+          })`,
     );
   }
-  const facts = parseBootstrapFacts(new TextDecoder().decode(out.stdout));
+  const facts = parseBootstrapFacts(out.stdout);
   const { loadRegistration, writeRegistration } = await import("../fleet/registration.ts");
   const reg = await loadRegistration(host.name);
   const refusal = bootstrapRefusal(host.name, facts, fleet.ubuntu.release, reg?.mac);
@@ -191,13 +184,13 @@ export async function hostBootstrap(o: HostBootstrapOptions): Promise<number> {
   m.done(`${facts.summary}${facts.uplink ? ` · network card ${facts.uplink}` : ""}`);
 
   const p = ui.phase("Files");
-  const dir = await Deno.makeTempDir({ prefix: "archon-bootstrap-" });
+  const dir = await fs.makeTempDir({ prefix: "archon-bootstrap-" });
   const files: Record<string, string> = {
-    "host": `${host.name}\n`,
+    host: `${host.name}\n`,
     // As the network install (specs 046, 047): which fleet, and whose signatures to trust.
-    "fleet": `${fleet.id}\n`,
-    "allowed_signers": allowedSignersText(fleet.signers ?? []),
-    "github_known_hosts": GITHUB_KNOWN_HOSTS,
+    fleet: `${fleet.id}\n`,
+    allowed_signers: allowedSignersText(fleet.signers ?? []),
+    github_known_hosts: GITHUB_KNOWN_HOSTS,
     "archon-first-boot": firstBootScript(fleet, host),
     "install.sh": INSTALL,
   };
@@ -210,7 +203,7 @@ export async function hostBootstrap(o: HostBootstrapOptions): Promise<number> {
   }
   for (const [n, c] of Object.entries(files)) {
     const secret = n === "deploy_key" || /^ssh_host_\w+_key$/.test(n);
-    await Deno.writeTextFile(join(dir, n), c, { mode: secret ? 0o600 : 0o644 });
+    await fs.writeTextFile(path.join(dir, n), c, { mode: secret ? 0o600 : 0o644 });
   }
   p.done(
     `first-boot files for ${host.name}, its registered SSH host keys${
@@ -225,21 +218,22 @@ export async function hostBootstrap(o: HostBootstrapOptions): Promise<number> {
       `cannot reach ${o.ssh} over SSH: check the address and that your key is installed`,
     );
   }
-  const scp = await new Deno.Command("scp", {
-    args: ["-q", ...Object.keys(files).map((n) => join(dir, n)), `${o.ssh}:${remote}/`],
-    stdout: "inherit",
-    stderr: "inherit",
-  }).output();
-  await Deno.remove(dir, { recursive: true });
+  const scp = await proc.output(
+    ["scp", "-q", ...Object.keys(files).map((n) => path.join(dir, n)), `${o.ssh}:${remote}/`],
+    { stdout: "inherit", stderr: "inherit" },
+  );
+  await fs.remove(dir, { recursive: true });
   if (!scp.success) throw new Error(`scp to ${o.ssh} failed`);
   c.done(`copied to ${o.ssh}:${remote} (removed after use)`);
 
   ui.pause();
-  console.error(`   running first boot on ${o.ssh} with sudo (it may ask for your password):`);
+  stdio.stderr.writeSync(
+    `   running first boot on ${o.ssh} with sudo (it may ask for your password):\n`,
+  );
   // A terminal only when there is one (sudo may ask for a password); not in automation.
   const code = await ssh(
-    [...(Deno.stdin.isTerminal() ? ["-t"] : []), o.ssh, `sudo sh ${remote}/install.sh`],
-    Deno.stdin.isTerminal(),
+    [...(tty.isTerminal("stdin") ? ["-t"] : []), o.ssh, `sudo sh ${remote}/install.sh`],
+    tty.isTerminal("stdin"),
   );
   ui.resume();
   const r = ui.phase("First boot");
@@ -256,9 +250,11 @@ export async function hostBootstrap(o: HostBootstrapOptions): Promise<number> {
         `${file}: mac ${facts.uplink}, as the machine reported it; commit and push it (signed)`,
       );
     }
-  } else {r.fail(
+  } else {
+    r.fail(
       `first boot on ${host.name} failed (exit ${code})`,
       `ssh ${o.ssh} sudo tail -n 80 /var/log/archon-first-boot.log`,
-    );}
+    );
+  }
   return code;
 }

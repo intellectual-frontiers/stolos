@@ -7,6 +7,7 @@
  * @module
  */
 
+import { errors, fs, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
 import { P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";
 import { journal } from "../core/log.ts";
@@ -39,10 +40,10 @@ export const DATA_DIRS = {
 async function entries(path: string): Promise<string[] | undefined> {
   try {
     const out: string[] = [];
-    for await (const e of Deno.readDir(path)) out.push(e.name);
+    for await (const e of fs.readDir(path)) out.push(e.name);
     return out;
   } catch (e) {
-    return e instanceof Deno.errors.NotFound ? [] : undefined; // undefined: cannot tell
+    return e instanceof errors.NotFound ? [] : undefined; // undefined: cannot tell
   }
 }
 
@@ -68,14 +69,14 @@ export async function dataOnDisk(dirs = DATA_DIRS): Promise<string[]> {
     }
   }
   try {
-    const st = await Deno.stat(dirs.s3);
+    const st = await fs.stat(dirs.s3);
     if (st.nlink === null || st.nlink > 2) found.push("s3");
     else if (st.nlink === 2) {
       const inside = await entries(dirs.s3);
       if (inside === undefined ? false : inside.length > 0) found.push("s3");
     }
   } catch (e) {
-    if (!(e instanceof Deno.errors.NotFound)) found.push("s3");
+    if (!(e instanceof errors.NotFound)) found.push("s3");
   }
   const shared = await entries(dirs.smb);
   if (shared === undefined || shared.length) found.push("smb");
@@ -96,16 +97,18 @@ export async function dataShow(hostName: string, json: boolean): Promise<number>
   const h = await host(hostName);
   const d = hostData(h, await dataOnDisk());
   if (json) {
-    console.log(JSON.stringify(
-      {
-        ...d,
-        meaning: MEANING[d.class],
-        offHost: d.class === "durable" ? null : undefined,
-        home: "ephemeral",
-      },
-      null,
-      2,
-    ));
+    stdio.stdout.writeSync(
+      `${JSON.stringify(
+        {
+          ...d,
+          meaning: MEANING[d.class],
+          offHost: d.class === "durable" ? null : undefined,
+          home: "ephemeral",
+        },
+        null,
+        2,
+      )}\n`,
+    );
     return 0;
   }
   const p = ui.phase("Data");
@@ -141,9 +144,9 @@ export async function dataSet(
   }
   if (!(name in USER_DATA_OPT_INS)) {
     throw new Error(
-      `${name} holds no end users' data; choices are for: ${
-        Object.keys(USER_DATA_OPT_INS).join(", ")
-      }`,
+      `${name} holds no end users' data; choices are for: ${Object.keys(USER_DATA_OPT_INS).join(
+        ", ",
+      )}`,
     );
   }
   const onDisk = await dataOnDisk();
@@ -158,7 +161,7 @@ export async function dataSet(
   const by = caller();
   await writeOptIn(h.name, name, rec?.enabled === true, by, P.state, data);
   p.done(`${USER_DATA_OPT_INS[name]}: ${data}; recorded in archon.sql ${h.name}/${name}.json`);
-  const fresh = (await loadHosts()).find((x) => x.name === h.name)!;
+  const fresh = (await loadHosts()).find((x) => x.name === h.name) ?? h;
   const { apply } = await import("../apply/apply.ts");
   const res = await apply(fresh, { check: false, only: ["files"] });
   const d = hostData(fresh, onDisk);

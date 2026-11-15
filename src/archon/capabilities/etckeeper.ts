@@ -21,14 +21,16 @@ const SPEC = "033-etckeeper" as const;
 export const etckeeper = (): Capability => () => ({
   spec: SPEC,
   packages: [{ name: "etckeeper", spec: SPEC }],
-  units: [{
-    unitName: "etckeeper.timer",
-    managed: false,
-    state: "enabled",
-    start: true,
-    verify: "systemctl is-enabled etckeeper.timer",
-    spec: SPEC,
-  }],
+  units: [
+    {
+      unitName: "etckeeper.timer",
+      managed: false,
+      state: "enabled",
+      start: true,
+      verify: "systemctl is-enabled etckeeper.timer",
+      spec: SPEC,
+    },
+  ],
   checks: [
     {
       name: "/etc's history is a local git repository",
@@ -42,8 +44,7 @@ export const etckeeper = (): Capability => () => ({
       name: "/etc's history has no remote",
       command: "sh -c 'test -z \"$(git -C /etc remote 2>/dev/null)\"'",
       level: "fail",
-      fix:
-        "sudo git -C /etc remote remove <name> (the history holds secrets; it never leaves this host)",
+      fix: "sudo git -C /etc remote remove <name> (the history holds secrets; it never leaves this host)",
       spec: SPEC,
     },
   ],

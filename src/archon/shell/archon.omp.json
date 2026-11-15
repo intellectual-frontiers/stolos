@@ -6,9 +6,7 @@
       "segments": [
         {
           "background": "#d3d7cf",
-          "background_templates": [
-            "{{ if eq .Env.ARCHON_DATA \"durable\" }}#e9b96e{{ end }}"
-          ],
+          "background_templates": ["{{ if eq .Env.ARCHON_DATA \"durable\" }}#e9b96e{{ end }}"],
           "foreground": "#000000",
           "leading_diamond": "\u256d\u2500\ue0b2",
           "style": "diamond",
@@ -136,9 +134,7 @@
         },
         {
           "background": "#000000",
-          "background_templates": [
-            "{{ if gt .Code 0 }}#cc2222{{ end }}"
-          ],
+          "background_templates": ["{{ if gt .Code 0 }}#cc2222{{ end }}"],
           "foreground": "#d3d7cf",
           "invert_powerline": true,
           "powerline_symbol": "\ue0b2",

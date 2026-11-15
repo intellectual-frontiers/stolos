@@ -22,7 +22,7 @@ export function providersOf(fleet: Pick<FleetDef, "providers">): ProvidersDef {
 
 /** Each ACME provider's directory (RFC 8555). */
 export const ACME_DIRECTORIES: Record<ProvidersDef["acme"], string> = {
-  "letsencrypt": "https://acme-v02.api.letsencrypt.org/directory",
+  letsencrypt: "https://acme-v02.api.letsencrypt.org/directory",
   // Untrusted certificates with generous rate limits: for test fleets (synthetic, UAT).
   "letsencrypt-staging": "https://acme-staging-v02.api.letsencrypt.org/directory",
 };
@@ -35,6 +35,7 @@ export const ACME_DIRECTORIES: Record<ProvidersDef["acme"], string> = {
  */
 export function isReservedDomain(domain: string): boolean {
   const d = domain.toLowerCase().replace(/\.$/, "");
-  return /(^|\.)example\.(com|net|org)$/.test(d) ||
-    /(^|\.)(test|example|invalid|localhost)$/.test(d);
+  return (
+    /(^|\.)example\.(com|net|org)$/.test(d) || /(^|\.)(test|example|invalid|localhost)$/.test(d)
+  );
 }

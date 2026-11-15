@@ -7,8 +7,7 @@
  * @module
  */
 
-import { join } from "../core/path.ts";
-import { ensureDir } from "../core/fsx.ts";
+import { fs, path as paths } from "@intellectual-frontiers/ifc-ts/runtime";
 import { P } from "../core/paths.ts";
 import { engineFile, engineSpecs } from "../core/assets.ts";
 import { loadFleet, loadHosts } from "./load.ts";
@@ -52,12 +51,11 @@ export async function exportRdf(): Promise<string[]> {
   const fleet = await loadFleet();
   const hosts = await loadHosts();
   const written: string[] = [];
-  const dir = join(P.out, "rdf");
-  await ensureDir(dir);
+  const dir = paths.join(P.out, "rdf");
+  await fs.ensureDir(dir);
 
   const specs = engineSpecs();
-  // deno-lint-ignore require-await
-  const specTitle = async (s: string) =>
+  const specTitle = (s: string): string =>
     engineFile(`specs/${s}/spec.md`).match(/^# Feature Specification: (.+)$/m)?.[1] ?? s;
 
   let ttl = PREFIXES;
@@ -75,10 +73,10 @@ export async function exportRdf(): Promise<string[]> {
     ["archon:host", hosts.map((h) => iri(`host/${h.name}`))],
   ]);
   for (const s of specs) {
-    ttl += subject(iri(`spec/${s}`), [["a", "archon:Spec"], [
-      "dcterms:title",
-      lit(await specTitle(s)),
-    ]]);
+    ttl += subject(iri(`spec/${s}`), [
+      ["a", "archon:Spec"],
+      ["dcterms:title", lit(specTitle(s))],
+    ]);
   }
   for (const h of hosts) {
     ttl += subject(iri(`host/${h.name}`), [
@@ -102,18 +100,22 @@ export async function exportRdf(): Promise<string[]> {
       ]);
     }
   }
-  const path = join(dir, "fleet.ttl");
-  await Deno.writeTextFile(path, ttl);
+  const path = paths.join(dir, "fleet.ttl");
+  await fs.writeTextFile(path, ttl);
   written.push(path);
   if (fleet.site) {
-    const sitePath = join(dir, "site.ttl");
-    await Deno.writeTextFile(sitePath, siteTurtle(fleet.site, hosts));
+    const sitePath = paths.join(dir, "site.ttl");
+    await fs.writeTextFile(sitePath, siteTurtle(fleet.site, hosts));
     written.push(sitePath);
   }
   return written;
 }
 
-const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const slug = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 
 /**
  * Spec 028: the site as RDF, with SKOS labels: archon:Site, archon:Network,
@@ -134,7 +136,10 @@ export function siteTurtle(site: SiteDef, hosts: HostDef[]): string {
     ["archon:secret", SECRET_INVENTORY.map((x) => iri(`secret/${x.id}`))],
   ]);
   for (const zone of site.zones) {
-    ttl += subject(z(zone), [["a", "archon:Zone"], ["skos:prefLabel", lit(zone)]]);
+    ttl += subject(z(zone), [
+      ["a", "archon:Zone"],
+      ["skos:prefLabel", lit(zone)],
+    ]);
   }
   for (const n of site.networks) {
     ttl += subject(nw(n.name), [
@@ -162,9 +167,10 @@ export function siteTurtle(site: SiteDef, hosts: HostDef[]): string {
       ["skos:definition", lit(p.purpose)],
     ]);
   }
-  for (const h of hosts.filter((x) => x.network)) {
+  for (const h of hosts) {
+    if (!h.network) continue;
     ttl += subject(iri(`host/${h.name}`), [
-      ["archon:onNetwork", nw(h.network!)],
+      ["archon:onNetwork", nw(h.network)],
       ["archon:address", h.ip ? lit(h.ip) : ""],
       ["archon:dnsName", h.dnsName ? lit(h.dnsName) : ""],
     ]);

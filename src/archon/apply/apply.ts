@@ -6,11 +6,11 @@
  * @module
  */
 
+import { errors, fs, path as paths, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { splitArgs } from "@intellectual-frontiers/ifc-ts/kernel";
 import { getRecord, putRecord } from "../state/store.ts";
-import { dirname, join } from "../core/path.ts";
 import { P } from "../core/paths.ts";
-import { ensureDir, exists, readTextOr } from "../core/fsx.ts";
-import { currentUser, isRoot, run, splitArgs, which } from "../core/exec.ts";
+import { currentUser, run } from "../core/exec.ts";
 import { type Phase, ui } from "../core/ui.ts";
 import { aptInstall, aptUpdate } from "./apt.ts";
 import { addPpa, aptVersions, ppaHasRelease, ppaPresent } from "./ppa.ts";
@@ -74,12 +74,16 @@ class Runner {
   host = "";
   /** Its opt-in switches as the model has them (Git's decisions over local records, spec 047). */
   optIn: Record<string, { enabled: boolean }> = {};
-  constructor(readonly opts: ApplyOptions) {}
+  /** How this apply runs. */
+  readonly opts: ApplyOptions;
+  constructor(opts: ApplyOptions) {
+    this.opts = opts;
+  }
   get sandbox() {
     return !!this.opts.root;
   }
   path(p: string) {
-    return this.opts.root ? join(this.opts.root, p) : p;
+    return this.opts.root ? paths.join(this.opts.root, p) : p;
   }
   change(msg: string) {
     this.changes.push(msg);
@@ -103,7 +107,7 @@ class Runner {
     try {
       return await f();
     } catch (e) {
-      if (e instanceof Deno.errors.PermissionDenied && this.opts.check && !isRoot()) {
+      if (e instanceof errors.PermissionDenied && this.opts.check && !proc.isRoot()) {
         this.unreadable.push(label);
         return undefined;
       }
@@ -125,7 +129,7 @@ class Runner {
  * 009), and, for a full apply, reports a change of state (spec 025).
  */
 export async function apply(host: HostDef, opts: ApplyOptions): Promise<ApplyResult> {
-  if (!opts.check && !opts.root && !isRoot()) {
+  if (!opts.check && !opts.root && !proc.isRoot()) {
     throw new Error("archon apply must run as root (it elevates through sudo automatically)");
   }
   const started = new Date();
@@ -139,7 +143,7 @@ export async function apply(host: HostDef, opts: ApplyOptions): Promise<ApplyRes
       ended: new Date(),
       changes: result.changes,
       failed: result.failed,
-      log: ui.logPath ?? undefined,
+      ...(ui.logPath === null ? {} : { log: ui.logPath }),
     });
     // Archon's own long-running services (the welcome page, notify watch) run
     // the checkout's code: restart them when that code changed since they started.
@@ -168,10 +172,17 @@ export async function apply(host: HostDef, opts: ApplyOptions): Promise<ApplyRes
 
 /** Archon's long-running services: managed units that run archon and are not oneshot. */
 export function archonDaemons(units: UnitDef[]): string[] {
-  return units.filter((u) =>
-    u.managed && u.content && /ExecStart=\/usr\/local\/bin\/archon /.test(u.content) &&
-    !/Type=oneshot/.test(u.content) && u.state === "enabled"
-  ).map((u) => u.unitName).sort();
+  return units
+    .filter(
+      (u) =>
+        u.managed &&
+        u.content &&
+        /ExecStart=\/usr\/local\/bin\/archon /.test(u.content) &&
+        !/Type=oneshot/.test(u.content) &&
+        u.state === "enabled",
+    )
+    .map((u) => u.unitName)
+    .sort();
 }
 
 /**
@@ -184,10 +195,10 @@ export async function restartArchonDaemons(plan: HostPlan): Promise<string[]> {
   const head = (await run(["git", "-C", P.repo, "rev-parse", "HEAD"])).stdout.trim();
   if (!head) return [];
   const mark = "/var/lib/archon/status/daemons-head";
-  if ((await readTextOr(mark))?.trim() === head) return [];
+  if ((await fs.readTextOr(mark))?.trim() === head) return [];
   const daemons = archonDaemons(plan.units);
   if (daemons.length) await run(["systemctl", "try-restart", ...daemons]);
-  await Deno.writeTextFile(mark, head + "\n").catch(() => {});
+  await fs.writeTextFile(mark, head + "\n").catch(() => {});
   return daemons;
 }
 
@@ -196,7 +207,7 @@ export async function restartArchonDaemons(plan: HostPlan): Promise<string[]> {
  * archon apply from apt, unattended-upgrades, and a person.
  */
 export async function etckeeperCommit(changes: string[]): Promise<boolean> {
-  if (!(await exists("/usr/bin/etckeeper"))) return false;
+  if (!(await fs.exists("/usr/bin/etckeeper"))) return false;
   if ((await run(["etckeeper", "unclean"])).code !== 0) return false; // nothing to commit
   const specs = [
     ...new Set(changes.flatMap((c) => c.match(/\(([0-9]{3}-[a-z0-9-]+)\)/)?.[1] ?? [])),
@@ -212,10 +223,10 @@ export async function settleInstallRecord(hostName: string, root = P.state): Pro
   const r = await getRecord<Record<string, unknown>>(hostName, "install", "install", root);
   if (!r) return false;
   const rec = r.body;
-  if (rec.ok !== false) return false;
-  rec.ok = true;
-  rec.resolved = { at: new Date().toISOString(), by: "apply", problems: rec.problems ?? [] };
-  rec.problems = [];
+  if (rec["ok"] !== false) return false;
+  rec["ok"] = true;
+  rec["resolved"] = { at: new Date().toISOString(), by: "apply", problems: rec["problems"] ?? [] };
+  rec["problems"] = [];
   await putRecord(hostName, "install", "install", rec, root, r.at);
   return true;
 }
@@ -257,9 +268,10 @@ async function applyPlan(host: HostDef, opts: ApplyOptions, _started: Date): Pro
     if (r.sandbox || plan.host.kind === "workstation") return held;
     try {
       const h = await import("../proposal/hold.ts");
-      held = opts.check || !isRoot() ? await h.activeHolds(host.name) : await h.refreshHolds(plan);
+      held =
+        opts.check || !proc.isRoot() ? await h.activeHolds(host.name) : await h.refreshHolds(plan);
     } catch (e) {
-      if (e instanceof Deno.errors.PermissionDenied && !isRoot()) r.unreadable.push("holds");
+      if (e instanceof errors.PermissionDenied && !proc.isRoot()) r.unreadable.push("holds");
       else {
         r.p.warn(
           `holds not read: ${(e as Error).message}`,
@@ -294,11 +306,11 @@ async function applyPlan(host: HostDef, opts: ApplyOptions, _started: Date): Pro
     // modes every run (idempotent, quiet).
     if (!r.sandbox && !opts.check) {
       for (const f of plan.files.filter((x) => x.path.startsWith("/etc/tmpfiles.d/"))) {
-        if (await exists(f.path)) await run(["systemd-tmpfiles", "--create", f.path]);
+        if (await fs.exists(f.path)) await run(["systemd-tmpfiles", "--create", f.path]);
       }
     }
     // Opt-in containers turned on (spec 040): their generated secrets exist before they start.
-    if (!r.sandbox && plan.host.optIn?.s3?.enabled) {
+    if (!r.sandbox && plan.host.optIn?.["s3"]?.enabled) {
       const { prepareS3 } = await import("../s3/s3.ts");
       await r.guard("/var/lib/archon/s3", () => prepareS3(sinkOf(r)));
     }
@@ -343,14 +355,12 @@ async function applyPlan(host: HostDef, opts: ApplyOptions, _started: Date): Pro
         unreadable: (path: string) => r.unreadable.push(path),
       };
       for (const i of instances) {
-        await r.guard(
-          `PostgreSQL ${i.name}`,
-          () => convergeInstance(plan.fleet, plan.host, i, sink, "archon apply"),
+        await r.guard(`PostgreSQL ${i.name}`, () =>
+          convergeInstance(plan.fleet, plan.host, i, sink, "archon apply"),
         );
       }
-      await r.guard(
-        "/etc/postgresql-common/pg_service.conf",
-        () => writeSystemServices(plan.host.name, sink),
+      await r.guard("/etc/postgresql-common/pg_service.conf", () =>
+        writeSystemServices(plan.host.name, sink),
       );
       r.p.done(
         r.mark() - before
@@ -359,7 +369,7 @@ async function applyPlan(host: HostDef, opts: ApplyOptions, _started: Date): Pro
       );
     }
   }
-  if (!r.sandbox && want("containers") && plan.host.optIn?.s3?.enabled) {
+  if (!r.sandbox && want("containers") && plan.host.optIn?.["s3"]?.enabled) {
     // Spec 041: S3's users are the server's Linux accounts and the fleet's service accounts.
     r.p = ui.phase("Containers");
     const before = r.mark();
@@ -379,15 +389,15 @@ async function applyPlan(host: HostDef, opts: ApplyOptions, _started: Date): Pro
       applied.length
         ? `${verb ? "pending: " : ""}${applied.join(", ")}`
         : r.dotfilesWaiting
-        ? "waiting for chezmoi (installed by the tools step)"
-        : "up to date",
+          ? "waiting for chezmoi (installed by the tools step)"
+          : "up to date",
     );
   }
   if (r.unreadable.length) {
     ui.next.push(
-      `Not compared (readable only by root or their owner): ${
-        r.unreadable.join(", ")
-      }. sudo archon apply --check compares everything.`,
+      `Not compared (readable only by root or their owner): ${r.unreadable.join(
+        ", ",
+      )}. sudo archon apply --check compares everything.`,
     );
   }
   const result: ApplyResult = {
@@ -421,7 +431,7 @@ async function ppas(plan: HostPlan, r: Runner): Promise<Set<string>> {
   let added = false;
   const ipv4Only = !networkOf(plan.fleet, plan.host).ipv6;
   let launchpadDown = false;
-  for (const ppa of new Set(plan.packages.flatMap((p) => p.ppa ? [p.ppa] : []))) {
+  for (const ppa of new Set(plan.packages.flatMap((p) => (p.ppa ? [p.ppa] : [])))) {
     if (await ppaPresent(ppa, codename)) {
       inUse.add(ppa);
       continue;
@@ -448,7 +458,7 @@ async function ppas(plan: HostPlan, r: Runner): Promise<Set<string>> {
     inUse.add(ppa);
     if (r.opts.check) continue;
     // add-apt-repository is Ubuntu Server's (software-properties-common); make sure.
-    if (!(await which("add-apt-repository"))) {
+    if (!proc.which("add-apt-repository")) {
       await aptUpdate(r.p);
       const sp = await aptInstall(r.p, ["software-properties-common"]);
       if (!sp.ok) {
@@ -479,18 +489,18 @@ async function vendorRepos(plan: HostPlan, r: Runner): Promise<void> {
       [
         `/etc/apt/sources.list.d/archon-${repo.id}.sources`,
         `# Archon (${repo.spec}): ${repo.uri}, signing key pinned in the repository.\n` +
-        `Types: deb\nURIs: ${repo.uri}\nSuites: ${repo.suites}\nComponents: ${repo.components}\n` +
-        `Architectures: ${plan.host.arch}\nSigned-By: ${keyPath}\n`,
+          `Types: deb\nURIs: ${repo.uri}\nSuites: ${repo.suites}\nComponents: ${repo.components}\n` +
+          `Architectures: ${plan.host.arch}\nSigned-By: ${keyPath}\n`,
       ],
     ];
     for (const [path, content] of files) {
-      if ((await readTextOr(path)) === content) continue;
+      if ((await fs.readTextOr(path)) === content) continue;
       r.change(`write ${path} (${repo.spec})`);
       changed = true;
       if (r.opts.check) continue;
-      await ensureDir(dirname(path));
-      await Deno.writeTextFile(path, content);
-      await Deno.chmod(path, 0o644);
+      await fs.ensureDir(paths.dirname(path));
+      await fs.writeTextFile(path, content);
+      await fs.chmod(path, 0o644);
     }
   }
   if (changed && !r.opts.check) await aptUpdate(r.p);
@@ -535,9 +545,9 @@ async function packages(plan: HostPlan, r: Runner): Promise<number> {
       }
     } else {
       // Preseed the questions of packages about to be installed (debconf).
-      const pre = plan.packages.filter((p) => missing.includes(p.name)).flatMap((p) =>
-        p.debconf ?? []
-      );
+      const pre = plan.packages
+        .filter((p) => missing.includes(p.name))
+        .flatMap((p) => p.debconf ?? []);
       if (pre.length) {
         const d = await run(["debconf-set-selections"], { stdin: pre.join("\n") + "\n" });
         if (!d.ok) r.fail(`debconf-set-selections: ${d.stderr.trim()}`);
@@ -553,9 +563,10 @@ async function packages(plan: HostPlan, r: Runner): Promise<number> {
     // (api.snapcraft.io times out); a warning, retried by the next reconcile.
     if (!res.ok) {
       r.p.warn(
-        `snap install ${m}: ${
-          (res.stderr || res.stdout).trim().split("\n").pop()
-        }; the Snap Store did not answer, the next reconcile tries again`,
+        `snap install ${m}: ${(res.stderr || res.stdout)
+          .trim()
+          .split("\n")
+          .pop()}; the Snap Store did not answer, the next reconcile tries again`,
         "snap debug connectivity",
       );
     }
@@ -614,9 +625,9 @@ async function user(u: UserDef, r: Runner) {
     await file(
       {
         path: `${home}/.ssh/authorized_keys`,
-        content: `# Managed by archon (spec 005-ssh). Edit the host model, not this file.\n${
-          u.sshKeys.join("\n")
-        }\n`,
+        content: `# Managed by archon (spec 005-ssh). Edit the host model, not this file.\n${u.sshKeys.join(
+          "\n",
+        )}\n`,
         mode: "0600",
         owner: u.name,
         group: u.name,
@@ -641,29 +652,33 @@ async function file(f: FileDef, r: Runner, extra: { dirMode?: number } = {}) {
   if (f.symlink) {
     let cur: string | undefined;
     try {
-      cur = await Deno.readLink(target);
-    } catch { /* missing or not a link */ }
+      cur = await fs.readLink(target);
+    } catch {
+      /* missing or not a link */
+    }
     if (cur === f.symlink) return;
     r.change(`link ${f.path} -> ${f.symlink}`);
     if (r.opts.check) return;
-    await ensureDir(dirname(target));
+    await fs.ensureDir(paths.dirname(target));
     const tmp = `${target}.archon-tmp`;
     try {
-      await Deno.remove(tmp);
-    } catch { /* none */ }
-    await Deno.symlink(f.symlink, tmp);
-    await Deno.rename(tmp, target);
+      await fs.remove(tmp);
+    } catch {
+      /* none */
+    }
+    await fs.symlink(f.symlink, tmp);
+    await fs.rename(tmp, target);
     r.actions.push(...(f.onChange ?? []));
     return;
   }
   const content = f.content ?? "";
   let current: string | undefined;
   try {
-    current = await readTextOr(target);
+    current = await fs.readTextOr(target);
   } catch (e) {
     // A read-only check runs as the person who asked (no sudo): files only root or
     // their owner may read (ops' authorized_keys, secrets) cannot be compared.
-    if (e instanceof Deno.errors.PermissionDenied && r.opts.check && !isRoot()) {
+    if (e instanceof errors.PermissionDenied && r.opts.check && !proc.isRoot()) {
       r.unreadable.push(f.path);
       return;
     }
@@ -673,9 +688,9 @@ async function file(f: FileDef, r: Runner, extra: { dirMode?: number } = {}) {
   const contentDiffers = current !== content;
   let metaDiffers = false;
   if (!contentDiffers) {
-    const st = await Deno.stat(target);
+    const st = await fs.stat(target);
     metaDiffers = ((st.mode ?? 0) & 0o7777) !== mode;
-    if (!r.sandbox && isRoot()) {
+    if (!r.sandbox && proc.isRoot()) {
       const uid = await idOf("passwd", f.owner);
       const gid = await idOf("group", f.group ?? (f.owner === "root" ? "root" : f.owner));
       if ((uid !== undefined && st.uid !== uid) || (gid !== undefined && st.gid !== gid)) {
@@ -695,42 +710,42 @@ async function file(f: FileDef, r: Runner, extra: { dirMode?: number } = {}) {
   if (!r.sandbox && f.owner !== "root" && (await idOf("passwd", f.owner)) === undefined) {
     return r.skip(`${f.path}: owner ${f.owner} does not exist yet`);
   }
-  const dir = dirname(target);
-  if (!(await exists(dir))) {
+  const dir = paths.dirname(target);
+  if (!(await fs.exists(dir))) {
     // Create missing parents one at a time so every directory created on a
     // user's behalf (for example ~/.config) belongs to that user.
     const missing: string[] = [];
-    for (let d = dir; !(await exists(d)); d = dirname(d)) missing.unshift(d);
+    for (let d = dir; !(await fs.exists(d)); d = paths.dirname(d)) missing.unshift(d);
     for (const d of missing) {
-      await Deno.mkdir(d);
+      await fs.mkdir(d);
       if (!r.sandbox && f.owner !== "root") await chown(d, f.owner, f.group ?? f.owner);
     }
-    if (extra.dirMode !== undefined) await Deno.chmod(dir, extra.dirMode);
+    if (extra.dirMode !== undefined) await fs.chmod(dir, extra.dirMode);
   }
   const tmp = `${target}.archon-tmp`;
-  await Deno.writeTextFile(tmp, content);
-  await Deno.chmod(tmp, mode);
+  await fs.writeTextFile(tmp, content);
+  await fs.chmod(tmp, mode);
   if (f.validate && !r.sandbox) {
     const argv = f.validate.map((a) => (a === "{}" ? tmp : a));
     const v = await run(argv);
     if (!v.ok) {
-      await Deno.remove(tmp);
+      await fs.remove(tmp);
       return r.fail(
         `${f.path}: validation failed (${argv.join(" ")}): ${(v.stderr || v.stdout).trim()}`,
       );
     }
   }
   if (!r.sandbox) await chown(tmp, f.owner, f.group ?? (f.owner === "root" ? "root" : f.owner));
-  await Deno.rename(tmp, target);
+  await fs.rename(tmp, target);
   if (f.postValidate && !r.sandbox) {
     const v = await run(f.postValidate);
     if (!v.ok) {
-      if (current !== undefined) await Deno.writeTextFile(target, current);
-      else await Deno.remove(target);
+      if (current !== undefined) await fs.writeTextFile(target, current);
+      else await fs.remove(target);
       return r.fail(
-        `${f.path}: post-validation failed (${
-          f.postValidate.join(" ")
-        }), restored previous content: ${(v.stderr || v.stdout).trim()}`,
+        `${f.path}: post-validation failed (${f.postValidate.join(
+          " ",
+        )}), restored previous content: ${(v.stderr || v.stdout).trim()}`,
       );
     }
   }
@@ -746,7 +761,7 @@ async function idOf(db: "passwd" | "group", name: string): Promise<number | unde
 async function chown(path: string, owner: string, group: string) {
   const uid = await idOf("passwd", owner);
   const gid = await idOf("group", group);
-  if (uid !== undefined) await Deno.chown(path, uid, gid ?? null);
+  if (uid !== undefined) await fs.chown(path, uid, gid ?? null);
 }
 
 // ------------------------------------------------------------------- actions
@@ -783,15 +798,14 @@ async function actions(r: Runner) {
     else if (a.kind === "reload-or-restart") {
       res = await run(["systemctl", "reload-or-restart", a.unit]);
     } else {
-      if (a.ifExists && !(await exists(a.ifExists))) {
+      if (a.ifExists && !(await fs.exists(a.ifExists))) {
         r.skip(`${a.argv.join(" ")} (${a.ifExists} not installed yet)`);
         continue;
       }
-      res = await run(a.argv, { asUser: a.asUser });
+      res = await run(a.argv, a.asUser === undefined ? {} : { asUser: a.asUser });
     }
-    const label = a.kind === "run"
-      ? a.argv.join(" ")
-      : `${a.kind}${"unit" in a ? ` ${a.unit}` : ""}`;
+    const label =
+      a.kind === "run" ? a.argv.join(" ") : `${a.kind}${"unit" in a ? ` ${a.unit}` : ""}`;
     r.p.status(label);
     if (res.ok) r.p.ok(label);
     else r.fail(`${label}: ${(res.stderr || res.stdout).trim()}`);
@@ -813,19 +827,22 @@ export async function switchOn(host: string, name: string, root = P.state): Prom
 
 async function unit(u0: UnitDef, r: Runner) {
   // An operator's switch decides between the unit's own state and "enabled" (spec 037).
-  const u: UnitDef = u0.switch &&
-      (u0.switch in r.optIn ? r.optIn[u0.switch].enabled : await switchOn(r.host, u0.switch))
-    ? { ...u0, state: "enabled", start: true }
-    : u0;
+  const u: UnitDef =
+    u0.switch && (r.optIn[u0.switch]?.enabled ?? (await switchOn(r.host, u0.switch)))
+      ? { ...u0, state: "enabled", start: true }
+      : u0;
   if (u.managed && u.content !== undefined) {
-    await file({
-      path: `/etc/systemd/system/${u.unitName}`,
-      content: u.content,
-      mode: "0644",
-      owner: "root",
-      spec: u.spec,
-      onChange: [{ kind: "daemon-reload" }],
-    }, r);
+    await file(
+      {
+        path: `/etc/systemd/system/${u.unitName}`,
+        content: u.content,
+        mode: "0644",
+        owner: "root",
+        spec: u.spec,
+        onChange: [{ kind: "daemon-reload" }],
+      },
+      r,
+    );
     await actions(r);
   }
   if (u.state === "ignore") return;
@@ -871,7 +888,8 @@ async function unit(u0: UnitDef, r: Runner) {
   const isEnabled = enabled === "enabled" || enabled === "static" || enabled === "alias";
   if (
     want !== isEnabled ||
-    (want && u.start !== false &&
+    (want &&
+      u.start !== false &&
       !(await run(["systemctl", "is-active", "--quiet", u.unitName])).ok)
   ) {
     const now = u.start === false ? "" : " --now";
@@ -907,7 +925,7 @@ async function dotfiles(host: string, u: UserDef, r: Runner): Promise<boolean> {
   r.p.status(u.name);
   // A check without sudo can only look at the caller's own dotfiles (the others'
   // composed sources and homes are theirs): the rest is noted, not compared.
-  if (r.opts.check && !isRoot() && u.name !== currentUser()) {
+  if (r.opts.check && !proc.isRoot() && u.name !== currentUser()) {
     r.unreadable.push(`dotfiles of ${u.name}`);
     return false;
   }
@@ -919,17 +937,17 @@ async function dotfiles(host: string, u: UserDef, r: Runner): Promise<boolean> {
   }
   if (s.changed.length) {
     r.change(
-      `compose dotfiles for ${u.name}: ${s.changed.length} file(s) from ${
-        s.composition.present.map((l) => l.dir).join(", ")
-      } (031-dotfile-layers)`,
+      `compose dotfiles for ${u.name}: ${s.changed.length} file(s) from ${s.composition.present
+        .map((l) => l.dir)
+        .join(", ")} (031-dotfile-layers)`,
     );
   }
-  if (!(await exists(chezmoi))) {
+  if (!(await fs.exists(chezmoi))) {
     r.skip(`dotfiles for ${u.name}: chezmoi not installed yet (archon tools sync)`);
     r.dotfilesWaiting = true;
     return false;
   }
-  if (!(await exists(cfg))) {
+  if (!(await fs.exists(cfg))) {
     r.skip(`dotfiles for ${u.name}: no chezmoi data yet`);
     return false;
   }

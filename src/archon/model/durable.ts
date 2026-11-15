@@ -83,7 +83,8 @@ export function dataSources(host: HostDef, onDisk: string[] = []): DataSource[] 
   for (const [name, title] of Object.entries(USER_DATA_OPT_INS)) {
     const r = host.optIn?.[name];
     const recorded = !!r && (r.enabled || !!r.data);
-    const evidence = onDisk.includes(name) ||
+    const evidence =
+      onDisk.includes(name) ||
       (name === "pg" && Object.keys(host.pgState?.instances ?? {}).length > 0);
     if (!recorded && !evidence) continue;
     out.push({
@@ -117,13 +118,16 @@ export function hostData(host: HostDef, onDisk: string[] = []): HostData {
   return {
     host: host.name,
     class: kept.length ? "durable" : "ephemeral",
-    reasons: kept.map((s) => s.data === "unchosen" ? `${s.title} (no choice recorded)` : s.title),
-    unchosen: sources.filter((s) => s.data === "unchosen").map((s) => ({
-      name: s.name,
-      fix: s.kind === "guest"
-        ? `set data: "durable" or "ephemeral" on guest ${s.name} in the model`
-        : `archon data set ${s.name} --durable (or --ephemeral --confirm-destroy ${host.name})`,
-    })),
+    reasons: kept.map((s) => (s.data === "unchosen" ? `${s.title} (no choice recorded)` : s.title)),
+    unchosen: sources
+      .filter((s) => s.data === "unchosen")
+      .map((s) => ({
+        name: s.name,
+        fix:
+          s.kind === "guest"
+            ? `set data: "durable" or "ephemeral" on guest ${s.name} in the model`
+            : `archon data set ${s.name} --durable (or --ephemeral --confirm-destroy ${host.name})`,
+      })),
     sources,
   };
 }
@@ -171,16 +175,12 @@ export function chooseData(a: { durable?: unknown; ephemeral?: unknown }, what: 
  * Leaving durable (to ephemeral, or a destructive step) needs the host's name
  * repeated with --confirm-destroy, typed by a person.
  */
-export function confirmDestroy(
-  confirm: unknown,
-  name: string,
-  what: string,
-): void {
+export function confirmDestroy(confirm: unknown, name: string, what: string): void {
   if (confirm === name) return;
   throw new Error(
     confirm === undefined
       ? `${what}: repeat the name with --confirm-destroy ${name}`
-      : `${what}: --confirm-destroy ${String(confirm)} does not name ${name}`,
+      : `${what}: --confirm-destroy ${typeof confirm === "string" ? confirm : JSON.stringify(confirm)} does not name ${name}`,
   );
 }
 
@@ -209,6 +209,5 @@ export const CONFIRM_DESTROY_ARG = (
   name: "confirm-destroy",
   type: "string" as const,
   human: true,
-  description:
-    `Repeat ${what} to confirm that durable data may be lost. Typed by a person: never accepted over MCP or from an agent (Article 23).`,
+  description: `Repeat ${what} to confirm that durable data may be lost. Typed by a person: never accepted over MCP or from an agent (Article 23).`,
 });

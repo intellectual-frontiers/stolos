@@ -19,16 +19,16 @@
  * @module
  */
 
-import { type Connector, fresh } from "@stolos/archon/connect/connector.ts";
-import { bearer, defineConnector } from "@stolos/archon/connect/sdk.ts";
-import { VULNERABILITY } from "@stolos/archon/connect/labels.ts";
+import { type Connector, fresh } from "@intellectual-frontiers/stolos/archon/connect/connector";
+import { bearer, defineConnector } from "@intellectual-frontiers/stolos/archon/connect/sdk";
+import { VULNERABILITY } from "@intellectual-frontiers/stolos/archon/connect/labels";
 import {
   firstCve,
   severityOf,
   vulnerabilityPolicies,
   vulnerabilityPosture,
-} from "@stolos/archon/connect/vulnerability.ts";
-import type { ConnectorFixture } from "@stolos/archon/connect/registry-contract.ts";
+} from "@intellectual-frontiers/stolos/archon/connect/vulnerability";
+import type { ConnectorFixture } from "@intellectual-frontiers/stolos/archon/connect/registry-contract";
 
 /** The engine versions this connector supports. */
 export const engine = ">=0.112.0 <1.0.0";
@@ -109,26 +109,30 @@ export const fixtures: ConnectorFixture[] = [
     responses: {
       [FINDINGS]: {
         body: {
-          items: [{
-            id: "f1",
-            cve: "CVE-2024-3094",
-            title: "xz backdoor",
-            severity: "Critical",
-            host: "alpha.lab.example.net",
-            first_seen: "2026-10-01T00:00:00Z",
-          }],
+          items: [
+            {
+              id: "f1",
+              cve: "CVE-2024-3094",
+              title: "xz backdoor",
+              severity: "Critical",
+              host: "alpha.lab.example.net",
+              first_seen: "2026-10-01T00:00:00Z",
+            },
+          ],
           next: `${API}/findings?status=open&page=2`,
         },
       },
       [`${API}/findings?status=open&page=2`]: {
         body: {
-          items: [{
-            id: "f2",
-            title: "TLS 1.0 enabled",
-            severity: "Medium",
-            host: "beta.lab.example.net",
-            first_seen: "2026-11-10T00:00:00Z",
-          }],
+          items: [
+            {
+              id: "f2",
+              title: "TLS 1.0 enabled",
+              severity: "Medium",
+              host: "beta.lab.example.net",
+              first_seen: "2026-11-10T00:00:00Z",
+            },
+          ],
         },
       },
     },

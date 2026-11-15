@@ -25,14 +25,13 @@
  * @module
  */
 
+import { absurd } from "@intellectual-frontiers/ifc-ts/kernel";
 import { parseMac } from "../fleet/registration.ts";
 import type { HostRegistration } from "../model/types.ts";
 
 /** How a machine becomes the host: claimed, by a typed MAC, or its own installed MAC. */
 export type Recognition =
-  | { kind: "claim" }
-  | { kind: "mac"; mac: string }
-  | { kind: "installed"; mac: string };
+  { kind: "claim" } | { kind: "mac"; mac: string } | { kind: "installed"; mac: string };
 
 /** How long a claim waits for an unknown machine to network-boot. */
 export const CLAIM_MINUTES = 30;
@@ -46,17 +45,16 @@ export function recognition(
   const both = o.claim && o.macAddress !== undefined;
   if (both) {
     return {
-      refusal:
-        `choose one: --claim (the next unknown machine becomes ${host}) or --mac-address <mac> (only that network card), not both`,
+      refusal: `choose one: --claim (the next unknown machine becomes ${host}) or --mac-address <mac> (only that network card), not both`,
     };
   }
   if (o.macAddress !== undefined) {
     const mac = parseMac(o.macAddress);
     if (!mac) {
       return {
-        refusal: `--mac-address ${
-          JSON.stringify(o.macAddress)
-        } is not a MAC address: six pairs of hex digits, for example 52:54:00:12:34:56 (the machine's firmware setup or a sticker on it shows it)`,
+        refusal: `--mac-address ${JSON.stringify(
+          o.macAddress,
+        )} is not a MAC address: six pairs of hex digits, for example 52:54:00:12:34:56 (the machine's firmware setup or a sticker on it shows it)`,
       };
     }
     return { kind: "mac", mac };
@@ -83,5 +81,7 @@ export function describeRecognition(host: string, r: Recognition): string {
       return `${host} is the machine whose network card is ${r.mac}`;
     case "installed":
       return `${host} is its own machine again (${r.mac}, as it reported when it installed)`;
+    default:
+      return absurd(r);
   }
 }

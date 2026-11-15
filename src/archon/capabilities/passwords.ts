@@ -50,8 +50,7 @@ exit 0
  * seteuid: PAM runs a command as the calling program's real user, which for
  * sudo and passwd is the person, not root; the hook needs root.
  */
-export const PASSWORDS_PROFILE =
-  `Name: Archon: SMB and PostgreSQL use the same password as Linux (specs 037, 039)
+export const PASSWORDS_PROFILE = `Name: Archon: SMB and PostgreSQL use the same password as Linux (specs 037, 039)
 Default: yes
 Priority: 0
 Auth-Type: Additional
@@ -63,28 +62,30 @@ Password:
 `;
 
 /** The password hook, for hosts with SMB or PostgreSQL (specs 037, 039). */
-export const passwords = (): Capability => ({ host }) => {
-  if (host.kind === "workstation") return { spec: SPEC };
-  const regenerate = {
-    kind: "run" as const,
-    argv: ["pam-auth-update", "--package", "--enable", PASSWORDS.profileName],
+export const passwords =
+  (): Capability =>
+  ({ host }) => {
+    if (host.kind === "workstation") return { spec: SPEC };
+    const regenerate = {
+      kind: "run" as const,
+      argv: ["pam-auth-update", "--package", "--enable", PASSWORDS.profileName],
+    };
+    return {
+      spec: SPEC,
+      files: [
+        { path: PASSWORDS.hook, content: PASSWORD_SYNC, mode: "0700", owner: "root", spec: SPEC },
+        {
+          // Ubuntu's own way to add to its PAM stacks (pam-auth-update), not an edit of /etc/pam.d.
+          path: PASSWORDS.profile,
+          content: PASSWORDS_PROFILE,
+          mode: "0644",
+          owner: "root",
+          spec: SPEC,
+          onChange: [regenerate],
+        },
+      ],
+      notes: [
+        "A person's Linux password also signs in to SMB and to published PostgreSQL instances (PAM keeps the copies in step).",
+      ],
+    };
   };
-  return {
-    spec: SPEC,
-    files: [
-      { path: PASSWORDS.hook, content: PASSWORD_SYNC, mode: "0700", owner: "root", spec: SPEC },
-      {
-        // Ubuntu's own way to add to its PAM stacks (pam-auth-update), not an edit of /etc/pam.d.
-        path: PASSWORDS.profile,
-        content: PASSWORDS_PROFILE,
-        mode: "0644",
-        owner: "root",
-        spec: SPEC,
-        onChange: [regenerate],
-      },
-    ],
-    notes: [
-      "A person's Linux password also signs in to SMB and to published PostgreSQL instances (PAM keeps the copies in step).",
-    ],
-  };
-};

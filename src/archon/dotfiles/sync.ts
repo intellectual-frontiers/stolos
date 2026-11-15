@@ -7,10 +7,9 @@
  * @module
  */
 
+import { fs, path as paths } from "@intellectual-frontiers/ifc-ts/runtime";
 import { P } from "../core/paths.ts";
 import { engineFile, engineFiles } from "../core/assets.ts";
-import { dirname, join } from "../core/path.ts";
-import { ensureDir, exists, walkFiles } from "../core/fsx.ts";
 import { run } from "../core/exec.ts";
 import {
   compose,
@@ -32,13 +31,13 @@ export function composeFrom(
     host,
     user,
     (dir) =>
-      Promise.resolve(dir === ENGINE_LAYER ? engineFiles("home") : undefined).then((e) =>
-        e ?? walkFiles(join(repo, dir))
+      Promise.resolve(dir === ENGINE_LAYER ? engineFiles("home") : undefined).then(
+        (e) => e ?? fs.walkFiles(paths.join(repo, dir)),
       ),
     (rel) =>
       rel.startsWith(ENGINE_LAYER + "/")
         ? Promise.resolve(engineFile(rel.replace("@engine/", "")))
-        : Deno.readTextFile(join(repo, rel)),
+        : fs.readTextFile(paths.join(repo, rel)),
     fleet,
   );
 }
@@ -47,7 +46,7 @@ export function composeFrom(
 function bytesOf(repo: string, from: string): Promise<Uint8Array> {
   return from.startsWith(ENGINE_LAYER + "/")
     ? Promise.resolve(new TextEncoder().encode(engineFile(from.replace("@engine/", ""))))
-    : Deno.readFile(join(repo, from));
+    : fs.readFile(paths.join(repo, from));
 }
 
 const same = (a: Uint8Array, b: Uint8Array) =>
@@ -74,26 +73,26 @@ export async function syncComposed(
   o: { check: boolean; root?: string },
 ): Promise<SyncResult> {
   const c = await composeFrom(repo, host, user);
-  const dir = o.root ? join(o.root, user) : composedDir(user);
+  const dir = o.root ? paths.join(o.root, user) : composedDir(user);
   const enc = new TextEncoder();
   const want = new Map<string, Uint8Array>();
   for (const e of composedEntries(c)) {
-    want.set(e.path, e.from ? await bytesOf(repo, e.from) : enc.encode(e.text!));
+    want.set(e.path, e.from ? await bytesOf(repo, e.from) : enc.encode(e.text ?? ""));
   }
   const changed: string[] = [];
   for (const [path, bytes] of want) {
-    const target = join(dir, path);
-    const have = await Deno.readFile(target).catch(() => undefined);
+    const target = paths.join(dir, path);
+    const have = await fs.readFile(target).catch(() => undefined);
     if (have && same(have, bytes)) continue;
     changed.push(path);
     if (o.check) continue;
-    await ensureDir(dirname(target));
-    await Deno.writeFile(target, bytes);
+    await fs.ensureDir(paths.dirname(target));
+    await fs.writeFile(target, bytes);
   }
-  for (const path of await walkFiles(dir)) {
+  for (const path of await fs.walkFiles(dir)) {
     if (want.has(path)) continue;
     changed.push(path);
-    if (!o.check) await Deno.remove(join(dir, path));
+    if (!o.check) await fs.remove(paths.join(dir, path));
   }
   if (!o.check && changed.length && !o.root) await lockDown(dir, user);
   return { composition: c, changed };
@@ -101,8 +100,8 @@ export async function syncComposed(
 
 /** root:<user's group>, directories 0750, files 0640; the parent is 0755. */
 async function lockDown(dir: string, user: string) {
-  await ensureDir(COMPOSED_ROOT);
-  await Deno.chmod(COMPOSED_ROOT, 0o755);
+  await fs.ensureDir(COMPOSED_ROOT);
+  await fs.chmod(COMPOSED_ROOT, 0o755);
   // Empty directories left by removed files.
   await run(["find", dir, "-mindepth", "1", "-type", "d", "-empty", "-delete"]);
   const group = (await run(["id", "-gn", user])).stdout.trim() || user;
@@ -113,5 +112,5 @@ async function lockDown(dir: string, user: string) {
 
 /** Whether a composed source exists yet for this user. */
 export function composedExists(user: string): Promise<boolean> {
-  return exists(composedDir(user));
+  return fs.exists(composedDir(user));
 }

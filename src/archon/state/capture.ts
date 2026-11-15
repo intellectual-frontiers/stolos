@@ -6,6 +6,7 @@
  * @module
  */
 
+import { fs } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "../core/exec.ts";
 import { planFor } from "../build.ts";
 import type { HostDef } from "../model/types.ts";
@@ -45,12 +46,16 @@ export interface Drift {
 }
 
 const out = async (argv: string[]) => (await run(argv)).stdout;
-const lines = (s: string) => s.split("\n").map((l) => l.trim()).filter(Boolean);
+const lines = (s: string) =>
+  s
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
 
 /** Read what the host is now. */
 export async function snapshot(host: HostDef): Promise<Snapshot> {
   const plan = await planFor(host);
-  const osr = await Deno.readTextFile("/etc/os-release").catch(() => "");
+  const osr = await fs.readTextFile("/etc/os-release").catch(() => "");
   const tools: Record<string, string | null> = {};
   for (const t of plan.tools) {
     const r = await run(["sh", "-c", `${t.versionCommand} 2>/dev/null | head -1`]);
@@ -62,10 +67,15 @@ export async function snapshot(host: HostDef): Promise<Snapshot> {
     ubuntu: osr.match(/^VERSION="?([^"\n]+)/m)?.[1] ?? "unknown",
     kernel: (await out(["uname", "-r"])).trim(),
     manualPackages: lines(await out(["apt-mark", "showmanual"])).sort(),
-    snaps: lines(await out(["snap", "list"])).slice(1).map((l) => l.split(/\s+/)[0]).sort(),
+    snaps: lines(await out(["snap", "list"]))
+      .slice(1)
+      .map((l) => l.split(/\s+/)[0] ?? "")
+      .sort(),
     enabledUnits: lines(
       await out(["systemctl", "list-unit-files", "--state=enabled", "--no-legend", "--plain"]),
-    ).map((l) => l.split(/\s+/)[0]).sort(),
+    )
+      .map((l) => l.split(/\s+/)[0] ?? "")
+      .sort(),
     listening: [
       ...new Set(
         lines(await out(["ss", "-Hlntu"])).map((l) => {
@@ -77,7 +87,7 @@ export async function snapshot(host: HostDef): Promise<Snapshot> {
     users: lines(await out(["getent", "passwd"]))
       .map((l) => l.split(":"))
       .filter((f) => Number(f[2]) >= 1000 && Number(f[2]) < 60000)
-      .map((f) => f[0])
+      .map((f) => f[0] ?? "")
       .sort(),
     tools,
   };
@@ -102,7 +112,7 @@ export async function drift(host: HostDef, s: Snapshot): Promise<Drift> {
   }
   const modeled = new Set(plan.ports.map((p) => `${p.protocol}/${p.port}`));
   const unmodeledListeningPorts = s.listening.filter((l) => {
-    const [proto, addr] = l.split("/");
+    const [proto, addr = ""] = l.split("/");
     const port = addr.slice(addr.lastIndexOf(":") + 1);
     const local = /^(127\.|\[::1\]|\[?::ffff:127\.)/.test(addr) || addr.includes("%lo:");
     // DHCP clients (68, 546) and resolved's stub (53 on 127.0.0.53/54) serve nothing.

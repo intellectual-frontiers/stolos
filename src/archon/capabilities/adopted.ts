@@ -50,33 +50,36 @@ export interface AdoptedDef {
 }
 
 /** What a host adopted from one proposal (spec 095), as a capability. */
-export const adopted = (d: AdoptedDef): Capability => () => {
-  const spec = d.spec;
-  const unit = (unitName: string, state: UnitDef["state"]): UnitDef => ({
-    unitName,
-    managed: false,
-    state,
-    ...(state === "enabled" ? { start: true } : {}),
-    verify: state === "enabled"
-      ? `systemctl is-enabled --quiet ${unitName}`
-      : state === "masked"
-      ? `sh -c 'test "$(systemctl is-enabled ${unitName})" = masked'`
-      : `sh -c '! systemctl is-enabled --quiet ${unitName}'`,
-    spec,
-  });
-  return {
-    spec,
-    packages: [
-      ...(d.packages ?? []).map((name) => ({ name, spec })),
-      ...(d.snaps ?? []).map((name) => ({ name, source: "snap" as const, spec })),
-    ],
-    units: [
-      ...(d.enable ?? []).map((u) => unit(u, "enabled")),
-      ...(d.disable ?? []).map((u) => unit(u, "disabled")),
-      ...(d.mask ?? []).map((u) => unit(u, "masked")),
-    ],
-    ports: (d.ports ?? []).map((p) => ({ ...p, spec })),
-    files: (d.files ?? []).map((f) => ({ ...f, spec })),
-    notes: [`Adopted from proposal ${d.proposal} (spec ${spec}).`],
+export const adopted =
+  (d: AdoptedDef): Capability =>
+  () => {
+    const spec = d.spec;
+    const unit = (unitName: string, state: UnitDef["state"]): UnitDef => ({
+      unitName,
+      managed: false,
+      state,
+      ...(state === "enabled" ? { start: true } : {}),
+      verify:
+        state === "enabled"
+          ? `systemctl is-enabled --quiet ${unitName}`
+          : state === "masked"
+            ? `sh -c 'test "$(systemctl is-enabled ${unitName})" = masked'`
+            : `sh -c '! systemctl is-enabled --quiet ${unitName}'`,
+      spec,
+    });
+    return {
+      spec,
+      packages: [
+        ...(d.packages ?? []).map((name) => ({ name, spec })),
+        ...(d.snaps ?? []).map((name) => ({ name, source: "snap" as const, spec })),
+      ],
+      units: [
+        ...(d.enable ?? []).map((u) => unit(u, "enabled")),
+        ...(d.disable ?? []).map((u) => unit(u, "disabled")),
+        ...(d.mask ?? []).map((u) => unit(u, "masked")),
+      ],
+      ports: (d.ports ?? []).map((p) => ({ ...p, spec })),
+      files: (d.files ?? []).map((f) => ({ ...f, spec })),
+      notes: [`Adopted from proposal ${d.proposal} (spec ${spec}).`],
+    };
   };
-};

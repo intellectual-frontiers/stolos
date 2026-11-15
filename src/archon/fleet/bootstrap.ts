@@ -1,6 +1,6 @@
 /**
- * Spec 062: the bootstrap scripts that make a PC a Stolos controller (Deno,
- * Git, gh, the GitHub sign-in, the fleet cloned into `$HOME/fleet`, the
+ * Spec 062: the bootstrap scripts that make a PC a Stolos controller (the
+ * pinned Bun, Git, gh, the GitHub sign-in, the fleet cloned into `$HOME/fleet`, the
  * `stolos` shortcut). The engine publishes them with every release,
  * `bin/bootstrap.sh` and `bin/bootstrap.windows.ps1` (carried in {@link ASSETS}),
  * which a new PC runs with --repo; a fleet
@@ -32,14 +32,18 @@ export const BOOTSTRAP_PATHS: string[] = Object.keys(TEMPLATES);
 
 /** The template's text for a fleet path (as the engine carries it). */
 export function bootstrapTemplate(fleetPath: string): string {
-  const t = ASSETS[TEMPLATES[fleetPath]];
+  const asset = TEMPLATES[fleetPath];
+  const t = asset === undefined ? undefined : ASSETS[asset];
   if (t === undefined) throw new Error(`no bootstrap template for ${fleetPath}`);
   return t;
 }
 
-/** The Deno version a bootstrap script installs at least (its DENO_MIN / $DenoMin line). */
-export function bootstrapDenoMin(text: string): string | undefined {
-  return text.match(/^(?:DENO_MIN=|\$DenoMin = )"([^"]+)"/m)?.[1];
+/**
+ * The Bun version a bootstrap script installs (its `BUN_VERSION="..."` / `$BunVersion = "..."`
+ * line): the engine's pin, `install/bun.ts` (spec 096 FR-007).
+ */
+export function bootstrapBunVersion(text: string): string | undefined {
+  return text.match(/^(?:BUN_VERSION=|\$BunVersion = )"([^"]+)"/m)?.[1];
 }
 
 /**
@@ -77,11 +81,7 @@ const RAW = "https://raw.githubusercontent.com/intellectual-frontiers/stolos/";
  * The one line that bootstraps a PC from the engine's bootstrap at `tag` (it is
  * public: no sign-in needed to fetch it), for the fleet `repo` (owner/name).
  */
-export function bootstrapOneLiner(
-  os: "windows" | "posix",
-  repo = "",
-  tag = `v${VERSION}`,
-): string {
+export function bootstrapOneLiner(os: "windows" | "posix", repo = "", tag = `v${VERSION}`): string {
   const r = repo || "<owner>/<fleet-repo>";
   return os === "windows"
     ? `& ([scriptblock]::Create((irm ${RAW}${tag}/bin/bootstrap.windows.ps1))) --repo ${r}`

@@ -1,5 +1,16 @@
 # 096: Mapping from Deno to Bun and IFC TypeScript
 
+## Test helpers
+
+- `tests/assert.ts` is **deleted**. Import the assertions from
+  `@intellectual-frontiers/ifc-ts/runtime/test` (`assert`, `assertEquals`, `assertStringIncludes`,
+  `assertThrows`, ...). Note `assertThrows(fn, Class?, includes?)`: pass `Error` (or `undefined`)
+  as the second argument where the old helper took anything.
+- `tests/fixtures.ts` keeps its names (`KEY`, `fleet`, `host`).
+- `tests/sandbox.ts` keeps its names (`sandbox`, `Sandbox`, `fingerprint`). `Sandbox.run(script,
+  args, stdin?, extra?)` runs the script with the runtime of the test itself (`bun <script>` on
+  Bun, `node <script>` on Node, through `proc.execPath()`), from a cleared environment, as before.
+
 The working guide for converting each folder of the engine under [spec 096](spec.md). It says, for
 each piece of the old ground, what replaces it. It is part of the spec folder, so it is reviewed
 with the spec. When a folder is done, nothing in it names `Deno`, `npm:`, `jsr:` or a URL import,

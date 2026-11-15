@@ -148,7 +148,7 @@ export interface ProvidersDef {
  *
  * @example A fleet with mail and HTTPS, like a real one
  * ```ts
- * import type { FleetDef } from "@stolos/archon/model/types.ts";
+ * import type { FleetDef } from "@intellectual-frontiers/stolos/archon/model/types";
  *
  * export const fleet: FleetDef = {
  *   id: "lab",
@@ -300,7 +300,7 @@ export type ExportKind = "oscal" | "ocsf" | "otlp" | "cyclonedx" | "in-toto";
  *
  * @example An auditor's monthly OSCAL, and a cloud tenant's daily inventory
  * ```ts
- * import type { ExportJobDef } from "@stolos/archon/model/types.ts";
+ * import type { ExportJobDef } from "@intellectual-frontiers/stolos/archon/model/types";
  *
  * export const exports: ExportJobDef[] = [
  *   {
@@ -492,8 +492,8 @@ export interface GuestDef {
  *
  * @example A server, as host add writes it
  * ```ts
- * import type { HostDef } from "@stolos/archon/model/types.ts";
- * import { foundation } from "@stolos/archon/capabilities/mod.ts";
+ * import type { HostDef } from "@intellectual-frontiers/stolos/archon/model/types";
+ * import { foundation } from "@intellectual-frontiers/stolos/archon/capabilities/mod";
  *
  * export const host: HostDef = {
  *   name: "alpha",

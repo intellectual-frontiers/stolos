@@ -41,7 +41,7 @@ export function ipv4(s: string): IPv4 {
 
 /** An IPv4 prefix (a.b.c.d/n), or an error naming the malformed literal. */
 export function cidr(s: string): Cidr {
-  const [a, bits] = s.split("/");
+  const [a = "", bits] = s.split("/");
   if (!IPV4_RE.test(a) || !/^\d+$/.test(bits ?? "") || Number(bits) > 32) {
     throw new Error(`site: '${s}' is not an IPv4 prefix (a.b.c.d/n)`);
   }
@@ -68,24 +68,17 @@ const toInt = (ip: string) => ip.split(".").reduce((a, o) => (a << 8) + Number(o
 
 /** Is the address inside the prefix? */
 export function inCidr(ip: IPv4 | string, c: Cidr | string): boolean {
-  const [net, bits] = c.split("/");
+  const [net = "", bits] = c.split("/");
   const b = Number(bits);
   const mask = b === 0 ? 0 : (~0 << (32 - b)) >>> 0;
-  return ((toInt(ip) & mask) >>> 0) === ((toInt(net) & mask) >>> 0);
+  return (toInt(ip) & mask) >>> 0 === (toInt(net) & mask) >>> 0;
 }
 
 // ------------------------------------------------------------------ ontology
 
 /** UniFi's firewall zones as this site uses them (a closed set; Gateway is UniFi's own). */
 export type Zone =
-  | "Internal"
-  | "IoT"
-  | "Servers"
-  | "DMZ"
-  | "Hotspot"
-  | "VPN"
-  | "External"
-  | "Gateway";
+  "Internal" | "IoT" | "Servers" | "DMZ" | "Hotspot" | "VPN" | "External" | "Gateway";
 
 /** A network of the site: its VLAN, prefix, gateway, firewall zone, DHCP, and what it routes. */
 export interface SiteNetwork {
@@ -301,19 +294,18 @@ export function validateSite(
       }
       if (bootNet && n.zone !== bootNet.zone) {
         const reaches = (proto: "udp" | "tcp", portNo: number) =>
-          site.policies.some((x) =>
-            x.from.zone === n.zone && x.to.address === boot.address &&
-            (x.action === "allow" || x.action === "allow-return") &&
-            (x.protocol === proto || x.protocol === "tcp/udp") &&
-            (x.ports ?? []).includes(portNo as Port)
+          site.policies.some(
+            (x) =>
+              x.from.zone === n.zone &&
+              x.to.address === boot.address &&
+              (x.action === "allow" || x.action === "allow-return") &&
+              (x.protocol === proto || x.protocol === "tcp/udp") &&
+              (x.ports ?? []).includes(portNo as Port),
           );
-        for (
-          const [proto, portNo, what] of [["udp", boot.tftp, "TFTP"], [
-            "tcp",
-            boot.http,
-            "HTTP",
-          ]] as const
-        ) {
+        for (const [proto, portNo, what] of [
+          ["udp", boot.tftp, "TFTP"],
+          ["tcp", boot.http, "HTTP"],
+        ] as const) {
           if (!reaches(proto, portNo)) {
             add(
               `site.policies`,
@@ -336,13 +328,19 @@ export function validateSite(
     ...site.devices.map((d) => ({
       who: `device ${d.name}`,
       address: d.address,
-      network: d.network,
+      ...(d.network === undefined ? {} : { network: d.network }),
     })),
-    ...hosts.filter((h) => h.ip).map((h) => ({
-      who: `host ${h.name}`,
-      address: h.ip!,
-      network: h.network,
-    })),
+    ...hosts.flatMap((h) =>
+      h.ip
+        ? [
+            {
+              who: `host ${h.name}`,
+              address: h.ip,
+              ...(h.network === undefined ? {} : { network: h.network }),
+            },
+          ]
+        : [],
+    ),
   ];
   const seen = new Map<string, string>();
   for (const f of fixed) {

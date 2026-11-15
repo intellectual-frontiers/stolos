@@ -8,6 +8,7 @@
  * @module
  */
 
+import { fs, proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
 import { ui } from "../core/ui.ts";
 import { P } from "../core/paths.ts";
 import { run } from "../core/exec.ts";
@@ -26,12 +27,11 @@ const last = (r: { stderr: string; stdout: string }) =>
 async function gitWithTerminal(repo: string, args: string[]): Promise<boolean> {
   ui.pause();
   try {
-    const r = await new Deno.Command("git", {
-      args: ["-C", repo, ...args],
+    const r = await proc.output(["git", "-C", repo, ...args], {
       stdin: "inherit",
       stdout: "inherit",
       stderr: "inherit",
-    }).output();
+    });
     return r.success;
   } finally {
     ui.resume();
@@ -53,7 +53,9 @@ async function identity(
       const { loadFleet } = await import("../model/load.ts");
       const gh = (await loadFleet()).admin.github;
       if (gh?.email) who = { name: gh.name ?? gh.login, email: gh.email };
-    } catch { /* no fleet */ }
+    } catch {
+      /* no fleet */
+    }
   }
   return who ? ["-c", `user.name=${who.name}`, "-c", `user.email=${who.email}`] : [];
 }
@@ -82,9 +84,11 @@ export async function publishChange(
     if ((await git(["ls-files", "--error-unmatch", "--", x])).ok) present.push(x);
     else {
       try {
-        await Deno.stat(`${o.repo ?? P.repo}/${x}`);
+        await fs.stat(`${o.repo ?? P.repo}/${x}`);
         present.push(x);
-      } catch { /* neither */ }
+      } catch {
+        /* neither */
+      }
     }
   }
   const add = await git(["add", "-A", "--", ...present]);
@@ -95,7 +99,7 @@ export async function publishChange(
   const staged = await git(["diff", "--cached", "--quiet"]);
   if (staged.ok) c.done("nothing to commit");
   else {
-    console.log("\n  Signing the commit: type your daily key's passphrase.\n");
+    stdio.stdout.writeSync("\n  Signing the commit: type your daily key's passphrase.\n\n");
     const ok = await gitWithTerminal(o.repo ?? P.repo, [
       ...(await identity(git, o.identity)),
       "commit",
@@ -106,7 +110,7 @@ export async function publishChange(
     if (!ok) {
       c.fail(
         "the commit was not made (a wrong passphrase, or it was cancelled)",
-        `nothing is lost: deno task stolos apply -m "${message}"`,
+        `nothing is lost: bun run stolos apply -m "${message}"`,
       );
       return false;
     }
@@ -123,10 +127,10 @@ export async function publishChange(
     // Someone (a host's own state) pushed first: rebase onto it and try again.
     // Rebasing signs the commit again: with the terminal, for the passphrase.
     if (!(await gitWithTerminal(o.repo ?? P.repo, ["pull", "-q", "--rebase", "--autostash"]))) {
-      p.fail("git pull --rebase did not finish", "git status; then deno task stolos apply");
+      p.fail("git pull --rebase did not finish", "git status; then bun run stolos apply");
       return false;
     }
   }
-  p.fail("git push failed three times", "deno task stolos apply");
+  p.fail("git push failed three times", "bun run stolos apply");
   return false;
 }

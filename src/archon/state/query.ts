@@ -89,7 +89,9 @@ export function queryRefusal(sql: string): string | undefined {
     return "only reading";
   }
   const tables = queryTables(s);
-  const ctes = new Set([...s.matchAll(/\b(\w+)\s+as\s*\(/gi)].map((m) => m[1].toLowerCase()));
+  const ctes = new Set(
+    [...s.matchAll(/\b(\w+)\s+as\s*\(/gi)].map((m) => (m[1] ?? "").toLowerCase()),
+  );
   for (const t of tables) {
     if (ctes.has(t)) continue;
     if (QUERY_DENIED.includes(t)) return `the table ${t} is never served (secrets or reaching out)`;
@@ -100,7 +102,9 @@ export function queryRefusal(sql: string): string | undefined {
 
 /** Tables named after FROM or JOIN. */
 export function queryTables(sql: string): string[] {
-  return [...sql.matchAll(/\b(?:from|join)\s+([a-z_][a-z0-9_]*)/gi)].map((m) => m[1].toLowerCase());
+  return [...sql.matchAll(/\b(?:from|join)\s+([a-z_][a-z0-9_]*)/gi)].map((m) =>
+    (m[1] ?? "").toLowerCase(),
+  );
 }
 
 /** The osqueryi command for one query (Archon's tables come with its config). */
@@ -139,16 +143,23 @@ export async function query(sql: string): Promise<Array<Record<string, string>>>
 export function table(rows: Array<Record<string, unknown>>): string {
   if (!rows.length) return "(no rows)";
   const cols = [...new Set(rows.flatMap((r) => Object.keys(r)))];
-  const cell = (v: unknown) => (v === null || v === undefined ? "" : String(v));
+  const cell = (v: unknown): string => {
+    if (v === null || v === undefined) return "";
+    if (typeof v === "string") return v;
+    if (typeof v === "number" || typeof v === "boolean" || typeof v === "bigint") return String(v);
+    return JSON.stringify(v) ?? "";
+  };
   const w = cols.map((c) =>
-    Math.min(60, Math.max(c.length, ...rows.map((r) => cell(r[c]).length)))
+    Math.min(60, Math.max(c.length, ...rows.map((r) => cell(r[c]).length))),
   );
   const line = (vals: string[]) =>
-    vals.map((v, i) => v.slice(0, 60).padEnd(w[i])).join("  ").trimEnd();
+    vals
+      .map((v, i) => v.slice(0, 60).padEnd(w[i] ?? 0))
+      .join("  ")
+      .trimEnd();
   return [
     line(cols),
     line(w.map((n) => "-".repeat(n))),
     ...rows.map((r) => line(cols.map((c) => cell(r[c])))),
-  ]
-    .join("\n");
+  ].join("\n");
 }

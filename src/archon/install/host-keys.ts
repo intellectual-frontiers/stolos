@@ -9,15 +9,14 @@
  * @module
  */
 
+import { fs, path as paths, proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "../core/exec.ts";
-import { join } from "../core/path.ts";
-import { ensureDir, exists, readTextOr } from "../core/fsx.ts";
 import { SECRETS, writeSecret } from "../core/secrets.ts";
 
 /** Ubuntu's own host key types. */
 export const HOST_KEY_TYPES = ["ed25519", "ecdsa", "rsa"] as const;
 /** An SSH host key type. */
-export type HostKeyType = typeof HOST_KEY_TYPES[number];
+export type HostKeyType = (typeof HOST_KEY_TYPES)[number];
 
 /** One SSH host key pair. */
 export interface HostKey {
@@ -34,9 +33,9 @@ export async function ensureHostKeys(host: string): Promise<HostKey[]> {
   const keys: HostKey[] = [];
   for (const type of HOST_KEY_TYPES) {
     const path = SECRETS.hostKey(host, type);
-    if (!(await exists(path))) {
+    if (!(await fs.exists(path))) {
       // A private temporary folder for ssh-keygen; writeSecret stores both halves (spec 029).
-      const tmp = await Deno.makeTempDir({ prefix: "archon-hostkey-" });
+      const tmp = await fs.makeTempDir({ prefix: "archon-hostkey-" });
       try {
         const r = await run([
           "ssh-keygen",
@@ -49,17 +48,17 @@ export async function ensureHostKeys(host: string): Promise<HostKey[]> {
           "-C",
           `root@${host}`,
           "-f",
-          join(tmp, "key"),
+          paths.join(tmp, "key"),
         ]);
         if (!r.ok) throw new Error(`ssh-keygen (${type}) failed: ${(r.stderr || r.stdout).trim()}`);
-        await writeSecret(path, await Deno.readTextFile(join(tmp, "key")));
-        await writeSecret(`${path}.pub`, await Deno.readTextFile(join(tmp, "key.pub")));
+        await writeSecret(path, await fs.readTextFile(paths.join(tmp, "key")));
+        await writeSecret(`${path}.pub`, await fs.readTextFile(paths.join(tmp, "key.pub")));
       } finally {
-        await Deno.remove(tmp, { recursive: true }).catch(() => {});
+        await fs.remove(tmp, { recursive: true }).catch(() => {});
       }
     }
-    const priv = await readTextOr(path);
-    const pub = await readTextOr(`${path}.pub`);
+    const priv = await fs.readTextOr(path);
+    const pub = await fs.readTextOr(`${path}.pub`);
     if (!priv || !pub) throw new Error(`host key ${path} is incomplete`);
     keys.push({
       type,
@@ -72,19 +71,17 @@ export async function ensureHostKeys(host: string): Promise<HostKey[]> {
 
 /** The known_hosts OpenSSH uses for this user (Windows: %USERPROFILE%\.ssh). */
 export function knownHostsFile(): string {
-  const home = Deno.build.os === "windows"
-    ? Deno.env.get("USERPROFILE") ?? Deno.env.get("HOME") ?? "."
-    : Deno.env.get("HOME") ?? ".";
-  return join(home, ".ssh", "known_hosts");
+  const home =
+    proc.build.os === "windows"
+      ? (proc.env.get("USERPROFILE") ?? proc.env.get("HOME") ?? ".")
+      : (proc.env.get("HOME") ?? ".");
+  return paths.join(home, ".ssh", "known_hosts");
 }
 
 /** Remove a host's entries from known_hosts; returns the names that were found. */
-export async function forgetHostKeys(
-  names: string[],
-  file = knownHostsFile(),
-): Promise<string[]> {
+export async function forgetHostKeys(names: string[], file = knownHostsFile()): Promise<string[]> {
   const removed: string[] = [];
-  if (!(await exists(file))) return removed;
+  if (!(await fs.exists(file))) return removed;
   for (const n of [...new Set(names.filter(Boolean))]) {
     const r = await run(["ssh-keygen", "-f", file, "-R", n]);
     if (r.ok && /# Host .* found/.test(r.stdout + r.stderr)) removed.push(n);
@@ -103,13 +100,10 @@ export async function trustHost(
   keys ??= await ensureHostKeys(host);
   const all = [...new Set([host, ...names].filter(Boolean))];
   await forgetHostKeys(all, file);
-  await ensureDir(join(file, ".."));
-  const before = (await readTextOr(file)) ?? "";
+  await fs.ensureDir(paths.join(file, ".."));
+  const before = (await fs.readTextOr(file)) ?? "";
   const lines = keys.map((k) => `${all.join(",")} ${k.public}`).join("\n") + "\n";
-  await Deno.writeTextFile(
-    file,
-    (before && !before.endsWith("\n") ? before + "\n" : before) + lines,
-  );
+  await fs.writeTextFile(file, (before && !before.endsWith("\n") ? before + "\n" : before) + lines);
   return all;
 }
 
@@ -123,13 +117,14 @@ export interface HostExport {
 
 /** The export, in the current form or the first one (a bare list of host keys). */
 export function parseHostExport(text: string): HostExport {
-  const j = JSON.parse(text);
-  return Array.isArray(j) ? { hostKeys: j } : j as HostExport;
+  const j: unknown = JSON.parse(text);
+  // Archon's own export (archon host-keys export), in either of its forms.
+  return Array.isArray(j) ? { hostKeys: j as HostExport["hostKeys"] } : (j as HostExport);
 }
 
 /**
  * `archon host-keys export` (spec 029): this host's SSH host keys and ops'
- * deploy key as JSON, for `deno task stolos vault recover-host-keys <host>` when
+ * deploy key as JSON, for `bun run stolos vault recover-host-keys <host>` when
  * the boot machine lost its copies without a backup: the rebuilt boot machine
  * then holds the same identities, so nothing changes on GitHub or for SSH
  * clients. Root only (it elevates); never offered over MCP.
@@ -137,8 +132,8 @@ export function parseHostExport(text: string): HostExport {
 export async function exportHostKeys(): Promise<number> {
   const keys: HostKey[] = [];
   for (const type of HOST_KEY_TYPES) {
-    const priv = await readTextOr(`/etc/ssh/ssh_host_${type}_key`);
-    const pub = await readTextOr(`/etc/ssh/ssh_host_${type}_key.pub`);
+    const priv = await fs.readTextOr(`/etc/ssh/ssh_host_${type}_key`);
+    const pub = await fs.readTextOr(`/etc/ssh/ssh_host_${type}_key.pub`);
     if (priv && pub) {
       keys.push({
         type,
@@ -148,12 +143,12 @@ export async function exportHostKeys(): Promise<number> {
     }
   }
   if (!keys.length) {
-    console.error("no SSH host keys in /etc/ssh");
+    stdio.stderr.writeSync("no SSH host keys in /etc/ssh\n");
     return 1;
   }
   const out: HostExport = { hostKeys: keys };
   const deploy = "/home/ops/.ssh/archon_deploy_key";
-  const priv = await readTextOr(deploy);
+  const priv = await fs.readTextOr(deploy);
   if (priv) {
     const pub = await run(["ssh-keygen", "-y", "-f", deploy]);
     if (pub.ok) {
@@ -163,6 +158,6 @@ export async function exportHostKeys(): Promise<number> {
       };
     }
   }
-  console.log(JSON.stringify(out));
+  stdio.stdout.writeSync(`${JSON.stringify(out)}\n`);
   return 0;
 }

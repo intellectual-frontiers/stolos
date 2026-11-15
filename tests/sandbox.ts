@@ -1,20 +1,24 @@
-// A sandbox for tests that run archon or the boot server as a subprocess.
-//
-// The child starts from a cleared environment (clearEnv): every per-user root
-// Archon reads, on Linux (HOME, XDG_*) and on Windows (USERPROFILE, APPDATA,
-// LOCALAPPDATA, OneDrive), points inside a temporary folder, and
-// ARCHON_SANDBOX makes archon refuse to start if any of them escapes it. Only
-// what a process needs is passed through: PATH, Windows' system variables,
-// temp folders, a proxy, and Deno's own cache. Before a test runs anything,
-// `probe()` asks a child where its secrets, ledger, vault, and logs resolve
-// and fails unless all are inside the sandbox; `fingerprint()` hashes the real
-// archon folders so a test can prove it left them untouched.
-//
-// Layout (the same on every OS): <home>/config/stolos/secrets (secrets),
-// <home>/data/stolos/... (boot cache, ledger, logs on Windows), <home>/OneDrive.
+/**
+ * A sandbox for tests that run archon or the boot server as a subprocess.
+ *
+ * The child starts from a cleared environment: every per-user root Archon reads, on Linux (`HOME`,
+ * `XDG_*`) and on Windows (`USERPROFILE`, `APPDATA`, `LOCALAPPDATA`, `OneDrive`), points inside a
+ * temporary folder, and `ARCHON_SANDBOX` makes archon refuse to start if any of them escapes it.
+ * Only what a process needs is passed through: `PATH`, Windows' system variables, temp folders and a
+ * proxy. The child runs with the runtime of the test itself (Bun or Node, spec 096). Before a test
+ * runs anything, `probe()` asks a child where its secrets, ledger, vault and logs resolve and fails
+ * unless all are inside the sandbox; `fingerprint()` hashes the real archon folders so a test can
+ * prove it left them untouched.
+ *
+ * Layout (the same on every OS): `<home>/config/stolos/secrets` (secrets),
+ * `<home>/data/stolos/...` (boot cache, ledger, logs on Windows), `<home>/OneDrive`.
+ *
+ * @module
+ */
 
-import { assert } from "./assert.ts";
-import { join } from "../src/archon/core/path.ts";
+import { sha256 } from "@intellectual-frontiers/ifc-ts/kernel";
+import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { assert } from "@intellectual-frontiers/ifc-ts/runtime/test";
 
 const PASS = [
   "PATH",
@@ -42,105 +46,87 @@ const PASS = [
   "http_proxy",
   "no_proxy",
   "SSL_CERT_FILE",
-  "DENO_CERT",
   "NODE_EXTRA_CA_CERTS",
+  "BUN_INSTALL",
+  "BUN_INSTALL_CACHE_DIR",
 ];
 
-let denoDir: string | undefined;
+/** What a command run in the sandbox did: its exit code, and its output and error joined. */
+export type SandboxResult = { readonly code: number; readonly out: string };
 
-/** The parent's Deno cache, so the child does not download its dependencies again. */
-async function parentDenoDir(): Promise<string | undefined> {
-  if (denoDir !== undefined) return denoDir || undefined;
-  const o = await new Deno.Command(Deno.execPath(), {
-    args: ["info", "--json"],
-    stdout: "piped",
-    stderr: "null",
-  })
-    .output();
-  try {
-    denoDir = JSON.parse(new TextDecoder().decode(o.stdout)).denoDir ?? "";
-  } catch {
-    denoDir = "";
-  }
-  return denoDir || undefined;
-}
-
+/** A temporary home for subprocess tests, and the way to run a script in it. */
 export interface Sandbox {
-  home: string;
-  env: Record<string, string>;
-  /** Run `deno run -A <script> ...args` in the sandbox. */
+  /** The sandbox's home folder (removed by the test when it is done). */
+  readonly home: string;
+  /** The whole environment a child is given. */
+  readonly env: Record<string, string>;
+  /** Runs `<runtime> <script> ...args` in the sandbox, with the runtime of the test itself. */
   run(
     script: string,
-    args: string[],
+    args: readonly string[],
     stdin?: string,
-    extra?: Record<string, string>,
-  ): Promise<{ code: number; out: string }>;
+    extra?: Readonly<Record<string, string>>,
+  ): Promise<SandboxResult>;
 }
 
 /** How long a command in the sandbox may run before its test fails. */
 const RUN_TIMEOUT_MS = 90_000;
 
+/** A new sandbox, probed: it fails unless every path archon would touch resolves inside it. */
 export async function sandbox(prefix = "archon-test-"): Promise<Sandbox> {
-  const home = await Deno.makeTempDir({ prefix });
-  const config = join(home, "config");
-  const data = join(home, "data");
-  const tmp = join(home, "tmp");
-  for (const d of [config, data, tmp, join(home, "OneDrive")]) {
-    await Deno.mkdir(d, { recursive: true });
+  const home = await fs.makeTempDir({ prefix });
+  const config = path.join(home, "config");
+  const data = path.join(home, "data");
+  const tmp = path.join(home, "tmp");
+  for (const d of [config, data, tmp, path.join(home, "OneDrive")]) {
+    await fs.mkdir(d, { recursive: true });
   }
   const env: Record<string, string> = {};
   for (const k of PASS) {
-    const v = Deno.env.get(k);
+    const v = proc.env.get(k);
     if (v !== undefined) env[k] = v;
   }
-  const dd = await parentDenoDir();
   Object.assign(env, {
     ARCHON_SANDBOX: home,
     HOME: home,
     USERPROFILE: home,
     XDG_CONFIG_HOME: config,
     XDG_DATA_HOME: data,
-    XDG_STATE_HOME: join(home, "state"),
-    XDG_CACHE_HOME: join(home, "cache"),
+    XDG_STATE_HOME: path.join(home, "state"),
+    XDG_CACHE_HOME: path.join(home, "cache"),
     APPDATA: config,
     LOCALAPPDATA: data,
-    OneDrive: join(home, "OneDrive"),
-    OneDriveConsumer: join(home, "OneDrive"),
+    OneDrive: path.join(home, "OneDrive"),
+    OneDriveConsumer: path.join(home, "OneDrive"),
     TEMP: tmp,
     TMP: tmp,
     TMPDIR: tmp,
     NO_COLOR: "1",
     ARCHON_PLAIN: "1",
-    ...(dd ? { DENO_DIR: dd } : {}),
   });
   const run = async (
     script: string,
-    args: string[],
+    args: readonly string[],
     stdin = "",
-    extra: Record<string, string> = {},
-  ) => {
-    const c = new Deno.Command(Deno.execPath(), {
-      args: ["run", "-A", script, ...args],
-      env: { ...env, ...extra },
-      clearEnv: true,
-      stdin: "piped",
-      stdout: "piped",
-      stderr: "piped",
-    }).spawn();
-    const w = c.stdin.getWriter();
-    await w.write(new TextEncoder().encode(stdin));
-    await w.close();
+    extra: Readonly<Record<string, string>> = {},
+  ): Promise<SandboxResult> => {
     // A command that hangs fails its test, saying so, instead of stalling the suite.
+    const stop = new AbortController();
     let timedOut = false;
     const timer = setTimeout(() => {
       timedOut = true;
-      try {
-        c.kill("SIGKILL");
-      } catch { /* already gone */ }
+      stop.abort();
     }, RUN_TIMEOUT_MS);
-    const o = await c.output().finally(() => clearTimeout(timer));
-    const d = new TextDecoder();
-    const out = d.decode(o.stdout) + d.decode(o.stderr);
+    const o = await proc
+      .run([proc.execPath(), script, ...args], {
+        env: { ...env, ...extra },
+        clearEnv: true,
+        input: stdin,
+        signal: stop.signal,
+        killAfterMs: 1000,
+      })
+      .finally(() => clearTimeout(timer));
+    const out = o.stdout + o.stderr;
     if (timedOut) {
       return {
         code: 124,
@@ -157,9 +143,9 @@ export async function sandbox(prefix = "archon-test-"): Promise<Sandbox> {
 
 /** Fail fast unless every path archon would touch resolves inside the sandbox. */
 async function probe(home: string, run: Sandbox["run"]): Promise<void> {
-  const script = join(home, "probe.ts");
-  const src = (rel: string) => new URL(`../src/archon/${rel}`, import.meta.url).href;
-  await Deno.writeTextFile(
+  const script = path.join(home, "probe.ts");
+  const src = (rel: string): string => new URL(`../src/archon/${rel}`, import.meta.url).href;
+  await fs.writeTextFile(
     script,
     `import { P } from ${JSON.stringify(src("core/paths.ts"))};
 import { LEDGER, VAULT_LOCAL } from ${JSON.stringify(src("core/secret-ledger.ts"))};
@@ -170,10 +156,13 @@ console.log(JSON.stringify([P.secrets, P.bootCache, LEDGER, VAULT_LOCAL, PROMPT_
   );
   const r = await run(script, []);
   assert(r.code === 0, `sandbox probe failed: ${r.out}`);
-  const paths = JSON.parse(r.out.trim().split("\n").pop()!) as Array<string | null>;
+  const last = r.out.trim().split("\n").pop() ?? "[]";
+  const parsed: unknown = JSON.parse(last);
+  assert(Array.isArray(parsed), `sandbox probe printed no list: ${r.out}`);
   const root = home.toLowerCase();
-  for (const p of paths) {
+  for (const p of parsed) {
     if (p === null) continue;
+    assert(typeof p === "string", `sandbox probe printed a non-path: ${String(p)}`);
     // Logs as root on Linux go to /var/log/archon: not per-user state, allowed.
     if (p.startsWith("/var/log/archon")) continue;
     assert(p.toLowerCase().startsWith(root), `sandbox leak: ${p} is outside ${home}`);
@@ -181,36 +170,50 @@ console.log(JSON.stringify([P.secrets, P.bootCache, LEDGER, VAULT_LOCAL, PROMPT_
 }
 
 /**
- * A fingerprint of the real archon folders of the test process itself (the
- * secrets' parent, and the boot cache's parent): every file's path, size, and
- * SHA-256. Equal before and after means the tests left them byte for byte as
- * they were. A boot server running at the same time owns boot.log and its
+ * A fingerprint of the real archon folders of the test process itself (the secrets' parent, and the
+ * boot cache's parent): every file's path, size, and SHA-256. Equal before and after means the tests
+ * left them byte for byte as they were. A boot server running at the same time owns boot.log and its
  * telemetry files, so those are left out.
  */
 const OWNED_BY_A_RUNNING_SERVER = /[\\/](boot\.log(\.1)?|telemetry[\\/].*)$/;
 
-export async function fingerprint(dirs: string[]): Promise<string> {
+/** Every file under the folders, with its size and SHA-256, one per line (see above). */
+export async function fingerprint(dirs: readonly string[]): Promise<string> {
   const out: string[] = [];
-  const walk = async (d: string) => {
-    let entries: Deno.DirEntry[] = [];
+  const walk = async (d: string): Promise<void> => {
+    const entries: fs.DirEntry[] = [];
     try {
-      entries = await Array.fromAsync(Deno.readDir(d));
+      for await (const e of fs.readDir(d)) entries.push(e);
     } catch {
       return;
     }
     for (const e of entries.sort((a, b) => a.name.localeCompare(b.name))) {
-      const p = join(d, e.name);
+      const p = path.join(d, e.name);
       if (OWNED_BY_A_RUNNING_SERVER.test(p)) continue;
       if (e.isDirectory) await walk(p);
       else if (e.isFile) {
-        const data = await Deno.readFile(p).catch(() => new Uint8Array());
-        const h = new Uint8Array(await crypto.subtle.digest("SHA-256", data));
-        out.push(
-          `${p} ${data.length} ${[...h].map((b) => b.toString(16).padStart(2, "0")).join("")}`,
-        );
+        const data = await fs.readFile(p).catch(() => new Uint8Array());
+        out.push(`${p} ${data.length} ${await sha256(data)}`);
       }
     }
   };
   for (const d of dirs) await walk(d);
   return out.join("\n");
+}
+
+/** The engine checkout the tests run. */
+export const ENGINE_ROOT: string = path
+  .fromFileUrl(new URL("..", import.meta.url))
+  .replace(/[\\/]$/, "");
+
+/**
+ * Make `repo` a fleet repository with the engine installed, as `bun install` would leave it:
+ * `node_modules/@intellectual-frontiers/stolos` is this checkout (its package.json maps every path
+ * under `src/`), so the fleet's files import the engine by its name, on Bun and on Node.
+ */
+export async function linkEngine(repo: string): Promise<void> {
+  const scope = path.join(repo, "node_modules", "@intellectual-frontiers");
+  await fs.mkdir(scope, { recursive: true });
+  const link = path.join(scope, "stolos");
+  if (!(await fs.exists(link))) await fs.symlink(ENGINE_ROOT, link, { type: "dir" });
 }

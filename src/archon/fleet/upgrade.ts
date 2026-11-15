@@ -1,33 +1,31 @@
 /**
- * `stolos fleet upgrade <tag>` (spec 046-engine-instance, Articles 9, 12, 24):
+ * `stolos fleet upgrade <tag>` (spec 046-engine-instance, Articles 9, 12, 24; spec 096 FR-006):
  * move a fleet repository to another released version of the engine, safely.
  *
  * Why each step exists (the fleet-repository guide, ./mod.ts, says it at length):
- *   1. The tag must be a release: the engine's own src/archon/version.ts at
- *      that tag must say the same version. A typo or a branch name is refused.
- *   2. Only forward, unless --downgrade: going back to an older engine is a
- *      decision, not an accident.
- *   3. deno.json's @stolos/ pin is rewritten to the tag; deno.lock is built
- *      again through engine.ts (and each fleet's connectors.ts, spec 088), so
- *      it holds a hash of every engine and added connector file. Hosts
- *      run with --frozen: any engine file that differs from the lock is
+ *   1. The tag must be a version tag, and only forward unless --downgrade: going back to an older
+ *      engine is a decision, not an accident.
+ *   2. `package.json`'s dependency on the engine is moved to that release's tarball
+ *      (`https://github.com/intellectual-frontiers/stolos/releases/download/v<version>/intellectual-frontiers-stolos-<version>.tgz`),
+ *      and `bun install` records its integrity in `bun.lock`. The installed package must say it is
+ *      that version: a typo, or an asset that is not that release, is refused and everything is
+ *      put back. Hosts run `bun install --frozen-lockfile`: a tarball that differs from the lock is
  *      refused. That is what makes your signature cover the engine's bytes.
- *   4. Every fleet in the repository is validated with the new engine before
- *      anything is committed.
- *   5. The three files are committed together and signed (git commit -S):
- *      hosts apply only a signed tip of main. Pushing it is the approval.
+ *   3. Every fleet in the repository is validated with the new engine before anything is
+ *      committed.
+ *   4. The files are committed together and signed (git commit -S): hosts apply only a signed
+ *      tip of main. Pushing it is the approval.
  *
  * ```mermaid
  * sequenceDiagram
  *   actor P as Person
  *   participant U as stolos fleet upgrade
- *   participant G as GitHub (stolos tag)
+ *   participant G as GitHub (stolos release)
  *   participant R as fleet repository
  *   P->>U: fleet upgrade vX.Y.Z
- *   U->>G: is vX.Y.Z a release? (its version.ts)
- *   U->>R: deno.json pin, the reusable workflows' tag
- *   U->>G: deno cache: every engine file
- *   U->>R: deno.lock (a hash of each)
+ *   U->>R: package.json: the release's tarball URL, the reusable workflows' tag
+ *   U->>G: bun install: the tarball
+ *   U->>R: bun.lock (its integrity); the installed engine says vX.Y.Z
  *   U->>R: validate every fleet with the new engine
  *   U->>R: one signed commit
  *   P->>R: git push (the approval)
@@ -36,25 +34,29 @@
  * @module
  */
 
+import { object, record, string } from "@intellectual-frontiers/ifc-ts/kernel";
+import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { listFleets, P } from "../core/paths.ts";
-import { join } from "../core/path.ts";
-import { exists, readTextOr } from "../core/fsx.ts";
 import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
+import { engineRuntime, installDependencies } from "../install/bun.ts";
 
-/** The file that names every engine module, so deno.lock pins all of them. */
-export const ENGINE_ENTRY = "engine.ts";
-/** Its content. */
-export const ENGINE_ENTRY_TEXT =
-  `// Every engine module, so that deno.lock pins all of them (archon runs with
-// --frozen, and the engine loads some modules on demand). Nothing runs this
-// file. Kept by stolos fleet upgrade (spec 046).
-import "@stolos/archon/modules.auto.ts";
-`;
+/** The engine's package name, as a fleet repository depends on it. */
+export const ENGINE_PACKAGE = "@intellectual-frontiers/stolos";
+
+/** Where the engine's releases are served from: the tag and the tarball's name are appended. */
+export const ENGINE_RELEASES =
+  "https://github.com/intellectual-frontiers/stolos/releases/download/";
+
+/** The file of a fleet repository that pins the engine. */
+export const PIN_FILE = "package.json";
+
+/** The file that holds the integrity of the pinned engine. */
+export const LOCK_FILE = "bun.lock";
 
 const TAG = /^v(\d+)\.(\d+)\.(\d+)$/;
-/** "https://raw.githubusercontent.com/<org>/stolos/v0.7.0/src/" */
-const PIN = /^(.*\/)(v\d+\.\d+\.\d+)(\/src\/)$/;
+/** "https://github.com/<org>/stolos/releases/download/v0.7.0/intellectual-frontiers-stolos-0.7.0.tgz" */
+const PIN = /^(.*\/)v(\d+\.\d+\.\d+)\/intellectual-frontiers-stolos-(\d+\.\d+\.\d+)\.tgz$/;
 
 /** A version: major, minor, patch. */
 export type Semver = [number, number, number];
@@ -67,44 +69,59 @@ export function parseTag(tag: string): Semver | undefined {
 
 /** -1, 0, or 1. */
 export function compare(a: Semver, b: Semver): number {
-  for (let i = 0; i < 3; i++) if (a[i] !== b[i]) return a[i] < b[i] ? -1 : 1;
+  for (const i of [0, 1, 2] as const) if (a[i] !== b[i]) return a[i] < b[i] ? -1 : 1;
   return 0;
 }
 
-/** Where the engine is pinned: its base URL and tag. */
+/** Where the engine is pinned: the releases' base URL and the tag. */
 export interface Pin {
-  /** The URL before the tag ("https://raw.githubusercontent.com/<org>/stolos/"). */
+  /** The URL before the tag ("https://github.com/<org>/stolos/releases/download/"). */
   base: string;
   /** The tag, "vX.Y.Z". */
   tag: string;
 }
 
-/** The @stolos/ pin in a deno.json's text, or undefined when it is not a tagged URL. */
-export function readPin(denoJson: string): Pin | undefined {
-  let url: unknown;
+/** The URL of a release's tarball: `<base>v<version>/intellectual-frontiers-stolos-<version>.tgz`. */
+export function tarballUrl(tag: string, base: string = ENGINE_RELEASES): string {
+  const version = tag.replace(/^v/, "");
+  return `${base}v${version}/intellectual-frontiers-stolos-${version}.tgz`;
+}
+
+/** The parts of a package.json the pin is read from. */
+const PACKAGE_JSON = object({}, { dependencies: record(string) });
+
+/** The engine's pin in a package.json's text, or undefined when it is not a release's tarball. */
+export function readPin(packageJson: string): Pin | undefined {
+  let parsed: unknown;
   try {
-    url = JSON.parse(denoJson)?.imports?.["@stolos/"];
+    parsed = JSON.parse(packageJson);
   } catch {
     return undefined;
   }
-  const m = typeof url === "string" ? url.match(PIN) : null;
-  return m ? { base: m[1], tag: m[2] } : undefined;
+  const d = PACKAGE_JSON(parsed);
+  const url = d.kind === "ok" ? d.value.dependencies?.[ENGINE_PACKAGE] : undefined;
+  const m = url?.match(PIN);
+  if (!m || m[2] !== m[3]) return undefined;
+  const [, base = "", version = ""] = m;
+  return { base, tag: `v${version}` };
 }
 
-/** deno.json's text with the pin moved to `tag` (only that string changes). */
-export function writePin(denoJson: string, pin: Pin, tag: string): string {
-  const from = JSON.stringify(`${pin.base}${pin.tag}/src/`);
-  const to = JSON.stringify(`${pin.base}${tag}/src/`);
-  if (!denoJson.includes(from)) throw new Error("deno.json's @stolos/ pin is not where expected");
-  return denoJson.replace(from, to);
+/** package.json's text with the pin moved to `tag` (only that string changes). */
+export function writePin(packageJson: string, pin: Pin, tag: string): string {
+  const from = JSON.stringify(tarballUrl(pin.tag, pin.base));
+  const to = JSON.stringify(tarballUrl(tag, pin.base));
+  if (!packageJson.includes(from)) {
+    throw new Error(`package.json's ${ENGINE_PACKAGE} pin is not where expected`);
+  }
+  return packageJson.replace(from, to);
 }
 
 /**
  * The engine repository ("owner/name") a pin's base points at:
- * https://raw.githubusercontent.com/<owner>/<name>/ (else undefined).
+ * https://github.com/<owner>/<name>/releases/download/ (else undefined).
  */
 export function engineRepository(pin: Pin): string | undefined {
-  return pin.base.match(/^https:\/\/raw\.githubusercontent\.com\/([^/]+\/[^/]+)\/$/)?.[1];
+  return pin.base.match(/^https:\/\/github\.com\/([^/]+\/[^/]+)\/releases\/download\/$/)?.[1];
 }
 
 /**
@@ -127,36 +144,33 @@ async function moveWorkflowRefs(repo: string, pin: Pin, tag: string): Promise<st
   if (!engineRepo) return [];
   const changed: string[] = [];
   try {
-    for (const e of Deno.readDirSync(join(repo, ".github", "workflows"))) {
+    for (const e of fs.readDirSync(path.join(repo, ".github", "workflows"))) {
       if (!e.isFile || !/\.ya?ml$/.test(e.name)) continue;
       const rel = `.github/workflows/${e.name}`;
-      const before = await Deno.readTextFile(join(repo, rel));
+      const before = await fs.readTextFile(path.join(repo, rel));
       const after = rewriteWorkflowRefs(before, engineRepo, tag);
       if (after !== before) {
-        await Deno.writeTextFile(join(repo, rel), after);
+        await fs.writeTextFile(path.join(repo, rel), after);
         changed.push(rel);
       }
     }
-  } catch { /* no workflows */ }
+  } catch {
+    /* no workflows */
+  }
   return changed;
 }
 
-/** The version the engine says it is at `tag` (its src/archon/version.ts), or why not. */
-export async function releasedVersion(
-  pin: Pin,
-  tag: string,
-): Promise<{ version?: string; why?: string }> {
-  const url = `${pin.base}${tag}/src/archon/version.ts`;
+/** The version of the engine installed in a checkout (its package's own package.json), or undefined. */
+export async function installedVersion(repo: string): Promise<string | undefined> {
+  const text = await fs.readTextOr(
+    path.join(repo, "node_modules", ...ENGINE_PACKAGE.split("/"), "package.json"),
+  );
+  if (text === undefined) return undefined;
   try {
-    const r = await fetch(url, { signal: AbortSignal.timeout(20_000) });
-    if (!r.ok) {
-      await r.body?.cancel();
-      return { why: `${tag} is not a released engine version (${url}: HTTP ${r.status})` };
-    }
-    const v = (await r.text()).match(/export const VERSION = "(\d+\.\d+\.\d+)";/)?.[1];
-    return v ? { version: v } : { why: `${url} has no VERSION` };
-  } catch (e) {
-    return { why: `cannot reach ${url}: ${(e as Error).message}` };
+    const d = object({ version: string })(JSON.parse(text));
+    return d.kind === "ok" ? d.value.version : undefined;
+  } catch {
+    return undefined;
   }
 }
 
@@ -172,25 +186,26 @@ export interface UpgradeOptions {
   repo?: string;
 }
 
-/** stolos fleet upgrade: move the pin, lock the engine, validate every fleet, and make one signed commit. */
+/** stolos fleet upgrade: move the pin, install and lock the engine, validate every fleet, and make one signed commit. */
 export async function fleetUpgrade(o: UpgradeOptions): Promise<number> {
   const repo = o.repo ?? P.repo;
-  const denoJsonPath = join(repo, "deno.json");
-  const git = (args: string[]) => run(["git", "-C", repo, ...args]);
+  const pinPath = path.join(repo, PIN_FILE);
+  const lockPath = path.join(repo, LOCK_FILE);
+  const git = (args: string[]): ReturnType<typeof run> => run(["git", "-C", repo, ...args]);
 
   // 1. The pin and the tag.
   const p = ui.phase("Engine version");
-  const text = await readTextOr(denoJsonPath);
+  const text = await fs.readTextOr(pinPath);
   const pin = text ? readPin(text) : undefined;
-  if (!text || !pin) {
+  const have = pin ? parseTag(pin.tag) : undefined;
+  if (!text || !pin || !have) {
     p.fail(
-      `${denoJsonPath} has no @stolos/ pin to a tagged URL (…/stolos/vX.Y.Z/src/)`,
-      "see deno task stolos docs fleet-repository, section 'The pin'",
+      `${pinPath} does not depend on ${ENGINE_PACKAGE} by a release's tarball (…/releases/download/vX.Y.Z/intellectual-frontiers-stolos-X.Y.Z.tgz)`,
+      "see bun run stolos docs fleet-repository, section 'The pin'",
     );
     return ui.finish();
   }
   const want = parseTag(o.tag);
-  const have = parseTag(pin.tag)!;
   if (!want) {
     p.fail(`'${o.tag}' is not a version tag`, "use the form v1.2.3 (see the engine's releases)");
     return ui.finish();
@@ -207,25 +222,17 @@ export async function fleetUpgrade(o: UpgradeOptions): Promise<number> {
     );
     return ui.finish();
   }
-  p.status(`checking that ${o.tag} is a released version`);
-  const rel = await releasedVersion(pin, o.tag);
-  if (!rel.version || `v${rel.version}` !== o.tag) {
-    p.fail(
-      rel.why ?? `${o.tag}'s own version.ts says ${rel.version}: not a release`,
-      "pick a tag CI made (the engine's tags), and check its spelling",
-    );
-    return ui.finish();
-  }
+  const version = want.join(".");
   // Spec 088: every connector a fleet added must support the new engine.
   {
     const { registryEntries, satisfies } = await import("../connect/registry.ts");
     for (const id of listFleets(repo)) {
-      const f = join(repo, "fleets", id, "connectors.ts");
-      for (const e of registryEntries(await readTextOr(f))) {
-        if (satisfies(rel.version, e.engine) === false) {
+      const f = path.join(repo, "fleets", id, "connectors.ts");
+      for (const e of registryEntries(await fs.readTextOr(f))) {
+        if (satisfies(version, e.engine) === false) {
           p.fail(
-            `fleet ${id}'s connector ${e.id} (${e.ref}) supports engine ${e.engine}, not ${rel.version}`,
-            `move it to a tag that does (deno task stolos connector add ${e.source}@<tag>), or remove it, first`,
+            `fleet ${id}'s connector ${e.id} (${e.ref}) supports engine ${e.engine}, not ${version}`,
+            `move it to a tag that does (bun run stolos connector add ${e.source}@<tag>), or remove it, first`,
           );
           return ui.finish();
         }
@@ -241,7 +248,7 @@ export async function fleetUpgrade(o: UpgradeOptions): Promise<number> {
     );
     return ui.finish();
   }
-  p.done(`${pin.tag} → ${o.tag} (released; ${order < 0 ? "a downgrade" : "newer"})`);
+  p.done(`${pin.tag} → ${o.tag} (${order < 0 ? "a downgrade" : "newer"})`);
 
   // A signed commit must be possible here, checked before any file changes: a fresh
   // clone has no signing settings or identity until vault restore or keys setup ran in it.
@@ -255,63 +262,53 @@ export async function fleetUpgrade(o: UpgradeOptions): Promise<number> {
     }
   }
 
-  // 2. The pin, engine.ts, and the lock.
+  // 2. The pin, the install, and the lock.
   const l = ui.phase("Lock");
-  await Deno.writeTextFile(denoJsonPath, writePin(text, pin, o.tag));
+  const lockBefore = await fs.readTextOr(lockPath);
+  await fs.writeTextFile(pinPath, writePin(text, pin, o.tag));
   const workflows = await moveWorkflowRefs(repo, pin, o.tag);
-  const entry = join(repo, ENGINE_ENTRY);
-  if ((await readTextOr(entry)) !== ENGINE_ENTRY_TEXT) {
-    await Deno.writeTextFile(entry, ENGINE_ENTRY_TEXT);
-  }
-  const lock = join(repo, "deno.lock");
-  if (await exists(lock)) await Deno.remove(lock);
-  const entries: string[] = [];
-  for (const f of ["archon.ts", "stolos.ts", ENGINE_ENTRY]) {
-    if (await exists(join(repo, f))) entries.push(f);
-  }
-  // Spec 088: the connectors each fleet added are locked with the engine.
-  for (const id of listFleets(repo)) {
-    const f = `fleets/${id}/connectors.ts`;
-    if (await exists(join(repo, f))) entries.push(f);
-  }
-  l.status("downloading the engine and hashing every file");
-  const cache = await run([
-    Deno.execPath(),
-    "cache",
-    "--allow-import",
-    "--lock=deno.lock",
-    ...entries,
-  ], { cwd: repo });
-  if (!cache.ok) {
-    // Put everything back: a half-done upgrade is worse than none.
-    await Deno.writeTextFile(denoJsonPath, text);
-    await git(["checkout", "--", "deno.lock", ENGINE_ENTRY, ...workflows]).catch(() => {});
+  // Put everything back: a half-done upgrade is worse than none.
+  const restore = async (): Promise<void> => {
+    await fs.writeTextFile(pinPath, text);
+    if (lockBefore === undefined) await fs.remove(lockPath).catch(() => {});
+    else await fs.writeTextFile(lockPath, lockBefore);
+    if (workflows.length) await git(["checkout", "--", ...workflows]);
+    await installDependencies(repo);
+  };
+  l.status(`installing the engine ${o.tag} and recording its integrity in ${LOCK_FILE}`);
+  const install = await installDependencies(repo, { frozen: false });
+  if (!install.ok) {
+    await restore();
     l.fail(
-      `the engine at ${o.tag} could not be cached: ${cache.stderr.trim().split("\n").pop()}`,
-      "check the network, then run it again; nothing was changed",
+      `the engine at ${o.tag} could not be installed: ${install.stderr.trim().split("\n").pop() ?? `exit ${install.code}`}`,
+      "check the tag (a release CI made) and the network, then run it again; nothing was changed",
     );
     return ui.finish();
   }
-  const files = ((await readTextOr(lock)) ?? "").split(`${pin.base}${o.tag}/`).length - 1;
-  l.done(`deno.lock pins ${files} engine file(s) at ${o.tag}`);
+  const installed = await installedVersion(repo);
+  if (installed !== version) {
+    await restore();
+    l.fail(
+      `${o.tag}'s package says it is ${installed ?? "no version"}: not that release`,
+      "pick a tag CI made (the engine's releases), and check its spelling; nothing was changed",
+    );
+    return ui.finish();
+  }
+  l.done(`${LOCK_FILE} holds the integrity of the engine ${o.tag}`);
 
-  // 3. Every fleet, validated with the new engine (in its own process, frozen).
+  // 3. Every fleet, validated with the new engine (in its own process).
   const v = ui.phase("Validate");
   const fleets = listFleets(repo);
   for (const id of fleets) {
     v.status(`fleet ${id}`);
-    const r = await run([
-      Deno.execPath(),
-      "run",
-      "-A",
-      "--frozen",
-      "stolos.ts",
-      "validate",
-    ], { cwd: repo, env: { ...Deno.env.toObject(), ARCHON_REPO: repo, ARCHON_FLEET: id } });
+    const r = await run([engineRuntime(), "stolos.ts", "validate"], {
+      cwd: repo,
+      env: { ...proc.env.toObject(), ARCHON_REPO: repo, ARCHON_FLEET: id },
+    });
     if (!r.ok) {
       v.fail(
         `fleet ${id} does not validate with ${o.tag}`,
-        `read it with: ARCHON_FLEET=${id} deno task stolos validate; fix the model (or stay on ${pin.tag}: git checkout -- deno.json deno.lock ${ENGINE_ENTRY})`,
+        `read it with: ARCHON_FLEET=${id} bun run stolos validate; fix the model (or stay on ${pin.tag}: git checkout -- ${PIN_FILE} ${LOCK_FILE} && bun install --frozen-lockfile)`,
       );
       return ui.finish();
     }
@@ -322,38 +319,33 @@ export async function fleetUpgrade(o: UpgradeOptions): Promise<number> {
   // spec 074: the compliance-impact workflow too.
   const { bootstrapFiles, repoSlug } = await import("./bootstrap.ts");
   const { GITATTRIBUTES_TEXT } = await import("./scaffold.ts");
-  const { IMPACT_WORKFLOW_PATH, IMPACT_WORKFLOW_TEXT } = await import(
-    "../compliance/workflow.ts"
-  );
+  const { IMPACT_WORKFLOW_PATH, IMPACT_WORKFLOW_TEXT } = await import("../compliance/workflow.ts");
   const refreshed: string[] = [];
-  for (
-    const [rel, want] of Object.entries({
-      ...bootstrapFiles(await repoSlug(repo)),
-      ".gitattributes": GITATTRIBUTES_TEXT,
-      [IMPACT_WORKFLOW_PATH]: IMPACT_WORKFLOW_TEXT,
-    })
-  ) {
-    const p = join(repo, rel);
-    if ((await readTextOr(p)) === want) continue;
-    await Deno.mkdir(join(p, ".."), { recursive: true });
-    await Deno.writeTextFile(p, want);
-    if (rel.endsWith(".sh") && Deno.build.os !== "windows") await Deno.chmod(p, 0o755);
+  for (const [rel, want] of Object.entries({
+    ...bootstrapFiles(await repoSlug(repo)),
+    ".gitattributes": GITATTRIBUTES_TEXT,
+    [IMPACT_WORKFLOW_PATH]: IMPACT_WORKFLOW_TEXT,
+  })) {
+    const f = path.join(repo, rel);
+    if ((await fs.readTextOr(f)) === want) continue;
+    await fs.mkdir(path.join(f, ".."), { recursive: true });
+    await fs.writeTextFile(f, want);
+    if (rel.endsWith(".sh") && proc.build.os !== "windows") await fs.chmod(f, 0o755);
     refreshed.push(rel);
   }
   if (refreshed.length) v.note(`refreshed ${refreshed.join(", ")}`);
 
   // 4. One signed commit.
   const c = ui.phase("Commit");
+  const files = [PIN_FILE, LOCK_FILE, ...workflows, ...refreshed];
   if (o.noCommit) {
     c.done("files changed, not committed (--no-commit)");
     ui.next.push(
-      `review: git diff; then: git add deno.json deno.lock ${ENGINE_ENTRY} ${
-        [...workflows, ...refreshed].join(" ")
-      } && git commit -S -m "stolos ${o.tag}: adopt the engine ${o.tag}"`,
+      `review: git diff; then: git add ${files.join(" ")} && git commit -S -m "stolos ${o.tag}: adopt the engine ${o.tag}"`,
     );
     return ui.finish();
   }
-  await git(["add", "deno.json", "deno.lock", ENGINE_ENTRY, ...workflows, ...refreshed]);
+  await git(["add", ...files]);
   // Runnable on Linux and macOS whatever system made the commit.
   if (refreshed.includes("bin/bootstrap.sh")) {
     await git(["update-index", "--chmod=+x", "bin/bootstrap.sh"]);
@@ -371,7 +363,7 @@ export async function fleetUpgrade(o: UpgradeOptions): Promise<number> {
       "-m",
       `stolos ${o.tag}: adopt the engine ${o.tag}`,
       "-m",
-      `From ${pin.tag}. deno.lock pins every engine file at ${o.tag}; validated: ${
+      `From ${pin.tag}. ${LOCK_FILE} holds the integrity of the engine's release ${o.tag}; validated: ${
         fleets.join(", ") || "no fleets"
       }.`,
     ],
@@ -387,7 +379,7 @@ export async function fleetUpgrade(o: UpgradeOptions): Promise<number> {
   }
   c.done(`signed commit "stolos ${o.tag}: adopt the engine ${o.tag}"`);
   ui.next.push(
-    "push it: deno task stolos apply (pushing is the approval; hosts move to it within 15 minutes)",
+    "push it: bun run stolos apply (pushing is the approval; hosts move to it within 15 minutes)",
     "then watch them: stolos fleet status",
   );
   return ui.finish();

@@ -13,6 +13,7 @@
  * @module
  */
 
+import { proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
 import { getRecord, putRecord } from "../state/store.ts";
 
 import { P } from "../core/paths.ts";
@@ -64,7 +65,7 @@ export const OPT_INS: OptInDef[] = [
     title: "SMB file sharing (Samba)",
     unit: "smbd.service",
     commands: { on: "archon fs smb on", off: "archon fs smb off", status: "archon fs smb status" },
-    howTo: (fleet, host) => {
+    howTo: (fleet: FleetDef, host: HostDef): string[] => {
       const n = fqdn(fleet, host);
       const name = n ? `smb.${n}` : host.name;
       return [
@@ -90,7 +91,7 @@ export const OPT_INS: OptInDef[] = [
     title: "S3 object storage (RustFS)",
     unit: "archon-s3.service",
     commands: { on: "archon fs s3 on", off: "archon fs s3 off", status: "archon fs s3 status" },
-    howTo: (fleet, host) => {
+    howTo: (fleet: FleetDef, host: HostDef): string[] => {
       const n = fqdn(fleet, host);
       return [
         `S3 API: https://s3.${n ?? host.name} (path-style) · console: https://s3-console.${
@@ -111,7 +112,7 @@ export const OPT_INS: OptInDef[] = [
       off: "archon otel ui off",
       status: "archon otel ui status",
     },
-    howTo: (fleet, host) => {
+    howTo: (fleet: FleetDef, host: HostDef): string[] => {
       const n = fqdn(fleet, host);
       return [
         `Web UI: https://otel.${
@@ -132,7 +133,7 @@ export const optInDef = (name: string): OptInDef | undefined =>
 export const isOn = (host: HostDef, name: string): boolean => host.optIn?.[name]?.enabled === true;
 
 /** Who asked: the person behind sudo, else the current user. */
-export const caller = (): string => Deno.env.get("SUDO_USER") || currentUser() || "root";
+export const caller = (): string => proc.env.get("SUDO_USER") || currentUser() || "root";
 
 /**
  * Write the decision, keeping anything else the record holds (pg.json also
@@ -224,7 +225,7 @@ export async function setOptIn(
     }; recorded in archon.sql ${host.name}/${name}.json`,
   );
   const { apply } = await import("../apply/apply.ts");
-  const fresh = (await loadHosts()).find((h) => h.name === host.name)!;
+  const fresh = (await loadHosts()).find((h) => h.name === host.name) ?? host;
   const res = await apply(fresh, {
     check: false,
     only: ["packages", "accounts", "files", "units", "databases", "containers"],
@@ -236,8 +237,8 @@ export async function setOptIn(
     level: "info",
     what: enabled
       ? `${rec.by} turned on ${def.title} on ${host.name}${
-        rec.data ? `, its data ${rec.data}` : ""
-      }. It stays on, across reboots and reinstalls, until an operator runs ${def.commands.off}.`
+          rec.data ? `, its data ${rec.data}` : ""
+        }. It stays on, across reboots and reinstalls, until an operator runs ${def.commands.off}.`
       : `${rec.by} turned off ${def.title} on ${host.name}. It stays off (its data kept) until an operator runs ${def.commands.on}.`,
     todo: "Nothing.",
     key: `optin:${host.name}:${name}:${enabled ? "on" : "off"}`,
@@ -275,18 +276,18 @@ export async function optInList(hostName: string, json: boolean): Promise<number
   });
   const d = hostData(host);
   if (json) {
-    console.log(
-      JSON.stringify({ host: host.name, data: d.class, reasons: d.reasons, optIn: rows }, null, 2),
+    stdio.stdout.writeSync(
+      `${JSON.stringify({ host: host.name, data: d.class, reasons: d.reasons, optIn: rows }, null, 2)}\n`,
     );
     return 0;
   }
-  console.log(`${host.name} is ${describeData(d)} (archon data)`);
+  stdio.stdout.writeSync(`${host.name} is ${describeData(d)} (archon data)\n`);
   for (const r of rows) {
     const when = r.since ? ` since ${r.since.slice(0, 16).replace("T", " ")} UTC by ${r.by}` : "";
-    console.log(
-      `${r.on ? "on " : "off"}  ${r.title.padEnd(30)} ${r.kind.padEnd(9)} ${
-        (r.data ?? "").padEnd(9)
-      }${r.on ? when : r.since ? `${when} · ${r.turnOn}` : ` · ${r.turnOn}`}`,
+    stdio.stdout.writeSync(
+      `${r.on ? "on " : "off"}  ${r.title.padEnd(30)} ${r.kind.padEnd(9)} ${(r.data ?? "").padEnd(
+        9,
+      )}${r.on ? when : r.since ? `${when} · ${r.turnOn}` : ` · ${r.turnOn}`}\n`,
     );
   }
   return 0;

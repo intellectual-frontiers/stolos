@@ -1,8 +1,15 @@
-// An example control pack (spec 078): the lab's own controls, in TypeScript, tested like code
-// (baseline_test.ts, with deno task test). Stolos loads every fleets/<fleet>/controls/<pack>/pack.ts
-// and shows its results in stolos compliance and the Compliance tab ("control pack").
+/**
+ * An example control pack (spec 078): the lab's own controls, in TypeScript, tested like code
+ * (baseline.test.ts, with `bun test`). Stolos loads every fleets/<fleet>/controls/<pack>/pack.ts
+ * and shows its results in stolos compliance and the Compliance tab ("control pack").
+ *
+ * @module
+ */
 
-import { defineControl, defineControlPack } from "@stolos/archon/controls/mod.ts";
+import {
+  defineControl,
+  defineControlPack,
+} from "@intellectual-frontiers/stolos/archon/controls/mod";
 
 /** No system has more than three active administrators (over the estate graph). */
 export const fewAdmins = defineControl({
@@ -17,12 +24,16 @@ export const fewAdmins = defineControl({
   },
   // Without any account that says whether it is an administrator, the control does not apply.
   assert: ({ known, many }) =>
-    !Number(known[0]?.n ?? 0) ? undefined : {
-      status: many.length ? "warn" : "pass",
-      detail: many.length
-        ? many.map((r) => `${r.n} administrators in ${r.system}`).join(", ")
-        : "at most three administrators in each system",
-    },
+    !Number(known[0]?.["n"] ?? 0)
+      ? undefined
+      : {
+          status: many.length ? "warn" : "pass",
+          detail: many.length
+            ? many
+                .map((r) => `${String(r["n"])} administrators in ${String(r["system"])}`)
+                .join(", ")
+            : "at most three administrators in each system",
+        },
   fix: "remove administrator rights from accounts that do not need them",
 });
 
@@ -36,7 +47,7 @@ export const noTelnet = defineControl({
   assert: (rows) => ({
     status: rows.length ? "fail" : "pass",
     detail: rows.length
-      ? `telnet listens on ${rows.map((r) => r.address).join(", ")}`
+      ? `telnet listens on ${rows.map((r) => String(r["address"])).join(", ")}`
       : "no telnet listener",
   }),
   fix: "turn the telnet service off, and use SSH",

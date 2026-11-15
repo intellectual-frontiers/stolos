@@ -7,10 +7,9 @@
  * @module
  */
 
+import { fs, path } from "@intellectual-frontiers/ifc-ts/runtime";
 import { getRecord, listRecords } from "../state/store.ts";
 import { listFleets, P } from "../core/paths.ts";
-import { exists } from "../core/fsx.ts";
-import { join, toFileUrl } from "../core/path.ts";
 import type { FleetDef, HostDef, McpTier, OptInRecord, PgState, UserDef } from "./types.ts";
 
 /** The tier workstations get over MCP (spec 030); never destructive. */
@@ -36,11 +35,26 @@ export class NoFleetError extends Error {
     super(
       P.fleetId
         ? `no fleet ${P.fleetId} in ${P.repo}: run \`stolos fleet init ${P.fleetId}\` on the boot machine first`
-        : `no fleet chosen in ${P.repo}: deno task stolos fleet use <id> (one of: ${
-          listFleets(P.repo).join(", ") || "none yet"
-        }), or create one: deno task stolos fleet init <id>`,
+        : `no fleet chosen in ${P.repo}: bun run stolos fleet use <id> (one of: ${
+            listFleets(P.repo).join(", ") || "none yet"
+          }), or create one: bun run stolos fleet init <id>`,
     );
   }
+}
+
+/**
+ * A named export of one of the fleet's own TypeScript files (fleet.ts, host.ts, registration.ts,
+ * decisions.ts), which the fleet's type check covers; `fresh` reads it again after a change.
+ */
+export async function fleetExport<T>(
+  file: string,
+  name: string,
+  fresh = false,
+): Promise<T | undefined> {
+  const mod: unknown = await import(path.toFileUrl(file).href + (fresh ? `?t=${Date.now()}` : ""));
+  if (typeof mod !== "object" || mod === null) return undefined;
+  const value: unknown = Reflect.get(mod, name);
+  return value === undefined ? undefined : (value as T);
 }
 
 /**
@@ -48,9 +62,10 @@ export class NoFleetError extends Error {
  * NoFleetError when there is none, or when its id does not match its folder.
  */
 export async function loadFleet(): Promise<FleetDef> {
-  if (!(await exists(P.fleet))) throw new NoFleetError();
-  const mod = await import(toFileUrl(P.fleet).href);
-  const fleet = { ...(mod.fleet as FleetDef) };
+  if (!(await fs.exists(P.fleet))) throw new NoFleetError();
+  const def = await fleetExport<FleetDef>(P.fleet, "fleet");
+  if (def === undefined) throw new Error(`${P.fleet} does not export fleet`);
+  const fleet = { ...def };
   // Spec 047: who may approve this fleet's changes, from fleets/<id>/signers.ts.
   const { loadSigners } = await import("../identity/signers.ts");
   fleet.signers = await loadSigners();
@@ -69,17 +84,17 @@ export async function loadFleet(): Promise<FleetDef> {
  */
 export async function loadHosts(): Promise<HostDef[]> {
   const hosts: HostDef[] = [];
-  if (!(await exists(P.hosts))) return hosts;
+  if (!(await fs.exists(P.hosts))) return hosts;
   // One folder per host (spec 046-engine-instance): hosts/<host>/host.ts.
   const names: string[] = [];
-  for await (const e of Deno.readDir(P.hosts)) {
-    if (e.isDirectory && !e.name.startsWith("_") && await exists(hostFile(e.name))) {
+  for await (const e of fs.readDir(P.hosts)) {
+    if (e.isDirectory && !e.name.startsWith("_") && (await fs.exists(hostFile(e.name)))) {
       names.push(e.name);
     }
   }
   for (const n of names.sort()) {
-    const mod = await import(toFileUrl(hostFile(n)).href);
-    const host = mod.host as HostDef;
+    const host = await fleetExport<HostDef>(hostFile(n), "host");
+    if (host === undefined) throw new Error(`${hostFile(n)} does not export host`);
     // Spec 038: what operators recorded on the host is part of its model.
     const pgState = await readPgState(host.name);
     // Spec 047: a decision in Git (decisions.ts) wins over the host's own record.
@@ -104,7 +119,7 @@ export async function loadHosts(): Promise<HostDef[]> {
 
 /** fleets/<id>/hosts/<host>/host.ts (spec 046-engine-instance). */
 export function hostFile(name: string): string {
-  return join(P.hosts, name, "host.ts");
+  return path.join(P.hosts, name, "host.ts");
 }
 
 /** The PostgreSQL record (the opt-in "pg" and the instances made), when there is one (spec 038). */
@@ -124,13 +139,14 @@ export async function readOptIns(
 ): Promise<Record<string, OptInRecord>> {
   const out: Record<string, OptInRecord> = {};
   for (const { name, body } of await listRecords<Record<string, unknown>>(host, "optin", root)) {
-    const r = body;
-    if (typeof r?.enabled === "boolean") {
+    const enabled = body["enabled"];
+    if (typeof enabled === "boolean") {
+      const { data, by, at } = body;
       out[name] = {
-        enabled: r.enabled,
-        by: String(r.by ?? ""),
-        at: String(r.at ?? ""),
-        ...(r.data === "durable" || r.data === "ephemeral" ? { data: r.data } : {}),
+        enabled,
+        by: typeof by === "string" ? by : "",
+        at: typeof at === "string" ? at : "",
+        ...(data === "durable" || data === "ephemeral" ? { data } : {}),
       };
     }
   }
@@ -153,15 +169,17 @@ export async function loadServers(): Promise<HostDef[]> {
 export function usersFor(fleet: FleetDef, host: HostDef): UserDef[] {
   const gh = fleet.admin.github;
   if (isWorkstation(host)) {
-    return [{
-      name: host.user ?? fleet.admin.user,
-      fullName: gh.name,
-      email: gh.email,
-      personas: ["operator"],
-      admin: true,
-      sshKeys: [],
-      spec: "020-workstation",
-    }];
+    return [
+      {
+        name: host.user ?? fleet.admin.user,
+        fullName: gh.name,
+        email: gh.email,
+        personas: ["operator"],
+        admin: true,
+        sshKeys: [],
+        spec: "020-workstation",
+      },
+    ];
   }
   return [
     {

@@ -20,10 +20,9 @@
  * @module
  */
 
+import { fs, path as paths } from "@intellectual-frontiers/ifc-ts/runtime";
 import { putRecord } from "../state/store.ts";
 import { P } from "../core/paths.ts";
-import { join } from "../core/path.ts";
-import { ensureDir, exists } from "../core/fsx.ts";
 import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
 import { apply } from "../apply/apply.ts";
@@ -54,10 +53,10 @@ export async function firstBoot(host: HostDef): Promise<number> {
   await apply(host, { check: false });
 
   // The mail relay's token (spec 027): Postfix's sasl_passwd, root only.
-  if (await exists(MAIL_DELIVERED)) {
+  if (await fs.exists(MAIL_DELIVERED)) {
     const { installCredential } = await import("../notify/commands.ts");
-    await installCredential(await Deno.readTextFile(MAIL_DELIVERED));
-    await Deno.remove(MAIL_DELIVERED);
+    await installCredential(await fs.readTextFile(MAIL_DELIVERED));
+    await fs.remove(MAIL_DELIVERED);
   }
 
   // Spec 032: the Let's Encrypt store carried from the previous install, in
@@ -69,22 +68,25 @@ export async function firstBoot(host: HostDef): Promise<number> {
   }
 
   // The Cloudflare DNS token (spec 032): root only, then this server's records.
-  if (await exists(WEB_DELIVERED)) {
+  if (await fs.exists(WEB_DELIVERED)) {
     const { installWebCredential, webDns } = await import("../web/commands.ts");
-    await installWebCredential(await Deno.readTextFile(WEB_DELIVERED));
-    await Deno.remove(WEB_DELIVERED);
+    await installWebCredential(await fs.readTextFile(WEB_DELIVERED));
+    await fs.remove(WEB_DELIVERED);
     await webDns(host.name);
   }
 
   const k = ui.phase("GitHub");
-  if (await exists(DEPLOY_KEY)) {
-    await ensureDir("/home/ops/.ssh");
-    await Deno.copyFile(DEPLOY_KEY, OPS_KEY);
-    for (const [path, mode] of [["/home/ops/.ssh", 0o700], [OPS_KEY, 0o600]] as const) {
-      await Deno.chmod(path, mode);
+  if (await fs.exists(DEPLOY_KEY)) {
+    await fs.ensureDir("/home/ops/.ssh");
+    await fs.copyFile(DEPLOY_KEY, OPS_KEY);
+    for (const [path, mode] of [
+      ["/home/ops/.ssh", 0o700],
+      [OPS_KEY, 0o600],
+    ] as const) {
+      await fs.chmod(path, mode);
       await run(["chown", "ops:ops", path]);
     }
-    await Deno.remove(DEPLOY_KEY);
+    await fs.remove(DEPLOY_KEY);
   }
   // The checkout belongs to ops and the archon-ops group, shared (spec 006).
   await run(["chown", "-R", "ops:archon-ops", P.installedRepo]);
@@ -95,7 +97,7 @@ export async function firstBoot(host: HostDef): Promise<number> {
   await run(["git", "config", "--system", "--add", "safe.directory", P.installedRepo]);
   const git = (args: string[]) => run(["git", "-C", P.installedRepo, ...args], { asUser: "ops" });
   const branch = fleet.repository.branch ?? "main";
-  const viaKey = await exists(OPS_KEY);
+  const viaKey = await fs.exists(OPS_KEY);
   if (viaKey) {
     await git(["remote", "set-url", "origin", `git@github.com:${fleet.repository.slug}.git`]);
   }
@@ -103,8 +105,8 @@ export async function firstBoot(host: HostDef): Promise<number> {
   k.done(
     fetch.ok
       ? `ops reaches ${fleet.repository.slug} (${branch}) ${
-        viaKey ? "with this host's deploy key" : "over HTTPS"
-      }`
+          viaKey ? "with this host's deploy key" : "over HTTPS"
+        }`
       : `fetch failed: ${fetch.stderr.trim()}`,
   );
 
@@ -117,8 +119,8 @@ export async function firstBoot(host: HostDef): Promise<number> {
 
   const rec = ui.phase("Record");
   const head = (await git(["rev-parse", "--short", "HEAD"])).stdout.trim();
-  const failures = ui.problems.filter((p) => p.level === "fail").length +
-    failedChecks(checks).length;
+  const failures =
+    ui.problems.filter((p) => p.level === "fail").length + failedChecks(checks).length;
   // Spec 048: the install record stays on this machine (archon.sql, table
   // archon_install), read over SSH by fleet status; nothing is pushed.
   const pendingChecks = checks.filter((c) => !c.ok && c.level === "pending").length;
@@ -145,9 +147,8 @@ export async function firstBoot(host: HostDef): Promise<number> {
     })),
   });
   // Spec 051: what this machine is, as it reports itself.
-  const { recordInventory, collectInventory, describeInventory } = await import(
-    "../state/inventory.ts"
-  );
+  const { recordInventory, collectInventory, describeInventory } =
+    await import("../state/inventory.ts");
   await recordInventory(host.name).catch(() => false);
   // Spec 095: the birth snapshot, once: what Ubuntu put here is never drift.
   const { recordBirth } = await import("../proposal/collect.ts");
@@ -155,35 +156,40 @@ export async function firstBoot(host: HostDef): Promise<number> {
     rec.warn(
       `birth snapshot not taken: ${(e as Error).message}`,
       "sudo archon drift --collect takes it (late)",
-    )
+    ),
   );
-  const machine = await collectInventory().then(describeInventory).catch(() => "");
+  const machine = await collectInventory()
+    .then(describeInventory)
+    .catch(() => "");
   rec.done(
     `recorded in ${P.state}/archon.sql (${head})${failures ? ` · ${failures} problem(s)` : ""}${
       machine ? ` · ${machine}` : ""
     }`,
   );
-  await ensureDir(P.varLib);
-  await Deno.writeTextFile(join(P.varLib, ".installed"), new Date().toISOString() + "\n");
+  await fs.ensureDir(P.varLib);
+  await fs.writeTextFile(paths.join(P.varLib, ".installed"), new Date().toISOString() + "\n");
   const { nextSteps } = await import("../observe/next.ts");
   const address = (await run(["hostname", "-I"])).stdout.trim().split(/\s+/)[0] || undefined;
   ui.next.push(
     `${host.name} is ready. Next:`,
-    ...nextSteps({ host, fleet, address }).map((l) => `  ${l}`),
+    ...nextSteps({ host, fleet, ...(address === undefined ? {} : { address }) }).map(
+      (l) => `  ${l}`,
+    ),
   );
-  const failed = ui.problems.filter((p) => p.level === "fail").length +
-    failedChecks(checks).length;
-  pending.push(bootEvent({
-    phase: failed ? "Done with problems" : "Ready",
-    level: failed ? "fail" : "ok",
-    summary: `${tally.passed}/${tally.total} checks${
-      tally.pending ? ` · ${tally.pending} not set up yet` : ""
-    } · ssh ${host.name}${
-      failed ? ` · ${failed} problem(s), see archon query "select * from archon_install"` : ""
-    }`,
-  }));
+  const failed = ui.problems.filter((p) => p.level === "fail").length + failedChecks(checks).length;
+  pending.push(
+    bootEvent({
+      phase: failed ? "Done with problems" : "Ready",
+      level: failed ? "fail" : "ok",
+      summary: `${tally.passed}/${tally.total} checks${
+        tally.pending ? ` · ${tally.pending} not set up yet` : ""
+      } · ssh ${host.name}${
+        failed ? ` · ${failed} problem(s), see archon query "select * from archon_install"` : ""
+      }`,
+    }),
+  );
   await Promise.all(pending);
-  await Deno.remove(BOOT_EVENTS).catch(() => {});
+  await fs.remove(BOOT_EVENTS).catch(() => {});
   // Spec 026: the doctor's email checks, their findings mailed through archon
   // and Postfix, so every new server proves its mail on its first boot.
   const { emailChecks } = await import("../doctor/email.ts");
@@ -191,23 +197,25 @@ export async function firstBoot(host: HostDef): Promise<number> {
   await emailChecks(
     await localSite(host.name),
     ui.phase("Email"),
-    `on the boot machine: deno task stolos boot mail-push ${host.name}`,
+    `on the boot machine: bun run stolos boot mail-push ${host.name}`,
     { send: "installed" },
   ).catch((e) => ui.active("Email").warn(`email checks: ${(e as Error).message}`));
   // Spec 025: the install finished, to the shared mailbox, with its record.
   const { notify } = await import("../notify/events.ts");
-  await notify({
-    event: failed ? "✗ Done with problems" : "✓ Ready",
-    level: failed ? "fail" : "info",
-    what:
-      `${host.name} installed Ubuntu ${UBUNTU_POINT} with Archon ${head}: ${tally.passed}/${tally.total} checks passed${
+  await notify(
+    {
+      event: failed ? "✗ Done with problems" : "✓ Ready",
+      level: failed ? "fail" : "info",
+      what: `${host.name} installed Ubuntu ${UBUNTU_POINT} with Archon ${head}: ${tally.passed}/${tally.total} checks passed${
         tally.pending ? ` (${tally.pending} not set up yet)` : ""
       }${failed ? `, ${failed} problem(s)` : ""}.`,
-    todo: failed
-      ? `ssh ${host.name}, then archon verify (the install record: archon query "select * from archon_install").`
-      : `ssh ${host.name}; archon observe; Cockpit at https://${host.name}:9090 from the local network.`,
-    key: `install:${host.name}:${head}:${new Date().toISOString().slice(0, 13)}`,
-  }, host.name);
+      todo: failed
+        ? `ssh ${host.name}, then archon verify (the install record: archon query "select * from archon_install").`
+        : `ssh ${host.name}; archon observe; Cockpit at https://${host.name}:9090 from the local network.`,
+      key: `install:${host.name}:${head}:${new Date().toISOString().slice(0, 13)}`,
+    },
+    host.name,
+  );
   // Ubuntu's updates published since the installer image (spec 009): start the
   // daily run now, in the background, instead of waiting up to a day.
   await run(["systemctl", "start", "--no-block", "apt-daily.service", "apt-daily-upgrade.service"]);

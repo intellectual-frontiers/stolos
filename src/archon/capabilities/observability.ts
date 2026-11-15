@@ -6,7 +6,7 @@
  *   metrics  PCP (pmcd, pmlogger) records; pmproxy serves them as OpenMetrics
  *            on localhost, which an OpenTelemetry Collector reads as OTLP
  *   logs     journald stores; the Collector's journald receiver reads it
- *   Archon   speaks OTLP itself (Deno); the local Collector writes it to files
+ *   Archon   speaks OTLP itself (IFC TypeScript); the local Collector writes it to files
  *
  * Every local store is ephemeral: age and size limits, pruned first when the
  * disk runs low, never backed up (/var/log/pcp, /var/log/journal, and
@@ -139,136 +139,146 @@ export function collectorConfig(host: HostDef, fleet: FleetDef, o: Observability
 }
 
 /** journald, PCP, and the OpenTelemetry Collector, within limits (spec 021). */
-export const observability = (): Capability => ({ fleet, host }) => {
-  const o = observabilityPolicy(fleet, host);
-  return {
-    spec: SPEC,
-    // Ubuntu's own metrics recorder (pmcd, pmlogger, pmproxy).
-    packages: [{ name: "pcp", spec: SPEC }],
-    // Spec 050: OTLP from the fleet's other servers, when this one has the web UI.
-    ports: collectsForFleet(host)
-      ? [{
-        port: 4318,
-        protocol: "tcp" as const,
-        spec: "050-telemetry-ui" as const,
-      }]
-      : [],
-    files: [
-      {
-        // journald: persistent, bounded by age and size; it also keeps 15% of
-        // the disk free by itself (SystemKeepFree's default), oldest first.
-        path: "/etc/systemd/journald.conf.d/50-archon.conf",
-        content: ini({
-          Journal: {
-            Storage: "persistent",
-            MaxRetentionSec: o.logsRetention,
-            SystemMaxUse: o.logsMaxSize,
-          },
-        }, SPEC),
-        mode: "0644",
-        owner: "root",
-        spec: SPEC,
-        onChange: [{ kind: "restart", unit: "systemd-journald.service" }],
-      },
-      {
-        // pmlogger_daily culls archives older than metricsDays (Ubuntu: 14) and
-        // compresses the rest; archon observe prune adds the size limit.
-        path: "/etc/default/pmlogger_timers",
-        content: header(SPEC) + `PMLOGGER_DAILY_PARAMS="-E -k ${o.metricsDays}"\n`,
-        mode: "0644",
-        owner: "root",
-        spec: SPEC,
-      },
-      {
-        // pmproxy serves OpenMetrics to this machine only (-i); -A is Ubuntu's
-        // default (no service advertising).
-        path: "/etc/pcp/pmproxy/pmproxy.options",
-        content: header(SPEC) + "-A\n-i 127.0.0.1\n",
-        mode: "0644",
-        owner: "root",
-        spec: SPEC,
-        onChange: [{ kind: "restart", unit: "pmproxy.service" }],
-      },
-      {
-        path: OBSERVE.collectorConfig,
-        content: collectorConfig(host, fleet, o),
-        mode: "0644",
-        owner: "root",
-        spec: SPEC,
-        // On a fresh host the unit is written after this file (Units follow Files):
-        // nothing to restart yet.
-        onChange: [{
-          kind: "run",
-          argv: ["systemctl", "try-restart", OBSERVE.collectorUnit],
-          ifExists: `/etc/systemd/system/${OBSERVE.collectorUnit}`,
-        }],
-      },
-    ],
-    units: [
-      ...["pmcd.service", "pmlogger.service", "pmproxy.service"].map((unitName) => ({
-        unitName,
-        managed: false,
-        state: "enabled" as const,
-        verify: `systemctl is-active ${unitName}`,
-        spec: SPEC,
-      })),
-      {
-        unitName: OBSERVE.collectorUnit,
-        managed: true,
-        content: ini({
-          Unit: {
-            Description: "Archon: OpenTelemetry Collector (local OTLP)",
-            Documentation: "man:archon-observe(1)",
-            After: "network.target",
-            // Installed by the tools sync, which then restarts this unit.
-            ConditionPathExists: "/usr/local/bin/otelcol-contrib",
-          },
-          Service: {
-            // Spec 024: discovery's file is merged in; it is "{}" until a central collector answers.
-            ExecStartPre:
-              `+/bin/sh -c 'test -s ${OBSERVE.centralConfig} || echo "{}" > ${OBSERVE.centralConfig}'`,
-            ExecStart:
-              `/usr/local/bin/otelcol-contrib --config=${OBSERVE.collectorConfig} --config=${OBSERVE.centralConfig}`,
-            // Spec 050: the web UI's credential, when it is on here (read by systemd as root).
-            EnvironmentFile: "-/var/lib/archon/otel-ui/collector.env",
-            DynamicUser: true,
-            CacheDirectory: "archon-otel",
-            CacheDirectoryMode: "0755",
-            StateDirectory: "archon-otel",
-            SupplementaryGroups: "systemd-journal",
-            Nice: 10,
-            IOSchedulingClass: "idle",
-            MemoryMax: "256M",
-            CPUQuota: "25%",
-            Restart: "on-failure",
-            RestartSec: 10,
-          },
-          Install: { WantedBy: "multi-user.target" },
-        }, SPEC),
-        state: "enabled" as const,
-        verify: `systemctl is-active ${OBSERVE.collectorUnit}`,
-        spec: SPEC,
-      },
-      ...timedJob({
-        name: "observe-discover",
-        description: "look for a central OpenTelemetry collector",
-        argv: ["observe", "discover"],
-        onCalendar: "*:07/15",
-        spec: "024-discovery",
-      }),
-      ...timedJob({
-        name: "observe-prune",
-        description: "keep local metric archives within their size and free-space limits",
-        argv: ["observe", "prune"],
-        onCalendar: "*-*-* 04:41:00",
-        spec: SPEC,
-      }),
-    ],
-    notes: [
-      `Ephemeral local stores: PCP archives up to ${o.metricsDays} days and ${o.metricsMaxSize}; journald up to ${o.logsRetention} and ${o.logsMaxSize}; Archon's OTLP files up to ${o.tracesDays} days and 64 MB. Below ${o.minFreePercent}% free disk, metric archives are pruned first.`,
-      collectsForFleet(host)
-        ? "This server has the telemetry web UI: its Collector also accepts OTLP from the fleet's other servers (4318) and forwards everything to OpenObserve."
-        : "OTLP is the only protocol data leaves in; the Collector listens on 127.0.0.1 only.",
-    ],
+export const observability =
+  (): Capability =>
+  ({ fleet, host }) => {
+    const o = observabilityPolicy(fleet, host);
+    return {
+      spec: SPEC,
+      // Ubuntu's own metrics recorder (pmcd, pmlogger, pmproxy).
+      packages: [{ name: "pcp", spec: SPEC }],
+      // Spec 050: OTLP from the fleet's other servers, when this one has the web UI.
+      ports: collectsForFleet(host)
+        ? [
+            {
+              port: 4318,
+              protocol: "tcp" as const,
+              spec: "050-telemetry-ui" as const,
+            },
+          ]
+        : [],
+      files: [
+        {
+          // journald: persistent, bounded by age and size; it also keeps 15% of
+          // the disk free by itself (SystemKeepFree's default), oldest first.
+          path: "/etc/systemd/journald.conf.d/50-archon.conf",
+          content: ini(
+            {
+              Journal: {
+                Storage: "persistent",
+                MaxRetentionSec: o.logsRetention,
+                SystemMaxUse: o.logsMaxSize,
+              },
+            },
+            SPEC,
+          ),
+          mode: "0644",
+          owner: "root",
+          spec: SPEC,
+          onChange: [{ kind: "restart", unit: "systemd-journald.service" }],
+        },
+        {
+          // pmlogger_daily culls archives older than metricsDays (Ubuntu: 14) and
+          // compresses the rest; archon observe prune adds the size limit.
+          path: "/etc/default/pmlogger_timers",
+          content: header(SPEC) + `PMLOGGER_DAILY_PARAMS="-E -k ${o.metricsDays}"\n`,
+          mode: "0644",
+          owner: "root",
+          spec: SPEC,
+        },
+        {
+          // pmproxy serves OpenMetrics to this machine only (-i); -A is Ubuntu's
+          // default (no service advertising).
+          path: "/etc/pcp/pmproxy/pmproxy.options",
+          content: header(SPEC) + "-A\n-i 127.0.0.1\n",
+          mode: "0644",
+          owner: "root",
+          spec: SPEC,
+          onChange: [{ kind: "restart", unit: "pmproxy.service" }],
+        },
+        {
+          path: OBSERVE.collectorConfig,
+          content: collectorConfig(host, fleet, o),
+          mode: "0644",
+          owner: "root",
+          spec: SPEC,
+          // On a fresh host the unit is written after this file (Units follow Files):
+          // nothing to restart yet.
+          onChange: [
+            {
+              kind: "run",
+              argv: ["systemctl", "try-restart", OBSERVE.collectorUnit],
+              ifExists: `/etc/systemd/system/${OBSERVE.collectorUnit}`,
+            },
+          ],
+        },
+      ],
+      units: [
+        ...["pmcd.service", "pmlogger.service", "pmproxy.service"].map((unitName) => ({
+          unitName,
+          managed: false,
+          state: "enabled" as const,
+          verify: `systemctl is-active ${unitName}`,
+          spec: SPEC,
+        })),
+        {
+          unitName: OBSERVE.collectorUnit,
+          managed: true,
+          content: ini(
+            {
+              Unit: {
+                Description: "Archon: OpenTelemetry Collector (local OTLP)",
+                Documentation: "man:archon-observe(1)",
+                After: "network.target",
+                // Installed by the tools sync, which then restarts this unit.
+                ConditionPathExists: "/usr/local/bin/otelcol-contrib",
+              },
+              Service: {
+                // Spec 024: discovery's file is merged in; it is "{}" until a central collector answers.
+                ExecStartPre: `+/bin/sh -c 'test -s ${OBSERVE.centralConfig} || echo "{}" > ${OBSERVE.centralConfig}'`,
+                ExecStart: `/usr/local/bin/otelcol-contrib --config=${OBSERVE.collectorConfig} --config=${OBSERVE.centralConfig}`,
+                // Spec 050: the web UI's credential, when it is on here (read by systemd as root).
+                EnvironmentFile: "-/var/lib/archon/otel-ui/collector.env",
+                DynamicUser: true,
+                CacheDirectory: "archon-otel",
+                CacheDirectoryMode: "0755",
+                StateDirectory: "archon-otel",
+                SupplementaryGroups: "systemd-journal",
+                Nice: 10,
+                IOSchedulingClass: "idle",
+                MemoryMax: "256M",
+                CPUQuota: "25%",
+                Restart: "on-failure",
+                RestartSec: 10,
+              },
+              Install: { WantedBy: "multi-user.target" },
+            },
+            SPEC,
+          ),
+          state: "enabled" as const,
+          verify: `systemctl is-active ${OBSERVE.collectorUnit}`,
+          spec: SPEC,
+        },
+        ...timedJob({
+          name: "observe-discover",
+          description: "look for a central OpenTelemetry collector",
+          argv: ["observe", "discover"],
+          onCalendar: "*:07/15",
+          spec: "024-discovery",
+        }),
+        ...timedJob({
+          name: "observe-prune",
+          description: "keep local metric archives within their size and free-space limits",
+          argv: ["observe", "prune"],
+          onCalendar: "*-*-* 04:41:00",
+          spec: SPEC,
+        }),
+      ],
+      notes: [
+        `Ephemeral local stores: PCP archives up to ${o.metricsDays} days and ${o.metricsMaxSize}; journald up to ${o.logsRetention} and ${o.logsMaxSize}; Archon's OTLP files up to ${o.tracesDays} days and 64 MB. Below ${o.minFreePercent}% free disk, metric archives are pruned first.`,
+        collectsForFleet(host)
+          ? "This server has the telemetry web UI: its Collector also accepts OTLP from the fleet's other servers (4318) and forwards everything to OpenObserve."
+          : "OTLP is the only protocol data leaves in; the Collector listens on 127.0.0.1 only.",
+      ],
+    };
   };
-};

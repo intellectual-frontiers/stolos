@@ -27,21 +27,22 @@ export const OSQUERY = {
  * Flags for osqueryd (one per line, as osquery's flagfile reads them). The
  * package's unit passes the config path and the pidfile (/etc/default/osqueryd).
  */
-export const OSQUERY_FLAGS: string = [
-  "--config_plugin=filesystem",
-  "--logger_plugin=filesystem",
-  `--logger_path=${OSQUERY.logs}`,
-  "--logger_rotate=true",
-  "--logger_rotate_size=26214400",
-  "--logger_rotate_max_files=10",
-  "--database_path=/var/osquery/osquery.db",
-  "--host_identifier=hostname",
-  // No kernel audit subscription: event tables stay off (no load on journald).
-  "--disable_events=true",
-  "--schedule_splay_percent=10",
-  // The watchdog keeps osqueryd small; a query over its limits is stopped.
-  "--watchdog_level=0",
-].join("\n") + "\n";
+export const OSQUERY_FLAGS: string =
+  [
+    "--config_plugin=filesystem",
+    "--logger_plugin=filesystem",
+    `--logger_path=${OSQUERY.logs}`,
+    "--logger_rotate=true",
+    "--logger_rotate_size=26214400",
+    "--logger_rotate_max_files=10",
+    "--database_path=/var/osquery/osquery.db",
+    "--host_identifier=hostname",
+    // No kernel audit subscription: event tables stay off (no load on journald).
+    "--disable_events=true",
+    "--schedule_splay_percent=10",
+    // The watchdog keeps osqueryd small; a query over its limits is stopped.
+    "--watchdog_level=0",
+  ].join("\n") + "\n";
 
 /** Archon's scheduled queries: what changed is logged (differential results). */
 export const OSQUERY_SCHEDULE: Record<
@@ -97,31 +98,35 @@ export const OSQUERY_SCHEDULE: Record<
  * construction), read from archon.auto.sqlite.db, which archon builds from
  * this machine's archon.sql.
  */
-export function archonTables(dir = "/var/lib/archon"): Record<
-  string,
-  { query: string; path: string; columns: string[]; platform: string }
-> {
+export function archonTables(
+  dir = "/var/lib/archon",
+): Record<string, { query: string; path: string; columns: string[]; platform: string }> {
   return Object.fromEntries(
-    Object.entries(VIEWS).map(([view, columns]) => [view, {
-      query: `SELECT ${columns.join(", ")} FROM ${view}`,
-      path: `${dir}/${STATE_DB}`,
-      columns,
-      platform: "linux",
-    }]),
+    Object.entries(VIEWS).map(([view, columns]) => [
+      view,
+      {
+        query: `SELECT ${columns.join(", ")} FROM ${view}`,
+        path: `${dir}/${STATE_DB}`,
+        columns,
+        platform: "linux",
+      },
+    ]),
   );
 }
 
 /** osquery's configuration. */
 export function osqueryConf(): string {
-  return JSON.stringify(
-    {
-      options: { host_identifier: "hostname", schedule_splay_percent: 10 },
-      schedule: OSQUERY_SCHEDULE,
-      auto_table_construction: archonTables(),
-    },
-    null,
-    2,
-  ) + "\n";
+  return (
+    JSON.stringify(
+      {
+        options: { host_identifier: "hostname", schedule_splay_percent: 10 },
+        schedule: OSQUERY_SCHEDULE,
+        auto_table_construction: archonTables(),
+      },
+      null,
+      2,
+    ) + "\n"
+  );
 }
 
 /** osquery's daemon on every host (spec 042). */
@@ -146,15 +151,16 @@ export const osquery = (): Capability => () => ({
       onChange: [{ kind: "restart", unit: OSQUERY.unit }],
     },
   ],
-  units: [{
-    unitName: OSQUERY.unit,
-    managed: false,
-    state: "enabled",
-    start: true,
-    verify:
-      `sh -c 'systemctl is-active --quiet ${OSQUERY.unit} && osqueryi --json "SELECT 1 AS ok;" | grep -q ok'`,
-    spec: SPEC,
-  }],
+  units: [
+    {
+      unitName: OSQUERY.unit,
+      managed: false,
+      state: "enabled",
+      start: true,
+      verify: `sh -c 'systemctl is-active --quiet ${OSQUERY.unit} && osqueryi --json "SELECT 1 AS ok;" | grep -q ok'`,
+      spec: SPEC,
+    },
+  ],
   notes: [
     "osquery runs on every host (osqueryd: scheduled queries, changes logged to /var/log/osquery; no port). sudo osqueryi asks the machine anything in SQL.",
   ],

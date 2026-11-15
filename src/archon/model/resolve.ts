@@ -5,7 +5,7 @@
  * @module
  */
 
-import type { FileDef, FleetDef, HostDef, HostPlan, SpecId } from "./types.ts";
+import type { FileDef, FleetDef, HostDef, HostPlan } from "./types.ts";
 import { type SiteDef, siteNetwork } from "./site.ts";
 import { usersFor } from "./load.ts";
 
@@ -38,8 +38,9 @@ export function resolvePlan(host: HostDef, fleet: FleetDef): HostPlan {
     // A package that names its maintainers' PPA refines the same package without one
     // (platform needs git; the tools capability says where newer git comes from).
     for (const p of c.packages ?? []) {
-      const i = plan.packages.findIndex((x) =>
-        (x.source ?? "apt") === (p.source ?? "apt") && x.name === p.name && !!x.ppa !== !!p.ppa
+      const i = plan.packages.findIndex(
+        (x) =>
+          (x.source ?? "apt") === (p.source ?? "apt") && x.name === p.name && !!x.ppa !== !!p.ppa,
       );
       if (i >= 0 && sameIgnoringSpec({ ...plan.packages[i], ppa: 0 }, { ...p, ppa: 0 })) {
         if (p.ppa) plan.packages[i] = p;
@@ -56,14 +57,14 @@ export function resolvePlan(host: HostDef, fleet: FleetDef): HostPlan {
     if (c.derive) derivers.push(c.derive);
   }
   for (const d of derivers) mergeBy(plan.files, d(plan), (f) => f.path);
-  plan.specsUsed = [...new Set(plan.specsUsed)].sort() as SpecId[];
+  plan.specsUsed = [...new Set(plan.specsUsed)].sort();
   plan.files.sort((a, b) => a.path.localeCompare(b.path));
   plan.packages.sort((a, b) => a.name.localeCompare(b.name));
   return plan;
 }
 
 /** Append items, keeping the first of each key; conflicting duplicates are errors. */
-export function mergeBy<T>(into: T[], items: T[] | undefined, key: (t: T) => string) {
+export function mergeBy<T>(into: T[], items: T[] | undefined, key: (t: T) => string): void {
   for (const item of items ?? []) {
     const k = key(item);
     const existing = into.find((x) => key(x) === k);
@@ -75,8 +76,8 @@ export function mergeBy<T>(into: T[], items: T[] | undefined, key: (t: T) => str
 }
 
 function sameIgnoringSpec(a: unknown, b: unknown): boolean {
-  const strip = (x: unknown) =>
-    JSON.stringify(x, (k, v) => (k === "spec" || typeof v === "function" ? undefined : v));
+  const strip = (x: unknown): string =>
+    JSON.stringify(x, (k, v: unknown) => (k === "spec" || typeof v === "function" ? undefined : v));
   return strip(a) === strip(b);
 }
 

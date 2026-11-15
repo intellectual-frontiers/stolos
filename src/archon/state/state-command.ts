@@ -7,7 +7,10 @@
  * @module
  */
 
+import { json } from "@intellectual-frontiers/ifc-ts/kernel";
+import { fs, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
 import { ui } from "../core/ui.ts";
+import type { SyncStatus } from "../reconcile/reconcile.ts";
 import { loadHosts } from "../model/load.ts";
 import { describeData, hostData } from "../model/durable.ts";
 import { getRecord, listRecords, STATE_SQL, stateDir } from "./store.ts";
@@ -31,7 +34,7 @@ export interface HostState {
   /** Spec 066: the commit this host applies now (its checkout's HEAD). */
   applied?: { commit: string; subject: string; at: string };
   /** Spec 066: what its last pull did (and why it could not, when it could not). */
-  sync?: import("../reconcile/reconcile.ts").SyncStatus;
+  sync?: SyncStatus;
   /** When this was read. */
   at: string;
 }
@@ -40,8 +43,7 @@ export interface HostState {
 async function applied(): Promise<Pick<HostState, "applied" | "sync">> {
   const { P } = await import("../core/paths.ts");
   const { run } = await import("../core/exec.ts");
-  const { readTextOr } = await import("../core/fsx.ts");
-  const { SYNC_STATUS } = await import("../reconcile/reconcile.ts");
+  const { SYNC_STATUS, syncStatusDecoder } = await import("../reconcile/reconcile.ts");
   const g = await run([
     "git",
     "-c",
@@ -52,13 +54,11 @@ async function applied(): Promise<Pick<HostState, "applied" | "sync">> {
     "-1",
     "--format=%h%x09%s%x09%cI",
   ]);
-  const [commit, subject, at] = g.ok ? g.stdout.trim().split("\t") : [];
-  let sync;
-  try {
-    sync = JSON.parse((await readTextOr(SYNC_STATUS)) ?? "null") ?? undefined;
-  } catch {
-    sync = undefined; // a half-written file: the next pull writes it again
-  }
+  const [commit, subject = "", at = ""] = g.ok ? g.stdout.trim().split("\t") : [];
+  // A missing or half-written file: the next pull writes it again.
+  const text = await fs.readTextOr(SYNC_STATUS);
+  const decoded = text === undefined ? undefined : json(text, syncStatusDecoder);
+  const sync = decoded?.kind === "ok" ? decoded.value : undefined;
   return { ...(commit ? { applied: { commit, subject, at } } : {}), ...(sync ? { sync } : {}) };
 }
 
@@ -88,16 +88,16 @@ export async function hostState(hostName: string, dir = stateDir()): Promise<Hos
 export async function stateCommand(hostName: string, json: boolean): Promise<number> {
   const s = await hostState(hostName);
   if (json) {
-    console.log(JSON.stringify(s, null, 2));
+    stdio.stdout.writeSync(`${JSON.stringify(s, null, 2)}\n`);
     return 0;
   }
   const p = ui.phase(`State of ${hostName}`);
   const i = s.install;
   p.note(
     i
-      ? `installed ${i.at.slice(0, 16).replace("T", " ")} · Archon ${i.body.archon ?? "?"} · ${
-        i.body.ok === false ? "with problems" : "ok"
-      }`
+      ? `installed ${i.at.slice(0, 16).replace("T", " ")} · Archon ${typeof i.body["archon"] === "string" ? i.body["archon"] : "?"} · ${
+          i.body["ok"] === false ? "with problems" : "ok"
+        }`
       : "no install record (installed by hand, or before spec 048)",
   );
   if (s.inventory) p.note(`machine: ${describeInventory(s.inventory)}`);
@@ -113,9 +113,9 @@ export async function stateCommand(hostName: string, json: boolean): Promise<num
   }
   if (s.verify) {
     p.note(
-      `verify: ${s.verify.passed}/${s.verify.total} checks since ${
-        s.verify.since.slice(0, 16).replace("T", " ")
-      }`,
+      `verify: ${s.verify.passed}/${s.verify.total} checks since ${s.verify.since
+        .slice(0, 16)
+        .replace("T", " ")}`,
     );
     for (const f of s.verify.failed) p.warn(`failing: ${f}`);
   }

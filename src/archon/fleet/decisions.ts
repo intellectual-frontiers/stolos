@@ -9,32 +9,35 @@
  * @module
  */
 
-import { lf } from "../core/fsx.ts";
-import { tsKey } from "../core/ts-literal.ts";
+import { fs, path } from "@intellectual-frontiers/ifc-ts/runtime";
+import { lf, tsKey } from "@intellectual-frontiers/ifc-ts/kernel";
 import { P, repoRel } from "../core/paths.ts";
-import { join } from "../core/path.ts";
-import { exists, readTextOr } from "../core/fsx.ts";
-import { toFileUrl } from "../core/path.ts";
 import { ui } from "../core/ui.ts";
 import type { DataClass, HostDecisions, OptInRecord } from "../model/types.ts";
 
 /** fleets/<id>/hosts/<host>/decisions.ts. */
 export function decisionsFile(host: string): string {
-  return join(P.hosts, host, "decisions.ts");
+  return path.join(P.hosts, host, "decisions.ts");
 }
 
 /** The fixed form of decisions.ts (sorted, one way to write each value). */
 export function decisionsSource(d: HostDecisions): string {
-  const rows = Object.entries(d.optIns ?? {}).sort(([a], [b]) => a.localeCompare(b)).map((
-    [name, r],
-  ) =>
-    `    ${tsKey(name)}: {\n      enabled: ${r.enabled},\n${
-      r.data ? `      data: ${JSON.stringify(r.data)},\n` : ""
-    }      by: ${JSON.stringify(r.by)},\n      at: ${JSON.stringify(r.at)},\n    },\n`
-  ).join("");
-  return `// Written by stolos decide (spec 047): what operators decided for this host.
-// Change it with stolos decide, in a signed commit; a decision here wins over the host's own record.
-import type { HostDecisions } from "@stolos/archon/model/types.ts";
+  const rows = Object.entries(d.optIns ?? {})
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(
+      ([name, r]) =>
+        `    ${tsKey(name)}: {\n      enabled: ${r.enabled},\n${
+          r.data ? `      data: ${JSON.stringify(r.data)},\n` : ""
+        }      by: ${JSON.stringify(r.by)},\n      at: ${JSON.stringify(r.at)},\n    },\n`,
+    )
+    .join("");
+  return `/**
+ * Written by stolos decide (spec 047): what operators decided for this host.
+ * Change it with stolos decide, in a signed commit; a decision here wins over the host's own record.
+ *
+ * @module
+ */
+import type { HostDecisions } from "@intellectual-frontiers/stolos/archon/model/types";
 
 export default {
   optIns: {
@@ -48,9 +51,9 @@ export async function loadDecisions(
   host: string,
   file = decisionsFile(host),
 ): Promise<HostDecisions> {
-  if (!(await exists(file))) return {};
-  const mod = await import(toFileUrl(file).href + `?t=${Date.now()}`);
-  return (mod.default ?? {}) as HostDecisions;
+  if (!(await fs.exists(file))) return {};
+  const { fleetExport } = await import("../model/load.ts");
+  return (await fleetExport<HostDecisions>(file, "default", true)) ?? {};
 }
 
 /** decisions.ts files that are not in the fixed form (build fails on them). */
@@ -58,7 +61,7 @@ export async function decisionProblems(hosts: string[]): Promise<string[]> {
   const out: string[] = [];
   for (const h of hosts) {
     const file = decisionsFile(h);
-    const text = await readTextOr(file);
+    const text = await fs.readTextOr(file);
     if (text === undefined) continue;
     // Line endings are Git's business (CRLF on a Windows checkout): the form is the text.
     if (lf(text) !== decisionsSource(await loadDecisions(h, file))) out.push(repoRel(file));
@@ -94,22 +97,23 @@ export async function decide(
   if (data) checkChoice(host, name, data, confirm);
   const d = await loadDecisions(hostName);
   const was = d.optIns?.[name] ?? host.optIn?.[name];
+  const kept = data ?? was?.data;
   const rec: OptInRecord = {
     enabled,
     by,
     at: new Date().toISOString(),
-    ...((data ?? was?.data) ? { data: data ?? was!.data } : {}),
+    ...(kept ? { data: kept } : {}),
   };
   const next: HostDecisions = { ...d, optIns: { ...(d.optIns ?? {}), [name]: rec } };
   const file = decisionsFile(hostName);
-  await Deno.writeTextFile(file, decisionsSource(next));
+  await fs.writeTextFile(file, decisionsSource(next));
   p.done(
-    `${def.title} ${enabled ? "on" : "off"}${rec.data ? `, ${rec.data}` : ""} for ${hostName} in ${
-      repoRel(file)
-    }`,
+    `${def.title} ${enabled ? "on" : "off"}${rec.data ? `, ${rec.data}` : ""} for ${hostName} in ${repoRel(
+      file,
+    )}`,
   );
   ui.next.push(
-    `commit and push it: deno task stolos apply -m "${P.fleetId} decide: ${name} ${
+    `commit and push it: bun run stolos apply -m "${P.fleetId} decide: ${name} ${
       enabled ? "on" : "off"
     } on ${hostName}"`,
     `${hostName} applies it within 15 minutes (or now: archon update on it)`,

@@ -16,12 +16,13 @@ export function renderFishCompletions(commands: Command[]): string {
   ];
   const groups = new Map<string, Command[]>();
   for (const c of commands) {
-    const [head] = c.name.split(" ");
+    const [head = c.name] = c.name.split(" ");
     groups.set(head, [...(groups.get(head) ?? []), c]);
   }
   for (const [head, cmds] of groups) {
-    const single = cmds.length === 1 && cmds[0].name === head;
-    const desc = single ? cmds[0].summary : `${head} commands`;
+    const [only] = cmds;
+    const single = cmds.length === 1 && only !== undefined && only.name === head;
+    const desc = single ? only.summary : `${head} commands`;
     L.push(`complete -c archon -n __fish_use_subcommand -a ${head} -d ${q(desc)}`);
     const emitted = new Set<string>();
     for (const c of cmds) {
@@ -42,9 +43,9 @@ export function renderFishCompletions(commands: Command[]): string {
           const leaf = i === words.length - 1;
           const desc = leaf ? c.summary : `${key} commands`;
           L.push(
-            `complete -c archon -n "${cond}; and not __fish_seen_subcommand_from ${
-              siblings.join(" ")
-            }" -a ${words[i]} -d ${q(desc)}`,
+            `complete -c archon -n "${cond}; and not __fish_seen_subcommand_from ${siblings.join(
+              " ",
+            )}" -a ${words[i]} -d ${q(desc)}`,
           );
         }
         cond = `${cond}; and __fish_seen_subcommand_from ${words[i]}`;
@@ -52,9 +53,9 @@ export function renderFishCompletions(commands: Command[]): string {
       for (const a of [...c.args, ...GLOBAL_ARGS]) {
         if (a.positional) continue;
         L.push(
-          `complete -c archon -n "${cond}" -l ${a.name}${a.type === "string" ? " -r" : ""} -d ${
-            q(a.description)
-          }`,
+          `complete -c archon -n "${cond}" -l ${a.name}${a.type === "string" ? " -r" : ""} -d ${q(
+            a.description,
+          )}`,
         );
       }
     }
