@@ -1,5 +1,5 @@
 /**
- * Spec 056: the boot machine's backup is one ZIP file. `deno task stolos vault
+ * Spec 056: the boot machine's backup is one ZIP file. `bun run stolos vault
  * backup` writes it into the backup folder where archon keeps its data
  * (Windows: `%LOCALAPPDATA%\stolos\backup`; Linux: `~/.local/share/stolos/backup`),
  * reads it back to check every file, and tells you to put it wherever you keep
@@ -21,17 +21,29 @@
  * @module
  */
 
+import {
+  array,
+  type Decoder,
+  formatArchiveError,
+  integer,
+  json,
+  object,
+  sha256,
+  string,
+  unzip,
+  zipDeflated,
+  zipEntries,
+  zipRead,
+} from "@intellectual-frontiers/ifc-ts/kernel";
+import { fs, path as ifcPath, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { bootstrapOneLiner, repoSlug } from "../fleet/bootstrap.ts";
-import { unzipSync, zipSync } from "npm:fflate@0.8.2";
-import { join } from "../core/path.ts";
-import { exists, readTextOr } from "../core/fsx.ts";
 import { run } from "../core/exec.ts";
 import { listFleets, P } from "../core/paths.ts";
 import { ownerOnly } from "../core/secrets.ts";
-import { liveSecrets, markBackedUp, sha256 } from "./state.ts";
+import { liveSecrets, markBackedUp } from "./state.ts";
 
 /** Where backups are written (beside the boot cache, in stolos's data folder). */
-export const BACKUP_DIR: string = join(P.bootCache, "..", "backup");
+export const BACKUP_DIR: string = ifcPath.join(P.bootCache, "..", "backup");
 
 /** The ZIP's format, in its manifest. */
 export const ZIP_FORMAT = "stolos-backup/1";
@@ -39,35 +51,52 @@ export const ZIP_FORMAT = "stolos-backup/1";
 /** What a backup ZIP holds, in its manifest.json (names, sizes, and hashes; never a value). */
 export interface ZipManifest {
   /** {@link ZIP_FORMAT}. */
-  format: string;
+  readonly format: string;
   /** The PC it was made on. */
-  pc: string;
+  readonly pc: string;
   /** When (ISO time). */
-  created: string;
+  readonly created: string;
   /** Every file: its path in the ZIP, SHA-256, and size. */
-  files: Array<{ name: string; sha256: string; size: number }>;
+  readonly files: ReadonlyArray<{
+    readonly name: string;
+    readonly sha256: string;
+    readonly size: number;
+  }>;
 }
+
+/** manifest.json, decoded where it is read (a ZIP is input: it may be anyone's). */
+export const zipManifest: Decoder<ZipManifest> = object({
+  format: string,
+  pc: string,
+  created: string,
+  files: array(object({ name: string, sha256: string, size: integer })),
+});
 
 /** One file to put in the ZIP. */
 interface Entry {
   name: string;
-  data: Uint8Array<ArrayBuffer>;
+  data: Uint8Array;
 }
 
 /** Every fleet's secrets on this PC (not the ephemeral ones), as ZIP entries under secrets/<fleet>/. */
 async function secretEntries(): Promise<{ entries: Entry[]; active: Record<string, string> }> {
-  const root = join(P.secrets, "..");
+  const root = ifcPath.join(P.secrets, "..");
   const entries: Entry[] = [];
   const active: Record<string, string> = {};
   let fleets: string[] = [];
   try {
-    fleets = [...Deno.readDirSync(root)].filter((e) => e.isDirectory).map((e) => e.name).sort();
-  } catch { /* no secrets yet */ }
+    fleets = [...fs.readDirSync(root)]
+      .filter((e) => e.isDirectory)
+      .map((e) => e.name)
+      .sort();
+  } catch {
+    /* no secrets yet */
+  }
   for (const fleet of fleets) {
-    for (const s of await liveSecrets(join(root, fleet))) {
+    for (const s of await liveSecrets(ifcPath.join(root, fleet))) {
       if (s.ref?.ephemeral) continue;
-      entries.push({ name: `secrets/${fleet}/${s.name}`, data: await Deno.readFile(s.path) });
-      if (join(root, fleet) === P.secrets) active[s.name] = s.sha256;
+      entries.push({ name: `secrets/${fleet}/${s.name}`, data: await fs.readFile(s.path) });
+      if (ifcPath.join(root, fleet) === P.secrets) active[s.name] = s.sha256;
     }
   }
   return { entries, active };
@@ -81,8 +110,8 @@ async function signingEntries(): Promise<{ entries: Entry[]; key?: string }> {
   const priv = k.replace(/\.pub$/, "");
   const entries: Entry[] = [];
   for (const p of [priv, `${priv}.pub`]) {
-    if (await exists(p)) {
-      entries.push({ name: `signing/${p.split(/[\\/]/).pop()}`, data: await Deno.readFile(p) });
+    if (await fs.exists(p)) {
+      entries.push({ name: `signing/${p.split(/[\\/]/).pop()}`, data: await fs.readFile(p) });
     }
   }
   return { entries, key: priv };
@@ -98,19 +127,26 @@ async function recoveryEntries(): Promise<{ entries: Entry[]; loose: string[] }>
   const paths = keyPaths();
   const entries: Entry[] = [];
   const loose: string[] = [];
-  for (
-    const [dir, isLoose] of [[paths.recoveryDir, false], [paths.looseRecoveryDir, true]] as const
-  ) {
-    let names: string[] = [];
+  for (const [dir, isLoose] of [
+    [paths.recoveryDir, false],
+    [paths.looseRecoveryDir, true],
+  ] as const) {
+    let names: string[];
     try {
-      names = [...Deno.readDirSync(dir)].filter((e) => e.isFile).map((e) => e.name).sort();
+      names = [...fs.readDirSync(dir)]
+        .filter((e) => e.isFile)
+        .map((e) => e.name)
+        .sort();
     } catch {
       continue;
     }
     for (const n of names) {
       if (entries.some((e) => e.name === `signing/recovery/${n}`)) continue;
-      entries.push({ name: `signing/recovery/${n}`, data: await Deno.readFile(join(dir, n)) });
-      if (isLoose) loose.push(join(dir, n));
+      entries.push({
+        name: `signing/recovery/${n}`,
+        data: await fs.readFile(ifcPath.join(dir, n)),
+      });
+      if (isLoose) loose.push(ifcPath.join(dir, n));
     }
   }
   return { entries, loose };
@@ -121,15 +157,17 @@ async function adoptLooseRecovery(loose: string[]): Promise<string | undefined> 
   if (!loose.length) return undefined;
   const { keyPaths } = await import("../identity/keys.ts");
   const paths = keyPaths();
-  await Deno.mkdir(paths.recoveryDir, { recursive: true });
+  await fs.mkdir(paths.recoveryDir, { recursive: true });
   for (const f of loose) {
-    const to = join(paths.recoveryDir, f.split(/[\\/]/).pop()!);
-    if (!(await exists(to))) await Deno.copyFile(f, to);
-    await Deno.remove(f);
+    const to = ifcPath.join(paths.recoveryDir, ifcPath.basename(f));
+    if (!(await fs.exists(to))) await fs.copyFile(f, to);
+    await fs.remove(f);
   }
   try {
-    await Deno.remove(paths.looseRecoveryDir); // empty now; left alone if something else is in it
-  } catch { /* other files in it: not ours to remove */ }
+    await fs.remove(paths.looseRecoveryDir); // empty now; left alone if something else is in it
+  } catch {
+    /* other files in it: not ours to remove */
+  }
   return paths.recoveryDir;
 }
 
@@ -151,7 +189,7 @@ This ZIP holds what a boot machine needs again after a disaster:
 
 On the new or rebuilt PC (Windows, in PowerShell):
 
- 1-2. Bootstrap: Deno, Git, gh, your GitHub sign-in, and your fleet repository
+ 1-2. Bootstrap: Bun, Git, gh, your GitHub sign-in, and your fleet repository
     cloned into $HOME\\fleet, in one line (spec 062):
         ${bootstrapOneLiner("windows", repo)}
     (Linux or macOS, in a terminal:
@@ -159,8 +197,8 @@ On the new or rebuilt PC (Windows, in PowerShell):
  3. Restore this ZIP, in one command (it checks the ZIP, never overwrites, and
     asks for your daily key's passphrase once, for a test signature):
         cd $HOME\\fleet
-        deno task stolos vault restore <path to this ZIP>
-    Then check everything: deno task stolos boot doctor. That is all.
+        bun run stolos vault restore <path to this ZIP>
+    Then check everything: bun run stolos boot doctor. That is all.
 
 By hand instead (the same as step 3 does):
 
@@ -176,19 +214,19 @@ By hand instead (the same as step 3 does):
         New-Item -ItemType Directory -Force $env:APPDATA\\stolos\\keys
         Copy-Item <unzipped>\\signing\\recovery\\* $env:APPDATA\\stolos\\keys\\
         cd $HOME\\fleet
-        deno task stolos keys setup
+        bun run stolos keys setup
     (Linux and macOS: cp <unzipped>/signing/fleet-signing* ~/.ssh/;
      mkdir -p ~/.config/stolos/keys && cp <unzipped>/signing/recovery/* ~/.config/stolos/keys/)
  6. Delete the unzipped folder (the ZIP itself stays wherever you keep it safe).
  7. Check, in the fleet repository:
-        deno task stolos vault status      every secret, back where it belongs
-        deno task stolos                 where you are, and what next
-        deno task stolos keys            your signing works
+        bun run stolos vault status      every secret, back where it belongs
+        bun run stolos                 where you are, and what next
+        bun run stolos keys            your signing works
 
 If you forgot the daily key's passphrase, the recovery key (in this ZIP) replaces the
-daily key: deno task stolos keys lost. If you forgot both passphrases, a person at
+daily key: bun run stolos keys lost. If you forgot both passphrases, a person at
 each server must trust a new key there (archon signers trust). See the engine's
-"deno task stolos docs disaster-recovery".
+"bun run stolos docs disaster-recovery".
 `;
 }
 
@@ -206,7 +244,7 @@ export async function writeBackupZip(
 }> {
   const { entries: secrets, active } = await secretEntries();
   const { entries: signing, key } = await signingEntries();
-  const fleets = [...new Set(secrets.map((e) => e.name.split("/")[1]))].sort();
+  const fleets = [...new Set(secrets.map((e) => e.name.split("/")[1] ?? ""))].sort();
   const { entries: recovery, loose } = await recoveryEntries();
   const files = [...secrets, ...signing, ...recovery];
   const manifest: ZipManifest = {
@@ -218,30 +256,44 @@ export async function writeBackupZip(
     ),
   };
   const enc = new TextEncoder();
-  const zip = zipSync({
-    ...Object.fromEntries(files.map((f) => [f.name, f.data])),
-    "manifest.json": enc.encode(JSON.stringify(manifest, null, 2) + "\n"),
-    "RESTORE.txt": enc.encode(
-      restoreText(fleets.length ? fleets : listFleets(P.repo), await repoSlug(P.repo)),
-    ),
-  }, { level: 9 });
+  // Deflated where that makes an entry smaller, stored otherwise; any unzip reads it.
+  const bytes = await zipDeflated(
+    new Map([
+      ...files.map((f): [string, Uint8Array] => [f.name, f.data]),
+      ["manifest.json", enc.encode(JSON.stringify(manifest, null, 2) + "\n")],
+      [
+        "RESTORE.txt",
+        enc.encode(
+          restoreText(fleets.length ? fleets : listFleets(P.repo), await repoSlug(P.repo)),
+        ),
+      ],
+    ]),
+  );
   // Read it back: every file in the manifest, with its SHA-256, before saying it worked.
-  const back = unzipSync(zip);
+  const back = await unzip(bytes);
+  if (back.kind === "err") {
+    throw new Error(
+      `the backup does not read back (${formatArchiveError(back.error)}); nothing was recorded`,
+    );
+  }
   for (const f of manifest.files) {
-    const d = back[f.name];
-    if (!d || (await sha256(new Uint8Array(d))) !== f.sha256) {
+    const d = back.value.get(f.name);
+    if (!d || (await sha256(d)) !== f.sha256) {
       throw new Error(`the backup does not read back correctly (${f.name}); nothing was recorded`);
     }
   }
-  await Deno.mkdir(BACKUP_DIR, { recursive: true });
-  const stamp = now.toISOString().replace(/[-:]/g, "").replace(/\.\d+Z$/, "Z");
+  await fs.mkdir(BACKUP_DIR, { recursive: true });
+  const stamp = now
+    .toISOString()
+    .replace(/[-:]/g, "")
+    .replace(/\.\d+Z$/, "Z");
   // Spec 082: a provider's client's backup says whose it is (it holds that client's secrets only).
   const whose = P.clientId ? `${pc}-${P.clientId}` : pc;
-  const path = join(BACKUP_DIR, `stolos-backup-${whose}-${stamp}.zip`);
-  await Deno.writeFile(path, zip, { mode: 0o600 });
-  if (Deno.build.os === "windows") await ownerOnly(path);
-  else await Deno.chmod(path, 0o600);
-  await markBackedUp(path.split(/[\\/]/).pop()!, active, manifest.created, BACKUP_DIR);
+  const path = ifcPath.join(BACKUP_DIR, `stolos-backup-${whose}-${stamp}.zip`);
+  await fs.writeFile(path, bytes, { mode: 0o600 });
+  if (proc.build.os === "windows") await ownerOnly(path);
+  else await fs.chmod(path, 0o600);
+  await markBackedUp(ifcPath.basename(path), active, manifest.created, BACKUP_DIR);
   // Backed up and verified: a loose recovery key moves into the key store, so every later
   // backup holds it too, and its old folder goes.
   const movedRecoveryTo = await adoptLooseRecovery(loose);
@@ -257,15 +309,20 @@ export async function writeBackupZip(
 
 /** The manifest inside a backup ZIP, or undefined (not one, or unreadable). */
 export async function readZipManifest(path: string): Promise<ZipManifest | undefined> {
+  let data: Uint8Array;
   try {
-    const files = unzipSync(await Deno.readFile(path), {
-      filter: (f) => f.name === "manifest.json",
-    });
-    const m = JSON.parse(new TextDecoder().decode(files["manifest.json"])) as ZipManifest;
-    return Array.isArray(m.files) ? m : undefined;
+    data = await fs.readFile(path);
   } catch {
     return undefined;
   }
+  const entries = zipEntries(data);
+  if (entries.kind === "err") return undefined;
+  const entry = entries.value.find((e) => e.name === "manifest.json");
+  if (!entry) return undefined;
+  const text = await zipRead(data, entry);
+  if (text.kind === "err") return undefined;
+  const m = json(new TextDecoder().decode(text.value), zipManifest);
+  return m.kind === "ok" ? m.value : undefined;
 }
 
 /** The backup ZIPs still in the backup folder, newest first. */
@@ -274,21 +331,21 @@ export async function backupZips(
 ): Promise<Array<{ path: string; name: string; files: number; size: number; created: string }>> {
   const out = [];
   try {
-    for await (const e of Deno.readDir(dir)) {
+    for await (const e of fs.readDir(dir)) {
       if (!e.isFile || !/^stolos-backup-.*\.zip$/.test(e.name)) continue;
-      const path = join(dir, e.name);
+      const path = ifcPath.join(dir, e.name);
       const m = await readZipManifest(path);
       if (!m) continue;
       out.push({
         path,
         name: e.name,
         files: m.files.length,
-        size: (await Deno.stat(path)).size,
+        size: (await fs.stat(path)).size,
         created: m.created,
       });
     }
-  } catch { /* no folder yet */ }
+  } catch {
+    /* no folder yet */
+  }
   return out.sort((a, b) => b.name.localeCompare(a.name));
 }
-
-export { readTextOr };
