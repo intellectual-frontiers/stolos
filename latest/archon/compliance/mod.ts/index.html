@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/compliance/mod.ts - Stolos v0.95.0 documentation</title>
+  <title>archon/compliance/mod.ts - Stolos v0.96.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.95.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.96.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -233,7 +233,9 @@ fix what fails. The Stolos Console downloads it all as JSON, and the four OSCAL 
 </a>OSCAL</h2>
 <p><code>compliance export</code> writes OSCAL 1.2.3 JSON, to NIST SP 800-53 Rev 5:</p>
 <ul>
-<li>a component definition: what Stolos does for each control;</li>
+<li>a component definition: Stolos, and one component per source of evidence (managed servers,
+adopted machines, devices, each connected service, the repository), each with the controls its
+checks reach;</li>
 <li>a system security plan importing NIST's moderate baseline, with the fleet's machines as its
 inventory;</li>
 <li>assessment results: every observation, and a finding per control, satisfied or not;</li>

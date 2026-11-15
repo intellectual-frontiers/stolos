@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/compliance/oscal.ts - Stolos v0.95.0 documentation</title>
+  <title>archon/compliance/oscal.ts - Stolos v0.96.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.95.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.96.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -103,7 +103,8 @@ so an assessor's or an agency's tools read it without retyping. Four
 documents, all to NIST SP 800-53 Rev 5 (the controls FedRAMP and most
 federal frameworks use), each control reached through SCF's own mappings:</p>
 <ul>
-<li>a component definition: what Stolos does for each control;</li>
+<li>a component definition: Stolos, and each source of evidence, with the
+controls each reaches;</li>
 <li>a system security plan (SSP): this fleet, its machines, and how each
 control is implemented, importing NIST's moderate baseline;</li>
 <li>assessment results: every observation Stolos made, and a finding per
@@ -183,7 +184,10 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_assessmentr
     </div><div id="namespace_componentdefinition" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;oscal.ts&#x2F;~&#x2F;componentDefinition.html" title="componentDefinition">
-			    <span>componentDefinition</span><span>(<span><span>i<span>: <span class="td-ref">OscalInput</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">unknown</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The component definition: Stolos, and what it does for each SP 800-53 control.</p>
+			    <span>componentDefinition</span><span>(<span><span>i<span>: <span class="td-ref">OscalInput</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">unknown</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The component definition: Stolos as a whole, and one component per source
+of evidence (managed servers, adopted machines, devices, each connected
+service, the estate graph, the repository), each implementing the SP 800-53
+controls its checks reach.</p>
 </div></div></div>
     </div><div id="namespace_nistcontrols" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
