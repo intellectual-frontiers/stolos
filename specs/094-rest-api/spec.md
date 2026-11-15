@@ -57,8 +57,8 @@ document must come from the same TypeScript declarations as the SQL (spec 089), 
 
 ## Success criteria
 
-- `tests/api094_test.ts`: the document validates against the official schema; every route's answer
+- `tests/api094.test.ts`: the document validates against the official schema; every route's answer
   validates against its schema in the document; filters, paging, and bound values; booleans as
   booleans; 401 without a session; 405 for other methods; 404 for unknown resources; path traversal
   refused; OCSF findings valid against OCSF 1.9.0's class schema.
-- `tests/console066_test.ts` passes, with the API routes in its list of pages.
+- `tests/console066.test.ts` passes, with the API routes in its list of pages.

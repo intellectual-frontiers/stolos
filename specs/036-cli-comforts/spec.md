@@ -46,7 +46,8 @@ part of this.
   `ARCHON_PROMPT=plain|pretty` overrides.
 - **FR-004**: `archon apply` renders the three outputs into
   `/usr/local/share/archon/shell/init.{bash,zsh,fish}` and installs the theme there; the `archon`
-  launcher prints the rendered file for `archon shell emit` without starting Deno.
+  launcher prints the rendered file for `archon shell emit` without starting the engine (no Bun or
+  Node).
 - **FR-005**: The fleet's dotfiles (`home/dot_bashrc.tmpl`, `home/dot_config/fish/config.fish.tmpl`)
   hold Ubuntu's defaults and the one line, for every persona. Personas no longer carry prompt or
   completion features.

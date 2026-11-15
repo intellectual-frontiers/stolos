@@ -77,7 +77,7 @@ it can. Decisions: RustFS; the image pinned; each Linux account is an S3 user of
   bucket, was refused another bucket and another's objects, and was locked out once disabled;
   `archon fs s3 key --write` as that user wrote a working profile, and an account with no key got
   one sentence.
-- `tests/optin_test.ts` covers the rest that runs without a server.
+- `tests/optin.test.ts` covers the rest that runs without a server.
 
 ## Keys: showing and rotating
 

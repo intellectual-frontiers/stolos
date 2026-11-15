@@ -22,4 +22,4 @@ from the real state, without anyone reading the documentation first.
 
 ## Success criteria
 
-- **SC-001** `tests/where053_test.ts`.
+- **SC-001** `tests/where053.test.ts`.

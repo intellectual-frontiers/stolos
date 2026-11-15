@@ -21,7 +21,7 @@ Source of the values: the owner's network reference, `example-lab-unify-network.
    network, two hosts on one address, or a host without a Local DNS record, **Then** validation
    names it with the UniFi change that fixes it.
 4. **Given** a network change, **When** the owner sends the change log, **Then**
-   `deno task boot notify --subject "Lab Network Runbook Change Log <dates>" --attach out/site/network-reference.html`
+   `bun run stolos boot notify --subject "Lab Network Runbook Change Log <dates>" --attach out/site/network-reference.html`
    mails it to the shared mailbox.
 
 ## Requirements _(mandatory)_

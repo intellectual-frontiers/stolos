@@ -7,9 +7,9 @@ The same hardware may then join as a new host.
 
 ## User Scenarios & Testing _(mandatory)_
 
-1. **Given** alpha in the model, **When** the operator runs `deno task boot retire alpha`, **Then**
-   it refuses, saying what alpha holds (durable or ephemeral) and that `--confirm-destroy alpha` is
-   needed; nothing changes.
+1. **Given** alpha in the model, **When** the operator runs `bun run stolos boot retire alpha`,
+   **Then** it refuses, saying what alpha holds (durable or ephemeral) and that
+   `--confirm-destroy alpha` is needed; nothing changes.
 2. **Given** `--confirm-destroy alpha`, **Then** alpha's DNS records leave Cloudflare, its deploy
    key leaves GitHub, this PC forgets its install token, secrets, and SSH trust, and its model and
    records leave the checkout; the mailbox is told; the next steps say to build, commit, push, clear
@@ -21,9 +21,9 @@ The same hardware may then join as a new host.
 
 ## Requirements _(mandatory)_
 
-- **FR-001** `deno task boot retire <host> --confirm-destroy <host>`: the host must be in the model;
-  the name must be repeated, by a person (refused with `ARCHON_AGENT` set). Without it, nothing
-  changes.
+- **FR-001** `bun run stolos boot retire <host> --confirm-destroy <host>`: the host must be in the
+  model; the name must be repeated, by a person (refused with `ARCHON_AGENT` set). Without it,
+  nothing changes.
 - **FR-002** It asks the host over SSH (`archon data --json`) whether it is durable, else reads its
   records, and says which before removing anything; a durable host is retired only with the same
   confirmation and a warning that its data goes with it.
@@ -44,7 +44,7 @@ The same hardware may then join as a new host.
   not touched.
 - **FR-007** The router's local DNS record is the owner's to remove (Article 21), then its line in
   `fleets/<fleet>/site.ts`; the next steps name it when the site has one. The vault keeps the old
-  secrets until the next `deno task boot vault backup`.
+  secrets until the next `bun run stolos boot vault backup`.
 - **FR-008** The mailbox is told what was removed.
 
 ## Success Criteria

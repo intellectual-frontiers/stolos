@@ -63,7 +63,7 @@ container supports it, it uses Linux accounts and credentials, never its own.
 
 ## Success Criteria _(mandatory)_
 
-- `tests/optin_test.ts`: a fresh plan has every opt-in masked and nothing routed; records are model
+- `tests/optin.test.ts`: a fresh plan has every opt-in masked and nothing routed; records are model
   input and keep their other fields; containers are pinned, unprivileged, loopback-only, with no
   secret in the file, and Podman's own Quadlet generator accepts the file; commands and tiers; a
   second apply into a sandbox root changes nothing.

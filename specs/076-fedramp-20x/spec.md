@@ -25,7 +25,7 @@ state no license; they are works of the United States Government (17 U.S.C. 105)
 
 ## Requirements
 
-- **FR-001** `tools/fedramp-gen.ts` (`deno task fedramp`) checks the vendored rules' SHA-256 and
+- **FR-001** `tools/fedramp-gen.ts` (`bun run fedramp`) checks the vendored rules' SHA-256 and
   generates `src/archon/fedramp/rules.auto.ts`: every KSI (id, theme, name, statement, its statement
   per class, the classes FedRAMP marks it optional for, its SP 800-53 controls), the Class A KSIs
   (parsed from `FRC-CLA-MFR`), and for Class A and B the rules `FRC-CSX-VVK` (automation, with its
@@ -60,7 +60,7 @@ state no license; they are works of the United States Government (17 U.S.C. 105)
 
 ## Success criteria
 
-- **SC-001** `tests/fedramp076_test.ts`: the vendored files match their recorded SHA-256s; the rules
+- **SC-001** `tests/fedramp076.test.ts`: the vendored files match their recorded SHA-256s; the rules
   validate against FedRAMP's own schema; the generated module is fresh; every official KSI (read
   from the vendored JSON, not the generated module) appears exactly once, covered or not observable
   with a reason; Class A is exactly `FRC-CLA-MFR`'s KSIs and Class B every KSI with FedRAMP's

@@ -37,7 +37,7 @@ Epic intellectual-frontiers/stolos#7; issue intellectual-frontiers/stolos#28.
 - **SC-001** The recorded-response tests for every connector pass unchanged (spec 084, 086). The old
   and new connectors were also compared on fake APIs, about 35 scenarios in all, with the same
   output apart from order.
-- **SC-002** `tests/connect091_test.ts` covers each new connector:
+- **SC-002** `tests/connect091.test.ts` covers each new connector:
   - the entities it produces;
   - posture;
   - a 403 as a gap;

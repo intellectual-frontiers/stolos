@@ -18,6 +18,6 @@ Epic intellectual-frontiers/stolos#7; issue intellectual-frontiers/stolos#14.
 
 ## Success criteria
 
-- **SC-001** `tests/connect086_test.ts`: each connector against recorded responses (paging by Link
+- **SC-001** `tests/connect086.test.ts`: each connector against recorded responses (paging by Link
   headers, rulesets beside branch protection, a verified JWT signature), only GET requests (but
   token requests), no pay fields kept, and a leaver failing once joined.

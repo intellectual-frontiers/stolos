@@ -63,8 +63,7 @@ all: who is failing, who is stale, who drifted, whose evidence is old.
   (Article 4 governs a fleet's configuration), written by commands, never by hand.
 - One engine runs every client in the summary, the report, and the provider's console (the one this
   PC runs), whatever each client's repository pins. A client's commands from the console run with
-  `deno task stolos` in its checkout, so with its pinned engine; an engine older than this spec
-  ignores ARCHON_CLIENT, so its per-user folders are the unscoped ones.
+  `bun run stolos` in its checkout, so with its pinned engine.
 - The provider's console does not check GitHub push access per client (the single-fleet console
   does): the launch link and 127.0.0.1 are its sign-in.
 - The boot server's log is not shown on a client's pages in the provider's console: it is this PC's,
@@ -73,7 +72,7 @@ all: who is failing, who is stale, who drifted, whose evidence is old.
 
 ## Tests
 
-`tests/multifleet082_test.ts`: a scope moves every per-user folder and two clients never share one;
+`tests/multifleet082.test.ts`: a scope moves every per-user folder and two clients never share one;
 concurrent work for two clients never sees the other's paths; the registry's refusals; a summary has
 numbers and dates only; two fixture client repositories (different fleets, vault folders, and
 signers) through `clients add`, `--client`, an evidence bundle for one holding nothing of the other,

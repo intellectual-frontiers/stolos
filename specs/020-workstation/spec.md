@@ -12,7 +12,7 @@ Archon, without anything that belongs to a server.
 **Acceptance Scenarios**:
 
 1. **Given** Ubuntu 26.04 on WSL with systemd, and the repository cloned to `/srv/archon` by the
-   owner, **When** the owner runs `deno task archon workstation add`, **Then**
+   owner, **When** the owner runs `bun run stolos workstation add`, **Then**
    `fleets/<fleet>/hosts/<name>/host.ts` is written (`kind: "workstation"`, `user: <owner>`), and
    through sudo the workstation gets the tools at their newest releases, the dotfiles, Claude Code,
    the `archon` command, and Ubuntu's daily updates; a new terminal opens in fish with the Archon
@@ -36,7 +36,8 @@ Archon, without anything that belongs to a server.
 - **FR-004**: `archon workstation add [<name>] [--user <u>] [--force]` runs as the user from
   `/srv/archon`, checks the Ubuntu release against the fleet's, that systemd runs (fix:
   `/etc/wsl.conf` `[boot] systemd=true`, `wsl --shutdown`), and the checkout location, writes the
-  host file, then runs `archon update --no-pull --host <name>` through sudo with the same Deno.
+  host file, installs the engine `bun.lock` holds (`bun install --frozen-lockfile`), then runs
+  `archon update --no-pull --host <name>` through sudo with the same runtime (Bun, or Node 26).
   Later changes come with `sudo archon update`.
 - **FR-005**: The boot machine ignores workstations (`loadServers`).
 

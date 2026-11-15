@@ -47,7 +47,7 @@ Linux ecosystem's well-known tools; invent nothing.
   Store through snapd's own `snap debug connectivity`. Each probe is curl with its own timings; a
   failure is explained by curl's exit code (DNS, refused or unreachable, timeout, TLS, certificate,
   reset). Over IPv4 only where `network.ipv6` is false.
-- **FR-009**: Email (specs 025, 027), shared with `deno task boot doctor`: the sending domain's
+- **FR-009**: Email (specs 025, 027), shared with `bun run stolos boot doctor`: the sending domain's
   records (Cloudflare's SPF, DKIM, and MX on `cf-bounce.<domain>`, DMARC on `_dmarc.<domain>`), a
   login to the relay with the stored token (curl: EHLO, AUTH, NOOP; nothing sent), and on servers
   Postfix: active, its relayhost, its queue (`postqueue -j`) with the first delay reason. archon
@@ -57,12 +57,12 @@ Linux ecosystem's well-known tools; invent nothing.
   iputils-tracepath, ethtool, tcpdump; `ubuntu-server`: curl). The `doctor()` capability declares
   them on servers and workstations so a smaller install still has them. Nothing is built or
   downloaded outside apt.
-- **FR-012**: `--send` (`archon doctor --send`, `deno task boot doctor --send`) also mails the Email
-  phase's findings to the shared mailbox (the fleet's message queue), through archon's own sender
-  (waiting for the relay's answer) and, on servers, through Postfix as root. It happens by itself
-  after `deno task boot mail-setup` stores a token, on every server's first boot ("installed"), and
-  when a server receives a token (`archon mail credential`, from `mail-push`). The message lists
-  every finding; the token never appears in it.
+- **FR-012**: `--send` (`archon doctor --send`, `bun run stolos boot doctor --send`) also mails the
+  Email phase's findings to the shared mailbox (the fleet's message queue), through archon's own
+  sender (waiting for the relay's answer) and, on servers, through Postfix as root. It happens by
+  itself after `bun run stolos boot mail-setup` stores a token, on every server's first boot
+  ("installed"), and when a server receives a token (`archon mail credential`, from `mail-push`).
+  The message lists every finding; the token never appears in it.
 - **FR-011**: Every tool runs with a time limit (coreutils `timeout`) and `LC_ALL=C`, so the doctor
   cannot hang and its parsing does not depend on the locale.
 

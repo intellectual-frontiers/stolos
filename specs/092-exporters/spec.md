@@ -6,8 +6,8 @@ encrypted email, and OS scheduling. It calls the API and knows nothing about the
 
 ## Requirements
 
-- **FR-001** OCSF JSON Lines (`ocsf-jsonl`): one OCSF 1.9.0 event per line, typed by the generated
-  OCSF types.
+- **FR-001** OCSF JSON Lines (`ocsf-jsonl`): one OCSF 1.9.0 event per line, typed by IFC
+  TypeScript's OCSF types (kernel `ocsf`).
   - User Inventory Info (5003) per person, then one per account of theirs (tied by
     `metadata.correlation_uid`), then the accounts of no one.
   - Device Inventory Info (5001) per fixed asset.
@@ -22,7 +22,7 @@ encrypted email, and OS scheduling. It calls the API and knows nothing about the
   - The resource is `service.name` stolos, `service.version`, and `service.namespace` (the fleet).
   - OpenTelemetry entity events (`entity.state`, Development status) for machines and other nodes,
     behind an option, off by default. People and accounts are never entity events.
-  - Only the request body is built here.
+  - Only the request body is built here, encoded by IFC TypeScript's kernel (`otlp.encodeLogs`).
 - **FR-003** CycloneDX 1.6 attestation (`cyclonedx-attestation`).
   - `definitions.standards` holds SCF, by release; its requirements are the SCF controls Stolos
     covers.
@@ -41,8 +41,9 @@ encrypted email, and OS scheduling. It calls the API and knows nothing about the
     `https://github.com/intellectual-frontiers/stolos/attestation/evidence-bundle/v1`. It is
     documented in `src/archon/export/intoto.ts`. No predicate in the in-toto attestation framework's
     list describes a set of compliance evidence.
-  - `dsseEnvelope` wraps a statement for a signature callback, by DSSE's PAE. The tests check PAE
-    against the DSSE specification's example.
+  - The statement is IFC TypeScript's (kernel `dsse.statement`); a signer wraps it in a DSSE
+    envelope with `dsse.signStatement` (by DSSE's PAE), and a verifier checks it with
+    `dsse.verifyStatement`. The tests check PAE against the DSSE specification's example.
 - **FR-005** The exports API: `buildExports(kind, input)` returns `{ fileName, mediaType, bytes }`.
   It covers the kinds above and the four OSCAL documents (spec 071): `oscal-component-definition`,
   `oscal-ssp`, `oscal-assessment-results`, and `oscal-poam`. The same input gives the same bytes.
@@ -53,7 +54,7 @@ encrypted email, and OS scheduling. It calls the API and knows nothing about the
 
 ## Success criteria
 
-- **SC-001** `tests/export092_test.ts` checks the following:
+- **SC-001** `tests/export092.test.ts` checks the following:
   - Every OCSF event validates against its vendored OCSF class schema.
   - The CycloneDX attestation validates against CycloneDX 1.6, with and without a bundle, and every
     reference in it resolves.
@@ -80,8 +81,8 @@ encrypted email, and OS scheduling. It calls the API and knows nothing about the
 - **FR-B03** Email is send-only (SMTP submission with TLS only, never reading a mailbox), through
   the fleet's mail setup or a per-tenant credential (`stolos export credential <name>`). Every
   message is S/MIME encrypted to its recipient's certificate:
-  - CMS AuthEnvelopedData with AES-256-GCM and RSA-OAEP SHA-256, written in TypeScript with
-    WebCrypto;
+  - CMS AuthEnvelopedData with AES-256-GCM and RSA-OAEP SHA-256, by IFC TypeScript's kernel
+    (`cms.authEnveloped`);
   - `openssl cms -decrypt` reads it;
   - one message per recipient;
   - nothing is ever sent unencrypted.
@@ -90,14 +91,15 @@ encrypted email, and OS scheduling. It calls the API and knows nothing about the
   - a macOS LaunchAgent;
   - a Linux systemd user timer.
 
-  `stolos export run <job>` is what it runs, and `stolos export list` lists the jobs. No secret is
-  written into a job.
-- **SC-B01** `tests/deliver092_test.ts` covers:
-  - DER vectors;
+  `stolos export run <job>` is what it runs (the command that runs Stolos now, from
+  `proc.selfCommand`: the runtime and the fleet's `stolos.ts`, in the fleet repository), and
+  `stolos export list` lists the jobs. No secret is written into a job.
+- **SC-B01** `tests/deliver092.test.ts` covers (the DER and the scheduler's files are IFC
+  TypeScript's, tested there):
   - an S/MIME round trip through openssl;
   - the OTLP-or-file choice;
   - job validation and tenant filters;
-  - the schedule files for each operating system;
+  - each job's schedule, in IFC TypeScript's terms, and the command it runs;
   - the SMTP dialogue against a fake TLS server, refusing plain text;
   - no secret in any job file or run record.
 

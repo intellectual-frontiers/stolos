@@ -106,7 +106,7 @@ make.
 
 ## Success Criteria _(mandatory)_
 
-- `tests/pg_connections_test.ts`: a password planted in the fixture password file (also with escaped
+- `tests/pg_connections.test.ts`: a password planted in the fixture password file (also with escaped
   colons, and in a malformed line) and in a service file appears in no output of `pg connections`,
   `pg connections --json`, `pg show` in every form, `pg show` for an unknown name, the usage error,
   the warning for a file others can read, or the MCP server's `tools/call` results. Matching,

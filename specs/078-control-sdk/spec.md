@@ -8,9 +8,9 @@ Every company has rules of its own that no product ships: a port that must stay 
 that may have only so many administrators, a naming rule for accounts. Stolos already checks adopted
 machines, devices, connected accounts, and the estate graph, each with code of its own. A company
 should write its own controls the same way Stolos writes its own: in TypeScript, in the fleet
-repository, tested with `deno test`, and shown in Compliance as evidence for the SCF controls they
-name. When the built-in policies are written on the same SDK, the SDK gets the same use as the
-engine.
+repository, tested with the runtime's own test runner (`bun test`), and shown in Compliance as
+evidence for the SCF controls they name. When the built-in policies are written on the same SDK, the
+SDK gets the same use as the engine.
 
 ## Requirements
 
@@ -45,15 +45,15 @@ engine.
   control). Connector posture policies stay as they are (`check`, `fresh`): porting them would
   change many files and nothing a person sees.
 - **FR-006** Packs in a fleet repository: `fleets/<fleet>/controls/<pack>/pack.ts` exports the pack
-  (as `pack`, or as its default export); `*_test.ts` beside it tests it. A pack that does not load
+  (as `pack`, or as its default export); `*.test.ts` beside it tests it. A pack that does not load
   is reported with why, and the others still run.
 - **FR-007** Testing (`src/archon/controls/testing.ts`): `testControl(control, fixture)` runs one
   control over a fixture and returns its results as Stolos would show them. A fixture is rows (an
   estate query's, or osquery rows per machine), an estate built from a few records
   (`fixtureEstate`), or an observation, with optional accepted risks and a time. An osquery
-  control's query is checked against `fleet query`'s rules. A fleet adds a `test` task to its
-  `deno.json` (`deno test -A fleets/`) for `deno task test`; the scaffold keeps one task (spec 059),
-  and `stolos controls test` runs the packs' tests without it.
+  control's query is checked against `fleet query`'s rules. A fleet may add a `test` script to its
+  `package.json` (`bun test fleets/`) for `bun run test`; the scaffold keeps its two scripts (spec
+  059), and `stolos controls test` runs the packs' tests without it.
 - **FR-008** Compliance: the Stolos Console's facts carry each pack's results (`PcFacts.controls`);
   `fleetEvidence` turns them into evidence with source `control pack` and the check
   `<pack title>: <control title>`, so they show in `stolos compliance`, the Compliance tab, the OCSF
@@ -63,17 +63,16 @@ engine.
   `stolos compliance` assert over the answers kept. Estate and observation controls run wherever the
   facts are gathered (nothing is asked of a machine or an account).
 - **FR-010** Commands: `stolos controls list` (packs and controls; `--json`),
-  `stolos controls run
-  [pack]` (results now; exits 1 on a failure; `--json`), and
-  `stolos controls test` (`deno test` on the packs, terminal only).
+  `stolos controls run [pack]` (results now; exits 1 on a failure; `--json`), and
+  `stolos controls test` (`bun test` on the packs, `node --test` on Node; terminal only).
 - **FR-011** An example pack, `examples/fleets/lab/controls/baseline/` (an estate control and an
   osquery control), with a passing test.
 - **FR-012** The guide `controls` (`src/archon/controls/mod.ts`), which is also the module a fleet
-  imports (`@stolos/archon/controls/mod.ts`).
+  imports (`@intellectual-frontiers/stolos/archon/controls/mod`).
 
 ## Success criteria
 
-- **SC-001** `tests/controls078_test.ts`:
+- **SC-001** `tests/controls078.test.ts`:
   - a wrong SCF id fails type checking (`@ts-expect-error`) and definition; duplicate control ids
     are refused;
   - a pack loads from a controls folder; a broken one is a problem;
@@ -89,5 +88,5 @@ engine.
     `stolos compliance
     --json` shows a pack's failing control as evidence, and
     `stolos controls test` passes.
-- **SC-002** The example pack's tests pass with `deno test`, and run in the engine's suite.
+- **SC-002** The example pack's tests pass with `bun test`, and run in the engine's suite.
 - **SC-003** Existing tests pass unchanged.

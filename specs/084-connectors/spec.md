@@ -23,4 +23,4 @@ Epic intellectual-frontiers/stolos#7; issue intellectual-frontiers/stolos#12.
 
 ## Success criteria
 
-- **SC-001** `tests/connect084_test.ts`: each connector against recorded API responses.
+- **SC-001** `tests/connect084.test.ts`: each connector against recorded API responses.

@@ -10,7 +10,7 @@ restore should be a few steps you can read.
 
 ## Requirements
 
-- **FR-001** `deno task boot vault backup` writes `archon-backup-<pc>-<UTC>.zip` into archon's
+- **FR-001** `bun run stolos boot vault backup` writes `archon-backup-<pc>-<UTC>.zip` into archon's
   backup folder, beside its other data (`%LOCALAPPDATA%\archon\backup`; Linux and macOS:
   `~/.local/share/archon/backup`), readable by its owner only.
 - **FR-002** The ZIP holds every fleet's non-ephemeral secrets on this PC (`secrets/<fleet>/...`),
@@ -32,5 +32,5 @@ restore should be a few steps you can read.
 
 ## Success criteria
 
-- **SC-001** `tests/vault_test.ts`: the ZIP's contents (secrets, signing key, no ephemeral token, no
+- **SC-001** `tests/vault.test.ts`: the ZIP's contents (secrets, signing key, no ephemeral token, no
   value in the manifest), owner-only, status before and after a move, restore changes nothing.

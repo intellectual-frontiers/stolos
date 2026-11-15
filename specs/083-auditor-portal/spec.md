@@ -20,11 +20,11 @@ screenshot.
 
 - **FR-001** An engagement is `fleets/<fleet>/audits/<id>/engagement.ts`
   (`src/archon/audit/engagement.ts`), a typed TypeScript literal (`Engagement`, exported from
-  `@stolos/archon/audit/mod.ts`) that Stolos reads without running it: the audit firm and its
-  people, the period, the frameworks, the controls in scope (each with the id the auditor uses, a
-  title, optional SCF ids, and the population it is tested on), the pinned evidence bundle (file
-  name, SHA-256, manifest head), the last day of access (`access.expires`, UTC, the day included),
-  when and by which signer it was opened, and when it was closed.
+  `@intellectual-frontiers/stolos/archon/audit/mod`) that Stolos reads without running it: the audit
+  firm and its people, the period, the frameworks, the controls in scope (each with the id the
+  auditor uses, a title, optional SCF ids, and the population it is tested on), the pinned evidence
+  bundle (file name, SHA-256, manifest head), the last day of access (`access.expires`, UTC, the day
+  included), when and by which signer it was opened, and when it was closed.
 - **FR-002** `stolos audit open`, `audit bundle`, `audit access`, `audit close` write it;
   `audit
   request`, `audit respond`, `audit sample` add to its trail. Each makes one commit of
@@ -97,7 +97,7 @@ screenshot.
 
 ## Success criteria
 
-- **SC-001** `tests/audit083_test.ts`, with real SSH keys and signed commits:
+- **SC-001** `tests/audit083.test.ts`, with real SSH keys and signed commits:
   - engagement.ts round-trips, and malformed ones are named;
   - open and close are signed commits whose trailer vouches for engagement.ts; a second open, a
     second close, an entry after closing, and a change over an uncommitted hand edit are refused;

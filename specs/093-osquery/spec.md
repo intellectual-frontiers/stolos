@@ -41,7 +41,7 @@ machine.
 
 ## Tests
 
-`tests/osquery093_test.ts`: the configuration covers every table and view with exactly its declared
+`tests/osquery093.test.ts`: the configuration covers every table and view with exactly its declared
 columns and the right path; its JSON has exactly the ATC keys; a reserved column is aliased; and,
 when `osqueryi` is installed, `osqueryi --config_path <generated> --json` returns, for
 `stolos_device`, `stolos_user_account`, `stolos_person`, and `stolos_compliance_finding`, the same

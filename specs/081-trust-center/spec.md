@@ -59,7 +59,7 @@ and nothing failing or stale hidden.
 
 ## Success criteria
 
-- **SC-001** `tests/trust081_test.ts`, from a real bundle (signed commits observing two machines, a
+- **SC-001** `tests/trust081.test.ts`, from a real bundle (signed commits observing two machines, a
   verify, OSCAL, a throwaway ed25519 key): the public page shows failing and stale controls as such,
   links every claim to an item in the published summary bundle whose bytes hash to the link, carries
   no subject, hostname, email, finding, or item name in any published file, is well formed, and

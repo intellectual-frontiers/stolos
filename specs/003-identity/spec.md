@@ -13,7 +13,7 @@ maintain it.
 
 **Acceptance Scenarios**:
 
-1. **Given** `gh` is signed in on the boot machine, **When** `deno task archon fleet init` runs,
+1. **Given** `gh` is signed in on the boot machine, **When** `bun run stolos fleet init` runs,
    **Then** `fleets/<fleet>/fleet.ts` holds my login, numeric ID, name, noreply commit address
    (`<id>+<login>@users.noreply.github.com`), and public SSH keys from `github.com/<login>.keys`,
    plus the Unix account name I chose (UID 1000), time zone, locale, and keyboard.
@@ -32,7 +32,8 @@ maintain it.
   tools), checked against glibc's reference vector.
 - **FR-004**: The validator (spec 002) refuses secret-looking text anywhere in the model or rendered
   files.
-- **FR-005**: Works the same on Windows and Linux boot machines (Deno only).
+- **FR-005**: Works the same on Windows and Linux boot machines (Bun only, or Node 26 as the
+  backup).
 
 ### Overrides of Ubuntu defaults
 

@@ -25,7 +25,7 @@ and light enough for an opt-in).
 3. **Given** `otel.localdomain` (router DNS) or `telemetry.collector` names that server, **Then**
    the other servers forward to it within 15 minutes, from then on.
 4. **Given** no collector answers and the site has a boot server, **Then** discovery says the boot
-   PC is not collecting and how to start it (`deno task boot serve`), and the server keeps its
+   PC is not collecting and how to start it (`bun run stolos boot serve`), and the server keeps its
    telemetry locally.
 5. **Given** `sudo archon otel ui off`, **Then** the container stops, its route and the 4318 opening
    go away, the Collector goes back to local only (or another collector), and the data and
@@ -56,7 +56,7 @@ and light enough for an opt-in).
 
 ## Success Criteria
 
-- **SC-001** `tests/otelui_test.ts`: the image is a pinned release without phone-home; off, the
+- **SC-001** `tests/otelui.test.ts`: the image is a pinned release without phone-home; off, the
   Collector is local and nothing is opened; on, it listens for the fleet, the firewall opens 4318 to
   the local networks, the route exists, and the credential is only an environment reference; this
   server's UI comes first in discovery, and only where it is on.

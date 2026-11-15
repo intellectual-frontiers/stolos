@@ -17,29 +17,32 @@ same guarantees as the engine itself: pinned, locked, checked, and approved by a
     exports `engine` (the engine versions it supports, a range) and `fixtures` (its recorded-fixture
     tests, `ConnectorFixture`);
   - `stolos connector add <source>@<ref>` resolves `https://github.com/<owner>/<repo>[/<path>]` to
-    `raw.githubusercontent.com/<owner>/<repo>/<ref>/<path>` (default `mod.ts`), as the engine is
-    pinned; the ref is a version tag or a full commit SHA (a branch is refused);
-  - it loads the module in a Deno process allowed only to import from the module's and the engine's
-    hosts (no network, no files beyond a local module's folder and a local engine's sources, only
-    the environment variables the engine reads for its paths), reads its declaration, and runs its
-    fixtures there;
+    `raw.githubusercontent.com/<owner>/<repo>/<ref>/<path>` (default `mod.ts`); the ref is a version
+    tag or a full commit SHA (a branch is refused);
+  - it fetches the module, takes its SHA-256, and loads it in a process of its own (the probe,
+    `registry-probe.ts`, under the runtime running Stolos), given only the environment variables the
+    engine reads for its paths and no standard input, so none of the operator's secrets; the module
+    resolves the engine the fleet installs. The probe reads its declaration and runs its fixtures.
+    Bun and Node give that process no permission sandbox: the connector's code is read before it is
+    approved, as the engine's is;
   - it refuses, changing nothing, a module that is not made with `defineConnector`, an id an engine
     or another added connector has, a label that breaks the naming rules or redeclares a built-in
     one, an SCF id not in `scf.ts`, a credential without a secret field, connect steps that do not
     say how to make a read-only credential, a missing or unsuitable engine range, an unknown market
     or OCSF class, and missing or failing fixtures;
-  - it writes `fleets/<fleet>/connectors.ts` (the import and Stolos's lock entry: the module's
-    SHA-256, its engine range, the engine that checked it, its fixture count) and runs
-    `deno cache --lock=deno.lock` on it, then checks deno.lock's hash of the module is the one it
-    checked;
-  - `stolos connector list | remove | test`: `test` probes each added connector again at its pin
-    (its hash, its engine range, its fixtures), or a module given by path or URL (an author's own
-    check);
+  - it copies the module, byte for byte as checked, into the fleet repository
+    (`fleets/<fleet>/connectors/<id>.ts`), checks the copy hashes as checked, and writes
+    `fleets/<fleet>/connectors.ts` (the import of the copy and Stolos's lock entry: the source, the
+    pinned URL, the module's SHA-256, its engine range, the engine that checked it, its fixture
+    count); the person commits both, signed;
+  - `stolos connector list | remove | test`: `test` probes each added connector's copy again (its
+    hash against the lock, the pinned URL's hash, its engine range, its fixtures), or a module given
+    by path or URL (an author's own check);
   - the engine loads the added connectors beside `CONNECTORS` (`allConnectors()`: connect, observe,
     check, assets, disconnect, the console, freshness, drift, impact), leaving out, with a warning,
-    one that does not load, does not suit this engine, or takes an engine id;
-  - `stolos fleet upgrade` locks each fleet's `connectors.ts` with the engine, and refuses an engine
-    version an added connector does not support;
+    one whose copy no longer hashes as `connectors.ts` locks it, one that does not load, does not
+    suit this engine, or takes an engine id;
+  - `stolos fleet upgrade` refuses an engine version an added connector does not support;
   - an index anyone can host is a JSON file (`stolos-connector-index/1`);
     `connector add <id>@<tag> --index <url>` finds the source in it. Stolos runs no central server;
   - the author's contract and a template with a fixture test: `examples/connector-template/`, and
@@ -91,19 +94,20 @@ same guarantees as the engine itself: pinned, locked, checked, and approved by a
 - **FR-006** SCF ids added, each confirmed in SCF 2026.3: VPM-06, VPM-07, MON-03, MON-05, MON-13,
   MON-16, CFG-02.
 - **FR-007** Registered in `CONNECTORS`, every connector-id choice list in `registry.ts`, the
-  provider table in `src/archon/adopt/mod.ts`, and `tests/connect084_test.ts`.
+  provider table in `src/archon/adopt/mod.ts`, and `tests/connect084.test.ts`.
 
 ## Success criteria
 
-- **SC-001** `tests/connect088_test.ts`: per connector, records and posture, a 403 as a gap, a
+- **SC-001** `tests/connect088.test.ts`: per connector, records and posture, a 403 as a gap, a
   failing policy with its fix, and reads only (GET, the token endpoint, and AWS's read actions);
   KnowBe4's and Checkr's records drive the 077 training and screening controls; open vulnerabilities
   validate as an OSCAL 1.2.3 POA&M and as OCSF 1.9.0 Vulnerability Findings.
-- **SC-002** `tests/registry088_test.ts`: pins and ranges; the index; every declaration check; a
-  local "GitHub" serving the engine and the template, where `connector add` writes the import, the
-  entry, and deno.lock's matching hash, and refuses a clashing id, a bad label, a made-up SCF id,
-  failing fixtures, a branch, and a second source for the same id; `connector list` and `test`;
-  `estate observe`, run as the fleet runs it, lists the added connector; `connector remove`.
+- **SC-002** `tests/registry088.test.ts`: pins and ranges; the index; every declaration check; a
+  local "GitHub" serving the template, where `connector add` writes the copy as checked, the import,
+  and the entry with the module's SHA-256, and refuses a clashing id, a bad label, a made-up SCF id,
+  failing fixtures, a branch, and a second source for the same id; `connector list` and `test`; the
+  engine loads the added connector while its copy hashes as locked, and leaves it out once the copy
+  changes; `connector remove`.
 - **SC-003** Existing tests pass, with the GitHub fixture given an empty Dependabot alert list and
   the AWS fixture's read check allowing CloudTrail's and Config's read actions.
 

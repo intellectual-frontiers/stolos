@@ -35,7 +35,7 @@ Epic intellectual-frontiers/stolos#7; issue intellectual-frontiers/stolos#18.
 
 ## Success criteria
 
-- **SC-001** `tests/connect087a_test.ts` and `tests/connect087b_test.ts` cover, per connector:
+- **SC-001** `tests/connect087a.test.ts` and `tests/connect087b.test.ts` cover, per connector:
   - entities and posture;
   - a 403 as a gap;
   - a failing policy with its fix;

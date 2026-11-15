@@ -22,8 +22,9 @@ it) is re-performable, which is what an assessor needs for a Type 2 period.
 - **FR-003** The manifest is signed with the operator's daily key (`ssh-keygen -Y sign`, namespace
   `stolos-evidence`): ssh-keygen asks the passphrase in the terminal; Stolos never sees it. The key
   must be one of the fleet's signers. Terminal only (never over MCP).
-- **FR-004** The ZIP holds `allowed_signers` (the fleet's signers, for `git` and `stolos-evidence`)
-  and a README saying how to check it with `sha256sum` and `ssh-keygen` alone.
+- **FR-004** The ZIP (deflated, as any `unzip` reads it) holds `allowed_signers` (the fleet's
+  signers, for `git` and `stolos-evidence`) and a README saying how to check it with `sha256sum` and
+  `ssh-keygen` alone.
 - **FR-005** `stolos evidence verify <bundle> [--signers <file>]`, offline, names each problem with
   its reason: an item changed, missing, or not in the manifest; the chain broken or cut off; the
   manifest's signature wrong or by a key that is not an allowed signer; a commit unsigned or with a
@@ -32,7 +33,7 @@ it) is re-performable, which is what an assessor needs for a Type 2 period.
 
 ## Success criteria
 
-- **SC-001** `tests/evidence072_test.ts`, against a real Git repository with SSH-signed commits: a
+- **SC-001** `tests/evidence072.test.ts`, against a real Git repository with SSH-signed commits: a
   good bundle verifies (naming the one unsigned commit); a tampered, missing, or added item, a
   reordered or cut manifest, and a signature by a key that is not a signer each fail with their
   reason.

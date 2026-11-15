@@ -17,7 +17,7 @@ what people do when unsure; the tool should make the safe way the easy one.
 
 ## Success criteria
 
-- **SC-001** `tests/power054_test.ts`.
+- **SC-001** `tests/power054.test.ts`.
 - **SC-002** The lab's reboot is a clean shutdown (the power button), and fails if one does not come
   within 10 minutes.
 

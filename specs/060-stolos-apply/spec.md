@@ -29,6 +29,6 @@ before it changes anything, and ask for the passphrase once.
 
 ## Success criteria
 
-- **SC-001** `tests/fleetapply060_test.ts`: `--check` changes nothing; the first apply of a new
+- **SC-001** `tests/fleetapply060.test.ts`: `--check` changes nothing; the first apply of a new
   repository is one signed commit that a server accepts, pushed through the real pre-push check;
   again: up to date; `push` is the same; the message is written from what changed.

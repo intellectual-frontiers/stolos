@@ -53,7 +53,7 @@ of truth for people, provenance, and history. Stolos keeps it in SQLite, declare
 
 ## Success criteria
 
-- **SC-001** `tests/estate090_test.ts` covers:
+- **SC-001** `tests/estate090.test.ts` covers:
   - cited names;
   - the source of truth (HR, an identity provider, the fleet's order);
   - email-case and manual links;

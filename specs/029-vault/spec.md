@@ -14,9 +14,9 @@ PC from the repo plus the vault (Article 13).
    or `boot status` starts), **Then** one framed panel lists them by name with the command to run;
    `boot doctor` warns; the prompt shows 🔐 backup; after 24 hours one email names them, then
    weekly.
-2. **Given** the Personal Vault is unlocked, **When** the owner runs `deno task boot vault backup`,
-   **Then** the secrets are copied into a new folder there with a manifest, read back, and checked,
-   and every reminder stops.
+2. **Given** the Personal Vault is unlocked, **When** the owner runs
+   `bun run stolos boot vault backup`, **Then** the secrets are copied into a new folder there with
+   a manifest, read back, and checked, and every reminder stops.
 3. **Given** a new PC, **When** the owner restores from the vault, **Then** the secrets come back
    with owner-only permissions, `known_hosts` is rebuilt, and `boot doctor` runs.
 4. **Given** no backup at all, **When** the owner runs `vault status --lost`, **Then** each secret's
@@ -24,8 +24,8 @@ PC from the repo plus the vault (Article 13).
 
 ## Requirements _(mandatory)_
 
-- **FR-001**: Commands in the one registry (Article 6), run as `deno task boot vault <sub>` (also
-  `deno task archon vault <sub>`), never offered over MCP (`noMcp`): `status [--lost]`,
+- **FR-001**: Commands in the one registry (Article 6), run as `bun run stolos boot vault <sub>`
+  (also `bun run stolos vault <sub>`), never offered over MCP (`noMcp`): `status [--lost]`,
   `backup [--to <dir>] [--wait]`, `verify [--file]`, `restore [--file] [--dry-run] [--force]`,
   `rehearse [--file]`, `list`, `prune [--keep 12]`, `recover-host-keys <host>`; on hosts,
   `archon host-keys export` (root, `noMcp`) serves `recover-host-keys`.
@@ -97,9 +97,9 @@ PC from the repo plus the vault (Article 13).
   unless the secrets, ledger, vault, prompt status, and log paths resolve inside it);
   `ARCHON_SANDBOX` makes archon refuse to start if any per-user path escapes it and skips the git
   hook; the vault tests hash the real archon folders before and after and fail if anything changed.
-  (A sandbox that set only HOME and XDG__ let `deno task test` on Windows run vault commands against
-  the real `%APPDATA%\archon\secrets` and overwrite the real ledger with a backup that no longer
-  existed.)
+  (A sandbox that set only HOME and XDG__ would let the suite on Windows run vault commands against
+  the real `%APPDATA%\archon\secrets` and overwrite the real ledger with a backup that does not
+  exist.)
 - **FR-011**: `docs/disaster-recovery.md`: with a backup (tools by winget, `gh auth login`, clone,
   unlock the Personal Vault, `vault restore`, the boot server's address in UniFi or
   `site.bootServer.address` with validation listing the UniFi changes, Windows Firewall rules,
@@ -113,7 +113,7 @@ None: this runs on the boot machine.
 
 ## Success Criteria _(mandatory)_
 
-- **SC-001**: On BOOTPC, `deno task boot vault status` lists the admin hash, install tokens
+- **SC-001**: On BOOTPC, `bun run stolos boot vault status` lists the admin hash, install tokens
   (ephemeral), `mail.json`, and alpha' deploy key and host keys as never backed up, with the panel.
 - **SC-002**: backup (copied as they are, ephemeral left out, a manifest with no values), status,
   verify, rehearse (with and without a backup), restore (a lost secret back, a newer one kept),

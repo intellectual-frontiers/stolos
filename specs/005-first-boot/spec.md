@@ -14,8 +14,9 @@ GitHub, with nothing for me to do (spec 030: no agent sign-in).
 **Acceptance Scenarios**:
 
 1. **Given** Ubuntu's installer finished, **When** the host boots, **Then** cloud-init runs
-   `/usr/local/sbin/archon-first-boot`: it installs Deno (upstream binary, checksum verified),
-   clones the repository to `/srv/archon` with the deploy key, and runs `archon first-boot`.
+   `/usr/local/sbin/archon-first-boot`: it installs the pinned Bun (its SHA-256 checked before
+   unpacking), clones the repository to `/srv/archon` with the deploy key, installs the engine
+   (`bun install --frozen-lockfile`), and runs `archon first-boot`.
 2. **Then** `archon first-boot` applies the host, moves the deploy key to `ops`, verifies, and
    pushes `state/hosts/<host>/installed.json` as `005-first-boot: <host> installed`. The record
    lists every step that failed or warned (`ok`, `problems`), and the commit subject counts them, so

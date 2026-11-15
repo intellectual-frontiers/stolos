@@ -64,6 +64,6 @@ which limits what it answers.
 
 ## Success Criteria
 
-- **SC-001** `tests/state_test.ts`: `archon.sql` is canonical, ordered, idempotent, quoted; the
+- **SC-001** `tests/state.test.ts`: `archon.sql` is canonical, ordered, idempotent, quoted; the
   SQLite file follows it, including a hand edit; the query allowlist refuses what it must; osquery's
   tables point at the `.auto.` file.

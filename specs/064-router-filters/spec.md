@@ -29,8 +29,8 @@ smb.conf, and `pg publish --local-only`. Two places to decide the same thing dis
 
 ## Success criteria
 
-- **SC-001** `tests/install_test.ts`: one profile with every port, no `Archon-LAN`, the cleanup
+- **SC-001** `tests/install.test.ts`: one profile with every port, no `Archon-LAN`, the cleanup
   first; the cleanup, run against a fake ufw, deletes every `Archon-LAN` rule (IPv4 and IPv6) and
   nothing else.
-- **SC-002** `tests/web_test.ts`, `smb_test.ts`, `pg_test.ts`, `otelui_test.ts`: no allow list in
+- **SC-002** `tests/web.test.ts`, `smb.test.ts`, `pg.test.ts`, `otelui.test.ts`: no allow list in
   Traefik or smb.conf; 445, 9090, 4318 and a published 5432 open; no `--local-only`.

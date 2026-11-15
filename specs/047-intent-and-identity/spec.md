@@ -78,10 +78,10 @@ signers changes only through a commit signed by a key already on it.
 
 ## Success Criteria
 
-- **SC-003** `tests/registration_test.ts`: one form; `known_hosts` lines for every name of a
+- **SC-003** `tests/registration.test.ts`: one form; `known_hosts` lines for every name of a
   registered host and none for others; fleet commands use `known_hosts.auto` first.
-- **SC-002** `tests/decisions_test.ts`: `decide` writes the fixed form; the model and the data class
+- **SC-002** `tests/decisions.test.ts`: `decide` writes the fixed form; the model and the data class
   follow Git's decision with no record on any machine; durable to ephemeral needs
   `--confirm-destroy`; a hand edit out of form fails `build`.
-- **SC-001** `tests/signers_test.ts`: a signed tip is accepted; unsigned, unknown-signer, rollback,
+- **SC-001** `tests/signers.test.ts`: a signed tip is accepted; unsigned, unknown-signer, rollback,
   and self-added signers are refused; the install checks before it runs anything.

@@ -42,10 +42,10 @@ evidence should leave Stolos in it.
 
 ## Success criteria
 
-- **SC-001** `tests/compliance071_test.ts`: a fixture workbook (built with fflate) reads by header;
-  a wrong hash is refused and nothing is cached; an old cache format is read again; SOC 2 by
-  criterion; every OSCAL document validates against NIST's OSCAL 1.2.3 JSON schema (`vendor/oscal/`)
-  with Ajv; the same input exports the same bytes.
+- **SC-001** `tests/compliance071.test.ts`: a fixture workbook (built with IFC TypeScript's ZIP)
+  reads by header; a wrong hash is refused and nothing is cached; an old cache format is read again;
+  SOC 2 by criterion; every OSCAL document validates against NIST's OSCAL 1.2.3 JSON schema
+  (`vendor/oscal/`) with Ajv; the same input exports the same bytes.
 - **SC-002** When this PC has the real catalog cached, the test checks every cited id and name
   against SCF 2026.3.
 

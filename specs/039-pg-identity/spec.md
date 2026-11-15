@@ -116,4 +116,4 @@ PostgreSQL is not started on a new machine; an operator turns it on.
   superuser, the PAM stack regenerated with the hook, a synced password signing in over TCP only
   while published and removed when private, `postgres` refused over the network, and `ensure`
   refused with one sentence while off.
-- `tests/pg_identity_test.ts` covers each requirement that runs without a server.
+- `tests/pg_identity.test.ts` covers each requirement that runs without a server.

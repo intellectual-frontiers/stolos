@@ -132,7 +132,7 @@ flowchart LR
 
 ## Tests
 
-- `tests/bun096_test.ts`:
+- `tests/bun096.test.ts`:
   - no `Deno`, `npm:`, `jsr:` or URL import in the engine;
   - `package.json` pinned exactly and matching `bun.lock`;
   - the packed package installs into an empty project and runs `archon --version` on Bun and on

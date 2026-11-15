@@ -13,18 +13,18 @@ down, because a first boot run again kept the clone it had refused.
 - **FR-001** `boot arm` (and `boot reinstall`) first fetch the fleet's branch from GitHub and
   refuse, arming nothing, when its newest commit is not signed by a key in signers.ts
   (`E063-TIP-UNSIGNED`) or does not hold `fleets/<fleet>/hosts/<host>/host.ts`
-  (`E063-HOST-NOT-PUSHED`), each with its fix (`deno task stolos apply`). Offline, the last fetched
+  (`E063-HOST-NOT-PUSHED`), each with its fix (`bun run stolos apply`). Offline, the last fetched
   commit is checked and that is said. A fleet not on GitHub (the lab) is not checked.
 - **FR-002** `boot serve` makes the same check for every armed host at start, as warnings.
 - **FR-003** The first-boot script, run again, fetches the branch and checks the newest commit (not
   the one it refused); the deploy key is used by those git commands only.
 - **FR-004** A refusal says how to recover, in the host's log and the boot server's window: on the
-  PC, `deno task stolos apply`; then on the host, `sudo /usr/local/sbin/archon-first-boot`.
+  PC, `bun run stolos apply`; then on the host, `sudo /usr/local/sbin/archon-first-boot`.
 
 ## Success criteria
 
-- **SC-001** `tests/keys057_test.ts`: with real keys and a bare repository as GitHub, `boot arm`
+- **SC-001** `tests/keys057.test.ts`: with real keys and a bare repository as GitHub, `boot arm`
   refuses an unsigned tip, then a host not pushed, then arms once both are in order.
-- **SC-002** `tests/install_test.ts`: the rendered first-boot script fetches on a re-run, checks the
+- **SC-002** `tests/install.test.ts`: the rendered first-boot script fetches on a re-run, checks the
   fetched commit, never exports the deploy key's ssh command to archon, says the fix, and is valid
   shell.

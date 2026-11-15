@@ -58,7 +58,7 @@ than that, and treats stale evidence as failing.
 
 ## Success criteria
 
-- **SC-001** `tests/freshness073_test.ts`: cadence defaults, a connector's own and the fleet's
+- **SC-001** `tests/freshness073.test.ts`: cadence defaults, a connector's own and the fleet's
   overrides, the 7-day cap; stale evidence fails its controls and MON-02 with the refresh command;
   each control's newest and oldest age; the drift comparison over a real Git repository; and the
   notify body carries no detail and no secret.

@@ -10,9 +10,9 @@ enough detail to tell whether someone is on a server who should not be.
 
 ### User Story 1: major Archon events (P1)
 
-1. **Given** the boot machine ran `deno task boot mail-setup`, **When** a host installs, **Then** it
-   receives the credential with the install and its first message is "[Archon] alpha: ✓ Ready" (or
-   "✗ Done with problems") with `installed.json` attached.
+1. **Given** the boot machine ran `bun run stolos boot mail-setup`, **When** a host installs,
+   **Then** it receives the credential with the install and its first message is "[Archon] alpha: ✓
+   Ready" (or "✗ Done with problems") with `installed.json` attached.
 2. **Given** a host whose reconcile starts failing, **Then** exactly one "✗ apply failing since
    HH:MM" message arrives with the failing lines and the log; when it succeeds again, exactly one "✓
    apply recovered"; while it keeps failing, one reminder a day.
@@ -57,21 +57,21 @@ enough detail to tell whether someone is on a server who should not be.
   machine is in the subaddress, so new machines need no Cloudflare change); Cloudflare's onboarding
   adds its MX, SPF, and DKIM records on `cf-bounce.<domain>` and DMARC on `_dmarc.<domain>`.
   Messages keep their `From:` address (no rewriting by the mailbox provider).
-- **FR-004**: `deno task boot mail-setup` lists the two dashboard steps (onboard the domain; create
-  an account API token with Email Sending: Edit), reads the token hidden, logs in to the relay
-  without sending (EHLO, AUTH, NOOP) and stores it only if Cloudflare accepts it, in the boot
+- **FR-004**: `bun run stolos boot mail-setup` lists the two dashboard steps (onboard the domain;
+  create an account API token with Email Sending: Edit), reads the token hidden, logs in to the
+  relay without sending (EHLO, AUTH, NOOP) and stores it only if Cloudflare accepts it, in the boot
   machine's secrets folder (`mail.json`, never in git), says how to revoke it, then runs the
   doctor's email checks and mails their findings to the shared mailbox (spec 026 FR-012).
 - **FR-005**: Servers get the token with the install (delivered 0600, installed by first boot) or
-  with `deno task boot mail-push <host>` (SSH, `archon mail credential` on stdin, which then mails
-  the doctor's email findings through archon and Postfix). It lives in Postfix's
+  with `bun run stolos boot mail-push <host>` (SSH, `archon mail credential` on stdin, which then
+  mails the doctor's email findings through archon and Postfix). It lives in Postfix's
   `/etc/postfix/sasl_passwd`, root only; archon reads the same file.
 - **FR-006**: Commands:
   `archon notify send --subject <s> [--body <text> | --body-file <f>] [--attach <file>]... [--level info|warn|fail] [--key <k>] [--wait]`;
   `archon notify test` ("[Archon] <host>: notification test", waits for the relay);
   `archon notify status [--check]` (mailbox, credential, last send and result, queue);
   `archon notify flush`; `archon notify watch` (User Story 2); `archon mail credential` and
-  `archon mail test` (spec 027). On the boot machine: `deno task boot notify <same options>`,
+  `archon mail test` (spec 027). On the boot machine: `bun run stolos boot notify <same options>`,
   `notify test`, `notify status`. A subject starting with `[` or `Lab` is sent as given (the network
   change log); any other becomes `[Archon] <host>: <subject>`.
 - **FR-007**: Archon events, major only: install finished (with `installed.json`); `boot reinstall`
@@ -116,9 +116,9 @@ None.
 
 ## Success Criteria _(mandatory)_
 
-- **SC-001**: `archon notify test` and `archon mail test` on alpha, and `deno task boot notify test`
-  on BOOTPC, arrive in the mailbox from their own addresses.
+- **SC-001**: `archon notify test` and `archon mail test` on alpha, and
+  `bun run stolos boot notify test` on BOOTPC, arrive in the mailbox from their own addresses.
 - **SC-002**: A forced apply failure produces exactly one "failing" and one "recovered" message
-  (tested in `tests/notify_test.ts`).
+  (tested in `tests/notify.test.ts`).
 - **SC-003**: No secret appears in any message (tested).
 - **SC-004**: An SSH login to alpha arrives within a minute, naming the user, address, and key.

@@ -22,11 +22,11 @@ local store is ephemeral, so performance and disk space are not impacted. No cen
 
 ## Requirements _(mandatory)_
 
-| Data    | Collected and stored (natively)        | Speaks OpenTelemetry through                                                                                          | Kept, at most                                                                  |
-| ------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| Metrics | PCP: pmcd, pmlogger (Ubuntu's package) | pmproxy's OpenMetrics endpoint (127.0.0.1:44322, `/metrics?names=...`), read by the Collector's `prometheus` receiver | `metricsDays` (365) and `metricsMaxSize` (2G)                                  |
-| Logs    | journald                               | the Collector's `journald` receiver                                                                                   | `logsRetention` (3month) and `logsMaxSize` (1G), and journald's 15% free floor |
-| Archon  | Deno's built-in OpenTelemetry          | OTLP to the local Collector (127.0.0.1:4318), written as OTLP JSON lines to `/var/cache/archon-otel/archon.jsonl`     | `tracesDays` (7) and 64 MB                                                     |
+| Data    | Collected and stored (natively)                             | Speaks OpenTelemetry through                                                                                          | Kept, at most                                                                  |
+| ------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Metrics | PCP: pmcd, pmlogger (Ubuntu's package)                      | pmproxy's OpenMetrics endpoint (127.0.0.1:44322, `/metrics?names=...`), read by the Collector's `prometheus` receiver | `metricsDays` (365) and `metricsMaxSize` (2G)                                  |
+| Logs    | journald                                                    | the Collector's `journald` receiver                                                                                   | `logsRetention` (3month) and `logsMaxSize` (1G), and journald's 15% free floor |
+| Archon  | IFC TypeScript's OpenTelemetry (`runtime/otel`, in-process) | OTLP to the local Collector (127.0.0.1:4318), written as OTLP JSON lines to `/var/cache/archon-otel/archon.jsonl`     | `tracesDays` (7) and 64 MB                                                     |
 
 - **FR-001**: `ObservabilityDef` (fleet, overridden per host) sets the limits above and
   `minFreePercent` (15). They are upper bounds, never promises.
@@ -41,12 +41,12 @@ local store is ephemeral, so performance and disk space are not impacted. No cen
   `service.namespace` = the fleet, `archon.host.kind`), one rotated file exporter (4 files of 16 MB,
   `tracesDays`). It starts once the tools sync installed it (`ConditionPathExists`), and the tools
   sync restarts it after upgrades.
-- **FR-005**: `archon` reports itself through Deno's built-in OpenTelemetry (the launcher sets
-  `OTEL_DENO`, `OTEL_SERVICE_NAME=archon`, OTLP/JSON to the local Collector): each command is a
-  trace with a span per phase; metrics `archon.run.duration`, `archon.run.problems`,
-  `archon.verify.checks`, `archon.apply.changes`. Silent and harmless when the Collector is not
-  running; the OpenTelemetry API is loaded only when enabled, and a failure to load it changes
-  nothing.
+- **FR-005**: `archon` reports itself through IFC TypeScript's OpenTelemetry (`runtime/otel`,
+  in-process; the launcher sets `OTEL_SERVICE_NAME=archon` and OTLP/JSON to the local Collector):
+  each command is a trace (an `archon.run` span) with an `archon.phase` span per phase; metrics
+  `archon.run.duration`, `archon.run.problems`, `archon.verify.checks`, `archon.apply.changes`.
+  Silent and harmless when the Collector is not running: nothing is sent where nothing listens, and
+  telemetry never changes a command's result.
 - **FR-006**: `archon observe` (read-only summary), `archon observe tui` (otel-tui on 127.0.0.1,
   PCP's core metrics through pmproxy, Archon's OTLP file), `archon observe prune` (PCP archives over
   `metricsMaxSize` or below `minFreePercent` free, oldest first, never the one being written; daily

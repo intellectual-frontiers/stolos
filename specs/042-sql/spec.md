@@ -64,7 +64,7 @@ and operational, with its standard port open in the firewall; CloudQuery, trdsql
 
 ## Success Criteria _(mandatory)_
 
-- `tests/sql_test.ts`: catalog entries, sources and placement; the pinned key's fingerprint; the
+- `tests/sql.test.ts`: catalog entries, sources and placement; the pinned key's fingerprint; the
   asset patterns against the names the projects' release builds publish (DuckDB's packaging test,
   Steampipe's `.goreleaser.yml`); `osqueryd` enabled and running with Archon's flags and schedule;
   no port for it; the docs and guide.

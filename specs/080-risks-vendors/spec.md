@@ -18,12 +18,13 @@ signer merges with a signed merge commit.
 
 - **FR-001** The register is `fleets/<fleet>/risks.ts`, `export const risks = defineRisks([...])`
   (`src/archon/risk/register.ts`). Each risk has an id, a title, a description, a likelihood and an
-  impact on NIST SP 800-30 Rev 1's qualitative scale (`very low`, `low`, `moderate`, `high`,
-  `very high`; Tables G-5 and H-3), an owner (a person's work email), a treatment (NIST SP 800-39's
+  impact on NIST SP 800-30 Rev 1's qualitative scale (`very-low`, `low`, `moderate`, `high`,
+  `very-high`; Tables G-5 and H-3), an owner (a person's work email), a treatment (NIST SP 800-39's
   and ISO 31000's risk responses: `accept`, `mitigate`, `transfer`, `avoid`), the SCF controls it
   relates to (typed `ScfId`: a wrong id fails type checking), links to accepted risks, a next review
-  date, an optional review interval (90 days by default), and a status (`open` or `closed`). Its
-  level of risk is SP 800-30 Rev 1 Table I-2. `defineRisks` refuses a malformed register.
+  date, an optional review interval (90 days by default), and a status (`open` or `closed`). The
+  scale, the level of risk (SP 800-30 Rev 1 Table I-2), and the treatments are IFC TypeScript's
+  (kernel `assess`). `defineRisks` refuses a malformed register.
 - **FR-002** Accepted risks are the ones Stolos already has (spec 078): `controls/accepted.ts`
   (named `<pack>/<control>`) and each adopted machine's `accepted` (named `<machine>:<policy>`). A
   risk names the ones it stands behind in `accepted`.
@@ -82,12 +83,12 @@ signer merges with a signed merge commit.
   treatment, owner, and next review as properties, and a POA&M item for it. Accepted and transferred
   risks are `deviation-approved`; mitigated and avoided ones are `remediating`.
 - **FR-010** The guide `risks` (`src/archon/risk/mod.ts`), which is also the module a fleet imports
-  (`@stolos/archon/risk/mod.ts`); example files in `examples/fleets/lab/` (`risks.ts`,
-  `vendors.ts`).
+  (`@intellectual-frontiers/stolos/archon/risk/mod`); example files in `examples/fleets/lab/`
+  (`risks.ts`, `vendors.ts`).
 
 ## Success criteria
 
-- **SC-001** `tests/risk080_test.ts`:
+- **SC-001** `tests/risk080.test.ts`:
   - the register and triage files are typed (wrong SCF ids, scale values, treatments, and data
     categories fail type checking and definition); the example lab's files load; SP 800-30's Table
     I-2 holds;

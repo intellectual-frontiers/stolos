@@ -13,9 +13,9 @@ server's name is a public Cloudflare record with its private address.
 
 ## User Scenarios & Testing _(mandatory)_
 
-1. **Given** a server reinstalled with `deno task boot reinstall`, **When** its first boot finishes,
-   **Then** Traefik serves the certificate carried from the previous install from its first start,
-   and the reinstall's log, the boot window, and the email say so.
+1. **Given** a server reinstalled with `bun run stolos boot reinstall`, **When** its first boot
+   finishes, **Then** Traefik serves the certificate carried from the previous install from its
+   first start, and the reinstall's log, the boot window, and the email say so.
 1. **Given** a freshly installed server, **When** someone on the LAN opens
    `https://alpha.lab.example.net`, **Then** the welcome page answers: health (last archon run,
    install record, certificate), services with links, and how to work on the server.
@@ -63,10 +63,10 @@ server's name is a public Cloudflare record with its private address.
   `<host>.<domain>` and any otherwise unclaimed name or address to it. It lists listening ports that
   are not published, with the model line that would publish one.
 - **FR-008**: The Cloudflare token (Zone: Read, DNS: Edit on the zone) lives on the boot machine
-  (`web.json`, secret inventory, vault). `deno task boot web-setup` stores it after checking it can
-  see the zone; installs deliver it; `deno task boot web-push <host>` sends it to a running server,
-  where `archon web credential` stores it root-only in `/etc/archon/web/` (JSON for archon, an
-  environment file for Traefik) and restarts Traefik.
+  (`web.json`, secret inventory, vault). `bun run stolos boot web-setup` stores it after checking it
+  can see the zone; installs deliver it; `bun run stolos boot web-push <host>` sends it to a running
+  server, where `archon web credential` stores it root-only in `/etc/archon/web/` (JSON for archon,
+  an environment file for Traefik) and restarts Traefik.
 - **FR-009**: `archon web dns` keeps the server's two A records (not proxied, TTL 60) at the address
   it reaches the network from now (the source of its default route), so servers need no reserved
   IPs. It runs at first boot and when a token arrives; `archon web dns-check`
@@ -79,7 +79,7 @@ server's name is a public Cloudflare record with its private address.
 - **FR-011**: Traefik's metrics and traces go to the local OpenTelemetry Collector (spec 021) over
   OTLP/HTTP.
 - **FR-012**: A server's Let's Encrypt certificates survive its re-install.
-  `deno task boot reinstall` runs `archon web acme-export` on the server before rebooting it
+  `bun run stolos boot reinstall` runs `archon web acme-export` on the server before rebooting it
   (Traefik's ACME store, with each certificate's names and expiry) and keeps it on the boot machine
   as `hosts/<host>/acme.json`, a cache in the secret inventory that is never backed up. The install
   delivers it unless a certificate expires within a day; the first boot puts it in Traefik's state

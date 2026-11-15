@@ -77,7 +77,7 @@ rebase, which would replace the manager's signature.
 
 ## Success criteria
 
-- **SC-001** `tests/people077_test.ts`: a leaver with active accounts fails; a joiner without the
+- **SC-001** `tests/people077.test.ts`: a leaver with active accounts fails; a joiner without the
   accounts their role needs is named; time to deprovision from a fixture history; review files per
   manager from a fixture estate; approval verified with real SSH-signed commits in a temporary
   repository (the manager's key, a fleet signer's trailer; another person's key and an unknown key

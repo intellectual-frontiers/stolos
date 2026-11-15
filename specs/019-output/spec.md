@@ -16,13 +16,13 @@ Implemented **Input**: Calm output for every operation (Article 19).
   (`TERM_PROGRAM`), and ConEmu; macOS terminals (`TERM_PROGRAM`). `ARCHON_PLAIN=1` turns emoji off,
   `ARCHON_EMOJI=1` on; `NO_COLOR` turns color off, `FORCE_COLOR` on without a terminal. The header
   is the title in bold cyan with a dim rule; phase names are bold.
-- **FR-005**: The boot server's window (`deno task boot serve`): each event on one line with an icon
-  for what happened (🥾 boot files, 🐧 kernel and initrd, 🧭 GRUB menu, 🎯 armed, 💿 installer
-  image, 🔑 install config, 📦 installer step, 🏁 install finished, 🔐 host keys trusted, 🚀 first
-  boot, ✅ a step, ⚠️ a warning, ❌ a failure, 🎉 Ready, 👉 next steps), the time (24-hour) and
-  address dimmed, the host in its own highlighted column, success green, problems amber or red.
-  GRUB's and the shim's probing for files they do without (`revocations.efi`,
-  `grub/x86_64-efi/*.lst`) is kept out of the window (it stays in `boot.log`; `ARCHON_VERBOSE=1`
-  shows it), and a line repeated within 3 seconds is shown once. `boot.log` keeps every line, plain.
-  The OpenTelemetry settings live in `src/archon-boot/otel.env` (`--env-file`), so `deno task boot`
-  echoes a short command.
+- **FR-005**: The boot server's window (`bun run stolos boot serve`): each event on one line with an
+  icon for what happened (🥾 boot files, 🐧 kernel and initrd, 🧭 GRUB menu, 🎯 armed, 💿 installer
+  image, 🔑 install config, 📦 installer step, 🏁 install finished, 🔐 host keys trusted, 🚀 first boot,
+  ✅ a step, ⚠️ a warning, ❌ a failure, 🎉 Ready, 👉 next steps), the time (24-hour) and address
+  dimmed, the host in its own highlighted column, success green, problems amber or red. GRUB's and
+  the shim's probing for files they do without (`revocations.efi`, `grub/x86_64-efi/*.lst`) is kept
+  out of the window (it stays in `boot.log`; `ARCHON_VERBOSE=1` shows it), and a line repeated
+  within 3 seconds is shown once. `boot.log` keeps every line, plain. Its telemetry starts
+  in-process (spec 023), with no settings on the command line, so the command `bun run stolos boot`
+  echoes is short.

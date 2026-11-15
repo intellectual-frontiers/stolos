@@ -1,19 +1,20 @@
 # Feature Specification: Telemetry by OpenTelemetry
 
 **Feature Branch**: `049-telemetry` (committed directly to main) **Created**: 2026-11-13 **Status**:
-In progress (v0.5.0) **Input**: Constitution Article 27. Use Deno's built-in OpenTelemetry
-extensively: one list of signal names, resource attributes that say which fleet, host, engine, and
-commit, traces carried across machines, security events as metrics, nothing secret. Where the
-network has no other collector, the boot PC's Deno boot server is the fleet's default, ephemeral
-collector. Research: [research.md](research.md).
+In progress (v0.5.0) **Input**: Constitution Article 27. Use IFC TypeScript's OpenTelemetry
+(`runtime/otel`) extensively: one list of signal names, resource attributes that say which fleet,
+host, engine, and commit, traces carried across machines, security events as metrics, nothing
+secret. Where the network has no other collector, the boot PC's boot server is the fleet's default,
+ephemeral collector. Research: [research.md](research.md).
 
 ## User Scenarios & Testing _(mandatory)_
 
 1. **Given** any host, **When** an archon command runs, **Then** the local Collector receives a
-   trace `archon <command>` with a span per phase and the run's attributes (`archon.fleet`,
-   `archon.host`, `archon.engine.version`, `archon.tier`), and the metrics of
-   `man 7 archon-telemetry`, under the resource `service.namespace` (fleet), `host.name`,
-   `service.version` (pinned engine tag), and `vcs.ref.head.revision` (commit).
+   trace (an `archon.run` span, its command in `archon.command`) with an `archon.phase` span per
+   phase and the run's attributes (`archon.fleet`, `archon.host`, `archon.engine.version`,
+   `archon.tier`), and the metrics of `man 7 archon-telemetry`, under the resource
+   `service.namespace` (fleet), `host.name`, `service.version` (pinned engine tag), and
+   `vcs.ref.head.revision` (commit).
 2. **Given** `archon fleet status` or `archon fleet query` on the boot machine, **Then** each
    server's command continues the caller's trace (the MCP call carries `_meta.traceparent`).
 3. **Given** a refused update (unsigned, untrusted, rollback), a refused query or MCP call, an
@@ -34,7 +35,8 @@ collector. Research: [research.md](research.md).
   `archon mcp` passes a call's `_meta.traceparent` to the command it runs; the MCP client
   (`fleet status`, `fleet query`) sends the current one; sudo preserves it.
 - **FR-003** The host launcher sets `OTEL_RESOURCE_ATTRIBUTES` from `/etc/archon/fleet`,
-  `/etc/archon/host`, the `@stolos` tag in `/srv/archon/deno.json`, and the checkout's commit.
+  `/etc/archon/host`, the engine's release tag in `/srv/archon/package.json` (its tarball URL), and
+  the checkout's commit.
 - **FR-004** Metrics: `archon.run.duration`, `archon.run.problems`, `archon.verify.checks`,
   `archon.apply.changes` (health); `archon.update.outcome`, `archon.query.requests`,
   `archon.mcp.calls`, `archon.signers.trusted`, `archon.confirm_destroy.used` (security);
@@ -44,7 +46,8 @@ collector. Research: [research.md](research.md).
   `/otlp/v1/{traces,metrics,logs}` on its HTTP port, keeps daily files under its boot cache
   (`telemetry/fleet/`), 7 days and 512 MB at most, and forwards to otel-tui on the PC. Host
   discovery tries it last (`source: boot`), and the Collector's exporter then sends JSON.
-- **FR-007** Silent and harmless with no collector: the API loads only with `OTEL_DENO`.
+- **FR-007** Silent and harmless with no collector: telemetry runs in-process (IFC TypeScript's
+  `runtime/otel`), sends nothing where no collector listens, and never changes a run's result.
 - **FR-008** Events are structured at their source (`src/archon/telemetry/events.ts`: a declared
   name, severity, host, client address, attributes, message) and recorded as OpenTelemetry log
   records (attribute `archon.event`). The boot server records each one in its OTLP files (and hands
@@ -72,12 +75,12 @@ collector. Research: [research.md](research.md).
 ## Success Criteria
 
 - **SC-003** The e2e lab checks that the host's first boot continued the boot server's install trace
-  (`tests/e2e/trace.ts`); `tests/telemetry_test.ts` checks a run's phases arrive as log records in
+  (`tests/e2e/trace.ts`); `tests/telemetry.test.ts` checks a run's phases arrive as log records in
   its trace.
-- **SC-002** `tests/pretty_test.ts`: the window renders events (tone, columns, debug, repeats), the
+- **SC-002** `tests/pretty.test.ts`: the window renders events (tone, columns, debug, repeats), the
   same line from an OTLP log record as from the event, and the boot server accepts only declared
   events from this PC.
-- **SC-001** `tests/telemetry_test.ts`: the list and the man page agree; traceparent and redaction;
+- **SC-001** `tests/telemetry.test.ts`: the list and the man page agree; traceparent and redaction;
   a real run exports a trace continuing a given parent, its phases, and its metrics; the boot server
   keeps OTLP JSON (and gzip) and refuses anything else; discovery falls back to the boot server with
   JSON encoding.

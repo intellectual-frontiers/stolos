@@ -15,7 +15,7 @@ rule. The off-host destination is an open question (a NAS, in a later spec).
 2. **Given** `archon pg on --durable`, **Then** PostgreSQL starts, the record says `data: durable`,
    and the server is durable: `archon data` says "durable (PostgreSQL)", the login banner and the
    welcome page say so, and the prompt marks the host.
-3. **Given** a durable server, **When** the boot machine runs `deno task boot reinstall alpha`,
+3. **Given** a durable server, **When** the boot machine runs `bun run stolos boot reinstall alpha`,
    **Then** it refuses before anything changes, naming why ("alpha is durable (PostgreSQL)") and the
    flag that confirms; with `--confirm-destroy alpha` it goes ahead.
 4. **Given** an ephemeral server, **Then** a reinstall needs no confirmation.
@@ -54,11 +54,12 @@ rule. The off-host destination is an open question (a NAS, in a later spec).
   offered over MCP, a call that passes it is refused, and any command run with `ARCHON_AGENT` set
   refuses it. `archon pg upgrade`, `pg restore`, and `pg remove` take it (with the instance's name),
   besides spec 038's `approve: destructive` line.
-- **FR-006** The boot machine: `deno task boot reinstall HOST` asks the host `archon data --json`
-  over SSH before anything changes. Ephemeral: it goes ahead. Durable (including data with no
-  recorded choice), or a class that cannot be read (no answer, no valid JSON): it refuses unless
-  `--confirm-destroy HOST` names it. A host that does not answer over SSH is armed only with
-  `--confirm-destroy`. `deno task boot arm HOST` checks the records in the checkout the same way.
+- **FR-006** The boot machine: `bun run stolos boot reinstall HOST` asks the host
+  `archon data --json` over SSH before anything changes. Ephemeral: it goes ahead. Durable
+  (including data with no recorded choice), or a class that cannot be read (no answer, no valid
+  JSON): it refuses unless `--confirm-destroy HOST` names it. A host that does not answer over SSH
+  is armed only with `--confirm-destroy`. `bun run stolos boot arm HOST` checks the records in the
+  checkout the same way.
 - **FR-007** Backups (spec 016): the nightly archive adds the paths of durable (or unchosen)
   sources, `/srv/s3` and `/srv/smb`; PostgreSQL's dumps are already in the backup target. Each
   durable guest is exported with `lxc export` next to the archives, keeping the newest N; a failed

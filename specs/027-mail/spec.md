@@ -51,8 +51,8 @@ Email Service, with DKIM for `example.net`. Replace the Gmail API.
   including real ones at `<domain>`, are relayed as written.
 - **FR-005**: The token: `/etc/postfix/sasl_passwd`, one line
   `[smtp.mx.cloudflare.net]:465 api_token:<token>`, root only, written by `archon mail credential`
-  (install delivery and `deno task boot mail-push`), which reloads Postfix. Never in the model, a
-  spec, git, or a log.
+  (install delivery and `bun run stolos boot mail-push`), which reloads Postfix. Never in the model,
+  a spec, git, or a log.
 - **FR-006**: `archon mail test` hands a message for root to `/usr/sbin/sendmail`: the path every
   program uses. `archon verify` checks that Postfix is active and warns while the token is missing.
 - **FR-007**: Cloudflare, once (the owner, in the dashboard): onboard `example.net` under Compute >

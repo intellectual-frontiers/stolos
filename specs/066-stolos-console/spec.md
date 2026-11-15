@@ -18,7 +18,7 @@ new password or key to keep.
 - **FR-003** Pages: Overview, Machines (managed, adopted, cloud; filter; CSV and evidence JSON
   downloads), one page per machine, Clouds, Ask every machine (fleet query as a table), Changes,
   Trust, Activity, Actions (six groups, each with its diagram), How it works, Guide.
-- **FR-004** Commands run as `deno task stolos ...` in the fleet repository, one at a time, with the
+- **FR-004** Commands run as `bun run stolos ...` in the fleet repository, one at a time, with the
   console's terminal as their input: secrets are typed there, never in the browser. Commands that
   change keys and `vault restore` are not offered; the person-only commands agents may not run over
   MCP (apply, fleet upgrade, vault backup, ...) are, because a person is at the PC.
@@ -36,7 +36,7 @@ new password or key to keep.
 
 ## Success criteria
 
-- **SC-001** `tests/console066_test.ts`: launch links (once, two minutes), the Host and Origin
+- **SC-001** `tests/console066.test.ts`: launch links (once, two minutes), the Host and Origin
   guards, refusals, the query table, what is offered, every page, the downloads, CSV quoting.
 - **SC-002** `tests/console/stolos-browser.cjs` (CI's console-browser job): every page at desktop
   and phone width, nothing wider than the screen, every field labeled, no script errors, a run

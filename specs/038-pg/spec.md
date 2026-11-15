@@ -188,6 +188,6 @@ PostgreSQL connections."
   `archon pg list` shows distinct ports; `archon pg connect prime --write` then `psql service=prime`
   connects with the prompt; `archon pg publish prime` and `unpublish` round-trip; `archon verify`
   clean.
-- Tests (`tests/pg_test.ts`) cover every requirement above that can run without a server; the
+- Tests (`tests/pg.test.ts`) cover every requirement above that can run without a server; the
   converge, connect, backup, restore, publish-configuration, and prompt paths were exercised against
   PostgreSQL 16 clusters on Ubuntu 24.04 during development.

@@ -11,8 +11,8 @@ rehearsed procedure).
 
 ## Requirements
 
-- **FR-001** `deno task stolos vault restore <zip>`, run in the freshly cloned fleet repository,
-  reads the ZIP and checks it before writing anything: a stolos backup (`manifest.json`, format
+- **FR-001** `bun run stolos vault restore <zip>`, run in the freshly cloned fleet repository, reads
+  the ZIP and checks it before writing anything: a stolos backup (`manifest.json`, format
   `stolos-backup/1`), every file present and matching its SHA-256, and every file in one of its
   places (`secrets/<fleet>/...`, `signing/<file>`, `signing/recovery/<file>`; no other path, no
   `..`).
@@ -34,18 +34,19 @@ rehearsed procedure).
 - **FR-005** The ZIP is recorded as the last backup: `vault status` shows every restored secret as
   backed up.
 - **FR-006** Then `keys setup` (Git's signing for this checkout, the pre-push check, one test
-  signature: the daily passphrase), and the engine's types for VS Code. When the ZIP held both keys,
-  no "back up" reminder. `--files-only` stops after the files.
+  signature: the daily passphrase), and the engine's types for VS Code (the engine installed as
+  `bun.lock` holds it, `bun install --frozen-lockfile`). When the ZIP held both keys, no "back up"
+  reminder. `--files-only` stops after the files.
 - **FR-007** Without a ZIP, `vault restore` prints the steps (the command first, then by hand), the
   same as `RESTORE.txt` in every ZIP. Never offered over MCP.
 
 ## Success criteria
 
-- **SC-001** `tests/vault_test.ts`: a backup, the PC wiped, a restore (`--files-only`) puts back
+- **SC-001** `tests/vault.test.ts`: a backup, the PC wiped, a restore (`--files-only`) puts back
   every secret and both keys owner-only; `vault status` is clean; again: nothing written; a file
   that differs: nothing written, named; `--destroy-existing`: exactly the backup, what it lacked
   saved in a ZIP first, a different daily key moved aside, a GitHub key untouched; a damaged ZIP and
   a non-ZIP refused; no path escapes.
-- **SC-002** `tests/keys057_test.ts`: real keys with passphrases: setup, commit, backup, the PC
+- **SC-002** `tests/keys057.test.ts`: real keys with passphrases: setup, commit, backup, the PC
   wiped, a fresh clone, `vault restore <zip>`: signing set up and a test signature verified; `keys`
   clean; again: unchanged.

@@ -43,7 +43,7 @@ becomes, and whether its disks may be erased.
 
 ## Success criteria
 
-- **SC-001** `tests/identity051_test.ts`: MAC parsing, the choice, the facts, every guard decision,
+- **SC-001** `tests/identity051.test.ts`: MAC parsing, the choice, the facts, every guard decision,
   the guard script (valid sh, reports facts, fails closed), the stall watch, the bootstrap probe.
 - **SC-002** The engine's lab (`tests/e2e/ci.sh`, network): a claimed machine whose disk holds a
   partition table is stopped by the guard and powers off; after `boot arm --claim --confirm-destroy`

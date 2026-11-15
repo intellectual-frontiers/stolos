@@ -150,7 +150,7 @@ flowchart LR
 
 ## Tests
 
-`tests/proposals095_test.ts`: each parser on fixtures (journald, apt history, dpkg.log, etckeeper,
+`tests/proposals095.test.ts`: each parser on fixtures (journald, apt history, dpkg.log, etckeeper,
 osquery snapshots, unit files, snap changes, dpkg -S, debsums and dpkg --verify); drift minus plan
 minus birth; a modified package binary raises an alert and is never proposed; secret redaction
 (inventory paths, keys in content); grouping by sudo session; signing and verifying with a throwaway

@@ -43,6 +43,6 @@ remembers. A newbie should run one command, and see every problem with its one f
 
 ## Success criteria
 
-- **SC-001** `tests/keys057_test.ts`: setup twice (the second changes nothing), the checks from
+- **SC-001** `tests/keys057.test.ts`: setup twice (the second changes nothing), the checks from
   facts, the pre-push check refusing an unsigned tip, rotate and lost producing commits a server
   accepts, each run twice.

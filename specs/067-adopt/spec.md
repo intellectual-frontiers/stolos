@@ -39,7 +39,7 @@ should answer for every machine, while managing only the ones it installed.
 
 ## Success criteria
 
-- **SC-001** `tests/adopt067_test.ts`: parsing, observation, policies, the authorized_keys line, and
+- **SC-001** `tests/adopt067.test.ts`: parsing, observation, policies, the authorized_keys line, and
   the probe itself (facts here; refusals of anything else; one SELECT through a fake osqueryi).
 - **SC-002** Against a real sshd: adopt, observe, check, query, release; the probe key opens no
   shell, runs no other command, and forwards no port.
@@ -63,7 +63,7 @@ should answer for every machine, while managing only the ones it installed.
 - **FR-010** AWS requests are signed (SigV4) in TypeScript; no provider CLI or SDK is installed.
 - **FR-011** Out of scope: creating, changing, or deleting anything in a cloud; costs (later).
 
-- **SC-003** `tests/cloud067_test.ts`: each provider against a fake API (inventory, gaps, posture),
+- **SC-003** `tests/cloud067.test.ts`: each provider against a fake API (inventory, gaps, posture),
   AWS's published SigV4 example, and only GET requests (Microsoft's token POST aside).
 
 ## Discovered
@@ -72,7 +72,7 @@ should answer for every machine, while managing only the ones it installed.
   has: its neighbor table (`ip neigh`, `arp -an`, `arp -a`) and the cloud observations in Git
   (servers and instances no fleet machine owns). It scans nothing and records nothing; each one can
   be adopted with `host adopt`.
-- **SC-004** `tests/adopt067_test.ts`: the three neighbor-table formats (macOS's unpadded octets
+- **SC-004** `tests/adopt067.test.ts`: the three neighbor-table formats (macOS's unpadded octets
   included) and the match against the fleet by MAC, address, and name.
 
 ## Later

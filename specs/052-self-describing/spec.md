@@ -23,13 +23,14 @@ say what happened, why, and what to do, without anyone reading the documentation
   happened, the likely cause, the fix, and the guide. Every code the engine uses has an explanation
   (a test).
 - **FR-005** Raw errors people meet often (ssh host keys and public keys, DNS, apt's lock, damaged
-  dpkg state, Deno's lock integrity) are recognized and given their code and fix.
+  dpkg state, the engine's integrity against `bun.lock`) are recognized and given their code and
+  fix.
 - **FR-006** No new silent catches: a test holds the count of `.catch(() => {})` at 60, so each one
   is a decision.
 
 ## Success criteria
 
-- **SC-001** `tests/explain052_test.ts`.
+- **SC-001** `tests/explain052.test.ts`.
 - **SC-002** The engine's lab: Ready shows every check passed, with mail and web "not set up yet"
   (the e2e fleet has both, without tokens); `archon verify` after the reboot and on the workstation
   exits 0.

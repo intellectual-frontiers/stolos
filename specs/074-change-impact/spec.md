@@ -71,13 +71,15 @@ refused unless someone accepted the risk or approved it.
   listed).
 - **FR-010** A fleet repository carries `.github/workflows/compliance-impact.yml`, written by
   `stolos fleet init` (scaffold) and again by `stolos fleet upgrade` when its text differs. On
-  `pull_request` it checks out the head (full history, without keeping credentials), downloads the
-  SCF catalog, runs `stolos compliance impact --base <PR base> --head <PR head> --markdown` for each
-  fleet, writes it to the run's summary, posts one comment (found again by a marker and updated)
-  when a control is affected or a comment exists already, and fails the check when the gate blocks.
-  It uses only GitHub's `GITHUB_TOKEN` (`contents: read`, `pull-requests: write`, given only to the
-  commenting step through `gh api`) and two actions pinned to commits: `actions/checkout` and
-  `denoland/setup-deno`. Values from the event reach shell steps only through the environment.
+  `pull_request` it checks out the head (full history, without keeping credentials), installs the
+  engine `bun.lock` holds (`bun install --frozen-lockfile`), downloads the SCF catalog, runs
+  `stolos compliance impact --base <PR base> --head <PR head> --markdown` for each fleet, writes it
+  to the run's summary, posts one comment (found again by a marker and updated) when a control is
+  affected or a comment exists already, and fails the check when the gate blocks. It uses only
+  GitHub's `GITHUB_TOKEN` (`contents: read`, `pull-requests: write`, given only to the commenting
+  step through `gh api`) and two actions pinned to commits: `actions/checkout` and
+  `oven-sh/setup-bun` (the Bun the engine pins). Values from the event reach shell steps only
+  through the environment.
 - **FR-011** The guide: a section in the compliance guide (`src/archon/compliance/mod.ts`) with a
   Mermaid diagram.
 
@@ -111,7 +113,7 @@ refused unless someone accepted the risk or approved it.
   its framework requirements when the catalog is cached).
 - `compliance.gate` in `fleet.ts` configures the gate; with `block: "weakens"`, the check fails and
   `stolos apply` commits nothing unless an accepted risk or a signed approval covers the weakening.
-- `tests/impact074_test.ts`: each declaration (weakens, strengthens, only it fires), the comment's
+- `tests/impact074.test.ts`: each declaration (weakens, strengthens, only it fires), the comment's
   text, the gate (blocks, allows with an accepted risk, with an approval, with `allow`), a fleet
   repository end to end (CLI, signed approval), and the workflow's content (pinned actions,
   permissions, the token's scope).

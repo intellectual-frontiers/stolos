@@ -44,10 +44,10 @@ plain words, say yes once, and copy one line back.
 
 ## Success criteria
 
-- **SC-001** `tests/integrate069_test.ts`: the code's parsing (and its refusals), the one-liners,
+- **SC-001** `tests/integrate069.test.ts`: the code's parsing (and its refusals), the one-liners,
   and integrate.sh for real: discover writes nothing, a wrong checksum installs nothing, adopt and
   undo.
-- **SC-003** `tests/snmp069_test.ts`: RFC 3414's key localization vector, NIST SP 800-38A's
+- **SC-003** `tests/snmp069.test.ts`: RFC 3414's key localization vector, NIST SP 800-38A's
   AES-CFB128 vector, and, where snmpd is installed (CI), SHA-256 and SHA-1 users with AES, a walk,
   and a wrong passphrase and an unknown user refused in plain words.
 - **SC-002** CI: Debian, Fedora, Arch, and Alpine (BusyBox) containers; macOS; Windows with OpenSSH
