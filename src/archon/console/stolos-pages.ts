@@ -489,10 +489,12 @@ export function machinePage(f: PcFacts, name: string, now = Date.now()): Html | 
           <div class="card"><h2>Checks</h2><div class="v">${score(x.score)}</div>
                   ${x.failing.length
                     ? html`<ul>${x.failing.map((y) => html`<li class="mono">${y}</li>`)}</ul>`
-                    : html`<p class="sub">Nothing failing at its last verify.</p>`}
-                  <a class="btn ghost" href="/actions/fleet?cmd=fleet%20status">Ask it now</a></div>
+                    : x.score
+                    ? html`<p class="sub">Nothing failing at its last verify.</p>`
+                    : html`<p class="sub">Not verified yet: this PC has no record of a verify from it.</p>`}
+                  <a class="btn ghost" href="/actions/fleet?cmd=fleet%20status">Ask every server now</a></div>
           <div
-            class="card"><h2>Ask it</h2><p class="sub">One SQL question, through osquery, over its MCP server:</p>
+            class="card"><h2>Ask every machine</h2><p class="sub">One SQL question, through osquery, to this server and every other (each over its MCP server):</p>
                   <a class="btn ghost" href="/query?sql=${encodeURIComponent(
                     "select name, version from os_version",
                   )}">What OS is every machine on?</a></div>
