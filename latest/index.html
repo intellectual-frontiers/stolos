@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Stolos v0.72.0</title>
+<title>Stolos v0.73.0</title>
 <link rel="stylesheet" href="./styles.css">
 <link rel="stylesheet" href="./page.css">
 <script src="./darkmode_toggle.js"></script>
@@ -17,7 +17,7 @@
 </head>
 <body>
 <main>
-<h1>Stolos v0.72.0</h1>
+<h1>Stolos v0.73.0</h1>
 <p>The fleet engine (its command is <code>archon</code>), documented from its TypeScript.</p>
 <p class="start">Start here: <a href="./mod.ts/index.html">the overview</a>, with how the
 pieces fit, in diagrams. Then the model: <a href="./archon/model/types.ts/index.html">types.ts</a>.
@@ -49,6 +49,13 @@ Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 <li><a href="./archon-boot/telemetry.ts/index.html"><code>telemetry.ts</code></a> The boot server's own telemetry (spec 023).</li>
 <li><a href="./archon-boot/tftp.ts/index.html"><code>tftp.ts</code></a> A read-only TFTP server for PXE (spec 004): UEFI PXE firmware fetches shim over TFTP, shim fetches GRUB, and GRUB its menu, kernel, and initrd, all from the same server.</li>
 <li><a href="./archon-boot/web.ts/index.html"><code>web.ts</code></a> The boot machine's side of HTTPS (spec 032): deno task stolos boot web-setup store the Cloudflare DNS token (once) deno task stolos boot web-push &lt;host&gt; give a running server the token over SSH…</li>
+</ul>
+<h2>archon/adopt/</h2>
+<ul>
+<li><a href="./archon/adopt/adopt.ts/index.html"><code>adopt.ts</code></a> Spec 067: adopted machines.</li>
+<li><a href="./archon/adopt/commands.ts/index.html"><code>commands.ts</code></a> Spec 067: stolos host adopt | observe | check | release and stolos fleet query, on the controller PC.</li>
+<li><a href="./archon/adopt/policy.ts/index.html"><code>policy.ts</code></a> Spec 067: the policy pack for adopted machines.</li>
+<li><a href="./archon/adopt/probe.ts/index.html"><code>probe.ts</code></a> Spec 067: the probe an adopted machine runs for Stolos.</li>
 </ul>
 <h2>archon/apply/</h2>
 <ul>
@@ -223,7 +230,6 @@ Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 <h2>archon/observe/</h2>
 <ul>
 <li><a href="./archon/observe/discover.ts/index.html"><code>discover.ts</code></a> archon observe discover (spec 024): find a central OpenTelemetry collector and forward this machine's telemetry to it.</li>
-<li><a href="./archon/observe/fleet-query.ts/index.html"><code>fleet-query.ts</code></a> stolos fleet query (spec 048): one SQL question to every server, through each server's MCP server over SSH (the server limits what it answers).</li>
 <li><a href="./archon/observe/fleet-status.ts/index.html"><code>fleet-status.ts</code></a> stolos fleet status (specs 021, 022): every server and workstation in the model, its last install and verify as it says them now (spec 048: asked over MCP, cached in this machine's archon.sql when…</li>
 <li><a href="./archon/observe/next.ts/index.html"><code>next.ts</code></a> &quot;What now?&quot; for a freshly installed server or workstation (specs 021, 022): how to reach it, its web console, and how to observe it.</li>
 <li><a href="./archon/observe/observe.ts/index.html"><code>observe.ts</code></a> archon observe (spec 021): what this machine records about itself, where, and within which limits; observe tui opens otel-tui on it; observe prune keeps PCP's metric archives within their size and…</li>
