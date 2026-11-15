@@ -38,9 +38,10 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
-      - uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.x
+      - name: Bun (pinned, SHA-256 checked) and Node 26.13.1
+        uses: ./.github/actions/bun
+      - name: Dependencies, exactly as bun.lock holds them
+        run: bun install --frozen-lockfile
       - name: KVM for this runner
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' |

@@ -17,5 +17,5 @@ dnsmasq --interface=archbr0 --bind-interfaces --port=0 --except-interface=lo \
   --log-dhcp --log-facility="$W/dnsmasq.log" --pid-file="$W/dnsmasq.pid"
 pkill -f "stolos/main.ts boot serve" || true
 cd "$REPO"
-setsid deno run -A src/stolos/main.ts boot serve --port 8080 </dev/null >"$W/boot.log" 2>&1 &
+setsid bun src/stolos/main.ts boot serve --port 8080 </dev/null >"$W/boot.log" 2>&1 &
 echo "lab up: tail -f $W/boot.log"

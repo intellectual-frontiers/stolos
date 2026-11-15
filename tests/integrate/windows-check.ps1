@@ -5,7 +5,7 @@
 $ErrorActionPreference = 'Stop'
 $env:STOLOS_RAW = (Get-Location).Path
 function Check($file, $kinds) {
-  deno run -A tests/integrate/check-code.ts $file windows @kinds
+  bun tests/integrate/check-code.ts $file windows @kinds
   if ($LASTEXITCODE) { Write-Host "---- $file"; Get-Content $file; throw "check-in code: $file" }
 }
 
@@ -20,11 +20,12 @@ foreach ($shell in 'powershell', 'pwsh') {
 Check discover.txt @('discover')
 if (Test-Path 'C:\ProgramData\stolos') { throw '--discover changed this PC' }
 
-# Through Deno, so the passphrase is exactly empty (PowerShell 7 passes '""' as two quote characters).
-deno eval "await new Deno.Command('ssh-keygen', { args: ['-q', '-t', 'ed25519', '-N', '', '-f', Deno.env.get('TEMP') + '/probe'] }).output()"
+# Through Bun (node:child_process), so the passphrase is exactly empty (PowerShell 7 passes '""' as two quote characters).
+bun -e "require('node:child_process').execFileSync('ssh-keygen', ['-q', '-t', 'ed25519', '-N', '', '-f', process.env.TEMP + '/probe'])"
 if (-not (Test-Path "$env:TEMP\probe")) { throw 'no test key' }
 $pub = Get-Content "$env:TEMP\probe.pub"
-$sha = (deno eval "const t=Deno.readTextFileSync('bin/stolos-probe.ps1');const h=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));console.log([...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,'0')).join(''))").Trim()
+# The probe's SHA-256 as the PC computes it (its text, UTF-8).
+$sha = (bun -e "const t = require('node:fs').readFileSync('bin/stolos-probe.ps1', 'utf8').replace(/^\uFEFF/, ''); console.log(require('node:crypto').createHash('sha256').update(t).digest('hex'))").Trim()
 & powershell -NoProfile -ExecutionPolicy Bypass -File bin/integrate.windows.ps1 --adopt --fleet ci --key "$pub" --probe-sha256 $sha --yes *> adopt.txt
 Write-Host '---- the installed probe, run directly:'
 & powershell -NoProfile -ExecutionPolicy Bypass -File 'C:\ProgramData\stolos\stolos-probe.ps1' facts 2>&1 | Select-Object -First 12

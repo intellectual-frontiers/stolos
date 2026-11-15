@@ -2,7 +2,8 @@
 # End-to-end install in CI with THIS checkout of the engine (spec 004 SC-001,
 # specs 046 to 049): a throwaway fleet "e2e" is made here, its tip signed with
 # a fresh key that signers.ts lists, and served on the lab bridge with this
-# checkout as its @stolos/, so the machines run the engine under test. The lab
+# checkout, packed, as its engine (package.json), so the machines run the engine
+# under test (spec 096). The lab
 # itself is lib.sh: server install to Ready, the install's trace, fleet query,
 # a reboot, and a workstation that reaches the server over MCP.
 . "$(cd "$(dirname "$0")" && pwd)/lib.sh"
@@ -17,16 +18,30 @@ lab_network
 
 log "fleet repository e2e, signed"
 mkdir -p "$F/fleets/e2e"
-cat >"$F/deno.json" <<JSON
-{ "imports": { "@stolos/": "http://$BR:8000/stolos/src/" } }
+# The engine under test, built and packed as a release is (tools/release.ts), served beside the
+# fleet (bun.lock holds its integrity).
+V=$(sed -n 's/^export const VERSION = "\(.*\)";$/\1/p' "$ENGINE/src/archon/version.ts")
+bun "$ENGINE/tools/release.ts" build "$W/www" >/dev/null
+cat >"$F/package.json" <<JSON
+{
+  "name": "fleet",
+  "private": true,
+  "type": "module",
+  "scripts": { "stolos": "bun stolos.ts", "archon": "bun archon.ts" },
+  "dependencies": {
+    "@intellectual-frontiers/stolos": "http://$BR:8000/intellectual-frontiers-stolos-$V.tgz"
+  }
+}
 JSON
-printf 'import { run } from "@stolos/archon/main.ts";\n\nawait run();\n' >"$F/archon.ts"
-printf 'import { run } from "@stolos/stolos/main.ts";\n\nawait run();\n' >"$F/stolos.ts"
-# Every engine module, so deno.lock pins them all (archon runs with --frozen).
-printf 'import "@stolos/archon/modules.auto.ts";\n' >"$F/engine.ts"
+printf 'import { run } from "@intellectual-frontiers/stolos/archon/main";\n\nawait run();\n' >"$F/archon.ts"
+printf 'import { run } from "@intellectual-frontiers/stolos/stolos/main";\n\nawait run();\n' >"$F/stolos.ts"
 cat >"$F/fleets/e2e/fleet.ts" <<TS
-// The end-to-end test's fleet (tests/e2e/ci.sh): made for one run, thrown away.
-import type { FleetDef } from "@stolos/archon/model/types.ts";
+/**
+ * The end-to-end test's fleet (tests/e2e/ci.sh): made for one run, thrown away.
+ *
+ * @module
+ */
+import type { FleetDef } from "@intellectual-frontiers/stolos/archon/model/types";
 
 export const fleet: FleetDef = {
   id: "e2e",
@@ -56,13 +71,13 @@ export const fleet: FleetDef = {
 };
 TS
 cd "$F"
-printf "out/\n" >.gitignore
+printf "out/\nnode_modules/\n" >.gitignore
 git init -q -b main
 git config user.name "e2e"
 git config user.email "e2e@example.invalid"
-deno cache --allow-import --lock=deno.lock archon.ts stolos.ts engine.ts >/dev/null
+bun install >/dev/null
 # Spec 059: the fleet's commands are stolos (as on your PC); machines run archon.
-A=(deno run -A --frozen stolos.ts)
+A=(bun stolos.ts)
 "${A[@]}" signers add e2e-daily --role daily --key "$W/signer.pub"
 # The admin password: a hash only (never used to log in here).
 mkdir -p "$HOME/.config/stolos/secrets/e2e"

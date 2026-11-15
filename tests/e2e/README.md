@@ -10,10 +10,11 @@ The lab is [`lib.sh`](lib.sh); two scripts set it up:
 
 - [`ci.sh`](ci.sh), run by `.github/workflows/e2e.yml` on every push to `main` (and by hand): a
   throwaway fleet repository (`fleets/e2e`, a fresh signer, its tip signed), served with **this
-  checkout of the engine** over HTTP on the lab bridge, so the machines run the engine under test.
+  checkout of the engine**, built and packed as a release is (`tools/release.ts`), over HTTP on the
+  lab bridge, so the machines run the engine under test.
 - [`fleet.sh`](fleet.sh), run by the reusable `.github/workflows/fleet-e2e.yml` from a fleet
-  repository: its synthetic fleet, with the engine its `deno.json` pins (checked against its
-  `deno.lock`). See
+  repository: its synthetic fleet, with the engine its `package.json` pins (checked against its
+  `bun.lock`). See
   [The fleet repository](https://intellectual-frontiers.github.io/stolos/latest/archon/fleet/mod.ts/index.html),
   "The synthetic fleet".
 
@@ -49,10 +50,10 @@ Needs a Linux machine with QEMU, OVMF, and dnsmasq
 with a test host:
 
 ```sh
-deno task stolos fleet init
-deno task stolos host add e2e
+bun run stolos fleet init
+bun run stolos host add e2e
 sudo tests/e2e/lab-up.sh      # bridge, DHCP with the PXE boot file, archon-boot
-deno task stolos boot arm e2e --claim
+bun run stolos boot arm e2e --claim
 sudo tests/e2e/vm.sh          # power on the blank VM
 tail -f tests/e2e/work/boot.log
 ```

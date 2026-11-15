@@ -12,11 +12,11 @@
 #                  run that script and nothing else.
 #   --osquery      With --adopt: install osquery, so the fleet can ask SQL questions.
 #   --server       An Ubuntu server installed by hand: SSH on, and the fleet admin's
-#                  GitHub keys allowed, ready for: deno task stolos host bootstrap.
+#                  GitHub keys allowed, ready for: bun run stolos host bootstrap.
 #   --workstation  Make this machine (Ubuntu or WSL) a managed fleet workstation.
 #
 #   --fleet <id> --key '<probe public key>' --engine <tag> --probe-sha256 <hash>
-#                  Filled in for you by: deno task stolos host integrate.
+#                  Filled in for you by: bun run stolos host integrate.
 #   --github <login> (--server)   --repo <owner/name> (--workstation)
 #   --ssh-port <n> When this machine's SSH server listens on another port than 22.
 #   --dry-run      Say what it would do; change nothing.   --yes   Do not ask.
@@ -73,8 +73,8 @@ ssh_on() {
 }
 probe_line() { printf 'command="%s/.local/bin/stolos-probe",restrict %s stolos-probe@%s' "$HOME" "$(printf '%s' "$key" | awk '{print $1" "$2}')" "$fleet"; }
 
-[ $((adopt + undo)) -gt 0 ] && [ -z "$fleet" ] && die "--fleet is needed (deno task stolos host integrate fills it in)"
-[ "$adopt" = 1 ] && [ -z "$key" ] && die "--key is needed for --adopt (deno task stolos host integrate fills it in)"
+[ $((adopt + undo)) -gt 0 ] && [ -z "$fleet" ] && die "--fleet is needed (bun run stolos host integrate fills it in)"
+[ "$adopt" = 1 ] && [ -z "$key" ] && die "--key is needed for --adopt (bun run stolos host integrate fills it in)"
 [ "$server" = 1 ] && [ -z "$github" ] && die "--github <login> is needed for --server (whose keys may sign in)"
 [ "$ws" = 1 ] && [ -z "$repo" ] && die "--repo <owner/name> is needed for --workstation"
 
@@ -92,7 +92,7 @@ else
   [ "$adopt" = 1 ] && add "allow the fleet's key to run that script, and nothing else, in ~/.ssh/authorized_keys"
   [ "$osq" = 1 ] && ! has osqueryi && add "install osquery from its maker (asks for your password)"
   [ "$server" = 1 ] && add "allow GitHub user $github's SSH keys to sign in as $me (ssh-import-id)"
-  [ "$ws" = 1 ] && add "set up Deno, Git, and GitHub sign-in, clone $repo, and make this a fleet workstation"
+  [ "$ws" = 1 ] && add "set up Bun (pinned, its SHA-256 checked), Git, and GitHub sign-in, clone $repo, and make this a fleet workstation"
 fi
 
 say ""
@@ -186,7 +186,13 @@ if [ "$ws" = 1 ]; then
   fetch "$raw/bin/bootstrap.sh" >"/tmp/stolos-bootstrap.$$" || die "could not download the bootstrap"
   bash "/tmp/stolos-bootstrap.$$" --repo "$repo" --no-shortcut || die "the bootstrap did not finish"
   rm -f "/tmp/stolos-bootstrap.$$"
-  (cd "$HOME/fleet" && deno task stolos workstation add) || die "workstation add did not finish"
+  # The bootstrap's runtime (~/.bun/bin; ~/.stolos/node where Bun cannot run) is not on this shell's PATH yet.
+  PATH="$HOME/.bun/bin:$HOME/.stolos/node/bin:$PATH"
+  if bun --version >/dev/null 2>&1; then
+    (cd "$HOME/fleet" && bun run stolos workstation add) || die "workstation add did not finish"
+  else
+    (cd "$HOME/fleet" && node stolos.ts workstation add) || die "workstation add did not finish"
+  fi
 fi
 
 # ---------------------------------------------------------------- the check-in code

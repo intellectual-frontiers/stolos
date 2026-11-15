@@ -1,5 +1,5 @@
 # Spec 062: bootstrap.windows.ps1, run for real on a Windows runner (CI only).
-# Deno and Git are already there; the repository is a local one, so no gh and
+# The pinned Bun and Git are already there; the repository is a local one, so no gh and
 # no sign-in. Usage: <shell> -File tests/bootstrap/windows-check.ps1 <shell>
 # where <shell> is pwsh (PowerShell 7) or powershell (Windows PowerShell 5.1).
 
@@ -34,7 +34,7 @@ Check ($r.code -eq 0 -and $r.out -match 'would run: git clone' -and -not (Test-P
 
 $r = Boot @('--repo', $src, '--in', $fleet, '--no-shortcut')
 Check ($r.code -eq 0 -and (Test-Path (Join-Path $fleet 'README.md'))) 'a real clone' $r.out
-Check ($r.out -match '\[ok\] Deno' -and $r.out -notmatch 'GitHub') 'Deno found; a local repository needs no gh' $r.out
+Check ($r.out -match '\[ok\] Bun' -and $r.out -notmatch 'GitHub') 'Bun found; a local repository needs no gh' $r.out
 
 $r = Boot @('-Repo', $src, '-In', $fleet, '-DryRun')
 Check ($r.code -eq 0 -and $r.out -match 'bringing it up to date') 'already there: stolos update (PowerShell-style options too)' $r.out
@@ -57,6 +57,10 @@ Check ($r.code -eq 1 -and (Test-Path (Join-Path $other 'notes.txt'))) 'another f
 $probe = "& ([scriptblock]::Create((Get-Content -Raw '$script'))) --dry-run; 'still here'"
 $out = & $shell -NoProfile -NonInteractive -Command $probe 2>&1 | Out-String
 Check ($out -match 'which fleet repository' -and $out -match 'still here') 'the one-line form never closes your window' $out
+
+# Node 26, the backup, when asked for (here: found, or installed at its pinned SHA-256).
+$r = Boot @('--repo', $src, '--in', $fleet, '--runtime', 'node', '--dry-run')
+Check ($r.code -eq 0 -and $r.out -match '\[(ok|\.\.)\] Node' -and $r.out -match 'node stolos\.ts update') '--runtime node: the fleet runs on Node' $r.out
 
 # The shortcut: both profiles, once.
 $r = Boot @('--repo', $src, '--in', $fleet, '--dry-run')

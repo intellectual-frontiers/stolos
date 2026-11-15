@@ -1,8 +1,8 @@
 #!/bin/sh
 # stolos-probe 2: read-only facts for the fleet's Stolos (specs 067, 069). Installed by
-# "deno task stolos host adopt" or bin/integrate.sh --adopt; run only by the fleet's probe key
+# "bun run stolos host adopt" or bin/integrate.sh --adopt; run only by the fleet's probe key
 # (authorized_keys forces it). It changes nothing. Remove it with: integrate.sh --undo, or
-# deno task stolos host release <name>. POSIX sh; BusyBox (NAS devices) too.
+# bun run stolos host release <name>. POSIX sh; BusyBox (NAS devices) too.
 set -u
 LC_ALL=C; export LC_ALL
 PATH="$PATH:/usr/sbin:/sbin:/usr/local/bin:/opt/homebrew/bin"

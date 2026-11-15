@@ -10,7 +10,7 @@
 #                run that script and nothing else. Needs "Run as administrator".
 #   --osquery    With --adopt: install osquery (its official MSI).
 #   --fleet <id> --key '<probe public key>' --engine <tag> --probe-sha256 <hash>
-#                Filled in for you by: deno task stolos host integrate.
+#                Filled in for you by: bun run stolos host integrate.
 #   --dry-run    Say what it would do; change nothing.   --yes   Do not ask.
 #   --undo       Remove what --adopt added.
 #
@@ -48,8 +48,8 @@ $Auth = 'C:\ProgramData\ssh\administrators_authorized_keys'
 $Me = $env:USERNAME
 function Test-Ssh { $s = Get-Service sshd -ErrorAction SilentlyContinue; $s -and $s.Status -eq 'Running' }
 
-if (($Adopt -or $Undo) -and -not $Fleet) { Die '--fleet is needed (deno task stolos host integrate fills it in)' }
-if ($Adopt -and -not $Key) { Die '--key is needed for --adopt (deno task stolos host integrate fills it in)' }
+if (($Adopt -or $Undo) -and -not $Fleet) { Die '--fleet is needed (bun run stolos host integrate fills it in)' }
+if ($Adopt -and -not $Key) { Die '--key is needed for --adopt (bun run stolos host integrate fills it in)' }
 if (($Adopt -or $Undo -or $Osq) -and -not $Admin) { Die 'this needs an administrator: right-click PowerShell, Run as administrator, and run the command again' }
 
 $plan = @()

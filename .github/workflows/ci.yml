@@ -1,6 +1,9 @@
-# Spec 046-engine-instance: every push and pull request is checked; every push
-# to main must raise the version in src/archon/version.ts, and is tagged
-# v<version> so fleets can pin @stolos/ to it (raw GitHub URLs need a tag).
+# Specs 046-engine-instance and 096-bun-runtime: every push and pull request is checked on the
+# pinned Bun (and Node 26, the backup runtime); every push to main must raise the version in
+# src/archon/version.ts, and once everything passes it is tagged v<version> and released: the
+# engine built by tsc into JavaScript with declarations, packed by Bun, installed into an empty
+# project and run on Bun and on Node, then attached to the GitHub release with its SHA-256. A
+# fleet repository depends on that tarball by its URL (package.json), its integrity in bun.lock.
 name: ci
 
 on:
@@ -14,24 +17,25 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-      - uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.x
+      - name: Bun (pinned, SHA-256 checked) and Node 26.13.1
+        uses: ./.github/actions/bun
+      - name: Dependencies, exactly as bun.lock holds them
+        run: bun install --frozen-lockfile
       - name: Generated files are fresh
-        run: deno run -A tools/gen-assets.ts --check
-      - name: Types
-        run: deno task check
-      - name: Lint
-        run: deno lint
+        run: bun tools/gen-assets.ts --check
+      - name: Types (TypeScript 7)
+        run: bun run check
+      - name: Lint (Bun, with IFC TypeScript's plugin)
+        run: bun run lint
       - name: Format
-        run: deno fmt --check
-      - name: Documentation (JSDoc problems may only go down; spec 055)
-        run: deno task docs:lint
+        run: bun run fmt:check
+      - name: Documentation (every module and export documented, every @example compiles; specs 055, 096 FR-009)
+        run: bun run docs:lint
       - name: snmpd, for the SNMPv3 test against a real agent (spec 069)
         run: sudo apt-get install -y --no-install-recommends snmpd >/dev/null && sudo systemctl stop snmpd || true
       - name: osquery 5.24.1, the official .deb at a pinned SHA-256, for the ATC test (spec 093)
@@ -39,21 +43,54 @@ jobs:
           curl -fsSL -o /tmp/osquery.deb https://pkg.osquery.io/deb/pool/deb/main/o/osquery/osquery_5.24.1-1.linux_amd64.deb
           echo "c6a37aec1156712cce0fafeb01a3697a2b73a1863a2b39fc3473b07600aea68d  /tmp/osquery.deb" | sha256sum -c -
           sudo dpkg -i /tmp/osquery.deb >/dev/null && osqueryi --version
-      - name: Tests
-        run: deno task test
+      - name: Tests (ifc test, on Bun and on Node; every report and the evidence ledger)
+        run: bun run test:ci
         env:
           STOLOS_REQUIRE_OSQUERY: "1"
+      - name: The test record, its reports and the ledger
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-linux
+          path: test-results/
+          if-no-files-found: warn
+          retention-days: 90
       - name: The version was raised (push to main)
         if: github.event_name == 'push'
         run: |
           if git rev-parse -q --verify HEAD^ >/dev/null; then
-            deno task version check HEAD^
+            bun run version check HEAD^
           else
-            deno task version show
+            bun run version show
           fi
       - name: The version is newer than main (pull request)
         if: github.event_name == 'pull_request'
-        run: deno task version check origin/${{ github.base_ref }}
+        run: bun run version check origin/${{ github.base_ref }}
+
+  suite:
+    # Spec 096 FR-004: the parts of the suite that apply on macOS and Windows, on Bun.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - name: Bun (pinned, SHA-256 checked) and Node 26.13.1
+        uses: ./.github/actions/bun
+      - name: Dependencies, exactly as bun.lock holds them
+        run: bun install --frozen-lockfile
+      - name: Tests (ifc test, on Bun)
+        run: bun run test
+      - name: The test record and its reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ runner.os }}
+          path: test-results/
+          if-no-files-found: warn
+          retention-days: 90
 
   bootstrap-windows:
     # Spec 062: bin/bootstrap.windows.ps1, run for real on Windows, in
@@ -62,9 +99,10 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
-      - uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.x
+      - name: Bun (pinned, SHA-256 checked) and Node 26.13.1
+        uses: ./.github/actions/bun
+      - name: Dependencies, exactly as bun.lock holds them
+        run: bun install --frozen-lockfile
       - name: PowerShell 7
         shell: pwsh
         run: pwsh -NoProfile -File tests/bootstrap/windows-check.ps1 pwsh
@@ -86,23 +124,24 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
-      - uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.x
+      - name: Bun (pinned, SHA-256 checked) and Node 26.13.1
+        uses: ./.github/actions/bun
+      - name: Dependencies, exactly as bun.lock holds them
+        run: bun install --frozen-lockfile
       - name: The integrate tests (discover, adopt, undo, the checksum)
-        run: deno test -A tests/integrate069_test.ts
+        run: bun run test tests/integrate069.test.ts
       - name: Distributions (Debian, Fedora, Arch, Alpine with BusyBox)
         if: runner.os == 'Linux'
         run: |
           for img in debian:12 fedora:41 archlinux:latest alpine:3.20; do
             docker run --rm -v "$PWD:/s:ro" -e STOLOS_RAW=/s -w /tmp "$img" sh /s/bin/integrate.sh > "out-${img%%:*}.txt" 2>&1 || { cat "out-${img%%:*}.txt"; exit 1; }
-            deno run -A tests/integrate/check-code.ts "out-${img%%:*}.txt" "" discover > /dev/null && echo "$img: ok"
+            bun tests/integrate/check-code.ts "out-${img%%:*}.txt" "" discover > /dev/null && echo "$img: ok"
           done
       - name: macOS discover
         if: runner.os == 'macOS'
         run: |
           STOLOS_RAW="$PWD" sh bin/integrate.sh > out-mac.txt 2>&1 || { cat out-mac.txt; exit 1; }
-          deno run -A tests/integrate/check-code.ts out-mac.txt macos discover
+          bun tests/integrate/check-code.ts out-mac.txt macos discover
 
   console-browser:
     # Spec 065: the Archon Console in a real browser (Chromium), at desktop and phone width.
@@ -110,9 +149,10 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
-      - uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.x
+      - name: Bun (pinned, SHA-256 checked) and Node 26.13.1
+        uses: ./.github/actions/bun
+      - name: Dependencies, exactly as bun.lock holds them
+        run: bun install --frozen-lockfile
       - name: Playwright and Chromium
         run: |
           mkdir -p /tmp/pw && cd /tmp/pw && npm init -y >/dev/null
@@ -120,17 +160,20 @@ jobs:
           npx playwright install --with-deps chromium
       - name: The console in a browser
         run: |
-          deno run -A tests/console/serve.ts 8099 &
-          for i in $(seq 1 60); do curl -sf http://127.0.0.1:8099/healthz && break; sleep 1; done
+          bun tests/console/serve.ts 8099 &
+          for _ in $(seq 1 60); do curl -sf http://127.0.0.1:8099/healthz && break; sleep 1; done
           NODE_PATH=/tmp/pw/node_modules node tests/console/browser.cjs 8099
       - name: The Stolos Console in a browser (spec 066)
         run: |
-          deno run -A tests/console/serve-stolos.ts 8098 &
-          for i in $(seq 1 60); do curl -sf http://127.0.0.1:8098/healthz && break; sleep 1; done
+          bun tests/console/serve-stolos.ts 8098 &
+          for _ in $(seq 1 60); do curl -sf http://127.0.0.1:8098/healthz && break; sleep 1; done
           NODE_PATH=/tmp/pw/node_modules node tests/console/stolos-browser.cjs 8098
 
-  tag:
-    needs: [check, bootstrap-windows, integrate-posix, console-browser]
+  release:
+    # Spec 096 FR-005: on a push to main that passed everything, the tag v<version>, the package
+    # (tsc into dist/, packed by Bun), a smoke install run on Bun and on Node, and the GitHub
+    # release with the tarball and its SHA-256. Then this version's documentation (spec 055).
+    needs: [check, suite, bootstrap-windows, integrate-posix, console-browser]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -140,12 +183,15 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-      - uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.x
+      - name: Bun (pinned, SHA-256 checked) and Node 26.13.1
+        uses: ./.github/actions/bun
+      - name: Dependencies, exactly as bun.lock holds them
+        run: bun install --frozen-lockfile
       - name: Tag v<version>
+        id: tag
         run: |
-          TAG="v$(deno run -A tools/version.ts show)"
+          TAG="v$(bun tools/version.ts show)"
+          echo "tag=$TAG" >>"$GITHUB_OUTPUT"
           if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
             if [ "$(git rev-list -n 1 "$TAG")" = "$(git rev-parse HEAD)" ]; then
               echo "$TAG already tags this commit"
@@ -156,13 +202,33 @@ jobs:
             git tag "$TAG"
             git push origin "$TAG"
           fi
+      - name: The package (tsc into dist/, packed by Bun, with its SHA-256)
+        id: pack
+        run: |
+          TGZ=$(bun tools/release.ts build out/release | tail -n 1)
+          echo "tgz=$TGZ" >>"$GITHUB_OUTPUT"
+          cat "$TGZ.sha256"
+      - name: The package installs into an empty project and runs (archon --version) on Bun and on Node
+        run: bun tools/release.ts smoke "${{ steps.pack.outputs.tgz }}"
+      - name: The GitHub release, with the tarball and its SHA-256
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.tag.outputs.tag }}
+          TGZ: ${{ steps.pack.outputs.tgz }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$TGZ" "$TGZ.sha256" --clobber
+          else
+            gh release create "$TAG" "$TGZ" "$TGZ.sha256" --verify-tag --title "Stolos $TAG" \
+              --notes "The engine $TAG: \`$(basename "$TGZ")\`, SHA-256 \`$(cut -d' ' -f1 "$TGZ.sha256")\`. A fleet repository depends on it by its URL in package.json (bun run stolos fleet upgrade $TAG); bun.lock holds its integrity."
+          fi
       # Spec 055: this version's documentation, on GitHub Pages (the gh-pages
       # branch): /vX.Y.Z/ for each release, /latest/ for the newest, the last 20 kept.
-      - name: Documentation (HTML from deno doc)
-        run: deno task docs out/docs
+      - name: Documentation (HTML from the JSDoc, tools/docs.ts)
+        run: bun run docs out/docs
       - name: Publish to the gh-pages branch
         run: |
-          TAG="v$(deno run -A tools/version.ts show)"
+          TAG="${{ steps.tag.outputs.tag }}"
           rm -rf ../pages
           if git ls-remote --exit-code origin gh-pages >/dev/null; then
             git clone -q --depth 1 --branch gh-pages "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" ../pages

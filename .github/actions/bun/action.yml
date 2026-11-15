@@ -1,0 +1,54 @@
+# The pinned Bun, and Node 26 beside it (spec 096-bun-runtime FR-003, FR-004, FR-007): Bun's
+# official release archive for this runner, kept only where its SHA-256 is the one the engine pins
+# (src/archon/core/bun-pin.ts, read by Node before anything is installed), unpacked and put on the
+# PATH. Linux, macOS and Windows. No third-party action: GitHub's setup-node, then curl.
+name: Pinned Bun
+description: >-
+  Node 26 (the backup runtime, and the reader of the pin) and Bun at the version and SHA-256 the
+  engine pins in src/archon/core/bun-pin.ts.
+inputs:
+  engine:
+    description: The engine checkout's folder, relative to the workspace (where src/ is).
+    default: "."
+  node-version:
+    description: Node, the backup runtime (src/archon/core/bun-pin.ts NODE_VERSION).
+    default: "26.13.1"
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+    - name: Bun, pinned and checked
+      shell: bash
+      env:
+        ENGINE: ${{ inputs.engine }}
+      run: |
+        set -euo pipefail
+        read -r url sha member version < <(node --input-type=module -e '
+          const { pathToFileURL } = await import("node:url");
+          const pin = await import(pathToFileURL(process.argv[1]).href);
+          const os = { linux: "linux", darwin: "darwin", win32: "windows" }[process.platform] ?? "other";
+          const arch = { x64: "x86_64", arm64: "aarch64" }[process.arch] ?? "other";
+          const target = pin.bunTarget(os, arch);
+          if (target === undefined) { console.error(`no Bun is pinned for ${process.platform} ${process.arch}`); process.exit(1); }
+          const d = pin.bunDownload(target);
+          console.log(d.url, d.sha256, d.member, pin.BUN_VERSION);
+        ' "$ENGINE/src/archon/core/bun-pin.ts")
+        dest="$RUNNER_TEMP/bun-$version"
+        mkdir -p "$dest"
+        curl -fsSL --retry 5 --retry-all-errors -o "$dest/bun.zip" "$url"
+        got=$(node -e 'process.stdout.write(require("node:crypto").createHash("sha256").update(require("node:fs").readFileSync(process.argv[1])).digest("hex"))' "$dest/bun.zip")
+        if [ "$got" != "$sha" ]; then
+          rm -f "$dest/bun.zip"
+          echo "::error::${url##*/} is not the pinned one (SHA-256 $got, expected $sha): not unpacked"
+          exit 1
+        fi
+        if [ "$RUNNER_OS" = Windows ]; then
+          pwsh -NoProfile -Command "Expand-Archive -LiteralPath '$dest/bun.zip' -DestinationPath '$dest' -Force"
+        else
+          unzip -q -o "$dest/bun.zip" -d "$dest"
+        fi
+        bin="$dest/$(dirname "$member")"
+        echo "$bin" >>"$GITHUB_PATH"
+        echo "Bun $("$bin/$(basename "$member")" --version) from ${url##*/} (SHA-256 $sha), Node $(node --version)"

@@ -10,7 +10,7 @@
 #   A       how to run archon in $F (an array)
 #
 # Needs: root through sudo, KVM, qemu-system-x86, qemu-utils, ovmf,
-# dnsmasq-base, cloud-image-utils, Deno.
+# dnsmasq-base, cloud-image-utils, Bun (the pinned one; the engine checkout installed).
 set -euo pipefail
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 W=${E2E_WORK:-/tmp/archon-e2e}
@@ -130,11 +130,11 @@ lab_network() {
     --dhcp-leasefile="$W/leases" \
     --log-dhcp --log-facility="$OUT/dnsmasq.log" --pid-file="$W/dnsmasq.pid"
   # $W/www over HTTP on the bridge: the fleet repository, and (ci.sh) the engine.
-  deno run -A "$HERE/serve.ts" "$W/www" $BR 8000 >"$OUT/http.log" 2>&1 &
+  bun "$HERE/serve.ts" "$W/www" $BR 8000 >"$OUT/http.log" 2>&1 &
   for _ in $(seq 50); do curl -s -o /dev/null "http://$BR:8000/" && break; sleep 0.2; done
   # The machines look up tool releases through a mirror that holds the job's
   # token (GitHub's shared runner addresses exhaust the anonymous limit).
-  deno run -A "$HERE/github-mirror.ts" $BR 8001 >"$OUT/github-mirror.log" 2>&1 &
+  bun "$HERE/github-mirror.ts" $BR 8001 >"$OUT/github-mirror.log" 2>&1 &
   for _ in $(seq 50); do curl -s -o /dev/null "http://$BR:8001/rate_limit" && break; sleep 0.2; done
   [ -n "${GITHUB_TOKEN:-}" ] || log "no GITHUB_TOKEN: tool lookups are anonymous (60 an hour per address)"
 }
@@ -153,9 +153,9 @@ publish_fleet() {
 
 install_server() {
   log "boot server (downloads Ubuntu's boot files and image on its first run)"
-  # As a fleet repository's `deno task stolos boot serve` runs it (spec 059: stolos turns
+  # As a fleet repository's `bun run stolos boot serve` runs it (spec 059: stolos turns
   # the boot server's OpenTelemetry on itself, spec 049).
-  (cd "$F" && exec deno run -A --frozen stolos.ts boot serve \
+  (cd "$F" && exec bun stolos.ts boot serve \
     --fleet "$FLEET" --port 8080 --github-api "http://$BR:8001") >"$OUT/boot.log" 2>&1 &
   for _ in $(seq 600); do curl -fsS -o /dev/null "http://$BR:8080/health" && break; sleep 2; done
   curl -fsS "http://$BR:8080/health"
@@ -236,14 +236,14 @@ guard_test() {
   # The guard's event is in the telemetry: move it aside so Ready is waited for afresh.
   mkdir -p "$OUT/guard-telemetry"
   mv "$EVENTS"/otlp-*.jsonl "$OUT/guard-telemetry/" 2>/dev/null || true
-  (cd "$F" && deno run -A --frozen stolos.ts boot arm "$SERVER" --claim --confirm-destroy "$SERVER" --fleet "$FLEET") ||
+  (cd "$F" && bun stolos.ts boot arm "$SERVER" --claim --confirm-destroy "$SERVER" --fleet "$FLEET") ||
     fail "boot arm --confirm-destroy failed"
 }
 
 # Spec 049: the boot server's "install <host>" trace, continued by the host's first boot.
 check_trace() {
   sleep 10 # the last batches
-  deno run -A "$HERE/trace.ts" "$EVENTS" "$SERVER" ||
+  bun "$HERE/trace.ts" "$EVENTS" "$SERVER" ||
     fail "the host's first boot did not continue the install's trace"
   log "the host's first boot continued the install's trace"
 }
@@ -325,26 +325,30 @@ workstation_stage() {
   ip=$(lease_ip "$WS_MAC")
   [ -n "$ip" ] || fail "the workstation did not answer SSH on any of its leases"
   log "$WS is at $ip"
-  local deno_v sip
-  deno_v=$(deno --version | head -n 1 | cut -d' ' -f2)
+  local bun_url bun_sha bun_dir sip
+  # The pinned Bun, as the bootstrap installs it on a PC: its archive, its SHA-256 checked.
+  read -r bun_url bun_sha bun_dir < <(bun -e 'const p = await import(process.argv[1]); const t = p.bunTarget("linux", "x86_64"); if (t === undefined) process.exit(1); const d = p.bunDownload(t); console.log(d.url, d.sha256, d.member.split("/")[0]);' "$HERE/../../src/archon/core/bun-pin.ts")
   sip=$(server_ip)
   s="set -e
 cloud-init status --wait >/dev/null || true
 echo '$sip $SERVER' | sudo tee -a /etc/hosts >/dev/null
 sudo apt-get install -y -q unzip >/dev/null
-curl -fsSL https://deno.land/install.sh | sh -s -- -y v$deno_v >/dev/null
-export PATH=\$HOME/.deno/bin:\$PATH
+curl -fsSL -o /tmp/bun.zip $bun_url
+echo '$bun_sha  /tmp/bun.zip' | sha256sum -c - >/dev/null
+unzip -q -o /tmp/bun.zip -d /tmp && mkdir -p \$HOME/.bun/bin && install -m 0755 /tmp/$bun_dir/bun \$HOME/.bun/bin/bun
+export PATH=\$HOME/.bun/bin:\$PATH
 sudo mkdir -p /srv/archon && sudo chown \$USER: /srv/archon
 git clone -q http://$BR:8000/fleet.git /srv/archon
 cd /srv/archon
+bun install --frozen-lockfile >/dev/null
 export ARCHON_GITHUB_API=http://$BR:8001
-deno run -A --frozen stolos.ts --fleet $FLEET workstation add $WS"
+bun stolos.ts --fleet $FLEET workstation add $WS"
   ssh_to "$ADMIN@$ip" "$s" 2>&1 | plain | tee "$OUT/workstation-add.txt" ||
     fail "stolos workstation add failed"
   log "$WS: set up; now the agent's path to $SERVER"
   scp -i "$W/admin" -o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
     -o LogLevel=ERROR "$W/admin" "$ADMIN@$ip:.ssh/id_ed25519"
-  ssh_to "$ADMIN@$ip" "chmod 600 ~/.ssh/id_ed25519; archon verify && cd /srv/archon && /usr/local/bin/deno run -A --frozen stolos.ts --fleet $FLEET fleet query 'select ok from archon_install'" \
+  ssh_to "$ADMIN@$ip" "chmod 600 ~/.ssh/id_ed25519; archon verify && cd /srv/archon && /usr/local/bin/bun stolos.ts --fleet $FLEET fleet query 'select ok from archon_install'" \
     2>&1 | plain | tee "$OUT/workstation-query.txt" || fail "the workstation could not query $SERVER"
   answered "$OUT/workstation-query.txt" || fail "the workstation's fleet query did not answer ok for $SERVER"
   log "$WS reached $SERVER over MCP"
