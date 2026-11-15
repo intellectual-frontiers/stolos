@@ -46,8 +46,8 @@ the SIL Open Font License, Simple Icons under CC0): see each folder.
 
 ## Contributing
 
-So that Intellectual Frontiers can offer both the BSL and commercial licenses, a contribution is
-accepted only with the contributor's agreement that Intellectual Frontiers may license it under
+So that Intellectual Frontiers LLC can offer both the BSL and commercial licenses, a contribution is
+accepted only with the contributor's agreement that Intellectual Frontiers LLC may license it under
 both. Sign off each commit (`git commit -s`, the Developer Certificate of Origin) and say in the
 pull request that you agree to this.
 
