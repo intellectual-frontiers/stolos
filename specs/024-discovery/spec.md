@@ -18,7 +18,7 @@ every server and workstation should find it and forward to it with no change to 
 
 ## Requirements _(mandatory)_
 
-- **FR-001**: `fleet.telemetry`: `collector` (an OTLP/HTTP URL, by a DNS name), `name` (default
+- **FR-001**: `fleet.telemetry`: `collector` (an OTLP/HTTP URL, by a host name or address), `name` (default
   `otel.localdomain`, a UniFi Local DNS record).
 - **FR-002**: `archon observe discover` (timer `archon-observe-discover`, every 15 minutes) tries,
   in order: `telemetry.collector`; `http://<name>:4318` when the name resolves over unicast DNS

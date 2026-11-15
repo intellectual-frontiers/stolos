@@ -19,7 +19,7 @@ the boot machine. The Windows PC itself is not observed.
   service `archon-boot`), in-process: started once when the boot server starts, with nothing to set
   on the command line and no restart to turn it on.
 - **FR-002**: `boot serve` keeps its signals in a journal in the boot cache
-  (`%LOCALAPPDATA%\archon\boot`): OTLP JSON lines (OpenTelemetry's file format) in
+  (`%LOCALAPPDATA%\stolos\boot`; Linux and macOS: `~/.local/share/stolos/boot`): OTLP JSON lines (OpenTelemetry's file format) in
   `telemetry/boot.otlp.jsonl`, rotated at 64 MB with three older files kept (256 MB at most), and
   its console lines as OTLP log records in `telemetry/otlp-<date>.jsonl`. Nothing leaves the PC;
   while otel-tui listens on 127.0.0.1:4318, the signals are also sent to it (best effort, silent

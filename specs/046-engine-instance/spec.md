@@ -64,7 +64,8 @@ Constitution Articles 7, 24, 26.
   the bootstrap scripts, `.gitattributes`, the compliance-impact workflow, and the engine's reusable
   workflows moved to the same tag). On any failure nothing is committed and the pin and the lock are
   put back. Documented in `docs/fleet-repository.md`; engine releases in `docs/releasing.md`.
-- **FR-006** Boot-machine secrets are per fleet: `<config>/archon/secrets/<fleet>/`.
+- **FR-006** Boot-machine secrets are per fleet: `<config>/stolos/secrets/<fleet>/` (a provider's client, spec 082:
+  `<config>/stolos/clients/<client>/secrets/<fleet>/`).
 - **FR-007** The engine's version is `VERSION` in `src/archon/version.ts`; `package.json`'s
   `version` follows it (`bun run version` writes both, and its `check` fails where they differ).
   `bun run version bump` raises the minor number; every push to `main` raises it; CI

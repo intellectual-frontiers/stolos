@@ -10,10 +10,13 @@ Implemented **Input**: Anything that holds state is backed up and restore-tested
   may override paths, target, retention, and schedule (`backup` in its model).
 - **FR-002**: `archon backup verify` restore-tests the newest archive; `archon backup restore`
   extracts into a directory to inspect, never in place.
-- **FR-003**: The repository itself is backed up by GitHub.
 - **FR-003a**: Every failed backup is emailed with its log, and a summary of successful backups once
   a week (spec 025).
 
 ### Overrides of Ubuntu defaults
 
 None (Ubuntu ships no server backup; /var/backups is its location for them).
+
+## Assumptions
+
+- The repository itself is backed up by GitHub; host backups do not cover it.

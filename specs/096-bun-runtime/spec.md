@@ -124,7 +124,9 @@ flowchart LR
   fetch the pinned Bun, check its SHA-256 before unpacking, and run the engine with it. The launcher
   runs `archon.ts` with Bun, and with Node 26 where Bun is not installed.
 - **FR-008** Telemetry is IFC TypeScript's (`runtime/otel`, commons 0006-signals): every command is
-  a trace, the console renders the same signals, and nothing reads `OTEL_DENO`.
+  a trace, and nothing reads `OTEL_DENO`. The boot server records each event as an OpenTelemetry log
+  record; its terminal window and `boot.log` are renderings of the same event, and the Stolos
+  Console's Installs page reads `boot.log` (not the OTLP journal).
 - **FR-009** `tools/docs.ts` renders the engine's documentation from its JSDoc to `out/docs/` with
   no Deno, checks that every module and every export is documented, and compiles every `@example`.
 - **FR-010** The console's PAM sign-in runs on Bun through `bun:ffi`. On Node it is refused as not

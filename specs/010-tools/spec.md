@@ -7,16 +7,17 @@ maintainers' PPA when they publish one, else the upstream binary release, else U
 
 ## Requirements _(mandatory)_
 
-| Tool                                      | Source                                                                                                             | Why                                                             |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------- |
-| fish                                      | apt, `ppa:fish-shell/release-4` (the fish developers)                                                              | newest 4.x; Ubuntu 26.04 has 4.2                                |
-| tmux                                      | Ubuntu (3.6a)                                                                                                      | upstream publishes source only, no maintainers' PPA             |
-| git                                       | apt, `ppa:git-core/ppa` (Ubuntu Git Maintainers)                                                                   | newest git                                                      |
-| Bun                                       | upstream binary at the engine's pin (its version and SHA-256 per platform, spec 096), not the newest               | the engine's runtime; not in Ubuntu's archive                   |
-| gh                                        | apt, GitHub's repository `https://cli.github.com/packages` (key `7F38BBB59D064DBCB3D84D725612B36462313325` pinned) | the vendor's own apt repository; Ubuntu 26.04 ships 2.46 (2024) |
-| chezmoi                                   | upstream binary                                                                                                    | not in Ubuntu's archive                                         |
-| oh-my-posh                                | upstream binary                                                                                                    | not in Ubuntu's archive                                         |
-| Claude Code (workstations only, spec 030) | its native installer, self-updating                                                                                | vendor-supported path                                           |
+| Tool       | Source                                                                                                             | Why                                                             |
+| ---------- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------- |
+| fish       | apt, `ppa:fish-shell/release-4` (the fish developers)                                                              | newest 4.x; Ubuntu 26.04 has 4.2                                |
+| tmux       | Ubuntu (3.6a)                                                                                                      | upstream publishes source only, no maintainers' PPA             |
+| git        | apt, `ppa:git-core/ppa` (Ubuntu Git Maintainers)                                                                   | newest git                                                      |
+| Bun        | upstream binary at the engine's pin (its version and SHA-256 per platform, spec 096), not the newest               | the engine's runtime; not in Ubuntu's archive                   |
+| gh         | apt, GitHub's repository `https://cli.github.com/packages` (key `7F38BBB59D064DBCB3D84D725612B36462313325` pinned) | the vendor's own apt repository; Ubuntu 26.04 ships 2.46 (2024) |
+| chezmoi    | upstream binary                                                                                                    | not in Ubuntu's archive                                         |
+| oh-my-posh | upstream binary                                                                                                    | not in Ubuntu's archive                                         |
+
+The catalog holds no agent: the agent is the workstation's own MCP client (spec 030).
 
 - **FR-001**: Upstream binaries are verified against the release's published SHA-256 digest,
   installed under `/opt/tools/<tool>/<version>`, smoke-tested, linked into `/usr/local/bin`, and

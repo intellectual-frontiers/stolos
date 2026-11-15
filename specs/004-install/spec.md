@@ -40,13 +40,15 @@ input.
 
 ## Requirements _(mandatory)_
 
-- **FR-001**: `archon host add <name> [--mac <mac>]` writes `fleets/<fleet>/hosts/<name>/host.ts`,
-  creates the host's ed25519 deploy key with `ssh-keygen` (native on Windows and Ubuntu), registers
-  it on the repository with write access through `gh`, arms the host, and prints its Boot URI. The
-  MAC is optional: a host is recognized by its Boot URI.
+- **FR-001**: `bun run stolos host add <name> (--claim | --mac-address <mac>)` writes
+  `fleets/<fleet>/hosts/<name>/host.ts` and its `registration.ts`, creates the host's ed25519 deploy
+  key with `ssh-keygen` (native on Windows and Ubuntu), registers it on the repository read-only
+  through `gh` (hosts never push, spec 048), arms the host, and prints its Boot URI. Exactly one of
+  `--claim` (the next unknown machine to network-boot within the claim window becomes the host) or
+  `--mac-address` (only that network card) says how its machine is recognized (spec 051).
 - **FR-002**: `bun run stolos boot serve` downloads Ubuntu's netboot files (shim `bootx64.efi`,
   network GRUB `grubx64.efi`, `linux`, `initrd`) and the live-server ISO, verifies each against
-  `src/archon-boot/pins.ts`, caches them under `%LOCALAPPDATA%\archon\boot`, and serves TFTP on UDP
+  `src/archon-boot/pins.ts`, caches them under `%LOCALAPPDATA%\stolos\boot`, and serves TFTP on UDP
   69 (PXE) and HTTP on port 8080. TFTP reads go through the same handler as HTTP, so both serve
   identical files and menus.
 - **FR-003**: Routes: `/boot/[<host>/]{bootx64.efi,grubx64.efi}` (a host name in the path ties the
@@ -77,16 +79,12 @@ input.
   through PowerShell; ufw and firewalld on Linux) and warns, with the exact command, when inbound
   TCP (HTTP) or UDP (TFTP) would be blocked: no allow rule for the active network profile, a block
   rule for Bun or Node (block wins), or allow rules limited to the local subnet. It changes no rule.
-- **FR-012** (superseded by FR-013): `boot arm <host>` and the install's `done` callback remove the
-  host's old SSH host keys from the boot machine's `known_hosts` (`ssh-keygen -f <file> -R`), by
-  name and by every address the host installed from, so connecting after a re-install never fails on
-  changed host keys.
 - **FR-013**: Each host's SSH host keys (ed25519, ecdsa, rsa) are made once on the boot machine
   (`host add`, or the first install) with `ssh-keygen`, kept in the secret store, and installed by
   cloud-init (`ssh_keys` with all three types, so it generates none) at every install: a host keeps
   its SSH identity across re-installs. `boot arm` and the end of an install write those keys into
   the boot machine's `known_hosts` for the host's name and every address it installed from,
-  replacing old entries (this supersedes FR-012's removal).
+  replacing old entries.
 - **FR-014**: The install records the firmware entry it network-booted from
   (`/etc/archon/netboot-entry`). `archon reboot --netboot` sets UEFI BootNext to it (or the first
   PXE/HTTP IPv4 entry) and reboots; the boot order is never changed.
@@ -104,7 +102,7 @@ input.
   keys, mail token), Ubuntu's files, LAN addresses, free ports (TCP 8080, UDP 69) unless boot serve
   is running, and the firewall; each problem has its fix.
 - **FR-017**: `boot serve` also writes its log to `boot.log` in the boot cache
-  (`%LOCALAPPDATA%\archon\boot`), keeping one previous copy past 5 MB.
+  (`%LOCALAPPDATA%\stolos\boot`), keeping one previous copy past 5 MB.
 - **FR-008**: archon-boot speaks HTTP/1.1 itself with canonical header names (GRUB compares
   `Content-Length` case-sensitively), closes the connection after HEAD (UEFI's HTTP driver waits for
   a body otherwise), and accepts shim's `\grubx64.efi` path.

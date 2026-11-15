@@ -14,7 +14,11 @@ Epic intellectual-frontiers/stolos#7; issue intellectual-frontiers/stolos#14.
   - BambooHR and Rippling (Cloud HCM Suites): the roster only (name, work email, status, start and
     end dates, manager, type), never pay or personal fields; people are not listed as assets.
 - **FR-002** Accounts known by login only are linked to people in `fleets/<fleet>/estate/links.ts`.
-- **FR-003** Later in this issue: Gusto, Deel, Justworks, JumpCloud, GitLab, Bitbucket.
+
+## Context
+
+- Planned later in the same issue, not built here: Gusto, Deel, Justworks, JumpCloud, GitLab,
+  Bitbucket.
 
 ## Success criteria
 

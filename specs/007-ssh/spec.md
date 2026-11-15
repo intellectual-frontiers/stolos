@@ -9,7 +9,7 @@ decision, 2026-11-11).
 - **FR-001**: The installer sets `allow-pw: false` and installs the fleet admin's GitHub keys (spec
   004).
 - **FR-002**: `/etc/ssh/sshd_config.d/50-archon.conf`: no root login; public keys only, except from
-  the networks in `fleet.ssh.passwordFrom` (default: 10.0.0.0/8, 172.16.0.0/12, 10.0.0.0/16,
+  the networks in `fleet.ssh.passwordFrom` (default: 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16,
   fc00::/7, fe80::/10), where an OpenSSH `Match Address` block also accepts the account's password
   (`AuthenticationMethods publickey password`). `passwordFrom: []` means keys only everywhere.
   Validated with `sshd -t` before it takes effect. The installer's `allow-pw: false` covers the

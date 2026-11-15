@@ -2,8 +2,9 @@
 
 **Feature Branch**: `020-workstation` (committed directly to main) **Created**: 2026-11-10
 **Status**: Implemented **Input**: The owner's Windows PC runs Ubuntu on WSL; it should get the same
-tools, dotfiles, prompt as the hosts, plus Claude Code (the agent layer, spec 030), managed by
-Archon, without anything that belongs to a server.
+tools, dotfiles, prompt as the hosts, managed by Archon, without anything that belongs to a server.
+The agent is the workstation's own MCP client, which the operator chooses and sets up; Archon
+renders only `.mcp.json` for it (spec 030).
 
 ## User Scenarios & Testing _(mandatory)_
 
@@ -14,8 +15,8 @@ Archon, without anything that belongs to a server.
 1. **Given** Ubuntu 26.04 on WSL with systemd, and the repository cloned to `/srv/archon` by the
    owner, **When** the owner runs `bun run stolos workstation add`, **Then**
    `fleets/<fleet>/hosts/<name>/host.ts` is written (`kind: "workstation"`, `user: <owner>`), and
-   through sudo the workstation gets the tools at their newest releases, the dotfiles, Claude Code,
-   the `archon` command, and Ubuntu's daily updates; a new terminal opens in fish with the Archon
+   through sudo the workstation gets the tools at their newest releases, the dotfiles, the `archon`
+   command, and Ubuntu's daily updates; a new terminal opens in fish with the Archon
    prompt.
 2. **Given** the wrong Ubuntu release, no systemd, or a checkout elsewhere, **Then** it stops before
    changing anything, with the fix for each.
@@ -31,8 +32,7 @@ Archon, without anything that belongs to a server.
   (Archon's groups and sudo rule; no ops), updates (spec 009), tools (spec 010), shell (spec 011),
   and the CLI (spec 012).
 - **FR-003**: The workstation has one account, its user, with the operator persona (fish,
-  oh-my-posh, tmux, developer tools, archon completions) and Claude Code. It is never created: WSL
-  created it.
+  oh-my-posh, tmux, developer tools, archon completions). It is never created: WSL created it.
 - **FR-004**: `archon workstation add [<name>] [--user <u>] [--force]` runs as the user from
   `/srv/archon`, checks the Ubuntu release against the fleet's, that systemd runs (fix:
   `/etc/wsl.conf` `[boot] systemd=true`, `wsl --shutdown`), and the checkout location, writes the

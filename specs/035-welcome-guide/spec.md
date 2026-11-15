@@ -35,8 +35,8 @@ banner.
   Traefik's dashboard; the repository), and a longer guide. An item appears only when the plan has
   what it describes.
 - **FR-002**: Agent steps: `agentSetup(plan)` and `agentSteps()`, using the same MCP server name and
-  SSH target as the repository's `.mcp.json` (spec 030). `AGENTS.md` at the repository's root points
-  any agent at `CLAUDE.md`.
+  SSH target as the repository's `.mcp.json` (spec 030). `AGENTS.md` at the repository's root is
+  the entry point for any agent: it gives the operating rules.
 - **FR-003**: The welcome page: what this is; "How it's doing" (one sentence; checks now from the
   last `archon verify` as root, `/var/lib/archon/status/verify.json`; the last run in words from
   `/var/lib/archon/status/last.json`; the certificate; updates waiting, when they last installed by

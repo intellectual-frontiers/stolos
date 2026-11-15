@@ -10,9 +10,9 @@ restore should be a few steps you can read.
 
 ## Requirements
 
-- **FR-001** `bun run stolos boot vault backup` writes `archon-backup-<pc>-<UTC>.zip` into archon's
-  backup folder, beside its other data (`%LOCALAPPDATA%\archon\backup`; Linux and macOS:
-  `~/.local/share/archon/backup`), readable by its owner only.
+- **FR-001** `bun run stolos boot vault backup` writes `stolos-backup-<pc>-<UTC>.zip` into stolos's
+  backup folder, beside its other data (`%LOCALAPPDATA%\stolos\backup`; Linux and macOS:
+  `~/.local/share/stolos/backup`), readable by its owner only.
 - **FR-002** The ZIP holds every fleet's non-ephemeral secrets on this PC (`secrets/<fleet>/...`),
   the signing key Git uses (`git config user.signingkey`: both halves, under `signing/`; the private
   half stays locked by its passphrase), `manifest.json` (names, sizes, SHA-256; never a value), and

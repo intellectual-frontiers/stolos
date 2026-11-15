@@ -36,8 +36,9 @@ server's name is a public Cloudflare record with its private address.
 ## Requirements _(mandatory)_
 
 - **FR-001**: Traefik is the official release binary (tools catalog, servers only,
-  checksum-verified, Article 5), run by `traefik.service` as a dynamic user with only
-  `CAP_NET_BIND_SERVICE`, state in `/var/lib/traefik` (ACME account and certificates). The tools
+  checksum-verified, Article 5), run by `traefik.service` as its own system account `traefik`
+  (declared in `/etc/sysusers.d/archon-web.conf`, in the group that may read Podman's socket) with
+  only `CAP_NET_BIND_SERVICE`, state in `/var/lib/traefik` (ACME account and certificates). The tools
   sync restarts it after an upgrade.
 - **FR-002**: Static configuration `/etc/traefik/traefik.yml` and dynamic configuration
   `/etc/traefik/dynamic/archon.yml` are rendered from the model (JSON, valid YAML). Entry points:

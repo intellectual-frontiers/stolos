@@ -77,8 +77,11 @@ rule. The off-host destination is an open question (a NAS, in a later spec).
   reinstall.
 - **FR-011** No history: the record holds only `enabled`, `by`, `at`, and `data`, the current
   decision. A record without a choice falls under the fail-safe rule (FR-003).
-- **FR-012** One vocabulary: "durable" describes data and hosts, never a transaction (not the D in
-  ACID). Spec 021's local stores are "ephemeral" in the same sense.
+
+## Vocabulary
+
+- "Durable" describes data and hosts, never a transaction (not the D in ACID). Spec 021's local
+  stores are "ephemeral" in the same sense.
 
 ## Success Criteria
 

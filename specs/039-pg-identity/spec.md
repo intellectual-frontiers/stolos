@@ -91,8 +91,6 @@ PostgreSQL is not started on a new machine; an operator turns it on.
   `archon pg ensure prime --json` answers without sudo when the instance runs;
   `archon pg connect prime --write --json` writes the socket service (no password); then
   `service=prime`.
-- **FR-014** Archon's code, specs, and docs name no app: apps are the fleet's data
-  (`fleet.services`, a host's `pg.instances[].databases`).
 
 ### Overrides of Ubuntu defaults
 
@@ -100,6 +98,11 @@ PostgreSQL is not started on a new machine; an operator turns it on.
   cluster on install).
 - Ubuntu's PAM stacks gain one `optional` auth and password module through `pam-auth-update` (not an
   edit of `/etc/pam.d`).
+
+## Context
+
+- Archon's code, specs, and docs name no app: apps are the fleet's data (`fleet.services`, a host's
+  `pg.instances[].databases`).
 
 ## Non-goals
 

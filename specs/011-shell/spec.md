@@ -2,7 +2,8 @@
 
 **Feature Branch**: `011-shell` (committed directly to main) **Created**: 2026-11-10 **Status**:
 Implemented **Input**: Persona-driven dotfiles through chezmoi: fish with oh-my-posh (the Archon
-status segment), tmux, git identity, Claude Code settings (workstations only, spec 030).
+status segment), tmux, git identity. No agent's settings are among them (the agent is the
+workstation's own MCP client, spec 030).
 
 ## Requirements _(mandatory)_
 

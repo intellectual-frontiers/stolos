@@ -1,18 +1,18 @@
 # Feature Specification: The agent layer
 
 **Feature Branch**: `030-agent-layer` (committed directly to main) **Created**: 2026-11-12
-**Status**: Implemented **Input**: Managed Ubuntu servers run no agent. The agent (Claude Code by
-default) is a layer the operator installs on a workstation, which reaches each server through
-`archon mcp` over SSH. Constitution Article 17.
+**Status**: Implemented **Input**: Managed Ubuntu servers run no agent. The agent is the
+workstation's own MCP client, whichever the operator chooses; it reaches each server through
+`archon mcp` over SSH. The engine names no particular agent and installs none. Constitution Article 17.
 
 ## User Scenarios & Testing _(mandatory)_
 
 1. **Given** a freshly installed server, **When** the owner looks for an agent, **Then** there is
-   none: no Claude Code binary, no token, no `claude.env`, and nothing in the install or first boot
-   asks for a sign-in.
-2. **Given** a workstation with this repository checked out, **When** the owner runs `claude` in it,
-   **Then** Claude Code finds one MCP server per server host (`archon-<host>`) in `.mcp.json`, each
-   started as `ssh ops@<host>`.
+   none: no agent binary, no AI token, and nothing in the install or first boot asks for a
+   sign-in.
+2. **Given** a workstation with this repository checked out, **When** the owner starts an MCP
+   client in it, **Then** the client finds one MCP server per server host (`archon-<fleet>-<host>`)
+   in `.mcp.json`, each started as `ssh ops@<host>`.
 3. **Given** that SSH connection, **When** it reaches the server, **Then** the server's
    `authorized_keys` for `ops` forces `archon mcp --max-tier <tier>` with `restrict`: no shell, no
    forwarding, no other command, whatever the client asks for.
@@ -24,8 +24,8 @@ default) is a layer the operator installs on a workstation, which reaches each s
 
 ## Requirements _(mandatory)_
 
-- **FR-001**: Servers install no agent: the tool catalog's Claude Code entry is workstation-only;
-  personas carry no agent feature; dotfiles for Claude Code apply on workstations only.
+- **FR-001**: Servers install no agent: the tool catalog holds no agent, personas carry no agent
+  feature, and the dotfiles hold no agent's settings.
 - **FR-002**: No AI credential reaches a server: the boot machine holds none, the install config
   carries none, and the first boot signs nothing in. Article 18: no human step after power-on.
 - **FR-003**: `fleet.mcp` (optional) sets `maxTier` (`read`, `repo`, or `mutate`; default `mutate`)
@@ -37,19 +37,22 @@ default) is a layer the operator installs on a workstation, which reaches each s
   the destructive tier. Without the flag (a local operator), the limit is `mutate`.
 - **FR-005**: Each tool call is journaled with `logger -t archon-mcp` (tool, arguments,
   `SSH_CLIENT`).
-- **FR-006**: `archon build` renders `.mcp.json` with one entry per server, `archon-<host>`:
-  `ssh -T -o BatchMode=yes ops@<dnsName or ip>`; and `.claude/settings.json` with permissions per
-  server: read tools allowed, repo and mutating tools ask, destructive tools denied.
-- **FR-007**: Claude Code stays the default agent and is installed on workstations (spec 020) by its
-  native installer. Another agent can use the same `.mcp.json` entries; the server enforces the
-  limits either way.
-- **FR-008**: The workstation hooks read only the checkout: SessionStart lists the fleet's MCP
-  servers; PostToolUse journals on the workstation (tag `archon-agent`); Stop still blocks while
-  `archon validate` fails.
+- **FR-006**: `bun run stolos build` renders `.mcp.json` with one entry per server host (workstations
+  excluded), `archon-<fleet>-<host>`:
+  `ssh -T -o BatchMode=yes -o ServerAliveInterval=30 ops@<dnsName, ip, or name>`, keeping the
+  entries other fleets of the same repository own. No agent-specific file is rendered: each server
+  enforces its tier itself.
+- **FR-007**: `.mcp.json` names no particular agent: any MCP client on the workstation uses the same
+  entries, and the server enforces the limits whatever the client.
 
 ### Overrides of Ubuntu defaults
 
 None.
+
+## Notes
+
+- The engine installs nothing for an agent on a workstation: no agent binary, no agent settings, and
+  no agent hooks. The agent is the workstation's own MCP client, set up by the operator.
 
 ## Non-goals
 

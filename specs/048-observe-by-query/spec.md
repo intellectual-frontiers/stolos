@@ -20,7 +20,7 @@ which limits what it answers.
    last.
 4. **Given** the boot machine, **When** the operator runs
    `archon fleet query "select name, version from deb_packages where name = 'openssh-server'"`,
-   **Then** every server answers in one table with a host column.
+   **Then** every server answers in one table with a machine column.
 5. **Given** a new host, **Then** its deploy key is read-only: it can fetch the fleet repository and
    never push.
 6. **Given** a person edits `archon.sql` by hand, **Then** the next write keeps their records (it
@@ -35,7 +35,7 @@ which limits what it answers.
   in a fixed order (atomically), and rebuilds `archon.auto.sqlite.db` from it. Provenance keeps the
   newest 500 records per host.
 - **FR-002** Where: an installed machine (`/etc/archon/host` exists) uses `/var/lib/archon`; the
-  boot machine and workstations use their user data, per fleet (`<data>/archon/state/<fleet>/`), as
+  boot machine and workstations use their user data, per fleet (`<data>/stolos/state/<fleet>/`), as
   a cache of what servers last said.
 - **FR-003** The install record (first boot), the latest verify, provenance (each apply), and the
   operators' switches (pg, s3, smb, with their data class) are written to the store; verify checks
@@ -50,7 +50,8 @@ which limits what it answers.
   as text or `--json`. `archon fleet status` asks each server for it over MCP (ssh as ops,
   newline-delimited JSON-RPC) and caches each answer.
 - **FR-007** `archon fleet query <sql>` (read, not over MCP): `archon_query` on every server in
-  parallel; rows with a host column; unreachable servers named.
+  parallel (and adopted machines through their probe, spec 067); one table with a machine column;
+  unreachable machines named.
 - **FR-008** `archon push` is gone; `archon capture` reports drift and writes nothing;
   `archon update` blocks on any local change in the checkout (hosts record nothing there);
   `boot reinstall` no longer pushes; deploy keys are registered read-only.

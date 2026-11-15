@@ -54,13 +54,6 @@ reports any that drifted.
 - **FR-003**: Create `/var/lib/archon` and its state directories through tmpfiles.d.
 - **FR-004**: Every override of an Ubuntu default lives in the spec that makes it, in a section
   named "Overrides of Ubuntu defaults", with the reason.
-- **FR-005**: The network these hosts live on (facts; Archon does not change them): a UniFi Cloud
-  Gateway Ultra; servers on the Servers VLAN 30, 10.0.30.0/24, gateway and DNS 10.0.30.1; the boot
-  machine at 10.0.1.157 on Default, 10.0.1.0/24. IPv4 only (spec 009). Hosts use the gateway as
-  their only resolver (DHCP), because local names live there as UniFi Local DNS records
-  (`<host>.localdomain`); Archon never points hosts at public resolvers. The zone firewall lets
-  Servers reach Default only at the boot machine (UDP 69, TCP 8080), the gateway only for DNS, DHCP,
-  NTP, and mDNS, and the internet.
 - **FR-006**: Name resolution and discovery (constitution Article 20, the network owner's decision
   of 2026-11-11): services are found by unicast DNS names (UniFi Local DNS, `<host>.localdomain` or
   a service alias such as `otel.localdomain`) or addresses in the model, never by mDNS, DNS-SD, or
@@ -87,3 +80,10 @@ reports any that drifted.
 ## Assumptions
 
 - The host was installed by Ubuntu's installer from the config Archon rendered (spec 004).
+- The network these hosts live on (facts; Archon does not change them): a UniFi Cloud Gateway
+  Ultra; servers on the Servers VLAN 30, 10.0.30.0/24, gateway and DNS 10.0.30.1; the boot machine
+  at 10.0.1.157 on Default, 10.0.1.0/24. IPv4 only (spec 009). Hosts use the gateway as their only
+  resolver (DHCP), because local names live there as UniFi Local DNS records
+  (`<host>.localdomain`); Archon never points hosts at public resolvers. The zone firewall lets
+  Servers reach Default only at the boot machine (UDP 69, TCP 8080), the gateway only for DNS, DHCP,
+  NTP, and mDNS, and the internet.

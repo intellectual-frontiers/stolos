@@ -42,7 +42,7 @@ As someone who wants the graph, I want `archon export` to write the fleet, hosts
   text anywhere in the model or rendered files (private keys, GitHub tokens, API keys, password
   hashes).
 - **FR-005**: `archon build` validates, then renders; `archon validate` only validates.
-- **FR-006**: `archon export` writes Turtle (W3C PROV, SKOS where they fit) under `out/rdf/`.
+- **FR-006**: `archon export` writes Turtle (W3C PROV, SKOS where they fit) under `out/<fleet>/rdf/`.
 
 ## Success Criteria _(mandatory)_
 

@@ -55,11 +55,6 @@ Email Service, with DKIM for `example.net`. Replace the Gmail API.
   a spec, git, or a log.
 - **FR-006**: `archon mail test` hands a message for root to `/usr/sbin/sendmail`: the path every
   program uses. `archon verify` checks that Postfix is active and warns while the token is missing.
-- **FR-007**: Cloudflare, once (the owner, in the dashboard): onboard `example.net` under Compute >
-  Email Service > Email Sending (Cloudflare adds MX, SPF, and DKIM on `cf-bounce.example.net`, DMARC
-  `p=reject` on `_dmarc.example.net`), and create an API token (account `cfat_` or user `cfut_`)
-  with Email Sending: Edit. New servers need no Cloudflare change. The Workers Paid plan includes
-  3,000 messages a month.
 
 ### Overrides of Ubuntu defaults
 
@@ -67,6 +62,14 @@ Email Service, with DKIM for `example.net`. Replace the Gmail API.
   mail. A server here must not receive mail from the network or deliver locally, and must relay with
   SASL over implicit TLS, which debconf cannot express; so debconf writes nothing ("No
   configuration") and archon renders the file. Postfix has no drop-in directory.
+
+## Context
+
+A manual procedure, done once by the owner in the Cloudflare dashboard (archon does not do it):
+onboard `example.net` under Compute > Email Service > Email Sending (Cloudflare adds MX, SPF, and
+DKIM on `cf-bounce.example.net`, DMARC `p=reject` on `_dmarc.example.net`), and create an API token
+(account `cfat_` or user `cfut_`) with Email Sending: Edit. New servers need no Cloudflare change.
+The Workers Paid plan includes 3,000 messages a month.
 
 ## Success Criteria _(mandatory)_
 

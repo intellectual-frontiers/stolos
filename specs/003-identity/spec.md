@@ -25,8 +25,9 @@ maintain it.
 ## Requirements _(mandatory)_
 
 - **FR-001**: Identity fields come from `gh api user` (REST) and `https://github.com/<login>.keys`.
-- **FR-002**: The secret store is `%APPDATA%\archon\secrets` on Windows and
-  `~/.config/archon/secrets` elsewhere (mode 0700/0600); it holds `admin-password.hash`,
+- **FR-002**: The secret store is `%APPDATA%\stolos\secrets\<fleet>` on Windows and
+  `~/.config/stolos/secrets/<fleet>` elsewhere (mode 0700/0600; a provider's client, spec 082:
+  `stolos/clients/<client>/secrets/<fleet>`); it holds `admin-password.hash`,
   `hosts/<host>/deploy_key`, and `install-tokens.json`.
 - **FR-003**: The password hash is SHA-512 crypt (`$6$`), computed in TypeScript (no external
   tools), checked against glibc's reference vector.

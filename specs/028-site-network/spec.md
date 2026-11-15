@@ -57,7 +57,7 @@ Source of the values: the owner's network reference, `example-lab-unify-network.
   account's, whose OneDrive Personal Vault holds the secrets backups; spec 029 has no passphrase). A
   test checks that every path the code writes is in the inventory and that every secret write goes
   through `writeSecret()`.
-- **FR-006**: RDF (`archon export`, `out/rdf/site.ttl`): `archon:Site`, `archon:Network`,
+- **FR-006**: RDF (`archon export`, `out/<fleet>/rdf/site.ttl`): `archon:Site`, `archon:Network`,
   `archon:Zone`, `archon:FirewallPolicy`, `archon:SecretRef` (names only) with SKOS labels. An
   export only (Article 10).
 - **FR-007**: The network reference (`archon build`, `out/site/network-reference.html`, GENERATED):
