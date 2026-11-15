@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/compliance/commands.ts - Stolos v0.105.0 documentation</title>
+  <title>archon/compliance/commands.ts - Stolos v0.106.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.105.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.106.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -102,7 +102,9 @@
 fleet's evidence by SCF control and by framework, from what this PC
 already knows (nothing is asked of a server); <code>stolos compliance catalog</code>
 downloads the SCF Council's and NIST's catalogs (pinned, SHA-256 checked);
-<code>stolos compliance export</code> writes the fleet's OSCAL documents.</p>
+<code>stolos compliance export</code> writes the fleet's OSCAL documents. Spec 073:
+each control shows its evidence's age, and stale evidence fails (MON-02);
+<code>stolos compliance drift</code> is in <code>drift.ts</code>.</p>
 </div><section class="section"  id="archon&#x2F;compliance&#x2F;commands_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;compliance&#x2F;commands_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
@@ -250,7 +252,7 @@ Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_oscalres
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 2091 symbols</span><svg
+              <span class="leading-none">view all 2123 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
