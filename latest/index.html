@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Stolos v0.73.0</title>
+<title>Stolos v0.74.0</title>
 <link rel="stylesheet" href="./styles.css">
 <link rel="stylesheet" href="./page.css">
 <script src="./darkmode_toggle.js"></script>
@@ -17,7 +17,7 @@
 </head>
 <body>
 <main>
-<h1>Stolos v0.73.0</h1>
+<h1>Stolos v0.74.0</h1>
 <p>The fleet engine (its command is <code>archon</code>), documented from its TypeScript.</p>
 <p class="start">Start here: <a href="./mod.ts/index.html">the overview</a>, with how the
 pieces fit, in diagrams. Then the model: <a href="./archon/model/types.ts/index.html">types.ts</a>.
@@ -97,6 +97,15 @@ Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 <li><a href="./archon/capabilities/updates.ts/index.html"><code>updates.ts</code></a> 009-updates: Ubuntu's unattended-upgrades, as Ubuntu configures it, plus one override (spec 009): the -updates pocket too, so Ubuntu's stable bug-fix updates install daily alongside security updates.</li>
 <li><a href="./archon/capabilities/web.ts/index.html"><code>web.ts</code></a> 032-web: every server is HTTPS-ready from its first boot.</li>
 <li><a href="./archon/capabilities/workstation.ts/index.html"><code>workstation.ts</code></a> 020-workstation: Ubuntu on WSL (or a desktop) as an Archon workstation.</li>
+</ul>
+<h2>archon/cloud/</h2>
+<ul>
+<li><a href="./archon/cloud/aws.ts/index.html"><code>aws.ts</code></a> Spec 067 (clouds): AWS, read-only, with an access key whose user (or role) has the managed SecurityAudit policy: the account, IAM users, S3 buckets, EC2 instances in every enabled region, and the…</li>
+<li><a href="./archon/cloud/cloud.ts/index.html"><code>cloud.ts</code></a> Spec 067 (clouds): what the fleet has in its cloud accounts, for people and auditors.</li>
+<li><a href="./archon/cloud/cloudflare.ts/index.html"><code>cloudflare.ts</code></a> Spec 067 (clouds): Cloudflare, read-only: accounts, zones and their DNS records, Workers, Pages projects, R2 buckets, and tunnels; each zone's TLS settings and DNSSEC for the posture policies.</li>
+<li><a href="./archon/cloud/commands.ts/index.html"><code>commands.ts</code></a> Spec 067 (clouds): stolos cloud connect | observe | check | assets | disconnect.</li>
+<li><a href="./archon/cloud/hetzner.ts/index.html"><code>hetzner.ts</code></a> Spec 067 (clouds): Hetzner Cloud, read-only: one project's servers, volumes, firewalls, primary IPs, and load balancers.</li>
+<li><a href="./archon/cloud/microsoft.ts/index.html"><code>microsoft.ts</code></a> Spec 067 (clouds): Microsoft 365 (Entra ID, through Microsoft Graph) and Azure (through Resource Manager), read-only, with one app registration's client credentials: the tenant, its domains, users…</li>
 </ul>
 <h2>archon/commands/</h2>
 <ul>
