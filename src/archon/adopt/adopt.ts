@@ -95,6 +95,8 @@ export interface Observed {
     firewall: string;
     autoUpdates: string;
     sshPasswordAuth?: string;
+    /** Real-time anti-malware (Windows Defender), when the probe can tell. */
+    antivirus?: string;
     admins: string[];
   };
   /** Software: the package manager, how many packages, updates waiting, osquery's version. */
@@ -146,6 +148,7 @@ export function toObserved(p: ProbeOutput): Observed {
       firewall: sec.firewall || "unknown",
       autoUpdates: sec.auto_updates || "unknown",
       ...(sec.ssh_password_auth ? { sshPasswordAuth: sec.ssh_password_auth } : {}),
+      ...(sec.antivirus ? { antivirus: sec.antivirus } : {}),
       admins: (sec.admins ?? "").split(/\s+/).filter(Boolean).sort(),
     },
     software: {

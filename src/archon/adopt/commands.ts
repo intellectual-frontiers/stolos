@@ -31,10 +31,26 @@ const fail = (): number => ui.problems.some((x) => x.level === "fail") ? 1 : 0;
 
 /** `stolos host adopt <name> --ssh user@address`: pin, install the probe, observe. */
 export async function hostAdopt(
-  o: { name: string; ssh: string; title?: string; owner?: string; until?: string },
+  o: {
+    name: string;
+    ssh?: string;
+    checkIn?: string;
+    title?: string;
+    owner?: string;
+    until?: string;
+  },
 ): Promise<number> {
+  if (o.checkIn) return await adoptFromCheckIn({ ...o, checkIn: o.checkIn });
+  if (!o.ssh) {
+    ui.phase("Checks").fail(
+      "--ssh user@address, or --check-in <code>",
+      `the easy way: deno task stolos host integrate ${o.name} --as adopt (prints the line to run on the machine)`,
+    );
+    return fail();
+  }
+  const ssh = o.ssh;
   const c = ui.phase("Checks");
-  const m = o.ssh.match(/^([a-z_][a-z0-9_.-]*)@([A-Za-z0-9.:-]+?)(?::(\d+))?$/);
+  const m = ssh.match(/^([a-z_][a-z0-9_.-]*)@([A-Za-z0-9.:-]+?)(?::(\d+))?$/);
   if (!MACHINE_NAME.test(o.name)) {
     c.fail(
       `${o.name} is not a name (lowercase letters, digits, -)`,
@@ -44,7 +60,7 @@ export async function hostAdopt(
   }
   if (!m) {
     c.fail(
-      `--ssh ${o.ssh} is not user@address`,
+      `--ssh ${ssh} is not user@address`,
       "for example --ssh shahid@macbook.local, or user@10.0.0.20:2222",
     );
     return fail();
@@ -438,5 +454,190 @@ export async function hostAccept(
   ui.next.push(
     `keep it (the signed commit is the record): deno task stolos apply -m "067-adopt: ${name} accepts ${policy}"`,
   );
+  return 0;
+}
+
+/** `host adopt <name> --check-in <code>`: the machine already ran integrate --adopt; pin its keys from the code and observe. */
+async function adoptFromCheckIn(
+  o: {
+    name: string;
+    checkIn: string;
+    ssh?: string;
+    title?: string;
+    owner?: string;
+    until?: string;
+  },
+): Promise<number> {
+  const c = ui.phase("Check-in");
+  const { parseCheckIn } = await import("./checkin.ts");
+  let ci;
+  try {
+    ci = parseCheckIn(o.checkIn);
+  } catch (e) {
+    c.fail(
+      (e as Error).message,
+      "run the line from host integrate on the machine again, and copy its last line",
+    );
+    return fail();
+  }
+  if (!MACHINE_NAME.test(o.name)) {
+    c.fail(`${o.name} is not a name (lowercase letters, digits, -)`, "for example: alice-laptop");
+    return fail();
+  }
+  if (ci.fleet && ci.fleet !== P.fleetId) {
+    c.fail(
+      `this code was made for the fleet ${ci.fleet}, not ${P.fleetId}`,
+      `deno task stolos fleet use ${ci.fleet}`,
+    );
+    return fail();
+  }
+  if (!ci.kinds.includes("adopt")) {
+    c.fail(
+      "the machine was not prepared for adoption (no --adopt)",
+      `deno task stolos host integrate ${o.name} --as adopt`,
+    );
+    return fail();
+  }
+  if (!ci.hostKeys.length) {
+    c.fail(
+      "the code has no SSH host keys (is SSH on?)",
+      "run the line on the machine again: it turns SSH on",
+    );
+    return fail();
+  }
+  if (!(await exists(probeKeyPath(o.name)))) {
+    c.fail(
+      `this PC has no probe key for ${o.name}`,
+      `the line must come from this PC: deno task stolos host integrate ${o.name} --as adopt, then run it again`,
+    );
+    return fail();
+  }
+  const via = o.ssh?.match(/^([a-z_][a-z0-9_.-]*)@([A-Za-z0-9.:-]+?)(?::(\d+))?$/i);
+  const user = via?.[1] ?? ci.user;
+  const address = via?.[2] ?? ci.addresses[0] ?? ci.hostname;
+  const port = via?.[3] ? Number(via[3]) : ci.port !== 22 ? ci.port : undefined;
+  c.done(
+    `${ci.hostname}: ${user}@${address}, ${ci.hostKeys.length} host key(s) from the code (no first-connection trust)`,
+  );
+  const existing = (await loadAdopted()).find((a) => a.machine.name === o.name)?.machine;
+  const machine: AdoptedDef = {
+    name: o.name,
+    ...(o.title ?? existing?.title ? { title: o.title ?? existing?.title } : {}),
+    ...(o.owner ?? existing?.owner ? { owner: o.owner ?? existing?.owner } : {}),
+    ssh: { user, address, ...(port ? { port } : {}) },
+    hostKeys: ci.hostKeys,
+    ...(o.until ?? existing?.until ? { until: o.until ?? existing?.until } : {}),
+    adopted: existing?.adopted ?? new Date().toISOString(),
+    ...(existing?.accepted ? { accepted: existing.accepted } : {}),
+  };
+  await Deno.mkdir(adoptedDir(o.name), { recursive: true });
+  await Deno.writeTextFile(join(adoptedDir(o.name), "machine.ts"), machineSource(machine));
+  const ob = ui.phase("Observe");
+  const r = await observe(machine);
+  const observed = r.observed ?? ci.observed;
+  if (observed) {
+    await Deno.writeTextFile(join(adoptedDir(o.name), "observed.ts"), observedSource(observed));
+  }
+  if (r.observed) ob.done(`${r.observed.os.name} ${r.observed.os.version} · ${r.observed.os.arch}`);
+  else if (observed) {
+    ob.warn(
+      `this PC could not reach it over SSH (${r.why}); kept what the check-in code said`,
+      `when it is reachable: deno task stolos host observe ${o.name} (or --ssh user@address)`,
+    );
+  } else ob.fail(`not observed: ${r.why}`, `deno task stolos host observe ${o.name}`);
+  const { saveDiscovered } = await import("./integrate.ts");
+  await saveDiscovered([], [o.name]);
+  if (observed) report(o.name, policies(machine, observed));
+  ui.next.push(`keep it: deno task stolos apply -m "069-integrate: adopt ${o.name}"`);
+  return fail();
+}
+
+/** `stolos host integrate <name> --as discover|adopt|osquery|server|workstation`: the line to run on the machine. */
+export async function hostIntegrate(
+  o: { name: string; as: string; github?: string; repo?: string },
+): Promise<number> {
+  const p = ui.phase("Integrate");
+  const { INTEGRATIONS, integrateLines } = await import("./integrate.ts");
+  const as = o.as.split(/[,\s]+/).filter(Boolean);
+  const bad = as.filter((k) => !(INTEGRATIONS as readonly string[]).includes(k));
+  if (!as.length || bad.length) {
+    p.fail(
+      `--as ${o.as}: one or more of ${INTEGRATIONS.join(", ")}`,
+      `for example: --as adopt,osquery`,
+    );
+    return fail();
+  }
+  if (!MACHINE_NAME.test(o.name)) {
+    p.fail(`${o.name} is not a name (lowercase letters, digits, -)`, "for example: alice-laptop");
+    return fail();
+  }
+  if (as.includes("osquery") && !as.includes("adopt")) as.push("adopt");
+  const github = o.github ??
+    (as.includes("server")
+      ? (await import("../model/load.ts").then((m) => m.loadFleet())).admin.github.login
+      : undefined);
+  const repo = o.repo ??
+    (as.includes("workstation")
+      ? (await import("../fleet/bootstrap.ts").then((m) => m.repoSlug(P.repo)))
+      : undefined);
+  const key = as.includes("adopt") ? await ensureProbeKey(o.name, P.fleetId) : undefined;
+  const lines = await integrateLines({
+    as: as as never,
+    fleet: P.fleetId,
+    ...(key ? { key } : {}),
+    ...(github ? { github } : {}),
+    ...(repo ? { repo } : {}),
+  });
+  p.done(`${o.name}: ${as.join(", ")}${key ? " (its probe key is in the vault)" : ""}`);
+  console.log(
+    `\n  On ${o.name}, in a terminal (Linux, macOS, or Ubuntu in WSL):\n\n    ${lines.posix}\n`,
+  );
+  if (lines.windows) {
+    console.log(
+      `  Or on Windows, in PowerShell (Run as administrator${
+        as.includes("adopt") ? "" : " is not needed for discover"
+      }):\n\n    ${lines.windows}\n`,
+    );
+  }
+  console.log(
+    "  It says what it will do and asks once; at the end it prints a check-in code (stolos1:...).\n",
+  );
+  const next = as.includes("adopt")
+    ? `then: deno task stolos host adopt ${o.name} --check-in <code>   (or paste it in the Stolos Console)`
+    : as.includes("server")
+    ? `then: deno task stolos host add ${o.name}, and deno task stolos host bootstrap ${o.name} --ssh <user>@<address>`
+    : as.includes("workstation")
+    ? "then: deno task stolos apply, on that workstation, to keep it"
+    : `then: deno task stolos discover --import <code>   (or paste it in the Stolos Console)`;
+  ui.next.push(next);
+  return 0;
+}
+
+/** `stolos discover --import <code>`: record a machine that checked in, to adopt or manage later. */
+export async function discoverImport(code: string, name?: string, owner?: string): Promise<number> {
+  const p = ui.phase("Discover");
+  const { nameFor, parseCheckIn } = await import("./checkin.ts");
+  let ci;
+  try {
+    ci = parseCheckIn(code);
+  } catch (e) {
+    p.fail((e as Error).message, "copy the whole last line the integrate script printed");
+    return fail();
+  }
+  const n = name ?? nameFor(ci.hostname);
+  if (!MACHINE_NAME.test(n)) {
+    p.fail(`${n} is not a name`, "give one: --name alice-laptop");
+    return fail();
+  }
+  const { fromCheckIn, saveDiscovered } = await import("./integrate.ts");
+  const d = fromCheckIn(ci, n);
+  await saveDiscovered([{ ...d, ...(owner ? { owner } : {}) }]);
+  p.done(
+    `${n}: ${d.os ?? ci.hostname}${
+      d.addresses.length ? ` at ${d.addresses.join(", ")}` : ""
+    } (recorded in discovered.ts)`,
+  );
+  ui.next.push(`keep it: deno task stolos apply -m "069-integrate: discovered ${n}"`);
+  ui.next.push(`adopt it: deno task stolos host integrate ${n} --as adopt`);
   return 0;
 }

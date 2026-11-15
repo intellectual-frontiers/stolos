@@ -597,6 +597,58 @@ export const COMMANDS: Command[] = [
     },
   },
   {
+    name: "host integrate",
+    summary:
+      "The one line to run on a machine to bring it into the fleet (discover, adopt, server, workstation)",
+    description:
+      `Spec 069. Prints the command to run on the machine itself (Linux, macOS, WSL: integrate.sh; Windows: integrate.windows.ps1), at this engine's release, with the fleet filled in. It says what it will do, asks once, and ends with a check-in code to paste back here (or in the Stolos Console). --as discover changes nothing on the machine; adopt adds the read-only probe (its key is made in the vault now); osquery also installs osquery; server prepares a hand-installed Ubuntu for host bootstrap; workstation makes a managed workstation.`,
+    tier: "repo",
+    args: [
+      {
+        name: "name",
+        type: "string",
+        positional: true,
+        required: true,
+        description: "Its name in the fleet (a DNS label): alice-laptop.",
+      },
+      {
+        name: "as",
+        type: "string",
+        required: true,
+        description: "discover, adopt, osquery, server, or workstation (several: adopt,osquery).",
+      },
+      {
+        name: "github",
+        type: "string",
+        description: "--as server: whose GitHub keys may sign in (default: the fleet admin).",
+      },
+      {
+        name: "repo",
+        type: "string",
+        description: "--as workstation: the fleet repository (default: this one's origin).",
+      },
+    ],
+    examples: [
+      {
+        cmd: "deno task stolos host integrate alice-laptop --as adopt",
+        text: "The line Alice runs on her laptop.",
+      },
+      {
+        cmd: "deno task stolos host integrate front-desk --as discover",
+        text: "Just record a machine; change nothing on it.",
+      },
+    ],
+    async run(a) {
+      const { hostIntegrate } = await import("../adopt/commands.ts");
+      return await hostIntegrate({
+        name: a.name as string,
+        as: a.as as string,
+        ...(a.github ? { github: a.github as string } : {}),
+        ...(a.repo ? { repo: a.repo as string } : {}),
+      });
+    },
+  },
+  {
     name: "host adopt",
     summary: "Adopt a machine over SSH (macOS, any Linux): observe and check it, never manage it",
     description:
@@ -613,8 +665,14 @@ export const COMMANDS: Command[] = [
       {
         name: "ssh",
         type: "string",
-        required: true,
-        description: "How to reach it: user@address, or user@address:port.",
+        description:
+          "How to reach it: user@address, or user@address:port (with --check-in: only to override).",
+      },
+      {
+        name: "check-in",
+        type: "string",
+        description:
+          "The check-in code the machine printed (integrate --adopt): its keys are pinned from it.",
       },
       {
         name: "title",
@@ -632,7 +690,8 @@ export const COMMANDS: Command[] = [
       const { hostAdopt } = await import("../adopt/commands.ts");
       return await hostAdopt({
         name: a.name as string,
-        ssh: a.ssh as string,
+        ...(a.ssh ? { ssh: a.ssh as string } : {}),
+        ...(a["check-in"] ? { checkIn: a["check-in"] as string } : {}),
         ...(a.title ? { title: a.title as string } : {}),
         ...(a.owner ? { owner: a.owner as string } : {}),
         ...(a.until ? { until: a.until as string } : {}),
@@ -809,9 +868,29 @@ export const COMMANDS: Command[] = [
     description:
       `Spec 067. Reads this PC's neighbor table (machines it has talked to; nothing is scanned) and the cloud observations in Git (servers and instances no fleet machine owns), and lists what the fleet does not know, by MAC, address, or name. Records nothing. Adopt the ones you are responsible for with host adopt.`,
     tier: "read",
-    args: [],
-    async run(_a, ctx) {
-      const { discover } = await import("../adopt/commands.ts");
+    args: [
+      {
+        name: "import",
+        type: "string",
+        description:
+          "A check-in code (integrate --discover): record that machine in discovered.ts.",
+      },
+      {
+        name: "name",
+        type: "string",
+        description: "With --import: its name in the fleet (default: from its hostname).",
+      },
+      { name: "owner", type: "string", description: "With --import: who it belongs to." },
+    ],
+    async run(a, ctx) {
+      const { discover, discoverImport } = await import("../adopt/commands.ts");
+      if (a.import) {
+        return await discoverImport(
+          a.import as string,
+          a.name as string | undefined,
+          a.owner as string | undefined,
+        );
+      }
       return await discover(ctx.json);
     },
   },
@@ -2684,6 +2763,7 @@ On a server, workstations reach it as ops over SSH (spec 030): ops' authorized_k
  */
 /** Commands run with `stolos` on your PC (the rest run with `archon` on each machine). */
 const PC_COMMANDS = new Set([
+  "host integrate",
   "host accept",
   "compliance",
   "console",

@@ -98,6 +98,17 @@ export const SCF: ScfControl[] = [
     },
   },
   {
+    id: "END-04",
+    name: "Anti-Malware Technologies",
+    how: "Windows machines run real-time anti-malware protection (Microsoft Defender or another).",
+    maps: {
+      hipaa: ["164.308(a)(5)(ii)(B)"],
+      pci: ["5.2.1"],
+      cmmc: ["SI.L1-3.14.2"],
+      soc2: ["CC6.8"],
+    },
+  },
+  {
     id: "END-05",
     name: "Software Firewall",
     how: "Adopted workstations run their own firewall.",

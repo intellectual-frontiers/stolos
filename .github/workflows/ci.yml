@@ -62,6 +62,38 @@ jobs:
       - name: Windows PowerShell 5.1
         shell: pwsh
         run: powershell -NoProfile -ExecutionPolicy Bypass -File tests/bootstrap/windows-check.ps1 powershell
+      - name: integrate and the Windows probe (spec 069)
+        shell: pwsh
+        run: pwsh -NoProfile -File tests/integrate/windows-check.ps1
+
+  integrate-posix:
+    # Spec 069: bin/integrate.sh and the probe on other Linux distributions (BusyBox
+    # included: Alpine) and on macOS, for real.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: The integrate tests (discover, adopt, undo, the checksum)
+        run: deno test -A tests/integrate069_test.ts
+      - name: Distributions (Debian, Fedora, Arch, Alpine with BusyBox)
+        if: runner.os == 'Linux'
+        run: |
+          for img in debian:12 fedora:41 archlinux:latest alpine:3.20; do
+            docker run --rm -v "$PWD:/s:ro" -e STOLOS_RAW=/s -w /tmp "$img" sh /s/bin/integrate.sh > "out-${img%%:*}.txt" 2>&1 || { cat "out-${img%%:*}.txt"; exit 1; }
+            deno run -A tests/integrate/check-code.ts "out-${img%%:*}.txt" "" discover > /dev/null && echo "$img: ok"
+          done
+      - name: macOS discover
+        if: runner.os == 'macOS'
+        run: |
+          STOLOS_RAW="$PWD" sh bin/integrate.sh > out-mac.txt 2>&1 || { cat out-mac.txt; exit 1; }
+          deno run -A tests/integrate/check-code.ts out-mac.txt macos discover
 
   console-browser:
     # Spec 065: the Archon Console in a real browser (Chromium), at desktop and phone width.
@@ -89,7 +121,7 @@ jobs:
           NODE_PATH=/tmp/pw/node_modules node tests/console/stolos-browser.cjs 8098
 
   tag:
-    needs: [check, bootstrap-windows, console-browser]
+    needs: [check, bootstrap-windows, integrate-posix, console-browser]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     timeout-minutes: 20

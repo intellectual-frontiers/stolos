@@ -28,12 +28,15 @@ export interface PolicyResult {
 }
 
 const mac = (o: Observed) => o.os.family === "macos";
+const win = (o: Observed) => o.os.family === "windows";
 
 /** Whether this OS version is still supported by its maker (a starter table). */
 export function supportedOs(o: Observed): boolean | undefined {
   const v = parseFloat(o.os.version);
   const f = o.os.family.split(" ")[0];
   if (f === "macos") return v >= 14;
+  // Windows: the build number. 11 24H2 (26100) and later; 10 and older 11 releases are past their end.
+  if (f === "windows") return Number(o.os.version) >= 26100;
   if (f === "ubuntu") return ["22.04", "24.04", "26.04"].includes(o.os.version);
   if (f === "debian") return v >= 12;
   if (f === "fedora") return v >= 41;
@@ -89,7 +92,9 @@ export function policies(m: AdoptedDef, o: Observed | undefined, now = Date.now(
       ? "fail"
       : "unknown",
     detail: `disk encryption: ${o.security.diskEncryption}`,
-    fix: mac(o)
+    fix: win(o)
+      ? "Settings > Privacy & security > Device encryption (or BitLocker: Control Panel > BitLocker Drive Encryption > Turn on)"
+      : mac(o)
       ? "System Settings > Privacy & Security > FileVault > Turn On"
       : "Linux encrypts at installation (LUKS): reinstall with encryption, or record why this machine holds nothing sensitive",
   });
@@ -103,7 +108,9 @@ export function policies(m: AdoptedDef, o: Observed | undefined, now = Date.now(
       ? "fail"
       : "unknown",
     detail: `firewall: ${o.security.firewall}`,
-    fix: mac(o)
+    fix: win(o)
+      ? "Windows Security > Firewall & network protection: turn on every network"
+      : mac(o)
       ? "System Settings > Network > Firewall > On"
       : o.os.family.includes("arch")
       ? "sudo pacman -S ufw && sudo systemctl enable --now ufw && sudo ufw enable"
@@ -123,7 +130,9 @@ export function policies(m: AdoptedDef, o: Observed | undefined, now = Date.now(
     detail: `automatic updates: ${o.security.autoUpdates}${
       o.software.pendingUpdates !== undefined ? `; ${o.software.pendingUpdates} waiting` : ""
     }`,
-    fix: mac(o)
+    fix: win(o)
+      ? "Settings > Windows Update (and remove the policy that turns automatic updates off)"
+      : mac(o)
       ? "System Settings > General > Software Update > Automatic Updates: all on"
       : o.security.autoUpdates === "manual"
       ? "a rolling distribution updates by hand: run sudo pacman -Syu (Omarchy: Update in its menu) at least weekly"
@@ -160,6 +169,20 @@ export function policies(m: AdoptedDef, o: Observed | undefined, now = Date.now(
       fix: "PasswordAuthentication no in /etc/ssh/sshd_config, then restart sshd",
     });
   }
+  if (o.security.antivirus !== undefined) {
+    add({
+      id: "antivirus",
+      title: "Anti-malware protection is on",
+      scf: ["END-04"],
+      status: o.security.antivirus === "on"
+        ? "pass"
+        : o.security.antivirus === "off"
+        ? "fail"
+        : "unknown",
+      detail: `real-time protection: ${o.security.antivirus}`,
+      fix: "Windows Security > Virus & threat protection > Real-time protection: on",
+    });
+  }
   add({
     id: "few-admins",
     title: "At most three administrators",
@@ -180,7 +203,9 @@ export function policies(m: AdoptedDef, o: Observed | undefined, now = Date.now(
     scf: ["MON-01"],
     status: o.software.osquery ? "pass" : "warn",
     detail: o.software.osquery ? `osquery ${o.software.osquery}` : "osquery is not installed",
-    fix: mac(o)
+    fix: win(o)
+      ? "integrate.windows.ps1 --adopt --osquery (installs osquery's MSI)"
+      : mac(o)
       ? "brew install --cask osquery"
       : o.os.family.includes("arch")
       ? "osquery is in the AUR: yay -S osquery-bin"

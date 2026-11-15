@@ -136,6 +136,7 @@ export const STOLOS_GROUPS: StolosGroup[] = [
       "Machines someone else installed (your laptop, a colleague's desktop): Stolos observes and checks them over SSH with a probe key that can run one read-only script, and never changes them.",
     names: [
       "compliance",
+      "host integrate",
       "discover",
       "host adopt",
       "host observe",
@@ -144,7 +145,7 @@ export const STOLOS_GROUPS: StolosGroup[] = [
       "host release",
       "fleet query",
     ],
-    first: "host check",
+    first: "host integrate",
     diagram: (f) =>
       `flowchart LR
   pc["This PC"] -- "probe key (vault)" --> sshd["sshd on ${f.adopted.length} adopted machine(s)"]

@@ -35,6 +35,10 @@ const files = [
   // Spec 062: the bootstrap scripts' template (fleets get their copy from it).
   join(ROOT, "bin/bootstrap.sh"),
   join(ROOT, "bin/bootstrap.windows.ps1"),
+  join(ROOT, "bin/stolos-probe.sh"),
+  join(ROOT, "bin/stolos-probe.ps1"),
+  join(ROOT, "bin/integrate.sh"),
+  join(ROOT, "bin/integrate.windows.ps1"),
   // Spec 065: Datastar, vendored and served by the consoles from the server itself.
   join(ROOT, "vendor/datastar/datastar-1.0.4.js"),
 ].map((f) => relative(ROOT, f).replaceAll("\\", "/")).sort();
