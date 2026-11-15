@@ -152,6 +152,12 @@ export const SCF: ScfControl[] = [
     },
   },
   {
+    id: "VPM-06",
+    name: "Vulnerability Scanning",
+    how: "Code is scanned for leaked secrets and vulnerable dependencies.",
+    maps: { hipaa: ["164.308(a)(8)"], pci: ["11.3.1"], cmmc: ["RA.L2-3.11.2"], soc2: ["CC7.1"] },
+  },
+  {
     id: "TDA-17",
     name: "Unsupported Systems",
     how: "Every operating system is still supported by its maker.",

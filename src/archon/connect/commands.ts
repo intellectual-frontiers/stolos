@@ -21,11 +21,25 @@ import {
   realHttp,
 } from "./connector.ts";
 import { cloudflare } from "./cloudflare.ts";
+import { github } from "./github.ts";
+import { google } from "./google.ts";
+import { bamboohr, rippling } from "./hris.ts";
+import { okta } from "./okta.ts";
 import { hetzner } from "./hetzner.ts";
 import { microsoft } from "./microsoft.ts";
 
 /** Every provider, in the fleet's order of importance. */
-export const CONNECTORS: Connector[] = [cloudflare, microsoft, aws, hetzner];
+export const CONNECTORS: Connector[] = [
+  cloudflare,
+  microsoft,
+  google,
+  okta,
+  github,
+  bamboohr,
+  rippling,
+  aws,
+  hetzner,
+];
 
 const fail = (): number => ui.problems.some((x) => x.level === "fail") ? 1 : 0;
 
@@ -130,7 +144,16 @@ export async function connectorConnect(id: string, http: Http = realHttp): Promi
   ui.pause();
   try {
     for (const f of c.fields) {
-      const v = f.secret ? await readSecret(`  ${f.hint}: `) : (prompt(`  ${f.hint}:`) ?? "");
+      let v = f.secret && !f.file
+        ? await readSecret(`  ${f.hint}: `)
+        : (prompt(`  ${f.hint}:`) ?? "");
+      if (f.file && v.trim()) {
+        // A key file: its content goes to the vault; delete the file after (the next line says so).
+        v = await Deno.readTextFile(v.trim().replace(/^["']|["']$/g, ""));
+        console.log(
+          "  read it into the vault: delete that file now, so the vault is its only copy",
+        );
+      }
       if (!v.trim()) {
         ui.resume();
         ui.phase("Connect").fail(`no ${f.hint}`, `deno task stolos connect ${id}`);
@@ -223,10 +246,38 @@ export async function connectorDisconnect(id: string): Promise<number> {
   return 0;
 }
 
+/**
+ * Links from accounts known by login only to people's work emails:
+ * `fleets/<fleet>/estate/links.ts` exports `links`, as `{ "github:alice": "alice@example.org" }`.
+ */
+export async function loadLinks(): Promise<Record<string, string>> {
+  const f = join(P.fleetDir, "estate", "links.ts");
+  if (!(await exists(f))) return {};
+  return ((await import(toFileUrl(f).href + `?t=${Date.now()}`)).links ?? {}) as Record<
+    string,
+    string
+  >;
+}
+
 /** Spec 085: the estate graph, from every observation and the fleet's own machines. */
 export async function loadEstate(): Promise<import("./estate.ts").Estate> {
   const { buildEstate } = await import("./estate.ts");
-  const sources = (await loadObservations()).map((o) => o.entities ?? {});
+  // Accounts a system knows by login only (github:alice) are linked to people in estate/links.ts.
+  const links = await loadLinks();
+  const sources = (await loadObservations()).map((o) => {
+    const e = o.entities ?? {};
+    return {
+      ...e,
+      accounts: (e.accounts ?? []).map((
+        a,
+      ) => (a.email
+        ? a
+        : links[`${a.system}:${a.name}`]
+        ? { ...a, email: links[`${a.system}:${a.name}`] }
+        : a)
+      ),
+    };
+  });
   const devices: import("./entities.ts").Device[] = [];
   const { loadHosts } = await import("../model/load.ts");
   for (const h of await loadHosts().catch(() => [])) {

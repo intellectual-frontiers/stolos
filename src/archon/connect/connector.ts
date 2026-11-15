@@ -155,17 +155,21 @@ export interface Observation {
 export type Http = (
   url: string,
   init?: { method?: string; headers?: Record<string, string>; body?: string },
-) => Promise<{ status: number; text: string }>;
+) => Promise<{ status: number; text: string; link?: string }>;
 
 /** The real one: fetch. */
-export const realHttp: Http = async (url, init): Promise<{ status: number; text: string }> => {
+export const realHttp: Http = async (
+  url,
+  init,
+): Promise<{ status: number; text: string; link?: string }> => {
   const r = await fetch(url, {
     method: init?.method ?? "GET",
     headers: init?.headers,
     body: init?.body,
     signal: AbortSignal.timeout(30_000),
   });
-  return { status: r.status, text: await r.text() };
+  const link = r.headers.get("link");
+  return { status: r.status, text: await r.text(), ...(link ? { link } : {}) };
 };
 
 /** A provider: how to connect, what to read, what to check. */
@@ -188,7 +192,13 @@ export interface Connector {
     shell?: { where: string; href: string; command: string };
   };
   /** The fields the credential has (one is a token; several make a JSON credential). */
-  fields: Array<{ name: string; secret: boolean; hint: string }>;
+  fields: Array<{
+    name: string;
+    secret: boolean;
+    hint: string;
+    /** A file's path is asked for, and the file's content kept (a key file). */
+    file?: boolean;
+  }>;
   /** Read the account. */
   observe(cred: Record<string, string>, http: Http, now: Date): Promise<Observation>;
   /** Its posture policies. */
@@ -236,6 +246,29 @@ export async function getJson<T>(
   } catch {
     throw new Error(`${new URL(url).pathname}: not JSON`);
   }
+}
+
+/** Every page of a JSON list API that pages with `Link: <...>; rel="next"` (GitHub, Okta). */
+export async function linkPages<T>(
+  http: Http,
+  url: string,
+  headers: Record<string, string>,
+  max = 50,
+): Promise<T[]> {
+  const out: T[] = [];
+  let next: string | undefined = url;
+  for (let i = 0; next && i < max; i++) {
+    const r = await http(next, { headers });
+    if (r.status === 401 || r.status === 403) {
+      throw new AccessDenied(
+        `${new URL(next).pathname}: ${r.status} (the credential may not read this)`,
+      );
+    }
+    if (r.status >= 400) throw new Error(`${new URL(next).pathname}: HTTP ${r.status}`);
+    out.push(...(JSON.parse(r.text) as T[]));
+    next = r.link?.match(/<([^>]+)>;\s*rel="next"/)?.[1];
+  }
+  return out;
 }
 
 /** A call the credential is not allowed to make: a gap, not a failure. */

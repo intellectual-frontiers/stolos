@@ -151,7 +151,8 @@ export function estatePolicies(e: Estate): PolicyResult[] {
           list(orphans, (x) => `${x.name} in ${x.system}`)
         }`
         : "every active account matches a person",
-      fix: "for each: link it to a person (its email), mark it a service account, or turn it off",
+      fix:
+        'for each: link it to a person (a login only system: add it to fleets/<fleet>/estate/links.ts, as "github:alice": "alice@example.org"), or turn it off',
     });
     const noDevice = rows(
       `select p.email from people p where p.status = 'active'

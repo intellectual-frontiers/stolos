@@ -133,9 +133,13 @@
  * | Microsoft 365 and Azure | tenant, domains, users, licenses, Global Administrators, MFA, Azure resources | MFA enforced, every member registered for MFA, 2 to 4 Global Admins |
  * | AWS                     | account, IAM users, S3 buckets, EC2 instances in every enabled region         | root MFA, no root keys, S3 blocks public access, IMDSv2             |
  * | Hetzner Cloud           | servers, volumes, firewalls, primary IPs, load balancers                      | backups, a firewall on every server, deletion protection            |
+ * | Google Workspace        | users, administrators, 2-Step Verification                                    | 2-Step Verification used and enforced, 2 to 4 super administrators |
+ * | Okta                    | users, administrator roles, second factors                                    | every active user has a second factor, 2 to 4 administrators       |
+ * | GitHub                  | members, owners, members without 2FA, repositories and their branch rules     | 2FA required, protected and reviewed branches, secret scanning     |
+ * | BambooHR, Rippling      | the roster only: name, work email, status, start and end dates, manager       | (the estate graph checks every account against it)                 |
  *
  * ```bash
- * deno task stolos connect cloudflare
+ * deno task stolos connect github
  * ```
  *
  * `connect` shows how to make a read-only credential in the provider's console, asks for it here
@@ -150,6 +154,24 @@
  *   too).
  *
  * A part the credential may not read (Workers, say) is listed as not readable, not as a failure.
+ *
+ * Every connector is labeled the way the industry labels it: its NIST SP 800-145 service models
+ * (IaaS, PaaS, SaaS) and its market categories as the analyst firms name them (Strategic Cloud
+ * Platform Services, Access Management, DevOps Platforms, Cloud HCM Suites, ...).
+ *
+ * ### Across systems: the estate graph
+ *
+ * People (from the HR system), accounts (identity, code, clouds), devices (managed, adopted, SNMP),
+ * and repositories meet in one graph. `deno task stolos estate check` reports what no single system
+ * can say (people who left with accounts still on, accounts no person owns, administrators without
+ * a second factor, people without a device), and one SQL question spans them all:
+ *
+ * ```bash
+ * deno task stolos estate query "select system, name from accounts where admin = 1 and mfa = 0"
+ * ```
+ *
+ * A system that knows people by login only (GitHub) is linked to work emails in
+ * `fleets/<fleet>/estate/links.ts`: `export const links = { "github:alice": "alice@example.org" };`.
  *
  * @module
  */

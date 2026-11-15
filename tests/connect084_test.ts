@@ -285,7 +285,17 @@ Deno.test("067: AWS root MFA, S3 public access, EC2 across regions", async () =>
 });
 
 Deno.test("067: every provider says how to make a read-only credential, and names SCF controls", () => {
-  assertEquals(CONNECTORS.map((c) => c.id), ["cloudflare", "microsoft", "aws", "hetzner"]);
+  assertEquals(CONNECTORS.map((c) => c.id), [
+    "cloudflare",
+    "microsoft",
+    "google",
+    "okta",
+    "github",
+    "bamboohr",
+    "rippling",
+    "aws",
+    "hetzner",
+  ]);
   for (const c of CONNECTORS) {
     assert(c.connectHelp.join(" ").match(/read/i), `${c.id}: read-only help`);
     assert(c.fields.some((f) => f.secret), `${c.id}: a secret field`);

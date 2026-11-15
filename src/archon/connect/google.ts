@@ -1,0 +1,197 @@
+/**
+ * Spec 086: Google Workspace, read-only, through the Admin SDK Directory
+ * API: its users (suspended or not, administrators, enrolled in 2-Step
+ * Verification, last sign-in). It signs in as a service account with
+ * domain-wide delegation for one read-only scope, impersonating an
+ * administrator; the JWT is signed here (RS256, WebCrypto), with no SDK.
+ * Evidence for MFA, account management, and least privilege (SCF IAC-06,
+ * IAC-15, IAC-21).
+ *
+ * @module
+ */
+
+import { check, type Connector, fresh, getJson, type Http } from "./connector.ts";
+import type { Account } from "./entities.ts";
+
+const SCOPE = "https://www.googleapis.com/auth/admin.directory.user.readonly";
+
+const b64url = (b: Uint8Array | string) =>
+  btoa(typeof b === "string" ? unescape(encodeURIComponent(b)) : String.fromCharCode(...b))
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+
+/** A signed JWT assertion for Google's token endpoint (RS256). */
+export async function serviceAccountJwt(
+  key: { client_email: string; private_key: string },
+  subject: string,
+  scope: string,
+  now: Date,
+): Promise<string> {
+  const iat = Math.floor(now.getTime() / 1000);
+  const header = b64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
+  const claims = b64url(
+    JSON.stringify({
+      iss: key.client_email,
+      sub: subject,
+      scope,
+      aud: "https://oauth2.googleapis.com/token",
+      iat,
+      exp: iat + 3600,
+    }),
+  );
+  const pem = key.private_key.replace(/-----[A-Z ]+-----/g, "").replace(/\s+/g, "");
+  const der = Uint8Array.from(atob(pem), (c) => c.charCodeAt(0));
+  const k = await crypto.subtle.importKey(
+    "pkcs8",
+    der,
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const sig = new Uint8Array(
+    await crypto.subtle.sign(
+      "RSASSA-PKCS1-v1_5",
+      k,
+      new TextEncoder().encode(`${header}.${claims}`),
+    ),
+  );
+  return `${header}.${claims}.${b64url(sig)}`;
+}
+
+interface GUser {
+  id: string;
+  primaryEmail: string;
+  suspended?: boolean;
+  archived?: boolean;
+  isAdmin?: boolean;
+  isDelegatedAdmin?: boolean;
+  isEnrolledIn2Sv?: boolean;
+  isEnforcedIn2Sv?: boolean;
+  lastLoginTime?: string;
+}
+
+/** Google Workspace. */
+export const google: Connector = {
+  id: "google",
+  title: "Google Workspace",
+  logo: "google",
+  serviceModels: ["SaaS"],
+  markets: ["access-management"],
+  connectHelp: [
+    "console.cloud.google.com > a project for Stolos > APIs & Services: enable the Admin SDK API",
+    "IAM & Admin > Service accounts > Create (no roles) > Keys > Add key > JSON: a key file downloads",
+    `admin.google.com > Security > Access and data control > API controls > Domain-wide delegation > Add new: the service account's client ID, scope ${SCOPE} (read only)`,
+    "The email of an administrator for it to act as (it only reads)",
+  ],
+  recipe: {
+    open: {
+      href: "https://admin.google.com/ac/owl/domainwidedelegation",
+      label: "Open domain-wide delegation",
+    },
+  },
+  fields: [
+    {
+      name: "admin",
+      secret: false,
+      hint: "an administrator's email (the service account reads as them)",
+    },
+    {
+      name: "key",
+      secret: true,
+      file: true,
+      hint: "the service account's JSON key file (its path)",
+    },
+  ],
+  async observe(cred, http: Http, now) {
+    const key = JSON.parse(cred.key) as { client_email: string; private_key: string };
+    const assertion = await serviceAccountJwt(key, cred.admin, SCOPE, now);
+    const tok = await getJson<{ access_token: string }>(
+      http,
+      "https://oauth2.googleapis.com/token",
+      { "Content-Type": "application/x-www-form-urlencoded" },
+      "POST",
+      new URLSearchParams({ grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer", assertion })
+        .toString(),
+    );
+    const h = { Authorization: `Bearer ${tok.access_token}` };
+    const users: GUser[] = [];
+    let page: string | undefined;
+    for (let i = 0; i < 50; i++) {
+      const r: { users?: GUser[]; nextPageToken?: string } = await getJson(
+        http,
+        `https://admin.googleapis.com/admin/directory/v1/users?customer=my_customer&maxResults=500${
+          page ? `&pageToken=${encodeURIComponent(page)}` : ""
+        }`,
+        h,
+      );
+      users.push(...(r.users ?? []));
+      if (!(page = r.nextPageToken)) break;
+    }
+    const active = users.filter((u) => !u.suspended && !u.archived);
+    const accounts: Account[] = users.map((u) => ({
+      system: "google",
+      id: u.id,
+      name: u.primaryEmail,
+      email: u.primaryEmail.toLowerCase(),
+      active: !u.suspended && !u.archived,
+      admin: !!u.isAdmin,
+      mfa: !!u.isEnrolledIn2Sv,
+      ...(u.lastLoginTime && !u.lastLoginTime.startsWith("1970")
+        ? { lastLogin: u.lastLoginTime }
+        : {}),
+    }));
+    return {
+      at: now.toISOString().replace(/\.\d+Z$/, "Z"),
+      provider: "google",
+      account: cred.admin.split("@")[1] ?? "Google Workspace",
+      assets: users.map((u) => ({
+        kind: "user",
+        id: u.id,
+        name: u.primaryEmail,
+        facts: { suspended: !!u.suspended, admin: !!u.isAdmin, twoStep: !!u.isEnrolledIn2Sv },
+      })),
+      posture: {
+        activeUsers: active.length,
+        activeWithout2sv: active.filter((u) => !u.isEnrolledIn2Sv).length,
+        activeNotEnforced2sv: active.filter((u) => !u.isEnforcedIn2Sv).length,
+        superAdmins: active.filter((u) => u.isAdmin).length,
+      },
+      gaps: [],
+      entities: { accounts },
+    };
+  },
+  policies(o, now) {
+    const of = (v: string | number | boolean) => `${v} of ${o.posture.activeUsers} active users`;
+    return [
+      fresh(o, now, "google"),
+      check(o, {
+        id: "gws-2sv-enrolled",
+        title: "Every active user uses 2-Step Verification",
+        scf: ["IAC-06"],
+        fact: "activeWithout2sv",
+        want: (v) => v === 0,
+        show: (v) => `${of(v)} not enrolled`,
+        fix: "ask each person to turn on 2-Step Verification (myaccount.google.com/security)",
+      }),
+      check(o, {
+        id: "gws-2sv-enforced",
+        title: "2-Step Verification is enforced",
+        scf: ["IAC-06"],
+        fact: "activeNotEnforced2sv",
+        want: (v) => v === 0,
+        show: (v) => `${of(v)} not enforced`,
+        fix: "admin.google.com > Security > Authentication > 2-Step Verification: Enforcement on",
+        warnOnly: true,
+      }),
+      check(o, {
+        id: "gws-super-admins",
+        title: "Two to four super administrators",
+        scf: ["IAC-21"],
+        fact: "superAdmins",
+        want: (v) => typeof v === "number" && v >= 2 && v <= 4,
+        fix:
+          "admin.google.com > Account > Admin roles > Super Admin: remove those who do not need it",
+        warnOnly: true,
+      }),
+    ];
+  },
+};
