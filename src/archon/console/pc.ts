@@ -327,7 +327,17 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
           connectors: observed.map((o) => ({ connector: o.provider, observed: o })),
         });
         for (const x of r.problems) warn("control packs")(new Error(x));
-        return r.runs;
+        // Spec 077: the people controls, when the fleet keeps people files.
+        const people = estate
+          ? await (async () => {
+            const { peoplePackRun } = await import("../people/commands.ts");
+            const { loadAccepted } = await import("../controls/run.ts");
+            return await peoplePackRun(estate, {
+              accepted: await loadAccepted().catch(() => []),
+            });
+          })().catch(warn("people controls"))
+          : undefined;
+        return people ? [...r.runs, people] : r.runs;
       } catch (e) {
         warn("control packs")(e);
         return [];

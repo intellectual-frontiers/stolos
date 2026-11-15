@@ -99,6 +99,12 @@ export const GUIDES: GuideDef[] = [
     module: "src/archon/controls/mod.ts",
   },
   {
+    name: "people",
+    title: "People controls",
+    why: "Joiners and leavers, access reviews, policies, training, and screening, as code.",
+    module: "src/archon/people/mod.ts",
+  },
+  {
     name: "evidence",
     title: "Evidence bundles",
     why: "A period's evidence, signed, for an auditor to check offline.",

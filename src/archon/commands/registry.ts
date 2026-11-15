@@ -1021,6 +1021,81 @@ export const COMMANDS: Command[] = [
     },
   },
   {
+    name: "people status",
+    aliases: ["people"],
+    summary:
+      "People controls now: leavers, joiners, people on leave, access reviews, policies, training, screening",
+    description:
+      `Spec 077. Runs the estate's leavers check and every people check over the estate graph built from Git (no network): joiners without the accounts their role needs (fleets/<fleet>/people/roles.ts), active accounts of people on leave, how long each leaver's accounts stayed active after the end date (from the observations' history in Git), last quarter's access reviews (each approved by a commit signed by the manager's own key in people/keys.ts or a fleet signer), policy acknowledgements (commits signed by each person's own key) and overdue policy reviews (policies/*.md front matter), training within 12 months (people/training.ts), and screening on file (people/screening.ts). Accepted risks (controls/accepted.ts, as people/<control>) apply. Read-only. Exits 1 when a check fails; --json for scripts. How it works: deno task stolos docs people.`,
+    tier: "read",
+    args: [],
+    examples: [{ cmd: "deno task stolos people status", text: "Every people check, now." }],
+    async run(_a, ctx) {
+      const { peopleStatus } = await import("../people/commands.ts");
+      return await peopleStatus(ctx.json);
+    },
+  },
+  {
+    name: "people review",
+    summary: "This quarter's access reviews: one file per manager, signed, as a pull request",
+    description:
+      `Spec 077. Writes fleets/<fleet>/people/reviews/<quarter>/<manager>.md for each manager in the HR system's reporting lines: each report's active accounts and admin rights, one line to tick each. Commits them signed (your passphrase) on the branch people/review-<quarter>, pushes it, and opens a pull request with gh. A manager approves by ticking every line in a commit signed with their own key (people/keys.ts) or a fleet signer's. A file already on this branch is kept. --check shows what it would write; --local commits on the branch without pushing. Terminal only.`,
+    tier: "repo",
+    noMcp: true,
+    args: [
+      {
+        name: "quarter",
+        type: "string",
+        description: "The quarter, as 2026-Q4 (default: this one).",
+      },
+      {
+        name: "check",
+        type: "boolean",
+        description: "Show the files it would write; change nothing.",
+      },
+      {
+        name: "local",
+        type: "boolean",
+        description: "Commit on the branch here; push nothing, open no pull request.",
+      },
+    ],
+    examples: [{
+      cmd: "deno task stolos people review --quarter 2026-Q4",
+      text: "The fourth quarter's reviews, as a pull request.",
+    }],
+    async run(a) {
+      const { peopleReview } = await import("../people/commands.ts");
+      return await peopleReview({
+        ...(a.quarter ? { quarter: a.quarter as string } : {}),
+        check: !!a.check,
+        local: !!a.local,
+      });
+    },
+  },
+  {
+    name: "people ack",
+    summary: "Acknowledge a policy's current version, in a commit signed with your own key",
+    description:
+      `Spec 077. Adds you (Git's user.email) with the policy's current version (its front matter) to fleets/<fleet>/policies/acks/<policy>.ts and commits it signed with your own key, the one people/keys.ts lists for your email, with the trailer Acknowledges: <policy>@<version>. The signed commit is the e-signature. It does not push: send it to main in a pull request, or, as a fleet signer, with stolos apply. Terminal only.`,
+    tier: "repo",
+    noMcp: true,
+    args: [{
+      name: "policy",
+      type: "string",
+      positional: true,
+      required: true,
+      description: "The policy: its file name in policies/, without .md.",
+    }],
+    examples: [{
+      cmd: "deno task stolos people ack acceptable-use",
+      text: "Acknowledge policies/acceptable-use.md's current version.",
+    }],
+    async run(a) {
+      const { peopleAck } = await import("../people/commands.ts");
+      return await peopleAck(a.policy as string);
+    },
+  },
+  {
     name: "evidence export",
     summary: "A period's evidence as one signed bundle an auditor checks offline",
     description:
@@ -3555,6 +3630,9 @@ const PC_COMMANDS = new Set([
   "export credential",
   "evidence export",
   "evidence verify",
+  "people status",
+  "people review",
+  "people ack",
   "console",
   "discover",
   "connect",

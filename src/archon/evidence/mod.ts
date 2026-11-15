@@ -11,7 +11,9 @@
  *
  * In it: every commit in the period (raw, with its SSH signature), each observation Stolos recorded
  * (adopted machines, devices, the SaaS and cloud estate), the verify and install results this PC
- * recorded, `signers.ts`, and the OSCAL assessment results (see [Compliance](../compliance/mod.ts)).
+ * recorded, `signers.ts`, the OSCAL assessment results (see [Compliance](../compliance/mod.ts)), and
+ * the access reviews of the period's quarters, each with the signed commit that approved it (see
+ * [People controls](../people/mod.ts)).
  *
  * ```mermaid
  * flowchart LR

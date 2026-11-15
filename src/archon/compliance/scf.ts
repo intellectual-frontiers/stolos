@@ -143,6 +143,50 @@ export const SCF_CONTROLS = [
     name: "Account Management",
     how: "Every active account belongs to a person on the roster, or is a known service account.",
   },
+  // Spec 077: people controls (joiners and leavers, access reviews, policies, training).
+  {
+    id: "IAC-12",
+    name: "Periodic Review of Individual & Service Account Privileges",
+    how:
+      "Each manager reviews their reports' accounts and admin rights every quarter, approved with a signed commit.",
+  },
+  {
+    id: "HRS-05",
+    name: "Personnel Screening",
+    how: "Every active person has a screening record on file (people/screening.ts).",
+  },
+  {
+    id: "HRS-08",
+    name: "Onboarding, Transferring & Offboarding Personnel",
+    how:
+      "Joiners have the accounts their role needs; people on leave have no active accounts left open.",
+  },
+  {
+    id: "HRS-08.2",
+    name: "Policy Familiarization & Acknowledgement",
+    how:
+      "Every active person acknowledged every current policy version with a commit signed by their own key.",
+  },
+  {
+    id: "HRS-12",
+    name: "Personnel Termination",
+    how: "How long each leaver's accounts stayed active after their end date, from Git's history.",
+  },
+  {
+    id: "GOV-04.1",
+    name: "Periodic Review & Update of Security, Compliance & Resilience Program",
+    how: "Every policy in the fleet repository has a review date that has not passed.",
+  },
+  {
+    id: "SAT-04",
+    name: "Security, Compliance & Resilience Awareness Training",
+    how: "Every active person passed awareness training within the last 12 months.",
+  },
+  {
+    id: "SAT-10",
+    name: "Security, Compliance & Resilience Training Records",
+    how: "Training records are kept in the fleet repository (people/training.ts) or a connector.",
+  },
   {
     id: "IAC-10",
     name: "Privileged Account Management (PAM)",

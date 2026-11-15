@@ -1,0 +1,683 @@
+// Spec 077: people controls as code: joiners and leavers, access reviews, policies, training.
+import { assert, assertEquals, assertStringIncludes } from "./assert.ts";
+import type { Observation } from "../src/archon/connect/connector.ts";
+import type { Account, Person } from "../src/archon/connect/entities.ts";
+import { fixtureEstate, testControl } from "../src/archon/controls/testing.ts";
+import { isScfId } from "../src/archon/compliance/scf.ts";
+import { loadScf } from "../src/archon/compliance/catalog.ts";
+import { nameProblems } from "../src/archon/schema/vocabulary.ts";
+import {
+  acksControl,
+  deprovisionControl,
+  joinersControl,
+  LEAVERS,
+  onLeaveControl,
+  peopleControls,
+  type PeopleFacts,
+  peoplePack,
+  policyReviewControl,
+  requiredSystems,
+  reviewsControl,
+  screeningControl,
+  trainingControl,
+} from "../src/archon/people/controls.ts";
+import {
+  accountActivity,
+  gitIn,
+  quarterReviews,
+  reviewEvidence,
+  verifiedAcks,
+} from "../src/archon/people/git.ts";
+import {
+  frontMatter,
+  isQuarter,
+  parsePolicy,
+  PERSON_RECORD,
+  previousQuarter,
+  quarterDays,
+  quarterOf,
+  quartersIn,
+  readPeopleFiles,
+} from "../src/archon/people/records.ts";
+import { reviewFiles, reviewTicks } from "../src/archon/people/reviews.ts";
+import { acksSource, peopleResults } from "../src/archon/people/commands.ts";
+import { gitReader } from "../src/archon/estate/snapshot.ts";
+import type { SignerDef } from "../src/archon/model/types.ts";
+import { join } from "../src/archon/core/path.ts";
+import { tsLiteral } from "../src/archon/core/ts-literal.ts";
+import { sandbox } from "./sandbox.ts";
+
+const NOW = new Date("2026-11-15T12:00:00Z");
+
+const obs = (
+  provider: string,
+  at: string,
+  entities: Observation["entities"],
+  records?: Observation["records"],
+): Observation => ({
+  at,
+  provider,
+  account: `${provider}.example`,
+  assets: [],
+  posture: {},
+  gaps: [],
+  ...(entities ? { entities } : {}),
+  ...(records ? { records } : {}),
+});
+
+const person = (email: string, p: Partial<Person> = {}): Person => ({
+  email,
+  status: "active",
+  type: "employee",
+  start: "2024-01-01",
+  ...p,
+});
+
+const account = (system: string, who: string, active = true, admin = false): Account => ({
+  system,
+  id: who,
+  name: system === "google" ? `${who}@example.org` : who,
+  email: `${who}@example.org`,
+  active,
+  admin,
+});
+
+/** The roster: carol manages bob and frank; bob manages alice, dave (left), and erin (on leave). */
+const PEOPLE: Person[] = [
+  person("alice@example.org", { manager: "bob@example.org" }),
+  person("bob@example.org", { manager: "carol@example.org" }),
+  person("carol@example.org"),
+  person("dave@example.org", {
+    status: "terminated",
+    end: "2026-10-01",
+    manager: "bob@example.org",
+  }),
+  person("erin@example.org", { status: "leave", manager: "bob@example.org" }),
+  person("frank@example.org", {
+    start: "2026-11-10",
+    type: "contractor",
+    manager: "carol@example.org",
+  }),
+];
+
+const google = (at: string, daveActive: boolean) =>
+  obs("google", at, {
+    accounts: [
+      account("google", "alice"),
+      account("google", "bob"),
+      account("google", "carol"),
+      account("google", "dave", daveActive),
+      account("google", "erin"),
+    ],
+  });
+const github = obs("github", "2026-11-14T00:00:00Z", {
+  accounts: [account("github", "alice", true, true), account("github", "bob")],
+});
+
+const estateWith = (daveActive: boolean) =>
+  fixtureEstate({
+    sources: [
+      {
+        connector: "bamboohr",
+        observation: obs("bamboohr", "2026-11-14T00:00:00Z", { people: PEOPLE }),
+      },
+      { connector: "google", observation: google("2026-11-14T00:00:00Z", daveActive) },
+      { connector: "github", observation: github },
+    ],
+  }, NOW);
+
+const facts = (f: Partial<PeopleFacts> = {}): PeopleFacts => ({
+  reviewQuarter: "2026-Q3",
+  policies: [],
+  acks: [],
+  activity: new Map(),
+  ...f,
+});
+
+Deno.test("077: a leaver with active accounts fails (the estate's own leavers control)", () => {
+  const [r] = testControl(LEAVERS, { estate: estateWith(true), now: NOW });
+  assertEquals(r.status, "fail");
+  assertStringIncludes(r.detail, "dave@example.org in google");
+  assertEquals(r.subjects, ["google:google.example:dave"]);
+  const [off] = testControl(LEAVERS, { estate: estateWith(false), now: NOW });
+  assertEquals(off.status, "pass");
+  // people status runs it first, under its own id, beside the people controls.
+  const all = peopleResults(estateWith(true), facts(), { now: NOW });
+  assertEquals(all[0].id, "leavers");
+  assertEquals(all[0].status, "fail");
+  assert(!peopleControls(facts()).some((c) => c.id === "leavers"), "not repeated");
+});
+
+Deno.test("077: a joiner without the accounts their role needs is named; on leave too", () => {
+  const roles = { "*": ["google"], employee: ["github"], contractor: ["slack"] };
+  assertEquals(requiredSystems(roles, ["employee"]), ["github", "google"]);
+  const [r] = testControl(joinersControl(facts({ roles })), {
+    estate: estateWith(false),
+    now: NOW,
+  });
+  assertEquals(r.status, "warn");
+  // carol (an employee) has no github account; frank (a contractor, 5 days in) has nothing.
+  // slack is not connected, so it is not asked for.
+  assertStringIncludes(r.detail, "carol@example.org needs github");
+  assertStringIncludes(r.detail, "frank@example.org needs google (started 5 day(s) ago)");
+  assert(!r.detail.includes("alice"), r.detail);
+  assertEquals(r.subjects, ["person:carol@example.org", "person:frank@example.org"]);
+  // Without roles.ts, it does not apply.
+  assertEquals(testControl(joinersControl(facts()), { estate: estateWith(false), now: NOW }), []);
+  const [leave] = testControl(onLeaveControl(), { estate: estateWith(false), now: NOW });
+  assertEquals(leave.status, "warn");
+  assertStringIncludes(leave.detail, "erin@example.org in google");
+});
+
+Deno.test("077: time to deprovision, from the history of the observations", () => {
+  // dave's google account: active on 09-20 and 10-04 (after his end date, 10-01), off on 10-06.
+  const versions = [
+    { connector: "google", observation: google("2026-10-06T10:00:00Z", false) },
+    { connector: "google", observation: google("2026-09-20T10:00:00Z", true) },
+    { connector: "google", observation: google("2026-10-04T10:00:00Z", true) },
+    // erin's account disappears from a later observation: gone counts as off.
+    {
+      connector: "google",
+      observation: obs("google", "2026-10-08T10:00:00Z", {
+        accounts: [account("google", "alice"), account("google", "dave", false)],
+      }),
+    },
+  ];
+  const activity = accountActivity(versions);
+  assertEquals(activity.get("google:google.example:dave"), {
+    lastActive: "2026-10-04T10:00:00Z",
+    offBy: "2026-10-06T10:00:00Z",
+  });
+  assertEquals(activity.get("google:google.example:erin")?.offBy, "2026-10-08T10:00:00Z");
+  const [r] = testControl(deprovisionControl(facts({ activity })), {
+    estate: estateWith(false),
+    now: NOW,
+  });
+  assertEquals(r.status, "warn");
+  assertStringIncludes(r.detail, "dave@example.org in google, 3 day(s)");
+  // Within two days' target it passes.
+  const [ok] = testControl(deprovisionControl(facts({ activity, deprovisionDays: 3 })), {
+    estate: estateWith(false),
+    now: NOW,
+  });
+  assertEquals(ok.status, "pass");
+  assertStringIncludes(ok.detail, "the slowest after 3 day(s)");
+});
+
+Deno.test("077: review files, one per manager, from the estate", () => {
+  const files = reviewFiles(estateWith(true), "2026-Q4", NOW);
+  assertEquals(files.map((f) => f.path), [
+    "people/reviews/2026-Q4/bob@example.org.md",
+    "people/reviews/2026-Q4/carol@example.org.md",
+  ]);
+  const bob = files[0].text;
+  assertStringIncludes(bob, "manager: bob@example.org");
+  assertStringIncludes(
+    bob,
+    "## alice@example.org (employee)\n\n- [ ] github: alice (admin)\n- [ ] google: alice@example.org",
+  );
+  assertStringIncludes(bob, "## erin@example.org (employee, on leave)");
+  assert(!bob.includes("dave"), "a leaver is not reviewed (the leavers control is his)");
+  const carol = files[1].text;
+  assertStringIncludes(carol, "## frank@example.org (contractor)\n\n- [ ] no active accounts");
+  assertEquals(files[0].lines, 3);
+  assertEquals(reviewTicks(bob), { ticked: 0, lines: 3 });
+  assertEquals(reviewTicks(bob.replaceAll("- [ ]", "- [x]")), { ticked: 3, lines: 3 });
+});
+
+Deno.test("077: quarters, front matter, and policies", () => {
+  assertEquals(quarterOf(NOW), "2026-Q4");
+  assertEquals(previousQuarter("2026-Q1"), "2025-Q4");
+  assertEquals(quarterDays("2026-Q3"), { from: "2026-07-01", to: "2026-09-30" });
+  assertEquals(quartersIn("2026-02-01", "2026-07-15"), ["2026-Q1", "2026-Q2", "2026-Q3"]);
+  assert(isQuarter("2026-Q4") && !isQuarter("2026-Q5"));
+  assertEquals(frontMatter('---\ntitle: X\nversion: "1.0"\n---\nbody\n').meta, {
+    title: "X",
+    version: "1.0",
+  });
+  const p = parsePolicy("acceptable-use.md", "---\ntitle: Acceptable use\nversion: 1.2\n---\n");
+  assertEquals(p.problems, [
+    "policies/acceptable-use.md: no owner in its front matter",
+    "policies/acceptable-use.md: no review in its front matter",
+  ]);
+  const overdue = { ...p, owner: "alice@example.org", review: "2026-11-01", problems: [] };
+  const [r] = testControl(policyReviewControl(facts({ policies: [overdue] })), {
+    estate: estateWith(false),
+    now: NOW,
+  });
+  assertEquals(r.status, "fail");
+  assertStringIncludes(r.detail, "acceptable-use (2026-11-01)");
+  const [fine] = testControl(
+    policyReviewControl(facts({ policies: [{ ...overdue, review: "2027-06-30" }] })),
+    { estate: estateWith(false), now: NOW },
+  );
+  assertEquals(fine.status, "pass");
+});
+
+Deno.test("077: training within 12 months, and screening on file, from files or a connector", () => {
+  const training = [
+    {
+      email: "alice@example.org",
+      course: "awareness",
+      date: "2026-03-01",
+      result: "passed" as const,
+    },
+    {
+      email: "bob@example.org",
+      course: "awareness",
+      date: "2025-10-01",
+      result: "passed" as const,
+    },
+    {
+      email: "carol@example.org",
+      course: "awareness",
+      date: "2026-06-01",
+      result: "failed" as const,
+    },
+  ];
+  const [t] = testControl(trainingControl(facts({ training })), {
+    estate: estateWith(false),
+    now: NOW,
+  });
+  assertEquals(t.status, "fail");
+  assertStringIncludes(
+    t.detail,
+    "since 2025-11-15: bob@example.org, carol@example.org, frank@example.org",
+  );
+  // No records at all: it does not apply.
+  assertEquals(testControl(trainingControl(facts()), { estate: estateWith(false), now: NOW }), []);
+  // A connector's records count too (person_record).
+  assertEquals(nameProblems(PERSON_RECORD.name, PERSON_RECORD.terms), []);
+  const lms = fixtureEstate({
+    sources: [
+      {
+        connector: "bamboohr",
+        observation: obs("bamboohr", "2026-11-14T00:00:00Z", { people: PEOPLE.slice(0, 2) }),
+      },
+      {
+        connector: "learning",
+        observation: obs(
+          "learning",
+          "2026-11-14T00:00:00Z",
+          undefined,
+          ["alice", "bob"].map((w) => ({
+            label: PERSON_RECORD.name,
+            ocsf_class_uid: 5003,
+            native_id: `${w}-1`,
+            display_name: `${w} awareness`,
+            props: {
+              email: `${w}@example.org`,
+              kind: "training",
+              subject: "awareness",
+              date: "2026-09-01",
+              result: "passed",
+            },
+          })),
+        ),
+      },
+    ],
+  }, NOW);
+  const [c] = testControl(trainingControl(facts()), { estate: lms, now: NOW });
+  assertEquals(c.status, "pass");
+  const screening = [
+    {
+      email: "alice@example.org",
+      check: "background",
+      date: "2024-01-01",
+      result: "clear" as const,
+    },
+    {
+      email: "bob@example.org",
+      check: "background",
+      date: "2024-01-01",
+      result: "not clear" as const,
+    },
+  ];
+  const [s] = testControl(screeningControl(facts({ screening })), {
+    estate: estateWith(false),
+    now: NOW,
+  });
+  assertEquals(s.status, "fail");
+  assertStringIncludes(s.detail, "2 without a screening: carol@example.org, frank@example.org");
+  assertStringIncludes(s.detail, "not clear: bob@example.org");
+  assert(!s.detail.includes("alice"), s.detail);
+});
+
+Deno.test("077: every SCF id the people controls cite is one Stolos knows, and the pack is well formed", () => {
+  const pack = peoplePack(facts());
+  assertEquals(pack.id, "people");
+  const ids = [...new Set([...LEAVERS.scf, ...pack.controls.flatMap((c) => c.scf)])].sort();
+  assertEquals(ids, [
+    "GOV-04.1",
+    "HRS-05",
+    "HRS-08",
+    "HRS-08.2",
+    "HRS-12",
+    "IAC-04",
+    "IAC-08",
+    "IAC-12",
+    "SAT-04",
+    "SAT-10",
+  ]);
+  for (const id of ids) assert(isScfId(id), id);
+});
+
+const catalog = await loadScf().catch(() => undefined);
+Deno.test({
+  name:
+    "077: every SCF id the people controls cite is in the SCF release (when the catalog is cached)",
+  ignore: !catalog,
+  fn() {
+    for (const c of [LEAVERS, ...peopleControls(facts())]) {
+      for (const id of c.scf) {
+        assert(catalog!.controls[id], `${id} is not in SCF ${catalog!.version}`);
+      }
+    }
+  },
+});
+
+// Signed commits, in a temporary Git repository.
+
+async function sh(args: string[], cwd?: string, env: Record<string, string> = {}) {
+  const r = await new Deno.Command(args[0], {
+    args: args.slice(1),
+    ...(cwd ? { cwd } : {}),
+    env: { GIT_CONFIG_GLOBAL: "/dev/null", GIT_CONFIG_NOSYSTEM: "1", ...env },
+    stdout: "piped",
+    stderr: "piped",
+  }).output();
+  if (!r.success) throw new Error(`${args.join(" ")}: ${new TextDecoder().decode(r.stderr)}`);
+  return new TextDecoder().decode(r.stdout);
+}
+
+async function keyPair(dir: string, name: string): Promise<{ key: string; pub: string }> {
+  const key = `${dir}/${name}`;
+  await sh(["ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-C", name, "-f", key]);
+  return {
+    key,
+    pub: (await Deno.readTextFile(key + ".pub")).trim().split(/\s+/).slice(0, 2).join(" "),
+  };
+}
+
+const hasSsh = await new Deno.Command("ssh-keygen", {
+  args: ["-V"],
+  stderr: "null",
+  stdout: "null",
+})
+  .output().then(() => true, () => false);
+
+/** A fleet repository; `commit` makes a commit signed with a key (or unsigned). */
+async function repoFixture() {
+  const dir = await Deno.makeTempDir();
+  const keys = {
+    alice: await keyPair(dir, "alice"),
+    bob: await keyPair(dir, "bob"),
+    carol: await keyPair(dir, "carol"),
+    signer: await keyPair(dir, "ops-daily"),
+    mallory: await keyPair(dir, "mallory"),
+  };
+  const repo = `${dir}/repo`;
+  await Deno.mkdir(`${repo}/fleets/lab/people`, { recursive: true });
+  await sh(["git", "init", "-q", "-b", "main"], repo);
+  for (
+    const [k, v] of [["user.name", "Ops"], ["user.email", "ops@example.org"], ["gpg.format", "ssh"]]
+  ) await sh(["git", "config", k, v], repo);
+  let tick = 0;
+  const commit = async (message: string, key?: string) => {
+    const date = new Date(Date.UTC(2026, 8, 1) + (tick++) * 3_600_000).toISOString();
+    await sh(["git", "add", "-A"], repo);
+    await sh(
+      [
+        "git",
+        ...(key
+          ? ["-c", `user.signingkey=${key}`, "-c", "commit.gpgsign=true"]
+          : ["-c", "commit.gpgsign=false"]),
+        "commit",
+        "-q",
+        "--allow-empty",
+        "-m",
+        message,
+      ],
+      repo,
+      { GIT_AUTHOR_DATE: date, GIT_COMMITTER_DATE: date },
+    );
+    return (await sh(["git", "rev-parse", "HEAD"], repo)).trim();
+  };
+  const write = async (path: string, text: string) => {
+    await Deno.mkdir(`${repo}/${path}`.replace(/\/[^/]+$/, ""), { recursive: true });
+    await Deno.writeTextFile(`${repo}/${path}`, text);
+  };
+  await write(
+    "fleets/lab/people/keys.ts",
+    `export const keys = {\n${
+      (["alice", "bob", "carol"] as const).map((w) => `  "${w}@example.org": "${keys[w].pub}",\n`)
+        .join("")
+    }};\n`,
+  );
+  await commit("people: keys", keys.signer.key);
+  const signers: SignerDef[] = [{
+    name: "ops-daily",
+    role: "daily",
+    key: keys.signer.pub,
+    added: "2026-01-01",
+  }];
+  return { dir, repo, keys, signers, commit, write };
+}
+
+Deno.test({
+  name:
+    "077: a review is approved only by a signed commit of the manager's own key or a fleet signer",
+  ignore: !hasSsh,
+  async fn() {
+    const f = await repoFixture();
+    try {
+      const files = reviewFiles(estateWith(false), "2026-Q3", new Date("2026-09-01T00:00:00Z"));
+      for (const r of files) await f.write(`fleets/lab/${r.path}`, r.text);
+      await f.commit("people: access reviews for 2026-Q3", f.keys.signer.key);
+      const git = gitIn(f.repo);
+      const { keys } = await readPeopleFiles(gitReader(f.repo), "fleets/lab");
+      const status = () => quarterReviews(git, "fleets/lab", "2026-Q3", keys, f.signers);
+      let s = await status();
+      assertEquals(s.map((x) => [x.manager, x.approvedBy, x.why]), [
+        ["bob@example.org", undefined, "3 of 3 line(s) not ticked"],
+        ["carol@example.org", undefined, "3 of 3 line(s) not ticked"],
+      ]);
+      // bob ticks every line, but mallory signs it: not an approval.
+      const bobPath = "fleets/lab/people/reviews/2026-Q3/bob@example.org.md";
+      await f.write(bobPath, files[0].text.replaceAll("- [ ]", "- [x]"));
+      await f.commit("people: bob's review", f.keys.mallory.key);
+      s = await status();
+      assertEquals(
+        s[0].why,
+        "not signed by the manager's own key (people/keys.ts) or a fleet signer",
+      );
+      // alice's own key is good, but alice is not bob: not an approval either.
+      await f.commit("people: bob's review, again", f.keys.alice.key);
+      await f.write(bobPath, files[0].text.replaceAll("- [ ]", "- [x]") + "\n");
+      await f.commit("people: bob's review, by alice", f.keys.alice.key);
+      assertEquals((await status())[0].approvedBy, undefined);
+      // bob signs it himself.
+      await f.write(bobPath, files[0].text.replaceAll("- [ ]", "- [x]"));
+      const bobSha = await f.commit("people: bob approves 2026-Q3", f.keys.bob.key);
+      s = await status();
+      assertEquals([s[0].approvedBy, s[0].commit], ["bob@example.org", bobSha]);
+      // The control: carol's review is missing an approval; then a fleet signer approves it as it is.
+      const control = (reviews: typeof s) =>
+        testControl(reviewsControl(facts({ reviews })), { estate: estateWith(false), now: NOW })[0];
+      let r = control(s);
+      assertEquals(r.status, "fail");
+      assertStringIncludes(
+        r.detail,
+        "2026-Q3: not approved: carol@example.org (3 of 3 line(s) not ticked)",
+      );
+      await f.commit(
+        "people: carol's review\n\nAccess-Review: 2026-Q3/carol@example.org",
+        f.keys.mallory.key,
+      );
+      assertEquals((await status())[1].approvedBy, undefined, "mallory's trailer approves nothing");
+      await f.commit(
+        "people: carol's review\n\nAccess-Review: 2026-Q3/carol@example.org",
+        f.keys.signer.key,
+      );
+      s = await status();
+      assertEquals(s[1].approvedBy, "ops-daily");
+      r = control(s);
+      assertEquals(r.status, "pass");
+      assertStringIncludes(r.detail, "bob@example.org by bob@example.org");
+      // A manager with no file at all fails.
+      assertStringIncludes(
+        control(s.slice(0, 1)).detail,
+        "2026-Q3: no review for carol@example.org",
+      );
+      // The evidence, by itself: each file as approved, and its raw signed commit.
+      const items = await reviewEvidence(git, s);
+      assertEquals(items.map((i) => i.kind), ["people", "commit", "people", "commit"]);
+      assertStringIncludes(items[0].name, "bob@example.org.md @ ");
+      assertStringIncludes(items[0].name, "approved by bob@example.org");
+      assertStringIncludes(
+        new TextDecoder().decode(items[0].content),
+        "- [x] github: alice (admin)",
+      );
+      assertStringIncludes(new TextDecoder().decode(items[1].content), "BEGIN SSH SIGNATURE");
+      assertEquals(items[1].name, `commit ${bobSha}`);
+    } finally {
+      await Deno.remove(f.dir, { recursive: true });
+    }
+  },
+});
+
+Deno.test({
+  name: "077: a policy acknowledgement is a commit signed by the person's own key",
+  ignore: !hasSsh,
+  async fn() {
+    const f = await repoFixture();
+    try {
+      await f.write(
+        "fleets/lab/policies/acceptable-use.md",
+        "---\ntitle: Acceptable use\nversion: 1.2\nowner: carol@example.org\nreview: 2027-06-30\n---\n\n# Acceptable use\n",
+      );
+      await f.commit("policies: acceptable use 1.2", f.keys.signer.key);
+      await f.write(
+        "fleets/lab/policies/acks/acceptable-use.ts",
+        acksSource([{ email: "alice@example.org", version: "1.2", date: "2026-09-02" }]),
+      );
+      await f.commit(
+        "people: alice@example.org acknowledges Acceptable use 1.2\n\nAcknowledges: acceptable-use@1.2",
+        f.keys.alice.key,
+      );
+      // mallory claims bob acknowledged; it is mallory's signature, so nothing.
+      await f.commit(
+        "people: bob acknowledges\n\nAcknowledges: acceptable-use@1.2",
+        f.keys.mallory.key,
+      );
+      // An unsigned one counts for no one.
+      await f.commit("people: carol acknowledges\n\nAcknowledges: acceptable-use@1.2");
+      const files = await readPeopleFiles(gitReader(f.repo), "fleets/lab");
+      assertEquals(files.policies.map((p) => [p.id, p.version, p.review]), [[
+        "acceptable-use",
+        "1.2",
+        "2027-06-30",
+      ]]);
+      assertEquals(files.acks["acceptable-use"].map((a) => a.email), ["alice@example.org"]);
+      const acks = await verifiedAcks(gitIn(f.repo), files.keys);
+      assertEquals(acks.map((a) => [a.email, a.policy, a.version]), [[
+        "alice@example.org",
+        "acceptable-use",
+        "1.2",
+      ]]);
+      const estate = fixtureEstate({
+        sources: [{
+          connector: "bamboohr",
+          observation: obs("bamboohr", "2026-11-14T00:00:00Z", { people: PEOPLE.slice(0, 3) }),
+        }],
+      }, NOW);
+      const [r] = testControl(acksControl(facts({ policies: files.policies, acks })), {
+        estate,
+        now: NOW,
+      });
+      assertEquals(r.status, "fail");
+      assertStringIncludes(
+        r.detail,
+        "2 person(s) owe an acknowledgement: bob@example.org: acceptable-use 1.2, carol@example.org",
+      );
+      // bob and carol sign their own; then everyone has acknowledged 1.2.
+      await f.commit("people: bob\n\nAcknowledges: acceptable-use@1.2", f.keys.bob.key);
+      await f.commit("people: carol\n\nAcknowledges: acceptable-use@1.2", f.keys.carol.key);
+      const all = await verifiedAcks(gitIn(f.repo), files.keys);
+      const [ok] = testControl(acksControl(facts({ policies: files.policies, acks: all })), {
+        estate,
+        now: NOW,
+      });
+      assertEquals(ok.status, "pass");
+      // A new version is owed again.
+      const v13 = files.policies.map((p) => ({ ...p, version: "1.3" }));
+      const [again] = testControl(acksControl(facts({ policies: v13, acks: all })), {
+        estate,
+        now: NOW,
+      });
+      assertEquals(again.status, "fail");
+    } finally {
+      await Deno.remove(f.dir, { recursive: true });
+    }
+  },
+});
+
+Deno.test("077: in a temporary fleet repository: people status, people review --check, compliance", async () => {
+  const sb = await sandbox("stolos-people-");
+  try {
+    const repo = join(sb.home, "fleet");
+    await Deno.mkdir(join(repo, "fleets"), { recursive: true });
+    const init = await new Deno.Command("git", { args: ["init", "-q", repo], stdin: "null" })
+      .output();
+    assert(init.success);
+    await new Deno.Command("cp", {
+      args: ["-r", "examples/fleets/lab", join(repo, "fleets", "lab")],
+    }).output();
+    const lab = join(repo, "fleets", "lab");
+    await Deno.mkdir(join(lab, "estate"), { recursive: true });
+    await Deno.mkdir(join(lab, "people"), { recursive: true });
+    const observed = (o: Observation) => `// GENERATED\nexport const observed = ${tsLiteral(o)};\n`;
+    await Deno.writeTextFile(
+      join(lab, "estate", "bamboohr.ts"),
+      observed(obs("bamboohr", "2026-11-14T00:00:00Z", { people: PEOPLE })),
+    );
+    await Deno.writeTextFile(
+      join(lab, "estate", "google.ts"),
+      observed(google("2026-11-14T00:00:00Z", true)),
+    );
+    await Deno.writeTextFile(
+      join(lab, "people", "roles.ts"),
+      `export const roles = {\n  "*": ["google", "github"],\n};\n`,
+    );
+    const env = { ARCHON_REPO: repo, ARCHON_FLEET: "lab" };
+    const json = (out: string) => JSON.parse(out.slice(out.indexOf("{"), out.lastIndexOf("}") + 1));
+    const st = await sb.run("src/stolos/main.ts", ["people", "status", "--json"], "", env);
+    assertEquals(st.code, 1, st.out);
+    const byId = Object.fromEntries(
+      json(st.out).results.map((r: { id: string; status: string }) => [r.id, r.status]),
+    );
+    assertEquals(byId["leavers"], "fail");
+    assertEquals(byId["people/on-leave"], "warn");
+    assertEquals(byId["people/access-reviews"], "fail");
+    const rv = await sb.run(
+      "src/stolos/main.ts",
+      ["people", "review", "--check", "--quarter", "2026-Q4"],
+      "",
+      env,
+    );
+    assertEquals(rv.code, 0, rv.out);
+    assertStringIncludes(rv.out, "people/reviews/2026-Q4/bob@example.org.md");
+    const c = await sb.run("src/stolos/main.ts", ["compliance", "--json"], "", env);
+    const view = json(c.out);
+    const iac12 = view.controls.find((x: { control: { id: string } }) => x.control.id === "IAC-12");
+    const e = iac12.evidence.find((x: { source: string }) => x.source === "control pack");
+    assert(e, c.out);
+    assertEquals(
+      e.check,
+      "People: Every manager approved last quarter's access review with a signed commit",
+    );
+    assertEquals(e.status, "fail");
+  } finally {
+    await Deno.remove(sb.home, { recursive: true }).catch(() => {});
+  }
+});

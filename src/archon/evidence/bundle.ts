@@ -37,7 +37,14 @@ export const BUNDLE_FORMAT = "stolos-evidence/1";
 export const NAMESPACE = "stolos-evidence";
 
 /** What an item is. */
-export type ItemKind = "observation" | "verify" | "commit" | "oscal" | "signers";
+export type ItemKind =
+  | "observation"
+  | "verify"
+  | "commit"
+  | "oscal"
+  | "signers"
+  // Spec 077: an access review as committed (its approving commit is a "commit" item).
+  | "people";
 
 /** One item, before it is stored. */
 export interface Item {

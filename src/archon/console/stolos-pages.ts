@@ -195,6 +195,22 @@ ${
     caption: "Each observation is a file in Git: its history is the account's history.",
   },
   {
+    id: "people",
+    label: "People",
+    intro:
+      "Joiners and leavers, access reviews, policies, training, and screening (spec 077): the HR system against every account, and what people sign as signed commits. Writing a review or acknowledging a policy is done in the terminal (deno task stolos people review, people ack).",
+    names: ["people status"],
+    first: "people status",
+    diagram: (f) =>
+      `flowchart LR
+  hr["HR system: people, managers, end dates"] --> estate[("estate graph")]
+  accts["every connected account"] --> estate
+  estate --> status["people status"]
+  files["fleets/${m(f.fleet.id)}/people/, policies/"] --> status
+  status -- "signed commits: reviews, acknowledgements" --> git["Git"]`,
+    caption: "A leaver with an active account fails; a manager's signed commit approves a review.",
+  },
+  {
     id: "trust",
     label: "Signers and keys",
     intro:

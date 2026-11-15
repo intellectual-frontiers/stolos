@@ -81,6 +81,35 @@ export async function gitItems(
   return items;
 }
 
+/** The access reviews of the quarters a period overlaps, and their approving commits not already in `have`. */
+export async function reviewItems(
+  repo: string,
+  fleetPath: string,
+  from: string,
+  to: string,
+  have: readonly Item[] = [],
+): Promise<Item[]> {
+  const { gitIn, quarterReviews, reviewEvidence } = await import("../people/git.ts");
+  const { quartersIn, readPeopleFiles } = await import("../people/records.ts");
+  const { gitReader } = await import("../estate/snapshot.ts");
+  const { loadSigners } = await import("../identity/signers.ts");
+  const files = await readPeopleFiles(gitReader(repo), fleetPath);
+  if (!files.inUse) return [];
+  const signers = await loadSigners(join(repo, fleetPath, "signers.ts")).catch(() => []);
+  const git = gitIn(repo);
+  const names = new Set(have.map((i) => i.name));
+  const out: Item[] = [];
+  for (const q of quartersIn(from, to)) {
+    const reviews = await quarterReviews(git, fleetPath, q, files.keys, signers);
+    for (const i of await reviewEvidence(git, reviews)) {
+      if (names.has(i.name)) continue;
+      names.add(i.name);
+      out.push(i);
+    }
+  }
+  return out;
+}
+
 /** The period's verify and install results this PC recorded. */
 export async function verifyItems(from: string, to: string, dir = P.state): Promise<Item[]> {
   const { allRecords } = await import("../state/store.ts");
@@ -133,6 +162,8 @@ export async function evidenceExport(
   const omitted: string[] = [];
   items.push(...await gitItems(repo, repoRel(P.fleetDir), from, to));
   items.push(...await verifyItems(from, to));
+  // Spec 077: the access reviews of the period's quarters, each with the signed commit that approved it.
+  items.push(...await reviewItems(repo, repoRel(P.fleetDir), from, to, items));
   if (!items.some((i) => i.kind === "verify")) {
     omitted.push("verify: no results recorded on this PC in the period");
   }
@@ -179,7 +210,7 @@ export async function evidenceExport(
   });
   p.ok(
     `${items.length} item(s): ${
-      ["commit", "observation", "verify", "oscal"].map((k) =>
+      ["commit", "observation", "verify", "people", "oscal"].map((k) =>
         `${items.filter((i) => i.kind === k).length} ${k}`
       ).join(", ")
     }`,
