@@ -33,7 +33,9 @@
  *
  * `compliance export` writes OSCAL 1.2.3 JSON, to NIST SP 800-53 Rev 5:
  *
- * - a component definition: what Stolos does for each control;
+ * - a component definition: Stolos, and one component per source of evidence (managed servers,
+ *   adopted machines, devices, each connected service, the repository), each with the controls its
+ *   checks reach;
  * - a system security plan importing NIST's moderate baseline, with the fleet's machines as its
  *   inventory;
  * - assessment results: every observation, and a finding per control, satisfied or not;

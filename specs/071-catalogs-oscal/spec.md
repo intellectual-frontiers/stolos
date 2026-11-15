@@ -28,12 +28,15 @@ evidence should leave Stolos in it.
 - **FR-004** The Compliance view, the command, and both consoles use the catalog. Without it, the
   frameworks say the catalog is not loaded and how to load it; with it, they cite SCF's release. SOC
   2 is shown by criterion, its points of focus folded in.
-- **FR-005** `stolos compliance export [--out <dir>]` writes four OSCAL 1.2.3 JSON documents to NIST
-  SP 800-53 Rev 5, each control reached through SCF's STRM: a component definition, a system
-  security plan importing NIST's moderate baseline (the fleet's machines are its inventory),
-  assessment results (every observation; a finding per control, satisfied or not), and a POA&M (each
-  failing check an open risk; each accepted risk a deviation approved). The Stolos Console downloads
-  the same.
+- **FR-005** `stolos compliance export [--oscal] [--out <dir>]` writes four OSCAL 1.2.3 JSON
+  documents to NIST SP 800-53 Rev 5, each control reached through SCF's STRM: a component definition
+  (Stolos, and one component per source of evidence: managed servers, adopted machines, devices,
+  each connected service, the estate graph, the repository, each implementing the controls its
+  checks reach; not one per model capability, which would need a mapping Stolos would have to write
+  itself), a system security plan importing NIST's moderate baseline (the fleet's machines are its
+  inventory), assessment results (every observation; a finding per control, satisfied or not), and a
+  POA&M (each failing check an open risk; each accepted risk a deviation approved). The Stolos
+  Console downloads the same.
 - **FR-006** UUIDs are UUIDv5 of what they name, so machines, controls, risks, and POA&M items keep
   their UUIDs across exports.
 

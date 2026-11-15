@@ -1050,11 +1050,19 @@ export const COMMANDS: Command[] = [
       `Spec 071. Writes four OSCAL ${"1.2.3"} JSON documents to NIST SP 800-53 Rev 5, each control reached through the SCF Council's mappings: Stolos's component definition; a system security plan importing NIST's moderate baseline, with the fleet's machines as its inventory; assessment results (every observation, a finding per control); and a POA&M (each failing check open, each accepted risk a deviation approved). A machine, control, risk, or POA&M item keeps its UUID from one export to the next.`,
     tier: "read",
     noMcp: true,
-    args: [{
-      name: "out",
-      type: "string",
-      description: "The directory to write to (default: this PC's state directory, oscal/<fleet>).",
-    }],
+    args: [
+      {
+        name: "oscal",
+        type: "boolean",
+        description: "OSCAL JSON (the default, and for now the only format).",
+      },
+      {
+        name: "out",
+        type: "string",
+        description:
+          "The directory to write to (default: this PC's state directory, oscal/<fleet>).",
+      },
+    ],
     async run(a) {
       const { exportCommand } = await import("../compliance/commands.ts");
       return await exportCommand(a.out as string | undefined);

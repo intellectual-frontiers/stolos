@@ -4,7 +4,8 @@
  * documents, all to NIST SP 800-53 Rev 5 (the controls FedRAMP and most
  * federal frameworks use), each control reached through SCF's own mappings:
  *
- * - a component definition: what Stolos does for each control;
+ * - a component definition: Stolos, and each source of evidence, with the
+ *   controls each reaches;
  * - a system security plan (SSP): this fleet, its machines, and how each
  *   control is implemented, importing NIST's moderate baseline;
  * - assessment results: every observation Stolos made, and a finding per
@@ -163,33 +164,106 @@ function how(view: ComplianceView, n: NistControl): string {
   }).join("\n\n");
 }
 
-/** The component definition: Stolos, and what it does for each SP 800-53 control. */
+const SOURCE_TEXT: Record<Evidence["source"], string> = {
+  managed:
+    "Managed servers: each converges to its model in Git and verifies it (archon verify), every 15 minutes.",
+  adopted:
+    "Adopted machines: a read-only probe reports facts over SSH; the policy pack checks them.",
+  device: "Devices: read over encrypted SNMPv3 (authPriv), read-only; their policies check them.",
+  cloud: "a read-only credential reads the account's configuration; its posture policies check it.",
+  estate:
+    "Across systems: people, accounts, devices, and repositories from every connector, checked together.",
+  repository:
+    "The fleet repository: every change is a commit, signed by a fleet signer before servers apply it.",
+};
+
+/** What produced a piece of evidence: a component of its own in the component definition. */
+function evidenceComponent(e: Evidence): { key: string; title: string; description: string } {
+  if (e.source === "cloud") {
+    const title = e.subject.replace(/\s*\(.*\)$/, "");
+    return { key: `cloud:${title}`, title, description: `${title}: ${SOURCE_TEXT.cloud}` };
+  }
+  const titles: Record<string, string> = {
+    managed: "Managed servers (Archon)",
+    adopted: "Adopted machines (the probe and policy pack)",
+    device: "Devices (SNMPv3)",
+    estate: "The estate graph (cross-system policies)",
+    repository: "Signed changes (the fleet repository)",
+  };
+  return { key: e.source, title: titles[e.source], description: SOURCE_TEXT[e.source] };
+}
+
+/**
+ * The component definition: Stolos as a whole, and one component per source
+ * of evidence (managed servers, adopted machines, devices, each connected
+ * service, the estate graph, the repository), each implementing the SP 800-53
+ * controls its checks reach.
+ */
 export async function componentDefinition(i: OscalInput): Promise<unknown> {
   const ns = nistControls(i.view, i.titles);
+  const ev = allEvidence(i.view);
+  const groups = new Map<string, { title: string; description: string; ev: Evidence[] }>();
+  for (const e of ev) {
+    const c = evidenceComponent(e);
+    const g = groups.get(c.key) ?? { title: c.title, description: c.description, ev: [] };
+    g.ev.push(e);
+    groups.set(c.key, g);
+  }
+  const impl = async (key: string, n: NistControl[], text: (n: NistControl) => string) => ({
+    uuid: await uuidFor("component", key, "nist80053"),
+    source: NIST_SOURCES.nist80053.url,
+    description:
+      `SP 800-53 Rev 5 controls reached through ${SCF_SOURCE.title} ${SCF_SOURCE.version} (STRM).`,
+    "implemented-requirements": await Promise.all(n.map(async (x) => ({
+      uuid: await uuidFor("component", key, "req", x.id),
+      "control-id": x.id,
+      description: text(x),
+      props: scfProps(x.scf),
+    }))),
+  });
+  const sources = await Promise.all(
+    [...groups].sort(([a], [b]) => a.localeCompare(b)).map(async ([key, g]) => {
+      const cited = new Set(g.ev.flatMap((e) => e.scf));
+      const mine = ns.filter((n) => n.scf.some((x) => cited.has(x)));
+      return {
+        uuid: await uuidFor("component", key),
+        type: g.ev[0].source === "cloud" ? "service" : "software",
+        title: g.title,
+        description: g.description,
+        ...(mine.length
+          ? {
+            "control-implementations": [
+              await impl(key, mine, (n) =>
+                [
+                  ...new Set(
+                    g.ev.filter((e) => e.scf.some((x) => n.scf.includes(x))).map((e) => e.check),
+                  ),
+                ]
+                  .join("; ")),
+            ],
+          }
+          : {}),
+      };
+    }),
+  );
   return {
     "component-definition": {
       uuid: await uuidFor(i.fleet.id, "component-definition", iso(i.now)),
       metadata: await metadata(i, `Stolos ${i.version}: component definition`),
-      components: [{
-        uuid: await uuidFor("component", "stolos"),
-        type: "software",
-        title: "Stolos",
-        description:
-          "Fleet management and observability: managed servers converge to a model in Git and verify it; adopted machines, devices, and SaaS and cloud accounts are observed read-only; every change is a signed Git commit.",
-        props: [{ name: "version", value: i.version }],
-        "control-implementations": [{
-          uuid: await uuidFor("component", "stolos", "nist80053"),
-          source: NIST_SOURCES.nist80053.url,
+      components: [
+        {
+          uuid: await uuidFor("component", "stolos"),
+          type: "software",
+          title: "Stolos",
           description:
-            `SP 800-53 Rev 5 controls reached through ${SCF_SOURCE.title} ${SCF_SOURCE.version} (STRM).`,
-          "implemented-requirements": await Promise.all(ns.map(async (n) => ({
-            uuid: await uuidFor("component", "stolos", "req", n.id),
-            "control-id": n.id,
-            description: how(i.view, n),
-            props: scfProps(n.scf),
-          }))),
-        }],
-      }],
+            "Fleet management and observability: managed servers converge to a model in Git and verify it; adopted machines, devices, and SaaS and cloud accounts are observed read-only; every change is a signed Git commit.",
+          props: [{ name: "version", value: i.version }],
+          ...(ns.length
+            ? { "control-implementations": [await impl("stolos", ns, (n) => how(i.view, n))] }
+            : {}),
+        },
+        ...sources,
+      ],
       "back-matter": await backMatter(i),
     },
   };
