@@ -41,6 +41,7 @@ export async function dailyReport(
   const drift = await capture(host).then((c) => c.summary).catch((e) =>
     `capture failed: ${e.message}`
   );
+  const outside = await outsideStolos(host);
   const reports = await listFiles(join(P.varLib, "reports"), ".md");
   const latestTools = reports.filter((r) => r.startsWith("tools-")).pop();
   const toolsReport = latestTools
@@ -75,6 +76,12 @@ export async function dailyReport(
     drift,
     "```",
     "",
+    "## Changes outside Stolos (spec 095)",
+    "",
+    "```",
+    outside,
+    "```",
+    "",
     "## Latest tools report",
     "",
     toolsReport.replace(/^# /m, "### "),
@@ -92,4 +99,25 @@ export async function dailyReport(
     }, ${upgradable} pending upgrade(s)`,
   );
   return { path, failedUnits: failed ? failed.split("\n").length : 0, upgradable };
+}
+
+/**
+ * Spec 095: collect (as root), then what changed outside Stolos and is not
+ * proposed yet. Never fails the report.
+ */
+async function outsideStolos(host: HostDef): Promise<string> {
+  try {
+    const { collect } = await import("../proposal/collect.ts");
+    const { loadDrift } = await import("../proposal/server.ts");
+    const { driftText } = await import("../proposal/drift.ts");
+    if (isRoot()) await collect(host);
+    const v = await loadDrift(host);
+    if (!v.state) return "nothing collected yet (sudo archon drift --collect)";
+    return driftText(host.name, v.items, v.alerts, {
+      birthLate: v.birth?.late,
+      collected: v.state.at,
+    });
+  } catch (e) {
+    return `not collected: ${(e as Error).message}`;
+  }
 }

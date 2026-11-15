@@ -3767,6 +3767,39 @@ export const COMMANDS: Command[] = [
     },
   },
   {
+    name: "drift",
+    summary: "What changed on this host outside Stolos, not proposed yet (read-only)",
+    description:
+      `Spec 095: what this host has, minus its plan, minus the birth snapshot (what Ubuntu put here at install, so unattended upgrades are never drift). Each item shows who changed it and when (from sudo's journal, apt's history, etckeeper, osquery) and the model change that would adopt it (packages.add, units.enable, ports.open, files.override), or what a person does by hand. A file no package owns under /usr/local or /opt is flagged (Article 5); a modified package file is a SECURITY ALERT, never a proposal (exit 1). Reads what was collected (by the daily report, every apply, or --collect); --collect reads every source again first, as root. --all also lists items already proposed, accepted as local, or rejected. Propose them with archon propose.`,
+    tier: "read",
+    mutateWith: "collect",
+    args: [
+      {
+        name: "all",
+        type: "boolean",
+        description: "Also items already proposed, kept local, or rejected.",
+      },
+      {
+        name: "collect",
+        type: "boolean",
+        description: "Read every source again first (as root: journald, /etc's history).",
+      },
+    ],
+    examples: [
+      { cmd: "archon drift", text: "What changed outside Stolos and is not proposed yet." },
+      { cmd: "sudo archon drift --collect", text: "Collect now, then show it." },
+    ],
+    seeAlso: ["archon-capture"],
+    async run(a, ctx) {
+      const { driftCommand } = await import("../proposal/server.ts");
+      return await driftCommand(await requireHost(ctx.hostName), {
+        all: !!a.all,
+        collect: !!a.collect,
+        json: ctx.json,
+      });
+    },
+  },
+  {
     name: "reboot",
     summary: "Reboot this host; --netboot boots it from the network once (for a re-install)",
     description:

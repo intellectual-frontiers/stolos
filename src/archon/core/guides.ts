@@ -147,6 +147,12 @@ export const GUIDES: GuideDef[] = [
     module: "src/archon/web/mod.ts",
   },
   {
+    name: "proposals",
+    title: "Proposals: changes made on a server",
+    why: "A change made by hand on a server, signed and mailed, becomes a model change.",
+    module: "src/archon/proposal/mod.ts",
+  },
+  {
     name: "telemetry",
     title: "Telemetry",
     why: "Where logs, metrics, and traces go.",

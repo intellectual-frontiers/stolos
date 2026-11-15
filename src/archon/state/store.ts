@@ -50,7 +50,16 @@ export type Kind =
   | "inventory"
   | "applied"
   | "sync"
-  | "control";
+  | "control"
+  // Spec 095-proposals: what collectors saw, Ubuntu's own install, the latest
+  // state, proposals sent, holds, recordings, and security alerts.
+  | "observation"
+  | "birth"
+  | "snapshot"
+  | "proposal"
+  | "hold"
+  | "recording"
+  | "alert";
 
 /** One record: a host's fact of one kind, by name. */
 export interface StateRecord<T = unknown> {
@@ -98,6 +107,15 @@ CREATE VIEW IF NOT EXISTS archon_inventory AS SELECT host, at,
   json_extract(body, '$.memMiB') AS mem_mib, json_extract(body, '$.disks') AS disks,
   json_extract(body, '$.macs') AS macs
   FROM archon_record WHERE kind = 'inventory';
+CREATE VIEW IF NOT EXISTS archon_observation AS SELECT host, name AS id, at,
+  json_extract(body, '$.source') AS source, json_extract(body, '$.who') AS who,
+  json_extract(body, '$.kind') AS kind, json_extract(body, '$.name') AS subject,
+  json_extract(body, '$.change') AS change, json_extract(body, '$.what') AS what
+  FROM archon_record WHERE kind = 'observation';
+CREATE VIEW IF NOT EXISTS archon_proposal AS SELECT host, name AS id, at,
+  json_extract(body, '$.by') AS by, json_extract(body, '$.reason') AS reason,
+  json_extract(body, '$.items') AS items, json_extract(body, '$.sent') AS sent
+  FROM archon_record WHERE kind = 'proposal';
 `;
 
 /** The views osquery exposes, and their columns (automatic table construction). */
@@ -116,6 +134,8 @@ export const VIEWS: Record<string, string[]> = {
   archon_prov: ["host", "run", "at", "command", "ok", "changes", "trace_id", "body"],
   archon_optin: ["host", "name", "at", "enabled", "by", "data"],
   archon_inventory: ["host", "at", "vendor", "model", "serial", "cpus", "mem_mib", "disks", "macs"],
+  archon_observation: ["host", "id", "at", "source", "who", "kind", "subject", "change", "what"],
+  archon_proposal: ["host", "id", "at", "by", "reason", "items", "sent"],
 };
 
 /** How many provenance records a host keeps (the oldest go first). */
@@ -233,6 +253,35 @@ export async function putRecord(
       `DELETE FROM archon_record WHERE host = ? AND kind = 'prov' AND name NOT IN
         (SELECT name FROM archon_record WHERE host = ? AND kind = 'prov' ORDER BY name DESC LIMIT ?)`,
     ).run(host, host, PROV_KEEP);
+  }
+  await save(dir, db);
+}
+
+/** How many observations a host keeps (the oldest go first, spec 095). */
+export const OBSERVATION_KEEP = 5000;
+
+/**
+ * Write many records of one kind in one load and save (spec 095: a collector's
+ * observations). Each replaces the record with the same key; observations are
+ * kept to {@link OBSERVATION_KEEP}, newest first.
+ */
+export async function putRecords(
+  host: string,
+  kind: Kind,
+  items: Array<{ name: string; body: unknown; at?: string }>,
+  dir = stateDir(),
+): Promise<void> {
+  if (!items.length) return;
+  const db = await load(dir);
+  const ins = db.prepare("INSERT OR REPLACE INTO archon_record VALUES (?, ?, ?, ?, ?)");
+  const now = new Date().toISOString();
+  for (const i of items) ins.run(host, kind, i.name, i.at ?? now, JSON.stringify(i.body));
+  count("archon.state.writes", items.length, { "archon.kind": kind });
+  if (kind === "observation") {
+    db.prepare(
+      `DELETE FROM archon_record WHERE host = ? AND kind = 'observation' AND name NOT IN
+        (SELECT name FROM archon_record WHERE host = ? AND kind = 'observation' ORDER BY at DESC LIMIT ?)`,
+    ).run(host, host, OBSERVATION_KEEP);
   }
   await save(dir, db);
 }

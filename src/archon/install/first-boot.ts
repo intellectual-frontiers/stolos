@@ -149,6 +149,14 @@ export async function firstBoot(host: HostDef): Promise<number> {
     "../state/inventory.ts"
   );
   await recordInventory(host.name).catch(() => false);
+  // Spec 095: the birth snapshot, once: what Ubuntu put here is never drift.
+  const { recordBirth } = await import("../proposal/collect.ts");
+  await recordBirth(host.name).catch((e) =>
+    rec.warn(
+      `birth snapshot not taken: ${(e as Error).message}`,
+      "sudo archon drift --collect takes it (late)",
+    )
+  );
   const machine = await collectInventory().then(describeInventory).catch(() => "");
   rec.done(
     `recorded in ${P.state}/archon.sql (${head})${failures ? ` · ${failures} problem(s)` : ""}${
