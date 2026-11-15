@@ -1,0 +1,163 @@
+/**
+ * Spec 091: the labels connectors fill, declared once (spec 089). Each is a
+ * term from MITRE D3FEND or OCSF, and each record a connector reads carries
+ * one: `user_account`, `code_repository`, `person` (an HR roster), and
+ * `hardware_device` become the estate's accounts, repositories, people, and
+ * devices; the others become nodes of the estate graph as they are.
+ *
+ * @module
+ */
+
+import { defineLabel, type LabelView } from "../schema/define.ts";
+import { codeRepository, userAccount } from "../estate/schema.ts";
+
+/** An account in some system (D3FEND user account). */
+export const USER_ACCOUNT: LabelView = userAccount;
+
+/** A code repository (D3FEND code repository). */
+export const CODE_REPOSITORY: LabelView = codeRepository;
+
+/** A person on an HR system's roster (UDM person): the source of truth for people. */
+export const PERSON: LabelView = defineLabel({
+  name: "person",
+  terms: [{ from: "udm", term: "person" }],
+  doc:
+    "A person on an HR system's roster: name, work email, status, dates, manager, and role only.",
+  props: {
+    email: { type: "text", doc: "Work email." },
+    name: { type: "text", doc: "Their name." },
+    status: { type: "text", doc: "active, terminated, leave, or unknown." },
+    start_date: { type: "text", doc: "Start date (YYYY-MM-DD)." },
+    end_date: { type: "text", doc: "End date (YYYY-MM-DD)." },
+    manager: { type: "text", doc: "Their manager's work email." },
+    role_type: { type: "text", doc: "Employee, contractor, ... (the source's own word)." },
+  },
+});
+
+/** A device a connector knows (D3FEND hardware device): an MDM's or directory's machines. */
+export const HARDWARE_DEVICE: LabelView = defineLabel({
+  name: "hardware_device",
+  terms: [{ from: "d3fend", term: "hardware_device" }],
+  doc: "A machine a connector knows (a directory's or an MDM's).",
+  props: {
+    owner: { type: "text", doc: "Its owner's work email." },
+    os_name: { type: "text", doc: "Its operating system." },
+    serial_number: { type: "text", doc: "Its serial number." },
+    encrypted: { type: "boolean", doc: "Its disk is encrypted." },
+    last_seen: { type: "text", doc: "When the source last saw it." },
+  },
+});
+
+/** A DNS record (D3FEND DNS record). */
+export const DNS_RECORD: LabelView = defineLabel({
+  name: "dns_record",
+  terms: [{ from: "d3fend", term: "dns_record" }],
+  doc: "A DNS record.",
+  props: {
+    type: { type: "text", doc: "A, AAAA, CNAME, MX, TXT, ..." },
+    content: { type: "text", doc: "What it points to." },
+    proxied: { type: "boolean", doc: "Behind the provider's proxy." },
+  },
+});
+
+/** A DNS zone (D3FEND domain name). */
+export const DOMAIN_NAME: LabelView = defineLabel({
+  name: "domain_name",
+  terms: [{ from: "d3fend", term: "domain_name" }],
+  doc: "A domain (a DNS zone) and its settings.",
+  props: {
+    status: { type: "text", doc: "Its status at the provider." },
+    dnssec: { type: "boolean", doc: "DNSSEC is on." },
+  },
+});
+
+/** A server in a cloud (D3FEND server). */
+export const SERVER: LabelView = defineLabel({
+  name: "server",
+  terms: [{ from: "d3fend", term: "server" }],
+  doc: "A server (an instance) in a cloud.",
+  props: {
+    status: { type: "text", doc: "Its state." },
+    type: { type: "text", doc: "Its size or instance type." },
+    region: { type: "text", doc: "Where it is." },
+    backups: { type: "boolean", doc: "Backups are on." },
+    protected: { type: "boolean", doc: "Protected from deletion." },
+    firewalled: { type: "boolean", doc: "A firewall applies to it." },
+    imds_v2: { type: "boolean", doc: "Instance metadata requires tokens (IMDSv2)." },
+  },
+});
+
+/** Object storage (D3FEND cloud storage). */
+export const CLOUD_STORAGE: LabelView = defineLabel({
+  name: "cloud_storage",
+  terms: [{ from: "d3fend", term: "cloud_storage" }],
+  doc: "An object storage bucket.",
+  props: {
+    region: { type: "text", doc: "Where it is." },
+    public_access_blocked: { type: "boolean", doc: "Public access is blocked." },
+  },
+});
+
+/** A disk volume (D3FEND volume). */
+export const VOLUME: LabelView = defineLabel({
+  name: "volume",
+  terms: [{ from: "d3fend", term: "volume" }],
+  doc: "A block storage volume.",
+  props: {
+    size_gb: { type: "integer", doc: "Its size (GB)." },
+    server: { type: "text", doc: "The server it is attached to." },
+    protected: { type: "boolean", doc: "Protected from deletion." },
+  },
+});
+
+/** A firewall (D3FEND firewall). */
+export const FIREWALL: LabelView = defineLabel({
+  name: "firewall",
+  terms: [{ from: "d3fend", term: "firewall" }],
+  doc: "A cloud firewall.",
+  props: { rules: { type: "integer", doc: "How many rules it has." } },
+});
+
+/** A load balancer (OCSF load balancer). */
+export const LOAD_BALANCER: LabelView = defineLabel({
+  name: "load_balancer",
+  terms: [{ from: "ocsf", term: "load_balancer" }],
+  doc: "A load balancer.",
+  props: { region: { type: "text", doc: "Where it is." } },
+});
+
+/** A public IP address (D3FEND IP address). */
+export const IP_ADDRESS: LabelView = defineLabel({
+  name: "ip_address",
+  terms: [{ from: "d3fend", term: "ip_address" }],
+  doc: "A public IP address a cloud assigns.",
+  props: {
+    type: { type: "text", doc: "ipv4 or ipv6." },
+    assigned_to: { type: "text", doc: "What it is assigned to." },
+  },
+});
+
+/** Software a provider runs for the fleet (D3FEND software): serverless functions, sites, tunnels. */
+export const SOFTWARE: LabelView = defineLabel({
+  name: "software",
+  terms: [{ from: "d3fend", term: "software" }],
+  doc: "Software a provider runs for the fleet: a serverless function, a static site, a tunnel.",
+  props: { kind: { type: "text", doc: "worker, pages, tunnel, ..." } },
+});
+
+/** Every connector label. */
+export const CONNECTOR_LABELS: readonly LabelView[] = [
+  USER_ACCOUNT,
+  CODE_REPOSITORY,
+  PERSON,
+  HARDWARE_DEVICE,
+  DNS_RECORD,
+  DOMAIN_NAME,
+  SERVER,
+  CLOUD_STORAGE,
+  VOLUME,
+  FIREWALL,
+  LOAD_BALANCER,
+  IP_ADDRESS,
+  SOFTWARE,
+];

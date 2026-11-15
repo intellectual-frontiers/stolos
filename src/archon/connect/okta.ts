@@ -1,23 +1,32 @@
 /**
- * Spec 086: Okta, read-only: its users (active, suspended, deprovisioned),
- * who holds an administrator role, and who has enrolled a second factor.
- * Evidence for account management and MFA (SCF IAC-37, IAC-08, IAC-30).
+ * Spec 086, declared with spec 091's SDK: Okta, read-only: its users
+ * (active, suspended, deprovisioned), who holds an administrator role, and
+ * who has enrolled a second factor. Evidence for account management and MFA
+ * (SCF IAC-37, IAC-08, IAC-30).
  *
  * @module
  */
 
-import { check, type Connector, fresh, type Http, linkPages, orGap } from "./connector.ts";
-import type { Account } from "./entities.ts";
+import { check, fresh } from "./connector.ts";
+import { bearer, defineConnector } from "./sdk.ts";
+import { USER_ACCOUNT } from "./labels.ts";
 
 interface OktaUser {
   id: string;
   status: string;
   lastLogin?: string | null;
-  profile: { login: string; email?: string; firstName?: string; lastName?: string };
+  profile: { login: string; email?: string };
+  /** Added here: whether they hold an administrator role (undefined: the roles could not be read). */
+  admin?: boolean;
+  /** Added here: whether they have an active second factor (undefined: not read). */
+  mfa?: boolean;
 }
 
+const ACTIVE = new Set(["ACTIVE", "PASSWORD_EXPIRED", "RECOVERY", "LOCKED_OUT"]);
+const base = (domain: string) => `https://${domain.replace(/^https?:\/\//, "").replace(/\/$/, "")}`;
+
 /** Okta. */
-export const okta: Connector = {
+export const okta = defineConnector({
   id: "okta",
   title: "Okta",
   logo: "okta",
@@ -29,65 +38,75 @@ export const okta: Connector = {
     "Copy the token, and your Okta domain (for example example.okta.com)",
   ],
   recipe: {},
-  fields: [
-    { name: "domain", secret: false, hint: "your Okta domain (example.okta.com)" },
-    { name: "token", secret: true, hint: "the API token of a Read-Only Administrator" },
-  ],
-  async observe(cred, http: Http, now) {
-    const base = `https://${cred.domain.replace(/^https?:\/\//, "").replace(/\/$/, "")}`;
-    const h = { Authorization: `SSWS ${cred.token}`, Accept: "application/json" };
-    const gaps: string[] = [];
-    const users = await linkPages<OktaUser>(http, `${base}/api/v1/users?limit=200`, h);
-    const admins = await orGap(
-      gaps,
-      "administrators",
-      undefined as Array<{ id: string }> | undefined,
-      () => linkPages(http, `${base}/api/v1/iam/assignees/users?limit=200`, h),
-    );
-    const adminIds = new Set((admins ?? []).map((a) => a.id));
-    const active = users.filter((u) =>
-      u.status === "ACTIVE" || u.status === "PASSWORD_EXPIRED" || u.status === "RECOVERY" ||
-      u.status === "LOCKED_OUT"
-    );
-    const mfa = new Map<string, boolean>();
-    for (const u of active.slice(0, 1000)) {
-      const f = await orGap(
-        gaps,
-        "factors",
-        undefined as Array<{ status: string }> | undefined,
-        () => linkPages(http, `${base}/api/v1/users/${u.id}/factors`, h),
-      );
-      if (f) mfa.set(u.id, f.some((x) => x.status === "ACTIVE"));
-    }
-    const accounts: Account[] = users.map((u) => ({
-      system: "okta",
-      id: u.id,
-      name: u.profile.login,
-      email: (u.profile.email ?? u.profile.login).toLowerCase(),
-      active: active.includes(u),
-      ...(admins ? { admin: adminIds.has(u.id) } : {}),
-      ...(mfa.has(u.id) ? { mfa: mfa.get(u.id)! } : {}),
-      ...(u.lastLogin ? { lastLogin: u.lastLogin } : {}),
-    }));
-    return {
-      at: now.toISOString().replace(/\.\d+Z$/, "Z"),
-      provider: "okta",
-      account: cred.domain,
-      assets: users.map((u) => ({
-        kind: "user",
-        id: u.id,
-        name: u.profile.login,
-        facts: { status: u.status, admin: adminIds.has(u.id) },
-      })),
-      posture: {
-        activeUsers: active.length,
-        ...(mfa.size
-          ? { activeWithoutMfa: active.filter((u) => mfa.get(u.id) === false).length }
-          : {}),
-        ...(admins ? { admins: admins.length } : {}),
+  fields: {
+    domain: { secret: false, hint: "your Okta domain (example.okta.com)" },
+    token: { secret: true, hint: "the API token of a Read-Only Administrator" },
+  },
+  auth: (cred) => Promise.resolve(bearer(cred.token, "SSWS")),
+  account: (cred) => cred.domain,
+  resources: {
+    users: {
+      label: USER_ACCOUNT,
+      ocsf: "user_inventory",
+      async *list(ctx) {
+        const b = base(ctx.cred.domain);
+        const users: OktaUser[] = [];
+        for await (const u of ctx.linkPages<OktaUser>(`${b}/api/v1/users?limit=200`)) users.push(u);
+        const admins = await ctx.orGap(
+          "administrators",
+          undefined as Set<string> | undefined,
+          async () => {
+            const ids = new Set<string>();
+            for await (
+              const a of ctx.linkPages<{ id: string }>(`${b}/api/v1/iam/assignees/users?limit=200`)
+            ) {
+              ids.add(a.id);
+            }
+            return ids;
+          },
+        );
+        for (const [i, u] of users.entries()) {
+          const active = ACTIVE.has(u.status);
+          let mfa: boolean | undefined;
+          if (active && i < 1000) {
+            mfa = await ctx.orGap("factors", undefined as boolean | undefined, async () => {
+              for await (
+                const f of ctx.linkPages<{ status: string }>(`${b}/api/v1/users/${u.id}/factors`)
+              ) {
+                if (f.status === "ACTIVE") return true;
+              }
+              return false;
+            });
+          }
+          yield {
+            ...u,
+            ...(admins ? { admin: admins.has(u.id) } : {}),
+            ...(mfa !== undefined ? { mfa } : {}),
+          };
+        }
       },
-      gaps: [...new Set(gaps)],
-      entities: { accounts },
+      map: (u: OktaUser) => ({
+        native_id: u.id,
+        display_name: u.profile.login,
+        props: {
+          email: (u.profile.email ?? u.profile.login).toLowerCase(),
+          active: ACTIVE.has(u.status),
+          ...(u.admin !== undefined ? { admin: u.admin } : {}),
+          ...(u.mfa !== undefined ? { mfa: u.mfa } : {}),
+          ...(u.lastLogin ? { last_login: u.lastLogin } : {}),
+        },
+      }),
+      asset: (u: OktaUser) => ({ kind: "user", facts: { status: u.status, admin: !!u.admin } }),
+    },
+  },
+  posture(records) {
+    const active = records.filter((r) => r.props.active);
+    const mfaKnown = active.some((r) => r.props.mfa !== undefined);
+    const adminKnown = records.some((r) => r.props.admin !== undefined);
+    return {
+      activeUsers: active.length,
+      ...(mfaKnown ? { activeWithoutMfa: active.filter((r) => r.props.mfa === false).length } : {}),
+      ...(adminKnown ? { admins: records.filter((r) => r.props.admin).length } : {}),
     };
   },
   policies(o, now) {
@@ -113,4 +132,4 @@ export const okta: Connector = {
       }),
     ];
   },
-};
+});

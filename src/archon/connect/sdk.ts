@@ -29,6 +29,7 @@
 import type { PolicyResult } from "../adopt/policy.ts";
 import { OCSF_CLASSES } from "../ocsf/types.auto.ts";
 import type { Column, LabelView, RowOf } from "../schema/define.ts";
+import type { Entities } from "./entities.ts";
 import {
   AccessDenied,
   type Asset,
@@ -89,6 +90,8 @@ export interface Ctx<F extends Record<string, FieldDef>> {
   now: Date;
   /** Headers to send (from `auth`). */
   headers: Record<string, string>;
+  /** Run `f`; a denied call becomes a gap named `what`, and `fallback` (a part read, the rest kept). */
+  orGap<T>(what: string, fallback: T, f: () => Promise<T>): Promise<T>;
   /** A JSON body from a GET, or AccessDenied on 401 and 403. */
   json<T>(url: string, headers?: Record<string, string>): Promise<T>;
   /** Every item of a list that pages with `Link: rel="next"`. */
@@ -118,6 +121,11 @@ export interface ResourceDef<
   map(raw: Raw): Mapped<P>;
   /** Keep the vendor's record beside the mapped one (default: no; least data). */
   keepUnmapped?: boolean;
+  /** How it is listed in `estate assets`: its kind (default: the label) and a few facts. */
+  asset?: (
+    raw: Raw,
+    m: Mapped<P>,
+  ) => { kind?: string; facts?: Asset["facts"]; fleetMachine?: string } | undefined;
 }
 
 /** A connector, as declared. */
@@ -185,6 +193,7 @@ function ctxFor<F extends Record<string, FieldDef>>(
   http: Http,
   now: Date,
   headers: Record<string, string>,
+  gaps: string[],
 ): Ctx<F> {
   const get = async <T>(url: string, h = headers): Promise<{ body: T; link?: string }> => {
     const r = await http(url, { headers: h });
@@ -204,6 +213,17 @@ function ctxFor<F extends Record<string, FieldDef>>(
     http,
     now,
     headers,
+    async orGap<T>(what: string, fallback: T, f: () => Promise<T>) {
+      try {
+        return await f();
+      } catch (e) {
+        if (e instanceof AccessDenied) {
+          gaps.push(`${what}: ${e.message}`);
+          return fallback;
+        }
+        throw e;
+      }
+    },
     async json<T>(url: string, h?: Record<string, string>) {
       return (await get<T>(url, h ?? headers)).body;
     },
@@ -249,8 +269,8 @@ export function defineConnector<F extends Record<string, FieldDef>>(
       const cred = raw as CredOf<F>;
       const guarded = withBackoff(readOnly(http, def.tokenEndpoints?.(cred) ?? []));
       const headers = await def.auth(cred, guarded, now);
-      const ctx = ctxFor(cred, guarded, now, headers);
       const gaps: string[] = [];
+      const ctx = ctxFor(cred, guarded, now, headers, gaps);
       const records: ObservedRecord[] = [];
       const assets: Asset[] = [];
       for (const [name, r] of Object.entries(def.resources)) {
@@ -265,26 +285,33 @@ export function defineConnector<F extends Record<string, FieldDef>>(
               props: m.props as Record<string, unknown>,
               ...(r.keepUnmapped ? { unmapped: x } : {}),
             });
-            assets.push({
-              kind: r.label.name,
-              id: m.native_id,
-              name: m.display_name,
-              ...(m.where ? { where: m.where } : {}),
-            });
+            const extra = r.asset?.(x, m);
+            if (extra !== undefined || !r.asset) {
+              assets.push({
+                kind: extra?.kind ?? r.label.name,
+                id: m.native_id,
+                name: m.display_name,
+                ...(m.where ? { where: m.where } : {}),
+                ...(extra?.facts ? { facts: extra.facts } : {}),
+                ...(extra?.fleetMachine ? { fleetMachine: extra.fleetMachine } : {}),
+              });
+            }
           }
         } catch (e) {
           if (e instanceof AccessDenied) gaps.push(`${name}: ${e.message}`);
           else throw e;
         }
       }
+      const { entities, rest } = toEntities(def.id, records);
       return {
         at: now.toISOString().replace(/\.\d+Z$/, "Z"),
         provider: def.id,
         account: def.account(cred),
         assets,
         posture: def.posture(records, cred),
-        gaps,
-        records,
+        gaps: [...new Set(gaps)],
+        ...(Object.keys(entities).length ? { entities } : {}),
+        ...(rest.length ? { records: rest } : {}),
       };
     },
     policies: (o, now) => def.policies(o, now),
@@ -294,6 +321,73 @@ export function defineConnector<F extends Record<string, FieldDef>>(
 const OCSF_UID = Object.fromEntries(
   Object.entries(OCSF_CLASSES).map(([k, v]) => [k, v.uid]),
 ) as Record<keyof typeof OCSF_CLASSES, number>;
+
+/**
+ * The estate's entities from a connector's records: `user_account` records
+ * are accounts, `code_repository` records repositories, `person` records
+ * (an HR roster) people, and `hardware_device` records devices. Other labels
+ * stay records (nodes of the estate graph as they are).
+ */
+export function toEntities(
+  system: string,
+  records: ObservedRecord[],
+): { entities: Entities; rest: ObservedRecord[] } {
+  const e: Required<Entities> = { people: [], accounts: [], devices: [], repositories: [] };
+  const rest: ObservedRecord[] = [];
+  const opt = <T>(k: string, v: T | undefined) => (v === undefined || v === null ? {} : { [k]: v });
+  for (const r of records) {
+    const p = r.props as Record<string, unknown>;
+    if (r.label === "user_account") {
+      e.accounts.push({
+        system,
+        id: r.native_id,
+        name: r.display_name,
+        active: !!p.active,
+        ...opt("email", p.email as string | undefined),
+        ...opt("admin", p.admin as boolean | undefined),
+        ...opt("mfa", p.mfa as boolean | undefined),
+        ...opt("lastLogin", p.last_login as string | undefined),
+        ...(p.service ? { service: true } : {}),
+      });
+    } else if (r.label === "code_repository") {
+      e.repositories.push({
+        system,
+        name: r.native_id,
+        private: !!p.private,
+        ...opt("protected", p.protected as boolean | undefined),
+        ...opt("reviews", p.reviews as number | undefined),
+        ...opt("secretScanning", p.secret_scanning as boolean | undefined),
+        ...opt("dependencyAlerts", p.dependency_alerts as boolean | undefined),
+      });
+    } else if (r.label === "person") {
+      e.people.push({
+        email: String(p.email ?? ""),
+        status: (p.status as "active" | "terminated" | "leave" | "unknown") ?? "unknown",
+        ...opt("name", (p.name as string | undefined) ?? r.display_name),
+        ...opt("start", p.start_date as string | undefined),
+        ...opt("end", p.end_date as string | undefined),
+        ...opt("manager", p.manager as string | undefined),
+        ...opt("type", p.role_type as string | undefined),
+      });
+    } else if (r.label === "hardware_device") {
+      e.devices.push({
+        source: system,
+        id: r.native_id,
+        name: r.display_name,
+        managed: false,
+        ...opt("owner", p.owner as string | undefined),
+        ...opt("os", p.os_name as string | undefined),
+        ...opt("serial", p.serial_number as string | undefined),
+        ...opt("encrypted", p.encrypted as boolean | undefined),
+        ...opt("seen", p.last_seen as string | undefined),
+      });
+    } else rest.push(r);
+  }
+  const entities = Object.fromEntries(
+    Object.entries(e).filter(([, v]) => v.length),
+  ) as Entities;
+  return { entities, rest };
+}
 
 /** Recorded responses, for tests: each URL to its status, body, and Link header; anything else is refused. */
 export function recordedHttp(
