@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Stolos v0.108.0</title>
+<title>Stolos v0.109.0</title>
 <link rel="stylesheet" href="./styles.css">
 <link rel="stylesheet" href="./page.css">
 <script src="./darkmode_toggle.js"></script>
@@ -17,7 +17,7 @@
 </head>
 <body>
 <main>
-<h1>Stolos v0.108.0</h1>
+<h1>Stolos v0.109.0</h1>
 <p>The fleet engine (its command is <code>archon</code>), documented from its TypeScript.</p>
 <p class="start">Start here: <a href="./mod.ts/index.html">the overview</a>, with how the
 pieces fit, in diagrams. Then the model: <a href="./archon/model/types.ts/index.html">types.ts</a>.
@@ -34,6 +34,7 @@ Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 <li><a href="./archon/console/mod.ts/index.html">The Stolos Console</a> The fleet in your browser, on your PC.</li>
 <li><a href="./archon/adopt/mod.ts/index.html">Adopted machines, devices, and clouds</a> Laptops, printers, and cloud accounts: observed, never changed.</li>
 <li><a href="./archon/compliance/mod.ts/index.html">Compliance</a> SCF controls; SOC 2, HIPAA, PCI DSS, CMMC, NIST, and FedRAMP; OSCAL exports.</li>
+<li><a href="./archon/controls/mod.ts/index.html">Custom controls</a> Your own controls in TypeScript: packs in the fleet repository, tested like code.</li>
 <li><a href="./archon/evidence/mod.ts/index.html">Evidence bundles</a> A period's evidence, signed, for an auditor to check offline.</li>
 <li><a href="./archon/web/mod.ts/index.html">HTTPS on every server</a> Publishing services, certificates, the Archon Console.</li>
 <li><a href="./archon/telemetry/mod.ts/index.html">Telemetry</a> Where logs, metrics, and traces go.</li>
@@ -216,6 +217,15 @@ Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 <ul>
 <li><a href="./archon/containers/catalog.ts/index.html"><code>catalog.ts</code></a> 040-opt-in: the catalog of opt-in containers.</li>
 <li><a href="./archon/containers/quadlet.ts/index.html"><code>quadlet.ts</code></a> 040-opt-in: a container as a Podman Quadlet file.</li>
+</ul>
+<h2>archon/controls/</h2>
+<ul>
+<li><a href="./archon/controls/commands.ts/index.html"><code>commands.ts</code></a> Spec 078: stolos controls list | run | test, on the controller PC: the fleet's control packs, listed, run now, or tested with deno test.</li>
+<li><a href="./archon/controls/core.ts/index.html"><code>core.ts</code></a> Spec 078: how a control's answer becomes a result.</li>
+<li><a href="./archon/controls/define.ts/index.html"><code>define.ts</code></a> Spec 078: a control, written in TypeScript.</li>
+<li><a href="./archon/controls/mod.ts/index.html"><code>mod.ts</code></a> A company writes its own controls in TypeScript, tests them like code, and keeps them in the fleet repository beside everything else (spec 078).</li>
+<li><a href="./archon/controls/run.ts/index.html"><code>run.ts</code></a> Spec 078: a fleet's control packs, loaded and run.</li>
+<li><a href="./archon/controls/testing.ts/index.html"><code>testing.ts</code></a> Spec 078: testing a control like code.</li>
 </ul>
 <h2>archon/core/</h2>
 <ul>

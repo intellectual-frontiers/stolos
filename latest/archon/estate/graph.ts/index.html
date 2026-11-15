@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/estate/graph.ts - Stolos v0.108.0 documentation</title>
+  <title>archon/estate/graph.ts - Stolos v0.109.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.108.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.109.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -119,11 +119,11 @@ marked stale, rather than dropped.</li>
 <pre class="highlight"><code class="language-mermaid">flowchart LR
   snap[&quot;Snapshot (Git, now or at a commit)&quot;] --&gt; build[&quot;buildGraph&quot;]
   build --&gt; db[(&quot;estate graph (SQLite)&quot;)]
-  db --&gt; policies[&quot;estatePolicies: findings (SCF)&quot;] &amp; query[&quot;estate query&quot;] &amp; sql[&quot;estate.sql + estate.auto.sqlite.db&quot;]
+  db --&gt; policies[&quot;estatePolicies: findings (SCF), controls on the SDK (spec 078)&quot;] &amp; query[&quot;estate query&quot;] &amp; sql[&quot;estate.sql + estate.auto.sqlite.db&quot;]
 </code><button class="copyButton" data-copy="flowchart LR
   snap[&quot;Snapshot (Git, now or at a commit)&quot;] --&gt; build[&quot;buildGraph&quot;]
   build --&gt; db[(&quot;estate graph (SQLite)&quot;)]
-  db --&gt; policies[&quot;estatePolicies: findings (SCF)&quot;] &amp; query[&quot;estate query&quot;] &amp; sql[&quot;estate.sql + estate.auto.sqlite.db&quot;]
+  db --&gt; policies[&quot;estatePolicies: findings (SCF), controls on the SDK (spec 078)&quot;] &amp; query[&quot;estate query&quot;] &amp; sql[&quot;estate.sql + estate.auto.sqlite.db&quot;]
 "><svg
   class="copy"
   width="15"
@@ -228,6 +228,11 @@ so a device with only that hostname is not joined to either.</p>
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;estate&#x2F;graph.ts&#x2F;~&#x2F;tenantUid.html" title="tenantUid">
 			    <span>tenantUid</span><span>(<div class="ml-4"><div><span>connector<span>: <span class="td-kw">string</span></span></span>,</div><div><span>account<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A tenant's uid.</p>
 </div></div></div>
+    </div><div id="namespace_writefindings" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;estate&#x2F;graph.ts&#x2F;~&#x2F;writeFindings.html" title="writeFindings">
+			    <span>writeFindings</span><span>(<div class="ml-4"><div><span>e<span>: <span class="td-ref">Estate</span></span></span>,</div><div><span>results<span>: <span class="td-ref">ReadonlyArray</span>&lt;<span><span class="td-ref">PolicyResult</span><span class="td-op"> & </span>{ subjects<span class="td-op">?</span><span>: <span class="td-kw">string</span>[]</span>;  }</span>&gt;</span></span>,</div><div><span>now<span class="td-op">?</span><span>: <span class="td-ref">Date</span></span></span></div></div>)<span>: <span class="td-kw">void</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Write results to the finding table: one row per result, SCF control, and subject.</p>
+</div></div></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;estate&#x2F;graph_ts_interfaces"><div>
@@ -289,7 +294,12 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_estate" cl
   </defs>
 </svg>
 </a>
-Variables</h2></div><div class="namespaceSection"><div id="namespace_estate_names" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+Variables</h2></div><div class="namespaceSection"><div id="namespace_estate_controls" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;estate&#x2F;graph.ts&#x2F;~&#x2F;ESTATE_CONTROLS.html" title="ESTATE_CONTROLS">
+			    <span>ESTATE_CONTROLS</span><span>: <span class="td-ref">EstateControl</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The cross-system policies, as controls over the graph (spec 078), in the order results are shown.</p>
+</div></div></div>
+    </div><div id="namespace_estate_names" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;estate&#x2F;graph.ts&#x2F;~&#x2F;ESTATE_NAMES.html" title="ESTATE_NAMES">
 			    <span>ESTATE_NAMES</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The tables and views a query may read, for messages.</p>
@@ -385,7 +395,7 @@ owner), then EDRs. A source not listed comes last.</p>
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 2190 symbols</span><svg
+              <span class="leading-none">view all 2270 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -400,7 +410,7 @@ owner), then EDRs. A source not listed comes last.</p>
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/estate/graph_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_buildgraph" title="buildGraph">buildGraph</a></li><li><a href="#namespace_estatepolicies" title="estatePolicies">estatePolicies</a></li><li><a href="#namespace_estatequery" title="estateQuery">estateQuery</a></li><li><a href="#namespace_estaterefusal" title="estateRefusal">estateRefusal</a></li><li><a href="#namespace_estatesql" title="estateSql">estateSql</a></li><li><a href="#namespace_fixedassetkey" title="fixedAssetKey">fixedAssetKey</a></li><li><a href="#namespace_nodeuids" title="nodeUids">nodeUids</a></li><li><a href="#namespace_serialkeysbyhostname" title="serialKeysByHostname">serialKeysByHostname</a></li><li><a href="#namespace_tenantuid" title="tenantUid">tenantUid</a></li></ul></li><li><a href="#archon/estate/graph_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_estate" title="Estate">Estate</a></li></ul></li><li><a href="#archon/estate/graph_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_estate_names" title="ESTATE_NAMES">ESTATE_NAMES</a></li><li><a href="#namespace_password_managers" title="PASSWORD_MANAGERS">PASSWORD_MANAGERS</a></li><li><a href="#namespace_person_sources" title="PERSON_SOURCES">PERSON_SOURCES</a></li><li><a href="#namespace_source_rank" title="SOURCE_RANK">SOURCE_RANK</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/estate/graph_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_buildgraph" title="buildGraph">buildGraph</a></li><li><a href="#namespace_estatepolicies" title="estatePolicies">estatePolicies</a></li><li><a href="#namespace_estatequery" title="estateQuery">estateQuery</a></li><li><a href="#namespace_estaterefusal" title="estateRefusal">estateRefusal</a></li><li><a href="#namespace_estatesql" title="estateSql">estateSql</a></li><li><a href="#namespace_fixedassetkey" title="fixedAssetKey">fixedAssetKey</a></li><li><a href="#namespace_nodeuids" title="nodeUids">nodeUids</a></li><li><a href="#namespace_serialkeysbyhostname" title="serialKeysByHostname">serialKeysByHostname</a></li><li><a href="#namespace_tenantuid" title="tenantUid">tenantUid</a></li><li><a href="#namespace_writefindings" title="writeFindings">writeFindings</a></li></ul></li><li><a href="#archon/estate/graph_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_estate" title="Estate">Estate</a></li></ul></li><li><a href="#archon/estate/graph_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_estate_controls" title="ESTATE_CONTROLS">ESTATE_CONTROLS</a></li><li><a href="#namespace_estate_names" title="ESTATE_NAMES">ESTATE_NAMES</a></li><li><a href="#namespace_password_managers" title="PASSWORD_MANAGERS">PASSWORD_MANAGERS</a></li><li><a href="#namespace_person_sources" title="PERSON_SOURCES">PERSON_SOURCES</a></li><li><a href="#namespace_source_rank" title="SOURCE_RANK">SOURCE_RANK</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>
