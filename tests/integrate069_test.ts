@@ -110,19 +110,6 @@ Deno.test("069: integrate.sh: discover changes nothing and prints a code; adopt 
   const dry = await sh(["--adopt", "--fleet", "lab", "--key", KEY, "--dry-run"], env);
   assertStringIncludes(dry.out, "nothing was changed");
   assertEquals([...Deno.readDirSync(home)].length, 0, "a dry run wrote nothing");
-  const bad = await sh([
-    "--adopt",
-    "--fleet",
-    "lab",
-    "--key",
-    KEY,
-    "--probe-sha256",
-    "0".repeat(64),
-    "--yes",
-    "--ssh-port",
-    "1",
-  ], env);
-  assert(bad.code !== 0 && bad.out.includes("checksum differs"), bad.out);
   const { PROBE_SCRIPT } = await import("../src/archon/adopt/probe.ts");
   const sum = [
     ...new Uint8Array(
@@ -133,6 +120,19 @@ Deno.test("069: integrate.sh: discover changes nothing and prints a code; adopt 
   // Something listens on --ssh-port (this test), so the script sees SSH on and only writes in the account.
   const l = Deno.listen({ hostname: "127.0.0.1", port: 0 });
   const port = String((l.addr as Deno.NetAddr).port);
+  const bad = await sh([
+    "--adopt",
+    "--fleet",
+    "lab",
+    "--key",
+    KEY,
+    "--probe-sha256",
+    "0".repeat(64),
+    "--yes",
+    "--ssh-port",
+    port,
+  ], env);
+  assert(bad.code !== 0 && bad.out.includes("checksum differs"), bad.out);
   const ok = await sh([
     "--adopt",
     "--fleet",

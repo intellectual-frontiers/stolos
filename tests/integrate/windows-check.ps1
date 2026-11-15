@@ -4,7 +4,10 @@
 # nothing else. Usage: pwsh -File tests/integrate/windows-check.ps1
 $ErrorActionPreference = 'Stop'
 $env:STOLOS_RAW = (Get-Location).Path
-function Check($file, $kinds) { deno run -A tests/integrate/check-code.ts $file windows @kinds; if ($LASTEXITCODE) { throw "check-in code: $file" } }
+function Check($file, $kinds) {
+  deno run -A tests/integrate/check-code.ts $file windows @kinds
+  if ($LASTEXITCODE) { Write-Host "---- $file"; Get-Content $file; throw "check-in code: $file" }
+}
 
 foreach ($shell in 'powershell', 'pwsh') {
   $f = & $shell -NoProfile -ExecutionPolicy Bypass -File bin/stolos-probe.ps1 facts
@@ -21,7 +24,8 @@ ssh-keygen -q -t ed25519 -N '""' -f "$env:TEMP\probe" | Out-Null
 $pub = Get-Content "$env:TEMP\probe.pub"
 $sha = (deno eval "const t=Deno.readTextFileSync('bin/stolos-probe.ps1');const h=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));console.log([...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,'0')).join(''))").Trim()
 & powershell -NoProfile -ExecutionPolicy Bypass -File bin/integrate.windows.ps1 --adopt --fleet ci --key "$pub" --probe-sha256 $sha --yes *> adopt.txt
-Get-Content adopt.txt | Select-Object -Last 8
+Write-Host '---- the installed probe, run directly:'
+& powershell -NoProfile -ExecutionPolicy Bypass -File 'C:\ProgramData\stolos\stolos-probe.ps1' facts 2>&1 | Select-Object -First 12
 Check adopt.txt @('adopt')
 
 $o = @('-i', "$env:TEMP\probe", '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=NUL', '-o', 'BatchMode=yes', "$env:USERNAME@localhost")
