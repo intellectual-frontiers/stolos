@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/console/pc.ts - Stolos v0.82.0 documentation</title>
+  <title>archon/console/pc.ts - Stolos v0.89.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.82.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.89.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -211,6 +211,9 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_pccloud" c
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcFacts.html#property_clouds">
                   <span>clouds</span><span>: <span class="td-ref">PcCloud</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Every cloud provider.</p>
 </div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcFacts.html#property_devices">
+                  <span>devices</span><span>: <span class="td-ref">Array</span>&lt;<div class="ml-indent"><div>{ device<span>: <span class="td-kw">import</span>(<span class="td-str">"../device/device.ts"</span>)<span>.DeviceDef</span></span>; observed<span class="td-op">?</span><span>: <span class="td-kw">import</span>(<span class="td-str">"../device/device.ts"</span>)<span>.DeviceObserved</span></span>; results<span>: <span class="td-ref">PolicyResult</span>[]</span>;  }</div></div>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Devices read over SNMPv3, with their policies.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcFacts.html#property_fleet">
                   <span>fleet</span><span>: { id<span>: <span class="td-kw">string</span></span>; title<span>: <span class="td-kw">string</span></span>; repo<span>: <span class="td-kw">string</span></span>; domain<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; engine<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fleet: id, title, its repository, web domain, and engine pin.</p>
 </div></div></li><li>
@@ -238,7 +241,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_pccloud" c
                   <span>failing</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What fails, in words.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcMachine.html#property_kind">
-                  <span>kind</span><span>: <span><span class="td-str">"server"</span><span class="td-op"> | </span><span class="td-str">"workstation"</span><span class="td-op"> | </span><span class="td-str">"adopted"</span><span class="td-op"> | </span><span class="td-str">"cloud"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>server or workstation (managed), adopted, or cloud (seen in a cloud account only).</p>
+                  <span>kind</span><span>: <div class="ml-indent"><span><span class="td-str">"server"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"workstation"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"adopted"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"device"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"discovered"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"cloud"</span></span></div></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>server or workstation (managed), adopted, device (SNMP), discovered (recorded, not yet adopted), or cloud.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcMachine.html#property_name">
                   <span>name</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its name in the fleet (or the cloud's).</p>
@@ -343,7 +346,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_pccloud" c
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1459 symbols</span><svg
+              <span class="leading-none">view all 1509 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

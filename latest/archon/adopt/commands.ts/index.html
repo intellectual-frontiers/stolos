@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/adopt/commands.ts - Stolos v0.82.0 documentation</title>
+  <title>archon/adopt/commands.ts - Stolos v0.89.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.82.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.89.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -128,6 +128,11 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_discover" c
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;adopt&#x2F;commands.ts&#x2F;~&#x2F;discover.html" title="discover">
 			    <span>discover</span><span>(<span><span>json<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos discover</code>: machines seen on this PC's network or in the clouds, not yet in the fleet.</p>
 </div></div></div>
+    </div><div id="namespace_discoverimport" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;adopt&#x2F;commands.ts&#x2F;~&#x2F;discoverImport.html" title="discoverImport">
+			    <span>discoverImport</span><span>(<div class="ml-4"><div><span>code<span>: <span class="td-kw">string</span></span></span>,</div><div><span>name<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span>,</div><div><span>owner<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos discover --import &lt;code&gt;</code>: record a machine that checked in, to adopt or manage later.</p>
+</div></div></div>
     </div><div id="namespace_fleetquery" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;adopt&#x2F;commands.ts&#x2F;~&#x2F;fleetQuery.html" title="fleetQuery">
@@ -141,12 +146,17 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_discover" c
     </div><div id="namespace_hostadopt" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;adopt&#x2F;commands.ts&#x2F;~&#x2F;hostAdopt.html" title="hostAdopt">
-			    <span>hostAdopt</span><span>(<span><span>o<span>: { name<span>: <span class="td-kw">string</span></span>; ssh<span>: <span class="td-kw">string</span></span>; title<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; owner<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; until<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos host adopt &lt;name&gt; --ssh user@address</code>: pin, install the probe, observe.</p>
+			    <span>hostAdopt</span><span>(<span><span>o<span>: { name<span>: <span class="td-kw">string</span></span>; ssh<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; checkIn<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; title<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; owner<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; until<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos host adopt &lt;name&gt; --ssh user@address</code>: pin, install the probe, observe.</p>
 </div></div></div>
     </div><div id="namespace_hostcheck" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;adopt&#x2F;commands.ts&#x2F;~&#x2F;hostCheck.html" title="hostCheck">
 			    <span>hostCheck</span><span>(<div class="ml-4"><div><span>name<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span>,</div><div><span>json<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos host check [name]</code>: the policies, per adopted machine.</p>
+</div></div></div>
+    </div><div id="namespace_hostintegrate" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;adopt&#x2F;commands.ts&#x2F;~&#x2F;hostIntegrate.html" title="hostIntegrate">
+			    <span>hostIntegrate</span><span>(<span><span>o<span>: { name<span>: <span class="td-kw">string</span></span>; as<span>: <span class="td-kw">string</span></span>; github<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; repo<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos host integrate &lt;name&gt; --as discover|adopt|osquery|server|workstation</code>: the line to run on the machine.</p>
 </div></div></div>
     </div><div id="namespace_hostobserve" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -278,7 +288,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_queryanswe
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1459 symbols</span><svg
+              <span class="leading-none">view all 1509 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -293,7 +303,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_queryanswe
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/adopt/commands_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_discover" title="discover">discover</a></li><li><a href="#namespace_fleetquery" title="fleetQuery">fleetQuery</a></li><li><a href="#namespace_hostaccept" title="hostAccept">hostAccept</a></li><li><a href="#namespace_hostadopt" title="hostAdopt">hostAdopt</a></li><li><a href="#namespace_hostcheck" title="hostCheck">hostCheck</a></li><li><a href="#namespace_hostobserve" title="hostObserve">hostObserve</a></li><li><a href="#namespace_hostrelease" title="hostRelease">hostRelease</a></li><li><a href="#namespace_report" title="report">report</a></li></ul></li><li><a href="#archon/adopt/commands_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_queryanswer" title="QueryAnswer">QueryAnswer</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/adopt/commands_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_discover" title="discover">discover</a></li><li><a href="#namespace_discoverimport" title="discoverImport">discoverImport</a></li><li><a href="#namespace_fleetquery" title="fleetQuery">fleetQuery</a></li><li><a href="#namespace_hostaccept" title="hostAccept">hostAccept</a></li><li><a href="#namespace_hostadopt" title="hostAdopt">hostAdopt</a></li><li><a href="#namespace_hostcheck" title="hostCheck">hostCheck</a></li><li><a href="#namespace_hostintegrate" title="hostIntegrate">hostIntegrate</a></li><li><a href="#namespace_hostobserve" title="hostObserve">hostObserve</a></li><li><a href="#namespace_hostrelease" title="hostRelease">hostRelease</a></li><li><a href="#namespace_report" title="report">report</a></li></ul></li><li><a href="#archon/adopt/commands_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_queryanswer" title="QueryAnswer">QueryAnswer</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>

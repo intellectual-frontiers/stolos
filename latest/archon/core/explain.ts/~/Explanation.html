@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Explanation - archon/core/explain.ts - Stolos v0.82.0 documentation</title>
+  <title>Explanation - archon/core/explain.ts - Stolos v0.89.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;core&#x2F;explain.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.82.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.89.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -142,54 +142,7 @@
   />
 </svg>
 </a>
-</div><div><div class="space-y-7" id=""><div class="markdown"><p>Spec 052: every problem archon knows how to explain, by a stable code. A
-problem shown with a code says &quot;explain: archon explain &lt;code&gt;&quot;; the code
-stays the same across versions, so it can be searched for and written down.
-Raw errors from other tools (ssh, apt, git, Deno) that people meet often are
-recognized here too, and given their plain cause and fix.</p>
-<p>Codes: E&lt;spec&gt;-&lt;WORD&gt; for a problem, P&lt;spec&gt;-&lt;WORD&gt; for something not set up
-yet (pending).</p>
-<pre class="highlight"><code class="language-mermaid">flowchart LR
-  raw[&quot;a problem, or a raw tool error&lt;br/&gt;(ssh, apt, dpkg, Deno)&quot;] --&gt; tr{&quot;known?&quot;}
-  tr --&gt;|yes| code[&quot;its code and fix&quot;]
-  tr --&gt;|no| plain[&quot;shown as it is&quot;]
-  code --&gt; show[&quot;fix: ...&lt;br/&gt;explain: archon explain CODE&quot;]
-</code><button class="copyButton" data-copy="flowchart LR
-  raw[&quot;a problem, or a raw tool error&lt;br/&gt;(ssh, apt, dpkg, Deno)&quot;] --&gt; tr{&quot;known?&quot;}
-  tr --&gt;|yes| code[&quot;its code and fix&quot;]
-  tr --&gt;|no| plain[&quot;shown as it is&quot;]
-  code --&gt; show[&quot;fix: ...&lt;br/&gt;explain: archon explain CODE&quot;]
-"><svg
-  class="copy"
-  width="15"
-  height="15"
-  viewBox="0 0 15 15"
-  fill="none"
-  xmlns="http://www.w3.org/2000/svg"
->
-  <rect x="2" y="2" width="7" height="7" fill="none" />
-  <rect x="6" y="6" width="7" height="7" fill="none" />
-  <path
-    d="M1.55566 2.7C1.55566 2.03726 2.09292 1.5 2.75566 1.5H8.75566C9.41841 1.5 9.95566 2.03726 9.95566 2.7V5.1H12.3557C13.0184 5.1 13.5557 5.63726 13.5557 6.3V12.3C13.5557 12.9627 13.0184 13.5 12.3557 13.5H6.35566C5.69292 13.5 5.15566 12.9627 5.15566 12.3V9.9H2.75566C2.09292 9.9 1.55566 9.36274 1.55566 8.7V2.7ZM6.35566 9.9V12.3H12.3557V6.3H9.95566V8.7C9.95566 9.36274 9.41841 9.9 8.75566 9.9H6.35566ZM8.75566 8.7V2.7H2.75566V8.7H8.75566Z"
-    fill="currentColor"
-  />
-</svg>
-<svg
-  class="check"
-  width="15"
-  height="15"
-  viewBox="0 0 24 24"
-  stroke-width="2"
-  stroke="currentColor"
-  fill="none"
-  stroke-linecap="round"
-  stroke-linejoin="round"
-  xmlns="http://www.w3.org/2000/svg"
->
-  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-  <path d="M5 12l5 5l10 -10" />
-</svg>
-</button><code></code></pre>
+</div><div><div class="space-y-7" id=""><div class="markdown"><p>One problem's explanation: what, why, the fix, and the guide.</p>
 </div><section class="section"  id="properties"><div>
       <h2 class="anchorable mb-1"><a href="#properties" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
@@ -481,7 +434,7 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   />
 </svg>
 </a>
-</div><div class="max-w-[75ch]"><div class="markdown"><p>Where the guide explains more (a file of the engine's docs).</p>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The guide that explains more (its name: deno task stolos docs &lt;name&gt;).</p>
 </div></div></div>
 </div></section>
 </div>
@@ -527,22 +480,5 @@ Properties</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   </div></div>
 </div>
 </div>
-<script src="../../../../mermaid.min.js"></script>
-<script>
-  (() => {
-    const blocks = document.querySelectorAll("pre > code.language-mermaid");
-    if (!blocks.length || !window.mermaid) return;
-    for (const code of blocks) {
-      const div = document.createElement("div");
-      div.className = "mermaid";
-      div.textContent = code.textContent;
-      code.parentElement.replaceWith(div);
-    }
-    const dark = document.documentElement.classList.contains("dark") ||
-      matchMedia("(prefers-color-scheme: dark)").matches;
-    mermaid.initialize({ startOnLoad: false, theme: dark ? "dark" : "default", securityLevel: "strict" });
-    mermaid.run({ querySelector: ".mermaid" });
-  })();
-</script>
 </body>
 </html>
