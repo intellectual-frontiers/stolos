@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/estate/graph.ts - Stolos v0.107.0 documentation</title>
+  <title>archon/estate/graph.ts - Stolos v0.108.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.107.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.108.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -108,8 +108,10 @@ other source links to them.</li>
 <code>code_repository</code>. An account is linked to its person (<code>has_account</code>) by
 work email, or by a manual link in links.ts.</li>
 <li><strong>Machines</strong> are fixed assets, deduplicated by serial number, then
-hostname (links.ts overrides). Each property records the source it came
-from, and each source's record is linked by <code>observed_as</code>.</li>
+hostname (links.ts overrides); a device with no serial number (an EDR's)
+joins the machine with its hostname. Each property records the source it
+came from (Stolos's own, then the probe, then MDMs, then EDRs: <code>SOURCE_RANK</code>),
+and each source's record is linked by <code>observed_as</code>.</li>
 <li><strong>History</strong>: first-seen and last-seen times come from Git. When a source
 could not read something (an observation), its earlier nodes are kept,
 marked stale, rather than dropped.</li>
@@ -204,12 +206,22 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_buildgraph"
     </div><div id="namespace_fixedassetkey" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;estate&#x2F;graph.ts&#x2F;~&#x2F;fixedAssetKey.html" title="fixedAssetKey">
-			    <span>fixedAssetKey</span><span>(<div class="ml-4"><div><span>d<span>: <span class="td-ref">Device</span></span></span>,</div><div><span>links<span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A machine's key: links.ts first, then its serial number, then its hostname.</p>
+			    <span>fixedAssetKey</span><span>(<div class="ml-4"><div><span>d<span>: <span class="td-ref">Device</span></span></span>,</div><div><span>links<span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></span>,</div><div><span>serialByHostname<span class="td-op">?</span><span>: <span class="td-ref">Map</span>&lt;<span class="td-kw">string</span><span>, </span><span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">null</span></span>&gt;</span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A machine's key: links.ts first, then its serial number, then its
+hostname. A device with no serial number (an EDR that does not report
+one) joins the machine another source knows by the same hostname and a
+serial number, when <code>serialByHostname</code> names exactly one.</p>
 </div></div></div>
     </div><div id="namespace_nodeuids" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;estate&#x2F;graph.ts&#x2F;~&#x2F;nodeUids.html" title="nodeUids">
 			    <span>nodeUids</span><span>(<div class="ml-4"><div><span>connector<span>: <span class="td-kw">string</span></span></span>,</div><div><span>o<span>: <span class="td-ref">Observation</span></span></span></div></div>)<span>: <span class="td-kw">string</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The uids of an observation's nodes (accounts, repositories, and declared records).</p>
+</div></div></div>
+    </div><div id="namespace_serialkeysbyhostname" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;estate&#x2F;graph.ts&#x2F;~&#x2F;serialKeysByHostname.html" title="serialKeysByHostname">
+			    <span>serialKeysByHostname</span><span>(<span><span>devices<span>: <span class="td-ref">Device</span>[]</span></span></span>)<span>: <span class="td-ref">Map</span>&lt;<span class="td-kw">string</span><span>, </span><span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">null</span></span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Each hostname's serial-number key, from the devices that report both; null
+when two machines share a hostname (a default name like &quot;macbook-pro&quot;),
+so a device with only that hostname is not joined to either.</p>
 </div></div></div>
     </div><div id="namespace_tenantuid" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -282,10 +294,23 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_estate_name
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;estate&#x2F;graph.ts&#x2F;~&#x2F;ESTATE_NAMES.html" title="ESTATE_NAMES">
 			    <span>ESTATE_NAMES</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The tables and views a query may read, for messages.</p>
 </div></div></div>
+    </div><div id="namespace_password_managers" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;estate&#x2F;graph.ts&#x2F;~&#x2F;PASSWORD_MANAGERS.html" title="PASSWORD_MANAGERS">
+			    <span>PASSWORD_MANAGERS</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Spec 087: the password managers; every active person should have an account in one.</p>
+</div></div></div>
     </div><div id="namespace_person_sources" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;estate&#x2F;graph.ts&#x2F;~&#x2F;PERSON_SOURCES.html" title="PERSON_SOURCES">
 			    <span>PERSON_SOURCES</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The default source-of-truth order for people: HR systems, then identity providers.</p>
+</div></div></div>
+    </div><div id="namespace_source_rank" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;estate&#x2F;graph.ts&#x2F;~&#x2F;SOURCE_RANK.html" title="SOURCE_RANK">
+			    <span>SOURCE_RANK</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">number</span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Whose word wins for a machine's property when sources disagree (lower
+first): Stolos's own managed hosts, then its probe (adopted machines), then
+SNMP, then MDMs and directories (they enforce encryption and know the
+owner), then EDRs. A source not listed comes last.</p>
 </div></div></div>
     </div></div>
 </section>
@@ -360,7 +385,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_estate_name
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 2155 symbols</span><svg
+              <span class="leading-none">view all 2190 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -375,7 +400,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_estate_name
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/estate/graph_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_buildgraph" title="buildGraph">buildGraph</a></li><li><a href="#namespace_estatepolicies" title="estatePolicies">estatePolicies</a></li><li><a href="#namespace_estatequery" title="estateQuery">estateQuery</a></li><li><a href="#namespace_estaterefusal" title="estateRefusal">estateRefusal</a></li><li><a href="#namespace_estatesql" title="estateSql">estateSql</a></li><li><a href="#namespace_fixedassetkey" title="fixedAssetKey">fixedAssetKey</a></li><li><a href="#namespace_nodeuids" title="nodeUids">nodeUids</a></li><li><a href="#namespace_tenantuid" title="tenantUid">tenantUid</a></li></ul></li><li><a href="#archon/estate/graph_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_estate" title="Estate">Estate</a></li></ul></li><li><a href="#archon/estate/graph_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_estate_names" title="ESTATE_NAMES">ESTATE_NAMES</a></li><li><a href="#namespace_person_sources" title="PERSON_SOURCES">PERSON_SOURCES</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/estate/graph_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_buildgraph" title="buildGraph">buildGraph</a></li><li><a href="#namespace_estatepolicies" title="estatePolicies">estatePolicies</a></li><li><a href="#namespace_estatequery" title="estateQuery">estateQuery</a></li><li><a href="#namespace_estaterefusal" title="estateRefusal">estateRefusal</a></li><li><a href="#namespace_estatesql" title="estateSql">estateSql</a></li><li><a href="#namespace_fixedassetkey" title="fixedAssetKey">fixedAssetKey</a></li><li><a href="#namespace_nodeuids" title="nodeUids">nodeUids</a></li><li><a href="#namespace_serialkeysbyhostname" title="serialKeysByHostname">serialKeysByHostname</a></li><li><a href="#namespace_tenantuid" title="tenantUid">tenantUid</a></li></ul></li><li><a href="#archon/estate/graph_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_estate" title="Estate">Estate</a></li></ul></li><li><a href="#archon/estate/graph_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_estate_names" title="ESTATE_NAMES">ESTATE_NAMES</a></li><li><a href="#namespace_password_managers" title="PASSWORD_MANAGERS">PASSWORD_MANAGERS</a></li><li><a href="#namespace_person_sources" title="PERSON_SOURCES">PERSON_SOURCES</a></li><li><a href="#namespace_source_rank" title="SOURCE_RANK">SOURCE_RANK</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>

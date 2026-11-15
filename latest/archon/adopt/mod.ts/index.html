@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/adopt/mod.ts - Stolos v0.107.0 documentation</title>
+  <title>archon/adopt/mod.ts - Stolos v0.108.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.107.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.108.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -692,6 +692,31 @@ deletes anything there (managing a cloud stays in that cloud's own console).</p>
 <td>second factors for users and admins, 2 to 4 admins, encrypted disks</td>
 </tr>
 <tr>
+<td>Microsoft Intune</td>
+<td>managed devices: serial, OS, primary user, encryption, last sync, compliance</td>
+<td>encrypted disks, checked in within 14 days, compliant</td>
+</tr>
+<tr>
+<td>Jamf Pro, Kandji</td>
+<td>computers: serial, OS, assigned user, FileVault, last check-in</td>
+<td>encrypted disks, checked in within 14 days</td>
+</tr>
+<tr>
+<td>Defender for Endpoint</td>
+<td>machines: OS, last seen, onboarding, sensor health</td>
+<td>sensors healthy, every discovered device onboarded, seen in 14 days</td>
+</tr>
+<tr>
+<td>CrowdStrike Falcon</td>
+<td>hosts: serial, OS, last seen, reduced functionality mode</td>
+<td>sensors fully working, seen within 14 days</td>
+</tr>
+<tr>
+<td>SentinelOne</td>
+<td>agents: serial, OS, last active, disk encryption, agent state, threats</td>
+<td>encrypted disks, agents working, no unresolved threat, active</td>
+</tr>
+<tr>
 <td>GitHub</td>
 <td>members, owners, members without 2FA, repositories and their branch rules</td>
 <td>2FA required, protected and reviewed branches, secret scanning</td>
@@ -716,8 +741,36 @@ deletes anything there (managing a cloud stays in that cloud's own console).</p>
 <td>the roster only: name, work email, status, start and end dates, manager</td>
 <td>every leaver has an end date (the estate graph checks the rest)</td>
 </tr>
+<tr>
+<td>Jira (Cloud)</td>
+<td>people, admin groups, 90 days of tickets (type, status, linked commits)</td>
+<td>changes recorded as tickets and linked to commits, 2 to 4 admins</td>
+</tr>
+<tr>
+<td>Linear</td>
+<td>workspace SAML, people, admins, 90 days of issues and attached pull requests</td>
+<td>SAML sign-in, changes linked to commits, 2 to 4 admins</td>
+</tr>
+<tr>
+<td>Slack</td>
+<td>workspace, people, owners and admins, guests, two-factor, shared channels</td>
+<td>every member has 2FA, 2 to 4 admins, shared channels reviewed</td>
+</tr>
+<tr>
+<td>1Password</td>
+<td>people (active, suspended, not yet joined)</td>
+<td>everyone invited has joined (the estate graph checks coverage)</td>
+</tr>
+<tr>
+<td>Bitwarden</td>
+<td>members, owners and admins, two-step login, collections and who opens them</td>
+<td>two-step login required and on, 2 to 4 admins</td>
+</tr>
 </tbody>
 </table>
+<p>A laptop the probe adopted, Intune manages, and Falcon protects is one device in the estate: the
+graph merges every source's devices by serial number, then hostname, and records which source
+each property came from (the probe first, then the MDM, then the EDR).</p>
 <pre class="highlight"><code class="language-bash">deno task stolos connect github
 </code><button class="copyButton" data-copy="deno task stolos connect github
 "><svg
@@ -1021,7 +1074,7 @@ A machine two sources see under different names is joined there too:
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 2155 symbols</span><svg
+              <span class="leading-none">view all 2190 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
