@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Stolos v0.98.0</title>
+<title>Stolos v0.99.0</title>
 <link rel="stylesheet" href="./styles.css">
 <link rel="stylesheet" href="./page.css">
 <script src="./darkmode_toggle.js"></script>
@@ -17,7 +17,7 @@
 </head>
 <body>
 <main>
-<h1>Stolos v0.98.0</h1>
+<h1>Stolos v0.99.0</h1>
 <p>The fleet engine (its command is <code>archon</code>), documented from its TypeScript.</p>
 <p class="start">Start here: <a href="./mod.ts/index.html">the overview</a>, with how the
 pieces fit, in diagrams. Then the model: <a href="./archon/model/types.ts/index.html">types.ts</a>.
@@ -153,7 +153,6 @@ Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 <li><a href="./archon/connect/commands.ts/index.html"><code>commands.ts</code></a> Spec 067 (clouds): stolos connect | observe | check | assets | disconnect.</li>
 <li><a href="./archon/connect/connector.ts/index.html"><code>connector.ts</code></a> Spec 084: connectors.</li>
 <li><a href="./archon/connect/entities.ts/index.html"><code>entities.ts</code></a> Spec 085: the normalized entities every source contributes to the estate graph: people (from HR systems), accounts (from identity providers, code hosts, clouds, SaaS), devices (managed, adopted,…</li>
-<li><a href="./archon/connect/estate.ts/index.html"><code>estate.ts</code></a> Spec 085: the estate graph.</li>
 <li><a href="./archon/connect/github.ts/index.html"><code>github.ts</code></a> Spec 086: GitHub, read-only, for one organization: its members (who are owners, who have no second factor), and its repositories (private or public, whether the default branch is protected by…</li>
 <li><a href="./archon/connect/google.ts/index.html"><code>google.ts</code></a> Spec 086: Google Workspace, read-only, through the Admin SDK Directory API: its users (suspended or not, administrators, enrolled in 2-Step Verification, last sign-in).</li>
 <li><a href="./archon/connect/hetzner.ts/index.html"><code>hetzner.ts</code></a> Spec 067 (clouds): Hetzner Cloud, read-only: one project's servers, volumes, firewalls, primary IPs, and load balancers.</li>
@@ -232,6 +231,13 @@ Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 <li><a href="./archon/dotfiles/mod.ts/index.html"><code>mod.ts</code></a> Every account's dotfiles (bash, fish, the prompt, tmux, git, and on workstations Claude Code's settings) are managed by chezmoi from the fleet repository.</li>
 <li><a href="./archon/dotfiles/report.ts/index.html"><code>report.ts</code></a> archon dotfiles [path] [--user &lt;u&gt;] (spec 031): which layer provides each of a user's dotfiles on this host.</li>
 <li><a href="./archon/dotfiles/sync.ts/index.html"><code>sync.ts</code></a> 031-dotfile-layers: write a user's composed chezmoi source from the repository's layers into /var/lib/archon-dotfiles/&lt;user&gt;: owned by root, readable by the user's group, so chezmoi reads it and…</li>
+</ul>
+<h2>archon/estate/</h2>
+<ul>
+<li><a href="./archon/estate/commands.ts/index.html"><code>commands.ts</code></a> Spec 090: the estate graph's commands.</li>
+<li><a href="./archon/estate/graph.ts/index.html"><code>graph.ts</code></a> Spec 090: the estate graph, built from a {@link Snapshot} into SQLite (Deno's built-in node:sqlite) with the schema in schema.ts.</li>
+<li><a href="./archon/estate/schema.ts/index.html"><code>schema.ts</code></a> Spec 090: the estate graph's schema, declared once (spec 089's schema language) and generated into the canonical SQL, the docs, and the views.</li>
+<li><a href="./archon/estate/snapshot.ts/index.html"><code>snapshot.ts</code></a> Spec 090: what the estate graph is built from, read from the fleet repository as it is now or at any commit, without running any of it: the connectors' observations (estate/&lt;id&gt;.ts), the links…</li>
 </ul>
 <h2>archon/evidence/</h2>
 <ul>

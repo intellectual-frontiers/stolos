@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/core/ts-literal.ts - Stolos v0.98.0 documentation</title>
+  <title>archon/core/ts-literal.ts - Stolos v0.99.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.98.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.99.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -127,7 +127,20 @@ JSON, and the same data.</p>
   </defs>
 </svg>
 </a>
-Functions</h2></div><div class="namespaceSection"><div id="namespace_tskey" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+Functions</h2></div><div class="namespaceSection"><div id="namespace_exportedliteral" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ts-literal.ts&#x2F;~&#x2F;exportedLiteral.html" title="exportedLiteral">
+			    <span>exportedLiteral</span><span>(<div class="ml-4"><div><span>source<span>: <span class="td-kw">string</span></span></span>,</div><div><span>name<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">unknown</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The value of <code>export const &lt;name&gt;[: Type] = &lt;literal&gt;;</code> in a file <a href="../../.././archon/core/ts-literal.ts/~/tsLiteral.html">tsLiteral</a> wrote.</p>
+</div></div></div>
+    </div><div id="namespace_parsetsliteral" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ts-literal.ts&#x2F;~&#x2F;parseTsLiteral.html" title="parseTsLiteral">
+			    <span>parseTsLiteral</span><span>(<div class="ml-4"><div><span>text<span>: <span class="td-kw">string</span></span></span>,</div><div><span>start<span class="td-op">?</span><span>: <span class="td-kw">number</span></span></span></div></div>)<span>: { value<span>: <span class="td-kw">unknown</span></span>; end<span>: <span class="td-kw">number</span></span>;  }</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Spec 090: read a value <a href="../../.././archon/core/ts-literal.ts/~/tsLiteral.html">tsLiteral</a> wrote, without running it (so a past
+version from <code>git show</code> can be read safely): objects with bare or quoted keys,
+arrays, double-quoted strings, numbers, true, false, null; trailing commas.
+Anything else is refused. Returns the value and where it ended.</p>
+</div></div></div>
+    </div><div id="namespace_tskey" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ts-literal.ts&#x2F;~&#x2F;tsKey.html" title="tsKey">
 			    <span>tsKey</span><span>(<span><span>key<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A key as TypeScript writes it: bare when it can be, else a double-quoted string.</p>
@@ -242,7 +255,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_bare_key" c
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1808 symbols</span><svg
+              <span class="leading-none">view all 1847 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -257,7 +270,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_bare_key" c
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/core/ts-literal_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_tskey" title="tsKey">tsKey</a></li><li><a href="#namespace_tsliteral" title="tsLiteral">tsLiteral</a></li></ul></li><li><a href="#archon/core/ts-literal_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_bare_key" title="BARE_KEY">BARE_KEY</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/core/ts-literal_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_exportedliteral" title="exportedLiteral">exportedLiteral</a></li><li><a href="#namespace_parsetsliteral" title="parseTsLiteral">parseTsLiteral</a></li><li><a href="#namespace_tskey" title="tsKey">tsKey</a></li><li><a href="#namespace_tsliteral" title="tsLiteral">tsLiteral</a></li></ul></li><li><a href="#archon/core/ts-literal_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_bare_key" title="BARE_KEY">BARE_KEY</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/model/types.ts - Stolos v0.98.0 documentation</title>
+  <title>archon/model/types.ts - Stolos v0.99.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.98.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.99.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -357,6 +357,12 @@ writes the first one from your GitHub account; edit it freely after, then
 </div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;FleetDef.html#property_admin">
                   <span>admin</span><span>: { user<span>: <span class="td-kw">string</span></span>; uid<span>: <span class="td-kw">number</span></span>; github<span>: <span class="td-ref">GitHubIdentity</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fleet's admin: one person, one account on every host (spec 003).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;FleetDef.html#property_estate">
+                  <span>estate</span><span>: { personSources<span class="td-op">?</span><span>: <span class="td-kw">string</span>[]</span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The estate graph (spec 090). <code>personSources</code>: the connectors that may
+create people, in order; the first one connected is the source of truth
+and the others only link to its people. Default: bamboohr, rippling,
+okta, microsoft, google (HR systems, then identity providers).</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;FleetDef.html#property_id">
                   <span>id</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fleet's id: its folder, fleets/&lt;id&gt;/, and a DNS label (lowercase, digits, hyphens).</p>
@@ -1385,7 +1391,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_brand-1" cl
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1808 symbols</span><svg
+              <span class="leading-none">view all 1847 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

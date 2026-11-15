@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/adopt/mod.ts - Stolos v0.98.0 documentation</title>
+  <title>archon/adopt/mod.ts - Stolos v0.99.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.98.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.99.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -768,12 +768,20 @@ Platform Services, Access Management, DevOps Platforms, Cloud HCM Suites, ...).<
   </defs>
 </svg>
 </a>Across systems: the estate graph</h3>
-<p>People (from the HR system), accounts (identity, code, clouds), devices (managed, adopted, SNMP),
-and repositories meet in one graph. <code>deno task stolos estate check</code> reports what no single system
-can say (people who left with accounts still on, accounts no person owns, administrators without
-a second factor, people without a device), and one SQL question spans them all:</p>
-<pre class="highlight"><code class="language-bash">deno task stolos estate query &quot;select system, name from accounts where admin = 1 and mfa = 0&quot;
-</code><button class="copyButton" data-copy="deno task stolos estate query &quot;select system, name from accounts where admin = 1 and mfa = 0&quot;
+<p>People, accounts, machines, and repositories meet in one graph (spec 090). People come only from
+the source of truth (the HR system; with none, the identity provider), and every other system's
+accounts link to them by work email. Machines are deduplicated by serial number, then hostname.
+<code>deno task stolos estate check</code> reports what no single system can say (people who left with
+accounts still on, accounts no person owns, administrators without a second factor, people
+without a machine), and one SQL question spans them all:</p>
+<pre class="highlight"><code class="language-bash">deno task stolos estate query &quot;select connector, display_name from user_account where admin = 1 and mfa = 0&quot;
+deno task stolos estate diff &quot;select uid, hostname from device&quot; --since 2026-10-01
+deno task stolos estate build
+deno task stolos estate schema --docs
+</code><button class="copyButton" data-copy="deno task stolos estate query &quot;select connector, display_name from user_account where admin = 1 and mfa = 0&quot;
+deno task stolos estate diff &quot;select uid, hostname from device&quot; --since 2026-10-01
+deno task stolos estate build
+deno task stolos estate schema --docs
 "><svg
   class="copy"
   width="15"
@@ -805,8 +813,15 @@ a second factor, people without a device), and one SQL question spans them all:<
   <path d="M5 12l5 5l10 -10" />
 </svg>
 </button><code></code></pre>
+<p>The tables follow the Universal Data Model (<code>person</code>, <code>party_role</code>, <code>contact_mechanism</code>,
+<code>fixed_asset</code>, ...) and a property graph (<code>tenant</code>, <code>node</code>, <code>edge</code>); views carry OCSF's and
+D3FEND's names (<code>user_account</code>, <code>code_repository</code>, <code>user_inventory</code>, <code>device</code>,
+<code>compliance_finding</code>). First seen and last seen come from Git. <code>estate build</code> writes the graph as
+canonical SQL (<code>estate.sql</code>, loadable into other databases) and as <code>estate.auto.sqlite.db</code>.</p>
 <p>A system that knows people by login only (GitHub) is linked to work emails in
-<code>fleets/&lt;fleet&gt;/estate/links.ts</code>: <code>export const links = { &quot;github:alice&quot;: &quot;alice@example.org&quot; };</code>.</p>
+<code>fleets/&lt;fleet&gt;/estate/links.ts</code>: <code>export const links = { &quot;github:alice&quot;: &quot;alice@example.org&quot; };</code>.
+A machine two sources see under different names is joined there too:
+<code>&quot;device:snmp:printer&quot;: &quot;hostname:front-printer&quot;</code>.</p>
 </div></div>
 </div>
 </section>
@@ -878,7 +893,7 @@ a second factor, people without a device), and one SQL question spans them all:<
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1808 symbols</span><svg
+              <span class="leading-none">view all 1847 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
