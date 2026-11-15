@@ -210,8 +210,13 @@ export async function oscalDocuments(now: Date = new Date()): Promise<OscalResul
   // Spec 080: the risk register's open risks go in the POA&M (a register that does not load is left out).
   const { loadRisks } = await import("../risk/register.ts");
   const register = await loadRisks().catch(() => undefined);
+  // Spec 088: the scanners' open vulnerabilities go in the POA&M too.
+  const { loadObservations } = await import("../connect/commands.ts");
+  const { openVulnerabilities } = await import("../connect/vulnerability.ts");
+  const vulnerabilities = openVulnerabilities(await loadObservations().catch(() => []));
   const docs = await oscalExports({
     ...(register ? { register } : {}),
+    ...(vulnerabilities.length ? { vulnerabilities } : {}),
     view: fleetFreshView(f, catalog, { cadences: await loadCadences() }),
     fleet: f.fleet,
     machines: f.machines.filter((m) => m.kind !== "discovered"),

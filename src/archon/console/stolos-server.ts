@@ -568,7 +568,8 @@ export function stolosHandler(
             : [what];
           lines = await deps.integrate(name, as);
         }
-        const { CONNECTORS } = await import("../connect/commands.ts");
+        const { allConnectors } = await import("../connect/commands.ts");
+        const CONNECTORS = await allConnectors();
         const { SNMP_HELP } = await import("../device/commands.ts");
         return await frame(
           s,

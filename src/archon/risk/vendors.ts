@@ -33,7 +33,17 @@
  * import { defineVendors } from "./vendors.ts";
  *
  * export const vendors = defineVendors([
- *   { id: "okta", name: "Okta", criticality: "high", data: ["Personal", "Security"] },
+ *   {
+    id: "digitalocean",
+    name: "DigitalOcean",
+    domains: ["digitalocean.com", "digitaloceanspaces.com", "ondigitalocean.app"],
+    connectors: ["digitalocean"],
+  },
+  { id: "snyk", name: "Snyk", domains: ["snyk.io"], apps: ["snyk"], connectors: ["snyk"] },
+  { id: "tenable", name: "Tenable", domains: ["tenable.com"], connectors: ["tenable"] },
+  { id: "knowbe4", name: "KnowBe4", domains: ["knowbe4.com"], apps: ["knowbe4"], connectors: ["knowbe4"] },
+  { id: "checkr", name: "Checkr", domains: ["checkr.com"], connectors: ["checkr"] },
+  { id: "okta", name: "Okta", criticality: "high", data: ["Personal", "Security"] },
  *   { id: "mailhost", name: "Mailhost", criticality: "moderate", data: ["Business"], domains: ["mailhost.example"] },
  * ]);
  * ```
@@ -182,7 +192,7 @@ export const WELL_KNOWN_VENDORS: readonly KnownVendor[] = [
       "web.app",
     ],
     apps: ["google", "googleworkspace", "gsuite"],
-    connectors: ["google"],
+    connectors: ["google", "gcp"],
   },
   {
     id: "amazon-web-services",

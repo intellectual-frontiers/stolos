@@ -105,6 +105,12 @@ export const GUIDES: GuideDef[] = [
     module: "src/archon/risk/mod.ts",
   },
   {
+    name: "connectors",
+    title: "The connector registry",
+    why: "Add a connector Stolos does not ship, pinned and locked like the engine; write your own.",
+    module: "src/archon/connect/registry-guide.ts",
+  },
+  {
     name: "people",
     title: "People controls",
     why: "Joiners and leavers, access reviews, policies, training, and screening, as code.",

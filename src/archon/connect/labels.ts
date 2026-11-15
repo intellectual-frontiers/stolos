@@ -10,6 +10,7 @@
 
 import { defineLabel, type LabelView } from "../schema/define.ts";
 import { codeRepository, userAccount } from "../estate/schema.ts";
+import { PERSON_RECORD } from "../people/records.ts";
 
 /** An account in some system (D3FEND user account). */
 export const USER_ACCOUNT: LabelView = userAccount;
@@ -196,6 +197,10 @@ export const CLOUD_USER_ACCOUNT: LabelView = defineLabel({
   props: {
     created: { type: "text", doc: "When it was created (ISO)." },
     password_last_used: { type: "text", doc: "When its password last signed in (ISO)." },
+    access_keys: {
+      type: "integer",
+      doc: "How many long-lived keys it has (a service account's user-managed keys).",
+    },
   },
 });
 
@@ -334,6 +339,78 @@ export const APPLICATION: LabelView = defineLabel({
   },
 });
 
+/**
+ * A vulnerability a scanner reports on one asset (OCSF vulnerability; emitted
+ * as OCSF Vulnerability Finding, 2002): spec 088. Open ones go in the OSCAL
+ * POA&M with their CVE, severity, and asset.
+ */
+export const VULNERABILITY: LabelView = defineLabel({
+  name: "vulnerability",
+  terms: [{ from: "ocsf", term: "vulnerability" }],
+  doc:
+    "A vulnerability a scanner reports on one asset: its CVE, severity, status, the asset, and when it was first seen.",
+  props: {
+    cve: { type: "text", doc: "Its CVE id (CVE-2024-3094), when it has one." },
+    title: { type: "text", doc: "Its title, as the scanner names it." },
+    severity: {
+      type: "text",
+      doc: "critical, high, medium, low, or info (the scanner's, normalized).",
+      values: ["critical", "high", "medium", "low", "info"],
+    },
+    status: {
+      type: "text",
+      doc: "open, fixed, or dismissed (accepted or ignored in the scanner).",
+      values: ["open", "fixed", "dismissed"],
+    },
+    asset: { type: "text", doc: "What it affects: a host, a repository, a project, an image." },
+    package: { type: "text", doc: "The affected package and version, when the scanner says." },
+    first_seen: { type: "text", doc: "When the scanner first found it (ISO)." },
+    fix_available: { type: "boolean", doc: "A fix (an upgrade, a patch) is available." },
+    src_url: { type: "text", doc: "Where it is in the scanner (its URL)." },
+  },
+});
+
+/** An audit log a cloud keeps (D3FEND event log): a CloudTrail trail, an exported activity log, a log sink. */
+export const EVENT_LOG: LabelView = defineLabel({
+  name: "event_log",
+  terms: [{ from: "d3fend", term: "event_log" }],
+  doc:
+    "An audit log a cloud keeps or sends somewhere: a CloudTrail trail, Azure's exported activity log, a Google Cloud log sink.",
+  props: {
+    kind: { type: "text", doc: "cloudtrail, activity-log, log-sink, ..." },
+    logging: { type: "boolean", doc: "It is recording now." },
+    multi_region: { type: "boolean", doc: "It records every region." },
+    retention_days: { type: "integer", doc: "How long it is kept (days), when the source says." },
+    destination: { type: "text", doc: "Where it goes (a bucket, a workspace, a sink's target)." },
+    region: { type: "text", doc: "Its home region." },
+  },
+});
+
+/** A cloud's threat detection (D3FEND intrusion detection system): GuardDuty, a Defender for Cloud plan. */
+export const INTRUSION_DETECTION_SYSTEM: LabelView = defineLabel({
+  name: "intrusion_detection_system",
+  terms: [{ from: "d3fend", term: "intrusion_detection_system" }],
+  doc:
+    "A cloud's threat detection: a GuardDuty detector in a region, a Defender for Cloud plan on a subscription.",
+  props: {
+    kind: { type: "text", doc: "guardduty, defender-plan, ..." },
+    enabled: { type: "boolean", doc: "It is on (a paid Defender plan: Standard)." },
+    region: { type: "text", doc: "Its region, or the subscription it covers." },
+  },
+});
+
+/** A cloud's record of its resources' configuration history (D3FEND configuration management database): AWS Config. */
+export const CONFIGURATION_MANAGEMENT_DATABASE: LabelView = defineLabel({
+  name: "configuration_management_database",
+  terms: [{ from: "d3fend", term: "configuration_management_database" }],
+  doc: "A cloud's record of its resources' configuration history (an AWS Config recorder).",
+  props: {
+    recording: { type: "boolean", doc: "It is recording now." },
+    all_resources: { type: "boolean", doc: "It records every supported resource type." },
+    region: { type: "text", doc: "Its region." },
+  },
+});
+
 /** Every connector label. */
 export const CONNECTOR_LABELS: readonly LabelView[] = [
   USER_ACCOUNT,
@@ -360,4 +437,9 @@ export const CONNECTOR_LABELS: readonly LabelView[] = [
   TICKET,
   PASSWORD_STORE,
   APPLICATION,
+  VULNERABILITY,
+  EVENT_LOG,
+  INTRUSION_DETECTION_SYSTEM,
+  CONFIGURATION_MANAGEMENT_DATABASE,
+  PERSON_RECORD,
 ];

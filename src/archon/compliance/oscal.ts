@@ -13,7 +13,8 @@
  * - a plan of action and milestones (POA&M): each failing check, open, and
  *   each accepted risk, as a deviation approved until its date; and (spec
  *   080) each open risk in the fleet's risk register, with its SP 800-30
- *   likelihood, impact, and level.
+ *   likelihood, impact, and level; and (spec 088) each open vulnerability a
+ *   scanner's connector reported, with its CVE, severity, and asset.
  *
  * UUIDs are UUIDv5 of what they name, so the same fleet exported twice names
  * the same things the same way, and a diff shows only what changed.
@@ -31,6 +32,7 @@
 import { NIST_MODERATE_PROFILE, NIST_SOURCES, OSCAL_VERSION, SCF_SOURCE } from "./catalog.ts";
 import type { ComplianceView, Coverage, Evidence } from "./report.ts";
 import type { Risk } from "../risk/register.ts";
+import type { OpenVulnerability } from "../connect/vulnerability.ts";
 
 /** Stolos's UUIDv5 namespace (a fixed random UUID). */
 const NAMESPACE = "6f1d0c52-7a39-4c1e-9d0b-3e5b8a2f4c71";
@@ -71,6 +73,8 @@ export interface OscalInput {
   now: Date;
   /** Spec 080: the risk register (fleets/<fleet>/risks.ts); its open risks go in the POA&M. */
   register?: readonly Risk[];
+  /** Spec 088: the open vulnerabilities the scanners' connectors reported; each is an open POA&M item. */
+  vulnerabilities?: readonly OpenVulnerability[];
 }
 
 /** An SP 800-53 control, with the SCF controls that map to it and their status. */
@@ -526,6 +530,33 @@ export async function registerRisk(i: OscalInput, r: Risk): Promise<Record<strin
   };
 }
 
+const vulnProps = (v: OpenVulnerability) => [
+  ...scfProps(["VPM-06"]),
+  ...(v.cve ? [{ name: "vulnerability-id", ns: STOLOS_NS, value: v.cve }] : []),
+  { name: "severity", ns: STOLOS_NS, value: v.severity },
+  { name: "asset", ns: STOLOS_NS, value: v.asset },
+  { name: "source", ns: STOLOS_NS, value: v.connector },
+  ...(v.firstSeen ? [{ name: "first-seen", ns: STOLOS_NS, value: v.firstSeen }] : []),
+];
+
+/** A scanner's open vulnerability (spec 088) as an OSCAL risk: open, with its CVE, severity, and asset. */
+export async function vulnerabilityRisk(
+  i: OscalInput,
+  v: OpenVulnerability,
+): Promise<Record<string, unknown>> {
+  const name = v.cve ?? v.title;
+  return {
+    uuid: await uuidFor(i.fleet.id, "risk", "vulnerability", v.connector, v.id),
+    title: `${name} on ${v.asset}`,
+    description: `${v.title}${v.package ? ` (${v.package})` : ""}, reported by ${v.connector}.`,
+    statement: `An open ${v.severity} vulnerability${v.cve ? ` (${v.cve})` : ""} on ${v.asset}${
+      v.firstSeen ? `, first seen ${v.firstSeen.slice(0, 10)}` : ""
+    }${v.url ? `: ${v.url}` : ""}.`,
+    props: vulnProps(v),
+    status: "open",
+  };
+}
+
 /** The POA&M: each failing check, open; each accepted risk, a deviation approved until its date. */
 export async function poam(i: OscalInput): Promise<unknown> {
   const ev = allEvidence(i.view).filter((e) => e.status === "fail" || e.status === "accepted");
@@ -544,7 +575,10 @@ export async function poam(i: OscalInput): Promise<unknown> {
   // Spec 080: the register's open risks, each with its SP 800-30 levels as facets.
   const reg = (i.register ?? []).filter((r) => r.status === "open");
   const regRisks = await Promise.all(reg.map((r) => registerRisk(i, r)));
-  const allRisks = [...risks, ...regRisks];
+  // Spec 088: the scanners' open vulnerabilities.
+  const vulns = i.vulnerabilities ?? [];
+  const vulnRisks = await Promise.all(vulns.map((v) => vulnerabilityRisk(i, v)));
+  const allRisks = [...risks, ...regRisks, ...vulnRisks];
   return {
     "plan-of-action-and-milestones": {
       uuid: await uuidFor(i.fleet.id, "poam", iso(i.now)),
@@ -572,6 +606,15 @@ export async function poam(i: OscalInput): Promise<unknown> {
           description: `${r.description} Treatment: ${r.treatment}; next review ${r.nextReview}.`,
           props: [...scfProps([...r.scf]), ...registerProps(r)],
           "related-risks": [{ "risk-uuid": regRisks[k].uuid }],
+        }))),
+        ...await Promise.all(vulns.map(async (v, k) => ({
+          uuid: await uuidFor(i.fleet.id, "poam-item", "vulnerability", v.connector, v.id),
+          title: `Vulnerability: ${v.cve ?? v.title} on ${v.asset}`,
+          description: `${v.title}${v.package ? ` (${v.package})` : ""}. Severity ${v.severity}${
+            v.firstSeen ? `, open since ${v.firstSeen.slice(0, 10)}` : ""
+          }; remediate it, or accept it as a risk in risks.ts.`,
+          props: vulnProps(v),
+          "related-risks": [{ "risk-uuid": vulnRisks[k].uuid }],
         }))),
       ],
       "back-matter": await backMatter(i),

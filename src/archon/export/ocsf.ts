@@ -9,6 +9,7 @@
  * | a person (the source of truth) | 5003 User Inventory Info | person |
  * | an account in some system | 5003 User Inventory Info | account (after its person) |
  * | a machine (fixed asset) | 5001 Device Inventory Info | fixed asset |
+ * | a scanner's vulnerability (spec 088) | 2002 Vulnerability Finding | node |
  * | any other record (repositories, ...) | 5023 Cloud Resources Inventory Info | node |
  * | a check's result | 2003 Compliance Finding | evidence and SCF control (`finding.ts`) |
  *
@@ -48,6 +49,7 @@ import {
   type OcsfOs,
   type OcsfUser,
   type OcsfUserInventoryInfo,
+  type OcsfVulnerabilityFinding,
 } from "../ocsf/types.auto.ts";
 import { VERSION } from "../version.ts";
 
@@ -56,7 +58,8 @@ export type OcsfEvent =
   | OcsfUserInventoryInfo
   | OcsfDeviceInventoryInfo
   | OcsfCloudResourcesInventoryInfo
-  | OcsfComplianceFinding;
+  | OcsfComplianceFinding
+  | OcsfVulnerabilityFinding;
 
 /** What every event's metadata names: the product, and the fleet as the tenant. */
 export function ocsfMetadata(fleet: string, extra: Partial<OcsfMetadata> = {}): OcsfMetadata {
@@ -273,6 +276,67 @@ function resourceEvent(n: Row, labels: string[], o: OcsfOptions): OcsfCloudResou
   };
 }
 
+const SEVERITY_ID: Record<string, OcsfVulnerabilityFinding["severity_id"]> = {
+  info: 1,
+  low: 2,
+  medium: 3,
+  high: 4,
+  critical: 5,
+};
+const SEVERITY_NAME = ["Unknown", "Informational", "Low", "Medium", "High", "Critical"];
+const STATUS_ID: Record<string, OcsfVulnerabilityFinding["status_id"]> = {
+  open: 1,
+  dismissed: 3,
+  fixed: 4,
+};
+
+/** Spec 088: a scanner's vulnerability record as an OCSF Vulnerability Finding. */
+function vulnerabilityEvent(n: Row, o: OcsfOptions): OcsfVulnerabilityFinding {
+  const p = props(n);
+  const severity_id = SEVERITY_ID[String(p.severity)] ?? 0;
+  const status_id = STATUS_ID[String(p.status)] ?? 0;
+  const first = at(p.first_seen);
+  const cve = str(p.cve);
+  const title = str(p.title) ?? String(n.display_name ?? n.native_id);
+  const asset = str(p.asset);
+  // "name@version" (an npm package's name may start with @).
+  const at2 = String(p.package ?? "").lastIndexOf("@");
+  const pkg = at2 > 0
+    ? { name: String(p.package).slice(0, at2), version: String(p.package).slice(at2 + 1) }
+    : undefined;
+  return {
+    class_uid: 2002,
+    category_uid: 2,
+    activity_id: 1,
+    type_uid: 200201,
+    severity_id,
+    severity: SEVERITY_NAME[severity_id],
+    status_id,
+    time: o.now.getTime(),
+    metadata: ocsfMetadata(o.fleet, {
+      uid: String(n.node_uid),
+      labels: [String(n.label), ...(bool(n.stale) ? ["stale"] : [])],
+    }),
+    finding_info: {
+      uid: String(n.node_uid),
+      title,
+      data_sources: [String(n.connector)],
+      ...(first ? { first_seen_time: first.t } : {}),
+      ...(str(p.src_url) ? { src_url: str(p.src_url) } : {}),
+    },
+    vulnerabilities: [{
+      title,
+      severity: SEVERITY_NAME[severity_id],
+      // OCSF needs a CVE, a CWE, or an advisory: without a CVE, the scanner's own finding.
+      ...(cve ? { cve: { uid: cve } } : { advisory: { uid: String(n.native_id), title } }),
+      ...(bool(p.fix_available) !== undefined ? { is_fix_available: bool(p.fix_available) } : {}),
+      ...(pkg ? { affected_packages: [pkg] } : {}),
+      ...(first ? { first_seen_time: first.t } : {}),
+    }],
+    ...(asset ? { resources: [{ uid: asset, name: asset }] } : {}),
+  };
+}
+
 /**
  * The estate as OCSF inventory events, in a stable order: each person and
  * then their accounts, the accounts of no one, the machines, then every
@@ -318,7 +382,8 @@ export function estateEvents(e: Estate, o: OcsfOptions): OcsfEvent[] {
        WHERE coalesce(n.ocsf_class_uid, 0) <> 5003 ORDER BY n.node_uid`,
     )
   ) {
-    out.push(resourceEvent(n, labels.get(String(n.node_uid)) ?? [String(n.label)], o));
+    if (Number(n.ocsf_class_uid) === 2002) out.push(vulnerabilityEvent(n, o));
+    else out.push(resourceEvent(n, labels.get(String(n.node_uid)) ?? [String(n.label)], o));
   }
   return out;
 }

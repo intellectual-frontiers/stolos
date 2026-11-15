@@ -298,7 +298,7 @@ export async function drift(o: {
   const s = await resolveSince(o.repo, o.since);
   if ("error" in s) return s;
   const { gitReader } = await import("../estate/snapshot.ts");
-  const connectors = o.connectors ?? (await import("../connect/commands.ts")).CONNECTORS;
+  const connectors = o.connectors ?? await (await import("../connect/commands.ts")).allConnectors();
   const now = o.now ?? Date.now();
   const common = {
     connectors,

@@ -6,6 +6,13 @@
  * the enterprise applications people sign in to (spec 080: vendors), and
  * Azure's subscriptions and resources.
  *
+ * Spec 088 reads deeper into each subscription, with the same Reader role:
+ * Microsoft Defender for Cloud's plans (`Microsoft.Security/pricings`: a
+ * plan on Standard is on) and where the activity log is exported
+ * (`Microsoft.Insights/diagnosticSettings` at the subscription: Azure keeps
+ * it 90 days by itself, an export keeps it longer). Each is read only when
+ * there is a subscription; its policies are reported only when read.
+ *
  * @module
  */
 
@@ -16,6 +23,8 @@ import {
   APPLICATION,
   ASSESSMENT,
   DOMAIN_NAME,
+  EVENT_LOG,
+  INTRUSION_DETECTION_SYSTEM,
   ORGANIZATION,
   POLICY,
   PRODUCT,
@@ -106,6 +115,52 @@ interface User {
   admin?: boolean;
   /** Added here: has registered MFA (undefined: not reported). */
   mfa?: boolean;
+}
+
+type Sub = { subscriptionId: string; displayName: string; state: string };
+
+/** The subscriptions and the Resource Manager header, read once per observation (both Azure resources use them). */
+const azure = (ctx: Ctx<Record<string, FieldDef>>) =>
+  once(ctx, "azure", async () => {
+    const a = { Authorization: `Bearer ${await token(ctx.http, ctx.cred, `${ARM}/.default`)}` };
+    const subs = await pages<Sub>(ctx, `${ARM}/subscriptions?api-version=2022-12-01`, a);
+    return { a, subs };
+  });
+
+/** A Defender for Cloud plan (spec 088). */
+type Plan = { name: string; properties?: { pricingTier?: string } };
+
+/** A subscription's diagnostic setting (spec 088): where its activity log goes. */
+type DiagnosticSetting = {
+  name: string;
+  properties?: {
+    workspaceId?: string | null;
+    storageAccountId?: string | null;
+    eventHubAuthorizationRuleId?: string | null;
+    logs?: Array<{ enabled?: boolean }>;
+  };
+};
+
+/** Anything that goes wrong reading a subscription's settings is a gap, as for Azure's resources. */
+const asGap = <T>(p: Promise<T>): Promise<T> =>
+  p.catch((e) => {
+    throw e instanceof AccessDenied ? e : new AccessDenied((e as Error).message);
+  });
+
+/** Each subscription's items (spec 088); none when Azure is not readable (the Azure resource says why). */
+async function* perSubscription<T>(
+  ctx: Ctx<Record<string, FieldDef>>,
+  f: (s: Sub, base: string, a: Record<string, string>) => AsyncGenerator<T>,
+): AsyncGenerator<T> {
+  let az: { a: Record<string, string>; subs: Sub[] };
+  try {
+    az = await azure(ctx);
+  } catch {
+    return;
+  }
+  for (const s of az.subs) {
+    yield* f(s, `${ARM}/subscriptions/${s.subscriptionId}/providers`, az.a);
+  }
 }
 
 type Azure =
@@ -352,14 +407,7 @@ export const microsoft: Connector = defineConnector({
       ocsf: "cloud_resources_inventory_info",
       list: async function* (ctx): AsyncGenerator<Azure> {
         try {
-          const a = {
-            Authorization: `Bearer ${await token(ctx.http, ctx.cred, `${ARM}/.default`)}`,
-          };
-          const subs = await pages<{ subscriptionId: string; displayName: string; state: string }>(
-            ctx,
-            `${ARM}/subscriptions?api-version=2022-12-01`,
-            a,
-          );
+          const { a, subs } = await azure(ctx);
           for (const s of subs) {
             yield { sub: s };
             for (
@@ -397,6 +445,74 @@ export const microsoft: Connector = defineConnector({
           ? { kind: "azure-subscription", facts: { state: x.sub.state } }
           : { kind: "azure-resource", facts: { type: x.res.type, subscription: x.subscription } },
     },
+    // Spec 088: Defender for Cloud's plans, per subscription.
+    AzureDefender: {
+      label: INTRUSION_DETECTION_SYSTEM,
+      ocsf: "cloud_resources_inventory_info",
+      list: (ctx) =>
+        perSubscription(ctx, async function* (s, base, a) {
+          for (
+            const plan of await ctx.orGap(
+              `Defender for Cloud ${s.displayName}`,
+              [] as Plan[],
+              () =>
+                asGap(
+                  pages<Plan>(ctx, `${base}/Microsoft.Security/pricings?api-version=2024-01-01`, a),
+                ),
+            )
+          ) yield { plan, sub: s };
+        }),
+      map: (x: { plan: Plan; sub: Sub }) => ({
+        native_id: `${x.sub.subscriptionId}/defender/${x.plan.name}`,
+        display_name: `Defender for ${x.plan.name} (${x.sub.displayName})`,
+        props: {
+          kind: "defender-plan",
+          enabled: x.plan.properties?.pricingTier === "Standard",
+          region: x.sub.displayName,
+        },
+      }),
+      asset: () => undefined,
+    },
+    // Spec 088: where each subscription's activity log is exported.
+    AzureActivityLog: {
+      label: EVENT_LOG,
+      ocsf: "cloud_resources_inventory_info",
+      list: (ctx) =>
+        perSubscription(ctx, async function* (s, base, a) {
+          const log = await ctx.orGap(
+            `activity log ${s.displayName}`,
+            undefined as DiagnosticSetting[] | undefined,
+            () =>
+              asGap(pages<DiagnosticSetting>(
+                ctx,
+                `${base}/Microsoft.Insights/diagnosticSettings?api-version=2021-05-01-preview`,
+                a,
+              )),
+          );
+          if (log) yield { log, sub: s };
+        }),
+      map: (x: { log: DiagnosticSetting[]; sub: Sub }) => {
+        const to = x.log.flatMap((d) => {
+          const p = d.properties ?? {};
+          const on = (p.logs ?? []).some((l) => l.enabled);
+          return on
+            ? [p.workspaceId, p.storageAccountId, p.eventHubAuthorizationRuleId]
+              .filter((v): v is string => !!v).map((v) => v.split("/").pop()!)
+            : [];
+        });
+        return {
+          native_id: `${x.sub.subscriptionId}/activity-log`,
+          display_name: `Activity log (${x.sub.displayName})`,
+          props: {
+            kind: "activity-log",
+            logging: to.length > 0,
+            ...(to.length ? { destination: to.join(", ") } : {}),
+            region: x.sub.displayName,
+          },
+        };
+      },
+      asset: () => undefined,
+    },
   },
   posture(records, _cred, { gaps }) {
     const posture: Record<string, string | number | boolean> = {};
@@ -427,6 +543,23 @@ export const microsoft: Connector = defineConnector({
     if (read("Azure")) {
       posture.azureSubscriptions = of(RESOURCE).filter((r) => r.props.type === "subscription")
         .length;
+    }
+    // Spec 088: per subscription, only what was read.
+    const subs = of(RESOURCE).filter((r) => r.props.type === "subscription");
+    const plans = records.filter((r) => r.props.kind === "defender-plan");
+    const planned = subs.filter((s) =>
+      plans.some((p) => p.native_id.startsWith(`${s.native_id}/defender/`))
+    );
+    if (planned.length) {
+      posture.defenderOff = planned.filter((s) =>
+        !plans.some((p) => p.native_id.startsWith(`${s.native_id}/defender/`) && p.props.enabled)
+      ).map((s) => s.display_name).join(", ");
+      posture.defenderPlansOn = plans.filter((p) => p.props.enabled).length;
+    }
+    const logs = records.filter((r) => r.label === EVENT_LOG.name);
+    if (logs.length) {
+      posture.activityLogNotExported = logs.filter((l) => !l.props.logging)
+        .map((l) => String(l.props.region)).join(", ");
     }
     return posture;
   },
@@ -466,6 +599,30 @@ export const microsoft: Connector = defineConnector({
         })`,
         warnOnly: true,
       }),
+      // Spec 088: reported only when read.
+      ...[
+        check(o, {
+          id: "az-activity-log",
+          title: "Every Azure subscription exports its activity log (kept beyond Azure's 90 days)",
+          scf: ["MON-03", "MON-13"],
+          fact: "activityLogNotExported",
+          want: (v) => v === "",
+          show: (v) => v ? `not exported: ${v}` : "every subscription's is exported",
+          fix:
+            "portal.azure.com > Monitor > Activity log > Export Activity Logs > Add diagnostic setting: every category, to a Log Analytics workspace or a storage account with retention",
+        }),
+        check(o, {
+          id: "az-defender",
+          title: "Every Azure subscription has a Defender for Cloud plan on",
+          scf: ["MON-16"],
+          fact: "defenderOff",
+          want: (v) => v === "",
+          show: (v) => v ? `no plan on: ${v}` : `${o.posture.defenderPlansOn} plan(s) on`,
+          fix:
+            "portal.azure.com > Microsoft Defender for Cloud > Environment settings > the subscription > Defender plans: turn on Servers (and the others the subscription uses)",
+          warnOnly: true,
+        }),
+      ].filter((p) => p.status !== "unknown"),
     ];
   },
 });

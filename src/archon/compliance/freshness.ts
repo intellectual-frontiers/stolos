@@ -214,7 +214,7 @@ export async function loadCadences(o: { connectors?: boolean } = {}): Promise<Ca
   }
   const connectors = o.connectors === false
     ? []
-    : (await import("../connect/commands.ts")).CONNECTORS;
+    : await (await import("../connect/commands.ts")).allConnectors();
   return resolveCadences({ ...(fleet ? { fleet } : {}), connectors });
 }
 

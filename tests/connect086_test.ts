@@ -86,6 +86,8 @@ Deno.test("086: GitHub: owners, members without 2FA, branch protection or rulese
       parameters: { required_approving_review_count: 0 },
     }]],
     [`${A}/repos/ex/site/rules/branches/main`]: [200, []],
+    // Spec 088: no open Dependabot alert.
+    [`${A}/orgs/ex/dependabot/alerts`]: [200, []],
   });
   const o = await github.observe({ org: "ex", token: "t" }, http, NOW);
   assertEquals(o.entities!.accounts!.map((a) => [a.name, a.admin, a.mfa, !!a.service]), [

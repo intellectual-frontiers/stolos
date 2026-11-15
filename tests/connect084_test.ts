@@ -281,7 +281,14 @@ Deno.test("067: AWS root MFA, S3 public access, EC2 across regions", async () =>
     "aws-s3-public": "fail",
     "aws-imdsv2": "warn",
   });
-  assert(http.calls.every((c) => c.method === "GET"), "only reads");
+  // Spec 088: GET, plus CloudTrail's and Config's read actions (their APIs are JSON over POST).
+  assert(
+    http.calls.every((c) =>
+      c.method === "GET" ||
+      /^https:\/\/(cloudtrail|config)\.[a-z0-9-]+\.amazonaws\.com\/$/.test(c.url)
+    ),
+    "only reads",
+  );
   assertEquals(xmlAll("<a>1</a><a>2</a>", "a"), ["1", "2"]);
 });
 
@@ -311,7 +318,13 @@ Deno.test("067: every provider says how to make a read-only credential, and name
     "slack",
     "onepassword",
     "bitwarden",
+    "snyk",
+    "tenable",
+    "knowbe4",
+    "checkr",
     "aws",
+    "gcp",
+    "digitalocean",
     "hetzner",
   ]);
   for (const c of CONNECTORS) {

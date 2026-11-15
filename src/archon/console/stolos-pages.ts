@@ -181,6 +181,8 @@ export const STOLOS_GROUPS: StolosGroup[] = [
       "estate osquery",
       "estate schema",
       "disconnect",
+      "connector list",
+      "connector test",
     ],
     first: "estate check",
     diagram: (f) =>

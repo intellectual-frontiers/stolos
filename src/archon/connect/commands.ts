@@ -43,6 +43,12 @@ import { onepassword } from "./onepassword.ts";
 import { bitwarden } from "./bitwarden.ts";
 import { hetzner } from "./hetzner.ts";
 import { microsoft } from "./microsoft.ts";
+import { snyk } from "./snyk.ts";
+import { tenable } from "./tenable.ts";
+import { knowbe4 } from "./knowbe4.ts";
+import { checkr } from "./checkr.ts";
+import { gcp } from "./gcp.ts";
+import { digitalocean } from "./digitalocean.ts";
 
 /** Every provider, in the fleet's order of importance. */
 export const CONNECTORS: Connector[] = [
@@ -70,25 +76,58 @@ export const CONNECTORS: Connector[] = [
   slack,
   onepassword,
   bitwarden,
+  snyk,
+  tenable,
+  knowbe4,
+  checkr,
   aws,
+  gcp,
+  digitalocean,
   hetzner,
 ];
 
-const fail = (): number => ui.problems.some((x) => x.level === "fail") ? 1 : 0;
+const warned = new Set<string>();
 
-function provider(id: string): Connector | undefined {
-  return CONNECTORS.find((c) => c.id === id);
+/**
+ * Spec 088: the engine's connectors and the fleet's added ones
+ * (`fleets/<fleet>/connectors.ts`, the connector registry). One that does
+ * not load or does not suit this engine is left out, with a warning.
+ */
+export async function allConnectors(): Promise<Connector[]> {
+  let fleetDir: string;
+  try {
+    fleetDir = P.fleetDir;
+  } catch {
+    return CONNECTORS;
+  }
+  const { loadRegistry } = await import("./registry.ts");
+  const { VERSION } = await import("../version.ts");
+  const r = await loadRegistry(fleetDir, VERSION, CONNECTORS.map((c) => c.id));
+  for (const p of r.problems.filter((p) => !warned.has(p))) {
+    warned.add(p);
+    console.error(`warning: added connector left out: ${p}`);
+  }
+  return [...CONNECTORS, ...r.connectors];
 }
 
-function unknown(id: string): number {
-  ui.phase("Cloud").fail(`no cloud ${id}`, `one of: ${CONNECTORS.map((c) => c.id).join(", ")}`);
+const fail = (): number => ui.problems.some((x) => x.level === "fail") ? 1 : 0;
+
+async function provider(id: string): Promise<Connector | undefined> {
+  return (await allConnectors()).find((c) => c.id === id);
+}
+
+async function unknown(id: string): Promise<number> {
+  ui.phase("Cloud").fail(
+    `no cloud ${id}`,
+    `one of: ${(await allConnectors()).map((c) => c.id).join(", ")}`,
+  );
   return fail();
 }
 
 /** Each provider's last observation, from the fleet repository. */
 export async function loadObservations(): Promise<Observation[]> {
   const out: Observation[] = [];
-  for (const c of CONNECTORS) {
+  for (const c of await allConnectors()) {
     const f = observationFile(c.id);
     if (await exists(f)) {
       out.push((await import(toFileUrl(f).href + `?t=${Date.now()}`)).observed as Observation);
@@ -167,8 +206,8 @@ async function observeOne(c: Connector, http: Http): Promise<Observation | undef
 
 /** `stolos connect <provider>`: how to make a read-only credential, then type it (hidden). */
 export async function connectorConnect(id: string, http: Http = realHttp): Promise<number> {
-  const c = provider(id);
-  if (!c) return unknown(id);
+  const c = await provider(id);
+  if (!c) return await unknown(id);
   console.log(`\n  ${c.title}: make a read-only credential (Stolos never changes a cloud):\n`);
   c.connectHelp.forEach((s, i) => console.log(`  ${i + 1}. ${s}`));
   console.log("");
@@ -211,8 +250,10 @@ export async function connectorConnect(id: string, http: Http = realHttp): Promi
 
 /** `stolos estate observe [provider]`. */
 export async function estateObserve(id?: string, http: Http = realHttp): Promise<number> {
-  if (id && !provider(id)) return unknown(id);
-  for (const c of CONNECTORS.filter((x) => !id || x.id === id)) await observeOne(c, http);
+  if (id && !(await provider(id))) return await unknown(id);
+  for (const c of (await allConnectors()).filter((x) => !id || x.id === id)) {
+    await observeOne(c, http);
+  }
   ui.next.push(`keep the observations: deno task stolos apply -m "067-adopt: clouds observed"`);
   ui.next.push("the estate graph as SQL and SQLite: deno task stolos estate build");
   return fail();
@@ -223,10 +264,11 @@ export async function estateCheck(id?: string, json = false): Promise<number> {
   const { report } = await import("../adopt/commands.ts");
   const now = Date.now();
   const all = (await loadObservations()).filter((o) => !id || o.provider === id);
+  const known = await allConnectors();
   const results = all.map((o) => ({
     provider: o.provider,
     account: o.account,
-    results: provider(o.provider)!.policies(o, now),
+    results: known.find((c) => c.id === o.provider)!.policies(o, now),
   }));
   // Spec 085: what no single source can say, across every source.
   const { estatePolicies } = await import("../estate/graph.ts");
@@ -268,8 +310,8 @@ export async function estateAssets(id?: string, kind?: string, json = false): Pr
 
 /** `stolos disconnect <provider>`: the credential goes from the vault; the last observation stays in Git. */
 export async function connectorDisconnect(id: string): Promise<number> {
-  const c = provider(id);
-  if (!c) return unknown(id);
+  const c = await provider(id);
+  if (!c) return await unknown(id);
   const { removeSecret } = await import("../core/secrets.ts");
   await removeSecret(connectorCredPath(id));
   ui.phase("Disconnect").done(`${c.title}: the credential is gone from this PC's vault`);

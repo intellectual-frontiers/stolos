@@ -117,6 +117,45 @@ export const SCF_CONTROLS = [
     how: "Code is scanned for leaked secrets and vulnerable dependencies.",
   },
   {
+    id: "VPM-06",
+    name: "Vulnerability Remediation Process",
+    how:
+      "Open vulnerabilities a scanner reports (Snyk, Tenable, Dependabot) are listed, each in the POA&M with its CVE, severity, and asset.",
+  },
+  {
+    id: "VPM-07",
+    name: "Time To Remediate / Benchmarks For Corrective Action",
+    how:
+      "No critical vulnerability stays open past 15 days, and no high one past 30 (CISA BOD 19-02's timelines).",
+  },
+  {
+    id: "MON-03",
+    name: "Event Log & Security-Relevant Telemetry Monitoring",
+    how:
+      "The clouds' audit logs are on: an AWS CloudTrail trail is logging, Azure's activity log is exported, Google Cloud's logs are routed.",
+  },
+  {
+    id: "MON-05",
+    name: "Centralized Collection of Event Logs & Security-Relevant Telemetry",
+    how: "One AWS CloudTrail trail records every region.",
+  },
+  {
+    id: "MON-13",
+    name: "Event Log & Security-Relevant Telemetry Retention",
+    how:
+      "The clouds' audit logs are kept beyond the cloud's own window: Azure's activity log exported, Google Cloud's logs routed to a sink.",
+  },
+  {
+    id: "MON-16",
+    name: "Anomalous Behavior",
+    how: "The clouds' threat detection is on: GuardDuty in every region, Defender for Cloud plans.",
+  },
+  {
+    id: "CFG-02",
+    name: "Configuration Management Program",
+    how: "AWS Config records configuration history in every region it is used.",
+  },
+  {
     id: "AST-39",
     name: "Unsupported Technology Assets, Applications and/or Services (TAAS)",
     how: "Every operating system is still supported by its maker.",

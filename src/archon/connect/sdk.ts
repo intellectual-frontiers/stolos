@@ -160,6 +160,12 @@ export interface ConnectorDef<F extends Record<string, FieldDef>> {
   fields: F;
   /** URL prefixes the guard lets POST to (OAuth token endpoints only). */
   tokenEndpoints?: (cred: CredOf<F>) => string[];
+  /**
+   * Spec 088: POSTs that only read, which the guard lets through when this
+   * says so (an AWS JSON API's Describe and Get actions, say). Every other
+   * POST is refused.
+   */
+  readPost?: ReadPost;
   /** The headers to send, given the credential (may call a token endpoint). */
   auth(cred: CredOf<F>, http: Http, now: Date): Promise<Record<string, string>>;
   /** The account, for people (from the credential, or from what was read). */
@@ -175,11 +181,22 @@ export interface ConnectorDef<F extends Record<string, FieldDef>> {
   cadence?: Connector["cadence"];
 }
 
-/** HTTP that refuses anything but GET, except POSTs to the given URL prefixes. */
-export function readOnly(http: Http, tokenEndpoints: string[] = []): Http {
+/** Whether a POST only reads (spec 088): given its URL, headers, and body. */
+export type ReadPost = (
+  url: string,
+  init: { headers?: Record<string, string>; body?: string },
+) => boolean;
+
+/**
+ * HTTP that refuses anything but GET, except POSTs to the given URL prefixes
+ * and POSTs that `readPost` says only read.
+ */
+export function readOnly(http: Http, tokenEndpoints: string[] = [], readPost?: ReadPost): Http {
   return (url, init) => {
     const method = (init?.method ?? "GET").toUpperCase();
-    if (method !== "GET" && !(method === "POST" && tokenEndpoints.some((t) => url.startsWith(t)))) {
+    const post = method === "POST" &&
+      (tokenEndpoints.some((t) => url.startsWith(t)) || !!readPost?.(url, init ?? {}));
+    if (method !== "GET" && !post) {
       return Promise.reject(new Error(`read-only: ${method} ${new URL(url).origin} is refused`));
     }
     return http(url, init);
@@ -286,7 +303,7 @@ export function defineConnector<F extends Record<string, FieldDef>>(
     def,
     async observe(raw, http, now) {
       const cred = raw as CredOf<F>;
-      const guarded = withBackoff(readOnly(http, def.tokenEndpoints?.(cred) ?? []));
+      const guarded = withBackoff(readOnly(http, def.tokenEndpoints?.(cred) ?? [], def.readPost));
       const headers = await def.auth(cred, guarded, now);
       const gaps: string[] = [];
       const facts: Observation["posture"] = {};

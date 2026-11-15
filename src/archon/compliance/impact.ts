@@ -1036,7 +1036,8 @@ export async function computeImpact(o: ImpactOptions): Promise<Impact | { error:
     if (!o.modelOnly) {
       const { repoEvidence, compareViews } = await import("./drift.ts");
       const { gitReader } = await import("../estate/snapshot.ts");
-      const connectors = o.connectors ?? (await import("../connect/commands.ts")).CONNECTORS;
+      const connectors = o.connectors ??
+        await (await import("../connect/commands.ts")).allConnectors();
       const side = async (rev: string | undefined, root: string) => {
         const reader = gitReader(o.repo, rev);
         return await repoEvidence(reader, o.fleet, {

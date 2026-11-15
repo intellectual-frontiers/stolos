@@ -8,7 +8,8 @@
  *   2. Only forward, unless --downgrade: going back to an older engine is a
  *      decision, not an accident.
  *   3. deno.json's @stolos/ pin is rewritten to the tag; deno.lock is built
- *      again through engine.ts, so it holds a hash of every engine file. Hosts
+ *      again through engine.ts (and each fleet's connectors.ts, spec 088), so
+ *      it holds a hash of every engine and added connector file. Hosts
  *      run with --frozen: any engine file that differs from the lock is
  *      refused. That is what makes your signature cover the engine's bytes.
  *   4. Every fleet in the repository is validated with the new engine before
@@ -215,6 +216,22 @@ export async function fleetUpgrade(o: UpgradeOptions): Promise<number> {
     );
     return ui.finish();
   }
+  // Spec 088: every connector a fleet added must support the new engine.
+  {
+    const { registryEntries, satisfies } = await import("../connect/registry.ts");
+    for (const id of listFleets(repo)) {
+      const f = join(repo, "fleets", id, "connectors.ts");
+      for (const e of registryEntries(await readTextOr(f))) {
+        if (satisfies(rel.version, e.engine) === false) {
+          p.fail(
+            `fleet ${id}'s connector ${e.id} (${e.ref}) supports engine ${e.engine}, not ${rel.version}`,
+            `move it to a tag that does (deno task stolos connector add ${e.source}@<tag>), or remove it, first`,
+          );
+          return ui.finish();
+        }
+      }
+    }
+  }
   // Nothing else may be changed: the commit must hold exactly this upgrade.
   const dirty = (await git(["status", "--porcelain", "--untracked-files=no"])).stdout.trim();
   if (dirty && !o.noCommit) {
@@ -250,6 +267,11 @@ export async function fleetUpgrade(o: UpgradeOptions): Promise<number> {
   if (await exists(lock)) await Deno.remove(lock);
   const entries: string[] = [];
   for (const f of ["archon.ts", "stolos.ts", ENGINE_ENTRY]) {
+    if (await exists(join(repo, f))) entries.push(f);
+  }
+  // Spec 088: the connectors each fleet added are locked with the engine.
+  for (const id of listFleets(repo)) {
+    const f = `fleets/${id}/connectors.ts`;
     if (await exists(join(repo, f))) entries.push(f);
   }
   l.status("downloading the engine and hashing every file");

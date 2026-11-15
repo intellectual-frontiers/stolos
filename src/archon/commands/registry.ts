@@ -2015,7 +2015,7 @@ export const COMMANDS: Command[] = [
       positional: true,
       required: true,
       description:
-        "cloudflare, microsoft, google, okta, jumpcloud, intune, defender, jamf, kandji, crowdstrike, sentinelone, github, gitlab, bitbucket, bamboohr, rippling, gusto, deel, justworks, jira, linear, slack, onepassword, bitwarden, aws, or hetzner.",
+        "cloudflare, microsoft, google, okta, jumpcloud, intune, defender, jamf, kandji, crowdstrike, sentinelone, github, gitlab, bitbucket, bamboohr, rippling, gusto, deel, justworks, jira, linear, slack, onepassword, bitwarden, snyk, tenable, knowbe4, checkr, aws, gcp, digitalocean, hetzner, or a connector the fleet added (stolos connector list).",
       choices: [
         "cloudflare",
         "microsoft",
@@ -2041,7 +2041,13 @@ export const COMMANDS: Command[] = [
         "slack",
         "onepassword",
         "bitwarden",
+        "snyk",
+        "tenable",
+        "knowbe4",
+        "checkr",
         "aws",
+        "gcp",
+        "digitalocean",
         "hetzner",
       ],
     }],
@@ -2052,6 +2058,86 @@ export const COMMANDS: Command[] = [
     async run(a) {
       const { connectorConnect } = await import("../connect/commands.ts");
       return await connectorConnect(a.provider as string);
+    },
+  },
+  {
+    name: "connector add",
+    summary: "Add a connector from a pinned URL (a tag or a commit), checked, with a lock entry",
+    description:
+      `Spec 088. Adds a connector Stolos does not ship, the way the fleet takes the engine: <source>@<ref>, where the source is https://github.com/<owner>/<repo>[/<path>] (read from raw.githubusercontent.com; the path defaults to mod.ts) and the ref a version tag or a full commit SHA (a branch is refused). It loads the module in its own Deno process with no network, files, or secrets (imports from its host only), and checks it: a connector made with defineConnector, an id no other connector has, labels that follow the naming rules (D3FEND, OCSF, UDM), only SCF ids Stolos knows, a read-only credential, an engine range this engine is in, and its own recorded-fixture tests, which must pass. Then it writes the import and Stolos's lock entry to fleets/<fleet>/connectors.ts and the hash of every file it loads to deno.lock. Commit and push to approve. --index <url> finds <id>@<tag> in an index anyone can host (stolos docs connectors).`,
+    tier: "repo",
+    noMcp: true,
+    args: [
+      {
+        name: "source",
+        type: "string",
+        positional: true,
+        required: true,
+        description: "<source>@<ref>, or <id>@<tag> with --index.",
+      },
+      { name: "index", type: "string", description: "A connector index's URL (JSON)." },
+    ],
+    examples: [{
+      cmd:
+        "deno task stolos connector add https://github.com/example/stolos-connector-example@v1.0.0",
+      text: "Check a connector, run its fixtures, and pin it with a lock entry.",
+    }],
+    async run(a) {
+      const { connectorAdd } = await import("../connect/registry-commands.ts");
+      return await connectorAdd(a.source as string, {
+        ...(a.index ? { index: a.index as string } : {}),
+      });
+    },
+  },
+  {
+    name: "connector list",
+    aliases: ["connectors"],
+    summary:
+      "The connectors this fleet added (fleets/<fleet>/connectors.ts), each pin and engine range",
+    description:
+      `Spec 088. Each added connector: its id, title, pinned tag or commit, the engine versions it supports (and whether this engine is one), and where it came from. --json for scripts.`,
+    tier: "read",
+    args: [],
+    async run(_a, ctx) {
+      const { connectorList } = await import("../connect/registry-commands.ts");
+      return await connectorList(ctx.json);
+    },
+  },
+  {
+    name: "connector remove",
+    summary:
+      "Remove an added connector: its import and lock entry (its last observation stays in Git)",
+    description:
+      `Spec 088. Removes the connector's import and entry from fleets/<fleet>/connectors.ts. Its credential stays in the vault until stolos disconnect <id>; its last observation stays in Git. Commit and push to approve.`,
+    tier: "repo",
+    noMcp: true,
+    args: [{
+      name: "id",
+      type: "string",
+      positional: true,
+      required: true,
+      description: "The added connector's id.",
+    }],
+    async run(a) {
+      const { connectorRemove } = await import("../connect/registry-commands.ts");
+      return await connectorRemove(a.id as string);
+    },
+  },
+  {
+    name: "connector test",
+    summary: "Test added connectors at their pins, or a connector module you are writing",
+    description:
+      `Spec 088. For each added connector (or the one named): its module still hashes as deno.lock and connectors.ts say, it supports this engine, and its recorded-fixture tests pass, run in a restricted Deno process. Given a path or URL instead, it checks a module not added yet, as connector add would (an author's own check before tagging a release). Exits 1 when any check fails.`,
+    tier: "read",
+    args: [{
+      name: "target",
+      type: "string",
+      positional: true,
+      description: "An added connector's id, or a module's path or URL (default: every added one).",
+    }],
+    async run(a) {
+      const { connectorTest } = await import("../connect/registry-commands.ts");
+      return await connectorTest(a.target as string | undefined);
     },
   },
   {
@@ -2090,7 +2176,13 @@ export const COMMANDS: Command[] = [
         "slack",
         "onepassword",
         "bitwarden",
+        "snyk",
+        "tenable",
+        "knowbe4",
+        "checkr",
         "aws",
+        "gcp",
+        "digitalocean",
         "hetzner",
       ],
     }],
@@ -2135,7 +2227,13 @@ export const COMMANDS: Command[] = [
         "slack",
         "onepassword",
         "bitwarden",
+        "snyk",
+        "tenable",
+        "knowbe4",
+        "checkr",
         "aws",
+        "gcp",
+        "digitalocean",
         "hetzner",
       ],
     }],
@@ -2286,7 +2384,13 @@ export const COMMANDS: Command[] = [
           "slack",
           "onepassword",
           "bitwarden",
+          "snyk",
+          "tenable",
+          "knowbe4",
+          "checkr",
           "aws",
+          "gcp",
+          "digitalocean",
           "hetzner",
         ],
       },
@@ -2317,7 +2421,7 @@ export const COMMANDS: Command[] = [
       positional: true,
       required: true,
       description:
-        "cloudflare, microsoft, google, okta, jumpcloud, intune, defender, jamf, kandji, crowdstrike, sentinelone, github, gitlab, bitbucket, bamboohr, rippling, gusto, deel, justworks, jira, linear, slack, onepassword, bitwarden, aws, or hetzner.",
+        "cloudflare, microsoft, google, okta, jumpcloud, intune, defender, jamf, kandji, crowdstrike, sentinelone, github, gitlab, bitbucket, bamboohr, rippling, gusto, deel, justworks, jira, linear, slack, onepassword, bitwarden, snyk, tenable, knowbe4, checkr, aws, gcp, digitalocean, hetzner, or a connector the fleet added (stolos connector list).",
       choices: [
         "cloudflare",
         "microsoft",
@@ -2343,7 +2447,13 @@ export const COMMANDS: Command[] = [
         "slack",
         "onepassword",
         "bitwarden",
+        "snyk",
+        "tenable",
+        "knowbe4",
+        "checkr",
         "aws",
+        "gcp",
+        "digitalocean",
         "hetzner",
       ],
     }],
@@ -4186,6 +4296,10 @@ On a server, workstations reach it as ops over SSH (spec 030): ops' authorized_k
  */
 /** Commands run with `stolos` on your PC (the rest run with `archon` on each machine). */
 const PC_COMMANDS = new Set([
+  "connector add",
+  "connector list",
+  "connector remove",
+  "connector test",
   "risks list",
   "risks check",
   "risks review",

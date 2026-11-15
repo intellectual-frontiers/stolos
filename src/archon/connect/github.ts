@@ -3,16 +3,28 @@
  * organization: its members (who are owners, who have no second factor), and
  * its repositories (private or public, whether the default branch is
  * protected by branch protection or a ruleset, how many approving reviews it
- * needs, secret scanning, dependency alerts). Evidence for change management
- * (SCF CHG-03), MFA (IAC-37), least privilege (IAC-30), and scanning
- * (VPM-12).
+ * needs, secret scanning, dependency alerts), and (spec 088) its open
+ * Dependabot alerts (`GET /orgs/{org}/dependabot/alerts`, which the token's
+ * read-only Dependabot alerts permission already allows) as `vulnerability`
+ * records, OCSF Vulnerability Findings that feed the OSCAL POA&M. Evidence
+ * for change management (SCF CHG-03), MFA (IAC-37), least privilege
+ * (IAC-30), scanning (VPM-12), and remediation (VPM-06, VPM-07).
+ *
+ * Code scanning alerts need one more permission (Code scanning alerts: Read)
+ * that the token Stolos asks for does not have; they are left for later.
  *
  * @module
  */
 
 import { AccessDenied, check, type Connector, fresh } from "./connector.ts";
 import { defineConnector } from "./sdk.ts";
-import { CODE_REPOSITORY, ORGANIZATION, USER_ACCOUNT } from "./labels.ts";
+import { CODE_REPOSITORY, ORGANIZATION, USER_ACCOUNT, VULNERABILITY } from "./labels.ts";
+import {
+  firstCve,
+  severityOf,
+  vulnerabilityPolicies,
+  vulnerabilityPosture,
+} from "./vulnerability.ts";
 
 const API = "https://api.github.com";
 
@@ -49,6 +61,26 @@ interface Repo {
 }
 
 const NO_2FA = "members without 2FA (an owner's token can read this)";
+
+/** A Dependabot alert, as the organization's list returns it. */
+interface Alert {
+  number: number;
+  state: string;
+  html_url?: string;
+  created_at?: string;
+  dependency?: { package?: { name?: string; ecosystem?: string }; manifest_path?: string };
+  security_advisory?: {
+    ghsa_id?: string;
+    cve_id?: string | null;
+    summary?: string;
+    severity?: string;
+  };
+  security_vulnerability?: {
+    severity?: string;
+    first_patched_version?: { identifier?: string } | null;
+  };
+  repository?: { full_name?: string };
+}
 
 /** GitHub (an organization). */
 export const github: Connector = defineConnector({
@@ -215,8 +247,45 @@ export const github: Connector = defineConnector({
         facts: { private: r.private, protected: !!r.protected, reviews: r.reviews ?? 0 },
       }),
     },
+    dependabot: {
+      label: VULNERABILITY,
+      ocsf: "vulnerability_finding",
+      async *list(ctx): AsyncGenerator<Alert> {
+        try {
+          yield* ctx.linkPages<Alert>(
+            `${API}/orgs/${ctx.cred.org}/dependabot/alerts?state=open&per_page=100`,
+          );
+        } catch (e) {
+          // 404: Dependabot alerts are off for the organization, or hidden from this token.
+          if (e instanceof AccessDenied || !/HTTP 404/.test((e as Error).message)) throw e;
+          throw new AccessDenied(`${(e as Error).message} (off, or not readable with this token)`);
+        }
+      },
+      map: (a: Alert) => {
+        const repo = a.repository?.full_name ?? "";
+        const adv = a.security_advisory;
+        const cve = firstCve([adv?.cve_id ?? undefined]);
+        const pkg = a.dependency?.package?.name;
+        return {
+          native_id: `${repo}#${a.number}`,
+          display_name: cve ?? adv?.ghsa_id ?? `${repo}#${a.number}`,
+          props: {
+            ...(cve ? { cve } : {}),
+            ...(adv?.summary ? { title: adv.summary } : {}),
+            severity: severityOf(a.security_vulnerability?.severity ?? adv?.severity),
+            status: a.state === "open" ? "open" : a.state === "fixed" ? "fixed" : "dismissed",
+            asset: repo,
+            ...(pkg ? { package: pkg } : {}),
+            ...(a.created_at ? { first_seen: a.created_at } : {}),
+            fix_available: !!a.security_vulnerability?.first_patched_version?.identifier,
+            ...(a.html_url ? { src_url: a.html_url } : {}),
+          },
+        };
+      },
+      asset: () => undefined,
+    },
   },
-  posture(records, _cred, { gaps }) {
+  posture(records, _cred, { gaps, now }) {
     const org = records.find((r) => r.label === ORGANIZATION.name);
     const members = records.filter((r) => r.label === USER_ACCOUNT.name);
     const read = (what: string) => !gaps.some((g) => g.startsWith(`${what}: `));
@@ -236,6 +305,8 @@ export const github: Connector = defineConnector({
       ...(priv.some((r) => r.props.secret_scanning !== undefined)
         ? { privateReposSecretScanning: priv.filter((r) => r.props.secret_scanning).length }
         : {}),
+      // Spec 088: only when the alerts could be read (else unknown, not none).
+      ...vulnerabilityPosture(records, now, read("dependabot")),
     };
   },
   policies(o, now) {
@@ -290,6 +361,11 @@ export const github: Connector = defineConnector({
         fix: "the organization > Settings > Code security: Secret scanning on for all repositories",
         warnOnly: true,
       }),
+      ...vulnerabilityPolicies(
+        o,
+        "gh",
+        "each repository > Security > Dependabot alerts (merge Dependabot's pull request, or upgrade)",
+      ),
     ];
   },
 });

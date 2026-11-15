@@ -3,16 +3,32 @@
  * access key whose user (or role) has the managed SecurityAudit policy: the
  * account, IAM users, S3 buckets, EC2 instances in every enabled region, and
  * the root account's MFA and keys. Requests are signed with Signature
- * Version 4, in TypeScript (no AWS CLI). Every call is a GET (the query APIs,
- * S3, and S3 Control all read with GET), so the connector declares no POST
- * endpoint.
+ * Version 4, in TypeScript (no AWS CLI). The query APIs, S3, S3 Control, and
+ * GuardDuty read with GET.
+ *
+ * Spec 088 reads deeper, each part only where the key may: CloudTrail (every
+ * trail, whether it logs, and whether it records every region), GuardDuty
+ * (a detector enabled in each region), and AWS Config (a recorder recording
+ * in each region). CloudTrail and Config have only a JSON API, read with
+ * POST; the guard lets through only their Describe and Get actions
+ * (`readPost`), and SecurityAudit allows nothing else. A part that answers
+ * 404 (a service not offered in a region) is left out; its policies are then
+ * not reported, so an account read before spec 088 reads the same.
  *
  * @module
  */
 
 import { AccessDenied, check, type Connector, fresh, type Http } from "./connector.ts";
 import { type Ctx, defineConnector, type FieldDef, mustRead } from "./sdk.ts";
-import { ACCOUNT, CLOUD_STORAGE, CLOUD_USER_ACCOUNT, SERVER } from "./labels.ts";
+import {
+  ACCOUNT,
+  CLOUD_STORAGE,
+  CLOUD_USER_ACCOUNT,
+  CONFIGURATION_MANAGEMENT_DATABASE,
+  EVENT_LOG,
+  INTRUSION_DETECTION_SYSTEM,
+  SERVER,
+} from "./labels.ts";
 
 const enc = new TextEncoder();
 const hex = (b: ArrayBuffer) =>
@@ -132,6 +148,112 @@ async function call(
 
 type Fields = { accessKeyId: FieldDef; secretAccessKey: FieldDef };
 
+/** The JSON APIs (awsJson1_1) Stolos reads, and the target prefix of each one's actions. */
+const JSON_TARGETS: Record<string, string> = {
+  cloudtrail: "com.amazonaws.cloudtrail.v20131101.CloudTrail_20131101",
+  config: "StarlingDoveService",
+};
+
+/** Spec 088: a POST the guard lets through: a Describe, Get, or List action of CloudTrail or Config. */
+export const awsReadPost = (
+  url: string,
+  init: { headers?: Record<string, string> },
+): boolean => {
+  const m = url.match(/^https:\/\/(cloudtrail|config)\.[a-z0-9-]+\.amazonaws\.com\/$/);
+  const target =
+    Object.entries(init.headers ?? {}).find(([k]) => k.toLowerCase() === "x-amz-target")?.[1] ?? "";
+  return !!m && target.startsWith(`${JSON_TARGETS[m[1]]}.`) &&
+    /^(Describe|Get|List)[A-Za-z]+$/.test(target.slice(JSON_TARGETS[m[1]].length + 1));
+};
+
+/** A JSON API action (POST, signed), its parsed answer; a 404 or a service not there is undefined. */
+async function jsonCall<T>(
+  ctx: Ctx<Fields>,
+  service: "cloudtrail" | "config",
+  region: string,
+  action: string,
+  body: Record<string, unknown> = {},
+): Promise<T | undefined> {
+  const host = `${service}.${region}.amazonaws.com`;
+  const text = JSON.stringify(body);
+  const headers = await sigv4({
+    method: "POST",
+    host,
+    path: "/",
+    query: {},
+    headers: {
+      "content-type": "application/x-amz-json-1.1",
+      "x-amz-target": `${JSON_TARGETS[service]}.${action}`,
+    },
+    body: text,
+    region,
+    service,
+  }, {
+    accessKeyId: ctx.cred.accessKeyId,
+    secretAccessKey: ctx.cred.secretAccessKey,
+    sessionToken: (ctx.cred as Record<string, string>).sessionToken || undefined,
+  }, ctx.now);
+  delete headers.host;
+  const r = await ctx.http(`https://${host}/`, { method: "POST", headers, body: text });
+  if (r.status === 401 || r.status === 403) {
+    throw new AccessDenied(`${service} ${action} in ${region}: ${r.status}`);
+  }
+  if (r.status >= 400) {
+    if (/AccessDenied|UnauthorizedOperation/.test(r.text)) {
+      throw new AccessDenied(`${service} ${action} in ${region}: access denied`);
+    }
+    return undefined;
+  }
+  try {
+    return JSON.parse(r.text) as T;
+  } catch {
+    return undefined;
+  }
+}
+
+/** A GuardDuty REST call (GET, signed); undefined when the region does not answer. */
+async function guardduty<T>(
+  ctx: Ctx<Fields>,
+  region: string,
+  path: string,
+): Promise<T | undefined> {
+  try {
+    return JSON.parse(
+      await call(ctx.http, ctx.cred, {
+        service: "guardduty",
+        host: `guardduty.${region}.amazonaws.com`,
+        region,
+        path,
+        query: {},
+      }, ctx.now),
+    ) as T;
+  } catch (e) {
+    if (e instanceof AccessDenied) throw e;
+    return undefined;
+  }
+}
+
+interface Trail {
+  Name: string;
+  TrailARN?: string;
+  HomeRegion?: string;
+  IsMultiRegionTrail?: boolean;
+  S3BucketName?: string;
+  /** Added here: it is logging (undefined: its status could not be read). */
+  logging?: boolean;
+}
+
+interface Detection {
+  region: string;
+  enabled: boolean;
+}
+
+interface Recorder {
+  region: string;
+  recording: boolean;
+  allSupported?: boolean;
+}
+
 /** What one observation has read so far: the EC2 regions the instances are listed in. */
 const seen = new WeakMap<object, { regions: string[] }>();
 const state = (ctx: Ctx<Fields>) => {
@@ -196,6 +318,7 @@ export const aws: Connector = defineConnector({
     accessKeyId: { secret: false, hint: "Access key ID (AKIA...)" },
     secretAccessKey: { secret: true, hint: "Secret access key" },
   },
+  readPost: awsReadPost,
   // Each request is signed on its own (SigV4), so there are no shared headers.
   auth: () => Promise.resolve({}),
   account: (_cred, records) => records.find((r) => r.label === ACCOUNT.name)?.native_id ?? "",
@@ -401,6 +524,113 @@ export const aws: Connector = defineConnector({
         },
       }),
     },
+    trails: {
+      label: EVENT_LOG,
+      ocsf: "cloud_resources_inventory_info",
+      async *list(ctx): AsyncGenerator<Trail> {
+        const r = await ctx.orGap(
+          "CloudTrail",
+          undefined as { trailList?: Trail[] } | undefined,
+          () =>
+            jsonCall<{ trailList?: Trail[] }>(ctx, "cloudtrail", "us-east-1", "DescribeTrails", {
+              includeShadowTrails: true,
+            }),
+        );
+        if (!r) return;
+        // Read, even with no trail at all: none is logging (records override these).
+        ctx.fact("cloudtrailLogging", false);
+        ctx.fact("cloudtrailMultiRegion", false);
+        for (const t of r.trailList ?? []) {
+          const home = t.HomeRegion ?? "us-east-1";
+          const st = await ctx.orGap(
+            `CloudTrail ${t.Name}`,
+            undefined as { IsLogging?: boolean } | undefined,
+            () =>
+              jsonCall<{ IsLogging?: boolean }>(ctx, "cloudtrail", home, "GetTrailStatus", {
+                Name: t.TrailARN ?? t.Name,
+              }),
+          );
+          yield { ...t, ...(st?.IsLogging !== undefined ? { logging: st.IsLogging } : {}) };
+        }
+      },
+      map: (t: Trail) => ({
+        native_id: t.TrailARN ?? t.Name,
+        display_name: t.Name,
+        ...(t.HomeRegion ? { where: t.HomeRegion } : {}),
+        props: {
+          kind: "cloudtrail",
+          ...(t.logging !== undefined ? { logging: t.logging } : {}),
+          multi_region: !!t.IsMultiRegionTrail,
+          ...(t.S3BucketName ? { destination: `s3://${t.S3BucketName}` } : {}),
+          ...(t.HomeRegion ? { region: t.HomeRegion } : {}),
+        },
+      }),
+      asset: () => undefined,
+    },
+    guardduty: {
+      label: INTRUSION_DETECTION_SYSTEM,
+      ocsf: "cloud_resources_inventory_info",
+      async *list(ctx): AsyncGenerator<Detection> {
+        const found = await Promise.all(
+          state(ctx).regions.map((region) =>
+            ctx.orGap(`GuardDuty ${region}`, undefined as Detection | undefined, async () => {
+              const d = await guardduty<{ detectorIds?: string[] }>(ctx, region, "/detector");
+              if (!d) return undefined;
+              for (const id of d.detectorIds ?? []) {
+                const x = await guardduty<{ status?: string }>(ctx, region, `/detector/${id}`);
+                if (x?.status === "ENABLED") return { region, enabled: true };
+              }
+              return { region, enabled: false };
+            })
+          ),
+        );
+        yield* found.filter((x): x is Detection => !!x);
+      },
+      map: (d: Detection) => ({
+        native_id: `guardduty:${d.region}`,
+        display_name: `GuardDuty ${d.region}`,
+        where: d.region,
+        props: { kind: "guardduty", enabled: d.enabled, region: d.region },
+      }),
+      asset: () => undefined,
+    },
+    config: {
+      label: CONFIGURATION_MANAGEMENT_DATABASE,
+      ocsf: "cloud_resources_inventory_info",
+      async *list(ctx): AsyncGenerator<Recorder> {
+        const found = await Promise.all(
+          state(ctx).regions.map((region) =>
+            ctx.orGap(`AWS Config ${region}`, undefined as Recorder | undefined, async () => {
+              const st = await jsonCall<
+                { ConfigurationRecordersStatus?: Array<{ recording?: boolean }> }
+              >(ctx, "config", region, "DescribeConfigurationRecorderStatus");
+              if (!st) return undefined;
+              const rec = await jsonCall<
+                { ConfigurationRecorders?: Array<{ recordingGroup?: { allSupported?: boolean } }> }
+              >(ctx, "config", region, "DescribeConfigurationRecorders");
+              const all = rec?.ConfigurationRecorders?.[0]?.recordingGroup?.allSupported;
+              return {
+                region,
+                recording: (st.ConfigurationRecordersStatus ?? []).some((x) => x.recording),
+                ...(all !== undefined ? { allSupported: all } : {}),
+              };
+            })
+          ),
+        );
+        yield* found.filter((x): x is Recorder => !!x);
+      },
+      map: (r: Recorder) => ({
+        native_id: `config:${r.region}`,
+        display_name: `AWS Config ${r.region}`,
+        where: r.region,
+        props: {
+          recording: r.recording,
+          ...(r.allSupported !== undefined ? { all_resources: r.allSupported } : {}),
+          region: r.region,
+        },
+      }),
+      asset: () => undefined,
+    },
   },
   posture(records) {
     const a = records.find((r) => r.label === ACCOUNT.name)?.props ?? {};
@@ -413,6 +643,24 @@ export const aws: Connector = defineConnector({
     if (a.regions !== undefined) {
       out.ec2Instances = ec2.length;
       out.ec2WithImdsV1 = ec2.filter((p) => p.imds_v2 === false).length;
+    }
+    // Spec 088: each only when it was read (absent, the policy is not reported).
+    const trails = records.filter((r) => r.label === EVENT_LOG.name);
+    if (trails.length) {
+      out.cloudtrailLogging = trails.some((t) => t.props.logging === true);
+      out.cloudtrailMultiRegion = trails.some((t) =>
+        t.props.logging === true && t.props.multi_region === true
+      );
+    }
+    const gd = records.filter((r) => r.label === INTRUSION_DETECTION_SYSTEM.name);
+    if (gd.length) {
+      out.guarddutyRegions = gd.length;
+      out.guarddutyOff = gd.filter((r) => !r.props.enabled).map((r) => r.props.region).join(", ");
+    }
+    const cfg = records.filter((r) => r.label === CONFIGURATION_MANAGEMENT_DATABASE.name);
+    if (cfg.length) {
+      out.configRegions = cfg.length;
+      out.configOff = cfg.filter((r) => !r.props.recording).map((r) => r.props.region).join(", ");
     }
     return out;
   },
@@ -455,6 +703,49 @@ export const aws: Connector = defineConnector({
           "EC2 > the instance > Actions > Instance settings > Modify instance metadata options > IMDSv2: Required",
         warnOnly: true,
       }),
+      // Spec 088: reported only when read.
+      ...[
+        check(o, {
+          id: "aws-cloudtrail",
+          title: "A CloudTrail trail is logging",
+          scf: ["MON-03"],
+          fact: "cloudtrailLogging",
+          want: (v) => v === true,
+          fix:
+            "CloudTrail > Trails > Create trail (all regions, to an S3 bucket only the security account can delete from)",
+        }),
+        check(o, {
+          id: "aws-cloudtrail-all-regions",
+          title: "One CloudTrail trail records every region",
+          scf: ["MON-05", "MON-03"],
+          fact: "cloudtrailMultiRegion",
+          want: (v) => v === true,
+          fix: "CloudTrail > the trail > Edit > Apply trail to all regions: Yes",
+        }),
+        check(o, {
+          id: "aws-guardduty",
+          title: "GuardDuty is enabled in every region",
+          scf: ["MON-16"],
+          fact: "guarddutyOff",
+          want: (v) => v === "",
+          show: (v) => v ? `off in ${v}` : `on in ${o.posture.guarddutyRegions} region(s)`,
+          fix:
+            "GuardDuty > Get started > Enable, in each region named (or for the organization, from its delegated administrator)",
+          warnOnly: true,
+        }),
+        check(o, {
+          id: "aws-config",
+          title: "AWS Config records configuration history in every region",
+          scf: ["CFG-02"],
+          fact: "configOff",
+          want: (v) => v === "",
+          show: (v) =>
+            v ? `not recording in ${v}` : `recording in ${o.posture.configRegions} region(s)`,
+          fix:
+            "AWS Config > Settings > Recorder: turn on recording (all resource types), in each region named",
+          warnOnly: true,
+        }),
+      ].filter((p) => p.status !== "unknown"),
     ];
   },
 });

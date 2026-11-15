@@ -118,7 +118,7 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
   const { getRecord } = await import("../state/store.ts");
   const { loadAdopted } = await import("../adopt/adopt.ts");
   const { policies } = await import("../adopt/policy.ts");
-  const { CONNECTORS, loadObservations } = await import("../connect/commands.ts");
+  const { allConnectors, loadObservations } = await import("../connect/commands.ts");
   const { connectorCredPath } = await import("../connect/connector.ts");
   const { exists } = await import("../core/fsx.ts");
   const { readPin } = await import("../fleet/upgrade.ts");
@@ -230,7 +230,7 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
   }
   const observed = (await loadObservations().catch(warn("cloud observations"))) ?? [];
   const clouds: PcConnector[] = [];
-  for (const c of CONNECTORS) {
+  for (const c of await allConnectors()) {
     const o = observed.find((x) => x.provider === c.id);
     clouds.push({
       id: c.id,

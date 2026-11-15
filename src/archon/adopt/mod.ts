@@ -151,6 +151,15 @@
  * | Slack                   | workspace, people, owners and admins, guests, two-factor, shared channels     | every member has 2FA, 2 to 4 admins, shared channels reviewed       |
  * | 1Password               | people (active, suspended, not yet joined)                                    | everyone invited has joined (the estate graph checks coverage)      |
  * | Bitwarden               | members, owners and admins, two-step login, collections and who opens them    | two-step login required and on, 2 to 4 admins                       |
+ * | Snyk                    | open issues: CVE, severity, project, package, first found                     | no critical open; none past 15 days (critical) or 30 (high)         |
+ * | Tenable VM              | assets' vulnerabilities (30 days), CVEs and first seen for high and critical  | no critical open; none past 15 days (critical) or 30 (high)         |
+ * | GitHub (Dependabot)     | open Dependabot alerts: CVE, severity, repository, package                    | no critical open; none past 15 days (critical) or 30 (high)         |
+ * | KnowBe4                 | training enrollments: who, which module, passed or failed, when               | none past due (people/training reads the completions)               |
+ * | Checkr                  | each candidate's reports: outcome and date only, never the findings           | none pending (people/screening reads the outcomes)                  |
+ * | Google Cloud            | assets, the project's roles and who holds them, service account keys, sinks   | nothing public, 2 to 4 owners, no long-lived keys, logs routed      |
+ * | DigitalOcean            | the team, Droplets, cloud firewalls, volumes                                  | backups, a firewall on every Droplet                                |
+ * | AWS (deeper)            | CloudTrail trails, GuardDuty per region, AWS Config recorders                 | a trail logging every region, GuardDuty and Config everywhere       |
+ * | Azure (deeper)          | Defender for Cloud plans, the activity log's export, per subscription         | activity log exported, a Defender plan on each subscription         |
  *
  * A laptop the probe adopted, Intune manages, and Falcon protects is one device in the estate: the
  * graph merges every source's devices by serial number, then hostname, and records which source
@@ -172,6 +181,13 @@
  *   too).
  *
  * A part the credential may not read (Workers, say) is listed as not readable, not as a failure.
+ *
+ * Open vulnerabilities (Snyk, Tenable, Dependabot) are OCSF Vulnerability Findings: each open one is
+ * an item of the OSCAL plan of action and milestones, with its CVE, severity, and asset. Training
+ * completions (KnowBe4) and screening outcomes (Checkr) are the records the people controls read
+ * beside `people/training.ts` and `people/screening.ts`. A connector Stolos does not ship can be
+ * added from its own repository, pinned and locked like the engine: see
+ * [the connector registry](connectors.md).
  *
  * Every connector is labeled the way the industry labels it: its NIST SP 800-145 service models
  * (IaaS, PaaS, SaaS) and its market categories as the analyst firms name them (Strategic Cloud
