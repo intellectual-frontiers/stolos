@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Stolos v0.109.0</title>
+<title>Stolos v0.110.0</title>
 <link rel="stylesheet" href="./styles.css">
 <link rel="stylesheet" href="./page.css">
 <script src="./darkmode_toggle.js"></script>
@@ -17,7 +17,7 @@
 </head>
 <body>
 <main>
-<h1>Stolos v0.109.0</h1>
+<h1>Stolos v0.110.0</h1>
 <p>The fleet engine (its command is <code>archon</code>), documented from its TypeScript.</p>
 <p class="start">Start here: <a href="./mod.ts/index.html">the overview</a>, with how the
 pieces fit, in diagrams. Then the model: <a href="./archon/model/types.ts/index.html">types.ts</a>.
@@ -35,6 +35,7 @@ Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 <li><a href="./archon/adopt/mod.ts/index.html">Adopted machines, devices, and clouds</a> Laptops, printers, and cloud accounts: observed, never changed.</li>
 <li><a href="./archon/compliance/mod.ts/index.html">Compliance</a> SCF controls; SOC 2, HIPAA, PCI DSS, CMMC, NIST, and FedRAMP; OSCAL exports.</li>
 <li><a href="./archon/controls/mod.ts/index.html">Custom controls</a> Your own controls in TypeScript: packs in the fleet repository, tested like code.</li>
+<li><a href="./archon/people/mod.ts/index.html">People controls</a> Joiners and leavers, access reviews, policies, training, and screening, as code.</li>
 <li><a href="./archon/evidence/mod.ts/index.html">Evidence bundles</a> A period's evidence, signed, for an auditor to check offline.</li>
 <li><a href="./archon/web/mod.ts/index.html">HTTPS on every server</a> Publishing services, certificates, the Archon Console.</li>
 <li><a href="./archon/telemetry/mod.ts/index.html">Telemetry</a> Where logs, metrics, and traces go.</li>
@@ -404,6 +405,15 @@ Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 <h2>archon/otelui/</h2>
 <ul>
 <li><a href="./archon/otelui/otelui.ts/index.html"><code>otelui.ts</code></a> Spec 050-telemetry-ui: OpenObserve as an opt-in on any server.</li>
+</ul>
+<h2>archon/people/</h2>
+<ul>
+<li><a href="./archon/people/commands.ts/index.html"><code>commands.ts</code></a> Spec 077: stolos people [status|review|ack], on the controller PC.</li>
+<li><a href="./archon/people/controls.ts/index.html"><code>controls.ts</code></a> Spec 077: people controls, on the control SDK (spec 078).</li>
+<li><a href="./archon/people/git.ts/index.html"><code>git.ts</code></a> Spec 077: what Git says about people.</li>
+<li><a href="./archon/people/mod.ts/index.html"><code>mod.ts</code></a> Joiners and leavers, quarterly access reviews, policies, training, and screening, kept the Git way and checked on the estate graph (spec 077).</li>
+<li><a href="./archon/people/records.ts/index.html"><code>records.ts</code></a> Spec 077: what a fleet keeps about its people, beside the estate graph, and how Stolos reads it.</li>
+<li><a href="./archon/people/reviews.ts/index.html"><code>reviews.ts</code></a> Spec 077: quarterly access reviews, written from the estate graph.</li>
 </ul>
 <h2>archon/personas/</h2>
 <ul>

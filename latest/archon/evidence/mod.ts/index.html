@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/evidence/mod.ts - Stolos v0.109.0 documentation</title>
+  <title>archon/evidence/mod.ts - Stolos v0.110.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.109.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.110.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -159,7 +159,9 @@ deno task stolos evidence verify fcr-evidence-2026-01-01-to-2026-06-30.zip
 </button><code></code></pre>
 <p>In it: every commit in the period (raw, with its SSH signature), each observation Stolos recorded
 (adopted machines, devices, the SaaS and cloud estate), the verify and install results this PC
-recorded, <code>signers.ts</code>, and the OSCAL assessment results (see <a href="../compliance/mod.ts">Compliance</a>).</p>
+recorded, <code>signers.ts</code>, the OSCAL assessment results (see <a href="../compliance/mod.ts">Compliance</a>), and
+the access reviews of the period's quarters, each with the signed commit that approved it (see
+<a href="../people/mod.ts">People controls</a>).</p>
 <pre class="highlight"><code class="language-mermaid">flowchart LR
   git[&quot;The fleet repository: commits and observations&quot;] --&gt; bundle[&quot;bundle: objects by SHA-256, a chained manifest&quot;]
   pc[&quot;This PC: verify results, OSCAL&quot;] --&gt; bundle
@@ -276,7 +278,7 @@ elsewhere (its repository, or the fleet's <code>allowed_signers</code>) passes t
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 2270 symbols</span><svg
+              <span class="leading-none">view all 2347 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
