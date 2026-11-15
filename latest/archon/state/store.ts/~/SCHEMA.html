@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>SCHEMA - archon/state/store.ts - Stolos v0.116.0 documentation</title>
+  <title>SCHEMA - archon/state/store.ts - Stolos v0.117.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;state&#x2F;store.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.116.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.117.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -200,6 +200,15 @@ CREATE VIEW IF NOT EXISTS archon_inventory AS SELECT host, at,
   json_extract(body, '$.memMiB') AS mem_mib, json_extract(body, '$.disks') AS disks,
   json_extract(body, '$.macs') AS macs
   FROM archon_record WHERE kind = 'inventory';
+CREATE VIEW IF NOT EXISTS archon_observation AS SELECT host, name AS id, at,
+  json_extract(body, '$.source') AS source, json_extract(body, '$.who') AS who,
+  json_extract(body, '$.kind') AS kind, json_extract(body, '$.name') AS subject,
+  json_extract(body, '$.change') AS change, json_extract(body, '$.what') AS what
+  FROM archon_record WHERE kind = 'observation';
+CREATE VIEW IF NOT EXISTS archon_proposal AS SELECT host, name AS id, at,
+  json_extract(body, '$.by') AS by, json_extract(body, '$.reason') AS reason,
+  json_extract(body, '$.items') AS items, json_extract(body, '$.sent') AS sent
+  FROM archon_record WHERE kind = 'proposal';
 `</span></span>
       </code>
     </div><a

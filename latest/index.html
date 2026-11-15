@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Stolos v0.116.0</title>
+<title>Stolos v0.117.0</title>
 <link rel="stylesheet" href="./styles.css">
 <link rel="stylesheet" href="./page.css">
 <script src="./darkmode_toggle.js"></script>
@@ -17,7 +17,7 @@
 </head>
 <body>
 <main>
-<h1>Stolos v0.116.0</h1>
+<h1>Stolos v0.117.0</h1>
 <p>The fleet engine (its command is <code>archon</code>), documented from its TypeScript.</p>
 <p class="start">Start here: <a href="./mod.ts/index.html">the overview</a>, with how the
 pieces fit, in diagrams. Then the model: <a href="./archon/model/types.ts/index.html">types.ts</a>.
@@ -43,6 +43,7 @@ Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 <li><a href="./archon/audit/mod.ts/index.html">The auditor portal</a> Engagements, populations, reproducible samples, verifiable evidence, an audit trail.</li>
 <li><a href="./archon/clients/mod.ts/index.html">Clients: one PC, many client fleets</a> For providers: setting up clients, what stays apart, what the summary shows.</li>
 <li><a href="./archon/web/mod.ts/index.html">HTTPS on every server</a> Publishing services, certificates, the Archon Console.</li>
+<li><a href="./archon/proposal/mod.ts/index.html">Proposals: changes made on a server</a> A change made by hand on a server, signed and mailed, becomes a model change.</li>
 <li><a href="./archon/telemetry/mod.ts/index.html">Telemetry</a> Where logs, metrics, and traces go.</li>
 <li><a href="./archon/mcp/mod.ts/index.html">The agent layer</a> AI agents and other MCP clients, limited by each server.</li>
 <li><a href="./archon/pg/mod.ts/index.html">PostgreSQL databases</a> Instances, connections, backups.</li>
@@ -130,6 +131,7 @@ Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 <h2>archon/capabilities/</h2>
 <ul>
 <li><a href="./archon/capabilities/accounts.ts/index.html"><code>accounts.ts</code></a> 006-accounts: Archon's groups (sysusers.d), the operator sudo rule, and the ops account's GitHub access through this host's deploy key.</li>
+<li><a href="./archon/capabilities/adopted.ts/index.html"><code>adopted.ts</code></a> 095-proposals: what a host adopted from a proposal.</li>
 <li><a href="./archon/capabilities/backup.ts/index.html"><code>backup.ts</code></a> 016-backups: the host's own state is archived daily (zstd tar) into Ubuntu's /var/backups by default, kept to a retention count, and restore-tested.</li>
 <li><a href="./archon/capabilities/cli.ts/index.html"><code>cli.ts</code></a> 012-cli-mcp: the archon launcher on every host.</li>
 <li><a href="./archon/capabilities/cockpit.ts/index.html"><code>cockpit.ts</code></a> 022-cockpit: Ubuntu's web console on every server, with PCP's metric history (cockpit-bridge reads the archives spec 021 keeps).</li>
@@ -470,6 +472,25 @@ Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 <li><a href="./archon/pg/converge.ts/index.html"><code>converge.ts</code></a> 038-pg, 039-pg-identity: make each instance what the model and the host's record say.</li>
 <li><a href="./archon/pg/mod.ts/index.html"><code>mod.ts</code></a> A server can keep several PostgreSQL instances side by side, each with a name, a major version, its own port, its own data directory, its own systemd unit, and its own log (spec 038).</li>
 <li><a href="./archon/pg/tui.ts/index.html"><code>tui.ts</code></a> archon pg admin-tui (rainfrog) and archon pg observe-tui (pgcenter top): each finds the instance the way archon pg show does (an instance Archon keeps, any cluster here, or a service section) and…</li>
+</ul>
+<h2>archon/proposal/</h2>
+<ul>
+<li><a href="./archon/proposal/collect.ts/index.html"><code>collect.ts</code></a> Spec 095-proposals: the collectors.</li>
+<li><a href="./archon/proposal/decisions.ts/index.html"><code>decisions.ts</code></a> Spec 095-proposals (Article 25): what operators decided about a host's proposals lives in Git, in fleets/&lt;fleet&gt;/hosts/&lt;host&gt;/proposals.ts, written by stolos proposal accept and reject and…</li>
+<li><a href="./archon/proposal/drift.ts/index.html"><code>drift.ts</code></a> Spec 095-proposals: drift is what the host has, minus the plan, minus the birth snapshot (what Ubuntu itself put on the host at install), so Ubuntu's own changes (unattended upgrades, a package's…</li>
+<li><a href="./archon/proposal/edit.ts/index.html"><code>edit.ts</code></a> Spec 095-proposals: turning an accepted proposal into a model change.</li>
+<li><a href="./archon/proposal/group.ts/index.html"><code>group.ts</code></a> Spec 095-proposals: change sessions.</li>
+<li><a href="./archon/proposal/hold.ts/index.html"><code>hold.ts</code></a> Spec 095-proposals, the owner's decision 1: **the reconcile hold**.</li>
+<li><a href="./archon/proposal/mail.ts/index.html"><code>mail.ts</code></a> Spec 095-proposals: reading a saved message (.eml, RFC 5322 with MIME) for its attachments, so stolos proposal import takes the mail as it was saved, with no mailbox access and no credential (the…</li>
+<li><a href="./archon/proposal/mod.ts/index.html"><code>mod.ts</code></a> Sometimes a person changes a server directly: sudo apt install nginx, an edit under /etc, sudo systemctl enable ....</li>
+<li><a href="./archon/proposal/parse.ts/index.html"><code>parse.ts</code></a> Spec 095-proposals: the collectors' parsers.</li>
+<li><a href="./archon/proposal/pc.ts/index.html"><code>pc.ts</code></a> Spec 095-proposals: stolos proposal ... on your PC, in the fleet repository.</li>
+<li><a href="./archon/proposal/proposal.ts/index.html"><code>proposal.ts</code></a> Spec 095-proposals: the stolos-proposal/1 format.</li>
+<li><a href="./archon/proposal/propose.ts/index.html"><code>propose.ts</code></a> Spec 095-proposals: archon propose on a server.</li>
+<li><a href="./archon/proposal/record.ts/index.html"><code>record.ts</code></a> Spec 095-proposals: recording mode and reminders.</li>
+<li><a href="./archon/proposal/secrets.ts/index.html"><code>secrets.ts</code></a> Spec 095-proposals, Article 13: no secret ever leaves a server in a proposal.</li>
+<li><a href="./archon/proposal/server.ts/index.html"><code>server.ts</code></a> Spec 095-proposals: archon drift on a server.</li>
+<li><a href="./archon/proposal/types.ts/index.html"><code>types.ts</code></a> Spec 095-proposals: the types shared by the server side (archon drift, archon propose, archon record) and the PC side (stolos proposal ...): observations, drift items, change sessions, structured…</li>
 </ul>
 <h2>archon/prov/</h2>
 <ul>
