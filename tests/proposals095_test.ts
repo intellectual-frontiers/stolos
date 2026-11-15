@@ -934,15 +934,15 @@ Deno.test("095: on the PC: import a mail, refuse a forgery, show, accept into ho
       'import { adopted, foundation } from "@stolos/archon/capabilities/mod.ts";',
     );
     assertStringIncludes(hostTs, `proposal: "${one.proposal.id}",`);
-    assertStringIncludes(hostTs, 'spec: "096-alpha-nginx-for-the-app",');
+    assertStringIncludes(hostTs, 'spec: "097-alpha-nginx-for-the-app",');
     assertStringIncludes(hostTs, 'packages: [\n        "nginx",\n      ],');
     assertStringIncludes(hostTs, 'enable: [\n        "nginx-extra.service",\n      ],');
     assertStringIncludes(hostTs, 'path: "/etc/nginx/sites-available/app",');
     assert(!hostTs.includes("ports:"), "443 is already open in the model");
     const spec = await Deno.readTextFile(
-      `${repo}/fleets/lab/specs/096-alpha-nginx-for-the-app/spec.md`,
+      `${repo}/fleets/lab/specs/097-alpha-nginx-for-the-app/spec.md`,
     );
-    assertStringIncludes(spec, "# 096: nginx for the app (alpha)");
+    assertStringIncludes(spec, "# 097: nginx for the app (alpha)");
     assertStringIncludes(spec, '`packages.add("nginx")`');
     assertStringIncludes(spec, "file:/etc/default/grub, until 2026-12-31");
     const decisions = await Deno.readTextFile(`${repo}/fleets/lab/hosts/alpha/proposals.ts`);
@@ -995,7 +995,7 @@ Deno.test("095: on the PC: import a mail, refuse a forgery, show, accept into ho
       '"htop"',
     );
     assertStringIncludes(
-      await Deno.readTextFile(`${repo}/fleets/lab/specs/097-alpha-htop-and-avahi/spec.md`),
+      await Deno.readTextFile(`${repo}/fleets/lab/specs/098-alpha-htop-and-avahi/spec.md`),
       "skipped at acceptance",
     );
 
