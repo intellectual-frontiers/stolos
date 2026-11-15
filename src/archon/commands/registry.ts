@@ -3789,12 +3789,97 @@ export const COMMANDS: Command[] = [
       { cmd: "archon drift", text: "What changed outside Stolos and is not proposed yet." },
       { cmd: "sudo archon drift --collect", text: "Collect now, then show it." },
     ],
-    seeAlso: ["archon-capture"],
+    seeAlso: ["archon-propose", "archon-capture"],
     async run(a, ctx) {
       const { driftCommand } = await import("../proposal/server.ts");
       return await driftCommand(await requireHost(ctx.hostName), {
         all: !!a.all,
         collect: !!a.collect,
+        json: ctx.json,
+      });
+    },
+  },
+  {
+    name: "propose",
+    summary: "Propose changes made outside Stolos: signed with the host key, mailed to the fleet",
+    description:
+      `Spec 095: anyone with sudo may propose. Collects again, then takes the drift items chosen (--all, --intent <id> for a change session, --item <key>, repeatable), each with an action: adopt (put it in the model), revert (let Stolos converge it back; Archon never removes anything itself, so the proposal names the command), or local (keep it here, recorded as accepted local drift until --until, default 30 days; not for an item the plan manages). A written --reason is required (a recording's counts). Builds proposal.json (format stolos-proposal/1: the host, the model commit it runs, the evidence, and per item the structured model edits), with no secrets (a secret path or key-like content is a hash only), signs it with the host's SSH host key (ssh-keygen -Y sign -n stolos-proposal), keeps it in /var/lib/archon/proposals/<id>/, and mails it to the fleet's mailbox with a readable summary. On your PC: stolos proposal import. --dry-run prints it and sends nothing.`,
+    tier: "mutate",
+    readOnlyWith: "dry-run",
+    args: [
+      { name: "all", type: "boolean", description: "Every item not proposed yet." },
+      {
+        name: "intent",
+        type: "string",
+        repeatable: true,
+        description: "A change session's items (its id from archon drift).",
+      },
+      {
+        name: "item",
+        type: "string",
+        repeatable: true,
+        description: "One drift item, by key (package:nginx, file:/etc/...).",
+      },
+      {
+        name: "action",
+        type: "string",
+        choices: ["adopt", "revert", "local"],
+        default: "adopt",
+        description: "What to do with every chosen item.",
+      },
+      {
+        name: "revert",
+        type: "string",
+        repeatable: true,
+        description: "This chosen item is reverted instead.",
+      },
+      {
+        name: "local",
+        type: "string",
+        repeatable: true,
+        description: "This chosen item stays local instead (until --until).",
+      },
+      {
+        name: "until",
+        type: "string",
+        description: "Local drift is accepted until this day (YYYY-MM-DD; default 30 days).",
+      },
+      {
+        name: "reason",
+        short: "r",
+        type: "string",
+        description: "Why the change was made (required, unless a recording gives it).",
+      },
+      {
+        name: "dry-run",
+        type: "boolean",
+        description: "Print the proposal; sign, record, and send nothing.",
+      },
+    ],
+    examples: [
+      {
+        cmd: 'sudo archon propose --all --reason "nginx for the app"',
+        text: "Propose every change not proposed yet, to adopt it.",
+      },
+      {
+        cmd:
+          'sudo archon propose --item package:htop --item file:/etc/htoprc --local file:/etc/htoprc -r "debugging"',
+        text: "Adopt htop, keep its settings here for 30 days.",
+      },
+    ],
+    seeAlso: ["archon-drift"],
+    async run(a, ctx) {
+      const { proposeCommand } = await import("../proposal/propose.ts");
+      return await proposeCommand(await requireHost(ctx.hostName), {
+        all: !!a.all,
+        intent: a.intent as string | undefined,
+        item: a.item as string | undefined,
+        action: a.action as string | undefined,
+        revert: a.revert as string | undefined,
+        local: a.local as string | undefined,
+        until: a.until as string | undefined,
+        reason: a.reason as string | undefined,
+        dryRun: !!a["dry-run"],
         json: ctx.json,
       });
     },

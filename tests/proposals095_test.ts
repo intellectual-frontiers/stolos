@@ -15,7 +15,13 @@ import {
   parseSudoJournal,
   parseUnitFiles,
 } from "../src/archon/proposal/parse.ts";
-import { type RawSources, stateFrom, storeCollection } from "../src/archon/proposal/collect.ts";
+import {
+  observationsFrom,
+  planView,
+  type RawSources,
+  stateFrom,
+  storeCollection,
+} from "../src/archon/proposal/collect.ts";
 import {
   type Birth,
   computeDrift,
@@ -24,7 +30,25 @@ import {
   unproposed,
 } from "../src/archon/proposal/drift.ts";
 import { fileEvidence, isSecretPath, looksSecret } from "../src/archon/proposal/secrets.ts";
-import { listRecords } from "../src/archon/state/store.ts";
+import { listRecords, putRecord } from "../src/archon/state/store.ts";
+import { groupItems, sessions } from "../src/archon/proposal/group.ts";
+import {
+  allowedSigners,
+  buildProposal,
+  keySigner,
+  proposalSummary,
+  proposalText,
+  revertHint,
+  signProposal,
+  verifyProposal,
+} from "../src/archon/proposal/proposal.ts";
+import { choose, proposeCommand } from "../src/archon/proposal/propose.ts";
+import { loadDrift } from "../src/archon/proposal/server.ts";
+import { redact } from "../src/archon/notify/redact.ts";
+import type { Event } from "../src/archon/notify/notify.ts";
+import type { DriftItem, Observation, Proposal } from "../src/archon/proposal/types.ts";
+import { loadHosts } from "../src/archon/model/load.ts";
+import { planFor } from "../src/archon/build.ts";
 
 // ------------------------------------------------------------------ fixtures
 
@@ -293,7 +317,6 @@ Deno.test("095: unit files, snap changes, dpkg -S, and modified package files", 
 Deno.test("095: drift is the host minus the plan minus the birth snapshot, with who and the adopting edit", async () => {
   const r = raw();
   const state = stateFrom(r, PLAN);
-  const { observationsFrom } = await import("../src/archon/proposal/collect.ts");
   const observations = await observationsFrom(r, osq({}, "2026-11-13T00:00:00Z"));
   const items = computeDrift({
     plan: PLAN,
@@ -411,4 +434,242 @@ Deno.test("095: no secrets: inventory and host secret paths, and key-like conten
   assertEquals(keyInside.content, undefined);
   const big = await fileEvidence("/etc/app/big.conf", enc("x".repeat(20_000)));
   assertEquals(big.content, undefined);
+});
+
+// ------------------------------------------------------------------ phase 2: sessions, signing
+
+async function driftFixture(): Promise<{ items: DriftItem[]; observations: Observation[] }> {
+  const r = raw();
+  const observations = await observationsFrom(r, osq({}, "2026-11-13T00:00:00Z"));
+  const items = computeDrift({ plan: PLAN, birth: BIRTH, state: stateFrom(r, PLAN), observations });
+  return { items, observations };
+}
+
+/** A throwaway ed25519 host key (like a server's /etc/ssh/ssh_host_ed25519_key). */
+async function hostKey(dir: string, name = "ssh_host_ed25519_key") {
+  const key = `${dir}/${name}`;
+  const r = await new Deno.Command("ssh-keygen", {
+    args: ["-q", "-t", "ed25519", "-N", "", "-C", "root@alpha", "-f", key],
+    stdout: "null",
+    stderr: "null",
+  }).output();
+  assert(r.success, "ssh-keygen made a key");
+  const pub = (await Deno.readTextFile(key + ".pub")).trim().split(/\s+/).slice(0, 2).join(" ");
+  return { key, pub };
+}
+
+Deno.test("095: change sessions: one person's sudo commands, close in time, are one intent", async () => {
+  const { items, observations } = await driftFixture();
+  const s = sessions(observations);
+  assertEquals(s.map((x) => [x.who, x.commands.length]), [["alice", 3], ["bob", 1]]);
+  const intents = groupItems(items, observations);
+  const alice = intents.find((i) => i.id.startsWith("s-alice-"))!;
+  for (
+    const k of [
+      "package:nginx",
+      "file:/etc/nginx/sites-available/app",
+      "file:/etc/nginx/nginx.conf",
+    ]
+  ) {
+    assert(alice.items.includes(k), `${k} in alice's session: ${JSON.stringify(alice)}`);
+  }
+  assert(intents.find((i) => i.id.startsWith("s-bob-"))!.items.includes("user:carol"));
+  // Nothing names /etc/default/grub and no session was open at 18:00: the day's other changes.
+  assert(intents.some((i) => i.id.startsWith("d-") && i.items.includes("file:/etc/default/grub")));
+  // A recording wins over sessions, with its reason.
+  const rec = groupItems(items, observations, [{
+    id: "r-202611141455",
+    reason: "nginx for the app",
+    by: "alice",
+    start: "2026-11-14T14:55:00Z",
+    end: "2026-11-14T15:10:00Z",
+  }]);
+  const r = rec.find((i) => i.id === "r-202611141455")!;
+  assertEquals(r.reason, "nginx for the app");
+  assert(r.items.includes("package:nginx"));
+});
+
+Deno.test("095: choosing items: a reason is required; a managed item is never kept local", async () => {
+  const { items, observations } = await driftFixture();
+  const intents = groupItems(items, observations);
+  const refused = (f: () => unknown) => {
+    try {
+      f();
+    } catch (e) {
+      return (e as Error).message;
+    }
+    return "";
+  };
+  assertStringIncludes(refused(() => choose(items, intents, { all: true })), "reason is required");
+  assertStringIncludes(
+    refused(() =>
+      choose(items, intents, { item: "unit:avahi-daemon.service", action: "local", reason: "x" })
+    ),
+    "managed by 001-platform",
+  );
+  const c = choose(items, intents, {
+    item: "package:nginx\nfile:/etc/default/grub",
+    local: "file:/etc/default/grub",
+    until: "2026-12-31",
+    reason: "nginx for the app",
+  });
+  assertEquals(c.choices, {
+    "package:nginx": { action: "adopt" },
+    "file:/etc/default/grub": { action: "local", until: "2026-12-31" },
+  });
+  assertStringIncludes(
+    revertHint(items.find((i) => i.key === "package:nginx")!),
+    "sudo apt remove nginx",
+  );
+});
+
+async function signedFixture(dir: string) {
+  const { items, observations } = await driftFixture();
+  const intents = groupItems(items, observations);
+  const pick = items.filter((i) =>
+    ["package:nginx", "file:/etc/nginx/sites-available/app", "unit:foo.service", "port:tcp/443"]
+      .includes(i.key)
+  );
+  const enc = (s: string) => new TextEncoder().encode(s);
+  const draft = buildProposal({
+    host: "alpha",
+    fleet: "lab",
+    base: "0123456789abcdef",
+    engine: "0.0.0",
+    at: "2026-11-14T19:05:00Z",
+    by: "alice",
+    reason: "nginx for the app",
+    items: pick,
+    choices: {},
+    intents,
+    observations: observations.map((o) =>
+      o.source === "apt" ? { ...o, evidence: `${o.evidence}\npassword=hunter2hunter2` } : o
+    ),
+    files: {
+      "/etc/nginx/sites-available/app": await fileEvidence(
+        "/etc/nginx/sites-available/app",
+        enc("server {\n  listen 443 ssl;\n  server_name app.example.net;\n}\n"),
+        { mode: "0644", owner: "root", group: "root" },
+      ),
+    },
+    suffix: "ab12",
+  });
+  const k = await hostKey(dir);
+  const signed = await signProposal(draft, keySigner(k.key));
+  return { ...signed, key: k, draft };
+}
+
+Deno.test("095: proposal.json: structured edits, content only when allowed, signed by the host key", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const { proposal, text, sig, key } = await signedFixture(dir);
+    assertEquals(proposal.format, "stolos-proposal/1");
+    assertEquals(proposal.id, "alpha-20261114-1905-ab12");
+    const by = Object.fromEntries(proposal.items.map((i) => [i.key, i]));
+    assertEquals(by["package:nginx"].edits, [{ op: "packages.add", name: "nginx" }]);
+    assertEquals(by["file:/etc/nginx/sites-available/app"].edits[0].op, "files.override");
+    assertEquals(by["unit:foo.service"].edits, [{ op: "units.enable", unit: "foo.service" }]);
+    assertEquals(by["port:tcp/443"].edits, [{ op: "ports.open", port: 443, protocol: "tcp" }]);
+    assertEquals(redact(text), text, "the mail's redaction changes nothing");
+    assert(!text.includes("hunter2"), "redacted before signing");
+    assertStringIncludes(sig, "BEGIN SSH SIGNATURE");
+    assertStringIncludes(proposalSummary(proposal), 'packages.add("nginx")');
+    // The PC verifies it against the host key in Git.
+    const keys = (h: string) => h === "alpha" ? [key.pub] : undefined;
+    assertEquals((await verifyProposal(text, sig, keys)).problem, undefined);
+    // Altered after signing: refused.
+    const altered = text.replace("nginx for the app", "something else");
+    assertStringIncludes((await verifyProposal(altered, sig, keys)).problem ?? "", "not alpha's");
+    // Signed by another key (forged): refused.
+    const other = await hostKey(dir, "other_key");
+    const forged = await keySigner(other.key)(text);
+    assertStringIncludes((await verifyProposal(text, forged, keys)).problem ?? "", "not alpha's");
+    // A host that is not in the fleet: refused.
+    assertStringIncludes(
+      (await verifyProposal(text, sig, () => undefined)).problem ?? "",
+      "not a host of this fleet",
+    );
+    assertStringIncludes(
+      allowedSigners("alpha", [key.pub + " root@alpha"]),
+      'alpha namespaces="stolos-proposal" ssh-ed25519 ',
+    );
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("095: a secret file is a hash in the proposal, and adopting it is by hand", async () => {
+  const it: DriftItem = {
+    key: "file:/etc/archon/mail.json",
+    kind: "file",
+    name: "/etc/archon/mail.json",
+    change: "edited",
+    managed: false,
+    at: "2026-11-14T15:00:00Z",
+    evidence: [],
+    edits: [],
+  };
+  const p = buildProposal({
+    host: "alpha",
+    fleet: "lab",
+    base: "",
+    engine: "0",
+    at: "2026-11-14T19:05:00Z",
+    by: "alice",
+    reason: "r",
+    items: [it],
+    choices: {},
+    intents: [],
+    observations: [],
+    files: {
+      "/etc/archon/mail.json": await fileEvidence(
+        "/etc/archon/mail.json",
+        new TextEncoder().encode('{"token":"x"}'),
+      ),
+    },
+  });
+  const item = p.items[0];
+  assertEquals(item.edits, []);
+  assertEquals(item.file?.content, undefined);
+  assert(item.file?.sha256 && item.manual?.includes("secret"), JSON.stringify(item));
+  assert(!proposalText(p).includes("token"));
+});
+
+Deno.test("095: archon propose: signs, keeps a copy, records it, mails it; the items are then proposed", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const k = await hostKey(dir);
+    const host = (await loadHosts()).find((h) => h.name === "alpha")!;
+    const view = planView(await planFor(host));
+    await storeCollection("alpha", raw(), view, dir);
+    await putRecord("alpha", "birth", "birth", BIRTH, dir);
+    const mails: Event[] = [];
+    const code = await proposeCommand(host, {
+      item: "package:nginx",
+      reason: "nginx for the app",
+      json: true,
+    }, {
+      sign: keySigner(k.key),
+      collectFirst: false,
+      dir,
+      notify: (ev) => (mails.push(ev), Promise.resolve("queued")),
+    });
+    assertEquals(code, 0);
+    assertEquals(mails.length, 1);
+    const json = mails[0].attach!.find((a) => a.endsWith("proposal.json"))!;
+    const sigFile = mails[0].attach!.find((a) => a.endsWith("proposal.json.sig"))!;
+    const v = await verifyProposal(
+      await Deno.readTextFile(json),
+      await Deno.readTextFile(sigFile),
+      () => [k.pub],
+    );
+    assertEquals(v.problem, undefined);
+    assertEquals((v.proposal as Proposal).items.map((i) => i.key), ["package:nginx"]);
+    assertEquals((await listRecords("alpha", "proposal", dir)).length, 1);
+    const d = await loadDrift(host, dir);
+    assertEquals(d.items.find((i) => i.key === "package:nginx")?.proposal, v.proposal!.id);
+    assert(!unproposed(d.items).some((i) => i.key === "package:nginx"));
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
 });

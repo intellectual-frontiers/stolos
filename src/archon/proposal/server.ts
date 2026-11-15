@@ -99,10 +99,17 @@ export async function driftCommand(
     }
   }
   const v = await loadDrift(host);
+  const items = opts.all ? v.items : unproposed(v.items);
+  const { groupItems } = await import("./group.ts");
+  const { recordings } = await import("./propose.ts");
+  const intents = groupItems(items, v.observations, await recordings(host.name));
   if (opts.json) {
-    const items = opts.all ? v.items : unproposed(v.items);
     console.log(
-      JSON.stringify({ host: host.name, collected: v.state?.at, items, alerts: v.alerts }, null, 2),
+      JSON.stringify(
+        { host: host.name, collected: v.state?.at, items, intents, alerts: v.alerts },
+        null,
+        2,
+      ),
     );
     return 0;
   }
@@ -117,5 +124,15 @@ export async function driftCommand(
     birthLate: v.birth.late,
     collected: v.state.at,
   }));
+  if (intents.length) {
+    console.log("\nChange sessions (archon propose --intent <id>):");
+    for (const i of intents) {
+      console.log(
+        `  ${i.id}${i.who ? ` ${i.who}` : ""} ${i.from.slice(0, 16).replace("T", " ")}${
+          i.reason ? ` "${i.reason}"` : ""
+        }: ${i.items.join(", ")}`,
+      );
+    }
+  }
   return v.alerts.length ? 1 : 0;
 }

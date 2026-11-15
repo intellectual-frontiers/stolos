@@ -54,6 +54,37 @@
  * The daily report collects every day and lists the same items. `archon drift` is read-only, so a
  * workstation's agent can call it over MCP.
  *
+ * **Change sessions.** Items are grouped into one *intent* per sudo session (the same person, each
+ * command within 30 minutes of the previous): "installed nginx, edited its site, enabled it, opened
+ * 443" is one thing to decide. `archon drift` lists the sessions with their ids.
+ *
+ * ## Proposing
+ *
+ * Anyone with sudo on the server may propose. Choose the items, an action for each, and say why:
+ *
+ * ```sh
+ * sudo archon propose --all --reason "nginx for the app"
+ * sudo archon propose --intent s-alice-202611141500 --reason "nginx for the app"
+ * sudo archon propose --item package:htop --item file:/etc/htoprc --local file:/etc/htoprc -r "debugging"
+ * archon propose --all --reason "..." --dry-run   # show it; send nothing
+ * ```
+ *
+ * | Action  | Means                                                                                                    |
+ * | ------- | -------------------------------------------------------------------------------------------------------- |
+ * | adopt   | put it in the model (the default)                                                                        |
+ * | revert  | let Stolos converge it back; for what Archon never removes (Article 11), the proposal names the command  |
+ * | local   | keep it on this server as accepted local drift, until `--until` (30 days by default); not for managed items |
+ *
+ * The message to the fleet's mailbox has a readable summary and two attachments: `proposal.json`
+ * (format `stolos-proposal/1`: the host, the model commit it runs, the evidence, and for each item
+ * the model change as structured edits such as `packages.add("nginx")` or
+ * `units.enable("nginx.service")`) and `proposal.json.sig`, signed with the server's SSH host key.
+ * A copy stays in `/var/lib/archon/proposals/<id>/`.
+ *
+ * **No secrets, ever (Article 13).** A path in the secret inventory (or secret on every host, such as
+ * `/etc/shadow` or an SSH host key), and anything that looks like a key, is sent as its SHA-256 hash
+ * only. A file's content is sent only when it is a small text file with nothing secret in it.
+ *
  * @module
  */
 
