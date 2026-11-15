@@ -98,7 +98,8 @@ if ($Adopt) {
     if ($h -ne $ProbeSha) { Die "the downloaded probe is not the fleet's copy (checksum differs): nothing was installed" }
   }
   Set-Content -Path $Probe -Value $text -Encoding utf8 -NoNewline
-  icacls.exe $Dir /inheritance:r /grant '*S-1-5-32-544:F' /grant '*S-1-5-18:F' /grant '*S-1-5-32-545:RX' | Out-Null
+  # (OI)(CI): the probe inside inherits these, once the folder's own inheritance is removed.
+  icacls.exe $Dir /inheritance:r /grant '*S-1-5-32-544:(OI)(CI)F' /grant '*S-1-5-18:(OI)(CI)F' /grant '*S-1-5-32-545:(OI)(CI)RX' | Out-Null
   $pub = (($Key -split '\s+')[0..1]) -join ' '
   $line = "command=""powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $Probe"",restrict $pub stolos-probe@$Fleet"
   Set-AuthFile ($keep + $line)
