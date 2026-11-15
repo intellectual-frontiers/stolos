@@ -163,6 +163,8 @@ export interface StolosDeps {
   catalog?(): Promise<ScfCatalog | undefined>;
   /** Spec 083: the auditor portal's engagements and links (none: no portal). */
   audit?: AuditDeps;
+  /** Spec 082: the provider's client these pages are for (shown in the top bar, with the way back). */
+  scope?: { label: string; href: string };
 }
 
 /** The fleet's OSCAL documents (spec 071), by file name; none without the SCF catalog. */
@@ -261,8 +263,12 @@ export function stolosHandler(
         user: deps.person.github ? `${s.user} · GitHub ${deps.person.github}` : s.user,
         role: "fleet operator",
       },
-      nav: STOLOS_NAV,
+      // Spec 082: a provider's client's pages lead back to the list of clients (also on a phone).
+      nav: deps.scope
+        ? [...STOLOS_NAV, { group: "Provider", label: "All clients", href: deps.scope.href }]
+        : STOLOS_NAV,
       current,
+      ...(deps.scope ? { scope: deps.scope } : {}),
     }, body));
   };
 

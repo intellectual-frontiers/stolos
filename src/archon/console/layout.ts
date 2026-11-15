@@ -37,6 +37,8 @@ export interface Frame {
   nav: NavItem[];
   /** The current page's href. */
   current: string;
+  /** Spec 082: the provider's client this page is for, and where the list of clients is. */
+  scope?: { label: string; href: string };
 }
 
 /** Initials for the avatar. */
@@ -103,7 +105,12 @@ export function page(f: Frame, body: Html): string {
           ${f.product === "stolos"
             ? html`
               <a class="brand" href="/">${STOLOS_LOGO}<b>Stolos</b><small>${f.subtitle}</small></a>
-              <div class="fleetmark"><span>fleet ${f.fleet.id} · ${f.fleet.repo}</span></div>
+              <div class="fleetmark"><span>${f.scope
+                ? html`
+                  client <b>${f.scope.label}</b> · <a href="${f.scope
+                    .href}">All clients</a> ·
+                `
+                : ""}fleet ${f.fleet.id} · ${f.fleet.repo}</span></div>
             `
             : html`
               <a class="brand" href="/">${ARCHON_LOGO}<b>Archon</b><small>${f.subtitle}</small></a>

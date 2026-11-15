@@ -37,13 +37,16 @@ export async function githubCheck(
   return { login, push: p.stdout.trim() === "true" };
 }
 
-/** Runs `deno task stolos <argv>` in the fleet repository; this terminal is its input. */
-export function pcRunner(repo = P.repo): PcRunner {
+/**
+ * Runs `deno task stolos <argv>` in the fleet repository; this terminal is its
+ * input. `env` adds to its environment (spec 082: a client's scope).
+ */
+export function pcRunner(repo: string = P.repo, env: Record<string, string> = {}): PcRunner {
   return async (argv, each) => {
     const p = new Deno.Command(Deno.execPath(), {
       args: ["task", "-q", "stolos", ...argv],
       cwd: repo,
-      env: { ARCHON_PLAIN: "1", NO_COLOR: "1", ARCHON_VIA: "console" },
+      env: { ...env, ARCHON_PLAIN: "1", NO_COLOR: "1", ARCHON_VIA: "console" },
       stdin: "inherit",
       stdout: "piped",
       stderr: "piped",
@@ -89,7 +92,43 @@ export function estateFor(): () => Promise<Estate> {
   };
 }
 
-function openBrowser(url: string): void {
+/** A guide's page for the console (one of PC_GUIDES), as HTML. */
+export function pcGuideDoc(n: string): Promise<string | undefined> {
+  if (!PC_GUIDES.some((g) => g.name === n)) return Promise.resolve(undefined);
+  const md = engineFileOr(`docs/${n}.md`);
+  return Promise.resolve(
+    md
+      ? markdownToHtml(md, {
+        served: PC_GUIDES.map((g) => g.name),
+        repoBlob: "https://github.com/intellectual-frontiers/stolos/blob/main/",
+      })
+      : undefined,
+  );
+}
+
+/** The lines to run on a machine for an integration (spec 069), for the active fleet. */
+export async function pcIntegrate(
+  name: string,
+  as: string[],
+  repo: string,
+): Promise<{ posix: string; windows?: string }> {
+  const { integrateLines } = await import("../adopt/integrate.ts");
+  const { ensureProbeKey } = await import("../adopt/adopt.ts");
+  const key = as.includes("adopt") ? await ensureProbeKey(name, P.fleetId) : undefined;
+  const fleet = as.includes("server")
+    ? await (await import("../model/load.ts")).loadFleet()
+    : undefined;
+  return await integrateLines({
+    as: as as never,
+    fleet: P.fleetId,
+    ...(key ? { key } : {}),
+    ...(fleet ? { github: fleet.admin.github.login } : {}),
+    ...(as.includes("workstation") ? { repo } : {}),
+  });
+}
+
+/** Open a URL in this PC's browser (best effort: the link is printed anyway). */
+export function openBrowser(url: string): void {
   const cmd = Deno.build.os === "windows"
     ? ["rundll32", "url.dll,FileProtocolHandler", url]
     : Deno.build.os === "darwin"
@@ -147,33 +186,8 @@ export async function stolosConsole(
     runner: pcRunner(),
     activity: activityLog(join(P.state, "console-activity.jsonl")),
     guides: PC_GUIDES,
-    guideDoc: (n) => {
-      if (!PC_GUIDES.some((g) => g.name === n)) return Promise.resolve(undefined);
-      const md = engineFileOr(`docs/${n}.md`);
-      return Promise.resolve(
-        md
-          ? markdownToHtml(md, {
-            served: PC_GUIDES.map((g) => g.name),
-            repoBlob: "https://github.com/intellectual-frontiers/stolos/blob/main/",
-          })
-          : undefined,
-      );
-    },
-    integrate: async (name, as) => {
-      const { integrateLines } = await import("../adopt/integrate.ts");
-      const { ensureProbeKey } = await import("../adopt/adopt.ts");
-      const key = as.includes("adopt") ? await ensureProbeKey(name, P.fleetId) : undefined;
-      const fleet = as.includes("server")
-        ? await (await import("../model/load.ts")).loadFleet()
-        : undefined;
-      return await integrateLines({
-        as: as as never,
-        fleet: P.fleetId,
-        ...(key ? { key } : {}),
-        ...(fleet ? { github: fleet.admin.github.login } : {}),
-        ...(as.includes("workstation") ? { repo: facts.fleet.repo } : {}),
-      });
-    },
+    guideDoc: pcGuideDoc,
+    integrate: (name, as) => pcIntegrate(name, as, facts.fleet.repo),
     bootLog: async () => (await readTextOr(join(P.bootCache, "boot.log"))) ?? "",
     cacheDir: join(P.state, "console-cache"),
     estate: estateFor(),

@@ -135,6 +135,12 @@ export const GUIDES: GuideDef[] = [
     module: "src/archon/audit/mod.ts",
   },
   {
+    name: "clients",
+    title: "Clients: one PC, many client fleets",
+    why: "For providers: setting up clients, what stays apart, what the summary shows.",
+    module: "src/archon/clients/mod.ts",
+  },
+  {
     name: "web",
     title: "HTTPS on every server",
     why: "Publishing services, certificates, the Archon Console.",

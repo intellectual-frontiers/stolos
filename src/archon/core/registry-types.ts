@@ -173,6 +173,12 @@ export const GLOBAL_ARGS: ArgSpec[] = [
       "The fleet of this repository to work on (fleets/<id>/), when it holds more than one (also ARCHON_FLEET).",
   },
   {
+    name: "client",
+    type: "string",
+    description:
+      "On a provider's PC (spec 082): run this command for one client, in its own checkout, state, and secrets (stolos clients list).",
+  },
+  {
     name: "host",
     type: "string",
     description: "Operate on this host model instead of the local host.",

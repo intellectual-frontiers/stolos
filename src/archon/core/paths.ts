@@ -13,6 +13,13 @@
  * (`stolos fleet use <id>`, in .git/stolos/fleet, never committed), else the
  * instance's only fleet.
  *
+ * A provider's PC (spec 082) works for many clients, each in its own
+ * checkout: `--client <id>` (ARCHON_CLIENT) points ARCHON_REPO and
+ * ARCHON_FLEET at that client's checkout and fleet, and this PC's per-user
+ * folders (state, secrets, the key store) move under `stolos/clients/<id>/`,
+ * so no two clients ever share one. The catalogs (public reference data) and
+ * the boot cache stay shared.
+ *
  * ```mermaid
  * flowchart TD
  *   repo{"ARCHON_REPO?"} -->|set| inst["that folder"]
@@ -103,6 +110,19 @@ export function findFleetId(repo: string): string {
   return all.length === 1 ? all[0] : "";
 }
 
+/** A client's id (spec 082): lowercase letters, digits, and hyphens, as a folder name. */
+export const CLIENT_ID: RegExp = /^[a-z0-9][a-z0-9-]{0,62}$/;
+
+/**
+ * The provider's client this run is for (ARCHON_CLIENT, which `--client`
+ * sets), or "" for none. Anything but a client id is refused: it names folders.
+ */
+export function clientId(): string {
+  const c = Deno.env.get("ARCHON_CLIENT")?.trim() ?? "";
+  if (c && !CLIENT_ID.test(c)) throw new Error(`ARCHON_CLIENT is not a client id: ${c}`);
+  return c;
+}
+
 let cachedRepo: string | undefined;
 let cachedFleet: string | undefined;
 /** Forget the resolved instance and fleet (tests, and `fleet init`). */
@@ -130,6 +150,17 @@ const userData = isWindows
 const userConfig = isWindows
   ? Deno.env.get("APPDATA") ?? join(home, "AppData", "Roaming")
   : Deno.env.get("XDG_CONFIG_HOME") ?? join(home, ".config");
+
+/**
+ * A per-user folder for the active fleet: `<base>/stolos/<kind>/<fleet>`, or,
+ * for a provider's client (spec 082), `<base>/stolos/clients/<client>/<kind>/<fleet>`.
+ */
+function perFleet(base: string, kind: string): string {
+  const c = clientId();
+  return c
+    ? join(base, "stolos", "clients", c, kind, fleetId() || "_")
+    : join(base, "stolos", kind, fleetId() || "_");
+}
 
 /**
  * ARCHON_SANDBOX=<folder> (tests): every per-user path must resolve inside it,
@@ -160,6 +191,15 @@ export const P = {
   get fleetId(): string {
     return fleetId();
   },
+  /** The provider's client this run is for (spec 082), or "" for none. */
+  get clientId(): string {
+    return clientId();
+  },
+  /**
+   * The provider's own folder on this PC (spec 082): the registry of client
+   * checkouts (clients.json) and the chosen client. Never in any repository.
+   */
+  provider: join(userConfig, "stolos"),
   /** fleets/<id>/ */
   get fleetDir(): string {
     return fleetDir();
@@ -180,14 +220,14 @@ export const P = {
   get state(): string {
     return readOr("/etc/archon/host") !== undefined
       ? "/var/lib/archon"
-      : join(userData, "stolos", "state", fleetId() || "_");
+      : perFleet(userData, "state");
   },
   /**
    * This user's own files derived from Git, per fleet (known_hosts.auto): an
    * operator on a workstation cannot write /var/lib/archon.
    */
   get userState(): string {
-    return join(userData, "stolos", "state", fleetId() || "_");
+    return perFleet(userData, "state");
   },
   /**
    * Downloaded reference catalogs (spec 071: SCF, NIST), for every fleet on
@@ -212,7 +252,7 @@ export const P = {
   bootCache: join(userData, "stolos", "boot"),
   /** Boot machine: secrets, never in the repository (Article 13). */
   get secrets(): string {
-    return join(userConfig, "stolos", "secrets", fleetId() || "_");
+    return perFleet(userConfig, "secrets");
   },
   /** Host: runtime state written by timers, outside Git. */
   varLib: "/var/lib/archon",

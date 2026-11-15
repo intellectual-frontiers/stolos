@@ -16,6 +16,14 @@ export const VAULT_LOCAL: string = join(P.bootCache, "..", "vault");
 /** The ledger file: `ledger.json` in `VAULT_LOCAL`. */
 export const LEDGER: string = join(VAULT_LOCAL, "ledger.json");
 
+/**
+ * The ledger for this run: `LEDGER`, or, for a provider's client (spec 082),
+ * `clients/<id>/ledger.json` beside it, so each client's backups are tracked apart.
+ */
+export function ledgerFile(): string {
+  return P.clientId ? join(VAULT_LOCAL, "clients", P.clientId, "ledger.json") : LEDGER;
+}
+
 /** The record of the last backup (spec 056): its ZIP, where it was written, and what it held. */
 export interface LedgerBackup {
   /** When it was made (ISO 8601). */
@@ -39,7 +47,7 @@ export interface Ledger {
 }
 
 /** Read the ledger; a missing or unreadable file reads as an empty one. */
-export async function readLedger(path = LEDGER): Promise<Ledger> {
+export async function readLedger(path = ledgerFile()): Promise<Ledger> {
   try {
     return { changes: {}, ...JSON.parse((await readTextOr(path)) ?? "{}") };
   } catch {
@@ -48,8 +56,8 @@ export async function readLedger(path = LEDGER): Promise<Ledger> {
 }
 
 /** Write the ledger (as formatted JSON), creating the vault folder first. */
-export async function writeLedger(l: Ledger, path = LEDGER): Promise<void> {
-  await ensureDir(VAULT_LOCAL);
+export async function writeLedger(l: Ledger, path = ledgerFile()): Promise<void> {
+  await ensureDir(join(path, ".."));
   await Deno.writeTextFile(path, JSON.stringify(l, null, 2) + "\n");
 }
 

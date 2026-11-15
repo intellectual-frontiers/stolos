@@ -120,6 +120,164 @@ export const COMMANDS: Command[] = [
       return await fleetUse(a.id as string);
     },
   },
+  // Spec 082: a provider's clients, each its own repository, vault, and signers.
+  {
+    name: "clients add",
+    summary: "Register a client's checkout on this provider's PC (spec 082)",
+    description:
+      `Spec 082. For managed service providers and virtual CISOs: adds a client to this PC's registry of clients (clients.json in your Stolos config folder, never in any repository): its id, its title, the path of its checkout (a clone of the client's own fleet repository), and the fleet in it. One checkout belongs to one client. Then any command runs for that client with --client <id>: its repository, its state, its secrets, and its key store on this PC, apart from every other client's.`,
+    tier: "read",
+    noMcp: true,
+    args: [
+      {
+        name: "path",
+        type: "string",
+        positional: true,
+        required: true,
+        description: "The client's checkout (the folder holding fleets/).",
+      },
+      {
+        name: "fleet",
+        type: "string",
+        description: "The fleet in it (default: its only fleet).",
+      },
+      { name: "id", type: "string", description: "The client's id (default: the fleet's id)." },
+      { name: "title", type: "string", description: "Its name (default: the fleet's title)." },
+    ],
+    examples: [{
+      cmd: "deno task stolos clients add ../north-fleet --id north",
+      text: "Register the client north, whose fleet repository is checked out beside this one.",
+    }],
+    async run(a) {
+      const { clientsAdd } = await import("../clients/commands.ts");
+      return await clientsAdd({
+        path: a.path as string,
+        ...(a.fleet ? { fleet: a.fleet as string } : {}),
+        ...(a.id ? { id: a.id as string } : {}),
+        ...(a.title ? { title: a.title as string } : {}),
+      });
+    },
+  },
+  {
+    name: "clients list",
+    summary: "The clients registered on this PC, and which one is chosen (spec 082)",
+    description:
+      `Spec 082. Each client's id, title, fleet, and checkout; the chosen one (clients use) is marked with *. With --json, the registry as JSON.`,
+    tier: "read",
+    noMcp: true,
+    args: [],
+    async run(_a, ctx) {
+      const { clientsList } = await import("../clients/commands.ts");
+      return await clientsList(ctx.json);
+    },
+  },
+  {
+    name: "clients remove",
+    summary: "Forget a client on this PC (nothing is deleted) (spec 082)",
+    description:
+      `Spec 082. Removes the client from this PC's registry. Its checkout, its state and secrets on this PC, and its repository stay as they are.`,
+    tier: "read",
+    noMcp: true,
+    args: [{
+      name: "id",
+      type: "string",
+      positional: true,
+      required: true,
+      description: "The client's id.",
+    }],
+    async run(a) {
+      const { clientsRemove } = await import("../clients/commands.ts");
+      return await clientsRemove(a.id as string);
+    },
+  },
+  {
+    name: "clients use",
+    summary: "Choose the client every stolos command is for (spec 082)",
+    description:
+      `Spec 082. Every stolos command on this PC is then for that client (its checkout, state, and secrets), in every terminal, until you choose another; --client <id> still chooses another for one command. Without an id, says which is chosen; --clear goes back to the fleet repository you are in.`,
+    tier: "read",
+    noMcp: true,
+    args: [
+      { name: "id", type: "string", positional: true, description: "The client's id." },
+      { name: "clear", type: "boolean", description: "Choose no client." },
+    ],
+    async run(a) {
+      const { clientsUse } = await import("../clients/commands.ts");
+      return await clientsUse(a.id as string | undefined, !!a.clear);
+    },
+  },
+  {
+    name: "clients summary",
+    summary: "Every client's compliance in numbers, each read on its own (spec 082)",
+    description:
+      `Spec 082. For each client, read in its own scope: controls passing, failing, partial, without evidence, and with stale evidence; controls changed since --since (default a day) and how many got worse; the last observation; open POA&M items; and the newest evidence bundle's date. Numbers and dates only: nothing of what any client holds. With --json, as JSON.`,
+    tier: "read",
+    noMcp: true,
+    args: [{
+      name: "since",
+      type: "string",
+      description: "The drift's starting point: a commit or a date (default: 1 day ago).",
+    }],
+    async run(a, ctx) {
+      const { clientsSummary } = await import("../clients/commands.ts");
+      return await clientsSummary({
+        json: ctx.json,
+        ...(a.since ? { since: a.since as string } : {}),
+      });
+    },
+  },
+  {
+    name: "clients report",
+    summary: "One compliance report per client, each in its own folder, and the summary (spec 082)",
+    description:
+      `Spec 082. Writes <out>/<client>/report.md, summary.json, and compliance.json for each client (each read in its own scope, so each folder holds that client's data only), then <out>/summary.md and summary.json (numbers only). A folder inside any client's checkout is refused. Each client's signed evidence bundle is still stolos --client <id> evidence export.`,
+    tier: "read",
+    noMcp: true,
+    args: [
+      {
+        name: "out",
+        type: "string",
+        required: true,
+        description: "The provider's folder for the reports.",
+      },
+      {
+        name: "since",
+        type: "string",
+        description: "The drift's starting point (default: 1 day ago).",
+      },
+    ],
+    examples: [{
+      cmd: "deno task stolos clients report --out ~/reports/2026-11",
+      text: "This month's reports, one folder per client.",
+    }],
+    async run(a) {
+      const { clientsReport } = await import("../clients/commands.ts");
+      return await clientsReport({
+        out: a.out as string,
+        ...(a.since ? { since: a.since as string } : {}),
+      });
+    },
+  },
+  {
+    name: "clients console",
+    summary: "Every client in one Stolos Console: switch between them, see the summary (spec 082)",
+    description:
+      `Spec 082. The Stolos Console for a provider, on 127.0.0.1 with a one-time launch link: /clients is the summary across clients (numbers only); opening a client starts a session for that client alone (its own pages, REST API, and commands, run in its checkout). Switching to another client ends that session and starts a new one. Ctrl+C stops it.`,
+    tier: "read",
+    noMcp: true,
+    args: [
+      { name: "port", type: "string", description: "The port on 127.0.0.1 (default 8092)." },
+      { name: "no-open", type: "boolean", description: "Print the link; do not open a browser." },
+    ],
+    async run(a) {
+      const port = a.port ? Number(a.port) : undefined;
+      if (port !== undefined && !(Number.isInteger(port) && port > 1023 && port < 65536)) {
+        throw new Error(`--port ${a.port}: a port from 1024 to 65535`);
+      }
+      const { clientsConsole } = await import("../clients/commands.ts");
+      return await clientsConsole({ ...(port ? { port } : {}), open: !a["no-open"] });
+    },
+  },
   {
     name: "fleet init",
     summary: "Create the fleet from your GitHub identity (boot machine, once)",
@@ -4364,6 +4522,13 @@ const PC_COMMANDS = new Set([
   "fleet use",
   "fleet init",
   "fleet status",
+  "clients add",
+  "clients list",
+  "clients remove",
+  "clients use",
+  "clients summary",
+  "clients report",
+  "clients console",
   "host add",
   "where",
   "fleet upgrade",

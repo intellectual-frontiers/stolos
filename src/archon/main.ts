@@ -72,7 +72,9 @@ function usage(surface: Surface): string {
       ]
       : []),
     "",
-    "Global options: --fleet <id>, --host <name>, --json, -v/--verbose.",
+    surface === "pc"
+      ? "Global options: --fleet <id>, --client <id> (a provider's client), --host <name>, --json, -v/--verbose."
+      : "Global options: --fleet <id>, --host <name>, --json, -v/--verbose.",
     surface === "pc"
       ? "Where you are, and the one thing to do next: deno task stolos (no arguments). A problem's code: stolos explain <code>."
       : "This machine's state: archon (no arguments). Every command has a man page: man archon-<command>. A problem's code: archon explain <code>.",
@@ -121,6 +123,27 @@ export async function main(argv: string[], surface: Surface = "machine"): Promis
   }
   const { rest, g } = globals(argv);
   if (!rest.length) rest.push(home); // only global options: still the default
+  // Spec 082: --client (or the client chosen with clients use) scopes this run to that client.
+  if (surface === "pc" || typeof g.client === "string") {
+    const { resolveClientScope } = await import("./clients/commands.ts");
+    const sc = await resolveClientScope(
+      typeof g.client === "string" ? g.client : undefined,
+      rest[0],
+    );
+    if (sc.error) {
+      console.error(`${ui.red("error:")} ${sc.error}`);
+      return 2;
+    }
+    if (sc.client && typeof g.fleet === "string" && g.fleet !== sc.client.fleet) {
+      console.error(
+        `${ui.red("error:")} client ${sc.client.id} is fleet ${sc.client.fleet}: drop --fleet`,
+      );
+      return 2;
+    }
+    if (sc.client && !g.json && typeof g.client !== "string") {
+      console.error(ui.dim(`client ${sc.client.id} (${sc.client.title}), chosen with clients use`));
+    }
+  }
   // Spec 046: --fleet chooses the fleet for this run (and what it starts through sudo).
   if (typeof g.fleet === "string") {
     Deno.env.set("ARCHON_FLEET", g.fleet);
@@ -177,7 +200,7 @@ export async function main(argv: string[], surface: Surface = "machine"): Promis
       const self = Deno.env.get("ARCHON_SELF") ?? "/usr/local/bin/archon";
       const p = new Deno.Command("sudo", {
         args: [
-          "--preserve-env=ARCHON_AGENT,ARCHON_VERBOSE,ARCHON_PLAIN,NO_COLOR,LANG,LC_ALL,TERM,TRACEPARENT,ARCHON_FLEET,ARCHON_REPO,ARCHON_GITHUB_API",
+          "--preserve-env=ARCHON_AGENT,ARCHON_VERBOSE,ARCHON_PLAIN,NO_COLOR,LANG,LC_ALL,TERM,TRACEPARENT,ARCHON_FLEET,ARCHON_REPO,ARCHON_CLIENT,ARCHON_GITHUB_API",
           self,
           ...argv,
         ],

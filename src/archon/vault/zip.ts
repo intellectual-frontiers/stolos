@@ -235,7 +235,9 @@ export async function writeBackupZip(
   }
   await Deno.mkdir(BACKUP_DIR, { recursive: true });
   const stamp = now.toISOString().replace(/[-:]/g, "").replace(/\.\d+Z$/, "Z");
-  const path = join(BACKUP_DIR, `stolos-backup-${pc}-${stamp}.zip`);
+  // Spec 082: a provider's client's backup says whose it is (it holds that client's secrets only).
+  const whose = P.clientId ? `${pc}-${P.clientId}` : pc;
+  const path = join(BACKUP_DIR, `stolos-backup-${whose}-${stamp}.zip`);
   await Deno.writeFile(path, zip, { mode: 0o600 });
   if (Deno.build.os === "windows") await ownerOnly(path);
   else await Deno.chmod(path, 0o600);
