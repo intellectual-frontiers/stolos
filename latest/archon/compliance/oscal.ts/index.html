@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/compliance/oscal.ts - Stolos v0.100.0 documentation</title>
+  <title>archon/compliance/oscal.ts - Stolos v0.102.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.100.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.102.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -176,7 +176,14 @@ the same things the same way, and a diff shows only what changed.</p>
   </defs>
 </svg>
 </a>
-Functions</h2></div><div class="namespaceSection"><div id="namespace_assessmentresults" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+Functions</h2></div><div class="namespaceSection"><div id="namespace_allevidence" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;oscal.ts&#x2F;~&#x2F;allEvidence.html" title="allEvidence">
+			    <span>allEvidence</span><span>(<span><span>view<span>: <span class="td-ref">ComplianceView</span></span></span></span>)<span>: <span class="td-ref">Evidence</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Every piece of evidence once (one can support several SCF controls). Two
+results of the same check on the same subject (rare, but possible) get
+distinct keys (#2, #3, in order), so their UUIDs never collide.</p>
+</div></div></div>
+    </div><div id="namespace_assessmentresults" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;oscal.ts&#x2F;~&#x2F;assessmentResults.html" title="assessmentResults">
 			    <span>assessmentResults</span><span>(<span><span>i<span>: <span class="td-ref">OscalInput</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">unknown</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The assessment results: every observation, and a finding per SP 800-53 control.</p>
@@ -193,6 +200,11 @@ controls its checks reach.</p>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;oscal.ts&#x2F;~&#x2F;nistControls.html" title="nistControls">
 			    <span>nistControls</span><span>(<div class="ml-4"><div><span>view<span>: <span class="td-ref">ComplianceView</span></span></span>,</div><div><span>titles<span class="td-op">?</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></span></div></div>)<span>: <span class="td-ref">NistControl</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The SP 800-53 controls the fleet's SCF controls reach, through SCF's STRM.</p>
+</div></div></div>
+    </div><div id="namespace_observationuuid" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;oscal.ts&#x2F;~&#x2F;observationUuid.html" title="observationUuid">
+			    <span>observationUuid</span><span>(<div class="ml-4"><div><span>fleet<span>: <span class="td-kw">string</span></span></span>,</div><div><span>now<span>: <span class="td-ref">Date</span></span></span>,</div><div><span>e<span>: <span class="td-ref">Evidence</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">string</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The UUID of a piece of evidence's OSCAL observation in the assessment results made at <code>now</code>.</p>
 </div></div></div>
     </div><div id="namespace_oscal80053" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -363,7 +375,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_nistcontro
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1896 symbols</span><svg
+              <span class="leading-none">view all 1962 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -378,7 +390,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_nistcontro
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/compliance/oscal_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_assessmentresults" title="assessmentResults">assessmentResults</a></li><li><a href="#namespace_componentdefinition" title="componentDefinition">componentDefinition</a></li><li><a href="#namespace_nistcontrols" title="nistControls">nistControls</a></li><li><a href="#namespace_oscal80053" title="oscal80053">oscal80053</a></li><li><a href="#namespace_oscalexports" title="oscalExports">oscalExports</a></li><li><a href="#namespace_poam" title="poam">poam</a></li><li><a href="#namespace_systemsecurityplan" title="systemSecurityPlan">systemSecurityPlan</a></li><li><a href="#namespace_tidystrings" title="tidyStrings">tidyStrings</a></li><li><a href="#namespace_uuidfor" title="uuidFor">uuidFor</a></li></ul></li><li><a href="#archon/compliance/oscal_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_nistcontrol" title="NistControl">NistControl</a></li><li><a href="#namespace_oscalinput" title="OscalInput">OscalInput</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/compliance/oscal_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_allevidence" title="allEvidence">allEvidence</a></li><li><a href="#namespace_assessmentresults" title="assessmentResults">assessmentResults</a></li><li><a href="#namespace_componentdefinition" title="componentDefinition">componentDefinition</a></li><li><a href="#namespace_nistcontrols" title="nistControls">nistControls</a></li><li><a href="#namespace_observationuuid" title="observationUuid">observationUuid</a></li><li><a href="#namespace_oscal80053" title="oscal80053">oscal80053</a></li><li><a href="#namespace_oscalexports" title="oscalExports">oscalExports</a></li><li><a href="#namespace_poam" title="poam">poam</a></li><li><a href="#namespace_systemsecurityplan" title="systemSecurityPlan">systemSecurityPlan</a></li><li><a href="#namespace_tidystrings" title="tidyStrings">tidyStrings</a></li><li><a href="#namespace_uuidfor" title="uuidFor">uuidFor</a></li></ul></li><li><a href="#archon/compliance/oscal_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_nistcontrol" title="NistControl">NistControl</a></li><li><a href="#namespace_oscalinput" title="OscalInput">OscalInput</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>
