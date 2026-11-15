@@ -39,8 +39,8 @@ export interface ScfControl {
   how: string;
 }
 
-/** The controls, by SCF id. */
-export const SCF: ScfControl[] = [
+/** The controls, as constants: their ids are the type {@link ScfId} (spec 078). Read {@link SCF} instead. */
+export const SCF_CONTROLS = [
   {
     id: "AST-04",
     name: "Asset Inventories",
@@ -168,7 +168,21 @@ export const SCF: ScfControl[] = [
     name: "Data Protection",
     how: "Storage is not public by default (S3 Block Public Access).",
   },
-];
+] as const satisfies readonly ScfControl[];
+
+/**
+ * The id of an SCF control Stolos gives evidence for. A control (spec 078)
+ * names its controls with this type, so a wrong id fails type checking.
+ */
+export type ScfId = typeof SCF_CONTROLS[number]["id"];
+
+/** The controls, by SCF id. */
+export const SCF: ScfControl[] = [...SCF_CONTROLS];
+
+/** Whether a string is the id of an SCF control Stolos gives evidence for. */
+export function isScfId(id: string): id is ScfId {
+  return SCF.some((c) => c.id === id);
+}
 
 /** A control by id. */
 export function scf(id: string): ScfControl | undefined {

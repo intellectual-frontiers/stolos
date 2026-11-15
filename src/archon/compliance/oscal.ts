@@ -175,6 +175,8 @@ const SOURCE_TEXT: Record<Evidence["source"], string> = {
     "Across systems: people, accounts, devices, and repositories from every connector, checked together.",
   repository:
     "The fleet repository: every change is a commit, signed by a fleet signer before servers apply it.",
+  "control pack":
+    "The fleet's own controls (spec 078): TypeScript in the fleet repository, tested like code, run over the estate graph, osquery, and observations.",
 };
 
 /** What produced a piece of evidence: a component of its own in the component definition. */
@@ -189,6 +191,7 @@ function evidenceComponent(e: Evidence): { key: string; title: string; descripti
     device: "Devices (SNMPv3)",
     estate: "The estate graph (cross-system policies)",
     repository: "Signed changes (the fleet repository)",
+    "control pack": "The fleet's control packs",
   };
   return { key: e.source, title: titles[e.source], description: SOURCE_TEXT[e.source] };
 }

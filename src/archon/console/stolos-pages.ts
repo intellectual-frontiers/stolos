@@ -140,6 +140,8 @@ export const STOLOS_GROUPS: StolosGroup[] = [
     names: [
       "compliance",
       "compliance fedramp",
+      "controls list",
+      "controls run",
       "evidence verify",
       "host integrate",
       "discover",

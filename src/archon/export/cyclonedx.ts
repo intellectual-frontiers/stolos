@@ -202,6 +202,9 @@ export function bundleItemsFor(e: Evidence, items: readonly ManifestItem[]): Man
         return i.kind === "observation" && i.name.includes("/estate/");
       case "repository":
         return i.kind === "commit" || i.kind === "signers";
+      case "control pack":
+        // Spec 078: the pack's code is in the fleet repository's commits.
+        return i.kind === "commit";
     }
   });
 }

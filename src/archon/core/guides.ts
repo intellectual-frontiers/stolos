@@ -93,6 +93,12 @@ export const GUIDES: GuideDef[] = [
     module: "src/archon/compliance/mod.ts",
   },
   {
+    name: "controls",
+    title: "Custom controls",
+    why: "Your own controls in TypeScript: packs in the fleet repository, tested like code.",
+    module: "src/archon/controls/mod.ts",
+  },
+  {
     name: "evidence",
     title: "Evidence bundles",
     why: "A period's evidence, signed, for an auditor to check offline.",

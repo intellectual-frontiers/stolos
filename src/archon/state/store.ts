@@ -49,7 +49,8 @@ export type Kind =
   | "pg"
   | "inventory"
   | "applied"
-  | "sync";
+  | "sync"
+  | "control";
 
 /** One record: a host's fact of one kind, by name. */
 export interface StateRecord<T = unknown> {

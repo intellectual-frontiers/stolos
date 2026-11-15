@@ -978,6 +978,49 @@ export const COMMANDS: Command[] = [
     },
   },
   {
+    name: "controls list",
+    summary: "The fleet's own control packs and their controls (TypeScript, tested like code)",
+    description:
+      `Spec 078. Lists each pack in fleets/<fleet>/controls/<pack>/pack.ts: its version, and each control's id (<pack>/<control>), subject (estate SQL, osquery on adopted machines, or an observation), SCF controls, and title. A pack that does not load is named with why. --json for scripts. How to write one: deno task stolos docs controls.`,
+    tier: "read",
+    args: [],
+    async run(_a, ctx) {
+      const { controlsList } = await import("../controls/commands.ts");
+      return await controlsList(ctx.json);
+    },
+  },
+  {
+    name: "controls run",
+    summary:
+      "Run the fleet's control packs now: estate SQL, osquery on adopted machines, observations",
+    description:
+      `Spec 078. Runs every control of every pack (or one pack): estate controls over the estate graph built from Git, observation controls over the observations in Git, and osquery controls on each adopted machine through its probe (one SELECT, as fleet query; each answer is kept on this PC, so stolos compliance and the consoles show it without asking again). Accepted risks (fleets/<fleet>/controls/accepted.ts) apply. Read-only. Exits 1 when a control fails; --json for scripts.`,
+    tier: "read",
+    args: [{
+      name: "pack",
+      type: "string",
+      positional: true,
+      description: "Only this pack (its id).",
+    }],
+    async run(a, ctx) {
+      const { controlsRun } = await import("../controls/commands.ts");
+      return await controlsRun(a.pack as string | undefined, ctx.json);
+    },
+  },
+  {
+    name: "controls test",
+    summary: "Run the control packs' tests (deno test fleets/<fleet>/controls/)",
+    description:
+      `Spec 078. Runs deno test on fleets/<fleet>/controls/ in the fleet repository: each pack's *_test.ts, which test its controls over fixtures with testControl. Nothing is asked of a machine or an account. The same as deno task test, for the packs only. Terminal only.`,
+    tier: "read",
+    noMcp: true,
+    args: [],
+    async run() {
+      const { controlsTest } = await import("../controls/commands.ts");
+      return await controlsTest();
+    },
+  },
+  {
     name: "evidence export",
     summary: "A period's evidence as one signed bundle an auditor checks offline",
     description:
@@ -3501,6 +3544,9 @@ const PC_COMMANDS = new Set([
   "compliance",
   "compliance catalog",
   "compliance drift",
+  "controls list",
+  "controls run",
+  "controls test",
   "compliance export",
   "compliance fedramp",
   "export list",

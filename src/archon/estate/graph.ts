@@ -21,7 +21,7 @@
  * flowchart LR
  *   snap["Snapshot (Git, now or at a commit)"] --> build["buildGraph"]
  *   build --> db[("estate graph (SQLite)")]
- *   db --> policies["estatePolicies: findings (SCF)"] & query["estate query"] & sql["estate.sql + estate.auto.sqlite.db"]
+ *   db --> policies["estatePolicies: findings (SCF), controls on the SDK (spec 078)"] & query["estate query"] & sql["estate.sql + estate.auto.sqlite.db"]
  * ```
  *
  * @module
@@ -30,6 +30,8 @@
 import { DatabaseSync } from "node:sqlite";
 import type { PolicyResult } from "../adopt/policy.ts";
 import type { Observation } from "../connect/connector.ts";
+import { defineControl, type EstateControl, type Row } from "../controls/define.ts";
+import { runEstate } from "../controls/core.ts";
 import { type Account, type Device, emailKey, type Repository } from "../connect/entities.ts";
 import { ordered, rowParams, upsertSql } from "../schema/define.ts";
 import {
@@ -71,6 +73,7 @@ export const PERSON_SOURCES = [
 
 /** Spec 087: the password managers; every active person should have an account in one. */
 export const PASSWORD_MANAGERS = ["onepassword", "bitwarden"];
+const PM_LIST = PASSWORD_MANAGERS.map((c) => `'${c}'`).join(", ");
 
 /** The estate graph. */
 export interface Estate {
@@ -485,154 +488,189 @@ export function estateQuery(e: Estate, sql: string): Array<Record<string, unknow
 /** The tables and views a query may read, for messages. */
 export const ESTATE_NAMES: string = ESTATE_SCHEMA.map((d) => d.name).join(", ");
 
-/** The cross-system policies, on the graph; each result is also written to the finding table. */
-export function estatePolicies(e: Estate, now = new Date()): PolicyResult[] {
-  const rows = (sql: string) =>
-    (e.db.prepare(sql).all() as Array<Record<string, string>>).map((r) => ({ ...r }));
-  const list = (r: Array<Record<string, string>>, f: (x: Record<string, string>) => string) =>
-    r.slice(0, 12).map(f).join(", ") + (r.length > 12 ? `, and ${r.length - 12} more` : "");
-  const count = (sql: string) => Number((e.db.prepare(sql).get() as { n: number }).n);
-  const out: Array<PolicyResult & { subjects: string[] }> = [];
-  const people = count("SELECT count(*) AS n FROM person");
-  if (people) {
-    const leavers = rows(
-      `SELECT u.email_addr AS email, t.connector AS system, a.display_name AS name, a.user_account_uid AS uid
+const list = (r: Row[], f: (x: Row) => string) =>
+  r.slice(0, 12).map(f).join(", ") + (r.length > 12 ? `, and ${r.length - 12} more` : "");
+const n = (r: Row[]) => Number(r[0]?.n ?? 0);
+const uids = (r: Row[]) => r.map((x) => x.uid as string);
+
+/** The cross-system policies, as controls over the graph (spec 078), in the order results are shown. */
+export const ESTATE_CONTROLS: EstateControl[] = [
+  defineControl({
+    id: "leavers",
+    title: "People who left have no active accounts",
+    scf: ["IAC-04"],
+    subject: "estate",
+    query: {
+      people: "SELECT count(*) AS n FROM person",
+      left: "SELECT count(*) AS n FROM person WHERE status = 'terminated'",
+      leavers:
+        `SELECT u.email_addr AS email, t.connector AS system, a.display_name AS name, a.user_account_uid AS uid
        FROM user_inventory u
        JOIN edge e ON e.src_uid = u.uid AND e.verb = 'has_account'
        JOIN user_account a ON a.user_account_uid = e.dst_uid
        JOIN tenant t ON t.tenant_uid = a.tenant_uid
        WHERE u.status = 'terminated' AND a.active = 1 ORDER BY u.email_addr`,
-    );
-    out.push({
-      id: "leavers",
-      title: "People who left have no active accounts",
-      scf: ["IAC-04"],
-      status: leavers.length ? "fail" : "pass",
-      detail: leavers.length
-        ? `${leavers.length} active account(s) of people who left: ${
-          list(leavers, (x) => `${x.email} in ${x.system}`)
-        }`
-        : `${
-          count("SELECT count(*) AS n FROM person WHERE status = 'terminated'")
-        } leaver(s), none with an active account`,
-      fix:
-        "turn the accounts off in each system today; then make offboarding turn them off (identity provider first)",
-      subjects: leavers.map((x) => x.uid),
-    });
-    const orphans = rows(
-      `SELECT a.connector AS system, a.display_name AS name, a.user_account_uid AS uid FROM user_account a
+    },
+    assert: ({ people, left, leavers }) =>
+      !n(people) ? undefined : {
+        status: leavers.length ? "fail" : "pass",
+        detail: leavers.length
+          ? `${leavers.length} active account(s) of people who left: ${
+            list(leavers, (x) => `${x.email} in ${x.system}`)
+          }`
+          : `${n(left)} leaver(s), none with an active account`,
+        subjects: uids(leavers),
+      },
+    fix:
+      "turn the accounts off in each system today; then make offboarding turn them off (identity provider first)",
+  }),
+  defineControl({
+    id: "orphans",
+    title: "Every active account belongs to a person on the roster",
+    scf: ["IAC-08"],
+    subject: "estate",
+    query: {
+      people: "SELECT count(*) AS n FROM person",
+      orphans:
+        `SELECT a.connector AS system, a.display_name AS name, a.user_account_uid AS uid FROM user_account a
        WHERE a.active = 1 AND coalesce(a.service, 0) = 0
        AND NOT EXISTS (SELECT 1 FROM edge e WHERE e.dst_uid = a.user_account_uid AND e.verb = 'has_account')
        ORDER BY a.connector, a.display_name`,
-    );
-    out.push({
-      id: "orphans",
-      title: "Every active account belongs to a person on the roster",
-      scf: ["IAC-08"],
-      status: orphans.length ? "warn" : "pass",
-      detail: orphans.length
-        ? `${orphans.length} account(s) with no person: ${
-          list(orphans, (x) => `${x.name} in ${x.system}`)
-        }`
-        : "every active account matches a person",
-      fix:
-        'for each: link it to a person (a login-only system: add it to fleets/<fleet>/estate/links.ts, as "github:alice": "alice@example.org"), or turn it off',
-      subjects: orphans.map((x) => x.uid),
-    });
-    const noDevice = rows(
-      `SELECT u.email_addr AS email, u.uid FROM user_inventory u WHERE u.status = 'active'
+    },
+    assert: ({ people, orphans }) =>
+      !n(people) ? undefined : {
+        status: orphans.length ? "warn" : "pass",
+        detail: orphans.length
+          ? `${orphans.length} account(s) with no person: ${
+            list(orphans, (x) => `${x.name} in ${x.system}`)
+          }`
+          : "every active account matches a person",
+        subjects: uids(orphans),
+      },
+    fix:
+      'for each: link it to a person (a login-only system: add it to fleets/<fleet>/estate/links.ts, as "github:alice": "alice@example.org"), or turn it off',
+  }),
+  defineControl({
+    id: "devices-for-people",
+    title: "Every active person has a known device",
+    scf: ["AST-04", "AST-07.1"],
+    subject: "estate",
+    query: {
+      people: "SELECT count(*) AS n FROM person",
+      without: `SELECT u.email_addr AS email, u.uid FROM user_inventory u WHERE u.status = 'active'
        AND NOT EXISTS (SELECT 1 FROM party_fixed_asset_assignment a WHERE a.party_uid = u.uid)
        ORDER BY u.email_addr`,
-    );
-    out.push({
-      id: "devices-for-people",
-      title: "Every active person has a known device",
-      scf: ["AST-04", "AST-07.1"],
-      status: noDevice.length ? "warn" : "pass",
-      detail: noDevice.length
-        ? `${noDevice.length} without a device: ${list(noDevice, (x) => x.email)}`
-        : "every active person has a device",
-      fix: "adopt each person's laptop (Add a machine), with --owner set to their work email",
-      subjects: noDevice.map((x) => x.uid),
-    });
-  }
-  if (count("SELECT count(*) AS n FROM user_account WHERE admin IS NOT NULL AND mfa IS NOT NULL")) {
-    const bad = rows(
-      `SELECT connector AS system, display_name AS name, user_account_uid AS uid FROM user_account
+    },
+    assert: ({ people, without }) =>
+      !n(people) ? undefined : {
+        status: without.length ? "warn" : "pass",
+        detail: without.length
+          ? `${without.length} without a device: ${list(without, (x) => x.email as string)}`
+          : "every active person has a device",
+        subjects: uids(without),
+      },
+    fix: "adopt each person's laptop (Add a machine), with --owner set to their work email",
+  }),
+  defineControl({
+    id: "admins-mfa",
+    title: "Every administrator signs in with a second factor",
+    scf: ["IAC-37"],
+    subject: "estate",
+    query: {
+      known: "SELECT count(*) AS n FROM user_account WHERE admin IS NOT NULL AND mfa IS NOT NULL",
+      bad:
+        `SELECT connector AS system, display_name AS name, user_account_uid AS uid FROM user_account
        WHERE active = 1 AND admin = 1 AND mfa = 0 ORDER BY connector, display_name`,
-    );
-    out.push({
-      id: "admins-mfa",
-      title: "Every administrator signs in with a second factor",
-      scf: ["IAC-37"],
-      status: bad.length ? "fail" : "pass",
-      detail: bad.length
-        ? `${bad.length} without MFA: ${list(bad, (x) => `${x.name} in ${x.system}`)}`
-        : "every administrator has MFA",
-      fix: "require MFA for administrators in each system (and register it for these people)",
-      subjects: bad.map((x) => x.uid),
-    });
-  }
+    },
+    assert: ({ known, bad }) =>
+      !n(known) ? undefined : {
+        status: bad.length ? "fail" : "pass",
+        detail: bad.length
+          ? `${bad.length} without MFA: ${list(bad, (x) => `${x.name} in ${x.system}`)}`
+          : "every administrator has MFA",
+        subjects: uids(bad),
+      },
+    fix: "require MFA for administrators in each system (and register it for these people)",
+  }),
   // Spec 087: password manager coverage, when one is connected and people are known.
-  const pm = PASSWORD_MANAGERS.map((c) => `'${c}'`).join(", ");
-  if (people && count(`SELECT count(*) AS n FROM tenant WHERE connector IN (${pm})`)) {
-    const uncovered = rows(
-      `SELECT u.email_addr AS email, u.uid FROM user_inventory u WHERE u.status = 'active'
+  defineControl({
+    id: "password-manager",
+    title: "Every active person has a password manager account",
+    scf: ["IAC-14"],
+    subject: "estate",
+    query: {
+      people: "SELECT count(*) AS n FROM person",
+      connected: `SELECT count(*) AS n FROM tenant WHERE connector IN (${PM_LIST})`,
+      uncovered:
+        `SELECT u.email_addr AS email, u.uid FROM user_inventory u WHERE u.status = 'active'
        AND NOT EXISTS (SELECT 1 FROM edge e JOIN user_account a ON a.user_account_uid = e.dst_uid
-         WHERE e.src_uid = u.uid AND e.verb = 'has_account' AND a.active = 1 AND a.connector IN (${pm}))
+         WHERE e.src_uid = u.uid AND e.verb = 'has_account' AND a.active = 1 AND a.connector IN (${PM_LIST}))
        ORDER BY u.email_addr`,
-    );
-    out.push({
-      id: "password-manager",
-      title: "Every active person has a password manager account",
-      scf: ["IAC-14"],
-      status: uncovered.length ? "warn" : "pass",
-      detail: uncovered.length
-        ? `${uncovered.length} without one: ${list(uncovered, (x) => x.email)}`
-        : "every active person has an active password manager account",
-      fix: "invite each of them to the company's password manager (and have them accept)",
-      subjects: uncovered.map((x) => x.uid),
-    });
-  }
-  if (count("SELECT count(*) AS n FROM fixed_asset WHERE encrypted IS NOT NULL")) {
-    const plain = rows(
-      `SELECT hostname AS name, fixed_asset_uid AS uid FROM fixed_asset WHERE encrypted = 0 ORDER BY hostname`,
-    );
-    out.push({
-      id: "devices-encrypted",
-      title: "Every device's disk is encrypted",
-      scf: ["CRY-07"],
-      status: plain.length ? "fail" : "pass",
-      detail: plain.length
-        ? `${plain.length} not encrypted: ${list(plain, (x) => x.name)}`
-        : "every device that says is encrypted",
-      fix: "turn on FileVault, BitLocker, or LUKS (or record an accepted risk)",
-      subjects: plain.map((x) => x.uid),
-    });
-  }
-  const repos = count("SELECT count(*) AS n FROM code_repository");
-  if (repos) {
-    const open = rows(
-      `SELECT display_name AS name, code_repository_uid AS uid FROM code_repository
+    },
+    assert: ({ people, connected, uncovered }) =>
+      !n(people) || !n(connected) ? undefined : {
+        status: uncovered.length ? "warn" : "pass",
+        detail: uncovered.length
+          ? `${uncovered.length} without one: ${list(uncovered, (x) => String(x.email))}`
+          : "every active person has an active password manager account",
+        subjects: uids(uncovered),
+      },
+    fix: "invite each of them to the company's password manager (and have them accept)",
+  }),
+  defineControl({
+    id: "devices-encrypted",
+    title: "Every device's disk is encrypted",
+    scf: ["CRY-07"],
+    subject: "estate",
+    query: {
+      known: "SELECT count(*) AS n FROM fixed_asset WHERE encrypted IS NOT NULL",
+      plain:
+        `SELECT hostname AS name, fixed_asset_uid AS uid FROM fixed_asset WHERE encrypted = 0 ORDER BY hostname`,
+    },
+    assert: ({ known, plain }) =>
+      !n(known) ? undefined : {
+        status: plain.length ? "fail" : "pass",
+        detail: plain.length
+          ? `${plain.length} not encrypted: ${list(plain, (x) => x.name as string)}`
+          : "every device that says is encrypted",
+        subjects: uids(plain),
+      },
+    fix: "turn on FileVault, BitLocker, or LUKS (or record an accepted risk)",
+  }),
+  defineControl({
+    id: "repos-protected",
+    title: "Every private repository protects its default branch",
+    scf: ["CHG-03"],
+    subject: "estate",
+    query: {
+      repos: "SELECT count(*) AS n FROM code_repository",
+      open: `SELECT display_name AS name, code_repository_uid AS uid FROM code_repository
        WHERE private = 1 AND protected = 0 ORDER BY display_name`,
-    );
-    out.push({
-      id: "repos-protected",
-      title: "Every private repository protects its default branch",
-      scf: ["CHG-03"],
-      status: open.length ? "fail" : "pass",
-      detail: open.length
-        ? `${open.length} unprotected: ${list(open, (x) => x.name)}`
-        : `${repos} repositories, all protected`,
-      fix:
-        "protect the default branch: require a pull request, an approving review, and passing checks",
-      subjects: open.map((x) => x.uid),
-    });
-  }
+    },
+    assert: ({ repos, open }) =>
+      !n(repos) ? undefined : {
+        status: open.length ? "fail" : "pass",
+        detail: open.length
+          ? `${open.length} unprotected: ${list(open, (x) => x.name as string)}`
+          : `${n(repos)} repositories, all protected`,
+        subjects: uids(open),
+      },
+    fix:
+      "protect the default branch: require a pull request, an approving review, and passing checks",
+  }),
+];
+
+/** Write results to the finding table: one row per result, SCF control, and subject. */
+export function writeFindings(
+  e: Estate,
+  results: ReadonlyArray<PolicyResult & { subjects?: string[] }>,
+  now = new Date(),
+): void {
   const at = now.toISOString().replace(/\.\d+Z$/, "Z");
-  for (const p of out) {
+  for (const p of results) {
+    const subjects = p.subjects ?? [];
     for (const control of p.scf) {
-      for (const subject of p.subjects.length ? p.subjects : [undefined]) {
+      for (const subject of subjects.length ? subjects : [undefined]) {
         e.db.prepare(upsertSql(finding)).run(...rowParams(finding, {
           finding_uid: `${p.id}:${control}:${subject ?? "all"}`,
           policy_id: p.id,
@@ -646,6 +684,12 @@ export function estatePolicies(e: Estate, now = new Date()): PolicyResult[] {
       }
     }
   }
+}
+
+/** The cross-system policies, on the graph; each result is also written to the finding table. */
+export function estatePolicies(e: Estate, now = new Date()): PolicyResult[] {
+  const out = ESTATE_CONTROLS.flatMap((c) => runEstate(c, (sql) => estateQuery(e, sql), now) ?? []);
+  writeFindings(e, out, now);
   return out.map(({ subjects: _, ...p }) => p);
 }
 

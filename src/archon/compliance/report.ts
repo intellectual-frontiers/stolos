@@ -23,7 +23,15 @@ export interface Evidence {
   /** What it is about: a machine, a cloud account, the repository. */
   subject: string;
   /** Where it came from. */
-  source: "managed" | "adopted" | "device" | "cloud" | "estate" | "repository";
+  source:
+    | "managed"
+    | "adopted"
+    | "device"
+    | "cloud"
+    | "estate"
+    | "repository"
+    // Spec 078: a control from one of the fleet's own packs.
+    | "control pack";
   /** The check, in words. */
   check: string;
   /** Its result. */
@@ -197,6 +205,20 @@ export function fleetEvidence(f: PcFacts, now = Date.now()): Evidence[] {
         subject: d.device.name,
         source: "device",
         check: r.title,
+        status: r.status,
+        detail: r.detail,
+        ...(r.fix ? { fix: r.fix } : {}),
+      });
+    }
+  }
+  // Spec 078: the fleet's own control packs; the check names its pack.
+  for (const p of f.controls ?? []) {
+    for (const r of p.results) {
+      out.push({
+        scf: r.scf,
+        subject: r.subject,
+        source: "control pack",
+        check: `${p.pack.title}: ${r.title}`,
         status: r.status,
         detail: r.detail,
         ...(r.fix ? { fix: r.fix } : {}),

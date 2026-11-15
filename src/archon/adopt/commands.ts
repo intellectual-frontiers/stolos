@@ -282,20 +282,17 @@ export interface QueryAnswer {
   error?: string;
 }
 
-/** `stolos fleet query "<sql>"`: one osquery SELECT on every machine; one table. */
-export async function fleetQuery(sql: string, json = false): Promise<number> {
-  const { queryRefusal, table } = await import("../state/query.ts");
-  const why = queryRefusal(sql);
-  if (why) {
-    ui.phase("Query").fail(
-      `refused: ${why}`,
-      `for example: deno task stolos fleet query "select name, version from os_version"`,
-    );
-    return fail();
-  }
+/**
+ * One osquery SELECT on each adopted machine, through its probe (the caller
+ * checks the SQL first, with queryRefusal). Spec 078's osquery controls ask
+ * through this too.
+ */
+export async function queryAdopted(
+  sql: string,
+  adopted: ReadonlyArray<{ machine: AdoptedDef }>,
+): Promise<QueryAnswer[]> {
   const answers: QueryAnswer[] = [];
   const b64 = btoa(String.fromCharCode(...new TextEncoder().encode(sql)));
-  const adopted = await loadAdopted();
   await Promise.all(adopted.map(async ({ machine }) => {
     const r = await probe(machine, `osquery ${b64}`);
     try {
@@ -308,6 +305,21 @@ export async function fleetQuery(sql: string, json = false): Promise<number> {
       answers.push({ machine: machine.name, kind: "adopted", error: "unreadable answer" });
     }
   }));
+  return answers.sort((a, b) => a.machine.localeCompare(b.machine));
+}
+
+/** `stolos fleet query "<sql>"`: one osquery SELECT on every machine; one table. */
+export async function fleetQuery(sql: string, json = false): Promise<number> {
+  const { queryRefusal, table } = await import("../state/query.ts");
+  const why = queryRefusal(sql);
+  if (why) {
+    ui.phase("Query").fail(
+      `refused: ${why}`,
+      `for example: deno task stolos fleet query "select name, version from os_version"`,
+    );
+    return fail();
+  }
+  const answers: QueryAnswer[] = await queryAdopted(sql, await loadAdopted());
   const { loadHosts } = await import("../model/load.ts");
   const { mcpServers } = await import("../render/agent.ts");
   const { callRemoteTool } = await import("../observe/remote.ts");

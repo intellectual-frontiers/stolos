@@ -14,6 +14,8 @@ import { join, toFileUrl } from "../core/path.ts";
 import { P } from "../core/paths.ts";
 import { tsLiteral } from "../core/ts-literal.ts";
 import type { PolicyResult } from "../adopt/policy.ts";
+import { defineControl, type ObservationControl } from "../controls/define.ts";
+import { runObservations } from "../controls/core.ts";
 import { type SnmpCredentials, SnmpSession, type SnmpValue } from "./snmp.ts";
 
 /** What kind of device. */
@@ -185,6 +187,60 @@ export async function observeDevice(
   };
 }
 
+/** A device's policies, as controls (spec 078), in the order results are shown. */
+export const DEVICE_CONTROLS: ObservationControl<"device">[] = [
+  defineControl({
+    id: "observed",
+    title: "Observed in the last 7 days",
+    scf: ["AST-04", "MON-02"],
+    subject: "observation",
+    of: "device",
+    assert: ({ observed: o, now }) => ({
+      status: (now - Date.parse(o.at)) / 86_400_000 <= 7 ? "pass" : "fail",
+      detail: `last observed ${o.at.slice(0, 10)}`,
+    }),
+    fix: ({ device: d }) => `deno task stolos device observe ${d.name}`,
+  }),
+  defineControl({
+    id: "snmpv3",
+    title: "Read only over encrypted SNMPv3 (authPriv)",
+    scf: ["CRY-05"],
+    subject: "observation",
+    of: "device",
+    assert: ({ device: d }) => ({
+      status: "pass",
+      detail: `user ${d.snmp.user}, ${d.snmp.auth === "sha256" ? "SHA-256" : "SHA-1"} and AES`,
+    }),
+  }),
+  defineControl({
+    id: "owner",
+    title: "It has an owner and a location",
+    scf: ["AST-07.1"],
+    subject: "observation",
+    of: "device",
+    assert: ({ device: d, observed: o }) => ({
+      status: (d.owner || o.contact) && (d.location || o.location) ? "pass" : "warn",
+      detail: `owner: ${d.owner || o.contact || "none"}; location: ${
+        d.location || o.location || "none"
+      }`,
+    }),
+    fix: ({ device: d }) =>
+      `set owner and location in fleets/<fleet>/devices/${d.name}/device.ts (or sysContact and sysLocation on the device)`,
+  }),
+  defineControl({
+    id: "restarted",
+    title: "Restarted in the last 400 days (firmware updates restart a device)",
+    scf: ["VPM-08"],
+    subject: "observation",
+    of: "device",
+    assert: ({ observed: o }) => ({
+      status: o.uptimeDays <= 400 ? "pass" : "warn",
+      detail: `up ${o.uptimeDays} days${o.firmware ? `; firmware ${o.firmware}` : ""}`,
+    }),
+    fix: "check the maker's site for firmware updates, and install them",
+  }),
+];
+
 /** A device's policies. */
 export function devicePolicies(
   d: DeviceDef,
@@ -201,41 +257,5 @@ export function devicePolicies(
       fix: `deno task stolos device observe ${d.name}`,
     }];
   }
-  const days = (now - Date.parse(o.at)) / 86_400_000;
-  return [
-    {
-      id: "observed",
-      title: "Observed in the last 7 days",
-      scf: ["AST-04", "MON-02"],
-      status: days <= 7 ? "pass" : "fail",
-      detail: `last observed ${o.at.slice(0, 10)}`,
-      fix: `deno task stolos device observe ${d.name}`,
-    },
-    {
-      id: "snmpv3",
-      title: "Read only over encrypted SNMPv3 (authPriv)",
-      scf: ["CRY-05"],
-      status: "pass",
-      detail: `user ${d.snmp.user}, ${d.snmp.auth === "sha256" ? "SHA-256" : "SHA-1"} and AES`,
-    },
-    {
-      id: "owner",
-      title: "It has an owner and a location",
-      scf: ["AST-07.1"],
-      status: (d.owner || o.contact) && (d.location || o.location) ? "pass" : "warn",
-      detail: `owner: ${d.owner || o.contact || "none"}; location: ${
-        d.location || o.location || "none"
-      }`,
-      fix:
-        `set owner and location in fleets/<fleet>/devices/${d.name}/device.ts (or sysContact and sysLocation on the device)`,
-    },
-    {
-      id: "restarted",
-      title: "Restarted in the last 400 days (firmware updates restart a device)",
-      scf: ["VPM-08"],
-      status: o.uptimeDays <= 400 ? "pass" : "warn",
-      detail: `up ${o.uptimeDays} days${o.firmware ? `; firmware ${o.firmware}` : ""}`,
-      fix: "check the maker's site for firmware updates, and install them",
-    },
-  ];
+  return runObservations(DEVICE_CONTROLS, { device: d, observed: o, now });
 }

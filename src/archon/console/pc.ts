@@ -91,6 +91,8 @@ export interface PcFacts {
   clouds: PcConnector[];
   /** Spec 085: the cross-system policies over the estate graph. */
   estate?: PolicyResult[];
+  /** Spec 078: the fleet's own control packs (fleets/<fleet>/controls/), with their results. */
+  controls?: import("../controls/run.ts").PackRun[];
   /** Devices read over SNMPv3, with their policies. */
   devices: Array<
     {
@@ -290,6 +292,9 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
       m.upToDate = newest.startsWith(m.applied.commit) || m.applied.commit.startsWith(newest);
     }
   }
+  const { loadEstate } = await import("../estate/commands.ts");
+  const { estatePolicies } = await import("../estate/graph.ts");
+  const estate = await loadEstate().catch(warn("the estate graph"));
   const pin = readPin((await readTextOr(join(repo, "deno.json"))) ?? "");
   const { repoSlug } = await import("../fleet/bootstrap.ts");
   return {
@@ -304,13 +309,27 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
     adopted,
     clouds,
     devices,
-    estate: await (async () => {
+    estate: (() => {
       try {
-        const { loadEstate } = await import("../estate/commands.ts");
-        const { estatePolicies } = await import("../estate/graph.ts");
-        return estatePolicies(await loadEstate());
+        return estate ? estatePolicies(estate) : [];
       } catch (e) {
         warn("the estate graph")(e);
+        return [];
+      }
+    })(),
+    controls: await (async () => {
+      try {
+        const { runFleetPacks } = await import("../controls/run.ts");
+        const r = await runFleetPacks({
+          ...(estate ? { estate } : {}),
+          adopted,
+          devices,
+          connectors: observed.map((o) => ({ connector: o.provider, observed: o })),
+        });
+        for (const x of r.problems) warn("control packs")(new Error(x));
+        return r.runs;
+      } catch (e) {
+        warn("control packs")(e);
         return [];
       }
     })(),
