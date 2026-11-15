@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Stolos v0.70.0</title>
+<title>Stolos v0.71.0</title>
 <link rel="stylesheet" href="./styles.css">
 <link rel="stylesheet" href="./page.css">
 <script src="./darkmode_toggle.js"></script>
@@ -17,7 +17,7 @@
 </head>
 <body>
 <main>
-<h1>Stolos v0.70.0</h1>
+<h1>Stolos v0.71.0</h1>
 <p>The fleet engine (its command is <code>archon</code>), documented from its TypeScript.</p>
 <p class="start">Start here: <a href="./mod.ts/index.html">the overview</a>, with how the
 pieces fit, in diagrams. Then the model: <a href="./archon/model/types.ts/index.html">types.ts</a>.
@@ -103,6 +103,7 @@ Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 <li><a href="./archon/console/forms.ts/index.html"><code>forms.ts</code></a> Specs 065 and 066: every command a console offers is a form, generated from the command registry (the source of archon help, the man pages, and the MCP tools), so the web and the CLI cannot drift.</li>
 <li><a href="./archon/console/html.ts/index.html"><code>html.ts</code></a> Spec 065: the console's HTML, as typed TypeScript.</li>
 <li><a href="./archon/console/layout.ts/index.html"><code>layout.ts</code></a> Specs 065 and 066: both consoles' frame.</li>
+<li><a href="./archon/console/logos.ts/index.html"><code>logos.ts</code></a> Spec 065: product logos for the consoles, from Simple Icons 16.36.0 (https://simpleicons.org, CC0 1.0; each mark remains its owner's trademark, shown only to name the product it stands for).</li>
 <li><a href="./archon/console/machine.ts/index.html"><code>machine.ts</code></a> Spec 065: the Archon Console's real dependencies on a server: PAM, the system's accounts, the runner, the checkout of the fleet repository (the commit applied now, who signed it, the engine it…</li>
 <li><a href="./archon/console/pages.ts/index.html"><code>pages.ts</code></a> Spec 065: the Archon Console's pages, as typed functions of their data: sign-in, Overview, Actions, Activity, and Guide.</li>
 <li><a href="./archon/console/pam-worker.ts/index.html"><code>pam-worker.ts</code></a> Spec 065: the worker thread that runs {@link pamCheck} (PAM blocks for about two seconds after a wrong password; the web server keeps answering).</li>

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/console/assets.ts - Stolos v0.70.0 documentation</title>
+  <title>archon/console/assets.ts - Stolos v0.71.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.70.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.71.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -248,10 +248,13 @@ tr:last-child td { border-bottom: 0; }
 .stack { display: flex; flex-direction: column; gap: 10px; }
 .ring { width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center; flex: none; }
 .ring span { width: 60px; height: 60px; border-radius: 50%; background: var(--panel); display: grid; place-items: center; font-weight: 600; font-variant-numeric: tabular-nums; }
-.grid.actions { grid-template-columns: minmax(0, 320px) minmax(0, 1fr); align-items: start; }
+.grid.actions { grid-template-columns: minmax(240px, 300px) minmax(0, 1fr); align-items: start; }
 .grid.actions &gt; .cmdlist { position: sticky; top: 70px; max-height: calc(100vh - 90px); overflow: auto; padding: 6px; }
 .diagram pre.mermaid svg { max-height: 300px; }
-.cmdlist a { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--line); padding: 10px 6px; }
+.cmdlist a { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--line); padding: 7px 8px; border-radius: 6px; }
+.cmdlist a .pill { font-size: 11px; padding: 1px 7px; }
+.cmdlist .sub { font-size: 12px; line-height: 1.35; }
+.cmdlist input[type=search] { width: 100%; margin-bottom: 6px; }
 .cmdlist a:hover, .cmdlist a[aria-current="true"] { background: var(--accent-soft); }
 .cmdlist .sub { grid-column: 1 / -1; }
 label.field { display: grid; gap: 4px; } label.field span { font-size: 12.5px; font-weight: 500; }
@@ -279,7 +282,12 @@ input[type=text], input[type=password], select { font: inherit; width: 100%; bor
   .grid.actions &gt; .cmdlist { position: static; max-height: 40vh; }
   .fleetmark span, .brand small, .me .who { display: none; }
 }
-`</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Both consoles' stylesheet: tokens first (light, then dark), then the parts.</p>
+`</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Both consoles' stylesheet: tokens first (light, then dark), then the parts. Served at <a href="../../.././archon/console/assets.ts/~/CSS_URL.html">CSS_URL</a>.</p>
+</div></div></div>
+    </div><div id="namespace_css_url" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;assets.ts&#x2F;~&#x2F;CSS_URL.html" title="CSS_URL">
+			    <span>CSS_URL</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The stylesheet's address: a new one per engine release, so a browser never keeps an old one.</p>
 </div></div></div>
     </div><div id="namespace_datastar" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
@@ -393,7 +401,7 @@ input[type=text], input[type=password], select { font: inherit; width: 100%; bor
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1301 symbols</span><svg
+              <span class="leading-none">view all 1317 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -408,7 +416,7 @@ input[type=text], input[type=password], select { font: inherit; width: 100%; bor
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/console/assets_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_datastarsource" title="datastarSource">datastarSource</a></li><li><a href="#namespace_sha256hex" title="sha256Hex">sha256Hex</a></li><li><a href="#namespace_vendored" title="vendored">vendored</a></li></ul></li><li><a href="#archon/console/assets_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_archon_logo" title="ARCHON_LOGO">ARCHON_LOGO</a></li><li><a href="#namespace_console_css" title="CONSOLE_CSS">CONSOLE_CSS</a></li><li><a href="#namespace_datastar" title="DATASTAR">DATASTAR</a></li><li><a href="#namespace_favicon" title="FAVICON">FAVICON</a></li><li><a href="#namespace_fonts" title="FONTS">FONTS</a></li><li><a href="#namespace_mermaid" title="MERMAID">MERMAID</a></li><li><a href="#namespace_stolos_logo" title="STOLOS_LOGO">STOLOS_LOGO</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/console/assets_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_datastarsource" title="datastarSource">datastarSource</a></li><li><a href="#namespace_sha256hex" title="sha256Hex">sha256Hex</a></li><li><a href="#namespace_vendored" title="vendored">vendored</a></li></ul></li><li><a href="#archon/console/assets_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_archon_logo" title="ARCHON_LOGO">ARCHON_LOGO</a></li><li><a href="#namespace_console_css" title="CONSOLE_CSS">CONSOLE_CSS</a></li><li><a href="#namespace_css_url" title="CSS_URL">CSS_URL</a></li><li><a href="#namespace_datastar" title="DATASTAR">DATASTAR</a></li><li><a href="#namespace_favicon" title="FAVICON">FAVICON</a></li><li><a href="#namespace_fonts" title="FONTS">FONTS</a></li><li><a href="#namespace_mermaid" title="MERMAID">MERMAID</a></li><li><a href="#namespace_stolos_logo" title="STOLOS_LOGO">STOLOS_LOGO</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>
