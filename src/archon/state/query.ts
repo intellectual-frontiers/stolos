@@ -51,6 +51,11 @@ export const QUERY_TABLES = new Set([
   "iptables",
   "time",
   "osquery_info",
+  // Spec 067: workstations (adopted machines): installed applications and packages.
+  "apps",
+  "homebrew_packages",
+  "rpm_packages",
+  "programs",
   ...Object.keys(VIEWS),
 ]);
 

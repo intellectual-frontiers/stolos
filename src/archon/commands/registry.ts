@@ -364,21 +364,6 @@ export const COMMANDS: Command[] = [
     },
   },
   {
-    name: "fleet query",
-    summary: "Ask every server the same SQL question, through each one's MCP server",
-    description:
-      `From the boot machine or a workstation: runs archon query on each server in parallel, over SSH as ops (each server limits what it answers), and prints the rows with a host column. Unreachable servers are named (spec 048).`,
-    tier: "read",
-    noMcp: true,
-    args: [
-      { name: "sql", type: "string", positional: true, required: true, description: "One SELECT." },
-    ],
-    async run(a, ctx) {
-      const { fleetQuery } = await import("../observe/fleet-query.ts");
-      return await fleetQuery(a.sql as string, ctx.json);
-    },
-  },
-  {
     name: "signers",
     summary: "Who may approve this fleet's changes, and your own signing setup",
     description:
@@ -609,6 +594,119 @@ export const COMMANDS: Command[] = [
     async run(a) {
       const { hostBootstrap } = await import("../install/host-bootstrap.ts");
       return await hostBootstrap({ name: a.name as string, ssh: a.ssh as string });
+    },
+  },
+  {
+    name: "host adopt",
+    summary: "Adopt a machine over SSH (macOS, any Linux): observe and check it, never manage it",
+    description:
+      `Spec 067. Pins the machine's SSH host key in Git, makes a probe key in the vault, and installs a read-only probe in the account's ~/.local/bin (over your own SSH, once: it may ask your password). The probe key's line in authorized_keys runs that probe and nothing else. Then it observes the machine and checks its policies (disk encryption, firewall, updates, supported OS, administrators), each labeled with its SCF controls. Writes fleets/<fleet>/adopted/<name>/machine.ts and observed.ts: keep them with deno task stolos apply. Run it again to reinstall the probe; it keeps the pinned key.`,
+    tier: "repo",
+    args: [
+      {
+        name: "name",
+        type: "string",
+        positional: true,
+        required: true,
+        description: "Its name in the fleet (a DNS label): macbook, omarchy-desk.",
+      },
+      {
+        name: "ssh",
+        type: "string",
+        required: true,
+        description: "How to reach it: user@address, or user@address:port.",
+      },
+      {
+        name: "title",
+        type: "string",
+        description: 'What it is, for people: "Shahid\'s MacBook Pro".',
+      },
+      { name: "owner", type: "string", description: "Who it belongs to." },
+      {
+        name: "until",
+        type: "string",
+        description: "When adoption ends (YYYY-MM-DD): a contractor's laptop, a loaner.",
+      },
+    ],
+    async run(a) {
+      const { hostAdopt } = await import("../adopt/commands.ts");
+      return await hostAdopt({
+        name: a.name as string,
+        ssh: a.ssh as string,
+        ...(a.title ? { title: a.title as string } : {}),
+        ...(a.owner ? { owner: a.owner as string } : {}),
+        ...(a.until ? { until: a.until as string } : {}),
+      });
+    },
+  },
+  {
+    name: "host observe",
+    summary: "Observe adopted machines now (all, or one): what their probe finds",
+    description:
+      `Spec 067. Runs the read-only probe on each adopted machine with its probe key and writes fleets/<fleet>/adopted/<name>/observed.ts (git log -p is the machine's history). Keep the observations with deno task stolos apply.`,
+    tier: "repo",
+    args: [{
+      name: "name",
+      type: "string",
+      positional: true,
+      description: "One machine (default: all).",
+    }],
+    async run(a) {
+      const { hostObserve } = await import("../adopt/commands.ts");
+      return await hostObserve(a.name as string | undefined);
+    },
+  },
+  {
+    name: "host check",
+    summary: "The policies of adopted machines: pass, fail, and the fix (SCF controls)",
+    description:
+      `Spec 067. Reads each adopted machine's last observation and checks its policies: observed recently, disk encryption, firewall, automatic updates, updates waiting, a supported OS, SSH keys only, few administrators, osquery. Each result names the Secure Controls Framework controls it is evidence for. Exits 1 when any fails. --json for scripts and auditors.`,
+    tier: "read",
+    args: [{
+      name: "name",
+      type: "string",
+      positional: true,
+      description: "One machine (default: all).",
+    }],
+    async run(a, ctx) {
+      const { hostCheck } = await import("../adopt/commands.ts");
+      return await hostCheck(a.name as string | undefined, ctx.json);
+    },
+  },
+  {
+    name: "host release",
+    summary: "Stop adopting a machine: remove its probe, its model, and its probe key",
+    description:
+      `Spec 067. Over your own SSH, removes ~/.local/bin/stolos-probe and the probe key's line from authorized_keys; then deletes fleets/<fleet>/adopted/<name>/ and the probe key from the vault. Nothing else on the machine changes. Keep it with deno task stolos apply.`,
+    tier: "repo",
+    args: [{
+      name: "name",
+      type: "string",
+      positional: true,
+      required: true,
+      description: "The adopted machine.",
+    }],
+    async run(a) {
+      const { hostRelease } = await import("../adopt/commands.ts");
+      return await hostRelease(a.name as string);
+    },
+  },
+  {
+    name: "fleet query",
+    summary: "Ask every machine one SQL question (osquery): managed and adopted, one table",
+    description:
+      `Spec 067. Runs one osquery SELECT on every machine: managed servers through their MCP server (archon query, over SSH as ops) and adopted machines through their probe (where osquery is installed). Prints one table with a machine column; --json for scripts. Read-only: one SELECT on the allowlisted tables (as archon query), anything else is refused; each server also limits what it answers (spec 048). Examples: "select name, version from os_version"; "select name, bundle_short_version from apps where name like 'Google Chrome%'"; "select port, address from listening_ports".`,
+    tier: "read",
+    args: [{
+      name: "sql",
+      type: "string",
+      positional: true,
+      required: true,
+      description: "One osquery SELECT.",
+    }],
+    async run(a, ctx) {
+      const { fleetQuery } = await import("../adopt/commands.ts");
+      return await fleetQuery(a.sql as string, ctx.json);
     },
   },
   {
@@ -2373,6 +2471,11 @@ On a server, workstations reach it as ops over SSH (spec 030): ops' authorized_k
  */
 /** Commands run with `stolos` on your PC (the rest run with `archon` on each machine). */
 const PC_COMMANDS = new Set([
+  "host adopt",
+  "host observe",
+  "host check",
+  "host release",
+  "fleet query",
   "validate",
   "build",
   "fleet use",

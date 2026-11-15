@@ -259,11 +259,11 @@ query_from_runner() {
   log "$SERVER is at $ip"
   echo "$ip $SERVER" | sudo tee -a /etc/hosts >/dev/null
   mkdir -p "$HOME/.ssh" && cp "$W/admin" "$HOME/.ssh/id_ed25519" && chmod 600 "$HOME/.ssh/id_ed25519"
-  (cd "$F" && "${A[@]}" fleet query "select host, ok, passed, total from archon_install") |
+  (cd "$F" && "${A[@]}" fleet query "select ok, passed, total from archon_install") |
     tee "$OUT/fleet-query.txt" || fail "fleet query failed"
   answered "$OUT/fleet-query.txt" || fail "fleet query did not answer ok for $SERVER"
   # Spec 051: what the machine is, as it reported itself.
-  (cd "$F" && "${A[@]}" fleet query "select host, model, cpus, mem_mib, macs from archon_inventory") |
+  (cd "$F" && "${A[@]}" fleet query "select model, cpus, mem_mib, macs from archon_inventory") |
     tee "$OUT/fleet-inventory.txt" || fail "fleet query of archon_inventory failed"
   grep -q "^$SERVER" "$OUT/fleet-inventory.txt" || fail "no inventory from $SERVER"
 }

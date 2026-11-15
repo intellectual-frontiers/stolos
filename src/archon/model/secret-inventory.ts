@@ -57,6 +57,26 @@ export const SECRET_INVENTORY: SecretRef[] = [
     spec: "004-install",
   },
   {
+    id: "probe-key",
+    label: "<host> probe key",
+    path: "adopted/<host>/probe_key",
+    purpose:
+      "reads facts from the adopted machine <host>: its authorized_keys lets this key run the read-only probe and nothing else (spec 067)",
+    holder: "boot-machine",
+    recreate:
+      "deno task stolos host adopt <host> --ssh <user>@<address> again (it makes a new key and replaces the old line)",
+    spec: "067-adopt",
+  },
+  {
+    id: "probe-key-pub",
+    label: "<host> probe key (public)",
+    path: "adopted/<host>/probe_key.pub",
+    purpose: "the probe key's public half (in the adopted machine's authorized_keys)",
+    holder: "boot-machine",
+    recreate: "made with the probe key",
+    spec: "067-adopt",
+  },
+  {
     id: "deploy-key-pub",
     label: "<host> deploy key (public)",
     path: "hosts/<host>/deploy_key.pub",
