@@ -6,7 +6,7 @@ import { github } from "../src/archon/connect/github.ts";
 import { okta } from "../src/archon/connect/okta.ts";
 import { google, serviceAccountJwt } from "../src/archon/connect/google.ts";
 import { bamboohr, rippling } from "../src/archon/connect/hris.ts";
-import { buildEstate, estatePolicies } from "../src/archon/connect/estate.ts";
+import { buildGraph, estatePolicies } from "../src/archon/estate/graph.ts";
 
 const NOW = new Date("2026-11-15T12:00:00Z");
 type Route = [number, unknown, string?];
@@ -261,8 +261,34 @@ Deno.test("086: HR systems: the roster only; joined with accounts, leavers fail"
     "active",
     "dan@example.org",
   ], ["dan@example.org", "terminated", null]]);
-  const e = buildEstate([b.entities!, {
-    accounts: [{ system: "okta", id: "1", name: "bob", email: "bob@example.org", active: true }],
-  }]);
+  const at = "2026-11-15T00:00:00Z";
+  const e = buildGraph({
+    fleet: "lab",
+    machines: [],
+    links: {},
+    sources: [
+      { connector: "bamboohr", observation: { ...b, at } },
+      {
+        connector: "okta",
+        observation: {
+          at,
+          provider: "okta",
+          account: "example.okta.com",
+          assets: [],
+          posture: {},
+          gaps: [],
+          entities: {
+            accounts: [{
+              system: "okta",
+              id: "1",
+              name: "bob",
+              email: "bob@example.org",
+              active: true,
+            }],
+          },
+        },
+      },
+    ],
+  });
   assertEquals(estatePolicies(e).find((p) => p.id === "leavers")!.status, "fail");
 });

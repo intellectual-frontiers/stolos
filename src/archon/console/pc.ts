@@ -306,8 +306,8 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
     devices,
     estate: await (async () => {
       try {
-        const { loadEstate } = await import("../connect/commands.ts");
-        const { estatePolicies } = await import("../connect/estate.ts");
+        const { loadEstate } = await import("../estate/commands.ts");
+        const { estatePolicies } = await import("../estate/graph.ts");
         return estatePolicies(await loadEstate());
       } catch (e) {
         warn("the estate graph")(e);

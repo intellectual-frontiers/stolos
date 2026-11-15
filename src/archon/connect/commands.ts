@@ -181,6 +181,7 @@ export async function estateObserve(id?: string, http: Http = realHttp): Promise
   if (id && !provider(id)) return unknown(id);
   for (const c of CONNECTORS.filter((x) => !id || x.id === id)) await observeOne(c, http);
   ui.next.push(`keep the observations: deno task stolos apply -m "067-adopt: clouds observed"`);
+  ui.next.push("the estate graph as SQL and SQLite: deno task stolos estate build");
   return fail();
 }
 
@@ -195,7 +196,8 @@ export async function estateCheck(id?: string, json = false): Promise<number> {
     results: provider(o.provider)!.policies(o, now),
   }));
   // Spec 085: what no single source can say, across every source.
-  const { estatePolicies } = await import("./estate.ts");
+  const { estatePolicies } = await import("../estate/graph.ts");
+  const { loadEstate } = await import("../estate/commands.ts");
   const across = id ? [] : estatePolicies(await loadEstate());
   if (json) console.log(JSON.stringify({ accounts: results, acrossSystems: across }, null, 2));
   else {
@@ -243,101 +245,5 @@ export async function connectorDisconnect(id: string): Promise<number> {
       observationFile(id).replace(P.repo + "/", "")
     } (delete it to forget)`,
   );
-  return 0;
-}
-
-/**
- * Links from accounts known by login only to people's work emails:
- * `fleets/<fleet>/estate/links.ts` exports `links`, as `{ "github:alice": "alice@example.org" }`.
- */
-export async function loadLinks(): Promise<Record<string, string>> {
-  const f = join(P.fleetDir, "estate", "links.ts");
-  if (!(await exists(f))) return {};
-  return ((await import(toFileUrl(f).href + `?t=${Date.now()}`)).links ?? {}) as Record<
-    string,
-    string
-  >;
-}
-
-/** Spec 085: the estate graph, from every observation and the fleet's own machines. */
-export async function loadEstate(): Promise<import("./estate.ts").Estate> {
-  const { buildEstate } = await import("./estate.ts");
-  // Accounts a system knows by login only (github:alice) are linked to people in estate/links.ts.
-  const links = await loadLinks();
-  const sources = (await loadObservations()).map((o) => {
-    const e = o.entities ?? {};
-    return {
-      ...e,
-      accounts: (e.accounts ?? []).map((
-        a,
-      ) => (a.email
-        ? a
-        : links[`${a.system}:${a.name}`]
-        ? { ...a, email: links[`${a.system}:${a.name}`] }
-        : a)
-      ),
-    };
-  });
-  const devices: import("./entities.ts").Device[] = [];
-  const { loadHosts } = await import("../model/load.ts");
-  for (const h of await loadHosts().catch(() => [])) {
-    devices.push({ source: "stolos", id: h.name, name: h.name, managed: true, os: "Ubuntu" });
-  }
-  const { loadAdopted } = await import("../adopt/adopt.ts");
-  for (const { machine, observed } of await loadAdopted()) {
-    const enc = observed?.security.diskEncryption;
-    devices.push({
-      source: "adopted",
-      id: machine.name,
-      name: machine.name,
-      managed: false,
-      ...(machine.owner ? { owner: machine.owner } : {}),
-      ...(observed
-        ? { os: `${observed.os.name} ${observed.os.version}`.trim(), seen: observed.at }
-        : {}),
-      ...(observed?.os.serial ? { serial: observed.os.serial } : {}),
-      ...(enc === "on" || enc === "off" ? { encrypted: enc === "on" } : {}),
-    });
-  }
-  const { loadDevices } = await import("../device/device.ts");
-  for (const { device, observed } of await loadDevices()) {
-    devices.push({
-      source: "snmp",
-      id: device.name,
-      name: device.name,
-      managed: false,
-      ...(device.owner ? { owner: device.owner } : {}),
-      ...(observed?.model ? { os: observed.model } : {}),
-      ...(observed?.serial ? { serial: observed.serial } : {}),
-      ...(observed ? { seen: observed.at } : {}),
-    });
-  }
-  return buildEstate([...sources, { devices }]);
-}
-
-/** `stolos estate query "<sql>"`: one SELECT across every source (people, accounts, devices, repositories). */
-export async function estateQueryCommand(sql: string, json = false): Promise<number> {
-  const { estateQuery, estateRefusal } = await import("./estate.ts");
-  const why = estateRefusal(sql);
-  if (why) {
-    ui.phase("Query").fail(
-      `refused: ${why}`,
-      `for example: deno task stolos estate query "select system, name from accounts where admin = 1"`,
-    );
-    return 1;
-  }
-  let rows: Array<Record<string, unknown>>;
-  try {
-    rows = estateQuery(await loadEstate(), sql);
-  } catch (e) {
-    ui.phase("Query").fail((e as Error).message, "tables: people, accounts, devices, repositories");
-    return 1;
-  }
-  if (json) console.log(JSON.stringify(rows, null, 2));
-  else {
-    const { table } = await import("../state/query.ts");
-    if (rows.length) console.log(table(rows));
-    console.log(`\n${rows.length} row(s)`);
-  }
   return 0;
 }

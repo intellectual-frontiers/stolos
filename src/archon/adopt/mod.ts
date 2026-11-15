@@ -161,17 +161,30 @@
  *
  * ### Across systems: the estate graph
  *
- * People (from the HR system), accounts (identity, code, clouds), devices (managed, adopted, SNMP),
- * and repositories meet in one graph. `deno task stolos estate check` reports what no single system
- * can say (people who left with accounts still on, accounts no person owns, administrators without
- * a second factor, people without a device), and one SQL question spans them all:
+ * People, accounts, machines, and repositories meet in one graph (spec 090). People come only from
+ * the source of truth (the HR system; with none, the identity provider), and every other system's
+ * accounts link to them by work email. Machines are deduplicated by serial number, then hostname.
+ * `deno task stolos estate check` reports what no single system can say (people who left with
+ * accounts still on, accounts no person owns, administrators without a second factor, people
+ * without a machine), and one SQL question spans them all:
  *
  * ```bash
- * deno task stolos estate query "select system, name from accounts where admin = 1 and mfa = 0"
+ * deno task stolos estate query "select connector, display_name from user_account where admin = 1 and mfa = 0"
+ * deno task stolos estate diff "select uid, hostname from device" --since 2026-10-01
+ * deno task stolos estate build
+ * deno task stolos estate schema --docs
  * ```
+ *
+ * The tables follow the Universal Data Model (`person`, `party_role`, `contact_mechanism`,
+ * `fixed_asset`, ...) and a property graph (`tenant`, `node`, `edge`); views carry OCSF's and
+ * D3FEND's names (`user_account`, `code_repository`, `user_inventory`, `device`,
+ * `compliance_finding`). First seen and last seen come from Git. `estate build` writes the graph as
+ * canonical SQL (`estate.sql`, loadable into other databases) and as `estate.auto.sqlite.db`.
  *
  * A system that knows people by login only (GitHub) is linked to work emails in
  * `fleets/<fleet>/estate/links.ts`: `export const links = { "github:alice": "alice@example.org" };`.
+ * A machine two sources see under different names is joined there too:
+ * `"device:snmp:printer": "hostname:front-printer"`.
  *
  * @module
  */

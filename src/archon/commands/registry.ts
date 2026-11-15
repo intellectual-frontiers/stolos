@@ -1220,9 +1220,9 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "estate query",
-    summary: "One SQL question across every source: people, accounts, devices, repositories",
+    summary: "One SQL question across every source: people, accounts, machines, repositories",
     description:
-      `Spec 085. The estate graph: every connector's people, accounts, devices, and repositories, and the fleet's own machines (managed, adopted, SNMP devices), in an in-memory SQLite database, from the last observations in Git (no network). One SELECT. Tables: people (email, name, status, start, end, manager, type), accounts (system, id, name, email, active, admin, mfa, lastLogin, service), devices (source, id, name, owner, os, serial, encrypted, managed, seen), repositories (system, name, private, protected, reviews, secretScanning, dependencyAlerts). Booleans are 0 and 1.`,
+      `Spec 090. The estate graph, built from the observations in Git (no network): Universal Data Model tables (party, person, organization, party_role, party_relationship, contact_mechanism, party_contact_mechanism, fixed_asset, party_fixed_asset_assignment), a property graph (tenant, node, node_label, edge, node_property_provenance), findings and observations, and views with OCSF's and D3FEND's names (user_account, code_repository, user_inventory, device, compliance_finding). One SELECT. Booleans are 0 and 1. The full schema: deno task stolos estate schema --docs.`,
     tier: "read",
     args: [{
       name: "sql",
@@ -1234,18 +1234,67 @@ export const COMMANDS: Command[] = [
     examples: [
       {
         cmd:
-          'deno task stolos estate query "select system, name from accounts where admin = 1 and mfa = 0"',
+          'deno task stolos estate query "select connector, display_name from user_account where admin = 1 and mfa = 0"',
         text: "Administrators without a second factor, in every system.",
       },
       {
         cmd:
-          "deno task stolos estate query \"select p.email, a.system from people p join accounts a on a.email = p.email where p.status = 'terminated' and a.active = 1\"",
+          "deno task stolos estate query \"select u.email_addr, a.connector from user_inventory u join edge e on e.src_uid = u.uid and e.verb = 'has_account' join user_account a on a.user_account_uid = e.dst_uid where u.status = 'terminated' and a.active = 1\"",
         text: "People who left, with accounts still on.",
       },
     ],
     async run(a, ctx) {
-      const { estateQueryCommand } = await import("../connect/commands.ts");
+      const { estateQueryCommand } = await import("../estate/commands.ts");
       return await estateQueryCommand(a.sql as string, ctx.json);
+    },
+  },
+  {
+    name: "estate build",
+    summary: "Write the estate graph as canonical SQL and as the SQLite file osquery reads",
+    description:
+      `Spec 090. Builds the estate graph from the observations in Git and writes, in this PC's state directory, estate.sql (the schema and every row: the canonical form, loadable into other databases) and estate.auto.sqlite.db made from it (what osquery reads, spec 093).`,
+    tier: "read",
+    args: [],
+    async run() {
+      const { estateBuild } = await import("../estate/commands.ts");
+      return await estateBuild();
+    },
+  },
+  {
+    name: "estate diff",
+    summary: "What a query gains and loses between a date or commit and now",
+    description:
+      `Spec 090. Runs one SELECT on the estate graph as Git had it at --since (a date, YYYY-MM-DD, or a commit) and as it is now, and lists the rows added and removed: drift, and a Type 2 period's record.`,
+    tier: "read",
+    args: [
+      { name: "sql", type: "string", positional: true, required: true, description: "One SELECT." },
+      {
+        name: "since",
+        type: "string",
+        required: true,
+        description: "A date (YYYY-MM-DD) or a commit.",
+      },
+    ],
+    examples: [{
+      cmd:
+        'deno task stolos estate diff "select connector, display_name from user_account where admin = 1" --since 2026-10-01',
+      text: "Administrators added and removed since October 1.",
+    }],
+    async run(a, ctx) {
+      const { estateDiff } = await import("../estate/commands.ts");
+      return await estateDiff(a.sql as string, a.since as string, ctx.json);
+    },
+  },
+  {
+    name: "estate schema",
+    summary: "The estate graph's schema: its SQL, or its documentation",
+    description:
+      `Spec 090. Prints the estate graph's schema as SQL (generated from its TypeScript declarations), or with --docs as documentation with an ER diagram: every table and view, what each column holds, and the standard each name comes from.`,
+    tier: "read",
+    args: [{ name: "docs", type: "boolean", description: "The documentation, not the SQL." }],
+    async run(a) {
+      const { estateSchema } = await import("../estate/commands.ts");
+      return estateSchema(!!a.docs);
     },
   },
   {
@@ -3102,6 +3151,9 @@ On a server, workstations reach it as ops over SSH (spec 030): ops' authorized_k
 /** Commands run with `stolos` on your PC (the rest run with `archon` on each machine). */
 const PC_COMMANDS = new Set([
   "estate query",
+  "estate build",
+  "estate diff",
+  "estate schema",
   "device add",
   "device observe",
   "device check",
