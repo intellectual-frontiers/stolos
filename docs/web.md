@@ -5,15 +5,38 @@ redirects. Traefik restricts no network: **who reaches the server is the router'
 firewall at the edge, outside the machine). Forward nothing to it from the internet unless you mean
 to publish it. Traefik's dashboard has no password of its own.
 
-| URL                                     | What                                                           |
-| --------------------------------------- | -------------------------------------------------------------- |
-| `https://alpha.lab.example.net`         | the server's welcome page: health, services, how to work on it |
-| `https://cockpit.alpha.lab.example.net` | Cockpit                                                        |
-| `https://traefik.alpha.lab.example.net` | Traefik's dashboard: routers, services, certificates           |
-| `https://<app>.alpha.lab.example.net`   | anything you publish (below)                                   |
+| URL                                     | What                                                            |
+| --------------------------------------- | --------------------------------------------------------------- |
+| `https://alpha.lab.example.net`         | the Archon Console: sign in, then health, actions, logs, guides |
+| `https://cockpit.alpha.lab.example.net` | Cockpit                                                         |
+| `https://traefik.alpha.lab.example.net` | Traefik's dashboard: routers, services, certificates            |
+| `https://<app>.alpha.lab.example.net`   | anything you publish (below)                                    |
 
 Before the certificate arrives, or without a Cloudflare token, Traefik answers with its own
-self-signed certificate, and `https://<address>` shows the welcome page too.
+self-signed certificate, and `https://<address>` shows the Archon Console too.
+
+## The Archon Console
+
+`https://<host>.<domain>` is the server in a browser (spec 065). Sign in with your account on the
+server: the same username and password as SSH (Linux checks them, through PAM). Nothing is shown
+before you sign in.
+
+| Page              | What it is for                                                                          |
+| ----------------- | --------------------------------------------------------------------------------------- |
+| Overview          | health, the commit applied and who signed it, a diagram of how the server stays current |
+| Services          | optional services (PostgreSQL, S3, file sharing, telemetry) and every unit's state      |
+| Apps, Data        | every HTTPS address; whether the server holds data that exists nowhere else             |
+| Logs              | the journal, live, for one service or everything                                        |
+| Actions (6 pages) | every `archon` command as a form, grouped, each with a diagram; output streams live     |
+| Activity          | every sign-in and every command run from the console: who, from where, the result       |
+| How it works      | the repositories, signing, and the path of a change, as diagrams                        |
+
+Everyone with an account can look. Operators (members of `sudo` or `archon-ops`) can also run
+commands that change the server; destroying data also needs the password again and the typed
+confirmation (`--confirm-destroy`). A command runs as you: `archon console exec` checks again, as
+root, that you may run it, then systemd runs it with your name, so every record names you, and a
+change is mailed to the fleet's mailbox. Five wrong passwords in a minute pause sign-ins from that
+address. Scripts may use HTTP Basic credentials for pages they only read.
 
 ## Once: the Cloudflare token
 

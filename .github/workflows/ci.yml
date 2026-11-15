@@ -63,8 +63,28 @@ jobs:
         shell: pwsh
         run: powershell -NoProfile -ExecutionPolicy Bypass -File tests/bootstrap/windows-check.ps1 powershell
 
+  console-browser:
+    # Spec 065: the Archon Console in a real browser (Chromium), at desktop and phone width.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Playwright and Chromium
+        run: |
+          mkdir -p /tmp/pw && cd /tmp/pw && npm init -y >/dev/null
+          npm install --silent playwright@1.63.0
+          npx playwright install --with-deps chromium
+      - name: The console in a browser
+        run: |
+          deno run -A tests/console/serve.ts 8099 &
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:8099/healthz && break; sleep 1; done
+          NODE_PATH=/tmp/pw/node_modules node tests/console/browser.cjs 8099
+
   tag:
-    needs: [check, bootstrap-windows]
+    needs: [check, bootstrap-windows, console-browser]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
