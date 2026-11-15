@@ -8,7 +8,6 @@ import {
   assertExists,
   assert,
   assertEquals,
-  test,
   proves,
 } from "@intellectual-frontiers/ifc-ts/runtime/test";
 import { ui } from "../src/archon/core/ui.ts";
@@ -196,26 +195,30 @@ proves(
   },
 );
 
-test("a successful apply settles an install record left at ok: false", async () => {
-  const dir = await fs.makeTempDir();
-  const { getRecord, putRecord } = await import("../src/archon/state/store.ts");
-  await putRecord(
-    "alpha",
-    "install",
-    "install",
-    {
-      host: "alpha",
-      ok: false,
-      problems: [{ level: "fail", message: "apt: Could not get lock" }],
-    },
-    dir,
-  );
-  assert(await settleInstallRecord("alpha", dir));
-  type Install = { ok: boolean; problems: unknown[]; resolved: { problems: unknown[] } };
-  const rec = (await getRecord<Install>("alpha", "install", "install", dir))?.body;
-  assertEquals(rec?.ok, true);
-  assertEquals(rec?.problems, []);
-  assertEquals(rec?.resolved.problems.length, 1);
-  assert(!(await settleInstallRecord("alpha", dir))); // already ok: untouched
-  await fs.remove(dir, { recursive: true });
-});
+proves(
+  ["009-updates FR-008"],
+  "a successful apply settles an install record left at ok: false",
+  async () => {
+    const dir = await fs.makeTempDir();
+    const { getRecord, putRecord } = await import("../src/archon/state/store.ts");
+    await putRecord(
+      "alpha",
+      "install",
+      "install",
+      {
+        host: "alpha",
+        ok: false,
+        problems: [{ level: "fail", message: "apt: Could not get lock" }],
+      },
+      dir,
+    );
+    assert(await settleInstallRecord("alpha", dir));
+    type Install = { ok: boolean; problems: unknown[]; resolved: { problems: unknown[] } };
+    const rec = (await getRecord<Install>("alpha", "install", "install", dir))?.body;
+    assertEquals(rec?.ok, true);
+    assertEquals(rec?.problems, []);
+    assertEquals(rec?.resolved.problems.length, 1);
+    assert(!(await settleInstallRecord("alpha", dir))); // already ok: untouched
+    await fs.remove(dir, { recursive: true });
+  },
+);

@@ -1,0 +1,2 @@
+# Requirements proven by review, not by a test: the requirement, a tab, how it is verified.
+003-identity FR-005	CI runs the suite on both boot-machine platforms: .github/workflows/ci.yml job "check" (ubuntu-24.04), step "Tests (ifc test, on Bun and on Node; every report and the evidence ledger)", and job "suite" (matrix windows-latest, macos-latest), step "Tests (ifc test, on Bun)"; tests/003-identity.test.ts (the secret store) and tests/install.test.ts (SHA-512 crypt) run in both.

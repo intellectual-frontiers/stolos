@@ -85,6 +85,9 @@ export async function exportRdf(): Promise<string[]> {
       ["archon:mac", h.mac ? lit(h.mac) : ""],
       ["archon:os", lit(`Ubuntu Server ${fleet.ubuntu.release}`)],
       ["dcterms:conformsTo", iri(`spec/${h.spec}`)],
+      // Spec 018: the host's out-of-band management (Intel AMT), as recorded.
+      ["archon:amtAddress", h.outOfBand?.amt?.address ? lit(h.outOfBand.amt.address) : ""],
+      ["archon:amtNotes", h.outOfBand?.amt?.notes ? lit(h.outOfBand.amt.notes) : ""],
     ]);
     for (const a of await loadActivities(h.name)) {
       const id = iri(`host/${h.name}/activity/${a.started}`);

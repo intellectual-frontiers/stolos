@@ -1,0 +1,2 @@
+# Requirements proven by review, not by a test: the requirement, a tab, how it is verified.
+020-workstation FR-004	The VM end-to-end run (.github/workflows/e2e.yml, step "Install a VM end to end", tests/e2e/lib.sh workstation_stage): on an Ubuntu cloud-image VM with the repository cloned to /srv/archon, `stolos workstation add` must succeed (release, systemd and checkout checks, the host file, bun install --frozen-lockfile, archon update through sudo), then `archon verify` and a fleet query from the workstation must pass, or the run fails.

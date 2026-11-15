@@ -179,7 +179,7 @@ proves(
 );
 
 proves(
-  ["096-bun-runtime FR-007"],
+  ["096-bun-runtime FR-007", "012-cli-mcp FR-001"],
   "096: the launcher runs archon.ts with Bun, and with Node where Bun is not installed",
   async () => {
     const { LAUNCHER } = await import("../src/archon/capabilities/cli.ts");
@@ -198,6 +198,11 @@ proves(
       new TextDecoder()
         .decode((await proc.output(["sh", `${dir}/${script}`, "verify", "--json"])).stdout)
         .trim();
+    // It is /usr/local/bin/archon on every host (spec 012).
+    const { resolvePlan } = await import("../src/archon/model/resolve.ts");
+    const { fleet, host } = await import("./fixtures.ts");
+    const bin = resolvePlan(host(), fleet()).files.find((f) => f.path === "/usr/local/bin/archon");
+    assertEquals([bin?.content, bin?.mode], [LAUNCHER, "0755"]);
     assertEquals(await run("with-bun"), `bun /srv/archon/archon.ts verify --json`);
     assertEquals(await run("without-bun"), `node /srv/archon/archon.ts verify --json`);
     // Only Bun or Node (the old runtime spelled in parts, so this file does not name it).
