@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Stolos v0.77.0</title>
+<title>Stolos v0.78.0</title>
 <link rel="stylesheet" href="./styles.css">
 <link rel="stylesheet" href="./page.css">
 <script src="./darkmode_toggle.js"></script>
@@ -17,7 +17,7 @@
 </head>
 <body>
 <main>
-<h1>Stolos v0.77.0</h1>
+<h1>Stolos v0.78.0</h1>
 <p>The fleet engine (its command is <code>archon</code>), documented from its TypeScript.</p>
 <p class="start">Start here: <a href="./mod.ts/index.html">the overview</a>, with how the
 pieces fit, in diagrams. Then the model: <a href="./archon/model/types.ts/index.html">types.ts</a>.
@@ -112,11 +112,18 @@ Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 <ul>
 <li><a href="./archon/commands/registry.ts/index.html"><code>registry.ts</code></a> The command registry (Article 6).</li>
 </ul>
+<h2>archon/compliance/</h2>
+<ul>
+<li><a href="./archon/compliance/commands.ts/index.html"><code>commands.ts</code></a> Spec 068: stolos compliance [--framework hipaa|pci|cmmc|soc2] [--json]: the fleet's evidence by SCF control and by framework, from what this PC already knows (nothing is asked of a server).</li>
+<li><a href="./archon/compliance/report.ts/index.html"><code>report.ts</code></a> Spec 068: compliance as evidence.</li>
+<li><a href="./archon/compliance/scf.ts/index.html"><code>scf.ts</code></a> Spec 068: the Secure Controls Framework (SCF) controls Stolos gives evidence for, and a starter mapping of each to the frameworks the fleet cares about first: HIPAA (the Security Rule, 45 CFR…</li>
+</ul>
 <h2>archon/console/</h2>
 <ul>
 <li><a href="./archon/console/assets.ts/index.html"><code>assets.ts</code></a> Specs 065 and 066: what both consoles serve besides their pages: one stylesheet (color tokens, light and dark), the Archon and Stolos logos, and Datastar (vendored, pinned by its SHA-256, served…</li>
 <li><a href="./archon/console/auth.ts/index.html"><code>auth.ts</code></a> Spec 065: who is signed in to the console, and what they may do.</li>
 <li><a href="./archon/console/boot-timeline.ts/index.html"><code>boot-timeline.ts</code></a> Spec 066: the boot server's installs as a timeline, from boot.log (each line &lt;ISO time&gt; [address] [host:] message, spec 049): for each machine, the furthest of the eleven steps of…</li>
+<li><a href="./archon/console/compliance-page.ts/index.html"><code>compliance-page.ts</code></a> Spec 068: the Compliance tab, in both consoles: each SCF control with its evidence, and each framework's requirements (HIPAA, PCI DSS, CMMC, SOC 2) with what their controls say.</li>
 <li><a href="./archon/console/exec.ts/index.html"><code>exec.ts</code></a> Spec 065: how the Archon Console runs a command for the person signed in.</li>
 <li><a href="./archon/console/forms.ts/index.html"><code>forms.ts</code></a> Specs 065 and 066: every command a console offers is a form, generated from the command registry (the source of archon help, the man pages, and the MCP tools), so the web and the CLI cannot drift.</li>
 <li><a href="./archon/console/html.ts/index.html"><code>html.ts</code></a> Spec 065: the console's HTML, as typed TypeScript.</li>
