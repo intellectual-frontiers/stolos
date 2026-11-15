@@ -128,9 +128,9 @@ flowchart LR
 - **FR-013** `stolos proposal accept <id>`: verifies it again, names conflicts (the model already
   defines the item otherwise, or the host's file cannot be edited) and changes nothing while any
   remains (`--skip <key>` leaves an item out); adds `adopted({...})` to the host's `capabilities`
-  with bare keys (`tsLiteral`) and the import; writes a draft spec `specs/NNN-<host>-<slug>/spec.md`
-  from the reason and the evidence; records the decision in `proposals.ts`; and runs `build`. The
-  person reviews it and runs `stolos apply`.
+  with bare keys (`tsLiteral`) and the import; writes a draft spec
+  `fleets/<fleet>/specs/NNN-<host>-<slug>/spec.md` from the reason and the evidence; records the
+  decision in `proposals.ts`; and runs `build`. The person reviews it and runs `stolos apply`.
 - **FR-014** `stolos proposal reject <id> [--reason]`: records the rejection in `proposals.ts`.
   After the push, the host ends the proposal's holds, so the next update reverts managed items;
   anything else stays flagged.

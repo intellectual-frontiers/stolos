@@ -120,8 +120,18 @@ export const STOLOS_GROUPS: StolosGroup[] = [
     id: "machines",
     label: "Servers",
     intro:
-      "Machines Stolos installs and manages: add one (its model, deploy key, and an armed install), install it over the network from this PC, or turn a WSL distribution into a workstation.",
-    names: ["host add", "host bootstrap", "workstation add", "fleet trust"],
+      "Machines Stolos installs and manages: add one (its model, deploy key, and an armed install), install it over the network from this PC, or turn a WSL distribution into a workstation. A change someone made by hand on a server arrives as a signed proposal: import it, look at it, accept or reject it (spec 095).",
+    names: [
+      "host add",
+      "host bootstrap",
+      "workstation add",
+      "fleet trust",
+      "proposal import",
+      "proposal list",
+      "proposal show",
+      "proposal accept",
+      "proposal reject",
+    ],
     first: "host add",
     diagram: () =>
       `flowchart LR

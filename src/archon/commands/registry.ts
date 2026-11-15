@@ -3885,6 +3885,110 @@ export const COMMANDS: Command[] = [
     },
   },
   {
+    name: "proposal import",
+    summary: "Import proposals mailed by servers: verify each against the host's key in Git",
+    description:
+      `Spec 095: reads a saved message (.eml: its proposal.json and proposal.json.sig attachments, base64 or quoted-printable, gzipped or not), or proposal.json (or .json.gz) with proposal.json.sig beside it, or a folder of them. Each is checked: its format (stolos-proposal/1), that its host is in this fleet, and that it was signed with one of that host's SSH host keys in fleets/<fleet>/hosts/<host>/registration.ts (namespace stolos-proposal). A forged or altered proposal is refused with the reason. Good ones are kept in your state folder (not in Git; Article 4: no JSON in a fleet). No mailbox access and no credential: save the mail, then import it.`,
+    tier: "repo",
+    args: [{
+      name: "path",
+      type: "string",
+      positional: true,
+      required: true,
+      description: "A saved .eml, a proposal.json, or a folder of them.",
+    }],
+    examples: [{
+      cmd: "deno task stolos proposal import ~/Downloads/proposal.eml",
+      text: "Verify and keep a proposal saved from the fleet's mailbox.",
+    }],
+    async run(a) {
+      const { importCommand } = await import("../proposal/pc.ts");
+      return await importCommand(a.path as string);
+    },
+  },
+  {
+    name: "proposal list",
+    summary: "The imported proposals: host, who, items, and the decision",
+    description:
+      `Spec 095: every imported proposal, newest first, with its host, time, proposer, number of items, its reason, and its decision in Git (waiting, accepted, rejected).`,
+    tier: "read",
+    args: [],
+    async run(_a, ctx) {
+      const { listCommand } = await import("../proposal/pc.ts");
+      return await listCommand(ctx.json);
+    },
+  },
+  {
+    name: "proposal show",
+    summary: "One proposal: its reason, items, evidence, and the model diff accepting makes",
+    description:
+      `Spec 095: verifies the proposal again, then shows who proposed it and why, the change sessions and their sudo commands, each item with its action (adopt, revert, local) and its structured edits, and the change to the host's host.ts that accepting makes. Items the model already has are named; so is every conflict (the model sets the item otherwise, with the spec that does), and a note when the host's model changed since the host made it.`,
+    tier: "read",
+    args: [{
+      name: "id",
+      type: "string",
+      positional: true,
+      required: true,
+      description: "The proposal's id (or a unique start of it).",
+    }],
+    async run(a, ctx) {
+      const { showCommand } = await import("../proposal/pc.ts");
+      return await showCommand(a.id as string, ctx.json);
+    },
+  },
+  {
+    name: "proposal accept",
+    summary: "Accept a proposal: edit the host's model, write a draft spec, record it, build",
+    description:
+      `Spec 095: verifies the proposal again, then compares each edit with the model now. A conflict (the model already sets the item otherwise) is named with the spec that owns it and nothing is written; --skip <key> leaves an item out (it stays flagged on the host). Otherwise: adds adopted({...}) (bare keys) to the host's capabilities in host.ts, with its import; writes a draft spec fleets/<fleet>/specs/NNN-<host>-<reason>/spec.md from the proposal's reason and evidence; records the decision in fleets/<fleet>/hosts/<host>/proposals.ts (with the items kept local and their dates); and runs stolos build. Review the change, then stolos apply: the host converges, and its holds end.`,
+    tier: "repo",
+    operation: true,
+    args: [
+      {
+        name: "id",
+        type: "string",
+        positional: true,
+        required: true,
+        description: "The proposal's id (or a unique start of it).",
+      },
+      {
+        name: "skip",
+        type: "string",
+        repeatable: true,
+        description: "Leave this item out (a named conflict); it stays flagged on the host.",
+      },
+    ],
+    examples: [{
+      cmd: "deno task stolos proposal accept alpha-20261114-1905-ab12",
+      text: "Adopt it into the model; then review and stolos apply.",
+    }],
+    async run(a) {
+      const { acceptCommand } = await import("../proposal/pc.ts");
+      return await acceptCommand(a.id as string, a.skip as string | undefined);
+    },
+  },
+  {
+    name: "proposal reject",
+    summary: "Reject a proposal: recorded in Git; managed items revert, the rest stays flagged",
+    description:
+      `Spec 095: records the rejection in fleets/<fleet>/hosts/<host>/proposals.ts. After stolos apply, the host ends the proposal's holds: the next apply reverts the items the plan manages; anything else stays flagged in archon drift.`,
+    tier: "repo",
+    args: [
+      {
+        name: "id",
+        type: "string",
+        positional: true,
+        required: true,
+        description: "The proposal's id (or a unique start of it).",
+      },
+      { name: "reason", short: "r", type: "string", description: "Why, for the record." },
+    ],
+    async run(a) {
+      const { rejectCommand } = await import("../proposal/pc.ts");
+      return await rejectCommand(a.id as string, a.reason as string | undefined);
+    },
+  },
+  {
     name: "reboot",
     summary: "Reboot this host; --netboot boots it from the network once (for a re-install)",
     description:
@@ -4576,6 +4680,11 @@ const PC_COMMANDS = new Set([
   "connector list",
   "connector remove",
   "connector test",
+  "proposal import",
+  "proposal list",
+  "proposal show",
+  "proposal accept",
+  "proposal reject",
   "risks list",
   "risks check",
   "risks review",

@@ -85,6 +85,49 @@
  * `/etc/shadow` or an SSH host key), and anything that looks like a key, is sent as its SHA-256 hash
  * only. A file's content is sent only when it is a small text file with nothing secret in it.
  *
+ * ## On your PC
+ *
+ * Nothing reads the mailbox for you (no IMAP, no new credential): save the message (`.eml`), or its
+ * two attachments, then in the fleet repository:
+ *
+ * ```sh
+ * deno task stolos proposal import ~/Downloads/proposal.eml   # or the .json, or a folder
+ * deno task stolos proposal list
+ * deno task stolos proposal show alpha-20261114-1905-ab12      # the model diff, and any conflict
+ * deno task stolos proposal accept alpha-20261114-1905-ab12
+ * deno task stolos apply -m "096-alpha-nginx-for-the-app: adopt proposal alpha-20261114-1905-ab12"
+ * ```
+ *
+ * `import` checks that the host is in the fleet and that the proposal was signed with that host's
+ * SSH host key, the one already in `fleets/<fleet>/hosts/<host>/registration.ts`; a forged or
+ * altered proposal is refused. Imported proposals are kept in your own state folder, not in Git.
+ *
+ * `accept` compares each edit with the model as it is now. What the model already has is left
+ * out; what the model sets otherwise (a unit a capability masks, a file a capability writes) is a
+ * **conflict**, named with the spec that owns it, and nothing is written: change that capability
+ * by hand, or leave the item out with `--skip <key>`. Otherwise it:
+ *
+ * - adds one `adopted({...})` to the host's `capabilities` in `host.ts` (bare keys), naming the
+ *   proposal and its draft spec;
+ * - writes that draft spec, `fleets/<fleet>/specs/NNN-<host>-<reason>/spec.md`, from the reason and
+ *   the evidence (review and edit it);
+ * - records the decision in `fleets/<fleet>/hosts/<host>/proposals.ts`, with what stays local and
+ *   until when;
+ * - runs `stolos build`.
+ *
+ * You review it and run `stolos apply` (a signed commit); the server converges, and the change made
+ * by hand is now intent. `deno task stolos proposal reject <id> --reason "..."` records a
+ * rejection instead: after the push, the items the plan manages revert at the next apply, and
+ * anything else stays flagged in `archon drift`.
+ *
+ * ```mermaid
+ * flowchart LR
+ *   mail["saved mail"] --> imp["import: verify"] --> show["show: diff, conflicts"]
+ *   show --> acc["accept: host.ts, draft spec, proposals.ts, build"]
+ *   show --> rej["reject: proposals.ts"]
+ *   acc & rej --> apply["stolos apply"] --> host["the server converges"]
+ * ```
+ *
  * @module
  */
 

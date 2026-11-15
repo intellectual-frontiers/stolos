@@ -7,6 +7,7 @@
 import type { Capability } from "../model/types.ts";
 import { platform } from "./platform.ts";
 import { accounts } from "./accounts.ts";
+import { adopted } from "./adopted.ts";
 import { ssh } from "./ssh.ts";
 import { firewall } from "./firewall.ts";
 import { updates } from "./updates.ts";
@@ -35,6 +36,7 @@ import { data } from "./data.ts";
 
 export {
   accounts,
+  adopted,
   backup,
   cli,
   cockpit,

@@ -46,9 +46,26 @@ import { choose, proposeCommand } from "../src/archon/proposal/propose.ts";
 import { loadDrift } from "../src/archon/proposal/server.ts";
 import { redact } from "../src/archon/notify/redact.ts";
 import type { Event } from "../src/archon/notify/notify.ts";
-import type { DriftItem, Observation, Proposal } from "../src/archon/proposal/types.ts";
+import type {
+  DriftItem,
+  FileEvidence,
+  Observation,
+  Proposal,
+} from "../src/archon/proposal/types.ts";
 import { loadHosts } from "../src/archon/model/load.ts";
 import { planFor } from "../src/archon/build.ts";
+import { attachmentsOf } from "../src/archon/proposal/mail.ts";
+import { buildMime } from "../src/archon/notify/mime.ts";
+import { sandbox } from "./sandbox.ts";
+import { registrationSource } from "../src/archon/fleet/registration.ts";
+import {
+  addAdopted,
+  adoptedDef,
+  lineDiff,
+  nextSpecNumber,
+  specId,
+} from "../src/archon/proposal/edit.ts";
+import { loadProposalDecisions } from "../src/archon/proposal/decisions.ts";
 
 // ------------------------------------------------------------------ fixtures
 
@@ -672,4 +689,387 @@ Deno.test("095: archon propose: signs, keeps a copy, records it, mails it; the i
   } finally {
     await Deno.remove(dir, { recursive: true });
   }
+});
+
+// ------------------------------------------------------------------ phase 3: on the PC
+
+const ENGINE = new URL("..", import.meta.url).pathname.replace(/\/$/, "");
+
+function item(key: string, edits: DriftItem["edits"], extra: Partial<DriftItem> = {}): DriftItem {
+  const [kind, ...rest] = key.split(":");
+  return {
+    key,
+    kind: kind as DriftItem["kind"],
+    name: rest.join(":"),
+    change: "installed",
+    managed: false,
+    who: "alice",
+    at: "2026-11-14T15:00:00Z",
+    evidence: [],
+    edits,
+    ...extra,
+  };
+}
+
+/** A signed proposal from alpha, as the mail carries it (an .eml with both attachments). */
+async function mailed(
+  key: string,
+  items: DriftItem[],
+  suffix: string,
+  opts: {
+    reason?: string;
+    choices?: Record<string, { action: "adopt" | "revert" | "local"; until?: string }>;
+    files?: Record<string, FileEvidence>;
+  } = {},
+) {
+  const p = buildProposal({
+    host: "alpha",
+    fleet: "lab",
+    base: "",
+    engine: "0.0.0",
+    at: "2026-11-14T19:05:00Z",
+    by: "alice",
+    reason: opts.reason ?? "nginx for the app",
+    items,
+    choices: opts.choices ?? {},
+    intents: [],
+    observations: [],
+    files: opts.files ?? {},
+    suffix,
+  });
+  const s = await signProposal(p, keySigner(key));
+  const enc = new TextEncoder();
+  const eml = buildMime({
+    from: "root+alpha.lab@example.net",
+    to: "fleet@example.net",
+    subject: `[Archon] alpha: proposal ${s.proposal.id}`,
+    text: proposalSummary(s.proposal),
+    html: "<p>proposal</p>",
+    attachments: [
+      { name: "proposal.json", type: "application/json", data: enc.encode(s.text) },
+      { name: "proposal.json.sig", type: "text/plain", data: enc.encode(s.sig) },
+    ],
+  });
+  return { ...s, eml };
+}
+
+Deno.test("095: a saved .eml's attachments are read back exactly (base64, quoted-printable, gzip)", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const k = await hostKey(dir);
+    const m = await mailed(
+      k.key,
+      [item("package:nginx", [{ op: "packages.add", name: "nginx" }])],
+      "aaaa",
+    );
+    const att = await attachmentsOf(m.eml);
+    assertEquals(att.map((a) => a.name), ["proposal.json", "proposal.json.sig"]);
+    assertEquals(new TextDecoder().decode(att[0].data), m.text);
+    assertEquals(new TextDecoder().decode(att[1].data), m.sig);
+    const gz = new Uint8Array(
+      await new Response(
+        new Blob([new TextEncoder().encode(m.text)]).stream().pipeThrough(
+          new CompressionStream("gzip"),
+        ),
+      ).arrayBuffer(),
+    );
+    const qp = [
+      "Content-Type: multipart/mixed; boundary=b1",
+      "",
+      "--b1",
+      'Content-Type: application/gzip; name="proposal.json.gz"',
+      "Content-Transfer-Encoding: base64",
+      "",
+      btoa(String.fromCharCode(...gz)),
+      "--b1",
+      "Content-Type: text/plain",
+      'Content-Disposition: attachment; filename="note.txt"',
+      "Content-Transfer-Encoding: quoted-printable",
+      "",
+      "caf=C3=A9 =",
+      "ok",
+      "--b1--",
+    ].join("\r\n");
+    const back = await attachmentsOf(qp);
+    assertEquals(back.map((a) => a.name), ["proposal.json", "note.txt"]);
+    assertEquals(new TextDecoder().decode(back[0].data), m.text);
+    assertEquals(new TextDecoder().decode(back[1].data).trim(), "café ok");
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("095: host.ts edits: adopted({...}) with bare keys and its import; the diff; spec numbers", () => {
+  const src = `import type { HostDef } from "@stolos/archon/model/types.ts";
+import { foundation } from "@stolos/archon/capabilities/mod.ts";
+
+export const host: HostDef = {
+  name: "alpha",
+  arch: "amd64",
+  capabilities: foundation(),
+  spec: "004-install",
+};
+`;
+  const d = adoptedDef("alpha-x", "096-alpha-nginx", [
+    { op: "packages.add", name: "nginx" },
+    { op: "units.enable", unit: "nginx.service" },
+    { op: "ports.open", port: 8443, protocol: "tcp" },
+  ]);
+  const r = addAdopted(src, d, "Spec 096-alpha-nginx: adopted from proposal alpha-x.");
+  assert("text" in r);
+  assertStringIncludes(
+    r.text,
+    'import { adopted, foundation } from "@stolos/archon/capabilities/mod.ts";',
+  );
+  assertStringIncludes(r.text, "  capabilities: [\n    ...foundation(),\n    // Spec 096");
+  assertStringIncludes(
+    r.text,
+    '    adopted({\n      proposal: "alpha-x",\n      spec: "096-alpha-nginx",\n      packages: [\n        "nginx",\n      ],',
+  );
+  assertStringIncludes(
+    r.text,
+    '      ports: [\n        {\n          port: 8443,\n          protocol: "tcp",\n        },\n      ],\n    }),\n  ],',
+  );
+  // A second proposal adds to the list.
+  const again = addAdopted(
+    r.text,
+    adoptedDef("alpha-y", "097-alpha-htop", [{ op: "packages.add", name: "htop" }]),
+    "Spec 097.",
+  );
+  assert("text" in again);
+  assertEquals(again.text.match(/adopted\(\{/g)?.length, 2);
+  assertEquals(again.text.match(/import \{ adopted, foundation \}/g)?.length, 1);
+  assertStringIncludes(lineDiff(src, r.text), "+     adopted({");
+  assert("problem" in addAdopted("export const host = {};\n", d, "x"));
+  assertEquals(nextSpecNumber(["004-install", "095-proposals", "notes"]), 96);
+  assertEquals(specId(96, "alpha", "nginx for the app!"), "096-alpha-nginx-for-the-app");
+});
+
+Deno.test("095: on the PC: import a mail, refuse a forgery, show, accept into host.ts, name a conflict, reject", async () => {
+  const sb = await sandbox("archon-proposal-test-");
+  const repo = `${sb.home}/fleet`;
+  try {
+    await Deno.mkdir(`${repo}/fleets`, { recursive: true });
+    await new Deno.Command("cp", {
+      args: ["-r", `${ENGINE}/examples/fleets/lab`, `${repo}/fleets/lab`],
+    }).output();
+    const k = await hostKey(sb.home);
+    await Deno.writeTextFile(
+      `${repo}/fleets/lab/hosts/alpha/registration.ts`,
+      registrationSource({ sshHostKeys: [k.pub], added: "2026-11-13" }),
+    );
+    const env = { ARCHON_REPO: repo, ARCHON_FLEET: "lab" };
+    const stolos = (args: string[]) => sb.run(`${ENGINE}/src/stolos/main.ts`, args, "", env);
+    const enc = (s: string) => new TextEncoder().encode(s);
+    const site = "server {\n  listen 8443;\n}\n";
+    const one = await mailed(
+      k.key,
+      [
+        item("package:nginx", [{ op: "packages.add", name: "nginx" }]),
+        item("unit:nginx-extra.service", [{ op: "units.enable", unit: "nginx-extra.service" }], {
+          change: "enabled",
+        }),
+        item("port:tcp/443", [{ op: "ports.open", port: 443, protocol: "tcp" }], {
+          change: "listening",
+        }),
+        item("file:/etc/nginx/sites-available/app", [], { change: "added" }),
+        item("file:/etc/default/grub", [], { change: "edited" }),
+      ],
+      "0001",
+      {
+        choices: { "file:/etc/default/grub": { action: "local", until: "2026-12-31" } },
+        files: {
+          "/etc/nginx/sites-available/app": await fileEvidence(
+            "/etc/nginx/sites-available/app",
+            enc(site),
+            { mode: "0644", owner: "root", group: "root" },
+          ),
+        },
+      },
+    );
+    await Deno.mkdir(`${sb.home}/mail`);
+    await Deno.writeTextFile(`${sb.home}/mail/one.eml`, one.eml);
+    // A forgery: the same signature over changed text, as .json files beside each other.
+    await Deno.mkdir(`${sb.home}/forged`);
+    await Deno.writeTextFile(
+      `${sb.home}/forged/proposal.json`,
+      one.text.replace("nginx for the app", "something else"),
+    );
+    await Deno.writeTextFile(`${sb.home}/forged/proposal.json.sig`, one.sig);
+
+    let r = await stolos(["proposal", "import", `${sb.home}/forged`]);
+    assert(r.code !== 0, r.out);
+    assertStringIncludes(r.out, "refused: the signature is not alpha's");
+    r = await stolos(["proposal", "import", `${sb.home}/mail`]);
+    assertEquals(r.code, 0, r.out);
+    assertStringIncludes(r.out, `✓ ${one.proposal.id}: from alpha, by alice, 5 item(s)`);
+    r = await stolos(["proposal", "import", `${sb.home}/mail/one.eml`]);
+    assertStringIncludes(r.out, "already imported");
+    r = await stolos(["proposal", "list"]);
+    assertStringIncludes(r.out, `${one.proposal.id}`);
+    assertStringIncludes(r.out, "waiting");
+    r = await stolos(["proposal", "show", one.proposal.id]);
+    assertEquals(r.code, 0, r.out);
+    assertStringIncludes(r.out, "good (alpha's host key)");
+    assertStringIncludes(r.out, "already: port:tcp/443: the model opens tcp/443");
+    assertStringIncludes(r.out, "+     adopted({");
+
+    // Accept: host.ts, a draft spec, the decision, and a build.
+    r = await stolos(["proposal", "accept", one.proposal.id]);
+    assertEquals(r.code, 0, r.out);
+    const hostTs = await Deno.readTextFile(`${repo}/fleets/lab/hosts/alpha/host.ts`);
+    assertStringIncludes(
+      hostTs,
+      'import { adopted, foundation } from "@stolos/archon/capabilities/mod.ts";',
+    );
+    assertStringIncludes(hostTs, `proposal: "${one.proposal.id}",`);
+    assertStringIncludes(hostTs, 'spec: "096-alpha-nginx-for-the-app",');
+    assertStringIncludes(hostTs, 'packages: [\n        "nginx",\n      ],');
+    assertStringIncludes(hostTs, 'enable: [\n        "nginx-extra.service",\n      ],');
+    assertStringIncludes(hostTs, 'path: "/etc/nginx/sites-available/app",');
+    assert(!hostTs.includes("ports:"), "443 is already open in the model");
+    const spec = await Deno.readTextFile(
+      `${repo}/fleets/lab/specs/096-alpha-nginx-for-the-app/spec.md`,
+    );
+    assertStringIncludes(spec, "# 096: nginx for the app (alpha)");
+    assertStringIncludes(spec, '`packages.add("nginx")`');
+    assertStringIncludes(spec, "file:/etc/default/grub, until 2026-12-31");
+    const decisions = await Deno.readTextFile(`${repo}/fleets/lab/hosts/alpha/proposals.ts`);
+    assertStringIncludes(decisions, `"${one.proposal.id}": {\n    decision: "accepted",`);
+    assertStringIncludes(decisions, 'key: "file:/etc/default/grub",\n        until: "2026-12-31",');
+    r = await stolos(["validate"]);
+    assertEquals(r.code, 0, r.out);
+    r = await stolos(["proposal", "accept", one.proposal.id]);
+    assert(r.code !== 0 && r.out.includes("already accepted"), r.out);
+
+    // A conflict: the model masks avahi-daemon (spec 001); it is named, and nothing is written.
+    const two = await mailed(
+      k.key,
+      [
+        item("unit:avahi-daemon.service", [{ op: "units.enable", unit: "avahi-daemon.service" }], {
+          change: "enabled",
+          managed: true,
+        }),
+        item("package:htop", [{ op: "packages.add", name: "htop" }]),
+      ],
+      "0002",
+      { reason: "htop and avahi" },
+    );
+    await Deno.writeTextFile(`${sb.home}/mail/two.eml`, two.eml);
+    r = await stolos(["proposal", "import", `${sb.home}/mail/two.eml`]);
+    assertEquals(r.code, 0, r.out);
+    const before = await Deno.readTextFile(`${repo}/fleets/lab/hosts/alpha/host.ts`);
+    r = await stolos(["proposal", "accept", two.proposal.id]);
+    assert(r.code !== 0, r.out);
+    assertStringIncludes(
+      r.out,
+      "unit:avahi-daemon.service: the model sets avahi-daemon.service masked (spec 001-",
+    );
+    assertStringIncludes(r.out, `--skip unit:avahi-daemon.service`);
+    assertEquals(
+      await Deno.readTextFile(`${repo}/fleets/lab/hosts/alpha/host.ts`),
+      before,
+      "nothing written",
+    );
+    r = await stolos([
+      "proposal",
+      "accept",
+      two.proposal.id,
+      "--skip",
+      "unit:avahi-daemon.service",
+    ]);
+    assertEquals(r.code, 0, r.out);
+    assertStringIncludes(
+      await Deno.readTextFile(`${repo}/fleets/lab/hosts/alpha/host.ts`),
+      '"htop"',
+    );
+    assertStringIncludes(
+      await Deno.readTextFile(`${repo}/fleets/lab/specs/097-alpha-htop-and-avahi/spec.md`),
+      "skipped at acceptance",
+    );
+
+    // Reject: recorded in Git.
+    const three = await mailed(
+      k.key,
+      [item("package:cowsay", [{ op: "packages.add", name: "cowsay" }])],
+      "0003",
+      { reason: "fun" },
+    );
+    await Deno.writeTextFile(`${sb.home}/mail/three.eml`, three.eml);
+    await stolos(["proposal", "import", `${sb.home}/mail/three.eml`]);
+    r = await stolos(["proposal", "reject", three.proposal.id, "--reason", "not on a server"]);
+    assertEquals(r.code, 0, r.out);
+    const d = await loadProposalDecisions("alpha", `${repo}/fleets/lab/hosts/alpha/proposals.ts`);
+    assertEquals(d[three.proposal.id].decision, "rejected");
+    assertEquals(d[three.proposal.id].reason, "not on a server");
+    assertEquals(d[two.proposal.id].skipped, ["unit:avahi-daemon.service"]);
+    r = await stolos(["proposal", "list"]);
+    assertStringIncludes(r.out, "rejected");
+    r = await stolos(["validate"]);
+    assertEquals(r.code, 0, r.out);
+  } finally {
+    await Deno.remove(sb.home, { recursive: true });
+  }
+});
+
+Deno.test("095: on the host, a rejected proposal's items are flagged; accepted local drift is quiet until its day", () => {
+  const state = stateFrom(
+    raw({
+      manual: "cowsay\n",
+      etcLog: "",
+      etcStatus: " M x\n",
+      etcUnowned: ["/etc/x"],
+      managedFiles: [],
+      unowned: [],
+      unitFiles: "",
+      listening: "",
+      passwd: "",
+      snapList: "",
+    }),
+    PLAN,
+  );
+  const base = {
+    plan: PLAN,
+    birth: { ...BIRTH, manualPackages: [] },
+    state,
+    observations: [],
+    now: new Date("2026-11-20T00:00:00Z"),
+  };
+  const proposals = [
+    {
+      id: "p1",
+      at: "t",
+      by: "alice",
+      reason: "r",
+      sent: "queued",
+      items: [{ key: "package:cowsay", action: "adopt" }],
+    },
+    {
+      id: "p2",
+      at: "t",
+      by: "alice",
+      reason: "r",
+      sent: "queued",
+      items: [{ key: "file:/etc/x", action: "local", until: "2026-12-31" }],
+    },
+  ];
+  const d = computeDrift({
+    ...base,
+    proposals,
+    decisions: { p1: { decision: "rejected", by: "bob", at: "t" } },
+  });
+  const by = Object.fromEntries(d.map((i) => [i.key, i]));
+  assert(by["package:cowsay"].rejected && !by["package:cowsay"].proposal);
+  assertEquals(by["file:/etc/x"].localUntil, "2026-12-31");
+  assertEquals(unproposed(d), []);
+  const later = computeDrift({
+    ...base,
+    now: new Date("2027-01-02T00:00:00Z"),
+    proposals: [proposals[1]],
+  });
+  assertEquals(
+    later.find((i) => i.key === "file:/etc/x")?.localUntil,
+    undefined,
+    "past its day: drift again",
+  );
 });
