@@ -346,6 +346,7 @@ export const FAKE_CATALOG: ScfCatalog = {
 /** The console with fakes; `launch` and the evidence directory are exposed for tests. */
 export async function fakeConsole(
   port: number,
+  extra: Partial<StolosDeps> = {},
 ): Promise<{ handler: ReturnType<typeof stolosHandler>; launch: Launch; evidenceDir: string }> {
   const log: ActivityEntry[] = [];
   const launch = new Launch();
@@ -389,6 +390,7 @@ export async function fakeConsole(
     estate: () => Promise.resolve(estate),
     evidenceDir,
     catalog: () => Promise.resolve(FAKE_CATALOG),
+    ...extra,
   });
   return { handler, launch, evidenceDir };
 }

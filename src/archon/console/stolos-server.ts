@@ -14,6 +14,9 @@
  *   there, never in the browser.
  * - Under `/v1/`, a read-only REST API for the estate (spec 094,
  *   `../api/handler.ts`): GET and HEAD only, for the same signed-in session.
+ * - Under `/audit/<id>/` and `/v1/audit/<id>/`, the auditor portal (spec 083,
+ *   `../audit/portal.ts`), behind its own one-time link (`/audit/launch`): an
+ *   audit-scoped session sees that engagement's routes only.
  *
  * @module
  */
@@ -21,6 +24,7 @@
 import type { Command } from "../core/registry-types.ts";
 import type { ScfCatalog } from "../compliance/catalog.ts";
 import type { Estate } from "../estate/graph.ts";
+import type { AuditDeps } from "../audit/portal.ts";
 import { COMMANDS, offeredOn } from "../commands/registry.ts";
 import { cookieOf, IDLE_MS, type Session, type Sessions } from "./auth.ts";
 import { argvFor, NOT_IN_CONSOLE, shellWords } from "./forms.ts";
@@ -157,6 +161,8 @@ export interface StolosDeps {
   evidenceDir: string;
   /** The SCF catalog, when it is on this PC (default: the cached one). */
   catalog?(): Promise<ScfCatalog | undefined>;
+  /** Spec 083: the auditor portal's engagements and links (none: no portal). */
+  audit?: AuditDeps;
 }
 
 /** The fleet's OSCAL documents (spec 071), by file name; none without the SCF catalog. */
@@ -412,7 +418,35 @@ export function stolosHandler(
         });
         return redirect("/", { "set-cookie": stolosCookie(s) });
       }
+      // Spec 083: an audit link becomes a session that sees one engagement's routes only.
+      if (path === "/audit/launch" && deps.audit) {
+        const { auditAccount } = await import("../audit/portal.ts");
+        const id = deps.audit.launch.redeem(url.searchParams.get("t"));
+        if (!id) return htmlResponse(bare("Audit portal", launchPage()), 401);
+        const a = deps.sessions.create(auditAccount(id), "audit link");
+        await deps.activity.add({
+          at: new Date().toISOString(),
+          user: a.user,
+          from: "audit link",
+          kind: "sign-in",
+          detail: `audit portal: ${id}`,
+        });
+        return redirect(`/audit/${id}/`, { "set-cookie": stolosCookie(a) });
+      }
       const s = deps.sessions.get(cookieOf(req.headers.get("cookie"), STOLOS_COOKIE));
+      if (s) {
+        const { auditScope, isAuditPath, serveAudit } = await import("../audit/portal.ts");
+        if (auditScope(s) !== undefined) {
+          if (path === "/signout" && (req.method !== "POST" || sameOrigin(req))) {
+            deps.sessions.end(s.id);
+            return htmlResponse(bare("Signed out", launchPage()), 200, {
+              "set-cookie": stolosCookie(undefined),
+            });
+          }
+          return await serveAudit(req, s, deps.audit);
+        }
+        if (isAuditPath(path)) return await serveAudit(req, s, deps.audit);
+      }
       // Spec 094: the read-only REST API, for this session (and local tools with its cookie).
       if (path === "/v1" || path.startsWith("/v1/")) {
         return s ? await api(req) : (await import("../api/handler.ts")).apiUnauthorized();

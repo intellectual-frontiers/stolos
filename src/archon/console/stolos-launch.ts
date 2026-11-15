@@ -100,9 +100,9 @@ function openBrowser(url: string): void {
   } catch { /* no browser opener: the link is printed */ }
 }
 
-/** `stolos console [--port n] [--no-open] [--no-github]`. */
+/** `stolos console [--port n] [--no-open] [--no-github]`; with `audit`, the auditor portal's link instead (spec 083). */
 export async function stolosConsole(
-  o: { port?: number; open?: boolean; github?: boolean },
+  o: { port?: number; open?: boolean; github?: boolean; audit?: string },
 ): Promise<number> {
   const c = ui.phase("Console");
   const facts = await pcFacts();
@@ -123,6 +123,21 @@ export async function stolosConsole(
   const user = Deno.env.get("USER") ?? Deno.env.get("USERNAME") ?? "you";
   const port = o.port ?? 8091;
   const launch = new Launch();
+  const { auditDeps } = await import("../audit/commands.ts");
+  const audit = await auditDeps();
+  if (o.audit) {
+    const ac = await audit.load(o.audit);
+    const { engagementState } = await import("../audit/engagement.ts");
+    if (!ac || engagementState(ac.engagement) !== "open") {
+      c.fail(
+        !ac
+          ? `no engagement ${o.audit}`
+          : `engagement ${o.audit} is ${engagementState(ac.engagement)}`,
+        "deno task stolos audit list",
+      );
+      return 1;
+    }
+  }
   const handler = stolosHandler({
     port,
     person: { user, name, ...(github ? { github } : {}) },
@@ -163,6 +178,7 @@ export async function stolosConsole(
     cacheDir: join(P.state, "console-cache"),
     estate: estateFor(),
     evidenceDir: join(P.state, "evidence"),
+    audit,
   });
   let server: Deno.HttpServer;
   try {
@@ -174,13 +190,20 @@ export async function stolosConsole(
     );
     return 1;
   }
-  const url = `http://127.0.0.1:${port}/launch?t=${launch.issue()}`;
+  const url = o.audit
+    ? `http://127.0.0.1:${port}/audit/launch?t=${audit.launch.issue(o.audit)}`
+    : `http://127.0.0.1:${port}/launch?t=${launch.issue()}`;
   c.done(
     `${facts.fleet.title} on http://127.0.0.1:${port}${
       github ? ` (GitHub ${github} may push to ${facts.fleet.repo})` : ""
     }`,
   );
   console.log(`\n  Open (works once, for two minutes, on this PC only):\n\n    ${url}\n`);
+  if (o.audit) {
+    console.log(
+      `  The link is for the auditor: it opens engagement ${o.audit} only, read-only, for at most four hours.`,
+    );
+  }
   console.log("  Passphrases and tokens a command asks for are typed here, in this terminal.");
   console.log("  Ctrl+C stops the console.\n");
   if (o.open !== false) openBrowser(url);

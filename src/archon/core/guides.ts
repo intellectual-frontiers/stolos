@@ -123,6 +123,12 @@ export const GUIDES: GuideDef[] = [
     module: "src/archon/trust/mod.ts",
   },
   {
+    name: "audit",
+    title: "The auditor portal",
+    why: "Engagements, populations, reproducible samples, verifiable evidence, an audit trail.",
+    module: "src/archon/audit/mod.ts",
+  },
+  {
     name: "web",
     title: "HTTPS on every server",
     why: "Publishing services, certificates, the Archon Console.",

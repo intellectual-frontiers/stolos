@@ -1251,6 +1251,364 @@ export const COMMANDS: Command[] = [
       return await evidenceVerify(a.bundle as string, a.signers as string | undefined, ctx.json);
     },
   },
+  // Spec 083: the auditor portal.
+  {
+    name: "audit open",
+    summary:
+      "Open an audit engagement: the firm, the period, the controls in scope, access until a day",
+    description:
+      `Spec 083. Writes fleets/<fleet>/audits/<id>/engagement.ts: the audit firm and its people, the period, the frameworks, the controls in scope (--controls "CC6.2=leavers,CC8.1=change": each control's id and the population it is tested on; populations: change, leavers, mfa, devices, repositories, access-reviews, verify; default: each population as its own control), and the last day the auditor's access works (--expires). One commit of that file, signed with your daily key (ssh-keygen asks its passphrase here); nothing is pushed. Terminal only.`,
+    tier: "repo",
+    noMcp: true,
+    args: [
+      {
+        name: "id",
+        type: "string",
+        positional: true,
+        required: true,
+        description: "The engagement's id (lowercase letters, digits, dashes).",
+      },
+      { name: "firm", type: "string", required: true, description: "The audit firm." },
+      {
+        name: "auditor",
+        type: "string",
+        required: true,
+        repeatable: true,
+        description: 'A person at the firm: "Name <email>" (repeat for each).',
+      },
+      {
+        name: "from",
+        type: "string",
+        required: true,
+        description: "The period's first day (YYYY-MM-DD).",
+      },
+      {
+        name: "to",
+        type: "string",
+        required: true,
+        description: "The period's last day (YYYY-MM-DD).",
+      },
+      {
+        name: "expires",
+        type: "string",
+        required: true,
+        description: "The last day the auditor's access works (YYYY-MM-DD, UTC).",
+      },
+      {
+        name: "framework",
+        type: "string",
+        repeatable: true,
+        description: "A framework in scope (soc2, iso27001, ...).",
+      },
+      {
+        name: "controls",
+        type: "string",
+        description: 'The controls in scope: "<id>=<population>,..." (default: every population).',
+      },
+      { name: "title", type: "string", description: "Its name for people." },
+    ],
+    examples: [{
+      cmd:
+        'deno task stolos audit open soc2-2026 --firm "Example CPA" --auditor "Dana Example <dana@example.com>" --from 2026-01-01 --to 2026-06-30 --expires 2026-09-30 --framework soc2 --controls "CC6.2=leavers,CC8.1=change"',
+      text: "A SOC 2 Type 2 engagement for the first half of 2026.",
+    }],
+    async run(a) {
+      const { auditOpenCmd } = await import("../audit/commands.ts");
+      return await auditOpenCmd(a);
+    },
+  },
+  {
+    name: "audit bundle",
+    summary:
+      "Pin the period's evidence bundle to an engagement (its populations are drawn from it)",
+    description:
+      `Spec 083. Checks the bundle (spec 072: signed by a fleet signer, covering the engagement's period), copies it into this PC's evidence directory, and records its file name, SHA-256, and manifest head in engagement.ts, in a signed commit. Terminal only.`,
+    tier: "repo",
+    noMcp: true,
+    args: [
+      {
+        name: "id",
+        type: "string",
+        positional: true,
+        required: true,
+        description: "The engagement.",
+      },
+      {
+        name: "bundle",
+        type: "string",
+        positional: true,
+        required: true,
+        description: "The evidence bundle (a ZIP from stolos evidence export).",
+      },
+    ],
+    async run(a) {
+      const { auditChangeCmd } = await import("../audit/commands.ts");
+      return await auditChangeCmd("bundle", a);
+    },
+  },
+  {
+    name: "audit access",
+    summary: "Move the last day an engagement's auditor access works",
+    description:
+      `Spec 083. Sets access.expires in engagement.ts, in a signed commit. The portal refuses every request after that day. Terminal only.`,
+    tier: "repo",
+    noMcp: true,
+    args: [
+      {
+        name: "id",
+        type: "string",
+        positional: true,
+        required: true,
+        description: "The engagement.",
+      },
+      {
+        name: "expires",
+        type: "string",
+        required: true,
+        description: "The last day (YYYY-MM-DD, UTC).",
+      },
+    ],
+    async run(a) {
+      const { auditChangeCmd } = await import("../audit/commands.ts");
+      return await auditChangeCmd("access", a);
+    },
+  },
+  {
+    name: "audit request",
+    summary: "Record an auditor's request in the engagement's trail (a signed commit)",
+    description:
+      `Spec 083. Adds the next numbered file to fleets/<fleet>/audits/<id>/trail/ with the request's text as the auditor sent it, in a commit signed with your daily key whose trailer names the file's SHA-256. --by is one of the engagement's auditors. Terminal only.`,
+    tier: "repo",
+    noMcp: true,
+    args: [
+      {
+        name: "id",
+        type: "string",
+        positional: true,
+        required: true,
+        description: "The engagement.",
+      },
+      {
+        name: "by",
+        type: "string",
+        required: true,
+        description: "The auditor who asked (their name in engagement.ts).",
+      },
+      {
+        name: "text",
+        type: "string",
+        required: true,
+        description: "The request, as they sent it.",
+      },
+      { name: "control", type: "string", description: "The control in scope it is about." },
+    ],
+    async run(a) {
+      const { auditEntryCmd } = await import("../audit/commands.ts");
+      return await auditEntryCmd("request", a);
+    },
+  },
+  {
+    name: "audit respond",
+    summary: "Record the company's response to a request in the trail (a signed commit)",
+    description:
+      `Spec 083. Adds the next numbered file to the trail with the response, answering request --re, in a commit signed with your daily key. Point to evidence by its SHA-256 or its portal page, never paste a secret. Terminal only.`,
+    tier: "repo",
+    noMcp: true,
+    args: [
+      {
+        name: "id",
+        type: "string",
+        positional: true,
+        required: true,
+        description: "The engagement.",
+      },
+      {
+        name: "re",
+        type: "string",
+        required: true,
+        description: "The request it answers (its number).",
+      },
+      { name: "text", type: "string", required: true, description: "The response." },
+      { name: "control", type: "string", description: "The control in scope it is about." },
+    ],
+    async run(a) {
+      const { auditEntryCmd } = await import("../audit/commands.ts");
+      return await auditEntryCmd("response", a);
+    },
+  },
+  {
+    name: "audit sample",
+    summary: "Draw a sample from a control's population with the auditor's seed, and record it",
+    description:
+      `Spec 083. Computes the control's population from the pinned bundle, draws --size units with the auditor's --seed (simple random sampling without replacement by SHA-256 sort keys: stolos-srswor-sha256/1, which the auditor can redraw with a shell), and records the sample, seed, method, and population hash in the trail, in a signed commit. The sample size is the auditor's choice. Terminal only.`,
+    tier: "repo",
+    noMcp: true,
+    args: [
+      {
+        name: "id",
+        type: "string",
+        positional: true,
+        required: true,
+        description: "The engagement.",
+      },
+      { name: "control", type: "string", required: true, description: "The control in scope." },
+      {
+        name: "seed",
+        type: "string",
+        required: true,
+        description: "The auditor's seed (one line of text).",
+      },
+      {
+        name: "size",
+        type: "string",
+        required: true,
+        description: "How many units (the auditor's choice).",
+      },
+      {
+        name: "note",
+        type: "string",
+        description: "A note for the trail (where the seed came from).",
+      },
+    ],
+    async run(a) {
+      const { auditSampleCmd } = await import("../audit/commands.ts");
+      return await auditSampleCmd(a);
+    },
+  },
+  {
+    name: "audit close",
+    summary: "Close an audit engagement: its portal refuses every request from then on",
+    description:
+      `Spec 083. Records the day it was closed and by whom in engagement.ts, in a signed commit. The trail and the files stay in the repository as the audit's record. Terminal only.`,
+    tier: "repo",
+    noMcp: true,
+    args: [
+      {
+        name: "id",
+        type: "string",
+        positional: true,
+        required: true,
+        description: "The engagement.",
+      },
+    ],
+    async run(a) {
+      const { auditChangeCmd } = await import("../audit/commands.ts");
+      return await auditChangeCmd("close", a);
+    },
+  },
+  {
+    name: "audit list",
+    aliases: ["audit"],
+    summary: "The fleet's audit engagements: firm, period, open, expired, or closed",
+    description:
+      `Spec 083. Each engagement in fleets/<fleet>/audits/ as committed, with where it stands. Read-only; --json for scripts.`,
+    tier: "read",
+    args: [],
+    async run(_a, ctx) {
+      const { auditListCmd } = await import("../audit/commands.ts");
+      return await auditListCmd(ctx.json);
+    },
+  },
+  {
+    name: "audit show",
+    summary:
+      "An engagement checked: its populations, samples, trail, and anything an auditor would find wrong",
+    description:
+      `Spec 083. Reads the engagement as committed, verifies its bundle (verifyBundle) and each commit that records it and its trail, computes each control's population, and redraws each sample from its seed. Exits 1 when anything does not check out. Read-only; --json for scripts.`,
+    tier: "read",
+    args: [
+      {
+        name: "id",
+        type: "string",
+        positional: true,
+        required: true,
+        description: "The engagement.",
+      },
+    ],
+    async run(a, ctx) {
+      const { auditShowCmd } = await import("../audit/commands.ts");
+      return await auditShowCmd(a.id as string, ctx.json);
+    },
+  },
+  {
+    name: "audit portal",
+    summary:
+      "Start the auditor portal and print its one-time link (this engagement only, time-boxed)",
+    description:
+      `Spec 083. Starts the Stolos Console on 127.0.0.1 and prints a link that works once, for two minutes, and opens a read-only session that sees only /audit/<id>/ and /v1/audit/<id>/, for at most four hours, refused once the engagement has expired or been closed. For an auditor elsewhere, send the export package instead (stolos audit export). Terminal only.`,
+    tier: "read",
+    noMcp: true,
+    args: [
+      {
+        name: "id",
+        type: "string",
+        positional: true,
+        required: true,
+        description: "The engagement.",
+      },
+      { name: "port", type: "string", description: "The port (default 8091)." },
+      { name: "no-open", type: "boolean", description: "Print the link; open no browser." },
+    ],
+    async run(a) {
+      const { stolosConsole } = await import("../console/stolos-launch.ts");
+      return await stolosConsole({
+        audit: a.id as string,
+        ...(a.port ? { port: Number(a.port) } : {}),
+        open: !a["no-open"],
+      });
+    },
+  },
+  {
+    name: "audit export",
+    summary: "An engagement as one package an auditor verifies offline",
+    description:
+      `Spec 083. Writes a ZIP with the evidence bundle, engagement.ts and every trail entry each with the raw signed commit that recorded it, the populations, the fleet's signers, the portal as one static page, and a README saying how to check it by hand. Nothing new is signed: everything in it is signed already or recomputes from the bundle. The package is not time-boxed: sending it is your decision. Terminal only.`,
+    tier: "read",
+    noMcp: true,
+    args: [
+      {
+        name: "id",
+        type: "string",
+        positional: true,
+        required: true,
+        description: "The engagement.",
+      },
+      {
+        name: "out",
+        type: "string",
+        description: "The ZIP to write (default: this PC's state directory, audits/).",
+      },
+    ],
+    async run(a) {
+      const { auditExportCmd } = await import("../audit/commands.ts");
+      return await auditExportCmd(a.id as string, a.out as string | undefined);
+    },
+  },
+  {
+    name: "audit verify",
+    summary: "Check an audit export package, offline: bundle, signed trail, populations, samples",
+    description:
+      `Spec 083. Verifies the package's evidence bundle (verifyBundle), that engagement.ts and every trail entry are the exact text a commit signed by an allowed signer vouches for, recomputes every population from the bundle and redraws every sample from its seed. Each problem is named; exits 1 on any. Without --signers it trusts the signers inside the package, and says so.`,
+    tier: "read",
+    args: [
+      {
+        name: "package",
+        type: "string",
+        positional: true,
+        required: true,
+        description: "The package (a ZIP).",
+      },
+      {
+        name: "signers",
+        type: "string",
+        description: "An allowed_signers file you trust (the fleet's, from elsewhere).",
+      },
+    ],
+    async run(a, ctx) {
+      const { auditVerifyCmd } = await import("../audit/commands.ts");
+      return await auditVerifyCmd(a.package as string, a.signers as string | undefined, ctx.json);
+    },
+  },
   {
     name: "trust build",
     summary: "A Trust Center: a status page for customers, built from a verified evidence bundle",
@@ -3860,6 +4218,18 @@ const PC_COMMANDS = new Set([
   "evidence export",
   "evidence verify",
   "trust build",
+  "audit open",
+  "audit bundle",
+  "audit access",
+  "audit request",
+  "audit respond",
+  "audit sample",
+  "audit close",
+  "audit list",
+  "audit show",
+  "audit portal",
+  "audit export",
+  "audit verify",
   "people status",
   "people review",
   "people ack",

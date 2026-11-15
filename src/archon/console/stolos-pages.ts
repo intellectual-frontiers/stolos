@@ -210,6 +210,22 @@ ${
     caption: "A review is a pull request; a fleet signer's signed merge approves it.",
   },
   {
+    id: "audit",
+    label: "Audits",
+    intro:
+      "Audit engagements (spec 083): each control in scope tested on a population drawn from the period's signed evidence bundle, samples drawn from the auditor's seed, and requests and responses as signed commits. Opening, sampling, recording, and the auditor's portal link are done in the terminal (deno task stolos audit open, audit sample, audit portal).",
+    names: ["audit list", "audit show", "audit verify"],
+    first: "audit list",
+    diagram: () =>
+      `flowchart LR
+  bundle["evidence bundle (signed)"] --> pop["populations"]
+  pop -- "the auditor's seed" --> sample["samples"]
+  sample & req["requests, responses"] --> trail["audits/(id)/trail: signed commits"]
+  trail --> portal["the portal, time-boxed"] & pkg["the export package, offline"]`,
+    caption:
+      "The auditor redraws every sample and verifies every item without asking for a screenshot.",
+  },
+  {
     id: "people",
     label: "People",
     intro:

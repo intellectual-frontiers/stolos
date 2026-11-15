@@ -19,6 +19,7 @@
 import { VERSION } from "../version.ts";
 import type { ColumnType, TypedColumn } from "../schema/define.ts";
 import { DEFAULT_LIMIT, MAX_LIMIT, type Resource, RESOURCES } from "./resources.ts";
+import { AUDIT_PATHS, AUDIT_SCHEMAS } from "../audit/openapi.ts";
 
 /** The OSCAL documents (spec 071) the API serves, by name. */
 export const OSCAL_DOCUMENTS: readonly string[] = [
@@ -302,6 +303,9 @@ export function openApiDocument(o: { port?: number; version?: string } = {}): Sc
       },
     },
   };
+  // Spec 083: the auditor portal's JSON routes.
+  Object.assign(paths, AUDIT_PATHS);
+  Object.assign(schemas, AUDIT_SCHEMAS);
   const errorResponse = (d: string) => json(ref("error"), d);
   return {
     openapi: "3.1.0",
@@ -326,6 +330,7 @@ export function openApiDocument(o: { port?: number; version?: string } = {}): Sc
       },
       { name: "views", description: "The estate's views (OCSF and D3FEND names)." },
       { name: "compliance", description: "OSCAL documents and evidence bundles." },
+      { name: "audit", description: "The auditor portal (spec 083): one engagement's routes." },
     ],
     paths,
     components: {
