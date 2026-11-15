@@ -149,6 +149,7 @@ import "./dotfiles/report.ts";
 import "./dotfiles/sync.ts";
 import "./estate/commands.ts";
 import "./estate/graph.ts";
+import "./estate/osquery.ts";
 import "./estate/schema.ts";
 import "./estate/snapshot.ts";
 import "./evidence/bundle.ts";

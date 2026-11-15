@@ -3,18 +3,41 @@
  *
  * - `stolos estate query "<select>"`: one SELECT across every source.
  * - `stolos estate build`: write the canonical `estate.sql` (the schema and
- *   every row) and `estate.auto.sqlite.db` made from it, in this PC's state
- *   directory. The SQL loads into other databases; the SQLite file is what
- *   osquery reads (spec 093).
+ *   every row), `estate.auto.sqlite.db` made from it, and
+ *   `estate.osquery.json`, in this PC's state directory. The SQL loads into
+ *   other databases; the SQLite file is what osquery reads (spec 093).
+ * - `stolos estate osquery [--print]`: write (or print) the osquery
+ *   configuration alone, and say how to load it.
  * - `stolos estate diff "<select>" --since <date|commit>`: the rows a query
  *   gains and loses between then and now, from Git.
  * - `stolos estate schema [--docs]`: the schema's SQL, or its docs.
+ *
+ * ## osquery (spec 093)
+ *
+ * Every estate table and view is also an osquery table, `stolos_<name>`
+ * (`stolos_device`, `stolos_user_account`, `stolos_person`, ...), through
+ * osquery's Automatic Table Construction: `estate.osquery.json` tells osquery
+ * to read `estate.auto.sqlite.db` itself, so no extension runs. The
+ * configuration is generated from the schema's declarations (`osquery.ts`).
+ * The SQLite file is written to a temporary file and renamed over the old one,
+ * so osquery, which reads it without locks, sees the old file or the new one,
+ * never half of either.
+ *
+ * ```mermaid
+ * flowchart LR
+ *   build["stolos estate build"] --> sql["estate.sql (canonical)"]
+ *   sql --> db["estate.auto.sqlite.db (temp file, then rename)"]
+ *   build --> conf["estate.osquery.json (ATC, from ESTATE_SCHEMA)"]
+ *   conf --> osq["osqueryi --config_path estate.osquery.json"]
+ *   db --> osq
+ *   osq --> rows["select * from stolos_device"]
+ * ```
  *
  * @module
  */
 
 import { ui } from "../core/ui.ts";
-import { join } from "../core/path.ts";
+import { dirname, join, resolve } from "../core/path.ts";
 import { P } from "../core/paths.ts";
 import { run } from "../core/exec.ts";
 import {
@@ -108,14 +131,46 @@ export async function estateQueryCommand(sql: string, json = false): Promise<num
   return 0;
 }
 
-/** Where the estate's SQL and SQLite files are on this PC. */
-export function estateFiles(): { sql: string; db: string } {
-  const dir = join(P.userState, "estate");
-  return { sql: join(dir, "estate.sql"), db: join(dir, "estate.auto.sqlite.db") };
+/** The estate's files: the canonical SQL, the SQLite file made from it, and, optionally, osquery's configuration. */
+export interface EstateFiles {
+  /** estate.sql: the schema and every row (canonical). */
+  sql: string;
+  /** estate.auto.sqlite.db: made from estate.sql; osquery reads it. */
+  db: string;
+  /** estate.osquery.json: osquery's ATC configuration for the SQLite file (spec 093). */
+  osquery?: string;
 }
 
-/** Write estate.sql (canonical) and estate.auto.sqlite.db (made from it). */
-export async function writeEstateFiles(e: Estate, files = estateFiles()): Promise<void> {
+/** Where the estate's files are on this PC (absolute: osquery's configuration names the SQLite file). */
+export function estateFiles(): Required<EstateFiles> {
+  const dir = resolve(P.userState, "estate");
+  return {
+    sql: join(dir, "estate.sql"),
+    db: join(dir, "estate.auto.sqlite.db"),
+    osquery: join(dir, "estate.osquery.json"),
+  };
+}
+
+/** Write osquery's configuration (spec 093) for the SQLite file at `db`: to a temporary file, then renamed. */
+export async function writeOsqueryConfig(path: string, db: string): Promise<void> {
+  const { atcJson } = await import("./osquery.ts");
+  await Deno.mkdir(dirname(path), { recursive: true });
+  const tmp = `${path}.tmp`;
+  await Deno.writeTextFile(tmp, atcJson(db));
+  await Deno.rename(tmp, path);
+}
+
+/**
+ * Write estate.sql (canonical), estate.auto.sqlite.db (made from it), and,
+ * when `files.osquery` is set, osquery's configuration. The SQLite file is
+ * built in a temporary file and renamed over the old one (atomic on one file
+ * system), so a reader (osquery opens it without locks) never sees it half
+ * written.
+ */
+export async function writeEstateFiles(
+  e: Estate,
+  files: EstateFiles = estateFiles(),
+): Promise<void> {
   const { DatabaseSync } = await import("node:sqlite");
   const sql = estateSql(e);
   await Deno.mkdir(join(files.sql, ".."), { recursive: true });
@@ -131,6 +186,7 @@ export async function writeEstateFiles(e: Estate, files = estateFiles()): Promis
     db.close();
   }
   await Deno.rename(tmp, files.db);
+  if (files.osquery) await writeOsqueryConfig(files.osquery, files.db);
 }
 
 /** `stolos estate build`. */
@@ -150,7 +206,33 @@ export async function estateBuild(): Promise<number> {
       n("finding")
     } finding(s)`,
   );
-  p.done(`${files.sql} (canonical) and ${files.db}`);
+  p.done(`${files.sql} (canonical), ${files.db}, and ${files.osquery} (for osquery)`);
+  return 0;
+}
+
+/** `stolos estate osquery [--print]`: write (or print) osquery's configuration for the estate. */
+export async function estateOsquery(print = false): Promise<number> {
+  const { atcJson, osqueryHelp } = await import("./osquery.ts");
+  const files = estateFiles();
+  if (print) {
+    console.log(atcJson(files.db).trimEnd());
+    return 0;
+  }
+  const p = ui.phase("osquery");
+  await writeOsqueryConfig(files.osquery, files.db);
+  const built = await Deno.stat(files.db).then(() => true, () => false);
+  if (!built) {
+    p.warn(
+      `${files.db} is not built yet: the tables answer nothing until it is`,
+      "deno task stolos estate build",
+    );
+  }
+  const { ESTATE_SCHEMA } = await import("./schema.ts");
+  p.ok(
+    `${ESTATE_SCHEMA.length} tables: ${ESTATE_SCHEMA.map((d) => `stolos_${d.name}`).join(", ")}`,
+  );
+  p.done(files.osquery);
+  console.log(`\n${osqueryHelp(files.osquery)}`);
   return 0;
 }
 

@@ -1270,12 +1270,38 @@ export const COMMANDS: Command[] = [
     name: "estate build",
     summary: "Write the estate graph as canonical SQL and as the SQLite file osquery reads",
     description:
-      `Spec 090. Builds the estate graph from the observations in Git and writes, in this PC's state directory, estate.sql (the schema and every row: the canonical form, loadable into other databases) and estate.auto.sqlite.db made from it (what osquery reads, spec 093).`,
+      `Spec 090. Builds the estate graph from the observations in Git and writes, in this PC's state directory, estate.sql (the schema and every row: the canonical form, loadable into other databases), estate.auto.sqlite.db made from it (what osquery reads), and estate.osquery.json (spec 093: osquery's configuration that makes each table and view an osquery table, stolos_<name>).`,
     tier: "read",
     args: [],
     async run() {
       const { estateBuild } = await import("../estate/commands.ts");
       return await estateBuild();
+    },
+  },
+  {
+    name: "estate osquery",
+    summary: "The estate graph as osquery tables: write or print osquery's configuration",
+    description:
+      `Spec 093. Writes estate.osquery.json next to estate.auto.sqlite.db: an osquery configuration (Automatic Table Construction, no extension) that makes every estate table and view an osquery table named stolos_<name> (stolos_device, stolos_user_account, stolos_person, ...) with exactly its declared columns, read from that SQLite file. Prints how to load it: osqueryi --config_path <file>, an existing osqueryd configuration, or a fleet manager. Every column is text in osquery. deno task stolos estate build writes it too, with fresh data.`,
+    tier: "read",
+    args: [{
+      name: "print",
+      type: "boolean",
+      description: "Print the configuration (JSON) instead of writing it.",
+    }],
+    examples: [
+      {
+        cmd: "deno task stolos estate osquery",
+        text: "Write the configuration; say how to load it.",
+      },
+      {
+        cmd: "deno task stolos estate osquery --print",
+        text: "The configuration, to merge into another one.",
+      },
+    ],
+    async run(a) {
+      const { estateOsquery } = await import("../estate/commands.ts");
+      return await estateOsquery(!!a.print);
     },
   },
   {
@@ -3182,6 +3208,7 @@ On a server, workstations reach it as ops over SSH (spec 030): ops' authorized_k
 const PC_COMMANDS = new Set([
   "estate query",
   "estate build",
+  "estate osquery",
   "estate diff",
   "estate schema",
   "device add",

@@ -34,8 +34,15 @@ jobs:
         run: deno task docs:lint
       - name: snmpd, for the SNMPv3 test against a real agent (spec 069)
         run: sudo apt-get install -y --no-install-recommends snmpd >/dev/null && sudo systemctl stop snmpd || true
+      - name: osquery 5.24.1, the official .deb at a pinned SHA-256, for the ATC test (spec 093)
+        run: |
+          curl -fsSL -o /tmp/osquery.deb https://pkg.osquery.io/deb/pool/deb/main/o/osquery/osquery_5.24.1-1.linux_amd64.deb
+          echo "c6a37aec1156712cce0fafeb01a3697a2b73a1863a2b39fc3473b07600aea68d  /tmp/osquery.deb" | sha256sum -c -
+          sudo dpkg -i /tmp/osquery.deb >/dev/null && osqueryi --version
       - name: Tests
         run: deno task test
+        env:
+          STOLOS_REQUIRE_OSQUERY: "1"
       - name: The version was raised (push to main)
         if: github.event_name == 'push'
         run: |

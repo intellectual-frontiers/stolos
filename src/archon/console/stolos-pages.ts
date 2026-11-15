@@ -175,6 +175,7 @@ export const STOLOS_GROUPS: StolosGroup[] = [
       "estate query",
       "estate diff",
       "estate build",
+      "estate osquery",
       "estate schema",
       "disconnect",
     ],

@@ -185,6 +185,32 @@
  * `compliance_finding`). First seen and last seen come from Git. `estate build` writes the graph as
  * canonical SQL (`estate.sql`, loadable into other databases) and as `estate.auto.sqlite.db`.
  *
+ * ### The estate graph in osquery
+ *
+ * `estate build` also writes `estate.osquery.json` (spec 093): an osquery configuration that makes
+ * every estate table and view an osquery table named `stolos_<name>`, through osquery's Automatic
+ * Table Construction (osquery reads the SQLite file itself; no extension runs). It is generated from
+ * the schema's declarations, so each table has exactly the declared columns. On your PC, where the
+ * file is, osquery can join the estate with what it sees on the machine:
+ *
+ * ```bash
+ * deno task stolos estate osquery          # write the configuration; print its path and how to load it
+ * osqueryi --config_path <that path> "select uid, hostname, owner_email_addr from stolos_device"
+ * ```
+ *
+ * ```mermaid
+ * flowchart LR
+ *   git["observations in Git"] --> build["deno task stolos estate build"]
+ *   build --> sql["estate.sql (canonical)"] --> db["estate.auto.sqlite.db"]
+ *   build --> conf["estate.osquery.json"]
+ *   conf --> osq["osqueryi or osqueryd"]
+ *   db --> osq --> t["stolos_device, stolos_user_account, ..."]
+ * ```
+ *
+ * For an `osqueryd` that already has a configuration, or a fleet manager, merge the file's
+ * `auto_table_construction` object into the configuration it uses (`estate osquery --print` prints
+ * it). Every column is text in osquery, and each table has osquery's own `path` column.
+ *
  * A system that knows people by login only (GitHub) is linked to work emails in
  * `fleets/<fleet>/estate/links.ts`: `export const links = { "github:alice": "alice@example.org" };`.
  * A machine two sources see under different names is joined there too:
