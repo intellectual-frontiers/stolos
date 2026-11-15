@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>archon/people/records.ts - Stolos v0.111.0 documentation</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="doc-current-file" content="">
+  <link rel="stylesheet" href="..&#x2F;..&#x2F;..&#x2F;styles.css">
+  <link rel="stylesheet" href="..&#x2F;..&#x2F;..&#x2F;page.css">
+  <link id="ddocResetStylesheet" rel="stylesheet" href="..&#x2F;..&#x2F;..&#x2F;reset.css"><link href="../../../comrak.css" rel="stylesheet" /><link href="../../../prism.css" rel="stylesheet" /><script src="../../../prism.js"></script><script src="..&#x2F;..&#x2F;..&#x2F;script.js" defer></script>
+  <script src="..&#x2F;..&#x2F;..&#x2F;darkmode_toggle.js"></script><script src="..&#x2F;..&#x2F;..&#x2F;search_index.js" defer></script>
+    <script src="..&#x2F;..&#x2F;..&#x2F;fuse.js" defer></script>
+    <script src="..&#x2F;..&#x2F;..&#x2F;search.js" defer></script></head>
+<body>
+<div class="ddoc">
+<div><nav id="topnav">
+  <div class="h-full">
+    <div class="flex items-center"><ul class="breadcrumbs">
+  <li>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.111.0</a>
+  </li><span class="text-black dark:text-white"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 16 16"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <path
+    fill-rule="evenodd"
+    clip-rule="evenodd"
+    d="M5.76748 11.8159C5.5378 11.577 5.54525 11.1972 5.78411 10.9675L8.93431 8L5.78411 5.0325C5.54525 4.80282 5.5378 4.423 5.76748 4.18413C5.99715 3.94527 6.37698 3.93782 6.61584 4.1675L10.2158 7.5675C10.3335 7.68062 10.4 7.83679 10.4 8C10.4 8.16321 10.3335 8.31938 10.2158 8.4325L6.61584 11.8325C6.37698 12.0622 5.99715 12.0547 5.76748 11.8159Z"
+    fill="currentColor"
+  />
+</svg>
+</span>archon&#x2F;people&#x2F;records.ts</ul>
+</div>
+
+    <div class="flex items-center gap-2">
+      <button id="theme-toggle" type="button" aria-label="Toggle dark mode" style="display: none;"><svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="14"
+  height="14"
+  viewBox="0 0 24 24"
+  fill="currentColor"
+>
+  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+  <path
+    d="M12 1.992a10 10 0 1 0 9.236 13.838c.341 -.82 -.476 -1.644 -1.298 -1.31a6.5 6.5 0 0 1 -6.864 -10.787l.077 -.08c.551 -.63 .113 -1.653 -.758 -1.653h-.266l-.068 -.006l-.06 -.002z"
+  />
+</svg>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="14"
+  height="14"
+  viewBox="0 0 24 24"
+  fill="currentColor"
+  class="hidden"
+>
+  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+  <path
+    d="M12 19a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"
+  />
+  <path
+    d="M18.313 16.91l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.218 -1.567l.102 .07z"
+  />
+  <path
+    d="M7.007 16.993a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"
+  />
+  <path
+    d="M4 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"
+  />
+  <path
+    d="M21 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"
+  />
+  <path
+    d="M6.213 4.81l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.217 -1.567l.102 .07z"
+  />
+  <path
+    d="M19.107 4.893a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"
+  />
+  <path
+    d="M12 2a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"
+  />
+  <path
+    d="M12 7a5 5 0 1 1 -4.995 5.217l-.005 -.217l.005 -.217a5 5 0 0 1 4.995 -4.783z"
+  />
+</svg>
+</button>
+
+        <input
+          type="text"
+          id="searchbar"
+          style="display: none;"
+          class="py-2 px-2.5 mx-1 rounded text-sm border border-gray-300 bg-transparent dark:bg-gray-800 dark:border-gray-700"
+          />
+    </div>
+  </div>
+</nav>
+<div id="searchResults"></div><div id="content">
+    <main><section>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc"><div class="markdown"><p>Spec 077: what a fleet keeps about its people, beside the estate graph,
+and how Stolos reads it. Every file is in <code>fleets/&lt;fleet&gt;/</code> and is read as
+a TypeScript literal (never run), so a past version from Git reads the
+same way:</p>
+<ul>
+<li><code>people/roles.ts</code>: which connected systems each role needs (<code>roles</code>);</li>
+<li><code>people/keys.ts</code>: each person's own SSH public key, by work email (<code>keys</code>);</li>
+<li><code>people/training.ts</code> and <code>people/screening.ts</code>: the records (<code>training</code>,
+<code>screening</code>), with no more than a control needs;</li>
+<li><code>policies/&lt;policy&gt;.md</code>: each policy, with its front matter;</li>
+<li><code>policies/acks/&lt;policy&gt;.ts</code>: who acknowledged which version (<code>acks</code>);</li>
+<li><code>people/reviews/&lt;quarter&gt;/&lt;manager&gt;.md</code>: the access reviews.</li>
+</ul>
+<p>Connectors may supply training and screening records too (none does yet):
+a record labeled <a href="../../.././archon/people/records.ts/~/PERSON_RECORD.html">PERSON_RECORD</a> is a node of the estate graph, and
+the controls read it beside the files.</p>
+<pre class="highlight"><code class="language-mermaid">flowchart LR
+  roles[&quot;people/roles.ts&quot;] &amp; keys[&quot;people/keys.ts&quot;] &amp; tr[&quot;people/training.ts&quot;] &amp; sc[&quot;people/screening.ts&quot;] --&gt; read[&quot;readPeopleFiles&quot;]
+  pol[&quot;policies/*.md&quot;] --&gt; parse[&quot;parsePolicy: front matter&quot;]
+  conn[&quot;a connector's person_record&quot;] --&gt; estate[(&quot;estate graph&quot;)]
+  read &amp; parse &amp; estate --&gt; controls[&quot;people controls&quot;]
+</code><button class="copyButton" data-copy="flowchart LR
+  roles[&quot;people/roles.ts&quot;] &amp; keys[&quot;people/keys.ts&quot;] &amp; tr[&quot;people/training.ts&quot;] &amp; sc[&quot;people/screening.ts&quot;] --&gt; read[&quot;readPeopleFiles&quot;]
+  pol[&quot;policies/*.md&quot;] --&gt; parse[&quot;parsePolicy: front matter&quot;]
+  conn[&quot;a connector's person_record&quot;] --&gt; estate[(&quot;estate graph&quot;)]
+  read &amp; parse &amp; estate --&gt; controls[&quot;people controls&quot;]
+"><svg
+  class="copy"
+  width="15"
+  height="15"
+  viewBox="0 0 15 15"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <rect x="2" y="2" width="7" height="7" fill="none" />
+  <rect x="6" y="6" width="7" height="7" fill="none" />
+  <path
+    d="M1.55566 2.7C1.55566 2.03726 2.09292 1.5 2.75566 1.5H8.75566C9.41841 1.5 9.95566 2.03726 9.95566 2.7V5.1H12.3557C13.0184 5.1 13.5557 5.63726 13.5557 6.3V12.3C13.5557 12.9627 13.0184 13.5 12.3557 13.5H6.35566C5.69292 13.5 5.15566 12.9627 5.15566 12.3V9.9H2.75566C2.09292 9.9 1.55566 9.36274 1.55566 8.7V2.7ZM6.35566 9.9V12.3H12.3557V6.3H9.95566V8.7C9.95566 9.36274 9.41841 9.9 8.75566 9.9H6.35566ZM8.75566 8.7V2.7H2.75566V8.7H8.75566Z"
+    fill="currentColor"
+  />
+</svg>
+<svg
+  class="check"
+  width="15"
+  height="15"
+  viewBox="0 0 24 24"
+  stroke-width="2"
+  stroke="currentColor"
+  fill="none"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+  <path d="M5 12l5 5l10 -10" />
+</svg>
+</button><code></code></pre>
+</div><section class="section"  id="archon&#x2F;people&#x2F;records_ts_functions"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;people&#x2F;records_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Functions</h2></div><div class="namespaceSection"><div id="namespace_frontmatter" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;frontMatter.html" title="frontMatter">
+			    <span>frontMatter</span><span>(<span><span>text<span>: <span class="td-kw">string</span></span></span></span>)<span>: { meta<span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span>; body<span>: <span class="td-kw">string</span></span>;  }</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The front matter of a Markdown file (<code>---</code> lines, <code>key: value</code>), and its body.</p>
+</div></div></div>
+    </div><div id="namespace_isquarter" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;isQuarter.html" title="isQuarter">
+			    <span>isQuarter</span><span>(<span><span>q<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">boolean</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Whether a string is a quarter (<code>2026-Q4</code>).</p>
+</div></div></div>
+    </div><div id="namespace_parsepolicy" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;parsePolicy.html" title="parsePolicy">
+			    <span>parsePolicy</span><span>(<div class="ml-4"><div><span>file<span>: <span class="td-kw">string</span></span></span>,</div><div><span>text<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Policy</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A policy from its file name and text.</p>
+</div></div></div>
+    </div><div id="namespace_previousquarter" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;previousQuarter.html" title="previousQuarter">
+			    <span>previousQuarter</span><span>(<span><span>q<span>: <span class="td-ref">Quarter</span></span></span></span>)<span>: <span class="td-ref">Quarter</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The quarter before.</p>
+</div></div></div>
+    </div><div id="namespace_quarterdays" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;quarterDays.html" title="quarterDays">
+			    <span>quarterDays</span><span>(<span><span>q<span>: <span class="td-ref">Quarter</span></span></span></span>)<span>: { from<span>: <span class="td-kw">string</span></span>; to<span>: <span class="td-kw">string</span></span>;  }</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A quarter's first and last days (YYYY-MM-DD).</p>
+</div></div></div>
+    </div><div id="namespace_quarterof" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;quarterOf.html" title="quarterOf">
+			    <span>quarterOf</span><span>(<span><span>d<span>: <span class="td-ref">Date</span></span></span></span>)<span>: <span class="td-ref">Quarter</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The quarter a date falls in.</p>
+</div></div></div>
+    </div><div id="namespace_quartersin" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;quartersIn.html" title="quartersIn">
+			    <span>quartersIn</span><span>(<div class="ml-4"><div><span>from<span>: <span class="td-kw">string</span></span></span>,</div><div><span>to<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Quarter</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The quarters that overlap a period (dates, both included), oldest first.</p>
+</div></div></div>
+    </div><div id="namespace_readpeoplefiles" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;readPeopleFiles.html" title="readPeopleFiles">
+			    <span>readPeopleFiles</span><span>(<div class="ml-4"><div><span>r<span>: <span class="td-ref">FileReader</span></span></span>,</div><div><span>base<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">PeopleFiles</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Read the fleet's people files through a reader (<code>base</code> is <code>fleets/&lt;fleet&gt;</code>).</p>
+</div></div></div>
+    </div></div>
+</section>
+<section class="section"  id="archon&#x2F;people&#x2F;records_ts_interfaces"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;people&#x2F;records_ts_interfaces" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Interfaces</h2></div><div class="namespaceSection"><div id="namespace_filereader" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;FileReader.html" title="FileReader">
+			    <span>FileReader</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Reads a repository's files (a working tree or a commit): see <code>gitReader</code> in the estate.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;FileReader.html#method_list_0">
+                  <span>list</span><span>(<span><span>dir<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">string</span>[]&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A folder's names (empty when it does not exist).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;FileReader.html#method_read_0">
+                  <span>read</span><span>(<span><span>path<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A file's text, or undefined.</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_peoplefiles" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;PeopleFiles.html" title="PeopleFiles">
+			    <span>PeopleFiles</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The people files of a fleet, as read.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;PeopleFiles.html#property_acks">
+                  <span>acks</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-ref">PolicyAck</span>[]&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The acknowledgements each policy's acks file lists.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;PeopleFiles.html#property_inuse">
+                  <span>inUse</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Whether the fleet keeps people files at all (a people/ or policies/ folder).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;PeopleFiles.html#property_keys">
+                  <span>keys</span><span>: <span class="td-ref">PeopleKeys</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>people/keys.ts.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;PeopleFiles.html#property_policies">
+                  <span>policies</span><span>: <span class="td-ref">Policy</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The policies, by file name.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;PeopleFiles.html#property_problems">
+                  <span>problems</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What could not be read, and why.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;PeopleFiles.html#property_roles">
+                  <span>roles</span><span>: <span class="td-ref">RoleMap</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>people/roles.ts (undefined: none).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;PeopleFiles.html#property_screening">
+                  <span>screening</span><span>: <span class="td-ref">ScreeningRecord</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>people/screening.ts (undefined: no file).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;PeopleFiles.html#property_training">
+                  <span>training</span><span>: <span class="td-ref">TrainingRecord</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>people/training.ts (undefined: no file).</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_policy" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;Policy.html" title="Policy">
+			    <span>Policy</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A policy: its id (file name) and front matter.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;Policy.html#property_id">
+                  <span>id</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its id: the file name without <code>.md</code>.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;Policy.html#property_owner">
+                  <span>owner</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Who owns it (a work email).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;Policy.html#property_problems">
+                  <span>problems</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What is wrong with its front matter (an empty list when nothing is).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;Policy.html#property_review">
+                  <span>review</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When it must next be reviewed (YYYY-MM-DD); overdue after it.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;Policy.html#property_title">
+                  <span>title</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its title.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;Policy.html#property_version">
+                  <span>version</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its version (an acknowledgement names it).</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_policyack" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;PolicyAck.html" title="PolicyAck">
+			    <span>PolicyAck</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One acknowledgement of a policy version, as listed in <code>policies/acks/&lt;policy&gt;.ts</code>.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;PolicyAck.html#property_date">
+                  <span>date</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When (YYYY-MM-DD).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;PolicyAck.html#property_email">
+                  <span>email</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The person's work email.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;PolicyAck.html#property_version">
+                  <span>version</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The policy version acknowledged.</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_screeningrecord" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;ScreeningRecord.html" title="ScreeningRecord">
+			    <span>ScreeningRecord</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One screening record: who, which check, when, and its outcome (never the check's details).</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;ScreeningRecord.html#property_check">
+                  <span>check</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The check (for example &quot;background&quot;, &quot;right to work&quot;).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;ScreeningRecord.html#property_date">
+                  <span>date</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When it was completed (YYYY-MM-DD).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;ScreeningRecord.html#property_email">
+                  <span>email</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The person's work email.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;ScreeningRecord.html#property_result">
+                  <span>result</span><span>: <span><span class="td-str">"clear"</span><span class="td-op"> | </span><span class="td-str">"not clear"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>clear, or not clear (a decision the record does not explain).</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_trainingrecord" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;TrainingRecord.html" title="TrainingRecord">
+			    <span>TrainingRecord</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One training record: who, which course, when, and how it went.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;TrainingRecord.html#property_course">
+                  <span>course</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The course (for example &quot;security awareness&quot;).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;TrainingRecord.html#property_date">
+                  <span>date</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When it was completed (YYYY-MM-DD).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;TrainingRecord.html#property_email">
+                  <span>email</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The person's work email.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;TrainingRecord.html#property_result">
+                  <span>result</span><span>: <span><span class="td-str">"passed"</span><span class="td-op"> | </span><span class="td-str">"failed"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>passed or failed.</p>
+</div></div></li></ul></div>
+    </div></div>
+</section>
+<section class="section"  id="archon&#x2F;people&#x2F;records_ts_type-aliases"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;people&#x2F;records_ts_type-aliases" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_peoplekeys" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;PeopleKeys.html" title="PeopleKeys">
+			    <span>PeopleKeys</span><span> = <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Each person's own SSH public key (<code>ssh-ed25519 AAAA...</code>), by work email.</p>
+</div></div></div>
+    </div><div id="namespace_quarter" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;Quarter.html" title="Quarter">
+			    <span>Quarter</span><span> = <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A quarter, as <code>2026-Q4</code>.</p>
+</div></div></div>
+    </div><div id="namespace_rolemap" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;RoleMap.html" title="RoleMap">
+			    <span>RoleMap</span><span> = <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>[]&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Which connectors each role needs: the key is a <code>role_type</code> from the HR
+system (employee, contractor, ...), or <code>&quot;*&quot;</code> for everyone; the value lists
+connector ids (google, github, onepassword, ...).</p>
+</div></div></div>
+    </div></div>
+</section>
+<section class="section"  id="archon&#x2F;people&#x2F;records_ts_variables"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;people&#x2F;records_ts_variables" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Variables</h2></div><div class="namespaceSection"><div id="namespace_person_record" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;PERSON_RECORD.html" title="PERSON_RECORD">
+			    <span>PERSON_RECORD</span><span>: <span class="td-ref">LabelView</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A connector's training and screening records (none supplies them yet: the
+hook a learning system's or a screening provider's connector fills). Each
+record is a node of the estate graph with this label; <code>kind</code> says which.</p>
+</div></div></div>
+    </div><div id="namespace_policy_id" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;people&#x2F;records.ts&#x2F;~&#x2F;POLICY_ID.html" title="POLICY_ID">
+			    <span>POLICY_ID</span><span>: <span class="td-ref">RegExp</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A policy id is its file name: lower case letters, digits, and hyphens.</p>
+</div></div></div>
+    </div></div>
+</section>
+</div>
+</div>
+</section>
+</main><div class="toc">
+    <div><div class="usageContent">
+    <h3>Usage</h3><div class="markdown"><pre class="highlight"><code class="language-typescript">import * as mod from &quot;archon/people/records.ts&quot;;
+</code><button class="copyButton" data-copy="import * as mod from &quot;archon/people/records.ts&quot;;
+"><svg
+  class="copy"
+  width="15"
+  height="15"
+  viewBox="0 0 15 15"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <rect x="2" y="2" width="7" height="7" fill="none" />
+  <rect x="6" y="6" width="7" height="7" fill="none" />
+  <path
+    d="M1.55566 2.7C1.55566 2.03726 2.09292 1.5 2.75566 1.5H8.75566C9.41841 1.5 9.95566 2.03726 9.95566 2.7V5.1H12.3557C13.0184 5.1 13.5557 5.63726 13.5557 6.3V12.3C13.5557 12.9627 13.0184 13.5 12.3557 13.5H6.35566C5.69292 13.5 5.15566 12.9627 5.15566 12.3V9.9H2.75566C2.09292 9.9 1.55566 9.36274 1.55566 8.7V2.7ZM6.35566 9.9V12.3H12.3557V6.3H9.95566V8.7C9.95566 9.36274 9.41841 9.9 8.75566 9.9H6.35566ZM8.75566 8.7V2.7H2.75566V8.7H8.75566Z"
+    fill="currentColor"
+  />
+</svg>
+<svg
+  class="check"
+  width="15"
+  height="15"
+  viewBox="0 0 24 24"
+  stroke-width="2"
+  stroke="currentColor"
+  fill="none"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+  <path d="M5 12l5 5l10 -10" />
+</svg>
+</button><code></code></pre>
+</div></div><nav class="topSymbols">
+          <h3>Symbols</h3>
+          <ul><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;ensureHome.html" title="ensureHome"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
+                    ensureHome
+                  </span>
+                </a>
+              </li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;localHostName.html" title="localHostName"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
+                    localHostName
+                  </span>
+                </a>
+              </li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;Surface.html" title="Surface"><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
+<span class="hover:bg-TypeAlias/15 hover:bg-TypeAliasDark/15">
+                    Surface
+                  </span>
+                </a>
+              </li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;commandName.html" title="commandName"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
+                    commandName
+                  </span>
+                </a>
+              </li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;main.html" title="main"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
+                    main
+                  </span>
+                </a>
+              </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
+              <span class="leading-none">view all 2390 symbols</span><svg
+  width="16"
+  height="16"
+  viewBox="0 0 16 16"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <path
+    fill-rule="evenodd"
+    clip-rule="evenodd"
+    d="M5.76748 11.8159C5.5378 11.577 5.54525 11.1972 5.78411 10.9675L8.93431 8L5.78411 5.0325C5.54525 4.80282 5.5378 4.423 5.76748 4.18413C5.99715 3.94527 6.37698 3.93782 6.61584 4.1675L10.2158 7.5675C10.3335 7.68062 10.4 7.83679 10.4 8C10.4 8.16321 10.3335 8.31938 10.2158 8.4325L6.61584 11.8325C6.37698 12.0622 5.99715 12.0547 5.76748 11.8159Z"
+    fill="currentColor"
+  />
+</svg>
+</a></nav><nav class="documentNavigation">
+          <h3>Document Navigation</h3><ul><li><a href="#archon/people/records_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_frontmatter" title="frontMatter">frontMatter</a></li><li><a href="#namespace_isquarter" title="isQuarter">isQuarter</a></li><li><a href="#namespace_parsepolicy" title="parsePolicy">parsePolicy</a></li><li><a href="#namespace_previousquarter" title="previousQuarter">previousQuarter</a></li><li><a href="#namespace_quarterdays" title="quarterDays">quarterDays</a></li><li><a href="#namespace_quarterof" title="quarterOf">quarterOf</a></li><li><a href="#namespace_quartersin" title="quartersIn">quartersIn</a></li><li><a href="#namespace_readpeoplefiles" title="readPeopleFiles">readPeopleFiles</a></li></ul></li><li><a href="#archon/people/records_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_filereader" title="FileReader">FileReader</a></li><li><a href="#namespace_peoplefiles" title="PeopleFiles">PeopleFiles</a></li><li><a href="#namespace_policy" title="Policy">Policy</a></li><li><a href="#namespace_policyack" title="PolicyAck">PolicyAck</a></li><li><a href="#namespace_screeningrecord" title="ScreeningRecord">ScreeningRecord</a></li><li><a href="#namespace_trainingrecord" title="TrainingRecord">TrainingRecord</a></li></ul></li><li><a href="#archon/people/records_ts_type-aliases" title="Type Aliases">Type Aliases</a></li><li><ul><li><a href="#namespace_peoplekeys" title="PeopleKeys">PeopleKeys</a></li><li><a href="#namespace_quarter" title="Quarter">Quarter</a></li><li><a href="#namespace_rolemap" title="RoleMap">RoleMap</a></li></ul></li><li><a href="#archon/people/records_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_person_record" title="PERSON_RECORD">PERSON_RECORD</a></li><li><a href="#namespace_policy_id" title="POLICY_ID">POLICY_ID</a></li></ul></li></ul></nav></div>
+  </div></div>
+</div>
+</div>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  (() => {
+    const blocks = document.querySelectorAll("pre > code.language-mermaid");
+    if (!blocks.length || !window.mermaid) return;
+    for (const code of blocks) {
+      const div = document.createElement("div");
+      div.className = "mermaid";
+      div.textContent = code.textContent;
+      code.parentElement.replaceWith(div);
+    }
+    const dark = document.documentElement.classList.contains("dark") ||
+      matchMedia("(prefers-color-scheme: dark)").matches;
+    mermaid.initialize({ startOnLoad: false, theme: dark ? "dark" : "default", securityLevel: "strict" });
+    mermaid.run({ querySelector: ".mermaid" });
+  })();
+</script>
+</body>
+</html>

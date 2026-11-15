@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>FleetDef - archon/model/types.ts - Stolos v0.110.0 documentation</title>
+  <title>FleetDef - archon/model/types.ts - Stolos v0.111.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;model&#x2F;types.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.110.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.111.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -1089,7 +1089,7 @@ schedule. See ExportJobDef.</p>
   </defs>
 </svg>
 </a>
-<a class="font-bold font-lg link" href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;FleetDef.compliance.html">compliance</a><span class="font-medium text-stone-500 dark:text-stone-200"><span>: { cadence<span class="td-op">?</span><span>: <a href="../../../.././archon/compliance/freshness.ts/~/CadenceOverrides.html" class="link td-ref">CadenceOverrides</a></span>;  }</span></span>
+<a class="font-bold font-lg link" href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;FleetDef.compliance.html">compliance</a><span class="font-medium text-stone-500 dark:text-stone-200"><span>: { cadence<span class="td-op">?</span><span>: <a href="../../../.././archon/compliance/freshness.ts/~/CadenceOverrides.html" class="link td-ref">CadenceOverrides</a></span>; gate<span class="td-op">?</span><span>: <a href="../../../.././archon/compliance/impact.ts/~/ComplianceGate.html" class="link td-ref">ComplianceGate</a></span>;  }</span></span>
       </code>
     </div><a
   class="sourceButton"
@@ -1120,6 +1120,12 @@ schedule. See ExportJobDef.</p>
 observed and how late it may be before it is stale (a failing check,
 SCF MON-02). Default: managed servers every 15 minutes, everything else
 daily, each stale after twice its cadence, never more than 7 days.</p>
+<p><code>gate</code> (spec 074): whether a change that weakens a control may be
+committed (<code>stolos apply</code>) or merged (the pull request's check):
+<code>{ block: &quot;weakens&quot; }</code> refuses one unless <code>allow</code> names it, an accepted
+risk (<code>impact/&lt;key&gt;</code> in controls/accepted.ts) covers it, or a commit
+signed by a fleet signer approves it (<code>Compliance-Approved: &lt;key&gt;</code>).
+Default: never block, only show.</p>
 </div></div></div>
 <div class="anchorable docEntry" id="property_observability">
 

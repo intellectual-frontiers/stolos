@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/fleet/apply.ts - Stolos v0.110.0 documentation</title>
+  <title>archon/fleet/apply.ts - Stolos v0.111.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.110.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.111.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -106,14 +106,16 @@ its fix; running it again with nothing new says so and does nothing.</p>
   c[&quot;checks&lt;br/&gt;(fleet, branch, keys)&quot;] --&gt; u[&quot;catch up&lt;br/&gt;(fast-forward)&quot;]
   u --&gt; b[&quot;build&lt;br/&gt;(validate, render)&quot;]
   b --&gt; s[&quot;show what changes&quot;]
-  s --&gt; k[&quot;one signed commit&lt;br/&gt;(your passphrase)&quot;]
+  s --&gt; ci[&quot;compliance impact&lt;br/&gt;(the gate, spec 074)&quot;]
+  ci --&gt; k[&quot;one signed commit&lt;br/&gt;(your passphrase)&quot;]
   k --&gt; v[&quot;verify: a key&lt;br/&gt;servers trust&quot;]
   v --&gt; p[&quot;push: every machine&lt;br/&gt;within 15 minutes&quot;]
 </code><button class="copyButton" data-copy="flowchart LR
   c[&quot;checks&lt;br/&gt;(fleet, branch, keys)&quot;] --&gt; u[&quot;catch up&lt;br/&gt;(fast-forward)&quot;]
   u --&gt; b[&quot;build&lt;br/&gt;(validate, render)&quot;]
   b --&gt; s[&quot;show what changes&quot;]
-  s --&gt; k[&quot;one signed commit&lt;br/&gt;(your passphrase)&quot;]
+  s --&gt; ci[&quot;compliance impact&lt;br/&gt;(the gate, spec 074)&quot;]
+  ci --&gt; k[&quot;one signed commit&lt;br/&gt;(your passphrase)&quot;]
   k --&gt; v[&quot;verify: a key&lt;br/&gt;servers trust&quot;]
   v --&gt; p[&quot;push: every machine&lt;br/&gt;within 15 minutes&quot;]
 "><svg
@@ -218,6 +220,11 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_fleetapply
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;apply.ts&#x2F;~&#x2F;FleetApplyOptions.html" title="FleetApplyOptions">
 			    <span>FleetApplyOptions</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What <code>stolos apply</code> is told.</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;apply.ts&#x2F;~&#x2F;FleetApplyOptions.html#property_approve">
+                  <span>approve</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Spec 074: approve weakenings the compliance gate blocks (&quot;updates/beta&quot;,
+&quot;NET-02&quot;, &quot;all&quot;): written into the signed commit as the trailer
+<code>Compliance-Approved: &lt;keys&gt;</code>.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;fleet&#x2F;apply.ts&#x2F;~&#x2F;FleetApplyOptions.html#property_check">
                   <span>check</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Show the checks, the build, and what would be committed; change nothing.</p>
 </div></div></li><li>
@@ -297,7 +304,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_fleetapply
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 2347 symbols</span><svg
+              <span class="leading-none">view all 2390 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

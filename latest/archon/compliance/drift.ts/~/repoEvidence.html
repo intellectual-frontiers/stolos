@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>repoEvidence - archon/compliance/drift.ts - Stolos v0.110.0 documentation</title>
+  <title>repoEvidence - archon/compliance/drift.ts - Stolos v0.111.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;compliance&#x2F;drift.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.110.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.111.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -165,7 +165,7 @@
   </defs>
 </svg>
 </a>
-<span class="font-bold">repoEvidence</span><span class="font-medium">(<div class="ml-4"><div><span>r<span>: <a href="../../../.././archon/estate/snapshot.ts/~/RepoReader.html" class="link td-ref">RepoReader</a></span></span>,</div><div><span>fleet<span>: <span class="td-kw">string</span></span></span>,</div><div><span>o<span>: { now<span>: <span class="td-kw">number</span></span>; connectors<span>: <a href="../../../.././archon/connect/connector.ts/~/Connector.html" class="link td-ref">Connector</a>[]</span>; cadences<span class="td-op">?</span><span>: <a href="../../../.././archon/compliance/freshness.ts/~/Cadences.html" class="link td-ref">Cadences</a></span>; catalog<span class="td-op">?</span><span>: <a href="../../../.././archon/compliance/catalog.ts/~/ScfCatalog.html" class="link td-ref">ScfCatalog</a></span>;  }</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<a href="../../../.././archon/compliance/freshness.ts/~/FreshView.html" class="link td-ref">FreshView</a>&gt;</span> </span>
+<span class="font-bold">repoEvidence</span><span class="font-medium">(<div class="ml-4"><div><span>r<span>: <a href="../../../.././archon/estate/snapshot.ts/~/RepoReader.html" class="link td-ref">RepoReader</a></span></span>,</div><div><span>fleet<span>: <span class="td-kw">string</span></span></span>,</div><div><span>o<span>: { now<span>: <span class="td-kw">number</span></span>; connectors<span>: <a href="../../../.././archon/connect/connector.ts/~/Connector.html" class="link td-ref">Connector</a>[]</span>; cadences<span class="td-op">?</span><span>: <a href="../../../.././archon/compliance/freshness.ts/~/Cadences.html" class="link td-ref">Cadences</a></span>; catalog<span class="td-op">?</span><span>: <a href="../../../.././archon/compliance/catalog.ts/~/ScfCatalog.html" class="link td-ref">ScfCatalog</a></span>; packs<span class="td-op">?</span><span>: (<span><span>i<span>: { adopted<span>: <a href="../../../.././archon/console/pc.ts/~/PcFacts.html" class="link td-ref">PcFacts</a>[<span class="td-str">"adopted"</span>]</span>; devices<span>: <a href="../../../.././archon/console/pc.ts/~/PcFacts.html" class="link td-ref">PcFacts</a>[<span class="td-str">"devices"</span>]</span>; connectors<span>: <span class="td-ref">Array</span>&lt;{ connector<span>: <span class="td-kw">string</span></span>; observed<span>: <a href="../../../.././archon/connect/connector.ts/~/Observation.html" class="link td-ref">Observation</a></span>;  }&gt;</span>;  }</span></span></span>) =&gt; <span class="td-ref">Promise</span>&lt;<span class="td-ref">NonNullable</span>&lt;<a href="../../../.././archon/console/pc.ts/~/PcFacts.html" class="link td-ref">PcFacts</a>[<span class="td-str">"controls"</span>]&gt;&gt;</span>;  }</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<a href="../../../.././archon/compliance/freshness.ts/~/FreshView.html" class="link td-ref">FreshView</a>&gt;</span> </span>
       </code><div class="space-y-7" id=""><div class="markdown"><p>The evidence a fleet repository holds, through a reader (now, or at a commit), as of <code>now</code>.</p>
 </div><section class="section"  id="parameters"><div>
       <h2 class="anchorable mb-1"><a href="#parameters" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
@@ -321,7 +321,7 @@ Parameters</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   </defs>
 </svg>
 </a>
-<span class="font-bold font-lg">o</span><span class="font-medium text-stone-500 dark:text-stone-200"><span>: { now<span>: <span class="td-kw">number</span></span>; connectors<span>: <a href="../../../.././archon/connect/connector.ts/~/Connector.html" class="link td-ref">Connector</a>[]</span>; cadences<span class="td-op">?</span><span>: <a href="../../../.././archon/compliance/freshness.ts/~/Cadences.html" class="link td-ref">Cadences</a></span>; catalog<span class="td-op">?</span><span>: <a href="../../../.././archon/compliance/catalog.ts/~/ScfCatalog.html" class="link td-ref">ScfCatalog</a></span>;  }</span></span>
+<span class="font-bold font-lg">o</span><span class="font-medium text-stone-500 dark:text-stone-200"><span>: { now<span>: <span class="td-kw">number</span></span>; connectors<span>: <a href="../../../.././archon/connect/connector.ts/~/Connector.html" class="link td-ref">Connector</a>[]</span>; cadences<span class="td-op">?</span><span>: <a href="../../../.././archon/compliance/freshness.ts/~/Cadences.html" class="link td-ref">Cadences</a></span>; catalog<span class="td-op">?</span><span>: <a href="../../../.././archon/compliance/catalog.ts/~/ScfCatalog.html" class="link td-ref">ScfCatalog</a></span>; packs<span class="td-op">?</span><span>: (<span><span>i<span>: { adopted<span>: <a href="../../../.././archon/console/pc.ts/~/PcFacts.html" class="link td-ref">PcFacts</a>[<span class="td-str">"adopted"</span>]</span>; devices<span>: <a href="../../../.././archon/console/pc.ts/~/PcFacts.html" class="link td-ref">PcFacts</a>[<span class="td-str">"devices"</span>]</span>; connectors<span>: <span class="td-ref">Array</span>&lt;{ connector<span>: <span class="td-kw">string</span></span>; observed<span>: <a href="../../../.././archon/connect/connector.ts/~/Observation.html" class="link td-ref">Observation</a></span>;  }&gt;</span>;  }</span></span></span>) =&gt; <span class="td-ref">Promise</span>&lt;<span class="td-ref">NonNullable</span>&lt;<a href="../../../.././archon/console/pc.ts/~/PcFacts.html" class="link td-ref">PcFacts</a>[<span class="td-str">"controls"</span>]&gt;&gt;</span>;  }</span></span>
       </code>
     </div><a
   class="sourceButton"
