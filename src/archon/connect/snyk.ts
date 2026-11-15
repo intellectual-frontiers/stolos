@@ -113,21 +113,21 @@ export const snyk: Connector = defineConnector({
         // Project names, for people: without them, the project's id stands for it.
         const names = await ctx.orGap("projects", new Map<string, string>(), async () => {
           const m = new Map<string, string>();
-          for await (
-            const p of ctx.cursorPages<Page<{ id: string; attributes?: { name?: string } }>, {
+          for await (const p of ctx.cursorPages<
+            Page<{ id: string; attributes?: { name?: string } }>,
+            {
               id: string;
               attributes?: { name?: string };
-            }>(`${api}/orgs/${ctx.cred.org}/projects?${v}`, (b) => b.data, nextOf(api))
-          ) m.set(p.id, p.attributes?.name ?? p.id);
+            }
+          >(`${api}/orgs/${ctx.cred.org}/projects?${v}`, (b) => b.data, nextOf(api)))
+            m.set(p.id, p.attributes?.name ?? p.id);
           return m;
         });
-        for await (
-          const i of ctx.cursorPages<Page<Issue>, Issue>(
-            `${api}/orgs/${ctx.cred.org}/issues?${v}&status=open`,
-            (b) => b.data,
-            nextOf(api),
-          )
-        ) {
+        for await (const i of ctx.cursorPages<Page<Issue>, Issue>(
+          `${api}/orgs/${ctx.cred.org}/issues?${v}&status=open`,
+          (b) => b.data,
+          nextOf(api),
+        )) {
           const pid = i.relationships?.scan_item?.data?.id;
           yield { ...i, ...(pid ? { project: names.get(pid) ?? pid } : {}) };
         }
@@ -135,10 +135,11 @@ export const snyk: Connector = defineConnector({
       map: (i: Issue) => {
         const a = i.attributes;
         const cve = firstCve((a.problems ?? []).map((p) => p.id));
-        const dep = a.coordinates?.flatMap((c) => c.representations ?? [])
+        const dep = a.coordinates
+          ?.flatMap((c) => c.representations ?? [])
           .find((r) => r.dependency?.package_name)?.dependency;
-        const fixable = a.coordinates?.some((c) =>
-          c.is_upgradeable || c.is_patchable || c.is_fixable_snyk
+        const fixable = a.coordinates?.some(
+          (c) => c.is_upgradeable || c.is_patchable || c.is_fixable_snyk,
         );
         return {
           native_id: i.id,
@@ -151,10 +152,10 @@ export const snyk: Connector = defineConnector({
             ...(i.project ? { asset: i.project } : {}),
             ...(dep?.package_name
               ? {
-                package: `${dep.package_name}${
-                  dep.package_version ? `@${dep.package_version}` : ""
-                }`,
-              }
+                  package: `${dep.package_name}${
+                    dep.package_version ? `@${dep.package_version}` : ""
+                  }`,
+                }
               : {}),
             ...(a.created_at ? { first_seen: a.created_at } : {}),
             ...(fixable !== undefined ? { fix_available: fixable } : {}),

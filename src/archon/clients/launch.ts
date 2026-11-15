@@ -7,7 +7,7 @@
  * @module
  */
 
-import { join } from "../core/path.ts";
+import { path } from "@intellectual-frontiers/ifc-ts/runtime";
 import { P } from "../core/paths.ts";
 import { Sessions } from "../console/auth.ts";
 import { activityLog } from "../console/machine.ts";
@@ -28,9 +28,8 @@ export function realConsoleFor(
     if (!b) {
       b = withClient(c, async () => {
         const { pcFacts } = await import("../console/pc.ts");
-        const { estateFor, pcGuideDoc, pcIntegrate, pcRunner } = await import(
-          "../console/stolos-launch.ts"
-        );
+        const { estateFor, pcGuideDoc, pcIntegrate, pcRunner } =
+          await import("../console/stolos-launch.ts");
         const estate = estateFor();
         const sessions = new Sessions();
         const handler = stolosHandler({
@@ -40,16 +39,16 @@ export function realConsoleFor(
           sessions,
           facts: () => withClient(c, () => pcFacts()),
           runner: pcRunner(c.path, clientEnv(c)),
-          activity: activityLog(join(P.state, "console-activity.jsonl")),
+          activity: activityLog(path.join(P.state, "console-activity.jsonl")),
           guides: PC_GUIDES,
           guideDoc: pcGuideDoc,
           integrate: (name, as) =>
             withClient(c, async () => pcIntegrate(name, as, (await pcFacts()).fleet.repo)),
           // The boot server's log is this PC's, about every client's installs: not on a client's pages.
           bootLog: () => Promise.resolve(""),
-          cacheDir: join(P.state, "console-cache"),
+          cacheDir: path.join(P.state, "console-cache"),
           estate: () => withClient(c, estate),
-          evidenceDir: join(P.state, "evidence"),
+          evidenceDir: path.join(P.state, "evidence"),
           scope: { label: c.title, href: "/clients" },
         });
         return {

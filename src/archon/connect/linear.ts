@@ -15,8 +15,9 @@
  * @module
  */
 
-import { AccessDenied, check, type Connector, fresh, type Http } from "./connector.ts";
-import { type Ctx, defineConnector } from "./sdk.ts";
+import type { http } from "@intellectual-frontiers/ifc-ts/runtime";
+import { AccessDenied, check, type Connector, fresh } from "./connector.ts";
+import { type Ctx, defineConnector, exchange } from "./sdk.ts";
 import { ORGANIZATION, TICKET, USER_ACCOUNT } from "./labels.ts";
 import {
   daysBefore,
@@ -37,20 +38,21 @@ const FIELDS = {
 
 /** One GraphQL query (never a mutation); a denial is AccessDenied. */
 export async function linearQuery<T>(
-  ctx: { http: Http; headers: Record<string, string> },
+  ctx: { http: http.Transport; headers: Record<string, string> },
   query: string,
   variables: Record<string, unknown> = {},
 ): Promise<T> {
   if (!/^\s*query\b/.test(query)) throw new Error("read-only: only GraphQL queries are sent");
-  const r = await ctx.http(LINEAR_GRAPHQL, {
+  const r = await exchange(ctx.http, {
     method: "POST",
-    headers: { ...ctx.headers, "Content-Type": "application/json" },
+    url: LINEAR_GRAPHQL,
+    headers: { ...ctx.headers, "content-type": "application/json" },
     body: JSON.stringify({ query, variables }),
   });
   type Body = { data?: T; errors?: Array<{ message?: string; extensions?: { code?: string } }> };
   let b: Body | undefined;
   try {
-    b = JSON.parse(r.text) as Body;
+    b = JSON.parse(r.body) as Body;
   } catch {
     b = undefined;
   }
@@ -167,10 +169,12 @@ export const linear: Connector = defineConnector({
       ocsf: "cloud_resources_inventory_info",
       required: true,
       async *list(ctx) {
-        yield (await linearQuery<{ organization: LinearOrg }>(
-          ctx,
-          "query Org { organization { id name urlKey samlEnabled } }",
-        )).organization;
+        yield (
+          await linearQuery<{ organization: LinearOrg }>(
+            ctx,
+            "query Org { organization { id name urlKey samlEnabled } }",
+          )
+        ).organization;
       },
       map: (o: LinearOrg) => ({
         native_id: o.id,
@@ -183,12 +187,7 @@ export const linear: Connector = defineConnector({
       label: USER_ACCOUNT,
       ocsf: "user_inventory",
       required: true,
-      list: (ctx) =>
-        nodes<LinearUser>(
-          ctx,
-          USERS,
-          (d) => (d as { users: never }).users,
-        ),
+      list: (ctx) => nodes<LinearUser>(ctx, USERS, (d) => (d as { users: never }).users),
       map: (u: LinearUser) => ({
         native_id: u.id,
         display_name: u.email || u.name || u.id,
@@ -242,8 +241,8 @@ export const linear: Connector = defineConnector({
     const org = records.find((r) => r.label === ORGANIZATION.name);
     return {
       ...ticketPosture(records),
-      ...(org?.props.mfa_required !== undefined
-        ? { samlRequired: org.props.mfa_required as boolean }
+      ...(org?.props["mfa_required"] !== undefined
+        ? { samlRequired: org.props["mfa_required"] as boolean }
         : {}),
     };
   },
@@ -261,8 +260,7 @@ export const linear: Connector = defineConnector({
       }),
       ...ticketPolicies(o, "linear", {
         changes: "label each production change Change (and each incident Incident) in Linear",
-        link:
-          "connect GitHub, GitLab, or Bitbucket in Linear > Settings > Integrations, and use the issue ID in branch names",
+        link: "connect GitHub, GitLab, or Bitbucket in Linear > Settings > Integrations, and use the issue ID in branch names",
         admins: "Linear > Settings > Members: keep two to four admins",
       }),
     ];

@@ -10,9 +10,9 @@
  *
  * {@link declare} reads a loaded module into a {@link Declaration}: its id,
  * labels, OCSF classes, the SCF controls its policies cite, its credential's
- * fields, and its fixtures' results. The registry probe runs it in a Deno
- * process with no network, files, or environment beyond the module's own
- * host, and the engine's checks (`registry.ts`) judge what it reports.
+ * fields, and its fixtures' results. The registry probe runs it in a process
+ * of its own, given none of the environment but the engine's paths, and the
+ * engine's checks (`registry.ts`) judge what it reports.
  *
  * @module
  */
@@ -150,11 +150,10 @@ export async function runFixtures(
 
 /** Read a loaded connector module into a {@link Declaration} (running its fixtures). */
 export async function declare(mod: Record<string, unknown>): Promise<Declaration> {
-  const c = mod.default as
-    | (Connector & { def?: ConnectorDef<Record<string, FieldDef>> })
-    | undefined;
-  const engine = typeof mod.engine === "string" ? mod.engine : undefined;
-  const fixtures = Array.isArray(mod.fixtures) ? mod.fixtures as ConnectorFixture[] : [];
+  const c = mod["default"] as
+    (Connector & { def?: ConnectorDef<Record<string, FieldDef>> }) | undefined;
+  const engine = typeof mod["engine"] === "string" ? mod["engine"] : undefined;
+  const fixtures = Array.isArray(mod["fixtures"]) ? (mod["fixtures"] as ConnectorFixture[]) : [];
   if (!c || typeof c.observe !== "function" || typeof c.policies !== "function") {
     return {
       sdk: false,

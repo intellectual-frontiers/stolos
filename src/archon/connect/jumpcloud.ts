@@ -76,7 +76,8 @@ function skipPages<T>(ctx: Ctx<typeof FIELDS>, path: string): AsyncGenerator<T> 
 const userActive = (u: SystemUser) =>
   u.activated !== false && !u.suspended && u.state !== "SUSPENDED" && u.state !== "STAGED";
 const userMfa = (u: SystemUser) =>
-  u.mfaEnrollment?.overallStatus === "ENROLLED" || u.mfa?.configured === true ||
+  u.mfaEnrollment?.overallStatus === "ENROLLED" ||
+  u.mfa?.configured === true ||
   u.totp_enabled === true;
 
 /** JumpCloud. */
@@ -157,23 +158,23 @@ export const jumpcloud: Connector = defineConnector({
     },
   },
   posture(records) {
-    const users = records.filter((r) => r.label === "user_account" && !r.props.admin);
-    const admins = records.filter((r) => r.label === "user_account" && r.props.admin);
-    const active = users.filter((r) => r.props.active);
+    const users = records.filter((r) => r.label === "user_account" && !r.props["admin"]);
+    const admins = records.filter((r) => r.label === "user_account" && r.props["admin"]);
+    const active = users.filter((r) => r.props["active"]);
     const devices = records.filter((r) => r.label === "hardware_device");
-    const fdeKnown = devices.filter((d) => d.props.encrypted !== undefined);
+    const fdeKnown = devices.filter((d) => d.props["encrypted"] !== undefined);
     return {
       activeUsers: active.length,
-      ...(users.length ? { activeWithoutMfa: active.filter((r) => !r.props.mfa).length } : {}),
+      ...(users.length ? { activeWithoutMfa: active.filter((r) => !r.props["mfa"]).length } : {}),
       ...(admins.length
         ? {
-          admins: admins.filter((r) => r.props.active).length,
-          adminsWithoutMfa: admins.filter((r) => r.props.active && !r.props.mfa).length,
-        }
+            admins: admins.filter((r) => r.props["active"]).length,
+            adminsWithoutMfa: admins.filter((r) => r.props["active"] && !r.props["mfa"]).length,
+          }
         : {}),
       devices: devices.length,
       ...(fdeKnown.length
-        ? { devicesUnencrypted: fdeKnown.filter((d) => d.props.encrypted === false).length }
+        ? { devicesUnencrypted: fdeKnown.filter((d) => d.props["encrypted"] === false).length }
         : {}),
     };
   },
@@ -186,9 +187,8 @@ export const jumpcloud: Connector = defineConnector({
         scf: ["IAC-37"],
         fact: "activeWithoutMfa",
         want: (v) => v === 0,
-        show: (v) => `${v} of ${o.posture.activeUsers} active users without one`,
-        fix:
-          "JumpCloud > User Management > Users: require MFA for the User Portal and in a Conditional Access policy, and ask each user to enroll",
+        show: (v) => `${v} of ${o.posture["activeUsers"]} active users without one`,
+        fix: "JumpCloud > User Management > Users: require MFA for the User Portal and in a Conditional Access policy, and ask each user to enroll",
       }),
       check(o, {
         id: "jumpcloud-admin-mfa",
@@ -196,7 +196,7 @@ export const jumpcloud: Connector = defineConnector({
         scf: ["IAC-37"],
         fact: "adminsWithoutMfa",
         want: (v) => v === 0,
-        show: (v) => `${v} of ${o.posture.admins} administrators without one`,
+        show: (v) => `${v} of ${o.posture["admins"]} administrators without one`,
         fix: "JumpCloud > Settings > Administrators: require MFA for each administrator",
       }),
       check(o, {
@@ -214,9 +214,8 @@ export const jumpcloud: Connector = defineConnector({
         scf: ["CRY-07"],
         fact: "devicesUnencrypted",
         want: (v) => v === 0,
-        show: (v) => `${v} of ${o.posture.devices} devices unencrypted`,
-        fix:
-          "JumpCloud > Device Management > Policy Management: add the FileVault (macOS) and BitLocker (Windows) policies to every device",
+        show: (v) => `${v} of ${o.posture["devices"]} devices unencrypted`,
+        fix: "JumpCloud > Device Management > Policy Management: add the FileVault (macOS) and BitLocker (Windows) policies to every device",
       }),
     ];
   },

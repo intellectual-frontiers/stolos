@@ -36,7 +36,11 @@ const FIELDS = {
  * example.1password.eu works too).
  */
 export function onePasswordApi(region: string): string {
-  const r = region.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "");
+  const r = region
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, "")
+    .replace(/\/.*$/, "");
   const known = ["ent.1password.com", "1password.ca", "1password.eu", "1password.com"];
   const hit = known.find((k) => r === k || r.endsWith(`.${k}`));
   return `https://api.${hit ?? "1password.com"}`;
@@ -85,20 +89,21 @@ export const onepassword: Connector = defineConnector({
       label: USER_ACCOUNT,
       ocsf: "user_inventory",
       async *list(ctx) {
-        const first = `${onePasswordApi(ctx.cred.region)}/v1/accounts/${
-          encodeURIComponent(ctx.cred.account)
-        }/users?max_page_size=1000`;
+        const first = `${onePasswordApi(ctx.cred.region)}/v1/accounts/${encodeURIComponent(
+          ctx.cred.account,
+        )}/users?max_page_size=1000`;
         let pending = 0;
-        for await (
-          const u of ctx.cursorPages<{ results?: OpUser[]; next_page_token?: string }, OpUser>(
-            first,
-            (b) => b.results,
-            (b) =>
-              b.next_page_token
-                ? `${first}&page_token=${encodeURIComponent(b.next_page_token)}`
-                : undefined,
-          )
-        ) {
+        for await (const u of ctx.cursorPages<
+          { results?: OpUser[]; next_page_token?: string },
+          OpUser
+        >(
+          first,
+          (b) => b.results,
+          (b) =>
+            b.next_page_token
+              ? `${first}&page_token=${encodeURIComponent(b.next_page_token)}`
+              : undefined,
+        )) {
           // No state: invited and not yet joined, or in account recovery.
           if (!u.state) pending++;
           yield u;
@@ -122,7 +127,7 @@ export const onepassword: Connector = defineConnector({
   posture(records, _cred, { gaps }): Observation["posture"] {
     if (gaps.some((g) => g.startsWith("users: "))) return {};
     const users = records.filter((r) => r.label === USER_ACCOUNT.name);
-    return { activeMembers: users.filter((r) => r.props.active).length, members: users.length };
+    return { activeMembers: users.filter((r) => r.props["active"]).length, members: users.length };
   },
   policies(o, now) {
     return [

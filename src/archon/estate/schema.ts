@@ -37,8 +37,7 @@ const time = (doc: string, required = false) => ({ type: "text" as const, doc, r
 export const tenant: AnyTable = defineTable({
   name: "tenant",
   terms: [{ from: "iso22123", term: "tenant" }],
-  doc:
-    "One connected account: an Okta org, a GitHub org, an AWS account, the HR system, or the fleet itself.",
+  doc: "One connected account: an Okta org, a GitHub org, an AWS account, the HR system, or the fleet itself.",
   columns: {
     tenant_uid: { type: "text", doc: 'Its uid: "<connector>:<account>".', required: true },
     connector: {
@@ -88,8 +87,7 @@ export const node: AnyTable = defineTable({
     last_seen: time("When an observation in Git last had it (ISO time).", true),
     stale: {
       type: "boolean",
-      doc:
-        "1: carried from an earlier observation, because the latest could not read it (see observation).",
+      doc: "1: carried from an earlier observation, because the latest could not read it (see observation).",
       required: true,
     },
     props: {
@@ -104,7 +102,10 @@ export const node: AnyTable = defineTable({
 /** The labels a node carries beyond its own. */
 export const nodeLabel: AnyTable = defineTable({
   name: "node_label",
-  terms: [{ from: "ocsf", term: "node" }, { from: "gql", term: "label" }],
+  terms: [
+    { from: "ocsf", term: "node" },
+    { from: "gql", term: "label" },
+  ],
   doc: "Labels a node carries: its own (standard), and cross-provider ones (ontology).",
   columns: {
     node_uid: { type: "text", doc: "The node.", required: true, references: "node" },
@@ -128,8 +129,7 @@ export const edge: AnyTable = defineTable({
     src_uid: { type: "text", doc: "From.", required: true },
     verb: {
       type: "text",
-      doc:
-        "has_account, observed_as, member_of, administers, affects, supplies (spec 080: a vendor, to what revealed it).",
+      doc: "has_account, observed_as, member_of, administers, affects, supplies (spec 080: a vendor, to what revealed it).",
       required: true,
       values: ["has_account", "observed_as", "member_of", "administers", "affects", "supplies"],
     },
@@ -191,8 +191,7 @@ export const party: AnyTable = defineTable({
 export const person: AnyTable = defineTable({
   name: "person",
   terms: [{ from: "udm", term: "person" }],
-  doc:
-    "A person, created only by the source-of-truth order in fleet.ts (HR systems, then identity providers).",
+  doc: "A person, created only by the source-of-truth order in fleet.ts (HR systems, then identity providers).",
   columns: {
     party_uid: { type: "text", doc: "The party.", required: true, references: "party" },
     name: { type: "text", doc: "Their name." },
@@ -304,8 +303,7 @@ export const partyContactMechanism: AnyTable = defineTable({
 export const fixedAsset: AnyTable = defineTable({
   name: "fixed_asset",
   terms: [{ from: "udm", term: "fixed_asset" }],
-  doc:
-    "A machine or device, deduplicated across sources by serial number, then hostname; links.ts overrides.",
+  doc: "A machine or device, deduplicated across sources by serial number, then hostname; links.ts overrides.",
   columns: {
     fixed_asset_uid: {
       type: "text",
@@ -356,8 +354,7 @@ export const partyFixedAssetAssignment: AnyTable = defineTable({
 export const finding: AnyTable = defineTable({
   name: "finding",
   terms: [{ from: "ocsf", term: "finding" }],
-  doc:
-    "One policy result about one subject, with its SCF control (reported as OCSF compliance findings).",
+  doc: "One policy result about one subject, with its SCF control (reported as OCSF compliance findings).",
   columns: {
     finding_uid: { type: "text", doc: "Its uid.", required: true },
     policy_id: { type: "text", doc: "The policy.", required: true },
@@ -383,8 +380,7 @@ export const finding: AnyTable = defineTable({
 export const observation: AnyTable = defineTable({
   name: "observation",
   terms: [{ from: "ocsf", term: "observation" }],
-  doc:
-    "What a connector could not read in its latest observation, and why (nothing behind it is dropped).",
+  doc: "What a connector could not read in its latest observation, and why (nothing behind it is dropped).",
   columns: {
     tenant_uid: { type: "text", doc: "The tenant.", required: true, references: "tenant" },
     resource: { type: "text", doc: "What could not be read.", required: true },

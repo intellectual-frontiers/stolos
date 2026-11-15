@@ -30,7 +30,10 @@ import {
 
 /** The site's host, from what was typed (example.atlassian.net). */
 export const jiraSite = (site: string): string =>
-  site.replace(/^https?:\/\//, "").replace(/\/.*$/, "").toLowerCase();
+  site
+    .replace(/^https?:\/\//, "")
+    .replace(/\/.*$/, "")
+    .toLowerCase();
 
 const FIELDS = {
   site: { secret: false, hint: "your Jira site (example.atlassian.net)" },
@@ -44,9 +47,11 @@ const bases = new WeakMap<object, Promise<string>>();
 function apiBase(ctx: Ctx<typeof FIELDS>): Promise<string> {
   let b = bases.get(ctx);
   if (!b) {
-    b = ctx.json<{ cloudId: string }>(`https://${jiraSite(ctx.cred.site)}/_edge/tenant_info`, {
-      Accept: "application/json",
-    }).then((t) => `https://api.atlassian.com/ex/jira/${t.cloudId}`);
+    b = ctx
+      .json<{ cloudId: string }>(`https://${jiraSite(ctx.cred.site)}/_edge/tenant_info`, {
+        Accept: "application/json",
+      })
+      .then((t) => `https://api.atlassian.com/ex/jira/${t.cloudId}`);
     bases.set(ctx, b);
   }
   return b;
@@ -160,11 +165,10 @@ export const jira: Connector = defineConnector({
                 ? `groupId=${encodeURIComponent(g.groupId)}`
                 : `groupname=${encodeURIComponent(g.name)}`;
               for (let at = 0; at < 5000; at += 50) {
-                const m = await ctx.json<
-                  { values?: Array<{ accountId: string }>; isLast?: boolean }
-                >(
-                  `${b}/rest/api/3/group/member?${q}&startAt=${at}&maxResults=50`,
-                );
+                const m = await ctx.json<{
+                  values?: Array<{ accountId: string }>;
+                  isLast?: boolean;
+                }>(`${b}/rest/api/3/group/member?${q}&startAt=${at}&maxResults=50`);
                 for (const v of m.values ?? []) ids.add(v.accountId);
                 if (m.isLast !== false) break;
               }
@@ -196,9 +200,11 @@ export const jira: Connector = defineConnector({
           "development field",
           undefined as string | undefined,
           async () =>
-            (await ctx.json<Array<{ id: string; schema?: { custom?: string } }>>(
-              `${b}/rest/api/3/field`,
-            )).find((f) => /devsummary/i.test(f.schema?.custom ?? ""))?.id,
+            (
+              await ctx.json<Array<{ id: string; schema?: { custom?: string } }>>(
+                `${b}/rest/api/3/field`,
+              )
+            ).find((f) => /devsummary/i.test(f.schema?.custom ?? ""))?.id,
         );
         const fields = [
           "summary",
@@ -215,34 +221,38 @@ export const jira: Connector = defineConnector({
         const first = `${b}/rest/api/3/search/jql?jql=${jql}&fields=${fields}&maxResults=100`;
         let n = 0;
         let remote = 0;
-        for await (
-          const i of ctx.cursorPages<
-            { issues?: JiraIssue[]; nextPageToken?: string; isLast?: boolean },
-            JiraIssue
-          >(
-            first,
-            (p) => p.issues,
-            (p) =>
-              p.nextPageToken && !p.isLast
-                ? `${first}&nextPageToken=${encodeURIComponent(p.nextPageToken)}`
-                : undefined,
-          )
-        ) {
+        for await (const i of ctx.cursorPages<
+          { issues?: JiraIssue[]; nextPageToken?: string; isLast?: boolean },
+          JiraIssue
+        >(
+          first,
+          (p) => p.issues,
+          (p) =>
+            p.nextPageToken && !p.isLast
+              ? `${first}&nextPageToken=${encodeURIComponent(p.nextPageToken)}`
+              : undefined,
+        )) {
           if (n++ >= TICKET_MAX) break;
           const counts = dev ? devSummary(i.fields[dev]) : {};
           const type = ticketType(i.fields.issuetype?.name, i.fields.project?.name);
           let links: string[] = [];
           // A resolved change the panel does not show: look for commit or pull request URLs it links.
           if (
-            type === "change" && i.fields.resolutiondate && !counts.commits &&
-            !counts.pull_requests && remote++ < 200
+            type === "change" &&
+            i.fields.resolutiondate &&
+            !counts.commits &&
+            !counts.pull_requests &&
+            remote++ < 200
           ) {
             links = await ctx.orGap("remote links", [] as string[], async () =>
               devLinks(
-                (await ctx.json<Array<{ object?: { url?: string } }>>(
-                  `${b}/rest/api/3/issue/${encodeURIComponent(i.key)}/remotelink`,
-                )).map((l) => l.object?.url),
-              ));
+                (
+                  await ctx.json<Array<{ object?: { url?: string } }>>(
+                    `${b}/rest/api/3/issue/${encodeURIComponent(i.key)}/remotelink`,
+                  )
+                ).map((l) => l.object?.url),
+              ),
+            );
           }
           yield { ...i, dev: { ...counts, links } };
         }
@@ -272,8 +282,7 @@ export const jira: Connector = defineConnector({
       ...ticketPolicies(o, "jira", {
         changes:
           "record each production change as a ticket (Jira Service Management's Change type, or an issue type named Change)",
-        link:
-          "connect your code host to Jira (GitHub for Jira, GitLab, or Bitbucket) and put the ticket key in branch names, commits, and pull request titles",
+        link: "connect your code host to Jira (GitHub for Jira, GitLab, or Bitbucket) and put the ticket key in branch names, commits, and pull request titles",
         admins:
           "Jira > Settings > User management > Groups: keep two to four in the administrators groups",
       }),

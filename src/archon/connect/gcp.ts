@@ -18,8 +18,9 @@
  * @module
  */
 
-import { check, type Connector, fresh, getJson } from "./connector.ts";
-import { bearer, type Ctx, defineConnector } from "./sdk.ts";
+import { http } from "@intellectual-frontiers/ifc-ts/runtime";
+import { check, type Connector, fresh } from "./connector.ts";
+import { type Ctx, defineConnector, type ObservedRecord, sendJson } from "./sdk.ts";
 import { serviceAccountJwt } from "./google.ts";
 import { ACCESS_CONTROL_GROUP, CLOUD_USER_ACCOUNT, EVENT_LOG, RESOURCE } from "./labels.ts";
 
@@ -98,18 +99,20 @@ export const gcp: Connector = defineConnector({
   },
   fields: FIELDS,
   tokenEndpoints: () => [TOKEN],
-  async auth(cred, http, now) {
+  async auth(cred, t, now) {
     const key = JSON.parse(cred.key) as { client_email: string; private_key: string };
     const assertion = await serviceAccountJwt(key, key.client_email, SCOPE, now);
-    const tok = await getJson<{ access_token: string }>(
-      http,
+    const tok = await sendJson<{ access_token: string }>(
+      t,
       TOKEN,
       { "Content-Type": "application/x-www-form-urlencoded" },
       "POST",
-      new URLSearchParams({ grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer", assertion })
-        .toString(),
+      new URLSearchParams({
+        grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+        assertion,
+      }).toString(),
     );
-    return bearer(tok.access_token);
+    return http.bearer(tok.access_token);
   },
   account: (cred) => cred.project,
   resources: {
@@ -131,20 +134,18 @@ export const gcp: Connector = defineConnector({
       async *list(ctx): AsyncGenerator<Binding> {
         const self = `//cloudresourcemanager.googleapis.com/projects/${ctx.cred.project}`;
         const by = new Map<string, Set<string>>();
-        for await (
-          const r of pages<{ resource: string; policy?: { bindings?: Binding[] } }>(
-            ctx,
-            `${ASSET}/projects/${ctx.cred.project}:searchAllIamPolicies?pageSize=500`,
-            "results",
-          )
-        ) {
+        for await (const r of pages<{ resource: string; policy?: { bindings?: Binding[] } }>(
+          ctx,
+          `${ASSET}/projects/${ctx.cred.project}:searchAllIamPolicies?pageSize=500`,
+          "results",
+        )) {
           for (const b of r.policy?.bindings ?? []) {
             // The project's own roles, and any binding anywhere to anyone at all.
             const pub = (b.members ?? []).filter((m) => PUBLIC.includes(m));
             if (r.resource !== self && !pub.length) continue;
             const role = r.resource === self ? b.role : `${b.role} on ${r.resource}`;
             const s = by.get(role) ?? new Set<string>();
-            for (const m of r.resource === self ? b.members ?? [] : pub) s.add(m);
+            for (const m of r.resource === self ? (b.members ?? []) : pub) s.add(m);
             by.set(role, s);
           }
         }
@@ -163,22 +164,24 @@ export const gcp: Connector = defineConnector({
       label: CLOUD_USER_ACCOUNT,
       ocsf: "cloud_resources_inventory_info",
       async *list(ctx): AsyncGenerator<ServiceAccount> {
-        for await (
-          const sa of pages<ServiceAccount>(
-            ctx,
-            `${IAM}/projects/${ctx.cred.project}/serviceAccounts?pageSize=100`,
-            "accounts",
-          )
-        ) {
+        for await (const sa of pages<ServiceAccount>(
+          ctx,
+          `${IAM}/projects/${ctx.cred.project}/serviceAccounts?pageSize=100`,
+          "accounts",
+        )) {
           const keys = await ctx.orGap(
             `${sa.email} keys`,
             undefined as number | undefined,
             async () =>
-              ((await ctx.json<{ keys?: unknown[] }>(
-                `${IAM}/projects/${ctx.cred.project}/serviceAccounts/${
-                  encodeURIComponent(sa.email)
-                }/keys?keyTypes=USER_MANAGED`,
-              )).keys ?? []).length,
+              (
+                (
+                  await ctx.json<{ keys?: unknown[] }>(
+                    `${IAM}/projects/${ctx.cred.project}/serviceAccounts/${encodeURIComponent(
+                      sa.email,
+                    )}/keys?keyTypes=USER_MANAGED`,
+                  )
+                ).keys ?? []
+              ).length,
           );
           yield { ...sa, ...(keys !== undefined ? { keys } : {}) };
         }
@@ -212,27 +215,37 @@ export const gcp: Connector = defineConnector({
     const roles = records.filter((r) => r.label === ACCESS_CONTROL_GROUP.name);
     if (read("roles")) {
       const owners = roles.find((r) => r.native_id === "roles/owner");
-      out.owners = (owners?.props.members as number | undefined) ?? 0;
-      out.ownerNames = String(owners?.props.member_names ?? "");
-      const pub = roles.filter((r) => PUBLIC.some((p) => String(r.props.member_names).includes(p)));
-      out.publicBindings = pub.length;
-      out.publicBindingNames = pub.map((r) => r.native_id).slice(0, 10).join(", ");
+      out["owners"] = (owners?.props["members"] as number | undefined) ?? 0;
+      const names = (r: ObservedRecord | undefined): string => {
+        const v = r?.props["member_names"];
+        return typeof v === "string" ? v : "";
+      };
+      out["ownerNames"] = names(owners);
+      const pub = roles.filter((r) => PUBLIC.some((p) => names(r).includes(p)));
+      out["publicBindings"] = pub.length;
+      out["publicBindingNames"] = pub
+        .map((r) => r.native_id)
+        .slice(0, 10)
+        .join(", ");
     }
     // Keys are counted only for the service accounts whose keys could be read.
     // Stolos's own service account has the one key it signs in with: not counted.
     let self = "";
     try {
       self = (JSON.parse(cred.key) as { client_email?: string }).client_email ?? "";
-    } catch { /* not a key file: every account counts */ }
-    const sas = records.filter((r) =>
-      r.label === CLOUD_USER_ACCOUNT.name && r.display_name !== self
+    } catch {
+      /* not a key file: every account counts */
+    }
+    const sas = records.filter(
+      (r) => r.label === CLOUD_USER_ACCOUNT.name && r.display_name !== self,
     );
-    if (read("serviceAccounts") && sas.every((r) => r.props.access_keys !== undefined)) {
-      out.serviceAccountKeys = sas.reduce((n, r) => n + (r.props.access_keys as number), 0);
+    if (read("serviceAccounts") && sas.every((r) => r.props["access_keys"] !== undefined)) {
+      out["serviceAccountKeys"] = sas.reduce((n, r) => n + (r.props["access_keys"] as number), 0);
     }
     if (read("sinks")) {
-      out.logSinks = records.filter((r) =>
-        r.label === EVENT_LOG.name && r.props.logging && !GOOGLE_SINKS.includes(r.native_id)
+      out["logSinks"] = records.filter(
+        (r) =>
+          r.label === EVENT_LOG.name && r.props["logging"] && !GOOGLE_SINKS.includes(r.native_id),
       ).length;
     }
     return out;
@@ -246,9 +259,8 @@ export const gcp: Connector = defineConnector({
         scf: ["DCH-02"],
         fact: "publicBindings",
         want: (v) => v === 0,
-        show: (v) => `${v}${v ? `: ${o.posture.publicBindingNames ?? ""}` : ""}`,
-        fix:
-          "console.cloud.google.com > IAM & Admin > IAM (or the resource's permissions): remove allUsers and allAuthenticatedUsers",
+        show: (v) => `${v}${v ? `: ${o.posture["publicBindingNames"] ?? ""}` : ""}`,
+        fix: "console.cloud.google.com > IAM & Admin > IAM (or the resource's permissions): remove allUsers and allAuthenticatedUsers",
       }),
       check(o, {
         id: "gcp-owners",
@@ -256,7 +268,7 @@ export const gcp: Connector = defineConnector({
         scf: ["IAC-30"],
         fact: "owners",
         want: (v) => typeof v === "number" && v >= 2 && v <= 4,
-        show: (v) => `${v}: ${o.posture.ownerNames ?? ""}`,
+        show: (v) => `${v}: ${o.posture["ownerNames"] ?? ""}`,
         fix: "IAM & Admin > IAM: give the rest narrower roles than Owner",
         warnOnly: true,
       }),
@@ -267,8 +279,7 @@ export const gcp: Connector = defineConnector({
         fact: "serviceAccountKeys",
         want: (v) => v === 0,
         show: (v) => `${v} key(s)`,
-        fix:
-          "IAM & Admin > Service accounts > each one > Keys: delete them, and use workload identity federation instead (Stolos's own key is not counted)",
+        fix: "IAM & Admin > Service accounts > each one > Keys: delete them, and use workload identity federation instead (Stolos's own key is not counted)",
         warnOnly: true,
       }),
       check(o, {
@@ -278,8 +289,7 @@ export const gcp: Connector = defineConnector({
         fact: "logSinks",
         want: (v) => typeof v === "number" && v > 0,
         show: (v) => `${v} sink(s) besides Google's _Required and _Default`,
-        fix:
-          "Logging > Log Router > Create sink: to a bucket with a locked retention policy (or a SIEM)",
+        fix: "Logging > Log Router > Create sink: to a bucket with a locked retention policy (or a SIEM)",
         warnOnly: true,
       }),
     ];

@@ -33,7 +33,10 @@ export const SMB = {
 
 /** The accounts that may use SMB: everyone in the model but ops (a service account). */
 export function smbUsers(users: UserDef[]): string[] {
-  return users.filter((u) => u.name !== "ops").map((u) => u.name).sort();
+  return users
+    .filter((u) => u.name !== "ops")
+    .map((u) => u.name)
+    .sort();
 }
 
 /** "smb.alpha.lab.example.net" (the server's wildcard record covers it), else the host name. */

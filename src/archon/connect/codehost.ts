@@ -14,25 +14,30 @@ import type { PolicyResult } from "../adopt/policy.ts";
 
 /** Whether a branch name matches a pattern where `*` is any run of characters (GitLab, Bitbucket). */
 export function branchMatches(pattern: string, branch: string): boolean {
-  const re = pattern.split("*").map((s) => s.replace(/[.+?^${}()|[\]\\]/g, "\\$&")).join(".*");
+  const re = pattern
+    .split("*")
+    .map((s) => s.replace(/[.+?^${}()|[\]\\]/g, "\\$&"))
+    .join(".*");
   return new RegExp(`^${re}$`).test(branch);
 }
 
 /** Members' and repositories' posture from the records. */
 export function codeHostPosture(records: ObservedRecord[]): Observation["posture"] {
-  const members = records.filter((r) => r.label === "user_account" && !r.props.service);
-  const mfaKnown = members.some((r) => typeof r.props.mfa === "boolean");
-  const adminKnown = members.some((r) => typeof r.props.admin === "boolean");
-  const priv = records.filter((r) => r.label === "code_repository" && r.props.private);
+  const members = records.filter((r) => r.label === "user_account" && !r.props["service"]);
+  const mfaKnown = members.some((r) => typeof r.props["mfa"] === "boolean");
+  const adminKnown = members.some((r) => typeof r.props["admin"] === "boolean");
+  const priv = records.filter((r) => r.label === "code_repository" && r.props["private"]);
   return {
     members: members.length,
-    ...(adminKnown ? { owners: members.filter((r) => r.props.admin).length } : {}),
-    ...(mfaKnown ? { membersWithout2fa: members.filter((r) => r.props.mfa === false).length } : {}),
+    ...(adminKnown ? { owners: members.filter((r) => r.props["admin"]).length } : {}),
+    ...(mfaKnown
+      ? { membersWithout2fa: members.filter((r) => r.props["mfa"] === false).length }
+      : {}),
     privateRepos: priv.length,
-    privateReposProtected: priv.filter((r) => r.props.protected).length,
-    privateReposReviewed: priv.filter((r) => Number(r.props.reviews ?? 0) >= 1).length,
-    ...(priv.some((r) => typeof r.props.secret_scanning === "boolean")
-      ? { privateReposSecretScanning: priv.filter((r) => r.props.secret_scanning).length }
+    privateReposProtected: priv.filter((r) => r.props["protected"]).length,
+    privateReposReviewed: priv.filter((r) => Number(r.props["reviews"] ?? 0) >= 1).length,
+    ...(priv.some((r) => typeof r.props["secret_scanning"] === "boolean")
+      ? { privateReposSecretScanning: priv.filter((r) => r.props["secret_scanning"]).length }
       : {}),
   };
 }
@@ -60,9 +65,9 @@ export function codeHostPolicies(
   fix: CodeHostFixes,
 ): (o: Observation, now: number) => PolicyResult[] {
   return (o, now) => {
-    const all = (v: unknown) => v === o.posture.privateRepos;
+    const all = (v: unknown) => v === o.posture["privateRepos"];
     const of = (v: string | number | boolean) =>
-      `${v} of ${o.posture.privateRepos} private repositories`;
+      `${v} of ${o.posture["privateRepos"]} private repositories`;
     return [
       fresh(o, now, id),
       check(o, {
@@ -79,7 +84,7 @@ export function codeHostPolicies(
         scf: ["IAC-37"],
         fact: "membersWithout2fa",
         want: (v) => v === 0,
-        show: (v) => `${v} of ${o.posture.members} members without it`,
+        show: (v) => `${v} of ${o.posture["members"]} members without it`,
         fix: fix.members2fa,
       }),
       check(o, {

@@ -199,10 +199,7 @@ export const defender: Connector = defineConnector({
   logo: "",
   serviceModels: ["SaaS"],
   markets: ["endpoint-protection-platforms"],
-  connectHelp: registration(
-    "Machine.Read.All",
-    "APIs my organization uses > WindowsDefenderATP",
-  ),
+  connectHelp: registration("Machine.Read.All", "APIs my organization uses > WindowsDefenderATP"),
   recipe: { open: APP_REGISTRATIONS },
   fields: FIELDS,
   tokenEndpoints: (cred) => [tokenUrl(cred.tenant)],
@@ -262,8 +259,7 @@ export const defender: Connector = defineConnector({
         fact: "notOnboarded",
         want: (v) => v === 0,
         show: (v) => `${v} discovered devices without the sensor`,
-        fix:
-          "Microsoft Defender portal > Assets > Devices > Onboarding status: Can be onboarded; onboard each (Settings > Endpoints > Onboarding), or exclude devices that are not yours",
+        fix: "Microsoft Defender portal > Assets > Devices > Onboarding status: Can be onboarded; onboard each (Settings > Endpoints > Onboarding), or exclude devices that are not yours",
         warnOnly: true,
       }),
     ];

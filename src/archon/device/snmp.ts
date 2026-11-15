@@ -63,22 +63,23 @@ function int(n: number): Uint8Array {
     b.unshift(x & 0xff);
     x = Math.floor(x / 256);
   } while (x > 0);
-  if (b[0] & 0x80) b.unshift(0);
+  if ((b[0] ?? 0) & 0x80) b.unshift(0);
   return tlv(0x02, b);
 }
-const octets = (b: Uint8Array | string) =>
+const octets = (b: Uint8Array | string): Uint8Array =>
   tlv(0x04, typeof b === "string" ? new TextEncoder().encode(b) : b);
-const seq = (...p: Uint8Array[]) => tlv(0x30, cat(...p));
+const seq = (...p: Uint8Array[]): Uint8Array => tlv(0x30, cat(...p));
 
 /** An OID's BER bytes. */
 export function encodeOid(oid: string): Uint8Array {
   const a = oid.replace(/^\./, "").split(".").map(Number);
-  if (a.length < 2 || a.some((x) => !Number.isInteger(x) || x < 0) || a[0] > 2) {
+  const [first = -1, second = -1, ...rest] = a;
+  if (a.length < 2 || a.some((x) => !Number.isInteger(x) || x < 0) || first > 2) {
     throw new Error(`not an OID: ${oid}`);
   }
   const b: number[] = [];
   // The first two arcs are one sub-identifier (40 * a + b), which can need more than a byte (2.999).
-  for (const x of [a[0] * 40 + a[1], ...a.slice(2)]) {
+  for (const x of [first * 40 + second, ...rest]) {
     const s: number[] = [x & 0x7f];
     let y = Math.floor(x / 128);
     while (y > 0) {
@@ -98,14 +99,14 @@ interface Node {
 }
 function read(b: Uint8Array, at: number): Node {
   if (at + 2 > b.length) throw new Error("SNMP: message cut short");
-  const tag = b[at];
-  let l = b[at + 1];
+  const tag = b[at] ?? 0;
+  let l = b[at + 1] ?? 0;
   let v = at + 2;
   if (l & 0x80) {
     const n = l & 0x7f;
     if (n > 4) throw new Error("SNMP: length too long");
     l = 0;
-    for (let i = 0; i < n; i++) l = l * 256 + b[at + 2 + i];
+    for (let i = 0; i < n; i++) l = l * 256 + (b[at + 2 + i] ?? 0);
     v += n;
   }
   if (v + l > b.length) throw new Error("SNMP: message cut short");
@@ -120,16 +121,22 @@ function children(b: Uint8Array, n: Node): Node[] {
   }
   return out;
 }
-const bytes = (b: Uint8Array, n: Node) => b.slice(n.vstart, n.end);
+/** The `i`th child of a node, or an Error: a message without it is not one this client reads. */
+function nth(nodes: readonly Node[], i: number): Node {
+  const n = nodes[i];
+  if (n === undefined) throw new Error("SNMP: message cut short");
+  return n;
+}
+const bytes = (b: Uint8Array, n: Node): Uint8Array => b.slice(n.vstart, n.end);
 function uint(b: Uint8Array, n: Node): number {
   let x = 0;
-  for (let i = n.vstart; i < n.end; i++) x = x * 256 + b[i];
+  for (let i = n.vstart; i < n.end; i++) x = x * 256 + (b[i] ?? 0);
   return x;
 }
 function sint(b: Uint8Array, n: Node): number {
   let x = uint(b, n);
   const w = n.end - n.vstart;
-  if (w && b[n.vstart] & 0x80) x -= 2 ** (8 * w);
+  if (w && (b[n.vstart] ?? 0) & 0x80) x -= 2 ** (8 * w);
   return x;
 }
 
@@ -144,8 +151,9 @@ export function decodeOid(v: Uint8Array): string {
       x = 0;
     }
   }
-  if (!subs.length) return "";
-  const first = subs[0] < 80 ? [Math.floor(subs[0] / 40), subs[0] % 40] : [2, subs[0] - 80];
+  const [s0] = subs;
+  if (s0 === undefined) return "";
+  const first = s0 < 80 ? [Math.floor(s0 / 40), s0 % 40] : [2, s0 - 80];
   return [...first, ...subs.slice(1)].join(".");
 }
 
@@ -182,8 +190,8 @@ function value(b: Uint8Array, n: Node): SnmpValue {
 
 // ---------------------------------------------------------------- USM
 
-const hashOf = (a: SnmpCredentials["auth"]) => (a === "sha256" ? "sha256" : "sha1");
-const macLen = (a: SnmpCredentials["auth"]) => (a === "sha256" ? 24 : 12);
+const hashOf = (a: SnmpCredentials["auth"]): string => (a === "sha256" ? "sha256" : "sha1");
+const macLen = (a: SnmpCredentials["auth"]): number => (a === "sha256" ? 24 : 12);
 
 /** RFC 3414 A.2: a passphrase to a key, then localized to an engine. */
 export function localizedKey(
@@ -196,11 +204,15 @@ export function localizedKey(
   const p = new TextEncoder().encode(pass);
   const chunk = new Uint8Array(64);
   for (let count = 0; count < 1048576; count += 64) {
-    for (let i = 0; i < 64; i++) chunk[i] = p[(count + i) % p.length];
+    for (let i = 0; i < 64; i++) chunk[i] = p[(count + i) % p.length] ?? 0;
     h.update(chunk);
   }
   const ku = new Uint8Array(h.digest());
-  return new Uint8Array(createHash(hashOf(auth)).update(cat(ku, engineId, ku)).digest());
+  return new Uint8Array(
+    createHash(hashOf(auth))
+      .update(cat(ku, engineId, ku))
+      .digest(),
+  );
 }
 
 /** AES-128-CFB (RFC 3826), from AES-ECB: each keystream block is the cipher of the previous ciphertext. */
@@ -217,7 +229,7 @@ export function aesCfb(
     c.setAutoPadding(false);
     const ks = new Uint8Array(c.update(prev));
     const block = data.slice(i, i + 16);
-    const o = block.map((x, j) => x ^ ks[j]);
+    const o = block.map((x, j) => x ^ (ks[j] ?? 0));
     out.set(o, i);
     prev = decrypt
       ? Uint8Array.from([...block, ...new Uint8Array(16 - block.length)])
@@ -283,6 +295,12 @@ export class SnmpSession {
     }
   }
 
+  /** The localized keys, known once the engine is discovered. */
+  #keysNow(): { auth: Uint8Array; priv: Uint8Array } {
+    if (!this.#keys) throw new Error("SNMPv3: no keys before the engine is discovered");
+    return this.#keys;
+  }
+
   /** Build a message: the PDU, authenticated and encrypted unless discovering. */
   #message(pdu: Uint8Array, secure: boolean): Uint8Array {
     const id = ++this.#id % 2147483647;
@@ -296,11 +314,11 @@ export class SnmpSession {
     let data = scoped;
     if (secure) {
       const iv = cat(
-        Uint8Array.of(boots >>> 24, boots >>> 16 & 255, boots >>> 8 & 255, boots & 255),
-        Uint8Array.of(time >>> 24, time >>> 16 & 255, time >>> 8 & 255, time & 255),
+        Uint8Array.of(boots >>> 24, (boots >>> 16) & 255, (boots >>> 8) & 255, boots & 255),
+        Uint8Array.of(time >>> 24, (time >>> 16) & 255, (time >>> 8) & 255, time & 255),
         salt,
       );
-      data = octets(aesCfb(this.#keys!.priv, iv, scoped, false));
+      data = octets(aesCfb(this.#keysNow().priv, iv, scoped, false));
     }
     const mac = new Uint8Array(secure ? macLen(this.#cred.auth) : 0);
     const userBits = cat(
@@ -311,14 +329,19 @@ export class SnmpSession {
     );
     const secInner = cat(userBits, octets(mac), octets(salt));
     const sec = seq(secInner);
-    const macOffsetInSec = (sec.length - secInner.length) + userBits.length + 2; // the MAC octet string's value
+    const macOffsetInSec = sec.length - secInner.length + userBits.length + 2; // the MAC octet string's value
     const secOctets = octets(sec);
     const body = cat(int(3), global, secOctets, data);
     const msg = tlv(0x30, body);
     if (secure) {
-      const at = (msg.length - body.length) + int(3).length + global.length +
-        (secOctets.length - sec.length) + macOffsetInSec;
-      const h = createHmac(hashOf(this.#cred.auth), this.#keys!.auth).update(msg).digest();
+      const at =
+        msg.length -
+        body.length +
+        int(3).length +
+        global.length +
+        (secOctets.length - sec.length) +
+        macOffsetInSec;
+      const h = createHmac(hashOf(this.#cred.auth), this.#keysNow().auth).update(msg).digest();
       msg.set(new Uint8Array(h).slice(0, mac.length), at);
     }
     return msg;
@@ -329,11 +352,17 @@ export class SnmpSession {
     m: Uint8Array,
     secure: boolean,
   ): { pdu: number; vars: Array<[string, SnmpValue]>; error: number; engine?: Engine } {
-    const top = read(m, 0);
-    const [, global, secN, dataN] = children(m, top);
-    const flags = bytes(m, children(m, global)[2])[0] ?? 0;
-    const secSeq = read(m, secN.vstart);
-    const [eid, boots, time, , macN, saltN] = children(m, secSeq);
+    const top = children(m, read(m, 0));
+    const global = nth(top, 1);
+    const secN = nth(top, 2);
+    const dataN = nth(top, 3);
+    const flags = bytes(m, nth(children(m, global), 2))[0] ?? 0;
+    const sec = children(m, read(m, secN.vstart));
+    const eid = nth(sec, 0);
+    const boots = nth(sec, 1);
+    const time = nth(sec, 2);
+    const macN = nth(sec, 4);
+    const saltN = nth(sec, 5);
     const engine: Engine = {
       id: bytes(m, eid),
       boots: uint(m, boots),
@@ -347,7 +376,7 @@ export class SnmpSession {
       const zeroed = m.slice();
       zeroed.fill(0, macN.vstart, macN.end);
       const want = new Uint8Array(
-        createHmac(hashOf(this.#cred.auth), this.#keys!.auth).update(zeroed).digest(),
+        createHmac(hashOf(this.#cred.auth), this.#keysNow().auth).update(zeroed).digest(),
       ).slice(0, got.length);
       if (got.length !== macLen(this.#cred.auth) || !got.every((x, i) => x === want[i])) {
         throw new Error(
@@ -360,29 +389,31 @@ export class SnmpSession {
       const iv = cat(
         Uint8Array.of(
           engine.boots >>> 24,
-          engine.boots >>> 16 & 255,
-          engine.boots >>> 8 & 255,
+          (engine.boots >>> 16) & 255,
+          (engine.boots >>> 8) & 255,
           engine.boots & 255,
         ),
         Uint8Array.of(
           engine.time >>> 24,
-          engine.time >>> 16 & 255,
-          engine.time >>> 8 & 255,
+          (engine.time >>> 16) & 255,
+          (engine.time >>> 8) & 255,
           engine.time & 255,
         ),
         bytes(m, saltN),
       );
-      scopedBytes = aesCfb(this.#keys!.priv, iv, bytes(m, dataN), true);
+      scopedBytes = aesCfb(this.#keysNow().priv, iv, bytes(m, dataN), true);
       scoped = read(scopedBytes, 0);
     } else {
       scopedBytes = m;
       scoped = dataN;
     }
-    const pduN = children(scopedBytes, scoped)[2];
-    const [, errS, , vbl] = children(scopedBytes, pduN);
-    const vars = children(scopedBytes, vbl).map((vb) => {
-      const [o, v] = children(scopedBytes, vb);
-      return [decodeOid(bytes(scopedBytes, o)), value(scopedBytes, v)] as [string, SnmpValue];
+    const pduN = nth(children(scopedBytes, scoped), 2);
+    const pduParts = children(scopedBytes, pduN);
+    const errS = nth(pduParts, 1);
+    const vbl = nth(pduParts, 3);
+    const vars = children(scopedBytes, vbl).map((vb): [string, SnmpValue] => {
+      const pair = children(scopedBytes, vb);
+      return [decodeOid(bytes(scopedBytes, nth(pair, 0))), value(scopedBytes, nth(pair, 1))];
     });
     return { pdu: pduN.tag, vars, error: sint(scopedBytes, errS), engine };
   }
@@ -406,14 +437,11 @@ export class SnmpSession {
       const pdu = tlv(tag, cat(int(this.#id + 1), int(0), int(0), vbl));
       const r = this.#open(await this.#send(this.#message(pdu, true)), true);
       if (r.pdu === 0xa8) {
-        const why = USM_REPORTS[r.vars[0]?.[0] ?? ""] ?? `report ${r.vars[0]?.[0]}`;
-        if (why === "not in the time window" && attempt === 0 && r.engine) {
-          this.#engine = {
-            ...this.#engine!,
-            boots: r.engine.boots,
-            time: r.engine.time,
-            at: Date.now(),
-          };
+        const reported = r.vars[0]?.[0] ?? "";
+        const why = USM_REPORTS[reported] ?? `report ${reported}`;
+        const known = this.#engine;
+        if (why === "not in the time window" && attempt === 0 && r.engine && known) {
+          this.#engine = { ...known, boots: r.engine.boots, time: r.engine.time, at: Date.now() };
           continue;
         }
         throw new Error(`SNMPv3: ${why}`);
@@ -434,7 +462,9 @@ export class SnmpSession {
     const out: Array<[string, SnmpValue]> = [];
     let at = base;
     while (out.length < max) {
-      const [[oid, v]] = await this.#request(0xa1, [at]);
+      const [next] = await this.#request(0xa1, [at]);
+      if (next === undefined) break;
+      const [oid, v] = next;
       if (!oid.startsWith(base + ".") || v === null) break;
       out.push([oid, v]);
       at = oid;

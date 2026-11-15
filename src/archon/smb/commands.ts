@@ -7,6 +7,7 @@
  * @module
  */
 
+import { proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { getRecord } from "../state/store.ts";
 
 import { P } from "../core/paths.ts";
@@ -32,7 +33,7 @@ export async function readRecord(host: string, root = P.state): Promise<SmbRecor
 }
 
 /** Who asked: the person behind sudo, else the current user. */
-const caller = () => Deno.env.get("SUDO_USER") ?? Deno.env.get("USER") ?? "root";
+const caller = (): string => proc.env.get("SUDO_USER") ?? proc.env.get("USER") ?? "root";
 
 async function server(name: string): Promise<{ fleet: FleetDef; host: HostDef }> {
   const fleet = await loadFleet();
@@ -89,26 +90,27 @@ export async function smbStatus(hostName: string): Promise<number> {
   );
   const sh = ui.phase("Shares");
   const users = smbUsers(plan.users);
-  ui.pause();
-  console.log(`  \\\\${name}\\shared   ${SMB.shared} · for ${users.join(", ") || "nobody yet"}`);
-  console.log(`  \\\\${name}\\<username>   each account's own home folder`);
-  ui.resume();
+  ui.say(`\\\\${name}\\shared   ${SMB.shared} · for ${users.join(", ") || "nobody yet"}`);
+  ui.say(`\\\\${name}\\<username>   each account's own home folder`);
   // Who has an SMB password (root only: Samba's database is private).
   const pdb = await run(["pdbedit", "-L"]);
   const withPw = pdb.ok
-    ? pdb.stdout.split("\n").map((l) => l.split(":")[0]).filter(Boolean)
+    ? pdb.stdout
+        .split("\n")
+        .map((l) => l.split(":")[0] ?? "")
+        .filter(Boolean)
     : undefined;
   sh.done(
     withPw
       ? `ready (password known to Samba): ${
-        withPw.filter((u) => users.includes(u)).join(", ") || "nobody yet"
-      }${
-        users.some((u) => !withPw.includes(u))
-          ? ` · not yet: ${
-            users.filter((u) => !withPw.includes(u)).join(", ")
-          } (type the Linux password once on the server: Cockpit, sudo, or passwd)`
-          : ""
-      }`
+          withPw.filter((u) => users.includes(u)).join(", ") || "nobody yet"
+        }${
+          users.some((u) => !withPw.includes(u))
+            ? ` · not yet: ${users
+                .filter((u) => !withPw.includes(u))
+                .join(", ")} (type the Linux password once on the server: Cockpit, sudo, or passwd)`
+            : ""
+        }`
       : "run as root (sudo) to see who has an SMB password",
   );
   if (on) ui.next.push(...howToConnect(name, caller()));

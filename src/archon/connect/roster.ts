@@ -46,24 +46,26 @@ export const day = (s?: string | null): string | undefined =>
 /** A row, with the optional parts left out when unknown (no email: no row). */
 export function rosterRow(r: {
   id: string;
-  email?: string | null;
-  name?: string | null;
+  email?: string | null | undefined;
+  name?: string | null | undefined;
   status: RosterRow["status"];
-  start?: string | null;
-  end?: string | null;
-  manager?: string | null;
-  type?: string | null;
+  start?: string | null | undefined;
+  end?: string | null | undefined;
+  manager?: string | null | undefined;
+  type?: string | null | undefined;
 }): RosterRow | undefined {
   const email = emailKey(r.email ?? undefined);
   if (!email) return undefined;
   const manager = emailKey(r.manager ?? undefined);
+  const start = day(r.start);
+  const end = day(r.end);
   return {
     id: r.id,
     email,
     status: r.status,
     ...(r.name?.trim() ? { name: r.name.trim() } : {}),
-    ...(day(r.start) ? { start: day(r.start) } : {}),
-    ...(day(r.end) ? { end: day(r.end) } : {}),
+    ...(start ? { start } : {}),
+    ...(end ? { end } : {}),
     ...(manager ? { manager } : {}),
     ...(r.type ? { type: r.type } : {}),
   };
@@ -111,9 +113,10 @@ export function rosterPosture(records: ObservedRecord[]): Observation["posture"]
   const people = records.filter((r) => r.label === "person");
   return {
     people: people.length,
-    active: people.filter((r) => r.props.status === "active").length,
-    leaversWithoutEndDate:
-      people.filter((r) => r.props.status === "terminated" && !r.props.end_date).length,
+    active: people.filter((r) => r.props["status"] === "active").length,
+    leaversWithoutEndDate: people.filter(
+      (r) => r.props["status"] === "terminated" && !r.props["end_date"],
+    ).length,
   };
 }
 

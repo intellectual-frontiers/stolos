@@ -16,8 +16,9 @@
  * @module
  */
 
-import { AccessDenied, type Connector, type Http } from "./connector.ts";
-import { bearer, defineConnector } from "./sdk.ts";
+import { http } from "@intellectual-frontiers/ifc-ts/runtime";
+import { AccessDenied, type Connector } from "./connector.ts";
+import { accessToken, defineConnector, exchange } from "./sdk.ts";
 import {
   rosterPolicies,
   rosterPosture,
@@ -52,14 +53,15 @@ function justworksRow(
   const status: RosterRow["status"] = /leave/.test(st)
     ? "leave"
     : m.active === true
-    ? "active"
-    : m.active === false || m.employment_termination_date
-    ? "terminated"
-    : "unknown";
+      ? "active"
+      : m.active === false || m.employment_termination_date
+        ? "terminated"
+        : "unknown";
   return rosterRow({
     id: m.id,
     email: workEmail(m),
-    name: m.name?.full_preferred_name ??
+    name:
+      m.name?.full_preferred_name ??
       [m.name?.given_name, m.name?.family_name].filter(Boolean).join(" "),
     status,
     start: m.employment_start_date,
@@ -73,12 +75,13 @@ const workEmail = (m: JustworksMember) => m.emails?.find((e) => e.type === "work
 
 /** A fresh access token from a refresh token (RFC 6749 section 6), as a bearer header. */
 export async function justworksToken(
-  http: Http,
+  t: http.Transport,
   cred: { client_id: string; client_secret: string; refresh_token: string },
 ): Promise<Record<string, string>> {
-  const r = await http(JUSTWORKS_TOKEN, {
+  const r = await exchange(t, {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
+    url: JUSTWORKS_TOKEN,
+    headers: { "content-type": "application/x-www-form-urlencoded", accept: "application/json" },
     body: new URLSearchParams({
       grant_type: "refresh_token",
       client_id: cred.client_id,
@@ -92,7 +95,7 @@ export async function justworksToken(
     );
   }
   if (r.status >= 400) throw new Error(`/oauth/token: HTTP ${r.status}`);
-  return bearer((JSON.parse(r.text) as { access_token: string }).access_token);
+  return { ...http.bearer(accessToken(r.body, JUSTWORKS_TOKEN)) };
 }
 
 const FIELDS = {
@@ -116,22 +119,21 @@ export const justworks: Connector = defineConnector<typeof FIELDS>({
   recipe: {},
   fields: FIELDS,
   tokenEndpoints: () => [JUSTWORKS_TOKEN],
-  auth: (cred, http) => justworksToken(http, cred),
+  auth: (cred, t) => justworksToken(t, cred),
   account: () => "Justworks",
   resources: {
     members: rosterResource(async function* (ctx) {
       type Page = { items?: JustworksMember[]; next_cursor?: string | null };
       const all: JustworksMember[] = [];
-      for await (
-        const m of ctx.cursorPages<Page, JustworksMember>(
-          `${JUSTWORKS_API}/v1/members?limit=100`,
-          (b) => b.items,
-          (b) =>
-            b.next_cursor
-              ? `${JUSTWORKS_API}/v1/members?limit=100&cursor=${encodeURIComponent(b.next_cursor)}`
-              : undefined,
-        )
-      ) all.push(m);
+      for await (const m of ctx.cursorPages<Page, JustworksMember>(
+        `${JUSTWORKS_API}/v1/members?limit=100`,
+        (b) => b.items,
+        (b) =>
+          b.next_cursor
+            ? `${JUSTWORKS_API}/v1/members?limit=100&cursor=${encodeURIComponent(b.next_cursor)}`
+            : undefined,
+      ))
+        all.push(m);
       const byId = new Map(all.map((m) => [m.id, workEmail(m)]));
       for (const m of all) {
         const row = justworksRow(m, (id) => byId.get(id));

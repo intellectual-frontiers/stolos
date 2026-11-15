@@ -62,8 +62,10 @@ const TYPE: Record<string, string> = {
   "3": "manager",
   "4": "custom",
 };
-const word = (v: unknown, names: Record<string, string>) =>
-  names[String(v)] ?? String(v ?? "").toLowerCase();
+const word = (v: unknown, names: Record<string, string>): string => {
+  const k = typeof v === "string" || typeof v === "number" ? String(v) : "";
+  return names[k] ?? k.toLowerCase();
+};
 
 interface Member {
   id: string;
@@ -95,9 +97,9 @@ function pages<T>(ctx: Ctx<typeof FIELDS>, url: string): AsyncGenerator<T> {
     (b) => b.data,
     (b) =>
       b.continuationToken
-        ? `${url}${url.includes("?") ? "&" : "?"}continuationToken=${
-          encodeURIComponent(b.continuationToken)
-        }`
+        ? `${url}${url.includes("?") ? "&" : "?"}continuationToken=${encodeURIComponent(
+            b.continuationToken,
+          )}`
         : undefined,
   );
 }
@@ -153,8 +155,8 @@ export const bitwarden: Connector = defineConnector({
           },
         );
         if (policies) {
-          const twoStep = policies.find((p) =>
-            String(p.type) === "0" || p.type === "TwoFactorAuthentication"
+          const twoStep = policies.find(
+            (p) => String(p.type) === "0" || p.type === "TwoFactorAuthentication",
           );
           ctx.fact("orgRequires2fa", !!twoStep?.enabled);
         }
@@ -204,17 +206,14 @@ export const bitwarden: Connector = defineConnector({
             if (!groupMembers.has(g.id)) {
               groupMembers.set(
                 g.id,
-                await ctx.orGap(
-                  `group ${g.id} members`,
-                  [] as string[],
-                  async () =>
-                    (await ctx.json<string[]>(`${api}/public/groups/${g.id}/member-ids`))
-                      .map((id) => email.get(id))
-                      .filter((e): e is string => !!e),
+                await ctx.orGap(`group ${g.id} members`, [] as string[], async () =>
+                  (await ctx.json<string[]>(`${api}/public/groups/${g.id}/member-ids`))
+                    .map((id) => email.get(id))
+                    .filter((e): e is string => !!e),
                 ),
               );
             }
-            for (const e of groupMembers.get(g.id)!) who.add(e);
+            for (const e of groupMembers.get(g.id) ?? []) who.add(e);
           }
           yield { ...c, access: { members: [...who].sort(), groups: (c.groups ?? []).length } };
         }
@@ -235,19 +234,24 @@ export const bitwarden: Connector = defineConnector({
     },
   },
   posture(records) {
-    const active = records.filter((r) => r.label === USER_ACCOUNT.name && r.props.active);
+    const active = records.filter((r) => r.label === USER_ACCOUNT.name && r.props["active"]);
     const stores = records.filter((r) => r.label === PASSWORD_STORE.name);
-    const known = active.some((r) => typeof r.props.mfa === "boolean");
+    const known = active.some((r) => typeof r.props["mfa"] === "boolean");
     return {
       activeMembers: active.length,
-      admins: active.filter((r) => r.props.admin).length,
-      ...(known ? { membersWithout2fa: active.filter((r) => r.props.mfa === false).length } : {}),
+      admins: active.filter((r) => r.props["admin"]).length,
       ...(known
-        ? { adminsWithout2fa: active.filter((r) => r.props.admin && r.props.mfa === false).length }
+        ? { membersWithout2fa: active.filter((r) => r.props["mfa"] === false).length }
+        : {}),
+      ...(known
+        ? {
+            adminsWithout2fa: active.filter((r) => r.props["admin"] && r.props["mfa"] === false)
+              .length,
+          }
         : {}),
       sharedCollections: stores.length,
       ...(stores.length
-        ? { widestCollection: Math.max(...stores.map((r) => Number(r.props.members ?? 0))) }
+        ? { widestCollection: Math.max(...stores.map((r) => Number(r.props["members"] ?? 0))) }
         : {}),
     };
   },
@@ -268,9 +272,8 @@ export const bitwarden: Connector = defineConnector({
         scf: ["IAC-37"],
         fact: "membersWithout2fa",
         want: (v) => v === 0,
-        show: (v) => `${v} of ${o.posture.activeMembers} members without it`,
-        fix:
-          "each member: Settings > Security > Two-step login (or turn on the Require two-step login policy)",
+        show: (v) => `${v} of ${o.posture["activeMembers"]} members without it`,
+        fix: "each member: Settings > Security > Two-step login (or turn on the Require two-step login policy)",
       }),
       check(o, {
         id: "bitwarden-admins",

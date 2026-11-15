@@ -15,8 +15,9 @@
  * @module
  */
 
+import { http } from "@intellectual-frontiers/ifc-ts/runtime";
 import { check, type Connector, fresh } from "./connector.ts";
-import { bearer, defineConnector } from "./sdk.ts";
+import { defineConnector } from "./sdk.ts";
 import { PERSON_RECORD } from "../people/records.ts";
 
 const FIELDS = {
@@ -62,14 +63,15 @@ export const knowbe4: Connector = defineConnector({
     },
   },
   fields: FIELDS,
-  auth: (cred) => Promise.resolve(bearer(cred.token)),
+  auth: (cred) => Promise.resolve(http.bearer(cred.token)),
   account: (cred) => new URL(base(cred.region)).host,
   resources: {
     enrollments: {
       label: PERSON_RECORD,
       ocsf: "evidence_info",
       async *list(ctx): AsyncGenerator<Enrollment> {
-        let pastDue = 0, open = 0;
+        let pastDue = 0,
+          open = 0;
         for (let page = 1; page <= 200; page++) {
           const rows = await ctx.json<Enrollment[]>(
             `${base(ctx.cred.region)}/v1/training/enrollments?page=${page}&per_page=${PER_PAGE}`,
@@ -100,7 +102,7 @@ export const knowbe4: Connector = defineConnector({
   },
   posture: (records) => ({
     trainingRecords: records.length,
-    trainingPassed: records.filter((r) => r.props.result === "passed").length,
+    trainingPassed: records.filter((r) => r.props["result"] === "passed").length,
   }),
   policies(o, now) {
     return [
@@ -111,9 +113,8 @@ export const knowbe4: Connector = defineConnector({
         scf: ["SAT-04"],
         fact: "trainingPastDue",
         want: (v) => v === 0,
-        show: (v) => `${v} past due, ${o.posture.trainingOpen ?? 0} not finished yet`,
-        fix:
-          "training.knowbe4.com > Training > the campaign > Users: remind each one past due (or extend the campaign)",
+        show: (v) => `${v} past due, ${o.posture["trainingOpen"] ?? 0} not finished yet`,
+        fix: "training.knowbe4.com > Training > the campaign > Users: remind each one past due (or extend the campaign)",
         warnOnly: true,
       }),
     ];

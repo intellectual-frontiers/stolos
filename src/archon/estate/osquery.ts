@@ -33,7 +33,7 @@
  * @module
  */
 
-import { resolve } from "../core/path.ts";
+import { path } from "@intellectual-frontiers/ifc-ts/runtime";
 import type { AnyTable, ViewDef } from "../schema/define.ts";
 import { ESTATE_SCHEMA } from "./schema.ts";
 
@@ -90,10 +90,10 @@ export function atcColumns(d: AnyTable | ViewDef): Array<{ estate: string; osque
 export function atcTable(d: AnyTable | ViewDef, dbPath: string): AtcTable {
   const cols = atcColumns(d);
   return {
-    query: `SELECT ${
-      cols.map((c) => c.estate === c.osquery ? c.estate : `${c.estate} AS ${c.osquery}`).join(", ")
-    } FROM ${d.name}`,
-    path: resolve(dbPath),
+    query: `SELECT ${cols
+      .map((c) => (c.estate === c.osquery ? c.estate : `${c.estate} AS ${c.osquery}`))
+      .join(", ")} FROM ${d.name}`,
+    path: path.resolve(dbPath),
     columns: cols.map((c) => c.osquery),
     platform: ATC_PLATFORM,
   };
@@ -132,6 +132,6 @@ export function osqueryHelp(configPath: string): string {
     "this PC's osquery. The path is this PC's, so the tables answer only here.",
     "",
     "Every column is text in osquery; NULL is empty; each table also has osquery's",
-    'own "path" column. Run deno task stolos estate build to refresh the data.',
+    'own "path" column. Run bun run stolos estate build to refresh the data.',
   ].join("\n");
 }

@@ -36,8 +36,8 @@
  * @module
  */
 
+import { errors, fs, path, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
 import { ui } from "../core/ui.ts";
-import { dirname, join, resolve } from "../core/path.ts";
 import { P } from "../core/paths.ts";
 import { run } from "../core/exec.ts";
 import {
@@ -50,7 +50,21 @@ import {
   nodeUids,
 } from "./graph.ts";
 import { estateSchemaDoc, estateSchemaSql } from "./schema.ts";
-import { gitReader, readSnapshot, seenTimes, type Snapshot } from "./snapshot.ts";
+import {
+  gitReader,
+  readSnapshot,
+  seenTimes,
+  type Snapshot,
+  type SourceSnapshot,
+} from "./snapshot.ts";
+
+/** Text for a program to read (a query's rows, the schema), on standard output. */
+const print = (text: string): void => {
+  stdio.stdout.writeSync(`${text}\n`);
+};
+
+/** An Error's message, or the thrown value as text. */
+const messageOf = (e: unknown): string => (e instanceof Error ? e.message : String(e));
 
 async function fleetFacts(): Promise<{ id: string; title: string; personSources?: string[] }> {
   const { loadFleet } = await import("../model/load.ts");
@@ -78,11 +92,11 @@ async function revFor(since: string): Promise<string | undefined> {
 
 /** The previous version of each source (the commit before its last), for what a source could not read now. */
 async function previousSnapshot(s: Snapshot): Promise<Snapshot> {
-  const sources = [];
+  const sources: SourceSnapshot[] = [];
   for (const src of s.sources) {
     if (!src.commit) continue;
-    const prev = await readSnapshot(gitReader(P.repo, `${src.commit}~1`), s.fleet).catch(() =>
-      undefined
+    const prev = await readSnapshot(gitReader(P.repo, `${src.commit}~1`), s.fleet).catch(
+      () => undefined,
     );
     const p = prev?.sources.find((x) => x.connector === src.connector);
     if (p) sources.push(p);
@@ -106,12 +120,12 @@ export async function loadEstate(rev?: string): Promise<Estate> {
 }
 
 /** `stolos estate query "<sql>"`. */
-export async function estateQueryCommand(sql: string, json = false): Promise<number> {
+export async function estateQueryCommand(sql: string, asJson = false): Promise<number> {
   const why = estateRefusal(sql);
   if (why) {
     ui.phase("Query").fail(
       `refused: ${why}`,
-      `for example: deno task stolos estate query "select connector, display_name from user_account where admin = 1 and mfa = 0"`,
+      `for example: bun run stolos estate query "select connector, display_name from user_account where admin = 1 and mfa = 0"`,
     );
     return 1;
   }
@@ -119,14 +133,13 @@ export async function estateQueryCommand(sql: string, json = false): Promise<num
   try {
     rows = estateQuery(await loadEstate(), sql);
   } catch (e) {
-    ui.phase("Query").fail((e as Error).message, `tables and views: ${ESTATE_NAMES}`);
+    ui.phase("Query").fail(messageOf(e), `tables and views: ${ESTATE_NAMES}`);
     return 1;
   }
-  if (json) console.log(JSON.stringify(rows, null, 2));
+  if (asJson) print(JSON.stringify(rows, null, 2));
   else {
     const { table } = await import("../state/query.ts");
-    if (rows.length) console.log(table(rows));
-    console.log(`\n${rows.length} row(s)`);
+    print(`${rows.length ? `${table(rows)}\n` : ""}\n${rows.length} row(s)`);
   }
   return 0;
 }
@@ -143,21 +156,21 @@ export interface EstateFiles {
 
 /** Where the estate's files are on this PC (absolute: osquery's configuration names the SQLite file). */
 export function estateFiles(): Required<EstateFiles> {
-  const dir = resolve(P.userState, "estate");
+  const dir = path.resolve(P.userState, "estate");
   return {
-    sql: join(dir, "estate.sql"),
-    db: join(dir, "estate.auto.sqlite.db"),
-    osquery: join(dir, "estate.osquery.json"),
+    sql: path.join(dir, "estate.sql"),
+    db: path.join(dir, "estate.auto.sqlite.db"),
+    osquery: path.join(dir, "estate.osquery.json"),
   };
 }
 
 /** Write osquery's configuration (spec 093) for the SQLite file at `db`: to a temporary file, then renamed. */
-export async function writeOsqueryConfig(path: string, db: string): Promise<void> {
+export async function writeOsqueryConfig(file: string, db: string): Promise<void> {
   const { atcJson } = await import("./osquery.ts");
-  await Deno.mkdir(dirname(path), { recursive: true });
-  const tmp = `${path}.tmp`;
-  await Deno.writeTextFile(tmp, atcJson(db));
-  await Deno.rename(tmp, path);
+  await fs.mkdir(path.dirname(file), { recursive: true });
+  const tmp = `${file}.tmp`;
+  await fs.writeTextFile(tmp, atcJson(db));
+  await fs.rename(tmp, file);
 }
 
 /**
@@ -173,11 +186,11 @@ export async function writeEstateFiles(
 ): Promise<void> {
   const { DatabaseSync } = await import("node:sqlite");
   const sql = estateSql(e);
-  await Deno.mkdir(join(files.sql, ".."), { recursive: true });
-  await Deno.writeTextFile(files.sql, sql);
+  await fs.mkdir(path.join(files.sql, ".."), { recursive: true });
+  await fs.writeTextFile(files.sql, sql);
   const tmp = `${files.db}.tmp`;
-  await Deno.remove(tmp).catch((x) => {
-    if (!(x instanceof Deno.errors.NotFound)) throw x;
+  await fs.remove(tmp).catch((x: unknown) => {
+    if (!(x instanceof errors.NotFound)) throw x;
   });
   const db = new DatabaseSync(tmp);
   try {
@@ -185,7 +198,7 @@ export async function writeEstateFiles(
   } finally {
     db.close();
   }
-  await Deno.rename(tmp, files.db);
+  await fs.rename(tmp, files.db);
   if (files.osquery) await writeOsqueryConfig(files.osquery, files.db);
 }
 
@@ -197,34 +210,39 @@ export async function estateBuild(): Promise<number> {
   estatePolicies(e);
   const files = estateFiles();
   await writeEstateFiles(e, files);
-  const n = (t: string) =>
-    Number((e.db.prepare(`SELECT count(*) AS n FROM ${t}`).get() as { n: number }).n);
+  const n = (t: string): number => {
+    const row = e.db.prepare(`SELECT count(*) AS n FROM ${t}`).get();
+    return typeof row?.["n"] === "number" ? row["n"] : Number(row?.["n"] ?? 0);
+  };
   p.ok(
     `${n("tenant")} tenant(s), ${n("person")} people${
       e.personSource ? ` (from ${e.personSource})` : ""
-    }, ${n("node")} node(s), ${n("fixed_asset")} machine(s), ${n("edge")} edge(s), ${
-      n("finding")
-    } finding(s)`,
+    }, ${n("node")} node(s), ${n("fixed_asset")} machine(s), ${n("edge")} edge(s), ${n(
+      "finding",
+    )} finding(s)`,
   );
   p.done(`${files.sql} (canonical), ${files.db}, and ${files.osquery} (for osquery)`);
   return 0;
 }
 
 /** `stolos estate osquery [--print]`: write (or print) osquery's configuration for the estate. */
-export async function estateOsquery(print = false): Promise<number> {
+export async function estateOsquery(printOnly = false): Promise<number> {
   const { atcJson, osqueryHelp } = await import("./osquery.ts");
   const files = estateFiles();
-  if (print) {
-    console.log(atcJson(files.db).trimEnd());
+  if (printOnly) {
+    print(atcJson(files.db).trimEnd());
     return 0;
   }
   const p = ui.phase("osquery");
   await writeOsqueryConfig(files.osquery, files.db);
-  const built = await Deno.stat(files.db).then(() => true, () => false);
+  const built = await fs.stat(files.db).then(
+    () => true,
+    () => false,
+  );
   if (!built) {
     p.warn(
       `${files.db} is not built yet: the tables answer nothing until it is`,
-      "deno task stolos estate build",
+      "bun run stolos estate build",
     );
   }
   const { ESTATE_SCHEMA } = await import("./schema.ts");
@@ -232,7 +250,7 @@ export async function estateOsquery(print = false): Promise<number> {
     `${ESTATE_SCHEMA.length} tables: ${ESTATE_SCHEMA.map((d) => `stolos_${d.name}`).join(", ")}`,
   );
   p.done(files.osquery);
-  console.log(`\n${osqueryHelp(files.osquery)}`);
+  for (const line of osqueryHelp(files.osquery).split("\n")) ui.say(line);
   return 0;
 }
 
@@ -241,7 +259,7 @@ export function rowsDiff(
   before: Array<Record<string, unknown>>,
   after: Array<Record<string, unknown>>,
 ): { added: Array<Record<string, unknown>>; removed: Array<Record<string, unknown>> } {
-  const key = (r: Record<string, unknown>) => JSON.stringify(r);
+  const key = (r: Record<string, unknown>): string => JSON.stringify(r);
   const b = new Set(before.map(key));
   const a = new Set(after.map(key));
   return {
@@ -251,7 +269,7 @@ export function rowsDiff(
 }
 
 /** `stolos estate diff "<sql>" --since <date|commit>`. */
-export async function estateDiff(sql: string, since: string, json = false): Promise<number> {
+export async function estateDiff(sql: string, since: string, asJson = false): Promise<number> {
   const p = ui.phase("Estate diff");
   const why = estateRefusal(sql);
   if (why) {
@@ -274,22 +292,22 @@ export async function estateDiff(sql: string, since: string, json = false): Prom
   try {
     d = rowsDiff(estateQuery(await loadEstate(rev), sql), estateQuery(await loadEstate(), sql));
   } catch (e) {
-    p.fail((e as Error).message, `tables and views: ${ESTATE_NAMES}`);
+    p.fail(messageOf(e), `tables and views: ${ESTATE_NAMES}`);
     return 1;
   }
-  if (json) {
-    console.log(JSON.stringify({ since: rev, ...d }, null, 2));
+  if (asJson) {
+    print(JSON.stringify({ since: rev, ...d }, null, 2));
     return 0;
   }
   const { table } = await import("../state/query.ts");
-  if (d.added.length) console.log(`Added since ${rev.slice(0, 12)}:\n${table(d.added)}\n`);
-  if (d.removed.length) console.log(`Removed since ${rev.slice(0, 12)}:\n${table(d.removed)}\n`);
+  if (d.added.length) print(`Added since ${rev.slice(0, 12)}:\n${table(d.added)}\n`);
+  if (d.removed.length) print(`Removed since ${rev.slice(0, 12)}:\n${table(d.removed)}\n`);
   p.done(`${d.added.length} added, ${d.removed.length} removed since ${rev.slice(0, 12)}`);
   return 0;
 }
 
 /** `stolos estate schema [--docs]`. */
 export function estateSchema(docs = false): number {
-  console.log(docs ? estateSchemaDoc() : estateSchemaSql());
+  print(docs ? estateSchemaDoc() : estateSchemaSql());
   return 0;
 }

@@ -13,8 +13,9 @@
  * @module
  */
 
+import { http } from "@intellectual-frontiers/ifc-ts/runtime";
 import type { Connector } from "./connector.ts";
-import { bearer, defineConnector } from "./sdk.ts";
+import { defineConnector } from "./sdk.ts";
 import {
   rosterPolicies,
   rosterPosture,
@@ -45,9 +46,15 @@ function gustoRow(
   now: Date,
   emailOf: (uuid: string) => string | undefined,
 ): RosterRow | undefined {
-  const ends = (e.terminations ?? []).map((t) => t.effective_date ?? "").filter(Boolean).sort();
+  const ends = (e.terminations ?? [])
+    .map((t) => t.effective_date ?? "")
+    .filter(Boolean)
+    .sort();
   const end = ends.at(-1);
-  const starts = (e.jobs ?? []).map((j) => j.hire_date ?? "").filter(Boolean).sort();
+  const starts = (e.jobs ?? [])
+    .map((j) => j.hire_date ?? "")
+    .filter(Boolean)
+    .sort();
   const today = now.toISOString().slice(0, 10);
   // A termination scheduled for later: still active until that day.
   const left = e.terminated === true && (!end || end.slice(0, 10) <= today);
@@ -83,8 +90,8 @@ export const gusto: Connector = defineConnector({
     company: { secret: false, hint: "your Gusto company UUID" },
     token: { secret: true, hint: "a company access token with employees:read only" },
   },
-  auth: (cred) => Promise.resolve(bearer(cred.token)),
-  account: (cred) => cred.company,
+  auth: (cred) => Promise.resolve(http.bearer(cred["token"] ?? "")),
+  account: (cred) => cred["company"] ?? "",
   resources: {
     employees: rosterResource(async function* (ctx) {
       const all = new Map<string, GustoEmployee>();
@@ -92,9 +99,9 @@ export const gusto: Connector = defineConnector({
       for (const terminated of [false, true]) {
         for (let page = 1; page <= 1000; page++) {
           const batch = await ctx.json<GustoEmployee[]>(
-            `${GUSTO_API}/v1/companies/${
-              encodeURIComponent(ctx.cred.company)
-            }/employees?terminated=${terminated}&page=${page}&per=100`,
+            `${GUSTO_API}/v1/companies/${encodeURIComponent(
+              ctx.cred["company"] ?? "",
+            )}/employees?terminated=${terminated}&page=${page}&per=100`,
           );
           for (const e of batch) all.set(e.uuid, e);
           if (batch.length < 100) break;

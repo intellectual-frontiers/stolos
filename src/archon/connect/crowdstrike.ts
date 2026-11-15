@@ -23,8 +23,7 @@ import { clientCredentials, type Ctx, defineConnector } from "./sdk.ts";
 const FIELDS = {
   cloud: {
     secret: false,
-    hint:
-      "your API address: api.crowdstrike.com (US-1), api.us-2.crowdstrike.com, api.eu-1.crowdstrike.com, or api.laggar.gcw.crowdstrike.com",
+    hint: "your API address: api.crowdstrike.com (US-1), api.us-2.crowdstrike.com, api.eu-1.crowdstrike.com, or api.laggar.gcw.crowdstrike.com",
   },
   clientId: { secret: false, hint: "the API client's Client ID" },
   clientSecret: { secret: true, hint: "the API client's Secret (Hosts: Read only)" },
@@ -66,15 +65,14 @@ interface Page {
 /** Every host, 1,000 at a time (the next page's `offset` is the last page's `next`). */
 function hosts(ctx: Ctx<typeof FIELDS>): AsyncGenerator<Host> {
   const at = (offset?: string) =>
-    `${base(ctx.cred.cloud)}/devices/combined/devices/v1?limit=1000&sort=device_id.asc&fields=${
-      encodeURIComponent(HOST_FIELDS)
-    }${offset ? `&offset=${encodeURIComponent(offset)}` : ""}`;
+    `${base(ctx.cred.cloud)}/devices/combined/devices/v1?limit=1000&sort=device_id.asc&fields=${encodeURIComponent(
+      HOST_FIELDS,
+    )}${offset ? `&offset=${encodeURIComponent(offset)}` : ""}`;
   return ctx.cursorPages<Page, Host>(
     at(),
     (b) => b.resources,
-    (
-      b,
-    ) => (b.meta?.pagination?.next && b.resources?.length ? at(b.meta.pagination.next) : undefined),
+    (b) =>
+      b.meta?.pagination?.next && b.resources?.length ? at(b.meta.pagination.next) : undefined,
   );
 }
 

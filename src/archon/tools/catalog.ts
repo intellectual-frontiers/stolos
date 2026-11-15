@@ -55,21 +55,6 @@ export const TOOLS: ToolDef[] = [
     spec: SPEC,
   },
   {
-    // Not in Ubuntu's archive: upstream binary.
-    id: "deno",
-    name: "Deno",
-    source: "upstream-binary",
-    bins: ["deno"],
-    versionCommand: "deno --version",
-    verify: "/usr/local/bin/deno eval 'Deno.exit(0)'",
-    spec: SPEC,
-    github: {
-      repo: "denoland/deno",
-      tagPrefix: "v",
-      asset: () => new RegExp(`^deno-${x86()}-unknown-linux-gnu\\.zip$`),
-    },
-  },
-  {
     // GitHub's own apt repository (Ubuntu 26.04 ships gh 2.46): apt and
     // unattended-upgrades keep it at the newest release.
     id: "gh",

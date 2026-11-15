@@ -30,10 +30,10 @@ interface Zone {
   status: string;
   plan?: { name: string };
   /** Added here: the zone's settings (undefined: not readable). */
-  ssl?: string;
-  always?: string;
-  minTls?: string;
-  dnssec?: string;
+  ssl?: string | undefined;
+  always?: string | undefined;
+  minTls?: string | undefined;
+  dnssec?: string | undefined;
 }
 
 interface DnsRecord {
@@ -58,7 +58,7 @@ type Fields = { token: FieldDef };
 const seen = new WeakMap<object, { accounts: CfAccount[]; zones: Zone[] }>();
 const state = (ctx: Ctx<Fields>) => {
   let s = seen.get(ctx);
-  if (!s) seen.set(ctx, s = { accounts: [], zones: [] });
+  if (!s) seen.set(ctx, (s = { accounts: [], zones: [] }));
   return s;
 };
 
@@ -112,8 +112,10 @@ export const cloudflare: Connector = defineConnector({
   fields: { token: { secret: true, hint: "the API token (read-only)" } },
   auth: (cred) => Promise.resolve({ Authorization: `Bearer ${cred.token}` }),
   account: (_cred, records) =>
-    records.filter((r) => r.label === ACCOUNT.name).map((r) => r.display_name).join(", ") ||
-    "(no account readable)",
+    records
+      .filter((r) => r.label === ACCOUNT.name)
+      .map((r) => r.display_name)
+      .join(", ") || "(no account readable)",
   resources: {
     accounts: {
       label: ACCOUNT,
@@ -131,10 +133,8 @@ export const cloudflare: Connector = defineConnector({
       label: SOFTWARE,
       ocsf: "cloud_resources_inventory_info",
       list: (ctx) =>
-        perAccount(
-          ctx,
-          "Workers",
-          (at) => all<{ id: string; modified_on?: string }>(ctx, `${at}/workers/scripts`),
+        perAccount(ctx, "Workers", (at) =>
+          all<{ id: string; modified_on?: string }>(ctx, `${at}/workers/scripts`),
         ),
       map: (w: { id: string; modified_on?: string; account: string }) => ({
         native_id: w.id,
@@ -151,11 +151,8 @@ export const cloudflare: Connector = defineConnector({
       label: SOFTWARE,
       ocsf: "cloud_resources_inventory_info",
       list: (ctx) =>
-        perAccount(
-          ctx,
-          "Pages",
-          (at) =>
-            all<{ id: string; name: string; subdomain?: string }>(ctx, `${at}/pages/projects`),
+        perAccount(ctx, "Pages", (at) =>
+          all<{ id: string; name: string; subdomain?: string }>(ctx, `${at}/pages/projects`),
         ),
       map: (p: { id: string; name: string; account: string }) => ({
         native_id: p.id,
@@ -196,14 +193,11 @@ export const cloudflare: Connector = defineConnector({
       label: SOFTWARE,
       ocsf: "cloud_resources_inventory_info",
       list: (ctx) =>
-        perAccount(
-          ctx,
-          "Tunnels",
-          (at) =>
-            all<{ id: string; name: string; status?: string }>(
-              ctx,
-              `${at}/cfd_tunnel?is_deleted=false`,
-            ),
+        perAccount(ctx, "Tunnels", (at) =>
+          all<{ id: string; name: string; status?: string }>(
+            ctx,
+            `${at}/cfd_tunnel?is_deleted=false`,
+          ),
         ),
       map: (t: { id: string; name: string; status?: string; account: string }) => ({
         native_id: t.id,
@@ -222,11 +216,8 @@ export const cloudflare: Connector = defineConnector({
         for (const z of zones) {
           const zs = `/zones/${z.id}`;
           const setting = (name: string) =>
-            ctx.orGap(
-              `${z.name} ${name}`,
-              undefined as string | undefined,
-              async () =>
-                String((await one<{ value: unknown }>(ctx, `${zs}/settings/${name}`)).value),
+            ctx.orGap(`${z.name} ${name}`, undefined as string | undefined, async () =>
+              String((await one<{ value: unknown }>(ctx, `${zs}/settings/${name}`)).value),
             );
           const ssl = await setting("ssl");
           const always = await setting("always_use_https");
@@ -269,10 +260,8 @@ export const cloudflare: Connector = defineConnector({
       ocsf: "cloud_resources_inventory_info",
       async *list(ctx) {
         for (const z of state(ctx).zones) {
-          const records = await ctx.orGap(
-            `${z.name} DNS`,
-            [] as Omit<DnsRecord, "zone">[],
-            () => all<Omit<DnsRecord, "zone">>(ctx, `/zones/${z.id}/dns_records`),
+          const records = await ctx.orGap(`${z.name} DNS`, [] as Omit<DnsRecord, "zone">[], () =>
+            all<Omit<DnsRecord, "zone">>(ctx, `/zones/${z.id}/dns_records`),
           );
           for (const r of records) yield { ...r, zone: z.name };
         }
@@ -295,14 +284,15 @@ export const cloudflare: Connector = defineConnector({
     const minTls = (v: unknown) => typeof v === "string" && v !== "" && parseFloat(v) >= 1.2;
     return {
       zones: zones.length,
-      zonesStrictTls: zones.filter((p) => p.ssl === "strict" || p.ssl === "full_strict").length,
-      zonesAlwaysHttps: zones.filter((p) => p.always_use_https === "on").length,
-      zonesMinTls12: zones.filter((p) => minTls(p.min_tls_version)).length,
-      zonesDnssec: zones.filter((p) => p.dnssec === true).length,
+      zonesStrictTls: zones.filter((p) => p["ssl"] === "strict" || p["ssl"] === "full_strict")
+        .length,
+      zonesAlwaysHttps: zones.filter((p) => p["always_use_https"] === "on").length,
+      zonesMinTls12: zones.filter((p) => minTls(p["min_tls_version"])).length,
+      zonesDnssec: zones.filter((p) => p["dnssec"] === true).length,
     };
   },
   policies(o, now): PolicyResult[] {
-    const every = (v: unknown) => v === o.posture.zones;
+    const every = (v: unknown) => v === o.posture["zones"];
     const zoneFix = "dash.cloudflare.com > the zone > SSL/TLS";
     return [
       fresh(o, now, "cloudflare"),
@@ -312,7 +302,7 @@ export const cloudflare: Connector = defineConnector({
         scf: ["CRY-05", "NET-37"],
         fact: "zonesStrictTls",
         want: every,
-        show: (v) => `${v} of ${o.posture.zones} zone(s)`,
+        show: (v) => `${v} of ${o.posture["zones"]} zone(s)`,
         fix: `${zoneFix} > Overview > Full (strict)`,
       }),
       check(o, {
@@ -321,7 +311,7 @@ export const cloudflare: Connector = defineConnector({
         scf: ["CRY-05"],
         fact: "zonesAlwaysHttps",
         want: every,
-        show: (v) => `${v} of ${o.posture.zones} zone(s)`,
+        show: (v) => `${v} of ${o.posture["zones"]} zone(s)`,
         fix: `${zoneFix} > Edge Certificates > Always Use HTTPS`,
       }),
       check(o, {
@@ -330,7 +320,7 @@ export const cloudflare: Connector = defineConnector({
         scf: ["CRY-05"],
         fact: "zonesMinTls12",
         want: every,
-        show: (v) => `${v} of ${o.posture.zones} zone(s)`,
+        show: (v) => `${v} of ${o.posture["zones"]} zone(s)`,
         fix: `${zoneFix} > Edge Certificates > Minimum TLS Version: 1.2`,
       }),
       check(o, {
@@ -339,9 +329,8 @@ export const cloudflare: Connector = defineConnector({
         scf: ["NET-13"],
         fact: "zonesDnssec",
         want: every,
-        show: (v) => `${v} of ${o.posture.zones} zone(s)`,
-        fix:
-          "dash.cloudflare.com > the zone > DNS > Settings > Enable DNSSEC (then add the DS record at the registrar)",
+        show: (v) => `${v} of ${o.posture["zones"]} zone(s)`,
+        fix: "dash.cloudflare.com > the zone > DNS > Settings > Enable DNSSEC (then add the DS record at the registrar)",
         warnOnly: true,
       }),
     ];

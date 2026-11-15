@@ -111,23 +111,22 @@ export const tenable: Connector = defineConnector({
             `asset ${assetName(a)}`,
             { vulnerabilities: [] as TVuln[] },
             () =>
-              ctx.json<{ vulnerabilities?: TVuln[] }>(
-                `${API}/workbenches/assets/${a.id}/vulnerabilities?date_range=30`,
-              ).then((r) => ({ vulnerabilities: r.vulnerabilities ?? [] })),
+              ctx
+                .json<{ vulnerabilities?: TVuln[] }>(
+                  `${API}/workbenches/assets/${a.id}/vulnerabilities?date_range=30`,
+                )
+                .then((r) => ({ vulnerabilities: r.vulnerabilities ?? [] })),
           );
           for (const v of vulnerabilities.filter((x) => x.severity >= 1)) {
             let f: Finding = { asset: a, vuln: v };
             if (v.severity >= 3 && details++ < MAX_DETAILS) {
-              const info = await ctx.orGap(
-                `plugin ${v.plugin_id} on ${assetName(a)}`,
-                {} as TInfo,
-                () =>
-                  ctx.json<TInfo>(
-                    `${API}/workbenches/assets/${a.id}/vulnerabilities/${v.plugin_id}/info`,
-                  ),
+              const unread: TInfo = {};
+              const info = await ctx.orGap(`plugin ${v.plugin_id} on ${assetName(a)}`, unread, () =>
+                ctx.json<TInfo>(
+                  `${API}/workbenches/assets/${a.id}/vulnerabilities/${v.plugin_id}/info`,
+                ),
               );
-              const cves = info.info?.reference_information?.find((r) => r.name === "cve")
-                ?.values;
+              const cves = info.info?.reference_information?.find((r) => r.name === "cve")?.values;
               const cve = firstCve(cves ?? []);
               const first = info.info?.discovery?.seen_first;
               f = { ...f, ...(cve ? { cve } : {}), ...(first ? { firstSeen: first } : {}) };
@@ -143,11 +142,12 @@ export const tenable: Connector = defineConnector({
           ...(f.cve ? { cve: f.cve } : {}),
           title: f.vuln.plugin_name,
           severity: SEVERITY[Math.min(4, Math.max(0, f.vuln.severity))],
-          status: f.vuln.vulnerability_state === "Fixed"
-            ? "fixed"
-            : (f.vuln.accepted_count ?? 0) > 0
-            ? "dismissed"
-            : "open",
+          status:
+            f.vuln.vulnerability_state === "Fixed"
+              ? "fixed"
+              : (f.vuln.accepted_count ?? 0) > 0
+                ? "dismissed"
+                : "open",
           asset: assetName(f.asset),
           ...(f.firstSeen ? { first_seen: f.firstSeen } : {}),
         },

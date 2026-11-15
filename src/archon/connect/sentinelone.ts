@@ -23,8 +23,8 @@ const FIELDS = {
 };
 
 /** The console's address, without a trailing slash. */
-const base = (console: string) =>
-  `https://${console.replace(/^https?:\/\//, "").replace(/\/+$/, "")}`;
+const base = (host: string): string =>
+  `https://${host.replace(/^https?:\/\//, "").replace(/\/+$/, "")}`;
 
 interface Agent {
   id: string;
@@ -55,16 +55,14 @@ async function* agents(ctx: Ctx<typeof FIELDS>): AsyncGenerator<Agent> {
       cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""
     }`;
   let infected = 0;
-  for await (
-    const a of ctx.cursorPages<
-      { data?: Agent[]; pagination?: { nextCursor?: string | null } },
-      Agent
-    >(
-      at(),
-      (b) => b.data,
-      (b) => (b.pagination?.nextCursor ? at(b.pagination.nextCursor) : undefined),
-    )
-  ) {
+  for await (const a of ctx.cursorPages<
+    { data?: Agent[]; pagination?: { nextCursor?: string | null } },
+    Agent
+  >(
+    at(),
+    (b) => b.data,
+    (b) => (b.pagination?.nextCursor ? at(b.pagination.nextCursor) : undefined),
+  )) {
     if (a.infected || (a.activeThreats ?? 0) > 0) infected++;
     yield a;
   }
@@ -141,9 +139,8 @@ export const sentinelone: Connector = defineConnector({
         scf: ["END-04"],
         fact: "devicesInfected",
         want: (v) => v === 0,
-        show: (v) => `${v} of ${o.posture.devices} devices with an active threat`,
-        fix:
-          "SentinelOne console > Incidents: resolve each active threat (mitigate, then mark resolved)",
+        show: (v) => `${v} of ${o.posture["devices"]} devices with an active threat`,
+        fix: "SentinelOne console > Incidents: resolve each active threat (mitigate, then mark resolved)",
       }),
     ];
   },

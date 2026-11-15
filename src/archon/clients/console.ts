@@ -25,6 +25,7 @@
  * @module
  */
 
+import type { ServeInfo } from "@intellectual-frontiers/ifc-ts/runtime";
 import { cookieOf, type Sessions } from "../console/auth.ts";
 import { type Html, html } from "../console/html.ts";
 import { bare, page } from "../console/layout.ts";
@@ -33,6 +34,7 @@ import { launchPage } from "../console/stolos-pages.ts";
 import { type Launch, STOLOS_COOKIE, stolosCookie } from "../console/stolos-server.ts";
 import { apiError, apiJson, apiUnauthorized } from "../api/handler.ts";
 import type { Client } from "./registry.ts";
+import { ui } from "../core/ui.ts";
 import { type ClientSummary, totals } from "./summary.ts";
 
 /** One client's console: its handler and its own sessions. */
@@ -76,7 +78,10 @@ export function clientsPage(list: ClientSummary[], current?: string): Html {
       <div>
         <div class="crumb">Provider</div>
         <h1>Clients</h1>
-        <p>Each client is its own repository, vault, and signers. These numbers are read from each client separately; opening a client starts a session for that client only.</p>
+        <p>
+          Each client is its own repository, vault, and signers. These numbers are read from each
+          client separately; opening a client starts a session for that client only.
+        </p>
       </div>
     </div>
     <div class="grid cols-3">
@@ -98,44 +103,74 @@ export function clientsPage(list: ClientSummary[], current?: string): Html {
     </div>
     <div class="card scroll">
       <table>
-        <thead><tr><th>Client</th><th>Pass</th><th>Fail</th><th>Partial</th><th>No evidence</th><th>Stale</th><th>Drift</th><th>Last observation</th><th>Open POA&amp;M</th><th>Evidence bundle</th><th></th></tr></thead>
-        <tbody>${list.map((s) =>
-          html`
-            <tr>
-              <td><b>${s.title}</b> <span class="sub mono">${s.client}</span>${s.client === current
-                ? html`
-                  <span class="pill tier">open</span>
-                `
-                : ""}</td>
-              ${s.readable
-                ? html`
-                  <td>${num(s.controls.pass)}</td>
-                  <td>${num(s.controls.fail, true)}</td>
-                  <td>${num(s.controls.partial)}</td>
-                  <td>${s.controls.noEvidence}</td>
-                  <td>${num(s.controls.stale, true)}</td>
-                  <td>${s.drift ? `${s.drift.changed} (${s.drift.worse} worse)` : "-"}</td>
-                  <td class="sub">${s.lastObservation?.slice(0, 16).replace("T", " ") ?? "-"}</td>
-                  <td>${num(s.poamOpen, true)}</td>
-                  <td class="sub">${s.evidenceBundle ?? "-"}</td>
-                `
-                : html`<td colspan="9" class="sub">Not read: ${s.problem}</td>`}
-              <td>${s.readable
-                ? html`
-                  <form method="post" action="/clients/switch">
-                    <input type="hidden" name="id" value="${s.client}">
-                    <button class="btn" type="submit">Open</button>
-                  </form>
-                `
-                : ""}</td>
-            </tr>
-          `
-        )}</tbody>
+        <thead>
+          <tr>
+            <th>Client</th>
+            <th>Pass</th>
+            <th>Fail</th>
+            <th>Partial</th>
+            <th>No evidence</th>
+            <th>Stale</th>
+            <th>Drift</th>
+            <th>Last observation</th>
+            <th>Open POA&amp;M</th>
+            <th>Evidence bundle</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${list.map(
+            (s) => html`
+              <tr>
+                <td>
+                  <b>${s.title}</b> <span class="sub mono">${s.client}</span>${
+                    s.client === current ? html` <span class="pill tier">open</span> ` : ""
+                  }
+                </td>
+                ${
+                  s.readable
+                    ? html`
+                        <td>${num(s.controls.pass)}</td>
+                        <td>${num(s.controls.fail, true)}</td>
+                        <td>${num(s.controls.partial)}</td>
+                        <td>${s.controls.noEvidence}</td>
+                        <td>${num(s.controls.stale, true)}</td>
+                        <td>${s.drift ? `${s.drift.changed} (${s.drift.worse} worse)` : "-"}</td>
+                        <td class="sub">
+                          ${s.lastObservation?.slice(0, 16).replace("T", " ") ?? "-"}
+                        </td>
+                        <td>${num(s.poamOpen, true)}</td>
+                        <td class="sub">${s.evidenceBundle ?? "-"}</td>
+                      `
+                    : html`<td colspan="9" class="sub">Not read: ${s.problem}</td>`
+                }
+                <td>
+                  ${
+                    s.readable
+                      ? html`
+                          <form method="post" action="/clients/switch">
+                            <input type="hidden" name="id" value="${s.client}" />
+                            <button class="btn" type="submit">Open</button>
+                          </form>
+                        `
+                      : ""
+                  }
+                </td>
+              </tr>
+            `,
+          )}
+        </tbody>
       </table>
-      ${list.length ? "" : html`
-        <p
-          class="sub">No clients yet: in a terminal, <code>deno task stolos clients add &lt;path to the client's checkout&gt;</code>.</p>
-      `}
+      ${
+        list.length
+          ? ""
+          : html`
+              <p class="sub">
+                No clients yet: in a terminal,
+                <code>bun run stolos clients add &lt;path to the client's checkout&gt;</code>.
+              </p>
+            `
+      }
     </div>
   `;
 }
@@ -143,7 +178,7 @@ export function clientsPage(list: ClientSummary[], current?: string): Html {
 /** The provider's console's request handler. */
 export function providerHandler(
   deps: ProviderDeps,
-): (req: Request, info?: Deno.ServeHandlerInfo) => Promise<Response> {
+): (req: Request, info?: ServeInfo) => Promise<Response> {
   const hosts = new Set([`127.0.0.1:${deps.port}`, `localhost:${deps.port}`]);
   /** Provider session id -> the client it is scoped to, and its session in that client's console. */
   const scopes = new Map<string, { client: string; inner: string }>();
@@ -159,15 +194,20 @@ export function providerHandler(
   };
 
   const frame = (title: string, body: Html, s: { name: string; user: string }) =>
-    htmlResponse(page({
-      product: "stolos",
-      title,
-      subtitle: `this PC · ${deps.person.user}`,
-      fleet: { id: "none (the provider's view)", repo: "each client in its own repository" },
-      user: { name: s.name, user: s.user, role: "provider" },
-      nav: NAV,
-      current: "/clients",
-    }, body));
+    htmlResponse(
+      page(
+        {
+          product: "stolos",
+          title,
+          subtitle: `this PC · ${deps.person.user}`,
+          fleet: { id: "none (the provider's view)", repo: "each client in its own repository" },
+          user: { name: s.name, user: s.user, role: "provider" },
+          nav: NAV,
+          current: "/clients",
+        },
+        body,
+      ),
+    );
 
   return async (req) => {
     const url = new URL(req.url);
@@ -184,11 +224,14 @@ export function providerHandler(
         if (!deps.launch.redeem(url.searchParams.get("t"))) {
           return htmlResponse(bare("Stolos Console", launchPage()), 401);
         }
-        const s = deps.sessions.create({
-          user: deps.person.user,
-          name: deps.person.name,
-          groups: ["archon-ops"],
-        }, "this PC");
+        const s = deps.sessions.create(
+          {
+            user: deps.person.user,
+            name: deps.person.name,
+            groups: ["archon-ops"],
+          },
+          "this PC",
+        );
         return redirect("/clients", { "set-cookie": stolosCookie(s) });
       }
       const s = deps.sessions.get(cookieOf(req.headers.get("cookie"), STOLOS_COOKIE));
@@ -207,7 +250,8 @@ export function providerHandler(
       if (path === "/clients/switch") {
         if (req.method !== "POST") return new Response("POST only\n", { status: 405 });
         if (!sameOrigin(req)) return new Response("cross-site request refused\n", { status: 403 });
-        const id = String((await req.formData()).get("id") ?? "");
+        const given = (await req.formData()).get("id");
+        const id = typeof given === "string" ? given : "";
         const c = (await deps.clients()).find((x) => x.id === id);
         if (!c) return new Response("no such client\n", { status: 404 });
         // A new session for the new scope: the old cookie (and its client session) end here.
@@ -256,7 +300,11 @@ export function providerHandler(
       out.headers.delete("set-cookie");
       return out;
     } catch (e) {
-      console.error(`console: ${path}: ${(e as Error).stack ?? e}`);
+      ui.problem(
+        "fail",
+        "Console",
+        `console: ${path}: ${e instanceof Error ? (e.stack ?? e.message) : String(e)}`,
+      );
       return htmlResponse(
         bare(
           "Error",

@@ -10,6 +10,7 @@
  * @module
  */
 
+import { proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { resetRoots } from "../core/paths.ts";
 import type { Client } from "./registry.ts";
 
@@ -23,8 +24,10 @@ export function clientEnv(c: Client): Record<(typeof SCOPE_VARS)[number], string
 
 /** Enter a client's scope for the rest of this process (undefined: leave every scope). */
 export function enterClient(c: Client | undefined): void {
-  for (const k of SCOPE_VARS) Deno.env.delete(k);
-  if (c) { for (const [k, v] of Object.entries(clientEnv(c))) Deno.env.set(k, v); }
+  for (const k of SCOPE_VARS) proc.env.delete(k);
+  if (c) {
+    for (const [k, v] of Object.entries(clientEnv(c))) proc.env.set(k, v);
+  }
   resetRoots();
 }
 
@@ -43,7 +46,7 @@ export async function withClient<T>(c: Client, fn: () => Promise<T>): Promise<T>
     await new Promise<void>((r) => waiting.push(r));
   }
   if (holders === 0) {
-    saved = Object.fromEntries(SCOPE_VARS.map((k) => [k, Deno.env.get(k)]));
+    saved = Object.fromEntries(SCOPE_VARS.map((k) => [k, proc.env.get(k)]));
     current = c.id;
     enterClient(c);
   }
@@ -55,8 +58,8 @@ export async function withClient<T>(c: Client, fn: () => Promise<T>): Promise<T>
     if (holders === 0) {
       for (const k of SCOPE_VARS) {
         const v = saved[k];
-        if (v === undefined) Deno.env.delete(k);
-        else Deno.env.set(k, v);
+        if (v === undefined) proc.env.delete(k);
+        else proc.env.set(k, v);
       }
       resetRoots();
       current = undefined;

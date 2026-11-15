@@ -10,8 +10,9 @@
  * @module
  */
 
-import { check, type Connector, fresh, getJson } from "./connector.ts";
-import { bearer, defineConnector } from "./sdk.ts";
+import { http } from "@intellectual-frontiers/ifc-ts/runtime";
+import { check, type Connector, fresh } from "./connector.ts";
+import { defineConnector, sendJson } from "./sdk.ts";
 import { USER_ACCOUNT } from "./labels.ts";
 
 const TOKEN = "https://oauth2.googleapis.com/token";
@@ -19,7 +20,9 @@ const SCOPE = "https://www.googleapis.com/auth/admin.directory.user.readonly";
 
 const b64url = (b: Uint8Array | string) =>
   btoa(typeof b === "string" ? unescape(encodeURIComponent(b)) : String.fromCharCode(...b))
-    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
 
 /** A signed JWT assertion for Google's token endpoint (RS256). */
 export async function serviceAccountJwt(
@@ -102,18 +105,20 @@ export const google: Connector = defineConnector({
     },
   },
   tokenEndpoints: () => [TOKEN],
-  async auth(cred, http, now) {
+  async auth(cred, t, now) {
     const key = JSON.parse(cred.key) as { client_email: string; private_key: string };
     const assertion = await serviceAccountJwt(key, cred.admin, SCOPE, now);
-    const tok = await getJson<{ access_token: string }>(
-      http,
+    const tok = await sendJson<{ access_token: string }>(
+      t,
       TOKEN,
       { "Content-Type": "application/x-www-form-urlencoded" },
       "POST",
-      new URLSearchParams({ grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer", assertion })
-        .toString(),
+      new URLSearchParams({
+        grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+        assertion,
+      }).toString(),
     );
-    return bearer(tok.access_token);
+    return http.bearer(tok.access_token);
   },
   account: (cred) => cred.admin.split("@")[1] ?? "Google Workspace",
   resources: {
@@ -154,16 +159,16 @@ export const google: Connector = defineConnector({
     },
   },
   posture(records) {
-    const active = records.filter((r) => r.props.active);
+    const active = records.filter((r) => r.props["active"]);
     return {
       activeUsers: active.length,
-      activeWithout2sv: active.filter((r) => !r.props.mfa).length,
-      activeNotEnforced2sv: active.filter((r) => !r.props.mfa_enforced).length,
-      superAdmins: active.filter((r) => r.props.admin).length,
+      activeWithout2sv: active.filter((r) => !r.props["mfa"]).length,
+      activeNotEnforced2sv: active.filter((r) => !r.props["mfa_enforced"]).length,
+      superAdmins: active.filter((r) => r.props["admin"]).length,
     };
   },
   policies(o, now) {
-    const of = (v: string | number | boolean) => `${v} of ${o.posture.activeUsers} active users`;
+    const of = (v: string | number | boolean) => `${v} of ${o.posture["activeUsers"]} active users`;
     return [
       fresh(o, now, "google"),
       check(o, {
@@ -191,8 +196,7 @@ export const google: Connector = defineConnector({
         scf: ["IAC-30"],
         fact: "superAdmins",
         want: (v) => typeof v === "number" && v >= 2 && v <= 4,
-        fix:
-          "admin.google.com > Account > Admin roles > Super Admin: remove those who do not need it",
+        fix: "admin.google.com > Account > Admin roles > Super Admin: remove those who do not need it",
         warnOnly: true,
       }),
     ];

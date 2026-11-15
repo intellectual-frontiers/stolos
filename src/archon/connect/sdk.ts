@@ -5,14 +5,16 @@
  * graph and an OCSF class), and its posture policies. `defineConnector`
  * turns it into a {@link Connector} the rest of Stolos already runs.
  *
- * What every connector gets, so none re-implements it:
- * - a read-only guard: only GET, plus the token endpoints it declares;
+ * What every connector gets, so none re-implements it (the transport, the
+ * read-only guard, backoff and paging are IFC TypeScript's runtime `http`):
+ * - a read-only guard: only safe methods, plus the token endpoints it declares
+ *   and the POSTs it declares as reads (`readPost`);
  * - paging: `Link: rel="next"`, cursors in the body, page tokens;
  * - backoff on 429 and 503, honoring Retry-After;
  * - a denied call becomes a gap in the observation, not a failure;
  * - the vendor's record kept beside the mapped one (OCSF's `unmapped`).
  *
- * Nothing else: no vendor SDK, no third-party binary. Only Deno and the
+ * Nothing else: no vendor SDK, no third-party binary. Only the runtime and the
  * vendor's published API.
  *
  * ```mermaid
@@ -26,15 +28,16 @@
  * @module
  */
 
+import { type Result, unknownValue } from "@intellectual-frontiers/ifc-ts/kernel";
+import { http } from "@intellectual-frontiers/ifc-ts/runtime";
 import type { PolicyResult } from "../adopt/policy.ts";
-import { OCSF_CLASSES } from "../ocsf/types.auto.ts";
+import { OCSF_CLASSES } from "../ocsf/classes.ts";
 import type { Column, LabelView, RowOf } from "../schema/define.ts";
-import type { Entities } from "./entities.ts";
+import type { Account, Device, Entities, Person, Repository } from "./entities.ts";
 import {
   AccessDenied,
   type Asset,
   type Connector,
-  type Http,
   type Observation,
   type ServiceModel,
 } from "./connector.ts";
@@ -84,8 +87,8 @@ export interface ObservedRecord {
 export interface Ctx<F extends Record<string, FieldDef>> {
   /** The credential. */
   cred: CredOf<F>;
-  /** Read-only HTTP (GET, plus the declared token endpoints). */
-  http: Http;
+  /** Read-only HTTP (safe methods, plus the declared token endpoints and read POSTs). */
+  http: http.Transport;
   /** Now. */
   now: Date;
   /** Headers to send (from `auth`). */
@@ -167,18 +170,53 @@ export interface ConnectorDef<F extends Record<string, FieldDef>> {
    */
   readPost?: ReadPost;
   /** The headers to send, given the credential (may call a token endpoint). */
-  auth(cred: CredOf<F>, http: Http, now: Date): Promise<Record<string, string>>;
+  auth(cred: CredOf<F>, http: http.Transport, now: Date): Promise<Record<string, string>>;
   /** The account, for people (from the credential, or from what was read). */
   account(cred: CredOf<F>, records: ObservedRecord[]): string;
-  /** The resources it reads. */
-  // deno-lint-ignore no-explicit-any
-  resources: Record<string, ResourceDef<F, any, any>>;
+  /**
+   * The resources it reads. Each resource's raw record and label differ, so the map's values are
+   * existentially typed: `never` for what `map` reads and `Record<string, Column>` for its label.
+   */
+  resources: Record<string, AnyResource<F>>;
   /** Posture facts from the records (what the policies read), knowing what could not be read and when. */
   posture(records: ObservedRecord[], cred: CredOf<F>, seen: Seen): Observation["posture"];
   /** Its posture policies. */
   policies(o: Observation, now: number): PolicyResult[];
   /** Spec 073: how often it is observed, when not daily. */
   cadence?: Connector["cadence"];
+}
+
+/**
+ * A resource of any raw record and label, as a connector's map of resources holds it. A resource's
+ * `map` and `asset` are called only with the records its own `list` gives, so they are typed here as
+ * taking what `list` gives (`never` from the outside), which every resource is assignable to.
+ */
+export interface AnyResource<F extends Record<string, FieldDef>> {
+  /** The estate graph label its records fill. */
+  label: LabelView;
+  /** The OCSF class its records are emitted as. */
+  ocsf: keyof typeof OCSF_CLASSES;
+  /** The vendor's records. */
+  list(ctx: Ctx<F>): AsyncIterable<unknown>;
+  /** One vendor record, mapped. */
+  map: (raw: never) => AnyMapped;
+  /** Keep the vendor's record beside the mapped one. */
+  keepUnmapped?: boolean;
+  /** A denied read fails the observation. */
+  required?: boolean;
+  /** How it is listed in `estate assets`. */
+  asset?: (raw: never, m: never) => AssetExtra;
+}
+
+/** What a resource says of a record for `estate assets` (undefined: it is not listed). */
+type AssetExtra = { kind?: string; facts?: Asset["facts"]; fleetMachine?: string } | undefined;
+
+/** A mapped record, of any label. */
+interface AnyMapped {
+  native_id: string;
+  display_name: string;
+  props: object;
+  where?: string;
 }
 
 /** Whether a POST only reads (spec 088): given its URL, headers, and body. */
@@ -188,64 +226,104 @@ export type ReadPost = (
 ) => boolean;
 
 /**
- * HTTP that refuses anything but GET, except POSTs to the given URL prefixes
- * and POSTs that `readPost` says only read.
+ * IFC TypeScript's read-only guard (safe methods, POST to `tokenEndpoints`), and besides it the
+ * POSTs that `readPost` says only read (spec 088).
  */
-export function readOnly(http: Http, tokenEndpoints: string[] = [], readPost?: ReadPost): Http {
-  return (url, init) => {
-    const method = (init?.method ?? "GET").toUpperCase();
-    const post = method === "POST" &&
-      (tokenEndpoints.some((t) => url.startsWith(t)) || !!readPost?.(url, init ?? {}));
-    if (method !== "GET" && !post) {
-      return Promise.reject(new Error(`read-only: ${method} ${new URL(url).origin} is refused`));
-    }
-    return http(url, init);
+export function readOnlyWith(
+  t: http.Transport,
+  tokenEndpoints: readonly string[] = [],
+  readPost?: ReadPost,
+): http.Transport {
+  const guarded = http.readOnly(t, tokenEndpoints);
+  return {
+    kind: t.kind,
+    send: (r) =>
+      r.method === "POST" &&
+      readPost?.(r.url, {
+        headers: { ...r.headers },
+        ...(r.body === undefined ? {} : { body: r.body }),
+      }) === true
+        ? t.send(r)
+        : guarded.send(r),
   };
 }
 
-/** HTTP that waits and tries again on 429 and 503 (Retry-After, else 1, 2, 4 s), up to `tries` times. */
-export function withBackoff(
-  http: Http,
-  tries = 3,
-  sleep = (ms: number) => new Promise((r) => setTimeout(r, ms)),
-): Http {
-  return async (url, init) => {
-    for (let i = 0;; i++) {
-      const r = await http(url, init);
-      if ((r.status !== 429 && r.status !== 503) || i >= tries) return r;
-      const after = Number(r.retryAfter);
-      await sleep(Number.isFinite(after) && after > 0 ? after * 1000 : 1000 * 2 ** i);
+/** A request's answer, or an Error that says why there was none (a refusal, the network). */
+export async function exchange(t: http.Transport, r: http.OutRequest): Promise<http.Exchange> {
+  const x = await t.send(r);
+  if (x.kind === "err") throw new Error(x.error.message);
+  return x.value;
+}
+
+/** A read error thrown: a denial as AccessDenied (a gap), anything else as an Error. */
+function thrown(e: http.ReadError): Error {
+  return e.kind === "denied"
+    ? new AccessDenied(http.formatReadError(e))
+    : new Error(http.formatReadError(e));
+}
+
+/** The value of a read, or its error thrown (see {@link thrown}). */
+function valueOf<T>(r: Result<T, http.ReadError>): T {
+  if (r.kind === "err") throw thrown(r.error);
+  return r.value;
+}
+
+/**
+ * The items of one of IFC TypeScript's paging generators, typed as the connector says the vendor's
+ * API documents them (the vendor's record is decoded field by field where it is mapped); the
+ * generator's failure is thrown (see {@link thrown}).
+ */
+async function* itemsOf<T>(
+  pages: AsyncGenerator<unknown, Result<number, http.ReadError>>,
+): AsyncGenerator<T> {
+  for (;;) {
+    const step = await pages.next();
+    if (step.done === true) {
+      valueOf(step.value);
+      return;
     }
-  };
+    yield step.value as T;
+  }
+}
+
+/**
+ * A JSON body from any method (a token endpoint's POST, a JSON API that reads by POST), typed as the
+ * vendor documents it; 401 and 403 are AccessDenied, any other status from 400 up an Error.
+ */
+export async function sendJson<T>(
+  t: http.Transport,
+  url: string,
+  headers: Record<string, string>,
+  method: http.OutRequest["method"] = "GET",
+  body?: string,
+): Promise<T> {
+  const r = await exchange(t, { method, url, headers, ...(body === undefined ? {} : { body }) });
+  const path = new URL(url).pathname;
+  if (r.status === 401 || r.status === 403) {
+    throw new AccessDenied(`${path}: ${r.status} (the credential may not read this)`);
+  }
+  if (r.status >= 400) throw new Error(`${path}: HTTP ${r.status}`);
+  try {
+    return JSON.parse(r.body) as T;
+  } catch {
+    throw new Error(`${path}: not JSON`);
+  }
 }
 
 function ctxFor<F extends Record<string, FieldDef>>(
   cred: CredOf<F>,
-  http: Http,
+  t: http.Transport,
   now: Date,
   headers: Record<string, string>,
   gaps: string[],
   facts: Observation["posture"] = {},
 ): Ctx<F> {
-  const get = async <T>(url: string, h = headers): Promise<{ body: T; link?: string }> => {
-    const r = await http(url, { headers: h });
-    const path = new URL(url).pathname;
-    if (r.status === 401 || r.status === 403) {
-      throw new AccessDenied(`${path}: ${r.status} (the credential may not read this)`);
-    }
-    if (r.status >= 400) throw new Error(`${path}: HTTP ${r.status}`);
-    try {
-      return { body: JSON.parse(r.text) as T, ...(r.link ? { link: r.link } : {}) };
-    } catch {
-      throw new Error(`${path}: not JSON`);
-    }
-  };
   return {
     cred,
-    http,
+    http: t,
     now,
     headers,
-    async orGap<T>(what: string, fallback: T, f: () => Promise<T>) {
+    async orGap<T>(what: string, fallback: T, f: () => Promise<T>): Promise<T> {
       try {
         return await f();
       } catch (e) {
@@ -256,32 +334,31 @@ function ctxFor<F extends Record<string, FieldDef>>(
         throw e;
       }
     },
-    fact(name: string, value: string | number | boolean) {
+    fact(name: string, value: string | number | boolean): void {
       facts[name] = value;
     },
-    async json<T>(url: string, h?: Record<string, string>) {
-      return (await get<T>(url, h ?? headers)).body;
+    async json<T>(url: string, h?: Record<string, string>): Promise<T> {
+      return valueOf(await http.getJson(t, url, unknownValue, h ?? headers)) as T;
     },
-    async *linkPages<T>(url: string, h?: Record<string, string>) {
-      let next: string | undefined = url;
-      for (let i = 0; next && i < 200; i++) {
-        const r: { body: T[]; link?: string } = await get<T[]>(next, h ?? headers);
-        yield* r.body;
-        next = r.link?.match(/<([^>]+)>;\s*rel="next"/)?.[1];
-      }
+    linkPages<T>(url: string, h?: Record<string, string>): AsyncGenerator<T> {
+      return itemsOf<T>(http.linkPages(t, url, unknownValue, { headers: h ?? headers }));
     },
-    async *cursorPages<B, T>(
+    cursorPages<B, T>(
       first: string,
       items: (b: B) => T[] | undefined,
       next: (b: B, url: string) => string | undefined,
       h?: Record<string, string>,
-    ) {
-      let url: string | undefined = first;
-      for (let i = 0; url && i < 200; i++) {
-        const b: B = (await get<B>(url, h ?? headers)).body;
-        yield* items(b) ?? [];
-        url = next(b, url);
-      }
+    ): AsyncGenerator<T> {
+      return itemsOf<T>(
+        http.cursorPages(
+          t,
+          first,
+          unknownValue,
+          (b) => items(b as B) ?? [],
+          (b, url) => next(b as B, url),
+          { headers: h ?? headers },
+        ),
+      );
     },
   };
 }
@@ -301,9 +378,11 @@ export function defineConnector<F extends Record<string, FieldDef>>(
     fields: Object.entries(def.fields).map(([name, f]) => ({ name, ...f })),
     ...(def.cadence ? { cadence: def.cadence } : {}),
     def,
-    async observe(raw, http, now) {
-      const cred = raw as CredOf<F>;
-      const guarded = withBackoff(readOnly(http, def.tokenEndpoints?.(cred) ?? [], def.readPost));
+    async observe(raw, t, now): Promise<Observation> {
+      const cred = credOf(def.fields, raw);
+      const guarded = http.withBackoff(
+        readOnlyWith(t, def.tokenEndpoints?.(cred) ?? [], def.readPost),
+      );
       const headers = await def.auth(cred, guarded, now);
       const gaps: string[] = [];
       const facts: Observation["posture"] = {};
@@ -311,19 +390,22 @@ export function defineConnector<F extends Record<string, FieldDef>>(
       const records: ObservedRecord[] = [];
       const assets: Asset[] = [];
       for (const [name, r] of Object.entries(def.resources)) {
+        // A resource's map and asset take what its own list gives (see AnyResource).
+        const map = r.map as (x: unknown) => AnyMapped;
+        const asset = r.asset as ((x: unknown, m: AnyMapped) => AssetExtra) | undefined;
         try {
           for await (const x of r.list(ctx)) {
-            const m = r.map(x);
+            const m = map(x);
             records.push({
               label: r.label.name,
-              ocsf_class_uid: OCSF_UID[r.ocsf],
+              ocsf_class_uid: OCSF_CLASSES[r.ocsf].uid,
               native_id: m.native_id,
               display_name: m.display_name,
-              props: m.props as Record<string, unknown>,
-              ...(r.keepUnmapped ? { unmapped: x } : {}),
+              props: { ...m.props },
+              ...(r.keepUnmapped === true ? { unmapped: x } : {}),
             });
-            const extra = r.asset?.(x, m);
-            if (extra !== undefined || !r.asset) {
+            const extra = asset?.(x, m);
+            if (extra !== undefined || asset === undefined) {
               assets.push({
                 kind: extra?.kind ?? r.label.name,
                 id: m.native_id,
@@ -335,7 +417,7 @@ export function defineConnector<F extends Record<string, FieldDef>>(
             }
           }
         } catch (e) {
-          if (e instanceof AccessDenied && !r.required) gaps.push(`${name}: ${e.message}`);
+          if (e instanceof AccessDenied && r.required !== true) gaps.push(`${name}: ${e.message}`);
           else throw e;
         }
       }
@@ -356,9 +438,30 @@ export function defineConnector<F extends Record<string, FieldDef>>(
   };
 }
 
-const OCSF_UID = Object.fromEntries(
-  Object.entries(OCSF_CLASSES).map(([k, v]) => [k, v.uid]),
-) as Record<keyof typeof OCSF_CLASSES, number>;
+/** The credential's declared fields, from the vault's record (a missing field is empty). */
+function credOf<F extends Record<string, FieldDef>>(
+  fields: F,
+  raw: Record<string, string>,
+): CredOf<F> {
+  const cred: Record<string, string> = { ...raw };
+  for (const name of Object.keys(fields)) cred[name] = raw[name] ?? "";
+  // Every declared field is set above, so the record is the credential the connector declared.
+  return cred as CredOf<F>;
+}
+
+const text = (v: unknown): string | undefined => (typeof v === "string" ? v : undefined);
+const flag = (v: unknown): boolean | undefined => (typeof v === "boolean" ? v : undefined);
+const count = (v: unknown): number | undefined => (typeof v === "number" ? v : undefined);
+const STATUSES: readonly Person["status"][] = ["active", "terminated", "leave", "unknown"];
+const statusOf = (v: unknown): Person["status"] => STATUSES.find((s) => s === v) ?? "unknown";
+
+/** The optional fields of an entity, left out where the record has no value of the right type. */
+function present<T extends object>(o: T): { [K in keyof T]?: Exclude<T[K], undefined> } {
+  // Only the entries with a value are kept, so each kept one has its field's defined type.
+  return Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined)) as {
+    [K in keyof T]?: Exclude<T[K], undefined>;
+  };
+}
 
 /**
  * The estate's entities from a connector's records: `user_account` records
@@ -370,96 +473,138 @@ export function toEntities(
   system: string,
   records: ObservedRecord[],
 ): { entities: Entities; rest: ObservedRecord[] } {
-  const e: Required<Entities> = { people: [], accounts: [], devices: [], repositories: [] };
+  const people: Person[] = [];
+  const accounts: Account[] = [];
+  const devices: Device[] = [];
+  const repositories: Repository[] = [];
   const rest: ObservedRecord[] = [];
-  const opt = <T>(k: string, v: T | undefined) => (v === undefined || v === null ? {} : { [k]: v });
   for (const r of records) {
-    const p = r.props as Record<string, unknown>;
+    const p = r.props;
     if (r.label === "user_account") {
-      e.accounts.push({
+      accounts.push({
         system,
         id: r.native_id,
         name: r.display_name,
-        active: !!p.active,
-        ...opt("email", p.email as string | undefined),
-        ...opt("admin", p.admin as boolean | undefined),
-        ...opt("mfa", p.mfa as boolean | undefined),
-        ...opt("lastLogin", p.last_login as string | undefined),
-        ...opt("service", p.service as boolean | undefined),
+        active: Boolean(p["active"]),
+        ...present({
+          email: text(p["email"]),
+          admin: flag(p["admin"]),
+          mfa: flag(p["mfa"]),
+          lastLogin: text(p["last_login"]),
+          service: flag(p["service"]),
+        }),
       });
     } else if (r.label === "code_repository") {
-      e.repositories.push({
+      repositories.push({
         system,
         name: r.native_id,
-        private: !!p.private,
-        ...opt("protected", p.protected as boolean | undefined),
-        ...opt("reviews", p.reviews as number | undefined),
-        ...opt("secretScanning", p.secret_scanning as boolean | undefined),
-        ...opt("dependencyAlerts", p.dependency_alerts as boolean | undefined),
+        private: Boolean(p["private"]),
+        ...present({
+          protected: flag(p["protected"]),
+          reviews: count(p["reviews"]),
+          secretScanning: flag(p["secret_scanning"]),
+          dependencyAlerts: flag(p["dependency_alerts"]),
+        }),
       });
     } else if (r.label === "person") {
-      e.people.push({
-        email: String(p.email ?? ""),
-        status: (p.status as "active" | "terminated" | "leave" | "unknown") ?? "unknown",
-        ...opt("name", p.name as string | undefined),
-        ...opt("start", p.start_date as string | undefined),
-        ...opt("end", p.end_date as string | undefined),
-        ...opt("manager", p.manager as string | undefined),
-        ...opt("type", p.role_type as string | undefined),
+      people.push({
+        email: text(p["email"]) ?? "",
+        status: statusOf(p["status"]),
+        ...present({
+          name: text(p["name"]),
+          start: text(p["start_date"]),
+          end: text(p["end_date"]),
+          manager: text(p["manager"]),
+          type: text(p["role_type"]),
+        }),
       });
     } else if (r.label === "hardware_device") {
-      e.devices.push({
+      devices.push({
         source: system,
         id: r.native_id,
         name: r.display_name,
         managed: false,
-        ...opt("owner", p.owner as string | undefined),
-        ...opt("os", p.os_name as string | undefined),
-        ...opt("serial", p.serial_number as string | undefined),
-        ...opt("encrypted", p.encrypted as boolean | undefined),
-        ...opt("seen", p.last_seen as string | undefined),
+        ...present({
+          owner: text(p["owner"]),
+          os: text(p["os_name"]),
+          serial: text(p["serial_number"]),
+          encrypted: flag(p["encrypted"]),
+          seen: text(p["last_seen"]),
+        }),
       });
     } else rest.push(r);
   }
-  const entities = Object.fromEntries(
-    Object.entries(e).filter(([, v]) => v.length),
-  ) as Entities;
+  const entities: Entities = {
+    ...(people.length ? { people } : {}),
+    ...(accounts.length ? { accounts } : {}),
+    ...(devices.length ? { devices } : {}),
+    ...(repositories.length ? { repositories } : {}),
+  };
   return { entities, rest };
 }
 
-/** Recorded responses, for tests: each URL to its status, body, and Link header; anything else is refused. */
+/** One recorded response: its status (200 by default), its body (JSON, or text as it is), its Link header. */
+export interface Recorded {
+  /** The status. */
+  status?: number;
+  /** The body: a string is sent as it is, anything else as JSON. */
+  body: unknown;
+  /** The `Link` header. */
+  link?: string;
+}
+
+/**
+ * Recorded responses, for tests: each URL to its status, body, and Link header, whatever the method
+ * (a token endpoint's POST is recorded by its URL); anything else is refused. Every request is
+ * appended to `calls`.
+ */
 export function recordedHttp(
-  fixtures: Record<string, { status?: number; body: unknown; link?: string }>,
+  fixtures: Record<string, Recorded>,
   calls: Array<{ method: string; url: string }> = [],
-): Http {
-  return (url, init) => {
-    calls.push({ method: init?.method ?? "GET", url });
-    const f = fixtures[url];
-    if (!f) return Promise.reject(new Error(`no recorded response for ${url}`));
-    return Promise.resolve({
-      status: f.status ?? 200,
-      text: typeof f.body === "string" ? f.body : JSON.stringify(f.body),
-      ...(f.link ? { link: f.link } : {}),
-    });
+): http.Transport {
+  return {
+    kind: "recorded",
+    send(r): Promise<Result<http.Exchange, http.TransportError>> {
+      calls.push({ method: r.method, url: r.url });
+      const f = fixtures[r.url];
+      if (f === undefined) {
+        return Promise.resolve({
+          kind: "err",
+          error: { kind: "refused", message: `no recorded response for ${r.url}` },
+        });
+      }
+      return Promise.resolve({
+        kind: "ok",
+        value: {
+          method: r.method,
+          url: r.url,
+          status: f.status ?? 200,
+          headers: f.link === undefined ? {} : { link: f.link },
+          body: typeof f.body === "string" ? f.body : JSON.stringify(f.body),
+        },
+      });
+    },
   };
 }
 
-/** A bearer token header. */
-export function bearer(token: string, scheme = "Bearer"): Record<string, string> {
-  return { Authorization: `${scheme} ${token}`, Accept: "application/json" };
-}
+/**
+ * Headers that give a bearer token: IFC TypeScript's `http.bearer`, offered here because a registry
+ * connector imports only the engine (spec 088).
+ */
+export const bearer: typeof http.bearer = http.bearer;
 
 /** An OAuth 2.0 client-credentials token (RFC 6749 section 4.4), as a bearer header. */
 export async function clientCredentials(
-  http: Http,
+  t: http.Transport,
   tokenUrl: string,
   clientId: string,
   clientSecret: string,
   scope?: string,
 ): Promise<Record<string, string>> {
-  const r = await http(tokenUrl, {
+  const r = await exchange(t, {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
+    url: tokenUrl,
+    headers: { "content-type": "application/x-www-form-urlencoded", accept: "application/json" },
     body: new URLSearchParams({
       grant_type: "client_credentials",
       client_id: clientId,
@@ -473,7 +618,21 @@ export async function clientCredentials(
     );
   }
   if (r.status >= 400) throw new Error(`${new URL(tokenUrl).pathname}: HTTP ${r.status}`);
-  return bearer((JSON.parse(r.text) as { access_token: string }).access_token);
+  return { ...http.bearer(accessToken(r.body, tokenUrl)) };
+}
+
+/** The `access_token` of a token endpoint's JSON answer (RFC 6749 section 5.1), or an Error. */
+export function accessToken(body: string, tokenUrl: string): string {
+  let v: unknown;
+  try {
+    v = JSON.parse(body);
+  } catch {
+    v = undefined;
+  }
+  const token =
+    typeof v === "object" && v !== null && "access_token" in v ? v.access_token : undefined;
+  if (typeof token !== "string") throw new Error(`${new URL(tokenUrl).pathname}: no access_token`);
+  return token;
 }
 
 /**
@@ -484,7 +643,7 @@ export async function mustRead<T>(f: () => Promise<T>): Promise<T> {
   try {
     return await f();
   } catch (e) {
-    if (e instanceof AccessDenied) throw new Error(e.message);
+    if (e instanceof AccessDenied) throw new Error(e.message, { cause: e });
     throw e;
   }
 }

@@ -73,19 +73,18 @@ export const checkr: Connector = defineConnector({
       ocsf: "evidence_info",
       async *list(ctx): AsyncGenerator<Screening> {
         let n = 0;
-        for await (
-          const c of ctx.cursorPages<{ data?: Candidate[]; next_href?: string | null }, Candidate>(
-            `${API}/candidates?per_page=100`,
-            (b) => b.data,
-            (b) => b.next_href ?? undefined,
-          )
-        ) {
+        for await (const c of ctx.cursorPages<
+          { data?: Candidate[]; next_href?: string | null },
+          Candidate
+        >(
+          `${API}/candidates?per_page=100`,
+          (b) => b.data,
+          (b) => b.next_href ?? undefined,
+        )) {
           if (!c.email) continue;
           for (const id of c.report_ids ?? []) {
-            const r = await ctx.orGap(
-              `report ${id}`,
-              undefined as Report | undefined,
-              () => ctx.json<Report>(`${API}/reports/${encodeURIComponent(id)}`),
+            const r = await ctx.orGap(`report ${id}`, undefined as Report | undefined, () =>
+              ctx.json<Report>(`${API}/reports/${encodeURIComponent(id)}`),
             );
             if (!r) continue;
             if (r.status !== "complete") {
@@ -113,7 +112,7 @@ export const checkr: Connector = defineConnector({
   },
   posture: (records) => ({
     screenings: records.length,
-    screeningsClear: records.filter((r) => r.props.result === "clear").length,
+    screeningsClear: records.filter((r) => r.props["result"] === "clear").length,
   }),
   policies(o, now) {
     return [

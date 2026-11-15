@@ -4,8 +4,8 @@
  * @module
  */
 
-import { exists } from "../core/fsx.ts";
-import { join } from "../core/path.ts";
+import { json, object, string } from "@intellectual-frontiers/ifc-ts/kernel";
+import { fs, path, stdio, tty } from "@intellectual-frontiers/ifc-ts/runtime";
 import { ui } from "../core/ui.ts";
 import { MACHINE_NAME } from "../adopt/adopt.ts";
 import {
@@ -21,7 +21,10 @@ import {
 } from "./device.ts";
 import type { SnmpCredentials } from "./snmp.ts";
 
-const fail = (): number => ui.problems.some((x) => x.level === "fail") ? 1 : 0;
+const fail = (): number => (ui.problems.some((x) => x.level === "fail") ? 1 : 0);
+
+/** The vault's record of a device's passphrases. */
+const passphrases = object({ authKey: string, privKey: string });
 
 /** How to make a read-only SNMPv3 user on common devices. */
 export const SNMP_HELP = [
@@ -38,8 +41,14 @@ async function credOf(d: DeviceDef): Promise<SnmpCredentials | undefined> {
   const { readSecret } = await import("../core/secrets.ts");
   const t = await readSecret(deviceCredPath(d.name));
   if (!t) return undefined;
-  const c = JSON.parse(t) as { authKey: string; privKey: string };
-  return { user: d.snmp.user, auth: d.snmp.auth, authKey: c.authKey, privKey: c.privKey };
+  const c = json(t, passphrases);
+  if (c.kind === "err") return undefined;
+  return {
+    user: d.snmp.user,
+    auth: d.snmp.auth,
+    authKey: c.value.authKey,
+    privKey: c.value.privKey,
+  };
 }
 
 async function observeOne(d: DeviceDef): Promise<boolean> {
@@ -48,13 +57,13 @@ async function observeOne(d: DeviceDef): Promise<boolean> {
   if (!cred) {
     p.fail(
       "its SNMP passphrases are not in this PC's vault",
-      `deno task stolos device add ${d.name} --address ${d.address} ... (again), or restore the vault`,
+      `bun run stolos device add ${d.name} --address ${d.address} ... (again), or restore the vault`,
     );
     return false;
   }
   try {
     const o = await observeDevice(d, cred);
-    await Deno.writeTextFile(join(deviceDir(d.name), "observed.ts"), deviceObservedSource(o));
+    await fs.writeTextFile(path.join(deviceDir(d.name), "observed.ts"), deviceObservedSource(o));
     p.done(
       `${o.model ?? o.description.slice(0, 60)}${
         o.serial ? ` · serial ${o.serial}` : ""
@@ -63,7 +72,7 @@ async function observeOne(d: DeviceDef): Promise<boolean> {
     return true;
   } catch (e) {
     p.fail(
-      `not observed: ${(e as Error).message}`,
+      `not observed: ${e instanceof Error ? e.message : String(e)}`,
       `is SNMPv3 on at ${d.address}${d.port ? `:${d.port}` : ""}, for this PC?`,
     );
     return false;
@@ -99,56 +108,57 @@ export async function deviceAdd(o: {
     c.fail(`--port ${o.port}`, "a UDP port, usually 161");
     return fail();
   }
+  const kind = DEVICE_KINDS.find((k) => k === o.kind) ?? "other";
   const prior = (await loadDevices()).find((x) => x.device.name === o.name)?.device;
+  const title = o.title ?? prior?.title;
+  const owner = o.owner ?? prior?.owner;
+  const location = o.location ?? prior?.location;
   const d: DeviceDef = {
     name: o.name,
-    kind: o.kind as DeviceDef["kind"],
+    kind,
     address: o.address,
     ...(port ? { port } : {}),
-    ...(o.title ?? prior?.title ? { title: o.title ?? prior?.title } : {}),
-    ...(o.owner ?? prior?.owner ? { owner: o.owner ?? prior?.owner } : {}),
-    ...(o.location ?? prior?.location ? { location: o.location ?? prior?.location } : {}),
+    ...(title ? { title } : {}),
+    ...(owner ? { owner } : {}),
+    ...(location ? { location } : {}),
     snmp: { user: o.user, auth: o.auth === "sha" ? "sha" : "sha256" },
     added: prior?.added ?? new Date().toISOString(),
   };
   c.done(`${d.name}: ${d.kind} at ${d.address}${port ? `:${port}` : ""}, SNMPv3 user ${o.user}`);
-  console.log("");
-  for (const l of SNMP_HELP) console.log(`  ${l}`);
-  console.log("");
+  for (const l of SNMP_HELP) ui.say(l);
   const { readSecret } = await import("../pg/connections.ts");
   ui.pause();
-  let authKey = "", privKey = "";
+  let keys: readonly string[];
   try {
-    if (Deno.stdin.isTerminal()) {
-      authKey = await readSecret(`  ${d.name}'s SNMPv3 authentication passphrase: `);
-      privKey = await readSecret(`  ${d.name}'s SNMPv3 privacy passphrase: `);
-    } else {
-      // From a pipe (a script): two lines, the authentication passphrase, then the privacy one.
-      [authKey = "", privKey = ""] = (await new Response(Deno.stdin.readable).text()).split(
-        /\r?\n/,
-      );
-    }
+    keys = tty.isTerminal("stdin")
+      ? [
+          await readSecret(`  ${d.name}'s SNMPv3 authentication passphrase: `),
+          await readSecret(`  ${d.name}'s SNMPv3 privacy passphrase: `),
+        ]
+      : // From a pipe (a script): two lines, the authentication passphrase, then the privacy one.
+        (await stdio.stdin.text()).split(/\r?\n/);
   } finally {
     ui.resume();
   }
+  const [authKey = "", privKey = ""] = keys;
   if (authKey.length < 8 || privKey.length < 8) {
     ui.phase("Passphrases").fail(
       "SNMPv3 passphrases have at least 8 characters",
-      `deno task stolos device add ${o.name} ... again`,
+      `bun run stolos device add ${o.name} ... again`,
     );
     return fail();
   }
   const { writeSecret } = await import("../core/secrets.ts");
   await writeSecret(deviceCredPath(d.name), JSON.stringify({ authKey, privKey }, null, 2) + "\n");
-  await Deno.mkdir(deviceDir(d.name), { recursive: true });
-  await Deno.writeTextFile(join(deviceDir(d.name), "device.ts"), deviceSource(d));
+  await fs.mkdir(deviceDir(d.name), { recursive: true });
+  await fs.writeTextFile(path.join(deviceDir(d.name), "device.ts"), deviceSource(d));
   if (await observeOne(d)) {
     const { report } = await import("../adopt/commands.ts");
-    const { observed } = (await loadDevices()).find((x) => x.device.name === d.name)!;
+    const observed = (await loadDevices()).find((x) => x.device.name === d.name)?.observed;
     report(d.name, devicePolicies(d, observed));
   }
-  ui.next.push(`keep it: deno task stolos apply -m "069-integrate: device ${d.name}"`);
-  ui.next.push("back up: deno task stolos vault backup (its passphrases are new)");
+  ui.next.push(`keep it: bun run stolos apply -m "069-integrate: device ${d.name}"`);
+  ui.next.push("back up: bun run stolos vault backup (its passphrases are new)");
   return fail();
 }
 
@@ -156,31 +166,31 @@ export async function deviceAdd(o: {
 export async function deviceObserve(name?: string): Promise<number> {
   const all = (await loadDevices()).filter((x) => !name || x.device.name === name);
   if (name && !all.length) {
-    ui.phase("Devices").fail(`no device ${name}`, "deno task stolos device check (lists them)");
+    ui.phase("Devices").fail(`no device ${name}`, "bun run stolos device check (lists them)");
     return fail();
   }
   if (!all.length) {
     ui.phase("Devices").done(
-      "no devices yet (deno task stolos device add <name> --address <a> --kind <k> --user <u>)",
+      "no devices yet (bun run stolos device add <name> --address <a> --kind <k> --user <u>)",
     );
   }
   for (const { device } of all) await observeOne(device);
   if (all.length) {
     ui.next.push(
-      `keep the observations: deno task stolos apply -m "069-integrate: devices observed"`,
+      `keep the observations: bun run stolos apply -m "069-integrate: devices observed"`,
     );
   }
   return fail();
 }
 
 /** `stolos device check [name] [--json]`. */
-export async function deviceCheck(name?: string, json = false): Promise<number> {
+export async function deviceCheck(name?: string, asJson = false): Promise<number> {
   const all = (await loadDevices()).filter((x) => !name || x.device.name === name);
   const results = all.map(({ device, observed }) => ({
     name: device.name,
     results: devicePolicies(device, observed),
   }));
-  if (json) console.log(JSON.stringify(results, null, 2));
+  if (asJson) stdio.stdout.writeSync(`${JSON.stringify(results, null, 2)}\n`);
   else {
     const { report } = await import("../adopt/commands.ts");
     if (!all.length) ui.phase("Devices").done("no devices yet");
@@ -192,16 +202,16 @@ export async function deviceCheck(name?: string, json = false): Promise<number> 
 /** `stolos device remove <name>`: its files and its passphrases go. */
 export async function deviceRemove(name: string): Promise<number> {
   const p = ui.phase("Remove");
-  if (!(await exists(deviceDir(name)))) {
-    p.fail(`no device ${name}`, "deno task stolos device check (lists them)");
+  if (!(await fs.exists(deviceDir(name)))) {
+    p.fail(`no device ${name}`, "bun run stolos device check (lists them)");
     return fail();
   }
-  await Deno.remove(deviceDir(name), { recursive: true });
+  await fs.remove(deviceDir(name), { recursive: true });
   const { removeSecret } = await import("../core/secrets.ts");
   await removeSecret(deviceCredPath(name));
   p.done(
     `${name}: its files and SNMP passphrases are gone (remove the SNMPv3 user on the device too)`,
   );
-  ui.next.push(`keep it: deno task stolos apply -m "069-integrate: remove device ${name}"`);
+  ui.next.push(`keep it: bun run stolos apply -m "069-integrate: remove device ${name}"`);
   return 0;
 }

@@ -39,10 +39,7 @@ const DAY = 86_400_000;
  * is left out when no device reports it (the policy is then unknown, not
  * passing).
  */
-export function devicePosture(
-  records: ObservedRecord[],
-  now: Date,
-): Record<string, number> {
+export function devicePosture(records: ObservedRecord[], now: Date): Record<string, number> {
   const devices = records.filter((r) => r.label === HARDWARE_DEVICE.name);
   const known = (k: string) => devices.filter((d) => d.props[k] !== undefined);
   const enc = known("encrypted");
@@ -50,20 +47,20 @@ export function devicePosture(
   const sensor = known("sensor_healthy");
   const compliant = known("compliant");
   const stale = (d: ObservedRecord) => {
-    const t = Date.parse(String(d.props.last_seen));
+    const t = Date.parse(String(d.props["last_seen"]));
     return !Number.isFinite(t) || now.getTime() - t > CHECK_IN_DAYS * DAY;
   };
   return {
     devices: devices.length,
     ...(enc.length
-      ? { devicesUnencrypted: enc.filter((d) => d.props.encrypted === false).length }
+      ? { devicesUnencrypted: enc.filter((d) => d.props["encrypted"] === false).length }
       : {}),
     ...(seen.length ? { devicesStale: seen.filter(stale).length } : {}),
     ...(sensor.length
-      ? { sensorsUnhealthy: sensor.filter((d) => d.props.sensor_healthy === false).length }
+      ? { sensorsUnhealthy: sensor.filter((d) => d.props["sensor_healthy"] === false).length }
       : {}),
     ...(compliant.length
-      ? { devicesNoncompliant: compliant.filter((d) => d.props.compliant === false).length }
+      ? { devicesNoncompliant: compliant.filter((d) => d.props["compliant"] === false).length }
       : {}),
   };
 }
@@ -82,18 +79,20 @@ export interface DeviceFixes {
 
 /** The device policies a connector checks, from {@link devicePosture}'s facts (one per fix given). */
 export function devicePolicies(o: Observation, id: string, fixes: DeviceFixes): PolicyResult[] {
-  const of = (v: string | number | boolean) => `${v} of ${o.posture.devices} devices`;
+  const of = (v: string | number | boolean) => `${v} of ${o.posture["devices"]} devices`;
   return [
     ...(fixes.encryption
-      ? [check(o, {
-        id: `${id}-disk-encryption`,
-        title: "Every device encrypts its disk",
-        scf: ["CRY-07"],
-        fact: "devicesUnencrypted",
-        want: (v) => v === 0,
-        show: (v) => `${of(v)} unencrypted`,
-        fix: fixes.encryption,
-      })]
+      ? [
+          check(o, {
+            id: `${id}-disk-encryption`,
+            title: "Every device encrypts its disk",
+            scf: ["CRY-07"],
+            fact: "devicesUnencrypted",
+            want: (v) => v === 0,
+            show: (v) => `${of(v)} unencrypted`,
+            fix: fixes.encryption,
+          }),
+        ]
       : []),
     check(o, {
       id: `${id}-check-in`,
@@ -105,26 +104,30 @@ export function devicePolicies(o: Observation, id: string, fixes: DeviceFixes): 
       fix: fixes.checkIn,
     }),
     ...(fixes.sensor
-      ? [check(o, {
-        id: `${id}-sensor`,
-        title: "Every device's sensor is present and healthy",
-        scf: ["END-04", "MON-02"],
-        fact: "sensorsUnhealthy",
-        want: (v) => v === 0,
-        show: (v) => `${of(v)} with a missing or unhealthy sensor`,
-        fix: fixes.sensor,
-      })]
+      ? [
+          check(o, {
+            id: `${id}-sensor`,
+            title: "Every device's sensor is present and healthy",
+            scf: ["END-04", "MON-02"],
+            fact: "sensorsUnhealthy",
+            want: (v) => v === 0,
+            show: (v) => `${of(v)} with a missing or unhealthy sensor`,
+            fix: fixes.sensor,
+          }),
+        ]
       : []),
     ...(fixes.compliance
-      ? [check(o, {
-        id: `${id}-compliance`,
-        title: "Every device meets its compliance policy",
-        scf: ["CFG-04"],
-        fact: "devicesNoncompliant",
-        want: (v) => v === 0,
-        show: (v) => `${of(v)} not compliant`,
-        fix: fixes.compliance,
-      })]
+      ? [
+          check(o, {
+            id: `${id}-compliance`,
+            title: "Every device meets its compliance policy",
+            scf: ["CFG-04"],
+            fact: "devicesNoncompliant",
+            want: (v) => v === 0,
+            show: (v) => `${of(v)} not compliant`,
+            fix: fixes.compliance,
+          }),
+        ]
       : []),
   ];
 }

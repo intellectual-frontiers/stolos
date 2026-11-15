@@ -11,9 +11,9 @@
  * once:
  *
  * ```bash
- * deno task stolos clients add ../north-fleet --id north
- * deno task stolos clients add ../south-fleet --id south --title "South Example Co"
- * deno task stolos clients list
+ * bun run stolos clients add ../north-fleet --id north
+ * bun run stolos clients add ../south-fleet --id south --title "South Example Co"
+ * bun run stolos clients list
  * ```
  *
  * The registry is one file of yours (`clients.json` in Stolos's config folder: on Windows
@@ -24,17 +24,17 @@
  * Then any command works for one client:
  *
  * ```bash
- * deno task stolos --client north compliance
- * deno task stolos --client north evidence export --from 2026-01-01 --to 2026-06-30
- * deno task stolos --client south trust build
+ * bun run stolos --client north compliance
+ * bun run stolos --client north evidence export --from 2026-01-01 --to 2026-06-30
+ * bun run stolos --client south trust build
  * ```
  *
  * or choose a client for every command until you choose another (`--client` still wins for one
  * command; `--clear` goes back to the repository you are in):
  *
  * ```bash
- * deno task stolos clients use north
- * deno task stolos clients use --clear
+ * bun run stolos clients use north
+ * bun run stolos clients use --clear
  * ```
  *
  * Your signing key signs a client's commits and bundles only if that client's `signers.ts` lists
@@ -84,7 +84,7 @@
  * ## The provider's console
  *
  * ```bash
- * deno task stolos clients console
+ * bun run stolos clients console
  * ```
  *
  * It opens like the Stolos Console (127.0.0.1, a one-time launch link) on the Clients page: the

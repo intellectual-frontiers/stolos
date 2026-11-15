@@ -10,9 +10,9 @@
  * @module
  */
 
-import { dirname, join } from "../core/path.ts";
-import { ensureDir, exists, readTextOr } from "../core/fsx.ts";
-import { currentUser, homeDir, isRoot, run } from "../core/exec.ts";
+import { errors, fs, path, proc, stdio, tty } from "@intellectual-frontiers/ifc-ts/runtime";
+import { currentUser, homeOf, run, type RunResult } from "../core/exec.ts";
+import { ui } from "../core/ui.ts";
 import { journal } from "../core/log.ts";
 import { loadFleet, loadHosts } from "../model/load.ts";
 import type { FleetDef, HostDef, UserDef } from "../model/types.ts";
@@ -21,12 +21,20 @@ import { newPassword, upsertSection } from "../pg/config.ts";
 import { S3 } from "../containers/catalog.ts";
 import type { Sink } from "../pg/converge.ts";
 
+/** What a program reads (`--json`, the secret for a terminal), on standard output. */
+const print = (text: string): void => {
+  stdio.stdout.writeSync(`${text}\n`);
+};
+
+/** Why a command refused, for the person: a problem, shown now. */
+const refuse = (message: string): void => ui.problem("fail", "S3", message);
+
 /** Where S3's credentials live, and the names Archon uses with it. */
 export const S3_PATHS = {
   /** The directory holding the admin credentials (0700). */
-  dir: dirname(S3.secrets),
+  dir: path.dirname(S3.secrets),
   /** The admin alias for rc inside the container (root only). */
-  rcEnv: join(dirname(S3.secrets), "rc.env"),
+  rcEnv: path.join(path.dirname(S3.secrets), "rc.env"),
   /** Each account's own secret, 0400 (P.keys: anyone may pass, nobody may list). */
   keys: "/var/lib/archon-keys/s3",
   /** The admin's access key (user name). */
@@ -70,18 +78,18 @@ export const s3Name = (fleet: FleetDef, host: HostDef): { api: string; console: 
 
 /** Before the container first starts: its admin credentials, root only (never in /etc). */
 export async function prepareS3(s: Sink): Promise<void> {
-  if (await exists(S3.secrets)) return;
+  if (await fs.exists(S3.secrets)) return;
   s.change(`${S3.secrets} (S3 admin credentials, root only)`);
   if (s.check) return;
   const secret = newPassword();
-  await ensureDir(S3_PATHS.dir);
-  await Deno.chmod(S3_PATHS.dir, 0o700);
-  await Deno.writeTextFile(
+  await fs.ensureDir(S3_PATHS.dir);
+  await fs.chmod(S3_PATHS.dir, 0o700);
+  await fs.writeTextFile(
     S3.secrets,
     `RUSTFS_ACCESS_KEY=${S3_PATHS.admin}\nRUSTFS_SECRET_KEY=${secret}\n`,
     { mode: 0o600 },
   );
-  await Deno.writeTextFile(
+  await fs.writeTextFile(
     S3_PATHS.rcEnv,
     `RC_HOST_${S3_PATHS.alias}=http://${S3_PATHS.admin}:${secret}@127.0.0.1:9000\n`,
     { mode: 0o600 },
@@ -93,7 +101,7 @@ export async function prepareS3(s: Sink): Promise<void> {
  * Podman's own environment (`-e NAME` copies it in): never on a command line,
  * where a process list would show it.
  */
-function rc(args: string[], o: { stdin?: string; secret?: string } = {}) {
+function rc(args: string[], o: { stdin?: string; secret?: string } = {}): Promise<RunResult> {
   return run(
     [
       "podman",
@@ -106,7 +114,7 @@ function rc(args: string[], o: { stdin?: string; secret?: string } = {}) {
       "rc",
       ...args,
     ],
-    { stdin: o.stdin ?? "", env: o.secret ? { ARCHON_S3_SECRET: o.secret } : undefined },
+    { stdin: o.stdin ?? "", ...(o.secret ? { env: { ARCHON_S3_SECRET: o.secret } } : {}) },
   );
 }
 
@@ -116,12 +124,12 @@ async function ready(timeoutMs = 120_000): Promise<boolean> {
     if ((await run(["curl", "-fsS", "-o", "/dev/null", "--max-time", "3", S3.health])).ok) {
       return true;
     }
-    await new Promise((r) => setTimeout(r, 2000));
+    await proc.sleep(2000);
   }
   return false;
 }
 
-const keyPath = (name: string) => join(S3_PATHS.keys, name);
+const keyPath = (name: string): string => path.join(S3_PATHS.keys, name);
 
 /** Give an S3 user this secret (through Podman's environment, never argv); an error, or undefined. */
 async function setSecret(name: string, secret: string): Promise<string | undefined> {
@@ -134,16 +142,16 @@ async function setSecret(name: string, secret: string): Promise<string | undefin
 
 /** The account's key file: 0400, owned by the account (root for a name without one). */
 async function writeKey(name: string, secret: string): Promise<void> {
-  const path = keyPath(name);
-  await ensureDir(S3_PATHS.keys);
-  await Deno.chmod(S3_PATHS.keys, 0o711);
+  const file = keyPath(name);
+  await fs.ensureDir(S3_PATHS.keys);
+  await fs.chmod(S3_PATHS.keys, 0o711);
   const owner = (await run(["getent", "passwd", name])).ok ? name : "root";
-  const tmp = `${path}.archon-${Deno.pid}`;
-  await Deno.writeTextFile(tmp, secret + "\n", { mode: 0o400 });
-  await Deno.chmod(tmp, 0o400);
+  const tmp = `${file}.archon-${proc.pid}`;
+  await fs.writeTextFile(tmp, secret + "\n", { mode: 0o400 });
+  await fs.chmod(tmp, 0o400);
   await run(["chown", `${owner}:root`, tmp]);
-  await Deno.rename(tmp, path);
-  await Deno.writeTextFile(path + ".set", new Date().toISOString() + "\n", { mode: 0o600 });
+  await fs.rename(tmp, file);
+  await fs.writeTextFile(file + ".set", new Date().toISOString() + "\n", { mode: 0o600 });
 }
 
 /**
@@ -157,8 +165,8 @@ export async function convergeS3(
 ): Promise<boolean> {
   const want = s3Identities(plan.users, plan.fleet);
   const have: string[] = [];
-  if (await exists(S3_PATHS.keys)) {
-    for await (const e of Deno.readDir(S3_PATHS.keys)) {
+  if (await fs.exists(S3_PATHS.keys)) {
+    for await (const e of fs.readDir(S3_PATHS.keys)) {
       if (e.isFile && !e.name.includes(".")) have.push(e.name);
     }
   }
@@ -172,11 +180,11 @@ export async function convergeS3(
     s.fail("S3 (RustFS) did not become ready in 2 minutes", "journalctl -u archon-s3 -n 50");
     return false;
   }
-  await ensureDir(S3_PATHS.keys);
-  await Deno.chmod(S3_PATHS.keys, 0o711);
+  await fs.ensureDir(S3_PATHS.keys);
+  await fs.chmod(S3_PATHS.keys, 0o711);
   for (const name of todo) {
-    const path = keyPath(name);
-    let secret = (await readTextOr(path))?.trim();
+    const file = keyPath(name);
+    let secret = (await fs.readTextOr(file))?.trim();
     const fresh = !secret;
     if (!secret) secret = newPassword();
     const known = (await rc(["admin", "user", "info", S3_PATHS.alias, name])).ok;
@@ -188,7 +196,7 @@ export async function convergeS3(
         continue;
       }
     }
-    if (fresh || !known || !(await exists(path + ".set"))) {
+    if (fresh || !known || !(await fs.exists(file + ".set"))) {
       const bad = await setSecret(name, secret);
       if (bad) {
         s.fail(`S3 secret for ${name}: ${bad}`);
@@ -217,8 +225,8 @@ export async function convergeS3(
   }
   for (const name of have.filter((h) => !want.includes(h))) {
     await rc(["admin", "user", "disable", S3_PATHS.alias, name]);
-    await Deno.remove(keyPath(name)).catch(() => {});
-    await Deno.remove(keyPath(name) + ".set").catch(() => {});
+    await fs.remove(keyPath(name)).catch(() => {});
+    await fs.remove(keyPath(name) + ".set").catch(() => {});
     s.change(`S3 user ${name} disabled (not a person here or a fleet service account)`);
   }
   return true;
@@ -236,13 +244,14 @@ async function server(name: string) {
 /** archon fs s3 status: on or off, since when, health, addresses, and (as root) its users. */
 export async function s3Status(hostName: string, json: boolean): Promise<number> {
   const { fleet, host } = await server(hostName);
-  const rec = host.optIn?.s3;
+  const rec = host.optIn?.["s3"];
   const active = (await run(["systemctl", "is-active", `archon-${S3.name}.service`])).stdout.trim();
-  const healthy = active === "active" &&
+  const healthy =
+    active === "active" &&
     (await run(["curl", "-fsS", "-o", "/dev/null", "--max-time", "3", S3.health])).ok;
   const users: string[] = [];
-  if (isRoot() && (await exists(S3_PATHS.keys))) {
-    for await (const e of Deno.readDir(S3_PATHS.keys)) {
+  if (proc.isRoot() && (await fs.exists(S3_PATHS.keys))) {
+    for await (const e of fs.readDir(S3_PATHS.keys)) {
       if (!e.name.includes(".")) users.push(e.name);
     }
   }
@@ -255,24 +264,27 @@ export async function s3Status(hostName: string, json: boolean): Promise<number>
     healthy,
     api: `https://${names.api}`,
     console: `https://${names.console}`,
-    users: isRoot() ? users.sort() : null,
+    users: proc.isRoot() ? users.sort() : null,
   };
-  if (json) console.log(JSON.stringify(out, null, 2));
+  if (json) print(JSON.stringify(out, null, 2));
   else {
-    console.log(
+    ui.say(
       out.on
-        ? `S3 is on since ${
-          out.since?.slice(0, 16).replace("T", " ")
-        } UTC by ${out.by} · ${active}${healthy ? " · ready" : " · not ready"}`
+        ? `S3 is on since ${out.since
+            ?.slice(0, 16)
+            .replace(
+              "T",
+              " ",
+            )} UTC by ${out.by} · ${active}${healthy ? " · ready" : " · not ready"}`
         : `S3 is off${
-          out.since ? ` since ${out.since.slice(0, 16).replace("T", " ")} UTC by ${out.by}` : ""
-        } · turn it on: archon fs s3 on`,
+            out.since ? ` since ${out.since.slice(0, 16).replace("T", " ")} UTC by ${out.by}` : ""
+          } · turn it on: archon fs s3 on`,
     );
-    console.log(`API:     ${out.api} (path-style: ${out.api}/<bucket>/<key>)`);
-    console.log(`Console: ${out.console}`);
-    if (out.users) console.log(`Users:   ${out.users.join(", ") || "none yet"}`);
-    console.log("Your S3 user is your Linux username; your key: archon fs s3 key --write");
-    console.log(
+    ui.say(`API:     ${out.api} (path-style: ${out.api}/<bucket>/<key>)`);
+    ui.say(`Console: ${out.console}`);
+    if (out.users) ui.say(`Users:   ${out.users.join(", ") || "none yet"}`);
+    ui.say("Your S3 user is your Linux username; your key: archon fs s3 key --write");
+    ui.say(
       "The console signs in with Account: your username and Key: your S3 secret (archon fs s3 key --show), not your Linux password.",
     );
   }
@@ -292,41 +304,40 @@ export async function s3Key(
 ): Promise<number> {
   const { fleet, host } = await server(hostName);
   const me = currentUser();
-  if (host.optIn?.s3?.enabled !== true) {
-    console.error(`S3 is off on ${host.name}: an operator turns it on with archon fs s3 on.`);
+  if (host.optIn?.["s3"]?.enabled !== true) {
+    refuse(`S3 is off on ${host.name}: an operator turns it on with archon fs s3 on.`);
     return 1;
   }
   let secret: string;
   try {
-    secret = (await Deno.readTextFile(keyPath(me))).trim();
+    secret = (await fs.readTextFile(keyPath(me))).trim();
   } catch (e) {
-    console.error(
-      e instanceof Deno.errors.NotFound
+    refuse(
+      e instanceof errors.NotFound
         ? `${me} has no S3 key on ${host.name} yet: S3 users are the people on the server and the fleet's service accounts (the next apply makes it: archon update).`
         : `${me} cannot read ${keyPath(me)}: ${
-          (e as Error).message
-        } (it should be 0400 and owned by ${me}; archon update sets it).`,
+            e instanceof Error ? e.message : String(e)
+          } (it should be 0400 and owned by ${me}; archon update sets it).`,
     );
     return 1;
   }
   const names = s3Name(fleet, host);
   const profile = `s3-${host.name}`;
   const endpoint = `https://${names.api}`;
-  const consoleLogin =
-    `Web console: https://${names.console}: Account ${me}, Key your secret (archon fs s3 key --show), not your Linux password.`;
+  const consoleLogin = `Web console: https://${names.console}: Account ${me}, Key your secret (archon fs s3 key --show), not your Linux password.`;
   if (show) {
     // The person's own secret, on their own terminal: never JSON, a pipe, or a log.
-    if (json || !Deno.stdout.isTerminal()) {
-      console.error("--show prints the secret only on a terminal (not JSON, not a pipe).");
+    if (json || !tty.isTerminal("stdout")) {
+      refuse("--show prints the secret only on a terminal (not JSON, not a pipe).");
       return 2;
     }
-    console.log(secret);
-    console.error(`Paste it as the Key at https://${names.console} (Account: ${me}).`);
+    print(secret);
+    ui.say(`Paste it as the Key at https://${names.console} (Account: ${me}).`);
     return 0;
   }
   if (!write) {
     if (json) {
-      console.log(
+      print(
         JSON.stringify(
           { ok: true, profile, endpoint, accessKey: me, region: "us-east-1" },
           null,
@@ -334,28 +345,28 @@ export async function s3Key(
         ),
       );
     } else {
-      console.log(
+      print(
         `Access key: ${me}\nSecret:     (in your key file; archon fs s3 key --write puts it in ~/.aws)\nEndpoint:   ${endpoint} (path-style)\nBuckets:    ${me}-*\n${consoleLogin}`,
       );
     }
     return 0;
   }
-  const home = Deno.env.get("HOME") ?? await homeDir(me);
-  const aws = join(home, ".aws");
-  await ensureDir(aws);
-  await Deno.chmod(aws, 0o700);
-  const write0600 = async (path: string, content: string) => {
-    const tmp = `${path}.archon-${Deno.pid}`;
-    await Deno.writeTextFile(tmp, content, { mode: 0o600 });
-    await Deno.chmod(tmp, 0o600);
-    await Deno.rename(tmp, path);
+  const home = proc.env.get("HOME") ?? (await homeOf(me));
+  const aws = path.join(home, ".aws");
+  await fs.ensureDir(aws);
+  await fs.chmod(aws, 0o700);
+  const write0600 = async (file: string, content: string): Promise<void> => {
+    const tmp = `${file}.archon-${proc.pid}`;
+    await fs.writeTextFile(tmp, content, { mode: 0o600 });
+    await fs.chmod(tmp, 0o600);
+    await fs.rename(tmp, file);
   };
-  const creds = join(aws, "credentials");
-  const config = join(aws, "config");
+  const creds = path.join(aws, "credentials");
+  const config = path.join(aws, "config");
   await write0600(
     creds,
     upsertSection(
-      (await readTextOr(creds)) ?? "",
+      (await fs.readTextOr(creds)) ?? "",
       profile,
       `[${profile}]\naws_access_key_id = ${me}\naws_secret_access_key = ${secret}\n`,
     ),
@@ -363,23 +374,25 @@ export async function s3Key(
   await write0600(
     config,
     upsertSection(
-      (await readTextOr(config)) ?? "",
+      (await fs.readTextOr(config)) ?? "",
       `profile ${profile}`,
       `[profile ${profile}]\nendpoint_url = ${endpoint}\nregion = us-east-1\ns3 =\n    addressing_style = path\n`,
     ),
   );
   await journal("archon-s3", `${me} wrote their S3 profile ${profile}`);
   if (json) {
-    console.log(
+    print(
       JSON.stringify(
         { ok: true, profile, endpoint, accessKey: me, files: { credentials: creds, config } },
         null,
         2,
       ),
     );
-  } else {console.log(
+  } else {
+    ui.say(
       `Wrote the ${profile} profile (0600). Try: aws --profile ${profile} s3 mb s3://${me}-files`,
-    );}
+    );
+  }
   return 0;
 }
 
@@ -391,36 +404,32 @@ export async function s3Key(
  */
 export async function s3Rotate(hostName: string): Promise<number> {
   const { host } = await server(hostName);
-  const who = Deno.env.get("SUDO_USER") || currentUser();
+  const who = proc.env.get("SUDO_USER") || currentUser();
   if (!who || who === "root") {
-    console.error(
-      "Rotate as the account whose key it is: archon fs s3 key --rotate (it asks sudo).",
-    );
+    refuse("Rotate as the account whose key it is: archon fs s3 key --rotate (it asks sudo).");
     return 2;
   }
-  if (host.optIn?.s3?.enabled !== true) {
-    console.error(`S3 is off on ${host.name}: an operator turns it on with archon fs s3 on.`);
+  if (host.optIn?.["s3"]?.enabled !== true) {
+    refuse(`S3 is off on ${host.name}: an operator turns it on with archon fs s3 on.`);
     return 1;
   }
-  if (!isRoot()) {
-    console.error("Rotating a key needs root (archon elevates through sudo).");
+  if (!proc.isRoot()) {
+    refuse("Rotating a key needs root (archon elevates through sudo).");
     return 1;
   }
-  if (!(await exists(keyPath(who)))) {
-    console.error(
-      `${who} has no S3 key on ${host.name} yet (the next apply makes it: archon update).`,
-    );
+  if (!(await fs.exists(keyPath(who)))) {
+    refuse(`${who} has no S3 key on ${host.name} yet (the next apply makes it: archon update).`);
     return 1;
   }
   const secret = newPassword();
   const bad = await setSecret(who, secret);
   if (bad) {
-    console.error(`S3 secret for ${who} was not changed: ${bad}`);
+    refuse(`S3 secret for ${who} was not changed: ${bad}`);
     return 1;
   }
   await writeKey(who, secret);
   await journal("archon-s3", `S3 secret for ${who} rotated`);
-  console.log(
+  ui.say(
     `${who}'s S3 secret is new; the old one no longer works. Update what uses it: archon fs s3 key --write (~/.aws), and archon fs s3 key --show for the web console.`,
   );
   return 0;

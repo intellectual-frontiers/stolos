@@ -16,8 +16,9 @@
  * @module
  */
 
-import { AccessDenied, check, type Connector, fresh, getJson, type Http } from "./connector.ts";
-import { type Ctx, defineConnector, type FieldDef } from "./sdk.ts";
+import type { http } from "@intellectual-frontiers/ifc-ts/runtime";
+import { AccessDenied, check, type Connector, fresh } from "./connector.ts";
+import { type Ctx, defineConnector, type FieldDef, sendJson } from "./sdk.ts";
 import {
   ACCESS_CONTROL_GROUP,
   APPLICATION,
@@ -38,20 +39,20 @@ const GLOBAL_ADMIN = "62e90394-69f5-4237-9190-012177145e10";
 const SECURITY_DEFAULTS = "security defaults";
 const CONDITIONAL_ACCESS = "conditional access";
 
-const tokenUrl = (tenant: string) =>
+const tokenUrl = (tenant: string): string =>
   `https://login.microsoftonline.com/${encodeURIComponent(tenant)}/oauth2/v2.0/token`;
 
-async function token(http: Http, c: Record<string, string>, scope: string): Promise<string> {
+async function token(t: http.Transport, c: Record<string, string>, scope: string): Promise<string> {
   const body = new URLSearchParams({
-    client_id: c.clientId,
-    client_secret: c.clientSecret,
+    client_id: c["clientId"] ?? "",
+    client_secret: c["clientSecret"] ?? "",
     scope,
     grant_type: "client_credentials",
   }).toString();
-  const r = await getJson<{ access_token: string }>(
-    http,
-    tokenUrl(c.tenant),
-    { "Content-Type": "application/x-www-form-urlencoded" },
+  const r = await sendJson<{ access_token: string }>(
+    t,
+    tokenUrl(c["tenant"] ?? ""),
+    { "content-type": "application/x-www-form-urlencoded" },
     "POST",
     body,
   );
@@ -81,9 +82,16 @@ async function pages<T>(
 const shared = new WeakMap<object, Map<string, Promise<unknown>>>();
 function once<T>(ctx: object, key: string, f: () => Promise<T>): Promise<T> {
   let m = shared.get(ctx);
-  if (!m) shared.set(ctx, m = new Map());
-  if (!m.has(key)) m.set(key, f());
-  return m.get(key) as Promise<T>;
+  if (!m) {
+    m = new Map<string, Promise<unknown>>();
+    shared.set(ctx, m);
+  }
+  const known = m.get(key);
+  // A key is read by one f, so what it holds is f's promise.
+  if (known !== undefined) return known as Promise<T>;
+  const read = f();
+  m.set(key, read);
+  return read;
 }
 
 type Admin = { id?: string; userPrincipalName?: string };
@@ -91,19 +99,17 @@ type MfaDetail = { userPrincipalName: string; isMfaRegistered: boolean; userType
 
 const admins = (ctx: Ctx<Record<string, FieldDef>>) =>
   once(ctx, "admins", () =>
-    ctx.orGap(
-      "Global Administrators",
-      undefined as Admin[] | undefined,
-      () => pages<Admin>(ctx, `${GRAPH}/directoryRoles(roleTemplateId='${GLOBAL_ADMIN}')/members`),
-    ));
+    ctx.orGap("Global Administrators", undefined as Admin[] | undefined, () =>
+      pages<Admin>(ctx, `${GRAPH}/directoryRoles(roleTemplateId='${GLOBAL_ADMIN}')/members`),
+    ),
+  );
 
 const mfaDetails = (ctx: Ctx<Record<string, FieldDef>>) =>
   once(ctx, "mfa", () =>
-    ctx.orGap(
-      "MFA registration",
-      undefined as MfaDetail[] | undefined,
-      () => pages<MfaDetail>(ctx, `${GRAPH}/reports/authenticationMethods/userRegistrationDetails`),
-    ));
+    ctx.orGap("MFA registration", undefined as MfaDetail[] | undefined, () =>
+      pages<MfaDetail>(ctx, `${GRAPH}/reports/authenticationMethods/userRegistrationDetails`),
+    ),
+  );
 
 interface User {
   id: string;
@@ -166,9 +172,9 @@ async function* perSubscription<T>(
 type Azure =
   | { sub: { subscriptionId: string; displayName: string; state: string } }
   | {
-    res: { id: string; name: string; type: string; location: string };
-    subscription: string;
-  };
+      res: { id: string; name: string; type: string; location: string };
+      subscription: string;
+    };
 
 /** Microsoft 365 and Azure. */
 export const microsoft: Connector = defineConnector({
@@ -202,8 +208,8 @@ export const microsoft: Connector = defineConnector({
     clientSecret: { secret: true, hint: "the client secret's Value" },
   },
   tokenEndpoints: (cred) => [tokenUrl(cred.tenant)],
-  auth: async (cred, http) => ({
-    Authorization: `Bearer ${await token(http, cred, "https://graph.microsoft.com/.default")}`,
+  auth: async (cred, t) => ({
+    Authorization: `Bearer ${await token(t, cred, "https://graph.microsoft.com/.default")}`,
   }),
   account: (cred, records) =>
     records.find((r) => r.label === ORGANIZATION.name)?.display_name ?? cred.tenant,
@@ -213,8 +219,9 @@ export const microsoft: Connector = defineConnector({
       label: ORGANIZATION,
       ocsf: "cloud_resources_inventory_info",
       list: async function* (ctx) {
-        yield* (await pages<{ id: string; displayName: string }>(ctx, `${GRAPH}/organization`))
-          .slice(0, 1);
+        yield* (
+          await pages<{ id: string; displayName: string }>(ctx, `${GRAPH}/organization`)
+        ).slice(0, 1);
       },
       map: (o: { id: string; displayName: string }) => ({
         native_id: o.id,
@@ -258,10 +265,11 @@ export const microsoft: Connector = defineConnector({
         );
         for (const u of users) {
           const k = u.userPrincipalName.toLowerCase();
+          const mfa = mfaOf.get(k);
           yield {
             ...u,
             ...(a ? { admin: adminSet.has(k) } : {}),
-            ...(mfaOf.has(k) ? { mfa: mfaOf.get(k)! } : {}),
+            ...(mfa === undefined ? {} : { mfa }),
           };
         }
       },
@@ -375,12 +383,10 @@ export const microsoft: Connector = defineConnector({
           ...MICROSOFT_TENANTS,
           ...(await pages<{ id: string }>(ctx, `${GRAPH}/organization`)).map((o) => o.id),
         ]);
-        for (
-          const sp of await pages<ServicePrincipal>(
-            ctx,
-            `${GRAPH}/servicePrincipals?$select=id,appId,displayName,appOwnerOrganizationId,servicePrincipalType,accountEnabled,preferredSingleSignOnMode,homepage,publisherName&$top=999`,
-          )
-        ) {
+        for (const sp of await pages<ServicePrincipal>(
+          ctx,
+          `${GRAPH}/servicePrincipals?$select=id,appId,displayName,appOwnerOrganizationId,servicePrincipalType,accountEnabled,preferredSingleSignOnMode,homepage,publisherName&$top=999`,
+        )) {
           if ((sp.servicePrincipalType ?? "Application") !== "Application") continue;
           if (sp.appOwnerOrganizationId && own.has(sp.appOwnerOrganizationId)) continue;
           yield sp;
@@ -410,18 +416,17 @@ export const microsoft: Connector = defineConnector({
           const { a, subs } = await azure(ctx);
           for (const s of subs) {
             yield { sub: s };
-            for (
-              const r of await ctx.orGap(
-                `Azure ${s.displayName}`,
-                [] as Array<{ id: string; name: string; type: string; location: string }>,
-                () =>
-                  pages(
-                    ctx,
-                    `${ARM}/subscriptions/${s.subscriptionId}/resources?api-version=2021-04-01`,
-                    a,
-                  ),
-              )
-            ) yield { res: r, subscription: s.displayName };
+            for (const r of await ctx.orGap(
+              `Azure ${s.displayName}`,
+              [] as Array<{ id: string; name: string; type: string; location: string }>,
+              () =>
+                pages(
+                  ctx,
+                  `${ARM}/subscriptions/${s.subscriptionId}/resources?api-version=2021-04-01`,
+                  a,
+                ),
+            ))
+              yield { res: r, subscription: s.displayName };
           }
         } catch (e) {
           throw e instanceof AccessDenied ? e : new AccessDenied((e as Error).message);
@@ -430,16 +435,16 @@ export const microsoft: Connector = defineConnector({
       map: (x: Azure) =>
         "sub" in x
           ? {
-            native_id: x.sub.subscriptionId,
-            display_name: x.sub.displayName,
-            props: { type: "subscription", state: x.sub.state },
-          }
+              native_id: x.sub.subscriptionId,
+              display_name: x.sub.displayName,
+              props: { type: "subscription", state: x.sub.state },
+            }
           : {
-            native_id: x.res.id,
-            display_name: x.res.name,
-            where: x.res.location,
-            props: { type: x.res.type, region: x.res.location, subscription: x.subscription },
-          },
+              native_id: x.res.id,
+              display_name: x.res.name,
+              where: x.res.location,
+              props: { type: x.res.type, region: x.res.location, subscription: x.subscription },
+            },
       asset: (x: Azure): { kind: string; facts: Record<string, string> } =>
         "sub" in x
           ? { kind: "azure-subscription", facts: { state: x.sub.state } }
@@ -451,16 +456,15 @@ export const microsoft: Connector = defineConnector({
       ocsf: "cloud_resources_inventory_info",
       list: (ctx) =>
         perSubscription(ctx, async function* (s, base, a) {
-          for (
-            const plan of await ctx.orGap(
-              `Defender for Cloud ${s.displayName}`,
-              [] as Plan[],
-              () =>
-                asGap(
-                  pages<Plan>(ctx, `${base}/Microsoft.Security/pricings?api-version=2024-01-01`, a),
-                ),
-            )
-          ) yield { plan, sub: s };
+          for (const plan of await ctx.orGap(
+            `Defender for Cloud ${s.displayName}`,
+            [] as Plan[],
+            () =>
+              asGap(
+                pages<Plan>(ctx, `${base}/Microsoft.Security/pricings?api-version=2024-01-01`, a),
+              ),
+          ))
+            yield { plan, sub: s };
         }),
       map: (x: { plan: Plan; sub: Sub }) => ({
         native_id: `${x.sub.subscriptionId}/defender/${x.plan.name}`,
@@ -483,11 +487,13 @@ export const microsoft: Connector = defineConnector({
             `activity log ${s.displayName}`,
             undefined as DiagnosticSetting[] | undefined,
             () =>
-              asGap(pages<DiagnosticSetting>(
-                ctx,
-                `${base}/Microsoft.Insights/diagnosticSettings?api-version=2021-05-01-preview`,
-                a,
-              )),
+              asGap(
+                pages<DiagnosticSetting>(
+                  ctx,
+                  `${base}/Microsoft.Insights/diagnosticSettings?api-version=2021-05-01-preview`,
+                  a,
+                ),
+              ),
           );
           if (log) yield { log, sub: s };
         }),
@@ -497,7 +503,8 @@ export const microsoft: Connector = defineConnector({
           const on = (p.logs ?? []).some((l) => l.enabled);
           return on
             ? [p.workspaceId, p.storageAccountId, p.eventHubAuthorizationRuleId]
-              .filter((v): v is string => !!v).map((v) => v.split("/").pop()!)
+                .filter((v): v is string => !!v)
+                .map((v) => v.split("/").pop() ?? v)
             : [];
         });
         return {
@@ -520,46 +527,55 @@ export const microsoft: Connector = defineConnector({
     const read = (what: string) => !gaps.some((g) => g.startsWith(`${what}: `));
     const role = of(ACCESS_CONTROL_GROUP).find((r) => r.native_id === GLOBAL_ADMIN);
     if (role) {
-      posture.globalAdmins = role.props.members as number;
-      posture.globalAdminNames = role.props.member_names as string;
+      posture["globalAdmins"] = role.props["members"] as number;
+      posture["globalAdminNames"] = role.props["member_names"] as string;
     }
     const mfa = of(ASSESSMENT)[0];
     if (mfa) {
       const users = of(USER_ACCOUNT);
       const enabled = new Set(
-        users.filter((u) => u.props.active && u.props.service === undefined).map((u) =>
-          u.display_name
-        ),
+        users
+          .filter((u) => u.props["active"] && u.props["service"] === undefined)
+          .map((u) => u.display_name),
       );
-      const without = (mfa.props.unregistered as string[]).filter((n) =>
-        !users.length || enabled.has(n)
+      const without = (mfa.props["unregistered"] as string[]).filter(
+        (n) => !users.length || enabled.has(n),
       );
-      posture.membersWithoutMfa = without.length;
-      posture.membersWithoutMfaNames = without.slice(0, 20).join(", ");
+      posture["membersWithoutMfa"] = without.length;
+      posture["membersWithoutMfaNames"] = without.slice(0, 20).join(", ");
     }
     if (read("Security defaults") || read("Conditional Access")) {
-      posture.mfaEnforced = of(POLICY).some((p) => p.props.enabled);
+      posture["mfaEnforced"] = of(POLICY).some((p) => p.props["enabled"]);
     }
     if (read("Azure")) {
-      posture.azureSubscriptions = of(RESOURCE).filter((r) => r.props.type === "subscription")
-        .length;
+      posture["azureSubscriptions"] = of(RESOURCE).filter(
+        (r) => r.props["type"] === "subscription",
+      ).length;
     }
     // Spec 088: per subscription, only what was read.
-    const subs = of(RESOURCE).filter((r) => r.props.type === "subscription");
-    const plans = records.filter((r) => r.props.kind === "defender-plan");
+    const subs = of(RESOURCE).filter((r) => r.props["type"] === "subscription");
+    const plans = records.filter((r) => r.props["kind"] === "defender-plan");
     const planned = subs.filter((s) =>
-      plans.some((p) => p.native_id.startsWith(`${s.native_id}/defender/`))
+      plans.some((p) => p.native_id.startsWith(`${s.native_id}/defender/`)),
     );
     if (planned.length) {
-      posture.defenderOff = planned.filter((s) =>
-        !plans.some((p) => p.native_id.startsWith(`${s.native_id}/defender/`) && p.props.enabled)
-      ).map((s) => s.display_name).join(", ");
-      posture.defenderPlansOn = plans.filter((p) => p.props.enabled).length;
+      posture["defenderOff"] = planned
+        .filter(
+          (s) =>
+            !plans.some(
+              (p) => p.native_id.startsWith(`${s.native_id}/defender/`) && p.props["enabled"],
+            ),
+        )
+        .map((s) => s.display_name)
+        .join(", ");
+      posture["defenderPlansOn"] = plans.filter((p) => p.props["enabled"]).length;
     }
     const logs = records.filter((r) => r.label === EVENT_LOG.name);
     if (logs.length) {
-      posture.activityLogNotExported = logs.filter((l) => !l.props.logging)
-        .map((l) => String(l.props.region)).join(", ");
+      posture["activityLogNotExported"] = logs
+        .filter((l) => !l.props["logging"])
+        .map((l) => String(l.props["region"]))
+        .join(", ");
     }
     return posture;
   },
@@ -572,8 +588,7 @@ export const microsoft: Connector = defineConnector({
         scf: ["IAC-37"],
         fact: "mfaEnforced",
         want: (v) => v === true,
-        fix:
-          "entra.microsoft.com > Overview > Properties > Manage security defaults: Enabled (or a Conditional Access policy requiring MFA)",
+        fix: "entra.microsoft.com > Overview > Properties > Manage security defaults: Enabled (or a Conditional Access policy requiring MFA)",
       }),
       check(o, {
         id: "ms-mfa-registered",
@@ -581,10 +596,10 @@ export const microsoft: Connector = defineConnector({
         scf: ["IAC-37"],
         fact: "membersWithoutMfa",
         show: (v) =>
-          `${v} member(s) without MFA${v ? `: ${o.posture.membersWithoutMfaNames ?? ""}` : ""}`,
+          `${v} member(s) without MFA${v ? `: ${o.posture["membersWithoutMfaNames"] ?? ""}` : ""}`,
         want: (v) => v === 0,
         fix: `ask each person in membersWithoutMfaNames to sign in at aka.ms/mysecurityinfo: ${
-          o.posture.membersWithoutMfaNames ?? ""
+          o.posture["membersWithoutMfaNames"] ?? ""
         }`.trim(),
       }),
       check(o, {
@@ -592,10 +607,10 @@ export const microsoft: Connector = defineConnector({
         title: "Two to four Global Administrators",
         scf: ["IAC-30"],
         fact: "globalAdmins",
-        show: (v) => `${v}: ${o.posture.globalAdminNames ?? "?"}`,
+        show: (v) => `${v}: ${o.posture["globalAdminNames"] ?? "?"}`,
         want: (v) => typeof v === "number" && v >= 2 && v <= 4,
         fix: `entra.microsoft.com > Roles and administrators > Global Administrator (now: ${
-          o.posture.globalAdminNames ?? "?"
+          o.posture["globalAdminNames"] ?? "?"
         })`,
         warnOnly: true,
       }),
@@ -607,9 +622,8 @@ export const microsoft: Connector = defineConnector({
           scf: ["MON-03", "MON-13"],
           fact: "activityLogNotExported",
           want: (v) => v === "",
-          show: (v) => v ? `not exported: ${v}` : "every subscription's is exported",
-          fix:
-            "portal.azure.com > Monitor > Activity log > Export Activity Logs > Add diagnostic setting: every category, to a Log Analytics workspace or a storage account with retention",
+          show: (v) => (v ? `not exported: ${v}` : "every subscription's is exported"),
+          fix: "portal.azure.com > Monitor > Activity log > Export Activity Logs > Add diagnostic setting: every category, to a Log Analytics workspace or a storage account with retention",
         }),
         check(o, {
           id: "az-defender",
@@ -617,9 +631,8 @@ export const microsoft: Connector = defineConnector({
           scf: ["MON-16"],
           fact: "defenderOff",
           want: (v) => v === "",
-          show: (v) => v ? `no plan on: ${v}` : `${o.posture.defenderPlansOn} plan(s) on`,
-          fix:
-            "portal.azure.com > Microsoft Defender for Cloud > Environment settings > the subscription > Defender plans: turn on Servers (and the others the subscription uses)",
+          show: (v) => (v ? `no plan on: ${v}` : `${o.posture["defenderPlansOn"]} plan(s) on`),
+          fix: "portal.azure.com > Microsoft Defender for Cloud > Environment settings > the subscription > Defender plans: turn on Servers (and the others the subscription uses)",
           warnOnly: true,
         }),
       ].filter((p) => p.status !== "unknown"),

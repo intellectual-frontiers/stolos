@@ -10,8 +10,9 @@
  * @module
  */
 
-import { exportedLiteral } from "../core/ts-literal.ts";
-import { run } from "../core/exec.ts";
+import { exportedLiteral } from "@intellectual-frontiers/ifc-ts/kernel";
+import { errors, fs } from "@intellectual-frontiers/ifc-ts/runtime";
+import { run, type RunResult } from "../core/exec.ts";
 import type { Observation } from "../connect/connector.ts";
 import type { Device } from "../connect/entities.ts";
 
@@ -51,49 +52,53 @@ export interface RepoReader {
 
 /** A reader for the working tree, or for one commit (`rev`), of the repository at `repo`. */
 export function gitReader(repo: string, rev?: string): RepoReader {
-  const git = (args: string[]) => run(["git", "-C", repo, ...args]);
+  const git = (args: string[]): Promise<RunResult> => run(["git", "-C", repo, ...args]);
   return {
-    async read(path) {
+    async read(path): Promise<string | undefined> {
       if (!rev) {
         try {
-          return await Deno.readTextFile(`${repo}/${path}`);
+          return await fs.readTextFile(`${repo}/${path}`);
         } catch (e) {
-          if (e instanceof Deno.errors.NotFound) return undefined;
+          if (e instanceof errors.NotFound) return undefined;
           throw e;
         }
       }
       const r = await git(["show", `${rev}:${path}`]);
       return r.ok ? r.stdout : undefined;
     },
-    async list(dir) {
+    async list(dir): Promise<string[]> {
       if (!rev) {
         const out: string[] = [];
         try {
-          for await (const e of Deno.readDir(`${repo}/${dir}`)) out.push(e.name);
+          for await (const e of fs.readDir(`${repo}/${dir}`)) out.push(e.name);
         } catch (e) {
-          if (!(e instanceof Deno.errors.NotFound)) throw e;
+          if (!(e instanceof errors.NotFound)) throw e;
         }
         return out.sort();
       }
       const r = await git(["ls-tree", "--name-only", `${rev}:${dir}`]);
       return r.ok ? r.stdout.split("\n").filter(Boolean).sort() : [];
     },
-    async lastCommit(path) {
+    async lastCommit(path): Promise<string | undefined> {
       const r = await git(["log", "-1", "--format=%H", ...(rev ? [rev] : []), "--", path]);
       return r.stdout.trim() || undefined;
     },
   };
 }
 
-const lit = <T>(text: string | undefined, name: string): T | undefined =>
-  text === undefined ? undefined : exportedLiteral(text, name) as T;
+/**
+ * The literal a file Stolos wrote exports as `name`, as the type that file declares it (Stolos wrote
+ * it from that type); undefined where there is no file. A file that is not such a literal throws.
+ */
+function lit<T>(text: string | undefined, name: string): T | undefined {
+  if (text === undefined) return undefined;
+  const r = exportedLiteral(text, name);
+  if (r.kind === "err") throw new Error(`${name}: expected ${r.error.expected} at ${r.error.at}`);
+  return r.value as T;
+}
 
 /** The snapshot of a fleet, through a reader. */
-export async function readSnapshot(
-  r: RepoReader,
-  fleet: string,
-  rev?: string,
-): Promise<Snapshot> {
+export async function readSnapshot(r: RepoReader, fleet: string, rev?: string): Promise<Snapshot> {
   const base = `fleets/${fleet}`;
   const sources: SourceSnapshot[] = [];
   for (const f of await r.list(`${base}/estate`)) {
@@ -180,23 +185,14 @@ export async function seenTimes(
     }
   };
   for (const path of paths) {
-    const connector = path.split("/").pop()!.replace(/\.ts$/, "");
-    const log = await run([
-      "git",
-      "-C",
-      repo,
-      "log",
-      `-${max}`,
-      "--format=%H",
-      "--",
-      path,
-    ]);
+    const connector = (path.split("/").pop() ?? path).replace(/\.ts$/, "");
+    const log = await run(["git", "-C", repo, "log", `-${max}`, "--format=%H", "--", path]);
     for (const sha of log.stdout.split("\n").filter(Boolean)) {
       const r = await run(["git", "-C", repo, "show", `${sha}:${path}`]);
       if (!r.ok) continue;
       try {
-        const o = exportedLiteral(r.stdout, "observed") as Observation;
-        for (const u of uids(connector, o)) mark(u, o.at);
+        const o = lit<Observation>(r.stdout, "observed");
+        if (o) for (const u of uids(connector, o)) mark(u, o.at);
       } catch {
         // A version that is not a literal Stolos wrote (edited by hand): it adds no times.
       }

@@ -14,9 +14,10 @@
  * @module
  */
 
+import { http } from "@intellectual-frontiers/ifc-ts/runtime";
 import { AccessDenied, type Connector } from "./connector.ts";
 import { CODE_REPOSITORY, USER_ACCOUNT } from "./labels.ts";
-import { bearer, type Ctx, defineConnector } from "./sdk.ts";
+import { type Ctx, defineConnector } from "./sdk.ts";
 import { branchMatches, codeHostPolicies, codeHostPosture } from "./codehost.ts";
 
 const FIELDS = {
@@ -75,7 +76,7 @@ export const gitlab: Connector = defineConnector<typeof FIELDS>({
     },
   },
   fields: FIELDS,
-  auth: (cred) => Promise.resolve(bearer(cred.token)),
+  auth: (cred) => Promise.resolve(http.bearer(cred.token)),
   account: (cred) => cred.group,
   resources: {
     members: {
@@ -111,13 +112,12 @@ export const gitlab: Connector = defineConnector<typeof FIELDS>({
       ocsf: "inventory_info",
       async *list(ctx) {
         const B = api(ctx.cred.url);
-        for await (
-          const p of ctx.linkPages<Project>(
-            `${B}/groups/${group(ctx)}/projects?include_subgroups=true&archived=false&per_page=100`,
-          )
-        ) {
+        for await (const p of ctx.linkPages<Project>(
+          `${B}/groups/${group(ctx)}/projects?include_subgroups=true&archived=false&per_page=100`,
+        )) {
           if (p.archived) continue;
-          if (!p.default_branch) { // an empty project: nothing to protect yet
+          if (!p.default_branch) {
+            // an empty project: nothing to protect yet
             yield p;
             continue;
           }

@@ -14,8 +14,9 @@
  * @module
  */
 
+import { http } from "@intellectual-frontiers/ifc-ts/runtime";
 import { AccessDenied, check, type Connector, fresh } from "./connector.ts";
-import { bearer, type Ctx, defineConnector } from "./sdk.ts";
+import { type Ctx, defineConnector } from "./sdk.ts";
 import { ORGANIZATION, USER_ACCOUNT } from "./labels.ts";
 
 /** Slack's Web API. */
@@ -134,7 +135,7 @@ export const slack: Connector = defineConnector({
     open: { href: "https://api.slack.com/apps", label: "Make a Slack app with read-only scopes" },
   },
   fields: FIELDS,
-  auth: (cred) => Promise.resolve(bearer(cred.token)),
+  auth: (cred) => Promise.resolve(http.bearer(cred.token)),
   account: (_cred, records) =>
     records.find((r) => r.label === ORGANIZATION.name)?.display_name ?? "slack",
   resources: {
@@ -148,12 +149,10 @@ export const slack: Connector = defineConnector({
         await ctx.orGap("shared channels", undefined, async () => {
           let shared = 0;
           let pending = 0;
-          for await (
-            const c of slackPages<Channel>(ctx, "conversations.list", "channels", {
-              types: "public_channel,private_channel",
-              exclude_archived: "true",
-            })
-          ) {
+          for await (const c of slackPages<Channel>(ctx, "conversations.list", "channels", {
+            types: "public_channel,private_channel",
+            exclude_archived: "true",
+          })) {
             if (c.is_ext_shared) shared++;
             else if (c.is_pending_ext_shared) pending++;
           }
@@ -208,15 +207,15 @@ export const slack: Connector = defineConnector({
     },
   },
   posture(records, _cred, { gaps }) {
-    const people = records.filter((r) =>
-      r.label === USER_ACCOUNT.name && r.props.active && !r.props.service
+    const people = records.filter(
+      (r) => r.label === USER_ACCOUNT.name && r.props["active"] && !r.props["service"],
     );
     const read = (what: string) => !gaps.some((g) => g.startsWith(`${what}: `));
     return {
       members: people.length,
-      admins: people.filter((r) => r.props.admin).length,
-      ...(read(NO_2FA) && people.some((r) => typeof r.props.mfa === "boolean")
-        ? { membersWithout2fa: people.filter((r) => r.props.mfa === false).length }
+      admins: people.filter((r) => r.props["admin"]).length,
+      ...(read(NO_2FA) && people.some((r) => typeof r.props["mfa"] === "boolean")
+        ? { membersWithout2fa: people.filter((r) => r.props["mfa"] === false).length }
         : {}),
     };
   },
@@ -229,9 +228,8 @@ export const slack: Connector = defineConnector({
         scf: ["IAC-37"],
         fact: "membersWithout2fa",
         want: (v) => v === 0,
-        show: (v) => `${v} of ${o.posture.members} members without it`,
-        fix:
-          "Slack > Workspace settings > Authentication > Two-factor authentication: require it for everyone (or sign in through your identity provider)",
+        show: (v) => `${v} of ${o.posture["members"]} members without it`,
+        fix: "Slack > Workspace settings > Authentication > Two-factor authentication: require it for everyone (or sign in through your identity provider)",
       }),
       check(o, {
         id: "slack-admins",
@@ -249,8 +247,7 @@ export const slack: Connector = defineConnector({
         fact: "externalChannels",
         want: (v) => v === 0,
         show: (v) => `${v} channel(s) shared with outside organizations`,
-        fix:
-          "review each Slack Connect channel and disconnect those no longer needed; Admin > Slack Connect: require admin approval for new ones",
+        fix: "review each Slack Connect channel and disconnect those no longer needed; Admin > Slack Connect: require admin approval for new ones",
         warnOnly: true,
       }),
     ];

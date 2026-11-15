@@ -12,8 +12,9 @@
  * @module
  */
 
+import { http } from "@intellectual-frontiers/ifc-ts/runtime";
 import type { Connector } from "./connector.ts";
-import { bearer, defineConnector } from "./sdk.ts";
+import { defineConnector } from "./sdk.ts";
 import {
   rosterPolicies,
   rosterPosture,
@@ -48,9 +49,11 @@ function status(p: DeelPerson): RosterRow["status"] {
 
 /** One Deel person, reduced to the roster's fields. */
 function deelRow(p: DeelPerson): RosterRow | undefined {
-  const work = p.emails?.find((e) => e.type === "work")?.value ??
+  const work =
+    p.emails?.find((e) => e.type === "work")?.value ??
     p.employments?.find((e) => e.work_email)?.work_email;
-  const end = p.direct_employee_termination_last_day ??
+  const end =
+    p.direct_employee_termination_last_day ??
     p.employments?.find((e) => e.termination_last_day)?.termination_last_day;
   return rosterRow({
     id: p.id,
@@ -83,24 +86,22 @@ export const deel: Connector = defineConnector({
   fields: {
     token: { secret: true, hint: "the organization API token (people:read only)" },
   },
-  auth: (cred) => Promise.resolve(bearer(cred.token)),
+  auth: (cred) => Promise.resolve(http.bearer(cred["token"] ?? "")),
   account: () => "Deel",
   resources: {
     people: rosterResource(async function* (ctx) {
       type Page = { data?: DeelPerson[]; page?: { offset?: number; total_rows?: number } };
-      for await (
-        const p of ctx.cursorPages<Page, DeelPerson>(
-          `${DEEL_API}/people?limit=100&offset=0`,
-          (b) => b.data,
-          (b, url) => {
-            const offset = Number(new URL(url).searchParams.get("offset") ?? 0) + 100;
-            const total = b.page?.total_rows ?? 0;
-            return (b.data?.length ?? 0) === 100 && offset < total
-              ? `${DEEL_API}/people?limit=100&offset=${offset}`
-              : undefined;
-          },
-        )
-      ) {
+      for await (const p of ctx.cursorPages<Page, DeelPerson>(
+        `${DEEL_API}/people?limit=100&offset=0`,
+        (b) => b.data,
+        (b, url) => {
+          const offset = Number(new URL(url).searchParams.get("offset") ?? 0) + 100;
+          const total = b.page?.total_rows ?? 0;
+          return (b.data?.length ?? 0) === 100 && offset < total
+            ? `${DEEL_API}/people?limit=100&offset=${offset}`
+            : undefined;
+        },
+      )) {
         const row = deelRow(p);
         if (row) yield row;
       }

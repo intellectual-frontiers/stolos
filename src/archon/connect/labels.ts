@@ -22,8 +22,7 @@ export const CODE_REPOSITORY: LabelView = codeRepository;
 export const PERSON: LabelView = defineLabel({
   name: "person",
   terms: [{ from: "udm", term: "person" }],
-  doc:
-    "A person on an HR system's roster: name, work email, status, dates, manager, and role only.",
+  doc: "A person on an HR system's roster: name, work email, status, dates, manager, and role only.",
   props: {
     email: { type: "text", doc: "Work email." },
     name: { type: "text", doc: "Their name." },
@@ -279,8 +278,7 @@ export const RESOURCE: LabelView = defineLabel({
 export const TICKET: LabelView = defineLabel({
   name: "ticket",
   terms: [{ from: "ocsf", term: "ticket" }],
-  doc:
-    "A ticket in a service management or work-tracking system (a change, an incident, other work) and the development work it links.",
+  doc: "A ticket in a service management or work-tracking system (a change, an incident, other work) and the development work it links.",
   props: {
     title: { type: "text", doc: "Its title." },
     type: {
@@ -322,8 +320,7 @@ export const PASSWORD_STORE: LabelView = defineLabel({
 export const APPLICATION: LabelView = defineLabel({
   name: "application",
   terms: [{ from: "ocsf", term: "application" }],
-  doc:
-    "An application people sign in to through the identity provider (single sign-on): its name and how it signs in.",
+  doc: "An application people sign in to through the identity provider (single sign-on): its name and how it signs in.",
   props: {
     catalog_name: {
       type: "text",
@@ -347,8 +344,7 @@ export const APPLICATION: LabelView = defineLabel({
 export const VULNERABILITY: LabelView = defineLabel({
   name: "vulnerability",
   terms: [{ from: "ocsf", term: "vulnerability" }],
-  doc:
-    "A vulnerability a scanner reports on one asset: its CVE, severity, status, the asset, and when it was first seen.",
+  doc: "A vulnerability a scanner reports on one asset: its CVE, severity, status, the asset, and when it was first seen.",
   props: {
     cve: { type: "text", doc: "Its CVE id (CVE-2024-3094), when it has one." },
     title: { type: "text", doc: "Its title, as the scanner names it." },
@@ -374,8 +370,7 @@ export const VULNERABILITY: LabelView = defineLabel({
 export const EVENT_LOG: LabelView = defineLabel({
   name: "event_log",
   terms: [{ from: "d3fend", term: "event_log" }],
-  doc:
-    "An audit log a cloud keeps or sends somewhere: a CloudTrail trail, Azure's exported activity log, a Google Cloud log sink.",
+  doc: "An audit log a cloud keeps or sends somewhere: a CloudTrail trail, Azure's exported activity log, a Google Cloud log sink.",
   props: {
     kind: { type: "text", doc: "cloudtrail, activity-log, log-sink, ..." },
     logging: { type: "boolean", doc: "It is recording now." },
@@ -390,8 +385,7 @@ export const EVENT_LOG: LabelView = defineLabel({
 export const INTRUSION_DETECTION_SYSTEM: LabelView = defineLabel({
   name: "intrusion_detection_system",
   terms: [{ from: "d3fend", term: "intrusion_detection_system" }],
-  doc:
-    "A cloud's threat detection: a GuardDuty detector in a region, a Defender for Cloud plan on a subscription.",
+  doc: "A cloud's threat detection: a GuardDuty detector in a region, a Defender for Cloud plan on a subscription.",
   props: {
     kind: { type: "text", doc: "guardduty, defender-plan, ..." },
     enabled: { type: "boolean", doc: "It is on (a paid Defender plan: Standard)." },

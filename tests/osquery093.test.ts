@@ -1,6 +1,12 @@
-// Spec 093: the estate graph as osquery tables, through osquery's Automatic Table Construction.
-import { assert, assertEquals } from "./assert.ts";
+/**
+ * Spec 093: the estate graph as osquery tables, through osquery's Automatic Table Construction.
+ *
+ * @module
+ */
+
+import { assert, assertEquals, proves } from "@intellectual-frontiers/ifc-ts/runtime/test";
 import { DatabaseSync } from "node:sqlite";
+import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import type { Observation } from "../src/archon/connect/connector.ts";
 import { buildGraph, estatePolicies, estateQuery } from "../src/archon/estate/graph.ts";
 import { ESTATE_SCHEMA } from "../src/archon/estate/schema.ts";
@@ -77,128 +83,100 @@ const snapshot: Snapshot = {
 
 const DB = "/var/tmp/estate/estate.auto.sqlite.db";
 
-Deno.test("093: one osquery table per estate table and view, with exactly its declared columns and the path", () => {
-  const c = atcConfig(DB);
-  assertEquals(Object.keys(c), ["auto_table_construction"]);
-  const t = c.auto_table_construction;
-  assertEquals(Object.keys(t), ESTATE_SCHEMA.map((d) => `stolos_${d.name}`));
-  for (const d of ESTATE_SCHEMA) {
-    const x = t[`stolos_${d.name}`];
-    assertEquals(Object.keys(x).sort(), ["columns", "path", "platform", "query"], d.name);
-    assertEquals(x.columns, Object.keys(d.columns), d.name);
-    assertEquals(x.query, `SELECT ${Object.keys(d.columns).join(", ")} FROM ${d.name}`);
-    assertEquals(x.path, DB);
-    assertEquals(x.platform, ATC_PLATFORM);
-    for (const p of ["darwin", "linux", "windows"]) assert(x.platform.includes(p));
-    for (const col of x.columns) {
-      assert(!ATC_RESERVED.includes(col.toLowerCase()), `${d.name}.${col} is reserved by ATC`);
-      assert(/^[a-z][a-z0-9_]*$/.test(col), col);
+proves(
+  ["093-osquery FR-001", "093-osquery FR-002"],
+  "093: one osquery table per estate table and view, with exactly its declared columns and the path",
+  () => {
+    const c = atcConfig(DB);
+    assertEquals(Object.keys(c), ["auto_table_construction"]);
+    const t = c.auto_table_construction;
+    assertEquals(
+      Object.keys(t),
+      ESTATE_SCHEMA.map((d) => `stolos_${d.name}`),
+    );
+    for (const d of ESTATE_SCHEMA) {
+      const x = t[`stolos_${d.name}`];
+      assert(x !== undefined, d.name);
+      assertEquals(Object.keys(x).sort(), ["columns", "path", "platform", "query"], d.name);
+      assertEquals(x.columns, Object.keys(d.columns), d.name);
+      assertEquals(x.query, `SELECT ${Object.keys(d.columns).join(", ")} FROM ${d.name}`);
+      assertEquals(x.path, DB);
+      assertEquals(x.platform, ATC_PLATFORM);
+      for (const p of ["darwin", "linux", "windows"]) assert(x.platform.includes(p));
+      for (const col of x.columns) {
+        assert(!ATC_RESERVED.includes(col.toLowerCase()), `${d.name}.${col} is reserved by ATC`);
+        assert(/^[a-z][a-z0-9_]*$/.test(col), col);
+      }
     }
-  }
-  // Every value is a string or an array of strings: the shape osquery's parser accepts.
-  const json = JSON.parse(JSON.stringify(c)) as AtcConfig;
-  for (const x of Object.values(json.auto_table_construction)) {
-    assert(typeof x.query === "string" && typeof x.path === "string");
-    assert(typeof x.platform === "string" && x.columns.every((s) => typeof s === "string"));
-  }
-  assert(osqueryHelp("/x/estate.osquery.json").includes('osqueryi --config_path "/x/'));
-});
+    // Every value is a string or an array of strings: the shape osquery's parser accepts.
+    const json = JSON.parse(JSON.stringify(c)) as AtcConfig;
+    for (const x of Object.values(json.auto_table_construction)) {
+      assert(typeof x.query === "string" && typeof x.path === "string");
+      assert(typeof x.platform === "string" && x.columns.every((s) => typeof s === "string"));
+    }
+    assert(osqueryHelp("/x/estate.osquery.json").includes('osqueryi --config_path "/x/'));
+  },
+);
 
-Deno.test("093: a column osquery reserves is renamed in osquery only, never in the estate", () => {
-  const t = defineTable({
-    name: "file_thing",
-    terms: [],
-    doc: "A test table.",
-    columns: {
-      path: { type: "text", doc: "A path.", required: true },
-      estate_path: { type: "text", doc: "Taken already." },
-      size: { type: "integer", doc: "Its size." },
-    },
-    key: ["path"],
-  });
-  const v = defineView({
-    name: "file_view",
-    terms: [],
-    doc: "A test view.",
-    columns: { Path: "A path." },
-    select: "SELECT path AS Path FROM file_thing",
-    reads: ["file_thing"],
-  });
-  const c = atcConfig("relative/estate.auto.sqlite.db", [t, v]).auto_table_construction;
-  assertEquals(c.stolos_file_thing.columns, ["estate_estate_path", "estate_path", "size"]);
-  assertEquals(
-    c.stolos_file_thing.query,
-    "SELECT path AS estate_estate_path, estate_path, size FROM file_thing",
-  );
-  assertEquals(c.stolos_file_view.columns, ["estate_Path"]);
-  assert(c.stolos_file_thing.path.startsWith("/") || /^[A-Za-z]:\\/.test(c.stolos_file_thing.path));
-  assert(c.stolos_file_thing.path.endsWith("estate.auto.sqlite.db"), "made absolute");
-});
+proves(
+  ["093-osquery FR-004"],
+  "093: a column osquery reserves is renamed in osquery only, never in the estate",
+  () => {
+    const t = defineTable({
+      name: "file_thing",
+      terms: [],
+      doc: "A test table.",
+      columns: {
+        path: { type: "text", doc: "A path.", required: true },
+        estate_path: { type: "text", doc: "Taken already." },
+        size: { type: "integer", doc: "Its size." },
+      },
+      key: ["path"],
+    });
+    const v = defineView({
+      name: "file_view",
+      terms: [],
+      doc: "A test view.",
+      columns: { Path: "A path." },
+      select: "SELECT path AS Path FROM file_thing",
+      reads: ["file_thing"],
+    });
+    const c = atcConfig("relative/estate.auto.sqlite.db", [t, v]).auto_table_construction;
+    const thing = c["stolos_file_thing"];
+    assert(thing !== undefined);
+    assertEquals(thing.columns, ["estate_estate_path", "estate_path", "size"]);
+    assertEquals(
+      thing.query,
+      "SELECT path AS estate_estate_path, estate_path, size FROM file_thing",
+    );
+    assertEquals(c["stolos_file_view"]?.columns, ["estate_Path"]);
+    assert(thing.path.startsWith("/") || /^[A-Za-z]:\\/.test(thing.path));
+    assert(thing.path.endsWith("estate.auto.sqlite.db"), "made absolute");
+  },
+);
 
 /** Rows as osquery shows them: every value text, NULL empty, plus its own path column. */
 const asOsquery = (rows: Array<Record<string, unknown>>, path: string) =>
   rows.map((r) => ({
-    ...Object.fromEntries(Object.entries(r).map(([k, v]) => [k, v === null ? "" : String(v)])),
+    ...Object.fromEntries(
+      Object.entries(r).map(([k, v]) => [
+        k,
+        v === null || v === undefined ? "" : typeof v === "string" ? v : JSON.stringify(v),
+      ]),
+    ),
     path,
   }));
 
 const sortRows = (rows: Array<Record<string, string>>) =>
   rows.map((r) => JSON.stringify(Object.entries(r).sort())).sort();
 
-Deno.test("093: the built files: the config next to the database; the database answers each ATC query", async () => {
-  const e = buildGraph(snapshot, { now: new Date(AT) });
-  estatePolicies(e, new Date(AT));
-  const dir = await Deno.makeTempDir();
-  try {
-    const files = {
-      sql: `${dir}/estate.sql`,
-      db: `${dir}/estate.auto.sqlite.db`,
-      osquery: `${dir}/estate.osquery.json`,
-    };
-    await writeEstateFiles(e, files);
-    const c = JSON.parse(await Deno.readTextFile(files.osquery)) as AtcConfig;
-    assertEquals(c, atcConfig(files.db));
-    for await (const f of Deno.readDir(dir)) assert(!f.name.endsWith(".tmp"), f.name);
-    const db = new DatabaseSync(files.db, { readOnly: true });
-    try {
-      for (const d of ESTATE_SCHEMA) {
-        const x = c.auto_table_construction[`stolos_${d.name}`];
-        const st = db.prepare(x.query);
-        assertEquals(st.columns().map((k) => k.name), x.columns, d.name);
-        assertEquals(st.all().length, estateQuery(e, `select * from ${d.name}`).length, d.name);
-      }
-    } finally {
-      db.close();
-    }
-  } finally {
-    await Deno.remove(dir, { recursive: true });
-  }
-});
-
-const osqueryi = await (async () => {
-  try {
-    const r = await new Deno.Command("osqueryi", { args: ["--version"], stdout: "piped" }).output();
-    return r.success ? new TextDecoder().decode(r.stdout).trim() : undefined;
-  } catch {
-    return undefined;
-  }
-})();
-if (!osqueryi && Deno.env.get("STOLOS_REQUIRE_OSQUERY")) {
-  throw new Error("093: STOLOS_REQUIRE_OSQUERY is set (CI) but osqueryi is not installed");
-}
-if (!osqueryi) {
-  console.log(
-    "093: osqueryi is not installed: skipping the osquery integration test (CI installs it)",
-  );
-}
-
-Deno.test({
-  name: "093: osqueryi reads the estate through ATC: the same rows as estate query",
-  ignore: !osqueryi,
-  async fn() {
+proves(
+  ["093-osquery FR-002", "093-osquery FR-003"],
+  "093: the built files: the config next to the database; the database answers each ATC query",
+  async () => {
     const e = buildGraph(snapshot, { now: new Date(AT) });
     estatePolicies(e, new Date(AT));
-    const dir = await Deno.makeTempDir();
+    const dir = await fs.makeTempDir();
     try {
       const files = {
         sql: `${dir}/estate.sql`,
@@ -206,23 +184,67 @@ Deno.test({
         osquery: `${dir}/estate.osquery.json`,
       };
       await writeEstateFiles(e, files);
-      const query = async (sql: string) => {
-        const r = await new Deno.Command("osqueryi", {
-          args: [
-            "--config_path",
-            files.osquery,
-            "--database_path",
-            `${dir}/osquery.db`,
-            "--disable_extensions",
-            "--json",
-            sql,
-          ],
-          stdout: "piped",
-          stderr: "piped",
-        }).output();
-        const out = new TextDecoder().decode(r.stdout);
-        assert(r.success, `${sql}: ${new TextDecoder().decode(r.stderr)}`);
-        return JSON.parse(out) as Array<Record<string, string>>;
+      const c = JSON.parse(await fs.readTextFile(files.osquery)) as AtcConfig;
+      assertEquals(c, atcConfig(files.db));
+      for await (const f of fs.readDir(dir)) assert(!f.name.endsWith(".tmp"), f.name);
+      const db = new DatabaseSync(files.db, { readOnly: true });
+      try {
+        for (const d of ESTATE_SCHEMA) {
+          const x = c.auto_table_construction[`stolos_${d.name}`];
+          assert(x !== undefined, d.name);
+          const st = db.prepare(x.query);
+          assertEquals(
+            st.columns().map((k) => k.name),
+            x.columns,
+            d.name,
+          );
+          assertEquals(st.all().length, estateQuery(e, `select * from ${d.name}`).length, d.name);
+        }
+      } finally {
+        db.close();
+      }
+    } finally {
+      await fs.remove(dir, { recursive: true });
+    }
+  },
+);
+
+const osqueryi = await (async (): Promise<string | undefined> => {
+  if (proc.which("osqueryi") === undefined) return undefined;
+  const r = await proc.run(["osqueryi", "--version"]);
+  return r.success ? r.stdout.trim() : undefined;
+})();
+if (!osqueryi && proc.env.get("STOLOS_REQUIRE_OSQUERY")) {
+  throw new Error("093: STOLOS_REQUIRE_OSQUERY is set (CI) but osqueryi is not installed");
+}
+
+proves(
+  ["093-osquery FR-001", "093-osquery FR-005"],
+  "093: osqueryi reads the estate through ATC: the same rows as estate query",
+  async () => {
+    const e = buildGraph(snapshot, { now: new Date(AT) });
+    estatePolicies(e, new Date(AT));
+    const dir = await fs.makeTempDir();
+    try {
+      const files = {
+        sql: `${dir}/estate.sql`,
+        db: `${dir}/estate.auto.sqlite.db`,
+        osquery: `${dir}/estate.osquery.json`,
+      };
+      await writeEstateFiles(e, files);
+      const query = async (sql: string): Promise<Array<Record<string, string>>> => {
+        const r = await proc.run([
+          "osqueryi",
+          "--config_path",
+          files.osquery,
+          "--database_path",
+          `${dir}/osquery.db`,
+          "--disable_extensions",
+          "--json",
+          sql,
+        ]);
+        assert(r.success, `${sql}: ${r.stderr}`);
+        return JSON.parse(r.stdout) as Array<Record<string, string>>;
       };
       for (const name of ["device", "user_account", "person", "compliance_finding"]) {
         const got = await query(`select * from stolos_${name}`);
@@ -235,7 +257,8 @@ Deno.test({
       );
       assertEquals(admins, [{ display_name: "alice" }]);
     } finally {
-      await Deno.remove(dir, { recursive: true });
+      await fs.remove(dir, { recursive: true });
     }
   },
-});
+  { skip: !osqueryi && "osqueryi is not installed (CI installs it)" },
+);

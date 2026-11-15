@@ -8,8 +8,9 @@
  * @module
  */
 
+import { http } from "@intellectual-frontiers/ifc-ts/runtime";
 import { check, type Connector, fresh } from "./connector.ts";
-import { bearer, defineConnector } from "./sdk.ts";
+import { defineConnector } from "./sdk.ts";
 import { APPLICATION, USER_ACCOUNT } from "./labels.ts";
 
 interface OktaUser {
@@ -57,7 +58,7 @@ export const okta: Connector = defineConnector({
     domain: { secret: false, hint: "your Okta domain (example.okta.com)" },
     token: { secret: true, hint: "the API token of a Read-Only Administrator" },
   },
-  auth: (cred) => Promise.resolve(bearer(cred.token, "SSWS")),
+  auth: (cred) => Promise.resolve(http.bearer(cred.token, "SSWS")),
   account: (cred) => cred.domain,
   resources: {
     users: {
@@ -72,9 +73,9 @@ export const okta: Connector = defineConnector({
           undefined as Set<string> | undefined,
           async () => {
             const ids = new Set<string>();
-            for await (
-              const a of ctx.linkPages<{ id: string }>(`${b}/api/v1/iam/assignees/users?limit=200`)
-            ) {
+            for await (const a of ctx.linkPages<{ id: string }>(
+              `${b}/api/v1/iam/assignees/users?limit=200`,
+            )) {
               ids.add(a.id);
             }
             return ids;
@@ -85,9 +86,9 @@ export const okta: Connector = defineConnector({
           let mfa: boolean | undefined;
           if (active && i < 1000) {
             mfa = await ctx.orGap("factors", undefined as boolean | undefined, async () => {
-              for await (
-                const f of ctx.linkPages<{ status: string }>(`${b}/api/v1/users/${u.id}/factors`)
-              ) {
+              for await (const f of ctx.linkPages<{ status: string }>(
+                `${b}/api/v1/users/${u.id}/factors`,
+              )) {
                 if (f.status === "ACTIVE") return true;
               }
               return false;
@@ -142,13 +143,15 @@ export const okta: Connector = defineConnector({
   },
   posture(all) {
     const records = all.filter((r) => r.label === USER_ACCOUNT.name);
-    const active = records.filter((r) => r.props.active);
-    const mfaKnown = active.some((r) => r.props.mfa !== undefined);
-    const adminKnown = records.some((r) => r.props.admin !== undefined);
+    const active = records.filter((r) => r.props["active"]);
+    const mfaKnown = active.some((r) => r.props["mfa"] !== undefined);
+    const adminKnown = records.some((r) => r.props["admin"] !== undefined);
     return {
       activeUsers: active.length,
-      ...(mfaKnown ? { activeWithoutMfa: active.filter((r) => r.props.mfa === false).length } : {}),
-      ...(adminKnown ? { admins: records.filter((r) => r.props.admin).length } : {}),
+      ...(mfaKnown
+        ? { activeWithoutMfa: active.filter((r) => r.props["mfa"] === false).length }
+        : {}),
+      ...(adminKnown ? { admins: records.filter((r) => r.props["admin"]).length } : {}),
     };
   },
   policies(o, now) {
@@ -160,7 +163,7 @@ export const okta: Connector = defineConnector({
         scf: ["IAC-37"],
         fact: "activeWithoutMfa",
         want: (v) => v === 0,
-        show: (v) => `${v} of ${o.posture.activeUsers} active users without one`,
+        show: (v) => `${v} of ${o.posture["activeUsers"]} active users without one`,
         fix: "Okta > Security > Authenticators > Enrollment: require a second factor for everyone",
       }),
       check(o, {

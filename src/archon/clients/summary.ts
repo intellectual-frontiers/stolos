@@ -9,8 +9,7 @@
  * @module
  */
 
-import { join } from "../core/path.ts";
-import { exists } from "../core/fsx.ts";
+import { fs, path } from "@intellectual-frontiers/ifc-ts/runtime";
 import { P } from "../core/paths.ts";
 import type { FreshView } from "../compliance/freshness.ts";
 import type { Evidence } from "../compliance/report.ts";
@@ -67,7 +66,10 @@ export function summarize(
 ): ClientSummary {
   const count = (s: string) => view.controls.filter((k) => k.status === s).length;
   const all: Evidence[] = [...new Set(view.controls.flatMap((k) => k.evidence))];
-  const times = all.map((e) => e.observedAt).filter((t): t is string => !!t).sort();
+  const times = all
+    .map((e) => e.observedAt)
+    .filter((t): t is string => !!t)
+    .sort();
   return {
     client: c.id,
     title: c.title,
@@ -82,7 +84,9 @@ export function summarize(
     machines: x.machines,
     ...(x.drift ? { drift: x.drift } : {}),
     ...(times.length ? { lastObservation: times[times.length - 1] } : {}),
-    poamOpen: all.filter((e) => e.status === "fail").length + (x.openRisks ?? 0) +
+    poamOpen:
+      all.filter((e) => e.status === "fail").length +
+      (x.openRisks ?? 0) +
       (x.openVulnerabilities ?? 0),
     ...(x.evidenceBundle ? { evidenceBundle: x.evidenceBundle } : {}),
     asOf: (x.now ?? new Date()).toISOString(),
@@ -111,12 +115,14 @@ export function unreadable(
 export async function newestBundle(dir: string): Promise<string | undefined> {
   let best = 0;
   try {
-    for await (const e of Deno.readDir(dir)) {
+    for await (const e of fs.readDir(dir)) {
       if (!e.isFile || !e.name.endsWith(".zip")) continue;
-      const m = (await Deno.stat(join(dir, e.name))).mtime?.getTime() ?? 0;
+      const m = (await fs.stat(path.join(dir, e.name))).mtime?.getTime() ?? 0;
       if (m > best) best = m;
     }
-  } catch { /* no bundles */ }
+  } catch {
+    /* no bundles */
+  }
   return best ? new Date(best).toISOString().slice(0, 10) : undefined;
 }
 
@@ -138,8 +144,8 @@ export async function readClient(
   o: { since?: string; now?: Date } = {},
 ): Promise<ClientRead | { summary: ClientSummary }> {
   const now = o.now ?? new Date();
-  if (!(await exists(c.path))) return { summary: unreadable(c, "its checkout is missing", now) };
-  if (!(await exists(join(c.path, "fleets", c.fleet, "fleet.ts")))) {
+  if (!(await fs.exists(c.path))) return { summary: unreadable(c, "its checkout is missing", now) };
+  if (!(await fs.exists(path.join(c.path, "fleets", c.fleet, "fleet.ts")))) {
     return { summary: unreadable(c, "its fleet is missing from its checkout", now) };
   }
   try {
@@ -171,8 +177,10 @@ export async function readClient(
             worse: d.changes.filter((x) => x.worse).length,
           };
         }
-      } catch { /* no history to compare: no drift numbers */ }
-      const bundle = await newestBundle(join(P.state, "evidence"));
+      } catch {
+        /* no history to compare: no drift numbers */
+      }
+      const bundle = await newestBundle(path.join(P.state, "evidence"));
       return {
         view,
         summary: summarize(c, view, {

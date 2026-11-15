@@ -12,9 +12,8 @@
  * @module
  */
 
+import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { CLIENT_ID, listFleets, P } from "../core/paths.ts";
-import { join, resolve, sep } from "../core/path.ts";
-import { readTextOr } from "../core/fsx.ts";
 
 /** The registry file's format. */
 export const CLIENTS_FORMAT = "stolos-clients/1";
@@ -43,17 +42,17 @@ export interface ClientRegistry {
 
 /** The registry file (`clients.json` in the provider's folder). */
 export function registryFile(): string {
-  return join(P.provider, "clients.json");
+  return path.join(P.provider, "clients.json");
 }
 
 /** Where `stolos clients use <id>` remembers the chosen client. */
 export function choiceFile(): string {
-  return join(P.provider, "client");
+  return path.join(P.provider, "client");
 }
 
 /** Read the registry (empty when there is none); a file in another form is refused. */
 export async function loadClients(file: string = registryFile()): Promise<Client[]> {
-  const text = await readTextOr(file);
+  const text = await fs.readTextOr(file);
   if (text === undefined) return [];
   const r = JSON.parse(text) as ClientRegistry;
   if (r.format !== CLIENTS_FORMAT || !Array.isArray(r.clients)) {
@@ -69,12 +68,12 @@ export async function loadClients(file: string = registryFile()): Promise<Client
 
 /** Write the registry (sorted by id), readable by its owner only. */
 export async function saveClients(list: Client[], file: string = registryFile()): Promise<void> {
-  await Deno.mkdir(join(file, ".."), { recursive: true });
+  await fs.mkdir(path.join(file, ".."), { recursive: true });
   const body: ClientRegistry = {
     format: CLIENTS_FORMAT,
     clients: [...list].sort((a, b) => a.id.localeCompare(b.id)),
   };
-  await Deno.writeTextFile(file, JSON.stringify(body, null, 2) + "\n", { mode: 0o600 });
+  await fs.writeTextFile(file, JSON.stringify(body, null, 2) + "\n", { mode: 0o600 });
 }
 
 /** The client with this id, or undefined. */
@@ -87,14 +86,15 @@ export async function findClient(
 
 /** The chosen client's id (`clients use`), or "". */
 export async function chosenClient(file: string = choiceFile()): Promise<string> {
-  return (await readTextOr(file))?.trim() ?? "";
+  return (await fs.readTextOr(file))?.trim() ?? "";
 }
 
 /** Whether `a` and `b` are the same folder or one is inside the other. */
 export function overlaps(a: string, b: string): boolean {
-  const low = Deno.build.os === "windows" ? (s: string) => s.toLowerCase() : (s: string) => s;
-  const p = low(resolve(a)), q = low(resolve(b));
-  return p === q || p.startsWith(q + sep) || q.startsWith(p + sep);
+  const low = proc.build.os === "windows" ? (s: string) => s.toLowerCase() : (s: string) => s;
+  const p = low(path.resolve(a)),
+    q = low(path.resolve(b));
+  return p === q || p.startsWith(q + path.sep) || q.startsWith(p + path.sep);
 }
 
 /** A client to add to `existing`: the new entry, or why it cannot be added (and the fix). */
@@ -102,23 +102,23 @@ export function planAdd(
   existing: Client[],
   o: { path: string; fleet?: string; id?: string; title?: string; today?: string },
 ): { client: Client } | { error: string; fix?: string } {
-  const path = resolve(o.path);
-  const fleets = listFleets(path);
+  const dir = path.resolve(o.path);
+  const fleets = listFleets(dir);
   if (!fleets.length) {
     return {
-      error: `${path} holds no fleet (no fleets/<id>/fleet.ts)`,
+      error: `${dir} holds no fleet (no fleets/<id>/fleet.ts)`,
       fix: "the path of a checkout of the client's fleet repository",
     };
   }
   const fleet = o.fleet ?? (fleets.length === 1 ? fleets[0] : "");
   if (!fleet) {
     return {
-      error: `${path} holds more than one fleet (${fleets.join(", ")})`,
+      error: `${dir} holds more than one fleet (${fleets.join(", ")})`,
       fix: "choose one with --fleet <id>",
     };
   }
   if (!fleets.includes(fleet)) {
-    return { error: `no fleet ${fleet} in ${path} (here: ${fleets.join(", ")})` };
+    return { error: `no fleet ${fleet} in ${dir} (here: ${fleets.join(", ")})` };
   }
   const id = o.id ?? fleet;
   if (!CLIENT_ID.test(id)) {
@@ -130,10 +130,10 @@ export function planAdd(
   if (existing.some((c) => c.id === id)) {
     return { error: `there is already a client ${id}`, fix: "choose another with --id <id>" };
   }
-  const shared = existing.find((c) => overlaps(c.path, path));
+  const shared = existing.find((c) => overlaps(c.path, dir));
   if (shared) {
     return {
-      error: `${path} is client ${shared.id}'s checkout (or inside it, or holds it)`,
+      error: `${dir} is client ${shared.id}'s checkout (or inside it, or holds it)`,
       fix: "each client is its own repository, in its own checkout",
     };
   }
@@ -141,7 +141,7 @@ export function planAdd(
     client: {
       id,
       title: o.title?.trim() || id,
-      path,
+      path: dir,
       fleet,
       added: o.today ?? new Date().toISOString().slice(0, 10),
     },

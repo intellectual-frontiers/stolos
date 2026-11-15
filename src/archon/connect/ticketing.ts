@@ -41,23 +41,24 @@ export function devLinks(urls: Array<string | undefined>): string[] {
 /** The tickets' posture: changes, how many link their development work, incidents. */
 export function ticketPosture(records: ObservedRecord[]): Observation["posture"] {
   const tickets = records.filter((r) => r.label === "ticket");
-  const changes = tickets.filter((r) => r.props.type === "change");
-  const done = changes.filter((r) => r.props.resolved);
+  const changes = tickets.filter((r) => r.props["type"] === "change");
+  const done = changes.filter((r) => r.props["resolved"]);
   const linked = (r: ObservedRecord) =>
-    ((r.props.links as unknown[] | undefined) ?? []).length > 0 ||
-    Number(r.props.commits ?? 0) > 0 || Number(r.props.pull_requests ?? 0) > 0;
-  const incidents = tickets.filter((r) => r.props.type === "incident");
-  const members = records.filter((r) => r.label === "user_account" && r.props.active);
-  const adminKnown = members.some((r) => typeof r.props.admin === "boolean");
+    ((r.props["links"] as unknown[] | undefined) ?? []).length > 0 ||
+    Number(r.props["commits"] ?? 0) > 0 ||
+    Number(r.props["pull_requests"] ?? 0) > 0;
+  const incidents = tickets.filter((r) => r.props["type"] === "incident");
+  const members = records.filter((r) => r.label === "user_account" && r.props["active"]);
+  const adminKnown = members.some((r) => typeof r.props["admin"] === "boolean");
   return {
     tickets: tickets.length,
     changeTickets: changes.length,
     resolvedChanges: done.length,
     resolvedChangesUnlinked: done.filter((r) => !linked(r)).length,
     incidents: incidents.length,
-    openIncidents: incidents.filter((r) => !r.props.resolved).length,
+    openIncidents: incidents.filter((r) => !r.props["resolved"]).length,
     activeMembers: members.length,
-    ...(adminKnown ? { admins: members.filter((r) => r.props.admin).length } : {}),
+    ...(adminKnown ? { admins: members.filter((r) => r.props["admin"]).length } : {}),
   };
 }
 
@@ -74,7 +75,7 @@ export function ticketPolicies(
       scf: ["CHG-03"],
       fact: "changeTickets",
       want: (v) => typeof v === "number" && v > 0,
-      show: (v) => `${v} change ticket(s) of ${o.posture.tickets}`,
+      show: (v) => `${v} change ticket(s) of ${o.posture["tickets"]}`,
       fix: fix.changes,
       warnOnly: true,
     }),
@@ -85,7 +86,7 @@ export function ticketPolicies(
       fact: "resolvedChangesUnlinked",
       want: (v) => v === 0,
       show: (v) =>
-        `${v} of ${o.posture.resolvedChanges} resolved changes link no commit or pull request`,
+        `${v} of ${o.posture["resolvedChanges"]} resolved changes link no commit or pull request`,
       fix: fix.link,
     }),
     check(o, {

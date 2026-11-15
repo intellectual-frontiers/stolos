@@ -6,9 +6,16 @@
  * @module
  */
 
-import { join } from "../core/path.ts";
+import {
+  errors,
+  fs,
+  path,
+  proc,
+  type Server,
+  serve,
+  stdio,
+} from "@intellectual-frontiers/ifc-ts/runtime";
 import { P } from "../core/paths.ts";
-import { exists } from "../core/fsx.ts";
 import { ui } from "../core/ui.ts";
 import {
   choiceFile,
@@ -21,6 +28,14 @@ import {
   saveClients,
 } from "./registry.ts";
 import { enterClient, withClient } from "./scope.ts";
+
+/** A command's result for a program or a pipe (`--json`, a listing), on standard output. */
+const print = (text: string): void => {
+  stdio.stdout.writeSync(`${text}\n`);
+};
+
+/** Why a command could not do what was asked, for the person, with its fix. */
+const refuse = (message: string, fix?: string): void => ui.problem("fail", "Clients", message, fix);
 
 /**
  * Which client this run is for: `--client <id>`, else the chosen one (`clients
@@ -36,18 +51,18 @@ export async function resolveClientScope(
     return flag ? { error: "the clients commands are the provider's: drop --client" } : {};
   }
   // A scope set by the process that started this one (the console, sudo) stands as it is.
-  if (!flag && Deno.env.get("ARCHON_CLIENT")) return {};
-  const id = flag ?? await chosenClient();
+  if (!flag && proc.env.get("ARCHON_CLIENT")) return {};
+  const id = flag ?? (await chosenClient());
   if (!id) return {};
   const c = await findClient(id);
   if (!c) {
     return {
-      error: `no client ${id} (see: deno task stolos clients list)${
-        flag ? "" : `; it was chosen with clients use: deno task stolos clients use --clear`
+      error: `no client ${id} (see: bun run stolos clients list)${
+        flag ? "" : `; it was chosen with clients use: bun run stolos clients use --clear`
       }`,
     };
   }
-  if (!(await exists(c.path))) {
+  if (!(await fs.exists(c.path))) {
     return { error: `client ${id}'s checkout is missing: ${c.path}` };
   }
   enterClient(c);
@@ -55,13 +70,16 @@ export async function resolveClientScope(
 }
 
 /** `stolos clients add <path>`: register a client's checkout. */
-export async function clientsAdd(
-  o: { path: string; fleet?: string; id?: string; title?: string },
-): Promise<number> {
+export async function clientsAdd(o: {
+  path: string;
+  fleet?: string;
+  id?: string;
+  title?: string;
+}): Promise<number> {
   const all = await loadClients();
   const r = planAdd(all, o);
   if ("error" in r) {
-    console.error(`${ui.red("error:")} ${r.error}${r.fix ? `\n  fix: ${r.fix}` : ""}`);
+    refuse(r.error, r.fix);
     return 1;
   }
   const c = r.client;
@@ -70,12 +88,14 @@ export async function clientsAdd(
     try {
       const { loadFleet } = await import("../model/load.ts");
       c.title = await withClient(c, async () => (await loadFleet()).title || c.id);
-    } catch { /* keep the id */ }
+    } catch {
+      /* keep the id */
+    }
   }
   await saveClients([...all, c]);
-  console.log(`added client ${c.id} (${c.title}): fleet ${c.fleet} in ${c.path}`);
-  console.log(`  its state and secrets on this PC: ${(await scopedFolders(c)).join(", ")}`);
-  console.log(`next: deno task stolos --client ${c.id} where`);
+  ui.say(`added client ${c.id} (${c.title}): fleet ${c.fleet} in ${c.path}`);
+  ui.say(`  its state and secrets on this PC: ${(await scopedFolders(c)).join(", ")}`);
+  ui.say(`next: bun run stolos --client ${c.id} where`);
   return 0;
 }
 
@@ -87,9 +107,9 @@ export function scopedFolders(c: Client): Promise<string[]> {
 /** Forget the chosen client (none chosen is fine; any other failure is reported). */
 async function clearChoice(): Promise<void> {
   try {
-    await Deno.remove(choiceFile());
+    await fs.remove(choiceFile());
   } catch (e) {
-    if (!(e instanceof Deno.errors.NotFound)) throw e;
+    if (!(e instanceof errors.NotFound)) throw e;
   }
 }
 
@@ -98,22 +118,22 @@ export async function clientsList(json: boolean): Promise<number> {
   const all = await loadClients();
   const chosen = await chosenClient();
   if (json) {
-    console.log(JSON.stringify({ chosen: chosen || null, clients: all }, null, 2));
+    print(JSON.stringify({ chosen: chosen || null, clients: all }, null, 2));
     return 0;
   }
   if (!all.length) {
-    console.log("no clients yet: deno task stolos clients add <path to a client's checkout>");
+    ui.say("no clients yet: bun run stolos clients add <path to a client's checkout>");
     return 0;
   }
   const w = Math.max(...all.map((c) => c.id.length));
   for (const c of all) {
-    console.log(
+    print(
       `${c.id === chosen ? "*" : " "} ${c.id.padEnd(w)}  ${c.title}  (fleet ${c.fleet}, ${c.path}${
-        (await exists(c.path)) ? "" : ", missing"
+        (await fs.exists(c.path)) ? "" : ", missing"
       })`,
     );
   }
-  console.log(ui.dim(`registry: ${registryFile()}`));
+  ui.say(ui.dim(`registry: ${registryFile()}`));
   return 0;
 }
 
@@ -122,12 +142,12 @@ export async function clientsRemove(id: string): Promise<number> {
   const all = await loadClients();
   const c = all.find((x) => x.id === id);
   if (!c) {
-    console.error(`${ui.red("error:")} no client ${id}`);
+    refuse(`no client ${id}`);
     return 1;
   }
   await saveClients(all.filter((x) => x.id !== id));
   if ((await chosenClient()) === id) await clearChoice();
-  console.log(
+  ui.say(
     `removed client ${id} from the registry; nothing was deleted: its checkout (${c.path}) and its folders on this PC stay`,
   );
   return 0;
@@ -138,22 +158,22 @@ export async function clientsUse(id: string | undefined, clear: boolean): Promis
   if (clear || !id) {
     if (!clear) {
       const now = await chosenClient();
-      console.log(now ? `using client ${now}` : "no client chosen");
+      ui.say(now ? `using client ${now}` : "no client chosen");
       return 0;
     }
     await clearChoice();
-    console.log("no client chosen: commands work on the fleet repository you are in");
+    ui.say("no client chosen: commands work on the fleet repository you are in");
     return 0;
   }
   const c = await findClient(id);
   if (!c) {
-    console.error(`${ui.red("error:")} no client ${id} (see: deno task stolos clients list)`);
+    refuse(`no client ${id}`, "bun run stolos clients list");
     return 1;
   }
-  await Deno.mkdir(P.provider, { recursive: true });
-  await Deno.writeTextFile(choiceFile(), id + "\n");
-  console.log(`now using client ${id} (${c.title}) for every stolos command on this PC`);
-  console.log("  --client <id> chooses another for one command; clients use --clear goes back");
+  await fs.mkdir(P.provider, { recursive: true });
+  await fs.writeTextFile(choiceFile(), id + "\n");
+  ui.say(`now using client ${id} (${c.title}) for every stolos command on this PC`);
+  ui.say("  --client <id> chooses another for one command; clients use --clear goes back");
   return 0;
 }
 
@@ -162,11 +182,11 @@ export async function clientsSummary(o: { since?: string; json: boolean }): Prom
   const { clientSummaries, totals } = await import("./summary.ts");
   const list = await clientSummaries(await loadClients(), o);
   if (o.json) {
-    console.log(JSON.stringify({ totals: totals(list), clients: list }, null, 2));
+    print(JSON.stringify({ totals: totals(list), clients: list }, null, 2));
     return 0;
   }
   const { summaryText } = await import("./report.ts");
-  console.log(summaryText(list));
+  print(summaryText(list));
   return 0;
 }
 
@@ -198,7 +218,7 @@ export async function clientsConsole(o: { port?: number; open?: boolean }): Prom
   const { realConsoleFor } = await import("./launch.ts");
   const { clientSummaries } = await import("./summary.ts");
   const { openBrowser } = await import("../console/stolos-launch.ts");
-  const user = Deno.env.get("USER") ?? Deno.env.get("USERNAME") ?? "you";
+  const user = proc.env.get("USER") ?? proc.env.get("USERNAME") ?? "you";
   const port = o.port ?? 8092;
   const launch = new Launch();
   const person = { user, name: user };
@@ -211,23 +231,24 @@ export async function clientsConsole(o: { port?: number; open?: boolean }): Prom
     clients: () => loadClients(),
     summaries: async () => await clientSummaries(await loadClients()),
     consoleFor,
-    cacheDir: join(P.provider, "console-cache"),
+    cacheDir: path.join(P.provider, "console-cache"),
   });
-  let server: Deno.HttpServer;
+  let server: Server;
   try {
-    server = Deno.serve({ hostname: "127.0.0.1", port, onListen: () => {} }, handler);
+    server = await serve({ hostname: "127.0.0.1", port }, handler);
   } catch (e) {
     c.fail(
-      `port ${port} is taken (${(e as Error).message})`,
-      `deno task stolos clients console --port ${port + 1}`,
+      `port ${port} is taken (${e instanceof Error ? e.message : String(e)})`,
+      `bun run stolos clients console --port ${port + 1}`,
     );
     return 1;
   }
   const url = `http://127.0.0.1:${port}/launch?t=${launch.issue()}`;
   c.done(`${(await loadClients()).length} client(s) on http://127.0.0.1:${port}`);
-  console.log(`\n  Open (works once, for two minutes, on this PC only):\n\n    ${url}\n`);
-  console.log("  Passphrases and tokens a command asks for are typed here, in this terminal.");
-  console.log("  Ctrl+C stops the console.\n");
+  ui.say("Open (works once, for two minutes, on this PC only):");
+  ui.say(`  ${url}`);
+  ui.say("Passphrases and tokens a command asks for are typed here, in this terminal.");
+  ui.say("Ctrl+C stops the console.");
   if (o.open !== false) openBrowser(url);
   await server.finished;
   return 0;

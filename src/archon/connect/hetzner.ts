@@ -91,7 +91,7 @@ export const hetzner: Connector = defineConnector({
   fields: { token: { secret: true, hint: "the project's API token (Read)" } },
   auth: (cred) => Promise.resolve({ Authorization: `Bearer ${cred.token}` }),
   // A credential written by hand may name its project.
-  account: (cred) => (cred as Record<string, string>).project || "Hetzner Cloud project",
+  account: (cred) => (cred as Record<string, string>)["project"] || "Hetzner Cloud project",
   resources: {
     servers: {
       label: SERVER,
@@ -194,13 +194,13 @@ export const hetzner: Connector = defineConnector({
     if (!servers.length) return {};
     return {
       servers: servers.length,
-      serversWithBackups: servers.filter((p) => p.backups).length,
-      serversWithFirewall: servers.filter((p) => p.firewalled).length,
-      serversDeleteProtected: servers.filter((p) => p.protected).length,
+      serversWithBackups: servers.filter((p) => p["backups"]).length,
+      serversWithFirewall: servers.filter((p) => p["firewalled"]).length,
+      serversDeleteProtected: servers.filter((p) => p["protected"]).length,
     };
   },
   policies(o, now) {
-    const every = (v: unknown) => v === o.posture.servers;
+    const every = (v: unknown) => v === o.posture["servers"];
     const fix = "console.hetzner.cloud > the server";
     return [
       fresh(o, now, "hetzner"),
@@ -210,7 +210,7 @@ export const hetzner: Connector = defineConnector({
         scf: ["BCD-24"],
         fact: "serversWithBackups",
         want: every,
-        show: (v) => `${v} of ${o.posture.servers} server(s)`,
+        show: (v) => `${v} of ${o.posture["servers"]} server(s)`,
         fix: `${fix} > Backups > Enable (or record that its data is backed up another way)`,
         warnOnly: true,
       }),
@@ -220,7 +220,7 @@ export const hetzner: Connector = defineConnector({
         scf: ["NET-02"],
         fact: "serversWithFirewall",
         want: every,
-        show: (v) => `${v} of ${o.posture.servers} server(s)`,
+        show: (v) => `${v} of ${o.posture["servers"]} server(s)`,
         fix: `${fix} > Firewalls > Apply firewall (the cloud's firewall is this fleet's router)`,
       }),
       check(o, {
@@ -229,7 +229,7 @@ export const hetzner: Connector = defineConnector({
         scf: ["BCD-02"],
         fact: "serversDeleteProtected",
         want: every,
-        show: (v) => `${v} of ${o.posture.servers} server(s)`,
+        show: (v) => `${v} of ${o.posture["servers"]} server(s)`,
         fix: `${fix} > the three dots > Change protection > Protect against deletion`,
         warnOnly: true,
       }),

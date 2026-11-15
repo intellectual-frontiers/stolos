@@ -79,9 +79,11 @@ export function bitbucketProtection(
   branch: string,
   rs: Restriction[],
 ): { protected: boolean; reviews: number } {
-  const on = rs.filter((r) =>
-    (r.branch_match_kind ?? "glob") === "glob" && r.pattern !== undefined &&
-    branchMatches(r.pattern, branch)
+  const on = rs.filter(
+    (r) =>
+      (r.branch_match_kind ?? "glob") === "glob" &&
+      r.pattern !== undefined &&
+      branchMatches(r.pattern, branch),
   );
   return {
     protected: on.some((r) => PROTECTING.has(r.kind)),
@@ -120,35 +122,29 @@ export const bitbucket: Connector = defineConnector<typeof FIELDS>({
       ocsf: "user_inventory",
       async *list(ctx) {
         // Only an owner may read the workspace's permissions: otherwise, a gap.
-        const owners = await ctx.orGap(
-          "owners",
-          undefined as Set<string> | undefined,
-          async () => {
-            const out = new Set<string>();
-            try {
-              for await (
-                const p of ctx.cursorPages<Page<{ user: BbUser }>, { user: BbUser }>(
-                  `${BITBUCKET_API}/workspaces/${ws(ctx)}/permissions?q=${
-                    encodeURIComponent('permission="owner"')
-                  }&pagelen=100`,
-                  (b) => b.values,
-                  (b) => b.next,
-                )
-              ) out.add(p.user.uuid);
-            } catch (e) {
-              if (e instanceof AccessDenied) throw e;
-              throw new AccessDenied(`not readable (${(e as Error).message})`);
-            }
-            return out;
-          },
-        );
-        for await (
-          const m of ctx.cursorPages<Page<{ user: BbUser }>, { user: BbUser }>(
-            `${BITBUCKET_API}/workspaces/${ws(ctx)}/members?pagelen=100`,
-            (b) => b.values,
-            (b) => b.next,
-          )
-        ) yield { ...m.user, ...(owners ? { owner: owners.has(m.user.uuid) } : {}) };
+        const owners = await ctx.orGap("owners", undefined as Set<string> | undefined, async () => {
+          const out = new Set<string>();
+          try {
+            for await (const p of ctx.cursorPages<Page<{ user: BbUser }>, { user: BbUser }>(
+              `${BITBUCKET_API}/workspaces/${ws(ctx)}/permissions?q=${encodeURIComponent(
+                'permission="owner"',
+              )}&pagelen=100`,
+              (b) => b.values,
+              (b) => b.next,
+            ))
+              out.add(p.user.uuid);
+          } catch (e) {
+            if (e instanceof AccessDenied) throw e;
+            throw new AccessDenied(`not readable (${(e as Error).message})`);
+          }
+          return out;
+        });
+        for await (const m of ctx.cursorPages<Page<{ user: BbUser }>, { user: BbUser }>(
+          `${BITBUCKET_API}/workspaces/${ws(ctx)}/members?pagelen=100`,
+          (b) => b.values,
+          (b) => b.next,
+        ))
+          yield { ...m.user, ...(owners ? { owner: owners.has(m.user.uuid) } : {}) };
       },
       map: (u: BbUser & { owner?: boolean }) => ({
         native_id: u.uuid,
@@ -169,15 +165,14 @@ export const bitbucket: Connector = defineConnector<typeof FIELDS>({
       label: CODE_REPOSITORY,
       ocsf: "inventory_info",
       async *list(ctx) {
-        for await (
-          const r of ctx.cursorPages<Page<Repo>, Repo>(
-            `${BITBUCKET_API}/repositories/${ws(ctx)}?pagelen=100`,
-            (b) => b.values,
-            (b) => b.next,
-          )
-        ) {
+        for await (const r of ctx.cursorPages<Page<Repo>, Repo>(
+          `${BITBUCKET_API}/repositories/${ws(ctx)}?pagelen=100`,
+          (b) => b.values,
+          (b) => b.next,
+        )) {
           const branch = r.mainbranch?.name;
-          if (!branch) { // an empty repository: nothing to protect yet
+          if (!branch) {
+            // an empty repository: nothing to protect yet
             yield r;
             continue;
           }
@@ -186,13 +181,12 @@ export const bitbucket: Connector = defineConnector<typeof FIELDS>({
             undefined as Restriction[] | undefined,
             async () => {
               const out: Restriction[] = [];
-              for await (
-                const x of ctx.cursorPages<Page<Restriction>, Restriction>(
-                  `${BITBUCKET_API}/repositories/${r.full_name}/branch-restrictions?pagelen=100`,
-                  (b) => b.values,
-                  (b) => b.next,
-                )
-              ) out.push(x);
+              for await (const x of ctx.cursorPages<Page<Restriction>, Restriction>(
+                `${BITBUCKET_API}/repositories/${r.full_name}/branch-restrictions?pagelen=100`,
+                (b) => b.values,
+                (b) => b.next,
+              ))
+                out.push(x);
               return out;
             },
           );

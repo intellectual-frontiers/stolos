@@ -18,8 +18,10 @@
  * @module
  */
 
-import { AccessDenied, check, type Connector, fresh, type Http } from "./connector.ts";
-import { type Ctx, defineConnector, type FieldDef, mustRead } from "./sdk.ts";
+import { sha256, toHex } from "@intellectual-frontiers/ifc-ts/kernel";
+import type { http } from "@intellectual-frontiers/ifc-ts/runtime";
+import { AccessDenied, check, type Connector, fresh } from "./connector.ts";
+import { type Ctx, defineConnector, exchange, type FieldDef, mustRead } from "./sdk.ts";
 import {
   ACCOUNT,
   CLOUD_STORAGE,
@@ -31,9 +33,8 @@ import {
 } from "./labels.ts";
 
 const enc = new TextEncoder();
-const hex = (b: ArrayBuffer) =>
-  [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
-const sha256 = async (s: string) => hex(await crypto.subtle.digest("SHA-256", enc.encode(s)));
+const hex = (b: ArrayBuffer): string => toHex(new Uint8Array(b));
+// HMAC-SHA256 on Web Crypto: SigV4's key derivation (a commons candidate: request signing, with s3/).
 async function hmac(key: BufferSource, data: string): Promise<ArrayBuffer> {
   const k = await crypto.subtle.importKey("raw", key, { name: "HMAC", hash: "SHA-256" }, false, [
     "sign",
@@ -41,7 +42,7 @@ async function hmac(key: BufferSource, data: string): Promise<ArrayBuffer> {
   return await crypto.subtle.sign("HMAC", k, enc.encode(data));
 }
 /** RFC 3986 encoding, as SigV4 wants it. */
-const rfc3986 = (s: string) =>
+const rfc3986 = (s: string): string =>
   encodeURIComponent(s).replace(
     /[!'()*]/g,
     (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`,
@@ -73,97 +74,118 @@ export async function sigv4(
   key: { accessKeyId: string; secretAccessKey: string; sessionToken?: string },
   now: Date,
 ): Promise<Record<string, string>> {
-  const amzDate = now.toISOString().replace(/[-:]/g, "").replace(/\.\d+Z$/, "Z");
+  const amzDate = now
+    .toISOString()
+    .replace(/[-:]/g, "")
+    .replace(/\.\d+Z$/, "Z");
   const day = amzDate.slice(0, 8);
   const headers: Record<string, string> = { ...r.headers, host: r.host, "x-amz-date": amzDate };
   if (key.sessionToken) headers["x-amz-security-token"] = key.sessionToken;
-  const names = Object.keys(headers).map((h) => h.toLowerCase()).sort();
+  const names = Object.keys(headers)
+    .map((h) => h.toLowerCase())
+    .sort();
   const lower = Object.fromEntries(Object.entries(headers).map(([k, v]) => [k.toLowerCase(), v]));
-  const canonicalHeaders = names.map((h) => `${h}:${lower[h].trim().replace(/\s+/g, " ")}\n`).join(
-    "",
-  );
+  const canonicalHeaders = names
+    .map((h) => `${h}:${(lower[h] ?? "").trim().replace(/\s+/g, " ")}\n`)
+    .join("");
   const signed = names.join(";");
-  const query = Object.keys(r.query).sort().map((k) => `${rfc3986(k)}=${rfc3986(r.query[k])}`).join(
-    "&",
-  );
+  const query = canonicalQuery(r.query);
   const canonical = [r.method, r.path, query, canonicalHeaders, signed, await sha256(r.body)].join(
     "\n",
   );
   const scope = `${day}/${r.region}/${r.service}/aws4_request`;
   const toSign = ["AWS4-HMAC-SHA256", amzDate, scope, await sha256(canonical)].join("\n");
-  let k: ArrayBuffer = await hmac(enc.encode(`AWS4${key.secretAccessKey}`) as BufferSource, day);
+  let k: ArrayBuffer = await hmac(enc.encode(`AWS4${key.secretAccessKey}`), day);
   for (const part of [r.region, r.service, "aws4_request"]) k = await hmac(k, part);
   const signature = hex(await hmac(k, toSign));
   return {
     ...headers,
-    Authorization:
-      `AWS4-HMAC-SHA256 Credential=${key.accessKeyId}/${scope}, SignedHeaders=${signed}, Signature=${signature}`,
+    Authorization: `AWS4-HMAC-SHA256 Credential=${key.accessKeyId}/${scope}, SignedHeaders=${signed}, Signature=${signature}`,
   };
 }
 
 /** Every <tag>...</tag>'s inner text. */
 export function xmlAll(xml: string, tag: string): string[] {
-  return [...xml.matchAll(new RegExp(`<${tag}>([\\s\\S]*?)</${tag}>`, "g"))].map((m) => m[1]);
+  return [...xml.matchAll(new RegExp(`<${tag}>([\\s\\S]*?)</${tag}>`, "g"))].map((m) => m[1] ?? "");
 }
-const xmlOne = (xml: string, tag: string) => xmlAll(xml, tag)[0] ?? "";
+const xmlOne = (xml: string, tag: string): string => xmlAll(xml, tag)[0] ?? "";
+
+/** The query string SigV4 signs and sends: each name and value RFC 3986 encoded, sorted by name. */
+const canonicalQuery = (query: Record<string, string>): string =>
+  Object.entries(query)
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    .map(([k, v]) => `${rfc3986(k)}=${rfc3986(v)}`)
+    .join("&");
+
+/** The access key a credential holds (a session token only where it has one). */
+const keyOf = (
+  c: Record<string, string>,
+): { accessKeyId: string; secretAccessKey: string; sessionToken?: string } => ({
+  accessKeyId: c["accessKeyId"] ?? "",
+  secretAccessKey: c["secretAccessKey"] ?? "",
+  ...(c["sessionToken"] ? { sessionToken: c["sessionToken"] } : {}),
+});
+
+/** An AWS API's answer from 400 up, other than a denial: its status, and its error code as the message. */
+class AwsStatus extends Error {
+  /** The HTTP status. */
+  readonly status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
+}
 
 async function call(
-  http: Http,
+  t: http.Transport,
   key: Record<string, string>,
   r: Omit<AwsRequest, "headers" | "body" | "method"> & { headers?: Record<string, string> },
   now: Date,
 ): Promise<string> {
-  const req: AwsRequest = { method: "GET", headers: {}, body: "", ...r } as AwsRequest;
+  const req: AwsRequest = { method: "GET", body: "", ...r, headers: { ...r.headers } };
   if (r.service === "s3") req.headers["x-amz-content-sha256"] = await sha256("");
-  const headers = await sigv4(req, {
-    accessKeyId: key.accessKeyId,
-    secretAccessKey: key.secretAccessKey,
-    sessionToken: key.sessionToken || undefined,
-  }, now);
-  delete headers.host;
-  const q = Object.keys(r.query).sort().map((k) => `${rfc3986(k)}=${rfc3986(r.query[k])}`).join(
-    "&",
-  );
-  const res = await http(`https://${r.host}${r.path}${q ? `?${q}` : ""}`, {
+  const headers = await sigv4(req, keyOf(key), now);
+  delete headers["host"];
+  const q = canonicalQuery(r.query);
+  const res = await exchange(t, {
     method: "GET",
+    url: `https://${r.host}${r.path}${q ? `?${q}` : ""}`,
     headers,
   });
   if (res.status === 403 || res.status === 401) {
     throw new AccessDenied(
-      `${r.service} ${r.query.Action ?? r.path}: ${xmlOne(res.text, "Code") || res.status}`,
+      `${r.service} ${r.query["Action"] ?? r.path}: ${xmlOne(res.body, "Code") || res.status}`,
     );
   }
   if (res.status >= 400) {
-    throw Object.assign(
-      new Error(
-        `${r.service} ${r.query.Action ?? r.path}: ${
-          xmlOne(res.text, "Code") || `HTTP ${res.status}`
-        }`,
-      ),
-      { status: res.status },
+    throw new AwsStatus(
+      `${r.service} ${r.query["Action"] ?? r.path}: ${xmlOne(res.body, "Code") || `HTTP ${res.status}`}`,
+      res.status,
     );
   }
-  return res.text;
+  return res.body;
 }
 
 type Fields = { accessKeyId: FieldDef; secretAccessKey: FieldDef };
 
 /** The JSON APIs (awsJson1_1) Stolos reads, and the target prefix of each one's actions. */
-const JSON_TARGETS: Record<string, string> = {
+const JSON_TARGETS: Readonly<Record<"cloudtrail" | "config", string>> = {
   cloudtrail: "com.amazonaws.cloudtrail.v20131101.CloudTrail_20131101",
   config: "StarlingDoveService",
 };
 
 /** Spec 088: a POST the guard lets through: a Describe, Get, or List action of CloudTrail or Config. */
-export const awsReadPost = (
-  url: string,
-  init: { headers?: Record<string, string> },
-): boolean => {
-  const m = url.match(/^https:\/\/(cloudtrail|config)\.[a-z0-9-]+\.amazonaws\.com\/$/);
+export const awsReadPost = (url: string, init: { headers?: Record<string, string> }): boolean => {
+  const service = url.match(/^https:\/\/(cloudtrail|config)\.[a-z0-9-]+\.amazonaws\.com\/$/)?.[1];
   const target =
     Object.entries(init.headers ?? {}).find(([k]) => k.toLowerCase() === "x-amz-target")?.[1] ?? "";
-  return !!m && target.startsWith(`${JSON_TARGETS[m[1]]}.`) &&
-    /^(Describe|Get|List)[A-Za-z]+$/.test(target.slice(JSON_TARGETS[m[1]].length + 1));
+  const prefix =
+    service === "cloudtrail" || service === "config" ? `${JSON_TARGETS[service]}.` : undefined;
+  return (
+    prefix !== undefined &&
+    target.startsWith(prefix) &&
+    /^(Describe|Get|List)[A-Za-z]+$/.test(target.slice(prefix.length))
+  );
 };
 
 /** A JSON API action (POST, signed), its parsed answer; a 404 or a service not there is undefined. */
@@ -176,36 +198,41 @@ async function jsonCall<T>(
 ): Promise<T | undefined> {
   const host = `${service}.${region}.amazonaws.com`;
   const text = JSON.stringify(body);
-  const headers = await sigv4({
-    method: "POST",
-    host,
-    path: "/",
-    query: {},
-    headers: {
-      "content-type": "application/x-amz-json-1.1",
-      "x-amz-target": `${JSON_TARGETS[service]}.${action}`,
+  const headers = await sigv4(
+    {
+      method: "POST",
+      host,
+      path: "/",
+      query: {},
+      headers: {
+        "content-type": "application/x-amz-json-1.1",
+        "x-amz-target": `${JSON_TARGETS[service]}.${action}`,
+      },
+      body: text,
+      region,
+      service,
     },
+    keyOf(ctx.cred),
+    ctx.now,
+  );
+  delete headers["host"];
+  const r = await exchange(ctx.http, {
+    method: "POST",
+    url: `https://${host}/`,
+    headers,
     body: text,
-    region,
-    service,
-  }, {
-    accessKeyId: ctx.cred.accessKeyId,
-    secretAccessKey: ctx.cred.secretAccessKey,
-    sessionToken: (ctx.cred as Record<string, string>).sessionToken || undefined,
-  }, ctx.now);
-  delete headers.host;
-  const r = await ctx.http(`https://${host}/`, { method: "POST", headers, body: text });
+  });
   if (r.status === 401 || r.status === 403) {
     throw new AccessDenied(`${service} ${action} in ${region}: ${r.status}`);
   }
   if (r.status >= 400) {
-    if (/AccessDenied|UnauthorizedOperation/.test(r.text)) {
+    if (/AccessDenied|UnauthorizedOperation/.test(r.body)) {
       throw new AccessDenied(`${service} ${action} in ${region}: access denied`);
     }
     return undefined;
   }
   try {
-    return JSON.parse(r.text) as T;
+    return JSON.parse(r.body) as T;
   } catch {
     return undefined;
   }
@@ -219,13 +246,18 @@ async function guardduty<T>(
 ): Promise<T | undefined> {
   try {
     return JSON.parse(
-      await call(ctx.http, ctx.cred, {
-        service: "guardduty",
-        host: `guardduty.${region}.amazonaws.com`,
-        region,
-        path,
-        query: {},
-      }, ctx.now),
+      await call(
+        ctx.http,
+        ctx.cred,
+        {
+          service: "guardduty",
+          host: `guardduty.${region}.amazonaws.com`,
+          region,
+          path,
+          query: {},
+        },
+        ctx.now,
+      ),
     ) as T;
   } catch (e) {
     if (e instanceof AccessDenied) throw e;
@@ -258,7 +290,7 @@ interface Recorder {
 const seen = new WeakMap<object, { regions: string[] }>();
 const state = (ctx: Ctx<Fields>) => {
   let s = seen.get(ctx);
-  if (!s) seen.set(ctx, s = { regions: [] });
+  if (!s) seen.set(ctx, (s = { regions: [] }));
   return s;
 };
 
@@ -272,20 +304,25 @@ const q = (
   version: string,
   extra: Record<string, string> = {},
 ) =>
-  call(ctx.http, ctx.cred, {
-    service,
-    host,
-    region,
-    path: "/",
-    query: { Action: action, Version: version, ...extra },
-  }, ctx.now);
+  call(
+    ctx.http,
+    ctx.cred,
+    {
+      service,
+      host,
+      region,
+      path: "/",
+      query: { Action: action, Version: version, ...extra },
+    },
+    ctx.now,
+  );
 
 interface AwsAccount {
   id: string;
   caller: string;
   rootMfa?: boolean;
   rootAccessKeys?: boolean;
-  s3BlockPublic?: boolean;
+  s3BlockPublic?: boolean | undefined;
   regions?: number;
 }
 
@@ -329,14 +366,12 @@ export const aws: Connector = defineConnector({
       async *list(ctx) {
         // Who the key is: without it nothing else means anything, so fail loudly.
         const id = await mustRead(() =>
-          q(ctx, "sts", "sts.amazonaws.com", "us-east-1", "GetCallerIdentity", "2011-06-15")
+          q(ctx, "sts", "sts.amazonaws.com", "us-east-1", "GetCallerIdentity", "2011-06-15"),
         );
         const account = xmlOne(id, "Account");
         const a: AwsAccount = { id: account, caller: xmlOne(id, "Arn") };
-        const summary = await ctx.orGap(
-          "IAM account summary",
-          "",
-          () => q(ctx, "iam", "iam.amazonaws.com", "us-east-1", "GetAccountSummary", "2010-05-08"),
+        const summary = await ctx.orGap("IAM account summary", "", () =>
+          q(ctx, "iam", "iam.amazonaws.com", "us-east-1", "GetAccountSummary", "2010-05-08"),
         );
         if (summary) {
           const entry = (k: string) =>
@@ -353,14 +388,19 @@ export const aws: Connector = defineConnector({
           undefined as boolean | undefined,
           async () => {
             try {
-              const x = await call(ctx.http, ctx.cred, {
-                service: "s3",
-                host: `${account}.s3-control.us-east-1.amazonaws.com`,
-                region: "us-east-1",
-                path: "/v20180820/configuration/publicAccessBlock",
-                query: {},
-                headers: { "x-amz-account-id": account },
-              }, ctx.now);
+              const x = await call(
+                ctx.http,
+                ctx.cred,
+                {
+                  service: "s3",
+                  host: `${account}.s3-control.us-east-1.amazonaws.com`,
+                  region: "us-east-1",
+                  path: "/v20180820/configuration/publicAccessBlock",
+                  query: {},
+                  headers: { "x-amz-account-id": account },
+                },
+                ctx.now,
+              );
               return [
                 "BlockPublicAcls",
                 "IgnorePublicAcls",
@@ -369,25 +409,22 @@ export const aws: Connector = defineConnector({
               ].every((t) => xmlOne(x, t) === "true");
             } catch (e) {
               // No configuration at all: nothing is blocked.
-              if (!(e instanceof AccessDenied) && (e as { status?: number }).status === 404) {
+              if (e instanceof AwsStatus && e.status === 404) {
                 return false;
               }
               throw e;
             }
           },
         );
-        const regions = await ctx.orGap(
-          "EC2 regions",
-          "",
-          () =>
-            q(
-              ctx,
-              "ec2",
-              "ec2.us-east-1.amazonaws.com",
-              "us-east-1",
-              "DescribeRegions",
-              "2016-11-15",
-            ),
+        const regions = await ctx.orGap("EC2 regions", "", () =>
+          q(
+            ctx,
+            "ec2",
+            "ec2.us-east-1.amazonaws.com",
+            "us-east-1",
+            "DescribeRegions",
+            "2016-11-15",
+          ),
         );
         if (regions) {
           state(ctx).regions = xmlAll(regions, "regionName");
@@ -412,13 +449,10 @@ export const aws: Connector = defineConnector({
       label: CLOUD_USER_ACCOUNT,
       ocsf: "cloud_resources_inventory_info",
       async *list(ctx) {
-        const users = await ctx.orGap(
-          "IAM users",
-          "",
-          () =>
-            q(ctx, "iam", "iam.amazonaws.com", "us-east-1", "ListUsers", "2010-05-08", {
-              MaxItems: "1000",
-            }),
+        const users = await ctx.orGap("IAM users", "", () =>
+          q(ctx, "iam", "iam.amazonaws.com", "us-east-1", "ListUsers", "2010-05-08", {
+            MaxItems: "1000",
+          }),
         );
         yield* xmlAll(users, "member");
       },
@@ -444,17 +478,19 @@ export const aws: Connector = defineConnector({
       label: CLOUD_STORAGE,
       ocsf: "cloud_resources_inventory_info",
       async *list(ctx) {
-        const buckets = await ctx.orGap(
-          "S3 buckets",
-          "",
-          () =>
-            call(ctx.http, ctx.cred, {
+        const buckets = await ctx.orGap("S3 buckets", "", () =>
+          call(
+            ctx.http,
+            ctx.cred,
+            {
               service: "s3",
               host: "s3.amazonaws.com",
               region: "us-east-1",
               path: "/",
               query: {},
-            }, ctx.now),
+            },
+            ctx.now,
+          ),
         );
         yield* xmlAll(buckets, "Bucket");
       },
@@ -475,18 +511,15 @@ export const aws: Connector = defineConnector({
         // Every enabled region at once; the instances in the regions' order (a stable file).
         const found = await Promise.all(
           state(ctx).regions.map(async (region) => {
-            const d = await ctx.orGap(
-              `EC2 ${region}`,
-              "",
-              () =>
-                q(
-                  ctx,
-                  "ec2",
-                  `ec2.${region}.amazonaws.com`,
-                  region,
-                  "DescribeInstances",
-                  "2016-11-15",
-                ),
+            const d = await ctx.orGap(`EC2 ${region}`, "", () =>
+              q(
+                ctx,
+                "ec2",
+                `ec2.${region}.amazonaws.com`,
+                region,
+                "DescribeInstances",
+                "2016-11-15",
+              ),
             );
             const out: Ec2[] = [];
             for (const set of xmlAll(d, "instancesSet")) {
@@ -581,7 +614,7 @@ export const aws: Connector = defineConnector({
                 if (x?.status === "ENABLED") return { region, enabled: true };
               }
               return { region, enabled: false };
-            })
+            }),
           ),
         );
         yield* found.filter((x): x is Detection => !!x);
@@ -601,20 +634,20 @@ export const aws: Connector = defineConnector({
         const found = await Promise.all(
           state(ctx).regions.map((region) =>
             ctx.orGap(`AWS Config ${region}`, undefined as Recorder | undefined, async () => {
-              const st = await jsonCall<
-                { ConfigurationRecordersStatus?: Array<{ recording?: boolean }> }
-              >(ctx, "config", region, "DescribeConfigurationRecorderStatus");
+              const st = await jsonCall<{
+                ConfigurationRecordersStatus?: Array<{ recording?: boolean }>;
+              }>(ctx, "config", region, "DescribeConfigurationRecorderStatus");
               if (!st) return undefined;
-              const rec = await jsonCall<
-                { ConfigurationRecorders?: Array<{ recordingGroup?: { allSupported?: boolean } }> }
-              >(ctx, "config", region, "DescribeConfigurationRecorders");
+              const rec = await jsonCall<{
+                ConfigurationRecorders?: Array<{ recordingGroup?: { allSupported?: boolean } }>;
+              }>(ctx, "config", region, "DescribeConfigurationRecorders");
               const all = rec?.ConfigurationRecorders?.[0]?.recordingGroup?.allSupported;
               return {
                 region,
                 recording: (st.ConfigurationRecordersStatus ?? []).some((x) => x.recording),
                 ...(all !== undefined ? { allSupported: all } : {}),
               };
-            })
+            }),
           ),
         );
         yield* found.filter((x): x is Recorder => !!x);
@@ -636,31 +669,38 @@ export const aws: Connector = defineConnector({
     const a = records.find((r) => r.label === ACCOUNT.name)?.props ?? {};
     const ec2 = records.filter((r) => r.label === SERVER.name).map((r) => r.props);
     const out: Record<string, string | number | boolean> = {};
-    if (typeof a.root_mfa === "boolean") out.rootMfa = a.root_mfa;
-    if (typeof a.root_access_keys === "boolean") out.rootAccessKeys = a.root_access_keys;
-    if (typeof a.public_access_blocked === "boolean") out.s3BlockPublic = a.public_access_blocked;
+    if (typeof a["root_mfa"] === "boolean") out["rootMfa"] = a["root_mfa"];
+    if (typeof a["root_access_keys"] === "boolean") out["rootAccessKeys"] = a["root_access_keys"];
+    if (typeof a["public_access_blocked"] === "boolean")
+      out["s3BlockPublic"] = a["public_access_blocked"];
     // Only when the regions could be listed: else the instances are unknown, not none.
-    if (a.regions !== undefined) {
-      out.ec2Instances = ec2.length;
-      out.ec2WithImdsV1 = ec2.filter((p) => p.imds_v2 === false).length;
+    if (a["regions"] !== undefined) {
+      out["ec2Instances"] = ec2.length;
+      out["ec2WithImdsV1"] = ec2.filter((p) => p["imds_v2"] === false).length;
     }
     // Spec 088: each only when it was read (absent, the policy is not reported).
     const trails = records.filter((r) => r.label === EVENT_LOG.name);
     if (trails.length) {
-      out.cloudtrailLogging = trails.some((t) => t.props.logging === true);
-      out.cloudtrailMultiRegion = trails.some((t) =>
-        t.props.logging === true && t.props.multi_region === true
+      out["cloudtrailLogging"] = trails.some((t) => t.props["logging"] === true);
+      out["cloudtrailMultiRegion"] = trails.some(
+        (t) => t.props["logging"] === true && t.props["multi_region"] === true,
       );
     }
     const gd = records.filter((r) => r.label === INTRUSION_DETECTION_SYSTEM.name);
     if (gd.length) {
-      out.guarddutyRegions = gd.length;
-      out.guarddutyOff = gd.filter((r) => !r.props.enabled).map((r) => r.props.region).join(", ");
+      out["guarddutyRegions"] = gd.length;
+      out["guarddutyOff"] = gd
+        .filter((r) => !r.props["enabled"])
+        .map((r) => r.props["region"])
+        .join(", ");
     }
     const cfg = records.filter((r) => r.label === CONFIGURATION_MANAGEMENT_DATABASE.name);
     if (cfg.length) {
-      out.configRegions = cfg.length;
-      out.configOff = cfg.filter((r) => !r.props.recording).map((r) => r.props.region).join(", ");
+      out["configRegions"] = cfg.length;
+      out["configOff"] = cfg
+        .filter((r) => !r.props["recording"])
+        .map((r) => r.props["region"])
+        .join(", ");
     }
     return out;
   },
@@ -689,18 +729,16 @@ export const aws: Connector = defineConnector({
         scf: ["DCH-02", "NET-02"],
         fact: "s3BlockPublic",
         want: (v) => v === true,
-        fix:
-          "console.aws.amazon.com > S3 > Block Public Access settings for this account > Edit > Block all public access",
+        fix: "console.aws.amazon.com > S3 > Block Public Access settings for this account > Edit > Block all public access",
       }),
       check(o, {
         id: "aws-imdsv2",
         title: "Every EC2 instance requires IMDSv2",
         scf: ["CFG-04"],
         fact: "ec2WithImdsV1",
-        show: (v) => `${v} of ${o.posture.ec2Instances} instance(s) allow IMDSv1`,
+        show: (v) => `${v} of ${o.posture["ec2Instances"]} instance(s) allow IMDSv1`,
         want: (v) => v === 0,
-        fix:
-          "EC2 > the instance > Actions > Instance settings > Modify instance metadata options > IMDSv2: Required",
+        fix: "EC2 > the instance > Actions > Instance settings > Modify instance metadata options > IMDSv2: Required",
         warnOnly: true,
       }),
       // Spec 088: reported only when read.
@@ -711,8 +749,7 @@ export const aws: Connector = defineConnector({
           scf: ["MON-03"],
           fact: "cloudtrailLogging",
           want: (v) => v === true,
-          fix:
-            "CloudTrail > Trails > Create trail (all regions, to an S3 bucket only the security account can delete from)",
+          fix: "CloudTrail > Trails > Create trail (all regions, to an S3 bucket only the security account can delete from)",
         }),
         check(o, {
           id: "aws-cloudtrail-all-regions",
@@ -728,9 +765,8 @@ export const aws: Connector = defineConnector({
           scf: ["MON-16"],
           fact: "guarddutyOff",
           want: (v) => v === "",
-          show: (v) => v ? `off in ${v}` : `on in ${o.posture.guarddutyRegions} region(s)`,
-          fix:
-            "GuardDuty > Get started > Enable, in each region named (or for the organization, from its delegated administrator)",
+          show: (v) => (v ? `off in ${v}` : `on in ${o.posture["guarddutyRegions"]} region(s)`),
+          fix: "GuardDuty > Get started > Enable, in each region named (or for the organization, from its delegated administrator)",
           warnOnly: true,
         }),
         check(o, {
@@ -740,9 +776,8 @@ export const aws: Connector = defineConnector({
           fact: "configOff",
           want: (v) => v === "",
           show: (v) =>
-            v ? `not recording in ${v}` : `recording in ${o.posture.configRegions} region(s)`,
-          fix:
-            "AWS Config > Settings > Recorder: turn on recording (all resource types), in each region named",
+            v ? `not recording in ${v}` : `recording in ${o.posture["configRegions"]} region(s)`,
+          fix: "AWS Config > Settings > Recorder: turn on recording (all resource types), in each region named",
           warnOnly: true,
         }),
       ].filter((p) => p.status !== "unknown"),

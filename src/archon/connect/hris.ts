@@ -10,9 +10,15 @@
  * @module
  */
 
-import { type Connector, fresh, getJson } from "./connector.ts";
+import { type Connector, fresh } from "./connector.ts";
 import { emailKey, type Person } from "./entities.ts";
-import { type ConnectorDef, defineConnector, type FieldDef, type ObservedRecord } from "./sdk.ts";
+import {
+  type ConnectorDef,
+  defineConnector,
+  type FieldDef,
+  type ObservedRecord,
+  sendJson,
+} from "./sdk.ts";
 import { PERSON } from "./labels.ts";
 
 const day = (s?: string | null) => (s && /^\d{4}-\d{2}-\d{2}/.test(s) ? s.slice(0, 10) : undefined);
@@ -37,12 +43,13 @@ function rosterPosture(records: ObservedRecord[], _cred: unknown, { now }: { now
   const people = records.filter((r) => r.label === PERSON.name).map((r) => r.props);
   return {
     people: people.length,
-    active: people.filter((p) => p.status === "active").length,
-    leftLast90Days:
-      people.filter((p) =>
-        p.end_date && Date.parse(p.end_date as string) > now.getTime() - 90 * 86_400_000 &&
-        p.status === "terminated"
-      ).length,
+    active: people.filter((p) => p["status"] === "active").length,
+    leftLast90Days: people.filter(
+      (p) =>
+        p["end_date"] &&
+        Date.parse(p["end_date"] as string) > now.getTime() - 90 * 86_400_000 &&
+        p["status"] === "terminated",
+    ).length,
   };
 }
 
@@ -74,9 +81,9 @@ const BAMBOO_FIELDS = [
 ];
 
 const bambooReport = (subdomain: string) =>
-  `https://api.bamboohr.com/api/gateway.php/${
-    encodeURIComponent(subdomain)
-  }/v1/reports/custom?format=JSON&onlyCurrent=false`;
+  `https://api.bamboohr.com/api/gateway.php/${encodeURIComponent(
+    subdomain,
+  )}/v1/reports/custom?format=JSON&onlyCurrent=false`;
 
 /** BambooHR. */
 export const bamboohr: Connector = roster({
@@ -108,7 +115,7 @@ export const bamboohr: Connector = roster({
       ocsf: "user_inventory",
       required: true,
       async *list(ctx) {
-        const r = await getJson<{ employees: Array<Record<string, string | null>> }>(
+        const r = await sendJson<{ employees: Array<Record<string, string | null>> }>(
           ctx.http,
           bambooReport(ctx.cred.subdomain),
           ctx.headers,
@@ -116,25 +123,27 @@ export const bamboohr: Connector = roster({
           JSON.stringify({ fields: BAMBOO_FIELDS }),
         );
         for (const e of r.employees ?? []) {
-          const email = emailKey(e.workEmail ?? undefined);
+          const email = emailKey(e["workEmail"] ?? undefined);
           if (!email) continue;
-          const status = (e.status ?? "").toLowerCase() === "active"
-            ? "active"
-            : e.terminationDate
-            ? "terminated"
-            : "unknown";
+          const status =
+            (e["status"] ?? "").toLowerCase() === "active"
+              ? "active"
+              : e["terminationDate"]
+                ? "terminated"
+                : "unknown";
+          const name = e["displayName"];
+          const start = day(e["hireDate"]);
+          const end = e["terminationDate"] === "0000-00-00" ? undefined : day(e["terminationDate"]);
+          const manager = emailKey(e["supervisorEmail"] ?? undefined);
+          const kind = e["employmentHistoryStatus"];
           const p: Person = {
             email,
-            ...(e.displayName ? { name: e.displayName } : {}),
+            ...(name ? { name } : {}),
             status,
-            ...(day(e.hireDate) ? { start: day(e.hireDate) } : {}),
-            ...(day(e.terminationDate) && e.terminationDate !== "0000-00-00"
-              ? { end: day(e.terminationDate) }
-              : {}),
-            ...(emailKey(e.supervisorEmail ?? undefined)
-              ? { manager: emailKey(e.supervisorEmail ?? undefined) }
-              : {}),
-            ...(e.employmentHistoryStatus ? { type: e.employmentHistoryStatus } : {}),
+            ...(start ? { start } : {}),
+            ...(end ? { end } : {}),
+            ...(manager ? { manager } : {}),
+            ...(kind ? { type: kind } : {}),
           };
           yield p;
         }
@@ -174,27 +183,33 @@ export const rippling: Connector = roster({
           out.push(...page);
           if (page.length < 100) break;
         }
-        const byId = new Map(out.map((e) => [String(e.id), emailKey(String(e.workEmail ?? ""))]));
+        const text = (v: unknown): string =>
+          typeof v === "string" ? v : typeof v === "number" ? String(v) : "";
+        const byId = new Map(out.map((e) => [text(e["id"]), emailKey(text(e["workEmail"]))]));
         for (const e of out) {
-          const email = emailKey(String(e.workEmail ?? ""));
+          const email = emailKey(text(e["workEmail"]));
           if (!email) continue;
-          const state = String(e.roleState ?? "").toUpperCase();
+          const state = text(e["roleState"]).toUpperCase();
+          const start = day(text(e["startDate"]));
+          const end = day(text(e["endDate"]));
+          const manager = text(e["manager"]) ? byId.get(text(e["manager"])) : undefined;
+          const name = text(e["name"]);
+          const kind = text(e["employmentType"]);
           const p: Person = {
             email,
-            ...(e.name ? { name: String(e.name) } : {}),
-            status: state === "ACTIVE"
-              ? "active"
-              : state === "TERMINATED"
-              ? "terminated"
-              : state === "ACCEPTED" || state === "HIRED"
-              ? "active"
-              : "unknown",
-            ...(day(e.startDate as string) ? { start: day(e.startDate as string) } : {}),
-            ...(day(e.endDate as string) ? { end: day(e.endDate as string) } : {}),
-            ...(e.manager && byId.get(String(e.manager))
-              ? { manager: byId.get(String(e.manager)) }
-              : {}),
-            ...(e.employmentType ? { type: String(e.employmentType) } : {}),
+            ...(name ? { name } : {}),
+            status:
+              state === "ACTIVE"
+                ? "active"
+                : state === "TERMINATED"
+                  ? "terminated"
+                  : state === "ACCEPTED" || state === "HIRED"
+                    ? "active"
+                    : "unknown",
+            ...(start ? { start } : {}),
+            ...(end ? { end } : {}),
+            ...(manager ? { manager } : {}),
+            ...(kind ? { type: kind } : {}),
           };
           yield p;
         }

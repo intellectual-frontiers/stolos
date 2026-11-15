@@ -124,9 +124,10 @@ export const github: Connector = defineConnector({
       map: (o: Org) => ({
         native_id: o.login,
         display_name: o.name || o.login,
-        props: o.two_factor_requirement_enabled !== undefined
-          ? { mfa_required: o.two_factor_requirement_enabled }
-          : {},
+        props:
+          o.two_factor_requirement_enabled !== undefined
+            ? { mfa_required: o.two_factor_requirement_enabled }
+            : {},
       }),
       asset: () => undefined,
     },
@@ -136,9 +137,10 @@ export const github: Connector = defineConnector({
       required: true,
       async *list(ctx) {
         const members: Member[] = [];
-        for await (
-          const m of ctx.linkPages<Member>(`${API}/orgs/${ctx.cred.org}/members?per_page=100`)
-        ) members.push(m);
+        for await (const m of ctx.linkPages<Member>(
+          `${API}/orgs/${ctx.cred.org}/members?per_page=100`,
+        ))
+          members.push(m);
         const logins = (url: string) => async () => {
           const s = new Set<string>();
           for await (const m of ctx.linkPages<{ login: string }>(url)) s.add(m.login);
@@ -180,9 +182,10 @@ export const github: Connector = defineConnector({
       required: true,
       async *list(ctx) {
         const repos: Repo[] = [];
-        for await (
-          const r of ctx.linkPages<Repo>(`${API}/orgs/${ctx.cred.org}/repos?per_page=100&type=all`)
-        ) if (!r.archived) repos.push(r);
+        for await (const r of ctx.linkPages<Repo>(
+          `${API}/orgs/${ctx.cred.org}/repos?per_page=100&type=all`,
+        ))
+          if (!r.archived) repos.push(r);
         for (const r of repos) {
           const branch = encodeURIComponent(r.default_branch);
           // 404: no branch protection; a ruleset may still protect the branch.
@@ -197,11 +200,13 @@ export const github: Connector = defineConnector({
             `${r.full_name} branch protection`,
             undefined as Protection | undefined,
             () =>
-              ctx.json<Protection>(`${API}/repos/${r.full_name}/branches/${branch}/protection`)
+              ctx
+                .json<Protection>(`${API}/repos/${r.full_name}/branches/${branch}/protection`)
                 .catch(notFound<Protection>),
           );
           let isProtected = p !== undefined;
-          let reviews = p?.required_pull_request_reviews?.required_approving_review_count ??
+          let reviews =
+            p?.required_pull_request_reviews?.required_approving_review_count ??
             (p ? 0 : undefined);
           if (!isProtected) {
             type Rule = {
@@ -212,7 +217,8 @@ export const github: Connector = defineConnector({
               `${r.full_name} rulesets`,
               [] as Rule[],
               async () =>
-                (await ctx.json<Rule[]>(`${API}/repos/${r.full_name}/rules/branches/${branch}`)
+                (await ctx
+                  .json<Rule[]>(`${API}/repos/${r.full_name}/rules/branches/${branch}`)
                   .catch(notFound<Rule[]>)) ?? [],
             );
             const pr = rules.find((x) => x.type === "pull_request");
@@ -289,30 +295,31 @@ export const github: Connector = defineConnector({
     const org = records.find((r) => r.label === ORGANIZATION.name);
     const members = records.filter((r) => r.label === USER_ACCOUNT.name);
     const read = (what: string) => !gaps.some((g) => g.startsWith(`${what}: `));
-    const priv = records.filter((r) => r.label === CODE_REPOSITORY.name && r.props.private);
+    const priv = records.filter((r) => r.label === CODE_REPOSITORY.name && r.props["private"]);
     return {
-      ...(org?.props.mfa_required !== undefined
-        ? { orgRequires2fa: org.props.mfa_required as boolean }
+      ...(org?.props["mfa_required"] !== undefined
+        ? { orgRequires2fa: org.props["mfa_required"] as boolean }
         : {}),
-      ...(read("owners") ? { owners: members.filter((m) => m.props.admin).length } : {}),
+      ...(read("owners") ? { owners: members.filter((m) => m.props["admin"]).length } : {}),
       ...(read(NO_2FA)
-        ? { membersWithout2fa: members.filter((m) => m.props.mfa === false).length }
+        ? { membersWithout2fa: members.filter((m) => m.props["mfa"] === false).length }
         : {}),
       privateRepos: priv.length,
-      privateReposProtected: priv.filter((r) => r.props.protected).length,
-      privateReposReviewed: priv.filter((r) => ((r.props.reviews as number | undefined) ?? 0) >= 1)
-        .length,
-      ...(priv.some((r) => r.props.secret_scanning !== undefined)
-        ? { privateReposSecretScanning: priv.filter((r) => r.props.secret_scanning).length }
+      privateReposProtected: priv.filter((r) => r.props["protected"]).length,
+      privateReposReviewed: priv.filter(
+        (r) => ((r.props["reviews"] as number | undefined) ?? 0) >= 1,
+      ).length,
+      ...(priv.some((r) => r.props["secret_scanning"] !== undefined)
+        ? { privateReposSecretScanning: priv.filter((r) => r.props["secret_scanning"]).length }
         : {}),
       // Spec 088: only when the alerts could be read (else unknown, not none).
       ...vulnerabilityPosture(records, now, read("dependabot")),
     };
   },
   policies(o, now) {
-    const all = (v: unknown) => v === o.posture.privateRepos;
+    const all = (v: unknown) => v === o.posture["privateRepos"];
     const of = (v: string | number | boolean) =>
-      `${v} of ${o.posture.privateRepos} private repositories`;
+      `${v} of ${o.posture["privateRepos"]} private repositories`;
     return [
       fresh(o, now, "github"),
       check(o, {
@@ -339,8 +346,7 @@ export const github: Connector = defineConnector({
         fact: "privateReposProtected",
         want: all,
         show: of,
-        fix:
-          "each repository > Settings > Rules (or Branches): require a pull request and passing checks",
+        fix: "each repository > Settings > Rules (or Branches): require a pull request and passing checks",
       }),
       check(o, {
         id: "gh-reviewed",

@@ -11,11 +11,12 @@
  * @module
  */
 
+import { http } from "@intellectual-frontiers/ifc-ts/runtime";
 import { type Connector, fresh } from "./connector.ts";
 import { devicePolicies, devicePosture, osName } from "./endpoint.ts";
 import { emailKey } from "./entities.ts";
 import { HARDWARE_DEVICE } from "./labels.ts";
-import { bearer, type Ctx, defineConnector } from "./sdk.ts";
+import { type Ctx, defineConnector } from "./sdk.ts";
 
 const FIELDS = {
   api: { secret: false, hint: "your API URL (example.api.kandji.io, or example.api.eu.kandji.io)" },
@@ -88,7 +89,7 @@ export const kandji: Connector = defineConnector({
     open: { href: "https://api-docs.iru.com", label: "Kandji (Iru) API documentation" },
   },
   fields: FIELDS,
-  auth: (cred) => Promise.resolve(bearer(cred.token)),
+  auth: (cred) => Promise.resolve(http.bearer(cred.token)),
   account: (cred) => cred.api.replace(/^https?:\/\//, "").replace(/\/+$/, ""),
   resources: {
     devices: {

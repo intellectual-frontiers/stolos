@@ -12,8 +12,9 @@
  * @module
  */
 
+import { http } from "@intellectual-frontiers/ifc-ts/runtime";
 import { check, type Connector, fresh, type Observation } from "./connector.ts";
-import { bearer, type Ctx, defineConnector } from "./sdk.ts";
+import { type Ctx, defineConnector } from "./sdk.ts";
 import { ACCOUNT, FIREWALL, SERVER, VOLUME } from "./labels.ts";
 
 const API = "https://api.digitalocean.com/v2";
@@ -66,18 +67,16 @@ function all<T>(ctx: Ctx<typeof FIELDS>, path: string, key: string): AsyncGenera
 
 /** What one observation has read so far: the firewalls, which the Droplets need. */
 const firewalls = new WeakMap<object, Promise<Firewall[]>>();
-const firewallsOf = (ctx: Ctx<typeof FIELDS>) => {
-  if (!firewalls.has(ctx)) {
-    firewalls.set(
-      ctx,
-      ctx.orGap("firewalls", [] as Firewall[], async () => {
-        const out: Firewall[] = [];
-        for await (const f of all<Firewall>(ctx, "firewalls", "firewalls")) out.push(f);
-        return out;
-      }),
-    );
-  }
-  return firewalls.get(ctx)!;
+const firewallsOf = (ctx: Ctx<typeof FIELDS>): Promise<Firewall[]> => {
+  const known = firewalls.get(ctx);
+  if (known !== undefined) return known;
+  const read = ctx.orGap("firewalls", [] as Firewall[], async () => {
+    const out: Firewall[] = [];
+    for await (const f of all<Firewall>(ctx, "firewalls", "firewalls")) out.push(f);
+    return out;
+  });
+  firewalls.set(ctx, read);
+  return read;
 };
 
 /** DigitalOcean. */
@@ -99,7 +98,7 @@ export const digitalocean: Connector = defineConnector({
     },
   },
   fields: FIELDS,
-  auth: (cred) => Promise.resolve(bearer(cred.token)),
+  auth: (cred) => Promise.resolve(http.bearer(cred.token)),
   account: (_cred, records) => records.find((r) => r.label === ACCOUNT.name)?.display_name ?? "",
   resources: {
     account: {
@@ -122,8 +121,8 @@ export const digitalocean: Connector = defineConnector({
       async *list(ctx): AsyncGenerator<Droplet> {
         const fws = await firewallsOf(ctx);
         for await (const d of all<Droplet>(ctx, "droplets", "droplets")) {
-          const firewalled = fws.some((f) =>
-            f.droplet_ids?.includes(d.id) || f.tags?.some((t) => d.tags?.includes(t))
+          const firewalled = fws.some(
+            (f) => f.droplet_ids?.includes(d.id) || f.tags?.some((t) => d.tags?.includes(t)),
           );
           yield { ...d, firewalled };
         }
@@ -187,15 +186,15 @@ export const digitalocean: Connector = defineConnector({
     const read = (what: string) => !gaps.some((g) => g.startsWith(`${what}: `));
     return {
       droplets: droplets.length,
-      dropletsWithBackups: droplets.filter((p) => p.backups).length,
+      dropletsWithBackups: droplets.filter((p) => p["backups"]).length,
       ...(read("firewalls")
-        ? { dropletsWithFirewall: droplets.filter((p) => p.firewalled).length }
+        ? { dropletsWithFirewall: droplets.filter((p) => p["firewalled"]).length }
         : {}),
     };
   },
   policies(o, now) {
-    const every = (v: unknown) => v === o.posture.droplets;
-    const show = (v: string | number | boolean) => `${v} of ${o.posture.droplets} Droplet(s)`;
+    const every = (v: unknown) => v === o.posture["droplets"];
+    const show = (v: string | number | boolean) => `${v} of ${o.posture["droplets"]} Droplet(s)`;
     return [
       fresh(o, now, "digitalocean"),
       check(o, {
@@ -205,8 +204,7 @@ export const digitalocean: Connector = defineConnector({
         fact: "dropletsWithBackups",
         want: every,
         show,
-        fix:
-          "cloud.digitalocean.com > the Droplet > Backups > Enable (or record that its data is backed up another way)",
+        fix: "cloud.digitalocean.com > the Droplet > Backups > Enable (or record that its data is backed up another way)",
         warnOnly: true,
       }),
       check(o, {
@@ -216,8 +214,7 @@ export const digitalocean: Connector = defineConnector({
         fact: "dropletsWithFirewall",
         want: every,
         show,
-        fix:
-          "Networking > Firewalls > the firewall > Droplets: add it (or tag it with a firewall's tag)",
+        fix: "Networking > Firewalls > the firewall > Droplets: add it (or tag it with a firewall's tag)",
       }),
     ];
   },

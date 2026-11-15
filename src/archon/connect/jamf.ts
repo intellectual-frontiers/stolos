@@ -30,7 +30,8 @@ const base = (server: string) =>
   `https://${server.replace(/^https?:\/\//, "").replace(/\/+$/, "")}`;
 
 const SECTIONS = ["GENERAL", "HARDWARE", "OPERATING_SYSTEM", "USER_AND_LOCATION", "DISK_ENCRYPTION"]
-  .map((s) => `section=${s}`).join("&");
+  .map((s) => `section=${s}`)
+  .join("&");
 
 interface Computer {
   id: string;
@@ -54,9 +55,9 @@ interface Computer {
 /** Every computer, `page` and `page-size` paged (`{ totalCount, results }`). */
 function inventory(ctx: Ctx<typeof FIELDS>, version: string): AsyncGenerator<Computer> {
   const at = (page: number) =>
-    `${
-      base(ctx.cred.server)
-    }/api/${version}/computers-inventory?${SECTIONS}&page=${page}&page-size=100&sort=id%3Aasc`;
+    `${base(
+      ctx.cred.server,
+    )}/api/${version}/computers-inventory?${SECTIONS}&page=${page}&page-size=100&sort=id%3Aasc`;
   return ctx.cursorPages<{ totalCount?: number; results?: Computer[] }, Computer>(
     at(0),
     (b) => b.results,
@@ -105,8 +106,7 @@ export const jamf: Connector = defineConnector({
   ],
   recipe: {
     open: {
-      href:
-        "https://learn.jamf.com/en-US/bundle/jamf-pro-documentation-current/page/API_Roles_and_Clients.html",
+      href: "https://learn.jamf.com/en-US/bundle/jamf-pro-documentation-current/page/API_Roles_and_Clients.html",
       label: "Jamf Pro: API Roles and Clients",
     },
   },
@@ -162,8 +162,7 @@ export const jamf: Connector = defineConnector({
       ...devicePolicies(o, "jamf", {
         encryption:
           "Jamf Pro > Computers > Configuration Profiles: scope a FileVault profile (Security & Privacy > FileVault, with a personal recovery key escrowed) to all managed computers",
-        checkIn:
-          `Jamf Pro > Computers > Search Inventory: Last Check-in more than ${CHECK_IN_DAYS} days ago; bring each back (sudo jamf policy), or remove the ones that are gone`,
+        checkIn: `Jamf Pro > Computers > Search Inventory: Last Check-in more than ${CHECK_IN_DAYS} days ago; bring each back (sudo jamf policy), or remove the ones that are gone`,
       }),
     ];
   },

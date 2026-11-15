@@ -1,6 +1,6 @@
 /**
  * Spec 090: the estate graph, built from a {@link Snapshot} into SQLite
- * (Deno's built-in node:sqlite) with the schema in `schema.ts`.
+ * (node:sqlite, the same on Bun and Node) with the schema in `schema.ts`.
  *
  * - **People** come only from the source of truth: the first connected
  *   source in fleet.ts's order (HR systems, then identity providers). Every
@@ -33,7 +33,14 @@ import type { Observation } from "../connect/connector.ts";
 import { defineControl, type EstateControl, type Row } from "../controls/define.ts";
 import { runEstate } from "../controls/core.ts";
 import { type Account, type Device, emailKey, type Repository } from "../connect/entities.ts";
-import { ordered, rowParams, upsertSql } from "../schema/define.ts";
+import {
+  type Column,
+  ordered,
+  rowParams,
+  type RowOf,
+  type TableDef,
+  upsertSql,
+} from "../schema/define.ts";
 import {
   codeRepository,
   contactMechanism,
@@ -114,7 +121,7 @@ const repoProps = (r: Repository) => ({
 });
 
 /** A machine's short hostname: lowercase, without its domain. */
-const shortName = (name: string) => name.trim().toLowerCase().split(".")[0];
+const shortName = (name: string): string => name.trim().toLowerCase().split(".")[0] ?? "";
 
 /**
  * A machine's key: links.ts first, then its serial number, then its
@@ -184,9 +191,10 @@ export function buildGraph(
   const now = (o.now ?? new Date()).toISOString().replace(/\.\d+Z$/, "Z");
   const db = new DatabaseSync(":memory:");
   db.exec(estateSchemaSql());
-  // deno-lint-ignore no-explicit-any
-  const put = (t: any, row: Record<string, unknown>) =>
-    db.prepare(upsertSql(t)).run(...rowParams(t, row as never));
+  // A row is written as its table declares it; the graph's rows are made for their tables.
+  const put = (t: TableDef, row: Record<string, unknown>): void => {
+    db.prepare(upsertSql(t)).run(...rowParams(t, row as RowOf<Record<string, Column>>));
+  };
   const seenOf = (uid: string, at: string) => o.seen?.get(uid) ?? { first: at, last: at };
 
   // The fleet itself: an organization, and a tenant for its own machines.
@@ -381,7 +389,10 @@ export function buildGraph(
         if (r.label === userAccount.name) {
           linkAccount(
             uid,
-            { email: r.props.email as string | undefined, name: r.display_name },
+            {
+              ...(typeof r.props["email"] === "string" ? { email: r.props["email"] } : {}),
+              name: r.display_name,
+            },
             src.connector,
             x.at,
           );
@@ -392,16 +403,19 @@ export function buildGraph(
     const prev = o.previous?.sources.find((p) => p.connector === src.connector)?.observation;
     if (prev && ob.gaps.length) {
       const current = new Set(nodeUids(src.connector, ob));
-      emit({
-        ...prev,
-        entities: {
-          accounts: (prev.entities?.accounts ?? []).filter((a) => !current.has(`${t}:${a.id}`)),
-          repositories: (prev.entities?.repositories ?? []).filter((r) =>
-            !current.has(`${t}:${r.name}`)
-          ),
+      emit(
+        {
+          ...prev,
+          entities: {
+            accounts: (prev.entities?.accounts ?? []).filter((a) => !current.has(`${t}:${a.id}`)),
+            repositories: (prev.entities?.repositories ?? []).filter(
+              (r) => !current.has(`${t}:${r.name}`),
+            ),
+          },
+          records: (prev.records ?? []).filter((r) => !current.has(`${t}:${r.native_id}`)),
         },
-        records: (prev.records ?? []).filter((r) => !current.has(`${t}:${r.native_id}`)),
-      }, true);
+        true,
+      );
     }
     emit(ob, false);
   }
@@ -426,18 +440,20 @@ export function buildGraph(
     set("serial_number", d.serial);
     set("os_name", d.os);
     set("encrypted", d.encrypted);
-    if (d.managed) a.managed = true;
-    a.fixed_asset_type ??= d.source === "snmp"
-      ? "network_device"
-      : d.source === "stolos"
-      ? "server"
-      : d.source === "adopted"
-      ? "workstation"
-      : "other";
+    if (d.managed) a["managed"] = true;
+    a["fixed_asset_type"] ??=
+      d.source === "snmp"
+        ? "network_device"
+        : d.source === "stolos"
+          ? "server"
+          : d.source === "adopted"
+            ? "workstation"
+            : "other";
     const seen = d.seen ?? now;
-    a.first_seen =
-      [a.first_seen as string | undefined, seenOf(key, seen).first].filter(Boolean).sort()[0];
-    a.last_seen = [a.last_seen as string | undefined, seen].filter(Boolean).sort().pop();
+    a["first_seen"] = [a["first_seen"] as string | undefined, seenOf(key, seen).first]
+      .filter(Boolean)
+      .sort()[0];
+    a["last_seen"] = [a["last_seen"] as string | undefined, seen].filter(Boolean).sort().pop();
     assets.set(key, a);
     const t = seenOf(`${key}>${d.source}:${d.id}`, seen);
     put(edge, {
@@ -454,7 +470,11 @@ export function buildGraph(
     });
     const owner = emailKey(d.owner);
     if (owner && parties.has(owner)) {
-      assignments.push({ party_uid: parties.get(owner)!, fixed_asset_uid: key, source: d.source });
+      assignments.push({
+        party_uid: parties.get(owner) ?? owner,
+        fixed_asset_uid: key,
+        source: d.source,
+      });
     }
   }
   for (const a of assets.values()) put(fixedAsset, a);
@@ -469,8 +489,9 @@ export function estateRefusal(sql: string): string | undefined {
   if (s.includes(";")) return "one statement only";
   if (!/^(select|with)\b/i.test(s)) return "only SELECT (or WITH ... SELECT)";
   if (
-    /\b(attach|detach|pragma|insert|update|delete|create|drop|alter|replace|vacuum|load_extension)\b/i
-      .test(s)
+    /\b(attach|detach|pragma|insert|update|delete|create|drop|alter|replace|vacuum|load_extension)\b/i.test(
+      s,
+    )
   ) {
     return "only reading";
   }
@@ -481,17 +502,28 @@ export function estateRefusal(sql: string): string | undefined {
 export function estateQuery(e: Estate, sql: string): Array<Record<string, unknown>> {
   const why = estateRefusal(sql);
   if (why) throw new Error(`refused: ${why}`);
-  return (e.db.prepare(sql.trim().replace(/;\s*$/, "")).all() as Array<Record<string, unknown>>)
-    .map((r) => ({ ...r }));
+  return (
+    e.db.prepare(sql.trim().replace(/;\s*$/, "")).all() as Array<Record<string, unknown>>
+  ).map((r) => ({ ...r }));
 }
 
 /** The tables and views a query may read, for messages. */
 export const ESTATE_NAMES: string = ESTATE_SCHEMA.map((d) => d.name).join(", ");
 
-const list = (r: Row[], f: (x: Row) => string) =>
+/** A cell's value as text: a string as it is, a number or a boolean written, anything else as JSON. */
+const cell = (v: unknown): string =>
+  typeof v === "string"
+    ? v
+    : typeof v === "number" || typeof v === "bigint" || typeof v === "boolean"
+      ? String(v)
+      : v === null || v === undefined
+        ? ""
+        : JSON.stringify(v);
+
+const list = (r: Row[], f: (x: Row) => string): string =>
   r.slice(0, 12).map(f).join(", ") + (r.length > 12 ? `, and ${r.length - 12} more` : "");
-const n = (r: Row[]) => Number(r[0]?.n ?? 0);
-const uids = (r: Row[]) => r.map((x) => x.uid as string);
+const n = (r: Row[]) => Number(r[0]?.["n"] ?? 0);
+const uids = (r: Row[]) => r.map((x) => x["uid"] as string);
 
 /** The cross-system policies, as controls over the graph (spec 078), in the order results are shown. */
 export const ESTATE_CONTROLS: EstateControl[] = [
@@ -503,8 +535,7 @@ export const ESTATE_CONTROLS: EstateControl[] = [
     query: {
       people: "SELECT count(*) AS n FROM person",
       left: "SELECT count(*) AS n FROM person WHERE status = 'terminated'",
-      leavers:
-        `SELECT u.email_addr AS email, t.connector AS system, a.display_name AS name, a.user_account_uid AS uid
+      leavers: `SELECT u.email_addr AS email, t.connector AS system, a.display_name AS name, a.user_account_uid AS uid
        FROM user_inventory u
        JOIN edge e ON e.src_uid = u.uid AND e.verb = 'has_account'
        JOIN user_account a ON a.user_account_uid = e.dst_uid
@@ -512,17 +543,19 @@ export const ESTATE_CONTROLS: EstateControl[] = [
        WHERE u.status = 'terminated' AND a.active = 1 ORDER BY u.email_addr`,
     },
     assert: ({ people, left, leavers }) =>
-      !n(people) ? undefined : {
-        status: leavers.length ? "fail" : "pass",
-        detail: leavers.length
-          ? `${leavers.length} active account(s) of people who left: ${
-            list(leavers, (x) => `${x.email} in ${x.system}`)
-          }`
-          : `${n(left)} leaver(s), none with an active account`,
-        subjects: uids(leavers),
-      },
-    fix:
-      "turn the accounts off in each system today; then make offboarding turn them off (identity provider first)",
+      !n(people)
+        ? undefined
+        : {
+            status: leavers.length ? "fail" : "pass",
+            detail: leavers.length
+              ? `${leavers.length} active account(s) of people who left: ${list(
+                  leavers,
+                  (x) => `${cell(x["email"])} in ${cell(x["system"])}`,
+                )}`
+              : `${n(left)} leaver(s), none with an active account`,
+            subjects: uids(leavers),
+          },
+    fix: "turn the accounts off in each system today; then make offboarding turn them off (identity provider first)",
   }),
   defineControl({
     id: "orphans",
@@ -531,24 +564,25 @@ export const ESTATE_CONTROLS: EstateControl[] = [
     subject: "estate",
     query: {
       people: "SELECT count(*) AS n FROM person",
-      orphans:
-        `SELECT a.connector AS system, a.display_name AS name, a.user_account_uid AS uid FROM user_account a
+      orphans: `SELECT a.connector AS system, a.display_name AS name, a.user_account_uid AS uid FROM user_account a
        WHERE a.active = 1 AND coalesce(a.service, 0) = 0
        AND NOT EXISTS (SELECT 1 FROM edge e WHERE e.dst_uid = a.user_account_uid AND e.verb = 'has_account')
        ORDER BY a.connector, a.display_name`,
     },
     assert: ({ people, orphans }) =>
-      !n(people) ? undefined : {
-        status: orphans.length ? "warn" : "pass",
-        detail: orphans.length
-          ? `${orphans.length} account(s) with no person: ${
-            list(orphans, (x) => `${x.name} in ${x.system}`)
-          }`
-          : "every active account matches a person",
-        subjects: uids(orphans),
-      },
-    fix:
-      'for each: link it to a person (a login-only system: add it to fleets/<fleet>/estate/links.ts, as "github:alice": "alice@example.org"), or turn it off',
+      !n(people)
+        ? undefined
+        : {
+            status: orphans.length ? "warn" : "pass",
+            detail: orphans.length
+              ? `${orphans.length} account(s) with no person: ${list(
+                  orphans,
+                  (x) => `${cell(x["name"])} in ${cell(x["system"])}`,
+                )}`
+              : "every active account matches a person",
+            subjects: uids(orphans),
+          },
+    fix: 'for each: link it to a person (a login-only system: add it to fleets/<fleet>/estate/links.ts, as "github:alice": "alice@example.org"), or turn it off',
   }),
   defineControl({
     id: "devices-for-people",
@@ -562,13 +596,15 @@ export const ESTATE_CONTROLS: EstateControl[] = [
        ORDER BY u.email_addr`,
     },
     assert: ({ people, without }) =>
-      !n(people) ? undefined : {
-        status: without.length ? "warn" : "pass",
-        detail: without.length
-          ? `${without.length} without a device: ${list(without, (x) => x.email as string)}`
-          : "every active person has a device",
-        subjects: uids(without),
-      },
+      !n(people)
+        ? undefined
+        : {
+            status: without.length ? "warn" : "pass",
+            detail: without.length
+              ? `${without.length} without a device: ${list(without, (x) => x["email"] as string)}`
+              : "every active person has a device",
+            subjects: uids(without),
+          },
     fix: "adopt each person's laptop (Add a machine), with --owner set to their work email",
   }),
   defineControl({
@@ -578,18 +614,19 @@ export const ESTATE_CONTROLS: EstateControl[] = [
     subject: "estate",
     query: {
       known: "SELECT count(*) AS n FROM user_account WHERE admin IS NOT NULL AND mfa IS NOT NULL",
-      bad:
-        `SELECT connector AS system, display_name AS name, user_account_uid AS uid FROM user_account
+      bad: `SELECT connector AS system, display_name AS name, user_account_uid AS uid FROM user_account
        WHERE active = 1 AND admin = 1 AND mfa = 0 ORDER BY connector, display_name`,
     },
     assert: ({ known, bad }) =>
-      !n(known) ? undefined : {
-        status: bad.length ? "fail" : "pass",
-        detail: bad.length
-          ? `${bad.length} without MFA: ${list(bad, (x) => `${x.name} in ${x.system}`)}`
-          : "every administrator has MFA",
-        subjects: uids(bad),
-      },
+      !n(known)
+        ? undefined
+        : {
+            status: bad.length ? "fail" : "pass",
+            detail: bad.length
+              ? `${bad.length} without MFA: ${list(bad, (x) => `${cell(x["name"])} in ${cell(x["system"])}`)}`
+              : "every administrator has MFA",
+            subjects: uids(bad),
+          },
     fix: "require MFA for administrators in each system (and register it for these people)",
   }),
   // Spec 087: password manager coverage, when one is connected and people are known.
@@ -601,20 +638,21 @@ export const ESTATE_CONTROLS: EstateControl[] = [
     query: {
       people: "SELECT count(*) AS n FROM person",
       connected: `SELECT count(*) AS n FROM tenant WHERE connector IN (${PM_LIST})`,
-      uncovered:
-        `SELECT u.email_addr AS email, u.uid FROM user_inventory u WHERE u.status = 'active'
+      uncovered: `SELECT u.email_addr AS email, u.uid FROM user_inventory u WHERE u.status = 'active'
        AND NOT EXISTS (SELECT 1 FROM edge e JOIN user_account a ON a.user_account_uid = e.dst_uid
          WHERE e.src_uid = u.uid AND e.verb = 'has_account' AND a.active = 1 AND a.connector IN (${PM_LIST}))
        ORDER BY u.email_addr`,
     },
     assert: ({ people, connected, uncovered }) =>
-      !n(people) || !n(connected) ? undefined : {
-        status: uncovered.length ? "warn" : "pass",
-        detail: uncovered.length
-          ? `${uncovered.length} without one: ${list(uncovered, (x) => String(x.email))}`
-          : "every active person has an active password manager account",
-        subjects: uids(uncovered),
-      },
+      !n(people) || !n(connected)
+        ? undefined
+        : {
+            status: uncovered.length ? "warn" : "pass",
+            detail: uncovered.length
+              ? `${uncovered.length} without one: ${list(uncovered, (x) => String(x["email"]))}`
+              : "every active person has an active password manager account",
+            subjects: uids(uncovered),
+          },
     fix: "invite each of them to the company's password manager (and have them accept)",
   }),
   defineControl({
@@ -624,17 +662,18 @@ export const ESTATE_CONTROLS: EstateControl[] = [
     subject: "estate",
     query: {
       known: "SELECT count(*) AS n FROM fixed_asset WHERE encrypted IS NOT NULL",
-      plain:
-        `SELECT hostname AS name, fixed_asset_uid AS uid FROM fixed_asset WHERE encrypted = 0 ORDER BY hostname`,
+      plain: `SELECT hostname AS name, fixed_asset_uid AS uid FROM fixed_asset WHERE encrypted = 0 ORDER BY hostname`,
     },
     assert: ({ known, plain }) =>
-      !n(known) ? undefined : {
-        status: plain.length ? "fail" : "pass",
-        detail: plain.length
-          ? `${plain.length} not encrypted: ${list(plain, (x) => x.name as string)}`
-          : "every device that says is encrypted",
-        subjects: uids(plain),
-      },
+      !n(known)
+        ? undefined
+        : {
+            status: plain.length ? "fail" : "pass",
+            detail: plain.length
+              ? `${plain.length} not encrypted: ${list(plain, (x) => x["name"] as string)}`
+              : "every device that says is encrypted",
+            subjects: uids(plain),
+          },
     fix: "turn on FileVault, BitLocker, or LUKS (or record an accepted risk)",
   }),
   defineControl({
@@ -648,15 +687,16 @@ export const ESTATE_CONTROLS: EstateControl[] = [
        WHERE private = 1 AND protected = 0 ORDER BY display_name`,
     },
     assert: ({ repos, open }) =>
-      !n(repos) ? undefined : {
-        status: open.length ? "fail" : "pass",
-        detail: open.length
-          ? `${open.length} unprotected: ${list(open, (x) => x.name as string)}`
-          : `${n(repos)} repositories, all protected`,
-        subjects: uids(open),
-      },
-    fix:
-      "protect the default branch: require a pull request, an approving review, and passing checks",
+      !n(repos)
+        ? undefined
+        : {
+            status: open.length ? "fail" : "pass",
+            detail: open.length
+              ? `${open.length} unprotected: ${list(open, (x) => x["name"] as string)}`
+              : `${n(repos)} repositories, all protected`,
+            subjects: uids(open),
+          },
+    fix: "protect the default branch: require a pull request, an approving review, and passing checks",
   }),
 ];
 
@@ -671,16 +711,18 @@ export function writeFindings(
     const subjects = p.subjects ?? [];
     for (const control of p.scf) {
       for (const subject of subjects.length ? subjects : [undefined]) {
-        e.db.prepare(upsertSql(finding)).run(...rowParams(finding, {
-          finding_uid: `${p.id}:${control}:${subject ?? "all"}`,
-          policy_id: p.id,
-          subject_uid: subject ?? null,
-          scf_control: control,
-          status: p.status,
-          detail: p.detail,
-          fix: p.fix ?? null,
-          observed_at: at,
-        }));
+        e.db.prepare(upsertSql(finding)).run(
+          ...rowParams(finding, {
+            finding_uid: `${p.id}:${control}:${subject ?? "all"}`,
+            policy_id: p.id,
+            subject_uid: subject ?? null,
+            scf_control: control,
+            status: p.status,
+            detail: p.detail,
+            fix: p.fix ?? null,
+            observed_at: at,
+          }),
+        );
       }
     }
   }
@@ -693,27 +735,26 @@ export function estatePolicies(e: Estate, now = new Date()): PolicyResult[] {
   return out.map(({ subjects: _, ...p }) => p);
 }
 
-const sqlValue = (v: unknown) =>
+const sqlValue = (v: unknown): string =>
   v === null || v === undefined
     ? "NULL"
     : typeof v === "number" || typeof v === "bigint"
-    ? String(v)
-    : `'${String(v).replace(/'/g, "''")}'`;
+      ? String(v)
+      : `'${cell(v).replace(/'/g, "''")}'`;
 
 /** The graph as canonical SQL: the schema, then every row as an INSERT, in a stable order. */
 export function estateSql(e: Estate): string {
   const out = [estateSchemaSql(), "BEGIN;"];
   for (const t of ordered(ESTATE_SCHEMA).filter((d) => d.kind === "table")) {
     const cols = Object.keys(t.columns);
-    const rows = e.db.prepare(
-      `SELECT ${cols.join(", ")} FROM ${t.name} ORDER BY ${t.key.join(", ")}`,
-    )
+    const rows = e.db
+      .prepare(`SELECT ${cols.join(", ")} FROM ${t.name} ORDER BY ${t.key.join(", ")}`)
       .all() as Array<Record<string, unknown>>;
     for (const r of rows) {
       out.push(
-        `INSERT INTO ${t.name} (${cols.join(", ")}) VALUES (${
-          cols.map((c) => sqlValue(r[c])).join(", ")
-        });`,
+        `INSERT INTO ${t.name} (${cols.join(", ")}) VALUES (${cols
+          .map((c) => sqlValue(r[c]))
+          .join(", ")});`,
       );
     }
   }
