@@ -338,6 +338,7 @@ Deno.test("inventory: every secret path the code writes is in the inventory", ()
     SECRETS.web,
     SECRETS.acme("alpha"),
     SECRETS.tokens,
+    SECRETS.exportMail("acme"),
   ];
   // Every SECRETS entry is among them (a new one must be added here and to the inventory).
   const keys = Object.keys(SECRETS).filter((k) => k !== "dir");
@@ -346,6 +347,7 @@ Deno.test("inventory: every secret path the code writes is in the inventory", ()
     "adminPasswordHash",
     "deployKey",
     "deployKeyPub",
+    "exportMail",
     "hostKey",
     "mail",
     "tokens",

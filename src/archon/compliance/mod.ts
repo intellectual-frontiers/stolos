@@ -47,6 +47,22 @@
  * document against NIST's OSCAL schema. Fill in what Stolos cannot know (the system's
  * categorization, the controls it cannot observe) before you submit an SSP.
  *
+ * ## Delivering them on a schedule
+ *
+ * An export job (`estate.exports` in `fleets/<fleet>/fleet.ts`, spec 092) delivers the OSCAL
+ * documents, and the other export kinds, without anyone running a command: to the fleet's
+ * OpenTelemetry collector when `telemetry.collector` is set, otherwise to a file in this PC's state
+ * directory; with recipients, the files are also emailed, send-only, each copy encrypted (S/MIME)
+ * to that recipient's own certificate, so an auditor's mail program opens it and nobody else can.
+ *
+ * ```sh
+ * deno task stolos export run auditor        # now
+ * deno task stolos export schedule auditor   # on its schedule, by this PC's own scheduler
+ * ```
+ *
+ * See the delivery module (`src/archon/export/deliver.ts`) and its commands
+ * (`src/archon/export/delivery-commands.ts`) for the send-only credential and the certificates.
+ *
  * ## What it is, and is not
  *
  * - It is evidence from machines and accounts: disk encryption, firewalls, updates, MFA, signed

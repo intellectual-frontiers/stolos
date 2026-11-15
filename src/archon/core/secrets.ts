@@ -33,6 +33,8 @@ export const SECRETS = {
   get mail(): string {
     return join(P.secrets, "mail.json");
   },
+  /** A send-only mail credential an export job names (spec 092): mail-<name>.json. */
+  exportMail: (name: string) => join(P.secrets, `mail-${name}.json`),
   /** The Cloudflare DNS token (spec 032): Zone Read and DNS Edit on the fleet's zone. */
   get web(): string {
     return join(P.secrets, "web.json");

@@ -1074,6 +1074,108 @@ export const COMMANDS: Command[] = [
     },
   },
   {
+    name: "export list",
+    summary: "The export jobs: kinds, tenants, where each delivers, its schedule, its last run",
+    description:
+      `Spec 092. Lists estate.exports from fleets/<fleet>/fleet.ts: each job's kinds and tenants, where it delivers (the fleet's OpenTelemetry collector when one is configured, else a file on this PC, and email when it has recipients), its schedule, and how its last run on this PC went.`,
+    tier: "read",
+    noMcp: true,
+    args: [],
+    async run() {
+      const { exportList } = await import("../export/delivery-commands.ts");
+      return await exportList();
+    },
+  },
+  {
+    name: "export run",
+    summary: "Make one export job's documents and deliver them: collector, file, encrypted email",
+    description:
+      `Spec 092. Makes the job's documents (its kinds, for its tenants) and delivers them: to the fleet's OpenTelemetry collector over OTLP/HTTP when telemetry.collector is configured, otherwise (or when it does not answer) to a file in this PC's state directory (exports/<job>/<time>/); with recipients, the files are also emailed, send-only, one message per recipient encrypted with S/MIME to that recipient's certificate (no shared secret). Mail leaves through the fleet's relay with the fleet's send-only credential (stolos boot mail-setup), or the job's own (stolos export credential <name>), over TLS only. What happened is in exports/<job>/last-run.json, without secrets. The scheduled job (stolos export schedule) runs this.`,
+    tier: "read",
+    noMcp: true,
+    args: [
+      {
+        name: "job",
+        type: "string",
+        positional: true,
+        required: true,
+        description: "The job's id.",
+      },
+    ],
+    examples: [{
+      cmd: "deno task stolos export run auditor",
+      text: "Deliver the job named auditor now.",
+    }],
+    async run(a) {
+      const { exportRun } = await import("../export/delivery-commands.ts");
+      return await exportRun(a.job as string);
+    },
+  },
+  {
+    name: "export schedule",
+    summary:
+      "Run an export job by itself: this PC's own scheduler (Task Scheduler, launchd, systemd)",
+    description:
+      `Spec 092. Creates the operating system's own scheduled job on this PC, so the export runs without Stolos open: on Windows a Task Scheduler task (Stolos\\export-<fleet>-<job>, as you, no stored password), on macOS a LaunchAgent in ~/Library/LaunchAgents, on Linux a systemd user service and timer in ~/.config/systemd/user. It runs deno task stolos --fleet <fleet> export run <job> in this fleet checkout, at the job's schedule (estate.exports[].schedule). Nothing secret is written into it. --remove takes it away; --dry-run prints the files and commands and changes nothing.`,
+    tier: "repo",
+    noMcp: true,
+    args: [
+      {
+        name: "job",
+        type: "string",
+        positional: true,
+        required: true,
+        description: "The job's id.",
+      },
+      { name: "remove", type: "boolean", description: "Remove the scheduled job instead." },
+      {
+        name: "dry-run",
+        type: "boolean",
+        description: "Print what would be written and run; change nothing.",
+      },
+    ],
+    examples: [
+      {
+        cmd: "deno task stolos export schedule auditor",
+        text: "Run the auditor job on its schedule.",
+      },
+      { cmd: "deno task stolos export schedule auditor --remove", text: "Stop it." },
+    ],
+    async run(a) {
+      const { exportSchedule } = await import("../export/delivery-commands.ts");
+      return await exportSchedule(a.job as string, {
+        remove: !!a.remove,
+        dryRun: !!a["dry-run"],
+      });
+    },
+  },
+  {
+    name: "export credential",
+    summary: "Store a separate send-only mail credential for export jobs, on this PC only",
+    description:
+      `Spec 092. For a tenant that sends through its own account (email.credential in an export job). Reads the credential without echo (or one line on stdin), logs in to the job's relay over TLS without sending, and stores it in this PC's secrets folder (mail-<name>.json, this user only; the vault backs it up). Use a send-only credential: a Cloudflare API token with only Email Sending: Edit, or an SMTP account with reading (IMAP, POP, the mail API) turned off. Stolos only submits mail; it never reads a mailbox. Terminal only.`,
+    tier: "repo",
+    noMcp: true,
+    args: [
+      {
+        name: "name",
+        type: "string",
+        positional: true,
+        required: true,
+        description: "The credential's name, as the job's email.credential gives it.",
+      },
+      {
+        name: "user",
+        type: "string",
+        description: "The SMTP user name (default: api_token, Cloudflare's).",
+      },
+    ],
+    async run(a) {
+      const { exportCredential } = await import("../export/delivery-commands.ts");
+      return await exportCredential(a.name as string, a.user as string | undefined);
+    },
+  },
+  {
     name: "console",
     summary: "The Stolos Console: the fleet in your browser, on this PC only",
     description:
@@ -3270,6 +3372,10 @@ const PC_COMMANDS = new Set([
   "compliance",
   "compliance catalog",
   "compliance export",
+  "export list",
+  "export run",
+  "export schedule",
+  "export credential",
   "evidence export",
   "evidence verify",
   "console",

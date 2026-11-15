@@ -16,7 +16,7 @@ export interface SecretRef {
   label: string;
   /**
    * Boot machine: the path inside its secrets folder (%APPDATA%\stolos\secrets),
-   * with <host> and <type> placeholders. Owner: where it is kept.
+   * with <host>, <type>, and <name> placeholders. Owner: where it is kept.
    */
   path: string;
   /** What it is for, in a sentence. */
@@ -138,6 +138,17 @@ export const SECRET_INVENTORY: SecretRef[] = [
     spec: "027-mail",
   },
   {
+    id: "export-mail-token",
+    label: "<name> export mail credential",
+    path: "mail-<name>.json",
+    purpose:
+      "a send-only SMTP credential for export jobs that send through their own account (email.credential in estate.exports; spec 092)",
+    holder: "boot-machine",
+    recreate:
+      "make a new send-only credential with the provider (Cloudflare: an API token with only Email Sending: Edit); deno task stolos export credential <name>",
+    spec: "092-exporters",
+  },
+  {
     id: "acme-store",
     label: "<host> Let's Encrypt certificates",
     path: "hosts/<host>/acme.json",
@@ -225,14 +236,18 @@ export const SECRET_INVENTORY: SecretRef[] = [
 /** A path pattern ("hosts/<host>/deploy_key") as a regular expression. */
 export function patternOf(path: string): RegExp {
   const esc = path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-    .replace(/<host>/g, "(?<host>[a-z0-9-]+)").replace(/<type>/g, "(?<type>[a-z0-9]+)");
+    .replace(/<host>/g, "(?<host>[a-z0-9-]+)").replace(/<type>/g, "(?<type>[a-z0-9]+)").replace(
+      /<name>/g,
+      "(?<name>[a-z0-9-]+)",
+    );
   return new RegExp(`^${esc}$`);
 }
 
 /** The entry's label for one file: "hermes deploy key". */
 export function labelFor(ref: SecretRef, rel: string): string {
   const g = patternOf(ref.path).exec(rel.replace(/\\/g, "/"))?.groups ?? {};
-  return ref.label.replace("<host>", g.host ?? "<host>").replace("<type>", g.type ?? "<type>");
+  return ref.label.replace("<host>", g.host ?? "<host>").replace("<type>", g.type ?? "<type>")
+    .replace("<name>", g.name ?? "<name>");
 }
 
 /** The inventory entry for a path relative to the secrets folder (forward slashes). */

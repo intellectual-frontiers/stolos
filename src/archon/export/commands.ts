@@ -16,7 +16,7 @@ import { buildExports, EXPORT_KINDS, type ExportInput, isExportKind } from "./ex
 import { type BundleInfo, bundleInfo } from "./intoto.ts";
 
 /** The newest evidence bundle in this PC's state directory, if any. */
-async function newestBundle(): Promise<string | undefined> {
+export async function newestBundle(): Promise<string | undefined> {
   const dir = join(P.state, "evidence");
   const found: Array<{ path: string; mtime: number }> = [];
   try {

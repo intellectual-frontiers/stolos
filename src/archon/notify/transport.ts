@@ -43,6 +43,11 @@ export interface Credential {
   token: string;
   /** When it was made (ISO 8601); empty when read back from sasl_passwd. */
   created: string;
+  /**
+   * The SMTP user name, for a relay other than Cloudflare's (spec 092: a
+   * tenant's own send-only account). Default: RELAY_USER.
+   */
+  user?: string;
 }
 
 /** Every secret string a credential holds (for redaction). */
@@ -58,15 +63,42 @@ export function relayParts(relay = DEFAULT_RELAY): { host: string; port: number 
   return { host, port: Number(port) || 465 };
 }
 
+/** How TLS starts: at once (implicit, port 465), or by STARTTLS after EHLO (submission, port 587). */
+export type SmtpTls = "implicit" | "starttls";
+
+/** The TLS mode for a port when none is given: STARTTLS on 587 and 25, implicit TLS otherwise. */
+export const tlsFor = (port: number): SmtpTls =>
+  port === 587 || port === 25 ? "starttls" : "implicit";
+
+/** One SMTP session's options (curl's configuration is built from these). */
+export interface SmtpOptions {
+  /** host:port of the relay (default DEFAULT_RELAY). */
+  relay?: string;
+  /** Reach it over IPv4 only. */
+  ipv4: boolean;
+  /** The envelope sender. */
+  from?: string;
+  /** The envelope recipient. */
+  to?: string;
+  /** The message file to upload (none: log in and NOOP). */
+  file?: string;
+  /**
+   * How TLS starts (default by port, tlsFor). Either way TLS is required
+   * (`ssl-reqd`): curl refuses to log in or send over a connection without it.
+   */
+  tls?: SmtpTls;
+  /** A CA bundle to trust instead of the system's (tests with their own certificate). */
+  cacert?: string;
+}
+
 /** curl's configuration for one SMTP session with the relay (token included: stdin only). */
-export function smtpConfig(
-  c: Credential,
-  o: { relay?: string; ipv4: boolean; from?: string; to?: string; file?: string },
-): string {
+export function smtpConfig(c: Credential, o: SmtpOptions): string {
   const { host, port } = relayParts(o.relay);
+  const scheme = (o.tls ?? tlsFor(port)) === "starttls" ? "smtp" : "smtps";
   const lines = [
-    `url = ${quote(`smtps://${host}:${port}`)}`,
-    `user = ${quote(`${RELAY_USER}:${c.token}`)}`,
+    `url = ${quote(`${scheme}://${host}:${port}`)}`,
+    `user = ${quote(`${c.user ?? RELAY_USER}:${c.token}`)}`,
+    // Required on both schemes: with smtp:// it means STARTTLS or no session at all.
     "ssl-reqd",
     "silent",
     "show-error",
@@ -74,6 +106,7 @@ export function smtpConfig(
     "max-time = 120",
   ];
   if (o.ipv4) lines.push("ipv4");
+  if (o.cacert) lines.push(`cacert = ${quote(o.cacert)}`);
   if (o.file) {
     lines.push(
       `mail-from = ${quote(o.from!)}`,
@@ -132,6 +165,9 @@ export function smtpError(
     }) (${msg})`;
   }
   if (exit === 28) return `${relay} did not answer in time: check the network (${msg})`;
+  if (exit === 64) {
+    return `${relay} did not offer TLS (no STARTTLS): nothing was sent and the credential was not used; mail leaves only over TLS`;
+  }
   if (exit === 35 || exit === 60) return `the TLS connection to ${relay} failed (${msg})`;
   return `sending through ${relay} failed: ${msg || `curl exit ${exit}`}`;
 }
@@ -139,7 +175,7 @@ export function smtpError(
 /** Send one RFC 5322 message (CRLF line ends) through the relay. */
 export async function sendSmtp(
   c: Credential,
-  o: { relay?: string; ipv4: boolean; from: string; to: string },
+  o: Omit<SmtpOptions, "file"> & { from: string; to: string },
   mime: string,
 ): Promise<string> {
   const file = await Deno.makeTempFile({ prefix: "archon-mail-", suffix: ".eml" });
@@ -156,7 +192,7 @@ export async function sendSmtp(
 /** Log in to the relay and leave, sending nothing (archon doctor, mail-setup). */
 export async function probeSmtp(
   c: Credential,
-  o: { relay?: string; ipv4: boolean },
+  o: Omit<SmtpOptions, "file" | "from" | "to">,
 ): Promise<void> {
   const r = await run(["curl", "-K", "-"], { stdin: smtpConfig(c, o) });
   if (!r.ok) throw new Error(smtpError(r.code, r.stderr, o));

@@ -8,6 +8,7 @@
 
 import type { FleetDef, HostDef, HostPlan } from "./types.ts";
 import { validateSite } from "./site.ts";
+import { validateExportJobs } from "../export/jobs.ts";
 
 /** One thing wrong with the model. */
 export interface Problem {
@@ -381,6 +382,8 @@ export function validateFleet(fleet: FleetDef, hosts: HostDef[]): Problem[] {
       add(sp.where, sp.message, sp.fix);
     }
   }
+  // Spec 092: export jobs (tenants, kinds, recipients and their certificates, schedule).
+  for (const jp of validateExportJobs(fleet)) add(jp.where, jp.message, jp.fix);
   const secret = findSecret(JSON.stringify(fleet) + JSON.stringify(hosts));
   if (secret) {
     add(

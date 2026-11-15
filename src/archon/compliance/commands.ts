@@ -147,23 +147,30 @@ export async function catalogCommand(
   return 0;
 }
 
-/** Write the fleet's OSCAL documents (component definition, SSP, assessment results, POA&M). */
-export async function exportCommand(out?: string): Promise<number> {
-  const p = ui.phase("OSCAL");
+/** The fleet's OSCAL documents by file name, or why they cannot be made (and the fix). */
+export type OscalResult =
+  | { ok: true; docs: Record<string, unknown>; fleet: { id: string; title: string }; scf: string }
+  | { ok: false; error: string; fix: string };
+
+/**
+ * Build the fleet's four OSCAL documents from what this PC knows (spec 071).
+ * `stolos compliance export` writes them; spec 092's export jobs deliver them.
+ */
+export async function oscalDocuments(now: Date = new Date()): Promise<OscalResult> {
   const catalog = await loadScf();
   if (!catalog) {
-    p.fail("the SCF catalog is not on this PC (OSCAL reaches NIST through it)", CATALOG_HINT);
-    return 1;
+    return {
+      ok: false,
+      error: "the SCF catalog is not on this PC (OSCAL reaches NIST through it)",
+      fix: CATALOG_HINT,
+    };
   }
   const { pcFacts } = await import("../console/pc.ts");
   const { oscalExports } = await import("./oscal.ts");
-  const { P } = await import("../core/paths.ts");
-  const { join } = await import("../core/path.ts");
   const { VERSION } = await import("../version.ts");
   const f = await pcFacts();
   if (!f.fleet.id) {
-    p.fail("no fleet chosen", "deno task stolos fleet use <id>");
-    return 1;
+    return { ok: false, error: "no fleet chosen", fix: "deno task stolos fleet use <id>" };
   }
   const nist = await loadNist("nist80053");
   const docs = await oscalExports({
@@ -172,16 +179,30 @@ export async function exportCommand(out?: string): Promise<number> {
     machines: f.machines.filter((m) => m.kind !== "discovered"),
     ...(nist ? { titles: nist.titles } : {}),
     version: VERSION,
-    now: new Date(),
+    now,
   });
-  const dir = out ?? join(P.state, "oscal", f.fleet.id);
+  return { ok: true, docs, fleet: f.fleet, scf: catalog.version };
+}
+
+/** Write the fleet's OSCAL documents (component definition, SSP, assessment results, POA&M). */
+export async function exportCommand(out?: string): Promise<number> {
+  const p = ui.phase("OSCAL");
+  const r = await oscalDocuments();
+  if (!r.ok) {
+    p.fail(r.error, r.fix);
+    return 1;
+  }
+  const { P } = await import("../core/paths.ts");
+  const { join } = await import("../core/path.ts");
+  const dir = out ?? join(P.state, "oscal", r.fleet.id);
   await Deno.mkdir(dir, { recursive: true });
-  for (const [name, doc] of Object.entries(docs)) {
+  for (const [name, doc] of Object.entries(r.docs)) {
     await Deno.writeTextFile(join(dir, name), JSON.stringify(doc, null, 2) + "\n");
     p.ok(join(dir, name));
   }
-  p.done(
-    `OSCAL documents for ${f.fleet.title}, to NIST SP 800-53 Rev 5 through SCF ${catalog.version}`,
+  p.done(`OSCAL documents for ${r.fleet.title}, to NIST SP 800-53 Rev 5 through SCF ${r.scf}`);
+  ui.next.push(
+    "to deliver them on a schedule (the collector, a file, or encrypted email): a job in estate.exports, then stolos export schedule <job>",
   );
   ui.next.push(
     "fill in what Stolos cannot know (the system's categorization, the controls it cannot observe) before you submit the SSP",

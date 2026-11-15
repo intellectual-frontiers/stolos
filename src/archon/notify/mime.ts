@@ -69,25 +69,20 @@ export function escapeHtml(s: string): string {
 }
 
 /**
- * The whole message as RFC 5322 text with CRLF line ends: headers, a
- * multipart/alternative body (plain text and HTML, base64), then each
- * attachment. `boundarySeed` names the MIME boundaries (random by default;
- * fixed in tests). Date and Message-ID are set here.
+ * The body as one MIME entity (CRLF line ends): its Content-Type header, a
+ * blank line, then a multipart/mixed body (plain text and HTML as
+ * multipart/alternative, base64), then each attachment. buildMime puts the
+ * message headers in front; spec 092 encrypts it whole (S/MIME).
  */
-export function buildMime(m: Mail, boundarySeed = crypto.randomUUID()): string {
+export function mimeEntity(
+  m: Pick<Mail, "text" | "html" | "attachments">,
+  boundarySeed: string = crypto.randomUUID(),
+): string {
   const mixed = `archon-mixed-${boundarySeed}`;
   const alt = `archon-alt-${boundarySeed}`;
-  const head = [
-    `From: ${m.fromName ? `${displayName(m.fromName)} <${m.from}>` : m.from}`,
-    `To: ${m.to}`,
-    `Subject: ${headerValue(m.subject)}`,
-    `Date: ${new Date().toUTCString().replace("GMT", "+0000")}`,
-    `Message-ID: <${crypto.randomUUID()}@archon>`,
-    "MIME-Version: 1.0",
-    ...Object.entries(m.headers ?? {}).map(([k, v]) => `${k}: ${headerValue(v)}`),
-    `Content-Type: multipart/mixed; boundary="${mixed}"`,
-  ];
   const parts = [
+    `Content-Type: multipart/mixed; boundary="${mixed}"`,
+    "",
     `--${mixed}`,
     `Content-Type: multipart/alternative; boundary="${alt}"`,
     "",
@@ -115,5 +110,24 @@ export function buildMime(m: Mail, boundarySeed = crypto.randomUUID()): string {
     );
   }
   parts.push(`--${mixed}--`, "");
-  return [...head, "", ...parts].join("\r\n");
+  return parts.join("\r\n");
+}
+
+/**
+ * The whole message as RFC 5322 text with CRLF line ends: headers, a
+ * multipart/alternative body (plain text and HTML, base64), then each
+ * attachment. `boundarySeed` names the MIME boundaries (random by default;
+ * fixed in tests). Date and Message-ID are set here.
+ */
+export function buildMime(m: Mail, boundarySeed = crypto.randomUUID()): string {
+  const head = [
+    `From: ${m.fromName ? `${displayName(m.fromName)} <${m.from}>` : m.from}`,
+    `To: ${m.to}`,
+    `Subject: ${headerValue(m.subject)}`,
+    `Date: ${new Date().toUTCString().replace("GMT", "+0000")}`,
+    `Message-ID: <${crypto.randomUUID()}@archon>`,
+    "MIME-Version: 1.0",
+    ...Object.entries(m.headers ?? {}).map(([k, v]) => `${k}: ${headerValue(v)}`),
+  ];
+  return [...head, mimeEntity(m, boundarySeed)].join("\r\n");
 }

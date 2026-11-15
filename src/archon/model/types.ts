@@ -211,8 +211,13 @@ export interface FleetDef {
    * and the others only link to its people. Default: bamboohr, rippling,
    * gusto, deel, justworks, okta, jumpcloud, microsoft, google (HR systems,
    * then identity providers).
+   *
+   * `exports` (spec 092): export jobs, each for some of the estate's tenants,
+   * delivered to the fleet's OpenTelemetry collector, else to a file on this
+   * PC, and emailed (send-only, S/MIME) to its own recipients, on its own
+   * schedule. See ExportJobDef.
    */
-  estate?: { personSources?: string[] };
+  estate?: { personSources?: string[]; exports?: ExportJobDef[] };
   /** Local observability limits for every host and workstation (spec 021). */
   observability?: Partial<ObservabilityDef>;
   /**
@@ -264,6 +269,101 @@ export interface FleetDef {
    * app runs as its account and reaches PostgreSQL as the role of that name.
    */
   services?: ServiceDef[];
+}
+
+/** The kinds of export document (spec 092). */
+export type ExportKind = "oscal" | "ocsf" | "otlp" | "cyclonedx" | "in-toto";
+
+/**
+ * One export job (spec 092): which documents, for which tenants, to whom, and
+ * when. Delivery: to the fleet's OpenTelemetry collector (OTLP/HTTP,
+ * `telemetry.collector`) when one is configured, otherwise to a file in this
+ * PC's state directory; with `email`, the files are also mailed, encrypted to
+ * each recipient's certificate. Nothing secret is in a job: the sending
+ * credential stays in this PC's secrets folder.
+ *
+ * @example An auditor's monthly OSCAL, and a cloud tenant's daily inventory
+ * ```ts
+ * import type { ExportJobDef } from "@stolos/archon/model/types.ts";
+ *
+ * export const exports: ExportJobDef[] = [
+ *   {
+ *     id: "auditor",
+ *     kinds: ["oscal"],
+ *     tenants: ["fleet:lab"],
+ *     email: {
+ *       to: [{ address: "auditor@example.com", certificate: "certs/auditor.pem" }],
+ *     },
+ *     schedule: { every: "monthly", at: "06:10", dayOfMonth: 1 },
+ *   },
+ *   { id: "aws-inventory", kinds: ["cyclonedx"], tenants: ["aws:*"], schedule: { every: "daily" } },
+ * ];
+ * ```
+ */
+export interface ExportJobDef {
+  /** Its id, a DNS label: names the scheduled job and its folder (`stolos export run <id>`). */
+  id: string;
+  /** What it is for, in one line. */
+  title?: string;
+  /** The documents to export. */
+  kinds: ExportKind[];
+  /**
+   * The tenants it covers, by uid (`<connector>:<account>`, as in the estate
+   * graph: `fleet:<fleet>`, `aws:123456789012`); a trailing `*` matches a
+   * prefix (`aws:*`). Default: every tenant.
+   */
+  tenants?: string[];
+  /** Send to the fleet's OpenTelemetry collector when one is configured (default true). */
+  otlp?: boolean;
+  /** Also email the files (send-only, each copy encrypted to its recipient). */
+  email?: ExportEmailDef;
+  /** When it runs by itself (`stolos export schedule <id>` creates the OS's own job). */
+  schedule?: ExportScheduleDef;
+}
+
+/** Where a job's files are emailed, and how they are sent (spec 092). */
+export interface ExportEmailDef {
+  /** The recipients; each gets their own copy, encrypted to their certificate only. */
+  to: ExportRecipientDef[];
+  /**
+   * The sender: a whole address, or a local part on `fleet.mail.domain`.
+   * Default: `exports+<pc>.<tag>@<fleet.mail.domain>`.
+   */
+  from?: string;
+  /** host:port of the SMTP relay (default `fleet.mail.relay`, else Cloudflare's, port 465). */
+  relay?: string;
+  /**
+   * A separate send-only credential on this PC, by name (`stolos export
+   * credential <name>`), for a tenant that sends through its own account.
+   * Default: the fleet's (`stolos boot mail-setup`).
+   */
+  credential?: string;
+  /** The subject (it is not encrypted, so keep it plain). Default: "[Stolos] <fleet> export <id>". */
+  subject?: string;
+}
+
+/** One recipient of emailed exports and their public certificate (spec 092). */
+export interface ExportRecipientDef {
+  /** Their email address. */
+  address: string;
+  /**
+   * Their S/MIME certificate (X.509, RSA, PEM): a path relative to the fleet's
+   * folder (`fleets/<id>/certs/auditor.pem`), or the PEM text itself. It is
+   * public; the private key never leaves the recipient.
+   */
+  certificate: string;
+}
+
+/** When an export job runs (spec 092), in the PC's local time. */
+export interface ExportScheduleDef {
+  /** How often. */
+  every: "hourly" | "daily" | "weekly" | "monthly";
+  /** HH:MM, 24-hour, local time (hourly uses only the minute). Default "02:17". */
+  at?: string;
+  /** For weekly: the day (default "mon"). */
+  weekday?: "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
+  /** For monthly: the day of the month, 1 to 28 (default 1). */
+  dayOfMonth?: number;
 }
 
 /** An app's own Linux account (spec 039). */
