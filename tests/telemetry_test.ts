@@ -58,6 +58,10 @@ Deno.test("049: a run exports its trace (continuing TRACEPARENT) and its metrics
       OTEL_EXPORTER_OTLP_PROTOCOL: "http/json",
       OTEL_EXPORTER_OTLP_ENDPOINT: `http://127.0.0.1:${server.addr.port}`,
       OTEL_METRIC_EXPORT_INTERVAL: "100",
+      // Bound each export, so a busy CI runner's slow sink cannot hold the run open at exit.
+      OTEL_EXPORTER_OTLP_TIMEOUT: "2000",
+      OTEL_BSP_EXPORT_TIMEOUT: "2000",
+      OTEL_METRIC_EXPORT_TIMEOUT: "2000",
       OTEL_RESOURCE_ATTRIBUTES: "service.namespace=lab",
       TRACEPARENT: `00-${traceId}-${parent}-01`,
       // The exporter honors proxy settings: the local sink is reached directly.
