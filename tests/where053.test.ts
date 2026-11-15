@@ -10,6 +10,8 @@ import {
   proves,
 } from "@intellectual-frontiers/ifc-ts/runtime/test";
 import { nextCommand, type WhereFacts, whereSteps } from "../src/archon/guide/where.ts";
+import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { ENGINE_ROOT, fingerprint, linkEngine, sandbox } from "./sandbox.ts";
 
 const ready: WhereFacts = {
   fleets: ["fcr"],
@@ -81,5 +83,87 @@ proves(
       "host add <name> --claim",
     );
     assertStringIncludes(nextCommand(whereSteps({ ...ready, unpushed: 2 })), "stolos apply");
+  },
+);
+
+/** The example lab as a fresh fleet repository in a sandbox: no signers yet, not committed. */
+async function freshFleet() {
+  const sb = await sandbox("archon-where-test-");
+  const repo = path.join(sb.home, "fleet");
+  await fs.mkdir(path.join(repo, "fleets"), { recursive: true });
+  await proc.output([
+    "cp",
+    "-r",
+    path.join(ENGINE_ROOT, "examples/fleets/lab"),
+    `${repo}/fleets/lab`,
+  ]);
+  await linkEngine(repo);
+  await fs.remove(path.join(repo, "fleets", "lab", "signers.ts"));
+  await fs.writeTextFile(path.join(repo, ".gitignore"), "node_modules/\nout/\n");
+  await proc.output(["git", "init", "-q", "-b", "main", repo]);
+  const env = { ARCHON_REPO: repo, ARCHON_FLEET: "lab", GIT_CONFIG_NOSYSTEM: "1" };
+  const stolos = (...args: string[]) => sb.run("src/stolos/main.ts", args, "", env);
+  return { sb, repo, stolos };
+}
+
+proves(
+  ["053-where-am-i FR-002"],
+  "053: each step is computed from the real state every time; nothing about progress is stored",
+  async () => {
+    const f = await freshFleet();
+    try {
+      const where = async () => {
+        const r = await f.stolos("--json");
+        assertEquals(r.code, 0, r.out);
+        return JSON.parse(r.out.slice(r.out.indexOf("{"))) as {
+          facts: { signers: { daily: number }; adminHash: boolean; dirty: boolean };
+          next: string;
+        };
+      };
+      // Everything this PC keeps, before: where am I writes none of it.
+      const kept = [
+        path.join(f.sb.home, "config"),
+        path.join(f.sb.home, "data", "stolos", "state"),
+      ];
+      const before = await fingerprint(kept);
+      let w = await where();
+      assertEquals(w.facts.signers.daily, 0);
+      assertEquals(await fingerprint(kept), before, "nothing stored");
+      // The state changes by other means (signers.ts, the secret store, Git): the answer follows.
+      const key = path.join(f.sb.home, "k");
+      await proc.output(["ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-f", key]);
+      assertEquals(
+        (await f.stolos("signers", "add", "pc", "--role", "daily", "--key", `${key}.pub`)).code,
+        0,
+      );
+      const secrets = path.join(f.sb.home, "config", "stolos", "secrets", "lab");
+      await fs.mkdir(secrets, { recursive: true });
+      await fs.writeTextFile(path.join(secrets, "admin-password.hash"), "$6$x$y\n");
+      w = await where();
+      assertEquals(w.facts.signers.daily, 1);
+      assertEquals(w.facts.adminHash, true);
+      assertEquals(w.facts.dirty, true, "Git: uncommitted changes");
+    } finally {
+      await fs.remove(f.sb.home, { recursive: true });
+    }
+  },
+);
+
+proves(
+  ["053-where-am-i FR-005"],
+  "053: host add warns, with its code, when the fleet has no daily signer",
+  async () => {
+    const f = await freshFleet();
+    try {
+      const r = await f.stolos("host", "add", "gamma", "--claim", "--no-deploy-key", "--no-push");
+      assertStringIncludes(
+        r.out,
+        "the fleet has no daily signer: gamma will install, but refuse every change after",
+      );
+      assertStringIncludes(r.out, "E047-NO-SIGNERS");
+      assertStringIncludes(r.out, "stolos signers add");
+    } finally {
+      await fs.remove(f.sb.home, { recursive: true });
+    }
   },
 );

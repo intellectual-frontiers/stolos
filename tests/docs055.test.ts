@@ -230,3 +230,20 @@ proves(
     );
   },
 );
+
+proves(
+  ["055-documentation FR-006"],
+  "055: a fleet repository's documentation stays local: nothing it is given publishes it",
+  async () => {
+    const { scaffoldFiles } = await import("../src/archon/fleet/scaffold.ts");
+    const files = scaffoldFiles("v1.2.3");
+    for (const [name, text] of Object.entries(files)) {
+      assert(
+        !/gh-pages|pages: write|deploy-pages|upload-pages-artifact/.test(text),
+        `${name} publishes`,
+      );
+    }
+    const pkg = JSON.parse(files["package.json"] ?? "{}") as { scripts?: Record<string, string> };
+    assertEquals(Object.keys(pkg.scripts ?? {}).sort(), ["archon", "stolos"]);
+  },
+);

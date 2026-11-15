@@ -163,3 +163,37 @@ proves(["042-sql FR-009"], "042: the guide, the served page, and the man page", 
   const { sqlPage } = await import("../src/archon/render/man.ts");
   assertStringIncludes(sqlPage(), "archon\\-sql");
 });
+
+proves(
+  ["042-sql FR-008"],
+  "042: verify: osqueryd active and osqueryi answering; each tool's version command",
+  () => {
+    const ws = host({
+      name: "pc",
+      kind: "workstation",
+      user: "alice",
+      mac: undefined,
+      disk: undefined,
+    });
+    for (const [h, ids] of [
+      [host(), ["osquery", "duckdb", "jc", "sqlite3"]],
+      [ws, ["osquery", "duckdb", "jc", "sqlite3", "steampipe"]],
+    ] as const) {
+      const plan = resolvePlan(h, fleet());
+      const u = plan.units.find((x) => x.unitName === "osqueryd.service");
+      assertExists(u);
+      assertEquals(
+        u.verify,
+        `sh -c 'systemctl is-active --quiet osqueryd.service && osqueryi --json "SELECT 1 AS ok;" | grep -q ok'`,
+      );
+      // archon verify runs every planned tool's verify (src/archon/state/verify.ts): its version.
+      for (const id of ids) {
+        const t = plan.tools.find((x) => x.id === id);
+        assertExists(t, `${id} on ${h.name}`);
+        assertStringIncludes(t.verify, "version", id);
+        assertEquals(t.verify.split(" ").pop(), t.versionCommand.split(" ").pop(), id);
+      }
+    }
+    // On a real host, tests/e2e/lib.sh requires every one of these checks to pass (archon verify).
+  },
+);

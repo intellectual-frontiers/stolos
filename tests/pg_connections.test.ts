@@ -23,6 +23,7 @@ import {
   renderShow,
   splitPgpassLine,
 } from "../src/archon/pg/connections.ts";
+import { engineFile } from "../src/archon/core/assets.ts";
 
 /** The password planted in every fixture: it must appear in no output, anywhere. */
 const SECRET = "Pw-NEVER-shown-7f3a";
@@ -650,6 +651,28 @@ proves(
       );
     } finally {
       await fs.remove(dir, { recursive: true });
+    }
+  },
+);
+
+proves(
+  ["043-pg-connections FR-008"],
+  "043: docs/pg.md documents the connections and how to reach an instance",
+  () => {
+    const doc = engineFile("docs/pg.md");
+    assertStringIncludes(doc, "## Your connections, and how to reach an instance");
+    const section = doc.slice(doc.indexOf("## Your connections, and how to reach an instance"));
+    for (const s of [
+      "archon pg connections",
+      "archon pg show prime",
+      "--form url",
+      "--remote",
+      "archon pg test prime",
+      "~/.pgpass",
+      "~/.pg_service.conf",
+      "chmod 600 ~/.pgpass",
+    ]) {
+      assertStringIncludes(section, s);
     }
   },
 );

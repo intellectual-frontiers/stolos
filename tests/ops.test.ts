@@ -84,7 +84,7 @@ proves(
 );
 
 proves(
-  ["030-agent-layer FR-006"],
+  ["030-agent-layer FR-006", "046-engine-instance FR-009"],
   "030: workstations reach each server over SSH as ops, one MCP server each",
   async () => {
     const { host } = await import("./fixtures.ts");

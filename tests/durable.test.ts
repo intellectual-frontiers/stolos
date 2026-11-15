@@ -32,6 +32,9 @@ import { destroyRefusal, parseData } from "../src/archon-boot/reinstall.ts";
 import { COMMANDS } from "../src/archon/commands/registry.ts";
 import { parseArgs } from "../src/archon/core/registry-types.ts";
 import { handle, toolFor } from "../src/archon/mcp/server.ts";
+import { renderWelcome } from "../src/archon/web/welcome.ts";
+import { ENGINE_ROOT, sandbox } from "./sandbox.ts";
+import { path } from "@intellectual-frontiers/ifc-ts/runtime";
 
 const rec = (enabled: boolean, data?: DataClass): OptInRecord => ({
   enabled,
@@ -439,5 +442,60 @@ proves(
     );
     assertEquals(r.code, 2);
     assertStringIncludes(new TextDecoder().decode(r.stderr), "--confirm-destroy <host>");
+  },
+);
+
+proves(
+  ["044-durable FR-010"],
+  "044: homes are archived locally; the banner, the welcome page, and archon data say they are not kept",
+  async () => {
+    assert(backupPolicy(host()).paths.includes("/home"), "archived locally, as before");
+    const banner = resolvePlan(host(), fleet()).files.find(
+      (f) => f.path === "/etc/update-motd.d/72-archon-data",
+    )?.content;
+    assertStringIncludes(banner ?? "", "your home directory is not kept across a reinstall");
+    for (const data of [
+      { class: "ephemeral" as const, reasons: [] },
+      { class: "durable" as const, reasons: ["PostgreSQL"] },
+    ]) {
+      const html = renderWelcome({
+        host: "alpha",
+        title: "Test fleet",
+        os: "Ubuntu 26.04.1 LTS",
+        repo: { slug: "example/fleet", url: "https://github.com/example/fleet" },
+        data,
+        services: [],
+        unrouted: [],
+        guide: [],
+        guides: [],
+        admin: "alice",
+        generated: "2026-11-12 14:00 UTC",
+      });
+      assertStringIncludes(html, "your home directory is not kept across a reinstall");
+    }
+    // archon data, on the example lab, as text and as JSON.
+    const sb = await sandbox("archon-data-test-");
+    try {
+      const script = path.join(sb.home, "data.ts");
+      const mod = (rel: string) =>
+        JSON.stringify(new URL(`../src/archon/${rel}`, import.meta.url).href);
+      await fs.writeTextFile(
+        script,
+        `import { dataShow } from ${mod("optin/data.ts")};
+import { ui } from ${mod("core/ui.ts")};
+const json = process.argv.includes("--json");
+await dataShow("alpha", json);
+if (!json) ui.finish();
+`,
+      );
+      const env = { ARCHON_REPO: path.join(ENGINE_ROOT, "examples"), ARCHON_FLEET: "lab" };
+      const text = await sb.run(script, [], "", env);
+      assertStringIncludes(text.out, "Home directories are not kept across a reinstall");
+      const json = await sb.run(script, ["--json"], "", env);
+      const parsed: unknown = JSON.parse(json.out.slice(json.out.indexOf("{")));
+      assertEquals((parsed as { home?: unknown }).home, "ephemeral");
+    } finally {
+      await fs.remove(sb.home, { recursive: true });
+    }
   },
 );

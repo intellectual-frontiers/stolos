@@ -135,7 +135,13 @@ async function bootSandbox(): Promise<{
 const posix = proc.build.os !== "windows";
 
 proves(
-  ["062-bootstrap FR-002", "062-bootstrap FR-003", "062-bootstrap FR-004", "062-bootstrap FR-006"],
+  [
+    "062-bootstrap FR-002",
+    "062-bootstrap FR-003",
+    "062-bootstrap FR-004",
+    "062-bootstrap FR-006",
+    "059-stolos-and-archon FR-006",
+  ],
   "062: bootstrap.sh clones into ~/fleet, adds the shortcut once, and is safe to run again",
   async () => {
     const s = await bootSandbox();
@@ -214,6 +220,104 @@ proves(
     }
   },
   { skip: !posix && "bootstrap.sh is for Linux and macOS" },
+);
+
+proves(
+  ["062-bootstrap FR-005"],
+  "062: the same options on both systems: --repo, --in, --destroy-existing, --no-shortcut, --runtime, --dry-run, --help",
+  async () => {
+    // Each option, in both scripts' usage and parsing (the Windows one also takes -Repo, -DryRun:
+    // its parser drops the dashes and the case; CI runs it for real, tests/bootstrap/windows-check.ps1).
+    const ps1 = await fs.readTextFile(PS1);
+    const sh = await fs.readTextFile(SCRIPT);
+    for (const o of [
+      "repo",
+      "in",
+      "destroy-existing",
+      "no-shortcut",
+      "runtime",
+      "dry-run",
+      "help",
+    ]) {
+      assertStringIncludes(sh, `--${o}`, `bootstrap.sh: --${o}`);
+      assertStringIncludes(ps1, `'${o.replace(/-/g, "")}'`, `bootstrap.windows.ps1: --${o}`);
+    }
+    assertStringIncludes(ps1, "TrimStart('-').ToLower()");
+    if (!posix) return;
+    const s = await bootSandbox();
+    try {
+      let r = await s.boot("--help");
+      assertEquals(r.code, 0, r.out);
+      for (const o of ["--repo", "--in", "--destroy-existing", "--no-shortcut", "--runtime"]) {
+        assertStringIncludes(r.out, o);
+      }
+      assertStringIncludes(
+        r.out,
+        "--dry-run             say what each step would do; change nothing",
+      );
+      // --runtime node, and --in: says each step, changes nothing.
+      const there = path.join(s.home, "elsewhere");
+      r = await s.boot("--repo", s.src, "--in", there, "--runtime", "node", "--dry-run");
+      assertEquals(r.code, 0, r.out);
+      assertStringIncludes(r.out, `would run: git clone ${s.src} ${there}`);
+      assertStringIncludes(r.out, "[ok] Node");
+      assert(!(await exists(there)), "--dry-run changes nothing");
+      r = await s.boot("--repo", s.src, "--runtime=deno", "--dry-run");
+      assertEquals(r.code, 1, r.out);
+      assertStringIncludes(r.out, "deno is not bun or node");
+      r = await s.boot("--frobnicate");
+      assertEquals(r.code, 2, r.out);
+      assertStringIncludes(r.out, "unknown option: --frobnicate (see --help)");
+    } finally {
+      await fs.remove(s.home, { recursive: true });
+    }
+  },
+);
+
+proves(
+  ["062-bootstrap FR-008"],
+  "062: the README, the disaster recovery guide and RESTORE.txt give the one line first; $HOME/fleet, never C:\\fleet",
+  async () => {
+    const { restoreText } = await import("../src/archon/vault/zip.ts");
+    const { bootstrapOneLiner } = await import("../src/archon/fleet/bootstrap.ts");
+    const { engineFile } = await import("../src/archon/core/assets.ts");
+    // RESTORE.txt: the bootstrap line (both systems) is the first step, then $HOME\fleet.
+    const restore = restoreText(["lab"], "example/fleet");
+    const steps = restore.slice(restore.indexOf("On the new or rebuilt PC"));
+    assert(/^ 1-2\. Bootstrap/m.test(steps), steps);
+    const win = bootstrapOneLiner("windows", "example/fleet");
+    assertStringIncludes(steps, win);
+    assertStringIncludes(steps, bootstrapOneLiner("posix", "example/fleet"));
+    assert(steps.indexOf(win) < steps.indexOf("vault restore"), "the one line before the restore");
+    assertStringIncludes(restore, "cd $HOME\\fleet");
+    // The disaster recovery guide: its first step is the one line.
+    const dr = engineFile("docs/disaster-recovery.md");
+    const first = dr.indexOf("\n1. ");
+    assert(first > 0, "a numbered list");
+    assert(dr.indexOf("bootstrap.windows.ps1", first) - first < 400, dr.slice(first, first + 400));
+    assertStringIncludes(dr, "$HOME\\fleet");
+    // The README: the bootstrap section's one lines come before anything else is run.
+    const readme = await fs.readTextFile(
+      path.fromFileUrl(new URL("../README.md", import.meta.url)),
+    );
+    const boot = readme.indexOf("### Bootstrap your PC in one line");
+    assert(boot > 0);
+    const firstCode = readme.slice(boot).search(/`(& \(|bash <\(|bun |git |cd )/);
+    assert(readme.slice(boot + firstCode).startsWith("`& ([scriptblock]"), "the one line first");
+    assertStringIncludes(readme, "**`$HOME/fleet`**");
+    // Nowhere C:\fleet: not in the README, the engine's sources, or the scripts.
+    const bad: string[] = [];
+    const roots = ["src", "bin"].map((d) => path.fromFileUrl(new URL(`../${d}`, import.meta.url)));
+    for (const root of roots) {
+      for (const f of await fs.walkFiles(root)) {
+        // The generated assets carry the specs' own text, which names what it replaced.
+        if (f.endsWith("assets.auto.ts")) continue;
+        if (/C:\\\\?fleet\b/i.test(await fs.readTextFile(path.join(root, f)))) bad.push(f);
+      }
+    }
+    if (/C:\\\\?fleet\b/i.test(readme)) bad.push("README.md");
+    assertEquals(bad, []);
+  },
 );
 
 async function exists(p: string): Promise<boolean> {

@@ -100,3 +100,49 @@ proves(
     }
   },
 );
+
+proves(
+  ["058-operator-update FR-002"],
+  "058: on a machine, archon update is spec 015's: elevated and locked; the PC's is another command",
+  async () => {
+    const { COMMANDS, offeredOn } = await import("../src/archon/commands/registry.ts");
+    const { effectiveTier, parseArgs } = await import("../src/archon/core/registry-types.ts");
+    const machine = COMMANDS.filter((c) => c.name === "update" && offeredOn(c, "machine"));
+    const pc = COMMANDS.filter((c) => c.name === "update" && offeredOn(c, "pc"));
+    assertEquals([machine.length, pc.length], [1, 1]);
+    const [m] = machine;
+    assert(m !== undefined && m !== pc[0], "two commands, one each");
+    // Mutate: main elevates it through sudo, and as root takes the host lock (it is not unlocked).
+    assertEquals(effectiveTier(m, parseArgs(m, [])), "mutate");
+    assert(!m.unlocked, "locked: one host-changing run at a time");
+    assertEquals(effectiveTier(m, parseArgs(m, ["--check"])), "read", "--check changes nothing");
+    assertStringIncludes(m.description, "(spec 015)");
+    // It runs spec 015's update (pull, validate, apply, tools, verify).
+    const src = await fs.readTextFile(
+      path.fromFileUrl(new URL("../src/archon/commands/registry.ts", import.meta.url)),
+    );
+    const body = src.slice(src.indexOf('summary: "Bring this machine up to date'));
+    assertStringIncludes(body.slice(0, 1500), 'await import("../update/update.ts")');
+  },
+);
+
+proves(
+  ["058-operator-update FR-003"],
+  "058: the READMEs say bun run stolos update, never git pull",
+  async () => {
+    const root = path.fromFileUrl(new URL("../", import.meta.url));
+    const readmes = ["README.md", "home/README.md", "tests/e2e/README.md"];
+    for (const f of readmes) {
+      const t = await fs.readTextFile(path.join(root, f));
+      for (const line of t.split("\n")) {
+        if (/\bgit pull\b/.test(line)) {
+          assert(/instead of git pull/.test(line), `${f}: ${line}`);
+        }
+      }
+    }
+    assertStringIncludes(
+      await fs.readTextFile(path.join(root, "README.md")),
+      "bun run stolos update",
+    );
+  },
+);

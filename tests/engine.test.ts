@@ -82,7 +82,7 @@ proves(
 );
 
 proves(
-  ["046-engine-instance FR-007"],
+  ["046-engine-instance FR-003", "046-engine-instance FR-007"],
   "046: the version is semver, in TypeScript (package.json follows it), and the generated assets are fresh",
   async () => {
     assert(/^\d+\.\d+\.\d+$/.test(VERSION), VERSION);

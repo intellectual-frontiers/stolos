@@ -8,7 +8,7 @@
  */
 
 import { otel as kotel } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, path, serve } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path, proc, serve } from "@intellectual-frontiers/ifc-ts/runtime";
 import {
   assert,
   assertEquals,
@@ -90,7 +90,7 @@ proves(["049-telemetry FR-005"], "049: attributes pass the same redaction as mai
 });
 
 proves(
-  ["049-telemetry FR-002", "049-telemetry FR-010"],
+  ["049-telemetry FR-002", "049-telemetry FR-010", "096-bun-runtime FR-008"],
   "049: a run exports its trace (continuing TRACEPARENT), its metrics, and its phases and problems as events",
   async () => {
     const got: Array<{ path: string; body: string }> = [];
@@ -301,3 +301,135 @@ test("023: the boot server's daily files are kept 30 days, within the telemetry 
     await fs.remove(dir, { recursive: true });
   }
 });
+
+proves(
+  ["049-telemetry FR-003"],
+  "049: the launcher sets OTEL_RESOURCE_ATTRIBUTES from the fleet, the host, the engine's tag, and the commit",
+  async () => {
+    const { LAUNCHER } = await import("../src/archon/capabilities/cli.ts");
+    const dir = await fs.makeTempDir({ prefix: "archon-launcher-otel-" });
+    try {
+      // /etc/archon and /srv/archon as an installed host has them, in a test folder.
+      const etc = path.join(dir, "etc");
+      const srv = path.join(dir, "srv");
+      await fs.mkdir(etc, { recursive: true });
+      await fs.mkdir(srv, { recursive: true });
+      await fs.writeTextFile(path.join(etc, "fleet"), "lab\n");
+      await fs.writeTextFile(path.join(etc, "host"), "alpha\n");
+      const { packageJsonText } = await import("../src/archon/fleet/scaffold.ts");
+      await fs.writeTextFile(path.join(srv, "package.json"), packageJsonText("v1.2.3"));
+      const git = (...a: string[]) =>
+        proc.output(["git", "-C", srv, ...a], { stdout: "piped", stderr: "null" });
+      await git("init", "-q", "-b", "main");
+      await git("-c", "user.name=t", "-c", "user.email=t@example.invalid", "add", "-A");
+      await git(
+        "-c",
+        "user.name=t",
+        "-c",
+        "user.email=t@example.invalid",
+        "commit",
+        "-q",
+        "--no-gpg-sign",
+        "-m",
+        "x",
+      );
+      const head = new TextDecoder().decode((await git("rev-parse", "HEAD")).stdout).trim();
+      const bun = path.join(dir, "bun");
+      await fs.writeTextFile(bun, `#!/bin/sh\necho "$OTEL_RESOURCE_ATTRIBUTES"\n`);
+      await fs.chmod(bun, 0o755);
+      const script = path.join(dir, "archon");
+      await fs.writeTextFile(
+        script,
+        LAUNCHER.replaceAll("/etc/archon/", `${etc}/`)
+          .replaceAll("/srv/archon", srv)
+          .replaceAll("/usr/local/bin/bun", bun),
+      );
+      const r = await proc.output(["sh", script, "verify"], {
+        env: { OTEL_RESOURCE_ATTRIBUTES: "" },
+        stdout: "piped",
+      });
+      assertEquals(
+        new TextDecoder().decode(r.stdout).trim(),
+        `service.namespace=lab,host.name=alpha,service.version=v1.2.3,vcs.ref.head.revision=${head}`,
+      );
+    } finally {
+      await fs.remove(dir, { recursive: true });
+    }
+  },
+);
+
+proves(
+  ["049-telemetry FR-004"],
+  "049: the metrics, by group, and the query and remote spans; each is emitted by the engine",
+  async () => {
+    const groups = Object.fromEntries(
+      Object.entries(METRICS).map(([n, m]) => [n, m.group as string]),
+    );
+    assertEquals(groups, {
+      "archon.run.duration": "health",
+      "archon.run.problems": "health",
+      "archon.verify.checks": "health",
+      "archon.apply.changes": "health",
+      "archon.update.outcome": "security",
+      "archon.query.requests": "security",
+      "archon.mcp.calls": "security",
+      "archon.signers.trusted": "security",
+      "archon.confirm_destroy.used": "security",
+      "archon.state.writes": "state",
+      "archon.engine.info": "state",
+    });
+    for (const s of ["archon.query", "archon.remote"]) assert(s in SPANS, s);
+    // Each is recorded somewhere in the engine (not only declared).
+    const root = path.fromFileUrl(new URL("../src/", import.meta.url));
+    let code = "";
+    for (const f of await fs.walkFiles(root)) {
+      if (!f.endsWith(".ts") || f.endsWith(".auto.ts") || f.endsWith("telemetry/signals.ts"))
+        continue;
+      code += await fs.readTextFile(path.join(root, f));
+    }
+    for (const name of [...Object.keys(METRICS), "archon.query", "archon.remote"]) {
+      assert(
+        new RegExp(`(count|measure|span)\\(\\s*"${name.replaceAll(".", "\\.")}"`).test(code),
+        `${name} is recorded`,
+      );
+    }
+  },
+);
+
+proves(
+  ["049-telemetry FR-007"],
+  "049: with no collector listening, a run is silent and its result unchanged",
+  async () => {
+    // A port that was just free: nothing listens there.
+    const closed = await serve({ port: 0 }, () => new Response(""));
+    const port = closed.addr.port;
+    await closed.shutdown();
+    const sb = await sandbox("archon-otel-none-");
+    try {
+      const nowhere = {
+        OTEL_EXPORTER_OTLP_ENDPOINT: `http://127.0.0.1:${port}`,
+        OTEL_EXPORTER_OTLP_PROTOCOL: "http/json",
+        OTEL_METRIC_EXPORT_INTERVAL: "100",
+        HTTP_PROXY: "",
+        HTTPS_PROXY: "",
+        NO_PROXY: "127.0.0.1,localhost",
+      };
+      const off = { OTEL_SDK_DISABLED: "true" };
+      // Without what differs from run to run: how long it took and its log's name.
+      const steady = (s: string) =>
+        s
+          .replace(/ in \d+(\.\d+)?m?s/g, "")
+          .replace(/log: \S+/g, "log")
+          .trim();
+      for (const args of [["validate"], ["keys"]]) {
+        const a = await sb.run("src/stolos/main.ts", args, "", nowhere);
+        const b = await sb.run("src/stolos/main.ts", args, "", off);
+        assertEquals(a.code, b.code, `${args.join(" ")}: the same result`);
+        assertEquals(steady(a.out), steady(b.out), `${args.join(" ")}: nothing more said`);
+        assert(!/ECONNREFUSED|otlp|export failed/i.test(a.out), a.out);
+      }
+    } finally {
+      await fs.remove(sb.home, { recursive: true });
+    }
+  },
+);

@@ -4,7 +4,8 @@
  *
  * @module
  */
-import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { ENGINE_ROOT, linkEngine, sandbox } from "./sandbox.ts";
 import {
   assert,
   assertEquals,
@@ -155,5 +156,76 @@ proves(
     );
     assertStringIncludes(ud, "/etc/archon/allowed_signers");
     assertStringIncludes(ud, 'alice-daily namespaces=\\"git\\" ssh-ed25519 AAAAA');
+  },
+);
+
+proves(
+  ["047-intent-and-identity FR-005"],
+  "047: signers lists and checks your setup; add and remove change signers.ts; trust is a person's, never MCP",
+  async () => {
+    const sb = await sandbox("archon-signers-test-");
+    try {
+      const repo = path.join(sb.home, "fleet");
+      await fs.mkdir(path.join(repo, "fleets"), { recursive: true });
+      await proc.output([
+        "cp",
+        "-r",
+        path.join(ENGINE_ROOT, "examples/fleets/lab"),
+        `${repo}/fleets/lab`,
+      ]);
+      await linkEngine(repo);
+      const file = path.join(repo, "fleets", "lab", "signers.ts");
+      await fs.remove(file);
+      const k = await key(sb.home, "pc-daily");
+      const env = { ARCHON_REPO: repo, ARCHON_FLEET: "lab", GIT_CONFIG_NOSYSTEM: "1" };
+      const stolos = (...args: string[]) => sb.run("src/stolos/main.ts", args, "", env);
+
+      let r = await stolos(
+        "signers",
+        "add",
+        "pc-daily",
+        "--role",
+        "daily",
+        "--key",
+        `${k.file}.pub`,
+      );
+      assertEquals(r.code, 0, r.out);
+      const { parseSignersSource } = await import("../src/archon/identity/keys.ts");
+      assertEquals(
+        parseSignersSource(await fs.readTextFile(file)).map((s) => [s.name, s.role, s.key]),
+        [["pc-daily", "daily", k.pub]],
+      );
+      r = await stolos("signers");
+      assertStringIncludes(r.out, "pc-daily");
+      assertStringIncludes(r.out, "1 signer(s) in fleets/lab/signers.ts");
+      assertStringIncludes(r.out, "no recovery signer");
+      assertStringIncludes(r.out, "Your signing setup", "the caller's own setup is checked");
+      r = await sb.run("src/stolos/main.ts", ["--json", "signers"], "", env);
+      assertStringIncludes(r.out, `"name": "pc-daily"`);
+      r = await stolos("signers", "remove", "pc-daily");
+      assertEquals(r.code, 0, r.out);
+      assertEquals(parseSignersSource(await fs.readTextFile(file)), []);
+    } finally {
+      await fs.remove(sb.home, { recursive: true });
+    }
+    const { COMMANDS } = await import("../src/archon/commands/registry.ts");
+    const by = (n: string) => COMMANDS.find((c) => c.name === n);
+    assertEquals(
+      ["signers", "signers add", "signers remove", "signers trust"].map((n) => by(n)?.tier),
+      ["read", "repo", "repo", "mutate"],
+    );
+    const trust = by("signers trust");
+    assert(trust?.noMcp === true, "never over MCP");
+    assert(
+      trust.args.find((a) => a.name === "key")?.human === true,
+      "the key is typed by a person",
+    );
+    // The local emergency list joins what the host trusts.
+    const text = allowedSignersText(
+      [signer("a", "ssh-ed25519 AAAA")],
+      'b namespaces="git" ssh-ed25519 BBBB\n',
+    );
+    assertStringIncludes(text, "ssh-ed25519 AAAA");
+    assertStringIncludes(text, 'b namespaces="git" ssh-ed25519 BBBB');
   },
 );

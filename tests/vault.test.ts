@@ -53,6 +53,8 @@ proves(
     "056-zip-backup FR-002",
     "056-zip-backup FR-003",
     "056-zip-backup FR-004",
+    "056-zip-backup FR-005",
+    "056-zip-backup FR-006",
   ],
   "vault: status, backup (one ZIP with the secrets and the signing key), status again",
   async () => {
@@ -119,11 +121,29 @@ proves(
       r = await s.archon(["vault", "list"]);
       assert(r.out.includes(zipName), r.out);
 
+      // Without a ZIP, vault restore prints the restore steps, as RESTORE.txt has them, and
+      // changes nothing.
+      const kept = [paths.join(s.home, "config"), dir];
+      const untouched = await fingerprint(kept);
+      r = await s.archon(["vault", "restore"]);
+      assertEquals(r.code, 0, r.out);
+      const steps = (t: string): string => t.slice(t.indexOf("On the new or rebuilt PC")).trim();
+      assert(steps(text("RESTORE.txt")).length > 200, "RESTORE.txt has the steps");
+      assert(r.out.includes(steps(text("RESTORE.txt"))), r.out);
+      assertEquals(
+        await fingerprint(kept),
+        untouched,
+        "vault restore without a ZIP changes nothing",
+      );
+
       // Moved somewhere safe: still counts (the record), and no longer listed.
       await fs.rename(paths.join(dir, zipName), paths.join(s.home, zipName));
       r = await s.archon(["vault", "status"]);
       assertEquals(r.code, 0, r.out);
       assert(!r.out.includes("still in"), r.out);
+      assert(r.out.includes(`Last backup: `) && r.out.includes(zipName), "the record still counts");
+      r = await s.archon(["vault", "list"]);
+      assert(!r.out.includes(zipName), r.out);
 
       // A changed secret is newer than the backup.
       await s.put("mail.json", '{"token":"t2"}\n');
@@ -508,6 +528,39 @@ proves(
 );
 
 proves(
+  ["056-zip-backup FR-007"],
+  "056: verify, rehearse, prune, and the Personal Vault detection are gone",
+  async () => {
+    const { COMMANDS } = await import("../src/archon/commands/registry.ts");
+    const vault = COMMANDS.filter((c) => c.name.startsWith("vault ")).map((c) => c.name);
+    for (const gone of ["vault verify", "vault rehearse", "vault prune"]) {
+      assert(!vault.includes(gone), `${gone} is removed`);
+    }
+    const backup = COMMANDS.find((c) => c.name === "vault backup");
+    assert(backup !== undefined);
+    assertEquals(
+      backup.args.map((a) => a.name),
+      [],
+      "no --to, no --wait: the ZIP goes to the backup folder",
+    );
+    const root = paths.fromFileUrl(new URL("../src/", import.meta.url));
+    for (const f of await fs.walkFiles(root)) {
+      if (!f.endsWith(".ts") || f.endsWith(".auto.ts")) continue;
+      const t = await fs.readTextFile(paths.join(root, f));
+      assert(!t.includes("ARCHON_VAULT_DIR"), `${f} reads ARCHON_VAULT_DIR`);
+      assert(!/rehears/i.test(t), `${f} still rehearses`);
+    }
+    const s = await vaultSandbox();
+    try {
+      const r = await s.archon(["vault", "rehearse"]);
+      assert(r.code !== 0, r.out);
+    } finally {
+      await fs.remove(s.home, { recursive: true });
+    }
+  },
+);
+
+proves(
   ["029-vault FR-015"],
   "sandbox: the real archon folders were not touched by any of these tests",
   async () => {
@@ -516,5 +569,55 @@ proves(
       before,
       "the vault tests changed the real secrets or ledger",
     );
+  },
+);
+
+proves(
+  ["061-vault-restore FR-002"],
+  "061: restore writes only into a repository with one of the backup's fleets, and chooses it",
+  async () => {
+    const s = await vaultSandbox();
+    try {
+      let r = await s.archon(["vault", "backup"]);
+      assertEquals(r.code, 0, r.out);
+      const dir = paths.join(s.home, "data", "stolos", "backup");
+      const zip = paths.join(s.home, "kept.zip");
+      await fs.rename(paths.join(dir, the(fs.readDirSync(dir)[0]).name), zip);
+      await fs.remove(paths.join(s.home, "config", "stolos", "secrets"), { recursive: true });
+
+      // A Git checkout holding the given fleets (each a fleets/<id>/fleet.ts).
+      const repoWith = async (name: string, fleets: string[]): Promise<string> => {
+        const repo = paths.join(s.home, name);
+        for (const f of fleets) {
+          await fs.mkdir(paths.join(repo, "fleets", f), { recursive: true });
+          await fs.writeTextFile(paths.join(repo, "fleets", f, "fleet.ts"), "export {};\n");
+        }
+        const g = await proc.run(["git", "init", "-q", repo]);
+        assertEquals(g.code, 0, g.stderr);
+        return repo;
+      };
+      const restore = (repo: string) =>
+        s.archon(["vault", "restore", zip, "--files-only"], "", { ARCHON_REPO: repo });
+
+      // The wrong repository: refused, nothing written.
+      const other = await repoWith("other", ["zeta"]);
+      r = await restore(other);
+      assertEquals(r.code, 1, r.out);
+      assert(r.out.includes("the backup is for lab; this repository has zeta"), r.out);
+      assert(!(await fs.exists(s.secrets)), "nothing written");
+
+      // Two fleets here, none chosen, exactly one in the backup: that one is chosen (fleet use).
+      const mine = await repoWith("mine", ["lab", "zeta"]);
+      r = await restore(mine);
+      assertEquals(r.code, 0, r.out);
+      assert(r.out.includes("lab (the backup holds lab)"), r.out);
+      assertEquals(
+        (await fs.readTextFile(paths.join(mine, ".git", "stolos", "fleet"))).trim(),
+        "lab",
+      );
+      assertEquals(await fs.readTextFile(paths.join(s.secrets, "mail.json")), '{"token":"t1"}\n');
+    } finally {
+      await fs.remove(s.home, { recursive: true });
+    }
   },
 );

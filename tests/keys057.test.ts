@@ -67,7 +67,8 @@ async function keysSandbox() {
   await git("commit", "-q", "--no-gpg-sign", "-m", "demo: the fleet");
   const archon = (args: string[], stdin = "", extra: Record<string, string> = {}) =>
     sb.run("src/stolos/main.ts", args, stdin, { ...env, ...extra });
-  return { home, repo, git, archon, daily: path.join(home, ".ssh", "fleet-signing") };
+  const script = (file: string) => sb.run(file, [], "", env);
+  return { home, repo, git, archon, script, daily: path.join(home, ".ssh", "fleet-signing") };
 }
 
 const mtime = (p: string) => fs.statSync(p).mtime?.getTime();
@@ -381,7 +382,7 @@ proves(
 );
 
 proves(
-  ["063-runnable-before-arm FR-001"],
+  ["063-runnable-before-arm FR-001", "063-runnable-before-arm FR-002"],
   "063: boot arm refuses until GitHub's tip is signed by a fleet signer and holds the host",
   async () => {
     const s = await keysSandbox();
@@ -426,6 +427,24 @@ proves(
       r = await s.archon(["boot", "arm", "beta", "--claim"]);
       assertEquals(r.code, 0, r.out);
       assertStringIncludes(r.out, "beta is armed for one install");
+
+      // Spec 063 FR-002: boot serve makes the same check for every armed host at start, as a
+      // warning. Here GitHub's tip is unsigned again. The Ubuntu files' cache that comes next is a
+      // file, not a folder, so the server stops right after its Fleet phase, downloading nothing.
+      await fs.writeTextFile(path.join(s.repo, "README.md"), "edited elsewhere again\n");
+      await s.git("add", "-A");
+      await s.git("commit", "-q", "--no-gpg-sign", "-m", "another unsigned edit");
+      await s.git("push", "-q", "--no-verify", "origin", "main");
+      const { UBUNTU_POINT } = await import("../src/archon/install/ubuntu.ts");
+      const cache = path.join(s.home, "data", "stolos", "boot");
+      await fs.mkdir(cache, { recursive: true });
+      await fs.writeTextFile(path.join(cache, UBUNTU_POINT), "not a folder\n");
+      r = await s.archon(["boot", "serve", "--port", "0"]);
+      assertEquals(r.code === 0, false, r.out);
+      assert(!r.out.includes("[ok] Ubuntu files"), r.out);
+      assertStringIncludes(r.out, "[warn] GitHub's main (");
+      assertStringIncludes(r.out, "a server installed now would refuse to run it");
+      assertStringIncludes(r.out, "[warn] Fleet            example/fleet · alpha, beta (armed)");
     } finally {
       await fs.remove(s.home, { recursive: true });
     }
@@ -589,3 +608,132 @@ proves(["057-keys FR-001"], "057: the checks, from facts (no files, no prompts)"
     "E057-HOOK:warn",
   ]);
 });
+
+proves(
+  ["057-keys FR-003", "057-keys FR-008"],
+  "057: check-recovery records the date; after six months keys, boot doctor, and a weekly email remind",
+  async () => {
+    const s = await keysSandbox();
+    try {
+      const ft = path.join(s.repo, "fleets", "demo", "fleet.ts");
+      await fs.writeTextFile(ft, (await fs.readTextFile(ft)).replace('id: "lab"', 'id: "demo"'));
+      assertEquals((await s.archon(["keys", "setup"])).code, 0);
+      const state = path.join(s.home, "data", "stolos", "keys", "state.json");
+      const recovery = path.join(s.home, "config", "stolos", "keys", "fleet-recovery");
+      // Last checked over six months ago: every place says so.
+      await fs.writeTextFile(state, JSON.stringify({ recoveryCheckedAt: "2025-01-01T00:00:00Z" }));
+      let r = await s.archon(["keys"]);
+      assertStringIncludes(r.out, "E057-RECOVERY-CHECK");
+      assertStringIncludes(r.out, "last checked on 2025-01-01 (over six months ago)");
+      assertStringIncludes(r.out, "bun run stolos keys check-recovery");
+      r = await s.archon(["boot", "doctor"]);
+      assertStringIncludes(r.out, "E057-RECOVERY-CHECK");
+      // FR-008: signers shows the same checks; the backup's restore steps use these commands.
+      r = await s.archon(["signers"]);
+      assertStringIncludes(r.out, "(bun run stolos explain E057-RECOVERY-CHECK)");
+      const { restoreText } = await import("../src/archon/vault/zip.ts");
+      assertStringIncludes(restoreText(), "bun run stolos keys setup");
+      // The weekly email, through the mailbox (a relay that does not answer keeps it in the spool).
+      const secrets = path.join(s.home, "config", "stolos", "secrets", "demo");
+      await fs.mkdir(secrets, { recursive: true });
+      await fs.writeTextFile(
+        path.join(secrets, "mail.json"),
+        JSON.stringify({ token: "cfat_test", created: "2026-11-01T00:00:00Z" }),
+      );
+      const src = (rel: string) => JSON.stringify(new URL(`../src/${rel}`, import.meta.url).href);
+      const script = path.join(s.home, "remind.ts");
+      await fs.writeTextFile(
+        script,
+        `import { sendDeps } from ${src("archon/notify/notify.ts")};
+import { remind } from ${src("archon/vault/reminder.ts")};
+sendDeps.smtp = () => Promise.reject(new Error("no relay in tests"));
+await remind();
+`,
+      );
+      const spool = path.join(s.home, "data", "stolos", "notify");
+      const reminders = async (): Promise<number> => {
+        let n = 0;
+        // The queued messages (status.json, beside them, names the last one sent).
+        for await (const e of fs.readDir(spool)) {
+          if (!/^\d+-[0-9a-f]+\.json$/.test(e.name)) continue;
+          const t = await fs.readTextFile(path.join(spool, e.name));
+          if (t.includes("check the fleet's recovery key")) n++;
+        }
+        return n;
+      };
+      assertEquals((await s.script(script)).code, 0);
+      assertEquals(await reminders(), 1, "one email");
+      assertEquals((await s.script(script)).code, 0);
+      assertEquals(await reminders(), 1, "not again within the week");
+      // Checked now: the date is recorded, and the reminders stop.
+      r = await s.archon(["keys", "check-recovery", "--key", recovery]);
+      assertEquals(r.code, 0, r.out);
+      const st: unknown = JSON.parse(await fs.readTextFile(state));
+      const at = (st as { recoveryCheckedAt?: string }).recoveryCheckedAt ?? "";
+      assertEquals(at.slice(0, 10), new Date().toISOString().slice(0, 10));
+      r = await s.archon(["keys"]);
+      assert(!r.out.includes("over six months ago"), r.out);
+      r = await s.archon(["boot", "doctor"]);
+      assert(!r.out.includes("E057-RECOVERY-CHECK"), r.out);
+      // Where am I: a check that stops signing is its next step, with that check's fix.
+      for (const ext of ["", ".pub"]) await fs.rename(s.daily + ext, `${s.daily}.away${ext}`);
+      r = await s.archon(["--json"]);
+      const where: unknown = JSON.parse(r.out.slice(r.out.indexOf("{")));
+      const problems = (where as { facts: { signingProblems: Array<{ fix: string }> } }).facts
+        .signingProblems;
+      assert(
+        problems.some((p) => p.fix.includes("bun run stolos keys setup")),
+        r.out,
+      );
+    } finally {
+      await fs.remove(s.home, { recursive: true });
+    }
+  },
+);
+
+proves(
+  ["057-keys FR-007"],
+  "057: passphrases go to OpenSSH only: never stored or printed, no ssh-agent, no keys command over MCP",
+  async () => {
+    const s = await keysSandbox();
+    try {
+      const r = await s.archon(["keys", "setup"]);
+      assertEquals(r.code, 0, r.out);
+      assert(!r.out.includes(PASS), "never printed");
+      // Nothing archon wrote holds it (the stand-in for a person typing it is the one file that does).
+      const askpass = path.join(s.home, "askpass.sh");
+      const hits: string[] = [];
+      for (const f of await fs.walkFiles(s.home)) {
+        const p = path.join(s.home, f);
+        if (p === askpass || f.includes("node_modules")) continue;
+        const bytes = await fs.readFile(p).catch(() => new Uint8Array());
+        if (new TextDecoder().decode(bytes).includes(PASS)) hits.push(f);
+      }
+      assertEquals(hits, [], "never stored");
+      // The keys are locked: OpenSSH refuses them without the passphrase.
+      const locked = await proc.output(["ssh-keygen", "-y", "-P", "", "-f", s.daily], {
+        stdout: "null",
+        stderr: "null",
+        stdin: "null",
+      });
+      assert(!locked.success, "the daily key needs its passphrase");
+    } finally {
+      await fs.remove(s.home, { recursive: true });
+    }
+    // Never loaded into an ssh-agent: the engine only lists the agent's keys (ssh-add -L).
+    const root = path.fromFileUrl(new URL("../src/", import.meta.url));
+    for (const f of await fs.walkFiles(root)) {
+      if (!f.endsWith(".ts") || f.endsWith(".auto.ts")) continue;
+      const t = await fs.readTextFile(path.join(root, f));
+      for (const m of t.matchAll(/\["ssh-add"((?:, "[^"]*")*)\]/g)) {
+        assertEquals(m[1], ', "-L"', `${f} runs ssh-add${m[1] ?? ""}`);
+      }
+    }
+    // No keys command is offered over MCP.
+    const { COMMANDS } = await import("../src/archon/commands/registry.ts");
+    const { listed } = await import("../src/archon/mcp/server.ts");
+    const keys = COMMANDS.filter((c) => c.name === "keys" || c.name.startsWith("keys "));
+    assert(keys.length >= 5, keys.map((c) => c.name).join(", "));
+    for (const c of keys) assert(!listed(c, "mutate"), `${c.name} is offered over MCP`);
+  },
+);

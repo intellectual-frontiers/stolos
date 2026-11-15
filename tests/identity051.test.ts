@@ -4,7 +4,9 @@
  * @module
  */
 import { array, json, object, string } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, proc, serve } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path, proc, serve } from "@intellectual-frontiers/ifc-ts/runtime";
+import { at, list } from "./fixtures.ts";
+import { ENGINE_ROOT, linkEngine, sandbox } from "./sandbox.ts";
 import {
   assert,
   assertEquals,
@@ -333,6 +335,128 @@ proves(
       assertEquals((await run(blank)).trim(), "");
     } finally {
       await fs.remove(dir, { recursive: true });
+    }
+  },
+);
+
+/** The example lab in a sandbox, and a script run there (the boot machine's view of it). */
+async function bootMachine() {
+  const sb = await sandbox("archon-identity051-");
+  const repo = path.join(sb.home, "fleet");
+  await fs.mkdir(path.join(repo, "fleets"), { recursive: true });
+  await proc.output([
+    "cp",
+    "-r",
+    path.join(ENGINE_ROOT, "examples/fleets/lab"),
+    `${repo}/fleets/lab`,
+  ]);
+  await linkEngine(repo);
+  const src = (rel: string) => JSON.stringify(new URL(`../src/${rel}`, import.meta.url).href);
+  const run = async (body: string) => {
+    const f = path.join(sb.home, `s${crypto.randomUUID().slice(0, 8)}.ts`);
+    await fs.writeTextFile(f, body);
+    return await sb.run(f, [], "", { ARCHON_REPO: repo, ARCHON_FLEET: "lab" });
+  };
+  const last = (out: string): unknown => JSON.parse(out.trim().split("\n").pop() ?? "null");
+  return { sb, repo, src, run, last };
+}
+
+proves(
+  ["051-machine-identity FR-003"],
+  "051: the MAC lives in registration.ts with its source; host.ts carries none (an old one is still read)",
+  async () => {
+    const { registrationSource } = await import("../src/archon/fleet/registration.ts");
+    const { hostSource } = await import("../src/archon/install/host-add.ts");
+    assertStringIncludes(
+      registrationSource({
+        sshHostKeys: [],
+        mac: "aa:bb:cc:dd:ee:01",
+        macSource: "operator",
+        added: "t",
+      }),
+      '  mac: "aa:bb:cc:dd:ee:01",\n  macSource: "operator",\n',
+    );
+    assert(
+      !/\bmac\b/.test(hostSource({ name: "gamma", disk: { match: "largest", layout: "lvm" } })),
+    );
+    const b = await bootMachine();
+    try {
+      // beta's host.ts still names a MAC, as before spec 051.
+      const beta = path.join(b.repo, "fleets", "lab", "hosts", "beta", "host.ts");
+      await fs.writeTextFile(
+        beta,
+        (await fs.readTextFile(beta)).replace(
+          '  name: "beta",',
+          '  name: "beta",\n  mac: "aa:bb:cc:dd:ee:02",',
+        ),
+      );
+      const r = await b.run(`import { loadHosts } from ${b.src("archon/model/load.ts")};
+import { loadRegistration, writeRegistration } from ${b.src("archon/fleet/registration.ts")};
+const reg = await loadRegistration("alpha");
+await writeRegistration("alpha", { ...reg, mac: "aa:bb:cc:dd:ee:01", macSource: "installed" });
+const hosts = await loadHosts();
+console.log(JSON.stringify(hosts.map((h) => [h.name, h.mac ?? null, h.registration?.macSource ?? null])));
+`);
+      assertEquals(r.code, 0, r.out);
+      assertEquals(b.last(r.out), [
+        ["alpha", "aa:bb:cc:dd:ee:01", "installed"],
+        ["beta", "aa:bb:cc:dd:ee:02", null],
+      ]);
+      assertStringIncludes(
+        await fs.readTextFile(
+          path.join(b.repo, "fleets", "lab", "hosts", "alpha", "registration.ts"),
+        ),
+        'macSource: "installed"',
+      );
+    } finally {
+      await fs.remove(b.sb.home, { recursive: true });
+    }
+  },
+);
+
+proves(
+  ["051-machine-identity FR-004"],
+  "051: an unknown machine boots while a host waits for another card: both named, the fix, nothing installs",
+  async () => {
+    const b = await bootMachine();
+    try {
+      const r = await b.run(`import { handler } from ${b.src("archon-boot/server.ts")};
+import { saveTokens, loadTokens } from ${b.src("archon/core/secrets.ts")};
+import { loadRegistration, writeRegistration } from ${b.src("archon/fleet/registration.ts")};
+await writeRegistration("alpha", { ...(await loadRegistration("alpha")), mac: "aa:bb:cc:dd:ee:01", macSource: "operator" });
+await saveTokens([{ host: "alpha", token: "tok", armed: new Date().toISOString() }]);
+const events = [];
+const h = handler({ files: {}, iso: "" }, { port: 8080, emit: (e) => events.push(e) });
+const res = await h(new Request("http://10.0.1.157:8080/boot/hosts/aa:bb:cc:dd:ee:99.cfg"), "10.0.1.99");
+console.log(JSON.stringify({ status: res.status, menu: await res.text(), events, tokens: await loadTokens() }));
+`);
+      assertEquals(r.code, 0, r.out);
+      const got = b.last(r.out);
+      const events = list(at(got, "events"));
+      const mismatch = events.find((e) => at(e, "name") === "boot.mismatch");
+      assert(mismatch !== undefined, JSON.stringify(events));
+      const message = String(at(mismatch, "message"));
+      assertStringIncludes(
+        message,
+        "unknown machine aa:bb:cc:dd:ee:99 network-booted while alpha waits for aa:bb:cc:dd:ee:01",
+      );
+      assertStringIncludes(
+        message,
+        "bun run stolos boot arm alpha --mac-address aa:bb:cc:dd:ee:99",
+      );
+      assertStringIncludes(message, "Nothing was installed");
+      assertEquals(at(mismatch, "attrs", "code"), "E051-MAC-MISMATCH");
+      // Nothing installs: the token is untouched (no card learned, never used), and the menu boots
+      // the machine's own disk by default.
+      assertEquals(at(got, "tokens", 0, "mac"), undefined);
+      assertEquals(at(got, "tokens", 0, "firstUse"), undefined);
+      assertEquals(at(got, "status"), 200);
+      const menu = String(at(got, "menu"));
+      assertStringIncludes(menu, "set default=0");
+      const first = menu.indexOf("menuentry");
+      assertStringIncludes(menu.slice(first, menu.indexOf("\n}", first)), "boot the local disk");
+    } finally {
+      await fs.remove(b.sb.home, { recursive: true });
     }
   },
 );
