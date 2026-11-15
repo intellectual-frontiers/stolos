@@ -40,7 +40,14 @@
 
 import type { Estate } from "../estate/graph.ts";
 import type { ExportJobDef, ExportKind, FleetDef } from "../model/types.ts";
-import { join } from "../core/path.ts";
+import type { ExportInput, ExportKind as ExportFormat } from "./exports.ts";
+import {
+  type cms,
+  type JsonObject,
+  otlp,
+  sha256 as kernelSha256,
+} from "@intellectual-frontiers/ifc-ts/kernel";
+import { fs, path } from "@intellectual-frontiers/ifc-ts/runtime";
 import { type Attachment, escapeHtml, headerValue, mimeEntity } from "../notify/mime.ts";
 import { redact } from "../notify/redact.ts";
 import {
@@ -49,8 +56,7 @@ import {
   secretsOf,
   type SmtpOptions,
 } from "../notify/transport.ts";
-import { hex } from "./der.ts";
-import { type CmsRandom, smimeMessage } from "./smime.ts";
+import { smimeMessage } from "./smime.ts";
 import { jobSender, readRecipients, tenantFilter } from "./jobs.ts";
 
 /** One document to deliver: what the exporters produce (spec 092 part A's `buildExports`). */
@@ -108,30 +114,33 @@ export const oscalSource: ExportSource = async (ctx: ExportContext): Promise<Exp
  * when the fleet's tenant is in the job.
  */
 export function estateForTenants(e: Estate, ctx: ExportContext): Estate {
-  const allowed =
-    (e.db.prepare("SELECT tenant_uid FROM tenant").all() as Array<{ tenant_uid: string }>)
-      .map((r) => r.tenant_uid).filter((t) => ctx.tenant(t));
+  const allowed = (
+    e.db.prepare("SELECT tenant_uid FROM tenant").all() as Array<{ tenant_uid: string }>
+  )
+    .map((r) => r.tenant_uid)
+    .filter((t) => ctx.tenant(t));
   const keep = JSON.stringify(allowed);
   e.db.exec("PRAGMA foreign_keys = OFF");
-  e.db.prepare(
-    "DELETE FROM node_label WHERE node_uid IN (SELECT node_uid FROM node WHERE tenant_uid NOT IN (SELECT value FROM json_each(?)))",
-  ).run(keep);
-  e.db.prepare("DELETE FROM node WHERE tenant_uid NOT IN (SELECT value FROM json_each(?))").run(
-    keep,
-  );
-  e.db.prepare("DELETE FROM observation WHERE tenant_uid NOT IN (SELECT value FROM json_each(?))")
+  e.db
+    .prepare(
+      "DELETE FROM node_label WHERE node_uid IN (SELECT node_uid FROM node WHERE tenant_uid NOT IN (SELECT value FROM json_each(?)))",
+    )
+    .run(keep);
+  e.db
+    .prepare("DELETE FROM node WHERE tenant_uid NOT IN (SELECT value FROM json_each(?))")
+    .run(keep);
+  e.db
+    .prepare("DELETE FROM observation WHERE tenant_uid NOT IN (SELECT value FROM json_each(?))")
     .run(keep);
   if (!ctx.tenant(`fleet:${ctx.fleet.id}`)) {
-    for (
-      const t of [
-        "party_fixed_asset_assignment",
-        "fixed_asset",
-        "party_relationship",
-        "party_role",
-        "party_contact_mechanism",
-        "person",
-      ]
-    ) {
+    for (const t of [
+      "party_fixed_asset_assignment",
+      "fixed_asset",
+      "party_relationship",
+      "party_role",
+      "party_contact_mechanism",
+      "person",
+    ]) {
       e.db.exec(`DELETE FROM ${t}`);
     }
   }
@@ -139,13 +148,16 @@ export function estateForTenants(e: Estate, ctx: ExportContext): Estate {
 }
 
 /** What the standard formats are made from, for a job (spec 092 part A's `buildExports`). */
-async function exportInput(ctx: ExportContext, need: { estate?: boolean; bundle?: boolean }) {
+async function exportInput(
+  ctx: ExportContext,
+  need: { estate?: boolean; bundle?: boolean },
+): Promise<ExportInput> {
   const { pcFacts } = await import("../console/pc.ts");
   const { loadScf } = await import("../compliance/catalog.ts");
   const { complianceView, fleetEvidence } = await import("../compliance/report.ts");
   const f = await pcFacts();
   const catalog = await loadScf();
-  const input: import("./exports.ts").ExportInput = {
+  const input: ExportInput = {
     fleet: f.fleet,
     now: ctx.now,
     view: complianceView(fleetEvidence(f), catalog),
@@ -159,14 +171,14 @@ async function exportInput(ctx: ExportContext, need: { estate?: boolean; bundle?
     const { newestBundle } = await import("./commands.ts");
     const { bundleInfo } = await import("./intoto.ts");
     const file = await newestBundle();
-    if (file) input.bundle = await bundleInfo(file, await Deno.readFile(file));
+    if (file) input.bundle = await bundleInfo(file, await fs.readFile(file));
   }
   return input;
 }
 
 /** A source made from one of spec 092 part A's formats. */
 function formatSource(
-  format: import("./exports.ts").ExportKind,
+  format: ExportFormat,
   need: { estate?: boolean; bundle?: boolean; requireBundle?: boolean },
 ): ExportSource {
   return async (ctx) => {
@@ -219,11 +231,6 @@ export function deliveryPlan(fleet: FleetDef, job: ExportJobDef): DeliveryPlan {
 
 // ------------------------------------------------------------------ OTLP
 
-/** The SHA-256 of these bytes, hex. */
-export async function sha256(bytes: Uint8Array): Promise<string> {
-  return hex(new Uint8Array(await crypto.subtle.digest("SHA-256", new Uint8Array(bytes))));
-}
-
 /** Whether a media type is text (sent as a string body), else bytes. */
 export const isText = (mediaType: string): boolean =>
   /^text\/|[/+]json\b|[/+]xml\b|jsonl|ndjson/i.test(mediaType);
@@ -236,19 +243,16 @@ export function otlpSignal(doc: ExportDocument): string | undefined {
   if (!/json/i.test(doc.mediaType)) return undefined;
   if (!/otlp/i.test(doc.mediaType + doc.fileName)) return undefined;
   try {
-    const j = JSON.parse(new TextDecoder().decode(doc.bytes));
-    if (j?.resourceLogs) return "/v1/logs";
-    if (j?.resourceSpans) return "/v1/traces";
-    if (j?.resourceMetrics) return "/v1/metrics";
+    const j: unknown = JSON.parse(new TextDecoder().decode(doc.bytes));
+    if (typeof j !== "object" || j === null) return undefined;
+    if ("resourceLogs" in j) return "/v1/logs";
+    if ("resourceSpans" in j) return "/v1/traces";
+    if ("resourceMetrics" in j) return "/v1/metrics";
   } catch {
     // Not one JSON document (JSON Lines): wrapped as a log record like any other.
   }
   return undefined;
 }
-
-/** Attributes of an OTLP key-value list. */
-const attrs = (o: Record<string, string>) =>
-  Object.entries(o).map(([key, v]) => ({ key, value: { stringValue: v } }));
 
 /**
  * One OTLP/JSON logs request carrying these documents, one log record each:
@@ -258,35 +262,34 @@ const attrs = (o: Record<string, string>) =>
 export async function otlpLogs(
   docs: KindDocument[],
   meta: { fleet: string; job: string; now: Date },
-): Promise<unknown> {
-  const t = String(BigInt(meta.now.getTime()) * 1_000_000n);
+): Promise<JsonObject> {
+  const t = BigInt(meta.now.getTime()) * 1_000_000n;
   const records = [];
   for (const { kind, doc } of docs) {
-    const body = isText(doc.mediaType)
-      ? { stringValue: new TextDecoder().decode(doc.bytes) }
-      : { bytesValue: (await import("../notify/mime.ts")).base64(doc.bytes) };
     records.push({
-      timeUnixNano: t,
-      observedTimeUnixNano: t,
-      severityNumber: 9,
+      time: t,
+      observedTime: t,
+      severityNumber: 9 as const,
       severityText: "INFO",
       eventName: "stolos.export.document",
-      body,
-      attributes: attrs({
+      body: isText(doc.mediaType) ? new TextDecoder().decode(doc.bytes) : doc.bytes,
+      attributes: {
         "stolos.export.job": meta.job,
         "stolos.export.kind": kind,
         "stolos.export.file_name": doc.fileName,
         "stolos.export.media_type": doc.mediaType,
-        "stolos.export.sha256": await sha256(doc.bytes),
-      }),
+        "stolos.export.sha256": await kernelSha256(doc.bytes),
+      },
+      droppedAttributesCount: 0,
     });
   }
-  return {
-    resourceLogs: [{
-      resource: { attributes: attrs({ "service.name": "stolos", "stolos.fleet": meta.fleet }) },
-      scopeLogs: [{ scope: { name: "stolos.export" }, logRecords: records }],
-    }],
-  };
+  return otlp.encodeLogs([
+    {
+      resource: { attributes: { "service.name": "stolos", "stolos.fleet": meta.fleet } },
+      scope: { name: "stolos.export" },
+      records,
+    },
+  ]);
 }
 
 /**
@@ -322,20 +325,30 @@ export async function postOtlp(
 
 /** A file name safe in any folder: no separators, no leading dots. */
 export const safeName = (n: string): string =>
-  [...n].map((c) => c.charCodeAt(0) < 32 || '\\/:*?"<>|'.includes(c) ? "_" : c).join("")
+  [...n]
+    .map((c) => (c.charCodeAt(0) < 32 || '\\/:*?"<>|'.includes(c) ? "_" : c))
+    .join("")
     .replace(/^\.+/, "_") || "export";
 
 /** The folder for one run: `exports/<job>/<UTC time, colons as dashes>`. */
 export const runDir = (stateDir: string, job: string, now: Date): string =>
-  join(stateDir, "exports", job, now.toISOString().replace(/\.\d+Z$/, "Z").replace(/:/g, "-"));
+  path.join(
+    stateDir,
+    "exports",
+    job,
+    now
+      .toISOString()
+      .replace(/\.\d+Z$/, "Z")
+      .replace(/:/g, "-"),
+  );
 
 /** Write each document into `dir`; returns the paths. */
 export async function writeFiles(dir: string, docs: ExportDocument[]): Promise<string[]> {
-  await Deno.mkdir(dir, { recursive: true });
+  await fs.mkdir(dir, { recursive: true });
   const out: string[] = [];
   for (const d of docs) {
-    const p = join(dir, safeName(d.fileName));
-    await Deno.writeFile(p, d.bytes);
+    const p = path.join(dir, safeName(d.fileName));
+    await fs.writeFile(p, d.bytes);
     out.push(p);
   }
   return out;
@@ -357,9 +370,9 @@ export async function mailText(
     "Attached:",
   ];
   for (const d of docs) {
-    lines.push(`- ${d.fileName} (${d.mediaType}, ${d.bytes.length} bytes, SHA-256 ${await sha256(
-      d.bytes,
-    )})`);
+    lines.push(
+      `- ${d.fileName} (${d.mediaType}, ${d.bytes.length} bytes, SHA-256 ${await kernelSha256(d.bytes)})`,
+    );
   }
   lines.push(
     "",
@@ -400,8 +413,8 @@ export interface EmailDeps {
   ) => Promise<string>;
   /** Extra SMTP options (tests: their own CA, STARTTLS). */
   smtpExtra?: Pick<SmtpOptions, "cacert" | "tls">;
-  /** Fixed randomness (tests). */
-  random?: CmsRandom;
+  /** Fixed content key and nonce (tests). */
+  random?: cms.CmsKeys;
   /** Reads a certificate file. */
   readFile?: (path: string) => Promise<string>;
 }
@@ -435,8 +448,7 @@ export async function emailFiles(
       out.push({
         to: r.address,
         ok: false,
-        error:
-          `the files are ${size} bytes, too large to email (at most ${MAX_EMAIL_BYTES}); they are in the state directory`,
+        error: `the files are ${size} bytes, too large to email (at most ${MAX_EMAIL_BYTES}); they are in the state directory`,
       });
       continue;
     }
@@ -451,15 +463,19 @@ export async function emailFiles(
         },
         inner,
         [r.cert],
-        d.random,
+        ...(d.random ? [d.random] : []),
       );
-      await d.smtp(d.credential, {
-        relay,
-        ipv4: d.fleet.network?.ipv6 === false,
-        from,
-        to: r.address,
-        ...d.smtpExtra,
-      }, mime);
+      await d.smtp(
+        d.credential,
+        {
+          relay,
+          ipv4: d.fleet.network?.ipv6 === false,
+          from,
+          to: r.address,
+          ...d.smtpExtra,
+        },
+        mime,
+      );
       out.push({ to: r.address, ok: true });
     } catch (e) {
       out.push({ to: r.address, ok: false, error: redact((e as Error).message, secrets) });
@@ -555,8 +571,8 @@ export async function runJob(job: ExportJobDef, d: RunDeps): Promise<RunReport> 
       if (!cred) {
         problems.push(
           job.email?.credential
-            ? `no credential named ${job.email.credential} on this PC: deno task stolos export credential ${job.email.credential}`
-            : "no mail credential on this PC: deno task stolos boot mail-setup",
+            ? `no credential named ${job.email.credential} on this PC: bun run stolos export credential ${job.email.credential}`
+            : "no mail credential on this PC: bun run stolos boot mail-setup",
         );
       } else {
         report.email = await emailFiles(job, plain, { ...d, credential: cred });
@@ -565,8 +581,8 @@ export async function runJob(job: ExportJobDef, d: RunDeps): Promise<RunReport> 
     }
   }
   report.ok = !problems.length;
-  const dir = join(d.stateDir, "exports", job.id);
-  await Deno.mkdir(dir, { recursive: true });
-  await Deno.writeTextFile(join(dir, "last-run.json"), JSON.stringify(report, null, 2) + "\n");
+  const dir = path.join(d.stateDir, "exports", job.id);
+  await fs.mkdir(dir, { recursive: true });
+  await fs.writeTextFile(path.join(dir, "last-run.json"), JSON.stringify(report, null, 2) + "\n");
   return report;
 }

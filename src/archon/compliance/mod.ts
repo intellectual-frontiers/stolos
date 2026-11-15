@@ -8,12 +8,12 @@
  * (STRM). Stolos writes none of those mappings itself.
  *
  * ```bash
- * deno task stolos compliance catalog
- * deno task stolos compliance
- * deno task stolos compliance --framework hipaa
- * deno task stolos compliance export
- * deno task stolos compliance drift --since 2026-11-01
- * deno task stolos compliance impact
+ * bun run stolos compliance catalog
+ * bun run stolos compliance
+ * bun run stolos compliance --framework hipaa
+ * bun run stolos compliance export
+ * bun run stolos compliance drift --since 2026-11-01
+ * bun run stolos compliance impact
  * ```
  *
  * `compliance catalog` downloads, once per PC, the SCF workbook from the SCF Council's repository
@@ -54,13 +54,13 @@
  * FedRAMP 20x measures a cloud service by Key Security Indicators (KSI), not by a list of controls,
  * and publishes them as machine-readable rules: the Consolidated Rules for 2026, from FedRAMP's
  * own repository (`FedRAMP/rules`, vendored at a pinned commit with its SHA-256 in
- * `vendor/fedramp/`). `deno task fedramp` generates `src/archon/fedramp/rules.auto.ts` from them:
+ * `vendor/fedramp/`). `bun run fedramp` generates `src/archon/fedramp/rules.auto.ts` from them:
  * every KSI with the NIST SP 800-53 controls FedRAMP maps it to, which KSIs Class A must address
  * (`FRC-CLA-MFR`), and each class's cadences.
  *
  * ```sh
- * deno task stolos compliance fedramp --class A
- * deno task stolos compliance fedramp --class B --out sdr-class-b.json --overview https://trust.example.com/fedramp/cpo.json
+ * bun run stolos compliance fedramp --class A
+ * bun run stolos compliance fedramp --class B --out sdr-class-b.json --overview https://trust.example.com/fedramp/cpo.json
  * ```
  *
  * ```mermaid
@@ -92,8 +92,8 @@
  * to that recipient's own certificate, so an auditor's mail program opens it and nobody else can.
  *
  * ```sh
- * deno task stolos export run auditor        # now
- * deno task stolos export schedule auditor   # on its schedule, by this PC's own scheduler
+ * bun run stolos export run auditor        # now
+ * bun run stolos export schedule auditor   # on its schedule, by this PC's own scheduler
  * ```
  *
  * See the delivery module (`src/archon/export/deliver.ts`) and its commands
@@ -154,9 +154,9 @@
  *
  * ```sh
  * # Linux or macOS (crontab -e)
- * 10 7 * * * cd ~/fleet && deno task stolos compliance drift --notify
+ * 10 7 * * * cd ~/fleet && bun run stolos compliance drift --notify
  * # Windows (once, in a terminal)
- * schtasks /Create /SC DAILY /ST 07:10 /TN "Stolos\compliance-drift" /TR "cmd /c cd /d %USERPROFILE%\fleet && deno task stolos compliance drift --notify"
+ * schtasks /Create /SC DAILY /ST 07:10 /TN "Stolos\compliance-drift" /TR "cmd /c cd /d %USERPROFILE%\fleet && bun run stolos compliance drift --notify"
  * ```
  *
  * A change is mailed once an hour at most (the notify path's own deduplication).
@@ -168,8 +168,8 @@
  * every pull request to the fleet repository gets it as one comment:
  *
  * ```sh
- * deno task stolos compliance impact                                   # the working tree vs GitHub's main
- * deno task stolos compliance impact --base main --head my-branch --markdown
+ * bun run stolos compliance impact                                   # the working tree vs GitHub's main
+ * bun run stolos compliance impact --base main --head my-branch --markdown
  * ```
  *
  * It compares the fleet at a base commit with a head commit (or the working tree). Each side's
@@ -247,7 +247,7 @@
  * --markdown` for each fleet, and posts one comment (created once, then updated) when a control is
  * affected; its check fails when the gate blocks. It uses GitHub's own `GITHUB_TOKEN`, limited to
  * `contents: read` and `pull-requests: write` and given only to the step that comments, and two
- * actions, each pinned to a commit: `actions/checkout` and `denoland/setup-deno`. A pull request
+ * actions, each pinned to a commit: `actions/checkout` and `oven-sh/setup-bun`. A pull request
  * from a fork gets a read-only token: its check still runs, and the impact is in the run's summary.
  *
  * ## What it is, and is not

@@ -42,8 +42,10 @@
  * @module
  */
 
+import { sha256 as sha256Hex } from "@intellectual-frontiers/ifc-ts/kernel";
+import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "../core/exec.ts";
-import { commitSignature, forNamespace, sha256Hex, sshVerify } from "../evidence/bundle.ts";
+import { commitSignature, forNamespace, sshVerify } from "../evidence/bundle.ts";
 import type { SampleRecord } from "./sample.ts";
 
 /** What an entry is. */
@@ -96,11 +98,10 @@ export function entrySource(e: TrailEntry): string {
     ["re", e.re],
     ["sample", e.sample],
   ];
-  return `---\n${
-    head.filter(([, v]) => v !== undefined).map(([k, v]) => `${k}: ${JSON.stringify(v)}\n`).join(
-      "",
-    )
-  }---\n\n${e.body.trim()}\n`;
+  return `---\n${head
+    .filter(([, v]) => v !== undefined)
+    .map(([k, v]) => `${k}: ${JSON.stringify(v)}\n`)
+    .join("")}---\n\n${e.body.trim()}\n`;
 }
 
 /** An entry from its text; throws when it is not one. */
@@ -108,23 +109,26 @@ export function parseEntry(text: string): TrailEntry {
   const m = /^---\n([\s\S]*?)\n---\n\n?([\s\S]*)$/.exec(text.replace(/\r\n/g, "\n"));
   if (!m) throw new Error("not a trail entry (front matter between --- lines first)");
   const f: Record<string, unknown> = {};
-  for (const line of m[1].split("\n")) {
-    const kv = /^([a-zA-Z]+): (.*)$/.exec(line);
-    if (!kv) throw new Error(`front matter line "${line}" is not key: <JSON>`);
-    f[kv[1]] = JSON.parse(kv[2]);
+  const [, front = "", rest = ""] = m;
+  for (const line of front.split("\n")) {
+    const [, key, value] = /^([a-zA-Z]+): (.*)$/.exec(line) ?? [];
+    if (key === undefined || value === undefined) {
+      throw new Error(`front matter line "${line}" is not key: <JSON>`);
+    }
+    f[key] = JSON.parse(value);
   }
-  if (typeof f.seq !== "number" || !ENTRY_KINDS.includes(f.kind as EntryKind)) {
+  if (typeof f["seq"] !== "number" || !ENTRY_KINDS.includes(f["kind"] as EntryKind)) {
     throw new Error("an entry has a seq and a kind");
   }
   return {
-    seq: f.seq,
-    kind: f.kind as EntryKind,
-    at: String(f.at ?? ""),
-    by: String(f.by ?? ""),
-    ...(typeof f.control === "string" ? { control: f.control } : {}),
-    ...(typeof f.re === "number" ? { re: f.re } : {}),
-    ...(f.sample ? { sample: f.sample as SampleRecord } : {}),
-    body: m[2].trim(),
+    seq: f["seq"],
+    kind: f["kind"] as EntryKind,
+    at: typeof f["at"] === "string" ? f["at"] : "",
+    by: typeof f["by"] === "string" ? f["by"] : "",
+    ...(typeof f["control"] === "string" ? { control: f["control"] } : {}),
+    ...(typeof f["re"] === "number" ? { re: f["re"] } : {}),
+    ...(f["sample"] ? { sample: f["sample"] as SampleRecord } : {}),
+    body: rest.trim(),
   };
 }
 
@@ -139,8 +143,8 @@ export async function trailerLine(path: string, text: string): Promise<string> {
 /** Each file a commit message's trailers vouch for, and its SHA-256. */
 export function trailersOf(message: string): Map<string, string> {
   const out = new Map<string, string>();
-  for (const m of message.matchAll(/^Audit-Entry: (\S+) sha256:([0-9a-f]{64})$/gm)) {
-    out.set(m[1], m[2]);
+  for (const [, file, sum] of message.matchAll(/^Audit-Entry: (\S+) sha256:([0-9a-f]{64})$/gm)) {
+    if (file !== undefined && sum !== undefined) out.set(file, sum);
   }
   return out;
 }
@@ -166,7 +170,8 @@ export async function commitId(raw: Uint8Array): Promise<string> {
   all.set(head);
   all.set(raw, head.length);
   return [...new Uint8Array(await crypto.subtle.digest("SHA-1", all))]
-    .map((x) => x.toString(16).padStart(2, "0")).join("");
+    .map((x) => x.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 /**
@@ -215,15 +220,16 @@ export function gitCommitter(repo: string, interactive = true): Committer {
   return async (files, message) => {
     const paths = Object.keys(files);
     for (const [p, text] of Object.entries(files)) {
-      const abs = `${repo}/${p}`;
-      await Deno.mkdir(abs.slice(0, abs.lastIndexOf("/")), { recursive: true });
-      await Deno.writeTextFile(abs, text);
+      const abs = path.join(repo, p);
+      await fs.mkdir(path.dirname(abs), { recursive: true });
+      await fs.writeTextFile(abs, text);
     }
     const add = await run(["git", "-C", repo, "add", "--", ...paths]);
     if (!add.ok) throw new Error(`git add: ${add.stderr.trim()}`);
-    const trailers = await Promise.all(paths.map((p) => trailerLine(p, files[p])));
-    const r = await new Deno.Command("git", {
-      args: [
+    const trailers = await Promise.all(paths.map((p) => trailerLine(p, files[p] ?? "")));
+    const r = await proc.output(
+      [
+        "git",
         "-C",
         repo,
         "commit",
@@ -235,11 +241,13 @@ export function gitCommitter(repo: string, interactive = true): Committer {
         "--",
         ...paths,
       ],
-      stdin: interactive ? "inherit" : "null",
-      stdout: interactive ? "inherit" : "null",
-      stderr: interactive ? "inherit" : "piped",
-    }).output();
-    if (!r.success) {
+      {
+        stdin: interactive ? "inherit" : "null",
+        stdout: interactive ? "inherit" : "null",
+        stderr: interactive ? "inherit" : "piped",
+      },
+    );
+    if (r.code !== 0) {
       await run(["git", "-C", repo, "reset", "-q", "--", ...paths]);
       throw new Error(
         `the commit was not made (a wrong passphrase, no signing key, or it was cancelled)${

@@ -2,7 +2,7 @@
  * Spec 078: testing a control like code. {@link testControl} runs one
  * control over a fixture (rows, an estate made from a few records, or an
  * observation) and returns its results, exactly as Stolos would show them,
- * so a fleet's `*_test.ts` asserts on them with `deno task test`. Nothing is
+ * so a fleet's `*.test.ts` asserts on them with `bun test`. Nothing is
  * asked of a machine or an account.
  *
  * ```mermaid
@@ -38,6 +38,7 @@ import { buildGraph, type Estate, estateQuery } from "../estate/graph.ts";
 import type { Snapshot } from "../estate/snapshot.ts";
 import { queryRefusal } from "../state/query.ts";
 import type {
+  Control,
   EstateControl,
   EstateQuery,
   EstateRows,
@@ -79,11 +80,22 @@ export interface ObservationFixture<K extends ObservationKind> extends FixtureCo
   input: ObservationInputs[K];
 }
 
+/** What the implementation of {@link testControl} takes: any of the fixtures. */
+type AnyFixture = FixtureCommon & {
+  rows?: unknown;
+  estate?: Estate | Partial<Snapshot>;
+  machines?: Record<string, Row[] | string>;
+  input?: ObservationInputs[ObservationKind];
+};
+
 /** An estate graph built from a few records (sources, machines, links); the rest is empty. */
 export function fixtureEstate(s: Partial<Snapshot> = {}, now?: Date): Estate {
-  return buildGraph({ fleet: "fixture", sources: [], machines: [], links: {}, ...s }, {
-    ...(now ? { now } : {}),
-  });
+  return buildGraph(
+    { fleet: "fixture", sources: [], machines: [], links: {}, ...s },
+    {
+      ...(now ? { now } : {}),
+    },
+  );
 }
 
 const isEstate = (x: unknown): x is Estate =>
@@ -108,20 +120,15 @@ export function testControl<K extends ObservationKind>(
  * Run a control over a fixture, with accepted risks applied: what Stolos
  * would show (an empty list when the control does not apply).
  */
-export function testControl(
-  // deno-lint-ignore no-explicit-any
-  c: EstateControl<any> | OsqueryControl | ObservationControl<any>,
-  // deno-lint-ignore no-explicit-any
-  f: any,
-): PolicyResult[] {
+export function testControl(c: Control, f: AnyFixture): PolicyResult[] {
   const now: Date = f.now ?? new Date();
   const accepted: readonly Acceptance[] = f.accepted ?? [];
   const done = <R extends PolicyResult>(rs: R[]) => acceptRisks(accepted, rs, now.getTime());
   if (c.subject === "estate") {
     let r: SubjectResult | undefined;
     if (f.rows !== undefined) {
-      const rows = f.rows;
-      const v = c.assert(rows, { now });
+      // The overloads tie the rows to the control's query.
+      const v = c.assert(f.rows as EstateRows<EstateQuery>, { now });
       r = v ? runEstate({ ...c, assert: () => v }, () => [], now) : undefined;
     } else {
       const e = isEstate(f.estate) ? f.estate : fixtureEstate(f.estate ?? {}, now);
@@ -134,16 +141,20 @@ export function testControl(
     // The query must be one Stolos would send (stolos fleet query's rules).
     const why = queryRefusal(c.query);
     if (why) throw new Error(`control ${c.id}: the query is refused: ${why}`);
-    const machines: Record<string, Row[] | string> = f.machines ??
-      (f.rows ? { fixture: f.rows } : {});
-    return done(runOsquery(
-      c,
-      Object.entries(machines).map(([machine, x]) =>
-        typeof x === "string" ? { machine, error: x } : { machine, rows: x }
+    const rows = Array.isArray(f.rows) ? (f.rows as Row[]) : undefined;
+    const machines: Record<string, Row[] | string> = f.machines ?? (rows ? { fixture: rows } : {});
+    return done(
+      runOsquery(
+        c,
+        Object.entries(machines).map(([machine, x]) =>
+          typeof x === "string" ? { machine, error: x } : { machine, rows: x },
+        ),
+        now,
       ),
-      now,
-    ));
+    );
   }
-  const r = runObservation(c, f.input);
+  if (f.input === undefined) return [];
+  // The overloads tie the observation's kind to the control's.
+  const r = runObservation(c as ObservationControl<ObservationKind>, f.input);
   return done(r ? [r] : []);
 }

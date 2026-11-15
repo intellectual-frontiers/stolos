@@ -30,8 +30,8 @@
  * @module
  */
 
-import { unzipSync, zipSync } from "npm:fflate@0.8.2";
-import { sha256Hex } from "../evidence/bundle.ts";
+import { sha256 as sha256Hex, unzip, zipDeflated } from "@intellectual-frontiers/ifc-ts/kernel";
+import { toError } from "@intellectual-frontiers/ifc-ts/runtime";
 import {
   assemble,
   type AuditCase,
@@ -76,7 +76,7 @@ export function packageReadme(c: AuditCase): string {
   return `Audit package: ${e.title} (${e.id}), ${e.firm}, ${e.period.from} to ${e.period.to}
 
 Check it with Stolos (offline):
-  deno task stolos audit verify <this zip> [--signers <the fleet's allowed_signers>]
+  bun run stolos audit verify <this zip> [--signers <the fleet's allowed_signers>]
 
 Or by hand, in the unzipped folder:
   1. The evidence bundle: unzip bundle/*.zip and follow its README.txt (sha256sum, ssh-keygen).
@@ -120,8 +120,9 @@ export async function buildPackage(
   o: { now: Date; version: string },
 ): Promise<Uint8Array> {
   const files: Record<string, Uint8Array> = {};
-  const put = (path: string, text: string | Uint8Array) =>
+  const put = (path: string, text: string | Uint8Array): void => {
     files[path] = typeof text === "string" ? enc.encode(text) : text;
+  };
   const committed = (f: CommittedFile) => {
     put(`repo/${f.path}`, f.text);
     if (f.raw) put(`repo/${f.path}.commit`, f.raw);
@@ -133,7 +134,7 @@ export async function buildPackage(
   put("portal.html", staticPortal(c, o.now));
   put("README.txt", packageReadme(c));
   const bundle = c.bundle && c.engagement.bundle ? `bundle/${c.engagement.bundle.file}` : undefined;
-  if (bundle) put(bundle, c.bundle!.zip);
+  if (bundle && c.bundle) put(bundle, c.bundle.zip);
   const hashes: Record<string, string> = {};
   for (const [p, b] of Object.entries(files).sort(([a], [b]) => a.localeCompare(b))) {
     hashes[p] = await sha256Hex(b);
@@ -150,7 +151,7 @@ export async function buildPackage(
     files: hashes,
   };
   put("index.json", JSON.stringify(index, null, 2) + "\n");
-  return zipSync(files, { level: 6, mtime: new Date("1980-01-02T00:00:00Z") });
+  return zipDeflated(new Map(Object.entries(files)));
 }
 
 /** What checking a package found. */
@@ -168,16 +169,15 @@ export async function verifyPackage(
   zip: Uint8Array,
   o: { allowedSigners?: string } = {},
 ): Promise<PackageResult> {
-  let files: Record<string, Uint8Array>;
-  try {
-    files = unzipSync(zip);
-  } catch (e) {
-    return { ok: false, problems: [`not a ZIP: ${(e as Error).message}`] };
-  }
-  if (!files["index.json"]) return { ok: false, problems: ["no index.json"] };
+  const unzipped = await unzip(zip);
+  if (unzipped.kind === "err")
+    return { ok: false, problems: [`not a ZIP: ${unzipped.error.kind}`] };
+  const files: Record<string, Uint8Array> = Object.fromEntries(unzipped.value);
+  const indexBytes = files["index.json"];
+  if (!indexBytes) return { ok: false, problems: ["no index.json"] };
   let index: PackageIndex;
   try {
-    index = JSON.parse(dec.decode(files["index.json"])) as PackageIndex;
+    index = JSON.parse(dec.decode(indexBytes)) as PackageIndex;
   } catch {
     return { ok: false, problems: ["index.json is not JSON"] };
   }
@@ -186,8 +186,9 @@ export async function verifyPackage(
   }
   const problems: string[] = [];
   for (const [p, h] of Object.entries(index.files ?? {})) {
-    if (!files[p]) problems.push(`${p}: missing`);
-    else if ((await sha256Hex(files[p])) !== h) problems.push(`${p}: changed (its SHA-256)`);
+    const b = files[p];
+    if (!b) problems.push(`${p}: missing`);
+    else if ((await sha256Hex(b)) !== h) problems.push(`${p}: changed (its SHA-256)`);
   }
   for (const p of Object.keys(files)) {
     if (p !== "index.json" && !(p in (index.files ?? {}))) problems.push(`${p}: not in index.json`);
@@ -206,15 +207,15 @@ export async function verifyPackage(
     trail: (index.trail ?? []).map(file).filter((f): f is CommittedFile => !!f),
     ...(index.bundle && files[index.bundle] ? { bundle: files[index.bundle] } : {}),
     bundleMissing: "the package holds no evidence bundle",
-    allowedSigners: o.allowedSigners ??
-      (files["allowed_signers"] ? dec.decode(files["allowed_signers"]) : ""),
+    allowedSigners:
+      o.allowedSigners ?? (files["allowed_signers"] ? dec.decode(files["allowed_signers"]) : ""),
   };
   if ((index.trail ?? []).length !== parts.trail.length) problems.push("a trail entry is missing");
   let c: AuditCase;
   try {
     c = await assemble(parts);
   } catch (e) {
-    return { ok: false, problems: [...problems, (e as Error).message] };
+    return { ok: false, problems: [...problems, toError(e).message] };
   }
   problems.push(...caseProblems(c));
   // populations.json is a convenience: it must say what the bundle says.

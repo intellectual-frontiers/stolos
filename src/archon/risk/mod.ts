@@ -25,7 +25,7 @@
  * ## The register
  *
  * Each risk has an id, a title and description, its likelihood and impact on the qualitative scale
- * of NIST SP 800-30 Rev 1 (`very low`, `low`, `moderate`, `high`, `very high`; the level of risk is
+ * of NIST SP 800-30 Rev 1 (`very-low`, `low`, `moderate`, `high`, `very-high`; the level of risk is
  * that publication's Table I-2), an owner (a person's work email, on the roster), a treatment (the
  * standard risk responses of NIST SP 800-39 and ISO 31000: `accept`, `mitigate`, `transfer`,
  * `avoid`), the SCF controls it relates to (typed: a wrong id fails type checking), the accepted
@@ -33,7 +33,7 @@
  *
  * ```ts
  * // fleets/<fleet>/risks.ts
- * import { defineRisks } from "@stolos/archon/risk/mod.ts";
+ * import { defineRisks } from "@intellectual-frontiers/stolos/archon/risk/mod";
  *
  * export const risks = defineRisks([
  *   {
@@ -79,7 +79,7 @@
  *
  * ```ts
  * // fleets/<fleet>/vendors.ts
- * import { defineVendors } from "@stolos/archon/risk/mod.ts";
+ * import { defineVendors } from "@intellectual-frontiers/stolos/archon/risk/mod";
  *
  * export const vendors = defineVendors([
  *   { id: "okta", name: "Okta", criticality: "high", data: ["Personal", "Security"] },

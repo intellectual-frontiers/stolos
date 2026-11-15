@@ -77,8 +77,7 @@ export const risk: AnyTable = defineTable({
 export const poamItem: AnyTable = defineTable({
   name: "poam_item",
   terms: [{ from: "oscal", term: "poam_item" }],
-  doc:
-    "An accepted risk: a check that may fail, why, who said so, and until when (controls/accepted.ts, or an adopted machine's).",
+  doc: "An accepted risk: a check that may fail, why, who said so, and until when (controls/accepted.ts, or an adopted machine's).",
   columns: {
     poam_item_uid: {
       type: "text",
@@ -102,8 +101,7 @@ export const poamItem: AnyTable = defineTable({
 export const dataClassification: AnyTable = defineTable({
   name: "data_classification",
   terms: [{ from: "ocsf", term: "data_classification" }],
-  doc:
-    "A vendor's triage (fleets/<fleet>/vendors.ts): its FIPS 199 criticality and the OCSF data categories it holds.",
+  doc: "A vendor's triage (fleets/<fleet>/vendors.ts): its FIPS 199 criticality and the OCSF data categories it holds.",
   columns: {
     party_uid: { type: "text", doc: "The vendor (an organization party).", required: true },
     criticality: {

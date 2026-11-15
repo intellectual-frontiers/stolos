@@ -29,32 +29,26 @@
  * @module
  */
 
-import { NIST_MODERATE_PROFILE, NIST_SOURCES, OSCAL_VERSION, SCF_SOURCE } from "./catalog.ts";
+import { oscal, uuid } from "@intellectual-frontiers/ifc-ts/kernel";
+import { NIST_MODERATE_PROFILE, NIST_SOURCES, SCF_SOURCE } from "./catalog.ts";
 import type { ComplianceView, Coverage, Evidence } from "./report.ts";
 import type { Risk } from "../risk/register.ts";
 import type { OpenVulnerability } from "../connect/vulnerability.ts";
 
 /** Stolos's UUIDv5 namespace (a fixed random UUID). */
-const NAMESPACE = "6f1d0c52-7a39-4c1e-9d0b-3e5b8a2f4c71";
+const NAMESPACE = uuid.uuidOf("6f1d0c52-7a39-4c1e-9d0b-3e5b8a2f4c71") ?? uuid.NIL_UUID;
 
-/** A UUIDv5 (SHA-1, RFC 9562) of a name in Stolos's namespace. */
-export async function uuidFor(...name: string[]): Promise<string> {
-  const ns = Uint8Array.from(NAMESPACE.replace(/-/g, "").match(/../g)!.map((h) => parseInt(h, 16)));
-  const n = new TextEncoder().encode(name.join("\u0000"));
-  const buf = new Uint8Array(ns.length + n.length);
-  buf.set(ns);
-  buf.set(n, ns.length);
-  const h = new Uint8Array(await crypto.subtle.digest("SHA-1", buf)).slice(0, 16);
-  h[6] = (h[6] & 0x0f) | 0x50;
-  h[8] = (h[8] & 0x3f) | 0x80;
-  const x = [...h].map((b) => b.toString(16).padStart(2, "0")).join("");
-  return `${x.slice(0, 8)}-${x.slice(8, 12)}-${x.slice(12, 16)}-${x.slice(16, 20)}-${x.slice(20)}`;
+/** A UUIDv5 (SHA-1, RFC 9562; kernel `uuid.uuidV5`) of a name in Stolos's namespace, its parts joined by NUL. */
+export function uuidFor(...name: string[]): Promise<string> {
+  return uuid.uuidV5(NAMESPACE, name.join("\u0000"));
 }
 
 /** An SP 800-53 id as SCF writes it (SC-28(01)) in OSCAL's form (sc-28.1), or undefined. */
 export function oscal80053(id: string): string | undefined {
-  const m = id.trim().match(/^([A-Z]{2})-0*(\d+)(?:\(0*(\d+)\))?$/);
-  return m ? `${m[1].toLowerCase()}-${m[2]}${m[3] ? `.${m[3]}` : ""}` : undefined;
+  const m = /^([A-Z]{2})-0*(\d+)(?:\(0*(\d+)\))?$/.exec(id.trim());
+  if (!m) return undefined;
+  const [, family = "", n = "", enhancement] = m;
+  return `${family.toLowerCase()}-${n}${enhancement ? `.${enhancement}` : ""}`;
 }
 
 /** What the exports describe. */
@@ -90,10 +84,7 @@ export interface NistControl {
 }
 
 /** The SP 800-53 controls the fleet's SCF controls reach, through SCF's STRM. */
-export function nistControls(
-  view: ComplianceView,
-  titles?: Record<string, string>,
-): NistControl[] {
+export function nistControls(view: ComplianceView, titles?: Record<string, string>): NistControl[] {
   const by = new Map<string, string[]>();
   for (const c of view.controls) {
     for (const r of c.control.maps.nist80053) {
@@ -102,18 +93,22 @@ export function nistControls(
     }
   }
   const status = (ids: string[]): Coverage => {
-    const ss = ids.map((i) => view.controls.find((c) => c.control.id === i)!.status);
+    const ss = ids.map(
+      (i) => view.controls.find((c) => c.control.id === i)?.status ?? "no evidence",
+    );
     if (ss.every((s) => s === "no evidence")) return "no evidence";
     if (ss.some((s) => s === "fail")) return "fail";
     return ss.every((s) => s === "pass") ? "pass" : "partial";
   };
   const order = (id: string) => id.replace(/\d+/g, (d) => d.padStart(4, "0"));
-  return [...by].sort(([a], [b]) => order(a).localeCompare(order(b))).map(([id, scf]) => ({
-    id,
-    ...(titles?.[id] ? { title: titles[id] } : {}),
-    scf,
-    status: status(scf),
-  }));
+  return [...by]
+    .sort(([a], [b]) => order(a).localeCompare(order(b)))
+    .map(([id, scf]) => ({
+      id,
+      ...(titles?.[id] ? { title: titles[id] } : {}),
+      scf,
+      status: status(scf),
+    }));
 }
 
 const iso = (d: Date) => d.toISOString().replace(/\.\d+Z$/, "Z");
@@ -123,12 +118,14 @@ async function metadata(i: OscalInput, title: string) {
     title,
     "last-modified": iso(i.now),
     version: i.now.toISOString().slice(0, 10),
-    "oscal-version": OSCAL_VERSION,
-    parties: [{
-      uuid: await uuidFor(i.fleet.id, "party", "fleet"),
-      type: "organization",
-      name: i.fleet.title,
-    }],
+    "oscal-version": oscal.OSCAL_VERSION,
+    parties: [
+      {
+        uuid: await uuidFor(i.fleet.id, "party", "fleet"),
+        type: "organization",
+        name: i.fleet.title,
+      },
+    ],
     props: [{ name: "marking", value: "internal" }],
   };
 }
@@ -139,23 +136,26 @@ async function backMatter(i: OscalInput) {
       {
         uuid: await uuidFor("resource", "scf", SCF_SOURCE.version),
         title: `${SCF_SOURCE.title} ${SCF_SOURCE.version} (the mappings, STRM)`,
-        rlinks: [{
-          href: SCF_SOURCE.url,
-          hashes: [{ algorithm: "SHA-256", value: SCF_SOURCE.sha256 }],
-        }],
+        rlinks: [
+          {
+            href: SCF_SOURCE.url,
+            hashes: [{ algorithm: "SHA-256", value: SCF_SOURCE.sha256 }],
+          },
+        ],
       },
       {
         uuid: await uuidFor("resource", "nist80053"),
         title: NIST_SOURCES.nist80053.title,
-        rlinks: [{
-          href: NIST_SOURCES.nist80053.url,
-          hashes: [{ algorithm: "SHA-256", value: NIST_SOURCES.nist80053.sha256 }],
-        }],
+        rlinks: [
+          {
+            href: NIST_SOURCES.nist80053.url,
+            hashes: [{ algorithm: "SHA-256", value: NIST_SOURCES.nist80053.sha256 }],
+          },
+        ],
       },
       {
         uuid: await uuidFor(i.fleet.id, "resource", "repository"),
-        title:
-          `The fleet repository (${i.fleet.repo}): the model, the observations, and their history`,
+        title: `The fleet repository (${i.fleet.repo}): the model, the observations, and their history`,
         rlinks: [{ href: `https://github.com/${i.fleet.repo}` }],
       },
     ],
@@ -167,10 +167,12 @@ const scfProps = (ids: string[]) =>
 
 /** How Stolos meets an SP 800-53 control, in words: its SCF controls' "how". */
 function how(view: ComplianceView, n: NistControl): string {
-  return n.scf.map((id) => {
-    const c = view.controls.find((x) => x.control.id === id)!.control;
-    return `${id} (${c.name}): ${c.how}`;
-  }).join("\n\n");
+  return n.scf
+    .map((id) => {
+      const c = view.controls.find((x) => x.control.id === id)?.control;
+      return c ? `${id} (${c.name}): ${c.how}` : id;
+    })
+    .join("\n\n");
 }
 
 const SOURCE_TEXT: Record<Evidence["source"], string> = {
@@ -202,7 +204,7 @@ function evidenceComponent(e: Evidence): { key: string; title: string; descripti
     repository: "Signed changes (the fleet repository)",
     "control pack": "The fleet's control packs",
   };
-  return { key: e.source, title: titles[e.source], description: SOURCE_TEXT[e.source] };
+  return { key: e.source, title: titles[e.source] ?? e.source, description: SOURCE_TEXT[e.source] };
 }
 
 /**
@@ -224,39 +226,44 @@ export async function componentDefinition(i: OscalInput): Promise<unknown> {
   const impl = async (key: string, n: NistControl[], text: (n: NistControl) => string) => ({
     uuid: await uuidFor("component", key, "nist80053"),
     source: NIST_SOURCES.nist80053.url,
-    description:
-      `SP 800-53 Rev 5 controls reached through ${SCF_SOURCE.title} ${SCF_SOURCE.version} (STRM).`,
-    "implemented-requirements": await Promise.all(n.map(async (x) => ({
-      uuid: await uuidFor("component", key, "req", x.id),
-      "control-id": x.id,
-      description: text(x),
-      props: scfProps(x.scf),
-    }))),
+    description: `SP 800-53 Rev 5 controls reached through ${SCF_SOURCE.title} ${SCF_SOURCE.version} (STRM).`,
+    "implemented-requirements": await Promise.all(
+      n.map(async (x) => ({
+        uuid: await uuidFor("component", key, "req", x.id),
+        "control-id": x.id,
+        description: text(x),
+        props: scfProps(x.scf),
+      })),
+    ),
   });
   const sources = await Promise.all(
-    [...groups].sort(([a], [b]) => a.localeCompare(b)).map(async ([key, g]) => {
-      const cited = new Set(g.ev.flatMap((e) => e.scf));
-      const mine = ns.filter((n) => n.scf.some((x) => cited.has(x)));
-      return {
-        uuid: await uuidFor("component", key),
-        type: g.ev[0].source === "cloud" ? "service" : "software",
-        title: g.title,
-        description: g.description,
-        ...(mine.length
-          ? {
-            "control-implementations": [
-              await impl(key, mine, (n) =>
-                [
-                  ...new Set(
-                    g.ev.filter((e) => e.scf.some((x) => n.scf.includes(x))).map((e) => e.check),
+    [...groups]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(async ([key, g]) => {
+        const cited = new Set(g.ev.flatMap((e) => e.scf));
+        const mine = ns.filter((n) => n.scf.some((x) => cited.has(x)));
+        return {
+          uuid: await uuidFor("component", key),
+          type: g.ev[0]?.source === "cloud" ? "service" : "software",
+          title: g.title,
+          description: g.description,
+          ...(mine.length
+            ? {
+                "control-implementations": [
+                  await impl(key, mine, (n) =>
+                    [
+                      ...new Set(
+                        g.ev
+                          .filter((e) => e.scf.some((x) => n.scf.includes(x)))
+                          .map((e) => e.check),
+                      ),
+                    ].join("; "),
                   ),
-                ]
-                  .join("; ")),
-            ],
-          }
-          : {}),
-      };
-    }),
+                ],
+              }
+            : {}),
+        };
+      }),
   );
   return {
     "component-definition": {
@@ -297,22 +304,25 @@ export async function systemSecurityPlan(i: OscalInput): Promise<unknown> {
         "system-ids": [{ "identifier-type": "https://ietf.org/rfc/rfc4122", id: thisSystem }],
         "system-name": i.fleet.title,
         "system-name-short": i.fleet.id,
-        description:
-          `The ${i.fleet.title} fleet: its servers, workstations, devices, and SaaS and cloud accounts, as its repository (${i.fleet.repo}) declares and observes them.`,
+        description: `The ${i.fleet.title} fleet: its servers, workstations, devices, and SaaS and cloud accounts, as its repository (${i.fleet.repo}) declares and observes them.`,
         "security-sensitivity-level": "fips-199-moderate",
         "system-information": {
-          "information-types": [{
-            uuid: await uuidFor(i.fleet.id, "information-type", "fleet"),
-            title: "The organization's operational information",
-            description: "What the fleet stores and processes; set its categorization here.",
-            categorizations: [{
-              system: "https://doi.org/10.6028/NIST.SP.800-60v2r1",
-              "information-type-ids": ["C.3.5.8"],
-            }],
-            "confidentiality-impact": { base: "fips-199-moderate" },
-            "integrity-impact": { base: "fips-199-moderate" },
-            "availability-impact": { base: "fips-199-moderate" },
-          }],
+          "information-types": [
+            {
+              uuid: await uuidFor(i.fleet.id, "information-type", "fleet"),
+              title: "The organization's operational information",
+              description: "What the fleet stores and processes; set its categorization here.",
+              categorizations: [
+                {
+                  system: "https://doi.org/10.6028/NIST.SP.800-60v2r1",
+                  "information-type-ids": ["C.3.5.8"],
+                },
+              ],
+              "confidentiality-impact": { base: "fips-199-moderate" },
+              "integrity-impact": { base: "fips-199-moderate" },
+              "availability-impact": { base: "fips-199-moderate" },
+            },
+          ],
         },
         "security-impact-level": {
           "security-objective-confidentiality": "fips-199-moderate",
@@ -326,11 +336,13 @@ export async function systemSecurityPlan(i: OscalInput): Promise<unknown> {
         },
       },
       "system-implementation": {
-        users: [{
-          uuid: await uuidFor(i.fleet.id, "user", "operator"),
-          title: "Fleet operator",
-          description: "Approves changes with a signed commit (a fleet signer).",
-        }],
+        users: [
+          {
+            uuid: await uuidFor(i.fleet.id, "user", "operator"),
+            title: "Fleet operator",
+            description: "Approves changes with a signed commit (a fleet signer).",
+          },
+        ],
         components: [
           {
             uuid: thisSystem,
@@ -350,37 +362,40 @@ export async function systemSecurityPlan(i: OscalInput): Promise<unknown> {
         ],
         ...(i.machines.length
           ? {
-            "inventory-items": await Promise.all(i.machines.map(async (m) => ({
-              uuid: await uuidFor(i.fleet.id, "inventory-item", m.name),
-              description: `${m.name} (${m.kind}${m.os ? `, ${m.os}` : ""})`,
-              props: [
-                { name: "asset-id", value: m.name },
-                {
-                  name: "asset-type",
-                  value: m.kind === "device" ? "network" : m.kind === "cloud" ? "cloud" : "server",
-                },
-              ],
-            }))),
-          }
+              "inventory-items": await Promise.all(
+                i.machines.map(async (m) => ({
+                  uuid: await uuidFor(i.fleet.id, "inventory-item", m.name),
+                  description: `${m.name} (${m.kind}${m.os ? `, ${m.os}` : ""})`,
+                  props: [
+                    { name: "asset-id", value: m.name },
+                    {
+                      name: "asset-type",
+                      value:
+                        m.kind === "device" ? "network" : m.kind === "cloud" ? "cloud" : "server",
+                    },
+                  ],
+                })),
+              ),
+            }
           : {}),
       },
       "control-implementation": {
-        description:
-          `How the fleet meets each SP 800-53 Rev 5 control Stolos has evidence for, reached through ${SCF_SOURCE.title} ${SCF_SOURCE.version}. Controls Stolos cannot observe (policies, training, contracts) need their own statements.`,
-        "implemented-requirements": await Promise.all(ns.map(async (n) => ({
-          uuid: await uuidFor(i.fleet.id, "ssp", "req", n.id),
-          "control-id": n.id,
-          props: [
-            ...scfProps(n.scf),
-            { name: "implementation-status", value: status(n.status) },
-          ],
-          "by-components": [{
-            "component-uuid": stolos,
-            uuid: await uuidFor(i.fleet.id, "ssp", "req", n.id, "stolos"),
-            description: how(i.view, n),
-            "implementation-status": { state: status(n.status) },
-          }],
-        }))),
+        description: `How the fleet meets each SP 800-53 Rev 5 control Stolos has evidence for, reached through ${SCF_SOURCE.title} ${SCF_SOURCE.version}. Controls Stolos cannot observe (policies, training, contracts) need their own statements.`,
+        "implemented-requirements": await Promise.all(
+          ns.map(async (n) => ({
+            uuid: await uuidFor(i.fleet.id, "ssp", "req", n.id),
+            "control-id": n.id,
+            props: [...scfProps(n.scf), { name: "implementation-status", value: status(n.status) }],
+            "by-components": [
+              {
+                "component-uuid": stolos,
+                uuid: await uuidFor(i.fleet.id, "ssp", "req", n.id, "stolos"),
+                description: how(i.view, n),
+                "implementation-status": { state: status(n.status) },
+              },
+            ],
+          })),
+        ),
       },
       "back-matter": await backMatter(i),
     },
@@ -436,44 +451,54 @@ export async function assessmentResults(i: OscalInput): Promise<unknown> {
   const ev = allEvidence(i.view);
   const obs = await Promise.all(ev.map((e) => observation(i, e)));
   const obsFor = (scf: string[]) =>
-    ev.flatMap((e, k) => e.scf.some((x) => scf.includes(x)) ? [obs[k].uuid] : []);
+    ev.flatMap((e, k) => (e.scf.some((x) => scf.includes(x)) ? [obs[k]?.uuid ?? ""] : []));
   const plan = await uuidFor(i.fleet.id, "resource", "assessment-plan");
   return {
     "assessment-results": {
       uuid: await uuidFor(i.fleet.id, "assessment-results", iso(i.now)),
       metadata: await metadata(i, `${i.fleet.title}: assessment results`),
       "import-ap": { href: `#${plan}` },
-      results: [{
-        uuid: await uuidFor(i.fleet.id, "result", iso(i.now)),
-        title: `Stolos observations as of ${iso(i.now)}`,
-        description:
-          "What Stolos observed (managed servers' verify, adopted machines' and devices' policies, the SaaS and cloud accounts' posture, the repository's signatures), and what it says about each SP 800-53 control it reaches.",
-        start: iso(i.now),
-        "reviewed-controls": {
-          "control-selections": [{
-            "include-controls": ns.map((n) => ({ "control-id": n.id })),
-          }],
-        },
-        ...(obs.length ? { observations: obs } : {}),
-        ...(ns.length
-          ? {
-            findings: await Promise.all(ns.map(async (n) => ({
-              uuid: await uuidFor(i.fleet.id, "finding", iso(i.now), n.id),
-              title: `${n.id}${n.title ? ` ${n.title}` : ""}`,
-              description: `SCF ${n.scf.join(", ")}: ${n.status}.`,
-              props: scfProps(n.scf),
-              target: {
-                type: "objective-id",
-                "target-id": `${n.id}_obj`,
-                status: n.status === "pass"
-                  ? { state: "satisfied" }
-                  : { state: "not-satisfied", reason: n.status === "fail" ? "fail" : "other" },
+      results: [
+        {
+          uuid: await uuidFor(i.fleet.id, "result", iso(i.now)),
+          title: `Stolos observations as of ${iso(i.now)}`,
+          description:
+            "What Stolos observed (managed servers' verify, adopted machines' and devices' policies, the SaaS and cloud accounts' posture, the repository's signatures), and what it says about each SP 800-53 control it reaches.",
+          start: iso(i.now),
+          "reviewed-controls": {
+            "control-selections": [
+              {
+                "include-controls": ns.map((n) => ({ "control-id": n.id })),
               },
-              "related-observations": obsFor(n.scf).map((u) => ({ "observation-uuid": u })),
-            }))),
-          }
-          : {}),
-      }],
+            ],
+          },
+          ...(obs.length ? { observations: obs } : {}),
+          ...(ns.length
+            ? {
+                findings: await Promise.all(
+                  ns.map(async (n) => ({
+                    uuid: await uuidFor(i.fleet.id, "finding", iso(i.now), n.id),
+                    title: `${n.id}${n.title ? ` ${n.title}` : ""}`,
+                    description: `SCF ${n.scf.join(", ")}: ${n.status}.`,
+                    props: scfProps(n.scf),
+                    target: {
+                      type: "objective-id",
+                      "target-id": `${n.id}_obj`,
+                      status:
+                        n.status === "pass"
+                          ? { state: "satisfied" }
+                          : {
+                              state: "not-satisfied",
+                              reason: n.status === "fail" ? "fail" : "other",
+                            },
+                    },
+                    "related-observations": obsFor(n.scf).map((u) => ({ "observation-uuid": u })),
+                  })),
+                ),
+              }
+            : {}),
+        },
+      ],
       "back-matter": {
         resources: [
           {
@@ -492,7 +517,7 @@ export async function assessmentResults(i: OscalInput): Promise<unknown> {
 const STOLOS_NS = "https://github.com/intellectual-frontiers/stolos";
 
 /** NIST SP 800-30 Rev 1, the naming system of a register risk's facets. */
-export const SP800_30 = "https://doi.org/10.6028/NIST.SP.800-30r1";
+export const SP800_30: string = oscal.SP800_30;
 
 const registerProps = (r: Risk) => [
   { name: "risk-register-id", ns: STOLOS_NS, value: r.id },
@@ -506,27 +531,30 @@ const registerProps = (r: Risk) => [
  * likelihood, impact, and level as facets; accepted and transferred risks
  * are deviations approved, mitigated and avoided ones are being remediated.
  */
-export async function registerRisk(i: OscalInput, r: Risk): Promise<Record<string, unknown>> {
+export async function registerRisk(
+  i: OscalInput,
+  r: Risk,
+): Promise<{ uuid: string; [field: string]: unknown }> {
   return {
     uuid: await uuidFor(i.fleet.id, "risk", "register", r.id),
     title: r.title,
     description: r.description,
-    statement:
-      `Level of risk ${r.level} (likelihood ${r.likelihood}, impact ${r.impact}; NIST SP 800-30 Rev 1). Treatment: ${r.treatment}. Owner: ${r.owner}. Next review: ${r.nextReview}.`,
+    statement: `Level of risk ${r.level} (likelihood ${r.likelihood}, impact ${r.impact}; NIST SP 800-30 Rev 1). Treatment: ${r.treatment}. Owner: ${r.owner}. Next review: ${r.nextReview}.`,
     props: [...scfProps([...r.scf]), ...registerProps(r)],
-    status: r.treatment === "accept" || r.treatment === "transfer"
-      ? "deviation-approved"
-      : "remediating",
-    characterizations: [{
-      origin: {
-        actors: [{ type: "party", "actor-uuid": await uuidFor(i.fleet.id, "party", "fleet") }],
+    status:
+      r.treatment === "accept" || r.treatment === "transfer" ? "deviation-approved" : "remediating",
+    characterizations: [
+      {
+        origin: {
+          actors: [{ type: "party", "actor-uuid": await uuidFor(i.fleet.id, "party", "fleet") }],
+        },
+        facets: [
+          { name: "likelihood", system: SP800_30, value: r.likelihood },
+          { name: "impact", system: SP800_30, value: r.impact },
+          { name: "risk", system: SP800_30, value: r.level },
+        ],
       },
-      facets: [
-        { name: "likelihood", system: SP800_30, value: r.likelihood },
-        { name: "impact", system: SP800_30, value: r.impact },
-        { name: "risk", system: SP800_30, value: r.level },
-      ],
-    }],
+    ],
   };
 }
 
@@ -543,7 +571,7 @@ const vulnProps = (v: OpenVulnerability) => [
 export async function vulnerabilityRisk(
   i: OscalInput,
   v: OpenVulnerability,
-): Promise<Record<string, unknown>> {
+): Promise<{ uuid: string; [field: string]: unknown }> {
   const name = v.cve ?? v.title;
   return {
     uuid: await uuidFor(i.fleet.id, "risk", "vulnerability", v.connector, v.id),
@@ -561,17 +589,20 @@ export async function vulnerabilityRisk(
 export async function poam(i: OscalInput): Promise<unknown> {
   const ev = allEvidence(i.view).filter((e) => e.status === "fail" || e.status === "accepted");
   const obs = await Promise.all(ev.map((e) => observation(i, e)));
-  const risks = await Promise.all(ev.map(async (e, k) => ({
-    uuid: await uuidFor(i.fleet.id, "risk", evidenceKey(e)),
-    title: `${e.subject}: ${e.check}`,
-    description: e.detail || e.check,
-    statement: e.status === "accepted"
-      ? `Accepted: ${e.detail}`
-      : `Failing: ${e.detail}${e.fix ? `. Fix: ${e.fix}` : ""}`,
-    props: scfProps(e.scf),
-    status: e.status === "accepted" ? "deviation-approved" : "open",
-    "related-observations": [{ "observation-uuid": obs[k].uuid }],
-  })));
+  const risks = await Promise.all(
+    ev.map(async (e, k) => ({
+      uuid: await uuidFor(i.fleet.id, "risk", evidenceKey(e)),
+      title: `${e.subject}: ${e.check}`,
+      description: e.detail || e.check,
+      statement:
+        e.status === "accepted"
+          ? `Accepted: ${e.detail}`
+          : `Failing: ${e.detail}${e.fix ? `. Fix: ${e.fix}` : ""}`,
+      props: scfProps(e.scf),
+      status: e.status === "accepted" ? "deviation-approved" : "open",
+      "related-observations": [{ "observation-uuid": obs[k]?.uuid ?? "" }],
+    })),
+  );
   // Spec 080: the register's open risks, each with its SP 800-30 levels as facets.
   const reg = (i.register ?? []).filter((r) => r.status === "open");
   const regRisks = await Promise.all(reg.map((r) => registerRisk(i, r)));
@@ -590,32 +621,39 @@ export async function poam(i: OscalInput): Promise<unknown> {
       ...(obs.length ? { observations: obs } : {}),
       ...(allRisks.length ? { risks: allRisks } : {}),
       "poam-items": [
-        ...await Promise.all(ev.map(async (e, k) => ({
-          uuid: await uuidFor(i.fleet.id, "poam-item", evidenceKey(e)),
-          title: `${e.subject}: ${e.check}`,
-          description: e.status === "accepted"
-            ? `A risk accepted: ${e.detail}`
-            : `${e.detail}${e.fix ? `. Fix: ${e.fix}` : ""}`,
-          props: scfProps(e.scf),
-          "related-observations": [{ "observation-uuid": obs[k].uuid }],
-          "related-risks": [{ "risk-uuid": risks[k].uuid }],
-        }))),
-        ...await Promise.all(reg.map(async (r, k) => ({
-          uuid: await uuidFor(i.fleet.id, "poam-item", "register", r.id),
-          title: `Risk register: ${r.title}`,
-          description: `${r.description} Treatment: ${r.treatment}; next review ${r.nextReview}.`,
-          props: [...scfProps([...r.scf]), ...registerProps(r)],
-          "related-risks": [{ "risk-uuid": regRisks[k].uuid }],
-        }))),
-        ...await Promise.all(vulns.map(async (v, k) => ({
-          uuid: await uuidFor(i.fleet.id, "poam-item", "vulnerability", v.connector, v.id),
-          title: `Vulnerability: ${v.cve ?? v.title} on ${v.asset}`,
-          description: `${v.title}${v.package ? ` (${v.package})` : ""}. Severity ${v.severity}${
-            v.firstSeen ? `, open since ${v.firstSeen.slice(0, 10)}` : ""
-          }; remediate it, or accept it as a risk in risks.ts.`,
-          props: vulnProps(v),
-          "related-risks": [{ "risk-uuid": vulnRisks[k].uuid }],
-        }))),
+        ...(await Promise.all(
+          ev.map(async (e, k) => ({
+            uuid: await uuidFor(i.fleet.id, "poam-item", evidenceKey(e)),
+            title: `${e.subject}: ${e.check}`,
+            description:
+              e.status === "accepted"
+                ? `A risk accepted: ${e.detail}`
+                : `${e.detail}${e.fix ? `. Fix: ${e.fix}` : ""}`,
+            props: scfProps(e.scf),
+            "related-observations": [{ "observation-uuid": obs[k]?.uuid ?? "" }],
+            "related-risks": [{ "risk-uuid": risks[k]?.uuid ?? "" }],
+          })),
+        )),
+        ...(await Promise.all(
+          reg.map(async (r, k) => ({
+            uuid: await uuidFor(i.fleet.id, "poam-item", "register", r.id),
+            title: `Risk register: ${r.title}`,
+            description: `${r.description} Treatment: ${r.treatment}; next review ${r.nextReview}.`,
+            props: [...scfProps([...r.scf]), ...registerProps(r)],
+            "related-risks": [{ "risk-uuid": regRisks[k]?.uuid ?? "" }],
+          })),
+        )),
+        ...(await Promise.all(
+          vulns.map(async (v, k) => ({
+            uuid: await uuidFor(i.fleet.id, "poam-item", "vulnerability", v.connector, v.id),
+            title: `Vulnerability: ${v.cve ?? v.title} on ${v.asset}`,
+            description: `${v.title}${v.package ? ` (${v.package})` : ""}. Severity ${v.severity}${
+              v.firstSeen ? `, open since ${v.firstSeen.slice(0, 10)}` : ""
+            }; remediate it, or accept it as a risk in risks.ts.`,
+            props: vulnProps(v),
+            "related-risks": [{ "risk-uuid": vulnRisks[k]?.uuid ?? "" }],
+          })),
+        )),
       ],
       "back-matter": await backMatter(i),
     },
@@ -635,8 +673,20 @@ export function tidyStrings<T>(x: T): T {
   return x;
 }
 
+/** The four documents, by file name. */
+export interface OscalDocuments {
+  /** The component definition. */
+  "component-definition.json": unknown;
+  /** The system security plan. */
+  "system-security-plan.json": unknown;
+  /** The assessment results. */
+  "assessment-results.json": unknown;
+  /** The plan of action and milestones. */
+  "poam.json": unknown;
+}
+
 /** All four, by file name. */
-export async function oscalExports(i: OscalInput): Promise<Record<string, unknown>> {
+export async function oscalExports(i: OscalInput): Promise<OscalDocuments> {
   return tidyStrings({
     "component-definition.json": await componentDefinition(i),
     "system-security-plan.json": await systemSecurityPlan(i),

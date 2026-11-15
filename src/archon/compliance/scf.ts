@@ -27,7 +27,7 @@ export const FRAMEWORKS = [
 ] as const;
 
 /** A framework's id. */
-export type FrameworkId = typeof FRAMEWORKS[number]["id"];
+export type FrameworkId = (typeof FRAMEWORKS)[number]["id"];
 
 /** One SCF control Stolos gives evidence for. */
 export interface ScfControl {
@@ -64,20 +64,17 @@ export const SCF_CONTROLS = [
   {
     id: "CFG-04",
     name: "Secure Baseline Configurations",
-    how:
-      "Managed servers converge to their model and verify it; adopted machines are checked against the policy pack.",
+    how: "Managed servers converge to their model and verify it; adopted machines are checked against the policy pack.",
   },
   {
     id: "CRY-05",
     name: "Encrypting Data In Transit",
-    how:
-      "Web traffic is TLS only, with certificates verified (Cloudflare Full strict, TLS 1.2 or later).",
+    how: "Web traffic is TLS only, with certificates verified (Cloudflare Full strict, TLS 1.2 or later).",
   },
   {
     id: "CRY-07",
     name: "Encrypting Data At Rest",
-    how:
-      "Disks are encrypted: adopted machines are checked (FileVault, LUKS); managed servers are listed as not checked yet.",
+    how: "Disks are encrypted: adopted machines are checked (FileVault, LUKS); managed servers are listed as not checked yet.",
   },
   {
     id: "END-04",
@@ -92,8 +89,7 @@ export const SCF_CONTROLS = [
   {
     id: "NET-02",
     name: "Network Security Controls (NSC)",
-    how:
-      "A firewall in front of every machine (the router, a cloud firewall, the workstation's own); S3 blocks public access.",
+    how: "A firewall in front of every machine (the router, a cloud firewall, the workstation's own); S3 blocks public access.",
   },
   {
     id: "NET-13",
@@ -103,8 +99,7 @@ export const SCF_CONTROLS = [
   {
     id: "NET-37",
     name: "Safeguarding Data Over Open Networks",
-    how:
-      "Cloudflare verifies the origin's certificate, so the open internet leg is encrypted end to end.",
+    how: "Cloudflare verifies the origin's certificate, so the open internet leg is encrypted end to end.",
   },
   {
     id: "VPM-08",
@@ -119,20 +114,17 @@ export const SCF_CONTROLS = [
   {
     id: "VPM-06",
     name: "Vulnerability Remediation Process",
-    how:
-      "Open vulnerabilities a scanner reports (Snyk, Tenable, Dependabot) are listed, each in the POA&M with its CVE, severity, and asset.",
+    how: "Open vulnerabilities a scanner reports (Snyk, Tenable, Dependabot) are listed, each in the POA&M with its CVE, severity, and asset.",
   },
   {
     id: "VPM-07",
     name: "Time To Remediate / Benchmarks For Corrective Action",
-    how:
-      "No critical vulnerability stays open past 15 days, and no high one past 30 (CISA BOD 19-02's timelines).",
+    how: "No critical vulnerability stays open past 15 days, and no high one past 30 (CISA BOD 19-02's timelines).",
   },
   {
     id: "MON-03",
     name: "Event Log & Security-Relevant Telemetry Monitoring",
-    how:
-      "The clouds' audit logs are on: an AWS CloudTrail trail is logging, Azure's activity log is exported, Google Cloud's logs are routed.",
+    how: "The clouds' audit logs are on: an AWS CloudTrail trail is logging, Azure's activity log is exported, Google Cloud's logs are routed.",
   },
   {
     id: "MON-05",
@@ -142,8 +134,7 @@ export const SCF_CONTROLS = [
   {
     id: "MON-13",
     name: "Event Log & Security-Relevant Telemetry Retention",
-    how:
-      "The clouds' audit logs are kept beyond the cloud's own window: Azure's activity log exported, Google Cloud's logs routed to a sink.",
+    how: "The clouds' audit logs are kept beyond the cloud's own window: Azure's activity log exported, Google Cloud's logs routed to a sink.",
   },
   {
     id: "MON-16",
@@ -168,14 +159,12 @@ export const SCF_CONTROLS = [
   {
     id: "IAC-04",
     name: "User Provisioning & De-Provisioning",
-    how:
-      "People who left (the HR system) have no active account anywhere (identity, code, clouds).",
+    how: "People who left (the HR system) have no active account anywhere (identity, code, clouds).",
   },
   {
     id: "IAC-14",
     name: "Authenticator Management",
-    how:
-      "SSH accepts keys, not passwords; signing keys are per person, with an offline recovery key.",
+    how: "SSH accepts keys, not passwords; signing keys are per person, with an offline recovery key.",
   },
   {
     id: "IAC-08",
@@ -186,8 +175,7 @@ export const SCF_CONTROLS = [
   {
     id: "IAC-12",
     name: "Periodic Review of Individual & Service Account Privileges",
-    how:
-      "Each manager reviews their reports' accounts and admin rights every quarter, approved with a signed commit.",
+    how: "Each manager reviews their reports' accounts and admin rights every quarter, approved with a signed commit.",
   },
   {
     id: "HRS-05",
@@ -197,14 +185,12 @@ export const SCF_CONTROLS = [
   {
     id: "HRS-08",
     name: "Onboarding, Transferring & Offboarding Personnel",
-    how:
-      "Joiners have the accounts their role needs; people on leave have no active accounts left open.",
+    how: "Joiners have the accounts their role needs; people on leave have no active accounts left open.",
   },
   {
     id: "HRS-08.2",
     name: "Policy Familiarization & Acknowledgement",
-    how:
-      "Every active person acknowledged every current policy version with a commit signed by their own key.",
+    how: "Every active person acknowledged every current policy version with a commit signed by their own key.",
   },
   {
     id: "HRS-12",
@@ -270,14 +256,12 @@ export const SCF_CONTROLS = [
   {
     id: "RSK-16.1",
     name: "Risk Treatment Options",
-    how:
-      "Each risk names its treatment (accept, mitigate, transfer, avoid); accepted risks end on a date.",
+    how: "Each risk names its treatment (accept, mitigate, transfer, avoid); accepted risks end on a date.",
   },
   {
     id: "TPM-08",
     name: "Third-Party Inventories",
-    how:
-      "Vendors are discovered from SSO applications, DNS records, and connected accounts, and listed.",
+    how: "Vendors are discovered from SSO applications, DNS records, and connected accounts, and listed.",
   },
   {
     id: "TPM-09",
@@ -290,7 +274,7 @@ export const SCF_CONTROLS = [
  * The id of an SCF control Stolos gives evidence for. A control (spec 078)
  * names its controls with this type, so a wrong id fails type checking.
  */
-export type ScfId = typeof SCF_CONTROLS[number]["id"];
+export type ScfId = (typeof SCF_CONTROLS)[number]["id"];
 
 /** The controls, by SCF id. */
 export const SCF: ScfControl[] = [...SCF_CONTROLS];

@@ -43,14 +43,20 @@
  * @module
  */
 
-import { join } from "../core/path.ts";
+import { parseTsLiteral } from "@intellectual-frontiers/ifc-ts/kernel";
+import { errors, fs, path, proc, stdio, toError } from "@intellectual-frontiers/ifc-ts/runtime";
+import { log } from "../core/log.ts";
 import { run } from "../core/exec.ts";
+import type { Connector } from "../connect/connector.ts";
 import type { Acceptance } from "../adopt/adopt.ts";
 import type { FleetDef, HostDef, HostPlan, McpTier, SignerDef } from "../model/types.ts";
 import type { ScfCatalog } from "./catalog.ts";
 import type { ControlChange } from "./drift.ts";
 import { type FrameworkId, FRAMEWORKS, scf, type ScfId } from "./scf.ts";
 import { IMPACT_AFFECTED_MARKER } from "./workflow.ts";
+
+/** A thrown value's first line. */
+const firstLine = (e: unknown): string => toError(e).message.split("\n")[0] ?? "";
 
 // ------------------------------------------------------------------ facts
 
@@ -120,9 +126,9 @@ export function sshPasswordNetworks(conf: string): string[] {
   let match: string[] | undefined;
   for (const raw of conf.split("\n")) {
     const line = raw.trim();
-    const m = line.match(/^Match\s+Address\s+(\S+)/i);
+    const m = /^Match\s+Address\s+(\S+)/i.exec(line);
     if (m) {
-      match = m[1].split(",").filter(Boolean);
+      match = (m[1] ?? "").split(",").filter(Boolean);
       continue;
     }
     if (/^Match\s/i.test(line)) {
@@ -143,7 +149,8 @@ export async function hostFacts(plan: HostPlan): Promise<HostFacts> {
   const unit = (name: string) => plan.units.find((u) => u.unitName === name);
   const pkg = (name: string) => plan.packages.some((p) => p.name === name);
   const sshd = plan.files.find((f) => f.path === SSHD_DROP_IN);
-  const backup = !!unit("archon-backup.timer") && unit("archon-backup.timer")!.state !== "masked";
+  const timer = unit("archon-backup.timer");
+  const backup = timer !== undefined && timer.state !== "masked";
   const policy = backup ? backupPolicy(plan.host) : undefined;
   return {
     kind: plan.host.kind ?? "server",
@@ -152,8 +159,8 @@ export async function hostFacts(plan: HostPlan): Promise<HostFacts> {
       ? { sshPasswords: sshPasswordNetworks(sshd.content) }
       : {}),
     firewall: pkg("ufw") && unit("ufw.service")?.state === "enabled",
-    ports: [...new Set(plan.ports.map((p) => `${p.port}/${p.protocol}`))].sort((a, b) =>
-      parseInt(a) - parseInt(b) || a.localeCompare(b)
+    ports: [...new Set(plan.ports.map((p) => `${p.port}/${p.protocol}`))].sort(
+      (a, b) => parseInt(a) - parseInt(b) || a.localeCompare(b),
     ),
     backup,
     backupScope: policy
@@ -162,7 +169,10 @@ export async function hostFacts(plan: HostPlan): Promise<HostFacts> {
     ...(policy ? { backupKeep: policy.keep } : {}),
     osquery: plan.specsUsed.includes("042-sql"),
     etckeeper: plan.specsUsed.includes("033-etckeeper"),
-    admins: plan.users.filter((u) => u.admin).map((u) => u.name).sort(),
+    admins: plan.users
+      .filter((u) => u.admin)
+      .map((u) => u.name)
+      .sort(),
   };
 }
 
@@ -183,11 +193,12 @@ export async function fleetFacts(fleet: FleetDef, hosts: HostDef[]): Promise<Fle
     try {
       out.hosts[h.name] = await hostFacts(resolvePlan(h, fleet));
     } catch (e) {
-      out.problems.push(`${h.name}: ${(e as Error).message.split("\n")[0]}`);
+      out.problems.push(`${h.name}: ${firstLine(e)}`);
     }
   }
   try {
-    const c = resolveCadences({ fleet: fleet.compliance?.cadence });
+    const own = fleet.compliance?.cadence;
+    const c = resolveCadences(own ? { fleet: own } : {});
     const keep = (x: CadenceFact): CadenceFact => ({
       every: x.every,
       staleAfter: x.staleAfter,
@@ -197,7 +208,7 @@ export async function fleetFacts(fleet: FleetDef, hosts: HostDef[]): Promise<Fle
     for (const [k, v] of Object.entries(c.sources)) out.cadence[k] = keep(v);
     for (const [k, v] of Object.entries(c.connectors)) out.cadence[`connector ${k}`] = keep(v);
   } catch (e) {
-    out.problems.push(`compliance.cadence: ${(e as Error).message}`);
+    out.problems.push(`compliance.cadence: ${toError(e).message}`);
   }
   return out;
 }
@@ -228,22 +239,17 @@ export interface Implementation<T> {
   /** Which direction weakens the control, in words. */
   weakens: string;
   /** Compare the two sides; undefined when the setting did not change. */
-  compare(before: T, after: T): Finding | undefined;
+  compare: (before: T, after: T) => Finding | undefined;
 }
 
 const added = (a: string[], b: string[]) => b.filter((x) => !a.includes(x));
 const list = (xs: string[]) => xs.join(", ");
-const flag = (
-  before: boolean,
-  after: boolean,
-  off: string,
-  on: string,
-): Finding | undefined =>
+const flag = (before: boolean, after: boolean, off: string, on: string): Finding | undefined =>
   before === after
     ? undefined
     : after
-    ? { direction: "strengthens", what: on }
-    : { direction: "weakens", what: off };
+      ? { direction: "strengthens", what: on }
+      : { direction: "weakens", what: off };
 
 /**
  * Set-valued settings where more is weaker (ports, networks, administrators):
@@ -287,12 +293,11 @@ export const HOST_IMPLEMENTATIONS: Implementation<HostFacts>[] = [
     setting:
       "fleet.ssh.passwordFrom, rendered into sshd_config.d/50-archon.conf by ssh() (spec 007)",
     weakens: "SSH accepts passwords from more networks, or Stolos stops configuring sshd",
-    compare: (a, b) => {
+    compare: (a: HostFacts, b: HostFacts): Finding | undefined => {
       if (a.sshPasswords && !b.sshPasswords) {
         return {
           direction: "weakens",
-          what:
-            "stops configuring sshd (keys only, passwords from local networks): Ubuntu's defaults apply",
+          what: "stops configuring sshd (keys only, passwords from local networks): Ubuntu's defaults apply",
         };
       }
       if (!a.sshPasswords && b.sshPasswords) {
@@ -301,16 +306,18 @@ export const HOST_IMPLEMENTATIONS: Implementation<HostFacts>[] = [
           what: "configures sshd: keys, and passwords only where set",
         };
       }
-      if (!a.sshPasswords || !b.sshPasswords) return undefined;
+      const before = a.sshPasswords;
+      const after = b.sshPasswords;
+      if (!before || !after) return undefined;
       return more(
-        a.sshPasswords,
-        b.sshPasswords,
+        before,
+        after,
         (xs) =>
-          a.sshPasswords!.length
+          before.length
             ? `accepts SSH passwords from ${list(xs)} too`
             : `turns on SSH password authentication (from ${list(xs)})`,
         (xs) =>
-          b.sshPasswords!.length
+          after.length
             ? `no longer accepts SSH passwords from ${list(xs)}`
             : "turns off SSH password authentication (keys only)",
       );
@@ -337,7 +344,12 @@ export const HOST_IMPLEMENTATIONS: Implementation<HostFacts>[] = [
     setting: "ports: every capability's ports, opened in ufw (spec 008)",
     weakens: "a port opened",
     compare: (a, b) =>
-      more(a.ports, b.ports, (xs) => `opens ${list(xs)}`, (xs) => `closes ${list(xs)}`),
+      more(
+        a.ports,
+        b.ports,
+        (xs) => `opens ${list(xs)}`,
+        (xs) => `closes ${list(xs)}`,
+      ),
   },
   {
     id: "backup",
@@ -355,7 +367,7 @@ export const HOST_IMPLEMENTATIONS: Implementation<HostFacts>[] = [
     setting:
       "host.backup (paths, keep) and durable guests (data: durable, spec 044): what the backup holds",
     weakens: "less backed up, or fewer archives kept",
-    compare: (a, b) => {
+    compare: (a: HostFacts, b: HostFacts): Finding | undefined => {
       if (!a.backup || !b.backup) return undefined;
       const lost = added(b.backupScope, a.backupScope);
       const gained = added(a.backupScope, b.backupScope);
@@ -428,7 +440,7 @@ export const FLEET_IMPLEMENTATIONS: Implementation<FleetFacts>[] = [
     scope: "fleet",
     setting: "fleet.mcp.maxTier (spec 030): what agents may do on each server",
     weakens: "a higher tier",
-    compare: (a, b) => {
+    compare: (a: FleetFacts, b: FleetFacts): Finding | undefined => {
       const x = TIERS.indexOf(a.agentTier);
       const y = TIERS.indexOf(b.agentTier);
       if (x === y) return undefined;
@@ -446,15 +458,14 @@ export const FLEET_IMPLEMENTATIONS: Implementation<FleetFacts>[] = [
     scope: "fleet",
     setting: "fleet.compliance.cadence (spec 073): how often evidence is observed, and when stale",
     weakens: "evidence observed less often, or stale later",
-    compare: (a, b) => {
+    compare: (a: FleetFacts, b: FleetFacts): Finding | undefined => {
       const slower: string[] = [];
       const faster: string[] = [];
       for (const k of new Set([...Object.keys(a.cadence), ...Object.keys(b.cadence)])) {
-        const x = a.cadence[k] ?? a.cadence.cloud;
-        const y = b.cadence[k] ?? b.cadence.cloud;
+        const x = a.cadence[k] ?? a.cadence["cloud"];
+        const y = b.cadence[k] ?? b.cadence["cloud"];
         if (!x || !y) continue;
-        const say =
-          `${k} every ${y.every} (stale after ${y.staleAfter}) instead of ${x.every} (${x.staleAfter})`;
+        const say = `${k} every ${y.every} (stale after ${y.staleAfter}) instead of ${x.every} (${x.staleAfter})`;
         if (y.everyMs > x.everyMs || y.staleAfterMs > x.staleAfterMs) slower.push(say);
         else if (y.everyMs < x.everyMs || y.staleAfterMs < x.staleAfterMs) faster.push(say);
       }
@@ -469,10 +480,7 @@ export const FLEET_IMPLEMENTATIONS: Implementation<FleetFacts>[] = [
 /** Every declaration, host and fleet: what the comment and the docs list. */
 export const IMPLEMENTATIONS: ReadonlyArray<
   Implementation<HostFacts> | Implementation<FleetFacts>
-> = [
-  ...HOST_IMPLEMENTATIONS,
-  ...FLEET_IMPLEMENTATIONS,
-];
+> = [...HOST_IMPLEMENTATIONS, ...FLEET_IMPLEMENTATIONS];
 
 /** One model change that moves a control. */
 export interface ModelChange {
@@ -498,7 +506,7 @@ export function compareFacts(
   for (const h of names) {
     const a = before.hosts[h];
     const b = after.hosts[h];
-    if (!a) continue;
+    if (!a || !b) continue;
     for (const d of HOST_IMPLEMENTATIONS) {
       const f = d.compare(a, b);
       if (f) changes.push({ implementation: d.id, scf: d.scf, subject: h, ...f });
@@ -511,7 +519,9 @@ export function compareFacts(
   return {
     changes,
     added: names.filter((h) => !before.hosts[h]),
-    removed: Object.keys(before.hosts).filter((h) => !after.hosts[h]).sort(),
+    removed: Object.keys(before.hosts)
+      .filter((h) => !after.hosts[h])
+      .sort(),
   };
 }
 
@@ -524,7 +534,7 @@ export function compareFacts(
  *
  * @example Block weakenings; opening ports is the router's business here
  * ```ts
- * import type { ComplianceGate } from "@stolos/archon/compliance/impact.ts";
+ * import type { ComplianceGate } from "@intellectual-frontiers/stolos/archon/compliance/impact";
  *
  * export const gate: ComplianceGate = { block: "weakens", allow: ["firewall-ports"] };
  * ```
@@ -581,7 +591,10 @@ export function changeKeys(c: { implementation: string; subject: string; scf: st
 
 /** Parse a trailer's value: keys separated by commas or spaces. */
 export function parseApproval(value: string): string[] {
-  return value.split(/[\s,]+/).map((x) => x.trim()).filter(Boolean);
+  return value
+    .split(/[\s,]+/)
+    .map((x) => x.trim())
+    .filter(Boolean);
 }
 
 /** Judge the weakenings of a change. */
@@ -596,13 +609,15 @@ export function judge(o: {
   const block = o.gate?.block ?? "never";
   const today = new Date(o.now ?? Date.now()).toISOString().slice(0, 10);
   const items: GateItem[] = [
-    ...o.changes.filter((c) => c.direction === "weakens").map((c) => ({
-      keys: changeKeys(c),
-      what: `${c.subject}: ${c.what} (${c.scf})`,
-    })),
-    ...(o.gate?.evidence ? o.evidence ?? [] : []).filter((c) => c.worse && c.to === "fail").map((
-      c,
-    ) => ({ keys: [c.id], what: `${c.id} ${c.name}: ${c.from} -> ${c.to} (observed)` })),
+    ...o.changes
+      .filter((c) => c.direction === "weakens")
+      .map((c) => ({
+        keys: changeKeys(c),
+        what: `${c.subject}: ${c.what} (${c.scf})`,
+      })),
+    ...(o.gate?.evidence ? (o.evidence ?? []) : [])
+      .filter((c) => c.worse && c.to === "fail")
+      .map((c) => ({ keys: [c.id], what: `${c.id} ${c.name}: ${c.from} -> ${c.to} (observed)` })),
   ];
   for (const it of items) {
     const allow = (o.gate?.allow ?? []).find((k) => it.keys.includes(k));
@@ -610,15 +625,15 @@ export function judge(o: {
       it.allowedBy = `allowed by compliance.gate.allow (${allow})`;
       continue;
     }
-    const acc = (o.accepted ?? []).find((a) =>
-      a.until >= today && it.keys.some((k) => a.policy === `impact/${k}`)
+    const acc = (o.accepted ?? []).find(
+      (a) => a.until >= today && it.keys.some((k) => a.policy === `impact/${k}`),
     );
     if (acc) {
       it.allowedBy = `accepted risk (${acc.policy}): ${acc.by} until ${acc.until}: ${acc.reason}`;
       continue;
     }
-    const ap = (o.approvals ?? []).find((a) =>
-      a.covers.includes("all") || a.covers.some((k) => it.keys.includes(k))
+    const ap = (o.approvals ?? []).find(
+      (a) => a.covers.includes("all") || a.covers.some((k) => it.keys.includes(k)),
     );
     if (ap) {
       it.allowedBy = `approved by ${ap.signer} (${
@@ -696,24 +711,26 @@ export function affectedControls(
       ...(ev ? { evidence: ev } : {}),
       ...(entry
         ? {
-          requirements: Object.fromEntries(
-            FRAMEWORKS.map((f) => [f.id, entry.maps[f.id] ?? []]).filter(([, v]) =>
-              (v as string[]).length
+            requirements: Object.fromEntries(
+              FRAMEWORKS.flatMap((f) => {
+                const ids = entry.maps[f.id] ?? [];
+                return ids.length > 0 ? [[f.id, ids] as const] : [];
+              }),
             ),
-          ),
-        }
+          }
         : {}),
     });
   }
-  return out.sort((a, b) =>
-    Number(b.direction === "weakens") - Number(a.direction === "weakens") ||
-    a.id.localeCompare(b.id)
+  return out.sort(
+    (a, b) =>
+      Number(b.direction === "weakens") - Number(a.direction === "weakens") ||
+      a.id.localeCompare(b.id),
   );
 }
 
 /** A framework's requirements, short: SOC 2 by criterion, at most `max` shown. */
 export function requirementText(fw: FrameworkId, ids: string[], max = 6): string {
-  const short = FRAMEWORKS.find((f) => f.id === fw)!.short;
+  const short = FRAMEWORKS.find((f) => f.id === fw)?.short ?? fw;
   const list = fw === "soc2" ? [...new Set(ids.map((i) => i.replace(/-POF\d+$/, "")))] : ids;
   const shown = list.slice(0, max).join(", ");
   return `${short} ${shown}${list.length > max ? ` and ${list.length - max} more` : ""}`;
@@ -722,7 +739,7 @@ export function requirementText(fw: FrameworkId, ids: string[], max = 6): string
 /** One line per affected control: "VPM-08 Software & Firmware Patching: HIPAA 164.308(a)(5)(ii)(B); ...". */
 export function controlLine(c: AffectedControl): string {
   const reqs = Object.entries(c.requirements ?? {}).map(([fw, ids]) =>
-    requirementText(fw as FrameworkId, ids as string[])
+    requirementText(fw as FrameworkId, ids),
   );
   return `${c.id} ${c.name}${reqs.length ? `: ${reqs.join("; ")}` : ""}`;
 }
@@ -759,9 +776,9 @@ export function impactMarkdown(i: Impact): string {
       lines.push(`- **${md(c.id)}** ${md(c.name)}`);
       for (const ch of c.changes) {
         lines.push(
-          `  - ${ch.direction}: ${ch.subject === "fleet" ? "the fleet" : `\`${md(ch.subject)}\``} ${
-            md(ch.what)
-          } (\`${ch.implementation}\`)`,
+          `  - ${ch.direction}: ${ch.subject === "fleet" ? "the fleet" : `\`${md(ch.subject)}\``} ${md(
+            ch.what,
+          )} (\`${ch.implementation}\`)`,
         );
       }
       if (c.evidence) {
@@ -780,11 +797,9 @@ export function impactMarkdown(i: Impact): string {
       const reqs = Object.entries(c.requirements ?? {});
       if (reqs.length) {
         lines.push(
-          `  - requirements: ${
-            reqs.map(([fw, ids]) => md(requirementText(fw as FrameworkId, ids as string[]))).join(
-              "; ",
-            )
-          }`,
+          `  - requirements: ${reqs
+            .map(([fw, ids]) => md(requirementText(fw as FrameworkId, ids)))
+            .join("; ")}`,
         );
       }
     }
@@ -793,16 +808,17 @@ export function impactMarkdown(i: Impact): string {
   section("Weakened", weak);
   section("Strengthened", strong);
   if (
-    i.gate.items.length && (i.gate.block === "weakens" || i.gate.items.some((x) => x.allowedBy))
+    i.gate.items.length &&
+    (i.gate.block === "weakens" || i.gate.items.some((x) => x.allowedBy))
   ) {
     lines.push(`#### Gate (\`${i.gate.block}\`)`, "");
     for (const it of i.gate.items) {
       lines.push(
-        `- ${it.allowedBy ? "allowed" : i.gate.block === "weakens" ? "**blocked**" : "shown"}: ${
-          md(it.what)
-        }${it.allowedBy ? `: ${md(it.allowedBy)}` : ""} (keys: ${
-          it.keys.map((k) => `\`${k}\``).join(", ")
-        })`,
+        `- ${it.allowedBy ? "allowed" : i.gate.block === "weakens" ? "**blocked**" : "shown"}: ${md(
+          it.what,
+        )}${it.allowedBy ? `: ${md(it.allowedBy)}` : ""} (keys: ${it.keys
+          .map((k) => `\`${k}\``)
+          .join(", ")})`,
       );
     }
     lines.push("");
@@ -816,7 +832,9 @@ export function impactMarkdown(i: Impact): string {
         i.hosts.removed.length
           ? `Hosts removed: ${i.hosts.removed.map((h) => `\`${md(h)}\``).join(", ")}.`
           : "",
-      ].filter(Boolean).join(" "),
+      ]
+        .filter(Boolean)
+        .join(" "),
       "",
     );
   }
@@ -824,9 +842,9 @@ export function impactMarkdown(i: Impact): string {
   lines.push(
     "catalog" in i && "version" in i.catalog
       ? `<sub>Framework requirements: the SCF Council's mappings (STRM), SCF ${i.catalog.version}. Which settings implement which controls: Stolos's declarations (spec 074).</sub>`
-      : `<sub>Framework requirements are not shown: ${
-        md((i.catalog as { missing: string }).missing)
-      }. Which settings implement which controls: Stolos's declarations (spec 074).</sub>`,
+      : `<sub>Framework requirements are not shown: ${md(
+          (i.catalog as { missing: string }).missing,
+        )}. Which settings implement which controls: Stolos's declarations (spec 074).</sub>`,
     "",
   );
   return lines.join("\n");
@@ -836,13 +854,15 @@ export function impactMarkdown(i: Impact): string {
 
 /**
  * Copy a commit's `fleets/` folder into a new temporary folder, without
- * touching the checkout, its index, or its worktrees. The caller removes it.
+ * touching the checkout, its index, or its worktrees, beside a link to the
+ * checkout's `node_modules` (the engine the fleet depends on). The caller
+ * removes it.
  */
 export async function extractFleets(repo: string, rev: string): Promise<string> {
-  const dir = await Deno.makeTempDir({ prefix: "stolos-impact-" });
-  const index = join(dir, ".index");
+  const dir = await fs.makeTempDir({ prefix: "stolos-impact-" });
+  const index = path.join(dir, ".index");
   const env = { GIT_INDEX_FILE: index };
-  // Only fleets/: a commit's deno.json (another engine's pin) must not be beside its files.
+  // Only fleets/: a commit's package.json (another engine's pin) must not be beside its files.
   const read = await run(["git", "-C", repo, "read-tree", `${rev}:fleets`], { env });
   if (!read.ok) {
     await removeTemp(dir);
@@ -856,16 +876,20 @@ export async function extractFleets(repo: string, rev: string): Promise<string> 
     await removeTemp(dir);
     throw new Error(`git checkout-index: ${co.stderr.trim()}`);
   }
-  return join(dir, "tree");
+  // The commit's fleet files import the engine by its package name: they resolve it from the
+  // checkout's own node_modules, as they do in the checkout.
+  const modules = path.join(repo, "node_modules");
+  if (await fs.exists(modules)) await fs.symlink(modules, path.join(dir, "tree", "node_modules"));
+  return path.join(dir, "tree");
 }
 
 /** Remove a temporary folder; one already gone is fine, anything else is said. */
 async function removeTemp(dir: string): Promise<void> {
   try {
-    await Deno.remove(dir, { recursive: true });
+    await fs.remove(dir, { recursive: true });
   } catch (e) {
-    if (!(e instanceof Deno.errors.NotFound)) {
-      console.error(`warning: could not remove ${dir}: ${(e as Error).message}`);
+    if (!(e instanceof errors.NotFound)) {
+      log.warn(`could not remove ${dir}: ${toError(e).message}`);
     }
   }
 }
@@ -873,17 +897,17 @@ async function removeTemp(dir: string): Promise<void> {
 /** Run `f` with the instance root set to `root` (the same fleet id), then put it back. */
 async function withRoot<T>(root: string, fleet: string, f: () => Promise<T>): Promise<T> {
   const { resetRoots } = await import("../core/paths.ts");
-  const keep = { repo: Deno.env.get("ARCHON_REPO"), fleet: Deno.env.get("ARCHON_FLEET") };
-  Deno.env.set("ARCHON_REPO", root);
-  Deno.env.set("ARCHON_FLEET", fleet);
+  const keep = { repo: proc.env.get("ARCHON_REPO"), fleet: proc.env.get("ARCHON_FLEET") };
+  proc.env.set("ARCHON_REPO", root);
+  proc.env.set("ARCHON_FLEET", fleet);
   resetRoots();
   try {
     return await f();
   } finally {
-    if (keep.repo === undefined) Deno.env.delete("ARCHON_REPO");
-    else Deno.env.set("ARCHON_REPO", keep.repo);
-    if (keep.fleet === undefined) Deno.env.delete("ARCHON_FLEET");
-    else Deno.env.set("ARCHON_FLEET", keep.fleet);
+    if (keep.repo === undefined) proc.env.delete("ARCHON_REPO");
+    else proc.env.set("ARCHON_REPO", keep.repo);
+    if (keep.fleet === undefined) proc.env.delete("ARCHON_FLEET");
+    else proc.env.set("ARCHON_FLEET", keep.fleet);
     resetRoots();
   }
 }
@@ -893,13 +917,13 @@ export function modelFactsAt(
   root: string,
   fleet: string,
 ): Promise<{ facts: FleetFacts } | { error: string }> {
-  return withRoot(root, fleet, async () => {
+  return withRoot(root, fleet, async (): Promise<{ facts: FleetFacts } | { error: string }> => {
     try {
       const { loadFleet, loadHosts } = await import("../model/load.ts");
       const def = await loadFleet();
       return { facts: await fleetFacts(def, await loadHosts()) };
     } catch (e) {
-      return { error: (e as Error).message.split("\n")[0] };
+      return { error: firstLine(e) };
     }
   });
 }
@@ -910,13 +934,8 @@ export async function signersAt(repo: string, rev: string, fleet: string): Promi
   if (!r.ok) return [];
   const at = r.stdout.indexOf("export default");
   if (at < 0) return [];
-  try {
-    const { parseTsLiteral } = await import("../core/ts-literal.ts");
-    const v = parseTsLiteral(r.stdout, at + "export default".length).value;
-    return Array.isArray(v) ? v as SignerDef[] : [];
-  } catch {
-    return [];
-  }
+  const v = parseTsLiteral(r.stdout, at + "export default".length);
+  return v.kind === "ok" && Array.isArray(v.value.value) ? (v.value.value as SignerDef[]) : [];
 }
 
 /**
@@ -940,11 +959,14 @@ export async function approvalsIn(
   ]);
   const approvals: Approval[] = [];
   const unverified: string[] = [];
-  const rows = log.stdout.split("\x1e").map((r) => r.trim()).filter(Boolean);
+  const rows = log.stdout
+    .split("\x1e")
+    .map((r) => r.trim())
+    .filter(Boolean);
   const wanted = rows.map((r) => r.split("\x1f")).filter(([, v]) => v?.trim());
   if (!wanted.length) return { approvals, unverified };
   if (!signers.length) {
-    for (const [sha] of wanted) {
+    for (const [sha = ""] of wanted) {
       unverified.push(
         `${sha.slice(0, 10)}: the base lists no signer, so no approval can be checked`,
       );
@@ -952,11 +974,11 @@ export async function approvalsIn(
     return { approvals, unverified };
   }
   const { allowedSignersText, checkTip } = await import("../identity/signers.ts");
-  const dir = await Deno.makeTempDir({ prefix: "stolos-approvals-" });
+  const dir = await fs.makeTempDir({ prefix: "stolos-approvals-" });
   try {
-    const allowed = join(dir, "allowed_signers");
-    await Deno.writeTextFile(allowed, allowedSignersText(signers));
-    for (const [sha, value] of wanted) {
+    const allowed = path.join(dir, "allowed_signers");
+    await fs.writeTextFile(allowed, allowedSignersText(signers));
+    for (const [sha = "", value = ""] of wanted) {
       const t = await checkTip(repo, sha, "", allowed);
       if (t.ok && t.signer) {
         approvals.push({ commit: sha, signer: t.signer, covers: parseApproval(value) });
@@ -985,7 +1007,7 @@ export interface ImpactOptions {
   /** Now (accepted risks' dates, evidence ages). */
   now?: number;
   /** The connectors whose observations count (default: every one). */
-  connectors?: import("../connect/connector.ts").Connector[];
+  connectors?: Connector[];
   /** Skip the evidence comparison (model changes only). */
   modelOnly?: boolean;
 }
@@ -1008,9 +1030,9 @@ export async function computeImpact(o: ImpactOptions): Promise<Impact | { error:
   try {
     // 1. The model, on both sides.
     const baseRoot = await extractFleets(o.repo, base);
-    temps.push(join(baseRoot, ".."));
+    temps.push(path.join(baseRoot, ".."));
     const headRoot = head ? await extractFleets(o.repo, head) : o.repo;
-    if (head) temps.push(join(headRoot, ".."));
+    if (head) temps.push(path.join(headRoot, ".."));
     const before = await modelFactsAt(baseRoot, o.fleet);
     const after = await modelFactsAt(headRoot, o.fleet);
     let changes: ModelChange[] = [];
@@ -1027,17 +1049,18 @@ export async function computeImpact(o: ImpactOptions): Promise<Impact | { error:
     for (const p of after.facts.problems) problems.push(`at the head, ${p}`);
 
     // 2. The catalog.
-    const catalog = o.catalog === null
-      ? undefined
-      : o.catalog ?? await (await import("./catalog.ts")).loadScf().catch(() => undefined);
+    const catalog =
+      o.catalog === null
+        ? undefined
+        : (o.catalog ?? (await (await import("./catalog.ts")).loadScf().catch(() => undefined)));
 
     // 3. Evidence: observations in Git, and the fleet's control packs, on both sides.
     let evidence: ControlChange[] = [];
     if (!o.modelOnly) {
       const { repoEvidence, compareViews } = await import("./drift.ts");
       const { gitReader } = await import("../estate/snapshot.ts");
-      const connectors = o.connectors ??
-        await (await import("../connect/commands.ts")).allConnectors();
+      const connectors =
+        o.connectors ?? (await (await import("../connect/commands.ts")).allConnectors());
       const side = async (rev: string | undefined, root: string) => {
         const reader = gitReader(o.repo, rev);
         return await repoEvidence(reader, o.fleet, {
@@ -1055,7 +1078,7 @@ export async function computeImpact(o: ImpactOptions): Promise<Impact | { error:
               estate = undefined;
             }
             const r = await runFleetPacks({
-              dir: join(root, "fleets", o.fleet, "controls"),
+              dir: path.join(root, "fleets", o.fleet, "controls"),
               adopted: i.adopted,
               devices: i.devices,
               connectors: i.connectors,
@@ -1072,13 +1095,13 @@ export async function computeImpact(o: ImpactOptions): Promise<Impact | { error:
           await side(head || undefined, headRoot),
         );
       } catch (e) {
-        problems.push(`the evidence: ${(e as Error).message.split("\n")[0]}`);
+        problems.push(`the evidence: ${firstLine(e)}`);
       }
     }
 
     // 4. The gate: the base's, with accepted risks (the head's) and approvals (signed, the base's signers).
     const { loadAccepted } = await import("../controls/run.ts");
-    const accepted = await loadAccepted(join(headRoot, "fleets", o.fleet, "controls")).catch(
+    const accepted = await loadAccepted(path.join(headRoot, "fleets", o.fleet, "controls")).catch(
       () => [],
     );
     const signers = await signersAt(o.repo, base, o.fleet);
@@ -1111,12 +1134,12 @@ export async function computeImpact(o: ImpactOptions): Promise<Impact | { error:
       controls: affectedControls(changes, evidence, catalog),
       catalog: catalog
         ? { version: catalog.version }
-        : { missing: "the SCF catalog is not cached here (deno task stolos compliance catalog)" },
+        : { missing: "the SCF catalog is not cached here (bun run stolos compliance catalog)" },
       gate,
       problems,
     };
   } catch (e) {
-    return { error: (e as Error).message.split("\n")[0] };
+    return { error: firstLine(e) };
   } finally {
     for (const t of temps) await removeTemp(t);
   }
@@ -1143,23 +1166,24 @@ export async function impactCommand(
   const quiet = o.json || o.markdown;
   const { ui } = await import("../core/ui.ts");
   if (!P.fleetId) {
-    if (quiet) console.error("no fleet chosen: deno task stolos fleet use <id>, or ARCHON_FLEET");
-    else ui.phase("Compliance impact").fail("no fleet chosen", "deno task stolos fleet use <id>");
+    if (quiet)
+      stdio.stderr.writeSync("no fleet chosen: bun run stolos fleet use <id>, or ARCHON_FLEET\n");
+    else ui.phase("Compliance impact").fail("no fleet chosen", "bun run stolos fleet use <id>");
     return 2;
   }
   const i = await computeImpact({
     repo: P.repo,
     fleet: P.fleetId,
-    base: o.base ?? await defaultBase(P.repo),
+    base: o.base ?? (await defaultBase(P.repo)),
     ...(o.head ? { head: o.head } : {}),
   });
   if ("error" in i) {
-    if (quiet) console.error(`compliance impact: ${i.error}`);
+    if (quiet) stdio.stderr.writeSync(`compliance impact: ${i.error}\n`);
     else ui.phase("Compliance impact").fail(i.error, "--base and --head take commits");
     return 2;
   }
-  if (o.json) console.log(JSON.stringify(i, null, 2));
-  else if (o.markdown) console.log(impactMarkdown(i));
+  if (o.json) stdio.stdout.writeSync(`${JSON.stringify(i, null, 2)}\n`);
+  else if (o.markdown) stdio.stdout.writeSync(`${impactMarkdown(i)}\n`);
   else printImpact(i, ui.phase("Compliance impact"));
   return i.gate.blocked ? 1 : 0;
 }
@@ -1177,9 +1201,9 @@ export type PhaseLike = {
 export function printImpact(i: Impact, p: PhaseLike): void {
   const name = (id: string) => i.controls.find((c) => c.id === id)?.name ?? id;
   for (const c of i.changes) {
-    const msg = `${c.subject === "fleet" ? "the fleet" : c.subject}: ${c.what}: ${c.scf} ${
-      name(c.scf)
-    }`;
+    const msg = `${c.subject === "fleet" ? "the fleet" : c.subject}: ${c.what}: ${c.scf} ${name(
+      c.scf,
+    )}`;
     if (c.direction === "weakens") p.warn(msg);
     else p.ok(msg);
   }
@@ -1199,7 +1223,7 @@ export function printImpact(i: Impact, p: PhaseLike): void {
         `the gate blocks: ${it.what}`,
         `accept the risk (policy "impact/${
           it.keys[1]
-        }" in controls/accepted.ts), or approve it: deno task stolos apply --approve ${it.keys[1]}`,
+        }" in controls/accepted.ts), or approve it: bun run stolos apply --approve ${it.keys[1]}`,
       );
     }
     return;
@@ -1209,8 +1233,8 @@ export function printImpact(i: Impact, p: PhaseLike): void {
   p.done(
     i.controls.length
       ? `${w} control(s) weakened, ${s} strengthened${
-        i.gate.block === "never" && w ? " (the gate is off: compliance.gate in fleet.ts)" : ""
-      }`
+          i.gate.block === "never" && w ? " (the gate is off: compliance.gate in fleet.ts)" : ""
+        }`
       : "no control affected",
   );
 }
@@ -1219,9 +1243,7 @@ export function printImpact(i: Impact, p: PhaseLike): void {
  * `stolos apply`'s "Compliance impact" phase: compare the working tree with
  * `base` (what GitHub has); false when the gate blocks (nothing is committed).
  */
-export async function applyImpact(
-  o: { base?: string; approve?: string },
-): Promise<boolean> {
+export async function applyImpact(o: { base?: string; approve?: string }): Promise<boolean> {
   const { ui } = await import("../core/ui.ts");
   const { P } = await import("../core/paths.ts");
   const p = ui.phase("Compliance impact");

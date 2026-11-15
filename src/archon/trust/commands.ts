@@ -16,7 +16,7 @@
  * @module
  */
 
-import { join } from "../core/path.ts";
+import { errors, fs, path, toError } from "@intellectual-frontiers/ifc-ts/runtime";
 import { ui } from "../core/ui.ts";
 import { type Signer, sshSigner, verifyBundle } from "../evidence/bundle.ts";
 import type { ScfCatalog } from "../compliance/catalog.ts";
@@ -63,12 +63,13 @@ export function isContact(s: string): boolean {
 /** Parse --frameworks (soc2,hipaa), or throw naming the unknown one. */
 export function parseFrameworks(s: string | undefined): FrameworkId[] | undefined {
   if (!s) return undefined;
-  const ids = s.split(",").map((x) => x.trim()).filter(Boolean);
+  const ids = s
+    .split(",")
+    .map((x) => x.trim())
+    .filter(Boolean);
   for (const id of ids) {
     if (!FRAMEWORKS.some((f) => f.id === id)) {
-      throw new Error(
-        `${id}: not a framework (one of ${FRAMEWORKS.map((f) => f.id).join(", ")})`,
-      );
+      throw new Error(`${id}: not a framework (one of ${FRAMEWORKS.map((f) => f.id).join(", ")})`);
     }
   }
   return ids as FrameworkId[];
@@ -102,25 +103,29 @@ export async function buildTrustSite(
       ...(o.frameworks ? { frameworks: o.frameworks } : {}),
     });
   } catch (e) {
-    return { ok: false, problems: [(e as Error).message] };
+    return { ok: false, problems: [toError(e).message] };
   }
   const files: Record<string, Uint8Array> = {};
   let published: Parameters<typeof trustPage>[1]["published"];
-  const publish = (name: string, bytes: Uint8Array) => {
+  const publish = async (name: string, bytes: Uint8Array): Promise<void> => {
     files[`${EVIDENCE_DIR}/${name}`] = bytes;
-    for (const [p, b] of Object.entries(unpacked(bytes))) files[`${EVIDENCE_DIR}/${p}`] = b;
+    for (const [p, b] of Object.entries(await unpacked(bytes))) files[`${EVIDENCE_DIR}/${p}`] = b;
   };
   if (mode === "gated") {
-    publish(fileName, zip);
-    published = { zip: fileName, items: verified.manifest!.items, signer: verified.signer! };
+    await publish(fileName, zip);
+    published = {
+      zip: fileName,
+      items: verified.manifest?.items ?? [],
+      signer: verified.signer ?? "",
+    };
   } else if (o.sign) {
     try {
       const s = await summaryBundle(model, zip, o.sign, { stolos, now });
       const name = `${model.fleetId}-trust-summary-${model.period.from}-to-${model.period.to}.zip`;
-      publish(name, s.zip);
+      await publish(name, s.zip);
       published = { zip: name, items: s.manifest.items, signer: model.signer };
     } catch (e) {
-      return { ok: false, problems: [(e as Error).message] };
+      return { ok: false, problems: [toError(e).message] };
     }
   }
   const page = await trustPage(model, {
@@ -137,9 +142,9 @@ export async function buildTrustSite(
 }
 
 async function emptyOrOurs(dir: string): Promise<boolean> {
-  if (await Deno.stat(join(dir, MARKER)).then(() => true, () => false)) return true;
+  if (await fs.exists(path.join(dir, MARKER))) return true;
   try {
-    for await (const _ of Deno.readDir(dir)) return false;
+    for await (const _ of fs.readDir(dir)) return false;
   } catch {
     // It does not exist yet.
   }
@@ -185,20 +190,21 @@ export async function trustBuild(o: {
   try {
     frameworks = parseFrameworks(o.frameworks);
   } catch (e) {
-    p.fail((e as Error).message);
+    p.fail(toError(e).message);
     return 1;
   }
   let zip: Uint8Array;
   try {
-    zip = await Deno.readFile(o.bundle);
+    zip = await fs.readFile(o.bundle);
   } catch (e) {
-    p.fail(`${o.bundle}: ${(e as Error).message}`);
+    p.fail(`${o.bundle}: ${toError(e).message}`);
     return 1;
   }
-  const catalog = o.catalog === null
-    ? undefined
-    : o.catalog ?? await (await import("../compliance/catalog.ts")).loadScf();
-  const fileName = o.bundle.split(/[\\/]/).pop()!;
+  const catalog =
+    o.catalog === null
+      ? undefined
+      : (o.catalog ?? (await (await import("../compliance/catalog.ts")).loadScf()));
+  const fileName = o.bundle.split(/[\\/]/).pop() ?? o.bundle;
   let sign = o.sign;
   if (mode === "public" && !o.onRequest && !sign) {
     const key = await signingKey(o.key);
@@ -208,7 +214,7 @@ export async function trustBuild(o: {
   const site = await buildTrustSite(zip, fileName, {
     mode,
     ...(sign && !o.onRequest ? { sign } : {}),
-    ...(o.signers ? { allowedSigners: await Deno.readTextFile(o.signers) } : {}),
+    ...(o.signers ? { allowedSigners: await fs.readTextFile(o.signers) } : {}),
     ...(catalog ? { catalog } : {}),
     ...(frameworks ? { frameworks } : {}),
     ...(o.contact ? { contact: o.contact } : {}),
@@ -220,20 +226,20 @@ export async function trustBuild(o: {
     return 1;
   }
   const { P } = await import("../core/paths.ts");
-  const out = o.out ?? join(P.state, "trust", mode);
+  const out = o.out ?? path.join(P.state, "trust", mode);
   if (!(await emptyOrOurs(out))) {
     p.fail(`${out} holds other files: give an empty folder, or one a Trust Center was built in`);
     return 1;
   }
   try {
-    await Deno.remove(out, { recursive: true });
+    await fs.remove(out, { recursive: true });
   } catch (e) {
-    if (!(e instanceof Deno.errors.NotFound)) throw e;
+    if (!(e instanceof errors.NotFound)) throw e;
   }
   for (const [rel, bytes] of Object.entries(site.files)) {
-    const f = join(out, rel);
-    await Deno.mkdir(join(f, ".."), { recursive: true });
-    await Deno.writeFile(f, bytes);
+    const f = path.join(out, rel);
+    await fs.mkdir(path.dirname(f), { recursive: true });
+    await fs.writeFile(f, bytes);
   }
   const m = site.model;
   const failing = m.controls.filter((c) => c.status === "fail").length;
@@ -251,10 +257,10 @@ export async function trustBuild(o: {
     if (m.scf.mappings === "catalog") p.note(msg);
     else p.warn(msg);
   }
-  p.done(join(out, "index.html"));
+  p.done(path.join(out, "index.html"));
   ui.next.push(
     mode === "gated"
-      ? "host it behind your own access (the trust guide: deno task stolos docs trust)"
+      ? "host it behind your own access (the trust guide: bun run stolos docs trust)"
       : "publish the folder as it is (any static host); it makes no requests",
   );
   return 0;

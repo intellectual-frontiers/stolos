@@ -27,8 +27,9 @@
  * @module
  */
 
+import { assess, exportedLiteral, type Json } from "@intellectual-frontiers/ifc-ts/kernel";
+import { stdio } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "../core/exec.ts";
-import { exportedLiteral } from "../core/ts-literal.ts";
 import type { RepoReader } from "../estate/snapshot.ts";
 import type { PcFacts } from "../console/pc.ts";
 import type { AdoptedDef, Observed } from "../adopt/adopt.ts";
@@ -63,11 +64,9 @@ export async function repoEvidence(
   const lit = async <T>(path: string, name: string): Promise<T | undefined> => {
     const text = await r.read(path);
     if (text === undefined) return undefined;
-    try {
-      return exportedLiteral(text, name) as T;
-    } catch {
-      return undefined; // Edited by hand: not a literal Stolos wrote.
-    }
+    const v = exportedLiteral(text, name);
+    // Edited by hand: not a literal Stolos wrote.
+    return v.kind === "ok" ? (v.value as T) : undefined;
   };
   const { policies } = await import("../adopt/policy.ts");
   const { devicePolicies } = await import("../device/device.ts");
@@ -108,10 +107,12 @@ export async function repoEvidence(
   }
   const controls = o.packs
     ? await o.packs({
-      adopted,
-      devices,
-      connectors: clouds.map((c) => ({ connector: c.id, observed: c.observed! })),
-    })
+        adopted,
+        devices,
+        connectors: clouds.flatMap((c) =>
+          c.observed ? [{ connector: c.id, observed: c.observed }] : [],
+        ),
+      })
     : undefined;
   const facts: PcFacts = {
     fleet: { id: fleet, title: fleet, repo: "" },
@@ -129,7 +130,9 @@ export async function repoEvidence(
   });
   // Only what the repository records: the repository's own checks need this PC's state.
   const keep = (e: Evidence) =>
-    e.source === "adopted" || e.source === "device" || e.source === "cloud" ||
+    e.source === "adopted" ||
+    e.source === "device" ||
+    e.source === "cloud" ||
     (!!o.packs && e.source === "control pack");
   const { combine } = await import("./report.ts");
   return {
@@ -175,29 +178,58 @@ export interface ControlChange {
 
 const RANK: Record<Coverage, number> = { fail: 0, "no evidence": 1, partial: 2, pass: 3 };
 
-/** The controls whose status differs between two views, worse first. */
+/** Evidence by its source, subject, and check: what drift compares (kernel `assess.drift`). */
+function evidenceView(evidence: readonly Evidence[]): Map<string, Json> {
+  return new Map(
+    evidence.map((e) => [
+      keyOf(e),
+      { source: e.source, subject: e.subject, check: e.check, status: e.status, stale: !!e.stale },
+    ]),
+  );
+}
+
+const keyOf = (e: Evidence): string => JSON.stringify([e.source, e.subject, e.check]);
+const keyed = (evidence: readonly Evidence[]): Map<string, Evidence> =>
+  new Map(evidence.map((e) => [keyOf(e), e]));
+
+/** The controls whose status differs between two views, worse first; each with the evidence that changed under it. */
 export function compareViews(before: ComplianceView, after: ComplianceView): ControlChange[] {
   const out: ControlChange[] = [];
-  const key = (e: Evidence) => `${e.source}\u0000${e.subject}\u0000${e.check}`;
   for (const a of after.controls) {
     const b = before.controls.find((x) => x.control.id === a.control.id);
     const from: Coverage = b?.status ?? "no evidence";
     if (from === a.status) continue;
-    const then = new Map((b?.evidence ?? []).map((e) => [key(e), e]));
-    const now = new Map(a.evidence.map((e) => [key(e), e]));
+    const then = keyed(b?.evidence ?? []);
+    const now = keyed(a.evidence);
+    const d = assess.drift(evidenceView(b?.evidence ?? []), evidenceView(a.evidence));
     const evidence: EvidenceChange[] = [];
-    for (const k of new Set([...then.keys(), ...now.keys()])) {
-      const x = then.get(k);
-      const y = now.get(k);
-      if (x && y && x.status === y.status) continue;
-      const e = (y ?? x)!;
+    for (const { key } of d.removed) {
+      const x = then.get(key);
+      if (x)
+        evidence.push({ source: x.source, subject: x.subject, check: x.check, from: x.status });
+    }
+    for (const { key } of d.added) {
+      const y = now.get(key);
+      if (!y) continue;
       evidence.push({
-        source: e.source,
-        subject: e.subject,
-        check: e.check,
-        ...(x ? { from: x.status } : {}),
-        ...(y ? { to: y.status } : {}),
-        ...(y?.stale ? { stale: true } : {}),
+        source: y.source,
+        subject: y.subject,
+        check: y.check,
+        to: y.status,
+        ...(y.stale ? { stale: true } : {}),
+      });
+    }
+    for (const { key, changes } of d.changed) {
+      const x = then.get(key);
+      const y = now.get(key);
+      if (!x || !y || !changes.some((c) => c.field === "$.status")) continue;
+      evidence.push({
+        source: y.source,
+        subject: y.subject,
+        check: y.check,
+        from: x.status,
+        to: y.status,
+        ...(y.stale ? { stale: true } : {}),
       });
     }
     out.push({
@@ -232,9 +264,9 @@ export interface Drift {
 export function driftEvent(d: Drift): Event {
   const worse = d.changes.filter((c) => c.worse);
   const lines = [
-    `Compliance drift in fleet ${d.fleet}, from ${d.since.rev.slice(0, 10)} (${
-      d.since.at.slice(0, 16).replace("T", " ")
-    } UTC) to now (${d.now.at.slice(0, 16).replace("T", " ")} UTC):`,
+    `Compliance drift in fleet ${d.fleet}, from ${d.since.rev.slice(0, 10)} (${d.since.at
+      .slice(0, 16)
+      .replace("T", " ")} UTC) to now (${d.now.at.slice(0, 16).replace("T", " ")} UTC):`,
     "",
   ];
   for (const c of d.changes) {
@@ -254,11 +286,10 @@ export function driftEvent(d: Drift): Event {
     }`,
     level: worse.some((c) => c.to === "fail") ? "fail" : worse.length ? "warn" : "info",
     what: lines.join("\n"),
-    todo:
-      "Run deno task stolos compliance on the PC: each failing check names its fix; stale evidence names the command that observes it again.",
-    key: `compliance-drift-${d.fleet}-${d.since.rev.slice(0, 12)}-${
-      d.changes.map((c) => `${c.id}:${c.to}`).join(",")
-    }`,
+    todo: "Run bun run stolos compliance on the PC: each failing check names its fix; stale evidence names the command that observes it again.",
+    key: `compliance-drift-${d.fleet}-${d.since.rev.slice(0, 12)}-${d.changes
+      .map((c) => `${c.id}:${c.to}`)
+      .join(",")}`,
   };
 }
 
@@ -298,7 +329,8 @@ export async function drift(o: {
   const s = await resolveSince(o.repo, o.since);
   if ("error" in s) return s;
   const { gitReader } = await import("../estate/snapshot.ts");
-  const connectors = o.connectors ?? await (await import("../connect/commands.ts")).allConnectors();
+  const connectors =
+    o.connectors ?? (await (await import("../connect/commands.ts")).allConnectors());
   const now = o.now ?? Date.now();
   const common = {
     connectors,
@@ -327,7 +359,7 @@ export async function driftCommand(
   const { loadCadences } = await import("./freshness.ts");
   const p = ui.phase("Compliance drift");
   if (!P.fleetId) {
-    p.fail("no fleet chosen", "deno task stolos fleet use <id>");
+    p.fail("no fleet chosen", "bun run stolos fleet use <id>");
     return 1;
   }
   const d = await drift({
@@ -341,11 +373,11 @@ export async function driftCommand(
     return 1;
   }
   if (o.json) {
-    console.log(JSON.stringify(d, null, 2));
+    stdio.stdout.writeSync(`${JSON.stringify(d, null, 2)}\n`);
   } else {
     for (const c of d.changes) {
       const msg = `${c.id} ${c.name}: ${c.from} -> ${c.to}`;
-      if (c.worse) p.warn(msg, "deno task stolos compliance");
+      if (c.worse) p.warn(msg, "bun run stolos compliance");
       else p.ok(msg);
       for (const e of c.evidence.slice(0, 10)) {
         p.note(
@@ -364,9 +396,10 @@ export async function driftCommand(
   }
   p.done(
     d.changes.length
-      ? `${d.changes.length} control(s) changed since ${d.since.rev.slice(0, 10)} (${
-        d.since.at.slice(0, 10)
-      })`
+      ? `${d.changes.length} control(s) changed since ${d.since.rev.slice(0, 10)} (${d.since.at.slice(
+          0,
+          10,
+        )})`
       : `no control changed since ${d.since.rev.slice(0, 10)} (${d.since.at.slice(0, 10)})`,
   );
   return 0;

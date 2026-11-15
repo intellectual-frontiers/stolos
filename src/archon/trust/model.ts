@@ -25,9 +25,8 @@
  * @module
  */
 
-import { unzipSync } from "npm:fflate@0.8.2";
+import { sha256 as sha256Hex, unzip } from "@intellectual-frontiers/ifc-ts/kernel";
 import type { Manifest, ManifestItem, VerifyResult } from "../evidence/bundle.ts";
-import { sha256Hex } from "../evidence/bundle.ts";
 import { SCF_SOURCE, type ScfCatalog, type ScfEntry } from "../compliance/catalog.ts";
 import {
   applyFreshness,
@@ -222,10 +221,10 @@ export function oscalChecks(ar: OscalResults): Array<Evidence & { observation: s
       const result = props.find((p) => p.name === "result" && p.ns === STOLOS_NS)?.value;
       const source = props.find((p) => p.name === "source" && p.ns === STOLOS_NS)?.value;
       const status = (RESULTS as readonly string[]).includes(result ?? "")
-        ? result as Evidence["status"]
+        ? (result as Evidence["status"])
         : "unknown";
       const src = (SOURCES as readonly string[]).includes(source ?? "")
-        ? source as Evidence["source"]
+        ? (source as Evidence["source"])
         : "repository";
       const k = o.title.indexOf(": ");
       const subject = k < 0 ? o.title : o.title.slice(0, k);
@@ -263,15 +262,15 @@ export function findingsCatalog(ar: OscalResults, version: string): ScfCatalog {
     >;
   for (const r of ar["assessment-results"]?.results ?? []) {
     for (const f of r.findings ?? []) {
-      const id = f.title.split(/\s+/)[0];
+      const id = f.title.split(/\s+/)[0] ?? f.title;
       for (const p of (f.props ?? []).filter((x) => x.name === "scf-control")) {
         const known = SCF.find((c) => c.id === p.value);
-        const e = controls[p.value] ??= {
+        const e = (controls[p.value] ??= {
           domain: "",
           name: known?.name ?? p.value,
           description: "",
           maps: empty(),
-        };
+        });
         if (!e.maps.nist80053.includes(id)) e.maps.nist80053.push(id);
       }
     }
@@ -281,7 +280,8 @@ export function findingsCatalog(ar: OscalResults, version: string): ScfCatalog {
 
 /** The bundle's assessment results (its newest "oscal" item named assessment-results.json). */
 export function assessmentItem(m: Manifest): ManifestItem | undefined {
-  return m.items.filter((i) => i.kind === "oscal" && i.name.endsWith("assessment-results.json"))
+  return m.items
+    .filter((i) => i.kind === "oscal" && i.name.endsWith("assessment-results.json"))
     .at(-1);
 }
 
@@ -296,19 +296,21 @@ const timed = (i: ManifestItem) => i.kind !== "oscal" && i.kind !== "signers";
 export async function trustModel(i: TrustInput): Promise<TrustModel> {
   const v = i.verified;
   if (!v.ok || !v.manifest || !v.signer) {
-    throw new Error(
-      `the bundle does not verify: ${v.problems.join("; ") || "no signer"}`,
-    );
+    throw new Error(`the bundle does not verify: ${v.problems.join("; ") || "no signer"}`);
   }
   const m = v.manifest;
-  const files = unzipSync(i.zip);
+  const unzipped = await unzip(i.zip);
+  if (unzipped.kind === "err") throw new Error(`the bundle is not a ZIP (${unzipped.error.kind})`);
+  const files = unzipped.value;
   const ai = assessmentItem(m);
   if (!ai) {
     throw new Error(
       "the bundle has no OSCAL assessment results (it was made without the SCF catalog): there is nothing to show",
     );
   }
-  const ar = JSON.parse(dec.decode(files[`objects/${ai.sha256}`])) as OscalResults;
+  const ar = JSON.parse(
+    dec.decode(files.get(`objects/${ai.sha256}`) ?? new Uint8Array()),
+  ) as OscalResults;
   const version = scfVersionOf(ar) ?? SCF_SOURCE.version;
   const signedAt = Date.parse(m.created);
   const now = i.now ?? new Date();
@@ -316,16 +318,21 @@ export async function trustModel(i: TrustInput): Promise<TrustModel> {
   // Each check, with its items and the newest observation time among them.
   const raw = oscalChecks(ar).map((e) => {
     const items = bundleItemsFor(e, m.items);
-    const times = items.filter(timed).map((x) => x.at).sort();
-    return { ...e, items, ...(times.length ? { observedAt: times.at(-1)! } : {}) };
+    const times = items
+      .filter(timed)
+      .map((x) => x.at)
+      .sort();
+    const newest = times.at(-1);
+    return { ...e, items, ...(newest ? { observedAt: newest } : {}) };
   });
   // Spec 073: stale when signed (the default cadences: the bundle carries no fleet.ts).
   // A stale check also counts against MON-02 (073); its items and observation come along.
   const fresh = applyFreshness(raw, resolveCadences(), signedAt) as TrustCheck[];
 
   // The mappings: the catalog of the bundle's release, else the bundle's own SP 800-53 findings.
-  const useCatalog = i.catalog && i.catalog.version === version;
-  const catalog = useCatalog ? i.catalog! : findingsCatalog(ar, version);
+  const own = i.catalog && i.catalog.version === version ? i.catalog : undefined;
+  const useCatalog = own !== undefined;
+  const catalog = own ?? findingsCatalog(ar, version);
   const view = complianceView(fresh, catalog);
   const unavailable: TrustModel["unavailable"] = [];
   const available = view.frameworks.filter((f) => {
@@ -335,8 +342,8 @@ export async function trustModel(i: TrustInput): Promise<TrustModel> {
       reason: useCatalog
         ? "no SCF control with evidence here maps to it"
         : i.catalog
-        ? `this PC has SCF ${i.catalog.version}, the bundle's mappings are SCF ${version}`
-        : `the SCF ${version} catalog is not on this PC (deno task stolos compliance catalog)`,
+          ? `this PC has SCF ${i.catalog.version}, the bundle's mappings are SCF ${version}`
+          : `the SCF ${version} catalog is not on this PC (bun run stolos compliance catalog)`,
     });
     return false;
   });
@@ -365,8 +372,8 @@ export async function trustModel(i: TrustInput): Promise<TrustModel> {
       checks,
       counts,
       freshness: controlFreshness(c, signedAt),
-      items: [...by.values()].sort((a, b) =>
-        (order.get(a.sha256 + a.name) ?? 0) - (order.get(b.sha256 + b.name) ?? 0)
+      items: [...by.values()].sort(
+        (a, b) => (order.get(a.sha256 + a.name) ?? 0) - (order.get(b.sha256 + b.name) ?? 0),
       ),
     };
   });

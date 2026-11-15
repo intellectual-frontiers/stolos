@@ -10,7 +10,7 @@
  *
  * ```mermaid
  * flowchart LR
- *   pack["fleets/&lt;fleet&gt;/controls/&lt;pack&gt;/pack.ts"] --> test["deno task test: *_test.ts with testControl"]
+ *   pack["fleets/&lt;fleet&gt;/controls/&lt;pack&gt;/pack.ts"] --> test["bun test: *.test.ts with testControl"]
  *   pack --> run["stolos controls run"]
  *   run --> estate[("estate graph: SQL")] & probe["adopted machines: osquery"] & obs["observations"]
  *   run --> comp["stolos compliance, the Compliance tab"]
@@ -31,7 +31,7 @@
  * checking. `fix` says how to make it pass.
  *
  * ```ts
- * import { defineControl, defineControlPack } from "@stolos/archon/controls/mod.ts";
+ * import { defineControl, defineControlPack } from "@intellectual-frontiers/stolos/archon/controls/mod";
  *
  * export const noTelnet = defineControl({
  *   id: "no-telnet",
@@ -60,11 +60,11 @@
  * ## A pack in the fleet repository
  *
  * Put each pack in its own folder: `fleets/<fleet>/controls/<pack>/pack.ts` exports the pack (as
- * `pack`, or as its default export), and `<pack>_test.ts` beside it tests it. Stolos loads every
+ * `pack`, or as its default export), and `<pack>.test.ts` beside it tests it. Stolos loads every
  * pack there. A risk the owner accepts is recorded in `fleets/<fleet>/controls/accepted.ts`:
  *
  * ```ts
- * import type { Acceptance } from "@stolos/archon/adopt/adopt.ts";
+ * import type { Acceptance } from "@intellectual-frontiers/stolos/archon/adopt/adopt";
  *
  * export const accepted: Acceptance[] = [{
  *   policy: "acme-baseline/no-telnet",
@@ -85,7 +85,8 @@
  * `accepted` and `now` as needed.
  *
  * ```ts
- * import { defineControl, testControl } from "@stolos/archon/controls/mod.ts";
+ * import { test } from "@intellectual-frontiers/ifc-ts/runtime/test";
+ * import { defineControl, testControl } from "@intellectual-frontiers/stolos/archon/controls/mod";
  *
  * const noTelnet = defineControl({
  *   id: "no-telnet",
@@ -96,22 +97,21 @@
  *   assert: (rows) => ({ status: rows.length ? "fail" : "pass", detail: `${rows.length} listener(s)` }),
  * });
  *
- * Deno.test("telnet fails where it listens", () => {
+ * test("telnet fails where it listens", () => {
  *   const rs = testControl(noTelnet, { machines: { alpha: [{ port: 23 }], beta: [] } });
  *   if (rs.map((r) => r.status).join() !== "fail,pass") throw new Error("wrong verdicts");
  * });
  * ```
  *
- * In the fleet repository, `deno task test` runs every test once `deno.json`'s tasks have
- * `"test": "deno test -A fleets/"` (add it beside `stolos`); `stolos controls test` runs the packs'
- * tests without it.
+ * In the fleet repository, `bun test fleets/` (or `node --test fleets/`) runs every test;
+ * `stolos controls test` runs the packs' tests with the runtime Stolos runs on.
  *
  * ## Commands
  *
  * ```bash
- * deno task stolos controls list
- * deno task stolos controls run
- * deno task stolos controls test
+ * bun run stolos controls list
+ * bun run stolos controls run
+ * bun run stolos controls test
  * ```
  *
  * `controls list` shows each pack and its controls. `controls run` runs them now: estate controls

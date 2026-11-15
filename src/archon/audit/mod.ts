@@ -18,11 +18,11 @@
  * ## 1. Open an engagement
  *
  * ```bash
- * deno task stolos audit open soc2-2026 --firm "Example CPA" --auditor "Dana Example <dana@example.com>" \
+ * bun run stolos audit open soc2-2026 --firm "Example CPA" --auditor "Dana Example <dana@example.com>" \
  *   --from 2026-01-01 --to 2026-06-30 --framework soc2 --expires 2026-09-30 \
  *   --controls "CC6.2=leavers,CC6.1=mfa,CC8.1=change,CC6.3=access-reviews"
- * deno task stolos evidence export --from 2026-01-01 --to 2026-06-30
- * deno task stolos audit bundle soc2-2026 <the bundle's path>
+ * bun run stolos evidence export --from 2026-01-01 --to 2026-06-30
+ * bun run stolos audit bundle soc2-2026 <the bundle's path>
  * ```
  *
  * The engagement is `fleets/<fleet>/audits/<id>/engagement.ts`: the firm and its people, the
@@ -58,7 +58,7 @@
  * auditor redraws it with a shell:
  *
  * ```bash
- * deno task stolos audit sample soc2-2026 --control CC6.2 --seed 734019 --size 5
+ * bun run stolos audit sample soc2-2026 --control CC6.2 --seed 734019 --size 5
  * ```
  *
  * The sample, the seed, the method, and the population's hash are recorded in the trail.
@@ -66,8 +66,8 @@
  * ## 4. Requests and responses
  *
  * ```bash
- * deno task stolos audit request soc2-2026 --by "Dana Example" --control CC6.2 --text "For each sampled leaver: ..."
- * deno task stolos audit respond soc2-2026 --re 3 --text "Each sample's evidence is on its page ..."
+ * bun run stolos audit request soc2-2026 --by "Dana Example" --control CC6.2 --text "For each sampled leaver: ..."
+ * bun run stolos audit respond soc2-2026 --re 3 --text "Each sample's evidence is on its page ..."
  * ```
  *
  * Each is a numbered file in `audits/<id>/trail/`, added in a signed commit whose trailer names the
@@ -77,7 +77,7 @@
  * ## 5. The portal
  *
  * ```bash
- * deno task stolos audit portal soc2-2026
+ * bun run stolos audit portal soc2-2026
  * ```
  *
  * It starts the Stolos Console on 127.0.0.1 and prints a link that works once, for two minutes,
@@ -92,8 +92,8 @@
  * The console answers only on this PC. For an auditor elsewhere, send the export package:
  *
  * ```bash
- * deno task stolos audit export soc2-2026
- * deno task stolos audit verify lab-audit-soc2-2026.zip   # the auditor, offline
+ * bun run stolos audit export soc2-2026
+ * bun run stolos audit verify lab-audit-soc2-2026.zip   # the auditor, offline
  * ```
  *
  * It holds the bundle, engagement.ts and every trail entry with the raw signed commit that recorded

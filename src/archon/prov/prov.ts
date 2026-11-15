@@ -5,6 +5,7 @@
  * @module
  */
 
+import { proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { listRecords, putRecord } from "../state/store.ts";
 import { P } from "../core/paths.ts";
 import { run } from "../core/exec.ts";
@@ -31,8 +32,9 @@ export interface Activity {
 
 /** Who is acting: `ARCHON_AGENT`, else `SUDO_USER`, else `USER`, else `"unknown"`. */
 export function agentName(): string {
-  return Deno.env.get("ARCHON_AGENT") ?? Deno.env.get("SUDO_USER") ?? Deno.env.get("USER") ??
-    "unknown";
+  return (
+    proc.env.get("ARCHON_AGENT") ?? proc.env.get("SUDO_USER") ?? proc.env.get("USER") ?? "unknown"
+  );
 }
 
 /** The checkout's HEAD commit, or `"unknown"`. */
@@ -81,8 +83,10 @@ export async function recordActivity(
 
 /** A host's recorded activities, oldest first. */
 export async function loadActivities(host: string, root = P.state): Promise<Activity[]> {
-  return (await listRecords<Activity & { detail?: string[] }>(host, "prov", root)).map((r) => ({
-    ...r.body,
-    changes: r.body.detail ?? [],
-  })).sort((a, b) => a.started.localeCompare(b.started));
+  return (await listRecords<Activity & { detail?: string[] }>(host, "prov", root))
+    .map((r) => ({
+      ...r.body,
+      changes: r.body.detail ?? [],
+    }))
+    .sort((a, b) => a.started.localeCompare(b.started));
 }

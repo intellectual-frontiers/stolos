@@ -1,5 +1,9 @@
-// Spec 078: the built-in policies as they were before they were rewritten on the control SDK,
-// kept only so tests/controls078_test.ts can show the rewrites give identical results.
+/**
+ * Spec 078: the built-in policies as they were before they were rewritten on the control SDK,
+ * kept only so tests/controls078.test.ts can show the rewrites give identical results (FR-005).
+ *
+ * @module
+ */
 import type { AdoptedDef, Observed } from "../src/archon/adopt/adopt.ts";
 import type { PolicyResult } from "../src/archon/adopt/policy.ts";
 import type { DeviceDef, DeviceObserved } from "../src/archon/device/device.ts";
@@ -46,14 +50,16 @@ export function legacyPolicies(
   now = Date.now(),
 ): PolicyResult[] {
   if (!o) {
-    return [{
-      id: "observed",
-      title: "Observed by Stolos",
-      scf: ["AST-04"],
-      status: "fail",
-      detail: "never observed",
-      fix: `deno task stolos host observe ${m.name}`,
-    }];
+    return [
+      {
+        id: "observed",
+        title: "Observed by Stolos",
+        scf: ["AST-04"],
+        status: "fail",
+        detail: "never observed",
+        fix: `bun run stolos host observe ${m.name}`,
+      },
+    ];
   }
   const days = (now - Date.parse(o.at)) / 86_400_000;
   const out: PolicyResult[] = [];
@@ -64,63 +70,62 @@ export function legacyPolicies(
     scf: ["AST-04", "MON-02"],
     status: days <= 7 ? "pass" : "fail",
     detail: `last observed ${o.at.slice(0, 10)}`,
-    fix: `deno task stolos host observe ${m.name}`,
+    fix: `bun run stolos host observe ${m.name}`,
   });
   add({
     id: "disk-encryption",
     title: "The disk is encrypted",
     scf: ["CRY-07"],
-    status: o.security.diskEncryption === "on"
-      ? "pass"
-      : o.security.diskEncryption === "off"
-      ? "fail"
-      : "unknown",
+    status:
+      o.security.diskEncryption === "on"
+        ? "pass"
+        : o.security.diskEncryption === "off"
+          ? "fail"
+          : "unknown",
     detail: `disk encryption: ${o.security.diskEncryption}`,
     fix: win(o)
       ? "Settings > Privacy & security > Device encryption (or BitLocker: Control Panel > BitLocker Drive Encryption > Turn on)"
       : mac(o)
-      ? "System Settings > Privacy & Security > FileVault > Turn On"
-      : "Linux encrypts at installation (LUKS): reinstall with encryption, or record why this machine holds nothing sensitive",
+        ? "System Settings > Privacy & Security > FileVault > Turn On"
+        : "Linux encrypts at installation (LUKS): reinstall with encryption, or record why this machine holds nothing sensitive",
   });
   add({
     id: "firewall",
     title: "The firewall is on",
     scf: ["END-07", "NET-02"],
-    status: o.security.firewall === "on"
-      ? "pass"
-      : o.security.firewall === "off"
-      ? "fail"
-      : "unknown",
+    status:
+      o.security.firewall === "on" ? "pass" : o.security.firewall === "off" ? "fail" : "unknown",
     detail: `firewall: ${o.security.firewall}`,
     fix: win(o)
       ? "Windows Security > Firewall & network protection: turn on every network"
       : mac(o)
-      ? "System Settings > Network > Firewall > On"
-      : o.os.family.includes("arch")
-      ? "sudo pacman -S ufw && sudo systemctl enable --now ufw && sudo ufw enable"
-      : "sudo ufw enable (Ubuntu, Debian) or sudo systemctl enable --now firewalld (Fedora)",
+        ? "System Settings > Network > Firewall > On"
+        : o.os.family.includes("arch")
+          ? "sudo pacman -S ufw && sudo systemctl enable --now ufw && sudo ufw enable"
+          : "sudo ufw enable (Ubuntu, Debian) or sudo systemctl enable --now firewalld (Fedora)",
   });
   add({
     id: "auto-updates",
     title: "Security updates install by themselves",
     scf: ["VPM-08"],
-    status: o.security.autoUpdates === "on"
-      ? "pass"
-      : o.security.autoUpdates === "manual"
-      ? "warn"
-      : o.security.autoUpdates === "off"
-      ? "fail"
-      : "unknown",
+    status:
+      o.security.autoUpdates === "on"
+        ? "pass"
+        : o.security.autoUpdates === "manual"
+          ? "warn"
+          : o.security.autoUpdates === "off"
+            ? "fail"
+            : "unknown",
     detail: `automatic updates: ${o.security.autoUpdates}${
       o.software.pendingUpdates !== undefined ? `; ${o.software.pendingUpdates} waiting` : ""
     }`,
     fix: win(o)
       ? "Settings > Windows Update (and remove the policy that turns automatic updates off)"
       : mac(o)
-      ? "System Settings > General > Software Update > Automatic Updates: all on"
-      : o.security.autoUpdates === "manual"
-      ? "a rolling distribution updates by hand: run sudo pacman -Syu (Omarchy: Update in its menu) at least weekly"
-      : "sudo apt install unattended-upgrades && sudo dpkg-reconfigure -plow unattended-upgrades",
+        ? "System Settings > General > Software Update > Automatic Updates: all on"
+        : o.security.autoUpdates === "manual"
+          ? "a rolling distribution updates by hand: run sudo pacman -Syu (Omarchy: Update in its menu) at least weekly"
+          : "sudo apt install unattended-upgrades && sudo dpkg-reconfigure -plow unattended-upgrades",
   });
   if (o.software.pendingUpdates !== undefined) {
     add({
@@ -158,11 +163,12 @@ export function legacyPolicies(
       id: "antivirus",
       title: "Anti-malware protection is on",
       scf: ["END-04"],
-      status: o.security.antivirus === "on"
-        ? "pass"
-        : o.security.antivirus === "off"
-        ? "fail"
-        : "unknown",
+      status:
+        o.security.antivirus === "on"
+          ? "pass"
+          : o.security.antivirus === "off"
+            ? "fail"
+            : "unknown",
       detail: `real-time protection: ${o.security.antivirus}`,
       fix: "Windows Security > Virus & threat protection > Real-time protection: on",
     });
@@ -171,11 +177,8 @@ export function legacyPolicies(
     id: "few-admins",
     title: "At most three administrators",
     scf: ["IAC-30"],
-    status: o.security.admins.length === 0
-      ? "unknown"
-      : o.security.admins.length <= 3
-      ? "pass"
-      : "warn",
+    status:
+      o.security.admins.length === 0 ? "unknown" : o.security.admins.length <= 3 ? "pass" : "warn",
     detail: o.security.admins.length
       ? `administrators: ${o.security.admins.join(", ")}`
       : "administrators: unknown",
@@ -190,10 +193,10 @@ export function legacyPolicies(
     fix: win(o)
       ? "integrate.windows.ps1 --adopt --osquery (installs osquery's MSI)"
       : mac(o)
-      ? "brew install --cask osquery"
-      : o.os.family.includes("arch")
-      ? "osquery is in the AUR: yay -S osquery-bin"
-      : "install osquery from osquery.io's apt or yum repository",
+        ? "brew install --cask osquery"
+        : o.os.family.includes("arch")
+          ? "osquery is in the AUR: yay -S osquery-bin"
+          : "install osquery from osquery.io's apt or yum repository",
   });
   if (m.until) {
     add({
@@ -202,7 +205,7 @@ export function legacyPolicies(
       scf: ["AST-04"],
       status: m.until >= new Date(now).toISOString().slice(0, 10) ? "pass" : "fail",
       detail: `adopted until ${m.until}`,
-      fix: `deno task stolos host release ${m.name}, or extend until in machine.ts`,
+      fix: `bun run stolos host release ${m.name}, or extend until in machine.ts`,
     });
   }
   return accept(m, out, now);
@@ -215,14 +218,16 @@ export function legacyDevicePolicies(
   now = Date.now(),
 ): PolicyResult[] {
   if (!o) {
-    return [{
-      id: "observed",
-      title: "Observed by Stolos",
-      scf: ["AST-04"],
-      status: "fail",
-      detail: "never observed",
-      fix: `deno task stolos device observe ${d.name}`,
-    }];
+    return [
+      {
+        id: "observed",
+        title: "Observed by Stolos",
+        scf: ["AST-04"],
+        status: "fail",
+        detail: "never observed",
+        fix: `bun run stolos device observe ${d.name}`,
+      },
+    ];
   }
   const days = (now - Date.parse(o.at)) / 86_400_000;
   return [
@@ -232,7 +237,7 @@ export function legacyDevicePolicies(
       scf: ["AST-04", "MON-02"],
       status: days <= 7 ? "pass" : "fail",
       detail: `last observed ${o.at.slice(0, 10)}`,
-      fix: `deno task stolos device observe ${d.name}`,
+      fix: `bun run stolos device observe ${d.name}`,
     },
     {
       id: "snmpv3",
@@ -249,8 +254,7 @@ export function legacyDevicePolicies(
       detail: `owner: ${d.owner || o.contact || "none"}; location: ${
         d.location || o.location || "none"
       }`,
-      fix:
-        `set owner and location in fleets/<fleet>/devices/${d.name}/device.ts (or sysContact and sysLocation on the device)`,
+      fix: `set owner and location in fleets/<fleet>/devices/${d.name}/device.ts (or sysContact and sysLocation on the device)`,
     },
     {
       id: "restarted",
@@ -287,15 +291,15 @@ export function legacyEstatePolicies(e: Estate, now = new Date()): PolicyResult[
       scf: ["IAC-04"],
       status: leavers.length ? "fail" : "pass",
       detail: leavers.length
-        ? `${leavers.length} active account(s) of people who left: ${
-          list(leavers, (x) => `${x.email} in ${x.system}`)
-        }`
-        : `${
-          count("SELECT count(*) AS n FROM person WHERE status = 'terminated'")
-        } leaver(s), none with an active account`,
-      fix:
-        "turn the accounts off in each system today; then make offboarding turn them off (identity provider first)",
-      subjects: leavers.map((x) => x.uid),
+        ? `${leavers.length} active account(s) of people who left: ${list(
+            leavers,
+            (x) => `${x["email"]} in ${x["system"]}`,
+          )}`
+        : `${count(
+            "SELECT count(*) AS n FROM person WHERE status = 'terminated'",
+          )} leaver(s), none with an active account`,
+      fix: "turn the accounts off in each system today; then make offboarding turn them off (identity provider first)",
+      subjects: leavers.map((x) => x["uid"] ?? ""),
     });
     const orphans = rows(
       `SELECT a.connector AS system, a.display_name AS name, a.user_account_uid AS uid FROM user_account a
@@ -309,13 +313,13 @@ export function legacyEstatePolicies(e: Estate, now = new Date()): PolicyResult[
       scf: ["IAC-08"],
       status: orphans.length ? "warn" : "pass",
       detail: orphans.length
-        ? `${orphans.length} account(s) with no person: ${
-          list(orphans, (x) => `${x.name} in ${x.system}`)
-        }`
+        ? `${orphans.length} account(s) with no person: ${list(
+            orphans,
+            (x) => `${x["name"]} in ${x["system"]}`,
+          )}`
         : "every active account matches a person",
-      fix:
-        'for each: link it to a person (a login-only system: add it to fleets/<fleet>/estate/links.ts, as "github:alice": "alice@example.org"), or turn it off',
-      subjects: orphans.map((x) => x.uid),
+      fix: 'for each: link it to a person (a login-only system: add it to fleets/<fleet>/estate/links.ts, as "github:alice": "alice@example.org"), or turn it off',
+      subjects: orphans.map((x) => x["uid"] ?? ""),
     });
     const noDevice = rows(
       `SELECT u.email_addr AS email, u.uid FROM user_inventory u WHERE u.status = 'active'
@@ -328,10 +332,10 @@ export function legacyEstatePolicies(e: Estate, now = new Date()): PolicyResult[
       scf: ["AST-04", "AST-07.1"],
       status: noDevice.length ? "warn" : "pass",
       detail: noDevice.length
-        ? `${noDevice.length} without a device: ${list(noDevice, (x) => x.email)}`
+        ? `${noDevice.length} without a device: ${list(noDevice, (x) => x["email"] ?? "")}`
         : "every active person has a device",
       fix: "adopt each person's laptop (Add a machine), with --owner set to their work email",
-      subjects: noDevice.map((x) => x.uid),
+      subjects: noDevice.map((x) => x["uid"] ?? ""),
     });
   }
   if (count("SELECT count(*) AS n FROM user_account WHERE admin IS NOT NULL AND mfa IS NOT NULL")) {
@@ -345,10 +349,10 @@ export function legacyEstatePolicies(e: Estate, now = new Date()): PolicyResult[
       scf: ["IAC-37"],
       status: bad.length ? "fail" : "pass",
       detail: bad.length
-        ? `${bad.length} without MFA: ${list(bad, (x) => `${x.name} in ${x.system}`)}`
+        ? `${bad.length} without MFA: ${list(bad, (x) => `${x["name"]} in ${x["system"]}`)}`
         : "every administrator has MFA",
       fix: "require MFA for administrators in each system (and register it for these people)",
-      subjects: bad.map((x) => x.uid),
+      subjects: bad.map((x) => x["uid"] ?? ""),
     });
   }
   if (count("SELECT count(*) AS n FROM fixed_asset WHERE encrypted IS NOT NULL")) {
@@ -361,10 +365,10 @@ export function legacyEstatePolicies(e: Estate, now = new Date()): PolicyResult[
       scf: ["CRY-07"],
       status: plain.length ? "fail" : "pass",
       detail: plain.length
-        ? `${plain.length} not encrypted: ${list(plain, (x) => x.name)}`
+        ? `${plain.length} not encrypted: ${list(plain, (x) => x["name"] ?? "")}`
         : "every device that says is encrypted",
       fix: "turn on FileVault, BitLocker, or LUKS (or record an accepted risk)",
-      subjects: plain.map((x) => x.uid),
+      subjects: plain.map((x) => x["uid"] ?? ""),
     });
   }
   const repos = count("SELECT count(*) AS n FROM code_repository");
@@ -379,27 +383,28 @@ export function legacyEstatePolicies(e: Estate, now = new Date()): PolicyResult[
       scf: ["CHG-03"],
       status: open.length ? "fail" : "pass",
       detail: open.length
-        ? `${open.length} unprotected: ${list(open, (x) => x.name)}`
+        ? `${open.length} unprotected: ${list(open, (x) => x["name"] ?? "")}`
         : `${repos} repositories, all protected`,
-      fix:
-        "protect the default branch: require a pull request, an approving review, and passing checks",
-      subjects: open.map((x) => x.uid),
+      fix: "protect the default branch: require a pull request, an approving review, and passing checks",
+      subjects: open.map((x) => x["uid"] ?? ""),
     });
   }
   const at = now.toISOString().replace(/\.\d+Z$/, "Z");
   for (const p of out) {
     for (const control of p.scf) {
       for (const subject of p.subjects.length ? p.subjects : [undefined]) {
-        e.db.prepare(upsertSql(finding)).run(...rowParams(finding, {
-          finding_uid: `${p.id}:${control}:${subject ?? "all"}`,
-          policy_id: p.id,
-          subject_uid: subject ?? null,
-          scf_control: control,
-          status: p.status,
-          detail: p.detail,
-          fix: p.fix ?? null,
-          observed_at: at,
-        }));
+        e.db.prepare(upsertSql(finding)).run(
+          ...rowParams(finding, {
+            finding_uid: `${p.id}:${control}:${subject ?? "all"}`,
+            policy_id: p.id,
+            subject_uid: subject ?? null,
+            scf_control: control,
+            status: p.status,
+            detail: p.detail,
+            fix: p.fix ?? null,
+            observed_at: at,
+          }),
+        );
       }
     }
   }

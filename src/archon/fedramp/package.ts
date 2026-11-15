@@ -32,6 +32,7 @@
  * @module
  */
 
+import { absurd } from "@intellectual-frontiers/ifc-ts/kernel";
 import type { PcFacts } from "../console/pc.ts";
 import type { ScfCatalog } from "../compliance/catalog.ts";
 import { combine, type Coverage, type Evidence, fleetEvidence } from "../compliance/report.ts";
@@ -56,13 +57,7 @@ export type SdrStatus = "Implemented" | "Not Implemented" | "Partially Implement
 export interface SdrEvidence {
   /** Log, Report, Screenshot, Configuration, Policy, Procedure, or Audit Record. */
   evidenceType:
-    | "Log"
-    | "Report"
-    | "Screenshot"
-    | "Configuration"
-    | "Policy"
-    | "Procedure"
-    | "Audit Record";
+    "Log" | "Report" | "Screenshot" | "Configuration" | "Policy" | "Procedure" | "Audit Record";
   /** What it is. */
   evidenceDescription?: string;
   /** Where it is (a URI). */
@@ -163,20 +158,21 @@ export interface FedrampPackage {
 /** How long a rule's cadence is, in milliseconds (a month counted as 31 days). */
 export function cadenceMs(r: ClassRule): number | undefined {
   if (!r.every) return undefined;
-  const unit: Record<string, number> = {
+  const unit: Record<string, number | undefined> = {
     hours: 3_600_000,
     days: 86_400_000,
     weeks: 7 * 86_400_000,
     months: 31 * 86_400_000,
   };
-  return unit[r.every.unit] ? unit[r.every.unit] * r.every.count : undefined;
+  const ms = unit[r.every.unit];
+  return ms === undefined ? undefined : ms * r.every.count;
 }
 
 const every = (r: ClassRule) =>
   r.every
     ? `${r.every.count === 1 ? "every" : `every ${r.every.count}`} ${
-      r.every.count === 1 ? r.every.unit.replace(/s$/, "") : r.every.unit
-    }`
+        r.every.count === 1 ? r.every.unit.replace(/s$/, "") : r.every.unit
+      }`
     : "";
 
 /**
@@ -186,7 +182,11 @@ const every = (r: ClassRule) =>
 export function evidenceObservedAt(e: Evidence, f: PcFacts): string | undefined {
   const own = (e as TimedEvidence).observedAt;
   if (own) return own;
-  const newest = (xs: Array<string | undefined>) => xs.filter((x): x is string => !!x).sort().pop();
+  const newest = (xs: Array<string | undefined>) =>
+    xs
+      .filter((x): x is string => !!x)
+      .sort()
+      .pop();
   switch (e.source) {
     case "adopted":
       return f.adopted.find((a) => a.machine.name === e.subject)?.observed?.at;
@@ -204,6 +204,10 @@ export function evidenceObservedAt(e: Evidence, f: PcFacts): string | undefined 
     }
     case "repository":
       return f.git.log[0]?.at;
+    case "control pack":
+      return undefined;
+    default:
+      return absurd(e.source);
   }
 }
 
@@ -229,9 +233,9 @@ const sdrStatus = (ev: TimedEvidence[]): SdrStatus | undefined => {
 export function classKsis(
   cls: FedrampClass,
 ): Array<{ ksi: Ksi; applies: "required" | "optional" }> {
-  return KSIS.filter((k) => cls === "B" ? !!k.classes.B : CLASS_A_KSIS.includes(k.id)).map((
-    ksi,
-  ) => ({ ksi, applies: ksi.optionalIn.includes(cls) ? "optional" : "required" }));
+  return KSIS.filter((k) => (cls === "B" ? !!k.classes.B : CLASS_A_KSIS.includes(k.id))).map(
+    (ksi) => ({ ksi, applies: ksi.optionalIn.includes(cls) ? "optional" : "required" }),
+  );
 }
 
 /** Everything the package needs besides the facts. */
@@ -251,8 +255,6 @@ export function placeholderOverview(fleet: string): string {
   return `urn:stolos:fleet:${encodeURIComponent(fleet || "fleet")}:certification-package-overview`;
 }
 
-const day = (iso?: string) => iso?.slice(0, 10);
-
 /** The validation package for a class, from what this PC knows. */
 export function fedrampPackage(
   f: PcFacts,
@@ -266,8 +268,13 @@ export function fedrampPackage(
   const ksis: KsiResult[] = classKsis(cls).map(({ ksi, applies }) => {
     const mapping = KSI_MAP[ksi.id];
     const ev = ksiEvidence(mapping, evidence);
-    const times = ev.map((e) => e.observedAt).filter((x): x is string => !!x).sort();
+    const times = ev
+      .map((e) => e.observedAt)
+      .filter((x): x is string => !!x)
+      .sort();
     const tests = [...new Set(ev.map((e) => `${e.source}: ${e.check}`))].sort();
+    const oldest = times[0];
+    const newest = times.at(-1);
     return {
       ksi,
       applies,
@@ -276,20 +283,17 @@ export function fedrampPackage(
       evidence: ev,
       tests,
       strm: strmLinks(ksi, mapping, o.catalog),
-      ...(times.length ? { observed: { oldest: times[0], newest: times.at(-1)! } } : {}),
-      ...(times.length && window !== undefined
-        ? {
-          fresh: times.length === ev.length &&
-            now.getTime() - Date.parse(times[0]) <= window,
-        }
+      ...(oldest !== undefined && newest !== undefined ? { observed: { oldest, newest } } : {}),
+      ...(oldest !== undefined && window !== undefined
+        ? { fresh: times.length === ev.length && now.getTime() - Date.parse(oldest) <= window }
         : {}),
     };
   });
   const sdrKsis = ksis.map((r) => sdrKsi(r, cls, cadence));
   const coveredN = ksis.filter((r) => covered(r.mapping)).length;
-  const withAutomation =
-    ksis.filter((r) => r.tests.length >= Math.max(1, cadence.automation.minMethods))
-      .length;
+  const withAutomation = ksis.filter(
+    (r) => r.tests.length >= Math.max(1, cadence.automation.minMethods),
+  ).length;
   return {
     class: cls,
     generatedAt: now.toISOString(),
@@ -324,9 +328,8 @@ export function fedrampPackage(
 
 function sdrKsi(r: KsiResult, cls: FedrampClass, cadence: ClassCadence): SdrKsi {
   const m = r.mapping;
-  const optional = r.applies === "optional"
-    ? [`FedRAMP marks this KSI optional for Class ${cls}.`]
-    : [];
+  const optional =
+    r.applies === "optional" ? [`FedRAMP marks this KSI optional for Class ${cls}.`] : [];
   if (!covered(m)) {
     return {
       ksiId: r.ksi.id,
@@ -356,33 +359,39 @@ function sdrKsi(r: KsiResult, cls: FedrampClass, cadence: ClassCadence): SdrKsi 
         m.sources ? ` (from ${m.sources.join(", ")} evidence)` : ""
       }.${
         strm.length
-          ? ` Through the SCF Council's STRM these reach the KSI's NIST SP 800-53 controls: ${
-            strm.join("; ")
-          }.`
+          ? ` Through the SCF Council's STRM these reach the KSI's NIST SP 800-53 controls: ${strm.join(
+              "; ",
+            )}.`
           : ""
       }`,
       "Cycle: managed servers reconcile and verify every 15 minutes; adopted machines, devices, and clouds are checked on each observation; Stolos rebuilds this record from the newest results each time it runs.",
     ],
     ksiValidation: [
       r.evidence.length
-        ? `${r.evidence.length} automated result(s) from ${r.tests.length} check(s): ${
-          ["pass", "fail", "warn", "unknown", "accepted"].map((s) =>
-            [s, r.evidence.filter((e) => e.status === s).length] as const
-          ).filter(([, n]) => n).map(([s, n]) => `${n} ${s}`).join(", ")
-        }.`
+        ? `${r.evidence.length} automated result(s) from ${r.tests.length} check(s): ${[
+            "pass",
+            "fail",
+            "warn",
+            "unknown",
+            "accepted",
+          ]
+            .map((s) => [s, r.evidence.filter((e) => e.status === s).length] as const)
+            .filter(([, n]) => n)
+            .map(([s, n]) => `${n} ${s}`)
+            .join(", ")}.`
         : "No results yet: nothing this KSI's checks look at has been observed on this PC.",
       ...(r.observed
         ? [
-          `Observed between ${r.observed.oldest} and ${r.observed.newest}; ${mv.rule} asks Class ${cls} to validate machine-based resources ${
-            every(mv)
-          } (${mv.force}): ${
-            r.fresh === undefined
-              ? "not every result has a time"
-              : r.fresh
-              ? "every result is within it"
-              : "some results are older, or have no time"
-          }.`,
-        ]
+            `Observed between ${r.observed.oldest} and ${r.observed.newest}; ${mv.rule} asks Class ${cls} to validate machine-based resources ${every(
+              mv,
+            )} (${mv.force}): ${
+              r.fresh === undefined
+                ? "not every result has a time"
+                : r.fresh
+                  ? "every result is within it"
+                  : "some results are older, or have no time"
+            }.`,
+          ]
         : []),
     ],
     ksiAssessment: [],
@@ -391,7 +400,7 @@ function sdrKsi(r: KsiResult, cls: FedrampClass, cadence: ClassCadence): SdrKsi 
       evidenceType: e.source === "repository" ? "Audit Record" : "Configuration",
       evidenceDescription: `${e.subject}: ${e.check}: ${e.status}`,
       evidenceText: `${e.detail}${e.observedAt ? ` (observed ${e.observedAt})` : ""}`,
-      ...(e.observedAt ? { lastUpdated: day(e.observedAt)! } : {}),
+      ...(e.observedAt ? { lastUpdated: e.observedAt.slice(0, 10) } : {}),
     })),
   };
 }
@@ -408,10 +417,10 @@ function requirements(
   const machines = evidence.filter((e) => e.source !== "repository" && e.source !== "estate");
   const mv = cadence.machineValidation;
   const window = cadenceMs(mv);
-  const inWindow =
-    machines.filter((e) =>
-      e.observedAt && window !== undefined && now.getTime() - Date.parse(e.observedAt) <= window
-    ).length;
+  const inWindow = machines.filter(
+    (e) =>
+      e.observedAt && window !== undefined && now.getTime() - Date.parse(e.observedAt) <= window,
+  ).length;
   const unobservable = ksis.filter((r) => !covered(r.mapping)).length;
   const pm = cadence.packageMaintenance;
   const kmt = cadence.metrics;
@@ -427,16 +436,18 @@ function requirements(
     },
     {
       frrID: auto.rule,
-      frrImplementationStatus: automated === ksis.length
-        ? "Implemented"
-        : automated
-        ? "Partially Implemented"
-        : "Not Implemented",
+      frrImplementationStatus:
+        automated === ksis.length
+          ? "Implemented"
+          : automated
+            ? "Partially Implemented"
+            : "Not Implemented",
       frrImplementation: [
         `${auto.statement} (${auto.force})`,
-        `${automated} of ${ksis.length} KSI(s) have at least ${
-          Math.max(1, auto.minMethods)
-        } automated method(s) in Stolos (its checks, run on every observation).`,
+        `${automated} of ${ksis.length} KSI(s) have at least ${Math.max(
+          1,
+          auto.minMethods,
+        )} automated method(s) in Stolos (its checks, run on every observation).`,
       ],
     },
     {
@@ -444,22 +455,22 @@ function requirements(
       frrImplementationStatus: !machines.length
         ? "Not Implemented"
         : inWindow === machines.length
-        ? "Implemented"
-        : "Partially Implemented",
+          ? "Implemented"
+          : "Partially Implemented",
       frrImplementation: [
         `${mv.statement} (${mv.force})`,
-        `Managed servers verify themselves every 15 minutes; Stolos observes adopted machines, devices, and clouds when asked or on schedule. ${inWindow} of ${machines.length} machine result(s) were observed within the last ${
-          every(mv).replace(/^every /, "")
-        }.`,
+        `Managed servers verify themselves every 15 minutes; Stolos observes adopted machines, devices, and clouds when asked or on schedule. ${inWindow} of ${machines.length} machine result(s) were observed within the last ${every(
+          mv,
+        ).replace(/^every /, "")}.`,
       ],
     },
     {
       frrID: pm.rule,
       frrImplementation: [
         `${pm.statement} (${pm.force})`,
-        `Stolos rebuilds this package from current evidence whenever it runs (stolos compliance fedramp --class ${cls}); run it, or an export job, at least ${
-          every(pm)
-        }.`,
+        `Stolos rebuilds this package from current evidence whenever it runs (stolos compliance fedramp --class ${cls}); run it, or an export job, at least ${every(
+          pm,
+        )}.`,
       ],
     },
     {

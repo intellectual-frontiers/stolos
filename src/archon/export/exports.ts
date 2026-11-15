@@ -25,8 +25,9 @@
  * @module
  */
 
+import { absurd } from "@intellectual-frontiers/ifc-ts/kernel";
 import type { ScfCatalog } from "../compliance/catalog.ts";
-import { oscalExports } from "../compliance/oscal.ts";
+import { type OscalDocuments, oscalExports } from "../compliance/oscal.ts";
 import type { ComplianceView } from "../compliance/report.ts";
 import type { Estate } from "../estate/graph.ts";
 import { VERSION } from "../version.ts";
@@ -48,7 +49,7 @@ export const EXPORT_KINDS = [
 ] as const;
 
 /** One kind of export. */
-export type ExportKind = typeof EXPORT_KINDS[number];
+export type ExportKind = (typeof EXPORT_KINDS)[number];
 
 /** Whether a string names a kind of export. */
 export function isExportKind(s: string): s is ExportKind {
@@ -106,7 +107,10 @@ export function ocsfEvents(i: ExportInput): OcsfEvent[] {
   ];
 }
 
-const OSCAL_FILES: Record<string, string> = {
+const OSCAL_FILES: Record<
+  Exclude<ExportKind, "ocsf-jsonl" | "otlp-json" | "cyclonedx-attestation" | "intoto-statement">,
+  keyof OscalDocuments
+> = {
   "oscal-component-definition": "component-definition.json",
   "oscal-ssp": "system-security-plan.json",
   "oscal-assessment-results": "assessment-results.json",
@@ -159,10 +163,13 @@ export async function buildExports(kind: ExportKind, i: ExportInput): Promise<Ex
         bytes: json(await evidenceStatement(i.bundle)),
       };
     }
-    default: {
+    case "oscal-component-definition":
+    case "oscal-ssp":
+    case "oscal-assessment-results":
+    case "oscal-poam": {
       if (!i.view?.catalog) {
         throw new Error(
-          "OSCAL reaches NIST through the SCF catalog, which is not on this PC (deno task stolos compliance catalog)",
+          "OSCAL reaches NIST through the SCF catalog, which is not on this PC (bun run stolos compliance catalog)",
         );
       }
       const docs = await oscalExports({
@@ -176,5 +183,7 @@ export async function buildExports(kind: ExportKind, i: ExportInput): Promise<Ex
       const name = OSCAL_FILES[kind];
       return { fileName: `${id}-${name}`, mediaType: "application/json", bytes: json(docs[name]) };
     }
+    default:
+      return absurd(kind);
   }
 }

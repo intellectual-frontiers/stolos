@@ -43,15 +43,22 @@
 
 import type { Estate } from "../estate/graph.ts";
 import { estateQuery } from "../estate/graph.ts";
-import { exists } from "../core/fsx.ts";
-import { join, toFileUrl } from "../core/path.ts";
+import { fs, path } from "@intellectual-frontiers/ifc-ts/runtime";
 import { P } from "../core/paths.ts";
+
+/** A row's column as text ("" where it is empty or not a scalar). */
+const txt = (v: unknown): string =>
+  typeof v === "string"
+    ? v
+    : typeof v === "number" || typeof v === "boolean" || typeof v === "bigint"
+      ? String(v)
+      : "";
 
 /** FIPS 199's potential impact levels, as a vendor's criticality; "unassessed" until a person decides. */
 export const CRITICALITIES = ["low", "moderate", "high", "unassessed"] as const;
 
 /** A vendor's criticality. */
-export type Criticality = typeof CRITICALITIES[number];
+export type Criticality = (typeof CRITICALITIES)[number];
 
 /** OCSF 1.9.0 data_classification categories (its category_id captions). */
 export const DATA_CATEGORIES = [
@@ -65,7 +72,7 @@ export const DATA_CATEGORIES = [
 ] as const;
 
 /** An OCSF data classification category. */
-export type DataCategory = typeof DATA_CATEGORIES[number];
+export type DataCategory = (typeof DATA_CATEGORIES)[number];
 
 /** One vendor, triaged, in fleets/<fleet>/vendors.ts. */
 export interface VendorDef {
@@ -120,20 +127,23 @@ export function defineVendors<const V extends readonly VendorDef[]>(list: V): V 
 
 /** Where the fleet's triage file is. */
 export function vendorsFile(dir: string = P.fleetDir): string {
-  return join(dir, "vendors.ts");
+  return path.join(dir, "vendors.ts");
 }
 
 /** The fleet's triage file (fleets/<fleet>/vendors.ts, exporting `vendors`), or [] when there is none. */
 export async function loadVendors(file: string = vendorsFile()): Promise<VendorDef[]> {
-  if (!(await exists(file))) return [];
-  const mod = await import(toFileUrl(file).href + `?t=${Date.now()}`);
-  const list = (mod.vendors ?? mod.default) as VendorDef[] | undefined;
+  if (!(await fs.exists(file))) return [];
+  const { importFresh } = await import("../controls/run.ts");
+  const exported = await importFresh(file);
+  const list = exported["vendors"] ?? exported["default"];
   if (!Array.isArray(list)) {
     throw new Error("vendors.ts exports no vendors (export const vendors = defineVendors([...]))");
   }
-  const p = vendorProblems(list);
+  // Checked field by field (vendorProblems) before it is used.
+  const defs = list as VendorDef[];
+  const p = vendorProblems(defs);
   if (p.length) throw new Error(p.join("; "));
-  return list;
+  return defs;
 }
 
 /** A well-known vendor: the organization, and how to recognize it. */
@@ -431,14 +441,17 @@ const under = (h: string, d: string) => h === d || h.endsWith(`.${d}`);
 export function registrable(h: string): string {
   const parts = host(h).split(".").filter(Boolean);
   if (parts.length <= 2) return parts.join(".");
-  const [sld, tld] = parts.slice(-2);
+  const [sld = "", tld = ""] = parts.slice(-2);
   const n = tld.length === 2 && sld.length <= 3 ? 3 : 2;
   return parts.slice(-n).join(".");
 }
 
 /** An id from a domain or a name: lower case letters, digits, hyphens. */
 export const slug = (s: string): string =>
-  s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "vendor";
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "vendor";
 
 /** What discovery reads besides the estate. */
 export interface DiscoverOptions {
@@ -464,7 +477,7 @@ export function discoverVendors(e: Estate, o: DiscoverOptions = {}): Vendor[] {
   // vendors.ts first: a fleet's own domains and apps win over the table.
   const byDomain: Array<{ d: string; id: string; name: string }> = [
     ...triage.flatMap((v) =>
-      (v.domains ?? []).map((d) => ({ d: host(d), id: v.id, name: v.name }))
+      (v.domains ?? []).map((d) => ({ d: host(d), id: v.id, name: v.name })),
     ),
     ...known.flatMap((v) => v.domains.map((d) => ({ d: host(d), id: v.id, name: v.name }))),
   ];
@@ -498,38 +511,35 @@ export function discoverVendors(e: Estate, o: DiscoverOptions = {}): Vendor[] {
   };
 
   // Connected accounts: each tenant's connector is a vendor.
-  for (
-    const t of q(
-      "SELECT tenant_uid, connector, name FROM tenant WHERE connector <> 'fleet' ORDER BY tenant_uid",
-    )
-  ) {
-    const c = String(t.connector);
+  for (const t of q(
+    "SELECT tenant_uid, connector, name FROM tenant WHERE connector <> 'fleet' ORDER BY tenant_uid",
+  )) {
+    const c = txt(t["connector"]);
     const v = byConnector.get(c) ?? { id: slug(c), name: c };
     add(v.id, v.name, {
       kind: "tenant",
-      uid: String(t.tenant_uid),
+      uid: txt(t["tenant_uid"]),
       source: c,
-      detail: `the ${c} account ${t.name}`,
+      detail: `the ${c} account ${txt(t["name"])}`,
     });
   }
 
   // SSO applications.
-  for (
-    const a of q(`SELECT n.node_uid AS uid, n.display_name AS name, t.connector,
+  for (const a of q(`SELECT n.node_uid AS uid, n.display_name AS name, t.connector,
       json_extract(n.props, '$.catalog_name') AS catalog, json_extract(n.props, '$.url') AS url,
       json_extract(n.props, '$.publisher') AS publisher
       FROM node n JOIN tenant t ON t.tenant_uid = n.tenant_uid
-      WHERE n.label = 'application' ORDER BY n.node_uid`)
-  ) {
-    const name = String(a.name ?? "");
-    const keys = [a.catalog, name, a.publisher].filter(Boolean).map((x) => norm(String(x)));
+      WHERE n.label = 'application' ORDER BY n.node_uid`)) {
+    const name = txt(a["name"]);
+    const keys = [a["catalog"], name, a["publisher"]].filter(Boolean).map((x) => norm(txt(x)));
     let v = keys.map((k) => byApp.get(k)).find(Boolean);
     // A catalog name like salesforce_2 or zoomus_sso: its first word.
-    v ??= keys.map((k) => [...byApp.entries()].find(([n]) => n.length >= 4 && k.startsWith(n))?.[1])
+    v ??= keys
+      .map((k) => [...byApp.entries()].find(([n]) => n.length >= 4 && k.startsWith(n))?.[1])
       .find(Boolean);
-    if (!v && a.url) {
+    if (!v && a["url"]) {
       try {
-        const d = ofDomain(new URL(String(a.url)).hostname);
+        const d = ofDomain(new URL(txt(a["url"])).hostname);
         if (isKnown(d.id)) v = d;
       } catch {
         // not a URL
@@ -538,31 +548,30 @@ export function discoverVendors(e: Estate, o: DiscoverOptions = {}): Vendor[] {
     v ??= { id: slug(name), name };
     add(v.id, v.name, {
       kind: "sso",
-      uid: String(a.uid),
-      source: String(a.connector),
+      uid: txt(a["uid"]),
+      source: txt(a["connector"]),
       detail: `the SSO application ${name}`,
     });
   }
 
   // DNS: CNAME and MX targets outside the fleet's own zones.
-  const zones = q("SELECT DISTINCT lower(display_name) AS z FROM node WHERE label = 'domain_name'")
-    .map((r) => host(String(r.z)));
-  for (
-    const r of q(`SELECT n.node_uid AS uid, n.display_name AS name, t.connector,
+  const zones = q(
+    "SELECT DISTINCT lower(display_name) AS z FROM node WHERE label = 'domain_name'",
+  ).map((r) => host(txt(r["z"])));
+  for (const r of q(`SELECT n.node_uid AS uid, n.display_name AS name, t.connector,
       json_extract(n.props, '$.type') AS type, json_extract(n.props, '$.content') AS content
       FROM node n JOIN tenant t ON t.tenant_uid = n.tenant_uid
       WHERE n.label = 'dns_record' AND json_extract(n.props, '$.type') IN ('CNAME', 'MX')
-      ORDER BY n.node_uid`)
-  ) {
+      ORDER BY n.node_uid`)) {
     // An MX record's content may carry its priority first ("10 mx.example.net").
-    const target = host(String(r.content ?? "").split(/\s+/).pop() ?? "");
+    const target = host(txt(r["content"]).split(/\s+/).pop() ?? "");
     if (!target || !target.includes(".") || zones.some((z) => under(target, z))) continue;
     const v = ofDomain(target);
     add(v.id, v.name, {
       kind: "dns",
-      uid: String(r.uid),
-      source: String(r.connector),
-      detail: `${r.type} ${r.name} -> ${target}`,
+      uid: txt(r["uid"]),
+      source: txt(r["connector"]),
+      detail: `${txt(r["type"])} ${txt(r["name"])} -> ${target}`,
     });
   }
 

@@ -27,7 +27,7 @@
  * What it relies on, and nothing else: GitHub's own `GITHUB_TOKEN`, limited
  * to `contents: read` and `pull-requests: write`, given only to the step that
  * posts the comment; `actions/checkout` (without keeping its credentials)
- * and `denoland/setup-deno`, each pinned to a commit. The comment holds
+ * and `oven-sh/setup-bun`, each pinned to a commit. The comment holds
  * control ids, host names, ports, networks, and the words of each change:
  * never a secret.
  *
@@ -40,7 +40,7 @@ export const IMPACT_WORKFLOW_PATH = ".github/workflows/compliance-impact.yml";
 /** The actions it uses, each pinned to a commit (the tag it was, in a comment). */
 export const IMPACT_ACTIONS: Record<string, { sha: string; tag: string }> = {
   "actions/checkout": { sha: "fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09", tag: "v5.1.0" },
-  "denoland/setup-deno": { sha: "22d081ff2d3a40755e97629de92e3bcbfa7cf2ed", tag: "v2.0.5" },
+  "oven-sh/setup-bun": { sha: "0c5077e51419868618aeaa5fe8019c62421857d6", tag: "v2.2.0" },
 };
 
 /** The marker that finds the workflow's own comment again, so it is updated, never repeated. */
@@ -49,11 +49,13 @@ export const IMPACT_COMMENT_MARKER = "<!-- stolos:compliance-impact -->";
 /** The marker `stolos compliance impact --markdown` writes when a control is affected. */
 export const IMPACT_AFFECTED_MARKER = "<!-- stolos:affected -->";
 
-const uses = (name: string) => `${name}@${IMPACT_ACTIONS[name].sha} # ${IMPACT_ACTIONS[name].tag}`;
+const uses = (name: string): string => {
+  const a = IMPACT_ACTIONS[name];
+  return a ? `${name}@${a.sha} # ${a.tag}` : name;
+};
 
 /** The workflow's text. */
-export const IMPACT_WORKFLOW_TEXT =
-  `# Written by stolos (spec 074); stolos fleet upgrade writes it again, so edits are lost.
+export const IMPACT_WORKFLOW_TEXT = `# Written by stolos (spec 074); stolos fleet upgrade writes it again, so edits are lost.
 # On each pull request: which SCF controls the change affects, with their framework
 # requirements, in one comment (created, then updated); the check fails when the
 # fleet's gate (compliance.gate in fleets/<fleet>/fleet.ts) blocks the change.
@@ -81,12 +83,14 @@ jobs:
           ref: \${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
-      - uses: ${uses("denoland/setup-deno")}
+      - uses: ${uses("oven-sh/setup-bun")}
         with:
-          deno-version: v2.x
+          bun-version: 1.4.4
+      - name: The engine (bun.lock pins it)
+        run: bun install --frozen-lockfile
       - name: The SCF catalog (framework requirements; pinned, SHA-256 checked)
         continue-on-error: true
-        run: deno task -q stolos compliance catalog
+        run: bun run --silent stolos compliance catalog
       - name: The controls this change affects
         id: impact
         env:
@@ -99,7 +103,7 @@ jobs:
             [ -e "$f" ] || continue
             id=$(basename "$(dirname "$f")")
             set +e
-            ARCHON_FLEET="$id" deno task -q stolos compliance impact --base "$BASE" --head "$HEAD" --markdown >>impact.md
+            ARCHON_FLEET="$id" bun run --silent stolos compliance impact --base "$BASE" --head "$HEAD" --markdown >>impact.md
             code=$?
             set -e
             if [ "$code" = 1 ]; then

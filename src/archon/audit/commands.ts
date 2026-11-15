@@ -12,10 +12,11 @@
  * @module
  */
 
-import { join } from "../core/path.ts";
+import { sha256 as sha256Hex } from "@intellectual-frontiers/ifc-ts/kernel";
+import { fs, path as paths, stdio, toError } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
-import { sha256Hex, verifyBundle } from "../evidence/bundle.ts";
+import { verifyBundle } from "../evidence/bundle.ts";
 import { type AuditCase, auditIds, caseProblems, loadAudit } from "./case.ts";
 import {
   type Engagement,
@@ -61,11 +62,13 @@ export interface AuditCtx {
 }
 
 /** A result: what was done, or why not. */
-export type Done = { ok: true; detail: string; commit?: string } | {
-  ok: false;
-  why: string;
-  fix?: string;
-};
+export type Done =
+  | { ok: true; detail: string; commit?: string }
+  | {
+      ok: false;
+      why: string;
+      fix?: string;
+    };
 
 const git = (repo: string, args: string[]) => run(["git", "-C", repo, ...args]);
 const day = (d: Date) => d.toISOString().slice(0, 10);
@@ -78,8 +81,8 @@ async function committedEngagement(
   if (!ENGAGEMENT_ID.test(id)) return { why: `"${id}" is not an engagement id` };
   const path = engagementPath(ctx.fleet, id);
   const shown = await git(ctx.repo, ["show", `HEAD:${path}`]);
-  if (!shown.ok) return { why: `no engagement ${id}`, fix: "deno task stolos audit list" };
-  const now = await Deno.readTextFile(join(ctx.repo, path)).catch(() => undefined);
+  if (!shown.ok) return { why: `no engagement ${id}`, fix: "bun run stolos audit list" };
+  const now = await fs.readTextFile(paths.join(ctx.repo, path)).catch(() => undefined);
   if (now !== undefined && now !== shown.stdout) {
     return {
       why: `${path} has uncommitted changes`,
@@ -89,7 +92,7 @@ async function committedEngagement(
   try {
     return { e: parseEngagement(shown.stdout) };
   } catch (e) {
-    return { why: (e as Error).message };
+    return { why: toError(e).message };
   }
 }
 
@@ -103,7 +106,7 @@ async function writeEngagement(ctx: AuditCtx, e: Engagement, message: string): P
     );
     return { ok: true, detail: message, commit };
   } catch (x) {
-    return { ok: false, why: (x as Error).message, fix: "deno task stolos keys" };
+    return { ok: false, why: (x as Error).message, fix: "bun run stolos keys" };
   }
 }
 
@@ -142,7 +145,8 @@ export async function auditOpen(ctx: AuditCtx, i: OpenInput): Promise<Done> {
   }
   const auditors = i.auditors.map((a) => {
     const m = /^(.*?)\s*<([^>]+)>$/.exec(a.trim());
-    return m ? { name: m[1], email: m[2] } : { name: a.trim() };
+    const [, name, email] = m ?? [];
+    return name !== undefined && email !== undefined ? { name, email } : { name: a.trim() };
   });
   const e: Engagement = {
     id: i.id,
@@ -169,56 +173,54 @@ export async function auditBundle(ctx: AuditCtx, id: string, file: string): Prom
   if (got.e.closed) return { ok: false, why: `engagement ${id} is closed` };
   let zip: Uint8Array;
   try {
-    zip = await Deno.readFile(file);
+    zip = await fs.readFile(file);
   } catch (e) {
-    return { ok: false, why: `${file}: ${(e as Error).message}` };
+    return { ok: false, why: `${file}: ${toError(e).message}` };
   }
   let head: string, period: { from: string; to: string };
   try {
-    const v = bundleView(zip);
+    const v = await bundleView(zip);
     head = v.manifest.head;
     period = v.manifest.period;
   } catch (e) {
-    return { ok: false, why: `${file}: ${(e as Error).message}` };
+    return { ok: false, why: `${file}: ${toError(e).message}` };
   }
   const r = await verifyBundle(zip, { allowedSigners: await ctx.allowedSigners() });
   if (!r.signer) {
     return {
       ok: false,
       why: `${file}: its manifest is not signed by a fleet signer (${r.problems.join("; ")})`,
-      fix: "deno task stolos evidence export --from ... --to ...",
+      fix: "bun run stolos evidence export --from ... --to ...",
     };
   }
   if (period.from > got.e.period.from || period.to < got.e.period.to) {
     return {
       ok: false,
-      why:
-        `the bundle covers ${period.from} to ${period.to}, not the engagement's period (${got.e.period.from} to ${got.e.period.to})`,
-      fix: `deno task stolos evidence export --from ${got.e.period.from} --to ${got.e.period.to}`,
+      why: `the bundle covers ${period.from} to ${period.to}, not the engagement's period (${got.e.period.from} to ${got.e.period.to})`,
+      fix: `bun run stolos evidence export --from ${got.e.period.from} --to ${got.e.period.to}`,
     };
   }
-  const name = file.split(/[\\/]/).pop()!;
+  const name = file.split(/[\\/]/).pop() ?? file;
   if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,200}\.zip$/.test(name)) {
     return { ok: false, why: `${name}: name the bundle with letters, digits, . - _ and .zip` };
   }
-  const dest = join(ctx.evidenceDir, name);
+  const dest = paths.join(ctx.evidenceDir, name);
   const sha256 = await sha256Hex(zip);
-  const there = await Deno.readFile(dest).catch(() => undefined);
+  const there = await fs.readFile(dest).catch(() => undefined);
   if (there && (await sha256Hex(there)) !== sha256) {
     return { ok: false, why: `${dest} exists and is another bundle: rename yours` };
   }
   if (!there) {
-    await Deno.mkdir(ctx.evidenceDir, { recursive: true });
-    await Deno.writeFile(dest, zip);
+    await fs.mkdir(ctx.evidenceDir, { recursive: true });
+    await fs.writeFile(dest, zip);
   }
   const e = { ...got.e, bundle: { file: name, sha256, head } };
   const done = await writeEngagement(ctx, e, `audit ${id}: pin the evidence bundle ${name}`);
   return done.ok && r.problems.length
     ? {
-      ...done,
-      detail:
-        `${done.detail} (the bundle has ${r.problems.length} problem(s) the auditor will see)`,
-    }
+        ...done,
+        detail: `${done.detail} (the bundle has ${r.problems.length} problem(s) the auditor will see)`,
+      }
     : done;
 }
 
@@ -254,8 +256,10 @@ async function nextSeq(ctx: AuditCtx, id: string): Promise<number> {
   const ls = await git(ctx.repo, ["ls-tree", "--name-only", `HEAD:${dir}`]);
   if (ls.ok) ls.stdout.split("\n").forEach((n) => names.add(n));
   try {
-    for await (const f of Deno.readDir(join(ctx.repo, dir))) names.add(f.name);
-  } catch { /* none yet */ }
+    for await (const f of fs.readDir(paths.join(ctx.repo, dir))) names.add(f.name);
+  } catch {
+    /* none yet */
+  }
   let max = 0;
   for (const n of names) {
     const m = ENTRY_FILE.exec(n);
@@ -287,7 +291,12 @@ export async function auditEntry(
   const entry: TrailEntry = {
     ...e,
     seq,
-    at: e.at ?? ctx.now().toISOString().replace(/\.\d+Z$/, "Z"),
+    at:
+      e.at ??
+      ctx
+        .now()
+        .toISOString()
+        .replace(/\.\d+Z$/, "Z"),
   };
   const path = `${trailDir(ctx.fleet, id)}/${entryFile(entry)}`;
   const message = `audit ${id}: ${e.kind} ${seq}${e.control ? ` (${e.control})` : ""}`;
@@ -295,7 +304,7 @@ export async function auditEntry(
     const commit = await ctx.commit({ [path]: entrySource(entry) }, message);
     return { ok: true, detail: `${path}: ${message}`, commit, seq };
   } catch (x) {
-    return { ok: false, why: (x as Error).message, fix: "deno task stolos keys" };
+    return { ok: false, why: (x as Error).message, fix: "bun run stolos keys" };
   }
 }
 
@@ -320,17 +329,16 @@ export async function auditSample(
     return {
       ok: false,
       why: c.bundleProblems.join("; ") || "no population",
-      fix: `deno task stolos audit bundle ${id} <bundle.zip>`,
+      fix: `bun run stolos audit bundle ${id} <bundle.zip>`,
     };
   }
   const s = await drawSample(x.id, pop, o.seed, o.size);
-  const body =
-    `${s.units.length} of ${s.populationSize} unit(s) of ${s.population}, drawn with ${s.method} from the seed the auditor gave.${
-      o.note ? `\n\n${o.note}` : ""
-    }\n\n${s.units.map((u) => `- ${u}`).join("\n")}`;
+  const body = `${s.units.length} of ${s.populationSize} unit(s) of ${s.population}, drawn with ${s.method} from the seed the auditor gave.${
+    o.note ? `\n\n${o.note}` : ""
+  }\n\n${s.units.map((u) => `- ${u}`).join("\n")}`;
   const r = await auditEntry(ctx, id, {
     kind: "sample",
-    by: o.by ?? await ctx.who(),
+    by: o.by ?? (await ctx.who()),
     control: x.id,
     sample: s,
     body,
@@ -366,11 +374,11 @@ async function whoSigns(repo: string): Promise<string> {
   const k = (await git(repo, ["config", "user.signingkey"])).stdout.trim();
   let pub: string | undefined;
   for (const f of [k.endsWith(".pub") ? k : `${k}.pub`, `${keyPaths(k).daily}.pub`]) {
-    pub = pubOf(await Deno.readTextFile(f).catch(() => undefined));
+    pub = pubOf(await fs.readTextFile(f).catch(() => undefined));
     if (pub) break;
   }
-  const me = (await loadSigners()).find((s) =>
-    pub && s.key.trim().split(/\s+/).slice(0, 2).join(" ") === pub
+  const me = (await loadSigners()).find(
+    (s) => pub && s.key.trim().split(/\s+/).slice(0, 2).join(" ") === pub,
   );
   return me?.name ?? ((await git(repo, ["config", "user.name"])).stdout.trim() || "unknown");
 }
@@ -383,7 +391,7 @@ export async function pcAuditCtx(): Promise<AuditCtx> {
   return {
     repo,
     fleet: P.fleetId,
-    evidenceDir: join(P.state, "evidence"),
+    evidenceDir: paths.join(P.state, "evidence"),
     allowedSigners: async () => allowedSignersText(await loadSigners()),
     who: () => whoSigns(repo),
     commit: gitCommitter(repo, true),
@@ -396,7 +404,7 @@ export const AUDIT_TTL_MS = 60_000;
 
 /** The portal's deps on this PC: engagements from the fleet repository, read at most once a minute each. */
 export async function auditDeps(ctx?: AuditCtx): Promise<AuditDeps> {
-  const c = ctx ?? await pcAuditCtx();
+  const c = ctx ?? (await pcAuditCtx());
   const cache = new Map<string, { at: number; v: Promise<AuditCase | undefined> }>();
   return {
     launch: new AuditLaunch(),
@@ -423,33 +431,48 @@ function report(name: string, r: Done): number {
   }
   p.done(`${r.detail}${r.commit ? ` (commit ${r.commit.slice(0, 12)}, signed; not pushed)` : ""}`);
   ui.next.push(
-    `push it when ready (deno task stolos apply), then: deno task stolos audit show ${name}`,
+    `push it when ready (bun run stolos apply), then: bun run stolos audit show ${name}`,
   );
   return 0;
 }
 
 const lines = (v: unknown) =>
-  typeof v === "string" ? v.split("\n").map((x) => x.trim()).filter(Boolean) : [];
+  typeof v === "string"
+    ? v
+        .split("\n")
+        .map((x) => x.trim())
+        .filter(Boolean)
+    : [];
 
 /** `stolos audit open`. */
 export async function auditOpenCmd(a: Record<string, unknown>): Promise<number> {
   const ctx = await pcAuditCtx();
   return report(
-    String(a.id),
+    arg(a, "id"),
     await auditOpen(ctx, {
-      id: String(a.id),
-      ...(a.title ? { title: String(a.title) } : {}),
-      firm: String(a.firm),
-      auditors: lines(a.auditor),
-      from: String(a.from),
-      to: String(a.to),
-      frameworks: lines(a.framework).flatMap((x) => x.split(",")).map((x) =>
-        x.trim().toLowerCase()
-      ),
-      ...(a.controls ? { controls: String(a.controls) } : {}),
-      expires: String(a.expires),
+      id: arg(a, "id"),
+      ...(a["title"] ? { title: arg(a, "title") } : {}),
+      firm: arg(a, "firm"),
+      auditors: lines(a["auditor"]),
+      from: arg(a, "from"),
+      to: arg(a, "to"),
+      frameworks: lines(a["framework"])
+        .flatMap((x) => x.split(","))
+        .map((x) => x.trim().toLowerCase()),
+      ...(a["controls"] ? { controls: arg(a, "controls") } : {}),
+      expires: arg(a, "expires"),
     }),
   );
+}
+
+/** A command-line argument as text ("" where it was not given). */
+function arg(a: Record<string, unknown>, name: string): string {
+  const v = a[name];
+  return typeof v === "string"
+    ? v
+    : typeof v === "number" || typeof v === "boolean"
+      ? String(v)
+      : "";
 }
 
 /** `stolos audit bundle`, `access`, `close`. */
@@ -458,14 +481,14 @@ export async function auditChangeCmd(
   a: Record<string, unknown>,
 ): Promise<number> {
   const ctx = await pcAuditCtx();
-  const id = String(a.id);
+  const id = arg(a, "id");
   return report(
     id,
     what === "bundle"
-      ? await auditBundle(ctx, id, String(a.bundle))
+      ? await auditBundle(ctx, id, arg(a, "bundle"))
       : what === "access"
-      ? await auditAccess(ctx, id, String(a.expires))
-      : await auditClose(ctx, id),
+        ? await auditAccess(ctx, id, arg(a, "expires"))
+        : await auditClose(ctx, id),
   );
 }
 
@@ -475,16 +498,16 @@ export async function auditEntryCmd(
   a: Record<string, unknown>,
 ): Promise<number> {
   const ctx = await pcAuditCtx();
-  const id = String(a.id);
+  const id = arg(a, "id");
   if (kind === "request") {
     const got = await committedEngagement(ctx, id);
-    const by = String(a.by ?? "");
+    const by = arg(a, "by");
     if ("e" in got && !got.e.auditors.some((x) => x.name === by)) {
       return report(id, {
         ok: false,
-        why: `--by "${by}" is not one of the engagement's auditors (${
-          got.e.auditors.map((x) => x.name).join(", ")
-        })`,
+        why: `--by "${by}" is not one of the engagement's auditors (${got.e.auditors
+          .map((x) => x.name)
+          .join(", ")})`,
       });
     }
   }
@@ -492,10 +515,10 @@ export async function auditEntryCmd(
     id,
     await auditEntry(ctx, id, {
       kind,
-      by: kind === "request" ? String(a.by) : await ctx.who(),
-      ...(a.control ? { control: String(a.control) } : {}),
-      ...(a.re ? { re: Number(a.re) } : {}),
-      body: String(a.text ?? ""),
+      by: kind === "request" ? arg(a, "by") : await ctx.who(),
+      ...(a["control"] ? { control: arg(a, "control") } : {}),
+      ...(a["re"] ? { re: Number(a["re"]) } : {}),
+      body: arg(a, "text"),
     }),
   );
 }
@@ -503,14 +526,16 @@ export async function auditEntryCmd(
 /** `stolos audit sample`. */
 export async function auditSampleCmd(a: Record<string, unknown>): Promise<number> {
   const ctx = await pcAuditCtx();
-  const id = String(a.id);
+  const id = arg(a, "id");
   const r = await auditSample(ctx, id, {
-    control: String(a.control),
-    seed: String(a.seed),
-    size: Number(a.size),
-    ...(a.note ? { note: String(a.note) } : {}),
+    control: arg(a, "control"),
+    seed: arg(a, "seed"),
+    size: Number(a["size"]),
+    ...(a["note"] ? { note: arg(a, "note") } : {}),
   });
-  if (r.ok && r.units) { for (const u of r.units) ui.say(u); }
+  if (r.ok && r.units) {
+    for (const u of r.units) ui.say(u);
+  }
   return report(id, r);
 }
 
@@ -532,7 +557,7 @@ export async function auditListCmd(json: boolean): Promise<number> {
     }
   }
   if (json) {
-    console.log(JSON.stringify(out, null, 2));
+    stdio.stdout.writeSync(`${JSON.stringify(out, null, 2)}\n`);
     return 0;
   }
   const p = ui.phase("Audit");
@@ -541,9 +566,7 @@ export async function auditListCmd(json: boolean): Promise<number> {
       `${x.id}: ${x.title} (${x.firm}, ${x.period.from} to ${x.period.to}): ${x.state}, access to ${x.expires}`,
     );
   }
-  p.done(
-    out.length ? `${out.length} engagement(s)` : "no engagements: deno task stolos audit open",
-  );
+  p.done(out.length ? `${out.length} engagement(s)` : "no engagements: bun run stolos audit open");
   return 0;
 }
 
@@ -553,20 +576,21 @@ export async function auditShowCmd(id: string, json: boolean): Promise<number> {
   const c = await loadCase(ctx, id);
   const p = ui.phase("Audit");
   if (!c) {
-    p.fail(`no engagement ${id}`, "deno task stolos audit list");
+    p.fail(`no engagement ${id}`, "bun run stolos audit list");
     return 1;
   }
   const problems = caseProblems(c);
   if (json) {
     const { engagementJson } = await import("./portal.ts");
-    console.log(JSON.stringify(engagementJson(c, ctx.now()), null, 2));
+    stdio.stdout.writeSync(`${JSON.stringify(engagementJson(c, ctx.now()), null, 2)}\n`);
     return problems.length ? 1 : 0;
   }
   const e = c.engagement;
   p.note(
-    `${e.title}: ${e.firm}, ${e.period.from} to ${e.period.to}, ${
-      engagementState(e, ctx.now())
-    }, access to ${e.access.expires}`,
+    `${e.title}: ${e.firm}, ${e.period.from} to ${e.period.to}, ${engagementState(
+      e,
+      ctx.now(),
+    )}, access to ${e.access.expires}`,
   );
   for (const x of e.controls) {
     const pop = c.populations.get(x.id);
@@ -598,14 +622,14 @@ export async function auditExportCmd(id: string, out?: string): Promise<number> 
   const p = ui.phase("Audit");
   const zip = await auditExportZip(ctx, id);
   if (!zip) {
-    p.fail(`no engagement ${id}`, "deno task stolos audit list");
+    p.fail(`no engagement ${id}`, "bun run stolos audit list");
     return 1;
   }
-  const file = out ?? join(ctx.evidenceDir, "..", "audits", `${ctx.fleet}-audit-${id}.zip`);
-  await Deno.mkdir(join(file, ".."), { recursive: true });
-  await Deno.writeFile(file, zip);
+  const file = out ?? paths.join(ctx.evidenceDir, "..", "audits", `${ctx.fleet}-audit-${id}.zip`);
+  await fs.mkdir(paths.dirname(file), { recursive: true });
+  await fs.writeFile(file, zip);
   p.done(file);
-  ui.next.push(`the auditor checks it, offline: deno task stolos audit verify ${file}`);
+  ui.next.push(`the auditor checks it, offline: bun run stolos audit verify ${file}`);
   return 0;
 }
 
@@ -618,15 +642,15 @@ export async function auditVerifyCmd(
   const p = ui.phase("Audit");
   let zip: Uint8Array;
   try {
-    zip = await Deno.readFile(file);
+    zip = await fs.readFile(file);
   } catch (e) {
-    p.fail(`${file}: ${(e as Error).message}`);
+    p.fail(`${file}: ${toError(e).message}`);
     return 1;
   }
-  const allowed = signers ? await Deno.readTextFile(signers) : undefined;
+  const allowed = signers ? await fs.readTextFile(signers) : undefined;
   const r = await verifyPackage(zip, allowed ? { allowedSigners: allowed } : {});
   if (json) {
-    console.log(JSON.stringify({ ok: r.ok, problems: r.problems }, null, 2));
+    stdio.stdout.writeSync(`${JSON.stringify({ ok: r.ok, problems: r.problems }, null, 2)}\n`);
     return r.ok ? 0 : 1;
   }
   if (r.case) {

@@ -1,22 +1,33 @@
-// `deno task fedramp` (spec 076): the FedRAMP 20x Key Security Indicators (KSI), and the rules
-// that say which apply to Class A and Class B and how often, as TypeScript, generated from
-// FedRAMP's own machine-readable Consolidated Rules (vendor/fedramp/<release>/, pinned by
-// commit and SHA-256). Nothing is typed by hand: a KSI added, renamed, or moved to another
-// class by FedRAMP reaches Stolos by vendoring the new release and running this again.
-//
-//   deno task fedramp            check the SHA-256, write src/archon/fedramp/rules.auto.ts
-//   deno task fedramp --check    fail when the generated module differs from what is written
+/**
+ * `bun run fedramp` (spec 076): the FedRAMP 20x Key Security Indicators (KSI), and the rules that
+ * say which apply to Class A and Class B and how often, as TypeScript, generated from FedRAMP's own
+ * machine-readable Consolidated Rules (vendor/fedramp/<release>/, pinned by commit and SHA-256).
+ * Nothing is typed by hand: a KSI added, renamed, or moved to another class by FedRAMP reaches
+ * Stolos by vendoring the new release and running this again. The module is formatted by
+ * `bun fmt`, so this tool runs on Bun.
+ *
+ * ```sh
+ * bun run fedramp            # check the SHA-256, write src/archon/fedramp/rules.auto.ts
+ * bun run fedramp --check    # fail when the generated module differs from what is written
+ * ```
+ *
+ * @module
+ */
+import { sha256 } from "@intellectual-frontiers/ifc-ts/kernel";
+import { fs, path, proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
+
+const ROOT = path.resolve(path.dirname(path.fromFileUrl(import.meta.url)), "..");
+const say = (line: string): void => {
+  stdio.stderr.writeSync(`${line}\n`);
+};
 
 const RELEASE = "2026.11.02.01";
 const COMMIT = "64fa769510416fa75fd00a4689466094265b8083";
 const SHA256 = "782faecae3eee4aa2aa9d32cdb0de4c929524f2e41dc1f3d143a94a9ca64c4e3";
 const SDR_SCHEMA =
   "https://fedramp.gov/schemas/fedramp-security-decision-record-schema-2026-06-24.json";
-const SRC = new URL(
-  `../vendor/fedramp/${RELEASE}/fedramp-consolidated-rules.json`,
-  import.meta.url,
-);
-const OUT = new URL("../src/archon/fedramp/rules.auto.ts", import.meta.url);
+const SRC = path.join(ROOT, `vendor/fedramp/${RELEASE}/fedramp-consolidated-rules.json`);
+const OUT = path.join(ROOT, "src/archon/fedramp/rules.auto.ts");
 
 interface Variant {
   statement?: string;
@@ -33,27 +44,30 @@ interface Entry extends Variant {
 }
 interface Rules {
   info: { title: string; version: string; last_updated: string };
-  KSI: Record<string, {
-    id: string;
-    name: string;
-    short_name: string;
-    status: string;
-    indicators: Record<string, Entry>;
-  }>;
+  KSI: Record<
+    string,
+    {
+      id: string;
+      name: string;
+      short_name: string;
+      status: string;
+      indicators: Record<string, Entry>;
+    }
+  >;
   FRR: Record<string, { data: Record<string, Record<string, Record<string, Entry>>> }>;
 }
 
-const bytes = await Deno.readFile(SRC);
-const got = [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))]
-  .map((x) => x.toString(16).padStart(2, "0")).join("");
+const bytes = await fs.readFile(SRC);
+const got = await sha256(bytes);
 if (got !== SHA256) {
-  console.error(`${SRC.pathname}: SHA-256 ${got}, expected ${SHA256}: not the pinned release`);
-  Deno.exit(1);
+  say(`${SRC}: SHA-256 ${got}, expected ${SHA256}: not the pinned release`);
+  proc.exit(1);
 }
+// FedRAMP's own file, pinned by its SHA-256 above.
 const rules = JSON.parse(new TextDecoder().decode(bytes)) as Rules;
 if (rules.info.version !== RELEASE) {
-  console.error(`the rules say version ${rules.info.version}, expected ${RELEASE}`);
-  Deno.exit(1);
+  say(`the rules say version ${rules.info.version}, expected ${RELEASE}`);
+  proc.exit(1);
 }
 
 /** A rule (FRR) by its id, wherever it is in the tree. */
@@ -82,8 +96,7 @@ function forClass(id: string, cls: "a" | "b") {
 
 /** Plain JSDoc text: no comment terminators, no tags, no Markdown emphasis. */
 const doc = (s: string) =>
-  s.replace(/\*\//g, "* /").replace(/@/g, "(at)").replace(/\*\*/g, "").replace(/\s+/g, " ")
-    .trim();
+  s.replace(/\*\//g, "* /").replace(/@/g, "(at)").replace(/\*\*/g, "").replace(/\s+/g, " ").trim();
 
 const themes = Object.values(rules.KSI).map((t) => ({
   id: t.short_name,
@@ -92,13 +105,13 @@ const themes = Object.values(rules.KSI).map((t) => ({
 }));
 const ksis = Object.values(rules.KSI).flatMap((t) =>
   Object.entries(t.indicators).map(([id, k]) => {
-    const a = k.varies_by_class?.a?.statement ?? k.statement;
-    const b = k.varies_by_class?.b?.statement ?? k.statement;
+    const a = k.varies_by_class?.["a"]?.statement ?? k.statement;
+    const b = k.varies_by_class?.["b"]?.statement ?? k.statement;
     return {
       id,
       theme: t.short_name,
       name: k.name,
-      statement: k.statement ?? k.varies_by_class?.c?.statement ?? b ?? "",
+      statement: k.statement ?? k.varies_by_class?.["c"]?.statement ?? b ?? "",
       classes: {
         ...(a ? { A: a } : {}),
         ...(b ? { B: b } : {}),
@@ -109,7 +122,7 @@ const ksis = Object.values(rules.KSI).flatMap((t) =>
       ],
       controls: k.controls ?? [],
     };
-  })
+  }),
 );
 const mfr = rule("FRC-CLA-MFR");
 const classA = (mfr.following_information ?? [])
@@ -138,7 +151,7 @@ const out = [
   " * controls FedRAMP maps it to, which apply to Class A and Class B, and the cadences the",
   " * rules set for each class, all from FedRAMP's own Consolidated Rules for 2026.",
   " *",
-  ` * GENERATED by \`deno task fedramp\` (tools/fedramp-gen.ts) from FedRAMP/rules ${RELEASE}`,
+  ` * GENERATED by \`bun run fedramp\` (tools/fedramp-gen.ts) from FedRAMP/rules ${RELEASE}`,
   ` * (commit ${COMMIT}, SHA-256 ${SHA256}), vendored in`,
   ` * vendor/fedramp/${RELEASE}/. A work of the United States Government. Never edit by hand.`,
   " *",
@@ -146,19 +159,16 @@ const out = [
   " */",
   "",
   "/** The FedRAMP rules release these are from, and where it is. */",
-  `export const FEDRAMP_RULES = ${
-    j({
-      title: rules.info.title,
-      version: rules.info.version,
-      lastUpdated: rules.info.last_updated,
-      repository: "https://github.com/FedRAMP/rules",
-      commit: COMMIT,
-      url:
-        `https://raw.githubusercontent.com/FedRAMP/rules/${COMMIT}/fedramp-consolidated-rules.json`,
-      sha256: SHA256,
-      sdrSchema: SDR_SCHEMA,
-    })
-  } as const;`,
+  `export const FEDRAMP_RULES = ${j({
+    title: rules.info.title,
+    version: rules.info.version,
+    lastUpdated: rules.info.last_updated,
+    repository: "https://github.com/FedRAMP/rules",
+    commit: COMMIT,
+    url: `https://raw.githubusercontent.com/FedRAMP/rules/${COMMIT}/fedramp-consolidated-rules.json`,
+    sha256: SHA256,
+    sdrSchema: SDR_SCHEMA,
+  })} as const;`,
   "",
   "/** A FedRAMP 20x certification class Stolos writes a package for. */",
   'export type FedrampClass = "A" | "B";',
@@ -199,8 +209,9 @@ const out = [
   "",
   "/** Every KSI, in FedRAMP's order. */",
   "export const KSIS: readonly Ksi[] = [",
-  ...ksis.map((k) =>
-    `  /** ${k.id} ${doc(k.name)}: ${doc(k.statement)} */\n  ${j(k).replace(/\n/g, "\n  ")},`
+  ...ksis.map(
+    (k) =>
+      `  /** ${k.id} ${doc(k.name)}: ${doc(k.statement)} */\n  ${j(k).replace(/\n/g, "\n  ")},`,
   ),
   "];",
   "",
@@ -238,35 +249,39 @@ const out = [
   "}",
   "",
   "/** The cadences and expectations for Class A and Class B, from the rules. */",
-  `export const CLASS_RULES: Record<FedrampClass, ClassCadence> = ${
-    j({ A: cadence("a"), B: cadence("b") })
-  };`,
+  `export const CLASS_RULES: Record<FedrampClass, ClassCadence> = ${j({
+    A: cadence("a"),
+    B: cadence("b"),
+  })};`,
   "",
 ].join("\n");
 
-const fmt = new Deno.Command(Deno.execPath(), {
-  args: ["fmt", "--line-width", "100", "--ext", "ts", "-"],
-  stdin: "piped",
-  stdout: "piped",
-}).spawn();
-const w = fmt.stdin.getWriter();
-await w.write(new TextEncoder().encode(out));
-await w.close();
-const r = await fmt.output();
-if (!r.success) throw new Error("deno fmt refused the generated module");
-const text = new TextDecoder().decode(r.stdout);
+/** The module as `bun fmt` writes it (the engine's bunfig.toml: width 100). */
+async function formatted(text: string): Promise<string> {
+  const bun = proc.runtimeName() === "bun" ? proc.execPath() : "bun";
+  return fs.withTempDir(
+    async (dir) => {
+      const file = path.join(dir, "rules.auto.ts");
+      await fs.writeTextFile(file, text);
+      const r = await proc.output([bun, "fmt", file], { cwd: ROOT, stdin: "null" });
+      if (r.code !== 0) throw new Error("bun fmt refused the generated module");
+      return fs.readTextFile(file);
+    },
+    { prefix: "stolos-fedramp-" },
+  );
+}
+const text = await formatted(out);
 
-if (Deno.args.includes("--check")) {
-  const old = await Deno.readTextFile(OUT).catch(() => "");
+if (proc.args.includes("--check")) {
+  const old = (await fs.readTextOr(OUT)) ?? "";
   if (old !== text) {
-    console.error(`${OUT.pathname} is stale: deno task fedramp`);
-    Deno.exit(1);
+    say(`${OUT} is stale: bun run fedramp`);
+    proc.exit(1);
   }
-  console.log(`FedRAMP ${RELEASE}: unchanged`);
+  say(`FedRAMP ${RELEASE}: unchanged`);
 } else {
-  await Deno.mkdir(new URL(".", OUT), { recursive: true });
-  await Deno.writeTextFile(OUT, text);
-  console.log(
+  await fs.writeTextFile(OUT, text);
+  say(
     `FedRAMP ${RELEASE}: ${ksis.length} KSIs in ${themes.length} themes; Class A: ${classA.length}`,
   );
 }

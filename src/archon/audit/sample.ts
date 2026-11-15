@@ -30,7 +30,7 @@
  * @module
  */
 
-import { sha256Hex } from "../evidence/bundle.ts";
+import { sha256 as sha256Hex } from "@intellectual-frontiers/ifc-ts/kernel";
 import type { Population, PopulationId } from "./populations.ts";
 
 /** The sampling method's name, recorded with every sample. */
@@ -83,7 +83,7 @@ export async function drawIds(
   if (new Set(ids).size !== ids.length) throw new Error("the population's unit ids are not unique");
   const keyed = await Promise.all(ids.map(async (id) => ({ id, key: await sampleKey(seed, id) })));
   keyed.sort((a, b) =>
-    a.key < b.key ? -1 : a.key > b.key ? 1 : a.id < b.id ? -1 : a.id > b.id ? 1 : 0
+    a.key < b.key ? -1 : a.key > b.key ? 1 : a.id < b.id ? -1 : a.id > b.id ? 1 : 0,
   );
   return keyed.slice(0, size).map((k) => k.id);
 }
@@ -103,7 +103,11 @@ export async function drawSample(
     seed,
     method: SAMPLE_METHOD,
     size,
-    units: await drawIds(pop.units.map((u) => u.id), seed, size),
+    units: await drawIds(
+      pop.units.map((u) => u.id),
+      seed,
+      size,
+    ),
   };
 }
 
@@ -116,7 +120,11 @@ export async function checkSample(s: SampleRecord, pop: Population): Promise<str
       `the population's hash is ${pop.hash}, the sample was drawn from ${s.populationHash} (another bundle, or the evidence changed)`,
     );
   }
-  const again = await drawIds(pop.units.map((u) => u.id), s.seed, s.size);
+  const again = await drawIds(
+    pop.units.map((u) => u.id),
+    s.seed,
+    s.size,
+  );
   if (again.join("\n") !== s.units.join("\n")) {
     out.push("redrawn from its seed, the sample has other units than the trail records");
   }

@@ -5,10 +5,9 @@
  * @module
  */
 
-import { join } from "../core/path.ts";
-import { ensureDir, listFiles } from "../core/fsx.ts";
+import { fs, path as paths, proc, toError } from "@intellectual-frontiers/ifc-ts/runtime";
 import { P } from "../core/paths.ts";
-import { isRoot, run } from "../core/exec.ts";
+import { run } from "../core/exec.ts";
 import { journal } from "../core/log.ts";
 import { capture } from "../state/capture.ts";
 import type { HostDef } from "../model/types.ts";
@@ -23,29 +22,34 @@ export async function dailyReport(
   host: HostDef,
 ): Promise<{ path: string; failedUnits: number; upgradable: number }> {
   const date = new Date().toISOString().slice(0, 10);
-  const failed = (await run(["systemctl", "--failed", "--no-legend", "--plain", "--no-pager"]))
-    .stdout.trim();
-  const disk = (await run([
-    "df",
-    "-h",
-    "--output=target,size,used,avail,pcent",
-    "-x",
-    "tmpfs",
-    "-x",
-    "devtmpfs",
-  ])).stdout.trim();
+  const failed = (
+    await run(["systemctl", "--failed", "--no-legend", "--plain", "--no-pager"])
+  ).stdout.trim();
+  const disk = (
+    await run([
+      "df",
+      "-h",
+      "--output=target,size,used,avail,pcent",
+      "-x",
+      "tmpfs",
+      "-x",
+      "devtmpfs",
+    ])
+  ).stdout.trim();
   const upgradable = (await run(["apt", "list", "--upgradable"], { env: { LANG: "C" } })).stdout
-    .split("\n").filter((l) => l.includes("[upgradable")).length;
-  const timers = (await run(["systemctl", "list-timers", "--no-pager", "--plain", "archon-*"]))
-    .stdout.trim();
-  const drift = await capture(host).then((c) => c.summary).catch((e) =>
-    `capture failed: ${e.message}`
-  );
+    .split("\n")
+    .filter((l) => l.includes("[upgradable")).length;
+  const timers = (
+    await run(["systemctl", "list-timers", "--no-pager", "--plain", "archon-*"])
+  ).stdout.trim();
+  const drift = await capture(host)
+    .then((c) => c.summary)
+    .catch((e: unknown) => `capture failed: ${toError(e).message}`);
   const outside = await outsideStolos(host);
-  const reports = await listFiles(join(P.varLib, "reports"), ".md");
+  const reports = await fs.listFiles(paths.join(P.varLib, "reports"), ".md");
   const latestTools = reports.filter((r) => r.startsWith("tools-")).pop();
   const toolsReport = latestTools
-    ? await Deno.readTextFile(join(P.varLib, "reports", latestTools))
+    ? await fs.readTextFile(paths.join(P.varLib, "reports", latestTools))
     : "No tools report yet.";
   const facts = [
     `# Daily report ${date}: ${host.name}`,
@@ -88,10 +92,10 @@ export async function dailyReport(
   ].join("\n");
 
   const text = facts + "\n";
-  const dir = isRoot() ? join(P.varLib, "reports") : join(P.state, "reports");
-  await ensureDir(dir);
-  const path = join(dir, `daily-${date}.md`);
-  await Deno.writeTextFile(path, text);
+  const dir = proc.isRoot() ? paths.join(P.varLib, "reports") : paths.join(P.state, "reports");
+  await fs.ensureDir(dir);
+  const path = paths.join(dir, `daily-${date}.md`);
+  await fs.writeTextFile(path, text);
   await journal(
     "archon-report",
     `daily report: ${
@@ -111,12 +115,12 @@ async function outsideStolos(host: HostDef): Promise<string> {
     const { loadDrift } = await import("../proposal/server.ts");
     const { driftText } = await import("../proposal/drift.ts");
     const { remind, waiting, waitingLine } = await import("../proposal/record.ts");
-    if (isRoot()) await collect(host);
+    if (proc.isRoot()) await collect(host);
     const v = await loadDrift(host);
     if (!v.state) return "nothing collected yet (sudo archon drift --collect)";
     // Spec 095: what waits on a person; a reminder after 3 days (at most every 3 days).
     const w = waiting(v);
-    const reminded = isRoot() ? await remind(host, w) : false;
+    const reminded = proc.isRoot() ? await remind(host, w) : false;
     return [
       waitingLine(w) + (reminded ? " (reminder mailed)" : ""),
       "",

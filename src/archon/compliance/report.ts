@@ -90,10 +90,7 @@ export function combine(ss: Array<PolicyResult["status"] | Coverage>): Coverage 
 }
 
 const NO_MAPS = (): Record<FrameworkId, string[]> =>
-  Object.fromEntries(FRAMEWORKS.map((f) => [f.id, []])) as unknown as Record<
-    FrameworkId,
-    string[]
-  >;
+  Object.fromEntries(FRAMEWORKS.map((f) => [f.id, []])) as unknown as Record<FrameworkId, string[]>;
 
 /** Each control's status from the evidence, with the catalog's name, description, and mappings. */
 export function controls(evidence: Evidence[], catalog?: ScfCatalog): ControlStatus[] {
@@ -117,18 +114,19 @@ export function framework(id: FrameworkId, cs: ControlStatus[]): RequirementStat
     const ids = id === "soc2" ? criteriaOnly(c.control.maps[id]) : c.control.maps[id];
     for (const r of ids) reqs.set(r, [...(reqs.get(r) ?? []), c.control.id]);
   }
-  return [...reqs].map(([rid, ids]) => ({
-    id: rid,
-    controls: ids,
-    // A requirement is met only as far as all its controls have evidence.
-    status:
-      ((ss) =>
+  return [...reqs]
+    .map(([rid, ids]) => ({
+      id: rid,
+      controls: ids,
+      // A requirement is met only as far as all its controls have evidence.
+      status: ((ss) =>
         ss.every((x) => x === "no evidence")
           ? "no evidence"
-          : combine(ss.map((x) => x === "no evidence" ? "partial" : x)))(
-          ids.map((x) => cs.find((c) => c.control.id === x)!.status),
-        ),
-  })).sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
+          : combine(ss.map((x) => (x === "no evidence" ? "partial" : x))))(
+        ids.map((x) => cs.find((c) => c.control.id === x)?.status ?? "no evidence"),
+      ),
+    }))
+    .sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
 }
 
 /** The fleet's evidence, from what the Stolos Console gathers. */
@@ -144,15 +142,14 @@ export function fleetEvidence(f: PcFacts, now = Date.now()): Evidence[] {
       status: !m.score
         ? "unknown"
         : m.failing.length || m.score.pass < m.score.total
-        ? "fail"
-        : "pass",
+          ? "fail"
+          : "pass",
       detail: m.score
         ? `${m.score.pass} of ${m.score.total} checks${
-          m.failing.length ? `; failing: ${m.failing.join(", ")}` : ""
-        }`
+            m.failing.length ? `; failing: ${m.failing.join(", ")}` : ""
+          }`
         : "not verified yet",
-      fix:
-        "deno task stolos fleet status, then the failing check's fix on the server (Archon Console)",
+      fix: "bun run stolos fleet status, then the failing check's fix on the server (Archon Console)",
     });
     out.push({
       scf: ["CRY-07"],
@@ -161,8 +158,7 @@ export function fleetEvidence(f: PcFacts, now = Date.now()): Evidence[] {
       check: "The disk is encrypted",
       status: "unknown",
       detail: "Archon does not check disk encryption on managed servers yet",
-      fix:
-        "record how this server's data at rest is protected (full-disk encryption at install, or an encrypted volume for its data)",
+      fix: "record how this server's data at rest is protected (full-disk encryption at install, or an encrypted volume for its data)",
     });
     out.push({
       scf: ["AST-04", "MON-02"],
@@ -171,7 +167,7 @@ export function fleetEvidence(f: PcFacts, now = Date.now()): Evidence[] {
       check: "Installed and recorded in the last 7 days",
       status: recent(m.seen) ? "pass" : m.seen ? "warn" : "unknown",
       detail: m.seen ? `last recorded ${m.seen.slice(0, 10)}` : "no record on this PC",
-      fix: "deno task stolos fleet status",
+      fix: "bun run stolos fleet status",
     });
   }
   for (const a of f.adopted) {
@@ -229,7 +225,7 @@ export function fleetEvidence(f: PcFacts, now = Date.now()): Evidence[] {
     for (const r of c.results) {
       out.push({
         scf: r.scf,
-        subject: `${c.title} (${c.observed!.account})`,
+        subject: `${c.title} (${c.observed?.account ?? ""})`,
         source: "cloud",
         check: r.title,
         status: r.status,
@@ -247,7 +243,7 @@ export function fleetEvidence(f: PcFacts, now = Date.now()): Evidence[] {
     detail: f.git.unapproved.length
       ? `${f.git.unapproved.length} commit(s) waiting for approval`
       : "the newest commit is approved",
-    fix: "deno task stolos apply (approves with one signed commit)",
+    fix: "bun run stolos apply (approves with one signed commit)",
   });
   const daily = f.signers.filter((s) => s.role === "daily").length;
   const recovery = f.signers.filter((s) => s.role === "recovery").length;
@@ -258,7 +254,7 @@ export function fleetEvidence(f: PcFacts, now = Date.now()): Evidence[] {
     check: "Signing keys: one per person, and an offline recovery key",
     status: daily && recovery ? "pass" : daily ? "warn" : "fail",
     detail: `${daily} daily, ${recovery} recovery signer(s)`,
-    fix: "deno task stolos keys setup (in the terminal)",
+    fix: "bun run stolos keys setup (in the terminal)",
   });
   out.push({
     scf: ["AST-04"],
@@ -276,13 +272,16 @@ export function fleetEvidence(f: PcFacts, now = Date.now()): Evidence[] {
 }
 
 /** One server's evidence, for its Archon Console: what it can show about itself. */
-export function serverEvidence(o: {
-  host: string;
-  verify?: { passed: number; total: number; failed: string[]; at?: string };
-  signer?: string;
-  commit?: string;
-  https: boolean;
-}, now = Date.now()): Evidence[] {
+export function serverEvidence(
+  o: {
+    host: string;
+    verify?: { passed: number; total: number; failed: string[]; at?: string };
+    signer?: string;
+    commit?: string;
+    https: boolean;
+  },
+  now = Date.now(),
+): Evidence[] {
   const v = o.verify;
   return [
     {
@@ -293,8 +292,8 @@ export function serverEvidence(o: {
       status: !v ? "unknown" : v.failed.length ? "fail" : "pass",
       detail: v
         ? `${v.passed} of ${v.total} checks${
-          v.failed.length ? `; failing: ${v.failed.join(", ")}` : ""
-        }`
+            v.failed.length ? `; failing: ${v.failed.join(", ")}` : ""
+          }`
         : "not verified yet",
       fix: "Actions, This server: verify",
     },
@@ -316,7 +315,7 @@ export function serverEvidence(o: {
       detail: o.signer
         ? `${o.commit ?? "HEAD"} signed by ${o.signer}`
         : "no signer's signature on the applied commit",
-      fix: "on the PC: deno task stolos apply",
+      fix: "on the PC: bun run stolos apply",
     },
     {
       scf: ["CRY-05"],
@@ -344,9 +343,12 @@ export interface ComplianceView {
   /** Every control, with its evidence. */
   controls: ControlStatus[];
   /** Each framework's requirements. */
-  frameworks: Array<
-    { id: FrameworkId; title: string; short: string; requirements: RequirementStatus[] }
-  >;
+  frameworks: Array<{
+    id: FrameworkId;
+    title: string;
+    short: string;
+    requirements: RequirementStatus[];
+  }>;
 }
 
 /** The whole view from evidence, with the frameworks when the catalog is loaded. */

@@ -17,9 +17,10 @@
  * @module
  */
 
+import { sha256 as sha256Hex } from "@intellectual-frontiers/ifc-ts/kernel";
 import { run } from "../core/exec.ts";
-import { join } from "../core/path.ts";
-import { sha256Hex, verifyBundle, type VerifyResult } from "../evidence/bundle.ts";
+import { fs, path } from "@intellectual-frontiers/ifc-ts/runtime";
+import { verifyBundle, type VerifyResult } from "../evidence/bundle.ts";
 import { type Engagement, engagementPath, parseEngagement } from "./engagement.ts";
 import { type BundleView, bundleView, type Population, population } from "./populations.ts";
 import { checkSample } from "./sample.ts";
@@ -147,7 +148,7 @@ export async function assemble(p: AuditParts): Promise<AuditCase> {
         `${engagement.bundle.file} is not the bundle the engagement pins (SHA-256 ${sha256}, pinned ${engagement.bundle.sha256})`,
       );
     } else {
-      const view = bundleView(p.bundle);
+      const view = await bundleView(p.bundle);
       bundle = {
         zip: p.bundle,
         sha256,
@@ -187,15 +188,16 @@ export async function assemble(p: AuditParts): Promise<AuditCase> {
     let redraw: string[] | undefined;
     if (entry?.kind === "sample") {
       const s = entry.sample;
-      const pop = s && bundle
-        ? [...populations.values()].find((x) => x.id === s.population) ??
-          await population(s.population, bundle.view, engagement.period)
-        : undefined;
+      const pop =
+        s && bundle
+          ? ([...populations.values()].find((x) => x.id === s.population) ??
+            (await population(s.population, bundle.view, engagement.period)))
+          : undefined;
       redraw = !s
         ? ["a sample entry without its sample"]
         : !pop
-        ? ["cannot be redrawn without the bundle"]
-        : await checkSample(s, pop);
+          ? ["cannot be redrawn without the bundle"]
+          : await checkSample(s, pop);
     }
     trail.push({ file: f, ...(entry ? { entry } : {}), proof, ...(redraw ? { redraw } : {}) });
   }
@@ -254,10 +256,9 @@ export async function repoParts(l: AuditLocation): Promise<AuditParts | undefine
     if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,200}\.zip$/.test(e.bundle.file)) {
       bundleMissing = `${e.bundle.file}: not a bundle's file name`;
     } else {
-      bundle = await Deno.readFile(join(l.evidenceDir, e.bundle.file)).catch(() => undefined);
+      bundle = await fs.readFile(path.join(l.evidenceDir, e.bundle.file)).catch(() => undefined);
       if (!bundle) {
-        bundleMissing =
-          `${e.bundle.file} is not in this PC's evidence directory (${l.evidenceDir}): copy the bundle there`;
+        bundleMissing = `${e.bundle.file} is not in this PC's evidence directory (${l.evidenceDir}): copy the bundle there`;
       }
     }
   }

@@ -77,8 +77,8 @@ const objHref = (sha: string) => `${EVIDENCE_DIR}/objects/${sha}`;
 function beforeSigning(iso: string, signed: string): Html {
   const ms = Date.parse(signed) - Date.parse(iso);
   return html`<time datetime="${iso}">${day(iso)}</time> (${
-    ms >= 0 ? `${formatAge(ms)} before signing` : `${formatAge(-ms)} after signing`
-  })`;
+      ms >= 0 ? `${formatAge(ms)} before signing` : `${formatAge(-ms)} after signing`
+    })`;
 }
 
 /** An age relative to the build, which the script rewrites by the reader's clock. */
@@ -139,8 +139,7 @@ nav ul { display: flex; flex-wrap: wrap; gap: 6px 14px; padding: 0; list-style: 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 `;
 
-const SCRIPT =
-  `(function(){var n=Date.now();function f(ms){var s=Math.max(0,Math.round(ms/1000));if(s<60)return s+"s";if(s<3600)return Math.floor(s/60)+"m";if(s<172800)return Math.floor(s/3600)+"h";return Math.floor(s/86400)+"d";}document.querySelectorAll("time[data-ago]").forEach(function(t){t.textContent=f(n-Date.parse(t.getAttribute("datetime")))+" ago";});var b=document.getElementById("aged");if(b&&n-Date.parse(b.getAttribute("data-signed"))>Number(b.getAttribute("data-max")))b.hidden=false;})();`;
+const SCRIPT = `(function(){var n=Date.now();function f(ms){var s=Math.max(0,Math.round(ms/1000));if(s<60)return s+"s";if(s<3600)return Math.floor(s/60)+"m";if(s<172800)return Math.floor(s/3600)+"h";return Math.floor(s/86400)+"d";}document.querySelectorAll("time[data-ago]").forEach(function(t){t.textContent=f(n-Date.parse(t.getAttribute("datetime")))+" ago";});var b=document.getElementById("aged");if(b&&n-Date.parse(b.getAttribute("data-signed"))>Number(b.getAttribute("data-max")))b.hidden=false;})();`;
 
 async function cspHash(text: string): Promise<string> {
   const d = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)));
@@ -152,40 +151,45 @@ function backing(c: TrustControl, o: PageOptions): Html {
   const gated = o.mode === "gated";
   const pub = o.published;
   if (gated && pub) {
-    return html`<ul class="items">${
-      c.items.map((i) =>
-        html`<li><a href="${objHref(i.sha256)}" data-sha256="${i.sha256}">${i.kind} ${i.name}</a>
-          <span class="mono muted">${i.sha256.slice(0, 16)}</span>, recorded ${when(i.at)}</li>`
-      )
-    }</ul>`;
+    return html`<ul class="items">
+      ${c.items.map(
+        (i) =>
+          html`<li>
+            <a href="${objHref(i.sha256)}" data-sha256="${i.sha256}">${i.kind} ${i.name}</a>
+            <span class="mono muted">${i.sha256.slice(0, 16)}</span>, recorded ${when(i.at)}
+          </li>`,
+      )}
+    </ul>`;
   }
   const full = html`
     <details>
       <summary>${c.items.length} item(s) in the full bundle, by SHA-256</summary>
-      <ul class="items">${c.items.map((i) =>
-        html`<li><span class="mono">${i.sha256}</span> (${i.kind}, ${day(i.at)})</li>`
-      )}</ul>
+      <ul class="items">
+        ${c.items.map(
+          (i) => html`<li><span class="mono">${i.sha256}</span> (${i.kind}, ${day(i.at)})</li>`,
+        )}
+      </ul>
     </details>
   `;
   const mine = pub?.items.find((i) => i.name === `trust/controls/${c.id}.json`);
   return html`${
     mine
       ? html`
-        <a href="${objHref(mine.sha256)}" data-sha256="${mine.sha256}">this control's summary</a>
-                <span class="mono muted">${mine.sha256.slice(
-                  0,
-                  16,
-                )}</span>, in the signed summary bundle;
-      `
+          <a href="${objHref(mine.sha256)}" data-sha256="${mine.sha256}">this control's summary</a>
+          <span class="mono muted">${mine.sha256.slice(0, 16)}</span>, in the signed summary bundle;
+        `
       : ""
-  }the evidence behind it is available on request. ${full}`;
+  }the
+  evidence behind it is available on request. ${full}`;
 }
 
 function checkRows(cs: TrustCheck[], signed: string): Html {
   return html`
     <div class="scroll">
       <table>
-        <caption>Each check, as the bundle records it</caption>
+        <caption>
+          Each check, as the bundle records it
+        </caption>
         <thead>
           <tr>
             <th scope="col">Subject</th>
@@ -195,24 +199,26 @@ function checkRows(cs: TrustCheck[], signed: string): Html {
             <th scope="col">Found</th>
           </tr>
         </thead>
-        <tbody>${cs.map((e) => {
-          const [label, cls] = RESULT[e.status] ?? [e.status, "off"];
-          return html`
-            <tr>
-              <td>${e.subject}</td>
-              <td>${e.check}</td>
-              <td><span class="pill ${cls}">${label}</span>${e.stale
-                ? html`
-                  <span class="pill bad">stale (was ${e.stale.was})</span>
-                `
-                : ""}</td>
-              <td>${e.observedAt
-                ? beforeSigning(e.observedAt, signed)
-                : "no time in the bundle"}</td>
-              <td>${e.detail}</td>
-            </tr>
-          `;
-        })}</tbody>
+        <tbody>
+          ${cs.map((e) => {
+            const [label, cls] = RESULT[e.status] ?? [e.status, "off"];
+            return html`
+              <tr>
+                <td>${e.subject}</td>
+                <td>${e.check}</td>
+                <td>
+                  <span class="pill ${cls}">${label}</span>${
+                    e.stale ? html` <span class="pill bad">stale (was ${e.stale.was})</span> ` : ""
+                  }
+                </td>
+                <td>
+                  ${e.observedAt ? beforeSigning(e.observedAt, signed) : "no time in the bundle"}
+                </td>
+                <td>${e.detail}</td>
+              </tr>
+            `;
+          })}
+        </tbody>
       </table>
     </div>
   `;
@@ -227,33 +233,39 @@ function controlCard(c: TrustControl, m: TrustModel, o: PageOptions): Html {
     n.warn && `${n.warn} warning`,
     n.unknown && `${n.unknown} unknown`,
     n.accepted && `${n.accepted} risk accepted`,
-  ].filter(Boolean).join(", ");
+  ]
+    .filter(Boolean)
+    .join(", ");
   return html`<article class="card control" id="${anchor(c.id)}">
-    <h3><span class="mono">${c.id}</span> ${c.name} ${pill(c.status)}${
-    n.stale
-      ? html`
-        <span class="pill bad">${n.stale} stale</span>
-      `
-      : ""
-  }${
-    m.bundleStale
-      ? html`
-        <span class="pill bad">stale bundle</span>
-      `
-      : ""
-  }</h3>
+    <h3>
+      <span class="mono">${c.id}</span> ${c.name}
+      ${pill(c.status)}${n.stale ? html` <span class="pill bad">${n.stale} stale</span> ` : ""}${
+        m.bundleStale ? html` <span class="pill bad">stale bundle</span> ` : ""
+      }
+    </h3>
     <p class="muted">${c.how}</p>
     <dl>
-      <dt>Checks</dt><dd>${c.checks.length}: ${parts}${
-    n.stale ? `; ${n.stale} stale (older than their service level when signed, so failing)` : ""
-  }</dd>
-      <dt>Newest evidence</dt><dd>${
-    f.newest ? beforeSigning(f.newest, m.created) : "no observation time in the bundle"
-  }</dd>
-      <dt>Oldest evidence</dt><dd>${f.oldest ? beforeSigning(f.oldest, m.created) : "none"}${
-    f.untimed ? `; ${f.untimed} check(s) read live from Git or never observed` : ""
-  }</dd>
-      <dt>Backed by</dt><dd>${backing(c, o)}</dd>
+      <dt>Checks</dt>
+      <dd>
+        ${c.checks.length}:
+        ${parts}${
+          n.stale
+            ? `; ${n.stale} stale (older than their service level when signed, so failing)`
+            : ""
+        }
+      </dd>
+      <dt>Newest evidence</dt>
+      <dd>
+        ${f.newest ? beforeSigning(f.newest, m.created) : "no observation time in the bundle"}
+      </dd>
+      <dt>Oldest evidence</dt>
+      <dd>
+        ${f.oldest ? beforeSigning(f.oldest, m.created) : "none"}${
+          f.untimed ? `; ${f.untimed} check(s) read live from Git or never observed` : ""
+        }
+      </dd>
+      <dt>Backed by</dt>
+      <dd>${backing(c, o)}</dd>
     </dl>
     ${o.mode === "gated" ? checkRows(c.checks, m.created) : ""}
   </article>`;
@@ -264,30 +276,38 @@ function verifySection(m: TrustModel, o: PageOptions): Html {
   if (!pub) {
     return html`
       <h2 id="verify">Check it yourself</h2>
-      <p>The evidence is not published with this page. It is available on request${o.contact
-        ? html`
-          (<a href="${o.contact}">contact us</a>)
-        `
-        : ""}: ask for the bundle whose SHA-256 is <code>${m.bundle.sha256}</code>, signed by
-          <b>${m
-            .signer}</b>, and check it with <code>stolos evidence verify</code>, or by hand as its README says.</p>
+      <p>
+        The evidence is not published with this page. It is available on
+        request${o.contact ? html` (<a href="${o.contact}">contact us</a>) ` : ""}: ask for the
+        bundle whose SHA-256 is <code>${m.bundle.sha256}</code>, signed by <b>${m.signer}</b>, and
+        check it with <code>stolos evidence verify</code>, or by hand as its README says.
+      </p>
     `;
   }
   const z = `${EVIDENCE_DIR}/${pub.zip}`;
   return html`
     <h2 id="verify">Check it yourself</h2>
-    <p>Every claim above links to the item that backs it, named by its SHA-256. The bundle is
-      <a href="${z}">${pub
-        .zip}</a>, and is also unpacked in <code>${EVIDENCE_DIR}/</code>. With Stolos, offline:</p>
-    <pre>deno task stolos evidence verify ${pub.zip}</pre>
-    <p>Or by hand, in the unpacked folder (its <a href="${EVIDENCE_DIR}/README.txt">README</a> says the same):</p>
-    <pre>sha256sum objects/*          # each file is named by its SHA-256
+    <p>
+      Every claim above links to the item that backs it, named by its SHA-256. The bundle is
+      <a href="${z}">${pub.zip}</a>, and is also unpacked in <code>${EVIDENCE_DIR}/</code>. With
+      Stolos, offline:
+    </p>
+    <pre>bun run stolos evidence verify ${pub.zip}</pre>
+    <p>
+      Or by hand, in the unpacked folder (its <a href="${EVIDENCE_DIR}/README.txt">README</a> says
+      the same):
+    </p>
+    <pre>
+sha256sum objects/*          # each file is named by its SHA-256
     ssh-keygen -Y find-principals -s manifest.json.sig -f allowed_signers
-    ssh-keygen -Y verify -f allowed_signers -I ${pub
-      .signer} -n ${NAMESPACE} -s manifest.json.sig &lt; manifest.json</pre>
-    <p>Each manifest entry is chained to the one before it, so nothing can be removed, added, or
-      reordered unseen. The <code>allowed_signers</code> in the bundle vouch for themselves: compare the key
-      with one you have from ${m.company} by another way.</p>
+    ssh-keygen -Y verify -f allowed_signers -I ${
+        pub.signer
+      } -n ${NAMESPACE} -s manifest.json.sig &lt; manifest.json</pre>
+    <p>
+      Each manifest entry is chained to the one before it, so nothing can be removed, added, or
+      reordered unseen. The <code>allowed_signers</code> in the bundle vouch for themselves: compare
+      the key with one you have from ${m.company} by another way.
+    </p>
   `;
 }
 
@@ -295,23 +315,22 @@ function scopeSection(m: TrustModel, o: PageOptions): Html {
   if (o.mode === "gated") {
     return html`
       <h2 id="scope">What this page shows</h2>
-      <p>This page is for people ${m
-        .company} has given access to. It shows everything in the evidence
-          bundle: each check's subject (hostnames, accounts, the repository <code>${m
-            .repo}</code>), what it
-          found, and every item by name. Do not pass it on.</p>
+      <p>
+        This page is for people ${m.company} has given access to. It shows everything in the
+        evidence bundle: each check's subject (hostnames, accounts, the repository
+        <code>${m.repo}</code>), what it found, and every item by name. Do not pass it on.
+      </p>
     `;
   }
   return html`
     <h2 id="scope">What this page shows</h2>
-    <p>This is the public Trust Center. It shows each control's and requirement's status, how many
-      checks stand behind it, how old its evidence is, and the SHA-256 of each item behind it. It leaves
-      out every subject (hostnames, accounts, people), what each check found, and item names; the full
-      evidence is available on request${o.contact
-        ? html`
-          (<a href="${o.contact}">contact us</a>)
-        `
-        : ""}.</p>
+    <p>
+      This is the public Trust Center. It shows each control's and requirement's status, how many
+      checks stand behind it, how old its evidence is, and the SHA-256 of each item behind it. It
+      leaves out every subject (hostnames, accounts, people), what each check found, and item names;
+      the full evidence is available on
+      request${o.contact ? html` (<a href="${o.contact}">contact us</a>) ` : ""}.
+    </p>
   `;
 }
 
@@ -324,126 +343,152 @@ export async function trustPage(m: TrustModel, o: PageOptions): Promise<string> 
   const failing = count("fail");
   const ageText = sinceBuild(m.created, m.asOf);
   const body = html`<a class="skip" href="#main">Skip to the evidence</a>
-<header>
-  <p class="muted">Trust Center${o.mode === "gated" ? " (access controlled)" : ""}</p>
-  <h1>${m.company}</h1>
-  <p>Control status from signed evidence, ${m.period.from} to ${m.period.to}. Every status
-  below is computed from the evidence bundle and nothing else; nothing is asserted without a check.</p>
-  <ul class="facts">
-    <li><span class="k">Period</span>${m.period.from} to ${m.period.to}</li>
-    <li><span class="k">Signed by</span>${m.signer}</li>
-    <li><span class="k">Signed</span><time datetime="${m.created}">${
-    when(m.created)
-  }</time>, ${ageText}</li>
-    <li><span class="k">Bundle</span><span class="mono">${
-    m.bundle.sha256.slice(0, 16)
-  }</span>, ${m.bundle.items} item(s), verified when this page was built</li>
-  </ul>
-  <div id="aged" class="banner bad" role="alert" data-signed="${m.created}" data-max="${
-    m.maxAgeDays * 86_400_000
-  }"${m.bundleStale ? "" : raw(" hidden")}>
-    <b>Stale evidence.</b> This bundle was signed more than ${m.maxAgeDays} days ago (the longest
-    interval FedRAMP 20x allows between machine validations). Treat every status on this page as stale
-    until ${m.company} publishes a newer one.
-  </div>
-  ${
-    failing || stale
-      ? html`
-        <div
-          class="banner bad"><b>${failing} control(s) failing</b>${stale
-            ? html`, <b>${stale} with stale evidence</b> (counted as failing)`
-            : ""}. They are listed below as they are.</div>
-      `
-      : html`
-        <div
-          class="banner ok">No control with evidence is failing, and none of its evidence was stale when signed.</div>
-      `
-  }
-</header>
-<main id="main">
-  <h2 id="summary">Summary</h2>
-  <div class="tiles">
-    <div class="card tile"><span class="k">Passing</span><b>${count("pass")}</b></div>
-    <div class="card tile"><span class="k">Failing</span><b>${failing}</b></div>
-    <div class="card tile"><span class="k">Partial</span><b>${count("partial")}</b></div>
-    <div class="card tile"><span class="k">Stale</span><b>${stale}</b></div>
-    <div class="card tile"><span class="k">No evidence</span><b>${without.length}</b></div>
-  </div>
-  <nav aria-label="Frameworks"><ul>${
-    m.frameworks.map((f) => html`<li><a href="#fw-${f.id}">${f.short}</a></li>`)
-  }<li><a href="#controls">SCF controls</a></li><li><a href="#verify">Check it yourself</a></li></ul></nav>
-  ${
-    m.frameworks.map((f) => {
-      const c = (s: Coverage) => f.requirements.filter((r) => r.status === s).length;
-      return html`
-        <section aria-labelledby="fw-${f.id}">
-          <h2 id="fw-${f.id}">${f.title}</h2>
-          <p class="muted">${f.requirements
-            .length} requirement(s) reached through the Secure Controls Framework
-            ${m.scf.version} (the SCF Council's mappings): ${c("pass")} passing, ${c(
-              "fail",
-            )} failing,
-            ${c("partial")} partial, ${c("no evidence")} without evidence.</p>
-          <div class="scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th scope="col">Requirement</th>
-                  <th scope="col">Status</th>
-                  <th scope="col">SCF controls</th>
-                </tr>
-              </thead>
-              <tbody>${f.requirements.map((r) =>
-                html`
+    <header>
+      <p class="muted">Trust Center${o.mode === "gated" ? " (access controlled)" : ""}</p>
+      <h1>${m.company}</h1>
+      <p>
+        Control status from signed evidence, ${m.period.from} to ${m.period.to}. Every status below
+        is computed from the evidence bundle and nothing else; nothing is asserted without a check.
+      </p>
+      <ul class="facts">
+        <li><span class="k">Period</span>${m.period.from} to ${m.period.to}</li>
+        <li><span class="k">Signed by</span>${m.signer}</li>
+        <li>
+          <span class="k">Signed</span><time datetime="${m.created}">${when(m.created)}</time>,
+          ${ageText}
+        </li>
+        <li>
+          <span class="k">Bundle</span><span class="mono">${m.bundle.sha256.slice(0, 16)}</span>,
+          ${m.bundle.items} item(s), verified when this page was built
+        </li>
+      </ul>
+      <div
+        id="aged"
+        class="banner bad"
+        role="alert"
+        data-signed="${m.created}"
+        data-max="${m.maxAgeDays * 86_400_000}"
+        ${m.bundleStale ? "" : raw(" hidden")}
+      >
+        <b>Stale evidence.</b> This bundle was signed more than ${m.maxAgeDays} days ago (the
+        longest interval FedRAMP 20x allows between machine validations). Treat every status on this
+        page as stale until ${m.company} publishes a newer one.
+      </div>
+      ${
+        failing || stale
+          ? html`
+              <div class="banner bad">
+                <b>${failing} control(s) failing</b>${
+                  stale ? html`, <b>${stale} with stale evidence</b> (counted as failing)` : ""
+                }.
+                They are listed below as they are.
+              </div>
+            `
+          : html`
+              <div class="banner ok">
+                No control with evidence is failing, and none of its evidence was stale when signed.
+              </div>
+            `
+      }
+    </header>
+    <main id="main">
+      <h2 id="summary">Summary</h2>
+      <div class="tiles">
+        <div class="card tile"><span class="k">Passing</span><b>${count("pass")}</b></div>
+        <div class="card tile"><span class="k">Failing</span><b>${failing}</b></div>
+        <div class="card tile"><span class="k">Partial</span><b>${count("partial")}</b></div>
+        <div class="card tile"><span class="k">Stale</span><b>${stale}</b></div>
+        <div class="card tile"><span class="k">No evidence</span><b>${without.length}</b></div>
+      </div>
+      <nav aria-label="Frameworks">
+        <ul>
+          ${m.frameworks.map((f) => html`<li><a href="#fw-${f.id}">${f.short}</a></li>`)}
+          <li><a href="#controls">SCF controls</a></li>
+          <li><a href="#verify">Check it yourself</a></li>
+        </ul>
+      </nav>
+      ${m.frameworks.map((f) => {
+        const c = (s: Coverage) => f.requirements.filter((r) => r.status === s).length;
+        return html`
+          <section aria-labelledby="fw-${f.id}">
+            <h2 id="fw-${f.id}">${f.title}</h2>
+            <p class="muted">
+              ${f.requirements.length} requirement(s) reached through the Secure Controls Framework
+              ${m.scf.version} (the SCF Council's mappings): ${c("pass")} passing, ${c("fail")}
+              failing, ${c("partial")} partial, ${c("no evidence")} without evidence.
+            </p>
+            <div class="scroll">
+              <table>
+                <thead>
                   <tr>
-                    <td class="mono">${r.id}</td>
-                    <td>${pill(r.status)}</td>
-                    <td>${r.controls.map((id, k) =>
-                      html`${k ? ", " : ""}<a href="#${anchor(id)}" class="mono">${id}</a>`
-                    )}</td>
+                    <th scope="col">Requirement</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">SCF controls</th>
                   </tr>
-                `
-              )}</tbody>
-            </table>
-          </div>
-        </section>
-      `;
-    })
-  }
-  ${
-    m.unavailable.length
-      ? html`<p class="muted">Not shown: ${
-        m.unavailable.map((u, k) => html`${k ? "; " : ""}${u.id} (${u.reason})`)
-      }.</p>`
-      : ""
-  }
-  <h2 id="controls">SCF controls</h2>
-  <p class="muted">Each Secure Controls Framework control Stolos gives evidence for. Evidence ages are
-  measured at signing; a source observed longer ago than its service level (30 minutes for managed
-  servers, two days for machines, devices, and accounts) was stale, and a stale check fails.</p>
-  <div class="controls">${withEv.map((c) => controlCard(c, m, o))}</div>
-  ${
-    without.length
-      ? html`
-        <h3 class="gap">No evidence in this bundle</h3>
-        <p>${without.map((c, k) =>
-          html`${k ? ", " : ""}<span class="mono" id="${anchor(c.id)}">${c.id}</span> ${c.name}`
-        )}.</p>
-      `
-      : ""
-  }
-  ${
-    m.omitted.length
-      ? html`<p class="muted">The bundle notes what it could not include: ${
-        m.omitted.join("; ")
-      }.</p>`
-      : ""
-  }
-  ${verifySection(m, o)}
-  ${scopeSection(m, o)}
-</main>
-<footer>Built ${when(m.asOf)} by Stolos ${o.stolos} from a bundle made by Stolos ${m.stolos}.
-This page makes no requests: it works offline and keeps no record of who reads it.</footer>`;
+                </thead>
+                <tbody>
+                  ${f.requirements.map(
+                    (r) => html`
+                      <tr>
+                        <td class="mono">${r.id}</td>
+                        <td>${pill(r.status)}</td>
+                        <td>
+                          ${r.controls.map(
+                            (id, k) =>
+                              html`${k ? ", " : ""}<a href="#${anchor(id)}" class="mono">${id}</a>`,
+                          )}
+                        </td>
+                      </tr>
+                    `,
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        `;
+      })}
+      ${
+        m.unavailable.length
+          ? html`<p class="muted">
+              Not shown:
+              ${m.unavailable.map((u, k) => html`${k ? "; " : ""}${u.id} (${u.reason})`)}.
+            </p>`
+          : ""
+      }
+      <h2 id="controls">SCF controls</h2>
+      <p class="muted">
+        Each Secure Controls Framework control Stolos gives evidence for. Evidence ages are measured
+        at signing; a source observed longer ago than its service level (30 minutes for managed
+        servers, two days for machines, devices, and accounts) was stale, and a stale check fails.
+      </p>
+      <div class="controls">${withEv.map((c) => controlCard(c, m, o))}</div>
+      ${
+        without.length
+          ? html`
+              <h3 class="gap">No evidence in this bundle</h3>
+              <p>
+                ${without.map(
+                  (c, k) =>
+                    html`${k ? ", " : ""}<span class="mono" id="${anchor(c.id)}">${c.id}</span>
+                      ${c.name}`,
+                )}.
+              </p>
+            `
+          : ""
+      }
+      ${
+        m.omitted.length
+          ? html`<p class="muted">
+              The bundle notes what it could not include: ${m.omitted.join("; ")}.
+            </p>`
+          : ""
+      }
+      ${verifySection(m, o)} ${scopeSection(m, o)}
+    </main>
+    <footer>
+      Built ${when(m.asOf)} by Stolos ${o.stolos} from a bundle made by Stolos ${m.stolos}. This
+      page makes no requests: it works offline and keeps no record of who reads it.
+    </footer>`;
   const csp = `default-src 'none'; style-src ${await cspHash(CSS)}; script-src ${await cspHash(
     SCRIPT,
   )}; img-src 'none'; base-uri 'none'; form-action 'none'`;
@@ -455,15 +500,13 @@ This page makes no requests: it works offline and keeps no record of who reads i
 <meta http-equiv="Content-Security-Policy" content="${esc(csp)}">
 <meta name="referrer" content="no-referrer">
 ${
-    o.mode === "gated"
-      ? `<meta name="robots" content="noindex, nofollow">\n`
-      : ""
-  }<meta name="color-scheme" content="light dark">
+  o.mode === "gated" ? `<meta name="robots" content="noindex, nofollow">\n` : ""
+}<meta name="color-scheme" content="light dark">
 <title>${esc(m.company)}: Trust Center</title>
 <style>${CSS}</style>
 </head>
 <body>
-${body}
+${body.s}
 <script>${SCRIPT}</script>
 </body>
 </html>

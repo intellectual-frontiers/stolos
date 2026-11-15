@@ -10,7 +10,8 @@
  * every 3 to 7 days ({@link FEDRAMP_20X_VALIDATION}): no service level here is
  * ever longer than 7 days.
  *
- * Evidence older than its service level is stale. Stale evidence is a failing
+ * Evidence older than its service level is stale (IFC TypeScript's
+ * `assess.freshness`, the service level as its cadence). Stale evidence is a failing
  * check: it fails its own controls and SCF MON-02 (Continuous Monitoring),
  * and its fix is the command that observes the source again. Each control
  * shows the age of its newest and oldest evidence.
@@ -28,6 +29,7 @@
  * @module
  */
 
+import { absurd, assess, grc } from "@intellectual-frontiers/ifc-ts/kernel";
 import type { PcFacts } from "../console/pc.ts";
 import type { ScfCatalog } from "./catalog.ts";
 import {
@@ -62,7 +64,7 @@ export type CadenceSource = "managed" | "adopted" | "device" | "cloud";
  *
  * @example Verify servers hourly, and read the HR system weekly
  * ```ts
- * import type { CadenceOverrides } from "@stolos/archon/compliance/freshness.ts";
+ * import type { CadenceOverrides } from "@intellectual-frontiers/stolos/archon/compliance/freshness";
  *
  * export const cadence: CadenceOverrides = {
  *   managed: { every: "1h" },
@@ -109,16 +111,22 @@ export const DEFAULT_CADENCES: Record<CadenceSource, CadenceDef> = {
   cloud: { every: "1d" },
 };
 
-const UNIT: Record<string, number> = { m: 60_000, h: 3_600_000, d: 86_400_000 };
+const UNIT = { m: 60_000, h: 3_600_000, d: 86_400_000 } as const;
+const isUnit = (u: string): u is keyof typeof UNIT => u === "m" || u === "h" || u === "d";
 const MAX_MS = FEDRAMP_20X_VALIDATION.maxDays * UNIT.d;
 
 /** A duration in milliseconds; throws on anything but `<number><m|h|d>`. */
 export function durationMs(d: string): number {
-  const m = /^(\d+(?:\.\d+)?)([mhd])$/.exec(d.trim());
-  if (!m || Number(m[1]) <= 0) {
+  const [, n = "", unit = ""] = /^(\d+(?:\.\d+)?)([mhd])$/.exec(d.trim()) ?? [];
+  if (!isUnit(unit) || Number(n) <= 0) {
     throw new Error(`${d}: not a duration (a number and m, h, or d: "15m", "1d")`);
   }
-  return Number(m[1]) * UNIT[m[2]];
+  return Number(n) * UNIT[unit];
+}
+
+/** A length of time in milliseconds as an ISO 8601 duration, whole seconds (kernel `grc.Duration`). */
+export function isoDuration(ms: number): grc.Duration {
+  return grc.duration(`PT${Math.max(1, Math.round(ms / 1000))}S`);
 }
 
 /** An age for people: "40s", "12m", "5h", "3d". */
@@ -131,11 +139,11 @@ export function formatAge(ms: number): string {
 }
 
 const asDuration = (ms: number): Duration =>
-  (ms % UNIT.d === 0
+  ms % UNIT.d === 0
     ? `${ms / UNIT.d}d`
     : ms % UNIT.h === 0
-    ? `${ms / UNIT.h}h`
-    : `${Math.round(ms / UNIT.m)}m`) as Duration;
+      ? `${ms / UNIT.h}h`
+      : `${Math.round(ms / UNIT.m)}m`;
 
 /** A cadence, resolved: its service level in milliseconds, and where it came from. */
 export interface Cadence {
@@ -181,12 +189,14 @@ export interface Cadences {
  * fleet's overrides (a fleet's `connectors.<id>` wins over everything for that
  * connector; its `cloud` applies to connectors without a cadence of their own).
  */
-export function resolveCadences(o: {
-  fleet?: CadenceOverrides;
-  connectors?: Array<{ id: string; cadence?: CadenceDef }>;
-} = {}): Cadences {
+export function resolveCadences(
+  o: {
+    fleet?: CadenceOverrides;
+    connectors?: Array<{ id: string; cadence?: CadenceDef }>;
+  } = {},
+): Cadences {
   const pick = (s: CadenceSource): Cadence =>
-    o.fleet?.[s] ? cadence(o.fleet[s]!, "fleet") : cadence(DEFAULT_CADENCES[s]);
+    ((def) => (def ? cadence(def, "fleet") : cadence(DEFAULT_CADENCES[s])))(o.fleet?.[s]);
   const sources = {
     managed: pick("managed"),
     adopted: pick("adopted"),
@@ -212,9 +222,8 @@ export async function loadCadences(o: { connectors?: boolean } = {}): Promise<Ca
   } catch {
     // No fleet.ts here (or a broken one): the defaults.
   }
-  const connectors = o.connectors === false
-    ? []
-    : await (await import("../connect/commands.ts")).allConnectors();
+  const connectors =
+    o.connectors === false ? [] : await (await import("../connect/commands.ts")).allConnectors();
   return resolveCadences({ ...(fleet ? { fleet } : {}), connectors });
 }
 
@@ -231,15 +240,19 @@ export function cadenceFor(e: Evidence, c: Cadences): Cadence | undefined {
 export function refreshCommand(e: Evidence): string | undefined {
   switch (e.source) {
     case "managed":
-      return "deno task stolos fleet status";
+      return "bun run stolos fleet status";
     case "adopted":
-      return `deno task stolos host observe ${e.subject}`;
+      return `bun run stolos host observe ${e.subject}`;
     case "device":
-      return `deno task stolos device observe ${e.subject}`;
+      return `bun run stolos device observe ${e.subject}`;
     case "cloud":
-      return `deno task stolos estate observe${e.connector ? ` ${e.connector}` : ""}`;
-    default:
+      return `bun run stolos estate observe${e.connector ? ` ${e.connector}` : ""}`;
+    case "estate":
+    case "repository":
+    case "control pack":
       return undefined;
+    default:
+      return absurd(e.source);
   }
 }
 
@@ -250,7 +263,7 @@ export function refreshCommand(e: Evidence): string | undefined {
  * a connector's observation (and the connector's id).
  */
 export function stampEvidence(ev: Evidence[], f: PcFacts): Evidence[] {
-  const at = new Map<string, { at?: string; connector?: string }>();
+  const at = new Map<string, { at?: string | undefined; connector?: string }>();
   const key = (source: string, subject: string) => `${source}\u0000${subject}`;
   for (const m of f.machines) {
     if (m.kind !== "server" && m.kind !== "workstation") continue;
@@ -287,16 +300,21 @@ export function applyFreshness(ev: Evidence[], c: Cadences, now = Date.now()): E
   return ev.map((e) => {
     const cad = cadenceFor(e, c);
     if (!cad || !e.observedAt || e.status === "unknown") return e;
+    const observed = grc.instantOf(e.observedAt);
+    const asOf = grc.instantFromEpochMs(now);
+    if (observed === undefined || asOf === undefined) return e;
+    // Held to its service level by the kernel (assess.freshness): stale past it.
+    const f = assess.freshness(isoDuration(cad.staleAfterMs), [observed], asOf);
+    if (f.status !== "stale") return e;
     const ageMs = now - Date.parse(e.observedAt);
-    if (!(ageMs > cad.staleAfterMs)) return e;
     const fix = refreshCommand(e) ?? e.fix;
     return {
       ...e,
       scf: e.scf.includes("MON-02") ? e.scf : [...e.scf, "MON-02"],
       status: "fail",
-      detail: `${e.detail} (stale: observed ${
-        formatAge(ageMs)
-      } ago; its service level is ${cad.staleAfter})`,
+      detail: `${e.detail} (stale: observed ${formatAge(
+        ageMs,
+      )} ago; its service level is ${cad.staleAfter})`,
       ...(fix ? { fix } : {}),
       stale: { was: e.status, ageMs, staleAfter: cad.staleAfter },
     };
@@ -323,7 +341,10 @@ export interface ControlFreshness {
 
 /** The age of one control's evidence, as of `now`. */
 export function controlFreshness(c: ControlStatus, now = Date.now()): ControlFreshness {
-  const times = c.evidence.map((e) => e.observedAt).filter((x): x is string => !!x).sort();
+  const times = c.evidence
+    .map((e) => e.observedAt)
+    .filter((x): x is string => !!x)
+    .sort();
   const newest = times.at(-1);
   const oldest = times[0];
   return {

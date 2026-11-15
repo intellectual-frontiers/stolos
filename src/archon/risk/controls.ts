@@ -35,10 +35,18 @@ import {
   type Row,
 } from "../controls/define.ts";
 import { type PackRun, runPack } from "../controls/run.ts";
-import { rowParams, upsertSql } from "../schema/define.ts";
+import { type Column, type RowOf, rowParams, type TableDef, upsertSql } from "../schema/define.ts";
 import { dataClassification, poamItem, risk, riskSchemaSql } from "./schema.ts";
 import { type Risk, today } from "./register.ts";
 import type { Vendor } from "./vendors.ts";
+
+/** A row's column as text ("" where it is empty or not a scalar). */
+const txt = (v: unknown): string =>
+  typeof v === "string"
+    ? v
+    : typeof v === "number" || typeof v === "boolean" || typeof v === "bigint"
+      ? String(v)
+      : "";
 
 /** A vendor's party uid in the estate. */
 export const vendorUid = (id: string): string => `organization:vendor:${id}`;
@@ -57,7 +65,7 @@ export function allAcceptances(
   return [
     ...accepted.map((a) => ({ ...a, scope: "fleet" })),
     ...adopted.flatMap(({ machine }) =>
-      (machine.accepted ?? []).map((a) => ({ ...a, scope: machine.name }))
+      (machine.accepted ?? []).map((a) => ({ ...a, scope: machine.name })),
     ),
   ];
 }
@@ -81,9 +89,13 @@ export interface RiskData {
 /** Load the register, the accepted risks, and the vendors into an estate (idempotent). */
 export function addRiskData(e: Estate, d: RiskData): void {
   e.db.exec(riskSchemaSql());
-  // deno-lint-ignore no-explicit-any
-  const put = (t: any, row: Record<string, unknown>) =>
-    e.db.prepare(upsertSql(t)).run(...rowParams(t, row as never));
+  // A json column takes its value as it is (rowParams writes it as JSON), which RowOf types as text.
+  const put = <C extends Record<string, Column>>(
+    t: TableDef<C>,
+    row: Record<string, unknown>,
+  ): void => {
+    e.db.prepare(upsertSql(t)).run(...rowParams(t, row as RowOf<C>));
+  };
   for (const r of d.risks ?? []) {
     put(risk, {
       risk_uid: r.id,
@@ -143,7 +155,7 @@ export function addRiskData(e: Estate, d: RiskData): void {
   }
 }
 
-const n = (r: Row[]) => Number(r[0]?.n ?? 0);
+const n = (r: Row[]) => Number(r[0]?.["n"] ?? 0);
 const list = (r: Row[], f: (x: Row) => string) =>
   r.slice(0, 12).map(f).join(", ") + (r.length > 12 ? `, and ${r.length - 12} more` : "");
 
@@ -163,19 +175,19 @@ export const reviewDue: EstateControl = defineControl({
         fix: "write the register: fleets/<fleet>/risks.ts (stolos docs risks)",
       };
     }
-    const due = rows.filter((r) => String(r.next_review) < today(now));
+    const due = rows.filter((r) => txt(r["next_review"]) < today(now));
     return {
       status: due.length ? "fail" : "pass",
       detail: due.length
-        ? `${due.length} of ${rows.length} overdue: ${
-          list(due, (r) => `${r.uid} (due ${r.next_review}, ${r.owner})`)
-        }`
-        : `${rows.length} open risk(s), each reviewed on time; next ${rows[0].next_review}`,
-      subjects: due.map((r) => String(r.uid)),
+        ? `${due.length} of ${rows.length} overdue: ${list(
+            due,
+            (r) => `${txt(r["uid"])} (due ${txt(r["next_review"])}, ${txt(r["owner"])})`,
+          )}`
+        : `${rows.length} open risk(s), each reviewed on time; next ${String(rows[0]?.["next_review"])}`,
+      subjects: due.map((r) => txt(r["uid"])),
     };
   },
-  fix:
-    "review each overdue risk with its owner: deno task stolos risks review <id> (a signed pull request)",
+  fix: "review each overdue risk with its owner: bun run stolos risks review <id> (a signed pull request)",
 });
 
 /** Every open risk's owner is an active person on the roster. */
@@ -196,18 +208,19 @@ export const ownerOnRoster: EstateControl = defineControl({
       return {
         status: "unknown",
         detail: "no roster to check the owners against (no HR system or identity provider)",
-        fix: "connect the HR system or the identity provider: deno task stolos connect",
+        fix: "connect the HR system or the identity provider: bun run stolos connect",
       };
     }
-    const off = owners.filter((r) => !Number(r.active));
+    const off = owners.filter((r) => !Number(r["active"]));
     return {
       status: off.length ? "warn" : "pass",
       detail: off.length
-        ? `${off.length} risk(s) owned by someone not active on the roster: ${
-          list(off, (r) => `${r.uid} (${r.owner})`)
-        }`
+        ? `${off.length} risk(s) owned by someone not active on the roster: ${list(
+            off,
+            (r) => `${txt(r["uid"])} (${txt(r["owner"])})`,
+          )}`
         : `${owners.length} risk(s), each owned by an active person`,
-      subjects: off.map((r) => String(r.uid)),
+      subjects: off.map((r) => txt(r["uid"])),
     };
   },
   fix: "give each a new owner in risks.ts (a person on the roster), through a pull request",
@@ -228,37 +241,37 @@ export const acceptedCurrent: EstateControl = defineControl({
   assert: ({ items, links }, { now }) => {
     if (!items.length && !links.length) return undefined;
     const day = today(now);
-    const ids = new Set(items.map((i) => String(i.uid)));
-    const linked = new Set(links.map((l) => String(l.link)));
-    const expired = items.filter((i) => String(i.until) < day);
-    const broken = links.filter((l) => !ids.has(String(l.link)));
-    const loose = items.filter((i) => !linked.has(String(i.uid)) && String(i.until) >= day);
+    const ids = new Set(items.map((i) => txt(i["uid"])));
+    const linked = new Set(links.map((l) => txt(l["link"])));
+    const expired = items.filter((i) => txt(i["until"]) < day);
+    const broken = links.filter((l) => !ids.has(txt(l["link"])));
+    const loose = items.filter((i) => !linked.has(txt(i["uid"])) && txt(i["until"]) >= day);
     const parts = [
       expired.length &&
-      `${expired.length} past its date: ${list(expired, (i) => `${i.uid} (ended ${i.until})`)}`,
+        `${expired.length} past its date: ${list(expired, (i) => `${txt(i["uid"])} (ended ${txt(i["until"])})`)}`,
       broken.length &&
-      `${broken.length} link(s) to no accepted risk: ${
-        list(broken, (l) => `${l.risk} -> ${l.link}`)
-      }`,
-      loose.length &&
-      `${loose.length} not in the register: ${list(loose, (i) => String(i.uid))}`,
+        `${broken.length} link(s) to no accepted risk: ${list(
+          broken,
+          (l) => `${txt(l["risk"])} -> ${txt(l["link"])}`,
+        )}`,
+      loose.length && `${loose.length} not in the register: ${list(loose, (i) => txt(i["uid"]))}`,
     ].filter(Boolean);
     return {
       status: expired.length ? "fail" : parts.length ? "warn" : "pass",
       detail: parts.length
         ? parts.join("; ")
         : `${items.length} accepted risk(s), each current and in the register`,
-      subjects: [...expired, ...loose].map((i) => String(i.uid)),
-      ...(expired.length ? {} : loose.length || broken.length
-        ? {
-          fix:
-            "link each accepted risk from a risk in risks.ts (accepted: [...]), and fix links that name none",
-        }
-        : {}),
+      subjects: [...expired, ...loose].map((i) => txt(i["uid"])),
+      ...(expired.length
+        ? {}
+        : loose.length || broken.length
+          ? {
+              fix: "link each accepted risk from a risk in risks.ts (accepted: [...]), and fix links that name none",
+            }
+          : {}),
     };
   },
-  fix:
-    "renew each expired acceptance with its owner (a new date and reason, in a signed commit), or fix what it excuses",
+  fix: "renew each expired acceptance with its owner (a new date and reason, in a signed commit), or fix what it excuses",
 });
 
 /** Every discovered vendor is triaged. */
@@ -273,20 +286,19 @@ export const vendorsTriaged: EstateControl = defineControl({
     ORDER BY o.name`,
   assert: (rows) => {
     if (!rows.length) return undefined;
-    const open = rows.filter((r) => !r.criticality || r.criticality === "unassessed");
-    const high = rows.filter((r) => r.criticality === "high").length;
+    const open = rows.filter((r) => !r["criticality"] || r["criticality"] === "unassessed");
+    const high = rows.filter((r) => r["criticality"] === "high").length;
     return {
       status: open.length ? "warn" : "pass",
       detail: open.length
-        ? `${open.length} of ${rows.length} vendor(s) not triaged: ${
-          list(open, (r) => String(r.name))
-        }`
+        ? `${open.length} of ${rows.length} vendor(s) not triaged: ${list(open, (r) =>
+            txt(r["name"]),
+          )}`
         : `${rows.length} vendor(s), all triaged (${high} high)`,
-      subjects: open.map((r) => String(r.uid)),
+      subjects: open.map((r) => txt(r["uid"])),
     };
   },
-  fix:
-    "deno task stolos vendors triage --write (a pull request adding them to vendors.ts), then set each one's criticality and data",
+  fix: "bun run stolos vendors triage --write (a pull request adding them to vendors.ts), then set each one's criticality and data",
 });
 
 /** The risk register and vendor inventory's controls, as a pack (results `risk-register/<control>`). */
@@ -333,7 +345,7 @@ export async function runRiskPack(i: RiskRunInputs): Promise<PackRun> {
       scf: ["RSK-14"],
       status: "fail",
       detail: p,
-      fix: "fix the file (deno task check names the line), then deno task stolos risks check",
+      fix: "fix the file (bun run check names the line), then bun run stolos risks check",
     });
   }
   return run;

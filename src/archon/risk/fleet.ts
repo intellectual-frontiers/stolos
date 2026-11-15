@@ -14,6 +14,7 @@
  * @module
  */
 
+import { path, toError } from "@intellectual-frontiers/ifc-ts/runtime";
 import type { AdoptedDef } from "../adopt/adopt.ts";
 import type { Estate } from "../estate/graph.ts";
 import type { PackRun } from "../controls/run.ts";
@@ -42,27 +43,26 @@ export interface FleetRisk {
   problems: string[];
 }
 
-const first = (e: unknown) => (e as Error).message.split("\n")[0];
+const first = (e: unknown): string => toError(e).message.split("\n")[0] ?? "";
 
 /** Read the fleet's files, discover the vendors in `estate`, and run the pack (the estate is augmented). */
 export async function fleetRisk(
   estate: Estate,
   o: { adopted?: ReadonlyArray<{ machine: AdoptedDef }>; now?: Date; dir?: string } = {},
 ): Promise<FleetRisk> {
-  const { join } = await import("../core/path.ts");
   const { P } = await import("../core/paths.ts");
   const { loadAccepted } = await import("../controls/run.ts");
   const dir = o.dir ?? P.fleetDir;
   const problems: string[] = [];
-  const risks = await loadRisks(join(dir, "risks.ts")).catch((e) => {
+  const risks = await loadRisks(path.join(dir, "risks.ts")).catch((e) => {
     problems.push(`risks.ts: ${first(e)}`);
     return undefined;
   });
-  const triage = await loadVendors(join(dir, "vendors.ts")).catch((e) => {
+  const triage = await loadVendors(path.join(dir, "vendors.ts")).catch((e) => {
     problems.push(`vendors.ts: ${first(e)}`);
     return [] as VendorDef[];
   });
-  const accepted = await loadAccepted(join(dir, "controls")).catch((e) => {
+  const accepted = await loadAccepted(path.join(dir, "controls")).catch((e) => {
     problems.push(`controls/accepted.ts: ${first(e)}`);
     return [];
   });

@@ -23,11 +23,30 @@
  * auditor who has the fleet's signers from elsewhere passes them with
  * `--signers`.
  *
+ * Built on IFC TypeScript: SHA-256 and the ZIP (deflated) are the kernel's,
+ * signing is runtime `sign.sshSigner` and checking a signature runtime
+ * `sign.sshVerifier`, both `ssh-keygen -Y` in the namespace `stolos-evidence`.
+ *
  * @module
  */
 
-import { unzipSync, zipSync } from "npm:fflate@0.8.2";
-import { join } from "../core/path.ts";
+import {
+  array,
+  type Decoder,
+  err,
+  formatDecodeError,
+  integer,
+  json,
+  literal,
+  mapDecoder,
+  object,
+  type Result,
+  sha256,
+  string,
+  unzip,
+  zipDeflated,
+} from "@intellectual-frontiers/ifc-ts/kernel";
+import { fs, path, sign } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "../core/exec.ts";
 
 /** The bundle format. */
@@ -101,23 +120,14 @@ export interface Manifest {
 const enc = new TextEncoder();
 const dec = new TextDecoder();
 
-/** A SHA-256, in hex. */
-export async function sha256Hex(b: Uint8Array | string): Promise<string> {
-  const bytes = typeof b === "string" ? enc.encode(b) : b;
-  return [
-    ...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes as Uint8Array<ArrayBuffer>)),
-  ]
-    .map((x) => x.toString(16).padStart(2, "0")).join("");
-}
-
 /** The chain's start: the format, the fleet, and the period. */
 export function genesis(m: Pick<Manifest, "fleet" | "period">): Promise<string> {
-  return sha256Hex(`${BUNDLE_FORMAT}\n${m.fleet.id}\n${m.period.from}\n${m.period.to}\n`);
+  return sha256(`${BUNDLE_FORMAT}\n${m.fleet.id}\n${m.period.from}\n${m.period.to}\n`);
 }
 
 /** One link of the chain. */
 export function link(prev: string, i: Omit<ManifestItem, "chain">): Promise<string> {
-  return sha256Hex(`${prev}\n${i.sha256}\n${i.size}\n${i.kind}\n${i.name}\n${i.at}\n`);
+  return sha256(`${prev}\n${i.sha256}\n${i.size}\n${i.kind}\n${i.name}\n${i.at}\n`);
 }
 
 /** The manifest for the items (in the order given). */
@@ -132,7 +142,7 @@ export async function manifestFor(
       kind: i.kind,
       name: i.name,
       at: i.at,
-      sha256: await sha256Hex(i.content),
+      sha256: await sha256(i.content),
       size: i.content.length,
     };
     prev = await link(prev, e);
@@ -147,7 +157,7 @@ export function bundleReadme(m: Manifest): string {
 Made ${m.created} by Stolos ${m.stolos}; signed by ${m.signer}.
 
 Check it with Stolos (offline):
-  deno task stolos evidence verify <this zip> [--signers <the fleet's allowed_signers>]
+  bun run stolos evidence verify <this zip> [--signers <the fleet's allowed_signers>]
 
 Or by hand, in the unzipped folder:
   1. Each file in objects/ is named by its SHA-256:  sha256sum objects/*
@@ -164,21 +174,72 @@ themselves. Compare them with the fleet's signers you have from elsewhere.
 `;
 }
 
-/** The bundle's bytes (a ZIP), from its items, manifest, signature, and allowed signers. */
+/** The bundle's bytes (a ZIP, deflated), from its items, manifest, signature, and allowed signers. */
 export function packBundle(
   items: Item[],
   m: Manifest,
   signature: string,
   allowedSigners: string,
-): Uint8Array {
-  const files: Record<string, Uint8Array> = {
-    "manifest.json": enc.encode(manifestText(m)),
-    "manifest.json.sig": enc.encode(signature),
-    "allowed_signers": enc.encode(allowedSigners),
-    "README.txt": enc.encode(bundleReadme(m)),
-  };
-  items.forEach((it, k) => files[`objects/${m.items[k].sha256}`] = it.content);
-  return zipSync(files, { level: 6, mtime: new Date("1980-01-02T00:00:00Z") });
+): Promise<Uint8Array> {
+  const files = new Map<string, Uint8Array>([
+    ["manifest.json", enc.encode(manifestText(m))],
+    ["manifest.json.sig", enc.encode(signature)],
+    ["allowed_signers", enc.encode(allowedSigners)],
+    ["README.txt", enc.encode(bundleReadme(m))],
+  ]);
+  for (const [k, it] of items.entries()) {
+    const entry = m.items[k];
+    if (entry) files.set(`objects/${entry.sha256}`, it.content);
+  }
+  return zipDeflated(files);
+}
+
+const ITEM_KINDS = [
+  "observation",
+  "verify",
+  "commit",
+  "oscal",
+  "signers",
+  "people",
+  "summary",
+] as const satisfies readonly ItemKind[];
+
+const manifestDecoder: Decoder<Manifest> = mapDecoder(
+  object({
+    format: string,
+    fleet: object({ id: string, title: string, repo: string }),
+    period: object({ from: string, to: string }),
+    created: string,
+    stolos: string,
+    signer: string,
+    omitted: array(string),
+    items: array(
+      object({
+        kind: literal(...ITEM_KINDS),
+        name: string,
+        at: string,
+        sha256: string,
+        size: integer,
+        chain: string,
+      }),
+    ),
+    head: string,
+  }),
+  (m): Manifest => ({
+    ...m,
+    fleet: { ...m.fleet },
+    period: { ...m.period },
+    omitted: [...m.omitted],
+    items: m.items.map((i) => ({ ...i })),
+  }),
+);
+
+/** A manifest from its text, or why it is not one. */
+export function parseManifest(text: string): Result<Manifest, string> {
+  const r = json(text, manifestDecoder);
+  return r.kind === "ok"
+    ? r
+    : err(`manifest.json is not a manifest: ${formatDecodeError(r.error)}`);
 }
 
 /** The manifest exactly as it is signed. */
@@ -189,30 +250,15 @@ export function manifestText(m: Manifest): string {
 /** Sign text with an SSH key (ssh-keygen -Y sign; it asks the key's passphrase in this terminal). */
 export type Signer = (text: string) => Promise<string>;
 
-/** A Signer that runs ssh-keygen with this key file, the terminal attached for its passphrase. */
-export function sshSigner(key: string, interactive = true): Signer {
+/** A Signer by ssh-keygen with this key file (runtime `sign.sshSigner`); ssh-keygen asks its passphrase at the terminal. */
+export function sshSigner(key: string): Signer {
+  const signer = sign.sshSigner({ keyFile: key, namespace: NAMESPACE });
   return async (text) => {
-    const dir = await Deno.makeTempDir({ prefix: "stolos-evidence-" });
-    try {
-      const f = join(dir, "manifest.json");
-      await Deno.writeTextFile(f, text);
-      const r = await new Deno.Command("ssh-keygen", {
-        args: ["-q", "-Y", "sign", "-f", key, "-n", NAMESPACE, f],
-        stdin: interactive ? "inherit" : "null",
-        stdout: "null",
-        stderr: interactive ? "inherit" : "piped",
-      }).output();
-      if (!r.success) {
-        throw new Error(
-          `ssh-keygen could not sign with ${key}${
-            interactive ? "" : `: ${dec.decode(r.stderr).trim()}`
-          }`,
-        );
-      }
-      return await Deno.readTextFile(f + ".sig");
-    } finally {
-      await Deno.remove(dir, { recursive: true });
+    const r = await signer.sign(enc.encode(text));
+    if (r.kind === "err") {
+      throw new Error(`ssh-keygen could not sign with ${key}: ${sign.formatSignError(r.error)}`);
     }
+    return dec.decode(r.value.sig);
   };
 }
 
@@ -231,41 +277,37 @@ export interface VerifyResult {
 }
 
 /** Who signed `text` with `sig`, by the allowed signers in `namespace`, or the reason it fails. */
-export async function sshVerify(
+export function sshVerify(
   text: string | Uint8Array,
   sig: string,
   allowedSigners: string,
   namespace: string,
 ): Promise<{ signer?: string; reason?: string }> {
-  const dir = await Deno.makeTempDir({ prefix: "stolos-verify-" });
-  try {
-    const s = join(dir, "sig"), a = join(dir, "allowed"), t = join(dir, "text");
-    await Deno.writeTextFile(s, sig);
-    await Deno.writeTextFile(a, allowedSigners);
-    await Deno.writeFile(t, typeof text === "string" ? enc.encode(text) : text);
-    const who = await run(["ssh-keygen", "-Y", "find-principals", "-s", s, "-f", a]);
-    const names = who.stdout.split("\n").map((x) => x.trim()).filter(Boolean);
-    if (!who.ok || !names.length) {
-      return { reason: "signed by a key that is not an allowed signer" };
-    }
-    for (const n of names) {
-      const v = await run([
-        "sh",
-        "-c",
-        `ssh-keygen -Y verify -f "$1" -I "$2" -n "$3" -s "$4" < "$5"`,
-        "sh",
-        a,
-        n,
-        namespace,
-        s,
-        t,
-      ]);
-      if (v.ok) return { signer: n };
-    }
-    return { reason: "the signature does not match the signed text (changed after signing)" };
-  } finally {
-    await Deno.remove(dir, { recursive: true });
-  }
+  return fs.withTempDir(
+    async (dir) => {
+      const s = path.join(dir, "sig");
+      const a = path.join(dir, "allowed");
+      await fs.writeTextFile(s, sig);
+      await fs.writeTextFile(a, allowedSigners);
+      const who = await run(["ssh-keygen", "-Y", "find-principals", "-s", s, "-f", a]);
+      const names = who.stdout
+        .split("\n")
+        .map((x) => x.trim())
+        .filter(Boolean);
+      if (!who.ok || !names.length) {
+        return { reason: "signed by a key that is not an allowed signer" };
+      }
+      const message = typeof text === "string" ? enc.encode(text) : text;
+      for (const identity of names) {
+        const v = await sign
+          .sshVerifier({ allowedSignersFile: a, identity, namespace })
+          .verify(message, enc.encode(sig));
+        if (v.kind === "ok" && v.value) return { signer: identity };
+      }
+      return { reason: "the signature does not match the signed text (changed after signing)" };
+    },
+    { prefix: "stolos-verify-" },
+  );
 }
 
 /** A raw Git commit object split into what Git signed and its SSH signature. */
@@ -273,7 +315,8 @@ export function commitSignature(raw: string): { payload: string; signature?: str
   const lines = raw.split("\n");
   const out: string[] = [];
   const sig: string[] = [];
-  let inSig = false, inHeaders = true;
+  let inSig = false,
+    inHeaders = true;
   for (const l of lines) {
     if (inHeaders && l === "") inHeaders = false;
     if (inHeaders && l.startsWith("gpgsig ")) {
@@ -300,15 +343,18 @@ export function commitSignature(raw: string): { payload: string; signature?: str
  * so the fleet's Git allowed_signers (namespaces="git") check a bundle too.
  */
 export function forNamespace(allowed: string, ns: string): string {
-  return allowed.split("\n").map((l) => {
-    const t = l.trim();
-    if (!t || t.startsWith("#")) return l;
-    const parts = t.split(/\s+/);
-    const isKey = (x: string) => /^(ssh-|sk-|ecdsa-)/.test(x);
-    const k = parts.findIndex((x, i) => i > 0 && isKey(x));
-    if (k < 1) return l;
-    return [parts[0], `namespaces="${ns}"`, ...parts.slice(k)].join(" ");
-  }).join("\n");
+  return allowed
+    .split("\n")
+    .map((l) => {
+      const t = l.trim();
+      if (!t || t.startsWith("#")) return l;
+      const parts = t.split(/\s+/);
+      const isKey = (x: string) => /^(ssh-|sk-|ecdsa-)/.test(x);
+      const k = parts.findIndex((x, i) => i > 0 && isKey(x));
+      if (k < 1) return l;
+      return [parts[0], `namespaces="${ns}"`, ...parts.slice(k)].join(" ");
+    })
+    .join("\n");
 }
 
 /** Check a bundle, offline; `allowedSigners` replaces the bundle's own when given. */
@@ -318,20 +364,17 @@ export async function verifyBundle(
 ): Promise<VerifyResult> {
   const problems: string[] = [];
   const commits: VerifyResult["commits"] = [];
-  let files: Record<string, Uint8Array>;
-  try {
-    files = unzipSync(zip);
-  } catch (e) {
-    return { ok: false, problems: [`not a ZIP: ${(e as Error).message}`], commits };
+  const unzipped = await unzip(zip);
+  if (unzipped.kind === "err") {
+    return { ok: false, problems: [`not a ZIP: ${unzipped.error.kind}`], commits };
   }
-  const text = files["manifest.json"] ? dec.decode(files["manifest.json"]) : undefined;
+  const files = unzipped.value;
+  const raw = files.get("manifest.json");
+  const text = raw ? dec.decode(raw) : undefined;
   if (!text) return { ok: false, problems: ["no manifest.json"], commits };
-  let m: Manifest;
-  try {
-    m = JSON.parse(text) as Manifest;
-  } catch {
-    return { ok: false, problems: ["manifest.json is not JSON"], commits };
-  }
+  const parsed = parseManifest(text);
+  if (parsed.kind === "err") return { ok: false, problems: [parsed.error], commits };
+  const m = parsed.value;
   if (m.format !== BUNDLE_FORMAT) {
     return {
       ok: false,
@@ -341,16 +384,17 @@ export async function verifyBundle(
     };
   }
   // 1. The signature over the manifest.
-  const allowed = o.allowedSigners ??
-    (files["allowed_signers"] ? dec.decode(files["allowed_signers"]) : "");
+  const bundled = files.get("allowed_signers");
+  const allowed = o.allowedSigners ?? (bundled ? dec.decode(bundled) : "");
+  const signature = files.get("manifest.json.sig");
   let signer: string | undefined;
-  if (!files["manifest.json.sig"]) {
+  if (!signature) {
     problems.push("the manifest is not signed (no manifest.json.sig)");
   } else if (!allowed.trim()) problems.push("no allowed signers to check the signature with");
   else {
     const v = await sshVerify(
       text,
-      dec.decode(files["manifest.json.sig"]),
+      dec.decode(signature),
       forNamespace(allowed, NAMESPACE),
       NAMESPACE,
     );
@@ -370,12 +414,12 @@ export async function verifyBundle(
         `${it.kind} ${it.name}: the chain breaks here (an entry was changed, removed, or reordered)`,
       );
     }
-    const b = files[path];
+    const b = files.get(path);
     if (!b) {
       problems.push(`${it.kind} ${it.name}: missing (no ${path})`);
       continue;
     }
-    const got = await sha256Hex(b);
+    const got = await sha256(b);
     if (got !== it.sha256 || b.length !== it.size) {
       problems.push(
         `${it.kind} ${it.name}: changed (SHA-256 ${got}, the manifest says ${it.sha256})`,
@@ -400,7 +444,7 @@ export async function verifyBundle(
   if (prev !== m.head) {
     problems.push("the manifest's head is not the end of its chain (items were cut off)");
   }
-  for (const f of Object.keys(files)) {
+  for (const f of files.keys()) {
     if (f.startsWith("objects/") && !listed.has(f)) {
       problems.push(`${f}: in the bundle, not in the manifest`);
     }

@@ -5,8 +5,8 @@
  * command gathers a period's evidence into a ZIP, and your daily key signs it:
  *
  * ```bash
- * deno task stolos evidence export --from 2026-01-01 --to 2026-06-30
- * deno task stolos evidence verify fcr-evidence-2026-01-01-to-2026-06-30.zip
+ * bun run stolos evidence export --from 2026-01-01 --to 2026-06-30
+ * bun run stolos evidence verify fcr-evidence-2026-01-01-to-2026-06-30.zip
  * ```
  *
  * In it: every commit in the period (raw, with its SSH signature), each observation Stolos recorded

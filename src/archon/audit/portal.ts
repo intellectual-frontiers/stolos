@@ -63,7 +63,8 @@ export class AuditLaunch {
   /** A new token for an engagement. */
   issue(id: string): string {
     const t = [...crypto.getRandomValues(new Uint8Array(32))]
-      .map((x) => x.toString(16).padStart(2, "0")).join("");
+      .map((x) => x.toString(16).padStart(2, "0"))
+      .join("");
     this.#tokens.set(t, { id, at: this.#now() });
     return t;
   }
@@ -113,18 +114,20 @@ function json(body: unknown, status = 200): Response {
 }
 
 function refuse(api: boolean, status: number, why: string): Response {
-  return api ? json({ error: why }, status) : htmlResponse(
-    bare(
-      "Audit portal",
-      html`
-        <div class="card stack" style="max-width:560px;margin:12vh auto">
-          <h1>Not available</h1>
-          <p>${why}</p>
-        </div>
-      `,
-    ),
-    status,
-  );
+  return api
+    ? json({ error: why }, status)
+    : htmlResponse(
+        bare(
+          "Audit portal",
+          html`
+            <div class="card stack" style="max-width:560px;margin:12vh auto">
+              <h1>Not available</h1>
+              <p>${why}</p>
+            </div>
+          `,
+        ),
+        status,
+      );
 }
 
 function download(bytes: Uint8Array, name: string, type: string): Response {
@@ -184,7 +187,8 @@ export const STATIC_LINKS: Links = {
 const pill = (ok: boolean, yes: string, no: string) =>
   html`<span class="pill ${ok ? "ok" : "bad"}">${ok ? yes : no}</span>`;
 
-const factText = (v: unknown) => v === null || v === undefined ? "" : String(v);
+const factText = (v: string | number | boolean | null | undefined): string =>
+  v === null || v === undefined ? "" : String(v);
 
 /** The bundle items a unit's evidence names, from the bundle. */
 function unitItems(c: AuditCase, u: Unit): BundleItem[] {
@@ -227,23 +231,23 @@ export function engagementJson(c: AuditCase, now: Date): Record<string, unknown>
     signer: c.engagementProof.signer ?? null,
     bundle: c.bundle
       ? {
-        file: e.bundle?.file,
-        sha256: c.bundle.sha256,
-        head: c.bundle.view.manifest.head,
-        items: c.bundle.view.items.length,
-        verified: c.bundle.verify.ok,
-        signer: c.bundle.verify.signer ?? null,
-      }
+          file: e.bundle?.file,
+          sha256: c.bundle.sha256,
+          head: c.bundle.view.manifest.head,
+          items: c.bundle.view.items.length,
+          verified: c.bundle.verify.ok,
+          signer: c.bundle.verify.signer ?? null,
+        }
       : null,
     controls: e.controls.map((x) => {
       const p = c.populations.get(x.id);
       return { ...x, size: p?.units.length ?? null, hash: p?.hash ?? null };
     }),
-    samples: c.trail.filter((t) => t.entry?.kind === "sample").map((t) => ({
-      seq: t.entry!.seq,
-      control: t.entry!.control,
-      size: t.entry!.sample?.units.length,
-    })),
+    samples: c.trail.flatMap((t) =>
+      t.entry?.kind === "sample"
+        ? [{ seq: t.entry.seq, control: t.entry.control, size: t.entry.sample?.units.length }]
+        : [],
+    ),
     problems: caseProblems(c),
   };
 }
@@ -253,19 +257,26 @@ function head(c: AuditCase, now: Date, l: Links, title: string): Html {
   return html`
     <div class="pagehead">
       <div>
-        <div
-          class="crumb"><a href="${l.home}">${e.title}</a> · ${e.firm} · ${e.period.from} to ${e
-            .period.to}</div>
+        <div class="crumb">
+          <a href="${l.home}">${e.title}</a> · ${e.firm} · ${e.period.from} to ${e.period.to}
+        </div>
         <h1>${title}</h1>
-        <p class="sub">Read-only. Access ${engagementState(e, now) === "open"
-          ? html`ends at the end of ${e.access.expires} (UTC)`
-          : html`has ended`}.</p>
+        <p class="sub">
+          Read-only. Access
+          ${
+            engagementState(e, now) === "open"
+              ? html`ends at the end of ${e.access.expires} (UTC)`
+              : html`has ended`
+          }.
+        </p>
       </div>
-      <div class="row">${l.bundle
-        ? html`<a class="btn ghost" href="${l.bundle}" download>Evidence bundle</a>`
-        : ""}${l.export
-        ? html`<a class="btn ghost" href="${l.export}" download>Export package</a>`
-        : ""}<a class="btn ghost" href="${l.trail}">Trail</a></div>
+      <div class="row">
+        ${
+          l.bundle ? html`<a class="btn ghost" href="${l.bundle}" download>Evidence bundle</a>` : ""
+        }${
+          l.export ? html`<a class="btn ghost" href="${l.export}" download>Export package</a>` : ""
+        }<a class="btn ghost" href="${l.trail}">Trail</a>
+      </div>
     </div>
   `;
 }
@@ -283,26 +294,30 @@ function controlsTable(c: AuditCase, l: Links): Html {
           <th>Samples</th>
         </tr>
       </thead>
-      <tbody>${c.engagement.controls.map((x) => {
-        const p = c.populations.get(x.id);
-        const samples = c.trail.filter((t) =>
-          t.entry?.kind === "sample" && t.entry.control === x.id
-        );
-        return html`
-          <tr>
-            <td><a href="${l.control(x.id)}"><b>${x.id}</b></a> ${x.title}</td>
-            <td>${x.framework ?? ""}</td>
-            <td>${populationDef(x.population)?.title ?? x.population}</td>
-            <td>${p ? p.units.length : "no bundle"}</td>
-            <td class="mono">${p ? p.hash.slice(0, 16) : ""}</td>
-            <td>${samples.map((t) =>
-              html`
-                <a href="${l.sample(t.entry!.seq)}">#${t.entry!.seq}</a>
-              `
-            )}</td>
-          </tr>
-        `;
-      })}</tbody>
+      <tbody>
+        ${c.engagement.controls.map((x) => {
+          const p = c.populations.get(x.id);
+          const samples = c.trail.filter(
+            (t) => t.entry?.kind === "sample" && t.entry.control === x.id,
+          );
+          return html`
+            <tr>
+              <td>
+                <a href="${l.control(x.id)}"><b>${x.id}</b></a> ${x.title}
+              </td>
+              <td>${x.framework ?? ""}</td>
+              <td>${populationDef(x.population)?.title ?? x.population}</td>
+              <td>${p ? p.units.length : "no bundle"}</td>
+              <td class="mono">${p ? p.hash.slice(0, 16) : ""}</td>
+              <td>
+                ${samples.map(
+                  (t) => html` <a href="${l.sample(t.entry?.seq ?? 0)}">#${t.entry?.seq ?? 0}</a> `,
+                )}
+              </td>
+            </tr>
+          `;
+        })}
+      </tbody>
     </table>
   `;
 }
@@ -311,25 +326,32 @@ function verifyCard(c: AuditCase): Html {
   const problems = caseProblems(c);
   const v = c.bundle?.verify;
   return html`<div class="card stack">
-    <h2>Verification ${
-    pill(!problems.length, "everything checks out", `${problems.length} problem(s)`)
-  }</h2>
-    <p>${
-    v
-      ? html`The evidence bundle ${pill(v.ok, "verifies", "does not verify")}: every item unchanged,
-        none missing or added, the chain whole, the manifest signed by ${
-        v.signer ??
-          "nobody the signers allow"
-      }; ${
-        v.commits.filter((x) => x.signer).length
-      } of ${v.commits.length} commit(s) carry a valid signature.`
-      : "No evidence bundle to verify yet."
-  }</p>
-    <p>engagement.ts is recorded in commit <span class="mono">${
-    (c.engagementProof.commit ?? "none")
-      .slice(0, 12)
-  }</span>${c.engagementProof.signer ? html`, signed by ${c.engagementProof.signer}` : ""}.</p>
-    ${problems.length ? html`<ul>${problems.map((p) => html`<li class="bad">${p}</li>`)}</ul>` : ""}
+    <h2>
+      Verification
+      ${pill(!problems.length, "everything checks out", `${problems.length} problem(s)`)}
+    </h2>
+    <p>
+      ${
+        v
+          ? html`The evidence bundle ${pill(v.ok, "verifies", "does not verify")}: every item
+            unchanged, none missing or added, the chain whole, the manifest signed by
+            ${v.signer ?? "nobody the signers allow"}; ${v.commits.filter((x) => x.signer).length}
+            of ${v.commits.length} commit(s) carry a valid signature.`
+          : "No evidence bundle to verify yet."
+      }
+    </p>
+    <p>
+      engagement.ts is recorded in commit
+      <span class="mono">${(c.engagementProof.commit ?? "none").slice(0, 12)}</span
+      >${c.engagementProof.signer ? html`, signed by ${c.engagementProof.signer}` : ""}.
+    </p>
+    ${
+      problems.length
+        ? html`<ul>
+            ${problems.map((p) => html`<li class="bad">${p}</li>`)}
+          </ul>`
+        : ""
+    }
   </div>`;
 }
 
@@ -339,16 +361,26 @@ export function engagementPage(c: AuditCase, now: Date, l: Links): Html {
   return html`
     ${head(c, now, l, "Engagement")}
     <div class="card stack" id="engagement">
-      <p><b>${e.firm}</b>: ${e.auditors.map((a) => a.name).join(", ")}. Frameworks: ${e.frameworks
-        .join(", ") || "none named"}. Opened ${e.opened.on} by ${e.opened.by}${e.closed
-        ? html`; closed ${e.closed.on} by ${e.closed.by}`
-        : ""}.</p>
-      <p>Evidence: ${e.bundle
-        ? html`<span class="mono">${e.bundle.file}</span>, SHA-256 <span class="mono">${e.bundle.sha256}</span>`
-        : "no bundle pinned yet"}.</p>
+      <p>
+        <b>${e.firm}</b>: ${e.auditors.map((a) => a.name).join(", ")}. Frameworks:
+        ${e.frameworks.join(", ") || "none named"}. Opened ${e.opened.on} by
+        ${e.opened.by}${e.closed ? html`; closed ${e.closed.on} by ${e.closed.by}` : ""}.
+      </p>
+      <p>
+        Evidence:
+        ${
+          e.bundle
+            ? html`<span class="mono">${e.bundle.file}</span>, SHA-256
+                <span class="mono">${e.bundle.sha256}</span>`
+            : "no bundle pinned yet"
+        }.
+      </p>
     </div>
     ${verifyCard(c)}
-    <div class="card scroll"><h2>Controls in scope</h2>${controlsTable(c, l)}</div>
+    <div class="card scroll">
+      <h2>Controls in scope</h2>
+      ${controlsTable(c, l)}
+    </div>
   `;
 }
 
@@ -360,23 +392,37 @@ function unitsTable(c: AuditCase, p: Population, l: Links, only?: string[]): Htm
   return html`
     <table>
       <thead>
-        <tr><th>Unit</th>${keys.map((k) =>
-          html`<th>${k}</th>`
-        )}<th>Evidence (SHA-256, manifest entry)</th></tr>
+        <tr>
+          <th>Unit</th>
+          ${keys.map((k) => html`<th>${k}</th>`)}
+          <th>Evidence (SHA-256, manifest entry)</th>
+        </tr>
       </thead>
-      <tbody>${units.map((u) =>
-        html`<tr>
-        <td><b>${u.label}</b><div class="sub mono">${u.id}</div></td>
-        ${keys.map((k) => html`<td>${factText(u.facts[k])}</td>`)}
-        <td>${
-          unitItems(c, u).map((i) =>
-            html`<div class="mono">${
-              l.item ? html`<a href="${l.item(i.sha256)}">${i.sha256.slice(0, 16)}</a>` : i.sha256
-            } #${i.index} ${i.kind}</div>`
-          )
-        }</td>
-      </tr>`
-      )}</tbody>
+      <tbody>
+        ${units.map(
+          (u) =>
+            html`<tr>
+              <td>
+                <b>${u.label}</b>
+                <div class="sub mono">${u.id}</div>
+              </td>
+              ${keys.map((k) => html`<td>${factText(u.facts[k])}</td>`)}
+              <td>
+                ${unitItems(c, u).map(
+                  (i) =>
+                    html`<div class="mono">
+                      ${
+                        l.item
+                          ? html`<a href="${l.item(i.sha256)}">${i.sha256.slice(0, 16)}</a>`
+                          : i.sha256
+                      }
+                      #${i.index} ${i.kind}
+                    </div>`,
+                )}
+              </td>
+            </tr>`,
+        )}
+      </tbody>
     </table>
   `;
 }
@@ -396,74 +442,93 @@ export function controlPage(
     <div class="card stack" id="${l.control(x.id).replace(/^.*#/, "")}">
       <h2>Population: ${def?.title ?? x.population}</h2>
       <p>One unit is ${def?.unit ?? "?"}. ${def?.doc ?? ""}</p>
-      <p>${p
-        ? html`${p.units.length} unit(s); population hash <span class="mono">${p.hash}</span>.`
-        : "No evidence bundle: no population yet."}</p>
+      <p>
+        ${
+          p
+            ? html`${p.units.length} unit(s); population hash <span class="mono">${p.hash}</span>.`
+            : "No evidence bundle: no population yet."
+        }
+      </p>
     </div>
-    ${l.item && p
-      ? html`
-        <form class="card row" method="get">
-          <label>Seed <input name="seed" required maxlength="256" value="${draw?.seed ??
-            ""}"></label>
-          <label>Sample size <input name="size" type="number" min="1" required value="${draw
-            ?.size ??
-            ""}"></label>
-          <button class="btn" type="submit">Preview the draw</button>
-          <span
-            class="sub">${SAMPLE_METHOD}: ${SAMPLE_METHOD_DOC} A preview is not recorded: the company records the sample (stolos audit sample) in the trail.</span>
-        </form>
-      `
-      : ""}
-    ${draw && p
-      ? html`
-        <div
-          class="card scroll"><h2>Draw preview (seed ${draw.seed}, ${draw.units
-            .length} unit(s))</h2>${unitsTable(c, p, l, draw.units)}</div>
-      `
-      : ""}
-    ${p ? html`<div class="card scroll"><h2>Every unit</h2>${unitsTable(c, p, l)}</div>` : ""}
+    ${
+      l.item && p
+        ? html`
+            <form class="card row" method="get">
+              <label
+                >Seed <input name="seed" required maxlength="256" value="${draw?.seed ?? ""}"
+              /></label>
+              <label
+                >Sample size
+                <input name="size" type="number" min="1" required value="${draw?.size ?? ""}"
+              /></label>
+              <button class="btn" type="submit">Preview the draw</button>
+              <span class="sub"
+                >${SAMPLE_METHOD}: ${SAMPLE_METHOD_DOC} A preview is not recorded: the company
+                records the sample (stolos audit sample) in the trail.</span
+              >
+            </form>
+          `
+        : ""
+    }
+    ${
+      draw && p
+        ? html`
+            <div class="card scroll">
+              <h2>Draw preview (seed ${draw.seed}, ${draw.units.length} unit(s))</h2>
+              ${unitsTable(c, p, l, draw.units)}
+            </div>
+          `
+        : ""
+    }
+    ${
+      p
+        ? html`<div class="card scroll">
+            <h2>Every unit</h2>
+            ${unitsTable(c, p, l)}
+          </div>`
+        : ""
+    }
   `;
 }
 
 /** A recorded sample's page: each unit's evidence, verifiable in place. */
 export function samplePage(c: AuditCase, t: CheckedEntry, now: Date, l: Links): Html {
-  const s = t.entry!.sample!;
+  const e = t.entry;
+  const s = e?.sample;
+  if (!e || !s) return html`<p>not a recorded sample</p>`;
   const p = [...c.populations.values()].find((x) => x.id === s.population);
   const problems = [...t.proof.problems, ...(t.redraw ?? [])];
   return html`
-    ${head(c, now, l, `Sample #${t.entry!.seq}: ${s.control}`)}
-    <div class="card stack" id="${l.sample(t.entry!.seq).replace(/^.*#/, "")}">
-      <p>${s.units.length} of ${s.populationSize} unit(s) of ${s
-        .population}, seed <span class="mono">${s
-        .seed}</span>, method <span class="mono">${s
-        .method}</span>, population hash <span class="mono">${s
-        .populationHash}</span>. Recorded ${t.entry!.at} by ${t.entry!
-        .by}, commit <span class="mono">${(t
-          .proof.commit ?? "none").slice(0, 12)}</span>${t.proof.signer
-        ? html`
-          signed by ${t.proof.signer}
-        `
-        : ""}.</p>
-      <p>${pill(
-        !problems.length,
-        "redrawn from its seed: the same units",
-        "does not check out",
-      )}</p>
-      ${problems.length
-        ? html`<ul>${problems.map((x) => html`<li class="bad">${x}</li>`)}</ul>`
-        : ""}
-      ${t.entry!.body ? html`<p>${t.entry!.body}</p>` : ""}
+    ${head(c, now, l, `Sample #${e.seq}: ${s.control}`)}
+    <div class="card stack" id="${l.sample(e.seq).replace(/^.*#/, "")}">
+      <p>
+        ${s.units.length} of ${s.populationSize} unit(s) of ${s.population}, seed
+        <span class="mono">${s.seed}</span>, method <span class="mono">${s.method}</span>,
+        population hash <span class="mono">${s.populationHash}</span>. Recorded ${e.at} by ${e.by},
+        commit <span class="mono">${(t.proof.commit ?? "none").slice(0, 12)}</span>${
+          t.proof.signer ? html` signed by ${t.proof.signer} ` : ""
+        }.
+      </p>
+      <p>
+        ${pill(!problems.length, "redrawn from its seed: the same units", "does not check out")}
+      </p>
+      ${
+        problems.length
+          ? html`<ul>
+              ${problems.map((x) => html`<li class="bad">${x}</li>`)}
+            </ul>`
+          : ""
+      }
+      ${e.body ? html`<p>${e.body}</p>` : ""}
     </div>
-    ${p
-      ? html`<div class="card scroll"><h2>Each unit and its evidence</h2>${
-        unitsTable(
-          c,
-          p,
-          l,
-          s.units,
-        )
-      }</div>`
-      : ""}
+    ${
+      p
+        ? html`<div class="card scroll">
+            <h2>Each unit and its evidence</h2>
+            ${unitsTable(c, p, l, s.units)}
+          </div>`
+        : ""
+    }
     ${verifyCard(c)}
   `;
 }
@@ -471,24 +536,28 @@ export function samplePage(c: AuditCase, t: CheckedEntry, now: Date, l: Links): 
 /** An item's page: its manifest entry, its text, its download. */
 export function itemPage(c: AuditCase, i: BundleItem, now: Date, l: Links): Html {
   const text = i.content ? new TextDecoder().decode(i.content) : "";
-  const shown = text.length > 200_000
-    ? `${text.slice(0, 200_000)}\n... (download it for the rest)`
-    : text;
+  const shown =
+    text.length > 200_000 ? `${text.slice(0, 200_000)}\n... (download it for the rest)` : text;
   return html`
     ${head(c, now, l, `${i.kind}: ${i.name}`)}
     <div class="card stack">
       <p>SHA-256 <span class="mono">${i.sha256}</span>, ${i.size} bytes, recorded ${i.at}.</p>
-      <p>Manifest entry #${i.index} of ${c.bundle?.view.items.length ??
-        0}; its chain link <span class="mono">${i
-        .chain}</span>. The manifest is signed by ${c.bundle?.verify.signer ??
-        "nobody verified"}.</p>
-      <p>Check it yourself: download it and run <span class="mono">sha256sum</span>; it is objects/${i
-        .sha256} in the bundle.</p>
-      ${l.itemRaw
-        ? html`<p><a class="btn ghost" href="${
-          l.itemRaw(i.sha256)
-        }" download>Download the item</a></p>`
-        : ""}
+      <p>
+        Manifest entry #${i.index} of ${c.bundle?.view.items.length ?? 0}; its chain link
+        <span class="mono">${i.chain}</span>. The manifest is signed by
+        ${c.bundle?.verify.signer ?? "nobody verified"}.
+      </p>
+      <p>
+        Check it yourself: download it and run <span class="mono">sha256sum</span>; it is
+        objects/${i.sha256} in the bundle.
+      </p>
+      ${
+        l.itemRaw
+          ? html`<p>
+              <a class="btn ghost" href="${l.itemRaw(i.sha256)}" download>Download the item</a>
+            </p>`
+          : ""
+      }
     </div>
     <div class="card">
       <pre class="mono" style="white-space:pre-wrap">${shown}</pre>
@@ -500,45 +569,45 @@ export function itemPage(c: AuditCase, i: BundleItem, now: Date, l: Links): Html
 export function trailPage(c: AuditCase, now: Date, l: Links): Html {
   return html`
     ${head(c, now, l, "Requests, responses, and samples")}
-    <div class="stack" id="trail">${c.trail.map((t) => {
-      const e = t.entry;
-      const problems = [...t.proof.problems, ...(t.redraw ?? [])];
-      return html`<div class="card stack">
-        <div class="spread"><b>#${e?.seq ?? "?"} ${e?.kind ?? "unreadable"}${
-        e?.control
-          ? html`
-            · ${e.control}
-          `
-          : ""
-      }${
-        e?.re
-          ? html`
-            · answers #${e.re}
-          `
-          : ""
-      }</b>
-          <span class="sub">${e?.at ?? ""} · ${e?.by ?? ""}</span></div>
-        ${
-        e?.kind === "sample"
-          ? html`<p><a href="${
-            l.sample(e.seq)
-          }">The sample: ${e.sample?.units.length} unit(s), seed ${e.sample?.seed}</a></p>`
-          : ""
-      }
-        ${e?.body ? html`<pre class="mono" style="white-space:pre-wrap">${e.body}</pre>` : ""}
-        <p class="sub">${t.file.path}, SHA-256 <span class="mono">${
-        t.proof.sha256.slice(0, 16)
-      }</span>, commit <span class="mono">${
-        (t
-          .proof.commit ?? "none").slice(0, 12)
-      }</span> ${pill(!problems.length, `signed by ${t.proof.signer}`, "does not check out")}</p>
-        ${
-        problems.length
-          ? html`<ul>${problems.map((x) => html`<li class="bad">${x}</li>`)}</ul>`
-          : ""
-      }
-      </div>`;
-    })}${c.trail.length ? "" : html`<p class="sub">Nothing recorded yet.</p>`}</div>
+    <div class="stack" id="trail">
+      ${c.trail.map((t) => {
+        const e = t.entry;
+        const problems = [...t.proof.problems, ...(t.redraw ?? [])];
+        return html`<div class="card stack">
+          <div class="spread">
+            <b
+              >#${e?.seq ?? "?"}
+              ${e?.kind ?? "unreadable"}${e?.control ? html` · ${e.control} ` : ""}${
+                e?.re ? html` · answers #${e.re} ` : ""
+              }</b
+            >
+            <span class="sub">${e?.at ?? ""} · ${e?.by ?? ""}</span>
+          </div>
+          ${
+            e?.kind === "sample"
+              ? html`<p>
+                  <a href="${l.sample(e.seq)}"
+                    >The sample: ${e.sample?.units.length} unit(s), seed ${e.sample?.seed}</a
+                  >
+                </p>`
+              : ""
+          }
+          ${e?.body ? html`<pre class="mono" style="white-space:pre-wrap">${e.body}</pre>` : ""}
+          <p class="sub">
+            ${t.file.path}, SHA-256 <span class="mono">${t.proof.sha256.slice(0, 16)}</span>, commit
+            <span class="mono">${(t.proof.commit ?? "none").slice(0, 12)}</span>
+            ${pill(!problems.length, `signed by ${t.proof.signer}`, "does not check out")}
+          </p>
+          ${
+            problems.length
+              ? html`<ul>
+                  ${problems.map((x) => html`<li class="bad">${x}</li>`)}
+                </ul>`
+              : ""
+          }
+        </div>`;
+      })}${c.trail.length ? "" : html`<p class="sub">Nothing recorded yet.</p>`}
+    </div>
   `;
 }
 
@@ -547,8 +616,12 @@ function frame(title: string, body: Html): string {
   return bare(
     `${title} · audit`,
     html`
-      <header
-        class="top"><b>Stolos audit portal</b><form method="post" action="/signout"><button class="btn ghost" type="submit">Sign out</button></form></header>
+      <header class="top">
+        <b>Stolos audit portal</b>
+        <form method="post" action="/signout">
+          <button class="btn ghost" type="submit">Sign out</button>
+        </form>
+      </header>
       <main id="main" style="padding:16px 24px">${body}</main>
     `,
   );
@@ -558,11 +631,10 @@ function frame(title: string, body: Html): string {
 export function staticPortal(c: AuditCase, now: Date): string {
   const l = STATIC_LINKS;
   const body = html`
-    ${engagementPage(c, now, l)}
-    ${c.engagement.controls.map((x) => controlPage(c, x, now, l))}
-    ${c.trail.filter((t) => t.entry?.kind === "sample" && t.entry.sample).map((t) =>
-      samplePage(c, t, now, l)
-    )}
+    ${engagementPage(c, now, l)} ${c.engagement.controls.map((x) => controlPage(c, x, now, l))}
+    ${c.trail
+      .filter((t) => t.entry?.kind === "sample" && t.entry.sample)
+      .map((t) => samplePage(c, t, now, l))}
     ${trailPage(c, now, l)}
   `;
   return `<!doctype html>
@@ -576,7 +648,7 @@ table{border-collapse:collapse;width:100%}th,td{border-bottom:1px solid #eee;pad
 .ok{background:#dcfce7}.bad{background:#fee2e2}.row,.spread{display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap}
 </style></head><body>
 <p class="sub">A static copy of the auditor portal, made ${now.toISOString()}. Check the package with
-<code>deno task stolos audit verify &lt;package&gt;</code>, or by hand: README.txt.</p>
+<code>bun run stolos audit verify &lt;package&gt;</code>, or by hand: README.txt.</p>
 ${body.s}
 </body></html>
 `;
@@ -600,7 +672,7 @@ export async function serveAudit(
     );
   }
   if (!d || !m) return refuse(api, 404, "no such engagement");
-  const [, id, rest = "/"] = m;
+  const [, id = "", rest = "/"] = m;
   const now = d.now?.() ?? new Date();
   if (scope !== undefined && now.getTime() - s.created > AUDIT_SESSION_MS) {
     return refuse(api, 401, "this audit session has ended: ask the company for a new link");
@@ -616,7 +688,7 @@ export async function serveAudit(
       api,
       410,
       state === "closed"
-        ? `this engagement was closed on ${c.engagement.closed!.on}`
+        ? `this engagement was closed on ${c.engagement.closed?.on ?? ""}`
         : `access to this engagement ended with ${c.engagement.access.expires}`,
     );
   }
@@ -639,7 +711,7 @@ export async function serveAudit(
   }
   if (r === "/bundle.zip") {
     return c.bundle
-      ? download(c.bundle.zip, c.engagement.bundle!.file, "application/zip")
+      ? download(c.bundle.zip, c.engagement.bundle?.file ?? "bundle.zip", "application/zip")
       : refuse(api, 404, "no evidence bundle yet");
   }
   if (r === "/export.zip") {
@@ -650,7 +722,7 @@ export async function serveAudit(
   if (cm) {
     let cid: string;
     try {
-      cid = decodeURIComponent(cm[1]);
+      cid = decodeURIComponent(cm[1] ?? "");
     } catch {
       return refuse(api, 400, "not a control's id");
     }
@@ -671,15 +743,25 @@ export async function serveAudit(
       control: x,
       population: p
         ? {
-          ...populationDef(x.population),
-          query: undefined,
-          hash: p.hash,
-          size: p.units.length,
-          units: p.units.map((u) => ({ ...u, evidence: unitItems(c, u).map((i) => itemJson(i)) })),
-        }
+            ...populationDef(x.population),
+            query: undefined,
+            hash: p.hash,
+            size: p.units.length,
+            units: p.units.map((u) => ({
+              ...u,
+              evidence: unitItems(c, u).map((i) => itemJson(i)),
+            })),
+          }
         : null,
       ...(draw
-        ? { draw: { ...draw, method: SAMPLE_METHOD, recorded: false, populationHash: p!.hash } }
+        ? {
+            draw: {
+              ...draw,
+              method: SAMPLE_METHOD,
+              recorded: false,
+              populationHash: p?.hash ?? "",
+            },
+          }
         : {}),
     });
   }
@@ -688,7 +770,8 @@ export async function serveAudit(
     const t = c.trail.find((x) => x.entry?.kind === "sample" && x.entry.seq === Number(sm[1]));
     if (!t?.entry?.sample) return refuse(api, 404, `no sample #${sm[1]}`);
     if (!api) return page(`Sample #${sm[1]}`, samplePage(c, t, now, l));
-    const p = [...c.populations.values()].find((x) => x.id === t.entry!.sample!.population);
+    const population = t.entry.sample.population;
+    const p = [...c.populations.values()].find((x) => x.id === population);
     return json({
       ...entryJson(t),
       units: t.entry.sample.units.map((uid) => {

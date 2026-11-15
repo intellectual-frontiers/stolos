@@ -1,15 +1,26 @@
-// Spec 081: a Trust Center built from a real signed evidence bundle: refused when the bundle does
-// not verify; failing and stale controls shown as such; a public build leaks no subject, hostname,
-// or email; every claim links to an item present in the published bundle with a matching hash; the
-// page is well formed and makes no requests.
-import { assert, assertEquals, assertStringIncludes } from "./assert.ts";
-import { unzipSync, zipSync } from "npm:fflate@0.8.2";
+/**
+ * Spec 081: a Trust Center built from a real signed evidence bundle: refused when the bundle does
+ * not verify; failing and stale controls shown as such; a public build leaks no subject, hostname,
+ * or email; every claim links to an item present in the published bundle with a matching hash; the
+ * page is well formed and makes no requests.
+ *
+ * @module
+ */
+import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { unzip, zipDeflated, sha256 } from "@intellectual-frontiers/ifc-ts/kernel";
+import {
+  assert,
+  assertEquals,
+  assertExists,
+  assertStringIncludes,
+  proves,
+  test,
+} from "@intellectual-frontiers/ifc-ts/runtime/test";
 import {
   type Item,
   manifestFor,
   manifestText,
   packBundle,
-  sha256Hex,
   sshSigner,
   verifyBundle,
 } from "../src/archon/evidence/bundle.ts";
@@ -28,19 +39,28 @@ import { publicControl, signerLines } from "../src/archon/trust/publish.ts";
 import { GUIDES } from "../src/archon/core/guides.ts";
 import { COMMANDS } from "../src/archon/commands/registry.ts";
 
+/** A ZIP of these files (deflated), as the engine writes its bundles. */
+const zipped = (files: Record<string, Uint8Array>): Promise<Uint8Array> =>
+  zipDeflated(new Map(Object.entries(files)));
+
+/** A ZIP's files, by path. */
+async function unzipped(zip: Uint8Array): Promise<Record<string, Uint8Array>> {
+  const r = await unzip(zip);
+  if (r.kind === "err") throw new Error(`not a ZIP: ${r.error.kind}`);
+  return Object.fromEntries(r.value);
+}
+
 const enc = new TextEncoder();
 const dec = new TextDecoder();
 
-async function sh(args: string[], cwd?: string, env: Record<string, string> = {}) {
-  const r = await new Deno.Command(args[0], {
-    args: args.slice(1),
+async function sh(args: string[], cwd?: string, env: Record<string, string> = {}): Promise<string> {
+  const r = await proc.run(args, {
     ...(cwd ? { cwd } : {}),
+    stdin: "null",
     env: { GIT_CONFIG_GLOBAL: "/dev/null", GIT_CONFIG_NOSYSTEM: "1", ...env },
-    stdout: "piped",
-    stderr: "piped",
-  }).output();
-  if (!r.success) throw new Error(`${args.join(" ")}: ${dec.decode(r.stderr)}`);
-  return dec.decode(r.stdout);
+  });
+  if (r.code !== 0) throw new Error(`${args.join(" ")}: ${r.stderr}`);
+  return r.stdout;
 }
 
 async function keyPair(dir: string, name: string) {
@@ -48,7 +68,7 @@ async function keyPair(dir: string, name: string) {
   await sh(["ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-C", name, "-f", key]);
   return {
     key,
-    pub: (await Deno.readTextFile(key + ".pub")).trim().split(/\s+/).slice(0, 2).join(" "),
+    pub: (await fs.readTextFile(key + ".pub")).trim().split(/\s+/).slice(0, 2).join(" "),
   };
 }
 
@@ -154,25 +174,24 @@ const EVIDENCE: Evidence[] = [
 
 /** A real bundle: a Git repository with signed commits (two adopted machines observed), a verify, OSCAL. */
 async function fixture() {
-  const dir = await Deno.makeTempDir();
+  const dir = await fs.makeTempDir();
   const alice = await keyPair(dir, "alice-daily");
   const mallory = await keyPair(dir, "mallory");
   const repo = `${dir}/repo`;
   for (const m of ["alice-mbp", "bob-desk"]) {
-    await Deno.mkdir(`${repo}/fleets/lab/adopted/${m}`, { recursive: true });
+    await fs.mkdir(`${repo}/fleets/lab/adopted/${m}`, { recursive: true });
   }
   await sh(["git", "init", "-q", "-b", "main"], repo);
-  for (
-    const [k, v] of [
-      ["user.name", "Alice Example"],
-      ["user.email", "alice@example.com"],
-      ["gpg.format", "ssh"],
-      ["user.signingkey", alice.key],
-      ["commit.gpgsign", "true"],
-    ]
-  ) await sh(["git", "config", k, v], repo);
+  for (const [k, v] of [
+    ["user.name", "Alice Example"],
+    ["user.email", "alice@example.com"],
+    ["gpg.format", "ssh"],
+    ["user.signingkey", alice.key],
+    ["commit.gpgsign", "true"],
+  ])
+    await sh(["git", "config", got(k), got(v)], repo);
   const commit = async (path: string, text: string, date: string) => {
-    await Deno.writeTextFile(`${repo}/${path}`, text);
+    await fs.writeTextFile(`${repo}/${path}`, text);
     const env = { GIT_AUTHOR_DATE: date, GIT_COMMITTER_DATE: date };
     await sh(["git", "add", "-A"], repo, env);
     await sh(["git", "commit", "-q", "-m", `observe ${path}`], repo, env);
@@ -216,17 +235,12 @@ async function fixture() {
   });
   const allowed = `alice-daily namespaces="git,stolos-evidence" ${alice.pub} alice@example.com\n`;
   const m = await manifestFor(items, META);
-  const sig = await sshSigner(alice.key, false)(manifestText(m));
-  const zip = packBundle(items, m, sig, allowed);
+  const sig = await sshSigner(alice.key)(manifestText(m));
+  const zip = await packBundle(items, m, sig, allowed);
   return { dir, alice, mallory, zip, m, allowed };
 }
 
-const hasSsh = await new Deno.Command("ssh-keygen", {
-  args: ["-V"],
-  stderr: "null",
-  stdout: "null",
-})
-  .output().then(() => true, () => false);
+const hasSsh = proc.which("ssh-keygen") !== undefined;
 
 const NOW = new Date("2026-04-01T00:00:00Z");
 const NAME = "lab-evidence-2026-03-01-to-2026-03-31.zip";
@@ -234,15 +248,17 @@ const NAME = "lab-evidence-2026-03-01-to-2026-03-31.zip";
 /** A simple well-formedness check: every non-void tag closes, in order. */
 function unclosed(page: string): string[] {
   const VOID = new Set(["meta", "link", "br", "hr", "img", "input", "source", "wbr", "col"]);
-  const body = page.replace(/<!--[\s\S]*?-->/g, "").replace(/<!doctype[^>]*>/i, "")
+  const body = page
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .replace(/<!doctype[^>]*>/i, "")
     .replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/g, "");
   const stack: string[] = [];
   const problems: string[] = [];
   for (const m of body.matchAll(/<(\/?)([a-zA-Z][a-zA-Z0-9]*)\b[^>]*?(\/?)>/g)) {
     const [, close, tag0] = m;
-    const tag = tag0.toLowerCase();
-    if (VOID.has(tag)) continue;
-    if (!close) stack.push(tag);
+    const tag = tag0?.toLowerCase();
+    if (VOID.has(got(tag))) continue;
+    if (!close) stack.push(got(tag));
     else if (stack.at(-1) === tag) stack.pop();
     else problems.push(`</${tag}> closes <${stack.at(-1)}>`);
   }
@@ -262,26 +278,36 @@ async function checkLinks(files: Record<string, Uint8Array>, zipName: string): P
   const zip = files[`evidence/${zipName}`];
   assert(zip, `evidence/${zipName} is published`);
   const listed = new Set(
-    (JSON.parse(dec.decode(unzipSync(zip)["manifest.json"])) as { items: { sha256: string }[] })
-      .items.map((i) => i.sha256),
+    (
+      JSON.parse(dec.decode((await unzipped(zip))["manifest.json"])) as {
+        items: { sha256: string }[];
+      }
+    ).items.map((i) => i.sha256),
   );
   const links = [...page.matchAll(/href="evidence\/objects\/([0-9a-f]{64})"/g)].map((m) => m[1]);
   for (const sha of links) {
     const b = files[`evidence/objects/${sha}`];
     assert(b, `evidence/objects/${sha} is published`);
-    assertEquals(await sha256Hex(b), sha);
-    assert(listed.has(sha), `${sha} is in the published bundle's manifest`);
+    assertEquals(await sha256(b), sha);
+    assert(listed.has(got(sha)), `${sha} is in the published bundle's manifest`);
   }
   return links.length;
 }
 
-Deno.test({
-  name: "081: a public Trust Center: honest statuses, a signed summary, nothing personal",
-  ignore: !hasSsh,
-  async fn() {
+proves(
+  [
+    "081-trust-center FR-001",
+    "081-trust-center FR-002",
+    "081-trust-center FR-003",
+    "081-trust-center FR-005",
+    "081-trust-center FR-006",
+    "081-trust-center FR-008",
+  ],
+  "081: a public Trust Center: honest statuses, a signed summary, nothing personal",
+  async () => {
     const f = await fixture();
     const site = await buildTrustSite(f.zip, NAME, {
-      sign: sshSigner(f.alice.key, false),
+      sign: sshSigner(f.alice.key),
       catalog: catalog(),
       now: NOW,
       stolos: "0.0.0",
@@ -301,21 +327,22 @@ Deno.test({
     assertStringIncludes(card(page, "CFG-04"), "Passing");
     assert(!card(page, "CFG-04").includes("stale"));
     assertStringIncludes(page, "control(s) failing");
-    assert(/<div id="aged"[^>]* hidden>/.test(page), "a fresh bundle's banner is hidden");
-    assertEquals(site.model.controls.find((c) => c.id === "END-07")!.counts.stale, 1);
-    const soc2 = site.model.frameworks.find((x) => x.id === "soc2")!;
+    assert(/<div\s+id="aged"[^>]*\shidden\s*>/.test(page), "a fresh bundle's banner is hidden");
+    assertEquals(got(site.model.controls.find((c) => c.id === "END-07")).counts.stale, 1);
+    const soc2 = got(site.model.frameworks.find((x) => x.id === "soc2"));
     // CC6.1-POF10 folds into CC6.1, reached by CRY-07 (failing) and IAC-37 (passing).
     assertEquals(soc2.requirements.find((r) => r.id === "CC6.1")?.status, "fail");
     assertEquals(soc2.requirements.find((r) => r.id === "CC8.1")?.status, "pass");
     assertStringIncludes(page, 'id="fw-hipaa"');
 
     // The summary bundle verifies on its own, signed by the full bundle's signer.
-    const zipName = Object.keys(site.files).find((p) => /^evidence\/[^/]+\.zip$/.test(p))!
-      .slice("evidence/".length);
-    const sum = await verifyBundle(site.files[`evidence/${zipName}`]);
+    const zipName = got(
+      Object.keys(site.files).find((p) => /^evidence\/[^/]+\.zip$/.test(p)),
+    ).slice("evidence/".length);
+    const sum = await verifyBundle(got(site.files[`evidence/${zipName}`]));
     assert(sum.ok, sum.problems.join("; "));
     assertEquals(sum.signer, "alice-daily");
-    assert(sum.manifest!.items.every((i) => i.kind === "summary"));
+    assert(got(sum.manifest).items.every((i) => i.kind === "summary"));
 
     // Every claim's link is an item in the published bundle, with a matching hash.
     const links = await checkLinks(site.files, zipName);
@@ -325,7 +352,8 @@ Deno.test({
     const texts: Array<[string, string]> = [];
     for (const [p, b] of Object.entries(site.files)) {
       if (p.endsWith(".zip")) {
-        for (const [q, c] of Object.entries(unzipSync(b))) texts.push([`${p}:${q}`, dec.decode(c)]);
+        for (const [q, c] of Object.entries(await unzipped(b)))
+          texts.push([`${p}:${q}`, dec.decode(c)]);
       } else texts.push([p, dec.decode(b)]);
     }
     const SECRETS = [
@@ -352,34 +380,32 @@ Deno.test({
       dec.decode(site.files["evidence/allowed_signers"]),
       `alice-daily namespaces="stolos-evidence" ${f.alice.pub}\n`,
     );
-    assertEquals(
-      signerLines(f.allowed, "nobody"),
-      "\n",
-    );
+    assertEquals(signerLines(f.allowed, "nobody"), "\n");
     // A public control document: exactly these fields.
     assertEquals(
-      Object.keys(publicControl(site.model.controls.find((c) => c.id === "CRY-07")!)).sort(),
+      Object.keys(publicControl(got(site.model.controls.find((c) => c.id === "CRY-07")))).sort(),
       ["backedBy", "checks", "counts", "format", "how", "id", "name", "observed", "status"],
     );
 
     // Well formed, and offline: no URL but the company's own.
     assertEquals(unclosed(page), []);
     for (const [p, t] of texts.filter(([p]) => p.endsWith(".html"))) {
-      const urls = (t.match(/https?:\/\/[^\s"'<>)]+/g) ?? []).filter((u) =>
-        u !== "https://example.com/security"
+      const urls = (t.match(/https?:\/\/[^\s"'<>)]+/g) ?? []).filter(
+        (u) => u !== "https://example.com/security",
       );
       assertEquals(urls, [], `${p} reaches out`);
     }
     assertStringIncludes(page, "default-src &#39;none&#39;");
     assert(!/\sstyle="/.test(page), "no inline style attributes (the CSP forbids them)");
-    await Deno.remove(f.dir, { recursive: true });
+    await fs.remove(f.dir, { recursive: true });
   },
-});
+  { skip: !hasSsh && "ssh-keygen is not installed" },
+);
 
-Deno.test({
-  name: "081: a gated Trust Center shows everything and links to the full bundle's items",
-  ignore: !hasSsh,
-  async fn() {
+proves(
+  ["081-trust-center FR-005", "081-trust-center FR-007"],
+  "081: a gated Trust Center shows everything and links to the full bundle's items",
+  async () => {
     const f = await fixture();
     const site = await buildTrustSite(f.zip, NAME, {
       mode: "gated",
@@ -400,47 +426,56 @@ Deno.test({
     // Every item backing every control is linked.
     const want = site.model.controls.reduce((n, c) => n + c.items.length, 0);
     assertEquals(links, want);
-    const cry = site.model.controls.find((c) => c.id === "CRY-07")!;
+    const cry = got(site.model.controls.find((c) => c.id === "CRY-07"));
     assert(cry.items.some((i) => i.kind === "oscal"));
     assert(cry.items.some((i) => i.name.includes("/alice-mbp/")));
     assertEquals(unclosed(page), []);
-    await Deno.remove(f.dir, { recursive: true });
+    await fs.remove(f.dir, { recursive: true });
   },
-});
+  { skip: !hasSsh && "ssh-keygen is not installed" },
+);
 
-Deno.test({
-  name:
-    "081: refused: a tampered bundle, a summary signed by someone else, a framework it cannot reach",
-  ignore: !hasSsh,
-  async fn() {
+proves(
+  ["081-trust-center FR-001", "081-trust-center FR-003"],
+  "081: refused: a tampered bundle, a summary signed by someone else, a framework it cannot reach",
+  async () => {
     const f = await fixture();
-    const files = unzipSync(f.zip);
-    const obj = `objects/${f.m.items.find((i) => i.kind === "oscal")!.sha256}`;
+    const files = await unzipped(f.zip);
+    const obj = `objects/${got(f.m.items.find((i) => i.kind === "oscal")).sha256}`;
     files[obj] = enc.encode(dec.decode(files[obj]).replace(/"fail"/g, '"pass"'));
-    const tampered = await buildTrustSite(zipSync(files), NAME, { catalog: catalog(), now: NOW });
+    const tampered = await buildTrustSite(await zipped(files), NAME, {
+      catalog: catalog(),
+      now: NOW,
+    });
     assert(!tampered.ok);
-    assert(tampered.problems.some((p) => p.includes("changed (SHA-256")), tampered.problems.join());
+    assert(
+      tampered.problems.some((p) => p.includes("changed (SHA-256")),
+      tampered.problems.join(),
+    );
 
     const wrong = await buildTrustSite(f.zip, NAME, {
-      sign: sshSigner(f.mallory.key, false),
+      sign: sshSigner(f.mallory.key),
       catalog: catalog(),
       now: NOW,
     });
     assert(!wrong.ok);
-    assertStringIncludes(wrong.problems[0], "must be signed by alice-daily");
+    assertStringIncludes(got(wrong.problems[0]), "must be signed by alice-daily");
 
     // Without the catalog: SP 800-53 from the bundle's own findings; the others say why not.
     const bare = await buildTrustSite(f.zip, NAME, { mode: "gated", now: NOW });
     assert(bare.ok);
-    assertEquals(bare.model.frameworks.map((x) => x.id), ["nist80053"]);
+    assertEquals(
+      bare.model.frameworks.map((x) => x.id),
+      ["nist80053"],
+    );
     assertEquals(bare.model.scf.mappings, "bundle");
     assert(bare.model.unavailable.some((u) => u.id === "soc2" && u.reason.includes("2026.3")));
     assert(
-      bare.model.frameworks[0].requirements.some((r) => r.id === "sc-28" && r.status === "fail"),
+      bare.model.frameworks[0]?.requirements.some((r) => r.id === "sc-28" && r.status === "fail"),
     );
     const hipaa = await buildTrustSite(f.zip, NAME, { frameworks: ["hipaa"], now: NOW });
     assert(!hipaa.ok);
-    assertStringIncludes(hipaa.problems[0], "hipaa: cannot be shown");
+    assertStringIncludes(got(hipaa.problems[0]), "hipaa: cannot be shown");
     assert(!(await buildTrustSite(f.zip, NAME, { contact: "http://x", now: NOW })).ok);
     let threw = false;
     try {
@@ -452,17 +487,23 @@ Deno.test({
 
     // The command writes nothing for a refused bundle.
     const out = `${f.dir}/site`;
-    await Deno.writeFile(`${f.dir}/bad.zip`, zipSync(files));
+    await fs.writeFile(`${f.dir}/bad.zip`, await zipped(files));
     assertEquals(await trustBuild({ bundle: `${f.dir}/bad.zip`, out, catalog: null }), 1);
-    assert(!(await Deno.stat(out).then(() => true, () => false)));
-    await Deno.remove(f.dir, { recursive: true });
+    assert(
+      !(await fs.stat(out).then(
+        () => true,
+        () => false,
+      )),
+    );
+    await fs.remove(f.dir, { recursive: true });
   },
-});
+  { skip: !hasSsh && "ssh-keygen is not installed" },
+);
 
-Deno.test({
-  name: "081: a stale bundle makes every status stale; on request publishes no evidence",
-  ignore: !hasSsh,
-  async fn() {
+proves(
+  ["081-trust-center FR-004", "081-trust-center FR-006"],
+  "081: a stale bundle makes every status stale; on request publishes no evidence",
+  async () => {
     const f = await fixture();
     const old = await buildTrustSite(f.zip, NAME, {
       catalog: catalog(),
@@ -471,48 +512,56 @@ Deno.test({
     assert(old.ok);
     assert(old.model.bundleStale);
     const page = dec.decode(old.files["index.html"]);
-    assert(/<div id="aged"[^>]*data-max="\d+">/.test(page), "the banner shows");
+    assert(/<div\s+id="aged"[^>]*data-max="\d+"\s*>/.test(page), "the banner shows");
     assertStringIncludes(card(page, "CFG-04"), "stale bundle");
     // Public without a signer: on request, no evidence published, hashes as text.
     assert(!Object.keys(old.files).some((p) => p.startsWith("evidence/")));
     assertStringIncludes(page, "available on request");
     assert(!page.includes('href="evidence/'));
-    await Deno.remove(f.dir, { recursive: true });
+    await fs.remove(f.dir, { recursive: true });
   },
-});
+  { skip: !hasSsh && "ssh-keygen is not installed" },
+);
 
-Deno.test({
-  name: "081: trust build writes the folder, rebuilds it, and refuses someone else's",
-  ignore: !hasSsh,
-  async fn() {
+proves(
+  ["081-trust-center FR-009"],
+  "081: trust build writes the folder, rebuilds it, and refuses someone else's",
+  async () => {
     const f = await fixture();
     const bundle = `${f.dir}/${NAME}`;
-    await Deno.writeFile(bundle, f.zip);
+    await fs.writeFile(bundle, f.zip);
     const out = `${f.dir}/site`;
     const o = {
       bundle,
       out,
       catalog: catalog(),
-      sign: sshSigner(f.alice.key, false),
+      sign: sshSigner(f.alice.key),
       now: NOW,
     };
     assertEquals(await trustBuild(o), 0);
-    assertStringIncludes(await Deno.readTextFile(`${out}/index.html`), "Example Co");
-    assert(await Deno.stat(`${out}/${MARKER}`));
+    assertStringIncludes(await fs.readTextFile(`${out}/index.html`), "Example Co");
+    assert(await fs.stat(`${out}/${MARKER}`));
     assertEquals(await trustBuild({ ...o, gated: true }), 0, "a rebuild replaces it");
-    assert(await Deno.stat(`${out}/evidence/${NAME}`));
+    assert(await fs.stat(`${out}/evidence/${NAME}`));
     const other = `${f.dir}/other`;
-    await Deno.mkdir(other);
-    await Deno.writeTextFile(`${other}/keep.txt`, "mine\n");
+    await fs.mkdir(other);
+    await fs.writeTextFile(`${other}/keep.txt`, "mine\n");
     assertEquals(await trustBuild({ ...o, out: other }), 1);
-    assertEquals(await Deno.readTextFile(`${other}/keep.txt`), "mine\n");
+    assertEquals(await fs.readTextFile(`${other}/keep.txt`), "mine\n");
     assertEquals(await trustBuild({ ...o, public: true, gated: true }), 1);
-    await Deno.remove(f.dir, { recursive: true });
+    await fs.remove(f.dir, { recursive: true });
   },
-});
+  { skip: !hasSsh && "ssh-keygen is not installed" },
+);
 
-Deno.test("081: the command and the guide are registered", () => {
+test("081: the command and the guide are registered", () => {
   const c = COMMANDS.find((x) => x.name === "trust build");
   assert(c && c.noMcp && c.place === "pc");
   assert(GUIDES.some((g) => g.name === "trust" && g.module === "src/archon/trust/mod.ts"));
 });
+
+/** The value the test expects to be there. */
+function got<T>(value: T | undefined | null, what = "a value"): T {
+  assertExists(value, `${what} is missing`);
+  return value;
+}

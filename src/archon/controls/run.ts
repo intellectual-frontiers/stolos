@@ -29,8 +29,7 @@ import type { PolicyResult } from "../adopt/policy.ts";
 import type { Observation } from "../connect/connector.ts";
 import type { DeviceDef, DeviceObserved } from "../device/device.ts";
 import type { Estate } from "../estate/graph.ts";
-import { exists } from "../core/fsx.ts";
-import { join, toFileUrl } from "../core/path.ts";
+import { fs, path, toError } from "@intellectual-frontiers/ifc-ts/runtime";
 import { P } from "../core/paths.ts";
 import type { Control, ControlPack, OsqueryControl } from "./define.ts";
 import { acceptRisks, type MachineAnswer, runEstate, runObservation, runOsquery } from "./core.ts";
@@ -92,9 +91,10 @@ async function runOne(c: Control, i: PackInputs, now: Date): Promise<ControlResu
     });
   try {
     if (c.subject === "estate") {
-      if (!i.estate) return [unknown(ACROSS, "the estate graph is not available")];
+      const estate = i.estate;
+      if (!estate) return [unknown(ACROSS, "the estate graph is not available")];
       const { estateQuery } = await import("../estate/graph.ts");
-      const r = runEstate(c, (sql) => estateQuery(i.estate!, sql), now);
+      const r = runEstate(c, (sql) => estateQuery(estate, sql), now);
       if (!r) return [];
       const { subjects, ...rest } = r;
       return [{ ...base(ACROSS, rest), ...(subjects.length ? { subjects } : {}) }];
@@ -108,7 +108,7 @@ async function runOne(c: Control, i: PackInputs, now: Date): Promise<ControlResu
         return [
           unknown(
             "adopted machines",
-            "no adopted machine has answered yet (deno task stolos controls run asks them)",
+            "no adopted machine has answered yet (bun run stolos controls run asks them)",
           ),
         ];
       }
@@ -136,7 +136,7 @@ async function runOne(c: Control, i: PackInputs, now: Date): Promise<ControlResu
     }
     return out;
   } catch (e) {
-    return [unknown(ACROSS, `the control failed: ${(e as Error).message}`)];
+    return [unknown(ACROSS, `the control failed: ${toError(e).message}`)];
   }
 }
 
@@ -158,7 +158,7 @@ export async function runPack(pack: ControlPack, inputs: PackInputs = {}): Promi
 
 /** Where a fleet's packs are. */
 export function controlsDir(): string {
-  return join(P.fleetDir, "controls");
+  return path.join(P.fleetDir, "controls");
 }
 
 /** A pack found in the fleet, with its folder. */
@@ -169,8 +169,16 @@ export interface LoadedPack {
   pack: ControlPack;
 }
 
+/** A fleet module (`pack.ts`, `risks.ts`, ...), imported afresh (a changed file is read again), as its exports. */
+export async function importFresh(file: string): Promise<Record<string, unknown>> {
+  const mod: unknown = await import(`${path.toFileUrl(file).href}?t=${Date.now()}`);
+  return typeof mod === "object" && mod !== null ? { ...mod } : {};
+}
+
 const isPack = (x: unknown): x is ControlPack =>
-  !!x && typeof x === "object" && typeof (x as ControlPack).id === "string" &&
+  !!x &&
+  typeof x === "object" &&
+  typeof (x as ControlPack).id === "string" &&
   Array.isArray((x as ControlPack).controls);
 
 /** Every pack in `dir` (each folder with a pack.ts), sorted by folder; a pack that fails to load is a problem, not an error. */
@@ -179,17 +187,13 @@ export async function loadControlPacks(
 ): Promise<{ packs: LoadedPack[]; problems: string[] }> {
   const packs: LoadedPack[] = [];
   const problems: string[] = [];
-  if (!(await exists(dir))) return { packs, problems };
-  const names: string[] = [];
-  for await (const e of Deno.readDir(dir)) {
-    if (e.isDirectory && !e.name.startsWith("_")) names.push(e.name);
-  }
-  for (const n of names.sort()) {
-    const f = join(dir, n, "pack.ts");
-    if (!(await exists(f))) continue;
+  const names = (await fs.listDirs(dir)).filter((n) => !n.startsWith("_"));
+  for (const n of names) {
+    const f = path.join(dir, n, "pack.ts");
+    if (!(await fs.exists(f))) continue;
     try {
-      const mod = await import(toFileUrl(f).href + `?t=${Date.now()}`);
-      const pack = mod.pack ?? mod.default;
+      const mod = await importFresh(f);
+      const pack = mod["pack"] ?? mod["default"];
       if (!isPack(pack)) {
         problems.push(
           `controls/${n}/pack.ts exports no pack (export const pack = defineControlPack(...))`,
@@ -200,9 +204,9 @@ export async function loadControlPacks(
         problems.push(`controls/${n}: a second pack named ${pack.id}`);
         continue;
       }
-      packs.push({ dir: join(dir, n), pack });
+      packs.push({ dir: path.join(dir, n), pack });
     } catch (e) {
-      problems.push(`controls/${n}/pack.ts: ${(e as Error).message.split("\n")[0]}`);
+      problems.push(`controls/${n}/pack.ts: ${toError(e).message.split("\n")[0]}`);
     }
   }
   return { packs, problems };
@@ -210,9 +214,10 @@ export async function loadControlPacks(
 
 /** The risks the owner accepted for the fleet's packs (controls/accepted.ts), or none. */
 export async function loadAccepted(dir: string = controlsDir()): Promise<Acceptance[]> {
-  const f = join(dir, "accepted.ts");
-  if (!(await exists(f))) return [];
-  return ((await import(toFileUrl(f).href + `?t=${Date.now()}`)).accepted ?? []) as Acceptance[];
+  const f = path.join(dir, "accepted.ts");
+  if (!(await fs.exists(f))) return [];
+  const accepted = (await importFresh(f))["accepted"];
+  return Array.isArray(accepted) ? (accepted as Acceptance[]) : [];
 }
 
 /** The name an osquery answer is kept under in this PC's state. */
@@ -275,7 +280,7 @@ export async function runFleetPacks(
   const dir = i.dir ?? controlsDir();
   const { packs, problems } = await loadControlPacks(dir);
   const accepted = await loadAccepted(dir).catch((e) => {
-    problems.push(`controls/accepted.ts: ${(e as Error).message.split("\n")[0]}`);
+    problems.push(`controls/accepted.ts: ${toError(e).message.split("\n")[0]}`);
     return [];
   });
   const adopted = i.adopted ?? [];

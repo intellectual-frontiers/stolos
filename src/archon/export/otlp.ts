@@ -19,7 +19,12 @@
  * With `entities`, inventory also becomes OpenTelemetry entity events
  * (`entity.state`, a Development-status part of the specification), one per
  * machine (`host`) and per other node: off by default, since receivers may
- * not understand them yet. People and accounts are never entity events.
+ * not understand them yet. People and accounts are never entity events. The
+ * entity's type is the attribute `entity.type`; its identity and description
+ * (maps) are the record's body, `entity.id` and `entity.description`, since
+ * IFC TypeScript's attributes hold no maps.
+ *
+ * The request is encoded by IFC TypeScript's kernel (`otlp.encodeLogs`).
  *
  * ```mermaid
  * flowchart LR
@@ -32,45 +37,11 @@
  * @module
  */
 
-import { OCSF_CLASSES } from "../ocsf/types.auto.ts";
-import { otlpAttributes, type OtlpKeyValue, otlpValue } from "../telemetry/events.ts";
-import type { OtlpAnyValue } from "../telemetry/events.ts";
+import { type JsonObject, type otel, otlp } from "@intellectual-frontiers/ifc-ts/kernel";
+import { grc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { ocsfClassName } from "../ocsf/classes.ts";
 import { VERSION } from "../version.ts";
 import type { OcsfEvent } from "./ocsf.ts";
-
-/** One OTLP LogRecord (OTLP/HTTP JSON). */
-export interface OtlpLogRecord {
-  /** When it happened, in nanoseconds since the epoch (a decimal string). */
-  timeUnixNano: string;
-  /** When it was observed (the same, for an export). */
-  observedTimeUnixNano: string;
-  /** OpenTelemetry's severity number (9 INFO, 13 WARN). */
-  severityNumber: number;
-  /** The severity's name. */
-  severityText: string;
-  /** The event's name (OpenTelemetry semantic conventions for events). */
-  eventName: string;
-  /** The record's body: the OCSF event, or nothing for an entity event. */
-  body?: OtlpAnyValue;
-  /** Its attributes. */
-  attributes: OtlpKeyValue[];
-}
-
-/** An OTLP logs export request (ExportLogsServiceRequest, OTLP/HTTP JSON). */
-export interface OtlpLogsRequest {
-  /** One resource (Stolos for this fleet) and its records. */
-  resourceLogs: Array<{
-    /** Who produced the records. */
-    resource: { attributes: OtlpKeyValue[] };
-    /** The instrumentation scope and its records. */
-    scopeLogs: Array<{
-      /** The scope: stolos.export. */
-      scope: { name: string; version: string };
-      /** The records. */
-      logRecords: OtlpLogRecord[];
-    }>;
-  }>;
-}
 
 /** Options for the request. */
 export interface OtlpOptions {
@@ -82,69 +53,76 @@ export interface OtlpOptions {
   now?: Date;
 }
 
-const nanos = (msTime: number): string => String(BigInt(Math.round(msTime)) * 1_000_000n);
+const nanos = (msTime: number): bigint => BigInt(Math.round(msTime)) * 1_000_000n;
 
-/** The OCSF class name for a class uid (`compliance_finding` for 2003). */
-export function ocsfClassName(uid: number): string {
-  return Object.entries(OCSF_CLASSES).find(([, c]) => c.uid === uid)?.[0] ?? `class_${uid}`;
-}
-
-/** One OCSF event as an OTLP LogRecord. */
-export function ocsfLogRecord(e: OcsfEvent): OtlpLogRecord {
+/** One OCSF event as an OpenTelemetry log record: the event is its body. */
+export function ocsfLogRecord(e: OcsfEvent): otel.LogRecord {
   const warn = e.class_uid === 2003 && e.compliance.status_id !== 1;
   const t = nanos(e.time);
+  const body = grc.toAnyValue(e);
   return {
-    timeUnixNano: t,
-    observedTimeUnixNano: t,
+    time: t,
+    observedTime: t,
     severityNumber: warn ? 13 : 9,
     severityText: warn ? "WARN" : "INFO",
     eventName: `ocsf.${ocsfClassName(e.class_uid)}`,
-    body: otlpValue(e),
-    attributes: otlpAttributes({
-      "ocsf.class_uid": e.class_uid,
-      "ocsf.category_uid": e.category_uid,
-    }),
+    ...(body === undefined ? {} : { body }),
+    attributes: {
+      "ocsf.class_uid": BigInt(e.class_uid),
+      "ocsf.category_uid": BigInt(e.category_uid),
+    },
+    droppedAttributesCount: 0,
   };
 }
 
 /** An inventory event as an OpenTelemetry entity.state event, or undefined (people, findings). */
-export function entityRecord(e: OcsfEvent, now?: Date): OtlpLogRecord | undefined {
+export function entityRecord(e: OcsfEvent, now?: Date): otel.LogRecord | undefined {
   const t = nanos(now?.getTime() ?? e.time);
-  const record = (type: string, id: Record<string, string>, description: object) => ({
-    timeUnixNano: t,
-    observedTimeUnixNano: t,
+  const record = (
+    type: string,
+    id: Record<string, string>,
+    description: Record<string, string>,
+  ): otel.LogRecord => ({
+    time: t,
+    observedTime: t,
     severityNumber: 9,
     severityText: "INFO",
     eventName: "entity.state",
-    attributes: otlpAttributes({
-      "entity.type": type,
-      "entity.id": id,
-      "entity.description": description,
-    }),
+    body: { "entity.id": id, "entity.description": description },
+    attributes: { "entity.type": type },
+    droppedAttributesCount: 0,
   });
   if (e.class_uid === 5001) {
     const d = e.device;
-    return record("host", { "host.id": d.uid ?? "" }, {
-      ...(d.hostname ? { "host.name": d.hostname } : {}),
-      ...(d.type ? { "host.type": d.type } : {}),
-      ...(d.os ? { "os.name": d.os.name } : {}),
-      ...(d.model ? { "host.model": d.model } : {}),
-    });
+    return record(
+      "host",
+      { "host.id": d.uid ?? "" },
+      {
+        ...(d.hostname ? { "host.name": d.hostname } : {}),
+        ...(d.type ? { "host.type": d.type } : {}),
+        ...(d.os ? { "os.name": d.os.name } : {}),
+        ...(d.model ? { "host.model": d.model } : {}),
+      },
+    );
   }
   if (e.class_uid === 5023) {
-    const r = e.resources?.[0];
+    const r = e.resources[0];
     if (!r?.uid) return undefined;
-    const connector = r.tags?.find((t) => t.name === "connector")?.value;
-    return record(`stolos.${r.type ?? "resource"}`, { "stolos.node.uid": r.uid }, {
-      ...(r.name ? { "stolos.node.name": r.name } : {}),
-      ...(connector ? { "stolos.connector": connector } : {}),
-    });
+    const connector = r.tags?.find((x) => x.name === "connector")?.value;
+    return record(
+      `stolos.${r.type ?? "resource"}`,
+      { "stolos.node.uid": r.uid },
+      {
+        ...(r.name ? { "stolos.node.name": r.name } : {}),
+        ...(connector ? { "stolos.connector": connector } : {}),
+      },
+    );
   }
   return undefined;
 }
 
-/** The OTLP logs request for these events (and entity events, when asked). */
-export function otlpLogsRequest(events: readonly OcsfEvent[], o: OtlpOptions): OtlpLogsRequest {
+/** The OTLP/HTTP JSON logs request (ExportLogsServiceRequest) for these events, and entity events when asked. */
+export function otlpLogsRequest(events: readonly OcsfEvent[], o: OtlpOptions): JsonObject {
   const records = events.map(ocsfLogRecord);
   if (o.entities) {
     for (const e of events) {
@@ -152,16 +130,17 @@ export function otlpLogsRequest(events: readonly OcsfEvent[], o: OtlpOptions): O
       if (r) records.push(r);
     }
   }
-  return {
-    resourceLogs: [{
+  return otlp.encodeLogs([
+    {
       resource: {
-        attributes: otlpAttributes({
+        attributes: {
           "service.name": "stolos",
           "service.version": VERSION,
           "service.namespace": o.fleet,
-        }),
+        },
       },
-      scopeLogs: [{ scope: { name: "stolos.export", version: VERSION }, logRecords: records }],
-    }],
-  };
+      scope: { name: "stolos.export", version: VERSION },
+      records,
+    },
+  ]);
 }

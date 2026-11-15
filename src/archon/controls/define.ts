@@ -98,7 +98,8 @@ export interface ControlBase {
 export type EstateQuery = string | Readonly<Record<string, string>>;
 
 /** The answer to an estate query: its rows, or each named query's rows. */
-export type EstateRows<Q extends EstateQuery> = Q extends string ? Row[]
+export type EstateRows<Q extends EstateQuery> = Q extends string
+  ? Row[]
   : { [K in keyof Q]: Row[] };
 
 /** A control over the estate graph: SQL, read-only, one result across systems. */
@@ -126,8 +127,9 @@ export interface OsqueryControl extends ControlBase {
 }
 
 /** A control over an observation Stolos holds: one result per machine, device, or account. */
-export interface ObservationControl<K extends ObservationKind = ObservationKind>
-  extends ControlBase {
+export interface ObservationControl<
+  K extends ObservationKind = ObservationKind,
+> extends ControlBase {
   /** It reads an observation. */
   subject: "observation";
   /** Which kind of observation. */
@@ -144,11 +146,7 @@ export type AnyObservationControl = {
 }[ObservationKind];
 
 /** Any control. */
-export type Control =
-  // deno-lint-ignore no-explicit-any
-  | EstateControl<any>
-  | OsqueryControl
-  | AnyObservationControl;
+export type Control = EstateControl<EstateQuery> | OsqueryControl | AnyObservationControl;
 
 /** A pack: controls shared together, versioned. */
 export interface ControlPack {
@@ -173,7 +171,7 @@ export function controlProblems(c: Control): string[] {
   if (!ID.test(c.id ?? "")) out.push(`${at}: its id must be lower case letters, digits, hyphens`);
   if (!c.title?.trim()) out.push(`${at}: it needs a title`);
   if (!c.scf?.length) out.push(`${at}: it needs at least one SCF control`);
-  for (const x of c.scf ?? []) {
+  for (const x of (c.scf ?? []) as readonly string[]) {
     if (!isScfId(x)) out.push(`${at}: ${x} is not an SCF control Stolos knows`);
   }
   if (!["estate", "osquery", "observation"].includes(c.subject)) {

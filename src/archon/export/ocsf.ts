@@ -1,8 +1,9 @@
 /**
  * Spec 092: the estate and the compliance view as OCSF 1.9.0 events, one
  * JSON object per line (JSON Lines), for a SIEM or a data lake to read
- * without a parser of its own. Every event is typed by the generated OCSF
- * types, so a missing required attribute does not compile.
+ * without a parser of its own. Every event is written by IFC TypeScript's
+ * kernel (`ocsf`), typed by its OCSF 1.9.0 types, so a missing required
+ * attribute does not compile; the mapping from the estate's rows is Stolos's.
  *
  * | What | OCSF class | One event per |
  * | --- | --- | --- |
@@ -32,49 +33,29 @@
  * @module
  */
 
+import { grc, ocsf } from "@intellectual-frontiers/ifc-ts/kernel";
 import type { ScfCatalog } from "../compliance/catalog.ts";
+import { instantOfDate } from "../compliance/findings.ts";
 import { allEvidence } from "../compliance/oscal.ts";
 import type { ComplianceView } from "../compliance/report.ts";
 import type { Estate } from "../estate/graph.ts";
-import { complianceFindings } from "../ocsf/finding.ts";
-import {
-  OCSF_VERSION,
-  type OcsfAccount,
-  type OcsfCloudResourcesInventoryInfo,
-  type OcsfComplianceFinding,
-  type OcsfDevice,
-  type OcsfDeviceInventoryInfo,
-  type OcsfLdapPerson,
-  type OcsfMetadata,
-  type OcsfOs,
-  type OcsfUser,
-  type OcsfUserInventoryInfo,
-  type OcsfVulnerabilityFinding,
-} from "../ocsf/types.auto.ts";
-import { VERSION } from "../version.ts";
+import { complianceFindings, OCSF_PRODUCT } from "../ocsf/finding.ts";
 
-/** One OCSF event Stolos exports. */
-export type OcsfEvent =
-  | OcsfUserInventoryInfo
-  | OcsfDeviceInventoryInfo
-  | OcsfCloudResourcesInventoryInfo
-  | OcsfComplianceFinding
-  | OcsfVulnerabilityFinding;
-
-/** What every event's metadata names: the product, and the fleet as the tenant. */
-export function ocsfMetadata(fleet: string, extra: Partial<OcsfMetadata> = {}): OcsfMetadata {
-  return {
-    version: OCSF_VERSION,
-    product: { name: "Stolos", vendor_name: "Intellectual Frontiers LLC", version: VERSION },
-    tenant_uid: fleet,
-    ...extra,
-  };
-}
+/** One OCSF event Stolos exports (the kernel's: inventories and findings). */
+export type OcsfEvent = ocsf.OcsfEvent;
 
 type Row = Record<string, unknown>;
 
 const str = (v: unknown): string | undefined =>
-  v === null || v === undefined || v === "" ? undefined : String(v);
+  typeof v === "string"
+    ? v === ""
+      ? undefined
+      : v
+    : typeof v === "number" || typeof v === "boolean" || typeof v === "bigint"
+      ? String(v)
+      : undefined;
+/** A column as text ("" where it is empty or not a scalar). */
+const text = (v: unknown): string => str(v) ?? "";
 const bool = (v: unknown): boolean | undefined =>
   v === null || v === undefined ? undefined : v === true || v === 1 || v === "1" || v === "true";
 const ms = (iso: unknown): number | undefined => {
@@ -92,7 +73,7 @@ function at(iso: unknown): { t: number } | undefined {
 }
 
 /** OCSF's operating system type, from its name (0 Unknown when Stolos cannot tell). */
-export function osTypeId(name: string): OcsfOs["type_id"] {
+export function osTypeId(name: string): ocsf.OcsfOs["type_id"] {
   const n = name.toLowerCase();
   if (/windows/.test(n)) return 100;
   if (/android/.test(n)) return 201;
@@ -102,15 +83,20 @@ export function osTypeId(name: string): OcsfOs["type_id"] {
   return 0;
 }
 
-const DEVICE_TYPE: Record<string, { type_id: OcsfDevice["type_id"]; type: string }> = {
+type DeviceType = { type_id: ocsf.OcsfDevice["type_id"]; type: string };
+const UNKNOWN_DEVICE: DeviceType = { type_id: 0, type: "Unknown" };
+const DEVICE_TYPE: Record<string, DeviceType> = {
   server: { type_id: 1, type: "Server" },
   workstation: { type_id: 99, type: "Workstation" },
   network_device: { type_id: 99, type: "Network Device" },
-  other: { type_id: 0, type: "Unknown" },
+  other: UNKNOWN_DEVICE,
 };
 
 /** OCSF's account type for a connector's tenant (99 Other, named by the connector, otherwise). */
-const ACCOUNT_TYPE: Record<string, { type_id: OcsfAccount["type_id"]; type: string }> = {
+const ACCOUNT_TYPE: Record<
+  string,
+  { type_id: Exclude<ocsf.OcsfAccount["type_id"], undefined>; type: string }
+> = {
   aws: { type_id: 10, type: "AWS Account" },
   google: { type_id: 15, type: "Google Workspace" },
   microsoft: { type_id: 17, type: "M365 Tenant" },
@@ -121,7 +107,7 @@ const rows = (e: Estate, sql: string): Row[] =>
 
 const props = (r: Row): Row => {
   try {
-    const p: unknown = JSON.parse(String(r.props ?? "{}"));
+    const p: unknown = JSON.parse(str(r["props"]) ?? "{}");
     return p && typeof p === "object" && !Array.isArray(p) ? { ...p } : {};
   } catch {
     return {};
@@ -138,203 +124,211 @@ export interface OcsfOptions {
   now: Date;
 }
 
+/** The kernel's inventory options: Stolos, the time, the fleet as the tenant, and more metadata. */
+function inventory(
+  o: OcsfOptions,
+  metadata: ocsf.MetadataExtra,
+  unmapped?: ocsf.OcsfOpenObject,
+): ocsf.InventoryOptions {
+  return {
+    product: OCSF_PRODUCT,
+    at: instantOfDate(o.now),
+    metadata: { tenant_uid: o.fleet, ...metadata },
+    ...(unmapped === undefined ? {} : { unmapped }),
+  };
+}
+
 /** The person's User Inventory Info event. */
-function personEvent(p: Row, manager: Row | undefined, o: OcsfOptions): OcsfUserInventoryInfo {
-  const hire = at(p.start_date);
-  const leave = at(p.end_date);
-  const ldap: OcsfLdapPerson = {
-    ...(str(p.name) ? { display_name: str(p.name) } : {}),
-    ...(str(p.type) ? { labels: [String(p.type)] } : {}),
+function personEvent(p: Row, manager: Row | undefined, o: OcsfOptions): ocsf.UserInventoryEvent {
+  const hire = at(p["start_date"]);
+  const leave = at(p["end_date"]);
+  const name = str(p["name"]);
+  const type = str(p["type"]);
+  const email = str(p["email_addr"]);
+  const managerEmail = manager === undefined ? undefined : str(manager["email_addr"]);
+  const ldap: ocsf.OcsfLdapPerson = {
+    ...(name === undefined ? {} : { display_name: name }),
+    ...(type === undefined ? {} : { labels: [type] }),
     ...(hire ? { hire_time: hire.t } : {}),
     ...(leave ? { leave_time: leave.t } : {}),
     ...(manager
       ? {
-        manager: {
-          uid: String(manager.uid),
-          ...(str(manager.email_addr) ? { email_addr: str(manager.email_addr) } : {}),
-        },
-      }
+          manager: {
+            uid: text(manager["uid"]),
+            ...(managerEmail === undefined ? {} : { email_addr: managerEmail }),
+          },
+        }
       : {}),
   };
-  const user: OcsfUser = {
-    uid: String(p.uid),
+  const user: ocsf.OcsfUser = {
+    uid: text(p["uid"]),
     type_id: 1,
     type: "User",
-    ...(str(p.name) ? { full_name: str(p.name) } : {}),
-    ...(str(p.email_addr) ? { email_addr: str(p.email_addr) } : {}),
+    ...(name === undefined ? {} : { full_name: name }),
+    ...(email === undefined ? {} : { email_addr: email }),
     org: { uid: o.fleet, ...(o.fleetTitle ? { name: o.fleetTitle } : {}) },
     ...(Object.keys(ldap).length ? { ldap_person: ldap } : {}),
   };
-  return {
-    class_uid: 5003,
-    category_uid: 5,
-    activity_id: 2,
-    type_uid: 500302,
-    severity_id: 1,
-    time: o.now.getTime(),
-    metadata: ocsfMetadata(o.fleet, { uid: String(p.uid), labels: ["person"] }),
+  return ocsf.userInventoryInfo(
     user,
-    unmapped: { status: String(p.status) },
-  };
+    inventory(o, { uid: text(p["uid"]), labels: ["person"] }, { status: text(p["status"]) }),
+  );
 }
 
 /** An account's User Inventory Info event, tied to its person when it has one. */
-function accountEvent(a: Row, person: string | undefined, o: OcsfOptions): OcsfUserInventoryInfo {
+function accountEvent(a: Row, person: string | undefined, o: OcsfOptions): ocsf.UserInventoryEvent {
   const pr = props(a);
-  const connector = String(a.connector);
+  const connector = text(a["connector"]);
   const acct = ACCOUNT_TYPE[connector] ?? { type_id: 99 as const, type: connector };
-  const account: OcsfAccount = {
-    uid: String(a.tenant_uid),
-    name: String(a.tenant_name),
+  const active = bool(pr["active"]);
+  const account: ocsf.OcsfAccount = {
+    uid: text(a["tenant_uid"]),
+    name: text(a["tenant_name"]),
     ...acct,
-    ...(bool(pr.active) !== undefined ? { is_disabled: !bool(pr.active) } : {}),
+    ...(active === undefined ? {} : { is_disabled: !active }),
   };
-  const service = bool(pr.service) === true;
-  const admin = bool(pr.admin) === true;
-  const login = at(pr.last_login);
-  const user: OcsfUser = {
-    uid: String(a.node_uid),
-    name: String(a.display_name ?? a.native_id),
+  const service = bool(pr["service"]) === true;
+  const admin = bool(pr["admin"]) === true;
+  const login = at(pr["last_login"]);
+  const email = str(pr["email"]);
+  const mfa = bool(pr["mfa"]);
+  const user: ocsf.OcsfUser = {
+    uid: text(a["node_uid"]),
+    name: text(a["display_name"] ?? a["native_id"]),
     type_id: service ? 4 : admin ? 2 : 1,
     type: service ? "Service" : admin ? "Admin" : "User",
-    ...(str(pr.email) ? { email_addr: str(pr.email) } : {}),
-    ...(bool(pr.mfa) !== undefined ? { has_mfa: bool(pr.mfa) } : {}),
+    ...(email === undefined ? {} : { email_addr: email }),
+    ...(mfa === undefined ? {} : { has_mfa: mfa }),
     account,
     ...(login ? { ldap_person: { last_login_time: login.t } } : {}),
   };
-  return {
-    class_uid: 5003,
-    category_uid: 5,
-    activity_id: 2,
-    type_uid: 500302,
-    severity_id: 1,
-    time: o.now.getTime(),
-    metadata: ocsfMetadata(o.fleet, {
-      uid: String(a.node_uid),
-      labels: ["user_account", ...(bool(a.stale) ? ["stale"] : [])],
+  return ocsf.userInventoryInfo(
+    user,
+    inventory(o, {
+      uid: text(a["node_uid"]),
+      labels: ["user_account", ...(bool(a["stale"]) ? ["stale"] : [])],
       ...(person ? { correlation_uid: person } : {}),
     }),
-    user,
-  };
+  );
 }
 
 /** A machine's Device Inventory Info event. */
-function deviceEvent(d: Row, o: OcsfOptions): OcsfDeviceInventoryInfo {
-  const t = DEVICE_TYPE[String(d.type)] ?? DEVICE_TYPE.other;
-  const os = str(d.os_name);
-  const owner = str(d.owner_email_addr);
-  const first = at(d.first_seen_time_dt);
-  const last = at(d.last_seen_time_dt);
-  const device: OcsfDevice = {
-    uid: String(d.uid),
+function deviceEvent(d: Row, o: OcsfOptions): ocsf.DeviceInventoryEvent {
+  const t = DEVICE_TYPE[text(d["type"])] ?? UNKNOWN_DEVICE;
+  const os = str(d["os_name"]);
+  const owner = str(d["owner_email_addr"]);
+  const hostname = str(d["hostname"]);
+  const model = str(d["model"]);
+  const serial = str(d["serial_number"]);
+  const first = at(d["first_seen_time_dt"]);
+  const last = at(d["last_seen_time_dt"]);
+  const device: ocsf.OcsfDevice = {
+    uid: text(d["uid"]),
     ...t,
-    ...(str(d.hostname) ? { hostname: str(d.hostname), name: str(d.hostname) } : {}),
-    ...(str(d.model) ? { model: str(d.model) } : {}),
-    ...(str(d.serial_number) ? { hw_info: { serial_number: str(d.serial_number) } } : {}),
-    ...(os ? { os: { name: os, type_id: osTypeId(os) } } : {}),
-    is_managed: bool(d.is_managed) === true,
-    ...(owner ? { owner: { uid: `person:${owner}`, email_addr: owner } } : {}),
+    ...(hostname === undefined ? {} : { hostname, name: hostname }),
+    ...(model === undefined ? {} : { model }),
+    ...(serial === undefined ? {} : { hw_info: { serial_number: serial } }),
+    ...(os === undefined ? {} : { os: { name: os, type_id: osTypeId(os) } }),
+    is_managed: bool(d["is_managed"]) === true,
+    ...(owner === undefined ? {} : { owner: { uid: `person:${owner}`, email_addr: owner } }),
     ...(first ? { first_seen_time: first.t } : {}),
     ...(last ? { last_seen_time: last.t } : {}),
   };
-  const encrypted = bool(d.is_encrypted);
-  return {
-    class_uid: 5001,
-    category_uid: 5,
-    activity_id: 2,
-    type_uid: 500102,
-    severity_id: 1,
-    time: o.now.getTime(),
-    metadata: ocsfMetadata(o.fleet, { uid: String(d.uid), labels: ["fixed_asset"] }),
+  const encrypted = bool(d["is_encrypted"]);
+  return ocsf.deviceInventoryInfo(
     device,
-    ...(encrypted !== undefined ? { unmapped: { is_encrypted: encrypted } } : {}),
-  };
+    inventory(
+      o,
+      { uid: text(d["uid"]), labels: ["fixed_asset"] },
+      encrypted === undefined ? undefined : { is_encrypted: encrypted },
+    ),
+  );
 }
 
 /** Any other node's Cloud Resources Inventory Info event. */
-function resourceEvent(n: Row, labels: string[], o: OcsfOptions): OcsfCloudResourcesInventoryInfo {
-  return {
-    class_uid: 5023,
-    category_uid: 5,
-    activity_id: 2,
-    type_uid: 502302,
-    severity_id: 1,
-    time: o.now.getTime(),
-    metadata: ocsfMetadata(o.fleet, {
-      uid: String(n.node_uid),
-      labels: [String(n.label), ...(bool(n.stale) ? ["stale"] : [])],
+function resourceEvent(
+  n: Row,
+  labels: string[],
+  o: OcsfOptions,
+): ocsf.CloudResourcesInventoryEvent {
+  return ocsf.cloudResourcesInventoryInfo(
+    [
+      {
+        uid: text(n["node_uid"]),
+        name: text(n["display_name"] ?? n["native_id"]),
+        type: text(n["label"]),
+        labels,
+        namespace: text(n["tenant_uid"]),
+        tags: [{ name: "connector", value: text(n["connector"]) }],
+        data: props(n),
+      },
+    ],
+    inventory(o, {
+      uid: text(n["node_uid"]),
+      labels: [text(n["label"]), ...(bool(n["stale"]) ? ["stale"] : [])],
     }),
-    resources: [{
-      uid: String(n.node_uid),
-      name: String(n.display_name ?? n.native_id),
-      type: String(n.label),
-      labels,
-      namespace: String(n.tenant_uid),
-      tags: [{ name: "connector", value: String(n.connector) }],
-      data: props(n),
-    }],
-  };
+  );
 }
 
-const SEVERITY_ID: Record<string, OcsfVulnerabilityFinding["severity_id"]> = {
-  info: 1,
-  low: 2,
-  medium: 3,
-  high: 4,
-  critical: 5,
-};
-const SEVERITY_NAME = ["Unknown", "Informational", "Low", "Medium", "High", "Critical"];
-const STATUS_ID: Record<string, OcsfVulnerabilityFinding["status_id"]> = {
-  open: 1,
-  dismissed: 3,
-  fixed: 4,
+const isSeverity = (s: string): s is grc.Severity =>
+  (grc.SEVERITIES as readonly string[]).includes(s);
+const STATUS: Record<string, ocsf.VulnerabilityStatus> = {
+  open: "new",
+  dismissed: "suppressed",
+  fixed: "resolved",
 };
 
 /** Spec 088: a scanner's vulnerability record as an OCSF Vulnerability Finding. */
-function vulnerabilityEvent(n: Row, o: OcsfOptions): OcsfVulnerabilityFinding {
+function vulnerabilityEvent(n: Row, o: OcsfOptions): ocsf.VulnerabilityFindingEvent {
   const p = props(n);
-  const severity_id = SEVERITY_ID[String(p.severity)] ?? 0;
-  const status_id = STATUS_ID[String(p.status)] ?? 0;
-  const first = at(p.first_seen);
-  const cve = str(p.cve);
-  const title = str(p.title) ?? String(n.display_name ?? n.native_id);
-  const asset = str(p.asset);
+  const severity = text(p["severity"]);
+  const status = STATUS[text(p["status"])];
+  const first = at(p["first_seen"]);
+  const cve = str(p["cve"]);
+  const title = str(p["title"]) ?? text(n["display_name"] ?? n["native_id"]);
+  const asset = str(p["asset"]);
+  const src = str(p["src_url"]);
+  const fix = bool(p["fix_available"]);
   // "name@version" (an npm package's name may start with @).
-  const at2 = String(p.package ?? "").lastIndexOf("@");
-  const pkg = at2 > 0
-    ? { name: String(p.package).slice(0, at2), version: String(p.package).slice(at2 + 1) }
-    : undefined;
-  return {
-    class_uid: 2002,
-    category_uid: 2,
-    activity_id: 1,
-    type_uid: 200201,
-    severity_id,
-    severity: SEVERITY_NAME[severity_id],
-    status_id,
-    time: o.now.getTime(),
-    metadata: ocsfMetadata(o.fleet, {
-      uid: String(n.node_uid),
-      labels: [String(n.label), ...(bool(n.stale) ? ["stale"] : [])],
-    }),
-    finding_info: {
-      uid: String(n.node_uid),
+  const spec = text(p["package"]);
+  const split = spec.lastIndexOf("@");
+  const pkg =
+    split > 0 ? { name: spec.slice(0, split), version: spec.slice(split + 1) } : undefined;
+  const caption = isSeverity(severity) ? ocsf.OCSF_SEVERITY[severity].caption : "Unknown";
+  return ocsf.vulnerabilityFinding(
+    {
+      uid: text(n["node_uid"]),
       title,
-      data_sources: [String(n.connector)],
-      ...(first ? { first_seen_time: first.t } : {}),
-      ...(str(p.src_url) ? { src_url: str(p.src_url) } : {}),
+      ...(isSeverity(severity) ? { severity } : {}),
+      ...(status === undefined ? {} : { status }),
+      vulnerabilities: [
+        {
+          title,
+          severity: caption,
+          // OCSF needs a CVE, a CWE, or an advisory: without a CVE, the scanner's own finding.
+          ...(cve ? { cve: { uid: cve } } : { advisory: { uid: text(n["native_id"]), title } }),
+          ...(fix === undefined ? {} : { is_fix_available: fix }),
+          ...(pkg ? { affected_packages: [pkg] } : {}),
+          ...(first ? { first_seen_time: first.t } : {}),
+        },
+      ],
+      ...(asset ? { resources: [{ uid: asset, name: asset }] } : {}),
+      findingInfo: {
+        data_sources: [text(n["connector"])],
+        ...(first ? { first_seen_time: first.t } : {}),
+        ...(src === undefined ? {} : { src_url: src }),
+      },
     },
-    vulnerabilities: [{
-      title,
-      severity: SEVERITY_NAME[severity_id],
-      // OCSF needs a CVE, a CWE, or an advisory: without a CVE, the scanner's own finding.
-      ...(cve ? { cve: { uid: cve } } : { advisory: { uid: String(n.native_id), title } }),
-      ...(bool(p.fix_available) !== undefined ? { is_fix_available: bool(p.fix_available) } : {}),
-      ...(pkg ? { affected_packages: [pkg] } : {}),
-      ...(first ? { first_seen_time: first.t } : {}),
-    }],
-    ...(asset ? { resources: [{ uid: asset, name: asset }] } : {}),
-  };
+    {
+      product: OCSF_PRODUCT,
+      at: instantOfDate(o.now),
+      metadata: {
+        tenant_uid: o.fleet,
+        uid: text(n["node_uid"]),
+        labels: [text(n["label"]), ...(bool(n["stale"]) ? ["stale"] : [])],
+      },
+    },
+  );
 }
 
 /**
@@ -345,12 +339,12 @@ function vulnerabilityEvent(n: Row, o: OcsfOptions): OcsfVulnerabilityFinding {
 export function estateEvents(e: Estate, o: OcsfOptions): OcsfEvent[] {
   const out: OcsfEvent[] = [];
   const people = rows(e, "SELECT * FROM user_inventory ORDER BY uid");
-  const byUid = new Map(people.map((p) => [String(p.uid), p]));
+  const byUid = new Map(people.map((p) => [text(p["uid"]), p]));
   const managers = new Map(
     rows(
       e,
       "SELECT from_party_uid, to_party_uid FROM party_relationship WHERE party_relationship_type = 'reports_to'",
-    ).map((r) => [String(r.from_party_uid), String(r.to_party_uid)]),
+    ).map((r) => [text(r["from_party_uid"]), text(r["to_party_uid"])]),
   );
   const accounts = rows(
     e,
@@ -361,29 +355,30 @@ export function estateEvents(e: Estate, o: OcsfOptions): OcsfEvent[] {
      WHERE n.ocsf_class_uid = 5003 ORDER BY n.node_uid`,
   );
   for (const p of people) {
-    const m = managers.get(String(p.uid));
-    out.push(personEvent(p, m ? byUid.get(m) ?? { uid: m } : undefined, o));
-    for (const a of accounts.filter((x) => x.person_uid === p.uid)) {
-      out.push(accountEvent(a, String(p.uid), o));
+    const m = managers.get(text(p["uid"]));
+    out.push(personEvent(p, m ? (byUid.get(m) ?? { uid: m }) : undefined, o));
+    for (const a of accounts.filter((x) => x["person_uid"] === p["uid"])) {
+      out.push(accountEvent(a, text(p["uid"]), o));
     }
   }
-  for (const a of accounts.filter((x) => !x.person_uid || !byUid.has(String(x.person_uid)))) {
+  for (const a of accounts.filter((x) => !x["person_uid"] || !byUid.has(text(x["person_uid"])))) {
     out.push(accountEvent(a, undefined, o));
   }
   for (const d of rows(e, "SELECT * FROM device ORDER BY uid")) out.push(deviceEvent(d, o));
   const labels = new Map<string, string[]>();
   for (const l of rows(e, "SELECT node_uid, label FROM node_label ORDER BY node_uid, label")) {
-    labels.set(String(l.node_uid), [...(labels.get(String(l.node_uid)) ?? []), String(l.label)]);
+    const k = text(l["node_uid"]);
+    labels.set(k, [...(labels.get(k) ?? []), text(l["label"])]);
   }
-  for (
-    const n of rows(
-      e,
-      `SELECT n.*, t.connector FROM node n JOIN tenant t ON t.tenant_uid = n.tenant_uid
+  for (const n of rows(
+    e,
+    `SELECT n.*, t.connector FROM node n JOIN tenant t ON t.tenant_uid = n.tenant_uid
        WHERE coalesce(n.ocsf_class_uid, 0) <> 5003 ORDER BY n.node_uid`,
-    )
-  ) {
-    if (Number(n.ocsf_class_uid) === 2002) out.push(vulnerabilityEvent(n, o));
-    else out.push(resourceEvent(n, labels.get(String(n.node_uid)) ?? [String(n.label)], o));
+  )) {
+    if (Number(n["ocsf_class_uid"]) === 2002) out.push(vulnerabilityEvent(n, o));
+    else {
+      out.push(resourceEvent(n, labels.get(text(n["node_uid"])) ?? [text(n["label"])], o));
+    }
   }
   return out;
 }
@@ -392,13 +387,13 @@ export function estateEvents(e: Estate, o: OcsfOptions): OcsfEvent[] {
 export function complianceEvents(
   view: ComplianceView,
   o: OcsfOptions & { catalog?: ScfCatalog },
-): OcsfComplianceFinding[] {
+): ocsf.ComplianceFindingEvent[] {
   return allEvidence(view).flatMap((e) =>
     complianceFindings(e, {
       now: o.now,
       fleet: o.fleet,
       ...(o.catalog ? { catalog: o.catalog } : {}),
-    })
+    }),
   );
 }
 

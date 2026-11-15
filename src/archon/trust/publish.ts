@@ -32,7 +32,7 @@
  * @module
  */
 
-import { unzipSync } from "npm:fflate@0.8.2";
+import { unzip } from "@intellectual-frontiers/ifc-ts/kernel";
 import {
   forNamespace,
   type Item,
@@ -151,12 +151,14 @@ export function summaryItems(m: TrustModel): Item[] {
   const json = (x: unknown) => enc.encode(JSON.stringify(x, null, 2) + "\n");
   return [
     { kind: "summary", name: INDEX_ITEM, at: m.created, content: json(publicIndex(m)) },
-    ...m.controls.filter((c) => c.checks.length).map((c) => ({
-      kind: "summary" as const,
-      name: controlItemName(c.id),
-      at: c.freshness.newest ?? m.created,
-      content: json(publicControl(c)),
-    })),
+    ...m.controls
+      .filter((c) => c.checks.length)
+      .map((c) => ({
+        kind: "summary" as const,
+        name: controlItemName(c.id),
+        at: c.freshness.newest ?? m.created,
+        content: json(publicControl(c)),
+      })),
   ];
 }
 
@@ -166,7 +168,9 @@ export function summaryItems(m: TrustModel): Item[] {
  * the namespace bundles are signed in.
  */
 export function signerLines(allowed: string, signer: string): string {
-  const lines = forNamespace(allowed, NAMESPACE).split("\n").map((l) => l.trim())
+  const lines = forNamespace(allowed, NAMESPACE)
+    .split("\n")
+    .map((l) => l.trim())
     .filter((l) => l && !l.startsWith("#") && l.split(/\s+/)[0] === signer)
     .map((l) => {
       const p = l.split(/\s+/);
@@ -195,7 +199,7 @@ export async function summaryBundle(
   sign: Signer,
   o: { stolos: string; now: Date },
 ): Promise<SummaryBundle> {
-  const files = unzipSync(full);
+  const files = await unpacked(full);
   const allowed = dec.decode(files["allowed_signers"] ?? new Uint8Array());
   const items = summaryItems(m);
   const manifest = await manifestFor(items, {
@@ -218,13 +222,15 @@ export async function summaryBundle(
       }`,
     );
   }
-  const zip = packBundle(items, manifest, sig, signerLines(allowed, m.signer));
+  const zip = await packBundle(items, manifest, sig, signerLines(allowed, m.signer));
   const v = await verifyBundle(zip);
   if (!v.ok) throw new Error(`the summary bundle does not verify: ${v.problems.join("; ")}`);
   return { zip, manifest };
 }
 
 /** A bundle's files, to publish unzipped beside it (so each item is a link: objects/<sha256>). */
-export function unpacked(zip: Uint8Array): Record<string, Uint8Array> {
-  return unzipSync(zip);
+export async function unpacked(zip: Uint8Array): Promise<Record<string, Uint8Array>> {
+  const files = await unzip(zip);
+  if (files.kind === "err") throw new Error(`not a ZIP (${files.error.kind})`);
+  return Object.fromEntries(files.value);
 }

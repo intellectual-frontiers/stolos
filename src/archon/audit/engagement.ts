@@ -21,7 +21,7 @@
  * @module
  */
 
-import { exportedLiteral, tsLiteral } from "../core/ts-literal.ts";
+import { exportedLiteral, type Literal, tsLiteral } from "@intellectual-frontiers/ifc-ts/kernel";
 import { POPULATION_IDS, type PopulationId } from "./populations.ts";
 
 /** One person at the audit firm. */
@@ -89,8 +89,9 @@ const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
 /** Whether a string is a real day (YYYY-MM-DD). */
 export function isDay(s: unknown): s is string {
-  return typeof s === "string" && DAY.test(s) &&
-    new Date(`${s}T00:00:00Z`).toISOString().startsWith(s);
+  return (
+    typeof s === "string" && DAY.test(s) && new Date(`${s}T00:00:00Z`).toISOString().startsWith(s)
+  );
 }
 
 /** The engagement folder, relative to the repository. */
@@ -158,15 +159,18 @@ export function engagementState(
 export function engagementSource(e: Engagement): string {
   return `// An audit engagement (spec 083), written by stolos audit open and stolos audit close.
 // Change it only with those commands: each change is a signed commit the auditor checks.
-import type { Engagement } from "@stolos/archon/audit/mod.ts";
+import type { Engagement } from "@intellectual-frontiers/stolos/archon/audit/mod";
 
-export const engagement: Engagement = ${tsLiteral(e)};
+export const engagement: Engagement = ${tsLiteral(e as unknown as Literal)};
 `;
 }
 
 /** An engagement from engagement.ts's text (read, never run); throws when it is not one. */
 export function parseEngagement(text: string): Engagement {
-  const e = exportedLiteral(text, "engagement") as Engagement;
+  const v = exportedLiteral(text, "engagement");
+  if (v.kind === "err") throw new Error("engagement.ts: no literal `export const engagement`");
+  // Checked field by field (engagementProblems) before it is used.
+  const e = v.value as unknown as Engagement;
   const p = engagementProblems(e);
   if (p.length) throw new Error(`engagement.ts: ${p.join("; ")}`);
   return e;
@@ -178,13 +182,17 @@ export function parseControls(
   titles: Record<string, string>,
   framework?: string,
 ): ScopedControl[] {
-  return spec.split(/[,\n]/).map((x) => x.trim()).filter(Boolean).map((x) => {
-    const [id, pop] = x.includes("=") ? x.split("=", 2).map((s) => s.trim()) : [x, x];
-    return {
-      id,
-      title: titles[pop] ?? pop,
-      ...(framework ? { framework } : {}),
-      population: pop as PopulationId,
-    };
-  });
+  return spec
+    .split(/[,\n]/)
+    .map((x) => x.trim())
+    .filter(Boolean)
+    .map((x) => {
+      const [id = x, pop = x] = x.includes("=") ? x.split("=", 2).map((s) => s.trim()) : [x, x];
+      return {
+        id,
+        title: titles[pop] ?? pop,
+        ...(framework ? { framework } : {}),
+        population: pop as PopulationId,
+      };
+    });
 }

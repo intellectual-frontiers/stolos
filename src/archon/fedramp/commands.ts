@@ -8,8 +8,12 @@
  * @module
  */
 
+import { fs, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
 import { ui } from "../core/ui.ts";
-import type { FedrampClass } from "./rules.auto.ts";
+
+const print = (text: string): void => {
+  stdio.stdout.writeSync(`${text}\n`);
+};
 
 /** Print the package for a class; with `out`, write its Security Decision Record. Exit 1 when a KSI's checks fail. */
 export async function fedrampCommand(
@@ -33,29 +37,31 @@ export async function fedrampCommand(
   const { VERSION } = await import("../version.ts");
   const { fedrampPackage } = await import("./package.ts");
   const catalog = await loadScf();
-  const pkg = fedrampPackage(await pcFacts(), cls as FedrampClass, {
+  const pkg = fedrampPackage(await pcFacts(), cls, {
     ...(catalog ? { catalog } : {}),
     ...(o.overview ? { overviewUri: o.overview } : {}),
     stolosVersion: VERSION,
   });
   const failing = pkg.ksis.some((k) => k.status === "fail");
   if (o.out) {
-    await Deno.writeTextFile(o.out, JSON.stringify(pkg.sdr, null, 2) + "\n");
+    await fs.writeTextFile(o.out, JSON.stringify(pkg.sdr, null, 2) + "\n");
   }
   if (o.json) {
-    console.log(JSON.stringify(pkg, null, 2));
+    print(JSON.stringify(pkg, null, 2));
     return failing ? 1 : 0;
   }
   const { table } = await import("../state/query.ts");
-  console.log(
-    table(pkg.ksis.map((k) => ({
-      ksi: k.ksi.id,
-      name: k.ksi.name,
-      applies: k.applies,
-      status: k.status,
-      checks: k.tests.length,
-      newest: k.observed?.newest.slice(0, 10) ?? "",
-    }))) + "\n",
+  print(
+    table(
+      pkg.ksis.map((k) => ({
+        ksi: k.ksi.id,
+        name: k.ksi.name,
+        applies: k.applies,
+        status: k.status,
+        checks: k.tests.length,
+        newest: k.observed?.newest.slice(0, 10) ?? "",
+      })),
+    ) + "\n",
   );
   const p = ui.phase(`FedRAMP 20x Class ${cls}`);
   for (const k of pkg.ksis.filter((x) => x.status === "fail")) {
@@ -79,7 +85,7 @@ export async function fedrampCommand(
   );
   if (!o.out) {
     ui.next.push(
-      `the record in FedRAMP's JSON format: deno task stolos compliance fedramp --class ${cls} --out sdr-class-${cls.toLowerCase()}.json`,
+      `the record in FedRAMP's JSON format: bun run stolos compliance fedramp --class ${cls} --out sdr-class-${cls.toLowerCase()}.json`,
     );
   }
   return failing ? 1 : 0;

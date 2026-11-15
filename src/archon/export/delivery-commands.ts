@@ -1,11 +1,11 @@
 /**
  * The export delivery commands, on your PC (spec 092):
  *
- *   deno task stolos export list                    the jobs, how each delivers, and its last run
- *   deno task stolos export run <job>               make and deliver one job's documents now
- *   deno task stolos export schedule <job>          create this PC's own scheduled job for it
- *   deno task stolos export schedule <job> --remove remove it
- *   deno task stolos export credential <name>       store a separate send-only credential
+ *   bun run stolos export list                    the jobs, how each delivers, and its last run
+ *   bun run stolos export run <job>               make and deliver one job's documents now
+ *   bun run stolos export schedule <job>          create this PC's own scheduled job for it
+ *   bun run stolos export schedule <job> --remove remove it
+ *   bun run stolos export credential <name>       store a separate send-only credential
  *
  * ## A send-only credential (least privilege)
  *
@@ -37,13 +37,26 @@
  * @module
  */
 
+import {
+  array,
+  boolean,
+  type Decoder,
+  jobs as kernelJobs,
+  json,
+  mapDecoder,
+  object,
+  string,
+} from "@intellectual-frontiers/ifc-ts/kernel";
+import { fs, jobs, path, proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
 import { ui } from "../core/ui.ts";
-import { join } from "../core/path.ts";
 import type { ExportJobDef, FleetDef } from "../model/types.ts";
 import type { Credential } from "../notify/transport.ts";
 import { deliveryPlan, type RunReport } from "./deliver.ts";
-import { findJob } from "./jobs.ts";
-import { describeSchedule, scheduledJob, type SchedulerOs } from "./schedule.ts";
+import { describeSchedule, exportJobSpec, findJob } from "./jobs.ts";
+
+const print = (line: string): void => {
+  stdio.stdout.writeSync(`${line}\n`);
+};
 
 async function fleetAndJob(
   id: string,
@@ -68,16 +81,17 @@ async function fleetAndJob(
 export async function readCredential(name?: string): Promise<Credential | undefined> {
   const { readSecret, SECRETS } = await import("../core/secrets.ts");
   const text = await readSecret(name ? SECRETS.exportMail(name) : SECRETS.mail);
-  try {
-    const c = JSON.parse(text ?? "");
-    return typeof c?.token === "string" ? c as Credential : undefined;
-  } catch {
-    return undefined;
-  }
+  const c = json(text ?? "", credentialDecoder);
+  return c.kind === "ok" ? c.value : undefined;
 }
 
+const credentialDecoder: Decoder<Credential> = mapDecoder(
+  object({ token: string }, { user: string, created: string }),
+  (c): Credential => ({ ...c, created: c.created ?? "" }),
+);
+
 /** This PC's short name (the sender's subaddress). */
-const pcName = () => Deno.hostname().split(".")[0].toLowerCase();
+const pcName = (): string => (proc.hostname().split(".")[0] ?? "pc").toLowerCase();
 
 /** `stolos export run <job>`: make and deliver the documents now; exit 1 on any problem. */
 export async function exportRun(id: string): Promise<number> {
@@ -106,7 +120,7 @@ export async function exportRun(id: string): Promise<number> {
   }
   for (const m of r.problems) p.warn(m);
   p.done(r.ok ? "delivered" : `${r.problems.length} problem(s)`);
-  ui.next.push(`what happened: ${join(P.state, "exports", job.id, "last-run.json")}`);
+  ui.next.push(`what happened: ${path.join(P.state, "exports", job.id, "last-run.json")}`);
   return r.ok ? 0 : 1;
 }
 
@@ -114,7 +128,6 @@ export async function exportRun(id: string): Promise<number> {
 export async function exportList(): Promise<number> {
   const { loadFleet } = await import("../model/load.ts");
   const { P } = await import("../core/paths.ts");
-  const { readTextOr } = await import("../core/fsx.ts");
   const fleet = await loadFleet();
   const p = ui.phase("Export jobs");
   const jobs = fleet.estate?.exports ?? [];
@@ -123,14 +136,16 @@ export async function exportList(): Promise<number> {
     const to = [
       plan.otlp ? `collector ${plan.otlp}` : "",
       plan.file ? "file" : "",
-      plan.email ? `email to ${j.email!.to.map((r) => r.address).join(", ")}` : "",
-    ].filter(Boolean).join(" + ");
-    const last = await readTextOr(join(P.state, "exports", j.id, "last-run.json"));
-    let lastRun = "never run here";
-    try {
-      const l = JSON.parse(last ?? "") as RunReport;
-      lastRun = `last run ${l.at}: ${l.ok ? "ok" : l.problems.join("; ")}`;
-    } catch { /* never run */ }
+      plan.email ? `email to ${(j.email?.to ?? []).map((r) => r.address).join(", ")}` : "",
+    ]
+      .filter(Boolean)
+      .join(" + ");
+    const last = await fs.readTextOr(path.join(P.state, "exports", j.id, "last-run.json"));
+    const l = json(last ?? "", lastRunDecoder);
+    const lastRun =
+      l.kind === "ok"
+        ? `last run ${l.value.at}: ${l.value.ok ? "ok" : l.value.problems.join("; ")}`
+        : "never run here";
     p.ok(
       `${j.id}: ${j.kinds.join(", ")} for ${(j.tenants ?? ["every tenant"]).join(", ")}; ${to}; ${
         j.schedule ? describeSchedule(j) : "not scheduled"
@@ -143,16 +158,13 @@ export async function exportList(): Promise<number> {
   return 0;
 }
 
-/** The OS this PC schedules on, or undefined. */
-function thisOs(): SchedulerOs | undefined {
-  const os = Deno.build.os;
-  return os === "windows" || os === "darwin" || os === "linux" ? os : undefined;
-}
+const lastRunDecoder = object({ at: string, ok: boolean, problems: array(string) });
 
 /**
  * `stolos export schedule <job> [--remove] [--dry-run]`: create (or remove)
- * this PC's own scheduled job. With --dry-run, print the files and commands
- * and change nothing.
+ * this PC's own scheduled job (kernel `jobs.planJob`, runtime
+ * `jobs.installJob` and `jobs.removeJob`). With --dry-run, print the files
+ * and commands and change nothing.
  */
 export async function exportSchedule(
   id: string,
@@ -162,9 +174,9 @@ export async function exportSchedule(
   if (!found) return 1;
   const { fleet, job } = found;
   const p = ui.phase(`Schedule ${job.id}`);
-  const os = thisOs();
-  if (!os) {
-    p.fail(`this OS (${Deno.build.os}) has no scheduler Stolos knows`, "Windows, macOS, or Linux");
+  const os = proc.build.os;
+  if (os !== "linux" && os !== "darwin" && os !== "windows") {
+    p.fail(`this OS (${os}) has no scheduler Stolos knows`, "Windows, macOS, or Linux");
     return 1;
   }
   if (!o.remove && !job.schedule) {
@@ -175,60 +187,51 @@ export async function exportSchedule(
     return 1;
   }
   const { P } = await import("../core/paths.ts");
-  const home = Deno.env.get("HOME") ?? Deno.env.get("USERPROFILE") ?? ".";
-  const sj = scheduledJob({
-    os,
-    fleet: fleet.id,
-    job,
-    deno: Deno.execPath(),
-    repo: P.repo,
-    home,
-    stateDir: P.state,
-    ...(Deno.uid() !== null ? { uid: Deno.uid()! } : {}),
+  const spec = exportJobSpec(fleet.id, job, {
+    command: proc.selfCommand(),
+    workdir: P.repo,
+    log: path.join(P.state, "exports", job.id, "scheduled.log"),
   });
+  if (spec.kind === "err") {
+    p.fail(kernelJobs.formatScheduleError(spec.error));
+    return 1;
+  }
+  const uid = proc.uid();
+  const plan = kernelJobs.planJob(spec.value, {
+    os,
+    home: proc.homeDir(),
+    ...(uid === undefined ? {} : { uid }),
+  });
+  if (plan.kind === "err") {
+    p.fail(kernelJobs.formatScheduleError(plan.error));
+    return 1;
+  }
   if (o.dryRun) {
-    for (const f of o.remove ? [] : sj.files) console.log(`--- ${f.path}\n${f.content}`);
-    for (const s of o.remove ? sj.remove : sj.create) console.log(`$ ${s.argv.join(" ")}`);
-    if (o.remove) { for (const f of sj.files) console.log(`remove ${f.path}`); }
+    for (const f of o.remove ? [] : plan.value.files) print(`--- ${f.path}\n${f.content}`);
+    for (const s of o.remove ? plan.value.remove : plan.value.install) {
+      print(`$ ${s.argv.join(" ")}`);
+    }
+    if (o.remove) {
+      for (const f of plan.value.files) print(`remove ${f.path}`);
+    }
     p.done("dry run: nothing changed");
     return 0;
   }
-  const { run } = await import("../core/exec.ts");
-  const deps = {
-    write: async (path: string, content: string) => {
-      await Deno.mkdir(join(path, ".."), { recursive: true });
-      await Deno.writeTextFile(path, content);
-    },
-    remove: async (path: string) => {
-      try {
-        await Deno.remove(path);
-      } catch (e) {
-        if (!(e instanceof Deno.errors.NotFound)) throw e;
-      }
-    },
-    exec: async (argv: string[]) => {
-      const r = await run(argv);
-      return { ok: r.ok, output: r.stderr || r.stdout };
-    },
-  };
-  const { installJob, uninstallJob } = await import("./schedule.ts");
-  try {
-    if (o.remove) {
-      await uninstallJob(sj, deps);
-      p.done(`removed ${sj.name}`);
-      return 0;
-    }
-    await installJob(sj, deps);
-  } catch (e) {
-    p.fail((e as Error).message);
+  const r = o.remove ? await jobs.removeJob(spec.value) : await jobs.installJob(spec.value);
+  if (r.kind === "err") {
+    p.fail(jobs.formatJobError(r.error));
     return 1;
   }
-  for (const f of sj.files) p.ok(f.path);
-  p.done(`${sj.name}: ${sj.when}, runs ${sj.command.slice(1).join(" ")}`);
+  if (o.remove) {
+    p.done(`removed ${plan.value.label}`);
+    return 0;
+  }
+  for (const f of plan.value.files) p.ok(f.path);
+  p.done(`${plan.value.label}: ${plan.value.description}, runs ${spec.value.argv.join(" ")}`);
   if (os === "linux") {
     ui.next.push("to run while you are logged out too: loginctl enable-linger");
   }
-  ui.next.push(`try it now: deno task stolos export run ${job.id}`);
+  ui.next.push(`try it now: bun run stolos export run ${job.id}`);
   return 0;
 }
 
@@ -251,8 +254,9 @@ export async function exportCredential(name: string, user?: string): Promise<num
   const fleet = await loadFleet();
   const job = (fleet.estate?.exports ?? []).find((j) => j.email?.credential === name);
   const relay = job?.email?.relay ?? fleet.mail?.relay ?? DEFAULT_RELAY;
-  const token = (await readHidden(`Send-only credential (password or API token) for ${relay}: `))
-    .trim();
+  const token = (
+    await readHidden(`Send-only credential (password or API token) for ${relay}: `)
+  ).trim();
   if (!token) {
     p.fail("nothing entered");
     return 1;
@@ -267,7 +271,10 @@ export async function exportCredential(name: string, user?: string): Promise<num
     p.ok(`logged in to ${relay} over TLS (nothing sent)`);
   } catch (e) {
     const { redact } = await import("../notify/redact.ts");
-    p.fail(redact((e as Error).message, [token]), "check the credential, then again");
+    p.fail(
+      redact(e instanceof Error ? e.message : String(e), [token]),
+      "check the credential, then again",
+    );
     return 1;
   }
   await writeSecret(SECRETS.exportMail(name), JSON.stringify(c) + "\n");

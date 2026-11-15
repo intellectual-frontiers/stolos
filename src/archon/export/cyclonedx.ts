@@ -120,9 +120,7 @@ export interface CdxAttestation {
       version: string;
       description: string;
       owner: string;
-      requirements: Array<
-        { "bom-ref": string; identifier: string; title: string; text?: string }
-      >;
+      requirements: Array<{ "bom-ref": string; identifier: string; title: string; text?: string }>;
       externalReferences: CdxExternalReference[];
     }>;
   };
@@ -242,30 +240,32 @@ export async function cdxAttestation(i: CdxInput): Promise<CdxAttestation> {
     });
   }
   const seen = new Set<string>();
-  for (const it of items) {
+  for (const it of bundle ? items : []) {
     if (seen.has(it.sha256)) continue;
     seen.add(it.sha256);
     evidence.push({
       "bom-ref": itemRef(it.sha256),
-      description: `${it.kind} ${it.name}, recorded ${it.at}, in ${bundle!.fileName}`,
+      description: `${it.kind} ${it.name}, recorded ${it.at}, in ${bundle?.fileName ?? "the bundle"}`,
       data: [{ name: it.name, contents: { url: `objects/${it.sha256}` } }],
       created: it.at,
     });
   }
   const bundleRef: CdxExternalReference[] = bundle
-    ? [{
-      type: "evidence",
-      url: bundle.fileName,
-      comment:
-        `the evidence bundle (spec 072), ${bundle.manifest.period.from} to ${bundle.manifest.period.to}`,
-      hashes: [{ alg: "SHA-256", content: bundle.sha256 }],
-    }]
+    ? [
+        {
+          type: "evidence",
+          url: bundle.fileName,
+          comment: `the evidence bundle (spec 072), ${bundle.manifest.period.from} to ${bundle.manifest.period.to}`,
+          hashes: [{ alg: "SHA-256", content: bundle.sha256 }],
+        },
+      ]
     : [];
 
   const claims: CdxClaim[] = i.view.controls.map((c) => {
     const refs = new Set<string>();
     for (const e of c.evidence) {
-      refs.add(checkRef.get(e)!);
+      const ref = checkRef.get(e);
+      if (ref !== undefined) refs.add(ref);
       for (const it of bundleItemsFor(e, items)) refs.add(itemRef(it.sha256));
     }
     return {
@@ -288,61 +288,72 @@ export async function cdxAttestation(i: CdxInput): Promise<CdxAttestation> {
     metadata: {
       timestamp: at,
       tools: {
-        components: [{
-          type: "application",
-          name: "Stolos",
-          version: VERSION,
-          supplier: { name: "Intellectual Frontiers LLC" },
-        }],
+        components: [
+          {
+            type: "application",
+            name: "Stolos",
+            version: VERSION,
+            supplier: { name: "Intellectual Frontiers LLC" },
+          },
+        ],
       },
     },
     definitions: {
-      standards: [{
-        "bom-ref": "standard:scf",
-        name: SCF_SOURCE.title,
-        version,
-        description:
-          "The SCF controls Stolos gives evidence for; their mappings to other frameworks are the SCF Council's own (STRM).",
-        owner: "SCF Council",
-        requirements: i.view.controls.map((c) => ({
-          "bom-ref": `requirement:${c.control.id}`,
-          identifier: c.control.id,
-          title: c.control.name,
-          ...(c.control.description ? { text: c.control.description } : {}),
-        })),
-        externalReferences: [{
-          type: "website",
-          url: SCF_SOURCE.url,
-          comment: `${SCF_SOURCE.title} ${SCF_SOURCE.version}`,
-          hashes: [{ alg: "SHA-256", content: SCF_SOURCE.sha256 }],
-        }],
-      }],
+      standards: [
+        {
+          "bom-ref": "standard:scf",
+          name: SCF_SOURCE.title,
+          version,
+          description:
+            "The SCF controls Stolos gives evidence for; their mappings to other frameworks are the SCF Council's own (STRM).",
+          owner: "SCF Council",
+          requirements: i.view.controls.map((c) => ({
+            "bom-ref": `requirement:${c.control.id}`,
+            identifier: c.control.id,
+            title: c.control.name,
+            ...(c.control.description ? { text: c.control.description } : {}),
+          })),
+          externalReferences: [
+            {
+              type: "website",
+              url: SCF_SOURCE.url,
+              comment: `${SCF_SOURCE.title} ${SCF_SOURCE.version}`,
+              hashes: [{ alg: "SHA-256", content: SCF_SOURCE.sha256 }],
+            },
+          ],
+        },
+      ],
     },
     declarations: {
-      assessors: [{
-        "bom-ref": assessor,
-        thirdParty: false,
-        organization: { name: i.fleet.title },
-      }],
-      attestations: [{
-        summary:
-          `${i.fleet.title}: what Stolos observed, as of ${at}, for each SCF control it gives evidence for`,
-        assessor,
-        map: i.view.controls.map((c) => ({
-          requirement: `requirement:${c.control.id}`,
-          claims: [`claim:${c.control.id}`],
-          conformance: conformance(c),
-        })),
-      }],
+      assessors: [
+        {
+          "bom-ref": assessor,
+          thirdParty: false,
+          organization: { name: i.fleet.title },
+        },
+      ],
+      attestations: [
+        {
+          summary: `${i.fleet.title}: what Stolos observed, as of ${at}, for each SCF control it gives evidence for`,
+          assessor,
+          map: i.view.controls.map((c) => ({
+            requirement: `requirement:${c.control.id}`,
+            claims: [`claim:${c.control.id}`],
+            conformance: conformance(c),
+          })),
+        },
+      ],
       claims,
       evidence,
       targets: {
-        components: [{
-          "bom-ref": target,
-          type: "platform",
-          name: i.fleet.title,
-          externalReferences: [{ type: "vcs", url: `https://github.com/${i.fleet.repo}` }],
-        }],
+        components: [
+          {
+            "bom-ref": target,
+            type: "platform",
+            name: i.fleet.title,
+            externalReferences: [{ type: "vcs", url: `https://github.com/${i.fleet.repo}` }],
+          },
+        ],
       },
       affirmation: {
         statement: `${i.fleet.title} affirms these claims, made by Stolos from its evidence${
@@ -350,24 +361,26 @@ export async function cdxAttestation(i: CdxInput): Promise<CdxAttestation> {
         }; the signature is the evidence bundle's own (spec 072).`,
         ...(signer
           ? {
-            signatories: [{
-              name: signer,
-              role: "fleet signer",
-              organization: { name: i.fleet.title },
-              externalReference: bundle
-                ? {
-                  type: "digital-signature",
-                  url: `${bundle.fileName}#manifest.json.sig`,
-                  comment:
-                    "the bundle manifest's SSH signature (ssh-keygen -Y, namespace stolos-evidence)",
-                }
-                : {
-                  type: "vcs",
-                  url: `https://github.com/${i.fleet.repo}`,
-                  comment: "a fleet signer: signs the fleet repository's commits",
+              signatories: [
+                {
+                  name: signer,
+                  role: "fleet signer",
+                  organization: { name: i.fleet.title },
+                  externalReference: bundle
+                    ? {
+                        type: "digital-signature",
+                        url: `${bundle.fileName}#manifest.json.sig`,
+                        comment:
+                          "the bundle manifest's SSH signature (ssh-keygen -Y, namespace stolos-evidence)",
+                      }
+                    : {
+                        type: "vcs",
+                        url: `https://github.com/${i.fleet.repo}`,
+                        comment: "a fleet signer: signs the fleet repository's commits",
+                      },
                 },
-            }],
-          }
+              ],
+            }
           : {}),
       },
     },

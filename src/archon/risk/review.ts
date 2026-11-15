@@ -28,7 +28,9 @@
  */
 
 import { run } from "../core/exec.ts";
-import { tsLiteral } from "../core/ts-literal.ts";
+import { type Literal, tsLiteral } from "@intellectual-frontiers/ifc-ts/kernel";
+import { fs, path as paths, proc, toError } from "@intellectual-frontiers/ifc-ts/runtime";
+import { log } from "../core/log.ts";
 import { isDay } from "./register.ts";
 import type { Vendor } from "./vendors.ts";
 
@@ -55,7 +57,7 @@ export function vendorsFileSource(): string {
   return `// The fleet's vendors, triaged (spec 080): each one's criticality (FIPS 199) and the data it holds
 // (OCSF data categories). Vendors are discovered (SSO applications, DNS, connected accounts);
 // stolos vendors triage --write adds new ones here, in a pull request, for a person to assess.
-import { defineVendors } from "@stolos/archon/risk/mod.ts";
+import { defineVendors } from "@intellectual-frontiers/stolos/archon/risk/mod";
 
 export const vendors = defineVendors([
 ]);
@@ -66,18 +68,20 @@ export const vendors = defineVendors([
 export function vendorEntry(v: Vendor): string {
   const domains = [
     ...new Set(
-      v.seen.filter((s) => s.kind === "dns").map((s) => s.detail.split(" -> ").pop() ?? "")
+      v.seen
+        .filter((s) => s.kind === "dns")
+        .map((s) => s.detail.split(" -> ").pop() ?? "")
         .filter(Boolean),
     ),
   ];
   const apps = [
     ...new Set(
-      v.seen.filter((s) => s.kind === "sso").map((s) =>
-        s.detail.replace(/^the SSO application /, "")
-      ),
+      v.seen
+        .filter((s) => s.kind === "sso")
+        .map((s) => s.detail.replace(/^the SSO application /, "")),
     ),
   ];
-  const entry: Record<string, unknown> = {
+  const entry: Record<string, Literal> = {
     id: v.id,
     name: v.name,
     criticality: "unassessed",
@@ -85,11 +89,15 @@ export function vendorEntry(v: Vendor): string {
     ...(!v.known && domains.length ? { domains: [v.name] } : {}),
     ...(!v.known && apps.length ? { apps } : {}),
   };
-  const seen = v.seen.slice(0, 3).map((s) => s.detail).join("; ") +
-    (v.seen.length > 3 ? `; and ${v.seen.length - 3} more` : "");
-  return `  // Discovered: ${seen.replace(/\n/g, " ")}. Set its criticality and data.\n  ${
-    tsLiteral(entry, 1)
-  },\n`;
+  const seen =
+    v.seen
+      .slice(0, 3)
+      .map((s) => s.detail)
+      .join("; ") + (v.seen.length > 3 ? `; and ${v.seen.length - 3} more` : "");
+  return `  // Discovered: ${seen.replace(/\n/g, " ")}. Set its criticality and data.\n  ${tsLiteral(
+    entry,
+    1,
+  )},\n`;
 }
 
 /** vendors.ts's text with entries for `vendors` added at the end of its list. */
@@ -131,27 +139,30 @@ export async function approvalOf(
   allowedSigners: string,
 ): Promise<Approval> {
   const git = (args: string[]) => run(["git", "-C", repo, ...args]);
-  const last = (await git(["log", "--first-parent", "-1", "--format=%H", "--", path])).stdout
-    .trim();
+  const last = (
+    await git(["log", "--first-parent", "-1", "--format=%H", "--", path])
+  ).stdout.trim();
   if (!last) return { reason: `${path} has no commit yet` };
   const { checkTip } = await import("../identity/signers.ts");
-  const dir = await Deno.makeTempDir({ prefix: "stolos-signers-" });
+  const dir = await fs.makeTempDir({ prefix: "stolos-signers-" });
   try {
-    const file = `${dir}/allowed_signers`;
-    await Deno.writeTextFile(file, allowedSigners);
+    const file = paths.join(dir, "allowed_signers");
+    await fs.writeTextFile(file, allowedSigners);
     const own = await checkTip(repo, last, "", file);
-    if (own.ok) return { commit: last, signer: own.signer! };
-    const later = (await git(["rev-list", "--first-parent", "--reverse", `${last}..HEAD`]))
-      .stdout.trim().split("\n").filter(Boolean);
+    if (own.ok && own.signer) return { commit: last, signer: own.signer };
+    const later = (await git(["rev-list", "--first-parent", "--reverse", `${last}..HEAD`])).stdout
+      .trim()
+      .split("\n")
+      .filter(Boolean);
     for (const c of later) {
       const t = await checkTip(repo, c, "", file);
-      if (t.ok) return { commit: last, approvedBy: { commit: c, signer: t.signer! } };
+      if (t.ok && t.signer) return { commit: last, approvedBy: { commit: c, signer: t.signer } };
     }
     return { commit: last, reason: own.reason ?? "not signed by a fleet signer" };
   } finally {
-    await Deno.remove(dir, { recursive: true }).catch((e) =>
-      console.error(`warning: could not remove ${dir}: ${(e as Error).message}`)
-    );
+    await fs
+      .remove(dir, { recursive: true })
+      .catch((e: unknown) => log.warn(`could not remove ${dir}: ${toError(e).message}`));
   }
 }
 
@@ -192,14 +203,13 @@ export function realRunner(repo: string): ReviewRunner {
   return {
     run: (argv) => run(argv, { cwd: repo }),
     async interactive(argv) {
-      const r = await new Deno.Command(argv[0], {
-        args: argv.slice(1),
+      const r = await proc.output(argv, {
         cwd: repo,
         stdin: "inherit",
         stdout: "inherit",
         stderr: "inherit",
-      }).output();
-      return r.success;
+      });
+      return r.code === 0;
     },
   };
 }
@@ -225,12 +235,14 @@ export async function openReview(
   if ((await git(["status", "--porcelain"])).stdout.trim()) {
     return fail(
       "the fleet repository has uncommitted changes",
-      "commit them (deno task stolos apply) or put them aside, then run this again",
+      "commit them (bun run stolos apply) or put them aside, then run this again",
     );
   }
   const start = (await git(["rev-parse", "--abbrev-ref", "HEAD"])).stdout.trim() || "main";
-  const base = (await git(["symbolic-ref", "--short", "refs/remotes/origin/HEAD"])).stdout.trim()
-    .replace(/^origin\//, "") || "main";
+  const base =
+    (await git(["symbolic-ref", "--short", "refs/remotes/origin/HEAD"])).stdout
+      .trim()
+      .replace(/^origin\//, "") || "main";
   const fetched = await git(["fetch", "-q", "origin", base]);
   if (!fetched.ok) {
     return fail(`git fetch: ${fetched.stderr.trim()}`, "check the network and GitHub access");
@@ -249,13 +261,13 @@ export async function openReview(
   try {
     const files = await c.edit(async (p) => {
       try {
-        return await Deno.readTextFile(`${repo}/${p}`);
+        return await fs.readTextFile(paths.join(repo, p));
       } catch {
         return undefined;
       }
     });
     for (const [p, text] of Object.entries(files)) {
-      await Deno.writeTextFile(`${repo}/${p}`, text);
+      await fs.writeTextFile(paths.join(repo, p), text);
       steps.push(`changed ${p}`);
     }
     const add = await git(["add", "--", ...Object.keys(files)]);
@@ -280,7 +292,7 @@ export async function openReview(
       "--head",
       c.branch,
       "--title",
-      c.message.split("\n")[0],
+      c.message.split("\n")[0] ?? c.message,
       "--body",
       c.body,
     ]);

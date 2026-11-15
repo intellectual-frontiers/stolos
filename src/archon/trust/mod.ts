@@ -8,8 +8,8 @@
  * stale is hidden.
  *
  * ```bash
- * deno task stolos evidence export --from 2026-07-01 --to 2026-09-30
- * deno task stolos trust build --bundle lab-evidence-2026-07-01-to-2026-09-30.zip --out trust
+ * bun run stolos evidence export --from 2026-07-01 --to 2026-09-30
+ * bun run stolos trust build --bundle lab-evidence-2026-07-01-to-2026-09-30.zip --out trust
  * ```
  *
  * ```mermaid
@@ -59,7 +59,7 @@
  * signed, hash-chained format as an evidence bundle, signed by the same fleet signer (`--key`, else
  * Git's signing key; ssh-keygen asks the passphrase). It refuses a key that is not the full
  * bundle's signer. Each control links to its summary item, which anyone can check with
- * `deno task stolos evidence verify` or `sha256sum` and `ssh-keygen`. `--on-request` publishes no
+ * `bun run stolos evidence verify` or `sha256sum` and `ssh-keygen`. `--on-request` publishes no
  * bundle; the page then says the evidence is available on request (`--contact`, an `https:` or
  * `mailto:` link, says where to ask).
  *

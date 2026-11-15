@@ -291,8 +291,8 @@ export function ksiMappings(): Array<{ ksi: Ksi; mapping: KsiMapping }> {
 /** The evidence a covered KSI counts (none for a KSI Stolos cannot observe). */
 export function ksiEvidence<E extends Evidence>(m: KsiMapping, evidence: E[]): E[] {
   if (!covered(m)) return [];
-  return evidence.filter((e) =>
-    e.scf.some((s) => m.scf.includes(s)) && (!m.sources || m.sources.includes(e.source))
+  return evidence.filter(
+    (e) => e.scf.some((s) => m.scf.includes(s)) && (!m.sources || m.sources.includes(e.source)),
   );
 }
 

@@ -2,8 +2,9 @@
  * Spec 092's export jobs as the fleet declares them (`estate.exports` in
  * `fleets/<id>/fleet.ts`, see ExportJobDef): checking them, matching their
  * tenants, and reading what each needs at run time (the recipients'
- * certificates, the sender, the credential's name). Pure, apart from reading
- * a certificate file.
+ * certificates, the sender, the credential's name), and the operating
+ * system's job for each (kernel `jobs`). Pure, apart from reading a
+ * certificate file.
  *
  * Each job is one tenant's (or a few tenants') arrangement: its own kinds,
  * its own recipients and sender, its own schedule. Nothing secret is in a
@@ -12,9 +13,11 @@
  * @module
  */
 
-import type { ExportJobDef, ExportKind, FleetDef } from "../model/types.ts";
+import type { ExportJobDef, ExportKind, ExportScheduleDef, FleetDef } from "../model/types.ts";
 import { EMAIL } from "../notify/transport.ts";
-import { certificateProblem, parseCertificate, type RecipientCert } from "./smime.ts";
+import { absurd, cms, jobs, ok, type Result } from "@intellectual-frontiers/ifc-ts/kernel";
+import { fs } from "@intellectual-frontiers/ifc-ts/runtime";
+import { describeCertificateProblem, parseCertificate } from "./smime.ts";
 
 /** Every kind of export document, in the order a job lists them. */
 export const EXPORT_KINDS: readonly ExportKind[] = [
@@ -169,7 +172,7 @@ export interface ReadyRecipient {
   /** Their address. */
   address: string;
   /** Their certificate, parsed. */
-  cert: RecipientCert;
+  cert: cms.Certificate;
 }
 
 /**
@@ -181,22 +184,100 @@ export async function readRecipients(
   job: ExportJobDef,
   fleetDir: string,
   now: Date = new Date(),
-  read: (path: string) => Promise<string> = (p) => Deno.readTextFile(p),
+  read: (path: string) => Promise<string> = (p) => fs.readTextFile(p),
 ): Promise<{ ready: ReadyRecipient[]; problems: Array<{ address: string; error: string }> }> {
   const ready: ReadyRecipient[] = [];
   const problems: Array<{ address: string; error: string }> = [];
   for (const r of job.email?.to ?? []) {
     try {
-      const pem = r.certificate.includes("-----BEGIN") ? r.certificate : await read(
-        /^([a-z]:)?[\\/]/i.test(r.certificate) ? r.certificate : `${fleetDir}/${r.certificate}`,
-      );
+      const pem = r.certificate.includes("-----BEGIN")
+        ? r.certificate
+        : await read(
+            /^([a-z]:)?[\\/]/i.test(r.certificate) ? r.certificate : `${fleetDir}/${r.certificate}`,
+          );
       const cert = parseCertificate(pem);
-      const why = certificateProblem(cert, r.address, now);
-      if (why) problems.push({ address: r.address, error: why });
-      else ready.push({ address: r.address, cert });
+      const why = cms.certificateProblem(cert, r.address, now);
+      if (why) {
+        problems.push({
+          address: r.address,
+          error: `${r.address}: the certificate cannot be used: ${describeCertificateProblem(why)}`,
+        });
+      } else ready.push({ address: r.address, cert });
     } catch (e) {
-      problems.push({ address: r.address, error: `${r.address}: ${(e as Error).message}` });
+      problems.push({
+        address: r.address,
+        error: `${r.address}: ${e instanceof Error ? e.message : String(e)}`,
+      });
     }
   }
   return { ready, problems };
+}
+
+/** A job's schedule with its defaults filled in (every day at 02:17, Mondays, the 1st). */
+export function scheduleOf(job: Pick<ExportJobDef, "schedule">): Required<ExportScheduleDef> {
+  const s = job.schedule ?? { every: "daily" };
+  return {
+    every: s.every,
+    at: s.at ?? "02:17",
+    weekday: s.weekday ?? "mon",
+    dayOfMonth: s.dayOfMonth ?? 1,
+  };
+}
+
+/** A job's schedule as IFC TypeScript's (kernel `jobs.schedule`), or why it is not one. */
+export function jobWhen(
+  job: Pick<ExportJobDef, "schedule">,
+): Result<jobs.Schedule, jobs.ScheduleError> {
+  const s = scheduleOf(job);
+  const [hh = "", mm = ""] = s.at.split(":");
+  const hour = Number(hh);
+  const minute = Number(mm);
+  switch (s.every) {
+    case "hourly":
+      return jobs.schedule({ kind: "hourly", minute });
+    case "daily":
+      return jobs.schedule({ kind: "daily", hour, minute });
+    case "weekly":
+      return jobs.schedule({ kind: "weekly", day: s.weekday, hour, minute });
+    case "monthly":
+      return jobs.schedule({ kind: "monthly", day: s.dayOfMonth, hour, minute });
+    default:
+      return absurd(s.every);
+  }
+}
+
+/** When a job runs, in plain words (`every day at 02:17`). */
+export function describeSchedule(job: Pick<ExportJobDef, "schedule">): string {
+  const w = jobWhen(job);
+  return w.kind === "ok" ? jobs.describeSchedule(w.value) : jobs.formatScheduleError(w.error);
+}
+
+/** Who Stolos's scheduled jobs belong to: their launchd and systemd domain, their Task Scheduler folder. */
+export const JOB_OWNER: jobs.JobOwner = {
+  domain: "io.github.intellectual-frontiers.stolos",
+  folder: "Stolos",
+};
+
+/**
+ * The operating system's job for an export job (kernel `jobs.JobSpec`): it runs `command` (this
+ * program, `--fleet <fleet> export run <job>`; no secret, ever) in the repository, on the job's
+ * schedule, its output appended to `log`.
+ */
+export function exportJobSpec(
+  fleet: string,
+  job: ExportJobDef,
+  o: { command: readonly string[]; workdir: string; log?: string },
+): Result<jobs.JobSpec, jobs.ScheduleError> {
+  const name = jobs.jobName(`export-${fleet}-${job.id}`.toLowerCase().replace(/[^a-z0-9-]/g, "-"));
+  if (name.kind === "err") return name;
+  const when = jobWhen(job);
+  if (when.kind === "err") return when;
+  return ok({
+    name: name.value,
+    owner: JOB_OWNER,
+    argv: [...o.command, "--fleet", fleet, "export", "run", job.id],
+    workdir: o.workdir,
+    when: when.value,
+    ...(o.log === undefined ? {} : { log: o.log }),
+  });
 }
