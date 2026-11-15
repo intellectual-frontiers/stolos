@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Stolos v0.97.0</title>
+<title>Stolos v0.98.0</title>
 <link rel="stylesheet" href="./styles.css">
 <link rel="stylesheet" href="./page.css">
 <script src="./darkmode_toggle.js"></script>
@@ -17,7 +17,7 @@
 </head>
 <body>
 <main>
-<h1>Stolos v0.97.0</h1>
+<h1>Stolos v0.98.0</h1>
 <p>The fleet engine (its command is <code>archon</code>), documented from its TypeScript.</p>
 <p class="start">Start here: <a href="./mod.ts/index.html">the overview</a>, with how the
 pieces fit, in diagrams. Then the model: <a href="./archon/model/types.ts/index.html">types.ts</a>.
@@ -160,6 +160,7 @@ Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 <li><a href="./archon/connect/hris.ts/index.html"><code>hris.ts</code></a> Spec 086: HR systems (Cloud HCM suites), read-only: the roster only, the source of truth for who should have access.</li>
 <li><a href="./archon/connect/microsoft.ts/index.html"><code>microsoft.ts</code></a> Spec 067 (clouds): Microsoft 365 (Entra ID, through Microsoft Graph) and Azure (through Resource Manager), read-only, with one app registration's client credentials: the tenant, its domains, users…</li>
 <li><a href="./archon/connect/okta.ts/index.html"><code>okta.ts</code></a> Spec 086: Okta, read-only: its users (active, suspended, deprovisioned), who holds an administrator role, and who has enrolled a second factor.</li>
+<li><a href="./archon/connect/sdk.ts/index.html"><code>sdk.ts</code></a> Spec 089: the connector SDK.</li>
 </ul>
 <h2>archon/console/</h2>
 <ul>
@@ -323,6 +324,11 @@ Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 <li><a href="./archon/observe/observe.ts/index.html"><code>observe.ts</code></a> archon observe (spec 021): what this machine records about itself, where, and within which limits; observe tui opens otel-tui on it; observe prune keeps PCP's metric archives within their size and…</li>
 <li><a href="./archon/observe/remote.ts/index.html"><code>remote.ts</code></a> Spec 048-observe-by-query: ask a server through its MCP server, over SSH as ops (spec 030, Article 17), the same way an agent does.</li>
 </ul>
+<h2>archon/ocsf/</h2>
+<ul>
+<li><a href="./archon/ocsf/finding.ts/index.html"><code>finding.ts</code></a> Spec 089: every check's result as an OCSF Compliance Finding (class 2003).</li>
+<li><a href="./archon/ocsf/types.auto.ts/index.html"><code>types.auto.ts</code></a> Spec 089: TypeScript types for the OCSF 1.9.0 classes Stolos emits, and every object they use, with each attribute's requirement (required fields are not optional).</li>
+</ul>
 <h2>archon/optin/</h2>
 <ul>
 <li><a href="./archon/optin/data.ts/index.html"><code>data.ts</code></a> 044-durable (Article 23): archon data shows whether this server is durable or ephemeral and why; archon data set changes one opt-in's choice.</li>
@@ -372,6 +378,12 @@ Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 <ul>
 <li><a href="./archon/s3/mod.ts/index.html"><code>mod.ts</code></a> Every server can serve S3-compatible object storage (RustFS).</li>
 <li><a href="./archon/s3/s3.ts/index.html"><code>s3.ts</code></a> 041-s3: S3 object storage (RustFS), an opt-in container (spec 040), managed with archon fs s3.</li>
+</ul>
+<h2>archon/schema/</h2>
+<ul>
+<li><a href="./archon/schema/d3fend.auto.ts/index.html"><code>d3fend.auto.ts</code></a> Spec 089: the names of MITRE D3FEND's digital and physical artifact classes, in lower_snake_case: the terms Stolos may use where OCSF has none.</li>
+<li><a href="./archon/schema/define.ts/index.html"><code>define.ts</code></a> Spec 089: the schema language.</li>
+<li><a href="./archon/schema/vocabulary.ts/index.html"><code>vocabulary.ts</code></a> Spec 089: the vocabularies Stolos names its tables, views, and columns from.</li>
 </ul>
 <h2>archon/shell/</h2>
 <ul>

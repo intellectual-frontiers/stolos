@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/connect/connector.ts - Stolos v0.97.0 documentation</title>
+  <title>archon/connect/connector.ts - Stolos v0.98.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.97.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.98.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -245,7 +245,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_check" clas
     </div><div id="namespace_realhttp" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;realHttp.html" title="realHttp">
-			    <span>realHttp</span><span>(<div class="ml-4"><div><span>url</span>,</div><div><span>init</span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;{ status<span>: <span class="td-kw">number</span></span>; text<span>: <span class="td-kw">string</span></span>; link<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The real one: fetch.</p>
+			    <span>realHttp</span><span>(<div class="ml-4"><div><span>url</span>,</div><div><span>init</span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<div class="ml-indent"><div>{ status<span>: <span class="td-kw">number</span></span>; text<span>: <span class="td-kw">string</span></span>; link<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; retryAfter<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</div></div>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The real one: fetch.</p>
 </div></div></div>
     </div></div>
 </section>
@@ -369,6 +369,9 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_asset" cla
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Observation.html#property_provider">
                   <span>provider</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The provider: cloudflare, microsoft, aws, hetzner.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Observation.html#property_records">
+                  <span>records</span><span>: <span class="td-ref">ObservedRecord</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Spec 089: each record read, as a labeled node with its OCSF class (connectors made with defineConnector).</p>
 </div></div></li></ul></div>
     </div></div>
 </section>
@@ -398,7 +401,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_asset" cla
 Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_http" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Http.html" title="Http">
-			    <span>Http</span><span> = (<div class="ml-4"><div><span>url<span>: <span class="td-kw">string</span></span></span>,</div><div><span>init<span class="td-op">?</span><span>: { method<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; headers<span class="td-op">?</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span>; body<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></span></div></div>) =&gt; <span class="td-ref">Promise</span>&lt;{ status<span>: <span class="td-kw">number</span></span>; text<span>: <span class="td-kw">string</span></span>; link<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>An HTTP GET or POST that returns parsed JSON or text; injectable for tests.</p>
+			    <span>Http</span><span> = (<div class="ml-4"><div><span>url<span>: <span class="td-kw">string</span></span></span>,</div><div><span>init<span class="td-op">?</span><span>: { method<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; headers<span class="td-op">?</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span>; body<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></span></div></div>) =&gt; <span class="td-ref">Promise</span>&lt;<div class="ml-indent"><div>{ status<span>: <span class="td-kw">number</span></span>; text<span>: <span class="td-kw">string</span></span>; link<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; retryAfter<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</div></div>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>An HTTP GET or POST that returns parsed JSON or text; injectable for tests.</p>
 </div></div></div>
     </div><div id="namespace_servicemodel" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
 <div class="namespaceItemContent">
@@ -516,7 +519,7 @@ a cloud service offering.</p>
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1598 symbols</span><svg
+              <span class="leading-none">view all 1808 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
