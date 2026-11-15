@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/connect/connector.ts - Stolos v0.91.0 documentation</title>
+  <title>archon/connect/connector.ts - Stolos v0.92.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.91.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.92.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -217,6 +217,11 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_check" clas
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;getJson.html" title="getJson">
 			    <span>getJson</span><span><span>&lt;<span><span class="td-tp">T</span></span>&gt;</span>(<div class="ml-4"><div><span>http<span>: <span class="td-ref">Http</span></span></span>,</div><div><span>url<span>: <span class="td-kw">string</span></span></span>,</div><div><span>headers<span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></span>,</div><div><span>method<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span>,</div><div><span>body<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">T</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A JSON body, or a clear error naming the call.</p>
 </div></div></div>
+    </div><div id="namespace_marketcategory" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;marketCategory.html" title="marketCategory">
+			    <span>marketCategory</span><span>(<span><span>id<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span><span class="td-ref">MarketCategory</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A market category by id.</p>
+</div></div></div>
     </div><div id="namespace_observationfile" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;observationFile.html" title="observationFile">
@@ -290,9 +295,6 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_asset" cla
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Connector.html" title="Connector">
 			    <span>Connector</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A provider: how to connect, what to read, what to check.</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Connector.html#property_category">
-                  <span>category</span><span>: <span class="td-ref">ConnectorCategory</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What kind of account it reads.</p>
-</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Connector.html#property_connecthelp">
                   <span>connectHelp</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What to create in the provider's console, step by step: read-only access only.</p>
 </div></div></li><li>
@@ -305,6 +307,9 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_asset" cla
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Connector.html#property_logo">
                   <span>logo</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The Simple Icons slug for its logo, or &quot;&quot; when its owner does not allow one there.</p>
 </div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Connector.html#property_markets">
+                  <span>markets</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its market categories, as the analyst firms name them (ids in MARKET_CATEGORIES).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Connector.html#method_observe_0">
                   <span>observe</span><span>(<div class="ml-4"><div><span>cred<span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></span>,</div><div><span>http<span>: <span class="td-ref">Http</span></span></span>,</div><div><span>now<span>: <span class="td-ref">Date</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">Observation</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Read the account.</p>
 </div></div></li><li>
@@ -314,8 +319,25 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_asset" cla
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Connector.html#property_recipe">
                   <span>recipe</span><span>: { open<span class="td-op">?</span><span>: { href<span>: <span class="td-kw">string</span></span>; label<span>: <span class="td-kw">string</span></span>;  }</span>; shell<span class="td-op">?</span><span>: { where<span>: <span class="td-kw">string</span></span>; href<span>: <span class="td-kw">string</span></span>; command<span>: <span class="td-kw">string</span></span>;  }</span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The quickest way to a read-only credential: a page to open, or a command for the provider's own browser shell.</p>
 </div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Connector.html#property_servicemodels">
+                  <span>serviceModels</span><span>: <span class="td-ref">ServiceModel</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its NIST SP 800-145 service models (what FedRAMP calls the offering's service model).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Connector.html#property_title">
                   <span>title</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its name for people.</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_marketcategory-1" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;MarketCategory.html" title="MarketCategory">
+			    <span>MarketCategory</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A market category, by the name an analyst firm uses for it, and where that name comes from.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;MarketCategory.html#property_id">
+                  <span>id</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A short id.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;MarketCategory.html#property_name">
+                  <span>name</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The category's name, as published.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;MarketCategory.html#property_source">
+                  <span>source</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where the name comes from.</p>
 </div></div></li></ul></div>
     </div><div id="namespace_observation" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
@@ -330,6 +352,9 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_asset" cla
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Observation.html#property_at">
                   <span>at</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When (ISO time).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Observation.html#property_entities">
+                  <span>entities</span><span>: <span class="td-ref">Entities</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Spec 085: the people, accounts, devices, and repositories it found, for the estate graph.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Observation.html#property_gaps">
                   <span>gaps</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What could not be read, and why (a missing permission, usually).</p>
@@ -365,15 +390,15 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_asset" cla
   </defs>
 </svg>
 </a>
-Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_connectorcategory" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
-<div class="namespaceItemContent">
-		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;ConnectorCategory.html" title="ConnectorCategory">
-			    <span>ConnectorCategory</span><span> = <span class="td-ref">CONNECTOR_CATEGORIES</span>[<span class="td-kw">number</span>]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One kind of account.</p>
-</div></div></div>
-    </div><div id="namespace_http" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
+Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_http" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Http.html" title="Http">
 			    <span>Http</span><span> = (<div class="ml-4"><div><span>url<span>: <span class="td-kw">string</span></span></span>,</div><div><span>init<span class="td-op">?</span><span>: { method<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; headers<span class="td-op">?</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span>; body<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></span></div></div>) =&gt; <span class="td-ref">Promise</span>&lt;{ status<span>: <span class="td-kw">number</span></span>; text<span>: <span class="td-kw">string</span></span>;  }&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>An HTTP GET or POST that returns parsed JSON or text; injectable for tests.</p>
+</div></div></div>
+    </div><div id="namespace_servicemodel" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;ServiceModel.html" title="ServiceModel">
+			    <span>ServiceModel</span><span> = <span class="td-ref">SERVICE_MODELS</span>[<span class="td-kw">number</span>]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A NIST SP 800-145 service model.</p>
 </div></div></div>
     </div></div>
 </section>
@@ -400,10 +425,18 @@ Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_connecto
   </defs>
 </svg>
 </a>
-Variables</h2></div><div class="namespaceSection"><div id="namespace_connector_categories" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+Variables</h2></div><div class="namespaceSection"><div id="namespace_market_categories" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
-		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;CONNECTOR_CATEGORIES.html" title="CONNECTOR_CATEGORIES">
-			    <span>CONNECTOR_CATEGORIES</span><span>: <div class="ml-indent"><span><span class="td-str">"cloud"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"identity"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"code"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"hr"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"endpoint"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"ticketing"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"collaboration"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"secrets"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"vulnerability"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"training"</span></span></div>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The kinds of account a connector reads (spec 084).</p>
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;MARKET_CATEGORIES.html" title="MARKET_CATEGORIES">
+			    <span>MARKET_CATEGORIES</span><span>: <span class="td-ref">MarketCategory</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The market categories connectors belong to, named as the analyst firms
+name them (spec 084): never Stolos's own words. Reports are renamed over
+time; the newest name is used.</p>
+</div></div></div>
+    </div><div id="namespace_service_models" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;SERVICE_MODELS.html" title="SERVICE_MODELS">
+			    <span>SERVICE_MODELS</span><span>: <span><span class="td-str">"IaaS"</span><span class="td-op"> | </span><span class="td-str">"PaaS"</span><span class="td-op"> | </span><span class="td-str">"SaaS"</span></span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>NIST SP 800-145's cloud service models, the ones FedRAMP uses to describe
+a cloud service offering.</p>
 </div></div></div>
     </div></div>
 </section>
@@ -478,7 +511,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_connector_c
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1511 symbols</span><svg
+              <span class="leading-none">view all 1532 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -493,7 +526,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_connector_c
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/connect/connector_ts_classes" title="Classes">Classes</a></li><li><ul><li><a href="#namespace_accessdenied" title="AccessDenied">AccessDenied</a></li></ul></li><li><a href="#archon/connect/connector_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_check" title="check">check</a></li><li><a href="#namespace_connectorcredpath" title="connectorCredPath">connectorCredPath</a></li><li><a href="#namespace_fresh" title="fresh">fresh</a></li><li><a href="#namespace_getjson" title="getJson">getJson</a></li><li><a href="#namespace_observationfile" title="observationFile">observationFile</a></li><li><a href="#namespace_observationsource" title="observationSource">observationSource</a></li><li><a href="#namespace_orgap" title="orGap">orGap</a></li><li><a href="#namespace_realhttp" title="realHttp">realHttp</a></li></ul></li><li><a href="#archon/connect/connector_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_asset" title="Asset">Asset</a></li><li><a href="#namespace_connector" title="Connector">Connector</a></li><li><a href="#namespace_observation" title="Observation">Observation</a></li></ul></li><li><a href="#archon/connect/connector_ts_type-aliases" title="Type Aliases">Type Aliases</a></li><li><ul><li><a href="#namespace_connectorcategory" title="ConnectorCategory">ConnectorCategory</a></li><li><a href="#namespace_http" title="Http">Http</a></li></ul></li><li><a href="#archon/connect/connector_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_connector_categories" title="CONNECTOR_CATEGORIES">CONNECTOR_CATEGORIES</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/connect/connector_ts_classes" title="Classes">Classes</a></li><li><ul><li><a href="#namespace_accessdenied" title="AccessDenied">AccessDenied</a></li></ul></li><li><a href="#archon/connect/connector_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_check" title="check">check</a></li><li><a href="#namespace_connectorcredpath" title="connectorCredPath">connectorCredPath</a></li><li><a href="#namespace_fresh" title="fresh">fresh</a></li><li><a href="#namespace_getjson" title="getJson">getJson</a></li><li><a href="#namespace_marketcategory" title="marketCategory">marketCategory</a></li><li><a href="#namespace_observationfile" title="observationFile">observationFile</a></li><li><a href="#namespace_observationsource" title="observationSource">observationSource</a></li><li><a href="#namespace_orgap" title="orGap">orGap</a></li><li><a href="#namespace_realhttp" title="realHttp">realHttp</a></li></ul></li><li><a href="#archon/connect/connector_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_asset" title="Asset">Asset</a></li><li><a href="#namespace_connector" title="Connector">Connector</a></li><li><a href="#namespace_marketcategory-1" title="MarketCategory">MarketCategory</a></li><li><a href="#namespace_observation" title="Observation">Observation</a></li></ul></li><li><a href="#archon/connect/connector_ts_type-aliases" title="Type Aliases">Type Aliases</a></li><li><ul><li><a href="#namespace_http" title="Http">Http</a></li><li><a href="#namespace_servicemodel" title="ServiceModel">ServiceModel</a></li></ul></li><li><a href="#archon/connect/connector_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_market_categories" title="MARKET_CATEGORIES">MARKET_CATEGORIES</a></li><li><a href="#namespace_service_models" title="SERVICE_MODELS">SERVICE_MODELS</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/connect/commands.ts - Stolos v0.91.0 documentation</title>
+  <title>archon/connect/commands.ts - Stolos v0.92.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.91.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.92.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -148,10 +148,20 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_connectorco
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;commands.ts&#x2F;~&#x2F;estateObserve.html" title="estateObserve">
 			    <span>estateObserve</span><span>(<div class="ml-4"><div><span>id<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span>,</div><div><span>http<span class="td-op">?</span><span>: <span class="td-ref">Http</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos estate observe [provider]</code>.</p>
 </div></div></div>
+    </div><div id="namespace_estatequerycommand" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;commands.ts&#x2F;~&#x2F;estateQueryCommand.html" title="estateQueryCommand">
+			    <span>estateQueryCommand</span><span>(<div class="ml-4"><div><span>sql<span>: <span class="td-kw">string</span></span></span>,</div><div><span>json<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos estate query &quot;&lt;sql&gt;&quot;</code>: one SELECT across every source (people, accounts, devices, repositories).</p>
+</div></div></div>
     </div><div id="namespace_joinfleet" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;commands.ts&#x2F;~&#x2F;joinFleet.html" title="joinFleet">
 			    <span>joinFleet</span><span>(<div class="ml-4"><div><span>o<span>: <span class="td-ref">Observation</span></span></span>,</div><div><span>machines<span>: <span class="td-kw">string</span>[]</span></span>,</div><div><span>domain<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Observation</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Mark the assets that belong to a fleet machine: a DNS record or server named after it.</p>
+</div></div></div>
+    </div><div id="namespace_loadestate" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;commands.ts&#x2F;~&#x2F;loadEstate.html" title="loadEstate">
+			    <span>loadEstate</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">import</span>(<span class="td-str">"./estate.ts"</span>)<span>.Estate</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Spec 085: the estate graph, from every observation and the fleet's own machines.</p>
 </div></div></div>
     </div><div id="namespace_loadobservations" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -261,7 +271,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_connectors"
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1511 symbols</span><svg
+              <span class="leading-none">view all 1532 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -276,7 +286,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_connectors"
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/connect/commands_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_connectorconnect" title="connectorConnect">connectorConnect</a></li><li><a href="#namespace_connectordisconnect" title="connectorDisconnect">connectorDisconnect</a></li><li><a href="#namespace_estateassets" title="estateAssets">estateAssets</a></li><li><a href="#namespace_estatecheck" title="estateCheck">estateCheck</a></li><li><a href="#namespace_estateobserve" title="estateObserve">estateObserve</a></li><li><a href="#namespace_joinfleet" title="joinFleet">joinFleet</a></li><li><a href="#namespace_loadobservations" title="loadObservations">loadObservations</a></li></ul></li><li><a href="#archon/connect/commands_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_connectors" title="CONNECTORS">CONNECTORS</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/connect/commands_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_connectorconnect" title="connectorConnect">connectorConnect</a></li><li><a href="#namespace_connectordisconnect" title="connectorDisconnect">connectorDisconnect</a></li><li><a href="#namespace_estateassets" title="estateAssets">estateAssets</a></li><li><a href="#namespace_estatecheck" title="estateCheck">estateCheck</a></li><li><a href="#namespace_estateobserve" title="estateObserve">estateObserve</a></li><li><a href="#namespace_estatequerycommand" title="estateQueryCommand">estateQueryCommand</a></li><li><a href="#namespace_joinfleet" title="joinFleet">joinFleet</a></li><li><a href="#namespace_loadestate" title="loadEstate">loadEstate</a></li><li><a href="#namespace_loadobservations" title="loadObservations">loadObservations</a></li></ul></li><li><a href="#archon/connect/commands_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_connectors" title="CONNECTORS">CONNECTORS</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>
