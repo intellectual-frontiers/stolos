@@ -28,14 +28,14 @@ export function osLogo(os: string): string | undefined {
     ? "linux"
     : logoFor(os);
 }
-import type { PcCloud, PcFacts, PcMachine } from "./pc.ts";
+import type { PcConnector, PcFacts, PcMachine } from "./pc.ts";
 
 /** The Stolos Console's menu. */
 export const STOLOS_NAV: NavItem[] = [
   { group: "Fleet", label: "Overview", href: "/" },
   { group: "Fleet", label: "Machines", href: "/machines" },
   { group: "Fleet", label: "Add a machine", href: "/add" },
-  { group: "Fleet", label: "Clouds", href: "/clouds" },
+  { group: "Fleet", label: "Connected accounts", href: "/clouds" },
   { group: "Fleet", label: "Ask every machine", href: "/query" },
   { group: "Fleet", label: "Installs", href: "/boot" },
   { group: "Fleet", label: "Changes", href: "/changes" },
@@ -45,7 +45,7 @@ export const STOLOS_NAV: NavItem[] = [
   { group: "Actions", label: "The fleet", href: "/actions/fleet" },
   { group: "Actions", label: "Servers", href: "/actions/machines" },
   { group: "Actions", label: "Adopted and devices", href: "/actions/adopted" },
-  { group: "Actions", label: "Clouds", href: "/actions/clouds" },
+  { group: "Actions", label: "Connected accounts", href: "/actions/clouds" },
   { group: "Actions", label: "Signers and keys", href: "/actions/trust" },
   { group: "Actions", label: "Vault and backups", href: "/actions/vault" },
   { group: "Learn", label: "How it works", href: "/how" },
@@ -163,20 +163,20 @@ export const STOLOS_GROUPS: StolosGroup[] = [
   },
   {
     id: "clouds",
-    label: "Clouds",
+    label: "Connected accounts",
     intro:
       "What the fleet keeps in Cloudflare, Microsoft 365 and Azure, AWS, and Hetzner, read with read-only credentials. Stolos never changes a cloud.",
-    names: ["cloud connect", "cloud observe", "cloud check", "cloud assets", "cloud disconnect"],
-    first: "cloud check",
+    names: ["connect", "estate observe", "estate check", "estate assets", "disconnect"],
+    first: "estate check",
     diagram: (f) =>
       `flowchart LR
-  vault["Vault: read-only credentials"] --> observe["cloud observe"]
+  vault["Vault: read-only credentials"] --> observe["estate observe"]
 ${
         f.clouds.map((c) =>
           `  observe --> ${c.id}["${m(c.title)}${c.connected ? "" : " (not connected)"}"]`
         ).join("\n")
       }
-  observe --> git["fleets/${m(f.fleet.id)}/clouds/*.ts"]`,
+  observe --> git["fleets/${m(f.fleet.id)}/estate/*.ts"]`,
     caption: "Each observation is a file in Git: its history is the account's history.",
   },
   {
@@ -666,14 +666,14 @@ export function machinePage(f: PcFacts, name: string, now = Date.now()): Html | 
   `;
 }
 
-function cloudCard(c: PcCloud, now: number): Html {
+function cloudCard(c: PcConnector, now: number): Html {
   const kinds = new Map<string, number>();
   for (const a of c.observed?.assets ?? []) kinds.set(a.kind, (kinds.get(a.kind) ?? 0) + 1);
   return html`<div class="card" id="${c.id}">
     <div class="row spread"><h2>${c.logo ? logo(c.logo, 20) : ""} ${c.title}</h2>${
     c.connected ? html`<span class="pill ok">connected</span>` : html`
       <a class="btn ghost"
-        href="/actions/clouds?cmd=cloud%20connect&provider=${c.id}">Connect (read-only)</a>
+        href="/actions/clouds?cmd=connect&provider=${c.id}">Connect (read-only)</a>
     `
   }</div>
     ${
@@ -729,11 +729,11 @@ function cloudCard(c: PcCloud, now: number): Html {
 }
 
 /** The clouds. */
-export function cloudsPage(f: PcFacts, now = Date.now()): Html {
+export function connectorsPage(f: PcFacts, now = Date.now()): Html {
   return html`
-    <div class="pagehead"><div><div class="crumb">${f.fleet.title}</div><h1>Clouds</h1>
-      <p>What the fleet keeps in its cloud accounts, read with read-only credentials, and how each account is set up. Stolos never changes a cloud.</p></div>
-      <a class="btn" href="/actions/clouds?cmd=cloud%20observe">Observe every cloud now</a></div>
+    <div class="pagehead"><div><div class="crumb">${f.fleet.title}</div><h1>Connected accounts</h1>
+      <p>The fleet's outside accounts (clouds, identity, code, HR, and more), read with read-only credentials, and how each is set up. Stolos never changes them.</p></div>
+      <a class="btn" href="/actions/clouds?cmd=estate%20observe">Observe every account now</a></div>
     <div class="stack">${f.clouds.map((c) => cloudCard(c, now))}</div>
   `;
 }
@@ -1115,8 +1115,8 @@ export const ADD_CHOICES: Array<{ id: string; title: string; text: string }> = [
   },
   {
     id: "cloud",
-    title: "A cloud account",
-    text: "Cloudflare, Microsoft 365 and Azure, AWS, Hetzner: read only, never changed.",
+    title: "A cloud or SaaS account",
+    text: "Clouds, identity providers, code hosts, HR systems: read only, never changed.",
   },
   {
     id: "server",
@@ -1184,7 +1184,7 @@ export function addStep(o: {
   what: string;
   name: string;
   lines?: { posix: string; windows?: string };
-  clouds: PcCloud[];
+  clouds: PcConnector[];
   recipes: Record<
     string,
     {
@@ -1249,7 +1249,7 @@ export function addStep(o: {
             `
             : ""
         }
-        <div><a class="btn" href="/actions/clouds?cmd=cloud%20connect&provider=${x.id}">Connect ${x.title} (read only)</a></div>
+        <div><a class="btn" href="/actions/clouds?cmd=connect&provider=${x.id}">Connect ${x.title} (read only)</a></div>
       </div>`;
       })
     }</div>`;

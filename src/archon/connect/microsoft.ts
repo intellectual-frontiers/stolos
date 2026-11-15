@@ -9,14 +9,14 @@
  */
 
 import {
+  type Asset,
   check,
-  type CloudAsset,
-  type CloudProvider,
+  type Connector,
   fresh,
   getJson,
   type Http,
   orGap,
-} from "./cloud.ts";
+} from "./connector.ts";
 
 const GRAPH = "https://graph.microsoft.com/v1.0";
 const ARM = "https://management.azure.com";
@@ -55,8 +55,9 @@ async function pages<T>(http: Http, url: string, auth: Record<string, string>): 
 }
 
 /** Microsoft 365 and Azure. */
-export const microsoft: CloudProvider = {
+export const microsoft: Connector = {
   id: "microsoft",
+  category: "identity",
   title: "Microsoft 365 and Azure",
   logo: "",
   connectHelp: [
@@ -85,7 +86,7 @@ export const microsoft: CloudProvider = {
   ],
   async observe(cred, http, now) {
     const gaps: string[] = [];
-    const assets: CloudAsset[] = [];
+    const assets: Asset[] = [];
     const posture: Record<string, string | number | boolean> = {};
     const g = {
       Authorization: `Bearer ${await token(http, cred, "https://graph.microsoft.com/.default")}`,

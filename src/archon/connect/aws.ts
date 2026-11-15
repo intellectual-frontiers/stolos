@@ -8,14 +8,14 @@
  */
 
 import {
+  AccessDenied,
+  type Asset,
   check,
-  type CloudAsset,
-  CloudDenied,
-  type CloudProvider,
+  type Connector,
   fresh,
   type Http,
   orGap,
-} from "./cloud.ts";
+} from "./connector.ts";
 
 const enc = new TextEncoder();
 const hex = (b: ArrayBuffer) =>
@@ -116,7 +116,7 @@ async function call(
     headers,
   });
   if (res.status === 403 || res.status === 401) {
-    throw new CloudDenied(
+    throw new AccessDenied(
       `${r.service} ${r.query.Action ?? r.path}: ${xmlOne(res.text, "Code") || res.status}`,
     );
   }
@@ -134,8 +134,9 @@ async function call(
 }
 
 /** AWS. */
-export const aws: CloudProvider = {
+export const aws: Connector = {
   id: "aws",
+  category: "cloud",
   title: "Amazon Web Services",
   logo: "",
   connectHelp: [
@@ -157,7 +158,7 @@ export const aws: CloudProvider = {
   ],
   async observe(cred, http, now) {
     const gaps: string[] = [];
-    const assets: CloudAsset[] = [];
+    const assets: Asset[] = [];
     const posture: Record<string, string | number | boolean> = {};
     const q = async (
       service: string,
@@ -254,7 +255,7 @@ export const aws: CloudProvider = {
         ].every((t) => xmlOne(x, t) === "true");
       });
     } catch (e) {
-      if (e instanceof CloudDenied) gaps.push(`S3 account public access block: ${e.message}`);
+      if (e instanceof AccessDenied) gaps.push(`S3 account public access block: ${e.message}`);
       else if ((e as { status?: number }).status === 404) posture.s3BlockPublic = false;
       else throw e;
     }

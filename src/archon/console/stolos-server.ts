@@ -38,7 +38,7 @@ import {
   answerTable,
   bootPage,
   changesPage,
-  cloudsPage,
+  connectorsPage,
   evidence,
   launchPage,
   machinePage,
@@ -468,7 +468,7 @@ export function stolosHandler(
             : [what];
           lines = await deps.integrate(name, as);
         }
-        const { CLOUDS } = await import("../cloud/commands.ts");
+        const { CONNECTORS } = await import("../connect/commands.ts");
         const { SNMP_HELP } = await import("../device/commands.ts");
         return await frame(
           s,
@@ -479,13 +479,15 @@ export function stolosHandler(
             name,
             ...(lines ? { lines } : {}),
             clouds: f.clouds,
-            recipes: Object.fromEntries(CLOUDS.map((c) => [c.id, c.recipe])),
+            recipes: Object.fromEntries(CONNECTORS.map((c) => [c.id, c.recipe])),
             snmpHelp: SNMP_HELP,
           }),
           f,
         );
       }
-      if (path === "/clouds") return await frame(s, "Clouds", "/clouds", cloudsPage(f), f);
+      if (path === "/clouds") {
+        return await frame(s, "Connected accounts", "/clouds", connectorsPage(f), f);
+      }
       if (path === "/query") {
         return await frame(
           s,

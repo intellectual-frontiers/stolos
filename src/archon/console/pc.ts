@@ -15,7 +15,7 @@ import { join } from "../core/path.ts";
 import { P } from "../core/paths.ts";
 import type { PolicyResult } from "../adopt/policy.ts";
 import type { AdoptedDef, Observed } from "../adopt/adopt.ts";
-import type { CloudObserved } from "../cloud/cloud.ts";
+import type { Observation } from "../connect/connector.ts";
 
 /** One machine, whatever its kind. */
 export interface PcMachine {
@@ -50,7 +50,7 @@ export interface PcMachine {
 }
 
 /** One cloud account, observed. */
-export interface PcCloud {
+export interface PcConnector {
   /** The provider's id. */
   id: string;
   /** Its name for people. */
@@ -60,7 +60,7 @@ export interface PcCloud {
   /** Connected on this PC (its credential is in the vault). */
   connected: boolean;
   /** The last observation, when there is one. */
-  observed?: CloudObserved;
+  observed?: Observation;
   /** Its posture policies. */
   results: PolicyResult[];
 }
@@ -88,7 +88,7 @@ export interface PcFacts {
   /** Adopted machines with their observations and policies. */
   adopted: Array<{ machine: AdoptedDef; observed?: Observed; results: PolicyResult[] }>;
   /** Every cloud provider. */
-  clouds: PcCloud[];
+  clouds: PcConnector[];
   /** Devices read over SNMPv3, with their policies. */
   devices: Array<
     {
@@ -114,8 +114,8 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
   const { getRecord } = await import("../state/store.ts");
   const { loadAdopted } = await import("../adopt/adopt.ts");
   const { policies } = await import("../adopt/policy.ts");
-  const { CLOUDS, loadClouds } = await import("../cloud/commands.ts");
-  const { cloudCredPath } = await import("../cloud/cloud.ts");
+  const { CONNECTORS, loadObservations } = await import("../connect/commands.ts");
+  const { connectorCredPath } = await import("../connect/connector.ts");
   const { exists } = await import("../core/fsx.ts");
   const { readPin } = await import("../fleet/upgrade.ts");
   const fleet = await loadFleet().catch(warn("fleet.ts"));
@@ -224,15 +224,15 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
       failing: [],
     });
   }
-  const observed = (await loadClouds().catch(warn("cloud observations"))) ?? [];
-  const clouds: PcCloud[] = [];
-  for (const c of CLOUDS) {
+  const observed = (await loadObservations().catch(warn("cloud observations"))) ?? [];
+  const clouds: PcConnector[] = [];
+  for (const c of CONNECTORS) {
     const o = observed.find((x) => x.provider === c.id);
     clouds.push({
       id: c.id,
       title: c.title,
       logo: c.logo,
-      connected: await exists(cloudCredPath(c.id)),
+      connected: await exists(connectorCredPath(c.id)),
       ...(o ? { observed: o } : {}),
       results: o ? c.policies(o, now) : [],
     });

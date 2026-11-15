@@ -10,8 +10,8 @@ import { policies } from "../../src/archon/adopt/policy.ts";
 import { type DeviceDef, devicePolicies } from "../../src/archon/device/device.ts";
 import { toObserved } from "../../src/archon/adopt/adopt.ts";
 import { parseProbe } from "../../src/archon/adopt/probe.ts";
-import { cloudflare } from "../../src/archon/cloud/cloudflare.ts";
-import type { CloudObserved } from "../../src/archon/cloud/cloud.ts";
+import { cloudflare } from "../../src/archon/connect/cloudflare.ts";
+import type { Observation } from "../../src/archon/connect/connector.ts";
 
 const now = new Date().toISOString().replace(/\.\d+Z$/, "Z");
 const mac = toObserved(
@@ -47,7 +47,7 @@ const machines = [
     }],
   },
 ];
-const cf: CloudObserved = {
+const cf: Observation = {
   at: now,
   provider: "cloudflare",
   account: "Example Co",

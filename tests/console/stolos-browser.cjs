@@ -189,14 +189,14 @@ async function launch(page) {
   check(shown === 1, `the filter shows ${shown} machines for "macos"`);
   // The search finds a command in another group.
   await page.goto(`${base}/actions/vault`);
-  await page.fill(".cmdlist input[type=search]", "cloud connect");
+  await page.fill(".cmdlist input[type=search]", "connect");
   await page.waitForTimeout(300);
   const found = await page.evaluate(() =>
     [...document.querySelectorAll(".cmdlist a")].filter((a) => a.offsetParent !== null).map((a) =>
       a.querySelector(".mono").textContent
     )
   );
-  check(found.includes("cloud connect"), `search found ${JSON.stringify(found)}`);
+  check(found.includes("connect"), `search found ${JSON.stringify(found)}`);
   // Keys that change are not offered here.
   await page.goto(`${base}/actions/trust?cmd=keys%20rotate`);
   check(

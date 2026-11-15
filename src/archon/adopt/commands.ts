@@ -355,7 +355,7 @@ export async function discover(json = false): Promise<number> {
   type D = import("./discover.ts").Discovered;
   const { loadHosts } = await import("../model/load.ts");
   const { loadRegistration } = await import("../fleet/registration.ts");
-  const { loadClouds } = await import("../cloud/commands.ts");
+  const { loadObservations } = await import("../connect/commands.ts");
   const hosts = await loadHosts();
   const adopted = await loadAdopted();
   const macs: string[] = [];
@@ -369,7 +369,7 @@ export async function discover(json = false): Promise<number> {
     address: n.address,
     id: n.mac,
   }));
-  for (const o of await loadClouds()) {
+  for (const o of await loadObservations()) {
     for (const a of o.assets) {
       if (!["server", "ec2-instance"].includes(a.kind) || a.fleetMachine) continue;
       const address = String(a.facts?.ipv4 ?? a.facts?.publicIp ?? "");

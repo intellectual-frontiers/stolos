@@ -7,15 +7,15 @@
  */
 
 import {
+  type Asset,
   check,
-  type CloudAsset,
-  type CloudObserved,
-  type CloudProvider,
+  type Connector,
   fresh,
   getJson,
   type Http,
+  type Observation,
   orGap,
-} from "./cloud.ts";
+} from "./connector.ts";
 import type { PolicyResult } from "../adopt/policy.ts";
 
 const API = "https://api.cloudflare.com/client/v4";
@@ -41,8 +41,9 @@ async function one<T>(http: Http, path: string, auth: Record<string, string>): P
 }
 
 /** Cloudflare. */
-export const cloudflare: CloudProvider = {
+export const cloudflare: Connector = {
   id: "cloudflare",
+  category: "cloud",
   title: "Cloudflare",
   logo: "cloudflare",
   connectHelp: [
@@ -61,8 +62,8 @@ export const cloudflare: CloudProvider = {
   async observe(cred, http, now) {
     const auth = { Authorization: `Bearer ${cred.token}` };
     const gaps: string[] = [];
-    const assets: CloudAsset[] = [];
-    const posture: CloudObserved["posture"] = {};
+    const assets: Asset[] = [];
+    const posture: Observation["posture"] = {};
     const accounts = await all<{ id: string; name: string }>(http, "/accounts", auth);
     for (const a of accounts) {
       assets.push({ kind: "account", id: a.id, name: a.name });

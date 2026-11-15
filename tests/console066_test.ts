@@ -130,7 +130,7 @@ Deno.test("066: what the console offers: person-only commands yes, keys that cha
       "apply",
       "fleet status",
       "host adopt",
-      "cloud connect",
+      "connect",
       "vault backup",
       "keys",
       "fleet query",
@@ -145,7 +145,7 @@ Deno.test("066: what the console offers: person-only commands yes, keys that cha
   }
   // Every offered command is in a group whose page lists it.
   for (const n of names) assert(STOLOS_GROUPS.some((g) => g.names.includes(n)), `${n} has a group`);
-  assertEquals(stolosGroupOf("cloud check").id, "clouds");
+  assertEquals(stolosGroupOf("estate check").id, "clouds");
 });
 
 Deno.test("066: every page answers, and the downloads are for auditors", async () => {
@@ -211,7 +211,7 @@ Deno.test("066: boot.log as install timelines: Ready, under way, stopped, and ar
 
 Deno.test("066 acceptance: choices, long values, quoting, bad addresses, signers in the terminal", async () => {
   const { argvFor, shellWords } = await import("../src/archon/console/forms.ts");
-  const connect = stolosCommands().find((c) => c.name === "cloud connect")!;
+  const connect = stolosCommands().find((c) => c.name === "connect")!;
   assert(
     "error" in argvFor(connect, { provider: "cloudfare" }),
     "a misspelled provider is refused",

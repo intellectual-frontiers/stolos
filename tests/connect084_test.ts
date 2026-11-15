@@ -1,12 +1,12 @@
 // Spec 067 (clouds): read-only inventory and posture, against fake provider APIs.
 import { assert, assertEquals, assertStringIncludes } from "./assert.ts";
-import type { Http } from "../src/archon/cloud/cloud.ts";
-import { cloudSource } from "../src/archon/cloud/cloud.ts";
-import { cloudflare } from "../src/archon/cloud/cloudflare.ts";
-import { hetzner } from "../src/archon/cloud/hetzner.ts";
-import { microsoft } from "../src/archon/cloud/microsoft.ts";
-import { aws, sigv4, xmlAll } from "../src/archon/cloud/aws.ts";
-import { CLOUDS, joinFleet } from "../src/archon/cloud/commands.ts";
+import type { Http } from "../src/archon/connect/connector.ts";
+import { observationSource } from "../src/archon/connect/connector.ts";
+import { cloudflare } from "../src/archon/connect/cloudflare.ts";
+import { hetzner } from "../src/archon/connect/hetzner.ts";
+import { microsoft } from "../src/archon/connect/microsoft.ts";
+import { aws, sigv4, xmlAll } from "../src/archon/connect/aws.ts";
+import { CONNECTORS, joinFleet } from "../src/archon/connect/commands.ts";
 
 const NOW = new Date("2026-11-15T12:00:00Z");
 
@@ -94,7 +94,7 @@ Deno.test("067: Cloudflare inventory, a denied part as a gap, and the TLS postur
     "server1",
   );
   assertEquals(joined.assets.find((a) => a.name === "www.example.org")?.fleetMachine, undefined);
-  assertStringIncludes(cloudSource(o), "GENERATED");
+  assertStringIncludes(observationSource(o), "GENERATED");
 });
 
 Deno.test("067: a Cloudflare token that cannot list zones fails loudly", async () => {
@@ -278,8 +278,8 @@ Deno.test("067: AWS root MFA, S3 public access, EC2 across regions", async () =>
 });
 
 Deno.test("067: every provider says how to make a read-only credential, and names SCF controls", () => {
-  assertEquals(CLOUDS.map((c) => c.id), ["cloudflare", "microsoft", "aws", "hetzner"]);
-  for (const c of CLOUDS) {
+  assertEquals(CONNECTORS.map((c) => c.id), ["cloudflare", "microsoft", "aws", "hetzner"]);
+  for (const c of CONNECTORS) {
     assert(c.connectHelp.join(" ").match(/read/i), `${c.id}: read-only help`);
     assert(c.fields.some((f) => f.secret), `${c.id}: a secret field`);
   }

@@ -120,11 +120,11 @@
  *
  * ```mermaid
  * flowchart LR
- *   vault["Vault: clouds/&lt;provider&gt;/credential.json (read-only)"] --> observe["deno task stolos cloud observe"]
+ *   vault["Vault: connectors/&lt;provider&gt;/credential.json (read-only)"] --> observe["deno task stolos estate observe"]
  *   observe -- "HTTPS GET" --> cf["Cloudflare"] & ms["Microsoft 365 and Azure"] & aws["AWS"] & hz["Hetzner"]
- *   observe --> file["fleets/&lt;fleet&gt;/clouds/&lt;provider&gt;.ts (GENERATED)"]
- *   file --> check["cloud check: posture policies (SCF)"]
- *   file --> assets["cloud assets: one table"]
+ *   observe --> file["fleets/&lt;fleet&gt;/estate/&lt;provider&gt;.ts (GENERATED)"]
+ *   file --> check["estate check: posture policies (SCF)"]
+ *   file --> assets["estate assets: one table"]
  * ```
  *
  * | Provider                | What Stolos reads                                                             | Posture policies                                                    |
@@ -135,18 +135,18 @@
  * | Hetzner Cloud           | servers, volumes, firewalls, primary IPs, load balancers                      | backups, a firewall on every server, deletion protection            |
  *
  * ```bash
- * deno task stolos cloud connect cloudflare
+ * deno task stolos connect cloudflare
  * ```
  *
  * `connect` shows how to make a read-only credential in the provider's console, asks for it here
  * (nothing you type is shown), keeps it in the vault, and observes once. Then:
  *
- * - `deno task stolos cloud observe` reads every connected account again (daily is plenty);
- * - `deno task stolos cloud check` reports the posture (`--json` for an auditor);
- * - `deno task stolos cloud assets --kind dns-record` lists every DNS record and the machine it points
+ * - `deno task stolos estate observe` reads every connected account again (daily is plenty);
+ * - `deno task stolos estate check` reports the posture (`--json` for an auditor);
+ * - `deno task stolos estate assets --kind dns-record` lists every DNS record and the machine it points
  *   at;
- * - `git log -p fleets/<fleet>/clouds/cloudflare.ts` shows what changed, and when;
- * - `deno task stolos cloud disconnect cloudflare` forgets the credential (revoke it in Cloudflare
+ * - `git log -p fleets/<fleet>/estate/cloudflare.ts` shows what changed, and when;
+ * - `deno task stolos disconnect cloudflare` forgets the credential (revoke it in Cloudflare
  *   too).
  *
  * A part the credential may not read (Workers, say) is listed as not readable, not as a failure.

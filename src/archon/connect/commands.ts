@@ -1,5 +1,5 @@
 /**
- * Spec 067 (clouds): `stolos cloud connect | observe | check | assets | disconnect`.
+ * Spec 067 (clouds): `stolos connect | observe | check | assets | disconnect`.
  * Read-only visibility into the fleet's cloud accounts; managing them is out of scope.
  *
  * @module
@@ -11,49 +11,49 @@ import { P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";
 import { aws } from "./aws.ts";
 import {
-  type CloudAsset,
-  cloudCredPath,
-  cloudFile,
-  type CloudObserved,
-  type CloudProvider,
-  cloudSource,
+  type Asset,
+  type Connector,
+  connectorCredPath,
   type Http,
+  type Observation,
+  observationFile,
+  observationSource,
   realHttp,
-} from "./cloud.ts";
+} from "./connector.ts";
 import { cloudflare } from "./cloudflare.ts";
 import { hetzner } from "./hetzner.ts";
 import { microsoft } from "./microsoft.ts";
 
 /** Every provider, in the fleet's order of importance. */
-export const CLOUDS: CloudProvider[] = [cloudflare, microsoft, aws, hetzner];
+export const CONNECTORS: Connector[] = [cloudflare, microsoft, aws, hetzner];
 
 const fail = (): number => ui.problems.some((x) => x.level === "fail") ? 1 : 0;
 
-function provider(id: string): CloudProvider | undefined {
-  return CLOUDS.find((c) => c.id === id);
+function provider(id: string): Connector | undefined {
+  return CONNECTORS.find((c) => c.id === id);
 }
 
 function unknown(id: string): number {
-  ui.phase("Cloud").fail(`no cloud ${id}`, `one of: ${CLOUDS.map((c) => c.id).join(", ")}`);
+  ui.phase("Cloud").fail(`no cloud ${id}`, `one of: ${CONNECTORS.map((c) => c.id).join(", ")}`);
   return fail();
 }
 
 /** Each provider's last observation, from the fleet repository. */
-export async function loadClouds(): Promise<CloudObserved[]> {
-  const out: CloudObserved[] = [];
-  for (const c of CLOUDS) {
-    const f = cloudFile(c.id);
+export async function loadObservations(): Promise<Observation[]> {
+  const out: Observation[] = [];
+  for (const c of CONNECTORS) {
+    const f = observationFile(c.id);
     if (await exists(f)) {
-      out.push((await import(toFileUrl(f).href + `?t=${Date.now()}`)).observed as CloudObserved);
+      out.push((await import(toFileUrl(f).href + `?t=${Date.now()}`)).observed as Observation);
     }
   }
   return out;
 }
 
 /** Mark the assets that belong to a fleet machine: a DNS record or server named after it. */
-export function joinFleet(o: CloudObserved, machines: string[], domain?: string): CloudObserved {
+export function joinFleet(o: Observation, machines: string[], domain?: string): Observation {
   const names = new Set(machines);
-  const assets = o.assets.map((a): CloudAsset => {
+  const assets = o.assets.map((a): Asset => {
     const label = a.name.split(".")[0];
     const inDomain = !domain || a.kind !== "dns-record" || a.name === `${label}.${domain}` ||
       a.name.endsWith(`.${domain}`);
@@ -66,7 +66,7 @@ export function joinFleet(o: CloudObserved, machines: string[], domain?: string)
 
 async function readCred(id: string): Promise<Record<string, string> | undefined> {
   const { readSecret } = await import("../core/secrets.ts");
-  const t = await readSecret(cloudCredPath(id));
+  const t = await readSecret(connectorCredPath(id));
   return t ? JSON.parse(t) : undefined;
 }
 
@@ -89,18 +89,18 @@ async function fleetNames(): Promise<{ names: string[]; domain?: string }> {
 }
 
 /** Observe one provider and write its file; the observation, or undefined after a failure. */
-async function observeOne(c: CloudProvider, http: Http): Promise<CloudObserved | undefined> {
+async function observeOne(c: Connector, http: Http): Promise<Observation | undefined> {
   const p = ui.phase(c.title);
   const cred = await readCred(c.id);
   if (!cred) {
-    p.done(`not connected (deno task stolos cloud connect ${c.id})`);
+    p.done(`not connected (deno task stolos connect ${c.id})`);
     return undefined;
   }
   try {
     const { names, domain } = await fleetNames();
     const o = joinFleet(await c.observe(cred, http, new Date()), names, domain);
-    await Deno.mkdir(dirname(cloudFile(c.id)), { recursive: true });
-    await Deno.writeTextFile(cloudFile(c.id), cloudSource(o));
+    await Deno.mkdir(dirname(observationFile(c.id)), { recursive: true });
+    await Deno.writeTextFile(observationFile(c.id), observationSource(o));
     const mine = o.assets.filter((a) => a.fleetMachine).length;
     for (const g of o.gaps) p.note(`not readable: ${g}`);
     p.done(
@@ -112,14 +112,14 @@ async function observeOne(c: CloudProvider, http: Http): Promise<CloudObserved |
   } catch (e) {
     p.fail(
       `${c.title} did not answer: ${(e as Error).message}`,
-      `check the credential: deno task stolos cloud connect ${c.id}`,
+      `check the credential: deno task stolos connect ${c.id}`,
     );
     return undefined;
   }
 }
 
-/** `stolos cloud connect <provider>`: how to make a read-only credential, then type it (hidden). */
-export async function cloudConnect(id: string, http: Http = realHttp): Promise<number> {
+/** `stolos connect <provider>`: how to make a read-only credential, then type it (hidden). */
+export async function connectorConnect(id: string, http: Http = realHttp): Promise<number> {
   const c = provider(id);
   if (!c) return unknown(id);
   console.log(`\n  ${c.title}: make a read-only credential (Stolos never changes a cloud):\n`);
@@ -133,7 +133,7 @@ export async function cloudConnect(id: string, http: Http = realHttp): Promise<n
       const v = f.secret ? await readSecret(`  ${f.hint}: `) : (prompt(`  ${f.hint}:`) ?? "");
       if (!v.trim()) {
         ui.resume();
-        ui.phase("Connect").fail(`no ${f.hint}`, `deno task stolos cloud connect ${id}`);
+        ui.phase("Connect").fail(`no ${f.hint}`, `deno task stolos connect ${id}`);
         return fail();
       }
       cred[f.name] = v.trim();
@@ -142,8 +142,10 @@ export async function cloudConnect(id: string, http: Http = realHttp): Promise<n
     ui.resume();
   }
   const { writeSecret } = await import("../core/secrets.ts");
-  await writeSecret(cloudCredPath(id), JSON.stringify(cred, null, 2) + "\n");
-  ui.phase("Connect").done(`${c.title}: the credential is in the vault (${join("clouds", id)})`);
+  await writeSecret(connectorCredPath(id), JSON.stringify(cred, null, 2) + "\n");
+  ui.phase("Connect").done(
+    `${c.title}: the credential is in the vault (${join("connectors", id)})`,
+  );
   const o = await observeOne(c, http);
   if (o) {
     ui.next.push(`keep the observation: deno task stolos apply -m "067-adopt: ${id} observed"`);
@@ -151,19 +153,19 @@ export async function cloudConnect(id: string, http: Http = realHttp): Promise<n
   return fail();
 }
 
-/** `stolos cloud observe [provider]`. */
-export async function cloudObserve(id?: string, http: Http = realHttp): Promise<number> {
+/** `stolos estate observe [provider]`. */
+export async function estateObserve(id?: string, http: Http = realHttp): Promise<number> {
   if (id && !provider(id)) return unknown(id);
-  for (const c of CLOUDS.filter((x) => !id || x.id === id)) await observeOne(c, http);
+  for (const c of CONNECTORS.filter((x) => !id || x.id === id)) await observeOne(c, http);
   ui.next.push(`keep the observations: deno task stolos apply -m "067-adopt: clouds observed"`);
   return fail();
 }
 
-/** `stolos cloud check [provider] [--json]`. */
-export async function cloudCheck(id?: string, json = false): Promise<number> {
+/** `stolos estate check [provider] [--json]`. */
+export async function estateCheck(id?: string, json = false): Promise<number> {
   const { report } = await import("../adopt/commands.ts");
   const now = Date.now();
-  const all = (await loadClouds()).filter((o) => !id || o.provider === id);
+  const all = (await loadObservations()).filter((o) => !id || o.provider === id);
   const results = all.map((o) => ({
     provider: o.provider,
     account: o.account,
@@ -172,16 +174,16 @@ export async function cloudCheck(id?: string, json = false): Promise<number> {
   if (json) console.log(JSON.stringify(results, null, 2));
   else {
     if (!all.length) {
-      ui.phase("Cloud").done("no cloud observed yet (deno task stolos cloud connect cloudflare)");
+      ui.phase("Estate").done("no account observed yet (deno task stolos connect cloudflare)");
     }
     for (const r of results) report(`${r.provider} (${r.account})`, r.results);
   }
   return results.some((r) => r.results.some((x) => x.status === "fail")) ? 1 : 0;
 }
 
-/** `stolos cloud assets [provider] [--kind k] [--json]`: one table of everything observed. */
-export async function cloudAssets(id?: string, kind?: string, json = false): Promise<number> {
-  const rows = (await loadClouds())
+/** `stolos estate assets [provider] [--kind k] [--json]`: one table of everything observed. */
+export async function estateAssets(id?: string, kind?: string, json = false): Promise<number> {
+  const rows = (await loadObservations())
     .filter((o) => !id || o.provider === id)
     .flatMap((o) => o.assets.map((a) => ({ provider: o.provider, ...a })))
     .filter((a) => !kind || a.kind === kind);
@@ -202,16 +204,16 @@ export async function cloudAssets(id?: string, kind?: string, json = false): Pro
   return 0;
 }
 
-/** `stolos cloud disconnect <provider>`: the credential goes from the vault; the last observation stays in Git. */
-export async function cloudDisconnect(id: string): Promise<number> {
+/** `stolos disconnect <provider>`: the credential goes from the vault; the last observation stays in Git. */
+export async function connectorDisconnect(id: string): Promise<number> {
   const c = provider(id);
   if (!c) return unknown(id);
   const { removeSecret } = await import("../core/secrets.ts");
-  await removeSecret(cloudCredPath(id));
+  await removeSecret(connectorCredPath(id));
   ui.phase("Disconnect").done(`${c.title}: the credential is gone from this PC's vault`);
   ui.next.push(
     `revoke it in ${c.title} too; the last observation stays in ${
-      cloudFile(id).replace(P.repo + "/", "")
+      observationFile(id).replace(P.repo + "/", "")
     } (delete it to forget)`,
   );
   return 0;

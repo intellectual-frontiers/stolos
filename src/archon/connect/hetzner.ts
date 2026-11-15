@@ -5,7 +5,7 @@
  * @module
  */
 
-import { check, type CloudAsset, type CloudProvider, fresh, getJson, type Http } from "./cloud.ts";
+import { type Asset, check, type Connector, fresh, getJson, type Http } from "./connector.ts";
 
 const API = "https://api.hetzner.cloud/v1";
 
@@ -38,8 +38,9 @@ interface Server {
 }
 
 /** Hetzner Cloud. */
-export const hetzner: CloudProvider = {
+export const hetzner: Connector = {
   id: "hetzner",
+  category: "cloud",
   title: "Hetzner Cloud",
   logo: "hetzner",
   connectHelp: [
@@ -56,7 +57,7 @@ export const hetzner: CloudProvider = {
   fields: [{ name: "token", secret: true, hint: "the project's API token (Read)" }],
   async observe(cred, http, now) {
     const auth = { Authorization: `Bearer ${cred.token}` };
-    const assets: CloudAsset[] = [];
+    const assets: Asset[] = [];
     const servers = await all<Server>(http, "servers", auth);
     for (const s of servers) {
       assets.push({

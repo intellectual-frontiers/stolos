@@ -10,7 +10,7 @@ import {
 } from "../src/archon/compliance/report.ts";
 import { policies } from "../src/archon/adopt/policy.ts";
 import { toObserved } from "../src/archon/adopt/adopt.ts";
-import { CLOUDS } from "../src/archon/cloud/commands.ts";
+import { CONNECTORS } from "../src/archon/connect/commands.ts";
 import { FACTS } from "./console/serve-stolos.ts";
 
 Deno.test("068: every SCF id a check cites is in the catalog, and each maps somewhere", () => {
@@ -39,7 +39,7 @@ Deno.test("068: every SCF id a check cites is in the catalog, and each maps some
     posture: {},
     gaps: [],
   };
-  for (const c of CLOUDS) {
+  for (const c of CONNECTORS) {
     for (const r of c.policies({ ...empty, provider: c.id }, Date.now())) {
       r.scf.forEach((x) => cited.add(x));
     }
