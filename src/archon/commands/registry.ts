@@ -973,6 +973,64 @@ export const COMMANDS: Command[] = [
     },
   },
   {
+    name: "evidence export",
+    summary: "A period's evidence as one signed bundle an auditor checks offline",
+    description:
+      `Spec 072. Gathers, for the period: every commit in the fleet repository (each raw, with its SSH signature), each observation Stolos recorded in it (adopted machines, devices, the estate), the verify and install results this PC recorded, signers.ts, and the OSCAL assessment results. Each item is stored under its SHA-256 and listed in a hash-chained manifest, which your daily key signs (ssh-keygen asks its passphrase here; Stolos never sees it). Terminal only.`,
+    tier: "read",
+    noMcp: true,
+    args: [
+      { name: "from", type: "string", required: true, description: "The first day (YYYY-MM-DD)." },
+      { name: "to", type: "string", required: true, description: "The last day (YYYY-MM-DD)." },
+      {
+        name: "out",
+        type: "string",
+        description: "The ZIP to write (default: this PC's state directory, evidence/).",
+      },
+      {
+        name: "key",
+        type: "string",
+        description: "The private key to sign with (default: Git's signing key, your daily key).",
+      },
+    ],
+    examples: [{
+      cmd: "deno task stolos evidence export --from 2026-01-01 --to 2026-06-30",
+      text: "The first half of 2026, for a SOC 2 Type 2 period.",
+    }],
+    async run(a) {
+      const { evidenceExport } = await import("../evidence/commands.ts");
+      return await evidenceExport(a.from as string, a.to as string, {
+        ...(a.out ? { out: a.out as string } : {}),
+        ...(a.key ? { key: a.key as string } : {}),
+      });
+    },
+  },
+  {
+    name: "evidence verify",
+    summary: "Check an evidence bundle, offline: unchanged, complete, chained, signed",
+    description:
+      `Spec 072. Checks that every item is unchanged (its SHA-256), none is missing or added, the chain is whole, the manifest is signed by an allowed signer, and every commit carries a valid Git signature. Each problem is named with its reason; exits 1 on any. Without --signers it trusts the signers inside the bundle, and says so.`,
+    tier: "read",
+    args: [
+      {
+        name: "bundle",
+        type: "string",
+        positional: true,
+        required: true,
+        description: "The bundle (a ZIP).",
+      },
+      {
+        name: "signers",
+        type: "string",
+        description: "An allowed_signers file you trust (the fleet's, from elsewhere).",
+      },
+    ],
+    async run(a, ctx) {
+      const { evidenceVerify } = await import("../evidence/commands.ts");
+      return await evidenceVerify(a.bundle as string, a.signers as string | undefined, ctx.json);
+    },
+  },
+  {
     name: "compliance catalog",
     summary: "Download the SCF Council's and NIST's catalogs (pinned, SHA-256 checked), once",
     description:
@@ -3040,6 +3098,8 @@ const PC_COMMANDS = new Set([
   "compliance",
   "compliance catalog",
   "compliance export",
+  "evidence export",
+  "evidence verify",
   "console",
   "discover",
   "connect",

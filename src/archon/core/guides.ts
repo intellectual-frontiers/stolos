@@ -93,6 +93,12 @@ export const GUIDES: GuideDef[] = [
     module: "src/archon/compliance/mod.ts",
   },
   {
+    name: "evidence",
+    title: "Evidence bundles",
+    why: "A period's evidence, signed, for an auditor to check offline.",
+    module: "src/archon/evidence/mod.ts",
+  },
+  {
     name: "web",
     title: "HTTPS on every server",
     why: "Publishing services, certificates, the Archon Console.",
