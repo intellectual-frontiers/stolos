@@ -23,7 +23,7 @@ import { agentSetup, guideFor } from "../guide/guide.ts";
 import { fqdn, WEB } from "./config.ts";
 import { certificateOf, serverAddress } from "./commands.ts";
 import { markdownToHtml } from "./markdown.ts";
-import { renderGuide, renderWelcome, type Service, type WelcomeData } from "./welcome.ts";
+import { renderGuide, type Service, type WelcomeData } from "./welcome.ts";
 
 /** The repository's guides served here (docs/<name>.md), with their titles. */
 export const GUIDES: Array<{ name: string; title: string }> = [
@@ -233,35 +233,36 @@ export async function guidePage(hostName: string, docName: string): Promise<stri
 }
 
 /**
- * archon web serve: answer on 127.0.0.1:8090 until stopped. `/` is the welcome
- * page, `/guide/<name>` a guide, `/healthz` says ok; anything else is 404, and
- * an error is a 500 with its message.
+ * archon web serve (spec 065): the Archon Console on 127.0.0.1:8090, behind
+ * Traefik: sign-in with the server's own accounts, then Overview, Actions,
+ * Activity, How it works, and Guide (see console/server.ts). `/healthz` says
+ * ok without signing in.
  */
 export async function webServe(hostName: string): Promise<number> {
-  const html = (body: string, status = 200) =>
-    new Response(body, {
-      status,
-      headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" },
-    });
+  const { consoleHandler } = await import("../console/server.ts");
+  const { pamAuthenticator } = await import("../console/pam.ts");
+  const { Sessions, Throttle, systemAccounts } = await import("../console/auth.ts");
+  const { systemRunner } = await import("../console/exec.ts");
+  const { activityLog, guideBody, repoFacts } = await import("../console/machine.ts");
+  const fleet = await loadFleet();
+  const handler = consoleHandler({
+    host: hostName,
+    auth: pamAuthenticator(WEB.pamService),
+    accounts: systemAccounts,
+    runner: systemRunner,
+    sessions: new Sessions(),
+    throttle: new Throttle(),
+    data: () => cached("welcome", 5_000, () => welcomeData(hostName)),
+    repo: () => cached("repo", 15_000, () => repoFacts()),
+    activity: activityLog(),
+    guideDoc: (name) => guideBody(name, GUIDES, fleet.repository.slug),
+    cacheDir: `${Deno.env.get("HOME") ?? "/var/cache/archon-web"}/vendor`,
+  });
   const server = Deno.serve(
     { hostname: WEB.welcomeAddress, port: WEB.welcomePort, onListen: () => {} },
-    async (req) => {
-      const path = new URL(req.url).pathname;
-      try {
-        if (path === "/healthz") return new Response("ok\n");
-        if (path === "/") return html(renderWelcome(await welcomeData(hostName)));
-        const g = path.match(/^\/guide\/([a-z0-9-]+)$/);
-        if (g) {
-          const body = await guidePage(hostName, g[1]);
-          if (body) return html(body);
-        }
-        return new Response("not found\n", { status: 404 });
-      } catch (e) {
-        return new Response(`welcome page error: ${(e as Error).message}\n`, { status: 500 });
-      }
-    },
+    handler,
   );
-  console.log(`welcome page on http://${WEB.welcomeAddress}:${WEB.welcomePort} (behind Traefik)`);
+  console.log(`Archon Console on http://${WEB.welcomeAddress}:${WEB.welcomePort} (behind Traefik)`);
   await server.finished;
   return 0;
 }

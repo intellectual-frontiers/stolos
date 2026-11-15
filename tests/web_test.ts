@@ -482,3 +482,22 @@ Deno.test("046: reserved test domains (a synthetic fleet's) are known as such", 
     assert(!isReservedDomain(d), d);
   }
 });
+
+Deno.test("065: the console runs as archon-console (shadow, archon-ops), as a person's interface", () => {
+  const plan = resolvePlan(host(), webFleet());
+  const unit = plan.units.find((x) => x.unitName === WEB.welcomeUnit)!.content!;
+  assertStringIncludes(unit, "User=archon-console");
+  for (const g of ["archon", "archon-ops", "shadow"]) {
+    assertStringIncludes(unit, `SupplementaryGroups=${g}\n`);
+  }
+  assertStringIncludes(unit, "StateDirectory=archon-console");
+  assert(!unit.includes("DynamicUser"), "a fixed account (its groups are in sysusers)");
+  assert(!unit.includes("ARCHON_AGENT"), "a person, not an agent");
+  assert(!unit.includes("NoNewPrivileges=true"), "it hands commands to sudo");
+  const users = plan.files.find((x) => x.path === "/etc/sysusers.d/archon-web.conf")!.content!;
+  assertStringIncludes(users, 'u archon-console - "Archon Console"');
+  assertStringIncludes(users, "m archon-console shadow");
+  assertStringIncludes(users, "m archon-console archon-ops");
+  const pam = plan.files.find((x) => x.path === "/etc/pam.d/archon-console")!.content!;
+  assertStringIncludes(pam, "@include common-auth\n@include common-account");
+});

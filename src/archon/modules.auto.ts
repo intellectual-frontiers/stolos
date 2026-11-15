@@ -62,6 +62,7 @@ import "./console/exec.ts";
 import "./console/forms.ts";
 import "./console/html.ts";
 import "./console/layout.ts";
+import "./console/machine.ts";
 import "./console/pages.ts";
 import "./console/pam-worker.ts";
 import "./console/pam.ts";

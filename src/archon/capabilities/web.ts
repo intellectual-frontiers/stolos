@@ -80,14 +80,14 @@ export const web = (): Capability => ({ host, fleet }) => {
       managed: true,
       content: ini({
         Unit: {
-          Description: "Archon: this server's welcome page (loopback, behind Traefik)",
+          Description: "Archon Console: this server in the browser (loopback, behind Traefik)",
           Documentation: "man:archon-web-serve(1)",
           After: "network.target",
         },
         Service: {
           ExecStart: "/usr/local/bin/archon web serve",
+          // A person's interface, not an agent's: no ARCHON_AGENT (a person may type --confirm-destroy).
           Environment: [
-            "ARCHON_AGENT=web",
             "NO_COLOR=1",
             "OTEL_DENO=false",
             // Deno's cache, writable under ProtectSystem=strict.
@@ -95,15 +95,18 @@ export const web = (): Capability => ({ host, fleet }) => {
             "DENO_DIR=/var/cache/archon-web/deno",
           ],
           CacheDirectory: "archon-web",
-          // Reads the model, the status line, and the reports; writes nothing.
-          DynamicUser: true,
+          // The activity record (sign-ins and runs).
+          StateDirectory: "archon-console",
+          // Spec 065: its own account. Commands run through sudo (archon console exec checks
+          // them again and runs them outside this sandbox), so new privileges are allowed;
+          // /etc and /usr stay read-only here.
           User: WEB.welcomeUser,
-          SupplementaryGroups: ["archon", "archon-ops"],
-          ProtectSystem: "strict",
+          Group: WEB.welcomeUser,
+          SupplementaryGroups: ["archon", "archon-ops", "shadow"],
+          ProtectSystem: "full",
           ProtectHome: true,
           PrivateTmp: true,
-          NoNewPrivileges: true,
-          MemoryMax: "128M",
+          MemoryMax: "256M",
           Restart: "on-failure",
           RestartSec: 5,
         },
@@ -178,11 +181,25 @@ export const web = (): Capability => ({ host, fleet }) => {
             `g ${WEB.group} - - -`,
             `u traefik - "Archon Traefik" /var/lib/traefik /usr/sbin/nologin`,
             `m traefik ${WEB.group}`,
+            // Spec 065: the Archon Console's account and its groups.
+            `u ${WEB.welcomeUser} - "Archon Console" /var/lib/${WEB.welcomeUser} /usr/sbin/nologin`,
+            `m ${WEB.welcomeUser} archon`,
+            `m ${WEB.welcomeUser} archon-ops`,
+            `m ${WEB.welcomeUser} shadow`,
           ].join("\n") + "\n",
         mode: "0644",
         owner: "root",
         spec: SPEC,
         onChange: [{ kind: "run", argv: ["systemd-sysusers", "/etc/sysusers.d/archon-web.conf"] }],
+      },
+      {
+        // Spec 065: the console checks passwords as Ubuntu's own services do.
+        path: `/etc/pam.d/${WEB.pamService}`,
+        content:
+          "# Rendered by archon from spec 065-console. Do not edit.\n@include common-auth\n@include common-account\n",
+        mode: "0644",
+        owner: "root",
+        spec: SPEC,
       },
       {
         // Traefik reads container labels from Podman's Docker-compatible socket.

@@ -29,10 +29,13 @@ export const WEB = {
   /** The welcome page: archon web serve, on loopback only. */
   welcomeUnit: "archon-web.service",
   /**
-   * Its dynamic account. Not the unit's own name: systemd refuses a dynamic
-   * account whose name exists, and the group archon-web does.
+   * The Archon Console's own account (spec 065): in the shadow group (PAM
+   * checks passwords), archon (reads the model), and archon-ops (hands each
+   * command to `archon console exec` through sudo).
    */
-  welcomeUser: "archon-welcome",
+  welcomeUser: "archon-console",
+  /** The console's PAM service (/etc/pam.d/archon-console). */
+  pamService: "archon-console",
   /** The welcome page listens here (loopback: only Traefik reaches it). */
   welcomeAddress: "127.0.0.1",
   /** The welcome page's TCP port. */
