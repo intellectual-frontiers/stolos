@@ -11,8 +11,8 @@
  * @module
  */
 
-import { join } from "../core/path.ts";
-import { homeDir, run } from "../core/exec.ts";
+import { fs, path as paths, proc, stdio, tty } from "@intellectual-frontiers/ifc-ts/runtime";
+import { homeOf, run } from "../core/exec.ts";
 import { entryServes, findTarget, parsePgpass, readSecret, type Target } from "./connections.ts";
 
 /** Ubuntu's bundle of trusted roots (what libpq's sslrootcert=system means on Linux). */
@@ -35,9 +35,9 @@ const enc = encodeURIComponent;
 export function rainfrogArgs(t: Target): string[] {
   const base = `postgres://${enc(t.user)}@`;
   const url = t.network
-    ? `${base}${t.host}:${t.port}/${enc(t.database)}?sslmode=verify-full&sslrootcert=${
-      enc(SYSTEM_ROOTS)
-    }`
+    ? `${base}${t.host}:${t.port}/${enc(t.database)}?sslmode=verify-full&sslrootcert=${enc(
+        SYSTEM_ROOTS,
+      )}`
     : `${base}localhost:${t.port}/${enc(t.database)}?host=${enc(t.host)}&sslmode=disable`;
   return ["--driver", "postgres", "--url", url];
 }
@@ -55,18 +55,18 @@ export function pgcenterArgs(t: Target): { args: string[]; env: Record<string, s
 /** Whether the person's password file has a usable line for this target. */
 async function inPgpass(t: Target): Promise<boolean> {
   const me = (await run(["id", "-un"])).stdout.trim();
-  const path = Deno.env.get("PGPASSFILE") ||
-    join(Deno.env.get("HOME") ?? await homeDir(me), ".pgpass");
+  const path =
+    proc.env.get("PGPASSFILE") || paths.join(proc.env.get("HOME") ?? (await homeOf(me)), ".pgpass");
   try {
-    const st = await Deno.stat(path);
+    const st = await fs.stat(path);
     if (st.mode !== null && (st.mode & 0o077) !== 0) return false; // libpq ignores it
-    return parsePgpass(await Deno.readTextFile(path)).some((e) =>
+    return parsePgpass(await fs.readTextFile(path)).some((e) =>
       entryServes(e, {
         host: t.host,
         port: String(t.port),
         database: t.database,
         user: t.user,
-      })
+      }),
     );
   } catch {
     return false;
@@ -83,19 +83,21 @@ export async function pgTui(
   name: string,
   remote: boolean,
 ): Promise<number> {
-  if (!Deno.stdin.isTerminal() || !Deno.stdout.isTerminal()) {
-    console.error(`${TUIS[tool].command} needs a terminal: ${TUIS[tool].what} is full screen.`);
+  if (!tty.isTerminal("stdin") || !tty.isTerminal("stdout")) {
+    stdio.stderr.writeSync(
+      `${TUIS[tool].command} needs a terminal: ${TUIS[tool].what} is full screen.\n`,
+    );
     return 2;
   }
   if (!(await run(["sh", "-c", `command -v ${tool}`])).ok) {
-    console.error(
-      `${tool} is not installed here (the tool catalog installs it: archon tools sync).`,
+    stdio.stderr.writeSync(
+      `${tool} is not installed here (the tool catalog installs it: archon tools sync).\n`,
     );
     return 1;
   }
   const t = await findTarget(hostName, name, remote);
   if (typeof t === "string") {
-    console.error(t);
+    stdio.stderr.writeSync(`${t}\n`);
     return 1;
   }
   let args: string[];
@@ -106,23 +108,22 @@ export async function pgTui(
     if (t.network && !(await inPgpass(t))) {
       const pw = await readSecret(`Password for ${t.user} on ${t.host}: `);
       if (!pw) {
-        console.error("No password given.");
+        stdio.stderr.writeSync("No password given.\n");
         return 2;
       }
-      env.PGPASSWORD = pw; // this process's child only: never argv, a file, or a log
+      env["PGPASSWORD"] = pw; // this process's child only: never argv, a file, or a log
     }
   }
-  console.error(
+  stdio.stderr.writeSync(
     `${TUIS[tool].what}: ${t.user}@${
       t.network ? `${t.host}:${t.port} (TLS, verify-full)` : `${name} through ${t.host} (peer)`
-    }, database ${t.database}`,
+    }, database ${t.database}\n`,
   );
-  const child = new Deno.Command(tool, {
-    args,
+  const child = proc.spawn([tool, ...args], {
     env,
     stdin: "inherit",
     stdout: "inherit",
     stderr: "inherit",
-  }).spawn();
+  });
   return (await child.status).code;
 }

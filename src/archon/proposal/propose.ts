@@ -10,10 +10,9 @@
  * @module
  */
 
-import { join } from "../core/path.ts";
+import { fs, path as paths, proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
 import { P } from "../core/paths.ts";
-import { currentUser, isRoot, run } from "../core/exec.ts";
-import { ensureDir, exists } from "../core/fsx.ts";
+import { currentUser, run } from "../core/exec.ts";
 import { putRecord } from "../state/store.ts";
 import { VERSION } from "../version.ts";
 import type { HostDef } from "../model/types.ts";
@@ -45,33 +44,37 @@ export const PROPOSALS_DIR = "/var/lib/archon/proposals";
 /** What `archon propose` was asked for. */
 export interface ProposeOptions {
   /** Every item not proposed yet. */
-  all?: boolean;
+  all?: boolean | undefined;
   /** Intents by id (newline-separated when repeated). */
-  intent?: string;
+  intent?: string | undefined;
   /** Items by key (newline-separated when repeated). */
-  item?: string;
+  item?: string | undefined;
   /** The action for every chosen item (default adopt). */
-  action?: string;
+  action?: string | undefined;
   /** Items to revert instead (keys, newline-separated). */
-  revert?: string;
+  revert?: string | undefined;
   /** Items to keep local instead (keys, newline-separated). */
-  local?: string;
+  local?: string | undefined;
   /** Local: until this day (default 30 days from now). */
-  until?: string;
+  until?: string | undefined;
   /** Why (required, unless a recording gives it). */
-  reason?: string;
+  reason?: string | undefined;
   /** Print proposal.json; sign, record, and send nothing. */
-  dryRun?: boolean;
+  dryRun?: boolean | undefined;
   /** --json. */
-  json?: boolean;
+  json?: boolean | undefined;
 }
 
-const list = (s?: string) => (s ?? "").split(/[\n,]/).map((x) => x.trim()).filter(Boolean);
+const list = (s?: string) =>
+  (s ?? "")
+    .split(/[\n,]/)
+    .map((x) => x.trim())
+    .filter(Boolean);
 
 /** Who proposes: the person behind sudo (and the agent, when one runs it over MCP). */
 export function proposer(): string {
-  const who = Deno.env.get("SUDO_USER") || currentUser();
-  const agent = Deno.env.get("ARCHON_AGENT");
+  const who = proc.env.get("SUDO_USER") || currentUser();
+  const agent = proc.env.get("ARCHON_AGENT");
   return agent ? `${who} (via ${agent})` : who;
 }
 
@@ -84,7 +87,9 @@ export function choose(
 ): { chosen: DriftItem[]; choices: Record<string, Choice>; reason: string } {
   const open = unproposed(items);
   const keys = new Set<string>();
-  if (o.all) { for (const i of open) keys.add(i.key); }
+  if (o.all) {
+    for (const i of open) keys.add(i.key);
+  }
   let recorded: string | undefined;
   for (const id of list(o.intent)) {
     const i = intents.find((x) => x.id === id);
@@ -119,8 +124,8 @@ export function choose(
   if (!["adopt", "revert", "local"].includes(action)) {
     throw new Error(`--action: adopt, revert, or local, not ${action}`);
   }
-  const until = o.until ??
-    new Date(now.getTime() + LOCAL_DAYS * 86_400_000).toISOString().slice(0, 10);
+  const until =
+    o.until ?? new Date(now.getTime() + LOCAL_DAYS * 86_400_000).toISOString().slice(0, 10);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(until)) {
     throw new Error(`--until: a day (YYYY-MM-DD), not ${until}`);
   }
@@ -136,7 +141,7 @@ export function choose(
   }
   const chosen = items.filter((i) => keys.has(i.key));
   for (const i of chosen) {
-    if (i.managed && choices[i.key].action === "local") {
+    if (i.managed && choices[i.key]?.action === "local") {
       throw new Error(
         `${i.key} is managed by ${
           i.spec ?? "the plan"
@@ -152,12 +157,13 @@ export async function hostFileEvidence(
   path: string,
   birth?: Birth,
 ): Promise<FileEvidence | undefined> {
-  if (!(await exists(path))) return undefined;
-  const data = await Deno.readFile(path);
+  if (!(await fs.exists(path))) return undefined;
+  const data = await fs.readFile(path);
   const st = (await run(["stat", "-c", "%a %U %G", path])).stdout.trim().split(" ");
-  const diff = path.startsWith("/etc/") && birth?.etcCommit
-    ? (await run(["git", "-C", "/etc", "diff", birth.etcCommit, "--", path.slice(5)])).stdout
-    : undefined;
+  const diff =
+    path.startsWith("/etc/") && birth?.etcCommit
+      ? (await run(["git", "-C", "/etc", "diff", birth.etcCommit, "--", path.slice(5)])).stdout
+      : undefined;
   return await fileEvidence(path, data, {
     mode: st[0] ? st[0].padStart(4, "0") : undefined,
     owner: st[1],
@@ -169,9 +175,9 @@ export async function hostFileEvidence(
 /** The recordings on this host (`archon record`). */
 export async function recordings(host: string, dir: string = P.state): Promise<Recording[]> {
   const { listRecords } = await import("../state/store.ts");
-  return (await listRecords<Recording>(host, "recording", dir)).map((r) => r.body).filter((r) =>
-    r.id !== "current" && !!r.start
-  );
+  return (await listRecords<Recording>(host, "recording", dir))
+    .map((r) => r.body)
+    .filter((r) => r.id !== "current" && !!r.start);
 }
 
 /** `archon propose`: collect, choose, build, sign, keep, record, and mail. */
@@ -186,10 +192,10 @@ export async function proposeCommand(
   } = {},
 ): Promise<number> {
   const dir = deps.dir ?? P.state;
-  if (!o.dryRun && !isRoot() && !deps.sign) {
+  if (!o.dryRun && !proc.isRoot() && !deps.sign) {
     throw new Error("archon propose signs with the host key, as root (it elevates through sudo)");
   }
-  if (deps.collectFirst ?? (!o.dryRun && isRoot())) {
+  if (deps.collectFirst ?? (!o.dryRun && proc.isRoot())) {
     const { collect } = await import("./collect.ts");
     await collect(host, dir);
   }
@@ -221,7 +227,7 @@ export async function proposeCommand(
     files,
   });
   if (o.dryRun) {
-    console.log(o.json ? proposalText(draft) : proposalSummary(draft));
+    stdio.stdout.writeSync(`${o.json ? proposalText(draft) : proposalSummary(draft)}\n`);
     return 0;
   }
   const { proposal, text, sig } = await signProposal(draft, deps.sign ?? keySigner());
@@ -229,7 +235,7 @@ export async function proposeCommand(
     proposal,
     text,
     sig,
-    deps.dir ? join(deps.dir, "proposals") : PROPOSALS_DIR,
+    deps.dir ? paths.join(deps.dir, "proposals") : PROPOSALS_DIR,
   );
   const sent: SentProposal = {
     id: proposal.id,
@@ -245,19 +251,26 @@ export async function proposeCommand(
   };
   await endOrTieHolds(host.name, proposal, dir);
   const notify = deps.notify ?? (await import("../notify/events.ts")).notify;
-  sent.sent = await notify({
-    event: `proposal ${proposal.id}: ${proposal.items.length} item(s) from ${proposal.by}`,
-    what: proposalSummary(proposal),
-    todo:
-      "Save this message (or both attachments) and run deno task stolos proposal import on it, in the fleet repository on your PC.",
-    attach: [out.json, out.sig],
-    key: `proposal:${proposal.id}`,
-  }, host.name);
+  sent.sent = await notify(
+    {
+      event: `proposal ${proposal.id}: ${proposal.items.length} item(s) from ${proposal.by}`,
+      what: proposalSummary(proposal),
+      todo: "Save this message (or both attachments) and run bun run stolos proposal import on it, in the fleet repository on your PC.",
+      attach: [out.json, out.sig],
+      key: `proposal:${proposal.id}`,
+    },
+    host.name,
+  );
   await putRecord(host.name, "proposal", proposal.id, sent, dir, proposal.at);
-  if (o.json) console.log(JSON.stringify({ id: proposal.id, sent: sent.sent, dir: out.dir }));
+  if (o.json)
+    stdio.stdout.writeSync(
+      `${JSON.stringify({ id: proposal.id, sent: sent.sent, dir: out.dir })}\n`,
+    );
   else {
-    console.log(proposalSummary(proposal));
-    console.log(`\nsigned with ${host.name}'s host key; kept in ${out.dir}; mail: ${sent.sent}`);
+    stdio.stdout.writeSync(`${proposalSummary(proposal)}\n`);
+    stdio.stdout.writeSync(
+      `\nsigned with ${host.name}'s host key; kept in ${out.dir}; mail: ${sent.sent}\n`,
+    );
   }
   return 0;
 }
@@ -269,12 +282,12 @@ async function keep(
   sig: string,
   root: string,
 ): Promise<{ dir: string; json: string; sig: string }> {
-  const dir = join(root, p.id);
-  await ensureDir(dir);
-  const json = join(dir, "proposal.json");
-  await Deno.writeTextFile(json, text);
-  await Deno.writeTextFile(json + ".sig", sig);
-  await Deno.writeTextFile(join(dir, "summary.txt"), proposalSummary(p) + "\n");
+  const dir = paths.join(root, p.id);
+  await fs.ensureDir(dir);
+  const json = paths.join(dir, "proposal.json");
+  await fs.writeTextFile(json, text);
+  await fs.writeTextFile(json + ".sig", sig);
+  await fs.writeTextFile(paths.join(dir, "summary.txt"), proposalSummary(p) + "\n");
   return { dir, json, sig: json + ".sig" };
 }
 
@@ -284,9 +297,10 @@ async function endOrTieHolds(host: string, p: Proposal, dir: string): Promise<vo
   for (const it of p.items.filter((i) => i.managed)) {
     const h = await getRecord<Hold>(host, "hold", it.key, dir);
     if (!h || h.body.ended) continue;
-    const next: Hold = it.action === "revert"
-      ? { ...h.body, proposal: p.id, ended: "reverted", endedAt: p.at }
-      : { ...h.body, proposal: p.id };
+    const next: Hold =
+      it.action === "revert"
+        ? { ...h.body, proposal: p.id, ended: "reverted", endedAt: p.at }
+        : { ...h.body, proposal: p.id };
     await putRecord(host, "hold", it.key, next, dir, h.at);
   }
 }

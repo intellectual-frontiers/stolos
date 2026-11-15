@@ -6,8 +6,8 @@
  * @module
  */
 
-import { join } from "../core/path.ts";
-import { exists, readTextOr } from "../core/fsx.ts";
+import { sha256 } from "@intellectual-frontiers/ifc-ts/kernel";
+import { fs, path as paths } from "@intellectual-frontiers/ifc-ts/runtime";
 import { P } from "../core/paths.ts";
 import { type Ledger, readLedger, VAULT_LOCAL, writeLedger } from "../core/secret-ledger.ts";
 import { secretFor, type SecretRef } from "../model/secret-inventory.ts";
@@ -28,33 +28,28 @@ export interface LiveSecret {
   changedAt: string;
 }
 
-/** SHA-256 of some bytes, as lowercase hex. */
-export async function sha256(data: Uint8Array<ArrayBuffer>): Promise<string> {
-  const d = await crypto.subtle.digest("SHA-256", data);
-  return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
 /** Every file in the secrets folder, with its inventory entry. */
 export async function liveSecrets(dir = P.secrets, ledger?: Ledger): Promise<LiveSecret[]> {
   const out: LiveSecret[] = [];
   const walk = async (d: string, prefix: string) => {
-    const entries: Deno.DirEntry[] = [];
+    const entries: fs.DirEntry[] = [];
     try {
-      for await (const e of Deno.readDir(d)) entries.push(e);
+      for await (const e of fs.readDir(d)) entries.push(e);
     } catch {
       return;
     }
     for (const e of entries.sort((a, b) => a.name.localeCompare(b.name))) {
       const rel = prefix ? `${prefix}/${e.name}` : e.name;
-      if (e.isDirectory) await walk(join(d, e.name), rel);
+      if (e.isDirectory) await walk(paths.join(d, e.name), rel);
       else if (e.isFile) {
-        const path = join(d, e.name);
-        const data = await Deno.readFile(path);
-        const st = await Deno.stat(path);
+        const path = paths.join(d, e.name);
+        const data = await fs.readFile(path);
+        const st = await fs.stat(path);
+        const ref = secretFor(rel);
         out.push({
           name: rel,
           path,
-          ref: secretFor(rel),
+          ...(ref === undefined ? {} : { ref }),
           sha256: await sha256(data),
           size: data.length,
           changedAt: ledger?.changes[rel]?.changedAt ?? (st.mtime ?? new Date(0)).toISOString(),
@@ -82,7 +77,7 @@ export interface BackupCheck {
 /** The last backup's state (spec 056): recorded or not, and whether its ZIP is still here. */
 export async function checkLastBackup(lb: Ledger["lastBackup"]): Promise<BackupCheck> {
   if (!lb) return { state: "none" };
-  const here = lb.dir ? await exists(join(lb.dir, lb.file)) : false;
+  const here = lb.dir ? await fs.exists(paths.join(lb.dir, lb.file)) : false;
   return { state: "ok", where: here ? "here" : "moved" };
 }
 
@@ -125,7 +120,8 @@ export async function assess(dir = P.secrets, now = Date.now()): Promise<Assessm
   const live = new Set(items.map((s) => s.name));
   const removed = Object.keys(recorded?.names ?? {}).filter((n) => !live.has(n));
   // Red: changed for more than 7 days, or host identity keys with no backup at all.
-  const red = changed.some((s) => now - Date.parse(s.changedAt) > 7 * DAY) ||
+  const red =
+    changed.some((s) => now - Date.parse(s.changedAt) > 7 * DAY) ||
     (!recorded && unbacked.some((s) => s.ref?.identity));
   return {
     items,
@@ -140,14 +136,16 @@ export async function assess(dir = P.secrets, now = Date.now()): Promise<Assessm
 // ------------------------------------------------------------ the prompt
 
 /** The prompt's vault token (spec 011): "🔐 backup" while anything is unbacked, else empty. */
-export const PROMPT_STATUS: string = join(P.bootCache, "..", "status", "prompt-vault");
+export const PROMPT_STATUS: string = paths.join(P.bootCache, "..", "status", "prompt-vault");
 
 /** Write the prompt's vault token from an assessment. Best effort: errors are ignored. */
 export async function writePromptStatus(a: Assessment): Promise<void> {
   try {
-    await Deno.mkdir(join(PROMPT_STATUS, ".."), { recursive: true });
-    await Deno.writeTextFile(PROMPT_STATUS, a.severity === "ok" ? "" : "🔐 backup");
-  } catch { /* the prompt is best effort */ }
+    await fs.mkdir(paths.join(PROMPT_STATUS, ".."), { recursive: true });
+    await fs.writeTextFile(PROMPT_STATUS, a.severity === "ok" ? "" : "🔐 backup");
+  } catch {
+    /* the prompt is best effort */
+  }
 }
 
 /** Record a backup: its file, the folder it was written to, and every secret's SHA-256 in it. */
@@ -162,4 +160,4 @@ export async function markBackedUp(
   await writeLedger(l);
 }
 
-export { exists, readTextOr, VAULT_LOCAL };
+export { VAULT_LOCAL };

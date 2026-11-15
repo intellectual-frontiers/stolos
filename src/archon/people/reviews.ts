@@ -20,7 +20,7 @@
  */
 
 import { type Estate, estateQuery } from "../estate/graph.ts";
-import type { Quarter } from "./records.ts";
+import { cell, type Quarter } from "./records.ts";
 
 /** One review file to write. */
 export interface ReviewFile {
@@ -35,8 +35,7 @@ export interface ReviewFile {
 }
 
 /** The reports, and their active accounts, of every manager with someone still employed. */
-export const REVIEW_SQL =
-  `SELECT r.to_party_uid AS manager, p.uid, p.email_addr AS email, p.type, p.status,
+export const REVIEW_SQL = `SELECT r.to_party_uid AS manager, p.uid, p.email_addr AS email, p.type, p.status,
   a.connector AS system, a.display_name AS account, a.admin
 FROM party_relationship r
 JOIN user_inventory p ON p.uid = r.from_party_uid
@@ -56,15 +55,21 @@ export function reviewFiles(e: Estate, quarter: Quarter, now = new Date()): Revi
     Map<string, { type?: string; status: string; lines: string[] }>
   >();
   for (const r of rows) {
-    const m = emailOf(String(r.manager));
-    const reports = byManager.get(m) ?? new Map();
+    const m = emailOf(String(r["manager"]));
+    const reports =
+      byManager.get(m) ?? new Map<string, { type?: string; status: string; lines: string[] }>();
     byManager.set(m, reports);
-    const email = String(r.email ?? emailOf(String(r.uid)));
-    const p = reports.get(email) ??
-      { ...(r.type ? { type: String(r.type) } : {}), status: String(r.status), lines: [] };
+    const email = r["email"] ? cell(r["email"]) : emailOf(cell(r["uid"]));
+    const p = reports.get(email) ?? {
+      ...(r["type"] ? { type: cell(r["type"]) } : {}),
+      status: String(r["status"]),
+      lines: [],
+    };
     reports.set(email, p);
-    if (r.system) {
-      p.lines.push(`${r.system}: ${r.account}${Number(r.admin) === 1 ? " (admin)" : ""}`);
+    if (r["system"]) {
+      p.lines.push(
+        `${cell(r["system"])}: ${cell(r["account"])}${Number(r["admin"]) === 1 ? " (admin)" : ""}`,
+      );
     }
   }
   const day = now.toISOString().slice(0, 10);
@@ -79,8 +84,8 @@ export function reviewFiles(e: Estate, quarter: Quarter, now = new Date()): Revi
           p.type
             ? ` (${p.type}${p.status === "leave" ? ", on leave" : ""})`
             : p.status === "leave"
-            ? " (on leave)"
-            : ""
+              ? " (on leave)"
+              : ""
         }`,
         "",
       );

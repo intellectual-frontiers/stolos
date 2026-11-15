@@ -20,8 +20,8 @@
  * @module
  */
 
+import { fs } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "../core/exec.ts";
-import { exists, readTextOr } from "../core/fsx.ts";
 import { P } from "../core/paths.ts";
 import { getRecord, listRecords, putRecord, putRecords } from "../state/store.ts";
 import type { HostDef, HostPlan } from "../model/types.ts";
@@ -64,16 +64,15 @@ export function planView(plan: HostPlan): PlanView {
         ...plan.users.map((u) => u.name),
         ...(plan.fleet.services ?? []).map((s) => s.name),
       ]),
-    ]
-      .sort(),
+    ].sort(),
     ownPaths: [
       P.toolsRoot,
       `${P.bin}/archon`,
       `${P.bin}/stolos`,
       ...plan.tools.flatMap((t) => t.bins.map((b) => `${P.bin}/${b}`)),
-      ...plan.files.map((f) => f.path).filter((p) =>
-        p.startsWith("/usr/local/") || p.startsWith("/opt/")
-      ),
+      ...plan.files
+        .map((f) => f.path)
+        .filter((p) => p.startsWith("/usr/local/") || p.startsWith("/opt/")),
     ].sort(),
   };
 }
@@ -120,14 +119,19 @@ export interface RawSources {
   failed: Record<string, string>;
 }
 
-const lines = (s: string) => s.split("\n").map((l) => l.trim()).filter(Boolean);
+const lines = (s: string) =>
+  s
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
 
 /** Listening sockets (`ss -Hlntu`) as "tcp/443", without loopback and DHCP clients. */
 export function parseListening(text: string): string[] {
   const out = new Set<string>();
   for (const l of lines(text)) {
     const f = l.split(/\s+/);
-    const proto = f[0], addr = f[4] ?? "";
+    const proto = f[0],
+      addr = f[4] ?? "";
     const port = addr.slice(addr.lastIndexOf(":") + 1);
     const local = /^(127\.|\[::1\]|\[?::ffff:127\.)/.test(addr) || addr.includes("%lo:");
     const client = proto === "udp" && (port === "68" || port === "546");
@@ -138,9 +142,11 @@ export function parseListening(text: string): string[] {
 
 /** Accounts with a login (UID 1000 to 59999) from `getent passwd`. */
 export function parseLoginUsers(text: string): string[] {
-  return lines(text).map((l) => l.split(":")).filter((f) =>
-    Number(f[2]) >= 1000 && Number(f[2]) < 60000
-  ).map((f) => f[0]).sort();
+  return lines(text)
+    .map((l) => l.split(":"))
+    .filter((f) => Number(f[2]) >= 1000 && Number(f[2]) < 60000)
+    .map((f) => f[0] ?? "")
+    .sort();
 }
 
 /**
@@ -159,17 +165,17 @@ export function stateFrom(raw: RawSources, plan: PlanView): HostState {
     }
   }
   for (const l of raw.etcStatus.split("\n")) {
-    const m = /^(..) (.+)$/.exec(l);
-    if (!m) continue;
-    const path = `/etc/${m[2].trim()}`;
-    touched.set(path, m[1].includes("D") ? "deleted" : m[1] === "??" ? "added" : "edited");
+    const [, xy, name] = /^(..) (.+)$/.exec(l) ?? [];
+    if (xy === undefined || name === undefined) continue;
+    const path = `/etc/${name.trim()}`;
+    touched.set(path, xy.includes("D") ? "deleted" : xy === "??" ? "added" : "edited");
   }
   const unowned = new Set(raw.etcUnowned);
   const modifiedConf = new Set(
-    lines(raw.modified).map((l) => /^(\S{9}) c (\/etc\/.+)$/.exec(l)).filter((m) =>
-      m && m[1][2] === "5"
-    )
-      .map((m) => m![2]),
+    lines(raw.modified).flatMap((l) => {
+      const [, flags, path] = /^(\S{9}) c (\/etc\/.+)$/.exec(l) ?? [];
+      return flags?.[2] === "5" && path !== undefined ? [path] : [];
+    }),
   );
   const etc: EtcChange[] = [];
   for (const [path, change] of [...touched].sort(([a], [b]) => a.localeCompare(b))) {
@@ -181,14 +187,19 @@ export function stateFrom(raw: RawSources, plan: PlanView): HostState {
   return {
     at: raw.at,
     manualPackages: lines(raw.manual).sort(),
-    snaps: lines(raw.snapList).slice(1).map((l) => l.split(/\s+/)[0]).sort(),
+    snaps: lines(raw.snapList)
+      .slice(1)
+      .map((l) => l.split(/\s+/)[0] ?? "")
+      .sort(),
     units: parseUnitFiles(raw.unitFiles),
     listening: parseListening(raw.listening),
     users: parseLoginUsers(raw.passwd),
     etc,
     managedFiles: [...raw.managedFiles].sort(),
     unowned: [...raw.unowned].sort(),
-    containers: lines(raw.containers).filter((c) => !containerUnits.has(c)).sort(),
+    containers: lines(raw.containers)
+      .filter((c) => !containerUnits.has(c))
+      .sort(),
     ...(Object.keys(raw.failed).length ? { failed: raw.failed } : {}),
   };
 }
@@ -200,12 +211,12 @@ export async function observationsFrom(
 ): Promise<Observation[]> {
   const apt = await parseAptHistory(raw.aptHistory);
   return [
-    ...await sudoObservations(parseSudoJournal(raw.sudoJournal)),
+    ...(await sudoObservations(parseSudoJournal(raw.sudoJournal))),
     ...apt,
-    ...await parseDpkgLog(raw.dpkgLog, apt),
-    ...await etckeeperObservations(parseEtckeeperLog(raw.etcLog)),
+    ...(await parseDpkgLog(raw.dpkgLog, apt)),
+    ...(await etckeeperObservations(parseEtckeeperLog(raw.etcLog))),
     ...(raw.osquery && prevOsquery ? await osqueryDiff(prevOsquery, raw.osquery) : []),
-    ...await parseSnapChanges(raw.snapChanges, raw.at),
+    ...(await parseSnapChanges(raw.snapChanges, raw.at)),
   ];
 }
 
@@ -232,9 +243,9 @@ async function unownedFiles(plan: PlanView): Promise<string[]> {
     `${P.toolsRoot}/*`,
   ]);
   const own = plan.ownPaths;
-  const paths = lines(found.stdout).filter((p) =>
-    !own.some((o) => p === o || p.startsWith(`${o}/`))
-  ).slice(0, 500);
+  const paths = lines(found.stdout)
+    .filter((p) => !own.some((o) => p === o || p.startsWith(`${o}/`)))
+    .slice(0, 500);
   const result: string[] = [];
   for (let i = 0; i < paths.length; i += 100) {
     const chunk = paths.slice(i, i + 100);
@@ -243,7 +254,7 @@ async function unownedFiles(plan: PlanView): Promise<string[]> {
   // A link into Archon's tools is Archon's.
   const kept: string[] = [];
   for (const p of result) {
-    const target = await Deno.realPath(p).catch(() => p);
+    const target = await fs.realPath(p).catch(() => p);
     if (!target.startsWith(`${P.toolsRoot}/`)) kept.push(p);
   }
   return kept;
@@ -266,46 +277,54 @@ export async function readSources(
       return fallback;
     }
   };
-  const sudoJournal = await guard("sudo", () =>
-    out([
-      "journalctl",
-      "-o",
-      "json",
-      "--no-pager",
-      "SYSLOG_IDENTIFIER=sudo",
-      `--since=@${Math.floor(Date.parse(since) / 1000)}`,
-    ]), "");
+  const sudoJournal = await guard(
+    "sudo",
+    () =>
+      out([
+        "journalctl",
+        "-o",
+        "json",
+        "--no-pager",
+        "SYSLOG_IDENTIFIER=sudo",
+        `--since=@${Math.floor(Date.parse(since) / 1000)}`,
+      ]),
+    "",
+  );
   const rotated = async (base: string) =>
-    `${(await readTextOr(`${base}.1`)) ?? ""}\n\n${(await readTextOr(base)) ?? ""}`;
+    `${(await fs.readTextOr(`${base}.1`)) ?? ""}\n\n${(await fs.readTextOr(base)) ?? ""}`;
   const aptHistory = await guard("apt", () => rotated("/var/log/apt/history.log"), "");
   const dpkgLog = await guard("dpkg", () => rotated("/var/log/dpkg.log"), "");
-  const etcGit = await exists("/etc/.git");
+  const etcGit = await fs.exists("/etc/.git");
   const etcLog = etcGit
-    ? await guard("etckeeper", () =>
-      out([
-        "git",
-        "-C",
-        "/etc",
-        "log",
-        "--no-renames",
-        "--format=%x1e%H%x1f%an%x1f%aI%x1f%s",
-        "--name-status",
-        ...(birth.etcCommit ? [`${birth.etcCommit}..HEAD`] : []),
-      ]), "")
+    ? await guard(
+        "etckeeper",
+        () =>
+          out([
+            "git",
+            "-C",
+            "/etc",
+            "log",
+            "--no-renames",
+            "--format=%x1e%H%x1f%an%x1f%aI%x1f%s",
+            "--name-status",
+            ...(birth.etcCommit ? [`${birth.etcCommit}..HEAD`] : []),
+          ]),
+        "",
+      )
     : "";
   const etcStatus = etcGit
     ? await guard("etckeeper", () => out(["git", "-C", "/etc", "status", "--porcelain"]), "")
     : "";
   const candidates = [
     ...new Set([
-      ...parseEtckeeperLog(etcLog).filter((c) => !isUbuntuCommit(c)).flatMap((c) =>
-        c.files.map((f) => f.path)
-      ),
+      ...parseEtckeeperLog(etcLog)
+        .filter((c) => !isUbuntuCommit(c))
+        .flatMap((c) => c.files.map((f) => f.path)),
       ...lines(etcStatus).map((l) => `/etc/${l.slice(3).trim()}`),
     ]),
   ].slice(0, 500);
   const existing: string[] = [];
-  for (const c of candidates) if (await exists(c)) existing.push(c);
+  for (const c of candidates) if (await fs.exists(c)) existing.push(c);
   const etcUnowned: string[] = [];
   for (let i = 0; i < existing.length; i += 100) {
     etcUnowned.push(
@@ -316,20 +335,23 @@ export async function readSources(
   try {
     const { query } = await import("../state/query.ts");
     const { OSQUERY_SQL, osquerySnapshot } = await import("./parse.ts");
-    osquery = osquerySnapshot({
-      packages: await query(OSQUERY_SQL.packages),
-      users: await query(OSQUERY_SQL.users),
-      sudoers: await query(OSQUERY_SQL.sudoers),
-      ports: await query(OSQUERY_SQL.ports),
-      modules: await query(OSQUERY_SQL.modules),
-    }, at);
+    osquery = osquerySnapshot(
+      {
+        packages: await query(OSQUERY_SQL.packages),
+        users: await query(OSQUERY_SQL.users),
+        sudoers: await query(OSQUERY_SQL.sudoers),
+        ports: await query(OSQUERY_SQL.ports),
+        modules: await query(OSQUERY_SQL.modules),
+      },
+      at,
+    );
   } catch (e) {
-    failed.osquery = (e as Error).message;
+    failed["osquery"] = (e as Error).message;
   }
   const managedFiles: string[] = [];
   for (const f of plan.files) {
     if (f.content === undefined || f.symlink) continue;
-    const now = await readTextOr(f.path).catch(() => undefined);
+    const now = await fs.readTextOr(f.path).catch(() => undefined);
     if (now !== undefined && now !== f.content) managedFiles.push(f.path);
   }
   const debsums = (await run(["sh", "-c", "command -v debsums"])).ok;
@@ -354,11 +376,13 @@ export async function readSources(
     containers: await guard(
       "containers",
       async () =>
-        (await run([
-          "sh",
-          "-c",
-          "command -v podman >/dev/null && podman ps -a --format '{{.Names}}'",
-        ])).stdout,
+        (
+          await run([
+            "sh",
+            "-c",
+            "command -v podman >/dev/null && podman ps -a --format '{{.Names}}'",
+          ])
+        ).stdout,
       "",
     ),
     unowned: await guard("unowned", () => unownedFiles(view), []),
@@ -385,9 +409,9 @@ export async function birthFrom(
   late?: Observation[],
 ): Promise<Birth> {
   const byPerson = new Set(
-    (late ?? []).filter((o) => o.who && (o.kind === "package" || o.kind === "snap")).map((o) =>
-      o.name
-    ),
+    (late ?? [])
+      .filter((o) => o.who && (o.kind === "package" || o.kind === "snap"))
+      .map((o) => o.name),
   );
   const units = Object.fromEntries(
     Object.entries(parseUnitFiles(raw.unitFiles)).map(([u, s]) => [u, s.state]),
@@ -401,10 +425,13 @@ export async function birthFrom(
   return {
     at: raw.at,
     ...(late ? { late: true } : {}),
-    manualPackages: lines(raw.manual).filter((p) => !byPerson.has(p)).sort(),
-    snaps: lines(raw.snapList).slice(1).map((l) => l.split(/\s+/)[0]).filter((s) =>
-      !byPerson.has(s)
-    )
+    manualPackages: lines(raw.manual)
+      .filter((p) => !byPerson.has(p))
+      .sort(),
+    snaps: lines(raw.snapList)
+      .slice(1)
+      .map((l) => l.split(/\s+/)[0] ?? "")
+      .filter((s) => !byPerson.has(s))
       .sort(),
     units,
     users: parseLoginUsers(raw.passwd),
@@ -415,7 +442,7 @@ export async function birthFrom(
 
 /** /etc's first etckeeper commit, or "" without etckeeper. */
 async function firstEtcCommit(): Promise<string> {
-  if (!(await exists("/etc/.git"))) return "";
+  if (!(await fs.exists("/etc/.git"))) return "";
   return lines(await out(["git", "-C", "/etc", "rev-list", "--max-parents=0", "HEAD"]))[0] ?? "";
 }
 
@@ -427,14 +454,23 @@ export async function recordBirth(hostName: string, dir: string = P.state): Prom
   const have = await getRecord<Birth>(hostName, "birth", "birth", dir);
   if (have) return have.body;
   const at = new Date().toISOString();
-  const birth = await birthFrom({
-    at,
-    manual: await out(["apt-mark", "showmanual"]),
-    snapList: await out(["snap", "list"]),
-    unitFiles: await out(["systemctl", "list-unit-files", "--no-legend", "--plain", "--no-pager"]),
-    passwd: await out(["getent", "passwd"]),
-    listening: await out(["ss", "-Hlntu"]),
-  }, await firstEtcCommit());
+  const birth = await birthFrom(
+    {
+      at,
+      manual: await out(["apt-mark", "showmanual"]),
+      snapList: await out(["snap", "list"]),
+      unitFiles: await out([
+        "systemctl",
+        "list-unit-files",
+        "--no-legend",
+        "--plain",
+        "--no-pager",
+      ]),
+      passwd: await out(["getent", "passwd"]),
+      listening: await out(["ss", "-Hlntu"]),
+    },
+    await firstEtcCommit(),
+  );
   await putRecord(hostName, "birth", "birth", birth, dir, at);
   return birth;
 }
@@ -476,7 +512,12 @@ export async function storeCollection(
   const known = new Set((await listRecords<Alert>(hostName, "alert", dir)).map((r) => r.name));
   const alerts = parseModified(raw.modified, raw.at);
   const fresh = alerts.filter((a) => !known.has(a.path));
-  await putRecords(hostName, "alert", fresh.map((a) => ({ name: a.path, body: a, at: a.at })), dir);
+  await putRecords(
+    hostName,
+    "alert",
+    fresh.map((a) => ({ name: a.path, body: a, at: a.at })),
+    dir,
+  );
   return { observations: observations.length, newAlerts: fresh, failed: raw.failed };
 }
 
@@ -490,20 +531,26 @@ export async function collect(host: HostDef, dir: string = P.state): Promise<Col
   const plan = await planFor(host);
   const view = planView(plan);
   let birthRec = (await getRecord<Birth>(host.name, "birth", "birth", dir))?.body;
-  const cursor = (await getRecord<{ journal: string }>(host.name, "snapshot", "cursor", dir))?.body
-    .journal ?? new Date(Date.now() - 30 * 86_400_000).toISOString();
+  const cursor =
+    (await getRecord<{ journal: string }>(host.name, "snapshot", "cursor", dir))?.body.journal ??
+    new Date(Date.now() - 30 * 86_400_000).toISOString();
   let late = false;
   if (!birthRec) {
     // Read the logs first, so what a person did is not mistaken for Ubuntu's.
-    const pre = await readSources(plan, view, {
-      at: "",
-      manualPackages: [],
-      snaps: [],
-      units: {},
-      users: [],
-      listening: [],
-      etcCommit: await firstEtcCommit(),
-    }, new Date(Date.now() - 365 * 86_400_000).toISOString());
+    const pre = await readSources(
+      plan,
+      view,
+      {
+        at: "",
+        manualPackages: [],
+        snaps: [],
+        units: {},
+        users: [],
+        listening: [],
+        etcCommit: await firstEtcCommit(),
+      },
+      new Date(Date.now() - 365 * 86_400_000).toISOString(),
+    );
     const obs = await observationsFrom(pre);
     birthRec = await birthFrom(pre, await firstEtcCommit(), obs);
     await putRecord(host.name, "birth", "birth", birthRec, dir, pre.at);
@@ -513,17 +560,21 @@ export async function collect(host: HostDef, dir: string = P.state): Promise<Col
   const r = await storeCollection(host.name, raw, view, dir);
   if (r.newAlerts.length) {
     const { notify } = await import("../notify/events.ts");
-    await notify({
-      event: `✗ SECURITY ALERT: ${r.newAlerts.length} package file(s) modified`,
-      level: "fail",
-      what: `Files installed by a package no longer match it (never a proposal, spec 095):\n${
-        r.newAlerts.map((a) => `- ${a.path}${a.package ? ` (${a.package})` : ""}: ${a.evidence}`)
-          .join("\n")
-      }`,
-      todo:
-        `Investigate now on ${host.name}: who had root (journalctl SYSLOG_IDENTIFIER=sudo), dpkg --verify, then reinstall the package from Ubuntu's archive (sudo apt install --reinstall <package>), or re-create the host.`,
-      key: `alert:${r.newAlerts.map((a) => a.path).sort().join(",")}`,
-    }, host.name); // never throws
+    await notify(
+      {
+        event: `✗ SECURITY ALERT: ${r.newAlerts.length} package file(s) modified`,
+        level: "fail",
+        what: `Files installed by a package no longer match it (never a proposal, spec 095):\n${r.newAlerts
+          .map((a) => `- ${a.path}${a.package ? ` (${a.package})` : ""}: ${a.evidence}`)
+          .join("\n")}`,
+        todo: `Investigate now on ${host.name}: who had root (journalctl SYSLOG_IDENTIFIER=sudo), dpkg --verify, then reinstall the package from Ubuntu's archive (sudo apt install --reinstall <package>), or re-create the host.`,
+        key: `alert:${r.newAlerts
+          .map((a) => a.path)
+          .sort()
+          .join(",")}`,
+      },
+      host.name,
+    ); // never throws
   }
   return { ...r, birthTakenLate: late };
 }

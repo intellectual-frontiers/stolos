@@ -6,6 +6,7 @@
  * @module
  */
 
+import { proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "../core/exec.ts";
 
 /** The result of one curl probe of a URL. */
@@ -19,19 +20,19 @@ export interface Probe {
   /** curl's exit code (0 on success; see `explainCurl`). */
   curlExit: number;
   /** The address curl connected to. */
-  ip?: string;
+  ip?: string | undefined;
   /** Seconds, cumulative as curl reports them. */
-  dns?: number;
+  dns?: number | undefined;
   /** Seconds until the TCP connection was made. */
-  connect?: number;
+  connect?: number | undefined;
   /** Seconds until the TLS handshake finished. */
-  tls?: number;
+  tls?: number | undefined;
   /** Seconds for the whole request. */
-  total?: number;
+  total?: number | undefined;
   /** The final URL, after any redirects followed. */
-  effective?: string;
+  effective?: string | undefined;
   /** curl's error message, without its `curl: (N)` prefix. */
-  error?: string;
+  error?: string | undefined;
 }
 
 const W =
@@ -40,13 +41,18 @@ const W =
 /** Probe a URL with curl: HEAD by default, following redirects when asked. */
 export async function probe(
   url: string,
-  o: { ipv4?: boolean; get?: boolean; follow?: boolean; timeout?: number } = {},
+  o: {
+    ipv4?: boolean | undefined;
+    get?: boolean | undefined;
+    follow?: boolean | undefined;
+    timeout?: number | undefined;
+  } = {},
 ): Promise<Probe> {
   const argv = [
     "curl",
     "-sS",
     "-o",
-    Deno.build.os === "windows" ? "NUL" : "/dev/null",
+    proc.build.os === "windows" ? "NUL" : "/dev/null",
     "--connect-timeout",
     "5",
     "--max-time",
@@ -94,8 +100,7 @@ export function explainCurl(exit: number, error = ""): { what: string; look: str
     case 7:
       return {
         what: "the connection was refused or the network is unreachable",
-        look:
-          "the default route and the router's firewall; with IPv6 addresses only, the IPv6 phase",
+        look: "the default route and the router's firewall; with IPv6 addresses only, the IPv6 phase",
       };
     case 28:
       return {
@@ -105,8 +110,7 @@ export function explainCurl(exit: number, error = ""): { what: string; look: str
     case 35:
       return {
         what: "the TLS handshake failed",
-        look:
-          "something between here and the site interferes with TLS (a filtering proxy or firewall)",
+        look: "something between here and the site interferes with TLS (a filtering proxy or firewall)",
       };
     case 60:
       return {
@@ -132,7 +136,9 @@ export function timings(p: Probe): string {
     p.connect !== undefined ? `connect ${ms(p.connect)}` : "",
     p.tls !== undefined ? `tls ${ms(p.tls)}` : "",
     p.total !== undefined ? `${ms(p.total)} in all` : "",
-  ].filter(Boolean).join(" · ");
+  ]
+    .filter(Boolean)
+    .join(" · ");
 }
 
 // ------------------------------------------------------------- parsers
@@ -145,8 +151,9 @@ export function aptRepos(
   for (const f of files) {
     if (f.name.endsWith(".sources")) {
       for (const stanza of f.text.split(/\n\s*\n/)) {
-        const field = (k: string) => stanza.match(new RegExp(`^${k}:\\s*(.+)$`, "mi"))?.[1].trim();
-        if (/^Enabled:\s*no/mi.test(stanza)) continue;
+        const field = (k: string): string | undefined =>
+          stanza.match(new RegExp(`^${k}:\\s*(.+)$`, "mi"))?.[1]?.trim();
+        if (/^Enabled:\s*no/im.test(stanza)) continue;
         const uris = field("URIs")?.split(/\s+/) ?? [];
         const suites = field("Suites")?.split(/\s+/) ?? [];
         for (const uri of uris) for (const suite of suites) out.push({ uri, suite });
@@ -154,7 +161,8 @@ export function aptRepos(
     } else {
       for (const l of f.text.split("\n")) {
         const m = l.match(/^\s*deb\s+(?:\[[^\]]*\]\s+)?(\S+)\s+(\S+)/);
-        if (m) out.push({ uri: m[1], suite: m[2] });
+        const [, uri, suite] = m ?? [];
+        if (uri !== undefined && suite !== undefined) out.push({ uri, suite });
       }
     }
   }
@@ -178,7 +186,7 @@ export function inReleaseUrl(r: { uri: string; suite: string }): string {
 /** ping's summary: loss and average round trip. */
 export function parsePing(
   out: string,
-): { sent: number; received: number; avgMs?: number } | undefined {
+): { sent: number; received: number; avgMs?: number | undefined } | undefined {
   const m = out.match(/(\d+) packets transmitted, (\d+) (?:packets )?received/);
   if (!m) return undefined;
   const rtt = out.match(/= [\d.]+\/([\d.]+)\/[\d.]+/);
@@ -192,19 +200,29 @@ export function parseResolvectlDns(out: string): string[] {
   // %ifname and #name suffixes.
   const servers: string[] = [];
   for (const l of out.split("\n")) {
-    const m = l.match(/^(?:Global|Link \d+ \([^)]+\)|Delegate \S+):\s*(.*)$/) ??
-      l.match(/^\s{2,}(\S.*)$/);
-    if (m) servers.push(...m[1].split(/\s+/).filter(Boolean).map((s) => s.replace(/[%#].*$/, "")));
+    const m =
+      l.match(/^(?:Global|Link \d+ \([^)]+\)|Delegate \S+):\s*(.*)$/) ?? l.match(/^\s{2,}(\S.*)$/);
+    if (m?.[1])
+      servers.push(
+        ...m[1]
+          .split(/\s+/)
+          .filter(Boolean)
+          .map((s) => s.replace(/[%#].*$/, "")),
+      );
   }
   return [...new Set(servers)];
 }
 
 /** `chronyc -n tracking`: offset in seconds (positive: fast) and leap status. */
-export function parseChronyTracking(out: string): { offset?: number; leap?: string; ref?: string } {
+export function parseChronyTracking(out: string): {
+  offset?: number | undefined;
+  leap?: string | undefined;
+  ref?: string | undefined;
+} {
   const sys = out.match(/^System time\s*:\s*([\d.]+) seconds (fast|slow)/m);
   return {
     offset: sys ? Number(sys[1]) * (sys[2] === "fast" ? 1 : -1) : undefined,
-    leap: out.match(/^Leap status\s*:\s*(.+)$/m)?.[1].trim(),
+    leap: out.match(/^Leap status\s*:\s*(.+)$/m)?.[1]?.trim(),
     ref: out.match(/^Reference ID\s*:\s*\S+ \(([^)]*)\)/m)?.[1],
   };
 }
@@ -219,7 +237,7 @@ export function parseSnapConnectivity(
   if (!/^Connectivity status:/m.test(out)) return undefined;
   return {
     pass: /^\s*\*\s*PASS\s*$/m.test(out),
-    unreachable: [...out.matchAll(/^\s*\*\s*(\S+):\s*unreachable/gm)].map((m) => m[1]),
+    unreachable: [...out.matchAll(/^\s*\*\s*(\S+):\s*unreachable/gm)].map((m) => m[1] ?? ""),
   };
 }
 

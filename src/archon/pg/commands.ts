@@ -9,10 +9,9 @@
  * @module
  */
 
-import { dirname, join } from "../core/path.ts";
-import { ensureDir, exists, readTextOr } from "../core/fsx.ts";
+import { fs, path as paths, proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
 import { P } from "../core/paths.ts";
-import { currentUser, homeDir, isRoot, run } from "../core/exec.ts";
+import { currentUser, homeOf, run } from "../core/exec.ts";
 import { journal } from "../core/log.ts";
 import { loadFleet, loadHosts } from "../model/load.ts";
 import type { FleetDef, HostDef, PgRecord } from "../model/types.ts";
@@ -52,7 +51,7 @@ import {
 export class PgError extends Error {}
 
 /** Who asked: the person behind sudo, else the current user. */
-const caller = () => Deno.env.get("SUDO_USER") || currentUser() || "root";
+const caller = () => proc.env.get("SUDO_USER") || currentUser() || "root";
 
 async function server(name: string): Promise<{ fleet: FleetDef; host: HostDef }> {
   const fleet = await loadFleet();
@@ -94,8 +93,8 @@ async function guarded(json: boolean, f: () => Promise<number>): Promise<number>
     return await f();
   } catch (e) {
     const msg = (e as Error).message;
-    if (json) console.log(JSON.stringify({ ok: false, error: msg }));
-    else console.error(msg);
+    if (json) stdio.stdout.writeSync(`${JSON.stringify({ ok: false, error: msg })}\n`);
+    else stdio.stderr.writeSync(`${msg}\n`);
     return 1;
   }
 }
@@ -159,19 +158,18 @@ async function views(
       name: i.name,
       version: i.version,
       port: c?.port ?? i.port ?? null,
-      status: !i.record ? "not created" : c?.status ?? "missing",
+      status: !i.record ? "not created" : (c?.status ?? "missing"),
       unit: unitOf(i.version, i.name),
       environment: i.environment,
       protected: i.protected,
       inModel: i.inModel,
       owned: !!i.record,
-      published: i.published ? publishedName(fleet, host, i.name) ?? host.name : null,
+      published: i.published ? (publishedName(fleet, host, i.name) ?? host.name) : null,
       data: c?.data ?? null,
     };
   });
-  const foreign = all.filter((c) =>
-    !mine.some((m) => m.owned && m.name === c.name && m.version === c.version)
-  )
+  const foreign = all
+    .filter((c) => !mine.some((m) => m.owned && m.name === c.name && m.version === c.version))
     .map((c) => `${c.version}/${c.name} (port ${c.port}, ${c.status})`);
   return { mine, foreign };
 }
@@ -182,24 +180,27 @@ export function pgList(hostName: string, json: boolean): Promise<number> {
     const { fleet, host } = await server(hostName);
     const { mine, foreign } = await views(fleet, host);
     if (json) {
-      console.log(
-        JSON.stringify({ host: host.name, instances: mine, notArchons: foreign }, null, 2),
+      stdio.stdout.writeSync(
+        `${JSON.stringify({ host: host.name, instances: mine, notArchons: foreign }, null, 2)}\n`,
       );
       return 0;
     }
     if (!mine.length) {
-      console.log(`No PostgreSQL instances on ${host.name}. Create one: archon pg ensure prime`);
-    }
-    for (const m of mine) {
-      console.log(
-        `${m.name.padEnd(12)} PostgreSQL ${m.version}  port ${String(m.port ?? "-").padEnd(5)}  ${
-          m.status.padEnd(12)
-        } ${m.environment}${m.protected ? " (protected)" : ""}${
-          m.published ? `  published at ${m.published}` : "  private"
-        }`,
+      stdio.stdout.writeSync(
+        `No PostgreSQL instances on ${host.name}. Create one: archon pg ensure prime\n`,
       );
     }
-    if (foreign.length) console.log(`Not Archon's (left alone): ${foreign.join(", ")}`);
+    for (const m of mine) {
+      stdio.stdout.writeSync(
+        `${m.name.padEnd(12)} PostgreSQL ${m.version}  port ${String(m.port ?? "-").padEnd(5)}  ${m.status.padEnd(
+          12,
+        )} ${m.environment}${m.protected ? " (protected)" : ""}${
+          m.published ? `  published at ${m.published}` : "  private"
+        }\n`,
+      );
+    }
+    if (foreign.length)
+      stdio.stdout.writeSync(`Not Archon's (left alone): ${foreign.join(", ")}\n`);
     return 0;
   });
 }
@@ -210,17 +211,19 @@ export function pgStatus(hostName: string, name: string, json: boolean): Promise
     const { fleet, host } = await server(hostName);
     need(fleet, host, name);
     const { mine } = await views(fleet, host);
-    const v = mine.find((m) => m.name === name)!;
+    const v = mine.find((m) => m.name === name);
+    if (!v) throw new PgError(`There is no instance ${name} on ${host.name}.`);
     const ready = v.port
       ? (await run(["pg_isready", "-q", "-h", "/var/run/postgresql", "-p", String(v.port)])).ok
       : false;
     const out = { ...v, accepting: ready };
-    if (json) console.log(JSON.stringify(out, null, 2));
+    if (json) stdio.stdout.writeSync(`${JSON.stringify(out, null, 2)}\n`);
     else {
-      for (const [k, val] of Object.entries(out)) console.log(`${k.padEnd(12)} ${val ?? "-"}`);
+      for (const [k, val] of Object.entries(out))
+        stdio.stdout.writeSync(`${k.padEnd(12)} ${val ?? "-"}\n`);
       if (!v.published) {
-        console.log(
-          "Private: only this server reaches it (archon pg publish " + name + " to change that).",
+        stdio.stdout.writeSync(
+          `${"Private: only this server reaches it (archon pg publish " + name + " to change that)."}\n`,
         );
       }
     }
@@ -299,19 +302,19 @@ async function cannotElevate(
   const msg = on
     ? `${name} is not running on ${host} yet: an operator runs archon pg ensure ${name}.`
     : `PostgreSQL is off on ${host}: an operator turns it on with archon pg on.`;
-  if (json) console.log(JSON.stringify({ ok: false, error: msg }));
-  else console.error(msg);
+  if (json) stdio.stdout.writeSync(`${JSON.stringify({ ok: false, error: msg })}\n`);
+  else stdio.stderr.writeSync(`${msg}\n`);
   return 1;
 }
 
 function print(json: boolean, r: EnsureResult) {
-  if (json) console.log(JSON.stringify(r, null, 2));
+  if (json) stdio.stdout.writeSync(`${JSON.stringify(r, null, 2)}\n`);
   else {
-    for (const c of r.changes) console.log(`  ${c}`);
-    console.log(
+    for (const c of r.changes) stdio.stdout.writeSync(`  ${c}\n`);
+    stdio.stdout.writeSync(
       `${r.name}: PostgreSQL ${r.version} on port ${r.port}, ${r.status}${
         r.created ? " (created)" : ""
-      }.`,
+      }.\n`,
     );
   }
 }
@@ -354,15 +357,16 @@ export function pgEnsure(
         },
         usersFor(fleet, host),
         fleet,
-      )
-        .find((x) => x.name === name)!;
+      ).find((x) => x.name === name);
+      if (!i) throw new PgError(`${name} could not be planned on ${host.name}.`);
     }
     const created = !i.record;
     const s = collector();
     const ok = await convergeInstance(fleet, host, i, s, caller());
     if (!ok) throw new PgError(s.failures.join(" "));
     const rec = (await readState(host.name)).instances[name];
-    const c = (await clusters()).find((x) => x.name === name && x.version === rec?.version);
+    if (!rec) throw new PgError(`${name} converged, but its record is missing from archon.sql.`);
+    const c = (await clusters()).find((x) => x.name === name && x.version === rec.version);
     if (created) {
       await journal(
         "archon-pg",
@@ -384,7 +388,7 @@ export function pgEnsure(
       created,
       changes: s.changes,
     });
-    for (const w of s.warnings) console.error(`warning: ${w}`);
+    for (const w of s.warnings) stdio.stderr.writeSync(`warning: ${w}\n`);
     return c?.status === "online" ? 0 : 1;
   });
 }
@@ -404,12 +408,12 @@ export function pgControl(
     const r = await run(["pg_ctlcluster", String(i.version), name, action]);
     if (!r.ok) throw new PgError(`${action} ${name} failed: ${r.stderr.trim().split("\n").pop()}`);
     await journal("archon-pg", `${action} ${name} by ${caller()}`);
-    console.log(
+    stdio.stdout.writeSync(
       `${name}: ${action} done.${
         action === "stop"
           ? " The next apply starts it again; archon pg remove takes it away for good."
           : ""
-      }`,
+      }\n`,
     );
     return 0;
   });
@@ -419,7 +423,7 @@ export function pgControl(
 
 // The owner's approval is the fleet's, so it is in the fleet's own copy of the
 // spec's decisions: fleets/<id>/specs/038-pg/spec.md (spec 046-engine-instance).
-const SPEC_FILE = () => join(P.fleetDir, "specs", SPEC, "spec.md");
+const SPEC_FILE = () => paths.join(P.fleetDir, "specs", SPEC, "spec.md");
 
 /** Destructive operations: the owner's approve marker in spec 038 and --confirm-destroy NAME. */
 export async function guardDestructive(
@@ -427,7 +431,7 @@ export async function guardDestructive(
   name: string,
   confirm: string | undefined,
 ): Promise<void> {
-  const spec = (await readTextOr(SPEC_FILE())) ?? "";
+  const spec = (await fs.readTextOr(SPEC_FILE())) ?? "";
   if (!approvedInSpec(spec)) {
     throw new PgError(
       `${op} ${name} is destructive and specs/${SPEC}/spec.md has no "approve: destructive" line: the owner adds it (and asks for this) before it runs.`,
@@ -442,15 +446,30 @@ export async function guardDestructive(
 
 // ------------------------------------------------------------------ backup / restore
 
+/** The host as the model says now (after a record changed). */
+async function reloaded(name: string): Promise<HostDef> {
+  const host = (await loadHosts()).find((h) => h.name === name);
+  if (!host) throw new PgError(`${name} is no longer in the fleet.`);
+  return host;
+}
+
+/** One program's output into another's input (both spawned with those streams piped). */
+async function pipe(from: proc.Child, to: proc.Child): Promise<void> {
+  if (from.stdout === null || to.stdin === null)
+    throw new PgError("a pipe between two programs was not made");
+  await from.stdout.pipeTo(to.stdin);
+}
+
 /** Dump an instance (pg_dumpall, zstd) into /var/backups/archon/pg/<name>/; keep the last 7. */
 export async function dumpInstance(i: Instance & { record: PgRecord }): Promise<string> {
-  const dir = join(PG.dumps, i.name);
-  await ensureDir(dir);
-  await Deno.chmod(dir, 0o700);
+  const dir = paths.join(PG.dumps, i.name);
+  await fs.ensureDir(dir);
+  await fs.chmod(dir, 0o700);
   const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 23);
-  const file = join(dir, `${i.name}-pg${i.record.version}-${stamp}.sql.zst`);
-  const dump = new Deno.Command("runuser", {
-    args: [
+  const file = paths.join(dir, `${i.name}-pg${i.record.version}-${stamp}.sql.zst`);
+  const dump = proc.spawn(
+    [
+      "runuser",
       "-u",
       "postgres",
       "--",
@@ -460,30 +479,28 @@ export async function dumpInstance(i: Instance & { record: PgRecord }): Promise<
       "--clean",
       "--if-exists",
     ],
-    stdout: "piped",
-    stderr: "piped",
-  }).spawn();
-  const zstd = new Deno.Command("zstd", {
-    args: ["-q", "-T0", "-o", file],
-    stdin: "piped",
-    stderr: "piped",
-  }).spawn();
-  await dump.stdout.pipeTo(zstd.stdin);
+    { stdout: "piped", stderr: "piped" },
+  );
+  const zstd = proc.spawn(["zstd", "-q", "-T0", "-o", file], { stdin: "piped", stderr: "piped" });
+  await pipe(dump, zstd);
   const [d, z] = await Promise.all([dump.output(), zstd.output()]);
   if (!d.success || !z.success) {
-    await Deno.remove(file).catch(() => {});
+    await fs.remove(file).catch(() => {});
     throw new PgError(
       `The dump of ${i.name} failed: ${
-        new TextDecoder().decode(d.success ? z.stderr : d.stderr).trim().split("\n").pop() ||
-        "no reason given"
+        new TextDecoder()
+          .decode(d.success ? z.stderr : d.stderr)
+          .trim()
+          .split("\n")
+          .pop() || "no reason given"
       }`,
     );
   }
-  await Deno.chmod(file, 0o600);
+  await fs.chmod(file, 0o600);
   const all = [];
-  for await (const e of Deno.readDir(dir)) if (e.name.endsWith(".sql.zst")) all.push(e.name);
+  for await (const e of fs.readDir(dir)) if (e.name.endsWith(".sql.zst")) all.push(e.name);
   for (const old of all.sort().slice(0, -PG.keepDumps)) {
-    await Deno.remove(join(dir, old)).catch(() => {});
+    await fs.remove(paths.join(dir, old)).catch(() => {});
   }
   return file;
 }
@@ -505,12 +522,14 @@ export function pgBackup(
       owned(i);
       out.push({ name: i.name, file: await dumpInstance(i) });
     }
-    if (json) console.log(JSON.stringify({ ok: true, dumps: out }, null, 2));
-    else {for (const o of out) {
-        console.log(
-          `${o.name}: ${o.file} (archived nightly with the rest of ${dirname(PG.dumps)}, spec 016)`,
+    if (json) stdio.stdout.writeSync(`${JSON.stringify({ ok: true, dumps: out }, null, 2)}\n`);
+    else {
+      for (const o of out) {
+        stdio.stdout.writeSync(
+          `${o.name}: ${o.file} (archived nightly with the rest of ${paths.dirname(PG.dumps)}, spec 016)\n`,
         );
-      }}
+      }
+    }
     return 0;
   });
 }
@@ -533,24 +552,25 @@ export function pgRestore(
     await guardDestructive("restore", name, confirm);
     let file = from;
     if (!file) {
-      const dir = join(PG.dumps, name);
+      const dir = paths.join(PG.dumps, name);
       const all: string[] = [];
-      if (await exists(dir)) {
-        for await (const e of Deno.readDir(dir)) {
+      if (await fs.exists(dir)) {
+        for await (const e of fs.readDir(dir)) {
           if (e.name.endsWith(".sql.zst")) all.push(e.name);
         }
       }
       if (!all.length) {
         throw new PgError(`There is no dump of ${name} in ${dir}: give one with --from.`);
       }
-      file = join(dir, all.sort().pop()!);
+      file = paths.join(dir, all.sort().at(-1) ?? "");
     }
-    if (!(await exists(file))) throw new PgError(`${file} does not exist.`);
+    if (!(await fs.exists(file))) throw new PgError(`${file} does not exist.`);
     // What is there now is dumped first, so a restore can itself be undone.
     const before = await dumpInstance(i);
-    const unz = new Deno.Command("zstd", { args: ["-dc", file], stdout: "piped" }).spawn();
-    const load = new Deno.Command("runuser", {
-      args: [
+    const unz = proc.spawn(["zstd", "-dc", file], { stdout: "piped" });
+    const load = proc.spawn(
+      [
+        "runuser",
         "-u",
         "postgres",
         "--",
@@ -562,20 +582,22 @@ export function pgRestore(
         "-d",
         "postgres",
       ],
-      stdin: "piped",
-      stdout: "null",
-      stderr: "piped",
-    }).spawn();
-    await unz.stdout.pipeTo(load.stdin);
+      { stdin: "piped", stdout: "null", stderr: "piped" },
+    );
+    await pipe(unz, load);
     const l = await load.output();
     await unz.status;
     // The dump carries the roles' old verifiers: Archon's passwords are set again.
-    for (const r of i.roles) await Deno.remove(secretPath(name, r.name) + ".set").catch(() => {});
+    for (const r of i.roles) await fs.remove(secretPath(name, r.name) + ".set").catch(() => {});
     await convergeInstance(fleet, host, i, collector(), caller());
     await journal("archon-pg", `restore ${name} from ${file} by ${caller()} (before: ${before})`);
-    console.log(`${name}: restored from ${file}. What was there before is in ${before}.`);
+    stdio.stdout.writeSync(
+      `${name}: restored from ${file}. What was there before is in ${before}.\n`,
+    );
     if (!l.success) {
-      console.error(new TextDecoder().decode(l.stderr).trim().split("\n").slice(-3).join("\n"));
+      stdio.stderr.writeSync(
+        `${new TextDecoder().decode(l.stderr).trim().split("\n").slice(-3).join("\n")}\n`,
+      );
     }
     return l.success ? 0 : 1;
   });
@@ -606,19 +628,14 @@ export function pgUpgrade(
     await guardDestructive("upgrade", name, confirm);
     // Never in place without a backup (FR-008).
     const dump = await dumpInstance(i);
-    console.log(`${name}: backed up to ${dump}`);
+    stdio.stdout.writeSync(`${name}: backed up to ${dump}\n`);
     // The new version's packages, the same way ensure gets them (PGDG for non-Ubuntu versions).
     const s = collector();
     if (!(await ensureVersion(fleet, host, Number(to), s))) throw new PgError(s.failures.join(" "));
-    const r = await run([
-      "pg_upgradecluster",
-      "-v",
-      to,
-      "-m",
-      "upgrade",
-      String(i.record.version),
-      name,
-    ], { inherit: true });
+    const r = await run(
+      ["pg_upgradecluster", "-v", to, "-m", "upgrade", String(i.record.version), name],
+      { inherit: true },
+    );
     if (!r.ok) {
       throw new PgError(
         `pg_upgradecluster failed; ${name} is still PostgreSQL ${i.record.version}, and the backup is ${dump}.`,
@@ -631,16 +648,18 @@ export function pgUpgrade(
       port: now?.port ?? i.record.port,
       retired: [...(i.record.retired ?? []), i.record.version],
     });
-    const fresh = (await loadHosts()).find((h) => h.name === host.name)!;
-    await convergeInstance(fleet, fresh, find(fleet, fresh, name)!, collector(), caller());
+    const fresh = await reloaded(host.name);
+    const upgraded = find(fleet, fresh, name);
+    if (!upgraded) throw new PgError(`${name} is no longer in ${host.name}'s plan.`);
+    await convergeInstance(fleet, fresh, upgraded, collector(), caller());
     await journal("archon-pg", `upgrade ${name} ${i.record.version} -> ${to} by ${caller()}`);
     await notifyOwner(
       "PostgreSQL instance upgraded",
       `${caller()} upgraded ${name} on ${host.name} from PostgreSQL ${i.record.version} to ${to}. The old cluster is kept, stopped, until archon pg remove ${name} --version ${i.record.version}. Backup: ${dump}.`,
       `pg:${host.name}:${name}:upgrade:${to}`,
     );
-    console.log(
-      `${name}: now PostgreSQL ${to}. The old ${i.record.version} cluster is kept, stopped; remove it with archon pg remove ${name} --version ${i.record.version} --confirm-destroy ${name}.`,
+    stdio.stdout.writeSync(
+      `${name}: now PostgreSQL ${to}. The old ${i.record.version} cluster is kept, stopped; remove it with archon pg remove ${name} --version ${i.record.version} --confirm-destroy ${name}.\n`,
     );
     return 0;
   });
@@ -684,7 +703,7 @@ export function pgRemove(
       });
     } else {
       await writeRecord(host.name, name, undefined);
-      await Deno.remove(join(PG.secrets, name), { recursive: true }).catch(() => {});
+      await fs.remove(paths.join(PG.secrets, name), { recursive: true }).catch(() => {});
     }
     await journal("archon-pg", `remove ${v}/${name} by ${caller()}`);
     await notifyOwner(
@@ -692,7 +711,7 @@ export function pgRemove(
       `${caller()} removed ${v}/${name} on ${host.name}.${dump ? ` Its last dump: ${dump}.` : ""}`,
       `pg:${host.name}:${name}:remove:${v}`,
     );
-    console.log(`${v}/${name} removed.${dump ? ` Its last dump is ${dump}.` : ""}`);
+    stdio.stdout.writeSync(`${v}/${name} removed.${dump ? ` Its last dump is ${dump}.` : ""}\n`);
     return 0;
   });
 }
@@ -701,13 +720,10 @@ export function pgRemove(
 
 /** The queries `archon pg maintain` reports: connections, max_connections, database sizes, and dead rows. */
 export const MAINTAIN_SQL = {
-  connections:
-    `SELECT coalesce(datname, '-') || ' ' || coalesce(state, 'background') || ' ' || count(*) FROM pg_stat_activity GROUP BY datname, state ORDER BY 1`,
+  connections: `SELECT coalesce(datname, '-') || ' ' || coalesce(state, 'background') || ' ' || count(*) FROM pg_stat_activity GROUP BY datname, state ORDER BY 1`,
   max: `SHOW max_connections`,
-  sizes:
-    `SELECT datname || ' ' || pg_size_pretty(pg_database_size(datname)) FROM pg_database WHERE NOT datistemplate ORDER BY pg_database_size(datname) DESC`,
-  bloat:
-    `SELECT schemaname || '.' || relname || ' ' || n_dead_tup || ' dead of ' || (n_live_tup + n_dead_tup) || ' (' || round(100.0 * n_dead_tup / greatest(n_live_tup + n_dead_tup, 1)) || '%)' FROM pg_stat_user_tables WHERE n_dead_tup > 1000 ORDER BY n_dead_tup DESC LIMIT 10`,
+  sizes: `SELECT datname || ' ' || pg_size_pretty(pg_database_size(datname)) FROM pg_database WHERE NOT datistemplate ORDER BY pg_database_size(datname) DESC`,
+  bloat: `SELECT schemaname || '.' || relname || ' ' || n_dead_tup || ' dead of ' || (n_live_tup + n_dead_tup) || ' (' || round(100.0 * n_dead_tup / greatest(n_live_tup + n_dead_tup, 1)) || '%)' FROM pg_stat_user_tables WHERE n_dead_tup > 1000 ORDER BY n_dead_tup DESC LIMIT 10`,
 };
 
 /**
@@ -716,19 +732,16 @@ export const MAINTAIN_SQL = {
  */
 export function pgMaintain(hostName: string, name: string, json: boolean): Promise<number> {
   return guarded(json, async () => {
-    if (!isRoot()) throw new PgError("archon pg maintain runs as root (sudo archon pg maintain).");
+    if (!proc.isRoot())
+      throw new PgError("archon pg maintain runs as root (sudo archon pg maintain).");
     const { fleet, host } = await server(hostName);
     const i = need(fleet, host, name);
     owned(i);
     const v = i.record.version;
-    const vac = await run([
-      "vacuumdb",
-      "--cluster",
-      `${v}/${name}`,
-      "--all",
-      "--analyze",
-      "--quiet",
-    ], { asUser: "postgres" });
+    const vac = await run(
+      ["vacuumdb", "--cluster", `${v}/${name}`, "--all", "--analyze", "--quiet"],
+      { asUser: "postgres" },
+    );
     const q = async (sql: string, db = "postgres") =>
       (await psql(v, name, sql, db)).stdout.trim().split("\n").filter(Boolean);
     const dbs = await q(`SELECT datname FROM pg_database WHERE datallowconn AND NOT datistemplate`);
@@ -742,16 +755,16 @@ export function pgMaintain(hostName: string, name: string, json: boolean): Promi
       sizes: await q(MAINTAIN_SQL.sizes),
       bloat,
     };
-    if (json) console.log(JSON.stringify(report, null, 2));
+    if (json) stdio.stdout.writeSync(`${JSON.stringify(report, null, 2)}\n`);
     else {
-      console.log(`${name}: VACUUM ANALYZE ${report.vacuumAnalyze}`);
-      console.log(`Connections (of ${report.maxConnections}):`);
-      for (const c of report.connections) console.log(`  ${c}`);
-      console.log("Databases:");
-      for (const s of report.sizes) console.log(`  ${s}`);
-      console.log("Tables with the most dead rows:");
+      stdio.stdout.writeSync(`${name}: VACUUM ANALYZE ${report.vacuumAnalyze}\n`);
+      stdio.stdout.writeSync(`Connections (of ${report.maxConnections}):\n`);
+      for (const c of report.connections) stdio.stdout.writeSync(`  ${c}\n`);
+      stdio.stdout.writeSync("Databases:\n");
+      for (const s of report.sizes) stdio.stdout.writeSync(`  ${s}\n`);
+      stdio.stdout.writeSync("Tables with the most dead rows:\n");
       for (const [d, rows] of Object.entries(bloat)) {
-        for (const r of rows) console.log(`  ${d}: ${r}`);
+        for (const r of rows) stdio.stdout.writeSync(`  ${d}: ${r}\n`);
       }
     }
     return vac.ok ? 0 : 1;
@@ -764,11 +777,7 @@ export function pgMaintain(hostName: string, name: string, json: boolean): Promi
  * `archon pg publish|unpublish NAME`: record the change, then apply the files
  * and databases phases now (firewall, listen_addresses, pg_hba.conf, TLS).
  */
-export function pgPublish(
-  hostName: string,
-  name: string,
-  on: boolean,
-): Promise<number> {
+export function pgPublish(hostName: string, name: string, on: boolean): Promise<number> {
   return guarded(false, async () => {
     const { fleet, host } = await server(hostName);
     const i = need(fleet, host, name);
@@ -786,20 +795,26 @@ export function pgPublish(
     }
     const scope = "every address the router lets through";
     if (on === i.published) {
-      console.log(
-        on
-          ? `${name} is already published at ${pub}:${i.record.port}, for ${scope}.`
-          : `${name} is already private.`,
+      stdio.stdout.writeSync(
+        `${
+          on
+            ? `${name} is already published at ${pub}:${i.record.port}, for ${scope}.`
+            : `${name} is already private.`
+        }\n`,
       );
       return 0;
     }
-    await writeRecord(host.name, name, {
-      ...i.record,
-      published: on ? { at: new Date().toISOString(), by: caller() } : undefined,
-    });
+    const { published: _was, ...unpublished } = i.record;
+    await writeRecord(
+      host.name,
+      name,
+      on
+        ? { ...unpublished, published: { at: new Date().toISOString(), by: caller() } }
+        : unpublished,
+    );
     // Apply it now: the firewall rule, listen_addresses, pg_hba.conf, TLS.
     const { apply } = await import("../apply/apply.ts");
-    const fresh = (await loadHosts()).find((h) => h.name === host.name)!;
+    const fresh = await reloaded(host.name);
     const res = await apply(fresh, { check: false, only: ["files", "databases"] });
     if (res.failed) {
       throw new PgError(
@@ -814,10 +829,12 @@ export function pgPublish(
         : `${caller()} made ${name} on ${host.name} private again: only the server itself reaches it.`,
       `pg:${host.name}:${name}:${on ? "publish" : "unpublish"}`,
     );
-    console.log(
-      on
-        ? `${name} is published at ${pub}, port ${i.record.port}, for ${scope} (the router decides what reaches the server). Clients: archon pg show ${name} --form external. People sign in with their Linux password, which PostgreSQL learns when they type it on ${host.name} from now on (sudo -k && sudo -v); archon pg test ${name} checks it. Undo: archon pg unpublish ${name}.`
-        : `${name} is private again (localhost only; the firewall rule is gone).`,
+    stdio.stdout.writeSync(
+      `${
+        on
+          ? `${name} is published at ${pub}, port ${i.record.port}, for ${scope} (the router decides what reaches the server). Clients: archon pg show ${name} --form external. People sign in with their Linux password, which PostgreSQL learns when they type it on ${host.name} from now on (sudo -k && sudo -v); archon pg test ${name} checks it. Undo: archon pg unpublish ${name}.`
+          : `${name} is private again (localhost only; the firewall rule is gone).`
+      }\n`,
     );
     return 0;
   });
@@ -855,9 +872,7 @@ export function pgConnect(
         `${name} is private: an operator publishes it with archon pg publish ${name}.`,
       );
     }
-    const mine = new Set(
-      (await run(["id", "-nG", me])).stdout.trim().split(/\s+/).filter(Boolean),
-    );
+    const mine = new Set((await run(["id", "-nG", me])).stdout.trim().split(/\s+/).filter(Boolean));
     const info = connectInfo({ ...i, port: i.record.port }, me, {
       publishedHost: pub,
       remote,
@@ -867,7 +882,7 @@ export function pgConnect(
     let pw: string | undefined;
     if (remote && role.kind === "service") {
       try {
-        pw = (await Deno.readTextFile(secretPath(name, me))).trim();
+        pw = (await fs.readTextFile(secretPath(name, me))).trim();
       } catch {
         throw new PgError(
           `${me}'s password for ${name} is not there yet: an operator runs archon apply.`,
@@ -875,37 +890,39 @@ export function pgConnect(
       }
     }
     if (!write) {
-      if (json) console.log(JSON.stringify({ ok: true, ...info }, null, 2));
-      else console.log(`# ~/.pg_service.conf\n${serviceBlock(info)}`);
+      if (json) stdio.stdout.writeSync(`${JSON.stringify({ ok: true, ...info }, null, 2)}\n`);
+      else stdio.stdout.writeSync(`# ~/.pg_service.conf\n${serviceBlock(info)}\n`);
       return 0;
     }
-    const home = Deno.env.get("HOME") ?? await homeDir(me);
-    const files: { service: string; pgpass?: string } = { service: join(home, ".pg_service.conf") };
+    const home = proc.env.get("HOME") ?? (await homeOf(me));
+    const files: { service: string; pgpass?: string } = {
+      service: paths.join(home, ".pg_service.conf"),
+    };
     const write0600 = async (path: string, content: string) => {
-      const tmp = `${path}.archon-${Deno.pid}`;
-      await Deno.writeTextFile(tmp, content, { mode: 0o600 });
-      await Deno.chmod(tmp, 0o600);
-      await Deno.rename(tmp, path);
+      const tmp = `${path}.archon-${proc.pid}`;
+      await fs.writeTextFile(tmp, content, { mode: 0o600 });
+      await fs.chmod(tmp, 0o600);
+      await fs.rename(tmp, path);
     };
     await write0600(
       files.service,
-      upsertSection((await readTextOr(files.service)) ?? "", info.service, serviceBlock(info)),
+      upsertSection((await fs.readTextOr(files.service)) ?? "", info.service, serviceBlock(info)),
     );
     if (pw) {
-      files.pgpass = join(home, ".pgpass");
+      files.pgpass = paths.join(home, ".pgpass");
       await write0600(
         files.pgpass,
-        upsertPgpass((await readTextOr(files.pgpass)) ?? "", pgpassLine(info, pw)),
+        upsertPgpass((await fs.readTextOr(files.pgpass)) ?? "", pgpassLine(info, pw)),
       );
     }
-    if (json) console.log(JSON.stringify({ ok: true, ...info, files }, null, 2));
+    if (json) stdio.stdout.writeSync(`${JSON.stringify({ ok: true, ...info, files }, null, 2)}\n`);
     else {
-      console.log(
+      stdio.stdout.writeSync(
         `Wrote the [${info.service}] service to ${files.service}${
           files.pgpass ? ` and your password to ${files.pgpass}` : ""
         } (0600). Connect: psql service=${info.service}${
           remote && role.kind === "human" ? " (it asks for your Linux password)" : ""
-        }`,
+        }\n`,
       );
     }
     return 0;
@@ -938,9 +955,8 @@ export function pgWho(hostName: string, name: string, json: boolean): Promise<nu
     const { fleet, host } = await server(hostName);
     const i = need(fleet, host, name);
     owned(i);
-    const root = isRoot();
-    const sql =
-      `SELECT r.rolname, coalesce(shobj_description(r.oid, 'pg_authid'), ''), r.rolcanlogin, r.rolsuper,
+    const root = proc.isRoot();
+    const sql = `SELECT r.rolname, coalesce(shobj_description(r.oid, 'pg_authid'), ''), r.rolcanlogin, r.rolsuper,
         ${root ? "(SELECT rolpassword IS NOT NULL FROM pg_authid a WHERE a.oid = r.oid)" : "NULL"},
         coalesce((SELECT string_agg(g.rolname, ',' ORDER BY g.rolname) FROM pg_auth_members m
           JOIN pg_roles g ON g.oid = m.roleid WHERE m.member = r.oid), '')
@@ -959,46 +975,52 @@ export function pgWho(hostName: string, name: string, json: boolean): Promise<nu
         "-d",
         "postgres",
       ],
-      { asUser: root ? "postgres" : undefined, stdin: sql },
+      { ...(root ? { asUser: "postgres" } : {}), stdin: sql },
     );
     if (!r.ok) {
       throw new PgError(`Could not read ${name}'s roles: ${r.stderr.trim().split("\n").pop()}`);
     }
     const views: RoleView[] = [];
-    for (const f of r.stdout.split("\n").filter(Boolean).map((l) => l.split("\x1f"))) {
+    for (const f of r.stdout
+      .split("\n")
+      .filter(Boolean)
+      .map((l) => l.split("\x1f"))) {
+      const [role = "", comment = "", login, superuser, password, memberOf] = f;
       views.push({
-        role: f[0],
-        kind: f[0] === "postgres"
-          ? "superuser"
-          : f[1].replace(/^archon: (\w+).*$/, "$1") || "unmanaged",
-        linuxAccount: (await run(["getent", "passwd", f[0]])).ok,
-        login: f[2] === "t",
-        superuser: f[3] === "t",
-        password: f[4] === "" ? null : f[4] === "t",
-        memberOf: f[5] ? f[5].split(",") : [],
+        role,
+        kind:
+          role === "postgres"
+            ? "superuser"
+            : comment.replace(/^archon: (\w+).*$/, "$1") || "unmanaged",
+        linuxAccount: (await run(["getent", "passwd", role])).ok,
+        login: login === "t",
+        superuser: superuser === "t",
+        password: password === "" ? null : password === "t",
+        memberOf: memberOf ? memberOf.split(",") : [],
       });
     }
     const problems = whoProblems(views, i.published);
     if (json) {
-      console.log(
-        JSON.stringify(
+      stdio.stdout.writeSync(
+        `${JSON.stringify(
           { ok: problems.length === 0, instance: name, roles: views, problems },
           null,
           2,
-        ),
+        )}\n`,
       );
     } else {
       for (const v of views) {
-        console.log(
+        stdio.stdout.writeSync(
           `${v.role.padEnd(16)} ${v.kind.padEnd(10)} ${v.login ? "login" : "no login"}${
             v.superuser ? " · superuser" : ""
           }${v.linuxAccount ? "" : " · no Linux account"}${
             v.password === true ? " · password" : ""
-          }${v.memberOf.length ? ` · ${v.memberOf.join(", ")}` : ""}`,
+          }${v.memberOf.length ? ` · ${v.memberOf.join(", ")}` : ""}\n`,
         );
       }
-      for (const p of problems) console.log(`problem: ${p}`);
-      if (!root) console.log("(passwords are visible to root only: sudo archon pg who)");
+      for (const p of problems) stdio.stdout.writeSync(`problem: ${p}\n`);
+      if (!root)
+        stdio.stdout.writeSync("(passwords are visible to root only: sudo archon pg who)\n");
     }
     return problems.length ? 1 : 0;
   });
@@ -1029,17 +1051,19 @@ export function whoProblems(views: RoleView[], published: boolean): string[] {
 export async function pgPasswdSync(hostName: string, user: string): Promise<number> {
   // Every outcome is journaled (journalctl -t archon-pg), never the password.
   const say = (m: string) => journal("archon-pg", `password sync for ${user}: ${m}`);
-  if (!isRoot()) {
-    await say(`not run as root (uid ${Deno.uid?.()}), so nothing was synced`);
+  if (!proc.isRoot()) {
+    await say(`not run as root (uid ${proc.uid()}), so nothing was synced`);
     return 1;
   }
-  const pw = new TextDecoder().decode(await new Response(Deno.stdin.readable).arrayBuffer())
-    .replace(/\0+$/, "").replace(/\n$/, "");
+  const pw = new TextDecoder()
+    .decode(await new Response(stdio.stdin.readable).arrayBuffer())
+    .replace(/\0+$/, "")
+    .replace(/\n$/, "");
   if (!pw) return 0;
   const fleet = await loadFleet();
   const host = (await loadHosts()).find((h) => h.name === hostName);
-  if (!host) return await say(`no host ${hostName} in the model`), 0;
-  if (!pgOn(host)) return await say("PostgreSQL is off"), 0;
+  if (!host) return (await say(`no host ${hostName} in the model`), 0);
+  if (!pgOn(host)) return (await say("PostgreSQL is off"), 0);
   let any = false;
   for (const i of instancesOf(host, usersFor(fleet, host), fleet)) {
     const role = i.roles.find((r) => r.name === user && r.kind === "human");

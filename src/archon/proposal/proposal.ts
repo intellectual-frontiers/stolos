@@ -25,7 +25,23 @@
  * @module
  */
 
-import { join } from "../core/path.ts";
+import {
+  absurd,
+  array,
+  boolean,
+  type Decoder,
+  formatDecodeError,
+  integer,
+  json,
+  literal,
+  mapDecoder,
+  number,
+  object,
+  oneOf,
+  string,
+  unknownValue,
+} from "@intellectual-frontiers/ifc-ts/kernel";
+import { fs, path as paths, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { redact } from "../notify/redact.ts";
 import {
   type Action,
@@ -40,6 +56,122 @@ import {
   PROPOSAL_NAMESPACE,
   type ProposalItem,
 } from "./types.ts";
+
+/** A list, as a mutable array (the proposal's own types use them). */
+const list = <T>(d: Decoder<T>): Decoder<T[]> => mapDecoder(array(d), (xs) => [...xs]);
+
+const subjectKind = literal(
+  "command",
+  "package",
+  "snap",
+  "unit",
+  "file",
+  "port",
+  "user",
+  "sudoer",
+  "module",
+  "container",
+  "unowned",
+);
+
+const editDecoder: Decoder<Edit> = oneOf(
+  object({ op: literal("packages.add"), name: string }, { source: literal("snap") }),
+  object({ op: literal("units.enable", "units.disable", "units.mask"), unit: string }),
+  object({ op: literal("ports.open"), port: integer, protocol: literal("tcp", "udp") }),
+  object(
+    { op: literal("files.override"), path: string, content: string, mode: string, owner: string },
+    { group: string },
+  ),
+);
+
+const observationDecoder: Decoder<Observation> = object(
+  {
+    id: string,
+    source: literal(
+      "sudo",
+      "apt",
+      "dpkg",
+      "etckeeper",
+      "osquery",
+      "units",
+      "snap",
+      "container",
+      "unowned",
+      "verify",
+    ),
+    at: string,
+    kind: subjectKind,
+    name: string,
+    change: string,
+    what: string,
+    evidence: string,
+  },
+  { who: string },
+);
+
+const intentDecoder: Decoder<Intent> = object(
+  { id: string, from: string, to: string, commands: list(string), items: list(string) },
+  { who: string, reason: string },
+);
+
+const fileEvidenceDecoder: Decoder<FileEvidence> = object(
+  { path: string, sha256: string, size: integer },
+  {
+    mode: string,
+    owner: string,
+    group: string,
+    content: string,
+    withheld: string,
+    diff: string,
+  },
+);
+
+const itemDecoder: Decoder<ProposalItem> = object(
+  {
+    key: string,
+    kind: subjectKind,
+    name: string,
+    change: string,
+    managed: boolean,
+    action: literal("adopt", "revert", "local"),
+    at: string,
+    edits: list(editDecoder),
+    evidence: list(string),
+  },
+  {
+    until: string,
+    who: string,
+    intent: string,
+    manual: string,
+    flag: string,
+    file: fileEvidenceDecoder,
+  },
+);
+
+/** proposal.json (format `stolos-proposal/1`), decoded where it is read. */
+export const proposalDecoder: Decoder<Proposal> = object(
+  {
+    format: literal(PROPOSAL_FORMAT),
+    id: string,
+    host: string,
+    fleet: string,
+    base: string,
+    engine: string,
+    at: string,
+    by: string,
+    reason: string,
+    intents: list(intentDecoder),
+    items: list(itemDecoder),
+    observations: list(observationDecoder),
+  },
+  { nonce: number },
+);
+
+/** A proposal's text as a proposal, or why it is not one. */
+export function readProposal(text: string): { proposal: Proposal } | { problem: string } {
+  const d = json(text, proposalDecoder);
+  return d.kind === "ok" ? { proposal: d.value } : { problem: formatDecodeError(d.error) };
+}
 
 /** What a person chose for one item. */
 export interface Choice {
@@ -89,6 +221,13 @@ export function proposalId(host: string, at: string, suffix: string): string {
 export function revertHint(it: DriftItem): string {
   if (it.managed) return "Stolos converges it back at the next apply (its hold ends now)";
   switch (it.kind) {
+    case "command":
+    case "container":
+    case "module":
+    case "port":
+    case "sudoer":
+    case "unowned":
+      return "undo it by hand";
     case "package":
       return it.change === "removed"
         ? `sudo apt install ${it.name}`
@@ -100,13 +239,14 @@ export function revertHint(it: DriftItem): string {
         ? `sudo systemctl disable --now ${it.name}`
         : `sudo systemctl unmask ${it.name}; sudo systemctl enable --now ${it.name}`;
     case "file":
-      return `restore it from etckeeper: sudo git -C /etc log -- ${
-        it.name.replace(/^\/etc\//, "")
-      }`;
+      return `restore it from etckeeper: sudo git -C /etc log -- ${it.name.replace(
+        /^\/etc\//,
+        "",
+      )}`;
     case "user":
       return `sudo userdel ${it.name} (Archon never removes accounts itself)`;
     default:
-      return "undo it by hand";
+      return absurd(it.kind);
   }
 }
 
@@ -130,14 +270,16 @@ export function proposalItem(
     edits = it.edits;
     if (it.kind === "file" && it.change !== "deleted") {
       if (file?.content !== undefined) {
-        edits = [{
-          op: "files.override",
-          path: it.name,
-          content: file.content,
-          mode: file.mode ?? "0644",
-          owner: file.owner ?? "root",
-          ...(file.group && file.group !== file.owner ? { group: file.group } : {}),
-        }];
+        edits = [
+          {
+            op: "files.override",
+            path: it.name,
+            content: file.content,
+            mode: file.mode ?? "0644",
+            owner: file.owner ?? "root",
+            ...(file.group && file.group !== file.owner ? { group: file.group } : {}),
+          },
+        ];
       } else {
         manual = `its content is not sent (${
           file?.withheld ?? "not readable"
@@ -175,19 +317,31 @@ export function buildProposal(input: ProposalInput): Proposal {
       input.choices[it.key] ?? { action: "adopt" },
       intentOf.get(it.key),
       it.kind === "file" ? input.files[it.name] : undefined,
-    )
+    ),
   );
   const keys = new Set(items.map((i) => i.key));
   const ids = new Set(items.flatMap((i) => i.evidence));
-  const intents = input.intents.map((i) => ({ ...i, items: i.items.filter((k) => keys.has(k)) }))
+  const intents = input.intents
+    .map((i) => ({ ...i, items: i.items.filter((k) => keys.has(k)) }))
     .filter((i) => i.items.length);
   const from = intents.map((i) => i.from).sort()[0];
-  const to = intents.map((i) => i.to).sort().pop();
+  const to = intents
+    .map((i) => i.to)
+    .sort()
+    .pop();
   // The sudo commands of these sessions are evidence too.
-  const observations = input.observations.filter((o) =>
-    ids.has(o.id) || (o.source === "sudo" && from && to && o.at >= from && o.at <= to &&
-      intents.some((i) => i.commands.includes(o.name)))
-  ).sort((a, b) => a.at.localeCompare(b.at) || a.id.localeCompare(b.id));
+  const observations = input.observations
+    .filter(
+      (o) =>
+        ids.has(o.id) ||
+        (o.source === "sudo" &&
+          from &&
+          to &&
+          o.at >= from &&
+          o.at <= to &&
+          intents.some((i) => i.commands.includes(o.name))),
+    )
+    .sort((a, b) => a.at.localeCompare(b.at) || a.id.localeCompare(b.id));
   return {
     format: PROPOSAL_FORMAT,
     id: proposalId(input.host, input.at, suffix),
@@ -229,24 +383,22 @@ export const HOST_KEY = "/etc/ssh/ssh_host_ed25519_key";
 /** A signer for a private key file, non-interactive (a host key has no passphrase). */
 export function keySigner(key: string = HOST_KEY): Signer {
   return async (text) => {
-    const dir = await Deno.makeTempDir({ prefix: "archon-proposal-" });
+    const dir = await fs.makeTempDir({ prefix: "archon-proposal-" });
     try {
-      const f = join(dir, "proposal.json");
-      await Deno.writeTextFile(f, text);
-      const r = await new Deno.Command("ssh-keygen", {
-        args: ["-q", "-Y", "sign", "-f", key, "-n", PROPOSAL_NAMESPACE, f],
-        stdin: "null",
-        stdout: "null",
-        stderr: "piped",
-      }).output();
+      const f = paths.join(dir, "proposal.json");
+      await fs.writeTextFile(f, text);
+      const r = await proc.output(
+        ["ssh-keygen", "-q", "-Y", "sign", "-f", key, "-n", PROPOSAL_NAMESPACE, f],
+        { stdin: "null", stdout: "null", stderr: "piped" },
+      );
       if (!r.success) {
         throw new Error(
           `ssh-keygen could not sign with ${key}: ${new TextDecoder().decode(r.stderr).trim()}`,
         );
       }
-      return await Deno.readTextFile(f + ".sig");
+      return await fs.readTextFile(f + ".sig");
     } finally {
-      await Deno.remove(dir, { recursive: true });
+      await fs.remove(dir, { recursive: true });
     }
   };
 }
@@ -264,7 +416,12 @@ export async function signProposal(
   for (let n = 0; n < 8; n++) {
     const text = proposalText(cur);
     const sig = await sign(text);
-    if (redact(sig) === sig) return { proposal: JSON.parse(text), text, sig };
+    if (redact(sig) === sig) {
+      // The proposal as signed: its text is redacted (proposalText), so it is read back.
+      const read = readProposal(text);
+      if ("problem" in read) throw new Error(`a proposal that does not read back: ${read.problem}`);
+      return { proposal: read.proposal, text, sig };
+    }
     cur = { ...p, nonce: n + 1 };
   }
   throw new Error("could not make a signature the mail's redaction leaves alone");
@@ -272,10 +429,14 @@ export async function signProposal(
 
 /** An allowed_signers file for a host's keys: the principal is the host, the namespace stolos-proposal. */
 export function allowedSigners(host: string, keys: string[]): string {
-  return keys.map((k) =>
-    `${host} namespaces="${PROPOSAL_NAMESPACE}" ${k.trim().split(/\s+/).slice(0, 2).join(" ")}`
-  )
-    .join("\n") + "\n";
+  return (
+    keys
+      .map(
+        (k) =>
+          `${host} namespaces="${PROPOSAL_NAMESPACE}" ${k.trim().split(/\s+/).slice(0, 2).join(" ")}`,
+      )
+      .join("\n") + "\n"
+  );
 }
 
 /** What checking a proposal found. */
@@ -296,18 +457,24 @@ export async function verifyProposal(
   sig: string,
   hostKeys: (host: string) => string[] | undefined,
 ): Promise<Checked> {
-  let p: Proposal;
-  try {
-    p = JSON.parse(text);
-  } catch {
-    return { problem: "not JSON" };
+  const envelope = json(text, object({}, { format: unknownValue }));
+  if (envelope.kind === "err") return { problem: "not JSON" };
+  const format = envelope.value.format;
+  if (format !== PROPOSAL_FORMAT) {
+    return {
+      problem: `not a ${PROPOSAL_FORMAT} proposal (format: ${
+        typeof format === "string"
+          ? format
+          : format === undefined
+            ? "undefined"
+            : JSON.stringify(format)
+      })`,
+    };
   }
-  if (p?.format !== PROPOSAL_FORMAT) {
-    return { problem: `not a ${PROPOSAL_FORMAT} proposal (format: ${String(p?.format)})` };
-  }
-  if (!p.id || !p.host || !Array.isArray(p.items)) {
-    return { problem: "incomplete: no id, host, or items" };
-  }
+  const read = readProposal(text);
+  if ("problem" in read) return { problem: `incomplete: ${read.problem}` };
+  const p = read.proposal;
+  if (!p.id || !p.host) return { problem: "incomplete: no id, host, or items" };
   const keys = hostKeys(p.host);
   if (!keys) return { proposal: p, problem: `${p.host} is not a host of this fleet` };
   if (!keys.length) {
@@ -354,9 +521,9 @@ export function proposalSummary(p: Proposal): string {
     "",
     "To decide on your PC, in the fleet repository: save this message (.eml), or proposal.json and",
     "proposal.json.sig together, then:",
-    "  deno task stolos proposal import <the .eml, the .json, or their folder>",
-    `  deno task stolos proposal show ${p.id}`,
-    `  deno task stolos proposal accept ${p.id}     (or reject)`,
+    "  bun run stolos proposal import <the .eml, the .json, or their folder>",
+    `  bun run stolos proposal show ${p.id}`,
+    `  bun run stolos proposal accept ${p.id}     (or reject)`,
   );
   return lines.join("\n");
 }

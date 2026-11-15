@@ -1,5 +1,5 @@
 /**
- * Spec 061: `deno task stolos vault restore <zip>` makes a freshly cloned PC
+ * Spec 061: `bun run stolos vault restore <zip>` makes a freshly cloned PC
  * the boot machine again from one backup ZIP (spec 056). It reads the ZIP and
  * checks every file against its manifest, puts each file back where stolos
  * keeps it (the secrets, readable by you only; the daily key in `.ssh`; the
@@ -30,15 +30,14 @@
  * @module
  */
 
-import { unzipSync } from "npm:fflate@0.8.2";
-import { join } from "../core/path.ts";
-import { exists } from "../core/fsx.ts";
+import { formatDecodeError, json, sha256, unzip } from "@intellectual-frontiers/ifc-ts/kernel";
+import { errors, fs, path as paths, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "../core/exec.ts";
 import { listFleets, P } from "../core/paths.ts";
 import { ownerOnly } from "../core/secrets.ts";
 import { ui } from "../core/ui.ts";
-import { markBackedUp, sha256 } from "./state.ts";
-import { ZIP_FORMAT, type ZipManifest } from "./zip.ts";
+import { markBackedUp } from "./state.ts";
+import { ZIP_FORMAT, zipManifest, type ZipManifest } from "./zip.ts";
 
 /** Where restored files go: the secrets root (holds one folder per fleet), `.ssh`, and the key store. */
 export interface RestoreRoots {
@@ -54,8 +53,8 @@ export interface RestoreRoots {
 export async function restoreRoots(): Promise<RestoreRoots> {
   const { homeFolder, keyPaths } = await import("../identity/keys.ts");
   return {
-    secrets: join(P.secrets, ".."),
-    ssh: join(homeFolder(), ".ssh"),
+    secrets: paths.join(P.secrets, ".."),
+    ssh: paths.join(homeFolder(), ".ssh"),
     keys: keyPaths().recoveryDir,
   };
 }
@@ -67,7 +66,7 @@ export interface RestoreFile {
   /** Where it goes on this PC. */
   to: string;
   /** Its bytes. */
-  data: Uint8Array<ArrayBuffer>;
+  data: Uint8Array;
   /** A private file (owner only); public halves (`.pub`) are not. */
   secret: boolean;
   /** "new": not here yet; "same": already here, identical; "differs": here, with other bytes. */
@@ -98,12 +97,15 @@ export function targetOf(
 ): { to: string; fleet?: string } | undefined {
   const parts = name.split("/");
   if (!parts.every(safePart)) return undefined;
-  if (parts[0] === "secrets" && parts.length >= 3) {
-    return { to: join(roots.secrets, ...parts.slice(1)), fleet: parts[1] };
+  const [top, second, third] = parts;
+  if (top === "secrets" && second !== undefined && parts.length >= 3) {
+    return { to: paths.join(roots.secrets, ...parts.slice(1)), fleet: second };
   }
-  if (parts[0] === "signing" && parts.length === 2) return { to: join(roots.ssh, parts[1]) };
-  if (parts[0] === "signing" && parts[1] === "recovery" && parts.length === 3) {
-    return { to: join(roots.keys, parts[2]) };
+  if (top === "signing" && second !== undefined && parts.length === 2) {
+    return { to: paths.join(roots.ssh, second) };
+  }
+  if (top === "signing" && second === "recovery" && third !== undefined && parts.length === 3) {
+    return { to: paths.join(roots.keys, third) };
   }
   return undefined;
 }
@@ -119,31 +121,30 @@ const same = (a: Uint8Array, b: Uint8Array) =>
 export async function planRestore(zipPath: string, roots: RestoreRoots): Promise<RestorePlan> {
   let raw: Uint8Array;
   try {
-    raw = await Deno.readFile(zipPath);
+    raw = await fs.readFile(zipPath);
   } catch {
     throw new Error(`cannot read ${zipPath}`);
   }
-  let entries: Record<string, Uint8Array>;
-  try {
-    entries = unzipSync(raw);
-  } catch {
-    throw new Error(`${zipPath} is not a ZIP file (or is damaged)`);
+  const unzipped = await unzip(raw);
+  if (unzipped.kind === "err") throw new Error(`${zipPath} is not a ZIP file (or is damaged)`);
+  const entries = unzipped.value;
+  const manifestBytes = entries.get("manifest.json");
+  if (!manifestBytes) throw new Error(`${zipPath} has no manifest.json: not a stolos backup`);
+  const decoded = json(new TextDecoder().decode(manifestBytes), zipManifest);
+  if (decoded.kind === "err") {
+    throw new Error(
+      `${zipPath} is not a stolos backup (its manifest.json: ${formatDecodeError(decoded.error)})`,
+    );
   }
-  let manifest: ZipManifest;
-  try {
-    manifest = JSON.parse(new TextDecoder().decode(entries["manifest.json"]));
-  } catch {
-    throw new Error(`${zipPath} has no manifest.json: not a stolos backup`);
-  }
-  if (manifest.format !== ZIP_FORMAT || !Array.isArray(manifest.files)) {
-    throw new Error(`${zipPath} is not a stolos backup (format ${manifest.format ?? "unknown"})`);
+  const manifest: ZipManifest = decoded.value;
+  if (manifest.format !== ZIP_FORMAT) {
+    throw new Error(`${zipPath} is not a stolos backup (format ${manifest.format})`);
   }
   const files: RestoreFile[] = [];
   const fleets = new Set<string>();
   for (const f of manifest.files) {
-    const data = entries[f.name];
-    if (!data) throw new Error(`the backup is incomplete: ${f.name} is missing`);
-    const bytes = new Uint8Array(data);
+    const bytes = entries.get(f.name);
+    if (!bytes) throw new Error(`the backup is incomplete: ${f.name} is missing`);
     if ((await sha256(bytes)) !== f.sha256) {
       throw new Error(`the backup is damaged: ${f.name} does not match its SHA-256`);
     }
@@ -151,7 +152,7 @@ export async function planRestore(zipPath: string, roots: RestoreRoots): Promise
     if (!t) throw new Error(`the backup holds ${f.name}, which stolos does not restore`);
     if (t.fleet) fleets.add(t.fleet);
     let state: RestoreFile["state"] = "new";
-    if (await exists(t.to)) state = same(await Deno.readFile(t.to), bytes) ? "same" : "differs";
+    if (await fs.exists(t.to)) state = same(await fs.readFile(t.to), bytes) ? "same" : "differs";
     files.push({ name: f.name, to: t.to, data: bytes, secret: !f.name.endsWith(".pub"), state });
   }
   const daily = files.find((f) => /^signing\/[^/]+$/.test(f.name) && f.secret)?.name.slice(8);
@@ -166,11 +167,11 @@ export async function planRestore(zipPath: string, roots: RestoreRoots): Promise
 
 /** Write one restored file: its folder private, the file readable by its owner only when private. */
 async function put(f: RestoreFile): Promise<void> {
-  const dir = join(f.to, "..");
-  await Deno.mkdir(dir, { recursive: true });
-  if (Deno.build.os !== "windows") await Deno.chmod(dir, 0o700).catch(() => {});
-  await Deno.writeFile(f.to, f.data, { mode: f.secret ? 0o600 : 0o644 });
-  if (Deno.build.os !== "windows") await Deno.chmod(f.to, f.secret ? 0o600 : 0o644);
+  const dir = paths.join(f.to, "..");
+  await fs.mkdir(dir, { recursive: true });
+  if (proc.build.os !== "windows") await fs.chmod(dir, 0o700).catch(() => {});
+  await fs.writeFile(f.to, f.data, { mode: f.secret ? 0o600 : 0o644 });
+  if (proc.build.os !== "windows") await fs.chmod(f.to, f.secret ? 0o600 : 0o644);
   else if (f.secret) await ownerOnly(f.to); // OpenSSH refuses a private key others can read
 }
 
@@ -190,17 +191,19 @@ export async function existingFiles(plan: RestorePlan, roots: RestoreRoots): Pro
   const out: string[] = [];
   const walk = async (d: string) => {
     try {
-      for await (const e of Deno.readDir(d)) {
-        const p = join(d, e.name);
+      for await (const e of fs.readDir(d)) {
+        const p = paths.join(d, e.name);
         if (e.isDirectory) await walk(p);
         else out.push(p);
       }
-    } catch { /* not there */ }
+    } catch {
+      /* not there */
+    }
   };
   await walk(roots.secrets);
   await walk(roots.keys);
   for (const f of plan.files) {
-    if (f.to.startsWith(roots.ssh) && (await exists(f.to))) out.push(f.to);
+    if (f.to.startsWith(roots.ssh) && (await fs.exists(f.to))) out.push(f.to);
   }
   return out.sort();
 }
@@ -219,19 +222,22 @@ export async function destroyExisting(
   const removed = (await existingFiles(plan, roots)).length;
   for (const d of [roots.secrets, roots.keys]) {
     try {
-      await Deno.remove(d, { recursive: true });
+      await fs.remove(d, { recursive: true });
     } catch (e) {
-      if (!(e instanceof Deno.errors.NotFound)) throw e; // already gone is fine; anything else is not
+      if (!(e instanceof errors.NotFound)) throw e; // already gone is fine; anything else is not
     }
   }
   const movedAside: string[] = [];
-  const stamp = now.toISOString().replace(/[-:]/g, "").replace(/\.\d+Z$/, "Z");
+  const stamp = now
+    .toISOString()
+    .replace(/[-:]/g, "")
+    .replace(/\.\d+Z$/, "Z");
   for (const f of plan.files) {
-    if (!f.to.startsWith(roots.ssh) || !(await exists(f.to))) continue;
+    if (!f.to.startsWith(roots.ssh) || !(await fs.exists(f.to))) continue;
     if (f.state === "differs") {
-      await Deno.rename(f.to, `${f.to}.replaced-${stamp}`);
+      await fs.rename(f.to, `${f.to}.replaced-${stamp}`);
       movedAside.push(`${f.to}.replaced-${stamp}`);
-    } else await Deno.remove(f.to);
+    } else await fs.remove(f.to);
   }
   const { writeLedger } = await import("../core/secret-ledger.ts");
   await writeLedger({ changes: {} });
@@ -239,7 +245,7 @@ export async function destroyExisting(
   return { removed, movedAside };
 }
 
-const done = (): number => ui.problems.some((x) => x.level === "fail") ? 1 : 0;
+const done = (): number => (ui.problems.some((x) => x.level === "fail") ? 1 : 0);
 
 /**
  * `vault restore <zip>`: check the ZIP, choose the fleet, put the files back,
@@ -250,7 +256,7 @@ export async function vaultRestoreZip(
   zip: string,
   o: { filesOnly?: boolean; destroyExisting?: boolean } = {},
 ): Promise<number> {
-  const name = zip.split(/[\\/]/).pop()!;
+  const name = zip.split(/[\\/]/).pop() ?? zip;
   const roots = await restoreRoots();
 
   // 1. The ZIP, read and checked before anything is written.
@@ -260,19 +266,16 @@ export async function vaultRestoreZip(
   try {
     plan = await planRestore(zip, roots);
   } catch (e) {
-    b.fail(
-      (e as Error).message,
-      "give the path of a backup ZIP from deno task stolos vault backup",
-    );
+    b.fail((e as Error).message, "give the path of a backup ZIP from bun run stolos vault backup");
     return done();
   }
   b.done(
-    `${plan.files.length} files from ${plan.manifest.pc}, made ${
-      new Date(plan.manifest.created).toLocaleString("en-US", {
-        dateStyle: "medium",
-        timeStyle: "short",
-      })
-    }; every SHA-256 checked`,
+    `${plan.files.length} files from ${plan.manifest.pc}, made ${new Date(
+      plan.manifest.created,
+    ).toLocaleString("en-US", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    })}; every SHA-256 checked`,
   );
 
   // 2. The fleet: the backup must be for this repository.
@@ -293,14 +296,15 @@ export async function vaultRestoreZip(
     );
     return done();
   }
-  if (!P.fleetId && common.length === 1) {
+  const [only] = common;
+  if (!P.fleetId && only !== undefined && common.length === 1) {
     const { chooseFleet } = await import("../fleet/use.ts");
-    if ((await chooseFleet(common[0])) === "chosen") f.note(`now using fleet ${common[0]} here`);
+    if ((await chooseFleet(only)) === "chosen") f.note(`now using fleet ${only} here`);
   }
   if (!P.fleetId) {
     f.warn(
       `several fleets here (${here.join(", ")}) and none chosen`,
-      `deno task stolos fleet use <id>, then run this again`,
+      `bun run stolos fleet use <id>, then run this again`,
     );
     return done();
   }
@@ -348,10 +352,10 @@ export async function vaultRestoreZip(
     x.done(
       removed
         ? `removed ${removed - movedAside.length} file(s)${
-          movedAside.length ? `, moved ${movedAside.length} aside` : ""
-        }${
-          savedTo ? ` (${unique.length} not in the backup as they were: saved in ${savedTo})` : ""
-        }: secrets, the key store, the daily key in .ssh`
+            movedAside.length ? `, moved ${movedAside.length} aside` : ""
+          }${
+            savedTo ? ` (${unique.length} not in the backup as they were: saved in ${savedTo})` : ""
+          }: secrets, the key store, the daily key in .ssh`
         : "nothing here: already clean",
     );
   }
@@ -362,9 +366,9 @@ export async function vaultRestoreZip(
   if (differs.length) {
     const shown = differs.slice(0, 5).map((x) => x.to);
     w.fail(
-      `${differs.length} file(s) already here differ from the backup (nothing was written): ${
-        shown.join(", ")
-      }${differs.length > shown.length ? ", ..." : ""}`,
+      `${differs.length} file(s) already here differ from the backup (nothing was written): ${shown.join(
+        ", ",
+      )}${differs.length > shown.length ? ", ..." : ""}`,
       "they may be newer than the backup: keep them (no restore needed), or restore clean: add --destroy-existing (what is here is saved first)",
     );
     return done();
@@ -372,17 +376,17 @@ export async function vaultRestoreZip(
   const written = await applyRestore(plan);
   const kept = plan.files.length - written;
   w.done(
-    `${written} put back${kept ? `, ${kept} already here` : ""}: secrets in ${
-      join(P.secrets, "..")
-    }, keys in .ssh and the key store`,
+    `${written} put back${kept ? `, ${kept} already here` : ""}: secrets in ${paths.join(
+      P.secrets,
+      "..",
+    )}, keys in .ssh and the key store`,
   );
   // The ZIP holds every secret as it is now: it counts as the last backup.
   const prefix = `secrets/${P.fleetId}/`;
   const names = Object.fromEntries(
-    plan.manifest.files.filter((x) => x.name.startsWith(prefix)).map((x) => [
-      x.name.slice(prefix.length),
-      x.sha256,
-    ]),
+    plan.manifest.files
+      .filter((x) => x.name.startsWith(prefix))
+      .map((x) => [x.name.slice(prefix.length), x.sha256]),
   );
   await markBackedUp(name, names, plan.manifest.created);
   if (!plan.daily) {
@@ -393,16 +397,16 @@ export async function vaultRestoreZip(
   }
 
   if (o.filesOnly) {
-    ui.next.push("set up signing: deno task stolos keys setup");
-    ui.next.push("then check everything: deno task stolos boot doctor");
+    ui.next.push("set up signing: bun run stolos keys setup");
+    ui.next.push("then check everything: bun run stolos boot doctor");
     return done();
   }
 
   // 5. Signing, for this checkout: Git uses the restored daily key.
   if (plan.daily && plan.daily !== "fleet-signing") {
     const set = await run(["git", "-C", P.repo, "config", "--local", "--get", "user.signingkey"]);
-    if (!set.stdout.trim()) {
-      const to = plan.files.find((x) => x.name === `signing/${plan.daily}`)!.to;
+    const to = plan.files.find((x) => x.name === `signing/${plan.daily}`)?.to;
+    if (!set.stdout.trim() && to !== undefined) {
       await run(["git", "-C", P.repo, "config", "--local", "user.signingkey", to]);
     }
   }
@@ -415,14 +419,14 @@ export async function vaultRestoreZip(
 
   // 6. VS Code: the engine's types.
   const e = ui.phase("Editor");
-  const { cacheEngine } = await import("../fleet/scaffold.ts");
-  const c = await cacheEngine(P.repo);
+  const { installEngine } = await import("../fleet/scaffold.ts");
+  const c = await installEngine(P.repo);
   if (c.ok) e.done("VS Code has the engine's types");
-  else e.warn(`could not download the engine: ${c.why}`, "deno task stolos update");
+  else e.warn(`could not install the engine: ${c.why}`, "bun install --frozen-lockfile");
 
-  ui.next.push("check everything: deno task stolos boot doctor");
+  ui.next.push("check everything: bun run stolos boot doctor");
   ui.next.push(
-    "keep the ZIP where you keep it safe; delete any copy you unzipped. If this PC replaces the boot machine: its address and firewall (deno task stolos docs disaster-recovery)",
+    "keep the ZIP where you keep it safe; delete any copy you unzipped. If this PC replaces the boot machine: its address and firewall (bun run stolos docs disaster-recovery)",
   );
   return done();
 }

@@ -1,5 +1,5 @@
 /**
- * Spec 053: "where am I". `deno task stolos` with no arguments shows, for the fleet of
+ * Spec 053: "where am I". `bun run stolos` with no arguments shows, for the fleet of
  * this repository, every step from a new repository to running hosts, each
  * done or not as the real state says (Git, this machine's secret store, the
  * boot server's tokens, what hosts reported), and the one command to run next.
@@ -18,15 +18,16 @@
  *
  * @module
  */
+import { fs, path, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
 
 export interface WhereFacts {
   /** The fleets of this repository. */
   fleets: string[];
   /** The active fleet, when one is chosen and exists. */
   fleetId?: string;
-  /** deno.json's engine tag, when pinned; and whether deno.lock exists. */
+  /** package.json's engine tag, when pinned. */
   pinned?: string;
-  /** deno.lock exists. */
+  /** bun.lock exists. */
   locked: boolean;
   /** How many signers of each role signers.ts lists. */
   signers: { daily: number; recovery: number };
@@ -72,57 +73,57 @@ export function whereSteps(f: WhereFacts): Step[] {
   if (!f.fleetId) {
     raw.push({
       done: false,
-      text: f.fleets.length > 1
-        ? `choose a fleet of this repository (${f.fleets.join(", ")})`
-        : "create the fleet",
-      command: f.fleets.length > 1
-        ? `deno task stolos fleet use ${f.fleets[0]}`
-        : "deno task stolos fleet init <id>",
+      text:
+        f.fleets.length > 1
+          ? `choose a fleet of this repository (${f.fleets.join(", ")})`
+          : "create the fleet",
+      command:
+        f.fleets.length > 1
+          ? `bun run stolos fleet use ${f.fleets[0]}`
+          : "bun run stolos fleet init <id>",
     });
     return label(raw);
   }
   raw.push({
     done: !!f.pinned && f.locked,
     text: f.pinned
-      ? `engine ${f.pinned}${f.locked ? ", locked" : ", not locked (deno.lock is missing)"}`
-      : "the engine is not pinned in deno.json",
-    command:
-      `deno task stolos fleet upgrade v<version> (the newest tag of intellectual-frontiers/stolos)`,
+      ? `engine ${f.pinned}${f.locked ? ", locked" : ", not locked (bun.lock is missing)"}`
+      : "the engine is not pinned in package.json",
+    command: `bun run stolos fleet upgrade v<version> (the newest tag of intellectual-frontiers/stolos)`,
   });
   raw.push({
     done: f.signers.daily > 0,
     text: f.signers.daily
       ? `${f.signers.daily} daily signer(s)`
       : "no daily signer: no change can be approved",
-    command: "deno task stolos keys setup",
+    command: "bun run stolos keys setup",
   });
   raw.push({
     done: f.signers.recovery > 0,
     text: f.signers.recovery
       ? `${f.signers.recovery} recovery signer(s)`
       : "no recovery signer (the key you keep apart, for when the daily one is lost)",
-    command: "deno task stolos keys setup",
+    command: "bun run stolos keys setup",
   });
+  const [signing] = f.signingProblems;
   raw.push({
-    done: !f.signingProblems.length,
-    text: f.signingProblems.length
-      ? `this machine's signing: ${f.signingProblems[0].what}`
-      : "this machine signs your commits",
-    command: f.signingProblems[0]?.fix ?? "deno task stolos keys",
+    done: signing === undefined,
+    text: signing ? `this machine's signing: ${signing.what}` : "this machine signs your commits",
+    command: signing?.fix ?? "bun run stolos keys",
   });
   raw.push({
     done: f.adminHash,
     text: f.adminHash
       ? "admin password (hash on this machine)"
       : "no admin password hash on this machine",
-    command: `deno task stolos fleet init ${id}`,
+    command: `bun run stolos fleet init ${id}`,
   });
   if (f.mail) {
     raw.push({
       done: f.mail.token,
       pending: !f.mail.token,
       text: f.mail.token ? "mail token" : "mail is not set up yet (no relay token)",
-      command: "deno task stolos boot mail-setup",
+      command: "bun run stolos boot mail-setup",
     });
   }
   if (f.web) {
@@ -132,7 +133,7 @@ export function whereSteps(f: WhereFacts): Step[] {
       text: f.web.token
         ? "Cloudflare token (DNS, certificates)"
         : "HTTPS names are not set up yet (no Cloudflare token)",
-      command: "deno task stolos boot web-setup",
+      command: "bun run stolos boot web-setup",
     });
   }
   const servers = f.hosts.filter((h) => !h.workstation);
@@ -140,7 +141,7 @@ export function whereSteps(f: WhereFacts): Step[] {
     raw.push({
       done: false,
       text: "no server yet",
-      command: "deno task stolos host add <name> --claim   (or --mac-address <mac>)",
+      command: "bun run stolos host add <name> --claim   (or --mac-address <mac>)",
     });
   }
   for (const h of servers) {
@@ -149,11 +150,11 @@ export function whereSteps(f: WhereFacts): Step[] {
       text: h.installed
         ? `${h.name} installed`
         : h.armed
-        ? `${h.name} armed${h.claim ? " (claim)" : ""}: power it on and let it network-boot`
-        : `${h.name} not installed`,
+          ? `${h.name} armed${h.claim ? " (claim)" : ""}: power it on and let it network-boot`
+          : `${h.name} not installed`,
       command: h.armed
-        ? "deno task stolos boot serve   (leave it running while it installs)"
-        : `deno task stolos boot arm ${h.name} --claim   (or --mac-address <mac>)`,
+        ? "bun run stolos boot serve   (leave it running while it installs)"
+        : `bun run stolos boot arm ${h.name} --claim   (or --mac-address <mac>)`,
     });
   }
   raw.push({
@@ -161,48 +162,51 @@ export function whereSteps(f: WhereFacts): Step[] {
     text: f.dirty
       ? "changes not committed"
       : f.unpushed
-      ? `${f.unpushed} commit(s) not pushed (pushing is the approval)`
-      : "everything committed and pushed",
-    command: 'deno task stolos apply -m "<what changed>"',
+        ? `${f.unpushed} commit(s) not pushed (pushing is the approval)`
+        : "everything committed and pushed",
+    command: 'bun run stolos apply -m "<what changed>"',
   });
   return label(raw);
 }
 
+/** The steps' states: done, the first one not done (next), the rest (todo), or pending. */
 function label(
   raw: Array<{ done: boolean; pending?: boolean; text: string; command?: string }>,
 ): Step[] {
   let nextGiven = false;
   return raw.map((r) => {
     if (r.done) return { state: "done" as const, text: r.text };
-    if (r.pending) return { state: "pending" as const, text: r.text, command: r.command };
+    const command = r.command === undefined ? {} : { command: r.command };
+    if (r.pending) return { state: "pending" as const, text: r.text, ...command };
     const state: StepState = nextGiven ? "todo" : "next";
     nextGiven = true;
-    return { state, text: r.text, command: r.command };
+    return { state, text: r.text, ...command };
   });
 }
 
 /** The one command to run next (or what to do when everything is done). */
 export function nextCommand(steps: Step[]): string {
-  return steps.find((s) => s.state === "next")?.command ??
+  return (
+    steps.find((s) => s.state === "next")?.command ??
     steps.find((s) => s.state === "pending")?.command ??
-    "deno task stolos fleet status   (everything is set up)";
+    "bun run stolos fleet status   (everything is set up)"
+  );
 }
 
 /** The facts, from the real state (see the header). */
 export async function collectWhere(): Promise<WhereFacts> {
   const { P, listFleets } = await import("../core/paths.ts");
-  const { exists, readTextOr } = await import("../core/fsx.ts");
-  const { join } = await import("../core/path.ts");
   const { run } = await import("../core/exec.ts");
   const fleets = listFleets(P.repo);
-  const fleetId = P.fleetId && (await exists(P.fleet)) ? P.fleetId : undefined;
+  const fleetId = P.fleetId && (await fs.exists(P.fleet)) ? P.fleetId : undefined;
   const { readPin } = await import("../fleet/upgrade.ts");
-  const denoJson = await readTextOr(join(P.repo, "deno.json"));
+  const packageJson = await fs.readTextOr(path.join(P.repo, "package.json"));
+  const pin = packageJson === undefined ? undefined : readPin(packageJson);
   const base: WhereFacts = {
     fleets,
     ...(fleetId ? { fleetId } : {}),
-    ...(denoJson && readPin(denoJson) ? { pinned: readPin(denoJson)!.tag } : {}),
-    locked: await exists(join(P.repo, "deno.lock")),
+    ...(pin ? { pinned: pin.tag } : {}),
+    locked: await fs.exists(path.join(P.repo, "bun.lock")),
     signers: { daily: 0, recovery: 0 },
     signingProblems: [],
     adminHash: false,
@@ -219,18 +223,21 @@ export async function collectWhere(): Promise<WhereFacts> {
   const fleet = await loadFleet();
   const tokens = await loadTokens().catch(() => []);
   const { getRecord } = await import("../state/store.ts");
-  const hosts = await Promise.all((await loadHosts().catch(() => [])).map(async (h) => {
-    const t = liveToken(tokens, h.name);
-    const installed = h.registration?.macSource === "installed" ||
-      !!(await getRecord(h.name, "install", "install", P.state).catch(() => undefined));
-    return {
-      name: h.name,
-      workstation: h.kind === "workstation",
-      installed,
-      armed: !!t,
-      claim: !!t?.claimUntil,
-    };
-  }));
+  const hosts = await Promise.all(
+    (await loadHosts().catch(() => [])).map(async (h) => {
+      const t = liveToken(tokens, h.name);
+      const installed =
+        h.registration?.macSource === "installed" ||
+        !!(await getRecord(h.name, "install", "install", P.state).catch(() => undefined));
+      return {
+        name: h.name,
+        workstation: h.kind === "workstation",
+        installed,
+        armed: !!t,
+        claim: !!t?.claimUntil,
+      };
+    }),
+  );
   const git = (args: string[]) => run(["git", "-C", P.repo, ...args]);
   const status = await git(["status", "--porcelain"]);
   const ahead = await git(["rev-list", "--count", "@{u}..HEAD"]);
@@ -244,9 +251,9 @@ export async function collectWhere(): Promise<WhereFacts> {
     signingProblems: (await keyChecksNow().catch(() => []))
       .filter((c) => !c.ok && c.level === "fail")
       .map((c) => ({ what: c.what, fix: c.fix })),
-    adminHash: await exists(SECRETS.adminPasswordHash),
-    ...(fleet.mail ? { mail: { token: await exists(SECRETS.mail) } } : {}),
-    ...(fleet.web ? { web: { token: await exists(SECRETS.web) } } : {}),
+    adminHash: await fs.exists(SECRETS.adminPasswordHash),
+    ...(fleet.mail ? { mail: { token: await fs.exists(SECRETS.mail) } } : {}),
+    ...(fleet.web ? { web: { token: await fs.exists(SECRETS.web) } } : {}),
     hosts,
     dirty: status.ok && status.stdout.trim() !== "",
     unpushed: ahead.ok ? Number(ahead.stdout.trim()) || 0 : 0,
@@ -258,28 +265,35 @@ export async function whereCommand(json: boolean): Promise<number> {
   const { ui } = await import("../core/ui.ts");
   // On a host: what it is and how it is (archon state).
   try {
-    Deno.statSync("/etc/archon/host");
+    fs.statSync("/etc/archon/host");
     const { stateCommand } = await import("../state/state-command.ts");
-    const host = Deno.readTextFileSync("/etc/archon/host").trim();
+    const host = fs.readTextFileSync("/etc/archon/host").trim();
     const code = await stateCommand(host, json);
-    if (!json) console.log("\nEvery command: archon help");
+    if (!json) stdio.stdout.writeSync("\nEvery command: archon help\n");
     return code;
-  } catch { /* the boot machine or a workstation's checkout */ }
+  } catch {
+    /* the boot machine or a workstation's checkout */
+  }
   const f = await collectWhere();
   const steps = whereSteps(f);
   if (json) {
-    console.log(JSON.stringify({ facts: f, steps, next: nextCommand(steps) }, null, 2));
+    stdio.stdout.writeSync(
+      `${JSON.stringify({ facts: f, steps, next: nextCommand(steps) }, null, 2)}\n`,
+    );
     return 0;
   }
   const mark = (s: StepState) =>
     ui.emoji
       ? { done: "✅", next: "👉", todo: "▫️ ", pending: "⏳" }[s]
       : { done: "[ok]", next: "[->]", todo: "[  ]", pending: "[..]" }[s];
-  console.log(`fleet ${f.fleetId ?? "(none chosen)"}${f.pinned ? ` · engine ${f.pinned}` : ""}\n`);
+  stdio.stdout.writeSync(
+    `fleet ${f.fleetId ?? "(none chosen)"}${f.pinned ? ` · engine ${f.pinned}` : ""}\n\n`,
+  );
   for (const s of steps) {
-    console.log(`${mark(s.state)} ${s.text}`);
-    if (s.state === "next" || s.state === "pending") console.log(`     ${ui.dim(s.command ?? "")}`);
+    stdio.stdout.writeSync(`${mark(s.state)} ${s.text}\n`);
+    if (s.state === "next" || s.state === "pending")
+      stdio.stdout.writeSync(`     ${ui.dim(s.command ?? "")}\n`);
   }
-  console.log(`\nnext: ${nextCommand(steps)}\nEvery command: archon help`);
+  stdio.stdout.writeSync(`\nnext: ${nextCommand(steps)}\nEvery command: archon help\n`);
   return 0;
 }

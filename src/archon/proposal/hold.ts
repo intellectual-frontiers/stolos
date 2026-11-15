@@ -25,9 +25,9 @@
  * @module
  */
 
+import { fs } from "@intellectual-frontiers/ifc-ts/runtime";
 import { P } from "../core/paths.ts";
 import { run } from "../core/exec.ts";
-import { readTextOr } from "../core/fsx.ts";
 import { journal } from "../core/log.ts";
 import { listRecords, putRecord } from "../state/store.ts";
 import type { HostPlan } from "../model/types.ts";
@@ -50,18 +50,20 @@ export interface HostLook {
 
 /** The real host. */
 export const realLook: HostLook = {
-  file: (path) => readTextOr(path),
+  file: (path) => fs.readTextOr(path),
   unit: async (name) => (await run(["systemctl", "is-enabled", name])).stdout.trim(),
   sudo: async (since) =>
     parseSudoJournal(
-      (await run([
-        "journalctl",
-        "-o",
-        "json",
-        "--no-pager",
-        "SYSLOG_IDENTIFIER=sudo",
-        `--since=@${Math.floor(Date.parse(since) / 1000)}`,
-      ])).stdout,
+      (
+        await run([
+          "journalctl",
+          "-o",
+          "json",
+          "--no-pager",
+          "SYSLOG_IDENTIFIER=sudo",
+          `--since=@${Math.floor(Date.parse(since) / 1000)}`,
+        ])
+      ).stdout,
     ),
 };
 
@@ -98,9 +100,9 @@ export async function refreshHolds(
   const look = opts.look ?? realLook;
   const host = plan.host.name;
   // Only the real host's journal hears about holds (tests look at their own fixtures).
-  const say = (m: string) => look === realLook ? journal("archon-hold", m) : Promise.resolve();
-  const decisions = opts.decisions ??
-    await (await import("./decisions.ts")).loadProposalDecisions(host);
+  const say = (m: string) => (look === realLook ? journal("archon-hold", m) : Promise.resolve());
+  const decisions =
+    opts.decisions ?? (await (await import("./decisions.ts")).loadProposalDecisions(host));
   const all = new Map(
     (await listRecords<StoredHold>(host, "hold", dir)).map((r) => [r.name, r.body]),
   );
@@ -114,8 +116,8 @@ export async function refreshHolds(
     await say(`${key}: hold ended, ${why}`);
   }
   const since = new Date(now.getTime() - HOLD_DAYS * 86_400_000).toISOString();
-  const entries = (await look.sudo(since)).filter((e) =>
-    e.at >= since && e.at <= now.toISOString()
+  const entries = (await look.sudo(since)).filter(
+    (e) => e.at >= since && e.at <= now.toISOString(),
   );
   const files = new Map(
     plan.files.filter((f) => f.content !== undefined && !f.symlink).map((f) => [f.path, f]),
@@ -124,11 +126,13 @@ export async function refreshHolds(
   for (const e of entries.sort((a, b) => a.at.localeCompare(b.at))) {
     for (const t of commandTargets(e.command)) {
       let key: string | undefined;
-      if (t.kind === "file" && files.has(t.name)) {
+      const file = t.kind === "file" ? files.get(t.name) : undefined;
+      const unit = t.kind === "unit" ? units.get(t.name) : undefined;
+      if (file) {
         const cur = await look.file(t.name);
-        if (cur !== undefined && cur !== files.get(t.name)!.content) key = `file:${t.name}`;
-      } else if (t.kind === "unit" && units.has(t.name)) {
-        if (!unitAsPlanned(units.get(t.name)!.state, await look.unit(t.name))) {
+        if (cur !== undefined && cur !== file.content) key = `file:${t.name}`;
+      } else if (unit) {
+        if (!unitAsPlanned(unit.state, await look.unit(t.name))) {
           key = `unit:${t.name}`;
         }
       }
@@ -159,16 +163,15 @@ export async function activeHolds(
 ): Promise<Map<string, StoredHold>> {
   const now = new Date().toISOString();
   return new Map(
-    (await listRecords<StoredHold>(host, "hold", dir)).filter((r) =>
-      !r.body.ended && r.body.until > now
-    )
+    (await listRecords<StoredHold>(host, "hold", dir))
+      .filter((r) => !r.body.ended && r.body.until > now)
       .map((r) => [r.name, r.body]),
   );
 }
 
 /** One line for apply: why it leaves an item alone. */
 export function heldLine(h: Hold): string {
-  return `held: ${h.by} changed it under sudo (${h.command.slice(0, 60)}); kept until ${
-    h.until.slice(0, 16).replace("T", " ")
-  } UTC or its proposal is decided (archon drift; spec 095)`;
+  return `held: ${h.by} changed it under sudo (${h.command.slice(0, 60)}); kept until ${h.until
+    .slice(0, 16)
+    .replace("T", " ")} UTC or its proposal is decided (archon drift; spec 095)`;
 }

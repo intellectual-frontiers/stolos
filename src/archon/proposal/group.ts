@@ -44,20 +44,23 @@ const stamp = (iso: string) => iso.slice(0, 16).replace(/[-:T]/g, "");
 /** Sudo sessions: each person's commands, split where they are more than 30 minutes apart. */
 export function sessions(observations: Observation[]): Array<Intent & { obs: Observation[] }> {
   const byWho = new Map<string, Observation[]>();
-  for (const o of observations.filter((x) => x.source === "sudo" && x.who)) {
-    byWho.set(o.who!, [...(byWho.get(o.who!) ?? []), o]);
+  for (const o of observations) {
+    if (o.source !== "sudo" || !o.who) continue;
+    byWho.set(o.who, [...(byWho.get(o.who) ?? []), o]);
   }
   const out: Array<Intent & { obs: Observation[] }> = [];
   for (const [who, list] of byWho) {
     list.sort((a, b) => a.at.localeCompare(b.at));
     let cur: Observation[] = [];
-    const close = () => {
-      if (!cur.length) return;
+    const close = (): void => {
+      const first = cur[0];
+      const last = cur.at(-1);
+      if (!first || !last) return;
       out.push({
-        id: `s-${who}-${stamp(cur[0].at)}`,
+        id: `s-${who}-${stamp(first.at)}`,
         who,
-        from: cur[0].at,
-        to: cur[cur.length - 1].at,
+        from: first.at,
+        to: last.at,
         commands: cur.map((o) => o.name),
         items: [],
         obs: cur,
@@ -90,41 +93,52 @@ export function groupItems(
   };
   for (const it of items) {
     const t = Date.parse(it.at);
-    const r = recordings.find((x) =>
-      t >= Date.parse(x.start) && t <= Date.parse(x.end ?? now.toISOString())
+    const r = recordings.find(
+      (x) => t >= Date.parse(x.start) && t <= Date.parse(x.end ?? now.toISOString()),
     );
     if (r) {
-      put({
-        id: r.id,
-        who: r.by,
-        from: r.start,
-        to: r.end ?? now.toISOString(),
-        commands: ss.filter((s) => s.from >= r.start && s.from <= (r.end ?? now.toISOString()))
-          .flatMap((s) => s.commands),
-        items: [],
-        reason: r.reason,
-      }, it.key);
+      put(
+        {
+          id: r.id,
+          who: r.by,
+          from: r.start,
+          to: r.end ?? now.toISOString(),
+          commands: ss
+            .filter((s) => s.from >= r.start && s.from <= (r.end ?? now.toISOString()))
+            .flatMap((s) => s.commands),
+          items: [],
+          reason: r.reason,
+        },
+        it.key,
+      );
       continue;
     }
     const named = ss.find((s) => s.obs.some((o) => explains(o, it.kind, it.name)));
-    const near = named ?? ss.find((s) =>
-      (!it.who || s.who === it.who) &&
-      t >= Date.parse(s.from) - SESSION_GAP_MS && t <= Date.parse(s.to) + SESSION_GAP_MS
-    );
+    const near =
+      named ??
+      ss.find(
+        (s) =>
+          (!it.who || s.who === it.who) &&
+          t >= Date.parse(s.from) - SESSION_GAP_MS &&
+          t <= Date.parse(s.to) + SESSION_GAP_MS,
+      );
     if (near) {
       const { obs: _obs, ...intent } = near;
       put(intent, it.key);
       continue;
     }
     const day = it.at.slice(0, 10);
-    put({
-      id: `d-${it.who ?? "unknown"}-${day.replaceAll("-", "")}`,
-      ...(it.who ? { who: it.who } : {}),
-      from: it.at,
-      to: it.at,
-      commands: [],
-      items: [],
-    }, it.key);
+    put(
+      {
+        id: `d-${it.who ?? "unknown"}-${day.replaceAll("-", "")}`,
+        ...(it.who ? { who: it.who } : {}),
+        from: it.at,
+        to: it.at,
+        commands: [],
+        items: [],
+      },
+      it.key,
+    );
   }
   for (const i of intents.values()) i.items.sort();
   return [...intents.values()].sort((a, b) => a.from.localeCompare(b.from));

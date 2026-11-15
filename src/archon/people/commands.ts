@@ -12,11 +12,11 @@
  * @module
  */
 
+import { fs, path as paths, proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
+import { tsLiteral } from "@intellectual-frontiers/ifc-ts/kernel";
 import { ui } from "../core/ui.ts";
 import { run } from "../core/exec.ts";
-import { join } from "../core/path.ts";
 import { P, repoRel } from "../core/paths.ts";
-import { tsLiteral } from "../core/ts-literal.ts";
 import type { PolicyResult } from "../adopt/policy.ts";
 import type { Acceptance } from "../adopt/adopt.ts";
 import type { SignerDef } from "../model/types.ts";
@@ -73,15 +73,18 @@ export async function gatherPeople(
   const now = o.now ?? new Date();
   const base = `fleets/${fleet}`;
   const files = await readPeopleFiles(gitReader(repo), base);
-  const signers = o.signers ?? await (async () => {
-    const { loadSigners } = await import("../identity/signers.ts");
-    return await loadSigners(join(repo, base, "signers.ts")).catch(() => []);
-  })();
+  const signers =
+    o.signers ??
+    (await (async () => {
+      const { loadSigners } = await import("../identity/signers.ts");
+      return await loadSigners(paths.join(repo, base, "signers.ts")).catch(() => []);
+    })());
   const git = gitIn(repo);
   const q = quarterOf(now);
   const reviewQuarter = previousQuarter(q);
   const estateFiles = (await gitReader(repo).list(`${base}/estate`))
-    .filter((f) => f.endsWith(".ts") && f !== "links.ts").map((f) => `${base}/estate/${f}`);
+    .filter((f) => f.endsWith(".ts") && f !== "links.ts")
+    .map((f) => `${base}/estate/${f}`);
   const reviews = files.inUse
     ? await quarterReviews(git, base, reviewQuarter, files.keys, signers)
     : undefined;
@@ -155,7 +158,7 @@ WHERE u.status = 'terminated' AND u.end_date IS NOT NULL ORDER BY u.email_addr, 
   return deprovisionMeasures(rows, f.activity, now);
 }
 
-const failed = (): number => ui.problems.some((x) => x.level === "fail") ? 1 : 0;
+const failed = (): number => (ui.problems.some((x) => x.level === "fail") ? 1 : 0);
 
 /** `stolos people status`: every people control now, and the time to deprovision. */
 export async function peopleStatus(json = false): Promise<number> {
@@ -168,39 +171,47 @@ export async function peopleStatus(json = false): Promise<number> {
   const results = peopleResults(e, g.facts, { now, accepted });
   const measures = deprovisionTable(e, g.facts, now);
   if (json) {
-    console.log(JSON.stringify(
-      {
-        results,
-        deprovision: measures,
-        reviews: { [g.facts.reviewQuarter]: g.facts.reviews ?? [], [quarterOf(now)]: g.current },
-        problems: g.problems,
-      },
-      null,
-      2,
-    ));
+    stdio.stdout.writeSync(
+      `${JSON.stringify(
+        {
+          results,
+          deprovision: measures,
+          reviews: { [g.facts.reviewQuarter]: g.facts.reviews ?? [], [quarterOf(now)]: g.current },
+          problems: g.problems,
+        },
+        null,
+        2,
+      )}\n`,
+    );
     return results.some((r) => r.status === "fail") ? 1 : 0;
   }
   const p = ui.phase("People");
   for (const x of g.problems) p.warn(x);
   const { table } = await import("../state/query.ts");
   if (results.length) {
-    console.log(table(results.map((r) => ({ control: r.id, status: r.status, detail: r.detail }))));
+    stdio.stdout.writeSync(
+      `${table(results.map((r) => ({ control: r.id, status: r.status, detail: r.detail })))}\n`,
+    );
   }
   if (measures.length) {
-    console.log("\nTime to deprovision (days active after the end date, from Git)");
-    console.log(table(measures.map((m) => ({
-      person: m.email,
-      end: m.end,
-      system: m.system,
-      account: m.account,
-      days: m.days,
-      now: m.active ? "active" : "off",
-    }))));
+    stdio.stdout.writeSync("\nTime to deprovision (days active after the end date, from Git)\n");
+    stdio.stdout.writeSync(
+      `${table(
+        measures.map((m) => ({
+          person: m.email,
+          end: m.end,
+          system: m.system,
+          account: m.account,
+          days: m.days,
+          now: m.active ? "active" : "off",
+        })),
+      )}\n`,
+    );
   }
   for (const r of results.filter((x) => x.status === "fail")) p.fail(`${r.id}: ${r.detail}`, r.fix);
   if (!g.files.inUse) {
     ui.next.push(
-      "keep people files: fleets/<fleet>/people/ and policies/ (deno task stolos docs people)",
+      "keep people files: fleets/<fleet>/people/ and policies/ (bun run stolos docs people)",
     );
   }
   p.done(
@@ -215,12 +226,11 @@ export async function peopleStatus(json = false): Promise<number> {
 async function gitInteractive(repo: string, args: string[]): Promise<boolean> {
   ui.pause();
   try {
-    const r = await new Deno.Command("git", {
-      args: ["-C", repo, ...args],
+    const r = await proc.output(["git", "-C", repo, ...args], {
       stdin: "inherit",
       stdout: "inherit",
       stderr: "inherit",
-    }).output();
+    });
     return r.success;
   } finally {
     ui.resume();
@@ -253,7 +263,7 @@ export async function peopleReview(o: ReviewOptions = {}): Promise<number> {
   if (!files.length) {
     p.fail(
       "no managers: the HR system gives no reporting lines (party_relationship reports_to)",
-      "connect the HR system (deno task stolos connect), then deno task stolos estate observe",
+      "connect the HR system (bun run stolos connect), then bun run stolos estate observe",
     );
     return 1;
   }
@@ -278,7 +288,7 @@ export async function peopleReview(o: ReviewOptions = {}): Promise<number> {
   if ((await git(["status", "--porcelain"])).stdout.trim()) {
     p.fail(
       "this checkout has uncommitted changes",
-      "commit them (deno task stolos apply) or set them aside, then run this again",
+      "commit them (bun run stolos apply) or set them aside, then run this again",
     );
     return 1;
   }
@@ -293,15 +303,15 @@ export async function peopleReview(o: ReviewOptions = {}): Promise<number> {
     p.fail(`git switch: ${sw.stderr.trim()}`, "git status");
     return 1;
   }
-  const back = async () => void await git(["switch", "-q", here]);
+  const back = async () => void (await git(["switch", "-q", here]));
   for (const f of fresh) {
-    const path = join(P.fleetDir, f.path);
-    await Deno.mkdir(join(path, ".."), { recursive: true });
-    await Deno.writeTextFile(path, f.text);
+    const path = paths.join(P.fleetDir, f.path);
+    await fs.mkdir(paths.join(path, ".."), { recursive: true });
+    await fs.writeTextFile(path, f.text);
   }
   await git(["add", "--", ...fresh.map((f) => `${fleet}/${f.path}`)]);
   const message = `people: access reviews for ${q} (${fresh.length} manager(s))`;
-  console.log("\n  Signing the commit: type your daily key's passphrase.\n");
+  stdio.stdout.writeSync("\n  Signing the commit: type your daily key's passphrase.\n\n");
   if (!(await gitInteractive(repo, ["commit", "-q", "-S", "-m", message]))) {
     await git(["reset", "-q", "--hard", "HEAD"]);
     await back();
@@ -349,12 +359,12 @@ export async function peopleReview(o: ReviewOptions = {}): Promise<number> {
 
 /** The text of policies/acks/<policy>.ts. */
 export function acksSource(acks: readonly PolicyAck[]): string {
-  const sorted = [...acks].sort((a, b) =>
-    a.email.localeCompare(b.email) || a.version.localeCompare(b.version)
+  const sorted = [...acks].sort(
+    (a, b) => a.email.localeCompare(b.email) || a.version.localeCompare(b.version),
   );
   return `// Written by stolos people ack (spec 077): who acknowledged which version of this policy.
 // Each line counts only with its commit, signed by that person's own key (people/keys.ts).
-import type { PolicyAck } from "@stolos/archon/people/records.ts";
+import type { PolicyAck } from "@intellectual-frontiers/stolos/archon/people/records";
 
 export const acks: PolicyAck[] = ${tsLiteral(sorted)};
 `;
@@ -402,13 +412,12 @@ export async function peopleAck(policy: string, o: { now?: Date } = {}): Promise
       date: (o.now ?? new Date()).toISOString().slice(0, 10),
     });
   }
-  const path = join(P.fleetDir, "policies", "acks", `${policy}.ts`);
-  await Deno.mkdir(join(path, ".."), { recursive: true });
-  await Deno.writeTextFile(path, acksSource(list));
+  const path = paths.join(P.fleetDir, "policies", "acks", `${policy}.ts`);
+  await fs.mkdir(paths.join(path, ".."), { recursive: true });
+  await fs.writeTextFile(path, acksSource(list));
   await git(["add", "--", `${fleet}/policies/acks/${policy}.ts`]);
-  const message =
-    `people: ${email} acknowledges ${pol.title} ${pol.version}\n\nAcknowledges: ${policy}@${pol.version}`;
-  console.log("\n  Signing with your own key: type its passphrase.\n");
+  const message = `people: ${email} acknowledges ${pol.title} ${pol.version}\n\nAcknowledges: ${policy}@${pol.version}`;
+  stdio.stdout.writeSync("\n  Signing with your own key: type its passphrase.\n\n");
   if (!(await gitInteractive(repo, ["commit", "-q", "-S", "--allow-empty", "-m", message]))) {
     p.fail("the commit was not made (a wrong passphrase, or it was cancelled)", "run this again");
     return 1;
@@ -423,7 +432,7 @@ export async function peopleAck(policy: string, o: { now?: Date } = {}): Promise
   }
   p.done(`${email} acknowledged ${policy} ${pol.version}`);
   ui.next.push(
-    "send it to main: a pull request (git push, gh pr create), or, as a fleet signer, deno task stolos apply",
+    "send it to main: a pull request (git push, gh pr create), or, as a fleet signer, bun run stolos apply",
   );
   return 0;
 }

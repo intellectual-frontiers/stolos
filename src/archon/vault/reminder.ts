@@ -12,8 +12,7 @@
  * @module
  */
 
-import { join } from "../core/path.ts";
-import { exists, readTextOr } from "../core/fsx.ts";
+import { fs, path as paths, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";
 import { readLedger, writeLedger } from "../core/secret-ledger.ts";
@@ -24,14 +23,15 @@ import { PRE_PUSH_HOOK } from "../identity/keys.ts";
 
 const DAY = 86_400_000;
 /** This machine's short hostname, as the panel names it. */
-export const pcName = (): string => Deno.hostname().split(".")[0];
+export const pcName = (): string => proc.hostname().split(".")[0] ?? "";
 
 /** Compute the panel for this run (shown by ui.finish or at exit). */
 export async function preparePanel(a?: Assessment): Promise<Assessment> {
-  const x = a ?? await assess();
+  const x = a ?? (await assess());
   await writePromptStatus(x);
   const lines = panelLines(x, pcName());
-  ui.panel = lines ? { lines, level: x.severity === "red" ? "red" : "amber" } : undefined;
+  if (lines) ui.panel = { lines, level: x.severity === "red" ? "red" : "amber" };
+  else delete ui.panel;
   return x;
 }
 
@@ -62,14 +62,13 @@ export async function remind(now = Date.now()): Promise<void> {
           `These secrets on ${pcName()} are newer than its last backup${
             a.lastBackup ? ` (${a.lastBackup.at.slice(0, 10)})` : " (there is none)"
           }:`,
-          ...a.unbacked.map((s) =>
-            `- ${s.name}: ${s.ref ? labelFor(s.ref, s.name) : "not in the inventory"}`
+          ...a.unbacked.map(
+            (s) => `- ${s.name}: ${s.ref ? labelFor(s.ref, s.name) : "not in the inventory"}`,
           ),
           "",
-          `If ${pcName()} failed now, these would have to be recreated (deno task stolos docs disaster-recovery).`,
+          `If ${pcName()} failed now, these would have to be recreated (bun run stolos docs disaster-recovery).`,
         ].join("\n"),
-        todo:
-          "On the boot machine: deno task stolos vault backup, then move the ZIP somewhere safe",
+        todo: "On the boot machine: bun run stolos vault backup, then move the ZIP somewhere safe",
         key: `vault:unbacked:${new Date(now).toISOString().slice(0, 10)}`,
       });
       if (r === "queued") {
@@ -85,8 +84,7 @@ export async function remind(now = Date.now()): Promise<void> {
       const r = await notify({
         event: "check the fleet's recovery key",
         level: "info",
-        what:
-          `${due57.what}. A recovery key you cannot use (a forgotten passphrase, a dead USB drive) cannot replace a lost daily key.`,
+        what: `${due57.what}. A recovery key you cannot use (a forgotten passphrase, a dead USB drive) cannot replace a lost daily key.`,
         todo: due57.fix,
         key: `keys:recovery:${new Date(now).toISOString().slice(0, 10)}`,
       });
@@ -97,7 +95,9 @@ export async function remind(now = Date.now()): Promise<void> {
         );
       }
     }
-  } catch { /* reminders never fail the command that runs them */ }
+  } catch {
+    /* reminders never fail the command that runs them */
+  }
 }
 
 /** The git pre-push hook (specs 029 and 057): the signature check, then the backup panel. */
@@ -109,14 +109,14 @@ export { PRE_PUSH_HOOK as PRE_PUSH } from "../identity/keys.ts";
  */
 export async function installPrePushHook(repo = P.repo): Promise<boolean> {
   // A sandboxed run (tests) touches nothing outside its sandbox, the checkout's hooks included.
-  if (Deno.env.get("ARCHON_SANDBOX")) return false;
-  const hooks = join(repo, ".git", "hooks");
-  if (!(await exists(hooks))) return false;
-  const path = join(hooks, "pre-push");
-  const current = await readTextOr(path);
+  if (proc.env.get("ARCHON_SANDBOX")) return false;
+  const hooks = paths.join(repo, ".git", "hooks");
+  if (!(await fs.exists(hooks))) return false;
+  const path = paths.join(hooks, "pre-push");
+  const current = await fs.readTextOr(path);
   if (current === PRE_PUSH_HOOK) return false;
   if (current && !current.includes("Installed by archon")) return false; // someone else's hook
-  await Deno.writeTextFile(path, PRE_PUSH_HOOK);
-  if (Deno.build.os !== "windows") await Deno.chmod(path, 0o755);
+  await fs.writeTextFile(path, PRE_PUSH_HOOK);
+  if (proc.build.os !== "windows") await fs.chmod(path, 0o755);
   return true;
 }

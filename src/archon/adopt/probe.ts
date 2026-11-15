@@ -43,15 +43,18 @@ export function parseProbe(text: string): ProbeOutput {
       continue;
     }
     const i = line.indexOf("=");
-    if (!section || i <= 0) continue;
-    out[section][line.slice(0, i).trim()] = line.slice(i + 1).trim();
+    const fields = out[section];
+    if (!fields || i <= 0) continue;
+    fields[line.slice(0, i).trim()] = line.slice(i + 1).trim();
   }
   return out;
 }
 
 /** The line in authorized_keys that lets the probe key run the probe and nothing else. */
 export function authorizedLine(publicKey: string, fleet: string): string {
-  return `command="$HOME/.local/bin/stolos-probe",restrict ${
-    publicKey.trim().split(/\s+/).slice(0, 2).join(" ")
-  } stolos-probe@${fleet}`;
+  return `command="$HOME/.local/bin/stolos-probe",restrict ${publicKey
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .join(" ")} stolos-probe@${fleet}`;
 }

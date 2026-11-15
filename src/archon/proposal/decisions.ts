@@ -9,15 +9,55 @@
  * @module
  */
 
-import { join } from "../core/path.ts";
+import {
+  array,
+  type Decoder,
+  exportedLiteral,
+  formatDecodeError,
+  literal,
+  mapDecoder,
+  object,
+  record,
+  string,
+  tsLiteral,
+} from "@intellectual-frontiers/ifc-ts/kernel";
+import { fs, path } from "@intellectual-frontiers/ifc-ts/runtime";
 import { P } from "../core/paths.ts";
-import { readTextOr } from "../core/fsx.ts";
-import { exportedLiteral, tsLiteral } from "../core/ts-literal.ts";
-import type { ProposalDecisions } from "./types.ts";
+import type { ProposalDecision, ProposalDecisions } from "./types.ts";
+
+/** One decision as proposals.ts holds it. */
+const proposalDecision: Decoder<ProposalDecision> = mapDecoder(
+  object(
+    { decision: literal("accepted", "rejected"), by: string, at: string },
+    {
+      reason: string,
+      spec: string,
+      adopted: array(string),
+      local: array(object({ key: string, until: string })),
+      skipped: array(string),
+    },
+  ),
+  (d): ProposalDecision => ({
+    decision: d.decision,
+    by: d.by,
+    at: d.at,
+    ...(d.reason === undefined ? {} : { reason: d.reason }),
+    ...(d.spec === undefined ? {} : { spec: d.spec }),
+    ...(d.adopted === undefined ? {} : { adopted: [...d.adopted] }),
+    ...(d.local === undefined ? {} : { local: d.local.map((l) => ({ ...l })) }),
+    ...(d.skipped === undefined ? {} : { skipped: [...d.skipped] }),
+  }),
+);
+
+/** proposals.ts's `proposals`. */
+export const proposalDecisions: Decoder<ProposalDecisions> = mapDecoder(
+  record(proposalDecision),
+  (r) => ({ ...r }),
+);
 
 /** fleets/<fleet>/hosts/<host>/proposals.ts. */
 export function proposalsFile(host: string): string {
-  return join(P.hosts, host, "proposals.ts");
+  return path.join(P.hosts, host, "proposals.ts");
 }
 
 /** The fixed form of proposals.ts: sorted by id, written by {@link tsLiteral}. */
@@ -25,7 +65,7 @@ export function decisionsSource(d: ProposalDecisions): string {
   const sorted = Object.fromEntries(Object.entries(d).sort(([a], [b]) => a.localeCompare(b)));
   return `// Written by stolos proposal accept and reject (spec 095): what operators decided about
 // this host's proposals. Change it with those commands, in a signed commit.
-import type { ProposalDecisions } from "@stolos/archon/proposal/types.ts";
+import type { ProposalDecisions } from "@intellectual-frontiers/stolos/archon/proposal/types";
 
 export const proposals: ProposalDecisions = ${tsLiteral(sorted)};
 `;
@@ -36,7 +76,13 @@ export async function loadProposalDecisions(
   host: string,
   file: string = proposalsFile(host),
 ): Promise<ProposalDecisions> {
-  const text = await readTextOr(file);
+  const text = await fs.readTextOr(file);
   if (text === undefined) return {};
-  return exportedLiteral(text, "proposals") as ProposalDecisions;
+  const v = exportedLiteral(text, "proposals");
+  if (v.kind === "err") {
+    throw new Error(`${file}: not a literal at ${v.error.at}: expected ${v.error.expected}`);
+  }
+  const d = proposalDecisions(v.value, "proposals");
+  if (d.kind === "err") throw new Error(`${file}: ${formatDecodeError(d.error)}`);
+  return d.value;
 }

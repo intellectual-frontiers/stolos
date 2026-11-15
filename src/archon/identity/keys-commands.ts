@@ -36,8 +36,7 @@
  * @module
  */
 
-import { join } from "../core/path.ts";
-import { exists, readTextOr } from "../core/fsx.ts";
+import { fs, path as ifcPath, proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "../core/exec.ts";
 import { P, repoRel } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";
@@ -65,19 +64,22 @@ import {
 
 const NAME = /^[a-z0-9][a-z0-9._-]{0,63}$/;
 const today = () => new Date().toISOString().slice(0, 10);
-const pc = () => Deno.hostname().split(".")[0].toLowerCase().replace(/[^a-z0-9._-]/g, "-");
+const pc = (): string =>
+  (proc.hostname().split(".")[0] ?? "").toLowerCase().replace(/[^a-z0-9._-]/g, "-");
 
 /** Tests only (inside ARCHON_SANDBOX): a passphrase for new keys, so no one has to type it. */
 function testPassphrase(): string | undefined {
-  return Deno.env.get("ARCHON_SANDBOX") ? Deno.env.get("ARCHON_TEST_PASSPHRASE") : undefined;
+  return proc.env.get("ARCHON_SANDBOX") ? proc.env.get("ARCHON_TEST_PASSPHRASE") : undefined;
 }
 
 /** Remove a temporary folder; one left behind (it holds no secret) is said, not hidden. */
 async function dropTemp(dir: string): Promise<void> {
   try {
-    await Deno.remove(dir, { recursive: true });
+    await fs.remove(dir, { recursive: true });
   } catch (e) {
-    console.error(`archon: could not remove the temporary folder ${dir}: ${(e as Error).message}`);
+    stdio.stderr.writeSync(
+      `archon: could not remove the temporary folder ${dir}: ${(e as Error).message}\n`,
+    );
   }
 }
 
@@ -85,12 +87,11 @@ async function dropTemp(dir: string): Promise<void> {
 async function interactive(argv: string[], capture = false): Promise<{ ok: boolean; out: string }> {
   ui.pause();
   try {
-    const r = await new Deno.Command(argv[0], {
-      args: argv.slice(1),
+    const r = await proc.output(argv, {
       stdin: "inherit",
       stdout: capture ? "piped" : "inherit",
       stderr: "inherit",
-    }).output();
+    });
     return { ok: r.success, out: capture ? new TextDecoder().decode(r.stdout) : "" };
   } catch (e) {
     return { ok: false, out: (e as Error).message };
@@ -101,15 +102,15 @@ async function interactive(argv: string[], capture = false): Promise<{ ok: boole
 
 /** Make an ed25519 key pair at `path` (OpenSSH asks for its passphrase twice). */
 async function makeKey(path: string, comment: string): Promise<boolean> {
-  await Deno.mkdir(join(path, ".."), { recursive: true });
+  await fs.mkdir(ifcPath.join(path, ".."), { recursive: true });
   const pass = testPassphrase();
   const argv = ["ssh-keygen", "-q", "-t", "ed25519", "-C", comment, "-f", path];
   if (pass !== undefined) argv.push("-N", pass);
   else {
-    console.log(
-      `\n  Choose a passphrase for ${path}: a long phrase you will type for every signature.`,
+    stdio.stdout.writeSync(
+      `\n  Choose a passphrase for ${path}: a long phrase you will type for every signature.\n`,
     );
-    console.log("  It is never stored anywhere. Type it twice.\n");
+    stdio.stdout.writeSync("  It is never stored anywhere. Type it twice.\n\n");
   }
   const r = await interactive(argv);
   // ssh-keygen writes the private file readable by you only.
@@ -118,9 +119,9 @@ async function makeKey(path: string, comment: string): Promise<boolean> {
 
 /** The public half of a private key: its .pub file, else derived from it (asks the passphrase). */
 async function publicOf(path: string): Promise<string | undefined> {
-  const pub = pubOf(await readTextOr(path + ".pub"));
+  const pub = pubOf(await fs.readTextOr(path + ".pub"));
   if (pub) return pub;
-  if (!(await exists(path))) return undefined;
+  if (!(await fs.exists(path))) return undefined;
   const r = await interactive(["ssh-keygen", "-y", "-f", path], true);
   return r.ok ? pubOf(r.out) : undefined;
 }
@@ -128,16 +129,19 @@ async function publicOf(path: string): Promise<string | undefined> {
 /** Your signer name: the fleet's admin account, else this PC's user. */
 async function yourName(): Promise<string> {
   const { loadFleet } = await import("../model/load.ts");
-  const user = (await loadFleet().catch(() => undefined))?.admin?.user ??
-    Deno.env.get("USER") ?? Deno.env.get("USERNAME") ?? "owner";
+  const user =
+    (await loadFleet().catch(() => undefined))?.admin?.user ??
+    proc.env.get("USER") ??
+    proc.env.get("USERNAME") ??
+    "owner";
   const n = user.toLowerCase().replace(/[^a-z0-9._-]/g, "-");
   return NAME.test(n) ? n : "owner";
 }
 
 /** Write signers.ts in its fixed form. */
 async function writeSigners(list: SignerDef[]): Promise<void> {
-  await Deno.mkdir(join(signersFile(), ".."), { recursive: true });
-  await Deno.writeTextFile(signersFile(), signersSource(list));
+  await fs.mkdir(ifcPath.join(signersFile(), ".."), { recursive: true });
+  await fs.writeTextFile(signersFile(), signersSource(list));
 }
 
 /** Git in the fleet checkout. */
@@ -168,34 +172,34 @@ async function githubIdentity(): Promise<{ name: string; email: string } | undef
 /** Render the checkout's allowed signers from signers.ts; true when changed. */
 async function renderAllowed(path: string): Promise<boolean> {
   const text = allowedSignersText(await loadSigners());
-  if ((await readTextOr(path)) === text) return false;
-  await Deno.mkdir(join(path, ".."), { recursive: true });
-  await Deno.writeTextFile(path, text);
+  if ((await fs.readTextOr(path)) === text) return false;
+  await fs.mkdir(ifcPath.join(path, ".."), { recursive: true });
+  await fs.writeTextFile(path, text);
   return true;
 }
 
 /** Install the pre-push check (leaves another program's hook alone); true when written. */
 async function installHook(path: string): Promise<"written" | "same" | "foreign"> {
-  const current = await readTextOr(path);
+  const current = await fs.readTextOr(path);
   if (current === PRE_PUSH_HOOK) return "same";
   if (current && !current.includes("Installed by archon")) return "foreign";
-  await Deno.mkdir(join(path, ".."), { recursive: true });
-  await Deno.writeTextFile(path, PRE_PUSH_HOOK);
-  if (Deno.build.os !== "windows") await Deno.chmod(path, 0o755);
+  await fs.mkdir(ifcPath.join(path, ".."), { recursive: true });
+  await fs.writeTextFile(path, PRE_PUSH_HOOK);
+  if (proc.build.os !== "windows") await fs.chmod(path, 0o755);
   return "written";
 }
 
 /** Sign a test message with `key` and verify it against `allowed` as `name`. */
 async function testSignature(key: string, allowed: string, name: string): Promise<boolean> {
-  const dir = await Deno.makeTempDir({ prefix: "archon-sign-" });
+  const dir = await fs.makeTempDir({ prefix: "archon-sign-" });
   try {
-    const msg = join(dir, "message");
-    await Deno.writeTextFile(msg, `stolos keys ${new Date().toISOString()}\n`);
+    const msg = ifcPath.join(dir, "message");
+    await fs.writeTextFile(msg, `stolos keys ${new Date().toISOString()}\n`);
     const s = await interactive(["ssh-keygen", "-q", "-Y", "sign", "-f", key, "-n", "git", msg]);
     if (!s.ok) return false;
     const v = await run(
       ["ssh-keygen", "-Y", "verify", "-f", allowed, "-I", name, "-n", "git", "-s", msg + ".sig"],
-      { stdin: await Deno.readTextFile(msg) },
+      { stdin: await fs.readTextFile(msg) },
     );
     return v.ok;
   } finally {
@@ -205,10 +209,10 @@ async function testSignature(key: string, allowed: string, name: string): Promis
 
 /** Sign a test message with `key` and verify it as `name` with `pub` (a one-line allowed list). */
 async function signsAs(key: string, name: string, pub: string): Promise<boolean> {
-  const dir = await Deno.makeTempDir({ prefix: "archon-check-" });
+  const dir = await fs.makeTempDir({ prefix: "archon-check-" });
   try {
-    const allowed = join(dir, "allowed");
-    await Deno.writeTextFile(allowed, `${name} namespaces="git" ${pub.trim()}\n`);
+    const allowed = ifcPath.join(dir, "allowed");
+    await fs.writeTextFile(allowed, `${name} namespaces="git" ${pub.trim()}\n`);
     return await testSignature(key, allowed, name);
   } finally {
     await dropTemp(dir);
@@ -241,7 +245,7 @@ async function commitSigners(key: string, message: string): Promise<"done" | "no
 }
 
 /** How an operation ends (archon prints the summary): 1 when anything failed. */
-const end = (): number => ui.problems.some((x) => x.level === "fail") ? 1 : 0;
+const end = (): number => (ui.problems.some((x) => x.level === "fail") ? 1 : 0);
 
 // ------------------------------------------------------------------ status
 
@@ -250,7 +254,7 @@ export async function keysStatus(json: boolean): Promise<number> {
   const f = await collectKeyFacts();
   const checks = keyChecks(f);
   if (json) {
-    console.log(JSON.stringify({ paths: f.paths, checks }, null, 2));
+    stdio.stdout.writeSync(`${JSON.stringify({ paths: f.paths, checks }, null, 2)}\n`);
     return checks.some((c) => !c.ok && c.level === "fail") ? 1 : 0;
   }
   const p = ui.phase(`Your signing keys${f.fleetId ? ` (${f.fleetId})` : ""}`);
@@ -267,9 +271,9 @@ export async function keysStatus(json: boolean): Promise<number> {
 
 /** Whether this is Ubuntu on WSL (Windows is then the PC whose key is already listed, usually). */
 function onWsl(): boolean {
-  if (Deno.env.get("WSL_DISTRO_NAME")) return true;
+  if (proc.env.get("WSL_DISTRO_NAME")) return true;
   try {
-    return /microsoft/i.test(Deno.readTextFileSync("/proc/version"));
+    return /microsoft/i.test(fs.readTextFileSync("/proc/version"));
   } catch {
     return false;
   }
@@ -287,13 +291,13 @@ export function approvalSteps(
   wsl = onWsl(),
 ): string[] {
   const where = wsl
-    ? "in Windows: open PowerShell, cd $HOME\\fleet (your fleet folder), deno task stolos update, then run:"
-    : "on a PC whose key is already listed, in the fleet repository, after deno task stolos update, run:";
+    ? "in Windows: open PowerShell, cd $HOME\\fleet (your fleet folder), bun run stolos update, then run:"
+    : "on a PC whose key is already listed, in the fleet repository, after bun run stolos update, run:";
   return [
     `approve this PC's key ${where}`,
-    `    deno task stolos signers add ${name} --role daily --key "${pub}"`,
-    `    deno task stolos apply -m "${fleetId}: signers: add ${name}"`,
-    `then back here: git checkout -- ${rel} && deno task stolos update`,
+    `    bun run stolos signers add ${name} --role daily --key "${pub}"`,
+    `    bun run stolos apply -m "${fleetId}: signers: add ${name}"`,
+    `then back here: git checkout -- ${rel} && bun run stolos update`,
   ];
 }
 
@@ -311,16 +315,16 @@ export async function keysSetup(o: { test?: boolean } = {}): Promise<number> {
         : "no fleet here (or several: set ARCHON_FLEET)",
       !f.repo
         ? "cd into your fleet repository (for example $HOME\\fleet on Windows, ~/fleet elsewhere), then run this again"
-        : "deno task stolos fleet init <id>, or set ARCHON_FLEET",
+        : "bun run stolos fleet init <id>, or set ARCHON_FLEET",
     );
     return end();
   }
-  const sshCheck = keyChecks(f).find((c) => c.code === "E057-SSH")!;
-  if (!sshCheck.ok) {
+  const sshCheck = keyChecks(f).find((c) => c.code === "E057-SSH");
+  if (sshCheck && !sshCheck.ok) {
     t.fail(sshCheck.what, sshCheck.fix, sshCheck.code);
     return end();
   }
-  t.done(sshCheck.what);
+  t.done(sshCheck?.what ?? "OpenSSH");
 
   // The daily key.
   const d = ui.phase("Daily key");
@@ -333,13 +337,13 @@ export async function keysSetup(o: { test?: boolean } = {}): Promise<number> {
     changed = true;
     d.note(`made ${paths.daily} and ${paths.daily}.pub`);
   } else d.note(`${paths.daily} (already there; kept)`);
-  if (!(await readTextOr(paths.daily + ".pub"))) {
+  if (!(await fs.readTextOr(paths.daily + ".pub"))) {
     const pub = await publicOf(paths.daily);
     if (!pub) {
       d.fail(`${paths.daily}.pub is missing and could not be made`, "run this again");
       return end();
     }
-    await Deno.writeTextFile(paths.daily + ".pub", pub + "\n");
+    await fs.writeTextFile(paths.daily + ".pub", pub + "\n");
     d.note(`made ${paths.daily}.pub again from the private key`);
   }
   if (!(await hasPassphrase(paths.daily))) {
@@ -365,7 +369,11 @@ export async function keysSetup(o: { test?: boolean } = {}): Promise<number> {
   const s = ui.phase("Signers");
   const me = await yourName();
   let list = await loadSigners();
-  const dailyPub = pubOf(await readTextOr(paths.daily + ".pub"))!;
+  const dailyPub = pubOf(await fs.readTextOr(paths.daily + ".pub"));
+  if (!dailyPub) {
+    s.fail(`${paths.daily}.pub cannot be read`, "bun run stolos keys setup again");
+    return end();
+  }
   const listedDaily = list.find((x) => x.key.trim() === dailyPub);
   let signersChanged = false;
   // A fleet whose committed signers.ts already lists a daily key accepts a new
@@ -392,7 +400,9 @@ export async function keysSetup(o: { test?: boolean } = {}): Promise<number> {
   }
   // Still waiting for approval (an earlier run added it here, not committed elsewhere yet).
   if (
-    !approval && listedDaily && committed.some((x) => x.role === "daily") &&
+    !approval &&
+    listedDaily &&
+    committed.some((x) => x.role === "daily") &&
     !committed.some((x) => x.key.trim() === dailyPub)
   ) {
     approval = { name: listedDaily.name, pub: dailyPub };
@@ -400,17 +410,21 @@ export async function keysSetup(o: { test?: boolean } = {}): Promise<number> {
   let recoveryMade = false;
   let newRecovery: { file: string; name: string; pub: string } | undefined;
   if (list.some((x) => x.role === "recovery")) {
-    s.note(`recovery key listed: ${list.filter((x) => x.role === "recovery").map((x) => x.name)}`);
+    s.note(
+      `recovery key listed: ${list
+        .filter((x) => x.role === "recovery")
+        .map((x) => x.name)
+        .join(",")}`,
+    );
   } else {
-    if (!(await exists(paths.recovery))) {
-      console.log(
-        "\n  Now the RECOVERY key: use a DIFFERENT passphrase, and write it down somewhere safe.",
+    if (!(await fs.exists(paths.recovery))) {
+      stdio.stdout.writeSync(
+        "\n  Now the RECOVERY key: use a DIFFERENT passphrase, and write it down somewhere safe.\n",
       );
       if (!(await makeKey(paths.recovery, `${me} fleet recovery`))) {
         s.fail("ssh-keygen did not make the recovery key", "run this again");
         return end();
       }
-      recoveryMade = true;
     }
     const rpub = await publicOf(paths.recovery);
     if (!rpub) {
@@ -450,15 +464,13 @@ export async function keysSetup(o: { test?: boolean } = {}): Promise<number> {
       `commits are made as ${me.name} <${me.email}> (your GitHub account; this checkout only)`,
     );
   }
-  for (
-    const [k, v] of [
-      ["gpg.format", "ssh"],
-      ["user.signingkey", paths.daily],
-      ["commit.gpgsign", "true"],
-      ["tag.gpgsign", "true"],
-      ["gpg.ssh.allowedSignersFile", paths.allowedSigners],
-    ]
-  ) {
+  for (const [k, v] of [
+    ["gpg.format", "ssh"],
+    ["user.signingkey", paths.daily],
+    ["commit.gpgsign", "true"],
+    ["tag.gpgsign", "true"],
+    ["gpg.ssh.allowedSignersFile", paths.allowedSigners],
+  ] as const) {
     if (await setLocal(k, v)) {
       gitChanged = true;
       g.note(`set ${k} = ${v}`);
@@ -476,7 +488,7 @@ export async function keysSetup(o: { test?: boolean } = {}): Promise<number> {
   if (hook === "foreign") {
     h.warn(
       `${paths.hook} belongs to another program: left alone`,
-      "add this line to it: deno task stolos keys check-push || exit 1",
+      "add this line to it: bun run stolos keys check-push || exit 1",
       "E057-HOOK",
     );
   } else h.done(hook === "written" ? "installed: every push is checked first" : "installed");
@@ -484,14 +496,14 @@ export async function keysSetup(o: { test?: boolean } = {}): Promise<number> {
   // A test signature: proves the passphrase and the listing, once something changed.
   const ts = ui.phase("Test signature");
   if (changed || o.test) {
-    const name = list.find((x) => x.key.trim() === dailyPub)!.name;
-    console.log("\n  A test signature: type your DAILY key's passphrase.\n");
+    const name = list.find((x) => x.key.trim() === dailyPub)?.name ?? me;
+    stdio.stdout.writeSync("\n  A test signature: type your DAILY key's passphrase.\n\n");
     if (await testSignature(paths.daily, paths.allowedSigners, name)) {
       ts.done(`signed and verified as ${name}`);
     } else {
       ts.fail(
         "the test signature did not verify",
-        "check the passphrase, then: deno task stolos keys setup --test",
+        "check the passphrase, then: bun run stolos keys setup --test",
       );
     }
   } else ts.done("nothing changed (run with --test to sign once anyway)");
@@ -499,8 +511,8 @@ export async function keysSetup(o: { test?: boolean } = {}): Promise<number> {
   // The recovery key just made: prove its passphrase too, while it is fresh in mind.
   if (newRecovery) {
     const rt = ui.phase("Recovery test");
-    console.log(
-      `\n  A test signature: type your RECOVERY key's passphrase (${newRecovery.name}).\n`,
+    stdio.stdout.writeSync(
+      `\n  A test signature: type your RECOVERY key's passphrase (${newRecovery.name}).\n\n`,
     );
     if (await signsAs(newRecovery.file, newRecovery.name, newRecovery.pub)) {
       const state = await readKeyState(paths.state);
@@ -509,7 +521,7 @@ export async function keysSetup(o: { test?: boolean } = {}): Promise<number> {
     } else {
       rt.fail(
         "the recovery key's test signature did not verify",
-        `check its passphrase: deno task stolos keys check-recovery --key ${newRecovery.file}`,
+        `check its passphrase: bun run stolos keys check-recovery --key ${newRecovery.file}`,
       );
     }
   }
@@ -519,13 +531,11 @@ export async function keysSetup(o: { test?: boolean } = {}): Promise<number> {
       ui.next.push(line);
     }
   } else if (signersChanged) {
-    ui.next.push(
-      `approve the new signers: deno task stolos apply -m "${f.fleetId}: signers"`,
-    );
+    ui.next.push(`approve the new signers: bun run stolos apply -m "${f.fleetId}: signers"`);
   }
   if (changed || recoveryMade) {
     ui.next.push(
-      "back up: deno task stolos vault backup (one ZIP with every secret and both keys); keep the ZIP somewhere safe and encrypted",
+      "back up: bun run stolos vault backup (one ZIP with every secret and both keys); keep the ZIP somewhere safe and encrypted",
     );
   }
   return end();
@@ -554,10 +564,9 @@ export async function repairKeys(): Promise<string[]> {
 export async function keysCheckRecovery(given?: string): Promise<number> {
   const p = ui.phase("Recovery key check");
   // The key store's recovery key unless another file is given (spec 057: it lives beside the secrets).
-  const key = given ?? keyPaths(
-    (await git(["config", "--get", "user.signingkey"])).stdout.trim(),
-  ).recovery;
-  if (!(await exists(key))) {
+  const key =
+    given ?? keyPaths((await git(["config", "--get", "user.signingkey"])).stdout.trim()).recovery;
+  if (!(await fs.exists(key))) {
     p.fail(
       `${key} is not there`,
       "put it back from your latest backup ZIP (signing/recovery/), or pass --key <its private file>",
@@ -575,11 +584,11 @@ export async function keysCheckRecovery(given?: string): Promise<number> {
     );
     return end();
   }
-  const dir = await Deno.makeTempDir({ prefix: "archon-recovery-" });
+  const dir = await fs.makeTempDir({ prefix: "archon-recovery-" });
   try {
-    const allowed = join(dir, "allowed");
-    await Deno.writeTextFile(allowed, `${signer.name} namespaces="git" ${signer.key.trim()}\n`);
-    console.log(`\n  Type the RECOVERY key's passphrase (${signer.name}).\n`);
+    const allowed = ifcPath.join(dir, "allowed");
+    await fs.writeTextFile(allowed, `${signer.name} namespaces="git" ${signer.key.trim()}\n`);
+    stdio.stdout.writeSync(`\n  Type the RECOVERY key's passphrase (${signer.name}).\n\n`);
     if (!(await testSignature(key, allowed, signer.name))) {
       p.fail("the recovery key did not sign", "check its passphrase, then run this again");
       return end();
@@ -606,7 +615,7 @@ function dailyOf(list: SignerDef[], pub?: string): SignerDef | undefined {
 async function retire(path: string): Promise<string> {
   const to = `${path}.retired-${today()}`;
   for (const ext of ["", ".pub"]) {
-    if (await exists(path + ext)) await Deno.rename(path + ext, to + ext);
+    if (await fs.exists(path + ext)) await fs.rename(path + ext, to + ext);
   }
   return to;
 }
@@ -614,7 +623,7 @@ async function retire(path: string): Promise<string> {
 /** Replace a signer's key in signers.ts (same name, today's date). */
 async function replaceKey(name: string, key: string): Promise<void> {
   const list = await loadSigners();
-  await writeSigners(list.map((x) => x.name === name ? { ...x, key, added: today() } : x));
+  await writeSigners(list.map((x) => (x.name === name ? { ...x, key, added: today() } : x)));
 }
 
 /** `stolos keys rotate`: a new daily key, approved by the current one; resumes a rotation in progress. */
@@ -623,26 +632,31 @@ export async function keysRotate(): Promise<number> {
   const p = ui.phase("Rotate the daily key");
   const next = f.paths.daily + ".next";
   const list = await loadSigners();
-  const nextPub = pubOf(await readTextOr(next + ".pub"));
-  const current = dailyOf(list, f.daily.pub) ??
+  const nextPub = pubOf(await fs.readTextOr(next + ".pub"));
+  const current =
+    dailyOf(list, f.daily.pub) ??
     (nextPub ? list.find((x) => x.key.trim() === nextPub) : undefined);
   if (!current || !f.daily.exists) {
-    p.fail("no listed daily key here to rotate", "deno task stolos keys setup", "E057-NOT-LISTED");
+    p.fail("no listed daily key here to rotate", "bun run stolos keys setup", "E057-NOT-LISTED");
     return end();
   }
-  if (!nextPub && (await exists(`${f.paths.daily}.retired-${today()}`))) {
+  if (!nextPub && (await fs.exists(`${f.paths.daily}.retired-${today()}`))) {
     p.done(`${current.name}'s key was already rotated today: nothing to do`);
     return end();
   }
-  if (!(await exists(next))) {
+  if (!(await fs.exists(next))) {
     if (!(await makeKey(next, `${current.name} fleet signing (${pc()}, ${today()})`))) {
       p.fail("ssh-keygen did not make the new key", "run this again");
       return end();
     }
   }
-  const newPub = (await publicOf(next))!;
+  const newPub = await publicOf(next);
+  if (!newPub) {
+    p.fail(`the new key's public half (${next}.pub) cannot be read`, "run this again");
+    return end();
+  }
   if (current.key.trim() !== newPub) await replaceKey(current.name, newPub);
-  console.log("\n  Approve it with the CURRENT daily key: type its passphrase.\n");
+  stdio.stdout.writeSync("\n  Approve it with the CURRENT daily key: type its passphrase.\n\n");
   const c = await commitSigners(
     f.paths.daily,
     `${f.fleetId}: rotate ${current.name}'s signing key`,
@@ -653,11 +667,11 @@ export async function keysRotate(): Promise<number> {
   }
   // Committed (now or before): the new key takes the daily key's place; Git's settings stay.
   const old = await retire(f.paths.daily);
-  for (const ext of ["", ".pub"]) await Deno.rename(next + ext, f.paths.daily + ext);
+  for (const ext of ["", ".pub"]) await fs.rename(next + ext, f.paths.daily + ext);
   await renderAllowed(f.paths.allowedSigners);
   p.done(`${current.name} has a new key; the old one is kept as ${old} (never used again)`);
-  ui.next.push("push it: deno task stolos apply (servers accept the new key from that commit on)");
-  ui.next.push("back up the new key: deno task stolos vault backup");
+  ui.next.push("push it: bun run stolos apply (servers accept the new key from that commit on)");
+  ui.next.push("back up the new key: bun run stolos vault backup");
   return end();
 }
 
@@ -668,7 +682,7 @@ export async function keysLost(given?: string, stolen = false): Promise<number> 
   const list = await loadSigners();
   // The key store's recovery key unless another file is given.
   const recovery = given ?? f.paths.recovery;
-  if (!(await exists(recovery))) {
+  if (!(await fs.exists(recovery))) {
     p.fail(
       `${recovery} is not there`,
       "put it back from your latest backup ZIP (signing/recovery/), or pass --recovery <its private file>",
@@ -682,22 +696,23 @@ export async function keysLost(given?: string, stolen = false): Promise<number> 
     return end();
   }
   const me = await yourName();
-  const old = list.find((x) => x.role === "daily" && x.name === `${me}-daily`) ??
-    dailyOf(list, f.daily.pub);
+  const old =
+    list.find((x) => x.role === "daily" && x.name === `${me}-daily`) ?? dailyOf(list, f.daily.pub);
   if (!old) {
     p.fail(
       "cannot tell which daily key is lost (several are listed)",
-      "deno task stolos signers remove <its name>, then run this again",
+      "bun run stolos signers remove <its name>, then run this again",
     );
     return end();
   }
   // The local key, if it is the lost (or stolen) one, is retired, never used again.
-  const replacedToday = await exists(`${f.paths.daily}.retired-${today()}`);
+  const replacedToday = await fs.exists(`${f.paths.daily}.retired-${today()}`);
   if (f.daily.exists && f.daily.pub === old.key.trim()) {
     // The listed key is here: it is not lost. Replace it only when it was stolen
     // (copied by someone else), and only once.
-    const clean = !(await git(["status", "--porcelain", "--", repoRel(signersFile())])).stdout
-      .trim();
+    const clean = !(
+      await git(["status", "--porcelain", "--", repoRel(signersFile())])
+    ).stdout.trim();
     // signers.ts not committed yet: a replacement was interrupted; finish it below.
     if (clean && (!stolen || replacedToday)) {
       p.done(
@@ -709,15 +724,21 @@ export async function keysLost(given?: string, stolen = false): Promise<number> 
     }
     if (stolen && !replacedToday) p.note(`retired the old key: ${await retire(f.paths.daily)}`);
   }
-  if (!(await exists(f.paths.daily))) {
+  if (!(await fs.exists(f.paths.daily))) {
     if (!(await makeKey(f.paths.daily, `${old.name} fleet signing (${pc()}, ${today()})`))) {
       p.fail("ssh-keygen did not make the new key", "run this again");
       return end();
     }
   }
-  const newPub = (await publicOf(f.paths.daily))!;
+  const newPub = await publicOf(f.paths.daily);
+  if (!newPub) {
+    p.fail(`the new key's public half (${f.paths.daily}.pub) cannot be read`, "run this again");
+    return end();
+  }
   if (old.key.trim() !== newPub) await replaceKey(old.name, newPub);
-  console.log(`\n  Approve it with the RECOVERY key (${r.name}): type its passphrase.\n`);
+  stdio.stdout.writeSync(
+    `\n  Approve it with the RECOVERY key (${r.name}): type its passphrase.\n\n`,
+  );
   const c = await commitSigners(recovery, `${f.fleetId}: replace ${old.name}'s lost signing key`);
   if (c === "failed") {
     p.fail("the commit was not signed", "run this again (it continues from here)");
@@ -727,9 +748,9 @@ export async function keysLost(given?: string, stolen = false): Promise<number> 
   await renderAllowed(f.paths.allowedSigners);
   p.done(`${old.name} has a new key, approved by ${r.name}`);
   ui.next.push(
-    "push it: deno task stolos apply (servers stop trusting the old key from that commit on)",
+    "push it: bun run stolos apply (servers stop trusting the old key from that commit on)",
   );
-  ui.next.push(`put the recovery key away again; back up: deno task stolos vault backup`);
+  ui.next.push(`put the recovery key away again; back up: bun run stolos vault backup`);
   return end();
 }
 
@@ -743,13 +764,16 @@ export async function keysLost(given?: string, stolen = false): Promise<number> 
  * that path says so). The new key is tested before anything changes; running
  * it again continues an interrupted change, or does nothing.
  */
-export async function keysRotateRecovery(o: { old?: string; oldLost?: boolean }): Promise<number> {
+export async function keysRotateRecovery(o: {
+  old?: string | undefined;
+  oldLost?: boolean;
+}): Promise<number> {
   const f = await collectKeyFacts();
   const p = ui.phase("Change the recovery key");
   const list = await loadSigners();
   const recovery = list.filter((x) => x.role === "recovery");
   if (!recovery.length) {
-    p.fail("no recovery key is listed", "deno task stolos keys setup", "E057-NO-RECOVERY");
+    p.fail("no recovery key is listed", "bun run stolos keys setup", "E057-NO-RECOVERY");
     return end();
   }
   const stored = f.paths.recovery;
@@ -758,16 +782,18 @@ export async function keysRotateRecovery(o: { old?: string; oldLost?: boolean })
   // Done already today: the new key took the stored one's place, and is committed.
   const rel = repoRel(signersFile()).replace(/\\/g, "/");
   const committed = parseSignersSource((await git(["show", `HEAD:${rel}`])).stdout);
-  const storedPub = pubOf(await readTextOr(stored + ".pub"));
+  const storedPub = pubOf(await fs.readTextOr(stored + ".pub"));
   if (
-    !(await exists(fresh)) && (await exists(retired)) && storedPub &&
+    !(await fs.exists(fresh)) &&
+    (await fs.exists(retired)) &&
+    storedPub &&
     committed.some((x) => x.role === "recovery" && x.key.trim() === storedPub)
   ) {
     p.done(`the recovery key was already changed today (the old one is ${retired}): nothing to do`);
     return end();
   }
   // The old key approves the change: the one in the key store, unless another is given.
-  const oldFile = o.old ?? ((await exists(stored)) ? stored : undefined);
+  const oldFile = o.old ?? ((await fs.exists(stored)) ? stored : undefined);
   if (!oldFile && !o.oldLost) {
     p.fail(
       `the recovery key is not in ${f.paths.recoveryDir}`,
@@ -793,49 +819,53 @@ export async function keysRotateRecovery(o: { old?: string; oldLost?: boolean })
     return end();
   }
   // 1. The new key, tested before anything changes.
-  if (!(await exists(fresh))) {
-    console.log(
-      "\n  The NEW recovery key: a passphrase different from your daily key's; write it down somewhere safe.",
+  if (!(await fs.exists(fresh))) {
+    stdio.stdout.writeSync(
+      "\n  The NEW recovery key: a passphrase different from your daily key's; write it down somewhere safe.\n",
     );
-    if (!(await makeKey(fresh, `${old!.name} fleet recovery (${today()})`))) {
+    if (!(await makeKey(fresh, `${old.name} fleet recovery (${today()})`))) {
       p.fail("ssh-keygen did not make the new recovery key", "run this again");
       return end();
     }
   }
-  const newPub = (await publicOf(fresh))!;
-  console.log(`\n  A test signature: type the NEW recovery key's passphrase.\n`);
-  if (!(await signsAs(fresh, old!.name, newPub))) {
+  const newPub = await publicOf(fresh);
+  if (!newPub) {
+    p.fail(`the new recovery key's public half (${fresh}.pub) cannot be read`, "run this again");
+    return end();
+  }
+  stdio.stdout.writeSync(`\n  A test signature: type the NEW recovery key's passphrase.\n\n`);
+  if (!(await signsAs(fresh, old.name, newPub))) {
     p.fail("the new recovery key did not sign", "check its passphrase, then run this again");
     return end();
   }
   // 2. signers.ts, then one commit approved by the old recovery key (or the daily key).
-  if (old!.key.trim() !== newPub) await replaceKey(old!.name, newPub);
+  if (old.key.trim() !== newPub) await replaceKey(old.name, newPub);
   if (o.oldLost) {
     p.warn(
       "approved by your daily key: anyone who had a copy of it could have done the same",
-      "if the daily key may have been copied too, replace it now: deno task stolos keys rotate",
+      "if the daily key may have been copied too, replace it now: bun run stolos keys rotate",
     );
   }
-  console.log(
-    `\n  Approve it with the ${o.oldLost ? "DAILY" : "OLD RECOVERY"} key: type its passphrase.\n`,
+  stdio.stdout.writeSync(
+    `\n  Approve it with the ${o.oldLost ? "DAILY" : "OLD RECOVERY"} key: type its passphrase.\n\n`,
   );
-  const c = await commitSigners(signWith, `${f.fleetId}: change ${old!.name}'s recovery key`);
+  const c = await commitSigners(signWith, `${f.fleetId}: change ${old.name}'s recovery key`);
   if (c === "failed") {
     p.fail("the commit was not signed", "run this again (it continues from here)");
     return end();
   }
   // 3. The key store: the new key takes the stored one's place; the old one is kept, retired.
   for (const ext of ["", ".pub"]) {
-    if (await exists(stored + ext)) await Deno.rename(stored + ext, retired + ext);
+    if (await fs.exists(stored + ext)) await fs.rename(stored + ext, retired + ext);
   }
-  for (const ext of ["", ".pub"]) await Deno.rename(fresh + ext, stored + ext);
+  for (const ext of ["", ".pub"]) await fs.rename(fresh + ext, stored + ext);
   await renderAllowed(f.paths.allowedSigners);
   const state = await readKeyState(f.paths.state);
   await writeKeyState({ ...state, recoveryCheckedAt: new Date().toISOString() }, f.paths.state);
-  p.done(`${old!.name} has a new recovery key, tested, in ${stored}`);
-  ui.next.push("push it: deno task stolos apply (servers trust the new recovery key from then on)");
+  p.done(`${old.name} has a new recovery key, tested, in ${stored}`);
+  ui.next.push("push it: bun run stolos apply (servers trust the new recovery key from then on)");
   ui.next.push(
-    "back up: deno task stolos vault backup (the new ZIP holds the new key); older ZIPs hold the old one, no longer trusted once pushed",
+    "back up: bun run stolos vault backup (the new ZIP holds the new key); older ZIPs hold the old one, no longer trusted once pushed",
   );
   if (o.old && o.old !== stored) {
     ui.next.push(`${o.old} is no longer trusted once pushed: delete it`);
@@ -852,36 +882,45 @@ export async function keysRotateRecovery(o: { old?: string; oldLost?: boolean })
  * standard input ("<local ref> <local sha> <remote ref> <remote sha>").
  */
 export async function keysCheckPush(input?: string): Promise<number> {
-  const text = input ?? await new Response(Deno.stdin.readable).text();
+  const text = input ?? (await new Response(stdio.stdin.readable).text());
   const { loadFleet } = await import("../model/load.ts");
   const branch = (await loadFleet().catch(() => undefined))?.repository?.branch ?? "main";
   const rel = repoRel(signersFile()).replace(/\\/g, "/");
   const zero = /^0+$/;
   let bad = 0;
-  for (const line of text.split("\n").map((l) => l.trim()).filter(Boolean)) {
+  for (const line of text
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean)) {
     const [, localSha, remoteRef, remoteSha] = line.split(/\s+/);
     if (!localSha || zero.test(localSha) || remoteRef !== `refs/heads/${branch}`) continue;
-    const have = remoteSha && !zero.test(remoteSha) &&
+    const have =
+      remoteSha &&
+      !zero.test(remoteSha) &&
       (await git(["cat-file", "-e", `${remoteSha}^{commit}`])).ok;
     const base = have ? remoteSha : localSha;
     const signers = parseSignersSource((await git(["show", `${base}:${rel}`])).stdout);
     if (!signers.some((s) => s.role === "daily")) continue; // no signers yet: nothing to check
-    const dir = await Deno.makeTempDir({ prefix: "archon-push-" });
+    const dir = await fs.makeTempDir({ prefix: "archon-push-" });
     try {
-      const allowed = join(dir, "allowed_signers");
-      await Deno.writeTextFile(allowed, allowedSignersText(signers));
+      const allowed = ifcPath.join(dir, "allowed_signers");
+      await fs.writeTextFile(allowed, allowedSignersText(signers));
       const t = await checkTip(P.repo, localSha, have ? remoteSha : "", allowed);
       if (!t.ok) {
         bad++;
-        console.error(`archon: push refused here: ${t.reason}`);
-        console.error(
-          t.code === "unsigned"
-            ? "  sign your last commit: git commit --amend --no-edit -S   (then push again)"
-            : t.code === "untrusted"
-            ? "  it was signed by a key signers.ts does not list: deno task stolos keys"
-            : "  pull first: git pull --rebase",
+        stdio.stderr.writeSync(`archon: push refused here: ${t.reason}\n`);
+        stdio.stderr.writeSync(
+          `${
+            t.code === "unsigned"
+              ? "  sign your last commit: git commit --amend --no-edit -S   (then push again)"
+              : t.code === "untrusted"
+                ? "  it was signed by a key signers.ts does not list: bun run stolos keys"
+                : "  pull first: git pull --rebase"
+          }\n`,
         );
-        console.error(`  (deno task stolos explain E047-${(t.code ?? "untrusted").toUpperCase()})`);
+        stdio.stderr.writeSync(
+          `  (bun run stolos explain E047-${(t.code ?? "untrusted").toUpperCase()})\n`,
+        );
       }
     } finally {
       await dropTemp(dir);
@@ -908,7 +947,7 @@ export async function signingBlockers(repo = P.repo): Promise<ReturnType<typeof 
   const no = (code: string, what: string, fix: string) =>
     out.push({ code, ok: false, level: "fail", what, fix });
   const setup =
-    "a restored PC: deno task stolos vault restore <your backup ZIP>; otherwise: deno task stolos keys setup";
+    "a restored PC: bun run stolos vault restore <your backup ZIP>; otherwise: bun run stolos keys setup";
   if (!f.ssh.ok) no("E057-SSH", "OpenSSH cannot sign here (8.2 or newer needed)", setup);
   if (f.git.format !== "ssh" || !f.git.signingKey) {
     no(

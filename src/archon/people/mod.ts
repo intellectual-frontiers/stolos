@@ -42,7 +42,7 @@
  * ## Access reviews
  *
  * ```bash
- * deno task stolos people review --quarter 2026-Q4
+ * bun run stolos people review --quarter 2026-Q4
  * ```
  *
  * Writes `people/reviews/<quarter>/<manager>.md` for each manager (from the HR system's reporting
@@ -54,11 +54,11 @@
  * do not, and commits the file signed with their own key, or asks a fleet signer to. That commit is
  * the approval; a later signed commit with the trailer `Access-Review: <quarter>/<manager>` approves
  * a file as it stands. Merge the pull request so the commits are kept (a merge commit or a
- * fast-forward, never a squash or a rebase), then `deno task stolos apply` as usual.
+ * fast-forward, never a squash or a rebase), then `bun run stolos apply` as usual.
  *
  * The check `people/access-reviews` (IAC-12) passes when every manager has an approved review for
  * the last quarter that ended. Each review's file and its signed commit are evidence by themselves:
- * `deno task stolos evidence export` puts both in the bundle for the quarters of its period.
+ * `bun run stolos evidence export` puts both in the bundle for the quarters of its period.
  *
  * A manager's own key is in `fleets/<fleet>/people/keys.ts`, by work email (the email is the
  * principal Git verifies the signature against):
@@ -89,7 +89,7 @@
  * (GOV-04.1). Everyone acknowledges each current version:
  *
  * ```bash
- * deno task stolos people ack acceptable-use
+ * bun run stolos people ack acceptable-use
  * ```
  *
  * adds you to `policies/acks/acceptable-use.ts` and commits it, signed with your own key (the one
@@ -123,13 +123,13 @@
  * ## Commands
  *
  * ```bash
- * deno task stolos people status
- * deno task stolos people review --quarter 2026-Q4
- * deno task stolos people ack acceptable-use
+ * bun run stolos people status
+ * bun run stolos people review --quarter 2026-Q4
+ * bun run stolos people ack acceptable-use
  * ```
  *
  * `people status` runs every check now and lists each leaver account's time to deprovision; with
- * people files kept, the same checks show in `deno task stolos compliance` as the People pack.
+ * people files kept, the same checks show in `bun run stolos compliance` as the People pack.
  *
  * @module
  */

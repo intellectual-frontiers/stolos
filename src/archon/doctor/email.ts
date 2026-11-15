@@ -11,27 +11,21 @@
  * @module
  */
 
+import { dns, fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import type { Phase } from "../core/ui.ts";
-import { exists } from "../core/fsx.ts";
 import { run } from "../core/exec.ts";
 import { enqueue, flush, loadCredential, queued, readStatus, type Site } from "../notify/notify.ts";
 import { probeSmtp, relayParts } from "../notify/transport.ts";
 import { isReservedDomain } from "../model/providers.ts";
 
 async function txt(name: string): Promise<string[]> {
-  try {
-    return (await Deno.resolveDns(name, "TXT")).map((r) => r.join(""));
-  } catch {
-    return [];
-  }
+  const r = await dns.resolveDns(name, "TXT");
+  return r.kind === "ok" ? r.value.map((parts) => parts.join("")) : [];
 }
 
 async function mx(name: string): Promise<string[]> {
-  try {
-    return (await Deno.resolveDns(name, "MX")).map((r) => r.exchange.replace(/\.$/, ""));
-  } catch {
-    return [];
-  }
+  const r = await dns.resolveDns(name, "MX");
+  return r.kind === "ok" ? r.value.map((m) => m.exchange.replace(/\.$/, "")) : [];
 }
 
 /** Which of Cloudflare Email Sending's records a domain lacks, from its TXT and MX answers. */
@@ -73,7 +67,7 @@ export async function emailChecks(
   site: Site | undefined,
   phase: Phase,
   fixCredential: string,
-  o: { send?: string } = {},
+  o: { send?: string | undefined } = {},
 ): Promise<void> {
   if (!site?.to || !site.from) {
     phase.done("not used: no mail in fleets/<fleet>/fleet.ts");
@@ -86,11 +80,12 @@ export async function emailChecks(
     warn: (m: string, fix?: string) => (found.push(`WARN  ${m}`), phase.warn(m, fix)),
     fail: (m: string, fix?: string) => (found.push(`FAIL  ${m}`), phase.fail(m, fix)),
     pending: (m: string, next: string, code: string) => (
-      found.push(`TODO  ${m}`), phase.pending(m, next, code)
+      found.push(`TODO  ${m}`),
+      phase.pending(m, next, code)
     ),
     done: (m: string) => phase.done(m),
   };
-  const domain = site.from.split("@")[1];
+  const domain = site.from.split("@")[1] ?? "";
 
   // The sending domain, as Cloudflare's onboarding sets it up. A reserved test
   // domain (a synthetic fleet's) can never be onboarded: not asked about.
@@ -128,8 +123,8 @@ export async function emailChecks(
   }
 
   // Postfix, on servers: what apps, cron, and unattended-upgrades send through.
-  if (site.role !== "boot" && Deno.build.os === "linux") {
-    if (!(await exists("/usr/sbin/postfix"))) {
+  if (site.role !== "boot" && proc.build.os === "linux") {
+    if (!(await fs.exists("/usr/sbin/postfix"))) {
       p.warn(
         "Postfix is not installed: programs on this host cannot send mail",
         "sudo archon apply",
@@ -143,7 +138,9 @@ export async function emailChecks(
       if (relayhost !== `[${host}]:${port}`) {
         p.fail(`Postfix relays to "${relayhost}", not [${host}]:${port}`, "sudo archon apply");
       }
-      const q = (await run(["postqueue", "-j"])).stdout.split("\n").filter(Boolean)
+      const q = (await run(["postqueue", "-j"])).stdout
+        .split("\n")
+        .filter(Boolean)
         .map((l) => {
           try {
             return JSON.parse(l) as { recipients?: Array<{ delay_reason?: string }> };
@@ -152,8 +149,9 @@ export async function emailChecks(
           }
         });
       if (q.length) {
-        const reason = q.flatMap((m) => m.recipients ?? []).find((r) => r.delay_reason)
-          ?.delay_reason;
+        const reason = q
+          .flatMap((m) => m.recipients ?? [])
+          .find((r) => r.delay_reason)?.delay_reason;
         p.warn(
           `Postfix holds ${q.length} message(s)${reason ? `: ${reason}` : ""}`,
           "mailq; sudo postqueue -f retries now; journalctl -t postfix/smtp -n 20",
@@ -166,14 +164,14 @@ export async function emailChecks(
   const { EMAIL } = await import("../notify/transport.ts");
   const boot = site.role === "boot";
   const cmd = (sub: string) =>
-    boot ? `deno task stolos boot notify ${sub}` : `sudo archon notify ${sub}`;
+    boot ? `bun run stolos boot notify ${sub}` : `sudo archon notify ${sub}`;
   const goodTo = !!site.to && EMAIL.test(site.to);
   if (site.to && !goodTo) {
     p.fail(
       `the shared mailbox ${JSON.stringify(site.to)} is not an email address${
         /[<>]/.test(site.to) ? " (still a placeholder?)" : ""
       }: the relay refuses it`,
-      `set fleet.mail.to in fleets/<fleet>/fleet.ts (for example ops@example.com), then deno task stolos apply; waiting messages go to the new address`,
+      `set fleet.mail.to in fleets/<fleet>/fleet.ts (for example ops@example.com), then bun run stolos apply; waiting messages go to the new address`,
     );
   }
   if (o.send && cred && goodTo) await sendTests(site, o.send, found, p);
@@ -231,11 +229,11 @@ async function sendTests(
     p.fail(
       `the test message was not sent: ${f?.error ?? r}`,
       `${
-        site.role === "boot" ? "deno task stolos boot notify status" : "archon notify status"
+        site.role === "boot" ? "bun run stolos boot notify status" : "archon notify status"
       }; it is retried with backoff`,
     );
   }
-  if (site.role === "boot" || !(await exists("/usr/sbin/sendmail"))) return;
+  if (site.role === "boot" || !(await fs.exists("/usr/sbin/sendmail"))) return;
   const msg = [
     "To: root",
     `Subject: [Archon] ${site.name}: mail test via Postfix (${reason})`,

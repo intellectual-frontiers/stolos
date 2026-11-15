@@ -22,9 +22,18 @@
  * @module
  */
 
+import { errors, fs } from "@intellectual-frontiers/ifc-ts/runtime";
+import {
+  array,
+  boolean,
+  type Decoder,
+  exportedLiteral,
+  object,
+  record,
+  string,
+  unknownValue,
+} from "@intellectual-frontiers/ifc-ts/kernel";
 import { run } from "../core/exec.ts";
-import { exportedLiteral } from "../core/ts-literal.ts";
-import type { Observation } from "../connect/connector.ts";
 import type { Item } from "../evidence/bundle.ts";
 import type { SignerDef } from "../model/types.ts";
 import type { PeopleKeys, Quarter } from "./records.ts";
@@ -37,18 +46,21 @@ const enc = new TextEncoder();
 export function peopleAllowedSigners(keys: PeopleKeys, signers: readonly SignerDef[]): string {
   const lines = [
     ...signers.map((s) => `${s.name} namespaces="git" ${s.key.trim()}`),
-    ...Object.entries(keys).filter(([, k]) => KEY.test(k)).map(([email, k]) =>
-      `${email} namespaces="git" ${k}`
-    ),
+    ...Object.entries(keys)
+      .filter(([, k]) => KEY.test(k))
+      .map(([email, k]) => `${email} namespaces="git" ${k}`),
   ];
   return lines.join("\n") + "\n";
 }
 
 /** Problems with people/keys.ts: each value must be one ed25519 public key. */
 export function keyProblems(keys: PeopleKeys): string[] {
-  return Object.entries(keys).filter(([, k]) => !KEY.test(k)).map(([email]) =>
-    `people/keys.ts: ${email}: not an ed25519 public key (the one line of its .pub file, without a comment)`
-  );
+  return Object.entries(keys)
+    .filter(([, k]) => !KEY.test(k))
+    .map(
+      ([email]) =>
+        `people/keys.ts: ${email}: not an ed25519 public key (the one line of its .pub file, without a comment)`,
+    );
 }
 
 /** Runs git in a repository (tests pass their own). */
@@ -82,10 +94,10 @@ export async function commitSigner(
 
 /** Run `fn` with an allowed-signers file made from `text`, removed after. */
 export async function withAllowed<T>(text: string, fn: (file: string) => Promise<T>): Promise<T> {
-  const file = await Deno.makeTempFile({ prefix: "stolos-people-", suffix: ".allowed" });
+  const file = await fs.makeTempFile({ prefix: "stolos-people-", suffix: ".allowed" });
   let out: T;
   try {
-    await Deno.writeTextFile(file, text);
+    await fs.writeTextFile(file, text);
     out = await fn(file);
   } finally {
     await removeTemp(file);
@@ -96,9 +108,9 @@ export async function withAllowed<T>(text: string, fn: (file: string) => Promise
 /** Remove a temporary file; one already gone is fine, any other error is thrown. */
 async function removeTemp(file: string): Promise<void> {
   try {
-    await Deno.remove(file);
+    await fs.remove(file);
   } catch (e) {
-    if (!(e instanceof Deno.errors.NotFound)) throw e;
+    if (!(e instanceof errors.NotFound)) throw e;
   }
 }
 
@@ -112,14 +124,18 @@ interface Commit {
 async function commits(git: Git, args: string[]): Promise<Commit[]> {
   const r = await git(["log", "--format=%H%x1f%cI%x1f%B%x1e", ...args]);
   if (!r.ok) return [];
-  return r.stdout.split("\x1e").map((x) => x.trim()).filter(Boolean).map((x) => {
-    const [sha, at, message] = x.split("\x1f");
-    return { sha, at, message: message ?? "" };
-  });
+  return r.stdout
+    .split("\x1e")
+    .map((x) => x.trim())
+    .filter(Boolean)
+    .map((x) => {
+      const [sha = "", at = "", message = ""] = x.split("\x1f");
+      return { sha, at, message };
+    });
 }
 
-const trailers = (message: string, key: string) =>
-  [...message.matchAll(new RegExp(`^${key}:\\s*(\\S+)\\s*$`, "gim"))].map((m) => m[1]);
+const trailers = (message: string, key: string): string[] =>
+  [...message.matchAll(new RegExp(`^${key}:\\s*(\\S+)\\s*$`, "gim"))].map((m) => m[1] ?? "");
 
 /** The trailer an acknowledgement commit carries: `Acknowledges: <policy>@<version>`. */
 export const ACK_TRAILER = "Acknowledges";
@@ -207,9 +223,11 @@ export async function reviewPaths(
 ): Promise<string[]> {
   const r = await git(["ls-tree", "--name-only", `${ref}:${base}/people/reviews/${q}`]);
   return r.ok
-    ? r.stdout.split("\n").filter((x) => x.endsWith(".md")).sort().map((f) =>
-      `${base}/people/reviews/${q}/${f}`
-    )
+    ? r.stdout
+        .split("\n")
+        .filter((x) => x.endsWith(".md"))
+        .sort()
+        .map((f) => `${base}/people/reviews/${q}/${f}`)
     : [];
 }
 
@@ -227,8 +245,8 @@ export async function reviewStatus(
   ref = "HEAD",
 ): Promise<ReviewStatus> {
   const parts = path.split("/");
-  const manager = parts.pop()!.replace(/\.md$/, "");
-  const quarter = parts.pop()!;
+  const manager = (parts.pop() ?? "").replace(/\.md$/, "");
+  const quarter = parts.pop() ?? "";
   const text = (await git(["show", `${ref}:${path}`])).stdout;
   const t = reviewTicks(text);
   const base: ReviewStatus = { quarter, manager, path, ticked: t.ticked, lines: t.lines };
@@ -238,18 +256,19 @@ export async function reviewStatus(
   base.changed = { commit: last.sha, at: last.at };
   if (t.lines && t.ticked === t.lines) {
     const who = await commitSigner(git, last.sha, allowedFile);
-    if (may(who)) return { ...base, approvedBy: who, commit: last.sha, at: last.at };
+    if (who && may(who)) return { ...base, approvedBy: who, commit: last.sha, at: last.at };
   }
   for (const c of await commits(git, [`--grep=^${REVIEW_TRAILER}:`, `${last.sha}..${ref}`])) {
     if (!trailers(c.message, REVIEW_TRAILER).includes(`${quarter}/${manager}`)) continue;
     const who = await commitSigner(git, c.sha, allowedFile);
-    if (may(who)) return { ...base, approvedBy: who, commit: c.sha, at: c.at };
+    if (who && may(who)) return { ...base, approvedBy: who, commit: c.sha, at: c.at };
   }
   return {
     ...base,
-    why: t.ticked < t.lines
-      ? `${t.lines - t.ticked} of ${t.lines} line(s) not ticked`
-      : "not signed by the manager's own key (people/keys.ts) or a fleet signer",
+    why:
+      t.ticked < t.lines
+        ? `${t.lines - t.ticked} of ${t.lines} line(s) not ticked`
+        : "not signed by the manager's own key (people/keys.ts) or a fleet signer",
   };
 }
 
@@ -311,12 +330,44 @@ export interface Activity {
   offBy?: string;
 }
 
+/**
+ * What account activity reads of a connector's observation (`connect/connector.ts`'s
+ * `Observation` has these fields and more).
+ */
+export type ObservedAccounts = {
+  /** When (ISO time). */
+  readonly at: string;
+  /** The account (or tenant) observed. */
+  readonly account: string;
+  /** What could not be read. */
+  readonly gaps: readonly string[];
+  /** The accounts found (spec 085). */
+  readonly entities?: {
+    readonly accounts?: ReadonlyArray<{ readonly id: string; readonly active: boolean }>;
+  };
+  /** The records read (spec 089). */
+  readonly records?: ReadonlyArray<{
+    readonly label: string;
+    readonly native_id: string;
+    readonly props: Readonly<Record<string, unknown>>;
+  }>;
+};
+
+/** An observation file's `observed`, as far as {@link ObservedAccounts} goes. */
+const observedAccounts: Decoder<ObservedAccounts> = object(
+  { at: string, account: string, gaps: array(string) },
+  {
+    entities: object({}, { accounts: array(object({ id: string, active: boolean })) }),
+    records: array(object({ label: string, native_id: string, props: record(unknownValue) })),
+  },
+);
+
 /** One version of a connector's observation. */
 export interface ObservedVersion {
   /** The connector. */
   connector: string;
   /** The observation. */
-  observation: Observation;
+  observation: ObservedAccounts;
 }
 
 /**
@@ -337,10 +388,12 @@ export function accountActivity(versions: readonly ObservedVersion[]): Map<strin
       const here = new Map<string, boolean>();
       for (const a of o.entities?.accounts ?? []) here.set(`${t}:${a.id}`, a.active);
       for (const r of o.records ?? []) {
-        if (r.label === "user_account") here.set(`${t}:${r.native_id}`, r.props.active === true);
+        if (r.label === "user_account") here.set(`${t}:${r.native_id}`, r.props["active"] === true);
       }
       // An account read before and missing now is gone (unless the source could not read it).
-      if (!o.gaps.length) { for (const u of known) if (!here.has(u)) here.set(u, false); }
+      if (!o.gaps.length) {
+        for (const u of known) if (!here.has(u)) here.set(u, false);
+      }
       for (const [u, active] of here) {
         known.add(u);
         states.set(u, [...(states.get(u) ?? []), [o.at, active]]);
@@ -366,20 +419,20 @@ export async function observedVersions(
   const git = gitIn(repo);
   const out: ObservedVersion[] = [];
   for (const path of paths) {
-    const connector = path.split("/").pop()!.replace(/\.ts$/, "");
+    const connector = (path.split("/").pop() ?? "").replace(/\.ts$/, "");
     const log = await git(["log", `-${max}`, "--format=%H", "--", path]);
     const texts = [];
     for (const sha of log.stdout.split("\n").filter(Boolean)) {
       const r = await git(["show", `${sha}:${path}`]);
       if (r.ok) texts.push(r.stdout);
     }
-    texts.push(await Deno.readTextFile(`${repo}/${path}`).catch(() => ""));
+    texts.push(await fs.readTextFile(`${repo}/${path}`).catch(() => ""));
     for (const text of texts) {
-      try {
-        out.push({ connector, observation: exportedLiteral(text, "observed") as Observation });
-      } catch {
-        // Not a literal Stolos wrote: it adds nothing.
-      }
+      // Not a literal Stolos wrote, or not an observation: it adds nothing.
+      const v = exportedLiteral(text, "observed");
+      if (v.kind === "err") continue;
+      const o = observedAccounts(v.value);
+      if (o.kind === "ok") out.push({ connector, observation: o.value });
     }
   }
   return out;

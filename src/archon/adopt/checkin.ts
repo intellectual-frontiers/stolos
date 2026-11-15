@@ -56,33 +56,39 @@ export function parseCheckIn(code: string): CheckIn {
     throw new Error("that check-in code is cut short or changed (copy the whole line again)");
   }
   const p = parseProbe(text);
-  const ci = p.checkin;
-  if (!ci || ci.v !== "1") throw new Error("that is not a check-in code this Stolos reads");
+  const ci = p["checkin"];
+  if (!ci || ci["v"] !== "1") throw new Error("that is not a check-in code this Stolos reads");
   const words = (s?: string) => (s ?? "").split(/\s+/).filter(Boolean);
-  const hostKeys = Object.values(p.hostkeys ?? {}).map((k) => k.trim()).filter((k) =>
-    HOST_KEY.test(k)
-  );
-  const name = (ci.hostname ?? "").trim();
+  const hostKeys = Object.values(p["hostkeys"] ?? {})
+    .map((k) => k.trim())
+    .filter((k) => HOST_KEY.test(k));
+  const name = (ci["hostname"] ?? "").trim();
   if (!/^[A-Za-z0-9._-]{1,253}$/.test(name)) {
     throw new Error("the check-in code has no usable hostname");
   }
   return {
-    fleet: ci.fleet ?? "",
-    kinds: words(ci.kinds),
-    user: ci.user ?? "",
-    port: /^\d{1,5}$/.test(ci.port ?? "") ? Number(ci.port) : 22,
+    fleet: ci["fleet"] ?? "",
+    kinds: words(ci["kinds"]),
+    user: ci["user"] ?? "",
+    port: /^\d{1,5}$/.test(ci["port"] ?? "") ? Number(ci["port"]) : 22,
     hostname: name,
-    addresses: words(ci.addresses).filter((a) => /^\d{1,3}(\.\d{1,3}){3}$/.test(a)),
-    macs: words(ci.macs).map((m) => m.toLowerCase()).filter((m) =>
-      /^([0-9a-f]{2}:){5}[0-9a-f]{2}$/.test(m)
-    ),
+    addresses: words(ci["addresses"]).filter((a) => /^\d{1,3}(\.\d{1,3}){3}$/.test(a)),
+    macs: words(ci["macs"])
+      .map((m) => m.toLowerCase())
+      .filter((m) => /^([0-9a-f]{2}:){5}[0-9a-f]{2}$/.test(m)),
     hostKeys,
-    ...(p.os ? { observed: toObserved(p) } : {}),
+    ...(p["os"] ? { observed: toObserved(p) } : {}),
   };
 }
 
 /** A machine name from a hostname: lowercase, a DNS label ("Alices-MacBook-Pro.local" → alices-macbook-pro). */
 export function nameFor(hostname: string): string {
-  return hostname.split(".")[0].toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "")
-    .replace(/^(\d)/, "m-$1").slice(0, 63) || "machine";
+  return (
+    (hostname.split(".")[0] ?? "")
+      .toLowerCase()
+      .replace(/[^a-z0-9-]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .replace(/^(\d)/, "m-$1")
+      .slice(0, 63) || "machine"
+  );
 }

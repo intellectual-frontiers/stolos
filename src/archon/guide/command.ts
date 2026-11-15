@@ -5,6 +5,7 @@
  * @module
  */
 
+import { stdio } from "@intellectual-frontiers/ifc-ts/runtime";
 import { ui } from "../core/ui.ts";
 import { loadFleet, loadHosts } from "../model/load.ts";
 import { resolvePlan } from "../model/resolve.ts";
@@ -21,9 +22,9 @@ export async function guide(hostName: string): Promise<number> {
   const name = fqdn(fleet, host);
   const out: string[] = [
     "",
-    `${ui.bold(host.name)} is managed by Archon: it is described in ${
-      ui.cyan(fleet.repository.slug)
-    } and keeps itself matching it.`,
+    `${ui.bold(host.name)} is managed by Archon: it is described in ${ui.cyan(
+      fleet.repository.slug,
+    )} and keeps itself matching it.`,
     "Changes go in the repository, not on the server.",
   ];
   if (name) out.push(`Welcome page, with links to everything: ${ui.cyan(`https://${name}`)}`);
@@ -51,11 +52,11 @@ export async function guide(hostName: string): Promise<number> {
   }
   out.push(
     "",
-    `More: ${ui.cyan("man archon-guide")} (for newcomers) · ${
-      ui.cyan("man archon")
-    } (every command)`,
+    `More: ${ui.cyan("man archon-guide")} (for newcomers) · ${ui.cyan(
+      "man archon",
+    )} (every command)`,
     "",
   );
-  console.log(out.join("\n"));
+  stdio.stdout.writeSync(`${out.join("\n")}\n`);
   return 0;
 }

@@ -8,6 +8,7 @@
  * @module
  */
 
+import { sha256 } from "@intellectual-frontiers/ifc-ts/kernel";
 import { redact } from "../notify/redact.ts";
 import { patternOf, SECRET_INVENTORY } from "../model/secret-inventory.ts";
 import type { FileEvidence } from "./types.ts";
@@ -51,13 +52,6 @@ export function looksSecret(text: string): boolean {
   return false;
 }
 
-/** SHA-256 of bytes, as hex. */
-export async function sha256Hex(data: Uint8Array | string): Promise<string> {
-  const bytes = typeof data === "string" ? new TextEncoder().encode(data) : data;
-  const d = await crypto.subtle.digest("SHA-256", bytes as Uint8Array<ArrayBuffer>);
-  return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
 /**
  * A file's evidence: always its hash and size; its content (and diff) only for
  * a small text file that is not secret by path or by content.
@@ -65,11 +59,16 @@ export async function sha256Hex(data: Uint8Array | string): Promise<string> {
 export async function fileEvidence(
   path: string,
   data: Uint8Array,
-  meta: { mode?: string; owner?: string; group?: string; diff?: string } = {},
+  meta: {
+    mode?: string | undefined;
+    owner?: string | undefined;
+    group?: string | undefined;
+    diff?: string | undefined;
+  } = {},
 ): Promise<FileEvidence> {
   const base: FileEvidence = {
     path,
-    sha256: await sha256Hex(data),
+    sha256: await sha256(data),
     size: data.length,
     ...(meta.mode ? { mode: meta.mode } : {}),
     ...(meta.owner ? { owner: meta.owner } : {}),

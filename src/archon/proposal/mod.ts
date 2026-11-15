@@ -129,11 +129,11 @@
  * two attachments, then in the fleet repository:
  *
  * ```sh
- * deno task stolos proposal import ~/Downloads/proposal.eml   # or the .json, or a folder
- * deno task stolos proposal list
- * deno task stolos proposal show alpha-20261114-1905-ab12      # the model diff, and any conflict
- * deno task stolos proposal accept alpha-20261114-1905-ab12
- * deno task stolos apply -m "096-alpha-nginx-for-the-app: adopt proposal alpha-20261114-1905-ab12"
+ * bun run stolos proposal import ~/Downloads/proposal.eml   # or the .json, or a folder
+ * bun run stolos proposal list
+ * bun run stolos proposal show alpha-20261114-1905-ab12      # the model diff, and any conflict
+ * bun run stolos proposal accept alpha-20261114-1905-ab12
+ * bun run stolos apply -m "096-alpha-nginx-for-the-app: adopt proposal alpha-20261114-1905-ab12"
  * ```
  *
  * `import` checks that the host is in the fleet and that the proposal was signed with that host's
@@ -154,7 +154,7 @@
  * - runs `stolos build`.
  *
  * You review it and run `stolos apply` (a signed commit); the server converges, and the change made
- * by hand is now intent. `deno task stolos proposal reject <id> --reason "..."` records a
+ * by hand is now intent. `bun run stolos proposal reject <id> --reason "..."` records a
  * rejection instead: after the push, the items the plan manages revert at the next apply, and
  * anything else stays flagged in `archon drift`.
  *

@@ -14,8 +14,8 @@
  * @module
  */
 
-import { join } from "../core/path.ts";
-import { currentUser, homeDir, run } from "../core/exec.ts";
+import { fs, path as paths, proc, stdio, tty } from "@intellectual-frontiers/ifc-ts/runtime";
+import { currentUser, homeOf, run } from "../core/exec.ts";
 import { loadFleet, loadHosts, usersFor } from "../model/load.ts";
 import { defaultDatabase, instancesOf, parseClusters, PG, publishedName } from "./config.ts";
 
@@ -86,8 +86,8 @@ export function splitPgpassLine(line: string): { fields: string[]; hasPassword: 
 export function parsePgpass(text: string): PgpassEntry[] {
   const out: PgpassEntry[] = [];
   const lines = text.split("\n");
-  for (let n = 0; n < lines.length; n++) {
-    const raw = lines[n].replace(/\r$/, "");
+  for (const [n, line] of lines.entries()) {
+    const raw = line.replace(/\r$/, "");
     if (!raw.length || raw.startsWith("#")) continue;
     const { fields, hasPassword } = splitPgpassLine(raw);
     if (fields.length < 4 || !hasPassword) {
@@ -106,7 +106,7 @@ export function parsePgpass(text: string): PgpassEntry[] {
       });
       continue;
     }
-    const [host, port, database, user] = fields;
+    const [host = "", port = "", database = "", user = ""] = fields;
     out.push({ line: n + 1, host, port, database, user, hasPassword });
   }
   return out;
@@ -142,9 +142,9 @@ export function parseServiceFile(
   for (const raw of text.split("\n")) {
     const line = raw.trim();
     if (!line || line.startsWith("#")) continue;
-    const head = line.match(/^\[(.+)\]$/);
-    if (head) {
-      cur = { name: head[1].trim(), file, source, params: {}, hadPassword: false };
+    const head = line.match(/^\[(.+)\]$/)?.[1];
+    if (head !== undefined) {
+      cur = { name: head.trim(), file, source, params: {}, hadPassword: false };
       out.push(cur);
       continue;
     }
@@ -168,19 +168,24 @@ export function lookupKey(
   me: string,
 ): { host: string; port: string; database: string; user: string } {
   const p = s.params;
-  let host = p.host ?? p.hostaddr ?? "";
+  let host = p["host"] ?? p["hostaddr"] ?? "";
   // 'localhost' matches no host, or the default socket directory.
   if (!host || host === LIBPQ.socketDir || host === "/run/postgresql") host = "localhost";
-  const user = p.user ?? me;
-  return { host, port: p.port ?? LIBPQ.port, database: p.dbname ?? user, user };
+  const user = p["user"] ?? me;
+  return { host, port: p["port"] ?? LIBPQ.port, database: p["dbname"] ?? user, user };
 }
 
 const fieldMatches = (pattern: string, value: string) => pattern === "*" || pattern === value;
 
 /** Whether a password-file entry matches a lookup key, as libpq matches it ("*" matches any). */
 export function entryServes(e: PgpassEntry, key: ReturnType<typeof lookupKey>): boolean {
-  return !e.malformed && fieldMatches(e.host, key.host) && fieldMatches(e.port, key.port) &&
-    fieldMatches(e.database, key.database) && fieldMatches(e.user, key.user);
+  return (
+    !e.malformed &&
+    fieldMatches(e.host, key.host) &&
+    fieldMatches(e.port, key.port) &&
+    fieldMatches(e.database, key.database) &&
+    fieldMatches(e.user, key.user)
+  );
 }
 
 // ------------------------------------------------------------------ the report
@@ -245,20 +250,21 @@ export function connectionsReport(input: ConnectionsInput): ConnectionsReport {
   const exists = pf.text !== undefined;
   let problem: string | null = null;
   if (exists && pf.isFile === false) problem = "it is not a plain file, so libpq ignores it";
-  else if (exists && pf.mode !== undefined && (pf.mode & 0o077)) {
-    problem = `group or others can access it (${
-      (pf.mode & 0o777).toString(8).padStart(4, "0")
-    }), so libpq ignores it: chmod 600 ${pf.path}`;
+  else if (exists && pf.mode !== undefined && pf.mode & 0o077) {
+    problem = `group or others can access it (${(pf.mode & 0o777)
+      .toString(8)
+      .padStart(4, "0")}), so libpq ignores it: chmod 600 ${pf.path}`;
   }
   const fileUsable = exists && !problem;
-  const entries = exists ? parsePgpass(pf.text!) : [];
+  const entries = pf.text !== undefined ? parsePgpass(pf.text) : [];
   const sections = input.serviceFiles.flatMap((f) =>
-    f.text === undefined ? [] : parseServiceFile(f.text, f.path, f.source)
+    f.text === undefined ? [] : parseServiceFile(f.text, f.path, f.source),
   );
   // A user's section hides a system section of the same name (libpq reads the user's file first).
-  const effective = sections.filter((s, i) =>
-    s.source === "user" ||
-    !sections.some((o, j) => j !== i && o.source === "user" && o.name === s.name)
+  const effective = sections.filter(
+    (s, i) =>
+      s.source === "user" ||
+      !sections.some((o, j) => j !== i && o.source === "user" && o.name === s.name),
   );
   const report: ConnectionsReport = {
     passwordFile: {
@@ -285,12 +291,12 @@ export function connectionsReport(input: ConnectionsInput): ConnectionsReport {
     if (s.hadPassword) {
       problems.push(`it holds a password; keep passwords in ${pf.path} (0600) instead`);
     }
-    const host = s.params.host ?? s.params.hostaddr ?? "";
+    const host = s.params["host"] ?? s.params["hostaddr"] ?? "";
     const network = !!host && !host.startsWith("/");
-    if (network && s.params.sslmode !== "verify-full") {
+    if (network && s.params["sslmode"] !== "verify-full") {
       problems.push(
         `over the network it uses sslmode=${
-          s.params.sslmode ?? "prefer"
+          s.params["sslmode"] ?? "prefer"
         }, which can fall back to plain text or skip the server's identity: use sslmode=verify-full`,
       );
     }
@@ -302,7 +308,7 @@ export function connectionsReport(input: ConnectionsInput): ConnectionsReport {
       port: key.port,
       database: key.database,
       user: key.user,
-      sslmode: s.params.sslmode ?? null,
+      sslmode: s.params["sslmode"] ?? null,
       passwordEntry: used?.line ?? null,
       problems,
     });
@@ -311,17 +317,21 @@ export function connectionsReport(input: ConnectionsInput): ConnectionsReport {
     const problems: string[] = [];
     if (e.malformed) problems.push(`libpq skips it: ${e.malformed}`);
     if (problem) problems.push("the file is ignored (see the password file's problem)");
-    const services = effective.filter((s) => entryServes(e, lookupKey(s, input.me))).map((s) =>
-      s.name
-    );
+    const services = effective
+      .filter((s) => entryServes(e, lookupKey(s, input.me)))
+      .map((s) => s.name);
     if (!e.malformed && !services.length) {
       // A near miss: everything matches but the host, because the service connects through
       // a socket directory other than the default, which libpq looks up as that path.
       const near = effective.filter((sv) => {
         const key = lookupKey(sv, input.me);
-        return key.host.startsWith("/") && ["localhost", "127.0.0.1", "::1"].includes(e.host) &&
-          fieldMatches(e.port, key.port) && fieldMatches(e.database, key.database) &&
-          fieldMatches(e.user, key.user);
+        return (
+          key.host.startsWith("/") &&
+          ["localhost", "127.0.0.1", "::1"].includes(e.host) &&
+          fieldMatches(e.port, key.port) &&
+          fieldMatches(e.database, key.database) &&
+          fieldMatches(e.user, key.user)
+        );
       });
       if (!near.length) problems.push("no service in the service files uses it");
       for (const sv of near) {
@@ -392,29 +402,33 @@ export function renderConnections(r: ConnectionsReport): string {
 /** Read this account's files (as libpq would find them) into a report. */
 export async function readConnections(): Promise<ConnectionsReport> {
   const me = await whoAmI();
-  const home = Deno.env.get("HOME") ?? await homeDir(me);
-  const pgpassPath = Deno.env.get("PGPASSFILE") || join(home, ".pgpass");
+  const home = proc.env.get("HOME") ?? (await homeOf(me));
+  const pgpassPath = proc.env.get("PGPASSFILE") || paths.join(home, ".pgpass");
   let pgpass: ConnectionsInput["pgpass"] = { path: pgpassPath };
   try {
-    const st = await Deno.stat(pgpassPath);
+    const st = await fs.stat(pgpassPath);
     pgpass = {
       path: pgpassPath,
       isFile: st.isFile,
-      mode: st.mode ?? undefined,
-      text: st.isFile ? await Deno.readTextFile(pgpassPath) : "",
+      ...(st.mode === null ? {} : { mode: st.mode }),
+      text: st.isFile ? await fs.readTextFile(pgpassPath) : "",
     };
-  } catch { /* none, or unreadable: libpq would ignore it too */ }
+  } catch {
+    /* none, or unreadable: libpq would ignore it too */
+  }
   const files: ConnectionsInput["serviceFiles"] = [
-    { path: Deno.env.get("PGSERVICEFILE") || join(home, ".pg_service.conf"), source: "user" },
+    { path: proc.env.get("PGSERVICEFILE") || paths.join(home, ".pg_service.conf"), source: "user" },
     {
-      path: join(Deno.env.get("PGSYSCONFDIR") || LIBPQ.sysconfDir, "pg_service.conf"),
+      path: paths.join(proc.env.get("PGSYSCONFDIR") || LIBPQ.sysconfDir, "pg_service.conf"),
       source: "system",
     },
   ];
   for (const f of files) {
     try {
-      f.text = await Deno.readTextFile(f.path);
-    } catch { /* none */ }
+      f.text = await fs.readTextFile(f.path);
+    } catch {
+      /* none */
+    }
   }
   return connectionsReport({ me, pgpass, serviceFiles: files });
 }
@@ -422,8 +436,8 @@ export async function readConnections(): Promise<ConnectionsReport> {
 /** `archon pg connections`: print this account's report, as text or JSON; returns the exit code. */
 export async function pgConnections(json: boolean): Promise<number> {
   const r = await readConnections();
-  if (json) console.log(JSON.stringify(r, null, 2));
-  else console.log(renderConnections(r));
+  if (json) stdio.stdout.writeSync(`${JSON.stringify(r, null, 2)}\n`);
+  else stdio.stdout.writeSync(`${renderConnections(r)}\n`);
   return 0;
 }
 
@@ -450,7 +464,7 @@ export const ROOT_CRT = {
   unix: "~/.postgresql/root.crt",
 } as const;
 /** One of {@link FORMS}. */
-export type Form = typeof FORMS[number];
+export type Form = (typeof FORMS)[number];
 
 /** Where an instance is, and as whom. Never a password. */
 export interface Target {
@@ -491,11 +505,12 @@ export function pamReminder(
  * filled in for it. TLS checks the server's name even when hostaddr skips DNS.
  */
 export function renderExternal(t: Target): string {
-  const password = t.kind === "service"
-    ? `the service account's own password: archon pg connect ${t.name} --remote --write, run as ${t.user} on the server, puts it in ${t.user}'s ~/.pgpass; copy that line to the client's ~/.pgpass (0600)`
-    : `your Linux password on ${
-      t.server ?? "the server"
-    } (libpq asks for it; or keep it in the client's ~/.pgpass, 0600)`;
+  const password =
+    t.kind === "service"
+      ? `the service account's own password: archon pg connect ${t.name} --remote --write, run as ${t.user} on the server, puts it in ${t.user}'s ~/.pgpass; copy that line to the client's ~/.pgpass (0600)`
+      : `your Linux password on ${
+          t.server ?? "the server"
+        } (libpq asks for it; or keep it in the client's ~/.pgpass, 0600)`;
   // Values start at the left margin, so a copied line pastes as it is (no stray spaces).
   const indent = (x: string) => x;
   return [
@@ -553,9 +568,9 @@ export function renderShow(t: Target, form: Form): string {
     case "url": {
       const host = t.host.startsWith("/") ? encodeURIComponent(t.host) : t.host;
       const q = tls ? `?sslmode=${tls.sslmode}&sslrootcert=${tls.sslrootcert}` : "";
-      return `postgresql://${encodeURIComponent(t.user)}@${host}:${t.port}/${
-        encodeURIComponent(t.database)
-      }${q}`;
+      return `postgresql://${encodeURIComponent(t.user)}@${host}:${t.port}/${encodeURIComponent(
+        t.database,
+      )}${q}`;
     }
     case "env":
       return [
@@ -564,17 +579,21 @@ export function renderShow(t: Target, form: Form): string {
         `PGDATABASE=${t.database}`,
         `PGUSER=${t.user}`,
         ...(tls ? [`PGSSLMODE=${tls.sslmode}`, `PGSSLROOTCERT=${tls.sslrootcert}`] : []),
-      ].map((l) => `export ${l.replace(/=(.*)$/, (_m, v) => `=${conninfoValue(v)}`)}`).join("\n");
+      ]
+        .map(
+          (l) => `export ${l.replace(/=(.*)$/, (_m: string, v: string) => `=${conninfoValue(v)}`)}`,
+        )
+        .join("\n");
     case "external":
       return renderExternal(t);
     case "jdbc":
       // pgJDBC (DBeaver, IntelliJ, Java apps): verify-full against Java's own trust store.
       // libpq's sslrootcert=system means a file named "system" to pgJDBC.
-      return `jdbc:postgresql://${t.host}:${t.port}/${
-        encodeURIComponent(t.database)
-      }?sslmode=verify-full&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory&user=${
-        encodeURIComponent(t.user)
-      }`;
+      return `jdbc:postgresql://${t.host}:${t.port}/${encodeURIComponent(
+        t.database,
+      )}?sslmode=verify-full&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory&user=${encodeURIComponent(
+        t.user,
+      )}`;
     case "npgsql":
       // .NET, Power BI, Excel's Power Query: Npgsql trusts the operating system's store.
       return [
@@ -691,8 +710,8 @@ export async function findTarget(
           database,
           user: me,
           network: true,
-          address: host.ip,
-          kind,
+          ...(host.ip === undefined ? {} : { address: host.ip }),
+          ...(kind === undefined ? {} : { kind }),
           server: host.name,
         };
       }
@@ -715,7 +734,7 @@ export async function findTarget(
   const s = r.find((x) => x.name === name);
   if (s) {
     const key = lookupKey(s, me);
-    const h = s.params.host ?? s.params.hostaddr ?? LIBPQ.socketDir;
+    const h = s.params["host"] ?? s.params["hostaddr"] ?? LIBPQ.socketDir;
     return {
       name,
       host: h,
@@ -730,17 +749,17 @@ export async function findTarget(
 
 async function readConnectionsSections(): Promise<ServiceSection[]> {
   const me = await whoAmI();
-  const home = Deno.env.get("HOME") ?? await homeDir(me);
+  const home = proc.env.get("HOME") ?? (await homeOf(me));
   const out: ServiceSection[] = [];
-  for (
-    const [path, source] of [
-      [Deno.env.get("PGSERVICEFILE") || join(home, ".pg_service.conf"), "user"],
-      [join(Deno.env.get("PGSYSCONFDIR") || LIBPQ.sysconfDir, "pg_service.conf"), "system"],
-    ] as Array<[string, ServiceSection["source"]]>
-  ) {
+  for (const [path, source] of [
+    [proc.env.get("PGSERVICEFILE") || paths.join(home, ".pg_service.conf"), "user"],
+    [paths.join(proc.env.get("PGSYSCONFDIR") || LIBPQ.sysconfDir, "pg_service.conf"), "system"],
+  ] as Array<[string, ServiceSection["source"]]>) {
     try {
-      out.push(...parseServiceFile(await Deno.readTextFile(path), path, source));
-    } catch { /* none */ }
+      out.push(...parseServiceFile(await fs.readTextFile(path), path, source));
+    } catch {
+      /* none */
+    }
   }
   return out;
 }
@@ -761,63 +780,61 @@ export async function pgShow(
   try {
     f = parseForm(form);
   } catch (e) {
-    console.error((e as Error).message);
+    stdio.stderr.writeSync(`${(e as Error).message}\n`);
     return 2;
   }
   // The external form is the published instance, whatever --remote says.
   const t = await findTarget(hostName, name, remote || f === "external");
   if (typeof t === "string") {
-    if (json) console.log(JSON.stringify({ ok: false, error: t }));
-    else console.error(t);
+    if (json) stdio.stdout.writeSync(`${JSON.stringify({ ok: false, error: t })}\n`);
+    else stdio.stderr.writeSync(`${t}\n`);
     return 1;
   }
   if (f === "ca") {
     if (!t.network) {
-      const msg =
-        `${name} is reached through its socket on this server, without TLS: the root certificate is for a published instance (archon pg show ${name} --form ca --remote).`;
-      if (json) console.log(JSON.stringify({ ok: false, error: msg }));
-      else console.error(msg);
+      const msg = `${name} is reached through its socket on this server, without TLS: the root certificate is for a published instance (archon pg show ${name} --form ca --remote).`;
+      if (json) stdio.stdout.writeSync(`${JSON.stringify({ ok: false, error: msg })}\n`);
+      else stdio.stderr.writeSync(`${msg}\n`);
       return 1;
     }
     const got = await rootCertificate(t.host, t.port);
     if (typeof got === "string") {
-      if (json) console.log(JSON.stringify({ ok: false, error: got }));
-      else console.error(got);
+      if (json) stdio.stdout.writeSync(`${JSON.stringify({ ok: false, error: got })}\n`);
+      else stdio.stderr.writeSync(`${got}\n`);
       return 1;
     }
-    if (json) console.log(JSON.stringify({ ok: true, form: f, ...t, ...got }, null, 2));
+    if (json)
+      stdio.stdout.writeSync(`${JSON.stringify({ ok: true, form: f, ...t, ...got }, null, 2)}\n`);
     else {
-      console.log(got.pem.trim());
-      console.error(
-        `# ${got.subject} (SHA-256 ${got.fingerprint}), the root behind ${t.host}. Save it as ${ROOT_CRT.windows} on Windows, or ${ROOT_CRT.unix} elsewhere, for clients without a system store.`,
+      stdio.stdout.writeSync(`${got.pem.trim()}\n`);
+      stdio.stderr.writeSync(
+        `# ${got.subject} (SHA-256 ${got.fingerprint}), the root behind ${t.host}. Save it as ${ROOT_CRT.windows} on Windows, or ${ROOT_CRT.unix} elsewhere, for clients without a system store.\n`,
       );
     }
     return 0;
   }
   if (f === "jdbc" && !t.network) {
-    const msg =
-      `JDBC connects over TCP with a password, and on this server ${name} takes neither: an operator publishes it (archon pg publish ${name}, or --local-only), then archon pg show ${name} --form jdbc --remote.`;
-    if (json) console.log(JSON.stringify({ ok: false, error: msg }));
-    else console.error(msg);
+    const msg = `JDBC connects over TCP with a password, and on this server ${name} takes neither: an operator publishes it (archon pg publish ${name}, or --local-only), then archon pg show ${name} --form jdbc --remote.`;
+    if (json) stdio.stdout.writeSync(`${JSON.stringify({ ok: false, error: msg })}\n`);
+    else stdio.stderr.writeSync(`${msg}\n`);
     return 1;
   }
   if (f === "external" && !t.network) {
-    const msg =
-      `${name} is reached through its socket on this server: from another machine, an operator publishes it first (archon pg publish ${name}).`;
-    if (json) console.log(JSON.stringify({ ok: false, error: msg }));
-    else console.error(msg);
+    const msg = `${name} is reached through its socket on this server: from another machine, an operator publishes it first (archon pg publish ${name}).`;
+    if (json) stdio.stdout.writeSync(`${JSON.stringify({ ok: false, error: msg })}\n`);
+    else stdio.stderr.writeSync(`${msg}\n`);
     return 1;
   }
   const text = renderShow(t, f);
   const note = t.network ? pamReminder(t) : undefined;
   if (json) {
-    console.log(
-      JSON.stringify({ ok: true, form: f, ...t, text, ...(note ? { note } : {}) }, null, 2),
+    stdio.stdout.writeSync(
+      `${JSON.stringify({ ok: true, form: f, ...t, text, ...(note ? { note } : {}) }, null, 2)}\n`,
     );
   } else {
-    console.log(text);
+    stdio.stdout.writeSync(`${text}\n`);
     // On stderr, so psql "$(archon pg show ...)" and eval still take stdout as it is.
-    if (note && f !== "external") console.error(`# ${note}`);
+    if (note && f !== "external") stdio.stderr.writeSync(`# ${note}\n`);
   }
   return 0;
 }
@@ -827,27 +844,27 @@ export async function pgShow(
 /** Read a password from the terminal without echoing it (or one line from a pipe). */
 export async function readSecret(prompt: string): Promise<string> {
   const enc = new TextEncoder();
-  if (!Deno.stdin.isTerminal()) {
-    const text = new TextDecoder().decode(await new Response(Deno.stdin.readable).arrayBuffer());
-    return text.split("\n")[0].replace(/\r$/, "");
+  if (!tty.isTerminal("stdin")) {
+    const text = new TextDecoder().decode(await new Response(stdio.stdin.readable).arrayBuffer());
+    return (text.split("\n")[0] ?? "").replace(/\r$/, "");
   }
-  await Deno.stderr.write(enc.encode(prompt));
-  Deno.stdin.setRaw(true);
+  await stdio.stderr.write(enc.encode(prompt));
+  tty.setRaw(true);
   const buf = new Uint8Array(1);
   const bytes: number[] = [];
   try {
     while (true) {
-      const n = await Deno.stdin.read(buf);
+      const n = await stdio.stdin.read(buf);
       if (n === null) break;
-      const c = buf[0];
+      const c = buf[0] ?? 0;
       if (c === 3) throw new Error("cancelled");
       if (c === 13 || c === 10) break;
       if (c === 127 || c === 8) bytes.pop();
       else bytes.push(c);
     }
   } finally {
-    Deno.stdin.setRaw(false);
-    await Deno.stderr.write(enc.encode("\n"));
+    tty.setRaw(false);
+    await stdio.stderr.write(enc.encode("\n"));
   }
   return new TextDecoder().decode(new Uint8Array(bytes));
 }
@@ -856,8 +873,10 @@ export async function readSecret(prompt: string): Promise<string> {
 export function explainFailure(stderr: string, t: Target): string {
   const e = stderr.toLowerCase();
   if (e.includes("password authentication failed")) {
-    return pamReminder(t) ??
-      `${t.user}'s password did not match: it is in ${t.user}'s ~/.pgpass on the server.`;
+    return (
+      pamReminder(t) ??
+      `${t.user}'s password did not match: it is in ${t.user}'s ~/.pgpass on the server.`
+    );
   }
   if (e.includes("certificate") || e.includes("ssl")) {
     return `TLS did not verify ${t.host}: archon web status shows the server's certificate; until Traefik has the wildcard certificate, the instance uses a self-signed one.`;
@@ -869,7 +888,9 @@ export function explainFailure(stderr: string, t: Target): string {
     return `${t.host} does not resolve here: the server's DNS record (archon web dns) or this machine's DNS.`;
   }
   if (
-    e.includes("timeout") || e.includes("could not connect") || e.includes("connection refused")
+    e.includes("timeout") ||
+    e.includes("could not connect") ||
+    e.includes("connection refused")
   ) {
     return `Nothing answered on ${t.host}:${t.port}: is ${t.name} published (archon pg list), and do the firewall and the router let this machine through?`;
   }
@@ -885,31 +906,31 @@ export function explainFailure(stderr: string, t: Target): string {
 export async function pgTest(hostName: string, name: string, user?: string): Promise<number> {
   const t = await findTarget(hostName, name, true);
   if (typeof t === "string") {
-    console.error(t);
+    stdio.stderr.writeSync(`${t}\n`);
     return 1;
   }
   if (user) t.user = user;
   if (!(await run(["sh", "-c", "command -v psql"])).ok) {
-    console.error("psql is not installed here (Ubuntu's postgresql-client).");
+    stdio.stderr.writeSync("psql is not installed here (Ubuntu's postgresql-client).\n");
     return 1;
   }
-  console.error(
-    `Testing ${t.user}@${t.host}:${t.port}/${t.database} over TLS (verify-full), not through localhost.`,
+  stdio.stderr.writeSync(
+    `Testing ${t.user}@${t.host}:${t.port}/${t.database} over TLS (verify-full), not through localhost.\n`,
   );
   const pw = await readSecret(`Password for ${t.user}: `);
   if (!pw) {
-    console.error("No password given.");
+    stdio.stderr.writeSync("No password given.\n");
     return 2;
   }
-  const dir = await Deno.makeTempDir({ prefix: "archon-pg-test-" });
-  await Deno.chmod(dir, 0o700);
-  const passfile = join(dir, "pgpass");
+  const dir = await fs.makeTempDir({ prefix: "archon-pg-test-" });
+  await fs.chmod(dir, 0o700);
+  const passfile = paths.join(dir, "pgpass");
   try {
     const esc = (v: string) => v.replace(/\\/g, "\\\\").replace(/:/g, "\\:");
-    await Deno.writeTextFile(passfile, `${esc(t.host)}:${t.port}:*:${esc(t.user)}:${esc(pw)}\n`, {
+    await fs.writeTextFile(passfile, `${esc(t.host)}:${t.port}:*:${esc(t.user)}:${esc(pw)}\n`, {
       mode: 0o600,
     });
-    await Deno.chmod(passfile, 0o600);
+    await fs.chmod(passfile, 0o600);
     const conninfo = `${renderShow(t, "conninfo")} connect_timeout=10`;
     const r = await run(
       [
@@ -926,22 +947,22 @@ export async function pgTest(hostName: string, name: string, user?: string): Pro
       { env: { PGPASSFILE: passfile, PGCONNECT_TIMEOUT: "10" } },
     );
     if (!r.ok) {
-      console.log(`FAILED: ${r.stderr.trim().split("\n").pop()}`);
-      console.log(explainFailure(r.stderr, t));
+      stdio.stdout.writeSync(`FAILED: ${r.stderr.trim().split("\n").pop()}\n`);
+      stdio.stdout.writeSync(`${explainFailure(r.stderr, t)}\n`);
       return 1;
     }
     const [who, server, client, tls, cipher] = r.stdout.trim().split("|");
-    console.log(
-      `OK: connected to ${t.host} (${server}) from ${client} as ${who}, ${tls} ${cipher}, the server's certificate verified.`,
+    stdio.stdout.writeSync(
+      `OK: connected to ${t.host} (${server}) from ${client} as ${who}, ${tls} ${cipher}, the server's certificate verified.\n`,
     );
     if (client === server) {
-      console.log(
-        "This ran on the server itself, so the firewall was not crossed: run it from another machine to test the firewall and the router too.",
+      stdio.stdout.writeSync(
+        "This ran on the server itself, so the firewall was not crossed: run it from another machine to test the firewall and the router too.\n",
       );
     }
     return 0;
   } finally {
-    await Deno.remove(dir, { recursive: true }).catch(() => {});
+    await fs.remove(dir, { recursive: true }).catch(() => {});
   }
 }
 
@@ -966,8 +987,8 @@ export async function rootCertificate(
     host,
     String(port),
   ]);
-  const chain = s.stdout.match(/-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g) ??
-    [];
+  const chain =
+    s.stdout.match(/-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g) ?? [];
   if (!chain.length) {
     return `Could not read ${host}:${port}'s certificate (is it published and reachable?).`;
   }
@@ -980,16 +1001,16 @@ export async function rootFor(
   certsDir = "/etc/ssl/certs",
 ): Promise<{ pem: string; subject: string; fingerprint: string } | string> {
   const last = chain[chain.length - 1];
-  const dir = await Deno.makeTempDir({ prefix: "archon-pg-ca-" });
+  const dir = await fs.makeTempDir({ prefix: "archon-pg-ca-" });
   try {
-    await Deno.writeTextFile(join(dir, "last.pem"), last + "\n");
-    const hash =
-      (await run(["openssl", "x509", "-in", join(dir, "last.pem"), "-noout", "-issuer_hash"]))
-        .stdout.trim();
+    await fs.writeTextFile(paths.join(dir, "last.pem"), last + "\n");
+    const hash = (
+      await run(["openssl", "x509", "-in", paths.join(dir, "last.pem"), "-noout", "-issuer_hash"])
+    ).stdout.trim();
     if (!hash) return "Could not read the chain's last certificate.";
     for (let i = 0; i < 10; i++) {
-      const candidate = join(certsDir, `${hash}.${i}`);
-      const pem = await Deno.readTextFile(candidate).catch(() => undefined);
+      const candidate = paths.join(certsDir, `${hash}.${i}`);
+      const pem = await fs.readTextFile(candidate).catch(() => undefined);
       if (pem === undefined) break;
       // The candidate must really sign the chain's last certificate.
       const v = await run([
@@ -998,7 +1019,7 @@ export async function rootFor(
         "-CAfile",
         candidate,
         "-partial_chain",
-        join(dir, "last.pem"),
+        paths.join(dir, "last.pem"),
       ]);
       if (!v.ok) continue;
       const info = await run([
@@ -1013,12 +1034,12 @@ export async function rootFor(
       ]);
       const subject = info.stdout.match(/^subject=\s*(.*)$/m)?.[1]?.trim() ?? "";
       const fingerprint = info.stdout.match(/Fingerprint=(.*)$/m)?.[1]?.trim() ?? "";
-      const body = pem.match(/-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/)?.[0] ??
-        pem;
+      const body =
+        pem.match(/-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/)?.[0] ?? pem;
       return { pem: body + "\n", subject, fingerprint };
     }
     return "The chain's root is not among this machine's trusted roots (ca-certificates).";
   } finally {
-    await Deno.remove(dir, { recursive: true }).catch(() => {});
+    await fs.remove(dir, { recursive: true }).catch(() => {});
   }
 }

@@ -6,6 +6,7 @@
  * @module
  */
 
+import { stdio } from "@intellectual-frontiers/ifc-ts/runtime";
 import { engineFileOr } from "../core/assets.ts";
 import { guideDef, GUIDES, guideUrl } from "../core/guides.ts";
 import { ui } from "../core/ui.ts";
@@ -14,15 +15,22 @@ import { ui } from "../core/ui.ts";
 export function docsCommand(name?: string, json = false): number {
   if (!name) {
     if (json) {
-      console.log(JSON.stringify(GUIDES.map((g) => ({ ...g, url: guideUrl(g.name) })), null, 2));
+      stdio.stdout.writeSync(
+        `${JSON.stringify(
+          GUIDES.map((g) => ({ ...g, url: guideUrl(g.name) })),
+          null,
+          2,
+        )}\n`,
+      );
       return 0;
     }
     const w = Math.max(...GUIDES.map((g) => g.name.length));
-    for (const g of GUIDES) console.log(`  ${g.name.padEnd(w)}  ${g.title}: ${g.why}`);
-    console.log(
-      `\n  Read one: docs <name>. Online, with diagrams: ${
-        guideUrl("guide").replace(/archon\/guide.*$/, "")
-      }`,
+    for (const g of GUIDES) stdio.stdout.writeSync(`  ${g.name.padEnd(w)}  ${g.title}: ${g.why}\n`);
+    stdio.stdout.writeSync(
+      `\n  Read one: docs <name>. Online, with diagrams: ${guideUrl("guide").replace(
+        /archon\/guide.*$/,
+        "",
+      )}\n`,
     );
     return 0;
   }
@@ -34,7 +42,10 @@ export function docsCommand(name?: string, json = false): number {
   }
   // Diagrams are Mermaid: in a terminal, say where they are drawn instead of printing their source.
   const text = md.replace(/```mermaid\n[\s\S]*?```/g, `(a diagram: ${guideUrl(g.name)})`);
-  if (json) console.log(JSON.stringify({ ...g, url: guideUrl(g.name), markdown: md }, null, 2));
-  else console.log(text);
+  if (json)
+    stdio.stdout.writeSync(
+      `${JSON.stringify({ ...g, url: guideUrl(g.name), markdown: md }, null, 2)}\n`,
+    );
+  else stdio.stdout.writeSync(`${text}\n`);
   return 0;
 }

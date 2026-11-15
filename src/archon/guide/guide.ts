@@ -84,8 +84,7 @@ export function guideFor(plan: HostPlan): GuideItem[] {
     id: "archon",
     category: "shell",
     title: "archon: one command for this server",
-    what:
-      "Everything Archon does here is an archon command, and every command has a manual page. Start with these.",
+    what: "Everything Archon does here is an archon command, and every command has a manual page. Start with these.",
     use: [
       { cmd: "archon guide", why: "this list, in the terminal" },
       { cmd: "archon verify", why: "check everything, with a fix for anything that fails" },
@@ -97,8 +96,7 @@ export function guideFor(plan: HostPlan): GuideItem[] {
       id: "fish",
       category: "shell",
       title: "fish, the friendly shell, and the Archon prompt",
-      what:
-        "When you log in you land in fish: it suggests commands as you type (press → to accept one). The prompt shows the server's name, your folder, git status, and how Archon's last run went.",
+      what: "When you log in you land in fish: it suggests commands as you type (press → to accept one). The prompt shows the server's name, your folder, git status, and how Archon's last run went.",
       use: [
         { cmd: "Tab", why: "complete a command, a file name, or an option" },
         { cmd: "↑", why: "search earlier commands that start with what you typed" },
@@ -111,8 +109,7 @@ export function guideFor(plan: HostPlan): GuideItem[] {
       id: "comforts",
       category: "shell",
       title: "Modern command-line comforts",
-      what:
-        "ls, ll, la, and tree show colors and git status (eza); cat shows syntax colors (bat); z jumps to folders you use (zoxide); Ctrl+R searches your history and Ctrl+T finds files (fzf). One line in your shell's startup file turns them on, and the fleet's settings include it; take it out and you get the classic tools.",
+      what: "ls, ll, la, and tree show colors and git status (eza); cat shows syntax colors (bat); z jumps to folders you use (zoxide); Ctrl+R searches your history and Ctrl+T finds files (fzf). One line in your shell's startup file turns them on, and the fleet's settings include it; take it out and you get the classic tools.",
       use: [
         { cmd: "archon shell status", why: "whether your shells have them turned on" },
         { cmd: "z proj", why: "jump to the folder you use most that matches 'proj'" },
@@ -139,28 +136,30 @@ export function guideFor(plan: HostPlan): GuideItem[] {
         : "The colorful prompt needs a Nerd Font on the computer you connect from; on the server's own console the prompt is plain, without icons. Seeing boxes instead of icons? Install a Nerd Font on your computer, or choose the plain prompt here.",
       use: ws
         ? host.desktop
-          ? [{
-            cmd: "oh-my-posh font install meslo",
-            why: "install the MesloLGM Nerd Font for you",
-          }]
+          ? [
+              {
+                cmd: "oh-my-posh font install meslo",
+                why: "install the MesloLGM Nerd Font for you",
+              },
+            ]
           : [
-            {
-              cmd: "winget install JanDeDobbeleer.OhMyPosh",
-              why: "on Windows (PowerShell), once: the tool that installs fonts",
-            },
-            {
-              cmd: "oh-my-posh font install meslo",
-              why: "on Windows: install the MesloLGM Nerd Font",
-            },
-          ]
+              {
+                cmd: "winget install JanDeDobbeleer.OhMyPosh",
+                why: "on Windows (PowerShell), once: the tool that installs fonts",
+              },
+              {
+                cmd: "oh-my-posh font install meslo",
+                why: "on Windows: install the MesloLGM Nerd Font",
+              },
+            ]
         : [
-          { cmd: "set -Ux ARCHON_PROMPT plain", why: "fish: the plain prompt from now on" },
-          {
-            cmd: "echo 'export ARCHON_PROMPT=plain' >> ~/.bashrc.local",
-            why: "bash: the same",
-          },
-          { cmd: "set -Ue ARCHON_PROMPT", why: "fish: back to the colorful prompt" },
-        ],
+            { cmd: "set -Ux ARCHON_PROMPT plain", why: "fish: the plain prompt from now on" },
+            {
+              cmd: "echo 'export ARCHON_PROMPT=plain' >> ~/.bashrc.local",
+              why: "bash: the same",
+            },
+            { cmd: "set -Ue ARCHON_PROMPT", why: "fish: back to the colorful prompt" },
+          ],
     });
     add({
       id: "vscode",
@@ -171,8 +170,8 @@ export function guideFor(plan: HostPlan): GuideItem[] {
           ? "VS Code is installed here (Microsoft's package, kept current with the system's updates)."
           : "VS Code runs on Windows and edits files here through its WSL extension."
         : `Use VS Code on your own computer with the Remote - SSH extension: connect to ${fleet.admin.user}@${
-          name ?? host.name
-        } and open a folder. Nothing extra is installed on the server.`,
+            name ?? host.name
+          } and open a folder. Nothing extra is installed on the server.`,
       use: ws ? [{ cmd: "code .", why: "open this folder in VS Code" }] : [],
     });
   }
@@ -181,8 +180,7 @@ export function guideFor(plan: HostPlan): GuideItem[] {
       id: "tmux",
       category: "shell",
       title: "tmux: keep working when the connection drops",
-      what:
-        "Start long jobs inside tmux. If your SSH connection drops, log in again and pick up where you were.",
+      what: "Start long jobs inside tmux. If your SSH connection drops, log in again and pick up where you were.",
       use: [
         { cmd: "tmux", why: "start a session" },
         { cmd: "tmux attach", why: "return to it after reconnecting" },
@@ -204,8 +202,7 @@ export function guideFor(plan: HostPlan): GuideItem[] {
       id: "dotfiles",
       category: "shell",
       title: "Your settings (dotfiles), by chezmoi",
-      what:
-        "Your shell, prompt, tmux, and git settings come from the fleet's repository, in layers: for everyone, for this server, and for you. Archon applies them; you change them in the repository. Tweaks for this machine only go in files Archon never touches.",
+      what: "Your shell, prompt, tmux, and git settings come from the fleet's repository, in layers: for everyone, for this server, and for you. Archon applies them; you change them in the repository. Tweaks for this machine only go in files Archon never touches.",
       use: [
         { cmd: "archon dotfiles", why: "where each of your files comes from" },
         { cmd: "chezmoi diff", why: "what the next update would change in your home" },
@@ -238,12 +235,10 @@ export function guideFor(plan: HostPlan): GuideItem[] {
       id: "containers",
       category: "web",
       title: "Run an app in a container (Podman)",
-      what:
-        `Containers run apps without installing them on the server. Give one the label traefik.enable=true and it gets its own HTTPS address at once, for example ${app}.`,
+      what: `Containers run apps without installing them on the server. Give one the label traefik.enable=true and it gets its own HTTPS address at once, for example ${app}.`,
       use: [
         {
-          cmd:
-            "sudo podman run -d --name hello --label traefik.enable=true docker.io/traefik/whoami",
+          cmd: "sudo podman run -d --name hello --label traefik.enable=true docker.io/traefik/whoami",
           why: `start a tiny test app at ${app}`,
         },
         { cmd: "sudo podman ps", why: "what is running" },
@@ -259,8 +254,7 @@ export function guideFor(plan: HostPlan): GuideItem[] {
       id: "smb",
       category: "web",
       title: "File shares for Windows, macOS, and Linux (SMB)",
-      what:
-        `One shared folder for everyone with an account, and your own home folder, at ${smbHost}, from the local networks. Sign in with your Linux username and password. Off until an operator turns it on; then it stays on until turned off.`,
+      what: `One shared folder for everyone with an account, and your own home folder, at ${smbHost}, from the local networks. Sign in with your Linux username and password. Off until an operator turns it on; then it stays on until turned off.`,
       use: [
         { cmd: "archon fs smb status", why: "on or off, and how to connect" },
         {
@@ -279,8 +273,7 @@ export function guideFor(plan: HostPlan): GuideItem[] {
       id: "s3",
       category: "web",
       title: "S3 object storage",
-      what:
-        `An S3-compatible object store (RustFS) at https://${s3Host}, off until an operator turns it on. Your S3 user is your Linux username; your buckets are the ones named <you>-*.`,
+      what: `An S3-compatible object store (RustFS) at https://${s3Host}, off until an operator turns it on. Your S3 user is your Linux username; your buckets are the ones named <you>-*.`,
       use: [
         { cmd: "archon fs s3 status", why: "on or off, and the addresses" },
         { cmd: "archon fs s3 key --write", why: "your key, as the AWS profile s3-<server>" },
@@ -304,8 +297,7 @@ export function guideFor(plan: HostPlan): GuideItem[] {
       id: "pg",
       category: "web",
       title: "PostgreSQL databases",
-      what:
-        `Named PostgreSQL instances (prime is PostgreSQL 18), off until an operator turns them on. You connect as yourself (your Linux account is your database identity, no password on the server); apps run as their own service accounts. Private to this server unless an operator publishes one (then ${pgHost} over TLS with your Linux password, from wherever the router lets clients through, or the local networks only). A protected database needs an explicit COMMIT.`,
+      what: `Named PostgreSQL instances (prime is PostgreSQL 18), off until an operator turns them on. You connect as yourself (your Linux account is your database identity, no password on the server); apps run as their own service accounts. Private to this server unless an operator publishes one (then ${pgHost} over TLS with your Linux password, from wherever the router lets clients through, or the local networks only). A protected database needs an explicit COMMIT.`,
       use: [
         { cmd: "psql service=prime", why: "connect as yourself (no password)" },
         { cmd: "archon pg list", why: "every instance, its version, port, and status" },
@@ -328,8 +320,7 @@ export function guideFor(plan: HostPlan): GuideItem[] {
       id: "sql",
       category: "watch",
       title: "Ask the server in SQL",
-      what:
-        "osquery answers questions about this machine in SQL (processes, ports, users, packages, units), and records what changes; DuckDB queries files, S3 buckets, and PostgreSQL; jc turns command output into tables.",
+      what: "osquery answers questions about this machine in SQL (processes, ports, users, packages, units), and records what changes; DuckDB queries files, S3 buckets, and PostgreSQL; jc turns command output into tables.",
       use: [
         { cmd: "sudo osqueryi", why: "the machine as SQL tables (.tables lists them)" },
         { cmd: "duckdb", why: "SQL over CSV, JSON, Parquet, S3, and PostgreSQL" },
@@ -350,9 +341,9 @@ export function guideFor(plan: HostPlan): GuideItem[] {
       id: "guests",
       category: "web",
       title: "Virtual machines and system containers (LXD)",
-      what: `This server also runs ${
-        host.guests.map((g) => g.name).join(", ")
-      }, described in its model.`,
+      what: `This server also runs ${host.guests
+        .map((g) => g.name)
+        .join(", ")}, described in its model.`,
       use: [{ cmd: "lxc list", why: "each one and its state" }],
     });
   }
@@ -363,8 +354,7 @@ export function guideFor(plan: HostPlan): GuideItem[] {
       id: "cockpit",
       category: "watch",
       title: "Cockpit: the server in your browser",
-      what:
-        "A web console for this server: its health, services, logs, and metric history, plus a terminal. Log in with your own username and password.",
+      what: "A web console for this server: its health, services, logs, and metric history, plus a terminal. Log in with your own username and password.",
       links: [
         { label: "Overview", href: cockpitBase },
         { label: "Logs", href: `${cockpitBase}/system/logs` },
@@ -379,8 +369,7 @@ export function guideFor(plan: HostPlan): GuideItem[] {
       id: "observe",
       category: "watch",
       title: "Logs and metrics, in the terminal",
-      what:
-        "The server keeps its logs and metrics for a while. These show what it's doing right now and what happened earlier.",
+      what: "The server keeps its logs and metrics for a while. These show what it's doing right now and what happened earlier.",
       use: [
         { cmd: "btop", why: "processes, CPU, memory, disks, network, live (q quits)" },
         { cmd: "journalctl -f", why: "the system's log as it happens (Ctrl+C stops)" },
@@ -405,8 +394,7 @@ export function guideFor(plan: HostPlan): GuideItem[] {
     id: "updates",
     category: "safety",
     title: "Security updates install themselves",
-    what:
-      "Ubuntu installs security and stable updates every day, and Archon keeps its own tools current every week. If an update needs a restart, it shows below and in Cockpit.",
+    what: "Ubuntu installs security and stable updates every day, and Archon keeps its own tools current every week. If an update needs a restart, it shows below and in Cockpit.",
     use: [{ cmd: "apt list --upgradable", why: "updates waiting, if any" }],
   });
   if (server) {
@@ -414,9 +402,10 @@ export function guideFor(plan: HostPlan): GuideItem[] {
     add({
       id: "data",
       category: "safety",
-      title: d.class === "durable"
-        ? `This server is durable: ${d.reasons.join(", ")}`
-        : "This server is ephemeral",
+      title:
+        d.class === "durable"
+          ? `This server is durable: ${d.reasons.join(", ")}`
+          : "This server is ephemeral",
       what: `${
         d.class === "durable"
           ? "Something here holds people's data that exists nowhere else: it is archived every night, and nobody can reinstall or wipe this server without repeating its name."
@@ -428,16 +417,14 @@ export function guideFor(plan: HostPlan): GuideItem[] {
       id: "firewall",
       category: "safety",
       title: "A firewall that only lets in what's needed",
-      what:
-        "Only the ports this server uses answer here (SSH 22, the web 80 and 443, Cockpit 9090, file sharing 445 when turned on), each open to every network: which networks reach the server is the router's decision (the firewall at the edge, outside the machine).",
+      what: "Only the ports this server uses answer here (SSH 22, the web 80 and 443, Cockpit 9090, file sharing 445 when turned on), each open to every network: which networks reach the server is the router's decision (the firewall at the edge, outside the machine).",
       use: [{ cmd: "sudo ufw status verbose", why: "the rules in force" }],
     });
     add({
       id: "ssh",
       category: "safety",
       title: "Logging in safely",
-      what:
-        "SSH accepts your key from anywhere and your password only from the local networks. Every login is emailed to the fleet's mailbox.",
+      what: "SSH accepts your key from anywhere and your password only from the local networks. Every login is emailed to the fleet's mailbox.",
     });
   }
   if (unit("archon-backup.timer")) {
@@ -457,8 +444,7 @@ export function guideFor(plan: HostPlan): GuideItem[] {
       id: "etckeeper",
       category: "safety",
       title: "A history of every settings change",
-      what:
-        "Every change to the system's settings (/etc) is recorded, with who made it: Ubuntu's updates, Archon, or a person.",
+      what: "Every change to the system's settings (/etc) is recorded, with who made it: Ubuntu's updates, Archon, or a person.",
       use: [{ cmd: "sudo etckeeper vcs log --stat -5", why: "the last five changes" }],
     });
   }
@@ -469,10 +455,9 @@ export function guideFor(plan: HostPlan): GuideItem[] {
       id: "mail",
       category: "email",
       title: "Mail from this server",
-      what:
-        `Mail sent by programs here (scheduled jobs, apps, alerts) goes to ${fleet.mail.to}, from addresses like root+${host.name}.${
-          fleet.mail.tag ?? host.name
-        }@${fleet.mail.domain}.`,
+      what: `Mail sent by programs here (scheduled jobs, apps, alerts) goes to ${fleet.mail.to}, from addresses like root+${host.name}.${
+        fleet.mail.tag ?? host.name
+      }@${fleet.mail.domain}.`,
       use: [{ cmd: "archon mail test", why: "send a test message" }],
     });
   }
@@ -481,8 +466,7 @@ export function guideFor(plan: HostPlan): GuideItem[] {
       id: "notify",
       category: "email",
       title: "Alerts",
-      what:
-        `Archon emails ${fleet.mail.to} about logins, failures, and anything that needs attention, and sends the daily report.`,
+      what: `Archon emails ${fleet.mail.to} about logins, failures, and anything that needs attention, and sends the daily report.`,
       use: [{ cmd: "archon notify status", why: "what was sent, and anything waiting" }],
     });
   }
@@ -493,8 +477,7 @@ export function guideFor(plan: HostPlan): GuideItem[] {
       id: "repository",
       category: "work",
       title: "Changes come from the repository",
-      what:
-        "Everything about this server is described in the fleet's repository. To change it, change the repository and push: every 15 minutes the server pulls it and applies it. Installing things by hand is undone or lost at the next reinstall.",
+      what: "Everything about this server is described in the fleet's repository. To change it, change the repository and push: every 15 minutes the server pulls it and applies it. Installing things by hand is undone or lost at the next reinstall.",
       use: [
         { cmd: "archon update", why: "pull and apply now, instead of waiting" },
         { cmd: "archon apply --check", why: "what applying would change" },
@@ -505,8 +488,7 @@ export function guideFor(plan: HostPlan): GuideItem[] {
       id: "agent",
       category: "work",
       title: "An AI assistant can help, within limits",
-      what:
-        `An agent (any MCP client) on a workstation can look after this server through Archon's commands, over SSH, within limits this server enforces. Nothing AI-related runs on the server.`,
+      what: `An agent (any MCP client) on a workstation can look after this server through Archon's commands, over SSH, within limits this server enforces. Nothing AI-related runs on the server.`,
       links: [{ label: "How to set it up", href: name ? `https://${name}/#agent` : "/#agent" }],
       guide: "agent",
     });
@@ -554,37 +536,34 @@ export function agentSteps(a: AgentSetup): Array<{ title: string; text: string; 
   return [
     {
       title: "Get the repository on your own computer, and keep it current",
-      text:
-        "The agent works in your copy of the fleet's repository, on your computer (not on this server). Pull before every session: it brings other people's changes and what the servers recorded.",
+      text: "The agent works in your copy of the fleet's repository, on your computer (not on this server). Pull before every session: it brings other people's changes and what the servers recorded.",
       cmds: [`git clone ${a.cloneUrl}`, `cd ${folder}`, "git pull"],
     },
     {
       title: "Check that your SSH key reaches the server",
-      text:
-        `The agent connects as ops with your SSH key (one listed in the fleet's model). This should connect and wait silently: that is the server's MCP endpoint. Press Ctrl+C.`,
+      text: `The agent connects as ops with your SSH key (one listed in the fleet's model). This should connect and wait silently: that is the server's MCP endpoint. Press Ctrl+C.`,
       cmds: [`ssh -T ${a.target}`],
     },
     {
       title: "Connect your MCP client",
-      text:
-        `Any agent that speaks MCP works. In the repository folder, its .mcp.json already lists ${a.server}; AGENTS.md there gives the operating rules. Elsewhere, add a stdio MCP server whose command is ssh with these arguments:`,
+      text: `Any agent that speaks MCP works. In the repository folder, its .mcp.json already lists ${a.server}; AGENTS.md there gives the operating rules. Elsewhere, add a stdio MCP server whose command is ssh with these arguments:`,
       cmds: [`ssh ${a.args.join(" ")}`],
     },
     {
       title: "Ask in plain words",
-      text: `For example: "Is ${
-        a.server.replace(/^archon-/, "")
-      } healthy?", "What would change if it updated now?", "Summarize today's daily report." The server answers through archon commands up to the ${a.tier} tier, refuses anything above it, never runs destructive commands, and logs every call (journalctl -t archon-mcp).`,
+      text: `For example: "Is ${a.server.replace(
+        /^archon-/,
+        "",
+      )} healthy?", "What would change if it updated now?", "Summarize today's daily report." The server answers through archon commands up to the ${a.tier} tier, refuses anything above it, never runs destructive commands, and logs every call (journalctl -t archon-mcp).`,
       cmds: [],
     },
     {
       title: "Keep the fleet up to date through Git",
-      text:
-        "To change a server, the agent changes the repository, never the server: it edits the model, runs the build to validate it, shows you what each server would change, and commits. You review and push: pushing to main is the approval. Every server applies main within 15 minutes, or at once when the agent runs archon_update on it. Then pull again to see what the servers recorded.",
+      text: "To change a server, the agent changes the repository, never the server: it edits the model, runs the build to validate it, shows you what each server would change, and commits. You review and push: pushing to main is the approval. Every server applies main within 15 minutes, or at once when the agent runs archon_update on it. Then pull again to see what the servers recorded.",
       cmds: [
-        "deno task stolos apply --check   (what would change)",
-        'deno task stolos apply -m "<what changed>"',
-        "deno task stolos update",
+        "bun run stolos apply --check   (what would change)",
+        'bun run stolos apply -m "<what changed>"',
+        "bun run stolos update",
       ],
     },
   ];

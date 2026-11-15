@@ -37,7 +37,7 @@ function headersOf(block: string): Record<string, string> {
 export function param(header: string | undefined, name: string): string | undefined {
   if (!header) return undefined;
   const ext = new RegExp(`;\\s*${name}\\*=(?:[^']*'[^']*')?([^;]+)`, "i").exec(header);
-  if (ext) return decodeURIComponent(ext[1].trim().replace(/^"|"$/g, ""));
+  if (ext?.[1]) return decodeURIComponent(ext[1].trim().replace(/^"|"$/g, ""));
   const m = new RegExp(`;\\s*${name}=("([^"]*)"|[^;\\s]+)`, "i").exec(header);
   return m ? (m[2] ?? m[1]) : undefined;
 }
@@ -67,9 +67,9 @@ function decodeBody(body: string, encoding: string | undefined): Uint8Array {
 
 /** Gunzip bytes. */
 export async function gunzip(data: Uint8Array): Promise<Uint8Array> {
-  const stream = new Blob([data as Uint8Array<ArrayBuffer>]).stream().pipeThrough(
-    new DecompressionStream("gzip"),
-  );
+  const stream = new Blob([data as Uint8Array<ArrayBuffer>])
+    .stream()
+    .pipeThrough(new DecompressionStream("gzip"));
   return new Uint8Array(await new Response(stream).arrayBuffer());
 }
 

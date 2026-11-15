@@ -63,10 +63,10 @@ const onOff = (v: string, warn?: string): CheckStatus =>
   v === "on"
     ? "pass"
     : v === "off"
-    ? "fail"
-    : warn !== undefined && v === warn
-    ? "warn"
-    : "unknown";
+      ? "fail"
+      : warn !== undefined && v === warn
+        ? "warn"
+        : "unknown";
 
 /** The adopted-machine policy pack, as controls (spec 078), in the order results are shown. */
 export const ADOPTED_CONTROLS: ObservationControl<"adopted">[] = [
@@ -80,7 +80,7 @@ export const ADOPTED_CONTROLS: ObservationControl<"adopted">[] = [
       status: (now - Date.parse(o.at)) / 86_400_000 <= 7 ? "pass" : "fail",
       detail: `last observed ${o.at.slice(0, 10)}`,
     }),
-    fix: ({ machine }) => `deno task stolos host observe ${machine.name}`,
+    fix: ({ machine }) => `bun run stolos host observe ${machine.name}`,
   }),
   defineControl({
     id: "disk-encryption",
@@ -96,8 +96,8 @@ export const ADOPTED_CONTROLS: ObservationControl<"adopted">[] = [
       win(os(i))
         ? "Settings > Privacy & security > Device encryption (or BitLocker: Control Panel > BitLocker Drive Encryption > Turn on)"
         : mac(os(i))
-        ? "System Settings > Privacy & Security > FileVault > Turn On"
-        : "Linux encrypts at installation (LUKS): reinstall with encryption, or record why this machine holds nothing sensitive",
+          ? "System Settings > Privacy & Security > FileVault > Turn On"
+          : "Linux encrypts at installation (LUKS): reinstall with encryption, or record why this machine holds nothing sensitive",
   }),
   defineControl({
     id: "firewall",
@@ -113,10 +113,10 @@ export const ADOPTED_CONTROLS: ObservationControl<"adopted">[] = [
       win(os(i))
         ? "Windows Security > Firewall & network protection: turn on every network"
         : mac(os(i))
-        ? "System Settings > Network > Firewall > On"
-        : os(i).os.family.includes("arch")
-        ? "sudo pacman -S ufw && sudo systemctl enable --now ufw && sudo ufw enable"
-        : "sudo ufw enable (Ubuntu, Debian) or sudo systemctl enable --now firewalld (Fedora)",
+          ? "System Settings > Network > Firewall > On"
+          : os(i).os.family.includes("arch")
+            ? "sudo pacman -S ufw && sudo systemctl enable --now ufw && sudo ufw enable"
+            : "sudo ufw enable (Ubuntu, Debian) or sudo systemctl enable --now firewalld (Fedora)",
   }),
   defineControl({
     id: "auto-updates",
@@ -134,10 +134,10 @@ export const ADOPTED_CONTROLS: ObservationControl<"adopted">[] = [
       win(os(i))
         ? "Settings > Windows Update (and remove the policy that turns automatic updates off)"
         : mac(os(i))
-        ? "System Settings > General > Software Update > Automatic Updates: all on"
-        : os(i).security.autoUpdates === "manual"
-        ? "a rolling distribution updates by hand: run sudo pacman -Syu (Omarchy: Update in its menu) at least weekly"
-        : "sudo apt install unattended-upgrades && sudo dpkg-reconfigure -plow unattended-upgrades",
+          ? "System Settings > General > Software Update > Automatic Updates: all on"
+          : os(i).security.autoUpdates === "manual"
+            ? "a rolling distribution updates by hand: run sudo pacman -Syu (Omarchy: Update in its menu) at least weekly"
+            : "sudo apt install unattended-upgrades && sudo dpkg-reconfigure -plow unattended-upgrades",
   }),
   defineControl({
     id: "updates-waiting",
@@ -146,10 +146,12 @@ export const ADOPTED_CONTROLS: ObservationControl<"adopted">[] = [
     subject: "observation",
     of: "adopted",
     assert: ({ observed: o }) =>
-      o.software.pendingUpdates === undefined ? undefined : {
-        status: o.software.pendingUpdates <= 20 ? "pass" : "warn",
-        detail: `${o.software.pendingUpdates} updates waiting`,
-      },
+      o.software.pendingUpdates === undefined
+        ? undefined
+        : {
+            status: o.software.pendingUpdates <= 20 ? "pass" : "warn",
+            detail: `${o.software.pendingUpdates} updates waiting`,
+          },
     fix: (i) =>
       mac(os(i))
         ? "System Settings > General > Software Update"
@@ -177,10 +179,12 @@ export const ADOPTED_CONTROLS: ObservationControl<"adopted">[] = [
     subject: "observation",
     of: "adopted",
     assert: ({ observed: o }) =>
-      o.security.sshPasswordAuth === undefined ? undefined : {
-        status: o.security.sshPasswordAuth === "no" ? "pass" : "warn",
-        detail: `PasswordAuthentication ${o.security.sshPasswordAuth}`,
-      },
+      o.security.sshPasswordAuth === undefined
+        ? undefined
+        : {
+            status: o.security.sshPasswordAuth === "no" ? "pass" : "warn",
+            detail: `PasswordAuthentication ${o.security.sshPasswordAuth}`,
+          },
     fix: "PasswordAuthentication no in /etc/ssh/sshd_config, then restart sshd",
   }),
   defineControl({
@@ -190,10 +194,12 @@ export const ADOPTED_CONTROLS: ObservationControl<"adopted">[] = [
     subject: "observation",
     of: "adopted",
     assert: ({ observed: o }) =>
-      o.security.antivirus === undefined ? undefined : {
-        status: onOff(o.security.antivirus),
-        detail: `real-time protection: ${o.security.antivirus}`,
-      },
+      o.security.antivirus === undefined
+        ? undefined
+        : {
+            status: onOff(o.security.antivirus),
+            detail: `real-time protection: ${o.security.antivirus}`,
+          },
     fix: "Windows Security > Virus & threat protection > Real-time protection: on",
   }),
   defineControl({
@@ -203,11 +209,12 @@ export const ADOPTED_CONTROLS: ObservationControl<"adopted">[] = [
     subject: "observation",
     of: "adopted",
     assert: ({ observed: o }) => ({
-      status: o.security.admins.length === 0
-        ? "unknown"
-        : o.security.admins.length <= 3
-        ? "pass"
-        : "warn",
+      status:
+        o.security.admins.length === 0
+          ? "unknown"
+          : o.security.admins.length <= 3
+            ? "pass"
+            : "warn",
       detail: o.security.admins.length
         ? `administrators: ${o.security.admins.join(", ")}`
         : "administrators: unknown",
@@ -228,10 +235,10 @@ export const ADOPTED_CONTROLS: ObservationControl<"adopted">[] = [
       win(os(i))
         ? "integrate.windows.ps1 --adopt --osquery (installs osquery's MSI)"
         : mac(os(i))
-        ? "brew install --cask osquery"
-        : os(i).os.family.includes("arch")
-        ? "osquery is in the AUR: yay -S osquery-bin"
-        : "install osquery from osquery.io's apt or yum repository",
+          ? "brew install --cask osquery"
+          : os(i).os.family.includes("arch")
+            ? "osquery is in the AUR: yay -S osquery-bin"
+            : "install osquery from osquery.io's apt or yum repository",
   }),
   defineControl({
     id: "adoption-current",
@@ -240,26 +247,29 @@ export const ADOPTED_CONTROLS: ObservationControl<"adopted">[] = [
     subject: "observation",
     of: "adopted",
     assert: ({ machine: m, now }) =>
-      !m.until ? undefined : {
-        status: m.until >= new Date(now).toISOString().slice(0, 10) ? "pass" : "fail",
-        detail: `adopted until ${m.until}`,
-      },
-    fix: ({ machine: m }) =>
-      `deno task stolos host release ${m.name}, or extend until in machine.ts`,
+      !m.until
+        ? undefined
+        : {
+            status: m.until >= new Date(now).toISOString().slice(0, 10) ? "pass" : "fail",
+            detail: `adopted until ${m.until}`,
+          },
+    fix: ({ machine: m }) => `bun run stolos host release ${m.name}, or extend until in machine.ts`,
   }),
 ];
 
 /** Every policy, for one machine: the controls above, then accepted risks. */
 export function policies(m: AdoptedDef, o: Observed | undefined, now = Date.now()): PolicyResult[] {
   if (!o) {
-    return [{
-      id: "observed",
-      title: "Observed by Stolos",
-      scf: ["AST-04"],
-      status: "fail",
-      detail: "never observed",
-      fix: `deno task stolos host observe ${m.name}`,
-    }];
+    return [
+      {
+        id: "observed",
+        title: "Observed by Stolos",
+        scf: ["AST-04"],
+        status: "fail",
+        detail: "never observed",
+        fix: `bun run stolos host observe ${m.name}`,
+      },
+    ];
   }
   return accept(m, runObservations(ADOPTED_CONTROLS, { machine: m, observed: o, now }), now);
 }

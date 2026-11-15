@@ -24,7 +24,7 @@ export const PERSONAS: Record<PersonaId, Persona> = {
   developer: {
     id: "developer",
     label: "Developer",
-    definition: "Builds software on the host: fish, tmux, Deno, and git configuration.",
+    definition: "Builds software on the host: fish, tmux, Bun, and git configuration.",
     implies: ["standard"],
     groups: ["archon", "archon-dev"],
     features: {

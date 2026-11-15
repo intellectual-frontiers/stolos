@@ -23,8 +23,7 @@
  * @module
  */
 
-import { join } from "../core/path.ts";
-import { exists, readTextOr } from "../core/fsx.ts";
+import { fs, path as ifcPath, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "../core/exec.ts";
 import { P } from "../core/paths.ts";
 import type { SignerDef } from "../model/types.ts";
@@ -61,32 +60,35 @@ export interface KeyPaths {
 
 /** The user's home folder (HOME, or USERPROFILE on Windows). */
 export function homeFolder(): string {
-  return Deno.env.get("HOME") ?? Deno.env.get("USERPROFILE") ?? ".";
+  return proc.env.get("HOME") ?? proc.env.get("USERPROFILE") ?? ".";
 }
 
 /** This PC's key paths; the daily key is Git's signing key when one is set. */
 export function keyPaths(signingKey = "", repo = P.repo): KeyPaths {
   const home = homeFolder();
-  const desktop = join(home, "Desktop");
+  const desktop = ifcPath.join(home, "Desktop");
   let hasDesktop = false;
   try {
-    hasDesktop = Deno.statSync(desktop).isDirectory;
-  } catch { /* none */ }
+    hasDesktop = fs.statSync(desktop).isDirectory;
+  } catch {
+    /* none */
+  }
   // Spec 057: the recovery key lives in the key store, beside the secrets, so that every
   // backup holds 100% of what a disaster needs (both keys, each locked by its passphrase).
-  const recoveryDir = join(P.secrets, "..", "..", "keys");
-  const looseRecoveryDir = join(hasDesktop ? desktop : home, "fleet-recovery");
+  const recoveryDir = ifcPath.join(P.secrets, "..", "..", "keys");
+  const looseRecoveryDir = ifcPath.join(hasDesktop ? desktop : home, "fleet-recovery");
   return {
     home,
-    daily: signingKey && !signingKey.startsWith("key::")
-      ? signingKey.replace(/\.pub$/, "")
-      : join(home, ".ssh", "fleet-signing"),
+    daily:
+      signingKey && !signingKey.startsWith("key::")
+        ? signingKey.replace(/\.pub$/, "")
+        : ifcPath.join(home, ".ssh", "fleet-signing"),
     recoveryDir,
-    recovery: join(recoveryDir, "fleet-recovery"),
+    recovery: ifcPath.join(recoveryDir, "fleet-recovery"),
     looseRecoveryDir,
-    allowedSigners: join(repo, ".git", "stolos", "allowed_signers"),
-    state: join(P.bootCache, "..", "keys", "state.json"),
-    hook: join(repo, ".git", "hooks", "pre-push"),
+    allowedSigners: ifcPath.join(repo, ".git", "stolos", "allowed_signers"),
+    state: ifcPath.join(P.bootCache, "..", "keys", "state.json"),
+    hook: ifcPath.join(repo, ".git", "hooks", "pre-push"),
   };
 }
 
@@ -101,7 +103,7 @@ export interface KeyState {
 /** Read this PC's record of key checks ({} when there is none). */
 export async function readKeyState(path = keyPaths().state): Promise<KeyState> {
   try {
-    return JSON.parse((await readTextOr(path)) ?? "{}") as KeyState;
+    return JSON.parse((await fs.readTextOr(path)) ?? "{}") as KeyState;
   } catch {
     return {};
   }
@@ -109,8 +111,8 @@ export async function readKeyState(path = keyPaths().state): Promise<KeyState> {
 
 /** Write this PC's record of key checks. */
 export async function writeKeyState(s: KeyState, path = keyPaths().state): Promise<void> {
-  await Deno.mkdir(join(path, ".."), { recursive: true });
-  await Deno.writeTextFile(path, JSON.stringify(s, null, 2) + "\n");
+  await fs.mkdir(ifcPath.join(path, ".."), { recursive: true });
+  await fs.writeTextFile(path, JSON.stringify(s, null, 2) + "\n");
 }
 
 /** A public key's "type base64" (the comment dropped), or undefined. */
@@ -136,8 +138,8 @@ export function parseSignersSource(text: string): SignerDef[] {
   const out: SignerDef[] = [];
   const re =
     /name:\s*"([^"]+)",\s*role:\s*"(daily|recovery)",\s*key:\s*"([^"]+)",\s*added:\s*"([^"]*)"/g;
-  for (const m of text.matchAll(re)) {
-    out.push({ name: m[1], role: m[2] as SignerDef["role"], key: m[3], added: m[4] });
+  for (const [, name = "", role, key = "", added = ""] of text.matchAll(re)) {
+    out.push({ name, role: role === "recovery" ? "recovery" : "daily", key, added });
   }
   return out;
 }
@@ -179,8 +181,8 @@ export const PRE_PUSH_HOOK = `#!/bin/sh
 # Installed by archon (specs 029 and 057). Checks that what you push is signed
 # by a key the fleet trusts, so servers will accept it; then reminds you to back
 # up when a secret changed. Skip it once with: git push --no-verify
-deno task stolos keys check-push || exit 1
-deno task stolos vault status --hook >&2 || true
+bun run stolos keys check-push || exit 1
+bun run stolos vault status --hook >&2 || true
 exit 0
 `;
 
@@ -194,17 +196,17 @@ export async function hasPassphrase(path: string): Promise<boolean> {
 async function privateFilesFor(pubs: string[], dirs: string[]): Promise<string[]> {
   const out: string[] = [];
   for (const d of dirs) {
-    let entries: Deno.DirEntry[] = [];
+    let entries: fs.DirEntry[];
     try {
-      entries = [...Deno.readDirSync(d)];
+      entries = [...fs.readDirSync(d)];
     } catch {
       continue;
     }
     for (const e of entries) {
       if (!e.isFile || !e.name.endsWith(".pub")) continue;
-      const pub = pubOf(await readTextOr(join(d, e.name)));
-      const priv = join(d, e.name.slice(0, -4));
-      if (pub && pubs.includes(pub) && (await exists(priv))) out.push(priv);
+      const pub = pubOf(await fs.readTextOr(ifcPath.join(d, e.name)));
+      const priv = ifcPath.join(d, e.name.slice(0, -4));
+      if (pub && pubs.includes(pub) && (await fs.exists(priv))) out.push(priv);
     }
   }
   return out.sort();
@@ -239,8 +241,8 @@ export async function collectKeyFacts(repo = P.repo): Promise<KeyFacts> {
     ...(version ? { version: version.join(".") } : {}),
     ok: opensshOk(version),
   };
-  const dailyExists = await exists(paths.daily);
-  const pub = pubOf(await readTextOr(paths.daily + ".pub"));
+  const dailyExists = await fs.exists(paths.daily);
+  const pub = pubOf(await fs.readTextOr(paths.daily + ".pub"));
   const daily: KeyFacts["daily"] = { exists: dailyExists, ...(pub ? { pub } : {}) };
   if (dailyExists) {
     daily.passphrase = await hasPassphrase(paths.daily);
@@ -250,8 +252,10 @@ export async function collectKeyFacts(repo = P.repo): Promise<KeyFacts> {
     }
   }
   const signers = await loadSigners().catch(() => [] as SignerDef[]);
-  const allowed = (await readTextOr(paths.allowedSigners)) ?? "";
+  const allowed = (await fs.readTextOr(paths.allowedSigners)) ?? "";
   const recoveryPubs = signers.filter((s) => s.role === "recovery").map((s) => s.key.trim());
+  const identity = isRepo ? await gitIdentity(repo) : undefined;
+  const dailySigner = pub ? signers.find((s) => s.key.trim() === pub) : undefined;
   return {
     paths,
     repo: isRepo,
@@ -259,16 +263,16 @@ export async function collectKeyFacts(repo = P.repo): Promise<KeyFacts> {
     ssh,
     daily,
     git: g,
-    ...(isRepo ? { identity: await gitIdentity(repo) } : {}),
+    ...(identity === undefined ? {} : { identity }),
     allowedSignersCurrent: allowed === allowedSignersText(signers),
     signers,
-    ...(pub ? { dailySigner: signers.find((s) => s.key.trim() === pub) } : {}),
+    ...(dailySigner === undefined ? {} : { dailySigner }),
     recoveryLoose: await privateFilesFor(recoveryPubs, [
-      join(paths.home, ".ssh"),
+      ifcPath.join(paths.home, ".ssh"),
       paths.looseRecoveryDir,
     ]),
     recoveryInStore: (await privateFilesFor(recoveryPubs, [paths.recoveryDir])).length > 0,
-    hook: (await readTextOr(paths.hook)) === PRE_PUSH_HOOK,
+    hook: (await fs.readTextOr(paths.hook)) === PRE_PUSH_HOOK,
     state: await readKeyState(paths.state),
   };
 }
@@ -287,7 +291,7 @@ export interface KeyCheck {
   fix: string;
 }
 
-const SETUP = "deno task stolos keys setup";
+const SETUP = "bun run stolos keys setup";
 
 /** The checks, in the order to fix them; `now` is for the recovery check's age. */
 export function keyChecks(f: KeyFacts, now = Date.now()): KeyCheck[] {
@@ -301,20 +305,22 @@ export function keyChecks(f: KeyFacts, now = Date.now()): KeyCheck[] {
     f.ssh.ok
       ? `OpenSSH ${f.ssh.version} can sign`
       : f.ssh.found
-      ? `OpenSSH ${f.ssh.version ?? "(unknown version)"} is too old to sign commits (8.2 or newer)`
-      : "OpenSSH (ssh, ssh-keygen) is not installed",
-    Deno.build.os === "windows"
+        ? `OpenSSH ${f.ssh.version ?? "(unknown version)"} is too old to sign commits (8.2 or newer)`
+        : "OpenSSH (ssh, ssh-keygen) is not installed",
+    proc.build.os === "windows"
       ? "Settings > System > Optional features > OpenSSH Client, or: winget install Microsoft.OpenSSH.Preview"
-      : Deno.build.os === "darwin"
-      ? "brew install openssh"
-      : "sudo apt install -y openssh-client",
+      : proc.build.os === "darwin"
+        ? "brew install openssh"
+        : "sudo apt install -y openssh-client",
   );
   add(
     "E057-NO-KEY",
     f.daily.exists && !!f.daily.pub,
     "fail",
     f.daily.exists
-      ? f.daily.pub ? `your daily signing key: ${f.paths.daily}` : `${f.paths.daily}.pub is missing`
+      ? f.daily.pub
+        ? `your daily signing key: ${f.paths.daily}`
+        : `${f.paths.daily}.pub is missing`
       : `no daily signing key at ${f.paths.daily}`,
     SETUP,
   );
@@ -338,9 +344,13 @@ export function keyChecks(f: KeyFacts, now = Date.now()): KeyCheck[] {
       `ssh-add -d ${f.paths.daily}`,
     );
   }
-  const gitOk = f.repo && f.git.format === "ssh" && f.git.gpgsign === "true" &&
+  const gitOk =
+    f.repo &&
+    f.git.format === "ssh" &&
+    f.git.gpgsign === "true" &&
     f.git.signingKey.replace(/\.pub$/, "") === f.paths.daily &&
-    f.git.allowedSignersFile === f.paths.allowedSigners && f.allowedSignersCurrent;
+    f.git.allowedSignersFile === f.paths.allowedSigners &&
+    f.allowedSignersCurrent;
   add(
     "E057-GIT",
     gitOk,
@@ -348,10 +358,10 @@ export function keyChecks(f: KeyFacts, now = Date.now()): KeyCheck[] {
     gitOk
       ? "Git signs every commit here with it"
       : !f.repo
-      ? "this folder is not a Git checkout of the fleet repository"
-      : f.git.gpgsign !== "true" || f.git.format !== "ssh"
-      ? "Git does not sign your commits here: servers would refuse them"
-      : "Git's signing settings here are not the ones archon expects",
+        ? "this folder is not a Git checkout of the fleet repository"
+        : f.git.gpgsign !== "true" || f.git.format !== "ssh"
+          ? "Git does not sign your commits here: servers would refuse them"
+          : "Git's signing settings here are not the ones archon expects",
     SETUP,
   );
   add(
@@ -361,8 +371,8 @@ export function keyChecks(f: KeyFacts, now = Date.now()): KeyCheck[] {
     f.dailySigner
       ? `signers.ts lists it as ${f.dailySigner.name} (${f.dailySigner.role})`
       : f.daily.pub
-      ? "signers.ts does not list your daily key: servers would refuse your commits"
-      : "signers.ts cannot list a daily key that does not exist yet",
+        ? "signers.ts does not list your daily key: servers would refuse your commits"
+        : "signers.ts cannot list a daily key that does not exist yet",
     SETUP,
   );
   const recovery = f.signers.filter((s) => s.role === "recovery");
@@ -381,11 +391,11 @@ export function keyChecks(f: KeyFacts, now = Date.now()): KeyCheck[] {
       f.recoveryLoose.length === 0,
       "warn",
       f.recoveryLoose.length
-        ? `the recovery key is outside the key store, so backups miss it: ${
-          f.recoveryLoose.join(", ")
-        }`
+        ? `the recovery key is outside the key store, so backups miss it: ${f.recoveryLoose.join(
+            ", ",
+          )}`
         : "the recovery key is in the key store (every backup holds it)",
-      "deno task stolos vault backup (it backs the key up, then moves it into the key store)",
+      "bun run stolos vault backup (it backs the key up, then moves it into the key store)",
     );
     if (!f.recoveryLoose.length) {
       add(
@@ -395,7 +405,7 @@ export function keyChecks(f: KeyFacts, now = Date.now()): KeyCheck[] {
         f.recoveryInStore
           ? `the recovery key is in ${f.paths.recoveryDir}`
           : `the recovery key's private file is not in ${f.paths.recoveryDir}: backups cannot hold it`,
-        `put it back from your latest backup ZIP (signing/recovery/), or make a new one: deno task stolos keys rotate-recovery --old-lost`,
+        `put it back from your latest backup ZIP (signing/recovery/), or make a new one: bun run stolos keys rotate-recovery --old-lost`,
       );
     }
     const at = f.state.recoveryCheckedAt ? Date.parse(f.state.recoveryCheckedAt) : 0;
@@ -405,13 +415,14 @@ export function keyChecks(f: KeyFacts, now = Date.now()): KeyCheck[] {
       fresh,
       "warn",
       fresh
-        ? `the recovery key was checked on ${f.state.recoveryCheckedAt!.slice(0, 10)}`
+        ? `the recovery key was checked on ${(f.state.recoveryCheckedAt ?? "").slice(0, 10)}`
         : at
-        ? `the recovery key was last checked on ${
-          f.state.recoveryCheckedAt!.slice(0, 10)
-        } (over six months ago)`
-        : "the recovery key has never been checked here",
-      "deno task stolos keys check-recovery",
+          ? `the recovery key was last checked on ${(f.state.recoveryCheckedAt ?? "").slice(
+              0,
+              10,
+            )} (over six months ago)`
+          : "the recovery key has never been checked here",
+      "bun run stolos keys check-recovery",
     );
   }
   if (f.repo) {

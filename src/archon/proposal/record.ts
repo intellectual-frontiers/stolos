@@ -20,8 +20,8 @@
  * @module
  */
 
+import { proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
 import { P } from "../core/paths.ts";
-import { isRoot } from "../core/exec.ts";
 import { getRecord, putRecord, removeRecords } from "../state/store.ts";
 import type { HostDef } from "../model/types.ts";
 import type { Event } from "../notify/notify.ts";
@@ -43,9 +43,9 @@ export async function startRecording(
   const cur = await getRecord<Recording>(host, "recording", "current", dir);
   if (cur) {
     throw new Error(
-      `a recording is running since ${
-        cur.body.start.slice(0, 16).replace("T", " ")
-      } UTC (${cur.body.by}: "${cur.body.reason}"): archon record done first`,
+      `a recording is running since ${cur.body.start
+        .slice(0, 16)
+        .replace("T", " ")} UTC (${cur.body.by}: "${cur.body.reason}"): archon record done first`,
     );
   }
   if (!reason.trim()) throw new Error('say why: archon record "nginx for the app"');
@@ -81,19 +81,24 @@ export async function recordCommand(
 ): Promise<number> {
   if (!arg) {
     const cur = await getRecord<Recording>(host.name, "recording", "current");
-    console.log(
-      cur
-        ? `recording ${cur.body.id} since ${
-          cur.body.start.slice(0, 16).replace("T", " ")
-        } UTC, by ${cur.body.by}: "${cur.body.reason}" (archon record done ends it)`
-        : 'no recording is running (archon record "reason" starts one)',
+    stdio.stdout.writeSync(
+      `${
+        cur
+          ? `recording ${cur.body.id} since ${cur.body.start
+              .slice(0, 16)
+              .replace(
+                "T",
+                " ",
+              )} UTC, by ${cur.body.by}: "${cur.body.reason}" (archon record done ends it)`
+          : 'no recording is running (archon record "reason" starts one)'
+      }\n`,
     );
     return 0;
   }
   if (arg === "done") {
     const r = await endRecording(host.name);
-    console.log(`recording ${r.id} ended: "${r.reason}"`);
-    if (isRoot()) {
+    stdio.stdout.writeSync(`recording ${r.id} ended: "${r.reason}"\n`);
+    if (proc.isRoot()) {
       const { collect } = await import("./collect.ts");
       await collect(host);
     }
@@ -102,18 +107,22 @@ export async function recordCommand(
     const v = await loadDrift(host);
     const intent = groupItems(unproposed(v.items), v.observations, [r]).find((i) => i.id === r.id);
     if (!intent?.items.length) {
-      console.log("nothing changed outside Stolos while it ran (archon drift shows all drift)");
+      stdio.stdout.writeSync(
+        "nothing changed outside Stolos while it ran (archon drift shows all drift)\n",
+      );
       return 0;
     }
-    console.log(`${intent.items.length} change(s) in it:`);
-    for (const k of intent.items) console.log(`  ${k}`);
-    console.log(
-      `propose them: sudo archon propose --intent ${r.id}   (its reason is the recording's)`,
+    stdio.stdout.writeSync(`${intent.items.length} change(s) in it:\n`);
+    for (const k of intent.items) stdio.stdout.writeSync(`  ${k}\n`);
+    stdio.stdout.writeSync(
+      `propose them: sudo archon propose --intent ${r.id}   (its reason is the recording's)\n`,
     );
     return 0;
   }
   const r = await startRecording(host.name, arg, by);
-  console.log(`recording ${r.id}: "${r.reason}". Do the work, then: archon record done`);
+  stdio.stdout.writeSync(
+    `recording ${r.id}: "${r.reason}". Do the work, then: archon record done\n`,
+  );
   return 0;
 }
 
@@ -136,8 +145,13 @@ export function waiting(
   v: Pick<DriftView, "items" | "proposals" | "decisions">,
   now: Date = new Date(),
 ): Waiting {
-  const open = unproposed(v.items).map((i) => i.at).sort();
-  const pending = v.proposals.filter((p) => !v.decisions[p.id]).map((p) => p.at).sort();
+  const open = unproposed(v.items)
+    .map((i) => i.at)
+    .sort();
+  const pending = v.proposals
+    .filter((p) => !v.decisions[p.id])
+    .map((p) => p.at)
+    .sort();
   const old = (iso?: string) => !!iso && now.getTime() - Date.parse(iso) > REMIND_DAYS * 86_400_000;
   return {
     unproposed: open.length,
@@ -152,12 +166,12 @@ export function waiting(
 export function waitingLine(w: Waiting): string {
   const parts = [
     w.unproposed
-      ? `${w.unproposed} change(s) outside Stolos not proposed (oldest ${
-        w.oldestUnproposed!.slice(0, 10)
-      })`
+      ? `${w.unproposed} change(s) outside Stolos not proposed (oldest ${(
+          w.oldestUnproposed ?? ""
+        ).slice(0, 10)})`
       : "no change outside Stolos waiting to be proposed",
     w.waiting
-      ? `${w.waiting} proposal(s) waiting for a decision (oldest ${w.oldestWaiting!.slice(0, 10)})`
+      ? `${w.waiting} proposal(s) waiting for a decision (oldest ${(w.oldestWaiting ?? "").slice(0, 10)})`
       : "no proposal waiting",
   ];
   return parts.join("; ");
@@ -179,14 +193,16 @@ export async function remind(
   const last = await getRecord<{ at: string }>(host.name, "snapshot", "reminder", dir);
   if (last && now.getTime() - Date.parse(last.body.at) < REMIND_DAYS * 86_400_000) return false;
   const notify = send ?? (await import("../notify/events.ts")).notify;
-  await notify({
-    event: `⚠ reminder: changes made outside Stolos are waiting`,
-    level: "warn",
-    what: waitingLine(w),
-    todo:
-      `On ${host.name}: archon drift, then sudo archon propose (adopt, revert, or keep local). On your PC: deno task stolos proposal import, then accept or reject. A hand change to a managed item is held 7 days at most; then the model wins.`,
-    key: `proposal-reminder:${now.toISOString().slice(0, 10)}`,
-  }, host.name);
+  await notify(
+    {
+      event: `⚠ reminder: changes made outside Stolos are waiting`,
+      level: "warn",
+      what: waitingLine(w),
+      todo: `On ${host.name}: archon drift, then sudo archon propose (adopt, revert, or keep local). On your PC: bun run stolos proposal import, then accept or reject. A hand change to a managed item is held 7 days at most; then the model wins.`,
+      key: `proposal-reminder:${now.toISOString().slice(0, 10)}`,
+    },
+    host.name,
+  );
   await putRecord(
     host.name,
     "snapshot",

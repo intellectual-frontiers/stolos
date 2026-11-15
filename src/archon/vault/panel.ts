@@ -15,12 +15,13 @@ import type { Assessment } from "./state.ts";
 export function width(s: string): number {
   let w = 0;
   for (const ch of s) {
-    const c = ch.codePointAt(0)!;
-    w += c >= 0x1f000 || (c >= 0x2e80 && c <= 0xa4cf) || (c >= 0xff00 && c <= 0xff60)
-      ? 2
-      : c === 0xfe0f
-      ? 0
-      : 1;
+    const c = ch.codePointAt(0) ?? 0;
+    w +=
+      c >= 0x1f000 || (c >= 0x2e80 && c <= 0xa4cf) || (c >= 0xff00 && c <= 0xff60)
+        ? 2
+        : c === 0xfe0f
+          ? 0
+          : 1;
   }
   return w;
 }
@@ -50,23 +51,26 @@ export function panelLines(a: Assessment, pc: string, now = Date.now()): string[
   const pubs = a.unbacked.length - secret.length;
   const n = secret.length || a.unbacked.length;
   const head = a.lastBackup
-    ? `${n} secret${n === 1 ? " is" : "s are"} newer than your last backup (${
-      ago(a.lastBackup.at, now)
-    }):`
+    ? `${n} secret${n === 1 ? " is" : "s are"} newer than your last backup (${ago(
+        a.lastBackup.at,
+        now,
+      )}):`
     : `${n} secret${n === 1 ? " has" : "s have"} never been backed up:`;
   const listed = secret.length ? secret : a.unbacked;
-  const rows = listed.slice(0, 8).map((s) => [
-    s.name,
-    s.ref ? labelFor(s.ref, s.name) : "(not in the inventory)",
-    when(s.changedAt, new Date(now)),
-  ]);
+  const rows = listed
+    .slice(0, 8)
+    .map((s): [string, string, string] => [
+      s.name,
+      s.ref ? labelFor(s.ref, s.name) : "(not in the inventory)",
+      when(s.changedAt, new Date(now)),
+    ]);
   const w0 = Math.max(...rows.map((r) => width(r[0])), 10);
   const w1 = Math.max(...rows.map((r) => width(r[1])), 10);
   const body = [
     head,
     ...rows.map((r) => `   • ${pad(r[0], w0)}  ${pad(r[1], w1)}  ${r[2]}`),
     ...(listed.length > 8
-      ? [`   and ${listed.length - 8} more (deno task stolos vault status)`]
+      ? [`   and ${listed.length - 8} more (bun run stolos vault status)`]
       : []),
     ...(pubs && secret.length
       ? [`   (and ${pubs} public key${pubs === 1 ? "" : "s"} that go with them)`]
@@ -78,7 +82,7 @@ export function panelLines(a: Assessment, pc: string, now = Date.now()): string[
     `If ${pc} failed now, these would have to be recreated.`,
     "Run this, then move the ZIP it makes somewhere safe:",
     "",
-    "    deno task stolos vault backup",
+    "    bun run stolos vault backup",
   ];
   const title = " 🔐  Secrets changed: back them up ";
   const inner = Math.max(...body.map(width), width(title) + 2) + 4;

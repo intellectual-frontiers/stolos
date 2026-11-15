@@ -7,32 +7,37 @@
  * @module
  */
 
-import { tsLiteral } from "../core/ts-literal.ts";
+import { fs, path as paths, proc, stdio, tty } from "@intellectual-frontiers/ifc-ts/runtime";
+import {
+  cryptSalt,
+  formatJson5Error,
+  type Literal,
+  parseJson5,
+  sha512Crypt,
+  tsLiteral,
+} from "@intellectual-frontiers/ifc-ts/kernel";
 import { P, resetRoots } from "../core/paths.ts";
-import { exists } from "../core/fsx.ts";
-import { dirname, join, resolve, toFileUrl } from "../core/path.ts";
 import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
-import { sha512Crypt } from "../core/crypt.ts";
 import { SECRETS, writeSecret } from "../core/secrets.ts";
 import type { FleetDef, GitHubIdentity } from "../model/types.ts";
 
 /** What stolos fleet init is given. */
 export interface FleetInitOptions {
   /** The new fleet's id: fleets/<id>/ (spec 046). Without it, the active fleet. */
-  id?: string;
+  id?: string | undefined;
   /** Your Unix account name on every host. */
-  user?: string;
+  user?: string | undefined;
   /** An IANA time zone (default: this machine's). */
-  timezone?: string;
+  timezone?: string | undefined;
   /** A locale (default en_US.UTF-8). */
-  locale?: string;
+  locale?: string | undefined;
   /** A keyboard layout (default us). */
-  keyboard?: string;
+  keyboard?: string | undefined;
   /** Read the admin password from stdin instead of prompting (automation). */
-  passwordStdin?: boolean;
+  passwordStdin?: boolean | undefined;
   /** Rewrite fleets/<fleet>/fleet.ts even though it exists (otherwise it is kept). */
-  rewrite?: boolean;
+  rewrite?: boolean | undefined;
 }
 
 /** GitHub's anonymized commit address for an account. */
@@ -45,9 +50,10 @@ export async function githubIdentity(): Promise<GitHubIdentity> {
   const r = await run(["gh", "api", "user"]);
   if (!r.ok) {
     throw new Error(
-      `gh is not signed in (${
-        r.stderr.trim().split("\n").pop()
-      }); run: gh auth login --web --git-protocol https`,
+      `gh is not signed in (${r.stderr
+        .trim()
+        .split("\n")
+        .pop()}); run: gh auth login --web --git-protocol https`,
     );
   }
   const u = JSON.parse(r.stdout) as { login: string; id: number; name: string | null };
@@ -56,7 +62,10 @@ export async function githubIdentity(): Promise<GitHubIdentity> {
     throw new Error(`could not read your SSH keys from ${url}: ${(e as Error).message}`);
   });
   if (!res.ok) throw new Error(`could not read your SSH keys from ${url}: HTTP ${res.status}`);
-  const keys = (await res.text()).split("\n").map((l) => l.trim()).filter(Boolean);
+  const keys = (await res.text())
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
   return {
     login: u.login,
     id: u.id,
@@ -70,7 +79,7 @@ export async function githubIdentity(): Promise<GitHubIdentity> {
 export async function repositorySlug(): Promise<string> {
   const r = await run(["git", "-C", P.repo, "remote", "get-url", "origin"]);
   const m = r.stdout.trim().match(/github\.com[:/]([^/]+\/[^/.]+?)(\.git)?$/);
-  if (!m) throw new Error("the checkout has no GitHub origin; clone it from GitHub first");
+  if (!m?.[1]) throw new Error("the checkout has no GitHub origin; clone it from GitHub first");
   return m[1];
 }
 
@@ -80,26 +89,26 @@ export async function repositorySlug(): Promise<string> {
  */
 export async function readHidden(question: string): Promise<string> {
   const enc = new TextEncoder();
-  const out = (t: string) => Deno.stderr.writeSync(enc.encode(t));
+  const out = (t: string) => stdio.stderr.writeSync(enc.encode(t));
   out(question);
-  if (!Deno.stdin.isTerminal()) {
+  if (!tty.isTerminal("stdin")) {
     // Piped (a password manager's CLI, or a test): one line from stdin, nothing echoed.
     out("\n");
     return await readLine();
   }
-  Deno.stdin.setRaw(true);
+  tty.setRaw(true);
   const buf = new Uint8Array(64);
   const bytes: number[] = [];
   try {
     read: while (true) {
-      const n = await Deno.stdin.read(buf);
+      const n = await stdio.stdin.read(buf);
       if (n === null) break;
       for (const c of buf.subarray(0, n)) {
         if (c === 13 || c === 10) break read;
         if (c === 3) throw new Error("cancelled");
         if (c === 127 || c === 8) {
           // Drop one whole UTF-8 character.
-          while (bytes.length && (bytes[bytes.length - 1] & 0xc0) === 0x80) bytes.pop();
+          while (((bytes.at(-1) ?? 0) & 0xc0) === 0x80) bytes.pop();
           if (bytes.length) {
             bytes.pop();
             out("\b \b");
@@ -111,24 +120,24 @@ export async function readHidden(question: string): Promise<string> {
       }
     }
   } finally {
-    Deno.stdin.setRaw(false);
+    tty.setRaw(false);
     out("\n");
   }
   return new TextDecoder().decode(new Uint8Array(bytes));
 }
 
 async function readStdin(): Promise<string> {
-  return (await new Response(Deno.stdin.readable).text()).replace(/\r?\n$/, "");
+  return (await new Response(stdio.stdin.readable).text()).replace(/\r?\n$/, "");
 }
 
 function sshDir(): string {
-  const home = Deno.env.get("USERPROFILE") ?? Deno.env.get("HOME") ?? ".";
+  const home = proc.env.get("USERPROFILE") ?? proc.env.get("HOME") ?? ".";
   return `${home}/.ssh`;
 }
 
 async function readText(path: string): Promise<string | undefined> {
   try {
-    return (await Deno.readTextFile(path)).trim();
+    return (await fs.readTextFile(path)).trim();
   } catch {
     return undefined;
   }
@@ -137,12 +146,7 @@ async function readText(path: string): Promise<string | undefined> {
 /** Run a command attached to this terminal (ssh-keygen and gh may ask questions). */
 async function interactive(argv: string[]): Promise<boolean> {
   try {
-    const r = await new Deno.Command(argv[0], {
-      args: argv.slice(1),
-      stdin: "inherit",
-      stdout: "inherit",
-      stderr: "inherit",
-    }).output();
+    const r = await proc.output(argv, { stdin: "inherit", stdout: "inherit", stderr: "inherit" });
     return r.success;
   } catch {
     return false;
@@ -164,8 +168,8 @@ export async function addLocalKey(login: string): Promise<string[]> {
     pub = await readText(path);
     if (pub) break;
   }
-  console.error(
-    `\nYour GitHub account (${login}) has no SSH public keys, so you could not log in to your hosts.`,
+  stdio.stderr.writeSync(
+    `\nYour GitHub account (${login}) has no SSH public keys, so you could not log in to your hosts.\n`,
   );
   if (!pub) {
     path = `${dir}/id_ed25519.pub`;
@@ -174,9 +178,11 @@ export async function addLocalKey(login: string): Promise<string[]> {
         "no SSH key: add one at https://github.com/settings/keys, then run stolos fleet init again",
       );
     }
-    await Deno.mkdir(dir, { recursive: true });
-    console.error("ssh-keygen asks for an optional passphrase that protects the key on this PC.");
-    if (!await interactive(["ssh-keygen", "-t", "ed25519", "-f", `${dir}/id_ed25519`])) {
+    await fs.mkdir(dir, { recursive: true });
+    stdio.stderr.writeSync(
+      "ssh-keygen asks for an optional passphrase that protects the key on this PC.\n",
+    );
+    if (!(await interactive(["ssh-keygen", "-t", "ed25519", "-f", `${dir}/id_ed25519`]))) {
       throw new Error(
         "ssh-keygen failed; on Windows: Settings, System, Optional features, OpenSSH Client",
       );
@@ -189,11 +195,13 @@ export async function addLocalKey(login: string): Promise<string[]> {
       `add ${path} at https://github.com/settings/keys, then run stolos fleet init again`,
     );
   }
-  const title = `archon ${Deno.hostname()}`;
+  const title = `archon ${proc.hostname()}`;
   let added = await interactive(["gh", "ssh-key", "add", path, "--title", title]);
   if (!added) {
     // gh's default sign-in cannot add keys: grant that one extra scope, then retry.
-    console.error("gh needs permission to add SSH keys; it opens your browser once to ask.");
+    stdio.stderr.writeSync(
+      "gh needs permission to add SSH keys; it opens your browser once to ask.\n",
+    );
     if (
       await interactive(["gh", "auth", "refresh", "-h", "github.com", "-s", "admin:public_key"])
     ) {
@@ -209,14 +217,25 @@ export async function addLocalKey(login: string): Promise<string[]> {
   return [pub.split(/\s+/).slice(0, 2).join(" ")];
 }
 
+/**
+ * A model value as the kernel's `Literal`: `FleetDef` is an interface, which has no index
+ * signature, so it is not a `Literal` as it is; its JSON, read back, is the same value (a commons gap:
+ * `tsLiteral` taking any JSON-shaped type).
+ */
+function literalOf(v: object): Literal {
+  const parsed = parseJson5(JSON.stringify(v));
+  if (parsed.kind === "err") throw new Error(`not JSON: ${formatJson5Error(parsed.error)}`);
+  return parsed.value;
+}
+
 /** fleet.ts as fleet init writes it. */
 export function fleetSource(f: FleetDef): string {
   return `// The fleet (spec 003). Written by \`stolos fleet init\` from your GitHub
 // account; public data only. Edit freely, then \`stolos build\`.
 
-import type { FleetDef } from "@stolos/archon/model/types.ts";
+import type { FleetDef } from "@intellectual-frontiers/stolos/archon/model/types";
 
-export const fleet: FleetDef = ${tsLiteral(f)};
+export const fleet: FleetDef = ${tsLiteral(literalOf(f))};
 `;
 }
 
@@ -228,81 +247,69 @@ export const FLEET_ID = /^[a-z][a-z0-9-]{0,30}[a-z0-9]$|^[a-z]$/;
  * at or above the working directory that holds fleets/, else the working
  * directory (a new, empty repository).
  */
-export function initRepository(cwd = Deno.cwd()): string {
-  const env = Deno.env.get("ARCHON_REPO");
-  if (env) return resolve(env);
-  let d = resolve(cwd);
+export function initRepository(cwd = proc.cwd()): string {
+  const env = proc.env.get("ARCHON_REPO");
+  if (env) return paths.resolve(env);
+  let d = paths.resolve(cwd);
   for (;;) {
     try {
-      if (Deno.statSync(join(d, "fleets")).isDirectory) return d;
-    } catch { /* keep looking */ }
-    const up = dirname(d);
-    if (up === d) return resolve(cwd);
+      if (fs.statSync(paths.join(d, "fleets")).isDirectory) return d;
+    } catch {
+      /* keep looking */
+    }
+    const up = paths.dirname(d);
+    if (up === d) return paths.resolve(cwd);
     d = up;
   }
 }
 
 /**
  * `fleet init <id>`: make fleets/<id>/ the active fleet and, in a repository
- * without them, write the pinned deno.json, the entry files, and deno.lock.
+ * without them, write package.json (the engine pinned by its release URL), the
+ * entry files, and bun.lock (spec 096 FR-006).
  */
 async function prepareRepository(id: string): Promise<void> {
   if (!FLEET_ID.test(id)) {
     throw new Error(
-      `fleet id ${
-        JSON.stringify(id)
-      }: use lowercase letters, digits, and hyphens (it names a folder and a DNS label)`,
+      `fleet id ${JSON.stringify(
+        id,
+      )}: use lowercase letters, digits, and hyphens (it names a folder and a DNS label)`,
     );
   }
   const repo = initRepository();
-  Deno.env.set("ARCHON_REPO", repo);
-  Deno.env.set("ARCHON_FLEET", id);
+  proc.env.set("ARCHON_REPO", repo);
+  proc.env.set("ARCHON_FLEET", id);
   resetRoots();
   const r = ui.phase("Repository");
-  await Deno.mkdir(join(repo, "fleets", id), { recursive: true });
+  await fs.mkdir(paths.join(repo, "fleets", id), { recursive: true });
   const { scaffoldRepository } = await import("../fleet/scaffold.ts");
   const { VERSION } = await import("../version.ts");
   const tag = `v${VERSION}`;
   const written = await scaffoldRepository(repo, tag);
-  if (!written.includes("deno.json")) {
-    // VS Code checks fleet.ts against the engine's types: have every engine file here.
-    r.status("downloading the pinned engine's files (checked against deno.lock)");
-    const { cacheEngine } = await import("../fleet/scaffold.ts");
-    const c = await cacheEngine(repo);
-    if (!c.ok) {
-      r.warn(
-        `the engine's files could not be downloaded: ${c.why}`,
-        "when the network is back: deno task stolos update",
-      );
-    }
-    r.done(
-      `${repo} · fleets/${id}/ · the engine pin in deno.json is kept${
-        c.ok ? ", its files here" : ""
-      }`,
-    );
-    return;
-  }
-  // The lock is what makes the pin safe (deno task stolos docs fleet-repository): make it now.
-  r.status(`pinning the engine at ${tag} and hashing every file into deno.lock`);
-  const cache = await run([
-    Deno.execPath(),
-    "cache",
-    "--allow-import",
-    "--lock=deno.lock",
-    "archon.ts",
-    "stolos.ts",
-    "engine.ts",
-  ], { cwd: repo });
-  if (!cache.ok) {
+  // The lock is what makes the pin safe (bun run stolos docs fleet-repository): bun install
+  // records the engine's integrity in bun.lock, and puts its files where VS Code finds its types.
+  const fresh = written.includes("package.json");
+  r.status(
+    fresh
+      ? `pinning the engine at ${tag} and recording its integrity in bun.lock`
+      : "installing the pinned engine (checked against bun.lock)",
+  );
+  const { installDependencies } = await import("../install/bun.ts");
+  const install = await installDependencies(repo, { frozen: !fresh });
+  if (!install.ok) {
     r.warn(
-      `wrote ${written.join(", ")}, but deno.lock could not be made: ${
-        cache.stderr.trim().split("\n").pop()
+      `${fresh ? `wrote ${written.join(", ")}, but ` : ""}the engine could not be installed: ${
+        install.stderr.trim().split("\n").pop() ?? `exit ${install.code}`
       }`,
-      `when the network is back: deno task stolos fleet upgrade ${tag}`,
+      `when the network is back: bun install (in ${repo})`,
     );
     return;
   }
-  r.done(`${repo} · fleets/${id}/ · wrote ${written.join(", ")}, deno.lock (engine ${tag})`);
+  r.done(
+    fresh
+      ? `${repo} · fleets/${id}/ · wrote ${written.join(", ")}, bun.lock (engine ${tag})`
+      : `${repo} · fleets/${id}/ · the engine pin in package.json is kept, its files here`,
+  );
 }
 
 /** stolos fleet init: the fleet (and a new repository's files), from your GitHub account. */
@@ -320,12 +327,16 @@ export async function fleetInit(o: FleetInitOptions): Promise<void> {
 
   const slug = await repositorySlug();
   // No id and no fleet yet: the fleet is named after the repository's owner.
-  if (!o.id && !P.fleetId) await prepareRepository(slug.split("/")[0].toLowerCase());
+  if (!o.id && !P.fleetId) await prepareRepository((slug.split("/")[0] ?? "").toLowerCase());
   // A model that already exists keeps its admin account (a rebuilt boot machine).
-  const existing = (await exists(P.fleet)) && !o.rewrite
-    ? await import(toFileUrl(P.fleet).href).then((m) => m.fleet as FleetDef).catch(() => undefined)
-    : undefined;
-  const user = existing?.admin.user ?? o.user ??
+  const { fleetExport } = await import("../model/load.ts");
+  const existing =
+    (await fs.exists(P.fleet)) && !o.rewrite
+      ? await fleetExport<FleetDef>(P.fleet, "fleet").catch(() => undefined)
+      : undefined;
+  const user =
+    existing?.admin.user ??
+    o.user ??
     (prompt(`Unix account name for you on every host [${gh.login.toLowerCase()}]:`) ||
       gh.login.toLowerCase());
   const tz = o.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -341,23 +352,24 @@ export async function fleetInit(o: FleetInitOptions): Promise<void> {
   };
 
   // Ask before the Password phase starts: its spinner would draw over the prompt.
-  let pw = "";
+  let pw: string;
   if (o.passwordStdin) pw = await readStdin();
   else {
     while (true) {
       pw = await readHidden(`Admin password for ${user} (console, AMT, and sudo): `);
       if (pw.length < 8) {
-        console.error("Use at least 8 characters.");
+        stdio.stderr.writeSync("Use at least 8 characters.\n");
         continue;
       }
-      if (pw === await readHidden("Again: ")) break;
-      console.error("The passwords differ; try again.");
+      if (pw === (await readHidden("Again: "))) break;
+      stdio.stderr.writeSync("The passwords differ; try again.\n");
     }
   }
   if (pw.length < 8) throw new Error("use at least 8 characters");
   const s = ui.phase("Password");
   s.status("hashing");
-  await writeSecret(SECRETS.adminPasswordHash, (await sha512Crypt(pw)) + "\n");
+  const salt = cryptSalt(crypto.getRandomValues(new Uint8Array(16)));
+  await writeSecret(SECRETS.adminPasswordHash, (await sha512Crypt(pw, salt)) + "\n");
   s.done(`hash stored on this machine only (${SECRETS.adminPasswordHash})`);
   // Spec 029: a git pre-push hook that reminds you to back up the secrets (never blocks).
   const { installPrePushHook } = await import("../vault/reminder.ts");
@@ -366,12 +378,12 @@ export async function fleetInit(o: FleetInitOptions): Promise<void> {
   const w = ui.phase("Fleet");
   // An existing model is kept (a rebuilt boot machine needs only its secrets
   // again): rewriting it would drop everything added since (site, mail, ...).
-  const kept = (await exists(P.fleet)) && !o.rewrite;
-  await Deno.mkdir(P.fleetDir, { recursive: true });
+  const kept = (await fs.exists(P.fleet)) && !o.rewrite;
+  await fs.mkdir(P.fleetDir, { recursive: true });
   // This checkout now works on the new fleet, without --fleet (stolos fleet use).
   const { chooseFleet } = await import("../fleet/use.ts");
   await chooseFleet(P.fleetId);
-  if (!kept) await Deno.writeTextFile(P.fleet, fleetSource(fleet));
+  if (!kept) await fs.writeTextFile(P.fleet, fleetSource(fleet));
   // Commits from this checkout carry your GitHub identity (noreply address),
   // set for this repository only; a global identity, if any, is left alone.
   await run(["git", "-C", P.repo, "config", "user.name", gh.name]);
@@ -382,7 +394,7 @@ export async function fleetInit(o: FleetInitOptions): Promise<void> {
     );
     ui.next.push(
       "the admin password hash is stored again; hosts keep theirs until their next install or apply",
-      "a rebuilt boot machine: deno task stolos vault recover-host-keys <host> for each host (deno task stolos docs disaster-recovery)",
+      "a rebuilt boot machine: bun run stolos vault recover-host-keys <host> for each host (bun run stolos docs disaster-recovery)",
     );
     return;
   }
@@ -390,9 +402,9 @@ export async function fleetInit(o: FleetInitOptions): Promise<void> {
     `fleets/<fleet>/fleet.ts · admin ${user} · ${tz} · ${fleet.locale} · git commits as ${gh.email}`,
   );
   ui.next.push(
-    "next: your signing keys (spec 057): deno task stolos keys setup",
-    `then: deno task stolos apply -m "${P.fleetId || "<fleet>"}: the fleet and its signers"`,
-    "then: deno task stolos (it shows the next step)",
+    "next: your signing keys (spec 057): bun run stolos keys setup",
+    `then: bun run stolos apply -m "${P.fleetId || "<fleet>"}: the fleet and its signers"`,
+    "then: bun run stolos (it shows the next step)",
   );
 }
 
@@ -406,7 +418,7 @@ async function readLine(): Promise<string> {
       const line = pending.splice(0, nl + 1).slice(0, -1);
       return new TextDecoder().decode(new Uint8Array(line)).replace(/\r$/, "");
     }
-    const n = await Deno.stdin.read(buf);
+    const n = await stdio.stdin.read(buf);
     if (n === null) {
       const rest = pending.splice(0);
       return new TextDecoder().decode(new Uint8Array(rest)).replace(/\r$/, "");

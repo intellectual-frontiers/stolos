@@ -27,7 +27,17 @@
  * @module
  */
 
-import { exportedLiteral } from "../core/ts-literal.ts";
+import {
+  array,
+  type Decoder,
+  exportedLiteral,
+  formatDecodeError,
+  literal,
+  mapDecoder,
+  object,
+  record,
+  string,
+} from "@intellectual-frontiers/ifc-ts/kernel";
 import { defineLabel, type LabelView } from "../schema/define.ts";
 
 /**
@@ -41,7 +51,7 @@ export type RoleMap = Record<string, string[]>;
 export type PeopleKeys = Record<string, string>;
 
 /** One training record: who, which course, when, and how it went. */
-export interface TrainingRecord {
+export type TrainingRecord = {
   /** The person's work email. */
   email: string;
   /** The course (for example "security awareness"). */
@@ -50,10 +60,10 @@ export interface TrainingRecord {
   date: string;
   /** passed or failed. */
   result: "passed" | "failed";
-}
+};
 
 /** One screening record: who, which check, when, and its outcome (never the check's details). */
-export interface ScreeningRecord {
+export type ScreeningRecord = {
   /** The person's work email. */
   email: string;
   /** The check (for example "background", "right to work"). */
@@ -62,17 +72,17 @@ export interface ScreeningRecord {
   date: string;
   /** clear, or not clear (a decision the record does not explain). */
   result: "clear" | "not clear";
-}
+};
 
 /** One acknowledgement of a policy version, as listed in `policies/acks/<policy>.ts`. */
-export interface PolicyAck {
+export type PolicyAck = {
   /** The person's work email. */
   email: string;
   /** The policy version acknowledged. */
   version: string;
   /** When (YYYY-MM-DD). */
   date: string;
-}
+};
 
 /** A policy: its id (file name) and front matter. */
 export interface Policy {
@@ -97,7 +107,10 @@ export interface Policy {
  */
 export const PERSON_RECORD: LabelView = defineLabel({
   name: "person_record",
-  terms: [{ from: "udm", term: "person" }, { from: "d3fend", term: "record" }],
+  terms: [
+    { from: "udm", term: "person" },
+    { from: "d3fend", term: "record" },
+  ],
   doc: "A training or screening record about a person, from a connector (spec 077).",
   props: {
     email: { type: "text", doc: "The person's work email." },
@@ -136,16 +149,37 @@ export interface FileReader {
   list(dir: string): Promise<string[]>;
 }
 
-const lower = (s: string) => s.trim().toLowerCase();
+const lower = (s: string): string => s.trim().toLowerCase();
+
+/** people/roles.ts's `roles`. */
+const roleMap: Decoder<RoleMap> = mapDecoder(record(array(string)), (r) =>
+  Object.fromEntries(Object.entries(r).map(([k, v]) => [k, [...v]])),
+);
+/** people/keys.ts's `keys`. */
+const peopleKeys: Decoder<PeopleKeys> = mapDecoder(record(string), (r) => ({ ...r }));
+/** people/training.ts's `training`. */
+const trainingRecords: Decoder<readonly TrainingRecord[]> = array(
+  object({ email: string, course: string, date: string, result: literal("passed", "failed") }),
+);
+/** people/screening.ts's `screening`. */
+const screeningRecords: Decoder<readonly ScreeningRecord[]> = array(
+  object({ email: string, check: string, date: string, result: literal("clear", "not clear") }),
+);
+/** policies/acks/<policy>.ts's `acks`. */
+export const policyAcks: Decoder<readonly PolicyAck[]> = array(
+  object({ email: string, version: string, date: string }),
+);
 
 /** The front matter of a Markdown file (`---` lines, `key: value`), and its body. */
 export function frontMatter(text: string): { meta: Record<string, string>; body: string } {
   const m = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/.exec(text);
   if (!m) return { meta: {}, body: text };
   const meta: Record<string, string> = {};
-  for (const line of m[1].split(/\r?\n/)) {
-    const kv = /^([A-Za-z_][\w-]*)\s*:\s*(.*)$/.exec(line);
-    if (kv) meta[kv[1].toLowerCase()] = kv[2].trim().replace(/^["'](.*)["']$/, "$1");
+  for (const line of (m[1] ?? "").split(/\r?\n/)) {
+    const [, key, value] = /^([A-Za-z_][\w-]*)\s*:\s*(.*)$/.exec(line) ?? [];
+    if (key !== undefined && value !== undefined) {
+      meta[key.toLowerCase()] = value.trim().replace(/^["'](.*)["']$/, "$1");
+    }
   }
   return { meta, body: text.slice(m[0].length) };
 }
@@ -160,17 +194,24 @@ export function parsePolicy(file: string, text: string): Policy {
   for (const k of ["title", "version", "owner", "review"]) {
     if (!meta[k]) problems.push(`policies/${file}: no ${k} in its front matter`);
   }
-  if (meta.review && !DATE.test(meta.review)) {
+  if (meta["review"] && !DATE.test(meta["review"])) {
     problems.push(`policies/${file}: review must be a date (YYYY-MM-DD)`);
   }
   return {
     id,
-    title: meta.title ?? id,
-    version: meta.version ?? "",
-    owner: lower(meta.owner ?? ""),
-    review: meta.review ?? "",
+    title: meta["title"] ?? id,
+    version: meta["version"] ?? "",
+    owner: lower(meta["owner"] ?? ""),
+    review: meta["review"] ?? "",
     problems,
   };
+}
+
+/** A cell of an estate query's row as text: a string as it is, a number or boolean written out, nothing as "". */
+export function cell(v: unknown): string {
+  if (typeof v === "string") return v;
+  if (typeof v === "number" || typeof v === "boolean" || typeof v === "bigint") return String(v);
+  return v === null || v === undefined ? "" : JSON.stringify(v);
 }
 
 /** A policy id is its file name: lower case letters, digits, and hyphens. */
@@ -179,33 +220,44 @@ export const POLICY_ID: RegExp = /^[a-z0-9][a-z0-9-]*$/;
 /** Read the fleet's people files through a reader (`base` is `fleets/<fleet>`). */
 export async function readPeopleFiles(r: FileReader, base: string): Promise<PeopleFiles> {
   const problems: string[] = [];
-  const lit = async <T>(path: string, name: string, fallback: T): Promise<T> => {
+  const lit = async <T, F>(
+    path: string,
+    name: string,
+    decoder: Decoder<T>,
+    fallback: F,
+  ): Promise<T | F> => {
     const text = await r.read(`${base}/${path}`);
     if (text === undefined) return fallback;
-    try {
-      return exportedLiteral(text, name) as T;
-    } catch (e) {
+    const v = exportedLiteral(text, name);
+    if (v.kind === "err") {
       problems.push(
-        `${path}: ${(e as Error).message} (write it as a literal: export const ${name} = ...)`,
+        `${path}: not a literal at ${v.error.at}: expected ${v.error.expected} (write it as a literal: export const ${name} = ...)`,
       );
       return fallback;
     }
+    const d = decoder(v.value, name);
+    if (d.kind === "err") {
+      problems.push(`${path}: ${formatDecodeError(d.error)}`);
+      return fallback;
+    }
+    return d.value;
   };
-  const roles = await lit<RoleMap | undefined>("people/roles.ts", "roles", undefined);
+  const roles = await lit("people/roles.ts", "roles", roleMap, undefined);
   const keys = Object.fromEntries(
-    Object.entries(await lit<PeopleKeys>("people/keys.ts", "keys", {})).map((
-      [k, v],
-    ) => [lower(k), String(v).trim().split(/\s+/).slice(0, 2).join(" ")]),
+    Object.entries(await lit("people/keys.ts", "keys", peopleKeys, {})).map(([k, v]) => [
+      lower(k),
+      v.trim().split(/\s+/).slice(0, 2).join(" "),
+    ]),
   );
-  const training =
-    (await lit<TrainingRecord[] | undefined>("people/training.ts", "training", undefined))
-      ?.map((t) => ({ ...t, email: lower(t.email) }));
-  const screening =
-    (await lit<ScreeningRecord[] | undefined>("people/screening.ts", "screening", undefined))
-      ?.map((s) => ({ ...s, email: lower(s.email) }));
+  const training = (await lit("people/training.ts", "training", trainingRecords, undefined))?.map(
+    (t) => ({ ...t, email: lower(t.email) }),
+  );
+  const screening = (
+    await lit("people/screening.ts", "screening", screeningRecords, undefined)
+  )?.map((s) => ({ ...s, email: lower(s.email) }));
   const policyFiles = await r.list(`${base}/policies`);
-  const inUse = (await r.list(`${base}/people`)).length > 0 ||
-    policyFiles.some((f) => f.endsWith(".md"));
+  const inUse =
+    (await r.list(`${base}/people`)).length > 0 || policyFiles.some((f) => f.endsWith(".md"));
   const policies: Policy[] = [];
   const acks: Record<string, PolicyAck[]> = {};
   for (const f of policyFiles) {
@@ -218,8 +270,10 @@ export async function readPeopleFiles(r: FileReader, base: string): Promise<Peop
     const p = parsePolicy(f, (await r.read(`${base}/policies/${f}`)) ?? "");
     problems.push(...p.problems);
     policies.push(p);
-    acks[id] = (await lit<PolicyAck[]>(`policies/acks/${id}.ts`, "acks", []))
-      .map((a) => ({ ...a, email: lower(a.email) }));
+    acks[id] = (await lit(`policies/acks/${id}.ts`, "acks", policyAcks, [])).map((a) => ({
+      ...a,
+      email: lower(a.email),
+    }));
   }
   return {
     ...(roles ? { roles } : {}),

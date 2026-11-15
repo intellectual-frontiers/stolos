@@ -159,8 +159,7 @@ export interface DriftInput {
 const MANUAL = {
   removedPackage:
     "the model cannot say a package is absent, and Archon never removes one (Article 11): keep it local, or put it back (revert: sudo apt install it)",
-  user:
-    "accounts carry personas and groups: add the person to the fleet's people or the host's users by hand",
+  user: "accounts carry personas and groups: add the person to the fleet's people or the host's users by hand",
   sudoer: "sudo rules are rendered from personas (spec 006): change the persona in the model",
   module: "a kernel module: load it from a capability's modules-load.d file, by hand",
   container: "containers are opt-ins or guests in the model: add one by hand, or remove this one",
@@ -178,10 +177,12 @@ export function explains(o: Observation, kind: SubjectKind, name: string): boole
   if (o.kind === kind && o.name === name) return true;
   if (o.kind === "package" && kind === "snap") return false;
   if (o.source !== "sudo") return false;
-  return commandTargets(o.name).some((t) =>
-    (t.kind === kind || (kind === "unowned" && t.kind === "file")) &&
-    (t.name === name || t.name === "*" ||
-      (kind === "unit" && t.name.replace(/\.service$/, "") === name.replace(/\.service$/, "")))
+  return commandTargets(o.name).some(
+    (t) =>
+      (t.kind === kind || (kind === "unowned" && t.kind === "file")) &&
+      (t.name === name ||
+        t.name === "*" ||
+        (kind === "unit" && t.name.replace(/\.service$/, "") === name.replace(/\.service$/, ""))),
   );
 }
 
@@ -221,7 +222,8 @@ export function computeDrift(input: DriftInput): DriftItem[] {
       push("package", p, "removed", [], { manual: MANUAL.removedPackage });
     }
   }
-  const snapsPlan = new Set(plan.snaps), snapsBorn = new Set(birth.snaps);
+  const snapsPlan = new Set(plan.snaps),
+    snapsBorn = new Set(birth.snaps);
   for (const s of state.snaps) {
     if (!snapsPlan.has(s) && !snapsBorn.has(s)) {
       push("snap", s, "installed", [{ op: "packages.add", name: s, source: "snap" }]);
@@ -233,15 +235,17 @@ export function computeDrift(input: DriftInput): DriftItem[] {
       st === "masked"
         ? [{ op: "units.mask", unit: u }]
         : unitOn(st)
-        ? [{ op: "units.enable", unit: u }]
-        : [{ op: "units.disable", unit: u }];
-    const label = (st: string) => st === "masked" ? "masked" : unitOn(st) ? "enabled" : "disabled";
+          ? [{ op: "units.enable", unit: u }]
+          : [{ op: "units.disable", unit: u }];
+    const label = (st: string) =>
+      st === "masked" ? "masked" : unitOn(st) ? "enabled" : "disabled";
     if (want && want.state !== "ignore") {
-      const ok = want.state === "masked"
-        ? cur.state === "masked"
-        : want.state === "enabled"
-        ? unitOn(cur.state) || cur.state === "static"
-        : !unitOn(cur.state);
+      const ok =
+        want.state === "masked"
+          ? cur.state === "masked"
+          : want.state === "enabled"
+            ? unitOn(cur.state) || cur.state === "static"
+            : !unitOn(cur.state);
       if (!ok) {
         push("unit", u, label(cur.state), unitEdit(cur.state), { managed: true, spec: want.spec });
       }
@@ -262,24 +266,29 @@ export function computeDrift(input: DriftInput): DriftItem[] {
   }
   const managedChanged = new Set(state.managedFiles);
   for (const f of state.managedFiles) {
-    push("file", f, "edited", [], { managed: true, spec: plan.files[f]?.spec });
+    const spec = plan.files[f]?.spec;
+    push("file", f, "edited", [], { managed: true, ...(spec === undefined ? {} : { spec }) });
   }
   for (const e of state.etc) {
     if (plan.files[e.path]) continue; // managed: only when its content differs (above)
     if (managedChanged.has(e.path)) continue;
     push("file", e.path, e.change, [], e.change === "deleted" ? { manual: MANUAL.deleted } : {});
   }
-  const portsPlan = new Set(plan.ports), portsBorn = new Set(birth.listening);
+  const portsPlan = new Set(plan.ports),
+    portsBorn = new Set(birth.listening);
   for (const p of state.listening) {
     if (portsPlan.has(p) || portsBorn.has(p)) continue;
     const [protocol, port] = p.split("/");
-    push("port", p, "listening", [{
-      op: "ports.open",
-      port: Number(port),
-      protocol: protocol === "udp" ? "udp" : "tcp",
-    }]);
+    push("port", p, "listening", [
+      {
+        op: "ports.open",
+        port: Number(port),
+        protocol: protocol === "udp" ? "udp" : "tcp",
+      },
+    ]);
   }
-  const usersPlan = new Set(plan.users), usersBorn = new Set(birth.users);
+  const usersPlan = new Set(plan.users),
+    usersBorn = new Set(birth.users);
   for (const u of state.users) {
     if (!usersPlan.has(u) && !usersBorn.has(u)) {
       push("user", u, "added", [], { manual: MANUAL.user });
@@ -288,11 +297,9 @@ export function computeDrift(input: DriftInput): DriftItem[] {
   // Sudo rules and kernel modules: only osquery saw them (added and not removed since).
   for (const kind of ["sudoer", "module"] as const) {
     const last = new Map<string, Observation>();
-    for (
-      const o of input.observations.filter((x) => x.kind === kind).sort((a, b) =>
-        a.at.localeCompare(b.at)
-      )
-    ) {
+    for (const o of input.observations
+      .filter((x) => x.kind === kind)
+      .sort((a, b) => a.at.localeCompare(b.at))) {
       last.set(o.name, o);
     }
     for (const [name, o] of last) {
@@ -315,7 +322,8 @@ export function computeDrift(input: DriftInput): DriftItem[] {
     it.evidence = ev.map((o) => o.id);
     const who = ev.find((o) => o.who && o.source !== "sudo")?.who ?? ev.find((o) => o.who)?.who;
     if (who) it.who = who;
-    if (ev.length) it.at = ev[0].at;
+    const [first] = ev;
+    if (first) it.at = first.at;
   }
   // What people already said about each item.
   const day = now.toISOString().slice(0, 10);
@@ -330,7 +338,8 @@ export function computeDrift(input: DriftInput): DriftItem[] {
       }
       if (d?.decision === "accepted" && d.skipped?.includes(pi.key)) continue;
       it.proposal = p.id;
-      const local = d?.local?.find((l) => l.key === pi.key)?.until ??
+      const local =
+        d?.local?.find((l) => l.key === pi.key)?.until ??
         (pi.action === "local" ? pi.until : undefined);
       if (local && local >= day) it.localUntil = local;
     }
@@ -352,7 +361,11 @@ export function driftText(
   host: string,
   items: DriftItem[],
   alerts: Alert[],
-  opts: { all?: boolean; birthLate?: boolean; collected?: string } = {},
+  opts: {
+    all?: boolean | undefined;
+    birthLate?: boolean | undefined;
+    collected?: string | undefined;
+  } = {},
 ): string {
   const shown = opts.all ? items : unproposed(items);
   const out: string[] = [];
@@ -366,8 +379,8 @@ export function driftText(
   out.push(
     shown.length
       ? `${shown.length} change(s) on ${host} made outside Stolos${
-        opts.all ? "" : ", not proposed yet"
-      }:`
+          opts.all ? "" : ", not proposed yet"
+        }:`
       : `no drift on ${host}${opts.all ? "" : " that is not proposed yet"}.`,
   );
   for (const i of shown) {
@@ -380,9 +393,9 @@ export function driftText(
       i.flag ?? "",
     ].filter(Boolean);
     out.push(
-      `  ${i.key}  ${i.change}${i.who ? ` by ${i.who}` : ""} ${
-        i.at.slice(0, 16).replace("T", " ")
-      }${tags.length ? `  [${tags.join("; ")}]` : ""}`,
+      `  ${i.key}  ${i.change}${i.who ? ` by ${i.who}` : ""} ${i.at
+        .slice(0, 16)
+        .replace("T", " ")}${tags.length ? `  [${tags.join("; ")}]` : ""}`,
     );
     if (i.edits.length) out.push(`      adopt: ${i.edits.map(editText).join(", ")}`);
     else if (i.kind === "file" && !i.manual) {

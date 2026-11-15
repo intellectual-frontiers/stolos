@@ -27,7 +27,14 @@ import {
 } from "../controls/define.ts";
 import { ESTATE_CONTROLS } from "../estate/graph.ts";
 import type { Activity, ReviewStatus, VerifiedAck } from "./git.ts";
-import type { Policy, Quarter, RoleMap, ScreeningRecord, TrainingRecord } from "./records.ts";
+import {
+  cell,
+  type Policy,
+  type Quarter,
+  type RoleMap,
+  type ScreeningRecord,
+  type TrainingRecord,
+} from "./records.ts";
 import { emailOf } from "./reviews.ts";
 
 /** What the people controls compare the estate graph with. */
@@ -56,12 +63,16 @@ export interface PeopleFacts {
 
 const list = (xs: string[]) =>
   xs.slice(0, 12).join(", ") + (xs.length > 12 ? `, and ${xs.length - 12} more` : "");
-const n = (r: Row[]) => Number(r[0]?.n ?? 0);
+const n = (r: Row[]) => Number(r[0]?.["n"] ?? 0);
 const DAY = 86_400_000;
 const today = (now: Date) => now.toISOString().slice(0, 10);
 
 /** The estate's own control: a leaver with an active account fails (IAC-04). */
-export const LEAVERS: EstateControl = ESTATE_CONTROLS.find((c) => c.id === "leavers")!;
+export const LEAVERS: EstateControl = (() => {
+  const c = ESTATE_CONTROLS.find((x) => x.id === "leavers");
+  if (!c) throw new Error("the estate controls have no leavers control (spec 085)");
+  return c;
+})();
 
 const ACTIVE_PEOPLE = `SELECT u.uid, u.email_addr AS email, u.start_date,
   (SELECT group_concat(r.role_type, ',') FROM party_role r WHERE r.party_uid = u.uid) AS roles,
@@ -71,8 +82,9 @@ FROM user_inventory u WHERE u.status = 'active' ORDER BY u.email_addr`;
 
 /** The connectors a person's roles need (with everyone's, `"*"`). */
 export function requiredSystems(roles: RoleMap, personRoles: string[]): string[] {
-  return [...new Set([...(roles["*"] ?? []), ...personRoles.flatMap((r) => roles[r] ?? [])])]
-    .sort();
+  return [
+    ...new Set([...(roles["*"] ?? []), ...personRoles.flatMap((r) => roles[r] ?? [])]),
+  ].sort();
 }
 
 /** Joiners (every active person) have the accounts their role needs (people/roles.ts). */
@@ -90,20 +102,21 @@ export function joinersControl(f: PeopleFacts): EstateControl {
     },
     assert: ({ people, connected }, { now }) => {
       if (!f.roles || !people.length) return undefined;
-      const have = new Set(connected.map((r) => String(r.connector)));
+      const have = new Set(connected.map((r) => String(r["connector"])));
       const gaps: Array<{ uid: string; text: string }> = [];
       for (const p of people) {
-        const mine = new Set(String(p.systems ?? "").split(",").filter(Boolean));
-        const need = requiredSystems(f.roles, String(p.roles ?? "").split(",").filter(Boolean))
-          .filter((c) => have.has(c) && !mine.has(c));
+        const mine = new Set(cell(p["systems"]).split(",").filter(Boolean));
+        const need = requiredSystems(f.roles, cell(p["roles"]).split(",").filter(Boolean)).filter(
+          (c) => have.has(c) && !mine.has(c),
+        );
         if (!need.length) continue;
-        const start = p.start_date ? String(p.start_date) : undefined;
+        const start = p["start_date"] ? cell(p["start_date"]) : undefined;
         const days = start
           ? Math.floor((now.getTime() - Date.parse(`${start}T00:00:00Z`)) / DAY)
           : undefined;
         gaps.push({
-          uid: String(p.uid),
-          text: `${p.email} needs ${need.join(", ")}${
+          uid: String(p["uid"]),
+          text: `${cell(p["email"])} needs ${need.join(", ")}${
             days !== undefined && days >= 0 ? ` (started ${days} day(s) ago)` : ""
           }`,
         });
@@ -136,17 +149,18 @@ export function onLeaveControl(): EstateControl {
        WHERE u.status = 'leave' AND a.active = 1 ORDER BY u.email_addr, a.connector`,
     },
     assert: ({ leave, open }) =>
-      !n(leave) ? undefined : {
-        status: open.length ? "warn" : "pass",
-        detail: open.length
-          ? `${open.length} active account(s) of people on leave: ${
-            list(open.map((x) => `${x.email} in ${x.system}`))
-          }`
-          : `${n(leave)} on leave, none with an active account`,
-        subjects: open.map((x) => String(x.uid)),
-      },
-    fix:
-      "suspend their accounts while they are away, or record the decision in fleets/<fleet>/controls/accepted.ts (people/on-leave)",
+      !n(leave)
+        ? undefined
+        : {
+            status: open.length ? "warn" : "pass",
+            detail: open.length
+              ? `${open.length} active account(s) of people on leave: ${list(
+                  open.map((x) => `${cell(x["email"])} in ${cell(x["system"])}`),
+                )}`
+              : `${n(leave)} on leave, none with an active account`,
+            subjects: open.map((x) => String(x["uid"])),
+          },
+    fix: "suspend their accounts while they are away, or record the decision in fleets/<fleet>/controls/accepted.ts (people/on-leave)",
   });
 }
 
@@ -172,8 +186,7 @@ export interface DeprovisionMeasure {
   days: number;
 }
 
-const LEAVER_ACCOUNTS =
-  `SELECT u.email_addr AS email, u.end_date, a.connector AS system, a.display_name AS account,
+const LEAVER_ACCOUNTS = `SELECT u.email_addr AS email, u.end_date, a.connector AS system, a.display_name AS account,
   a.user_account_uid AS uid, a.active
 FROM user_inventory u
 JOIN edge e ON e.src_uid = u.uid AND e.verb = 'has_account'
@@ -187,17 +200,17 @@ export function deprovisionMeasures(
   now: Date,
 ): DeprovisionMeasure[] {
   return rows.map((r) => {
-    const end = String(r.end_date);
+    const end = String(r["end_date"]);
     const endMs = Date.parse(`${end}T23:59:59Z`);
-    const a = activity.get(String(r.uid)) ?? {};
-    const active = Number(r.active) === 1;
+    const a = activity.get(String(r["uid"])) ?? {};
+    const active = Number(r["active"]) === 1;
     const until = active ? now.getTime() : a.lastActive ? Date.parse(a.lastActive) : endMs;
     return {
-      email: String(r.email),
+      email: String(r["email"]),
       end,
-      system: String(r.system),
-      account: String(r.account),
-      uid: String(r.uid),
+      system: String(r["system"]),
+      account: String(r["account"]),
+      uid: String(r["uid"]),
       active,
       ...(a.lastActive ? { lastActive: a.lastActive } : {}),
       ...(a.offBy ? { offBy: a.offBy } : {}),
@@ -225,21 +238,19 @@ export function deprovisionControl(f: PeopleFacts): EstateControl {
       const worst = Math.max(0, ...ms.filter((m) => !m.active).map((m) => m.days));
       return {
         status: late.length ? "warn" : "pass",
-        detail: (late.length
-          ? `${late.length} account(s) stayed active past ${target} day(s): ${
-            list(late.map((m) => `${m.email} in ${m.system}, ${m.days} day(s)`))
-          }`
-          : `${
-            ms.length - open.length
-          } leaver account(s) turned off, the slowest after ${worst} day(s)`) +
+        detail:
+          (late.length
+            ? `${late.length} account(s) stayed active past ${target} day(s): ${list(
+                late.map((m) => `${m.email} in ${m.system}, ${m.days} day(s)`),
+              )}`
+            : `${
+                ms.length - open.length
+              } leaver account(s) turned off, the slowest after ${worst} day(s)`) +
           (open.length ? `; ${open.length} still active (the leavers control)` : ""),
-        subjects: late.map((m) =>
-          m.uid
-        ),
+        subjects: late.map((m) => m.uid),
       };
     },
-    fix:
-      "make offboarding turn every account off on the last day (identity provider first, then each system)",
+    fix: "make offboarding turn every account off on the last day (identity provider first, then each system)",
   });
 }
 
@@ -265,29 +276,31 @@ export function reviewsControl(f: PeopleFacts): EstateControl {
       const open: string[] = [];
       const subjects: string[] = [];
       for (const r of rows) {
-        const m = emailOf(String(r.uid));
+        const m = emailOf(String(r["uid"]));
         const s = f.reviews.find((x) => x.manager === m);
         if (!s) missing.push(m);
         else if (!s.approvedBy) open.push(`${m} (${s.why})`);
         else continue;
-        subjects.push(String(r.uid));
+        subjects.push(String(r["uid"]));
       }
       const approved = f.reviews.filter((x) => x.approvedBy);
       return {
         status: missing.length || open.length ? "fail" : "pass",
-        detail: missing.length || open.length
-          ? [
-            missing.length ? `${q}: no review for ${list(missing)}` : "",
-            open.length ? `${q}: not approved: ${list(open)}` : "",
-          ].filter(Boolean).join("; ")
-          : `${q}: ${approved.length} review(s), each approved by a signed commit (${
-            list(approved.map((x) => `${x.manager} by ${x.approvedBy}`))
-          })`,
+        detail:
+          missing.length || open.length
+            ? [
+                missing.length ? `${q}: no review for ${list(missing)}` : "",
+                open.length ? `${q}: not approved: ${list(open)}` : "",
+              ]
+                .filter(Boolean)
+                .join("; ")
+            : `${q}: ${approved.length} review(s), each approved by a signed commit (${list(
+                approved.map((x) => `${x.manager} by ${x.approvedBy}`),
+              )})`,
         subjects,
       };
     },
-    fix:
-      `deno task stolos people review --quarter ${f.reviewQuarter}, then each manager ticks and signs their file`,
+    fix: `bun run stolos people review --quarter ${f.reviewQuarter}, then each manager ticks and signs their file`,
   });
 }
 
@@ -299,7 +312,7 @@ export function acksControl(f: PeopleFacts): EstateControl {
     scf: ["HRS-08.2"],
     subject: "estate",
     description:
-      "An acknowledgement is a commit with Acknowledges: <policy>@<version>, signed by the person's own key (people/keys.ts): deno task stolos people ack <policy>.",
+      "An acknowledgement is a commit with Acknowledges: <policy>@<version>, signed by the person's own key (people/keys.ts): bun run stolos people ack <policy>.",
     query:
       "SELECT uid, email_addr AS email FROM user_inventory WHERE status = 'active' ORDER BY email_addr",
     assert: (people) => {
@@ -307,15 +320,16 @@ export function acksControl(f: PeopleFacts): EstateControl {
       if (!current.length || !people.length) return undefined;
       const gaps: Array<{ uid: string; text: string }> = [];
       for (const p of people) {
-        const owed = current.filter((pol) =>
-          !f.acks.some((a) =>
-            a.email === p.email && a.policy === pol.id && a.version === pol.version
-          )
+        const owed = current.filter(
+          (pol) =>
+            !f.acks.some(
+              (a) => a.email === p["email"] && a.policy === pol.id && a.version === pol.version,
+            ),
         );
         if (owed.length) {
           gaps.push({
-            uid: String(p.uid),
-            text: `${p.email}: ${owed.map((x) => `${x.id} ${x.version}`).join(", ")}`,
+            uid: String(p["uid"]),
+            text: `${cell(p["email"])}: ${owed.map((x) => `${x.id} ${x.version}`).join(", ")}`,
           });
         }
       }
@@ -327,8 +341,7 @@ export function acksControl(f: PeopleFacts): EstateControl {
         subjects: gaps.map((g) => g.uid),
       };
     },
-    fix:
-      "each of them runs deno task stolos people ack <policy> (a commit signed with their own key; add the key to people/keys.ts)",
+    fix: "each of them runs bun run stolos people ack <policy> (a commit signed with their own key; add the key to people/keys.ts)",
   });
 }
 
@@ -347,14 +360,13 @@ export function policyReviewControl(f: PeopleFacts): EstateControl {
       return {
         status: bad.length ? "fail" : "pass",
         detail: bad.length
-          ? `${bad.length} overdue or without a review date: ${
-            list(bad.map((p) => `${p.id} (${p.review || "none"})`))
-          }`
+          ? `${bad.length} overdue or without a review date: ${list(
+              bad.map((p) => `${p.id} (${p.review || "none"})`),
+            )}`
           : `${f.policies.length} polic(ies), each due for review on or after ${day}`,
       };
     },
-    fix:
-      "review the policy with its owner, raise its version if it changed, and set its next review date in its front matter",
+    fix: "review the policy with its owner, raise its version if it changed, and set its next review date in its front matter",
   });
 }
 
@@ -380,26 +392,26 @@ export function trainingControl(f: PeopleFacts): EstateControl {
       const all = [
         ...(f.training ?? []).map((t) => ({ email: t.email, date: t.date, result: t.result })),
         ...records.map((r) => ({
-          email: String(r.email),
-          date: String(r.date),
-          result: String(r.result),
+          email: String(r["email"]),
+          date: String(r["date"]),
+          result: String(r["result"]),
         })),
       ];
       if (!people.length || (f.training === undefined && !records.length)) return undefined;
       const since = new Date(now);
       since.setUTCMonth(since.getUTCMonth() - months);
       const from = today(since);
-      const due = people.filter((p) =>
-        !all.some((t) => t.email === p.email && t.result === "passed" && t.date >= from)
+      const due = people.filter(
+        (p) => !all.some((t) => t.email === p["email"] && t.result === "passed" && t.date >= from),
       );
       return {
         status: due.length ? "fail" : "pass",
         detail: due.length
-          ? `${due.length} without a passed training since ${from}: ${
-            list(due.map((p) => String(p.email)))
-          }`
+          ? `${due.length} without a passed training since ${from}: ${list(
+              due.map((p) => String(p["email"])),
+            )}`
           : `${people.length} active person(s), each trained since ${from}`,
-        subjects: due.map((p) => String(p.uid)),
+        subjects: due.map((p) => String(p["uid"])),
       };
     },
     fix: "have each of them take the awareness training, and record it in people/training.ts",
@@ -417,31 +429,34 @@ export function screeningControl(f: PeopleFacts): EstateControl {
     assert: ({ people, records }) => {
       const all = [
         ...(f.screening ?? []).map((s) => ({ email: s.email, result: s.result })),
-        ...records.map((r) => ({ email: String(r.email), result: String(r.result) })),
+        ...records.map((r) => ({ email: String(r["email"]), result: String(r["result"]) })),
       ];
       if (!people.length || (f.screening === undefined && !records.length)) return undefined;
-      const none = people.filter((p) => !all.some((s) => s.email === p.email));
-      const unclear = people.filter((p) =>
-        all.some((s) => s.email === p.email) &&
-        !all.some((s) => s.email === p.email && s.result === "clear")
+      const none = people.filter((p) => !all.some((s) => s.email === p["email"]));
+      const unclear = people.filter(
+        (p) =>
+          all.some((s) => s.email === p["email"]) &&
+          !all.some((s) => s.email === p["email"] && s.result === "clear"),
       );
       return {
         status: none.length || unclear.length ? "fail" : "pass",
-        detail: none.length || unclear.length
-          ? [
-            none.length
-              ? `${none.length} without a screening: ${list(none.map((p) => String(p.email)))}`
-              : "",
-            unclear.length
-              ? `${unclear.length} not clear: ${list(unclear.map((p) => String(p.email)))}`
-              : "",
-          ].filter(Boolean).join("; ")
-          : `${people.length} active person(s), each screened and clear`,
-        subjects: [...none, ...unclear].map((p) => String(p.uid)),
+        detail:
+          none.length || unclear.length
+            ? [
+                none.length
+                  ? `${none.length} without a screening: ${list(none.map((p) => String(p["email"])))}`
+                  : "",
+                unclear.length
+                  ? `${unclear.length} not clear: ${list(unclear.map((p) => String(p["email"])))}`
+                  : "",
+              ]
+                .filter(Boolean)
+                .join("; ")
+            : `${people.length} active person(s), each screened and clear`,
+        subjects: [...none, ...unclear].map((p) => String(p["uid"])),
       };
     },
-    fix:
-      "record each screening in people/screening.ts (the check, its date, its result: nothing more)",
+    fix: "record each screening in people/screening.ts (the check, its date, its result: nothing more)",
   });
 }
 

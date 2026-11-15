@@ -73,7 +73,7 @@
  * per host), for example `observability: { metricsDays: 90, logsMaxSize: "512M" }`. Nothing is sent
  * anywhere until a central collector exists. Every 15 minutes each machine looks for one (spec 024):
  * `telemetry.collector` in `fleets/<fleet>/fleet.ts`, else the name `otel.localdomain` in your
- * router's DNS, else the boot PC itself (spec 049): while `deno task stolos boot serve` runs, it
+ * router's DNS, else the boot PC itself (spec 049): while `bun run stolos boot serve` runs, it
  * accepts OpenTelemetry at `http://<boot PC>:8080/otlp` (the port servers already reach) and keeps it
  * a week under the boot cache (`telemetry/fleet/`), handing it to otel-tui when that runs on the PC.
  * When one answers OpenTelemetry, the machine forwards its logs, metrics, and Archon's own telemetry
@@ -206,7 +206,7 @@
  * | gh                                                           | GitHub's apt repository (signing key pinned in this repository)                  | unattended-upgrades, daily  |
  * | tmux                                                         | Ubuntu (no official binaries or PPA)                                             | Ubuntu updates              |
  * | btop                                                         | Ubuntu                                                                           | Ubuntu updates              |
- * | Deno, chezmoi, oh-my-posh, OpenTelemetry Collector, otel-tui | official release binaries, SHA-256 verified, under `/opt/tools/<tool>/<version>` | `archon tools sync`, weekly |
+ * | Bun, chezmoi, oh-my-posh, OpenTelemetry Collector, otel-tui | official release binaries, SHA-256 verified, under `/opt/tools/<tool>/<version>` | `archon tools sync`, weekly |
  *
  * `sudo archon tools sync` upgrades the release-binary tools at once.
  *
@@ -222,7 +222,7 @@
  * `archon apply --check`, commit and push, then `archon apply` (or wait for the converge timer),
  * `archon verify`. Never change a host by hand outside that loop. If a change was made by hand
  * anyway, it has a way back into the model: `archon drift`, then `sudo archon propose`, and on your
- * PC `deno task stolos proposal accept` ([proposals](proposals.md)).
+ * PC `bun run stolos proposal accept` ([proposals](proposals.md)).
  *
  * @module
  */

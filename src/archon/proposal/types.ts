@@ -7,6 +7,8 @@
  * @module
  */
 
+import { absurd } from "@intellectual-frontiers/ifc-ts/kernel";
+
 /** The spec that brings proposals. */
 export const PROPOSAL_SPEC = "095-proposals" as const;
 
@@ -125,41 +127,41 @@ export interface Alert {
 /** A structured model edit: what `stolos proposal accept` writes into the host's TypeScript. */
 export type Edit =
   | {
-    /** Install a package (apt, or a snap). */
-    op: "packages.add";
-    /** The package. */
-    name: string;
-    /** "snap" for a snap; apt otherwise. */
-    source?: "snap";
-  }
+      /** Install a package (apt, or a snap). */
+      op: "packages.add";
+      /** The package. */
+      name: string;
+      /** "snap" for a snap; apt otherwise. */
+      source?: "snap";
+    }
   | {
-    /** Enable, disable, or mask a unit Ubuntu ships. */
-    op: "units.enable" | "units.disable" | "units.mask";
-    /** The unit. */
-    unit: string;
-  }
+      /** Enable, disable, or mask a unit Ubuntu ships. */
+      op: "units.enable" | "units.disable" | "units.mask";
+      /** The unit. */
+      unit: string;
+    }
   | {
-    /** Open a port in the firewall. */
-    op: "ports.open";
-    /** The port. */
-    port: number;
-    /** tcp or udp. */
-    protocol: "tcp" | "udp";
-  }
+      /** Open a port in the firewall. */
+      op: "ports.open";
+      /** The port. */
+      port: number;
+      /** tcp or udp. */
+      protocol: "tcp" | "udp";
+    }
   | {
-    /** Write a file with this content (small, non-secret text only). */
-    op: "files.override";
-    /** Its absolute path. */
-    path: string;
-    /** Its content. */
-    content: string;
-    /** Its mode ("0644"). */
-    mode: string;
-    /** Its owner. */
-    owner: string;
-    /** Its group. */
-    group?: string;
-  };
+      /** Write a file with this content (small, non-secret text only). */
+      op: "files.override";
+      /** Its absolute path. */
+      path: string;
+      /** Its content. */
+      content: string;
+      /** Its mode ("0644"). */
+      mode: string;
+      /** Its owner. */
+      owner: string;
+      /** Its group. */
+      group?: string;
+    };
 
 /** An edit as one line people read: `packages.add("nginx")`. */
 export function editText(e: Edit): string {
@@ -169,11 +171,15 @@ export function editText(e: Edit): string {
     case "ports.open":
       return `ports.open(${e.port}, ${JSON.stringify(e.protocol)})`;
     case "files.override":
-      return `files.override(${JSON.stringify(e.path)}, { mode: ${JSON.stringify(e.mode)}, owner: ${
-        JSON.stringify(e.owner)
-      }, ${e.content.length} bytes })`;
-    default:
+      return `files.override(${JSON.stringify(e.path)}, { mode: ${JSON.stringify(e.mode)}, owner: ${JSON.stringify(
+        e.owner,
+      )}, ${e.content.length} bytes })`;
+    case "units.enable":
+    case "units.disable":
+    case "units.mask":
       return `${e.op}(${JSON.stringify(e.unit)})`;
+    default:
+      return absurd(e);
   }
 }
 
@@ -285,7 +291,7 @@ export interface Proposal {
 }
 
 /** What operators decided about one proposal, in Git (`fleets/<fleet>/hosts/<host>/proposals.ts`). */
-export interface ProposalDecision {
+export type ProposalDecision = {
   /** accepted or rejected. */
   decision: "accepted" | "rejected";
   /** Who decided. */
@@ -302,7 +308,7 @@ export interface ProposalDecision {
   local?: Array<{ key: string; until: string }>;
   /** Items skipped at acceptance (named conflicts), left flagged. */
   skipped?: string[];
-}
+};
 
 /** Every decision about a host's proposals, by proposal id. */
 export type ProposalDecisions = Record<string, ProposalDecision>;

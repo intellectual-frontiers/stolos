@@ -47,7 +47,7 @@
  * 5. **Ask in plain words**: "Is it healthy?", "What would change if it updated now?", "Summarize
  *    today's daily report."
  * 6. **Keep the fleet up to date through Git**: the agent changes the repository, never the server. It
- *    edits the model, runs `deno task stolos build` to validate it, shows what each server would
+ *    edits the model, runs `bun run stolos build` to validate it, shows what each server would
  *    change, and commits; you review and `git push`. Pushing to main is the approval: every server
  *    applies it within 15 minutes, or at once when the agent runs `archon_update`. Then `git pull` to
  *    see what the servers recorded.

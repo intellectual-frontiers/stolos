@@ -19,7 +19,12 @@
  * @module
  */
 
-import { tsLiteral } from "../core/ts-literal.ts";
+import {
+  formatJson5Error,
+  type Literal,
+  parseJson5,
+  tsLiteral,
+} from "@intellectual-frontiers/ifc-ts/kernel";
 import type { AdoptedDef } from "../capabilities/adopted.ts";
 import type { HostPlan, SpecId } from "../model/types.ts";
 import { type Edit, editText, type Proposal, type ProposalItem } from "./types.ts";
@@ -54,11 +59,8 @@ export function checkEdits(plan: HostPlan, items: ProposalItem[]): EditCheck[] {
         case "units.enable":
         case "units.disable":
         case "units.mask": {
-          const want = e.op === "units.enable"
-            ? "enabled"
-            : e.op === "units.disable"
-            ? "disabled"
-            : "masked";
+          const want =
+            e.op === "units.enable" ? "enabled" : e.op === "units.disable" ? "disabled" : "masked";
           const u = plan.units.find((x) => x.unitName === e.unit);
           if (!u) c("new");
           else if (u.state === want) c("already", `the model already sets ${e.unit} ${want}`);
@@ -97,8 +99,11 @@ export function checkEdits(plan: HostPlan, items: ProposalItem[]): EditCheck[] {
 
 /** The adopted() definition for the new edits. */
 export function adoptedDef(proposal: string, spec: SpecId, edits: Edit[]): AdoptedDef {
-  const packages: string[] = [], snaps: string[] = [];
-  const enable: string[] = [], disable: string[] = [], mask: string[] = [];
+  const packages: string[] = [],
+    snaps: string[] = [];
+  const enable: string[] = [],
+    disable: string[] = [],
+    mask: string[] = [];
   const ports: NonNullable<AdoptedDef["ports"]> = [];
   const files: NonNullable<AdoptedDef["files"]> = [];
   for (const e of edits) {
@@ -154,6 +159,17 @@ function closing(text: string, open: number): number {
 }
 
 /**
+ * A model value as the kernel's `Literal`: `AdoptedDef` (capabilities/adopted.ts) is an interface, which has no index
+ * signature, so it is not a `Literal` as it is; its JSON, read back, is the same value (a commons gap:
+ * `tsLiteral` taking any JSON-shaped type).
+ */
+function literalOf(v: object): Literal {
+  const parsed = parseJson5(JSON.stringify(v));
+  if (parsed.kind === "err") throw new Error(`not JSON: ${formatJson5Error(parsed.error)}`);
+  return parsed.value;
+}
+
+/**
  * host.ts with `adopted({...})` added to its `capabilities` and its import, or
  * the reason it cannot be edited safely. `capabilities: foundation(),` becomes
  * a list that spreads it; an existing list gets one more entry.
@@ -163,11 +179,12 @@ export function addAdopted(
   d: AdoptedDef,
   comment: string,
 ): { text: string } | { problem: string } {
-  const call = `    // ${comment}\n    adopted(${tsLiteral(d, 2)}),\n`;
+  const call = `    // ${comment}\n    adopted(${tsLiteral(literalOf(d), 2)}),\n`;
   let text: string;
   const simple = /^(\s*)capabilities:\s*foundation\(\),\s*$/m.exec(source);
   if (simple) {
-    text = source.slice(0, simple.index) +
+    text =
+      source.slice(0, simple.index) +
       `${simple[1]}capabilities: [\n    ...foundation(),\n${call}  ],` +
       source.slice(simple.index + simple[0].length);
   } else {
@@ -190,25 +207,38 @@ export function addAdopted(
 
 /** Add `adopted` to the import from the engine's capabilities (or a new import). */
 function withImport(text: string): string {
-  if (/\badopted\b[^(]*\bfrom\s+"[^"]*capabilities\/(mod|adopted)\.ts"/.test(text)) return text;
-  const m = /import\s*\{([^}]*)\}\s*from\s*"([^"]*capabilities\/mod\.ts)";/.exec(text);
-  if (m) {
-    const names = [...new Set([...m[1].split(",").map((s) => s.trim()).filter(Boolean), "adopted"])]
-      .sort((a, b) => a.localeCompare(b));
-    return text.slice(0, m.index) + `import { ${names.join(", ")} } from "${m[2]}";` +
-      text.slice(m.index + m[0].length);
+  if (/\badopted\b[^(]*\bfrom\s+"[^"]*capabilities\/(mod|adopted)(\.ts)?"/.test(text)) return text;
+  const m = /import\s*\{([^}]*)\}\s*from\s*"([^"]*capabilities\/mod(?:\.ts)?)";/.exec(text);
+  const [whole, listed, from] = m ?? [];
+  if (m && whole !== undefined && listed !== undefined && from !== undefined) {
+    const names = [
+      ...new Set([
+        ...listed
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+        "adopted",
+      ]),
+    ].sort((a, b) => a.localeCompare(b));
+    return (
+      text.slice(0, m.index) +
+      `import { ${names.join(", ")} } from "${from}";` +
+      text.slice(m.index + whole.length)
+    );
   }
-  const imports = [...text.matchAll(/^import .*;$/gm)];
-  const at = imports.length
-    ? imports[imports.length - 1].index! + imports[imports.length - 1][0].length
-    : 0;
-  return text.slice(0, at) + `\nimport { adopted } from "@stolos/archon/capabilities/mod.ts";` +
-    text.slice(at);
+  const last = [...text.matchAll(/^import .*;$/gm)].at(-1);
+  const at = last ? last.index + last[0].length : 0;
+  return (
+    text.slice(0, at) +
+    `\nimport { adopted } from "@intellectual-frontiers/stolos/archon/capabilities/mod";` +
+    text.slice(at)
+  );
 }
 
 /** A unified-looking diff of two texts: the changed middle, with a little context. */
 export function lineDiff(a: string, b: string, context = 2): string {
-  const x = a.split("\n"), y = b.split("\n");
+  const x = a.split("\n"),
+    y = b.split("\n");
   let s = 0;
   while (s < x.length && s < y.length && x[s] === y[s]) s++;
   let e = 0;
@@ -231,12 +261,17 @@ export function nextSpecNumber(names: string[]): number {
 
 /** A spec id from its number, the host, and the reason: `096-alpha-nginx-for-the-app`. */
 export function specId(n: number, host: string, reason: string): SpecId {
-  const words = reason.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim().split(" ").filter(Boolean)
-    .slice(0, 5).join("-");
-  return `${String(n).padStart(3, "0")}-${host}-${words || "adopted"}`.slice(0, 48).replace(
-    /-+$/,
-    "",
-  ) as SpecId;
+  const words = reason
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 5)
+    .join("-");
+  return `${String(n).padStart(3, "0")}-${host}-${words || "adopted"}`
+    .slice(0, 48)
+    .replace(/-+$/, "") as SpecId;
 }
 
 /** The draft spec an acceptance writes: why (the reason), what (each edit), what stays local or by hand, and the evidence. */
@@ -252,31 +287,33 @@ export function draftSpec(
   const already = checks.filter((c) => c.status === "already");
   const local = p.items.filter((i) => i.action === "local");
   const revert = p.items.filter((i) => i.action === "revert");
-  const byHand = p.items.filter((i) =>
-    i.action === "adopt" && i.manual && !skipped.includes(i.key)
+  const byHand = p.items.filter(
+    (i) => i.action === "adopt" && i.manual && !skipped.includes(i.key),
   );
   const obs = new Map(p.observations.map((o) => [o.id, o]));
   const lines = [
     `# ${n}: ${p.reason} (${p.host})`,
     "",
-    `Draft written by \`stolos proposal accept\` (spec 095) from proposal \`${p.id}\`, accepted by ${accepted.by} on ${
-      accepted.at.slice(0, 10)
-    }. Review it, edit it, then \`stolos apply\`.`,
+    `Draft written by \`stolos proposal accept\` (spec 095) from proposal \`${p.id}\`, accepted by ${accepted.by} on ${accepted.at.slice(
+      0,
+      10,
+    )}. Review it, edit it, then \`stolos apply\`.`,
     "",
     "## Why",
     "",
     p.reason,
     "",
-    `Proposed by ${p.by} on ${p.host} at ${
-      p.at.slice(0, 16).replace("T", " ")
-    } UTC, from model commit \`${p.base.slice(0, 12) || "unknown"}\`.`,
+    `Proposed by ${p.by} on ${p.host} at ${p.at
+      .slice(0, 16)
+      .replace("T", " ")} UTC, from model commit \`${p.base.slice(0, 12) || "unknown"}\`.`,
     "",
     "## Requirements",
     "",
     ...(newOnes.length
-      ? newOnes.map((c, i) =>
-        `- **FR-${String(i + 1).padStart(3, "0")}** ${p.host}: \`${editText(c.edit)}\` (${c.key})`
-      )
+      ? newOnes.map(
+          (c, i) =>
+            `- **FR-${String(i + 1).padStart(3, "0")}** ${p.host}: \`${editText(c.edit)}\` (${c.key})`,
+        )
       : ["- Nothing new for the model (see below)."]),
     "",
   ];
@@ -309,27 +346,23 @@ export function draftSpec(
       "## By hand",
       "",
       ...byHand.map((i) => `- ${i.key}: ${i.manual}`),
-      ...skipped.map((k) =>
-        `- ${k}: skipped at acceptance (a conflict with the model); still flagged on the host`
+      ...skipped.map(
+        (k) =>
+          `- ${k}: skipped at acceptance (a conflict with the model); still flagged on the host`,
       ),
       "",
     );
   }
   const flags = p.items.filter((i) => i.flag);
   if (flags.length) {
-    lines.push(
-      "## Constitution flags",
-      "",
-      ...flags.map((i) => `- ${i.key}: ${i.flag}`),
-      "",
-    );
+    lines.push("## Constitution flags", "", ...flags.map((i) => `- ${i.key}: ${i.flag}`), "");
   }
   lines.push("## Evidence", "");
   for (const it of p.items) {
     lines.push(
-      `- ${it.key} (${it.change}${it.who ? ` by ${it.who}` : ""}, ${
-        it.at.slice(0, 16).replace("T", " ")
-      } UTC)`,
+      `- ${it.key} (${it.change}${it.who ? ` by ${it.who}` : ""}, ${it.at
+        .slice(0, 16)
+        .replace("T", " ")} UTC)`,
     );
     for (const id of it.evidence.slice(0, 5)) {
       const o = obs.get(id);

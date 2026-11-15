@@ -95,7 +95,7 @@ export interface Instance {
   /** Its major version: the record's, else the model's, else Ubuntu's. */
   version: number;
   /** undefined until allocated (first ensure). */
-  port?: number;
+  port?: number | undefined;
   /** Shown in the psql prompt (default production). */
   environment: string;
   /** psql turns AUTOCOMMIT off and warns (default true for production). */
@@ -107,13 +107,13 @@ export interface Instance {
   /** In the host's model file (else only recorded by an operator's ensure). */
   inModel: boolean;
   /** The host's record of it, when Archon created it. */
-  record?: PgRecord;
+  record?: PgRecord | undefined;
   /** Whether it is published: reachable on the server's address over TLS. */
   published: boolean;
 }
 
 /** Whether an operator turned PostgreSQL on for this host (an opt-in service, spec 040). */
-export const pgOn = (host: HostDef): boolean => host.optIn?.pg?.enabled === true;
+export const pgOn = (host: HostDef): boolean => host.optIn?.["pg"]?.enabled === true;
 /** postgresql-common's umbrella unit: every cluster is PartOf it; the opt-in switch masks it. */
 export const PG_UNIT = "postgresql.service";
 
@@ -156,11 +156,13 @@ export function principals(d: PgDatabaseDef): string[] {
  * not roles: their members are.
  */
 export function rolesFor(dbs: PgDatabaseDef[], users: UserDef[], services: ServiceDef[]): Role[] {
-  const out: Role[] = users.filter((u) => u.name !== "ops").map((u) => ({
-    name: u.name,
-    kind: "human" as const,
-    admin: u.admin,
-  }));
+  const out: Role[] = users
+    .filter((u) => u.name !== "ops")
+    .map((u) => ({
+      name: u.name,
+      kind: "human" as const,
+      admin: u.admin,
+    }));
   for (const p of dbs.flatMap(principals)) {
     if (p.startsWith("@") || out.some((r) => r.name === p)) continue;
     if (services.some((s) => s.name === p)) out.push({ name: p, kind: "service", admin: false });
@@ -188,7 +190,7 @@ export const ANYWHERE = ["0.0.0.0/0", "::/0"];
 /** conf.d/50-archon.conf: everything Archon sets; the rest is Ubuntu's (Article 2). */
 export function archonConf(
   i: Pick<Instance, "name" | "version" | "environment" | "protected" | "published">,
-  opts: { address?: string; tls?: { cert: string; key: string } } = {},
+  opts: { address?: string | undefined; tls?: { cert: string; key: string } | undefined } = {},
 ): string {
   const listen = i.published && opts.address ? `localhost,${opts.address}` : "localhost";
   const lines = [
@@ -231,10 +233,10 @@ export function hbaConf(published: boolean, from: string[]): string {
     "host     all       all       ::1/128          scram-sha-256",
     ...(published
       ? [
-        "hostssl  all       postgres  0.0.0.0/0        reject",
-        "hostssl  all       postgres  ::/0             reject",
-        ...from.map((n) => `hostssl  all       all       ${n.padEnd(16)} scram-sha-256`),
-      ]
+          "hostssl  all       postgres  0.0.0.0/0        reject",
+          "hostssl  all       postgres  ::/0             reject",
+          ...from.map((n) => `hostssl  all       all       ${n.padEnd(16)} scram-sha-256`),
+        ]
       : []),
     "",
   ];
@@ -339,8 +341,9 @@ export function desiredMembers(
 ): { write: string[]; read: string[] } {
   const known = new Set(roles.map((r) => r.name));
   const expand = (xs: string[] = []) =>
-    [...new Set(xs.flatMap((x) => x.startsWith("@") ? members(x.slice(1)) : [x]))]
-      .filter((x) => known.has(x) && x !== d.owner).sort();
+    [...new Set(xs.flatMap((x) => (x.startsWith("@") ? members(x.slice(1)) : [x])))]
+      .filter((x) => known.has(x) && x !== d.owner)
+      .sort();
   const write = expand(d.write);
   return { write, read: expand(d.read).filter((x) => !write.includes(x)) };
 }
@@ -348,12 +351,12 @@ export function desiredMembers(
 /** GRANT and REVOKE so a group role's members are exactly `want`. */
 export function membershipSql(group: string, want: string[], have: string[]): string[] {
   return [
-    ...want.filter((m) => !have.includes(m)).map((m) =>
-      `GRANT ${quoteIdent(group)} TO ${quoteIdent(m)};`
-    ),
-    ...have.filter((m) => !want.includes(m)).map((m) =>
-      `REVOKE ${quoteIdent(group)} FROM ${quoteIdent(m)};`
-    ),
+    ...want
+      .filter((m) => !have.includes(m))
+      .map((m) => `GRANT ${quoteIdent(group)} TO ${quoteIdent(m)};`),
+    ...have
+      .filter((m) => !want.includes(m))
+      .map((m) => `REVOKE ${quoteIdent(group)} FROM ${quoteIdent(m)};`),
   ];
 }
 
@@ -374,9 +377,7 @@ export async function scramVerifier(
     enc.encode(password.normalize("NFKC")),
     "PBKDF2",
     false,
-    [
-      "deriveBits",
-    ],
+    ["deriveBits"],
   );
   const salted = new Uint8Array(
     await crypto.subtle.deriveBits(
@@ -405,16 +406,19 @@ export async function scramVerifier(
 
 /** Whether a stored SCRAM verifier was made from this password (its own salt and rounds). */
 export async function scramMatches(verifier: string, password: string): Promise<boolean> {
-  const m = verifier.match(/^SCRAM-SHA-256\$(\d+):([^$]+)\$/);
-  if (!m) return false;
-  const salt = Uint8Array.from(atob(m[2]), (c) => c.charCodeAt(0));
-  return (await scramVerifier(password, salt, Number(m[1]))) === verifier;
+  const [, rounds, saltB64] = verifier.match(/^SCRAM-SHA-256\$(\d+):([^$]+)\$/) ?? [];
+  if (rounds === undefined || saltB64 === undefined) return false;
+  const salt = Uint8Array.from(atob(saltB64), (c) => c.charCodeAt(0));
+  return (await scramVerifier(password, salt, Number(rounds))) === verifier;
 }
 
 /** A new password: 32 random bytes, URL-safe, no characters .pgpass would need escaped. */
 export function newPassword(): string {
   const b = crypto.getRandomValues(new Uint8Array(32));
-  return btoa(String.fromCharCode(...b)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  return btoa(String.fromCharCode(...b))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
 }
 
 /** The app contract's JSON (spec 038 FR-019, spec 039): stable keys, nothing secret. */
@@ -445,8 +449,10 @@ export function defaultDatabase(
 ): string {
   const has = (xs: string[] = []) =>
     xs.some((x) => x === role || (x.startsWith("@") && inGroup(x.slice(1))));
-  const d = i.databases.find((d) => d.owner === role) ??
-    i.databases.find((d) => has(d.write)) ?? i.databases.find((d) => has(d.read));
+  const d =
+    i.databases.find((d) => d.owner === role) ??
+    i.databases.find((d) => has(d.write)) ??
+    i.databases.find((d) => has(d.read));
   return d?.name ?? "postgres";
 }
 
@@ -457,18 +463,24 @@ export function defaultDatabase(
 export function connectInfo(
   i: Pick<Instance, "name" | "port" | "published" | "databases">,
   role: string,
-  o: { publishedHost?: string; remote?: boolean; inGroup?: (g: string) => boolean } = {},
+  o: {
+    publishedHost?: string | undefined;
+    remote?: boolean;
+    inGroup?: (g: string) => boolean;
+  } = {},
 ): ConnectInfo {
-  const remote = !!o.remote && i.published && !!o.publishedHost;
+  const publishedHost = i.published ? o.publishedHost : undefined;
+  const remote = o.remote === true && publishedHost !== undefined && publishedHost !== "";
+  const port = i.port ?? PG.firstPort; // libpq's default where no port is recorded yet
   return {
     service: i.name,
-    host: remote ? o.publishedHost! : PG.socketDir,
-    port: i.port!,
+    host: remote ? publishedHost : PG.socketDir,
+    port,
     user: role,
     database: defaultDatabase(i, role, o.inGroup),
     sslmode: remote ? "verify-full" : "disable",
-    ...(i.published && o.publishedHost
-      ? { published: { host: o.publishedHost, port: i.port!, sslmode: "verify-full" as const } }
+    ...(publishedHost
+      ? { published: { host: publishedHost, port, sslmode: "verify-full" as const } }
       : {}),
   };
 }
@@ -496,13 +508,15 @@ export function systemServices(instances: Array<Pick<Instance, "name" | "port">>
   return [
     "# Rendered by archon from spec 039-pg-identity. Do not edit.",
     "# psql service=<instance>: your own role over the socket (peer, no password).",
-    ...instances.filter((i) => i.port).flatMap((i) => [
-      "",
-      `[${i.name}]`,
-      `host=${PG.socketDir}`,
-      `port=${i.port}`,
-      "dbname=postgres",
-    ]),
+    ...instances
+      .filter((i) => i.port)
+      .flatMap((i) => [
+        "",
+        `[${i.name}]`,
+        `host=${PG.socketDir}`,
+        `port=${i.port}`,
+        "dbname=postgres",
+      ]),
     "",
   ].join("\n");
 }
@@ -519,9 +533,9 @@ export function sudoersPg(services: string[]): string {
     "%archon-ops ALL=(postgres) /usr/bin/psql, /usr/bin/psql *",
     ...(services.length
       ? [
-        "# Act as an app's own account to see exactly what it sees.",
-        `%archon-ops ALL=(${services.join(", ")}) /usr/bin/psql, /usr/bin/psql *`,
-      ]
+          "# Act as an app's own account to see exactly what it sees.",
+          `%archon-ops ALL=(${services.join(", ")}) /usr/bin/psql, /usr/bin/psql *`,
+        ]
       : []),
     "",
   ].join("\n");
@@ -548,11 +562,14 @@ export function upsertSection(file: string, name: string, block: string): string
     return (base ? base + "\n\n" : "") + block;
   }
   let end = start + 1;
-  while (end < lines.length && !/^\s*\[.+\]\s*$/.test(lines[end])) end++;
+  while (end < lines.length && !/^\s*\[.+\]\s*$/.test(lines[end] ?? "")) end++;
   const before = lines.slice(0, start).join("\n");
   const after = lines.slice(end).join("\n").replace(/^\n+/, "");
-  return [before.replace(/\n*$/, ""), block.replace(/\n*$/, ""), after]
-    .filter((x) => x.length).join("\n\n") + "\n";
+  return (
+    [before.replace(/\n*$/, ""), block.replace(/\n*$/, ""), after]
+      .filter((x) => x.length)
+      .join("\n\n") + "\n"
+  );
 }
 
 /** Replace (or add) the .pgpass line for host:port:*:user. */
@@ -582,18 +599,22 @@ export interface Cluster {
 
 /** Parse `pg_lsclusters --no-header` output, skipping lines that are not clusters. */
 export function parseClusters(out: string): Cluster[] {
-  return out.split("\n").map((l) => l.trim().split(/\s+/)).filter((f) =>
-    f.length >= 6 && /^\d+$/.test(f[0])
-  )
-    .map((f) => ({
-      version: Number(f[0]),
-      name: f[1],
-      port: Number(f[2]),
-      status: f[3],
-      owner: f[4],
-      data: f[5],
-      log: f[6] ?? "",
-    }));
+  const found: Cluster[] = [];
+  for (const line of out.split("\n")) {
+    const [version, name, port, status, owner, data, log = ""] = line.trim().split(/\s+/);
+    if (
+      version === undefined ||
+      !/^\d+$/.test(version) ||
+      name === undefined ||
+      port === undefined ||
+      status === undefined ||
+      owner === undefined ||
+      data === undefined
+    )
+      continue;
+    found.push({ version: Number(version), name, port: Number(port), status, owner, data, log });
+  }
+  return found;
 }
 
 /**
@@ -603,15 +624,21 @@ export function parseClusters(out: string): Cluster[] {
 export function ownership(
   i: Pick<Instance, "name" | "record">,
   clusters: Cluster[],
-): { kind: "owned"; cluster?: Cluster } | { kind: "absent" } | {
-  kind: "foreign";
-  cluster: Cluster;
-} {
+):
+  | { kind: "owned"; cluster?: Cluster }
+  | { kind: "absent" }
+  | {
+      kind: "foreign";
+      cluster: Cluster;
+    } {
   const same = clusters.filter((c) => c.name === i.name);
-  if (i.record) {
-    return { kind: "owned", cluster: same.find((c) => c.version === i.record!.version) };
+  const record = i.record;
+  if (record) {
+    const cluster = same.find((c) => c.version === record.version);
+    return cluster ? { kind: "owned", cluster } : { kind: "owned" };
   }
-  if (same.length) return { kind: "foreign", cluster: same[0] };
+  const [first] = same;
+  if (first) return { kind: "foreign", cluster: first };
   return { kind: "absent" };
 }
 

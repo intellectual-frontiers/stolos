@@ -9,6 +9,7 @@
  * @module
  */
 
+import { json, record, unknownValue } from "@intellectual-frontiers/ifc-ts/kernel";
 import { redact } from "../notify/redact.ts";
 import type { Alert, Observation, SubjectKind } from "./types.ts";
 
@@ -57,14 +58,12 @@ export function parseSudoJournal(text: string): SudoEntry[] {
   const out: SudoEntry[] = [];
   for (const line of text.split("\n")) {
     if (!line.trim()) continue;
-    let j: Record<string, unknown>;
-    try {
-      j = JSON.parse(line);
-    } catch {
-      continue;
-    }
-    const msg = typeof j.MESSAGE === "string" ? j.MESSAGE : "";
+    const entry = json(line, record(unknownValue));
+    if (entry.kind === "err") continue;
+    const j = entry.value;
+    const msg = typeof j["MESSAGE"] === "string" ? j["MESSAGE"] : "";
     const m = /^\s*(\S+) : (.*)$/.exec(msg);
+    const [, sudoer = "", detail = ""] = m ?? [];
     if (
       !m ||
       /incorrect password|command not allowed|NOT in sudoers|a password is required/i.test(msg)
@@ -72,19 +71,19 @@ export function parseSudoJournal(text: string): SudoEntry[] {
       continue;
     }
     const fields: Record<string, string> = {};
-    for (const part of m[2].split(" ; ")) {
+    for (const part of detail.split(" ; ")) {
       const i = part.indexOf("=");
       if (i > 0) fields[part.slice(0, i).trim()] = part.slice(i + 1);
     }
-    const command = fields.COMMAND;
+    const command = fields["COMMAND"];
     if (!command || isArchonCommand(command)) continue;
-    const us = Number(j.__REALTIME_TIMESTAMP ?? 0) / 1000;
+    const us = Number(j["__REALTIME_TIMESTAMP"] ?? 0) / 1000;
     out.push({
-      who: m[1],
+      who: sudoer,
       at: iso(us || Date.now()),
       command,
-      as: fields.USER ?? "root",
-      pwd: fields.PWD ?? "",
+      as: fields["USER"] ?? "root",
+      pwd: fields["PWD"] ?? "",
     });
   }
   return out;
@@ -97,7 +96,8 @@ export function commandTargets(command: string): Array<{ kind: SubjectKind; name
   const args = words.slice(1).filter((w) => !w.startsWith("-"));
   const out: Array<{ kind: SubjectKind; name: string }> = [];
   if (
-    /^(apt|apt-get|aptitude)$/.test(bin) && /^(install|reinstall|remove|purge)$/.test(args[0] ?? "")
+    /^(apt|apt-get|aptitude)$/.test(bin) &&
+    /^(install|reinstall|remove|purge)$/.test(args[0] ?? "")
   ) {
     for (const p of args.slice(1)) out.push({ kind: "package", name: p.replace(/[:=].*$/, "") });
   }
@@ -114,7 +114,7 @@ export function commandTargets(command: string): Array<{ kind: SubjectKind; name
   }
   if (bin === "ufw" || bin === "nft" || bin === "iptables") out.push({ kind: "port", name: "*" });
   if (/^(useradd|adduser|usermod|userdel|deluser)$/.test(bin) && args.length) {
-    out.push({ kind: "user", name: args[args.length - 1] });
+    out.push({ kind: "user", name: args.at(-1) ?? "" });
   }
   if (bin === "visudo") out.push({ kind: "sudoer", name: "*" });
   if (/^(modprobe|insmod|rmmod)$/.test(bin) && args[0]) {
@@ -169,36 +169,38 @@ export async function parseAptHistory(text: string): Promise<Observation[]> {
       const i = line.indexOf(": ");
       if (i > 0) f[line.slice(0, i).trim()] = line.slice(i + 2).trim();
     }
-    if (!f["Start-Date"]) continue;
-    const at = localTime(f["Start-Date"]);
+    const started = f["Start-Date"];
+    if (!started) continue;
+    const at = localTime(started);
     const who = f["Requested-By"]?.split(/\s+/)[0];
-    const cmd = f.Commandline ?? "";
+    const cmd = f["Commandline"] ?? "";
     if (/unattended-upgrade/.test(cmd)) continue;
-    for (
-      const [field, change] of [["Install", "installed"], ["Remove", "removed"], [
-        "Purge",
-        "purged",
-      ]]
-    ) {
+    for (const [field, change] of [
+      ["Install", "installed"],
+      ["Remove", "removed"],
+      ["Purge", "purged"],
+    ] as const) {
       for (const m of (f[field] ?? "").matchAll(PKG)) {
-        if (m[2].includes("automatic")) continue;
+        const [, pkg = "", note = ""] = m;
+        if (note.includes("automatic")) continue;
         out.push({
-          id: await obsId("apt", at, field, m[1]),
+          id: await obsId("apt", at, field, pkg),
           source: "apt",
           at,
           ...(who ? { who } : {}),
           kind: "package",
-          name: m[1],
+          name: pkg,
           change,
-          what: `${m[1]} ${change}${who ? ` by ${who}` : ""}${cmd ? ` (${redact(cmd)})` : ""}`,
+          what: `${pkg} ${change}${who ? ` by ${who}` : ""}${cmd ? ` (${redact(cmd)})` : ""}`,
           evidence: redact(
             [
-              `Start-Date: ${f["Start-Date"]}`,
+              `Start-Date: ${started}`,
               cmd && `Commandline: ${cmd}`,
               who && `Requested-By: ${f["Requested-By"]}`,
               `${field}: ${m[0]}`,
             ]
-              .filter(Boolean).join("\n"),
+              .filter(Boolean)
+              .join("\n"),
           ),
         });
       }
@@ -212,31 +214,30 @@ export async function parseAptHistory(text: string): Promise<Observation[]> {
  * 1.26.0`): installs and removals. Only those apt's history does not explain
  * are kept (a `dpkg -i` of a downloaded .deb); `aptAt` is apt's install times.
  */
-export async function parseDpkgLog(
-  text: string,
-  apt: Observation[] = [],
-): Promise<Observation[]> {
+export async function parseDpkgLog(text: string, apt: Observation[] = []): Promise<Observation[]> {
   const known = new Set(
     apt.map((o) => `${o.name}:${o.change === "installed" ? "install" : "remove"}`),
   );
   const out: Observation[] = [];
   for (const line of text.split("\n")) {
     const m =
-      /^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) (install|remove|purge) ([^:\s]+)(?::\S+)? (\S+) (\S+)/
-        .exec(line);
+      /^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) (install|remove|purge) ([^:\s]+)(?::\S+)? (\S+) (\S+)/.exec(
+        line,
+      );
     if (!m) continue;
-    const kind = m[2] === "install" ? "install" : "remove";
-    if (known.has(`${m[3]}:${kind}`)) continue;
-    const at = localTime(m[1]);
+    const [, stamp = "", action = "", pkg = ""] = m;
+    const kind = action === "install" ? "install" : "remove";
+    if (known.has(`${pkg}:${kind}`)) continue;
+    const at = localTime(stamp);
     out.push({
-      id: await obsId("dpkg", m[1], m[2], m[3]),
+      id: await obsId("dpkg", stamp, action, pkg),
       source: "dpkg",
       at,
       kind: "package",
-      name: m[3],
-      change: m[2] === "install" ? "installed" : m[2] === "remove" ? "removed" : "purged",
-      what: `${m[3]} ${
-        m[2] === "install" ? "installed" : "removed"
+      name: pkg,
+      change: action === "install" ? "installed" : action === "remove" ? "removed" : "purged",
+      what: `${pkg} ${
+        action === "install" ? "installed" : "removed"
       } with dpkg directly (not through apt)`,
       evidence: line.trim(),
     });
@@ -266,13 +267,14 @@ export function parseEtckeeperLog(text: string): EtcCommit[] {
   const out: EtcCommit[] = [];
   for (const rec of text.split("\x1e")) {
     if (!rec.trim()) continue;
-    const [head, ...rest] = rec.split("\n");
+    const [head = "", ...rest] = rec.split("\n");
     const [hash, author, at, subject] = head.split("\x1f");
     if (!hash || !at) continue;
     if (/^archon apply\b/.test(subject ?? "")) continue;
-    const files = rest.map((l) => /^([AMDRT])\d*\t(?:[^\t]+\t)?(.+)$/.exec(l.trim())).filter((
-      m,
-    ): m is RegExpExecArray => !!m).map((m) => ({ status: m[1], path: `/etc/${m[2]}` }));
+    const files = rest
+      .map((l) => /^([AMDRT])\d*\t(?:[^\t]+\t)?(.+)$/.exec(l.trim()))
+      .filter((m): m is RegExpExecArray => !!m)
+      .map((m) => ({ status: m[1] ?? "", path: `/etc/${m[2] ?? ""}` }));
     out.push({
       hash,
       author: author ?? "",
@@ -286,8 +288,11 @@ export function parseEtckeeperLog(text: string): EtcCommit[] {
 
 /** Commits made for Ubuntu (unattended upgrades, apt run by root on its own), not by a person. */
 export function isUbuntuCommit(c: EtcCommit): boolean {
-  return c.author === "root" && !/^daily autocommit/.test(c.subject) &&
-    /committing changes in \/etc (made by|after) /.test(c.subject);
+  return (
+    c.author === "root" &&
+    !/^daily autocommit/.test(c.subject) &&
+    /committing changes in \/etc (made by|after) /.test(c.subject)
+  );
 }
 
 /** etckeeper commits as file observations (who is the commit's author unless it is root). */
@@ -345,14 +350,20 @@ export function osquerySnapshot(
   rows: Record<keyof typeof OSQUERY_SQL, Array<Record<string, string>>>,
   at: string,
 ): OsquerySnapshot {
-  const proto = (p: string) => p === "17" ? "udp" : p === "6" ? "tcp" : p;
+  const proto = (p: string) => (p === "17" ? "udp" : p === "6" ? "tcp" : p);
   return {
     at,
-    packages: Object.fromEntries(rows.packages.map((r) => [r.name, r.version])),
-    users: Object.fromEntries(rows.users.map((r) => [r.username, `${r.uid} ${r.shell}`])),
-    sudoers: rows.sudoers.map((r) => `${r.source}: ${r.header} ${r.rule_details}`.trim()).sort(),
-    ports: [...new Set(rows.ports.map((r) => `${proto(String(r.protocol))}/${r.port}`))].sort(),
-    modules: rows.modules.map((r) => r.name).sort(),
+    packages: Object.fromEntries(rows.packages.map((r) => [r["name"] ?? "", r["version"] ?? ""])),
+    users: Object.fromEntries(
+      rows.users.map((r) => [r["username"] ?? "", `${r["uid"] ?? ""} ${r["shell"] ?? ""}`]),
+    ),
+    sudoers: rows.sudoers
+      .map((r) => `${r["source"]}: ${r["header"]} ${r["rule_details"]}`.trim())
+      .sort(),
+    ports: [
+      ...new Set(rows.ports.map((r) => `${proto(String(r["protocol"]))}/${r["port"]}`)),
+    ].sort(),
+    modules: rows.modules.map((r) => r["name"] ?? "").sort(),
   };
 }
 
@@ -370,13 +381,15 @@ export async function osqueryDiff(
       kind,
       name,
       change,
-      what: `${kind} ${name} ${change} (osquery, between ${before.at.slice(0, 16)} and ${
-        after.at.slice(0, 16)
-      })`,
+      what: `${kind} ${name} ${change} (osquery, between ${before.at.slice(0, 16)} and ${after.at.slice(
+        0,
+        16,
+      )})`,
       evidence: redact(evidence),
     });
   const sets = (a: string[], b: string[]) => {
-    const sa = new Set(a), sb = new Set(b);
+    const sa = new Set(a),
+      sb = new Set(b);
     return { added: b.filter((x) => !sa.has(x)), removed: a.filter((x) => !sb.has(x)) };
   };
   const pk = sets(Object.keys(before.packages), Object.keys(after.packages));
@@ -409,9 +422,13 @@ export interface UnitFileState {
 export function parseUnitFiles(text: string): Record<string, UnitFileState> {
   const out: Record<string, UnitFileState> = {};
   for (const line of text.split("\n")) {
-    const f = line.trim().split(/\s+/);
-    if (f.length >= 2 && /\.(service|timer|socket|path|mount|target)$/.test(f[0])) {
-      out[f[0]] = { state: f[1], preset: f[2] ?? "" };
+    const [unit, state, preset = ""] = line.trim().split(/\s+/);
+    if (
+      unit !== undefined &&
+      state !== undefined &&
+      /\.(service|timer|socket|path|mount|target)$/.test(unit)
+    ) {
+      out[unit] = { state, preset };
     }
   }
   return out;
@@ -426,15 +443,16 @@ export async function parseSnapChanges(text: string, at: string): Promise<Observ
   const out: Observation[] = [];
   for (const line of text.split("\n").slice(1)) {
     const m = /^(\d+)\s+(Done|Doing|Error|Undone)\s.*\s(Install|Remove) "([^"]+)" snap/.exec(line);
-    if (!m || m[2] !== "Done") continue;
+    const [, change = "", status, op, snap = ""] = m ?? [];
+    if (status !== "Done") continue;
     out.push({
-      id: await obsId("snap", m[1], m[4]),
+      id: await obsId("snap", change, snap),
       source: "snap",
       at,
       kind: "snap",
-      name: m[4],
-      change: m[3] === "Install" ? "installed" : "removed",
-      what: `snap ${m[4]} ${m[3] === "Install" ? "installed" : "removed"} (snap change ${m[1]})`,
+      name: snap,
+      change: op === "Install" ? "installed" : "removed",
+      what: `snap ${snap} ${op === "Install" ? "installed" : "removed"} (snap change ${change})`,
       evidence: line.trim(),
     });
   }
@@ -443,9 +461,9 @@ export async function parseSnapChanges(text: string, at: string): Promise<Observ
 
 /** `dpkg -S <paths>`'s errors: the files no package owns (`dpkg-query: no path found matching pattern /x`). */
 export function parseDpkgSearch(stderr: string): string[] {
-  return [
-    ...stderr.matchAll(/no path found matching pattern (\/\S+)/g),
-  ].map((m) => m[1]).sort();
+  return [...stderr.matchAll(/no path found matching pattern (\/\S+)/g)]
+    .map((m) => m[1] ?? "")
+    .sort();
 }
 
 /**
@@ -460,13 +478,15 @@ export function parseModified(text: string, at: string): Alert[] {
     if (!t.trim()) continue;
     const v = /^(\S{9}) (.) (\/.+)$/.exec(t);
     if (v) {
-      if (v[2] === "c" || v[1][2] !== "5") continue;
-      out.push({ path: v[3], at, evidence: t });
+      const [, flags = "", type, path = ""] = v;
+      if (type === "c" || flags[2] !== "5") continue;
+      out.push({ path, at, evidence: t });
       continue;
     }
-    const d = /^(?:debsums: changed file )?(\/\S+)(?: \(from (\S+) package\))?$/.exec(t.trim());
-    if (d && !d[1].startsWith("/etc/")) {
-      out.push({ path: d[1], ...(d[2] ? { package: d[2] } : {}), at, evidence: t.trim() });
+    const [, path, pkg] =
+      /^(?:debsums: changed file )?(\/\S+)(?: \(from (\S+) package\))?$/.exec(t.trim()) ?? [];
+    if (path !== undefined && !path.startsWith("/etc/")) {
+      out.push({ path, ...(pkg ? { package: pkg } : {}), at, evidence: t.trim() });
     }
   }
   return out;

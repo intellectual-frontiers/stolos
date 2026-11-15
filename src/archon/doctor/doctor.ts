@@ -9,8 +9,16 @@
  * @module
  */
 
-import { readTextOr } from "../core/fsx.ts";
-import { isRoot, run } from "../core/exec.ts";
+import {
+  array,
+  integer,
+  json,
+  number,
+  object,
+  string,
+} from "@intellectual-frontiers/ifc-ts/kernel";
+import { fs, proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
+import { run } from "../core/exec.ts";
 import { P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";
 import type { FleetDef, HostDef } from "../model/types.ts";
@@ -37,6 +45,21 @@ import {
 const t = (secs: number, argv: string[]) =>
   run(["timeout", String(secs), ...argv], { env: { LC_ALL: "C" } });
 
+/** `ip -j -4 addr show dev <dev>`, as far as the doctor reads it. */
+const IP_ADDR = array(
+  object({}, { addr_info: array(object({ local: string, prefixlen: integer })) }),
+);
+
+/** `ip -j -s link show dev <dev>`: its error counters. */
+const IP_LINK_STATS = array(
+  object(
+    {},
+    {
+      stats64: object({ rx: object({ errors: number }), tx: object({ errors: number }) }),
+    },
+  ),
+);
+
 /** The name archon doctor and its checks use to test DNS: Ubuntu's archive. */
 const ARCHIVE = "archive.ubuntu.com";
 
@@ -56,13 +79,15 @@ async function endpoints(fleet: FleetDef, host: HostDef): Promise<Endpoint[]> {
   const files: Array<{ name: string; text: string }> = [];
   const dir = "/etc/apt/sources.list.d";
   try {
-    for await (const e of Deno.readDir(dir)) {
+    for await (const e of fs.readDir(dir)) {
       if (/\.(sources|list)$/.test(e.name)) {
-        files.push({ name: e.name, text: (await readTextOr(`${dir}/${e.name}`)) ?? "" });
+        files.push({ name: e.name, text: (await fs.readTextOr(`${dir}/${e.name}`)) ?? "" });
       }
     }
-  } catch { /* no sources.list.d */ }
-  files.push({ name: "sources.list", text: (await readTextOr("/etc/apt/sources.list")) ?? "" });
+  } catch {
+    /* no sources.list.d */
+  }
+  files.push({ name: "sources.list", text: (await fs.readTextOr("/etc/apt/sources.list")) ?? "" });
   for (const r of aptRepos(files)) {
     out.push({ what: `apt ${new URL(r.uri).host} ${r.suite}`, url: inReleaseUrl(r) });
   }
@@ -71,7 +96,7 @@ async function endpoints(fleet: FleetDef, host: HostDef): Promise<Endpoint[]> {
   if (/^https:/.test(remote)) out.push({ what: "git remote", url: remote, anyHttp: true });
   out.push({
     what: "GitHub API (tools sync)",
-    url: `${Deno.env.get("ARCHON_GITHUB_API") ?? "https://api.github.com"}/rate_limit`,
+    url: `${proc.env.get("ARCHON_GITHUB_API") ?? "https://api.github.com"}/rate_limit`,
     // GitHub's API answers HEAD on /rate_limit with 404; a GET is what the tools sync does.
     get: true,
   });
@@ -105,7 +130,7 @@ async function endpoints(fleet: FleetDef, host: HostDef): Promise<Endpoint[]> {
  */
 export async function doctor(
   host: HostDef,
-  o: { trace: boolean; send?: string },
+  o: { trace: boolean; send?: string | undefined },
 ): Promise<number> {
   const fleet = await loadFleet();
   const ipv6Model = networkOf(fleet, host).ipv6;
@@ -114,9 +139,7 @@ export async function doctor(
   const l = ui.phase("Link");
   const routes = JSON.parse(
     (await run(["ip", "-j", "route", "show", "default"])).stdout || "[]",
-  ) as Array<
-    { gateway?: string; dev?: string }
-  >;
+  ) as Array<{ gateway?: string; dev?: string }>;
   const def = routes[0];
   let gateway: string | undefined;
   if (!def) {
@@ -127,7 +150,7 @@ export async function doctor(
   } else {
     gateway = def.gateway;
     const dev = def.dev ?? "?";
-    const sys = (f: string) => readTextOr(`/sys/class/net/${dev}/${f}`).then((x) => x?.trim());
+    const sys = (f: string) => fs.readTextOr(`/sys/class/net/${dev}/${f}`).then((x) => x?.trim());
     const [carrier, speed, duplex, mtu] = await Promise.all([
       sys("carrier"),
       sys("speed"),
@@ -143,12 +166,16 @@ export async function doctor(
         `ethtool ${dev}`,
       );
     }
-    const addr = JSON.parse(
+    const addrs = json(
       (await run(["ip", "-j", "-4", "addr", "show", "dev", dev])).stdout || "[]",
-    )?.[0]?.addr_info?.[0];
-    const stats = JSON.parse(
+      IP_ADDR,
+    );
+    const addr = addrs.kind === "ok" ? addrs.value[0]?.addr_info?.[0] : undefined;
+    const links = json(
       (await run(["ip", "-j", "-s", "link", "show", "dev", dev])).stdout || "[]",
-    )?.[0]?.stats64;
+      IP_LINK_STATS,
+    );
+    const stats = links.kind === "ok" ? links.value[0]?.stats64 : undefined;
     const errs = stats ? stats.rx.errors + stats.tx.errors : 0;
     if (errs) {
       l.warn(
@@ -181,7 +208,7 @@ export async function doctor(
         "packet loss on the LAN: cable, switch port, Wi-Fi bridge",
       );
     }
-    const mtu = Number(await readTextOr(`/sys/class/net/${def?.dev}/mtu`)) || 1500;
+    const mtu = Number(await fs.readTextOr(`/sys/class/net/${def?.dev}/mtu`)) || 1500;
     const big = await t(4, [
       "ping",
       "-n",
@@ -263,10 +290,11 @@ export async function doctor(
   // ---------------------------------------------------------------- IPv6
   const v6 = ui.phase("IPv6");
   const route6 = (await run(["ip", "-6", "route", "show", "default"])).stdout.trim();
-  const aaaa = (await t(5, ["dig", "+time=2", "+tries=1", "+short", "AAAA", ARCHIVE])).stdout
-    .trim();
+  const aaaa = (
+    await t(5, ["dig", "+time=2", "+tries=1", "+short", "AAAA", ARCHIVE])
+  ).stdout.trim();
   const force4 = /ForceIPv4 "true"/.test(
-    (await readTextOr("/etc/apt/apt.conf.d/52archon-network")) ?? "",
+    (await fs.readTextOr("/etc/apt/apt.conf.d/52archon-network")) ?? "",
   );
   if (!route6) {
     if (ipv6Model) {
@@ -325,8 +353,8 @@ export async function doctor(
       synced === "yes"
         ? "synchronized"
         : synced === "unknown"
-        ? "state unknown"
-        : "NOT synchronized"
+          ? "state unknown"
+          : "NOT synchronized"
     }${tr.ref ? ` to ${tr.ref}` : ""}${
       tr.offset !== undefined ? ` · offset ${(tr.offset * 1000).toFixed(1)} ms` : ""
     }`,
@@ -334,12 +362,12 @@ export async function doctor(
 
   // ------------------------------------------------------- proxy, firewall
   const pf = ui.phase("Proxy and firewall");
-  const proxyEnv = ["https_proxy", "http_proxy", "HTTPS_PROXY", "HTTP_PROXY"].map((k) =>
-    Deno.env.get(k)
-  ).find(Boolean);
-  const aptProxy = (await run(["apt-config", "dump"])).stdout.split("\n").filter((x) =>
-    /::Proxy/i.test(x)
-  );
+  const proxyEnv = ["https_proxy", "http_proxy", "HTTPS_PROXY", "HTTP_PROXY"]
+    .map((k) => proc.env.get(k))
+    .find(Boolean);
+  const aptProxy = (await run(["apt-config", "dump"])).stdout
+    .split("\n")
+    .filter((x) => /::Proxy/i.test(x));
   if (proxyEnv) pf.note(`proxy in the environment: ${proxyEnv}`);
   for (const a of aptProxy) pf.note(`apt proxy: ${a}`);
   const ufw = await t(5, ["ufw", "status", "verbose"]);
@@ -401,13 +429,15 @@ export async function doctor(
       "HEAD",
     ]);
     if (ls.ok) e.ok("git remote over SSH (ops, deploy key): works");
-    else {e.fail(
+    else {
+      e.fail(
         `git remote over SSH failed: ${ls.stderr.trim().split("\n").pop()}`,
         "ssh -T git@github.com as ops; outbound TCP 22; git -C /srv/archon fetch",
-      );}
+      );
+    }
   }
   // snapd's own connectivity check against the Snap Store.
-  if (isRoot() && (await run(["sh", "-c", "command -v snap"])).ok) {
+  if (proc.isRoot() && (await run(["sh", "-c", "command -v snap"])).ok) {
     const sc = await t(30, ["snap", "debug", "connectivity"]);
     const st = parseSnapConnectivity(sc.stdout);
     if (st?.pass) e.ok("Snap Store reachable (snap debug connectivity)");
@@ -453,7 +483,7 @@ export async function doctor(
           ...(ipv4 ? ["-4"] : []),
           u.hostname,
         ]);
-        console.log(`\n${u.hostname}:${port}\n${(m.stdout || m.stderr).trim()}\n`);
+        stdio.stdout.writeSync(`\n${u.hostname}:${port}\n${(m.stdout || m.stderr).trim()}\n\n`);
       }
       tr2.done("the last hop that answers is where the path stops");
     }
@@ -464,7 +494,7 @@ export async function doctor(
   await emailChecks(
     hostSite(fleet, host.name, host.kind === "workstation" ? "workstation" : "server", ipv6Model),
     em,
-    `on the boot machine: deno task stolos boot mail-push ${host.name}`,
+    `on the boot machine: bun run stolos boot mail-push ${host.name}`,
     { send: o.send },
   );
 

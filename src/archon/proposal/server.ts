@@ -8,8 +8,8 @@
  * @module
  */
 
+import { proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
 import { P } from "../core/paths.ts";
-import { isRoot } from "../core/exec.ts";
 import { getRecord, listRecords } from "../state/store.ts";
 import type { HostDef } from "../model/types.ts";
 import {
@@ -51,18 +51,27 @@ export async function loadDrift(
 ): Promise<DriftView> {
   const birth = (await getRecord<Birth>(host.name, "birth", "birth", dir))?.body;
   const state = (await getRecord<HostState>(host.name, "snapshot", "state", dir))?.body;
-  const observations = (await listRecords<Observation>(host.name, "observation", dir)).map((r) =>
-    r.body
+  const observations = (await listRecords<Observation>(host.name, "observation", dir)).map(
+    (r) => r.body,
   );
   const alerts = (await listRecords<Alert>(host.name, "alert", dir)).map((r) => r.body);
-  const proposals = (await listRecords<SentProposal>(host.name, "proposal", dir)).map((r) =>
-    r.body
+  const proposals = (await listRecords<SentProposal>(host.name, "proposal", dir)).map(
+    (r) => r.body,
   );
   const holds = (await listRecords<Hold>(host.name, "hold", dir)).map((r) => r.body);
   const { loadProposalDecisions } = await import("./decisions.ts");
   const decisions = await loadProposalDecisions(host.name);
   if (!birth || !state) {
-    return { items: [], alerts, birth, state, observations, proposals, decisions, holds };
+    return {
+      items: [],
+      alerts,
+      ...(birth === undefined ? {} : { birth }),
+      ...(state === undefined ? {} : { state }),
+      observations,
+      proposals,
+      decisions,
+      holds,
+    };
   }
   const { planFor } = await import("../build.ts");
   const { planView } = await import("./collect.ts");
@@ -85,16 +94,16 @@ export async function driftCommand(
   opts: { all?: boolean; collect?: boolean; json?: boolean },
 ): Promise<number> {
   if (opts.collect) {
-    if (!isRoot()) {
+    if (!proc.isRoot()) {
       throw new Error("archon drift --collect runs as root (it elevates through sudo)");
     }
     const { collect } = await import("./collect.ts");
     const c = await collect(host);
     if (!opts.json) {
-      console.error(
+      stdio.stderr.writeSync(
         `collected ${c.observations} observation(s)${
           Object.keys(c.failed).length ? `; not read: ${Object.keys(c.failed).join(", ")}` : ""
-        }${c.birthTakenLate ? "; birth snapshot taken now (late)" : ""}`,
+        }${c.birthTakenLate ? "; birth snapshot taken now (late)" : ""}\n`,
       );
     }
   }
@@ -104,33 +113,35 @@ export async function driftCommand(
   const { recordings } = await import("./propose.ts");
   const intents = groupItems(items, v.observations, await recordings(host.name));
   if (opts.json) {
-    console.log(
-      JSON.stringify(
+    stdio.stdout.writeSync(
+      `${JSON.stringify(
         { host: host.name, collected: v.state?.at, items, intents, alerts: v.alerts },
         null,
         2,
-      ),
+      )}\n`,
     );
     return 0;
   }
   if (!v.state || !v.birth) {
-    console.log(
-      `nothing collected on ${host.name} yet: sudo archon drift --collect (the daily report collects too)`,
+    stdio.stdout.writeSync(
+      `nothing collected on ${host.name} yet: sudo archon drift --collect (the daily report collects too)\n`,
     );
     return 0;
   }
-  console.log(driftText(host.name, v.items, v.alerts, {
-    all: opts.all,
-    birthLate: v.birth.late,
-    collected: v.state.at,
-  }));
+  stdio.stdout.writeSync(
+    `${driftText(host.name, v.items, v.alerts, {
+      all: opts.all,
+      birthLate: v.birth.late,
+      collected: v.state.at,
+    })}\n`,
+  );
   if (intents.length) {
-    console.log("\nChange sessions (archon propose --intent <id>):");
+    stdio.stdout.writeSync("\nChange sessions (archon propose --intent <id>):\n");
     for (const i of intents) {
-      console.log(
+      stdio.stdout.writeSync(
         `  ${i.id}${i.who ? ` ${i.who}` : ""} ${i.from.slice(0, 16).replace("T", " ")}${
           i.reason ? ` "${i.reason}"` : ""
-        }: ${i.items.join(", ")}`,
+        }: ${i.items.join(", ")}\n`,
       );
     }
   }

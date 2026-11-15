@@ -8,6 +8,7 @@
  * @module
  */
 
+import { proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "../core/exec.ts";
 
 /** One machine seen but not in the fleet. */
@@ -31,7 +32,11 @@ export function parseNeighbors(text: string): Array<{ address: string; mac: stri
     const ip = line.match(/\b(\d{1,3}(?:\.\d{1,3}){3})\b/)?.[1];
     const m = line.match(mac)?.[0];
     if (!ip || !m || /FAILED|incomplete/i.test(line)) continue;
-    const norm = m.toLowerCase().split(/[:-]/).map((o) => o.padStart(2, "0")).join(":");
+    const norm = m
+      .toLowerCase()
+      .split(/[:-]/)
+      .map((o) => o.padStart(2, "0"))
+      .join(":");
     if (norm === "ff:ff:ff:ff:ff:ff" || norm.startsWith("01:00:5e") || ip.endsWith(".255")) {
       continue;
     }
@@ -42,11 +47,12 @@ export function parseNeighbors(text: string): Array<{ address: string; mac: stri
 
 /** This PC's neighbor table. */
 export async function neighbors(): Promise<Array<{ address: string; mac: string }>> {
-  const cmd = Deno.build.os === "linux"
-    ? ["ip", "neigh"]
-    : Deno.build.os === "windows"
-    ? ["arp", "-a"]
-    : ["arp", "-an"];
+  const cmd =
+    proc.build.os === "linux"
+      ? ["ip", "neigh"]
+      : proc.build.os === "windows"
+        ? ["arp", "-a"]
+        : ["arp", "-an"];
   const r = await run(cmd);
   return r.ok ? parseNeighbors(r.stdout) : [];
 }
@@ -59,8 +65,10 @@ export function unknownMachines(
   const macs = new Set(known.macs.map((m) => m.toLowerCase()));
   const addrs = new Set(known.addresses);
   const names = new Set(known.names);
-  return seen.filter((d) =>
-    !macs.has(d.id.toLowerCase()) && !addrs.has(d.address) &&
-    !(d.name && names.has(d.name.split(".")[0]))
+  return seen.filter(
+    (d) =>
+      !macs.has(d.id.toLowerCase()) &&
+      !addrs.has(d.address) &&
+      !(d.name && names.has(d.name.split(".")[0] ?? "")),
   );
 }
