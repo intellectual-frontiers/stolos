@@ -14,6 +14,7 @@
  * @module
  */
 
+/** The Ubuntu release the boot server installs, and its boot files, each pinned by SHA-256. */
 export const UBUNTU = {
   release: "26.04",
   point: "26.04.1",

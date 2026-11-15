@@ -5,7 +5,7 @@
  * @module
  */
 
-import { array, json, record, unknownValue } from "@intellectual-frontiers/ifc-ts/kernel";
+import { array, compact, json, record, unknownValue } from "@intellectual-frontiers/ifc-ts/kernel";
 import { fs, path, proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
 import type { Discovered } from "./discover.ts";
 import { P } from "../core/paths.ts";
@@ -14,7 +14,6 @@ import {
   type AdoptedDef,
   adoptedDir,
   ensureProbeKey,
-  given,
   installScript,
   loadAdopted,
   MACHINE_NAME,
@@ -103,11 +102,13 @@ export async function hostAdopt(o: {
 
   const machine: AdoptedDef = {
     name: o.name,
-    ...given("title", (o.title ?? existing?.title) || undefined),
-    ...given("owner", (o.owner ?? existing?.owner) || undefined),
+    ...compact({
+      title: (o.title ?? existing?.title) || undefined,
+      owner: (o.owner ?? existing?.owner) || undefined,
+    }),
     ssh: { user, address, ...(port ? { port } : {}) },
     hostKeys,
-    ...given("until", (o.until ?? existing?.until) || undefined),
+    ...compact({ until: (o.until ?? existing?.until) || undefined }),
     adopted: existing?.adopted ?? new Date().toISOString(),
   };
 
@@ -550,11 +551,13 @@ async function adoptFromCheckIn(o: {
   const existing = (await loadAdopted()).find((a) => a.machine.name === o.name)?.machine;
   const machine: AdoptedDef = {
     name: o.name,
-    ...given("title", (o.title ?? existing?.title) || undefined),
-    ...given("owner", (o.owner ?? existing?.owner) || undefined),
+    ...compact({
+      title: (o.title ?? existing?.title) || undefined,
+      owner: (o.owner ?? existing?.owner) || undefined,
+    }),
     ssh: { user, address, ...(port ? { port } : {}) },
     hostKeys: ci.hostKeys,
-    ...given("until", (o.until ?? existing?.until) || undefined),
+    ...compact({ until: (o.until ?? existing?.until) || undefined }),
     adopted: existing?.adopted ?? new Date().toISOString(),
     ...(existing?.accepted ? { accepted: existing.accepted } : {}),
   };

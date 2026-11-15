@@ -94,6 +94,7 @@ encrypted email, and OS scheduling. It calls the API and knows nothing about the
   `stolos export run <job>` is what it runs (the command that runs Stolos now, from
   `proc.selfCommand`: the runtime and the fleet's `stolos.ts`, in the fleet repository), and
   `stolos export list` lists the jobs. No secret is written into a job.
+
 - **SC-B01** `tests/deliver092.test.ts` covers (the DER and the scheduler's files are IFC
   TypeScript's, tested there):
   - an S/MIME round trip through openssl;

@@ -11,6 +11,7 @@ import {
   assertExists,
   assertStringIncludes,
   proves,
+  the,
 } from "@intellectual-frontiers/ifc-ts/runtime/test";
 import type { Observation } from "../src/archon/connect/connector.ts";
 import type { Account, Person } from "../src/archon/connect/entities.ts";
@@ -55,13 +56,7 @@ import { reviewFiles, reviewTicks } from "../src/archon/people/reviews.ts";
 import { acksSource, peopleResults } from "../src/archon/people/commands.ts";
 import { gitReader } from "../src/archon/estate/snapshot.ts";
 import type { SignerDef } from "../src/archon/model/types.ts";
-import { sandbox } from "./sandbox.ts";
-
-/** A value the test expects to be there: fails the test where it is not. */
-function the<T>(value: T | undefined | null): T {
-  assertExists(value);
-  return value;
-}
+import { linkEngine, sandbox } from "./sandbox.ts";
 
 const NOW = new Date("2026-11-15T12:00:00Z");
 
@@ -711,6 +706,7 @@ proves(
       await fs.mkdir(paths.join(repo, "fleets"), { recursive: true });
       const init = await proc.output(["git", "init", "-q", repo]);
       assert(init.success);
+      await linkEngine(repo);
       await proc.output(["cp", "-r", "examples/fleets/lab", paths.join(repo, "fleets", "lab")]);
       const lab = paths.join(repo, "fleets", "lab");
       await fs.mkdir(paths.join(lab, "estate"), { recursive: true });

@@ -8,9 +8,9 @@ import { fs, proc, serve } from "@intellectual-frontiers/ifc-ts/runtime";
 import {
   assert,
   assertEquals,
-  assertExists,
   assertStringIncludes,
   proves,
+  the,
 } from "@intellectual-frontiers/ifc-ts/runtime/test";
 import { parseMac } from "../src/archon/fleet/registration.ts";
 import { recognition } from "../src/archon/install/recognize.ts";
@@ -21,12 +21,6 @@ import {
   parseFacts,
 } from "../src/archon-boot/guard.ts";
 import { stallMessage, StallWatch } from "../src/archon-boot/stall.ts";
-
-/** A value the test expects to be there: fails the test where it is not. */
-function the<T>(value: T | undefined | null): T {
-  assertExists(value);
-  return value;
-}
 
 proves(
   ["051-machine-identity FR-002"],

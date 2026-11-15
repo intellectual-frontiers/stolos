@@ -16,7 +16,7 @@ Epic intellectual-frontiers/stolos#7; issue intellectual-frontiers/stolos#12.
   controls.
 - **FR-002** Commands: `stolos connect <id>`, `stolos disconnect <id>`, and
   `stolos estate observe |
-  check | assets` (the estate: every connected account). The console's
+check | assets` (the estate: every connected account). The console's
   page is Connected accounts.
 - **FR-003** Normalized entities (Person, Account, Device, Repository, Resource, Vendor, Finding)
   for the estate graph (spec 085) come from each connector.

@@ -240,6 +240,14 @@ export interface Authenticator {
 }
 
 /**
+ * The worker's module, beside this one with this module's own extension: `pam-worker.ts` from the
+ * repository, `pam-worker.js` from the release package (spec 096 FR-005, compiled to JavaScript).
+ */
+export function pamWorkerUrl(self: string = import.meta.url): URL {
+  return new URL(self.endsWith(".js") ? "./pam-worker.js" : "./pam-worker.ts", self);
+}
+
+/**
  * PAM in a worker thread, through the service `service` (/etc/pam.d/<service>, or `confdir`'s).
  * On Node every check rejects with `NotSupported` ({@link PAM_UNSUPPORTED}) and no worker starts.
  */
@@ -256,7 +264,7 @@ export function pamAuthenticator(
     worker = undefined;
   };
   const start = (): Worker => {
-    const w = new Worker(new URL("./pam-worker.ts", import.meta.url));
+    const w = new Worker(pamWorkerUrl());
     w.on("message", (m: unknown) => {
       const r = pamReply(m);
       if (!r) return;

@@ -5,7 +5,7 @@
  * and a timer every 5 minutes) through Cloudflare's SMTP relay (spec 027),
  * with backoff when it cannot be reached,
  * duplicates dropped by key within an hour, and one summary after a long
- * outage. Nothing secret is ever sent (redact.ts).
+ * outage. Nothing secret is ever sent (IFC TypeScript's one redaction, `otel.redactText`).
  *
  * ```mermaid
  * flowchart LR
@@ -23,14 +23,13 @@
  * @module
  */
 
-import { fromBase64, toBase64 } from "@intellectual-frontiers/ifc-ts/kernel";
+import { fromBase64, otel, toBase64 } from "@intellectual-frontiers/ifc-ts/kernel";
 import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "../core/exec.ts";
 import { P } from "../core/paths.ts";
 import { SECRETS } from "../core/secrets.ts";
 import type { FleetDef } from "../model/types.ts";
 import { buildMime, escapeHtml } from "./mime.ts";
-import { redact } from "./redact.ts";
 import {
   type Credential,
   DEFAULT_RELAY,
@@ -222,7 +221,7 @@ export async function attachments(
     const raw = await fs.readFile(p).catch(() => undefined);
     if (!raw) continue;
     const name = p.split(/[\\/]/).pop() ?? p;
-    let text = redact(new TextDecoder().decode(raw), exact);
+    let text = otel.redactText(new TextDecoder().decode(raw), exact);
     if (text.length > 256_000) text = "[trimmed to the last 256 KB]\n" + text.slice(-256_000);
     let data: Uint8Array = new TextEncoder().encode(text);
     let file = name;
@@ -262,10 +261,10 @@ export async function compose(site: Site, ev: Event, exact: string[] = []): Prom
     dateStyle: "medium",
     timeStyle: "short",
   });
-  const subject = redact(ev.subject ?? `[Archon] ${site.name}: ${ev.event}`, exact);
+  const subject = otel.redactText(ev.subject ?? `[Archon] ${site.name}: ${ev.event}`, exact);
   if (ev.subject) {
     // A message written by a person or assistant: their body, as given.
-    const body = redact(ev.what, exact);
+    const body = otel.redactText(ev.what, exact);
     return {
       id: `${now.getTime()}-${crypto.randomUUID().slice(0, 8)}`,
       created: now.toISOString(),
@@ -291,8 +290,8 @@ export async function compose(site: Site, ev: Event, exact: string[] = []): Prom
     ["Time", `${now.toISOString().slice(0, 16).replace("T", " ")} UTC (${local} ${site.timezone})`],
     ["Archon", await commit()],
   ];
-  const what = redact(ev.what, exact);
-  const todo = redact(ev.todo ?? "Nothing.", exact);
+  const what = otel.redactText(ev.what, exact);
+  const todo = otel.redactText(ev.todo ?? "Nothing.", exact);
   const text = [
     ...fields.map(([k, v]) => `${k}: ${v}`),
     "",
@@ -532,7 +531,7 @@ export async function flush(
       status.lastSend = { at: new Date().toISOString(), ok: true, subject: q.subject };
     } catch (e) {
       failed++;
-      error = redact((e as Error).message, secretsOf(cred));
+      error = otel.redactText((e as Error).message, secretsOf(cred));
       q.attempts++;
       q.lastError = error;
       const wait = BACKOFF_MIN[Math.min(q.attempts - 1, BACKOFF_MIN.length - 1)] ?? 180;

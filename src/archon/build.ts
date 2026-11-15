@@ -6,11 +6,10 @@
  * @module
  */
 
-import { lf } from "./core/fsx.ts";
+import { lf } from "@intellectual-frontiers/ifc-ts/kernel";
+import { fs, path } from "@intellectual-frontiers/ifc-ts/runtime";
 import { listFleets, P } from "./core/paths.ts";
 import { engineSpecs } from "./core/assets.ts";
-import { join } from "./core/path.ts";
-import { ensureDir, exists, listDirs, readTextOr, walkFiles, writeIfChanged } from "./core/fsx.ts";
 import { ui } from "./core/ui.ts";
 import { loadFleet, loadHosts, NoFleetError } from "./model/load.ts";
 import { resolvePlan } from "./model/resolve.ts";
@@ -31,7 +30,7 @@ export interface Model {
 
 /** Every spec ID the model may name: the engine's and the fleet repository's own. */
 export async function knownSpecs(): Promise<Set<string>> {
-  return new Set([...engineSpecs(), ...(await listDirs(join(P.fleetDir, "specs")))]);
+  return new Set([...engineSpecs(), ...(await fs.listDirs(path.join(P.fleetDir, "specs")))]);
 }
 
 /** Load, resolve, and validate everything. Never throws for model problems. */
@@ -69,7 +68,7 @@ export async function loadModel(): Promise<Model> {
       });
     }
   }
-  problems.push(...await dotfileProblems(fleet, hosts));
+  problems.push(...(await dotfileProblems(fleet, hosts)));
   return { fleet, hosts, plans, problems };
 }
 
@@ -87,23 +86,27 @@ export async function dotfileProblems(
   const { composeFrom } = await import("./dotfiles/sync.ts");
   const { usersFor } = await import("./model/load.ts");
   // Spec 046: the layers live in the fleet's folder (fleets/<id>/...).
-  const root = join(repo, "fleets", P.fleetId);
+  const root = path.join(repo, "fleets", P.fleetId);
   const hostDirs = [];
-  for (const h of await listDirs(join(root, "hosts"))) {
-    if (await exists(join(root, "hosts", h, "home"))) hostDirs.push(h);
+  for (const h of await fs.listDirs(path.join(root, "hosts"))) {
+    if (await fs.exists(path.join(root, "hosts", h, "home"))) hostDirs.push(h);
   }
   const dirs = {
     hosts: hostDirs,
-    users: await listDirs(join(root, "users")),
-    hostUsers: (await Promise.all(
-      (await listDirs(join(root, "hosts"))).map(async (h) =>
-        (await listDirs(join(root, "hosts", h, "users"))).map((u) => [h, u] as [string, string])
-      ),
-    )).flat(),
+    users: await fs.listDirs(path.join(root, "users")),
+    hostUsers: (
+      await Promise.all(
+        (await fs.listDirs(path.join(root, "hosts"))).map(async (h) =>
+          (await fs.listDirs(path.join(root, "hosts", h, "users"))).map(
+            (u) => [h, u] as [string, string],
+          ),
+        ),
+      )
+    ).flat(),
   };
   const hostUsers = new Map(hosts.map((h) => [h.name, usersFor(fleet, h).map((u) => u.name)]));
   const problems: Problem[] = strayLayers(dirs, hostUsers, P.fleetId).map((m) => ({
-    where: m.split(":")[0],
+    where: m.split(":")[0] ?? m,
     message: m.slice(m.indexOf(":") + 2),
     fix: "rename or remove the layer, or add the host or user to the model",
   }));
@@ -114,7 +117,7 @@ export async function dotfileProblems(
         if (seen.has(m)) continue;
         seen.add(m);
         problems.push({
-          where: m.split(":")[0],
+          where: m.split(":")[0] ?? m,
           message: m.slice(m.indexOf(":") + 2),
           fix: "see man archon-dotfiles",
         });
@@ -139,21 +142,21 @@ export async function planFor(host: HostDef): Promise<HostPlan> {
 export async function renderHosts(m: Model): Promise<number> {
   let written = 0;
   for (const plan of m.plans) {
-    const root = join(P.out, "hosts", plan.host.name, "rootfs");
+    const root = path.join(P.out, "hosts", plan.host.name, "rootfs");
     const keep = new Set<string>();
     for (const f of plan.files) {
       if (f.content === undefined) continue;
       const rel = f.path.replace(/^\//, "");
       keep.add(rel);
-      const target = join(root, rel);
-      await ensureDir(join(target, ".."));
-      if (await writeIfChanged(target, f.content)) written++;
+      const target = path.join(root, rel);
+      await fs.ensureDir(path.join(target, ".."));
+      if (await fs.writeIfChanged(target, f.content)) written++;
     }
     // Files no longer in the plan are removed from out/ (rendered output only).
-    if (await exists(root)) {
-      for (const rel of await walkFiles(root)) {
+    if (await fs.exists(root)) {
+      for (const rel of await fs.walkFiles(root)) {
         if (!keep.has(rel)) {
-          await Deno.remove(join(root, rel));
+          await fs.remove(path.join(root, rel));
           written++;
         }
       }
@@ -172,16 +175,16 @@ export async function renderRepoFiles(m?: Model): Promise<number> {
   const servers = m ? mcpServers(m.hosts, P.fleetId) : [];
   let written = 0;
   for (const [rel, content] of renderManPages()) {
-    const target = join(P.man, rel);
-    await ensureDir(join(target, ".."));
-    if (await writeIfChanged(target, content)) written++;
+    const target = path.join(P.man, rel);
+    await fs.ensureDir(path.join(target, ".."));
+    if (await fs.writeIfChanged(target, content)) written++;
   }
   const mcp = renderMcpJson(servers, {
-    existing: await readTextOr(P.mcpJson),
+    existing: await fs.readTextOr(P.mcpJson),
     fleet: P.fleetId,
     fleets: listFleets(P.repo),
   });
-  if (await writeIfChanged(P.mcpJson, mcp)) written++;
+  if (await fs.writeIfChanged(P.mcpJson, mcp)) written++;
   return written;
 }
 
@@ -190,7 +193,9 @@ export async function renderSite(m: Model): Promise<number> {
   if (!m.fleet.site) return 0;
   const { renderNetworkDoc } = await import("./render/network-doc.ts");
   const html = renderNetworkDoc(m.fleet.site, m.hosts, {});
-  return (await writeIfChanged(join(P.out, "site", "network-reference.html"), html)) ? 1 : 0;
+  return (await fs.writeIfChanged(path.join(P.out, "site", "network-reference.html"), html))
+    ? 1
+    : 0;
 }
 
 /** `stolos build`: validate the model, then render every target into out/; true when it is valid. */
@@ -221,7 +226,7 @@ async function signersFileProblems(fleet: FleetDef): Promise<Problem[]> {
   const { signerProblems, signersFile, signersSource } = await import("./identity/signers.ts");
   const list = fleet.signers ?? [];
   const out: Problem[] = signerProblems(list).map((p) => ({ where: "signers", ...p }));
-  const text = await readTextOr(signersFile());
+  const text = await fs.readTextOr(signersFile());
   // Line endings are Git's business (CRLF on a Windows checkout): the form is the text.
   if (text !== undefined && lf(text) !== signersSource(list)) {
     out.push({

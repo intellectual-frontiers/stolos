@@ -24,16 +24,11 @@ import {
   githubSlug,
 } from "../src/archon/fleet/bootstrap.ts";
 import { scaffoldFiles } from "../src/archon/fleet/scaffold.ts";
-import { BUN_VERSION } from "../src/archon/install/bun.ts";
+import { BUN_VERSION } from "../src/archon/core/bun-pin.ts";
 
 const SCRIPT = path.fromFileUrl(new URL("../bin/bootstrap.sh", import.meta.url));
 const PS1 = path.fromFileUrl(new URL("../bin/bootstrap.windows.ps1", import.meta.url));
 const has = (cmd: string): boolean => proc.which(cmd) !== undefined;
-
-/** The bootstraps of bin/ still install the old runtime: their conversion (spec 096 FR-007) is its own work. */
-const UNCONVERTED = new RegExp(["D", "ENO_MIN"].join(""), "i").test(fs.readTextFileSync(SCRIPT))
-  ? "bin/bootstrap.sh does not install the pinned Bun yet (spec 096 FR-007)"
-  : false;
 
 proves(
   ["062-bootstrap FR-001", "096-bun-runtime FR-007"],
@@ -43,7 +38,6 @@ proves(
       assertEquals(bootstrapBunVersion(bootstrapTemplate(p)), BUN_VERSION, p);
     }
   },
-  { todo: UNCONVERTED },
 );
 
 proves(
@@ -187,7 +181,7 @@ proves(
       await fs.remove(s.home, { recursive: true });
     }
   },
-  { skip: !posix && "bootstrap.sh is for Linux and macOS", todo: UNCONVERTED },
+  { skip: !posix && "bootstrap.sh is for Linux and macOS" },
 );
 
 proves(
@@ -219,7 +213,7 @@ proves(
       await fs.remove(s.home, { recursive: true });
     }
   },
-  { skip: !posix && "bootstrap.sh is for Linux and macOS", todo: UNCONVERTED },
+  { skip: !posix && "bootstrap.sh is for Linux and macOS" },
 );
 
 async function exists(p: string): Promise<boolean> {

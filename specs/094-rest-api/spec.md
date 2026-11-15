@@ -18,8 +18,7 @@ document must come from the same TypeScript declarations as the SQL (spec 089), 
   - `GET /v1/<table or view>` for every table and view in `ESTATE_SCHEMA`: `?limit` (default 100, 1
     to 1000), `?offset`, and equality filters on declared columns (`?status=active`). Names in the
     SQL come only from the declarations; values are bound parameters. The answer is
-    `{ items, limit, offset, total }`. A bad parameter is 400 with the reason; an unknown name is
-    404.
+    `{ items, limit, offset, total }`. A bad parameter is 400 with the reason; an unknown name is 404.
   - `GET /v1/finding` also as OCSF Compliance Findings (spec 089's mapping) with
     `Accept: application/vnd.ocsf+json` or `?format=ocsf` (`?format=json` wins over Accept).
   - `GET /v1/oscal/<document>`: the four OSCAL documents of spec 071 (`component-definition`,

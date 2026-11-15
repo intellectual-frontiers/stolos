@@ -5,27 +5,16 @@
  * @module
  */
 import { zipManifest } from "../src/archon/vault/zip.ts";
-import { json, unzip, zip as zipFiles } from "@intellectual-frontiers/ifc-ts/kernel";
+import { compact, json, unzip, zip as zipFiles } from "@intellectual-frontiers/ifc-ts/kernel";
 import { fs, path as paths, proc } from "@intellectual-frontiers/ifc-ts/runtime";
-import {
-  assert,
-  assertEquals,
-  assertExists,
-  proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+import { assert, assertEquals, proves, the } from "@intellectual-frontiers/ifc-ts/runtime/test";
 import { panelLines, width } from "../src/archon/vault/panel.ts";
 import type { Assessment } from "../src/archon/vault/state.ts";
 import { targetOf } from "../src/archon/vault/restore.ts";
-import { type SecretRef, secretFor } from "../src/archon/model/secret-inventory.ts";
+import { secretFor } from "../src/archon/model/secret-inventory.ts";
 import { SECRETS } from "../src/archon/core/secrets.ts";
 import { P } from "../src/archon/core/paths.ts";
 import { fingerprint, sandbox } from "./sandbox.ts";
-
-/** A value the test expects to be there: fails the test where it is not. */
-function the<T>(value: T | undefined | null): T {
-  assertExists(value);
-  return value;
-}
 
 // The real archon folders of this test process: they must not change (checked at the end).
 const REAL = [paths.join(P.secrets, ".."), paths.join(P.bootCache, "..")];
@@ -36,11 +25,6 @@ async function unzipped(file: string): Promise<ReadonlyMap<string, Uint8Array>> 
   const r = await unzip(await fs.readFile(file));
   assert(r.kind === "ok", `${file} is a ZIP`);
   return r.value;
-}
-
-/** `{ ref }`, or nothing where the inventory does not know the file. */
-function given(ref: SecretRef | undefined): { ref?: SecretRef } {
-  return ref === undefined ? {} : { ref };
 }
 
 async function vaultSandbox() {
@@ -396,7 +380,7 @@ proves(
     const item = (name: string, changedAt: string) => ({
       name,
       path: "",
-      ...given(secretFor(name)),
+      ...compact({ ref: secretFor(name) }),
       sha256: "",
       size: 0,
       changedAt,

@@ -27,6 +27,7 @@ Epic intellectual-frontiers/stolos#7; issue intellectual-frontiers/stolos#28.
     API says, owners, protected and reviewed default branches, and secret scanning where available.
 
   `PERSON_SOURCES` gains the new HR systems after Rippling, and JumpCloud after Okta.
+
 - **FR-004** Vendor limits are stated in each connector's connect steps:
   - Gusto and Justworks offer no self-serve read-only token (OAuth apps, partner access).
   - Bitbucket's API does not expose 2FA.

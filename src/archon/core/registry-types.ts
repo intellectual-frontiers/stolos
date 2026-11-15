@@ -7,6 +7,10 @@
  */
 import { proc } from "@intellectual-frontiers/ifc-ts/runtime";
 
+/**
+ * What a command may do, from least to most: read, change the repository, change a machine, or
+ * destroy something (the agent's permission rules follow it).
+ */
 export type Tier = "read" | "repo" | "mutate" | "destructive";
 
 /** One argument of a command: an option (--name) or a positional value. */

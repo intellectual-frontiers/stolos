@@ -7,22 +7,16 @@
 import {
   assert,
   assertEquals,
-  assertExists,
   assertStringIncludes,
   proves,
   test,
+  the,
 } from "@intellectual-frontiers/ifc-ts/runtime/test";
 import { pgcenterArgs, rainfrogArgs, SYSTEM_ROOTS } from "../src/archon/pg/tui.ts";
 import type { Target } from "../src/archon/pg/connections.ts";
 import { COMMANDS } from "../src/archon/commands/registry.ts";
 import { effectiveTier, parseArgs } from "../src/archon/core/registry-types.ts";
 import { allowed } from "../src/archon/mcp/server.ts";
-
-/** A value the test expects to be there: fails the test where it is not. */
-function the<T>(value: T | undefined | null): T {
-  assertExists(value);
-  return value;
-}
 
 const local: Target = {
   name: "prime",

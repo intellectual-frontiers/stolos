@@ -817,6 +817,16 @@ export interface GitHubSource {
   asset: (arch: "amd64", version: string) => RegExp;
   /** What precedes the version in its tags (for example "v"). */
   tagPrefix?: string;
+  /**
+   * A pinned release instead of the newest (the engine's Bun, spec 096): its version, and the
+   * asset for this machine with the SHA-256 the engine pins for it.
+   */
+  pinned?: {
+    /** The pinned version. */
+    version: string;
+    /** The asset for this machine: its file name, URL and pinned SHA-256. */
+    asset: () => Promise<{ name: string; url: string; sha256: string }>;
+  };
 }
 
 /** A tool installed at its newest release (spec 010): from apt, a snap, an upstream binary (checked, smoke-tested, rolled back on failure), or its own installer. */

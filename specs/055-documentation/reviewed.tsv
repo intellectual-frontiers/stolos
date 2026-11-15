@@ -1,0 +1,2 @@
+# Requirements proven by review, not by a test: the requirement, a tab, how it is verified.
+055-documentation FR-005	CI job release (.github/workflows/ci.yml, step "Publish to the gh-pages branch") copies out/docs to /vX.Y.Z/ and /latest/ on gh-pages and keeps the newest 20; Pages serving the branch is a repository setting.

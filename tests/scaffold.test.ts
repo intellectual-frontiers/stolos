@@ -17,7 +17,7 @@ type PackageJson = {
 };
 
 proves(
-  ["096-bun-runtime FR-006"],
+  ["059-stolos-and-archon FR-005", "096-bun-runtime FR-006"],
   "096: the scaffolded package.json pins the engine's release tarball; stolos and archon are its commands",
   () => {
     const f = scaffoldFiles("v1.2.3");

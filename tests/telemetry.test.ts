@@ -25,8 +25,11 @@ import {
   installProblem,
   installStep,
   installTraceparent,
+  DAILY_KEEP,
+  JOURNAL,
   JOURNAL_FILE,
   otlpHandler,
+  recordEvents,
   stopBootTelemetry,
 } from "../src/archon-boot/telemetry.ts";
 import { installsFrom } from "../src/archon-boot/observe.ts";
@@ -68,21 +71,27 @@ proves(["049-telemetry FR-002"], "049: traceparent is parsed strictly", () => {
   assertEquals(kotel.parseTraceparent("garbage").kind, "err");
 });
 
-// IFC TypeScript's redaction (kernel `redactText`): bearer tokens, credentials in URLs, keys.
-test("049: attributes never carry a token IFC TypeScript recognizes", () => {
-  const c = clean({
+// One redaction (kernel `redactText`) for attributes and for mail: bearer tokens, credentials in
+// URLs, keys, and the shapes mail carries (Postfix's api_token:, Cloudflare's tokens).
+proves(["049-telemetry FR-005"], "049: attributes pass the same redaction as mail", () => {
+  const given = {
     "archon.phase.result": "Authorization: Bearer abcdefghijklmnopqrstuvwxyz0123456789",
     "archon.fix": "curl https://alice:s3cretpassword@example.net/x",
-    n: 3,
-  });
+    "archon.command": "[smtp.mx.cloudflare.net]:465 api_token:abcdef123456",
+    "archon.code": "cfut_ZYXWVUTSRQPONMLKJIHGFEDCBA9876543210",
+  };
+  const c = clean({ ...given, n: 3 });
   assert(!String(c["archon.phase.result"]).includes("abcdefghijklmnopqrstuvwxyz"));
   assert(!String(c["archon.fix"]).includes("s3cretpassword"));
+  assert(!String(c["archon.command"]).includes("abcdef123456"));
+  assert(!String(c["archon.code"]).includes("ZYXWVUTSRQ"));
+  for (const [k, v] of Object.entries(given)) assertEquals(c[k], kotel.redactText(v), k);
   assertEquals(c["n"], 3);
 });
 
 proves(
-  ["049-telemetry FR-002"],
-  "049: a run exports its trace (continuing TRACEPARENT) and its metrics",
+  ["049-telemetry FR-002", "049-telemetry FR-010"],
+  "049: a run exports its trace (continuing TRACEPARENT), its metrics, and its phases and problems as events",
   async () => {
     const got: Array<{ path: string; body: string }> = [];
     const server = await serve({ port: 0 }, async (req) => {
@@ -93,7 +102,7 @@ proves(
     try {
       const traceId = "4bf92f3577b34da6a3ce929d0e0e4736";
       const parent = "00f067aa0ba902b7";
-      const r = await sb.run("src/stolos/main.ts", ["validate"], "", {
+      const env = {
         OTEL_SERVICE_NAME: "archon",
         OTEL_EXPORTER_OTLP_PROTOCOL: "http/json",
         OTEL_EXPORTER_OTLP_ENDPOINT: `http://127.0.0.1:${server.addr.port}`,
@@ -108,7 +117,8 @@ proves(
         HTTP_PROXY: "",
         HTTPS_PROXY: "",
         NO_PROXY: "127.0.0.1,localhost",
-      });
+      };
+      const r = await sb.run("src/stolos/main.ts", ["validate"], "", env);
       assertEquals(r.code, 0, r.out);
       // Compact, whatever spacing the exporter used.
       const compact = (b: string): string => JSON.stringify(JSON.parse(b));
@@ -125,6 +135,23 @@ proves(
       assertStringIncludes(all, '"stringValue":"lab"');
       assertStringIncludes(traces, '"name":"archon.phase"', "each phase is a span");
       assertStringIncludes(traces, '"key":"archon.phase","value":{"stringValue":"Model"}');
+      // Spec 049 FR-010: each phase is also an archon.phase log record, in the run's trace.
+      const logs = got
+        .filter((g) => g.path === "/v1/logs")
+        .map((g) => compact(g.body))
+        .join("\n");
+      assertStringIncludes(logs, '"eventName":"archon.phase"', "each phase is an event");
+      assertStringIncludes(logs, `"traceId":"${traceId}"`, "in the run's trace");
+      assertStringIncludes(logs, '"key":"archon.phase.level","value":{"stringValue":"ok"}');
+      // And a problem is an archon.problem log record: `keys` in a sandbox has no keys to find.
+      got.length = 0;
+      await sb.run("src/stolos/main.ts", ["keys"], "", env);
+      const problems = got
+        .filter((g) => g.path === "/v1/logs")
+        .map((g) => compact(g.body))
+        .join("\n");
+      assertStringIncludes(problems, '"eventName":"archon.problem"', "each problem is an event");
+      assertStringIncludes(problems, '"eventName":"archon.phase"');
       const metrics = got
         .filter((g) => g.path === "/v1/metrics")
         .map((g) => compact(g.body))
@@ -250,3 +277,27 @@ proves(
     }
   },
 );
+
+test("023: the boot journal rotates at 64 MB, keeps three older files, and nothing past 30 days", () => {
+  assertEquals(JOURNAL, { maxBytes: 64 * 1024 * 1024, keep: 3, maxAgeDays: 30 });
+});
+
+test("023: the boot server's daily files are kept 30 days, within the telemetry folder's limit", async () => {
+  assertEquals(DAILY_KEEP, { days: 30, bytes: 256 * 1024 * 1024 });
+  const dir = await fs.makeTempDir({ prefix: "archon-boot-daily-" });
+  try {
+    await fs.writeTextFile(path.join(dir, "otlp-2020-01-01.jsonl"), "{}\n");
+    const recent = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+    await fs.writeTextFile(path.join(dir, `otlp-${recent}.jsonl`), "{}\n");
+    await recordEvents(
+      [{ name: "boot.menu", severity: "info", message: "a menu", attrs: {} }],
+      { "service.name": "archon-boot" },
+      dir,
+    );
+    const left = (await fs.listFiles(dir)).sort();
+    const today = new Date().toISOString().slice(0, 10);
+    assertEquals(left, [`otlp-${recent}.jsonl`, `otlp-${today}.jsonl`].sort());
+  } finally {
+    await fs.remove(dir, { recursive: true });
+  }
+});

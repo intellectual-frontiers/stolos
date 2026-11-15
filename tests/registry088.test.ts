@@ -27,7 +27,7 @@ import {
   pinSource,
   registryEntries,
   registrySource,
-  satisfies,
+  engineSuits,
 } from "../src/archon/connect/registry.ts";
 import {
   connectorAdd,
@@ -86,12 +86,12 @@ proves(
 );
 
 proves(["088-wave3-registry FR-001"], "088: engine ranges", () => {
-  assertEquals(satisfies("0.112.0", ">=0.112.0 <1.0.0"), true);
-  assertEquals(satisfies("1.0.0", ">=0.112.0 <1.0.0"), false);
-  assertEquals(satisfies("0.112.5", "^0.112.0"), true);
-  assertEquals(satisfies("0.113.0", "^0.112.0"), false);
-  assertEquals(satisfies("1.9.0", "^1.2.0"), true);
-  assertEquals(satisfies("0.112.0", "latest"), undefined);
+  assertEquals(engineSuits("0.112.0", ">=0.112.0 <1.0.0"), true);
+  assertEquals(engineSuits("1.0.0", ">=0.112.0 <1.0.0"), false);
+  assertEquals(engineSuits("0.112.5", "^0.112.0"), true);
+  assertEquals(engineSuits("0.113.0", "^0.112.0"), false);
+  assertEquals(engineSuits("1.9.0", "^1.2.0"), true);
+  assertEquals(engineSuits("0.112.0", "latest"), undefined);
 });
 
 proves(

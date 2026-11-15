@@ -44,12 +44,12 @@ import type { ExportInput, ExportKind as ExportFormat } from "./exports.ts";
 import {
   type cms,
   type JsonObject,
+  otel,
   otlp,
   sha256 as kernelSha256,
 } from "@intellectual-frontiers/ifc-ts/kernel";
 import { fs, path } from "@intellectual-frontiers/ifc-ts/runtime";
 import { type Attachment, escapeHtml, headerValue, mimeEntity } from "../notify/mime.ts";
-import { redact } from "../notify/redact.ts";
 import {
   type Credential,
   DEFAULT_RELAY,
@@ -478,7 +478,7 @@ export async function emailFiles(
       );
       out.push({ to: r.address, ok: true });
     } catch (e) {
-      out.push({ to: r.address, ok: false, error: redact((e as Error).message, secrets) });
+      out.push({ to: r.address, ok: false, error: otel.redactText((e as Error).message, secrets) });
     }
   }
   return out;
@@ -558,7 +558,7 @@ export async function runJob(job: ExportJobDef, d: RunDeps): Promise<RunReport> 
         await postOtlp(plan.otlp, docs, { fleet: d.fleet.id, job: job.id, now: d.now }, d.fetch);
         report.otlp = { endpoint: plan.otlp, ok: true };
       } catch (e) {
-        const error = redact((e as Error).message);
+        const error = otel.redactText((e as Error).message);
         report.otlp = { endpoint: plan.otlp, ok: false, error };
         problems.push(`the collector: ${error}; kept as a file instead`);
         file = true;

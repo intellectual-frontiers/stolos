@@ -27,7 +27,7 @@ screenshot.
   included), when and by which signer it was opened, and when it was closed.
 - **FR-002** `stolos audit open`, `audit bundle`, `audit access`, `audit close` write it;
   `audit
-  request`, `audit respond`, `audit sample` add to its trail. Each makes one commit of
+request`, `audit respond`, `audit sample` add to its trail. Each makes one commit of
   those files only, signed with Git's signing key (`git commit -S`; ssh-keygen asks the passphrase
   in the terminal), whose message carries a trailer
   `Audit-Entry: <path> sha256:<SHA-256 of the file>` for each file: the signature covers the exact
@@ -44,7 +44,7 @@ screenshot.
   `verify` (each verify item). A unit has a unique id, facts, and its evidence items by SHA-256. A
   population's hash is
   `sha256("stolos-audit-population/1\n<id>\n<manifest head>\n" +
-  "<unit id>\t<sha256,...>\n" per unit sorted by id)`.
+"<unit id>\t<sha256,...>\n" per unit sorted by id)`.
   Each query is documented in the guide and on the portal.
 - **FR-004** Samples (`src/archon/audit/sample.ts`): the auditor gives the seed (any one line of
   text: a number, or a value from a public randomness source they chose; Stolos only accepts it) and

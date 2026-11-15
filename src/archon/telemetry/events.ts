@@ -10,6 +10,7 @@
  * @module
  */
 
+/** An event's usual severity, as OpenTelemetry's severity ranges name them. */
 export type Severity = "debug" | "info" | "warn" | "error";
 
 /** What an event means. */

@@ -26,7 +26,7 @@
  *   assert: (rows) => ({ status: rows.length ? "fail" : "pass", detail: `${rows.length} listener(s)` }),
  * });
  * const [r] = testControl(noTelnet, { machines: { alpha: [{ port: 23 }] } });
- * if (r.status !== "fail") throw new Error("telnet should fail");
+ * if (r?.status !== "fail") throw new Error("telnet should fail");
  * ```
  *
  * @module

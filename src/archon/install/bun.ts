@@ -3,9 +3,10 @@
  * operator's PC run the engine with, and how a fleet checkout gets its engine.
  *
  * - **The pin**: one Bun version, and the SHA-256 of its release archive for each platform, kept
- *   here in the engine. The first boot (`render/autoinstall.ts`, also run by `stolos host
- *   bootstrap`) downloads the archive for its machine, checks its SHA-256 before unpacking it, and
- *   links `/usr/local/bin/bun`. Raising the pin is a change to this file, reviewed like any other.
+ *   in the engine's `core/bun-pin.ts`. The first boot (`render/autoinstall.ts`, also run by
+ *   `stolos host bootstrap`) downloads the archive for its machine, checks its SHA-256 before
+ *   unpacking it, and links `/usr/local/bin/bun`. Raising the pin is a change to that file,
+ *   reviewed like any other.
  * - **The engine in a checkout**: a fleet repository depends on the engine's release tarball by
  *   its URL (`package.json`), and `bun.lock` holds its integrity. `bun install --frozen-lockfile`
  *   installs exactly that, or stops (E046-LOCK-INTEGRITY): the lock is the control.
@@ -24,39 +25,9 @@
  * @module
  */
 
-import { proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { BUN_SHA256, BUN_VERSION, type BunTarget, bunDownload } from "../core/bun-pin.ts";
 import { run, type RunResult } from "../core/exec.ts";
-
-/** The Bun every machine runs (spec 096). */
-export const BUN_VERSION = "1.4.4";
-
-/** A platform Bun is pinned for. */
-export type BunPlatform =
-  | "linux-x64"
-  | "linux-x64-baseline"
-  | "linux-aarch64"
-  | "darwin-x64"
-  | "darwin-aarch64"
-  | "windows-x64"
-  | "windows-x64-baseline"
-  | "windows-aarch64";
-
-/** The release archive of the pinned Bun for each platform, by its SHA-256 (from Bun's SHASUMS256.txt). */
-export const BUN_SHA256: Readonly<Record<BunPlatform, string>> = {
-  "linux-x64": "bf8ccbfb2b0b80159e0f9a6d15c55317add8077534dbc6130a3edb52fccb395c",
-  "linux-x64-baseline": "e0446eb55995772eb9894bebae9a6be368d985a8b9271ee124486f9946eedd76",
-  "linux-aarch64": "baa6bb36f51d6e58561e02bbea825038a9df454f673d6d776e8bbf86f8c7850e",
-  "darwin-x64": "50a3491f73abc2fe81673171a85762d3bc2cc1680ccecadd983de99adf77977e",
-  "darwin-aarch64": "c240d7f0ccb90c263a849fcdb09b7ee62630d921348ed6aafda86b9d577bc510",
-  "windows-x64": "cd2c0fccc78f3ede1f50ca827a15f063eda13d4d150a3d0674f4f6e323d864a5",
-  "windows-x64-baseline": "0f20ce6674d4f2dbcc8c5d59fdf99f7ba45f8c3b367e0f5781cbfa30a1c78d99",
-  "windows-aarch64": "2d57a0eec0cb44d95c918c3f9734f60455a1306ae5085d76fc68f44e3ee30d09",
-};
-
-/** The release archive's URL for a platform. */
-export function bunUrl(platform: BunPlatform, version = BUN_VERSION): string {
-  return `https://github.com/oven-sh/bun/releases/download/bun-v${version}/bun-${platform}.zip`;
-}
 
 /** Where the pinned Bun is unpacked on a host, beside the other side-by-side tools (spec 010). */
 export const BUN_HOME = `/opt/tools/bun/${BUN_VERSION}`;
@@ -92,6 +63,22 @@ ${linux}
   ln -sfn ${BUN_HOME}/bin/bun ${BUN_BIN}
   rm -rf "$T"
 fi`;
+}
+
+/**
+ * The pinned Bun's archive for this Linux machine, as `archon tools sync` installs it (spec 010):
+ * ARM64, or x86-64 (the baseline build where the processor has no AVX2), with its pinned SHA-256.
+ */
+export async function bunAssetHere(): Promise<{ name: string; url: string; sha256: string }> {
+  const arm = proc.build.arch === "aarch64";
+  const cpu = arm ? "" : ((await fs.readTextOr("/proc/cpuinfo")) ?? "");
+  const target: BunTarget = arm
+    ? "linux-aarch64"
+    : /\bavx2\b/.test(cpu)
+      ? "linux-x64"
+      : "linux-x64-baseline";
+  const d = bunDownload(target);
+  return { name: `bun-${target}.zip`, url: d.url, sha256: d.sha256 };
 }
 
 /** The Bun to run: this process's own when it is Bun, else `bun` on the PATH, else the host's. */

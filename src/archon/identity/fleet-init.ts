@@ -8,14 +8,7 @@
  */
 
 import { fs, path as paths, proc, stdio, tty } from "@intellectual-frontiers/ifc-ts/runtime";
-import {
-  cryptSalt,
-  formatJson5Error,
-  type Literal,
-  parseJson5,
-  sha512Crypt,
-  tsLiteral,
-} from "@intellectual-frontiers/ifc-ts/kernel";
+import { cryptSalt, sha512Crypt, tsLiteral } from "@intellectual-frontiers/ifc-ts/kernel";
 import { P, resetRoots } from "../core/paths.ts";
 import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
@@ -217,17 +210,6 @@ export async function addLocalKey(login: string): Promise<string[]> {
   return [pub.split(/\s+/).slice(0, 2).join(" ")];
 }
 
-/**
- * A model value as the kernel's `Literal`: `FleetDef` is an interface, which has no index
- * signature, so it is not a `Literal` as it is; its JSON, read back, is the same value (a commons gap:
- * `tsLiteral` taking any JSON-shaped type).
- */
-function literalOf(v: object): Literal {
-  const parsed = parseJson5(JSON.stringify(v));
-  if (parsed.kind === "err") throw new Error(`not JSON: ${formatJson5Error(parsed.error)}`);
-  return parsed.value;
-}
-
 /** fleet.ts as fleet init writes it. */
 export function fleetSource(f: FleetDef): string {
   return `// The fleet (spec 003). Written by \`stolos fleet init\` from your GitHub
@@ -235,7 +217,7 @@ export function fleetSource(f: FleetDef): string {
 
 import type { FleetDef } from "@intellectual-frontiers/stolos/archon/model/types";
 
-export const fleet: FleetDef = ${tsLiteral(literalOf(f))};
+export const fleet: FleetDef = ${tsLiteral(f)};
 `;
 }
 

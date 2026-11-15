@@ -89,7 +89,7 @@ proves(
   },
 );
 
-test("secrets are refused in the model and in rendered files", () => {
+proves(["003-identity FR-004"], "secrets are refused in the model and in rendered files", () => {
   assertEquals(findSecret("-----BEGIN OPENSSH PRIVATE KEY-----"), "a private key");
   assertEquals(findSecret("ghp_" + "a".repeat(36)), "a GitHub token");
   assertEquals(findSecret("$6$saltsalt$" + "x".repeat(40)), "a password hash");
@@ -216,22 +216,26 @@ proves(
   },
 );
 
-test("SSH: keys from anywhere, passwords too from local networks; [] means keys only", async () => {
-  const { sshdConfig, LOCAL_NETWORKS } = await import("../src/archon/capabilities/ssh.ts");
-  const lan = sshdConfig(LOCAL_NETWORKS);
-  assert(lan.startsWith("PermitRootLogin no\nPasswordAuthentication no\n"));
-  assert(
-    lan.includes("Match Address 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,fc00::/7,fe80::/10\n"),
-  );
-  assert(lan.trimEnd().endsWith("AuthenticationMethods publickey password"));
-  assert(!sshdConfig([]).includes("Match"));
-  const plan = resolvePlan(host(), { ...fleet(), ssh: { passwordFrom: ["10.0.30.0/24"] } });
-  const f = plan.files.find((x) => x.path === "/etc/ssh/sshd_config.d/50-archon.conf");
-  assertExists(f);
-  assert(f.content?.includes("Match Address 10.0.30.0/24\n"));
-  const bad = where(validateFleet({ ...fleet(), ssh: { passwordFrom: ["lan"] } }, [host()]));
-  assert(bad.some((p) => p.includes("not a network in CIDR form")));
-});
+proves(
+  ["007-ssh FR-002"],
+  "SSH: keys from anywhere, passwords too from local networks; [] means keys only",
+  async () => {
+    const { sshdConfig, LOCAL_NETWORKS } = await import("../src/archon/capabilities/ssh.ts");
+    const lan = sshdConfig(LOCAL_NETWORKS);
+    assert(lan.startsWith("PermitRootLogin no\nPasswordAuthentication no\n"));
+    assert(
+      lan.includes("Match Address 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,fc00::/7,fe80::/10\n"),
+    );
+    assert(lan.trimEnd().endsWith("AuthenticationMethods publickey password"));
+    assert(!sshdConfig([]).includes("Match"));
+    const plan = resolvePlan(host(), { ...fleet(), ssh: { passwordFrom: ["10.0.30.0/24"] } });
+    const f = plan.files.find((x) => x.path === "/etc/ssh/sshd_config.d/50-archon.conf");
+    assertExists(f);
+    assert(f.content?.includes("Match Address 10.0.30.0/24\n"));
+    const bad = where(validateFleet({ ...fleet(), ssh: { passwordFrom: ["lan"] } }, [host()]));
+    assert(bad.some((p) => p.includes("not a network in CIDR form")));
+  },
+);
 
 test("observability: ephemeral limits rendered natively; Collector local only", async () => {
   const { collectorConfig, DEFAULT_OBSERVABILITY } =

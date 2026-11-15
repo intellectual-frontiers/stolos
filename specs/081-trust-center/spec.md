@@ -13,7 +13,7 @@ and nothing failing or stale hidden.
 
 - **FR-001**
   `stolos trust build --bundle <zip> [--out <dir>] [--frameworks soc2,hipaa,...]
-  [--public|--gated] [--on-request] [--key <file>] [--signers <file>] [--contact <link>]`
+[--public|--gated] [--on-request] [--key <file>] [--signers <file>] [--contact <link>]`
   verifies the bundle first (spec 072's `verifyBundle`; `--signers` replaces the bundle's own) and
   refuses it, naming each problem, when anything is wrong. Nothing is written for a refused bundle.
 - **FR-002** The page is built from the bundle alone (never this PC's live state): the company (the

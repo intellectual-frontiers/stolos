@@ -30,6 +30,7 @@ connector should produce everything else, so nothing drifts.
 
   Every table and view cites the term each part of its name is. Names are singular lower_snake_case
   and never an SQL keyword (SQLite's, the SQL standard's, PostgreSQL's).
+
 - **FR-003** `src/archon/schema/define.ts`: `defineTable`, `defineView`, and `defineLabel` (a typed
   view over the graph's nodes). From them:
   - `schemaSql` gives the canonical SQL, ordered by references;

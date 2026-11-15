@@ -9,8 +9,7 @@
  * @module
  */
 
-import { json, record, unknownValue } from "@intellectual-frontiers/ifc-ts/kernel";
-import { redact } from "../notify/redact.ts";
+import { json, otel, record, unknownValue } from "@intellectual-frontiers/ifc-ts/kernel";
 import type { Alert, Observation, SubjectKind } from "./types.ts";
 
 /** A short stable id for an observation: the same evidence collected twice is one record. */
@@ -144,10 +143,10 @@ export async function sudoObservations(entries: SudoEntry[]): Promise<Observatio
       at: e.at,
       who: e.who,
       kind: "command",
-      name: redact(e.command),
+      name: otel.redactText(e.command),
       change: "ran",
-      what: `${e.who} ran under sudo: ${redact(e.command)}`,
-      evidence: redact(`${e.who} : PWD=${e.pwd} ; USER=${e.as} ; COMMAND=${e.command}`),
+      what: `${e.who} ran under sudo: ${otel.redactText(e.command)}`,
+      evidence: otel.redactText(`${e.who} : PWD=${e.pwd} ; USER=${e.as} ; COMMAND=${e.command}`),
     });
   }
   return out;
@@ -191,8 +190,8 @@ export async function parseAptHistory(text: string): Promise<Observation[]> {
           kind: "package",
           name: pkg,
           change,
-          what: `${pkg} ${change}${who ? ` by ${who}` : ""}${cmd ? ` (${redact(cmd)})` : ""}`,
-          evidence: redact(
+          what: `${pkg} ${change}${who ? ` by ${who}` : ""}${cmd ? ` (${otel.redactText(cmd)})` : ""}`,
+          evidence: otel.redactText(
             [
               `Start-Date: ${started}`,
               cmd && `Commandline: ${cmd}`,
@@ -312,7 +311,7 @@ export async function etckeeperObservations(commits: EtcCommit[]): Promise<Obser
         name: f.path,
         change,
         what: `${f.path} ${change}${c.author && c.author !== "root" ? ` by ${c.author}` : ""}`,
-        evidence: redact(`etckeeper ${c.hash.slice(0, 10)} ${c.author}: ${c.subject}`),
+        evidence: otel.redactText(`etckeeper ${c.hash.slice(0, 10)} ${c.author}: ${c.subject}`),
       });
     }
   }
@@ -385,7 +384,7 @@ export async function osqueryDiff(
         0,
         16,
       )})`,
-      evidence: redact(evidence),
+      evidence: otel.redactText(evidence),
     });
   const sets = (a: string[], b: string[]) => {
     const sa = new Set(a),

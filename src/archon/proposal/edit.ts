@@ -19,12 +19,7 @@
  * @module
  */
 
-import {
-  formatJson5Error,
-  type Literal,
-  parseJson5,
-  tsLiteral,
-} from "@intellectual-frontiers/ifc-ts/kernel";
+import { tsLiteral } from "@intellectual-frontiers/ifc-ts/kernel";
 import type { AdoptedDef } from "../capabilities/adopted.ts";
 import type { HostPlan, SpecId } from "../model/types.ts";
 import { type Edit, editText, type Proposal, type ProposalItem } from "./types.ts";
@@ -159,17 +154,6 @@ function closing(text: string, open: number): number {
 }
 
 /**
- * A model value as the kernel's `Literal`: `AdoptedDef` (capabilities/adopted.ts) is an interface, which has no index
- * signature, so it is not a `Literal` as it is; its JSON, read back, is the same value (a commons gap:
- * `tsLiteral` taking any JSON-shaped type).
- */
-function literalOf(v: object): Literal {
-  const parsed = parseJson5(JSON.stringify(v));
-  if (parsed.kind === "err") throw new Error(`not JSON: ${formatJson5Error(parsed.error)}`);
-  return parsed.value;
-}
-
-/**
  * host.ts with `adopted({...})` added to its `capabilities` and its import, or
  * the reason it cannot be edited safely. `capabilities: foundation(),` becomes
  * a list that spreads it; an existing list gets one more entry.
@@ -179,7 +163,7 @@ export function addAdopted(
   d: AdoptedDef,
   comment: string,
 ): { text: string } | { problem: string } {
-  const call = `    // ${comment}\n    adopted(${tsLiteral(literalOf(d), 2)}),\n`;
+  const call = `    // ${comment}\n    adopted(${tsLiteral(d, 2)}),\n`;
   let text: string;
   const simple = /^(\s*)capabilities:\s*foundation\(\),\s*$/m.exec(source);
   if (simple) {

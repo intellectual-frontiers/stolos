@@ -8,9 +8,9 @@ import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import {
   assert,
   assertEquals,
-  assertExists,
   assertStringIncludes,
   proves,
+  the,
 } from "@intellectual-frontiers/ifc-ts/runtime/test";
 import {
   connectionsReport,
@@ -23,12 +23,6 @@ import {
   renderShow,
   splitPgpassLine,
 } from "../src/archon/pg/connections.ts";
-
-/** A value the test expects to be there: fails the test where it is not. */
-function the<T>(value: T | undefined | null): T {
-  assertExists(value);
-  return value;
-}
 
 /** The password planted in every fixture: it must appear in no output, anywhere. */
 const SECRET = "Pw-NEVER-shown-7f3a";

@@ -6,6 +6,7 @@
  *
  * @module
  */
+/** Microsoft's apt repository signing key (packages.microsoft.com), ASCII-armored. */
 export const MICROSOFT_KEY = `-----BEGIN PGP PUBLIC KEY BLOCK-----
 Version: BSN Pgp v1.1.0.0
 

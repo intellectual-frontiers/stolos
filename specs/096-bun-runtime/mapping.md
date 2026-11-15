@@ -8,7 +8,7 @@
   as the second argument where the old helper took anything.
 - `tests/fixtures.ts` keeps its names (`KEY`, `fleet`, `host`).
 - `tests/sandbox.ts` keeps its names (`sandbox`, `Sandbox`, `fingerprint`). `Sandbox.run(script,
-  args, stdin?, extra?)` runs the script with the runtime of the test itself (`bun <script>` on
+args, stdin?, extra?)` runs the script with the runtime of the test itself (`bun <script>` on
   Bun, `node <script>` on Node, through `proc.execPath()`), from a cleared environment, as before.
 
 The working guide for converting each folder of the engine under [spec 096](spec.md). It says, for
@@ -137,6 +137,18 @@ first (see "Gaps"). The catalog content (SCF, NIST, FedRAMP) stays here.
 | `archon-boot/telemetry.ts`                                                                                                                                                                                                                                                                  | REWRITE on runtime `otel`                 | `startTelemetry` with a `journal` (the daily OTLP JSON files) and `otlpReceiver` for `/otlp`; no restart to turn telemetry on.                                                                                                                                                                         |
 | `archon-boot/http.ts`, `web.ts`, `console/server.ts`, `proposal/server.ts`, `api/`                                                                                                                                                                                                          | REWRITE on runtime `serve`                | Note that `serve` binds `127.0.0.1` unless given `hostname` (Deno bound every interface): the boot server must pass `hostname: "0.0.0.0"` (or the LAN address).                                                                                                                                        |
 | `console/pam.ts`                                                                                                                                                                                                                                                                            | REWRITE on `bun:ffi`                      | The one file that imports `bun:ffi` (`dlopen`, `JSCallback`, `ptr`, `read`), allowed by `bunfig.toml`. On Node (`proc.runtimeName() === "node"`) the password sign-in is refused as not supported.                                                                                                     |
+
+With IFC TypeScript 0.4.0, also:
+
+- `notify/redact.ts` is deleted: mail, proposals, exports and telemetry use the kernel's one
+  redaction, `otel.redactText(text, exactSecrets)` (spec 049 FR-005).
+- `connect/aws.ts`'s SigV4 signer is the kernel's `sigv4.sign`; `connect/sdk.ts`'s `readOnlyWith`
+  is `http.readOnly(t, tokenEndpoints, readPost)` (`readPost` takes the `http.OutRequest`).
+- `connect/registry.ts`'s engine ranges are the kernel's `parseRange` and `satisfies`
+  (`engineSuits`).
+- `adopt`'s `given`, the tests' own `the()`, and `literalOf` before `tsLiteral` are gone: the
+  kernel's `compact`, the test runtime's `the`, and `tsLiteral<T>(value: T & LiteralShape<T>)`.
+- The boot journal keeps 30 days (`journalProcessor`'s `maxAgeDays`).
 
 ## `Deno.*` to IFC TypeScript
 

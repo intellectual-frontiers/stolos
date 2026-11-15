@@ -34,7 +34,7 @@ proves(["046-engine-instance FR-008"], "046: no fleet's facts in the engine", as
 });
 
 proves(
-  ["046-engine-instance FR-008", "096-bun-runtime FR-001"],
+  ["046-engine-instance FR-004", "046-engine-instance FR-008", "096-bun-runtime FR-001"],
   "096: the engine imports its own modules relatively, node: builtins, and its declared packages only",
   async () => {
     const bad: string[] = [];

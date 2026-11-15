@@ -26,6 +26,7 @@ SDK gets the same use as the engine.
   The assertion returns a verdict (`pass`, `fail`, `warn`, `unknown`, with what was found, an
   optional fix, and, for estate controls, the node uids it is about), or `undefined` when the
   control does not apply.
+
 - **FR-002** SCF ids are typed from `src/archon/compliance/scf.ts` (`ScfId`): a wrong id fails type
   checking, and `defineControl` also refuses it at run time. Control and pack ids are lower case
   letters, digits, and hyphens.
@@ -44,6 +45,7 @@ SDK gets the same use as the engine.
   "Never observed" stays a single result outside the controls (there is no observation to give a
   control). Connector posture policies stay as they are (`check`, `fresh`): porting them would
   change many files and nothing a person sees.
+
 - **FR-006** Packs in a fleet repository: `fleets/<fleet>/controls/<pack>/pack.ts` exports the pack
   (as `pack`, or as its default export); `*.test.ts` beside it tests it. A pack that does not load
   is reported with why, and the others still run.
@@ -86,7 +88,7 @@ SDK gets the same use as the engine.
   - a pack's results are Compliance evidence from a `control pack`;
   - in a temporary fleet repository, `stolos controls list` lists its packs,
     `stolos compliance
-    --json` shows a pack's failing control as evidence, and
+--json` shows a pack's failing control as evidence, and
     `stolos controls test` passes.
 - **SC-002** The example pack's tests pass with `bun test`, and run in the engine's suite.
 - **SC-003** Existing tests pass unchanged.

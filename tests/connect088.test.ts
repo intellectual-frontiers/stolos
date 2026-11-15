@@ -836,10 +836,13 @@ proves(
     // Reads only: every POST is a Describe or Get action of CloudTrail or Config.
     for (const c of calls.filter((c) => c.method !== "GET")) {
       assert(/^(Describe|Get)/.test(c.target?.split(".").pop() ?? ""), c.target);
-      assert(awsReadPost(c.url, { headers: { "X-Amz-Target": c.target ?? "" } }), c.url);
+      const headers = { "X-Amz-Target": c.target ?? "" };
+      assert(awsReadPost({ method: "POST", url: c.url, headers }), c.url);
     }
     assertEquals(
-      awsReadPost("https://cloudtrail.us-east-1.amazonaws.com/", {
+      awsReadPost({
+        method: "POST",
+        url: "https://cloudtrail.us-east-1.amazonaws.com/",
         headers: {
           "x-amz-target": "com.amazonaws.cloudtrail.v20131101.CloudTrail_20131101.StopLogging",
         },
@@ -847,7 +850,10 @@ proves(
       false,
       "a write action is refused",
     );
-    assertEquals(awsReadPost("https://iam.amazonaws.com/", { headers: {} }), false);
+    assertEquals(
+      awsReadPost({ method: "POST", url: "https://iam.amazonaws.com/", headers: {} }),
+      false,
+    );
   },
 );
 

@@ -9,6 +9,8 @@
  * @module
  */
 
+import { BUN_VERSION } from "../core/bun-pin.ts";
+import { bunAssetHere } from "../install/bun.ts";
 import type { ToolDef } from "../model/types.ts";
 import { GITHUB_CLI_KEY } from "./keys/github-cli.ts";
 import { OSQUERY_KEY } from "./keys/osquery.ts";
@@ -53,6 +55,23 @@ export const TOOLS: ToolDef[] = [
     versionCommand: "git --version",
     verify: "git --version",
     spec: SPEC,
+  },
+  {
+    // The engine's runtime, at the engine's pin (spec 096: core/bun-pin.ts's version and
+    // SHA-256), never the newest. The first boot installs it; tools sync keeps it at the pin.
+    id: "bun",
+    name: "Bun",
+    source: "upstream-binary",
+    bins: ["bun"],
+    versionCommand: "bun --version",
+    verify: "/usr/local/bin/bun --version",
+    spec: SPEC,
+    github: {
+      repo: "oven-sh/bun",
+      tagPrefix: "bun-v",
+      asset: () => /^bun-linux-(?:x64|x64-baseline|aarch64)\.zip$/,
+      pinned: { version: BUN_VERSION, asset: bunAssetHere },
+    },
   },
   {
     // GitHub's own apt repository (Ubuntu 26.04 ships gh 2.46): apt and

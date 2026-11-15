@@ -1,10 +1,11 @@
 /**
  * The boot server's own telemetry (spec 023, on IFC TypeScript since spec 096). The boot server's
- * signals are IFC TypeScript's (`runtime/otel`), in-process: started once with {@link initBootTelemetry},
- * they are kept in a journal in the boot cache (OTLP JSON lines, OpenTelemetry's file format,
- * rotated by size: 256 MB at most) and sent over OTLP/HTTP to otel-tui while it runs on this PC
- * (`localhost:4318`, the pipeline's default; silent where nothing listens). Nothing else leaves the
- * PC. There is no restart to turn telemetry on, and nothing reads `OTEL_DENO`.
+ * signals are IFC TypeScript's (`runtime/otel`), in-process: started once with
+ * {@link initBootTelemetry}, they are kept in a journal in the boot cache (OTLP JSON lines,
+ * OpenTelemetry's file format, rotated by size: 256 MB at most, and kept 30 days) and sent over
+ * OTLP/HTTP to otel-tui while it runs on this PC (`localhost:4318`, the pipeline's default; silent
+ * where nothing listens). Nothing else leaves the
+ * PC. There is no restart to turn telemetry on.
  *
  * Spec 049: the boot server is also the fleet's default collector. Servers that find no other
  * (fleet.telemetry, or otel.localdomain) send their telemetry to http://<boot PC>:<http port>/otlp,
@@ -34,8 +35,13 @@ import { VERSION } from "../archon/version.ts";
 export const TELEMETRY_DIR: string = paths.join(P.bootCache, "telemetry");
 /** The journal of the boot server's own signals, in {@link TELEMETRY_DIR}. */
 export const JOURNAL_FILE = "boot.otlp.jsonl";
-/** The journal is rotated at 64 MB, three older files kept: 256 MB at most. */
-const JOURNAL = { maxBytes: 64 * 1024 * 1024, keep: 3 };
+/** The journal is rotated at 64 MB, three older files kept (256 MB at most), none past 30 days. */
+export const JOURNAL = { maxBytes: 64 * 1024 * 1024, keep: 3, maxAgeDays: 30 };
+/**
+ * The boot server's daily files of its console lines (`otlp-<date>.jsonl` in
+ * {@link TELEMETRY_DIR}, spec 023 SC-001): none past 30 days, 256 MB at most in all.
+ */
+export const DAILY_KEEP = { days: 30, bytes: 256 * 1024 * 1024 };
 const OTEL_TUI = "http://127.0.0.1:4318";
 
 /** Every attribute the boot server's signals carry. */
@@ -114,7 +120,14 @@ export async function stopBootTelemetry(): Promise<void> {
 
 // ------------------------------------------------------------------- the fleet's collector
 
-async function prune(dir: string, keepDays: number, keepBytes: number): Promise<void> {
+/** The day each folder's daily files were last pruned in this process. */
+const pruned = new Map<string, string>();
+
+/**
+ * Remove a folder's daily files (`otlp-<date>.jsonl`), oldest first, while any is older than
+ * `keepDays` or they hold more than `keepBytes` in all; the newest is always kept.
+ */
+export async function prune(dir: string, keepDays: number, keepBytes: number): Promise<void> {
   const files: Array<{ name: string; size: number }> = [];
   for await (const e of fs.readDir(dir)) {
     if (e.isFile && /^otlp-\d{4}-\d{2}-\d{2}\.jsonl$/.test(e.name)) {
@@ -214,6 +227,11 @@ export async function recordEvents(
   const body = JSON.stringify(toLogsRequest(events, resource, "archon-boot"));
   await fs.ensureDir(dir);
   const day = new Date().toISOString().slice(0, 10);
+  // Kept within the folder's limits: pruned at the first write of each day.
+  if (pruned.get(dir) !== day) {
+    pruned.set(dir, day);
+    await prune(dir, DAILY_KEEP.days, DAILY_KEEP.bytes);
+  }
   await fs.writeTextFile(paths.join(dir, `otlp-${day}.jsonl`), body + "\n", { append: true });
   toTui("/v1/logs", body, { until: 0 });
 }

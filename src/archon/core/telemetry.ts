@@ -1,9 +1,10 @@
 /**
  * Archon's own telemetry (specs 021, 049, 096; Article 27), through IFC TypeScript's signals
  * (`runtime/otel`, commons 0006-signals): every command is a trace, an `archon.run` span with one
- * `archon.phase` span per phase, its results are metrics, and its problems are `archon.problem` log
- * records in that trace. Every name comes from `telemetry/signals.ts` and `telemetry/events.ts`, and
- * the registry below is made from them, so a name that is not declared does not compile.
+ * `archon.phase` span per phase, its results are metrics, and its phases and problems are
+ * `archon.phase` and `archon.problem` log records in that trace. Every name comes from
+ * `telemetry/signals.ts` and `telemetry/events.ts`, and the registry below is made from them, so a
+ * name that is not declared does not compile.
  *
  * The pipeline is configured by OpenTelemetry's own variables (`OTEL_EXPORTER_OTLP_ENDPOINT`,
  * `OTEL_SERVICE_NAME`, `OTEL_RESOURCE_ATTRIBUTES`, ...), which the launcher sets to the local
@@ -11,7 +12,7 @@
  * endpoint it looks for a Collector on `localhost:4318` and is silent where none listens. A run
  * continues a trace begun elsewhere when `TRACEPARENT` is set (an MCP call's `_meta.traceparent`,
  * an SSH command from the boot machine), and every program it runs through `proc` is given its
- * `TRACEPARENT` in turn. Nothing reads `OTEL_DENO`.
+ * `TRACEPARENT` in turn.
  *
  * ```mermaid
  * flowchart LR
@@ -122,6 +123,7 @@ type Open = {
 };
 
 let started: otel.Started<Kinds> | undefined;
+let scope: kotel.Scope = { name: "archon" };
 let root: Open | undefined;
 let lastRoot: Open | undefined;
 let startedAt = 0;
@@ -141,6 +143,7 @@ export function clean(a: Attrs): Attrs {
  */
 export function initTelemetry(service = "archon", version?: string): void {
   if (started !== undefined) return;
+  scope = { name: service, ...(version === undefined ? {} : { version }) };
   started = otel.startTelemetry({
     registry: ARCHON_SIGNALS,
     service,
@@ -216,7 +219,33 @@ export function span(
   return (good = true) => s.end(good ? ok(undefined) : err(`${name} failed`));
 }
 
-/** UI phases become `archon.phase` spans, children of the run's span. */
+/**
+ * Spec 049 FR-010: a finished phase is also an `archon.phase` event, an OTLP log record in the
+ * phase's span (its name, its level, its summary line). The registry gives the name `archon.phase`
+ * to the span (spec 096: names are declared once), so the record is handed to the pipeline as made
+ * here, redacted the same way.
+ */
+function phaseEvent(name: string, level: string, summary: string, at: kotel.SpanContext): void {
+  if (started === undefined) return;
+  const severity: kotel.SeverityNumber = level === "fail" ? 17 : level === "warn" ? 13 : 9;
+  const time = BigInt(Date.now()) * 1_000_000n;
+  const record: kotel.LogRecord = {
+    time,
+    observedTime: time,
+    severityNumber: severity,
+    severityText: kotel.severityText(severity),
+    body: kotel.redactText(`${name}: ${summary}`),
+    attributes: clean({ "archon.phase": name, "archon.phase.level": level }),
+    droppedAttributesCount: 0,
+    eventName: "archon.phase",
+    traceId: at.traceId,
+    spanId: at.spanId,
+    traceFlags: at.traceFlags,
+  };
+  started.pipeline.emit({ kind: "log", record }, { resource: started.pipeline.resource, scope });
+}
+
+/** UI phases become `archon.phase` spans, children of the run's span, and `archon.phase` events. */
 export const phaseListener = {
   start(name: string): void {
     const s = open("archon.phase", { "archon.phase": name }, root?.handle.context);
@@ -226,6 +255,7 @@ export const phaseListener = {
     const s = phases.get(name);
     if (s === undefined) return;
     s.handle.set({ "archon.phase.result": kotel.redactText(summary), "archon.phase.level": level });
+    phaseEvent(name, level, summary, s.handle.context);
     s.end(level === "fail" ? err(kotel.redactText(`${name}: ${summary}`)) : ok(undefined));
     phases.delete(name);
   },
@@ -270,7 +300,7 @@ export type ProblemRecord = {
 
 /**
  * Spec 049: the run's problems as `archon.problem` log records in the run's trace (the terminal
- * and the run log print the same facts), then the pipeline flushed and shut down, within a second.
+ * and the run log print the same facts), then the pipeline flushed and shut down, within 3 seconds.
  * Silent where nothing listens.
  */
 export async function flushEvents(problems: readonly ProblemRecord[]): Promise<void> {
@@ -290,5 +320,6 @@ export async function flushEvents(problems: readonly ProblemRecord[]): Promise<v
     if (run !== undefined) run.handle.log("archon.problem", clean(attrs), body, { severity });
     else started.telemetry.log("archon.problem", clean(attrs), body, { severity });
   }
-  await started.pipeline.shutdown();
+  // Spec 049 FR-010: best effort, 3 seconds at most.
+  await started.pipeline.shutdown(3000);
 }

@@ -10,6 +10,7 @@ import {
   assertExists,
   assertStringIncludes,
   proves,
+  the,
 } from "@intellectual-frontiers/ifc-ts/runtime/test";
 import {
   authorizedLine,
@@ -29,12 +30,6 @@ import {
 } from "../src/archon/adopt/adopt.ts";
 import { policies, supportedOs } from "../src/archon/adopt/policy.ts";
 import { queryRefusal } from "../src/archon/state/query.ts";
-
-/** A value the test expects to be there: fails the test where it is not. */
-function the<T>(value: T | undefined | null): T {
-  assertExists(value);
-  return value;
-}
 
 const MAC_OUTPUT = `@probe
 version=1

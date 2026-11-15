@@ -45,6 +45,7 @@ import {
   json,
   mapDecoder,
   object,
+  otel,
   string,
 } from "@intellectual-frontiers/ifc-ts/kernel";
 import { fs, jobs, path, proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
@@ -270,9 +271,8 @@ export async function exportCredential(name: string, user?: string): Promise<num
     await probeSmtp(c, { relay, ipv4: fleet.network?.ipv6 === false });
     p.ok(`logged in to ${relay} over TLS (nothing sent)`);
   } catch (e) {
-    const { redact } = await import("../notify/redact.ts");
     p.fail(
-      redact(e instanceof Error ? e.message : String(e), [token]),
+      otel.redactText(e instanceof Error ? e.message : String(e), [token]),
       "check the credential, then again",
     );
     return 1;

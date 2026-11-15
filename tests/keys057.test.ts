@@ -432,35 +432,39 @@ proves(
   },
 );
 
-test("057: a fresh clone has no Git identity: keys setup takes it from GitHub (gh)", async () => {
-  const s = await keysSandbox();
-  try {
-    // No identity anywhere (a new PC): the global config loses it.
-    await fs.writeTextFile(path.join(s.home, "gitconfig"), "");
-    let r = await s.archon(["keys"]);
-    assertStringIncludes(r.out, "E057-IDENTITY");
-    // gh, as GitHub answers `gh api user --jq ...` (name, login, id).
-    const bin = path.join(s.home, "bin");
-    await fs.mkdir(bin);
-    await fs.writeTextFile(
-      path.join(bin, "gh"),
-      `#!/bin/sh\nprintf 'Test Person\\ttester\\t42\\n'\n`,
-    );
-    await fs.chmod(path.join(bin, "gh"), 0o755);
-    const withGh = { PATH: `${bin}:${proc.env.get("PATH")}` };
-    r = await s.archon(["keys", "setup"], "", withGh);
-    assertEquals(r.code, 0, r.out);
-    assertEquals(await s.git("config", "--local", "user.name"), "Test Person");
-    assertEquals(
-      await s.git("config", "--local", "user.email"),
-      "42+tester@users.noreply.github.com",
-    );
-    r = await s.archon(["keys"], "", withGh);
-    assert(!r.out.includes("E057-IDENTITY"), r.out);
-  } finally {
-    await fs.remove(s.home, { recursive: true });
-  }
-});
+proves(
+  ["057-keys FR-IDENTITY"],
+  "057: a fresh clone has no Git identity: keys setup takes it from GitHub (gh)",
+  async () => {
+    const s = await keysSandbox();
+    try {
+      // No identity anywhere (a new PC): the global config loses it.
+      await fs.writeTextFile(path.join(s.home, "gitconfig"), "");
+      let r = await s.archon(["keys"]);
+      assertStringIncludes(r.out, "E057-IDENTITY");
+      // gh, as GitHub answers `gh api user --jq ...` (name, login, id).
+      const bin = path.join(s.home, "bin");
+      await fs.mkdir(bin);
+      await fs.writeTextFile(
+        path.join(bin, "gh"),
+        `#!/bin/sh\nprintf 'Test Person\\ttester\\t42\\n'\n`,
+      );
+      await fs.chmod(path.join(bin, "gh"), 0o755);
+      const withGh = { PATH: `${bin}:${proc.env.get("PATH")}` };
+      r = await s.archon(["keys", "setup"], "", withGh);
+      assertEquals(r.code, 0, r.out);
+      assertEquals(await s.git("config", "--local", "user.name"), "Test Person");
+      assertEquals(
+        await s.git("config", "--local", "user.email"),
+        "42+tester@users.noreply.github.com",
+      );
+      r = await s.archon(["keys"], "", withGh);
+      assert(!r.out.includes("E057-IDENTITY"), r.out);
+    } finally {
+      await fs.remove(s.home, { recursive: true });
+    }
+  },
+);
 
 test("057: a second PC's key: setup prints the exact command that approves it", async () => {
   const s = await keysSandbox();

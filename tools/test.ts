@@ -32,10 +32,13 @@ import {
 
 const ROOT = path.resolve(path.dirname(path.fromFileUrl(import.meta.url)), "..");
 
-/** A requirement line of a spec: `- **FR-001** ...` (also `FR-003a`). */
-const FR_LINE = /^\s*-\s*\*\*(FR-\d+[a-z]?)\*\*/;
+/**
+ * A requirement line of a spec: `- **FR-001** ...`, in every shape the specs use: a number with an
+ * optional letter (`FR-003a`), a lettered group (`FR-K2`, `FR-B01`), or a name (`FR-IDENTITY`).
+ */
+const FR_LINE = /^\s*-\s*\*\*(FR-[A-Z0-9]+[a-z]?)\*\*/;
 /** A requirement id as a test names it: `"096-bun-runtime FR-001"`. */
-const NAMED = /["'`](\d{3}[a-z0-9-]*) (FR-\d+[a-z]?)["'`]/g;
+const NAMED = /["'`](\d{3}[a-z0-9-]*) (FR-[A-Z0-9]+[a-z]?)["'`]/g;
 
 function listOf<T extends string>(all: readonly T[], what: string): cli.Parser<readonly T[]> {
   return (t) => {

@@ -1,12 +1,9 @@
 {
   "recommendations": [
-    "denoland.vscode-deno",
+    "oven.bun-vscode",
     "bierner.markdown-mermaid",
     "github.vscode-github-actions",
     "redhat.vscode-yaml"
   ],
-  "unwantedRecommendations": [
-    "esbenp.prettier-vscode",
-    "dbaeumer.vscode-eslint"
-  ]
+  "unwantedRecommendations": ["esbenp.prettier-vscode", "dbaeumer.vscode-eslint"]
 }

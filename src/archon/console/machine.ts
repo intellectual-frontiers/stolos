@@ -34,8 +34,8 @@ export async function repoFacts(repo = P.repo): Promise<RepoFacts> {
     "HEAD",
   ]);
   const signer = (v.stderr + v.stdout).match(/Good "git" signature for (\S+) with/)?.[1];
-  const { readPin } = await import("../fleet/upgrade.ts");
-  const pin = readPin((await fs.readTextOr(path.join(repo, "package.json"))) ?? "");
+  const { PIN_FILE, readPin } = await import("../fleet/upgrade.ts");
+  const pin = readPin((await fs.readTextOr(path.join(repo, PIN_FILE))) ?? "");
   let signers: RepoFacts["signers"] = [];
   try {
     const { loadSigners } = await import("../identity/signers.ts");

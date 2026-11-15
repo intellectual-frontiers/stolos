@@ -33,6 +33,7 @@ refused unless someone accepted the risk or approved it.
   | `cadence`        | `fleet.compliance.cadence` (073)                        | MON-02 | observed less often, or stale later                        |
 
   The reverse direction strengthens the control. Each declaration is tested.
+
 - **FR-002** Impact analysis: given the fleet at a base commit and at a head commit (or the working
   tree), each side's model is loaded (its `fleet.ts` and `host.ts`, as build does; a commit is read
   into a temporary folder without touching the checkout), every host's plan resolved and reduced to
@@ -54,7 +55,7 @@ refused unless someone accepted the risk or approved it.
   the approval trailer into the commit it signs.
 - **FR-007** The gate: `compliance.gate` in `fleet.ts`:
   `{ block?: "weakens" | "never"; allow?:
-  string[]; evidence?: boolean }`, default `never` (show
+string[]; evidence?: boolean }`, default `never` (show
   only). With `block: "weakens"`, a change that weakens a control is refused unless (a) `allow`
   names it, (b) an accepted risk in `fleets/<fleet>/controls/accepted.ts` covers it
   (`policy: "impact/<key>"`, until a date), or (c) an approval is recorded. A weakening's keys are

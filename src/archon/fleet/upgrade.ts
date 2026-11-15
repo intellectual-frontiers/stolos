@@ -225,11 +225,11 @@ export async function fleetUpgrade(o: UpgradeOptions): Promise<number> {
   const version = want.join(".");
   // Spec 088: every connector a fleet added must support the new engine.
   {
-    const { registryEntries, satisfies } = await import("../connect/registry.ts");
+    const { engineSuits, registryEntries } = await import("../connect/registry.ts");
     for (const id of listFleets(repo)) {
       const f = path.join(repo, "fleets", id, "connectors.ts");
       for (const e of registryEntries(await fs.readTextOr(f))) {
-        if (satisfies(version, e.engine) === false) {
+        if (engineSuits(version, e.engine) === false) {
           p.fail(
             `fleet ${id}'s connector ${e.id} (${e.ref}) supports engine ${e.engine}, not ${version}`,
             `move it to a tag that does (bun run stolos connector add ${e.source}@<tag>), or remove it, first`,

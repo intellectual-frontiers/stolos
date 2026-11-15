@@ -45,7 +45,8 @@ import {
   readPin,
   type Semver,
 } from "../fleet/upgrade.ts";
-import { BUN_VERSION, engineRuntime } from "../install/bun.ts";
+import { BUN_VERSION } from "../core/bun-pin.ts";
+import { engineRuntime } from "../install/bun.ts";
 
 /** The newest release tag in a list of `git ls-remote --tags` lines, or undefined. */
 export function newestTag(lsRemote: string): string | undefined {

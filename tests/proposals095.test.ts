@@ -4,6 +4,7 @@
  *
  * @module
  */
+import { otel } from "@intellectual-frontiers/ifc-ts/kernel";
 import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import {
   assert,
@@ -11,6 +12,7 @@ import {
   assertExists,
   assertStringIncludes,
   proves,
+  the,
 } from "@intellectual-frontiers/ifc-ts/runtime/test";
 import {
   commandTargets,
@@ -55,7 +57,6 @@ import {
 } from "../src/archon/proposal/proposal.ts";
 import { choose, proposeCommand } from "../src/archon/proposal/propose.ts";
 import { loadDrift } from "../src/archon/proposal/server.ts";
-import { redact } from "../src/archon/notify/redact.ts";
 import type { Event } from "../src/archon/notify/notify.ts";
 import type {
   DriftItem,
@@ -67,7 +68,7 @@ import { loadHosts } from "../src/archon/model/load.ts";
 import { planFor } from "../src/archon/build.ts";
 import { attachmentsOf } from "../src/archon/proposal/mail.ts";
 import { buildMime } from "../src/archon/notify/mime.ts";
-import { sandbox } from "./sandbox.ts";
+import { linkEngine, sandbox } from "./sandbox.ts";
 import { registrationSource } from "../src/archon/fleet/registration.ts";
 import {
   addAdopted,
@@ -88,12 +89,6 @@ import {
 import { recordings } from "../src/archon/proposal/propose.ts";
 import type { SudoEntry } from "../src/archon/proposal/parse.ts";
 import type { Hold } from "../src/archon/proposal/drift.ts";
-
-/** A value the test expects to be there: fails the test where it is not. */
-function the<T>(value: T | undefined | null): T {
-  assertExists(value);
-  return value;
-}
 
 // ------------------------------------------------------------------ fixtures
 
@@ -716,7 +711,7 @@ proves(
       assertEquals(the(by["port:tcp/443"]).edits, [
         { op: "ports.open", port: 443, protocol: "tcp" },
       ]);
-      assertEquals(redact(text), text, "the mail's redaction changes nothing");
+      assertEquals(otel.redactText(text), text, "the mail's redaction changes nothing");
       assert(!text.includes("hunter2"), "redacted before signing");
       assertStringIncludes(sig, "BEGIN SSH SIGNATURE");
       assertStringIncludes(proposalSummary(proposal), 'packages.add("nginx")');
@@ -1013,6 +1008,7 @@ proves(
     const repo = `${sb.home}/fleet`;
     try {
       await fs.mkdir(`${repo}/fleets`, { recursive: true });
+      await linkEngine(repo);
       await proc.output(["cp", "-r", `${ENGINE}/examples/fleets/lab`, `${repo}/fleets/lab`]);
       const k = await hostKey(sb.home);
       await fs.writeTextFile(

@@ -168,7 +168,7 @@ export interface ConnectorDef<F extends Record<string, FieldDef>> {
    * says so (an AWS JSON API's Describe and Get actions, say). Every other
    * POST is refused.
    */
-  readPost?: ReadPost;
+  readPost?: http.ReadPost;
   /** The headers to send, given the credential (may call a token endpoint). */
   auth(cred: CredOf<F>, http: http.Transport, now: Date): Promise<Record<string, string>>;
   /** The account, for people (from the credential, or from what was read). */
@@ -217,35 +217,6 @@ interface AnyMapped {
   display_name: string;
   props: object;
   where?: string;
-}
-
-/** Whether a POST only reads (spec 088): given its URL, headers, and body. */
-export type ReadPost = (
-  url: string,
-  init: { headers?: Record<string, string>; body?: string },
-) => boolean;
-
-/**
- * IFC TypeScript's read-only guard (safe methods, POST to `tokenEndpoints`), and besides it the
- * POSTs that `readPost` says only read (spec 088).
- */
-export function readOnlyWith(
-  t: http.Transport,
-  tokenEndpoints: readonly string[] = [],
-  readPost?: ReadPost,
-): http.Transport {
-  const guarded = http.readOnly(t, tokenEndpoints);
-  return {
-    kind: t.kind,
-    send: (r) =>
-      r.method === "POST" &&
-      readPost?.(r.url, {
-        headers: { ...r.headers },
-        ...(r.body === undefined ? {} : { body: r.body }),
-      }) === true
-        ? t.send(r)
-        : guarded.send(r),
-  };
 }
 
 /** A request's answer, or an Error that says why there was none (a refusal, the network). */
@@ -381,7 +352,7 @@ export function defineConnector<F extends Record<string, FieldDef>>(
     async observe(raw, t, now): Promise<Observation> {
       const cred = credOf(def.fields, raw);
       const guarded = http.withBackoff(
-        readOnlyWith(t, def.tokenEndpoints?.(cred) ?? [], def.readPost),
+        http.readOnly(t, def.tokenEndpoints?.(cred) ?? [], def.readPost),
       );
       const headers = await def.auth(cred, guarded, now);
       const gaps: string[] = [];

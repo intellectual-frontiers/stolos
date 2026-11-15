@@ -21,6 +21,7 @@ import {
   pamReply,
   pamRequest,
   pamSupported,
+  pamWorkerUrl,
   pointerBytes,
 } from "../src/archon/console/pam.ts";
 import { passwordMatches } from "../src/archon/console/server.ts";
@@ -190,6 +191,15 @@ proves(
     assertEquals(pamReply({ id: 1, ok: "yes" }), undefined);
     assertEquals(pamSupported("bun"), true);
     assertEquals(pamSupported("node"), false);
+    // The worker is found from the repository's .ts and from the release package's .js.
+    assertEquals(
+      pamWorkerUrl("file:///r/src/archon/console/pam.ts").href,
+      "file:///r/src/archon/console/pam-worker.ts",
+    );
+    assertEquals(
+      pamWorkerUrl("file:///p/dist/archon/console/pam.js").href,
+      "file:///p/dist/archon/console/pam-worker.js",
+    );
   },
 );
 

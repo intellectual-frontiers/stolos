@@ -122,7 +122,7 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
   const { policies } = await import("../adopt/policy.ts");
   const { allConnectors, loadObservations } = await import("../connect/commands.ts");
   const { connectorCredPath } = await import("../connect/connector.ts");
-  const { readPin } = await import("../fleet/upgrade.ts");
+  const { PIN_FILE, readPin } = await import("../fleet/upgrade.ts");
   const fleet = await loadFleet().catch(warn("fleet.ts"));
   const hosts = (await loadHosts().catch(warn("hosts"))) ?? [];
   const domain = fleet?.web?.domain;
@@ -300,7 +300,7 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
   const { loadEstate } = await import("../estate/commands.ts");
   const { estatePolicies } = await import("../estate/graph.ts");
   const estate = await loadEstate().catch(warn("the estate graph"));
-  const pin = readPin((await fs.readTextOr(path.join(repo, "package.json"))) ?? "");
+  const pin = readPin((await fs.readTextOr(path.join(repo, PIN_FILE))) ?? "");
   const { repoSlug } = await import("../fleet/bootstrap.ts");
   return {
     fleet: {

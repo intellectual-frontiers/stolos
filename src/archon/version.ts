@@ -8,6 +8,7 @@
  * @module
  */
 
+/** The engine's version (semver), raised on every push to main. */
 export const VERSION = "0.118.0";
 
 /** The git tag a fleet pins: "v0.1.0". */

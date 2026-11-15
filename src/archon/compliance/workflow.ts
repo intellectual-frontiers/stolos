@@ -33,6 +33,7 @@
  *
  * @module
  */
+import { BUN_VERSION } from "../core/bun-pin.ts";
 
 /** Where the workflow lives in a fleet repository. */
 export const IMPACT_WORKFLOW_PATH = ".github/workflows/compliance-impact.yml";
@@ -85,7 +86,7 @@ jobs:
           persist-credentials: false
       - uses: ${uses("oven-sh/setup-bun")}
         with:
-          bun-version: 1.4.4
+          bun-version: ${BUN_VERSION}
       - name: The engine (bun.lock pins it)
         run: bun install --frozen-lockfile
       - name: The SCF catalog (framework requirements; pinned, SHA-256 checked)

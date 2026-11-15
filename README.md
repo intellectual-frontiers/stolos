@@ -45,7 +45,7 @@ Infrastructure as code is a crowded field, and each tool covers part of the job:
 Shahid Shah created Stolos because he wanted **one unified experience** from bare metal to a
 verified server: state the intent once, then let every machine converge to it and prove that it did.
 No control server, no agent to install, no second language: two commands (`stolos` on your PC,
-`archon` on each machine) run by **Deno**, a single binary, and **GitHub** as the only state, fully
+`archon` on each machine) run by **Bun**, a single binary, and **GitHub** as the only state, fully
 versioned. Every change is a signed commit, so the history of each server is the history of its
 repository.
 
@@ -94,15 +94,16 @@ rather than written by hand. (Generating those reports is the direction, not yet
 
 ## What you need
 
-`stolos` runs on **Windows, macOS, or Linux**. All it needs is **[Deno](https://deno.com) 2.9.6 or
-newer** (2.x), a single program with no other dependencies, plus Git and `gh` (GitHub's command
-line) to work with your fleet repository. Servers need nothing installed by you: Stolos puts Deno
-and `archon` on each one as it installs it.
+`stolos` runs on **Windows, macOS, or Linux**. All it needs is **[Bun](https://bun.sh)** at the
+version the engine pins (1.4.4; Node 26 runs the same code where Bun cannot), a single program with
+no other dependencies, plus Git and `gh` (GitHub's command line) to work with your fleet repository.
+Servers need nothing installed by you: Stolos puts the pinned Bun and `archon` on each one as it
+installs it.
 
 ### Bootstrap your PC in one line
 
-The PC you run `stolos` on is the fleet's **controller**. One line makes a PC one. It installs Deno,
-Git and `gh`, signs you in to GitHub in the browser, clones your fleet repository into
+The PC you run `stolos` on is the fleet's **controller**. One line makes a PC one. It installs the
+pinned Bun (its SHA-256 checked before it is unpacked), Git and `gh`, signs you in to GitHub in the browser, clones your fleet repository into
 **`$HOME/fleet`** (on Windows, `C:\Users\<you>\fleet`), and adds the `stolos` shortcut. Replace
 `<owner>/<fleet-repo>` with your fleet repository:
 
@@ -123,11 +124,11 @@ config:
     edgeLabelBackground: "#F8FAFC"
 ---
 flowchart LR
-  D["Deno 2.9.6+"]:::step --> G["Git"]:::step --> H["gh"]:::step
+  D["Bun 1.4.4 (pinned)"]:::step --> G["Git"]:::step --> H["gh"]:::step
   H --> S["GitHub sign-in<br/>(browser)"]:::you
   S --> F{"$HOME/fleet?"}:::gh
   F -- "not there" --> C["clone"]:::ok
-  F -- "there" --> U["deno task stolos update"]:::ok
+  F -- "there" --> U["bun run stolos update"]:::ok
   C --> K["stolos shortcut"]:::step
   U --> K
   classDef step fill:#F1F5F9,stroke:#475569,stroke-width:2px,color:#0F172A
@@ -137,7 +138,7 @@ flowchart LR
 ```
 
 Each step checks first and skips what is already done, so running it again is always safe: on a PC
-that already has the fleet, it brings it up to date (`deno task stolos update`). Options, the same
+that already has the fleet, it brings it up to date (`bun run stolos update`). Options, the same
 on every system:
 
 | Option                | What it does                                                                                                                                                                     |
@@ -151,12 +152,12 @@ on every system:
 **How it works, line by line.** [`bin/bootstrap.sh`](bin/bootstrap.sh) (Linux and macOS; it tells
 them apart itself) and [`bin/bootstrap.windows.ps1`](bin/bootstrap.windows.ps1) are written to be
 read: each step says what it does and why. They prefer the system's own packages (Ubuntu's `gh`
-before GitHub's), never need Administrator on Windows (Deno goes into your own folder; `winget` asks
+before GitHub's), never need Administrator on Windows (Bun goes into your own folder; `winget` asks
 if it must), and use `sudo` on Linux only to install Git or `gh` when they are missing.
 
-**Your fleet's own copy.** `deno task stolos fleet init` writes `bin/bootstrap.sh` and
+**Your fleet's own copy.** `bun run stolos fleet init` writes `bin/bootstrap.sh` and
 `bin/bootstrap.windows.ps1` into the fleet repository with its name filled in (so `--repo` is not
-needed), and `deno task stolos fleet upgrade` keeps them in step with the engine. A private fleet
+needed), and `bun run stolos fleet upgrade` keeps them in step with the engine. A private fleet
 repository's files cannot be downloaded before you sign in, so a new PC starts from the engine's
 public bootstrap above; the fleet's copy is for running again later, from `$HOME/fleet`.
 
@@ -167,12 +168,12 @@ public bootstrap above; the fleet's copy is for running again later, from `$HOME
 <summary><b>Windows</b> (PowerShell)</summary>
 
 ```powershell
-winget install --id DenoLand.Deno      # or: irm https://deno.land/install.ps1 | iex
+powershell -c "& {$(irm https://bun.sh/install.ps1)} -Version 1.4.4"
 winget install --id Git.Git
 winget install --id GitHub.cli
 ```
 
-Open a new PowerShell window, then check: `deno --version` (2.9.6 or newer) and `gh auth login`.
+Open a new PowerShell window, then check: `bun --version` (1.4.4) and `gh auth login`.
 Windows is the usual **boot machine** (the PC that installs new servers); see
 [The boot machine](https://intellectual-frontiers.github.io/stolos/latest/archon-boot/mod.ts/index.html)
 for its firewall and network settings.
@@ -183,11 +184,11 @@ for its firewall and network settings.
 <summary><b>macOS</b> (Terminal)</summary>
 
 ```sh
-brew install deno git gh               # with Homebrew (https://brew.sh)
-# or Deno alone: curl -fsSL https://deno.land/install.sh | sh
+brew install git gh                                   # with Homebrew (https://brew.sh)
+curl -fsSL https://bun.sh/install | bash -s "bun-v1.4.4"  # Bun, into ~/.bun/bin
 ```
 
-Then `deno --version` (2.9.6 or newer) and `gh auth login`.
+Then `bun --version` (1.4.4) and `gh auth login`.
 
 </details>
 
@@ -195,12 +196,12 @@ Then `deno --version` (2.9.6 or newer) and `gh auth login`.
 <summary><b>Linux</b> (Ubuntu, or Ubuntu on WSL)</summary>
 
 ```sh
-curl -fsSL https://deno.land/install.sh | sh      # Deno, into ~/.deno/bin
 sudo apt install -y git gh unzip
+curl -fsSL https://bun.sh/install | bash -s "bun-v1.4.4"  # Bun, into ~/.bun/bin
 ```
 
-Open a new terminal, then `deno --version` (2.9.6 or newer) and `gh auth login`. Servers need
-nothing installed by you: Stolos puts Deno and `archon` on each one as it installs it.
+Open a new terminal, then `bun --version` (1.4.4) and `gh auth login`. Servers need nothing
+installed by you: Stolos puts the pinned Bun and `archon` on each one as it installs it.
 
 </details>
 
@@ -208,17 +209,17 @@ nothing installed by you: Stolos puts Deno and `archon` on each one as it instal
 
 ## Two commands: `stolos` and `archon`
 
-| Where                                 | Command                                              | For                                                                                   |
-| ------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| your PC, in the fleet repository      | `deno task stolos ...` (or just `stolos ...`, below) | the fleet: keys, adding and installing machines (`stolos boot ...`), backups, updates |
-| each server or workstation (over SSH) | `archon ...`                                         | that machine: its state, `verify`, `update`, `reboot`, PostgreSQL, data               |
+| Where                                 | Command                                            | For                                                                                   |
+| ------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| your PC, in the fleet repository      | `bun run stolos ...` (or just `stolos ...`, below) | the fleet: keys, adding and installing machines (`stolos boot ...`), backups, updates |
+| each server or workstation (over SSH) | `archon ...`                                       | that machine: its state, `verify`, `update`, `reboot`, PostgreSQL, data               |
 
-Each points at the other: `archon keys setup` on a server says to run `deno task stolos keys setup`
+Each points at the other: `archon keys setup` on a server says to run `bun run stolos keys setup`
 on your PC, and `stolos apply` says to run `archon apply` on the machine. With no arguments,
 `stolos` shows where you are and the next step; `archon` shows the machine's state.
 
-**A shortcut: `stolos` instead of `deno task stolos`.** It works in the fleet folder (where
-`deno.json` is), and runs the engine version pinned there. The bootstrap adds it for you (unless
+**A shortcut: `stolos` instead of `bun run stolos`.** It works in the fleet folder (where
+`package.json` is), and runs the engine version pinned there. The bootstrap adds it for you (unless
 `--no-shortcut`); by hand:
 
 <details>
@@ -226,7 +227,7 @@ on your PC, and `stolos apply` says to run `archon apply` on the machine. With n
 
 ```powershell
 if (!(Test-Path $PROFILE)) { New-Item -Force $PROFILE | Out-Null }
-Add-Content $PROFILE 'function stolos { deno task stolos @args }'
+Add-Content $PROFILE 'function stolos { bun run stolos @args }'
 . $PROFILE
 ```
 
@@ -238,13 +239,13 @@ If PowerShell says "running scripts is disabled on this system", allow your own 
 <details>
 <summary><b>macOS and Linux</b></summary>
 
-zsh (macOS's default): `echo 'stolos() { deno task stolos "$@"; }' >> ~/.zshrc`; bash:
-`echo 'stolos() { deno task stolos "$@"; }' >> ~/.bashrc`; then open a new terminal. In fish (the
-fleet's workstations): `function stolos; deno task stolos $argv; end; funcsave stolos`.
+zsh (macOS's default): `echo 'stolos() { bun run stolos "$@"; }' >> ~/.zshrc`; bash:
+`echo 'stolos() { bun run stolos "$@"; }' >> ~/.bashrc`; then open a new terminal. In fish (the
+fleet's workstations): `function stolos; bun run stolos $argv; end; funcsave stolos`.
 
 </details>
 
-The rest of this README writes `deno task stolos`, which always works.
+The rest of this README writes `bun run stolos`, which always works.
 
 ## Two kinds of repository
 
@@ -269,7 +270,7 @@ flowchart LR
     E["the engine: stolos, archon, the boot server,<br/>guides, an example fleet<br/><i>every change: a new version, tested, tagged</i>"]:::gh
   end
   subgraph fleet["your fleet: private"]
-    F["deno.json: use engine vX.Y.Z<br/>deno.lock: a fingerprint of every engine file<br/>fleets/‹id›/fleet.ts, hosts/...<br/>fleets/‹id›/signers.ts: who approves"]:::you
+    F["package.json: use engine vX.Y.Z<br/>bun.lock: the integrity of the engine's package<br/>stolos.ts, archon.ts<br/>fleets/‹id›/fleet.ts, hosts/...<br/>fleets/‹id›/signers.ts: who approves"]:::you
   end
   S["your servers"]:::ok
   E -- "tag vX.Y.Z" --> F
@@ -324,18 +325,19 @@ flowchart LR
   classDef no fill:#FEF2F2,stroke:#EF4444,stroke-width:2px,color:#7F1D1D
 ```
 
-The fingerprints in `deno.lock` make your seal cover the engine's code too: a server runs exactly
-the engine files you approved.
+The engine's integrity in `bun.lock` makes your seal cover the engine's code too: a server installs
+exactly the engine package you approved (`bun install --frozen-lockfile`), or stops.
 
 ## Set up a fleet repository
 
 1. Create an empty private repository on GitHub, then bootstrap this PC with it (above:
    `--repo <owner>/<new-repo>`). It clones the empty repository into `$HOME/fleet`; `cd` into it.
-2. Start the fleet with the engine's latest version (it writes `deno.json`, `deno.lock`, and
-   `fleets/<id>/fleet.ts` from your GitHub account):
+2. Start the fleet with the engine's latest version (it writes `package.json`, `bun.lock`,
+   `stolos.ts`, `archon.ts`, `.gitignore`, and `fleets/<id>/fleet.ts` from your GitHub account):
 
    ```sh
-   deno run -A https://raw.githubusercontent.com/intellectual-frontiers/stolos/v<version>/src/stolos/main.ts fleet init <id>
+   bun add https://github.com/intellectual-frontiers/stolos/releases/download/v<version>/intellectual-frontiers-stolos-<version>.tgz
+   bun node_modules/@intellectual-frontiers/stolos/dist/stolos/main.js fleet init <id>
    ```
 
 3. Set up your signing keys. One command does it all, and is safe to run again at any time: it makes
@@ -344,23 +346,24 @@ the engine files you approved.
    installs a check that runs before every push, and makes a test signature:
 
    ```sh
-   deno task stolos keys setup
+   bun run stolos keys setup
    ```
 
    The recovery key lives in this PC's key store (`%APPDATA%\stolos\keys`; Linux and macOS:
-   `~/.config/stolos/keys`), and every backup (`deno task stolos vault backup`) holds both keys with
-   every secret: one ZIP is everything a disaster needs. `deno task stolos keys` checks everything
+   `~/.config/stolos/keys`), and every backup (`bun run stolos vault backup`) holds both keys with
+   every secret: one ZIP is everything a disaster needs. `bun run stolos keys` checks everything
    later.
+
 4. Commit and push (Git signs it; type your passphrase):
 
    ```sh
-   deno task stolos apply -m "<id>: the fleet"
+   bun run stolos apply -m "<id>: the fleet"
    ```
 
-5. From here, `deno task stolos` shows where you are and the one command to run next: tokens, your
-   first server (`deno task stolos host add <name> --claim`), and installing it
-   (`deno task stolos boot serve`).
-6. Back up: `deno task stolos vault backup` writes one ZIP with every secret and your signing key;
+5. From here, `bun run stolos` shows where you are and the one command to run next: tokens, your
+   first server (`bun run stolos host add <name> --claim`), and installing it
+   (`bun run stolos boot serve`).
+6. Back up: `bun run stolos vault backup` writes one ZIP with every secret and your signing key;
    move it somewhere safe and encrypted.
 
 The full walk-through:
@@ -408,16 +411,16 @@ Open a terminal in your fleet repository (`cd ~/fleet`; on Windows, in PowerShel
 `cd $HOME\fleet`), then:
 
 ```sh
-deno task stolos update           # instead of git pull: pulls, checks signatures, moves to a newer
+bun run stolos update           # instead of git pull: pulls, checks signatures, moves to a newer
                                   # engine release, repairs keys, and runs the doctor
-deno task stolos                  # where you are, and the one command to run next
-deno task stolos fleet status     # every server, how it is
+bun run stolos                  # where you are, and the one command to run next
+bun run stolos fleet status     # every server, how it is
 ```
 
 Then, after changing anything in the fleet repository, one command sends it to every machine:
 
 ```sh
-deno task stolos apply -m "what changed"   # (or: deno task stolos push)
+bun run stolos apply -m "what changed"   # (or: bun run stolos push)
 ```
 
 It checks your keys and the model, catches up with GitHub, builds, makes **one** signed commit (your
@@ -437,7 +440,7 @@ within 15 minutes.
    from the network becomes this server" (within 30 minutes):
 
    ```sh
-   deno task stolos host add server-hostname --claim
+   bun run stolos host add server-hostname --claim
    ```
 
    If you know its network card's MAC address, use that instead, so only that machine can take the
@@ -446,7 +449,7 @@ within 15 minutes.
 2. Start the boot server on the boot machine, and leave it running:
 
    ```sh
-   deno task stolos boot serve
+   bun run stolos boot serve
    ```
 
 3. Power the new machine on and make it boot from the network (the boot menu key at power-on: F7,
@@ -456,7 +459,7 @@ within 15 minutes.
 5. Save what the machine reported about itself (its MAC address), signed:
 
    ```sh
-   deno task stolos apply -m "my-fleet: server-hostname installed"
+   bun run stolos apply -m "my-fleet: server-hostname installed"
    ```
 
 6. Log in: `ssh server-hostname`. On the server, `archon` (no arguments) shows its state and
@@ -467,11 +470,11 @@ what it found (`archon explain E051-DISK-NOT-BLANK`). When you are sure it may b
 yourself (never an agent), for this one install, then boot it again:
 
 ```sh
-deno task stolos boot arm server-hostname --claim --confirm-destroy server-hostname
+bun run stolos boot arm server-hostname --claim --confirm-destroy server-hostname
 ```
 
 **If it has less than 8 GB of RAM**, a network install stalls. Install Ubuntu 26.04 Server from a
-USB stick instead, then: `deno task stolos host bootstrap server-hostname --ssh you@<its address>`.
+USB stick instead, then: `bun run stolos host bootstrap server-hostname --ssh you@<its address>`.
 
 </details>
 
@@ -485,9 +488,9 @@ sudo apt update && sudo apt install -y git gh unzip
 gh auth login --web --git-protocol https && gh auth setup-git
 sudo mkdir -p /srv/archon && sudo chown "$USER": /srv/archon
 git clone https://github.com/<you>/<fleet repository>.git /srv/archon
-curl -fsSL https://deno.land/install.sh | sh -s -- -y && exec bash
-cd /srv/archon && deno task stolos workstation add
-deno task stolos apply -m "my-fleet: add workstation"
+curl -fsSL https://bun.sh/install | bash -s "bun-v1.4.4" && exec bash
+cd /srv/archon && bun install --frozen-lockfile && bun run stolos workstation add
+bun run stolos apply -m "my-fleet: add workstation"
 ```
 
 Open a new Ubuntu tab: the fleet's tools, prompt, and Claude Code are ready. Details:
@@ -502,8 +505,8 @@ Edit its file, `fleets/my-fleet/hosts/server-hostname/host.ts` (or `fleets/my-fl
 every server), then:
 
 ```sh
-deno task stolos apply -m "my-fleet: what changed"   # checks, builds, signs, pushes
-deno task stolos fleet status     # within 15 minutes, each server has applied it
+bun run stolos apply -m "my-fleet: what changed"   # checks, builds, signs, pushes
+bun run stolos fleet status     # within 15 minutes, each server has applied it
 ```
 
 In a hurry: `ssh -t server-hostname archon update` applies it now (it asks for your password).
@@ -522,8 +525,8 @@ Anything that holds people's data must be marked, when you turn it on, as one of
 There is no default: you choose.
 
 ```sh
-deno task stolos decide pg on --durable --host server-hostname
-deno task stolos apply -m "my-fleet: PostgreSQL on server-hostname"
+bun run stolos decide pg on --durable --host server-hostname
+bun run stolos apply -m "my-fleet: PostgreSQL on server-hostname"
 ```
 
 Check later: `ssh server-hostname archon data` lists each source of data and its choice. Going from
@@ -531,7 +534,7 @@ ephemeral to durable is always allowed. Going from durable to ephemeral removes 
 it needs the confirmation:
 
 ```sh
-deno task stolos decide pg on --ephemeral --host server-hostname --confirm-destroy server-hostname
+bun run stolos decide pg on --ephemeral --host server-hostname --confirm-destroy server-hostname
 ```
 
 </details>
@@ -543,7 +546,7 @@ Everything comes back from the repository and the boot machine (the same SSH ide
 `ssh server-hostname` still works); anything only on the server is lost. With `boot serve` running:
 
 ```sh
-deno task stolos boot reinstall server-hostname
+bun run stolos boot reinstall server-hostname
 ```
 
 A durable server (or one that cannot be asked) is reinstalled only with
@@ -564,8 +567,8 @@ database.
 <summary><b>Retire a server for good</b></summary>
 
 ```sh
-deno task stolos boot retire server-hostname                                     # only shows what it holds
-deno task stolos boot retire server-hostname --confirm-destroy server-hostname   # removes it from the fleet
+bun run stolos boot retire server-hostname                                     # only shows what it holds
+bun run stolos boot retire server-hostname --confirm-destroy server-hostname   # removes it from the fleet
 ```
 
 Its DNS names, deploy key, secrets, and files leave the fleet; the machine itself is not touched.
@@ -575,15 +578,15 @@ Its DNS names, deploy key, secrets, and files leave the fleet; the machine itsel
 <details>
 <summary><b>Keys: a new PC, a lost key, a yearly change</b></summary>
 
-| Situation                                 | Run                                                                    |
-| ----------------------------------------- | ---------------------------------------------------------------------- |
-| check everything                          | `deno task stolos keys`                                                |
-| a new PC, or anything is wrong            | `deno task stolos keys setup` (safe to run again)                      |
-| a planned change of key                   | `deno task stolos keys rotate`, then `deno task stolos apply`          |
-| the daily key is lost                     | `deno task stolos keys lost`, then push                                |
-| the laptop was stolen (key may be copied) | the same, with `--stolen`                                              |
-| a new recovery key (yearly)               | `deno task stolos keys rotate-recovery`, then `deno task stolos apply` |
-| twice a year                              | `deno task stolos keys check-recovery`                                 |
+| Situation                                 | Run                                                                |
+| ----------------------------------------- | ------------------------------------------------------------------ |
+| check everything                          | `bun run stolos keys`                                              |
+| a new PC, or anything is wrong            | `bun run stolos keys setup` (safe to run again)                    |
+| a planned change of key                   | `bun run stolos keys rotate`, then `bun run stolos apply`          |
+| the daily key is lost                     | `bun run stolos keys lost`, then push                              |
+| the laptop was stolen (key may be copied) | the same, with `--stolen`                                          |
+| a new recovery key (yearly)               | `bun run stolos keys rotate-recovery`, then `bun run stolos apply` |
+| twice a year                              | `bun run stolos keys check-recovery`                               |
 
 </details>
 
@@ -593,7 +596,7 @@ Its DNS names, deploy key, secrets, and files leave the fleet; the machine itsel
 After anything that made a secret (a new server, a new token, a new key):
 
 ```sh
-deno task stolos vault backup
+bun run stolos vault backup
 ```
 
 It writes one ZIP and tells you where. Move it somewhere safe and encrypted (a password manager, an
@@ -603,7 +606,7 @@ On a new PC, after cloning the fleet repository, one command puts it all back (e
 keys, Git's signing):
 
 ```sh
-deno task stolos vault restore <path to the ZIP>
+bun run stolos vault restore <path to the ZIP>
 ```
 
 </details>
@@ -611,37 +614,37 @@ deno task stolos vault restore <path to the ZIP>
 <details>
 <summary><b>Adopt a newer engine</b></summary>
 
-`deno task stolos update` does it when a newer release is out: it checks the new version against
-your fleet, makes one signed commit, and tells you to run `deno task stolos apply`; your servers
+`bun run stolos update` does it when a newer release is out: it checks the new version against
+your fleet, makes one signed commit, and tells you to run `bun run stolos apply`; your servers
 pick it up within 15 minutes. To choose a version yourself:
-`deno task stolos fleet upgrade v<version>`, then `deno task stolos apply`.
+`bun run stolos fleet upgrade v<version>`, then `bun run stolos apply`.
 
 </details>
 
 ## When something goes wrong
 
 Most messages end with `explain: archon explain <code>`: run it for what it means and how to fix it.
-`deno task stolos boot doctor` checks the boot machine; `archon doctor` checks a server.
+`bun run stolos boot doctor` checks the boot machine; `archon doctor` checks a server.
 
-| You see                                               | What to do                                                                                                                                                                               |
-| ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `no fleet chosen in ...`                              | the repository holds several fleets: `deno task stolos fleet use my-fleet` (once per checkout; remembered)                                                                               |
-| `push refused here: ... is not signed`                | `git commit --amend --no-edit -S`, then `deno task stolos apply` again. `deno task stolos keys` shows what is missing                                                                    |
-| a server does not pick up your change                 | `deno task stolos fleet status`; on the server, `journalctl -t archon-approval` says why it refused (usually `E047-UNSIGNED`)                                                            |
-| the boot window shows nothing when the machine boots  | `deno task stolos boot doctor` (the firewall, and the router's network boot setting); is the machine booting from the network (F7/F12)?                                                  |
-| `disk is not blank` in the boot window                | it protected the disk. If it may be erased: `deno task stolos boot arm server-hostname --claim --confirm-destroy server-hostname`                                                        |
-| the install stops after `installer image`             | the machine has less than 8 GB of RAM: install from USB, then `host bootstrap` (above)                                                                                                   |
-| `ssh server-hostname` warns that the host key changed | stop: do not accept it. `deno task stolos boot doctor`, then `archon explain E047-HOST-KEY`                                                                                              |
-| you forgot your daily key's passphrase                | it cannot be recovered: `deno task stolos keys lost`                                                                                                                                     |
-| `integrity check failed` or `lockfile is out of date` | stop: never regenerate `deno.lock` to make it go away. See [The fleet repository](https://intellectual-frontiers.github.io/stolos/latest/archon/fleet/mod.ts/index.html#troubleshooting) |
-| `the repository has uncommitted changes`              | commit (or `git stash`) your other change first                                                                                                                                          |
+| You see                                               | What to do                                                                                                                                                                              |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `no fleet chosen in ...`                              | the repository holds several fleets: `bun run stolos fleet use my-fleet` (once per checkout; remembered)                                                                                |
+| `push refused here: ... is not signed`                | `git commit --amend --no-edit -S`, then `bun run stolos apply` again. `bun run stolos keys` shows what is missing                                                                       |
+| a server does not pick up your change                 | `bun run stolos fleet status`; on the server, `journalctl -t archon-approval` says why it refused (usually `E047-UNSIGNED`)                                                             |
+| the boot window shows nothing when the machine boots  | `bun run stolos boot doctor` (the firewall, and the router's network boot setting); is the machine booting from the network (F7/F12)?                                                   |
+| `disk is not blank` in the boot window                | it protected the disk. If it may be erased: `bun run stolos boot arm server-hostname --claim --confirm-destroy server-hostname`                                                         |
+| the install stops after `installer image`             | the machine has less than 8 GB of RAM: install from USB, then `host bootstrap` (above)                                                                                                  |
+| `ssh server-hostname` warns that the host key changed | stop: do not accept it. `bun run stolos boot doctor`, then `archon explain E047-HOST-KEY`                                                                                               |
+| you forgot your daily key's passphrase                | it cannot be recovered: `bun run stolos keys lost`                                                                                                                                      |
+| `integrity check failed` or `lockfile is out of date` | stop: never regenerate `bun.lock` to make it go away. See [The fleet repository](https://intellectual-frontiers.github.io/stolos/latest/archon/fleet/mod.ts/index.html#troubleshooting) |
+| `the repository has uncommitted changes`              | commit (or `git stash`) your other change first                                                                                                                                         |
 
 ## Documentation
 
 Everything is documented in the code, so it changes with the code: each guide is the documentation
-of the module beside the code it explains, rendered with its diagrams by `deno doc`
-(<https://intellectual-frontiers.github.io/stolos/latest/>, or `deno task docs` here), and read
-offline, at your engine's version, with `deno task stolos docs <name>` (or `archon docs <name>` on a
+of the module beside the code it explains, rendered with its diagrams by `tools/docs.ts`
+(<https://intellectual-frontiers.github.io/stolos/latest/>, or `bun run docs` here), and read
+offline, at your engine's version, with `bun run stolos docs <name>` (or `archon docs <name>` on a
 server). Tests keep every command a guide names, and every link between guides, real.
 
 | Guide                                                                                                                                            | For                                                                   | Offline                         |
@@ -675,9 +678,9 @@ and [AGENTS.md](AGENTS.md).
 ## Try it
 
 ```sh
-deno task stolos validate     # the example fleet, examples/fleets/lab
-deno task stolos build        # renders its machines into examples/out/lab/
-deno task test
+bun run stolos validate     # the example fleet, examples/fleets/lab
+bun run stolos build        # renders its machines into examples/out/lab/
+bun run test
 ```
 
 Every change to this repository is a new version ([`src/archon/version.ts`](src/archon/version.ts)),

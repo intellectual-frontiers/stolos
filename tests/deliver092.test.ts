@@ -15,6 +15,7 @@ import {
   assert,
   assertEquals,
   assertStringIncludes,
+  proves,
   test,
 } from "@intellectual-frontiers/ifc-ts/runtime/test";
 import { fleet } from "./fixtures.ts";
@@ -127,7 +128,8 @@ async function recipient(
   return { files, cert: parseCertificate(await fs.readTextFile(files.cert)), key };
 }
 
-test(
+proves(
+  ["092-exporters FR-B03"],
   "smime: AuthEnvelopedData opens with each recipient's key, and only theirs",
   async () => {
     const dir = await fs.makeTempDir({ prefix: "stolos-smime-" });
@@ -168,7 +170,8 @@ test(
   { skip: !OPENSSL && "openssl makes the test certificates" },
 );
 
-test(
+proves(
+  ["092-exporters FR-B03"],
   "smime: openssl cms -decrypt opens our message (interoperability)",
   async () => {
     const dir = await fs.makeTempDir({ prefix: "stolos-smime-" });
@@ -225,143 +228,151 @@ test(
   { skip: !OPENSSL && "no openssl here" },
 );
 
-test("smime: certificates that cannot be used are refused with a reason", async () => {
-  let threw = "";
-  try {
-    parseCertificate("not a certificate");
-  } catch (e) {
-    threw = (e as Error).message;
-  }
-  assert(threw !== "", "not a certificate is refused");
-  if (!OPENSSL) return;
-  const dir = await fs.makeTempDir({ prefix: "stolos-smime-" });
-  try {
-    await sh("openssl", [
-      "req",
-      "-x509",
-      "-newkey",
-      "ec",
-      "-pkeyopt",
-      "ec_paramgen_curve:P-256",
-      "-nodes",
-      "-keyout",
-      `${dir}/ec.key`,
-      "-out",
-      `${dir}/ec.pem`,
-      "-subj",
-      "/CN=ec",
-      "-days",
-      "2",
-    ]);
-    const ec = parseCertificate(await fs.readTextFile(`${dir}/ec.pem`));
-    assertStringIncludes(
-      describeCertificateProblem(must(cms.certificateProblem(ec, "ec@example.com", new Date()))),
-      "not RSA",
-    );
-    const sign = await opensslCert(dir, "signer", "s@example.com", [
-      "-addext",
-      "keyUsage=digitalSignature",
-    ]);
-    const c = parseCertificate(await fs.readTextFile(sign.cert));
-    assertStringIncludes(
-      describeCertificateProblem(must(cms.certificateProblem(c, "s@example.com", new Date()))),
-      "signing only",
-    );
-  } finally {
-    await fs.remove(dir, { recursive: true });
-  }
-});
+proves(
+  ["092-exporters FR-B03"],
+  "smime: certificates that cannot be used are refused with a reason",
+  async () => {
+    let threw = "";
+    try {
+      parseCertificate("not a certificate");
+    } catch (e) {
+      threw = (e as Error).message;
+    }
+    assert(threw !== "", "not a certificate is refused");
+    if (!OPENSSL) return;
+    const dir = await fs.makeTempDir({ prefix: "stolos-smime-" });
+    try {
+      await sh("openssl", [
+        "req",
+        "-x509",
+        "-newkey",
+        "ec",
+        "-pkeyopt",
+        "ec_paramgen_curve:P-256",
+        "-nodes",
+        "-keyout",
+        `${dir}/ec.key`,
+        "-out",
+        `${dir}/ec.pem`,
+        "-subj",
+        "/CN=ec",
+        "-days",
+        "2",
+      ]);
+      const ec = parseCertificate(await fs.readTextFile(`${dir}/ec.pem`));
+      assertStringIncludes(
+        describeCertificateProblem(must(cms.certificateProblem(ec, "ec@example.com", new Date()))),
+        "not RSA",
+      );
+      const sign = await opensslCert(dir, "signer", "s@example.com", [
+        "-addext",
+        "keyUsage=digitalSignature",
+      ]);
+      const c = parseCertificate(await fs.readTextFile(sign.cert));
+      assertStringIncludes(
+        describeCertificateProblem(must(cms.certificateProblem(c, "s@example.com", new Date()))),
+        "signing only",
+      );
+    } finally {
+      await fs.remove(dir, { recursive: true });
+    }
+  },
+);
 
 // ------------------------------------------------------------------- jobs
 
 const LAB_MAIL = { to: "fleet@example.net", domain: "example.net", tag: "lab" };
 
-test("jobs: per-tenant jobs are checked, matched, and send from their own address", () => {
-  const f = fleet({
-    mail: LAB_MAIL,
-    estate: {
-      exports: [
-        {
-          id: "auditor",
-          kinds: ["oscal"],
-          tenants: ["fleet:lab"],
-          email: { to: [{ address: "auditor@example.com", certificate: "certs/auditor.pem" }] },
-          schedule: { every: "monthly", at: "06:10", dayOfMonth: 1 },
-        },
-        {
-          id: "acme",
-          kinds: ["cyclonedx", "ocsf"],
-          tenants: ["aws:*", "microsoft:acme.example"],
-          email: {
-            to: [{ address: "security@acme.example", certificate: "certs/acme.pem" }],
-            from: "reports@acme.example",
-            relay: "smtp.acme.example:587",
-            credential: "acme",
+proves(
+  ["092-exporters FR-B01"],
+  "jobs: per-tenant jobs are checked, matched, and send from their own address",
+  () => {
+    const f = fleet({
+      mail: LAB_MAIL,
+      estate: {
+        exports: [
+          {
+            id: "auditor",
+            kinds: ["oscal"],
+            tenants: ["fleet:lab"],
+            email: { to: [{ address: "auditor@example.com", certificate: "certs/auditor.pem" }] },
+            schedule: { every: "monthly", at: "06:10", dayOfMonth: 1 },
           },
-          schedule: { every: "weekly", weekday: "fri" },
-        },
-      ],
-    },
-  });
-  assertEquals(validateExportJobs(f), []);
-  assertEquals(
-    validateFleet(f, []).filter((p) => p.where.includes("exports")),
-    [],
-  );
-  const acme = must(must(must(f.estate).exports)[1]);
-  assert(tenantMatches("aws:*", "aws:123456789012"));
-  assert(!tenantMatches("aws:*", "gcp:proj"));
-  assert(tenantFilter(acme)("microsoft:acme.example"));
-  assert(!tenantFilter(acme)("fleet:lab"));
-  assert(tenantFilter({})("anything:at-all"));
-  assertEquals(
-    jobSender(f, must(must(must(f.estate).exports)[0]), "bootpc"),
-    "exports+bootpc.lab@example.net",
-  );
-  assertEquals(jobSender(f, acme, "bootpc"), "reports@acme.example");
+          {
+            id: "acme",
+            kinds: ["cyclonedx", "ocsf"],
+            tenants: ["aws:*", "microsoft:acme.example"],
+            email: {
+              to: [{ address: "security@acme.example", certificate: "certs/acme.pem" }],
+              from: "reports@acme.example",
+              relay: "smtp.acme.example:587",
+              credential: "acme",
+            },
+            schedule: { every: "weekly", weekday: "fri" },
+          },
+        ],
+      },
+    });
+    assertEquals(validateExportJobs(f), []);
+    assertEquals(
+      validateFleet(f, []).filter((p) => p.where.includes("exports")),
+      [],
+    );
+    const acme = must(must(must(f.estate).exports)[1]);
+    assert(tenantMatches("aws:*", "aws:123456789012"));
+    assert(!tenantMatches("aws:*", "gcp:proj"));
+    assert(tenantFilter(acme)("microsoft:acme.example"));
+    assert(!tenantFilter(acme)("fleet:lab"));
+    assert(tenantFilter({})("anything:at-all"));
+    assertEquals(
+      jobSender(f, must(must(must(f.estate).exports)[0]), "bootpc"),
+      "exports+bootpc.lab@example.net",
+    );
+    assertEquals(jobSender(f, acme, "bootpc"), "reports@acme.example");
 
-  const bad = fleet({
-    estate: {
-      exports: [
-        {
-          id: "Bad Id",
-          kinds: ["pdf" as ExportKind],
-          tenants: ["no-colon"],
-          email: {
-            to: [
-              { address: "not-an-address", certificate: "" },
-              { address: "x@example.com", certificate: "-----BEGIN PRIVATE KEY-----" },
-            ],
-            subject: "two\nlines",
+    const bad = fleet({
+      estate: {
+        exports: [
+          {
+            id: "Bad Id",
+            kinds: ["pdf" as ExportKind],
+            tenants: ["no-colon"],
+            email: {
+              to: [
+                { address: "not-an-address", certificate: "" },
+                { address: "x@example.com", certificate: "-----BEGIN PRIVATE KEY-----" },
+              ],
+              subject: "two\nlines",
+            },
+            schedule: { every: "yearly" as "daily", at: "25:00", dayOfMonth: 31 },
           },
-          schedule: { every: "yearly" as "daily", at: "25:00", dayOfMonth: 31 },
-        },
-        { id: "dup", kinds: [] },
-        { id: "dup", kinds: ["oscal"] },
-      ],
-    },
-  });
-  const msgs = validateExportJobs(bad)
-    .map((p) => `${p.where}: ${p.message}`)
-    .join("\n");
-  for (const s of [
-    "is not a job id",
-    "unknown kind pdf",
-    "is not a tenant uid",
-    "is not an email address",
-    "has no certificate: exports are only emailed encrypted",
-    "holds a private key",
-    "the fleet has no mail settings",
-    "line break",
-    "is not a period",
-    "is not HH:MM",
-    "is not 1 to 28",
-    "no kinds",
-    "two jobs are named dup",
-  ]) {
-    assertStringIncludes(msgs, s);
-  }
-});
+          { id: "dup", kinds: [] },
+          { id: "dup", kinds: ["oscal"] },
+        ],
+      },
+    });
+    const msgs = validateExportJobs(bad)
+      .map((p) => `${p.where}: ${p.message}`)
+      .join("\n");
+    for (const s of [
+      "is not a job id",
+      "unknown kind pdf",
+      "is not a tenant uid",
+      "is not an email address",
+      "has no certificate: exports are only emailed encrypted",
+      "holds a private key",
+      "the fleet has no mail settings",
+      "line break",
+      "is not a period",
+      "is not HH:MM",
+      "is not 1 to 28",
+      "no kinds",
+      "two jobs are named dup",
+    ]) {
+      assertStringIncludes(msgs, s);
+    }
+  },
+);
 
 // ------------------------------------------------------------------- delivery
 
@@ -431,99 +442,115 @@ async function deps(f: FleetDef, over: Partial<RunDeps> = {}): Promise<RunDeps> 
   };
 }
 
-test("deliver: the collector when configured, otherwise a file; a file too when emailed", () => {
-  const job: ExportJobDef = { id: "j", kinds: ["otlp"] };
-  const withCollector = fleet({ telemetry: { collector: "http://10.0.0.5:4318/" } });
-  assertEquals(deliveryPlan(withCollector, job), {
-    otlp: "http://10.0.0.5:4318",
-    file: false,
-    email: false,
-  });
-  assertEquals(deliveryPlan(fleet(), job), { file: true, email: false });
-  assertEquals(deliveryPlan(withCollector, { ...job, otlp: false }), { file: true, email: false });
-  const mailed = { ...job, email: { to: [{ address: "a@example.com", certificate: "c.pem" }] } };
-  assertEquals(deliveryPlan(withCollector, mailed), {
-    otlp: "http://10.0.0.5:4318",
-    file: true,
-    email: true,
-  });
-});
+proves(
+  ["092-exporters FR-B02"],
+  "deliver: the collector when configured, otherwise a file; a file too when emailed",
+  () => {
+    const job: ExportJobDef = { id: "j", kinds: ["otlp"] };
+    const withCollector = fleet({ telemetry: { collector: "http://10.0.0.5:4318/" } });
+    assertEquals(deliveryPlan(withCollector, job), {
+      otlp: "http://10.0.0.5:4318",
+      file: false,
+      email: false,
+    });
+    assertEquals(deliveryPlan(fleet(), job), { file: true, email: false });
+    assertEquals(deliveryPlan(withCollector, { ...job, otlp: false }), {
+      file: true,
+      email: false,
+    });
+    const mailed = { ...job, email: { to: [{ address: "a@example.com", certificate: "c.pem" }] } };
+    assertEquals(deliveryPlan(withCollector, mailed), {
+      otlp: "http://10.0.0.5:4318",
+      file: true,
+      email: true,
+    });
+  },
+);
 
-test("deliver: OTLP documents go to their signal, the rest as log records", async () => {
-  assertEquals(otlpSignal(OTLP_DOC), "/v1/traces");
-  assertEquals(otlpSignal(JSON_DOC), undefined);
-  const f = fleet({ telemetry: { collector: "http://10.0.0.5:4318" } });
-  const net = fakeFetch();
-  const d = await deps(f, { fetch: net.fn });
-  const r = await runJob({ id: "aws", kinds: ["otlp", "cyclonedx"], tenants: ["aws:*"] }, d);
-  assert(r.ok, r.problems.join("; "));
-  assertEquals(r.otlp, { endpoint: "http://10.0.0.5:4318", ok: true });
-  assertEquals(r.files, undefined);
-  assertEquals(
-    net.calls.map((c) => c.url),
-    ["http://10.0.0.5:4318/v1/traces", "http://10.0.0.5:4318/v1/logs"],
-  );
-  const logs = parse(must(net.calls[1]).body);
-  const records = list(logs, "resourceLogs", 0, "scopeLogs", 0, "logRecords");
-  assertEquals(records.length, 2);
-  assertEquals(at(records, 0, "body", "stringValue"), '{"bomFormat":"CycloneDX"}');
-  assertEquals(at(records, 1, "body", "bytesValue"), "AAEC/w==");
-  const names = records.map((x) =>
-    at(
-      list(x, "attributes").find((a) => at(a, "key") === "stolos.export.file_name"),
-      "value",
-      "stringValue",
-    ),
-  );
-  assertEquals(names, ["inventory.cdx.json", "bundle.bin"]);
-  const direct: unknown = await otlpLogs([{ kind: "cyclonedx", doc: JSON_DOC }], {
-    fleet: "lab",
-    job: "aws",
-    now: d.now,
-  });
-  assert(
-    list(direct, "resourceLogs", 0, "resource", "attributes").some(
-      (a) => at(a, "key") === "stolos.fleet",
-    ),
-  );
-});
+proves(
+  ["092-exporters FR-B02"],
+  "deliver: OTLP documents go to their signal, the rest as log records",
+  async () => {
+    assertEquals(otlpSignal(OTLP_DOC), "/v1/traces");
+    assertEquals(otlpSignal(JSON_DOC), undefined);
+    const f = fleet({ telemetry: { collector: "http://10.0.0.5:4318" } });
+    const net = fakeFetch();
+    const d = await deps(f, { fetch: net.fn });
+    const r = await runJob({ id: "aws", kinds: ["otlp", "cyclonedx"], tenants: ["aws:*"] }, d);
+    assert(r.ok, r.problems.join("; "));
+    assertEquals(r.otlp, { endpoint: "http://10.0.0.5:4318", ok: true });
+    assertEquals(r.files, undefined);
+    assertEquals(
+      net.calls.map((c) => c.url),
+      ["http://10.0.0.5:4318/v1/traces", "http://10.0.0.5:4318/v1/logs"],
+    );
+    const logs = parse(must(net.calls[1]).body);
+    const records = list(logs, "resourceLogs", 0, "scopeLogs", 0, "logRecords");
+    assertEquals(records.length, 2);
+    assertEquals(at(records, 0, "body", "stringValue"), '{"bomFormat":"CycloneDX"}');
+    assertEquals(at(records, 1, "body", "bytesValue"), "AAEC/w==");
+    const names = records.map((x) =>
+      at(
+        list(x, "attributes").find((a) => at(a, "key") === "stolos.export.file_name"),
+        "value",
+        "stringValue",
+      ),
+    );
+    assertEquals(names, ["inventory.cdx.json", "bundle.bin"]);
+    const direct: unknown = await otlpLogs([{ kind: "cyclonedx", doc: JSON_DOC }], {
+      fleet: "lab",
+      job: "aws",
+      now: d.now,
+    });
+    assert(
+      list(direct, "resourceLogs", 0, "resource", "attributes").some(
+        (a) => at(a, "key") === "stolos.fleet",
+      ),
+    );
+  },
+);
 
-test("deliver: no collector, or one that refuses: files in the state directory", async () => {
-  const d = await deps(fleet());
-  const r = await runJob({ id: "aws", kinds: ["cyclonedx"] }, d);
-  assert(r.ok);
-  assertEquals(must(r.files).length, 2);
-  const first = must(must(r.files)[0]);
-  assert(first.startsWith(`${d.stateDir}/exports/aws/2026-11-15T02-17-00Z/`));
-  assertEquals(await fs.readTextFile(first), '{"bomFormat":"CycloneDX"}');
-  const last = parse(await fs.readTextFile(`${d.stateDir}/exports/aws/last-run.json`));
-  assertEquals(at(last, "ok"), true);
+proves(
+  ["092-exporters FR-B02"],
+  "deliver: no collector, or one that refuses: files in the state directory",
+  async () => {
+    const d = await deps(fleet());
+    const r = await runJob({ id: "aws", kinds: ["cyclonedx"] }, d);
+    assert(r.ok);
+    assertEquals(must(r.files).length, 2);
+    const first = must(must(r.files)[0]);
+    assert(first.startsWith(`${d.stateDir}/exports/aws/2026-11-15T02-17-00Z/`));
+    assertEquals(await fs.readTextFile(first), '{"bomFormat":"CycloneDX"}');
+    const last = parse(await fs.readTextFile(`${d.stateDir}/exports/aws/last-run.json`));
+    assertEquals(at(last, "ok"), true);
 
-  const down = fakeFetch(503);
-  const d2 = await deps(fleet({ telemetry: { collector: "http://10.0.0.5:4318" } }), {
-    fetch: down.fn,
-  });
-  const r2 = await runJob({ id: "aws", kinds: ["cyclonedx"] }, d2);
-  assertEquals(r2.otlp?.ok, false);
-  assertEquals(must(r2.files).length, 2);
-  assertStringIncludes(r2.problems.join(), "kept as a file instead");
+    const down = fakeFetch(503);
+    const d2 = await deps(fleet({ telemetry: { collector: "http://10.0.0.5:4318" } }), {
+      fetch: down.fn,
+    });
+    const r2 = await runJob({ id: "aws", kinds: ["cyclonedx"] }, d2);
+    assertEquals(r2.otlp?.ok, false);
+    assertEquals(must(r2.files).length, 2);
+    assertStringIncludes(r2.problems.join(), "kept as a file instead");
 
-  // A tenant the job leaves out makes nothing; an unknown source says so.
-  const seen: string[] = [];
-  const r3 = await runJob(
-    { id: "gcp", kinds: ["cyclonedx", "in-toto"], tenants: ["gcp:*"] },
-    await deps(fleet(), { source: fakeSources(seen) }),
-  );
-  assertEquals(seen, ["cyclonedx:gcp"]);
-  assertStringIncludes(
-    r3.problems.join("\n"),
-    "in-toto: this version of Stolos cannot make it yet",
-  );
-  assertStringIncludes(r3.problems.join("\n"), "nothing to deliver");
-  assert(!r3.ok);
-});
+    // A tenant the job leaves out makes nothing; an unknown source says so.
+    const seen: string[] = [];
+    const r3 = await runJob(
+      { id: "gcp", kinds: ["cyclonedx", "in-toto"], tenants: ["gcp:*"] },
+      await deps(fleet(), { source: fakeSources(seen) }),
+    );
+    assertEquals(seen, ["cyclonedx:gcp"]);
+    assertStringIncludes(
+      r3.problems.join("\n"),
+      "in-toto: this version of Stolos cannot make it yet",
+    );
+    assertStringIncludes(r3.problems.join("\n"), "nothing to deliver");
+    assert(!r3.ok);
+  },
+);
 
-test(
+proves(
+  ["092-exporters FR-B02", "092-exporters FR-B03"],
   "deliver: each job emails its own recipients through its own credential",
   async () => {
     const f = fleet({ mail: LAB_MAIL });
@@ -677,7 +704,7 @@ test("deliver: no secret in the run record, even when the relay's error echoes i
   const text = await fs.readTextFile(`${d.stateDir}/exports/leak/last-run.json`);
   assert(!text.includes(SECRET.token), "the token is not in last-run.json");
   assert(!JSON.stringify(r).includes(SECRET.token));
-  assertStringIncludes(text, "[redacted");
+  assertStringIncludes(text, "REDACTED");
   // Without a credential, it says how to make one.
   const r2 = await runJob(
     {
@@ -692,40 +719,44 @@ test("deliver: no secret in the run record, even when the relay's error echoes i
 
 // ------------------------------------------------------------------- schedule
 
-test("schedule: a job's schedule, in IFC TypeScript's terms, and the command it runs", () => {
-  const job = (sch: ExportJobDef["schedule"]): ExportJobDef => ({
-    id: "auditor",
-    kinds: ["oscal"],
-    ...(sch === undefined ? {} : { schedule: sch }),
-  });
-  const spec = exportJobSpec("lab", job({ every: "daily", at: "06:10" }), {
-    command: ["/home/alice/.bun/bin/bun", "stolos.ts"],
-    workdir: "/home/alice/src/fleet",
-  });
-  assert(spec.kind === "ok");
-  assertEquals(spec.value.argv, [
-    "/home/alice/.bun/bin/bun",
-    "stolos.ts",
-    "--fleet",
-    "lab",
-    "export",
-    "run",
-    "auditor",
-  ]);
-  assertEquals(spec.value.workdir, "/home/alice/src/fleet");
-  assertStringIncludes(spec.value.name, "export-lab-auditor");
-  const when = (sch: ExportJobDef["schedule"]): jobs.Schedule => {
-    const w = jobWhen(job(sch));
-    assert(w.kind === "ok");
-    return w.value;
-  };
-  assertEquals(when({ every: "daily", at: "06:10" }), when({ every: "daily", at: "06:10" }));
-  assertStringIncludes(describeSchedule(job(undefined)), "02:17");
-  assertStringIncludes(describeSchedule(job({ every: "weekly", weekday: "fri" })), "02:17");
-  assertEquals(jobWhen(job({ every: "daily", at: "25:00" })).kind, "err");
-});
+proves(
+  ["092-exporters FR-B04"],
+  "schedule: a job's schedule, in IFC TypeScript's terms, and the command it runs",
+  () => {
+    const job = (sch: ExportJobDef["schedule"]): ExportJobDef => ({
+      id: "auditor",
+      kinds: ["oscal"],
+      ...(sch === undefined ? {} : { schedule: sch }),
+    });
+    const spec = exportJobSpec("lab", job({ every: "daily", at: "06:10" }), {
+      command: ["/home/alice/.bun/bin/bun", "stolos.ts"],
+      workdir: "/home/alice/src/fleet",
+    });
+    assert(spec.kind === "ok");
+    assertEquals(spec.value.argv, [
+      "/home/alice/.bun/bin/bun",
+      "stolos.ts",
+      "--fleet",
+      "lab",
+      "export",
+      "run",
+      "auditor",
+    ]);
+    assertEquals(spec.value.workdir, "/home/alice/src/fleet");
+    assertStringIncludes(spec.value.name, "export-lab-auditor");
+    const when = (sch: ExportJobDef["schedule"]): jobs.Schedule => {
+      const w = jobWhen(job(sch));
+      assert(w.kind === "ok");
+      return w.value;
+    };
+    assertEquals(when({ every: "daily", at: "06:10" }), when({ every: "daily", at: "06:10" }));
+    assertStringIncludes(describeSchedule(job(undefined)), "02:17");
+    assertStringIncludes(describeSchedule(job({ every: "weekly", weekday: "fri" })), "02:17");
+    assertEquals(jobWhen(job({ every: "daily", at: "25:00" })).kind, "err");
+  },
+);
 
-test("schedule: no secret in any job definition", () => {
+proves(["092-exporters FR-B04"], "schedule: no secret in any job definition", () => {
   proc.env.set("STOLOS_TEST_SECRET", SECRET.token);
   try {
     const spec = exportJobSpec(
@@ -835,7 +866,8 @@ function fakeSmtp(listener: tcp.Listener): {
   };
 }
 
-test(
+proves(
+  ["092-exporters FR-B03"],
   "smtp: the dialogue over implicit TLS with a fake relay: AUTH PLAIN, MAIL, RCPT, DATA",
   async () => {
     const dir = await fs.makeTempDir({ prefix: "stolos-smtp-" });
@@ -899,7 +931,8 @@ test(
   { skip: (!OPENSSL || !CURL) && "needs openssl and curl" },
 );
 
-test(
+proves(
+  ["092-exporters FR-B03"],
   "smtp: refuses to log in or send without TLS (no STARTTLS offered, or no TLS at all)",
   async () => {
     for (const tls of ["starttls", "implicit"] as const) {
@@ -958,53 +991,57 @@ test("commands: export run, schedule, list, credential are PC-only and never ove
   assert(s.args.some((a) => a.name === "remove") && s.args.some((a) => a.name === "dry-run"));
 });
 
-test("092: a job's tenants limit what the estate formats carry", async () => {
-  const { buildGraph } = await import("../src/archon/estate/graph.ts");
-  const { estateForTenants } = await import("../src/archon/export/deliver.ts");
-  const obs = (provider: string, account: string) => ({
-    at: "2026-11-01T00:00:00Z",
-    provider,
-    account,
-    assets: [],
-    posture: {},
-    gaps: [],
-    entities: {
-      accounts: [
+proves(
+  ["092-exporters FR-B01"],
+  "092: a job's tenants limit what the estate formats carry",
+  async () => {
+    const { buildGraph } = await import("../src/archon/estate/graph.ts");
+    const { estateForTenants } = await import("../src/archon/export/deliver.ts");
+    const obs = (provider: string, account: string) => ({
+      at: "2026-11-01T00:00:00Z",
+      provider,
+      account,
+      assets: [],
+      posture: {},
+      gaps: [],
+      entities: {
+        accounts: [
+          {
+            system: provider,
+            id: "1",
+            name: "alice",
+            email: "alice@example.org",
+            active: true,
+          },
+        ],
+      },
+    });
+    const e = buildGraph({
+      fleet: "lab",
+      sources: [
+        { connector: "okta", observation: obs("okta", "a") },
         {
-          system: provider,
-          id: "1",
-          name: "alice",
-          email: "alice@example.org",
-          active: true,
+          connector: "github",
+          observation: obs("github", "b"),
         },
       ],
-    },
-  });
-  const e = buildGraph({
-    fleet: "lab",
-    sources: [
-      { connector: "okta", observation: obs("okta", "a") },
-      {
-        connector: "github",
-        observation: obs("github", "b"),
-      },
-    ],
-    machines: [{ source: "stolos", id: "alpha", name: "alpha", managed: true }],
-    links: {},
-  });
-  const ctx: ExportContext = {
-    fleet: fleet({ id: "lab" }),
-    job: { id: "okta", kinds: ["ocsf"] },
-    tenant: (uid: string) => uid.startsWith("okta:"),
-    now: new Date(Date.now() + 60_000),
-  };
-  estateForTenants(e, ctx);
-  const n = (sql: string) => (e.db.prepare(sql).get() as { n: number }).n;
-  assertEquals(n("SELECT count(*) AS n FROM node WHERE tenant_uid = 'okta:a'"), 1);
-  assertEquals(n("SELECT count(*) AS n FROM node WHERE tenant_uid = 'github:b'"), 0);
-  assertEquals(
-    n("SELECT count(*) AS n FROM fixed_asset"),
-    0,
-    "the fleet's machines only with the fleet's tenant",
-  );
-});
+      machines: [{ source: "stolos", id: "alpha", name: "alpha", managed: true }],
+      links: {},
+    });
+    const ctx: ExportContext = {
+      fleet: fleet({ id: "lab" }),
+      job: { id: "okta", kinds: ["ocsf"] },
+      tenant: (uid: string) => uid.startsWith("okta:"),
+      now: new Date(Date.now() + 60_000),
+    };
+    estateForTenants(e, ctx);
+    const n = (sql: string) => (e.db.prepare(sql).get() as { n: number }).n;
+    assertEquals(n("SELECT count(*) AS n FROM node WHERE tenant_uid = 'okta:a'"), 1);
+    assertEquals(n("SELECT count(*) AS n FROM node WHERE tenant_uid = 'github:b'"), 0);
+    assertEquals(
+      n("SELECT count(*) AS n FROM fixed_asset"),
+      0,
+      "the fleet's machines only with the fleet's tenant",
+    );
+  },
+);

@@ -25,15 +25,15 @@
 
 import {
   array,
-  compareSemVer,
   type Decoder,
   exportedLiteral,
   formatDecodeError,
   integer,
   literal,
   object,
+  parseRange,
   parseSemVer,
-  type SemVer,
+  satisfies,
   string,
   tsLiteral,
 } from "@intellectual-frontiers/ifc-ts/kernel";
@@ -118,48 +118,17 @@ export function pinSource(spec: string): PinnedSource {
   return { source, ref, module: `${origin}/${owner}/${repo}/${ref}/${file}` };
 }
 
-/** A version ("0.112.0", "v0.112.0"), or undefined. */
-function semver(v: string): SemVer | undefined {
-  const r = parseSemVer(v.trim());
-  return r.kind === "ok" ? r.value : undefined;
-}
-
-/** `^w`'s upper bound: the next major, or before 1.0 the next minor. */
-const caretLimit = (w: SemVer): SemVer =>
-  w.major > 0
-    ? { major: w.major + 1, minor: 0, patch: 0 }
-    : { major: 0, minor: w.minor + 1, patch: 0 };
-
 /**
- * Whether a version is in a range: comparators separated by spaces, all of
- * which must hold (`>=0.112.0 <1.0.0`); `^1.2.3` is `>=1.2.3 <2.0.0` (and
- * `^0.3.1`, `>=0.3.1 <0.4.0`). Undefined when the range is not readable.
+ * Whether an engine version is in a connector's engine range (an npm range, IFC TypeScript's
+ * `parseRange` and `satisfies`: `>=0.112.0 <1.0.0`, `^0.112.0`); undefined when either is not
+ * readable.
  */
-export function satisfies(version: string, range: string): boolean | undefined {
-  const v = semver(version);
-  const parts = range.trim().split(/\s+/).filter(Boolean);
-  if (!v || !parts.length) return undefined;
-  for (const p of parts) {
-    const m = p.match(/^(>=|<=|>|<|=|\^)?(v?\d+\.\d+\.\d+)$/);
-    const w = m?.[2] === undefined ? undefined : semver(m[2]);
-    if (!m || !w) return undefined;
-    const c = compareSemVer(v, w);
-    const op = m[1] ?? "=";
-    const ok =
-      op === ">="
-        ? c >= 0
-        : op === "<="
-          ? c <= 0
-          : op === ">"
-            ? c > 0
-            : op === "<"
-              ? c < 0
-              : op === "="
-                ? c === 0
-                : c >= 0 && compareSemVer(v, caretLimit(w)) < 0;
-    if (!ok) return false;
-  }
-  return true;
+export function engineSuits(version: string, range: string): boolean | undefined {
+  const v = parseSemVer(version.trim());
+  const r = parseRange(range);
+  return v.kind === "ok" && r.kind === "ok" && range.trim() !== ""
+    ? satisfies(v.value, r.value)
+    : undefined;
 }
 
 /** What the checks know besides the declaration. */
@@ -189,7 +158,7 @@ export function declarationProblems(d: Declaration, x: CheckContext): string[] {
   if (!d.engine) {
     out.push('it declares no engine range (export const engine = ">=0.112.0 <1.0.0")');
   } else {
-    const ok = satisfies(x.version, d.engine);
+    const ok = engineSuits(x.version, d.engine);
     if (ok === undefined) out.push(`engine range "${d.engine}" is not readable (>=1.2.3 <2.0.0)`);
     else if (!ok) out.push(`it supports engine ${d.engine}; this engine is ${x.version}`);
   }
@@ -304,11 +273,6 @@ export interface Loaded {
 
 const cache = new Map<string, Promise<Loaded>>();
 
-/**
- * The fleet's added connectors: each entry's module, if it suits this
- * engine (its range), is a connector, and does not take an engine
- * connector's id. Loaded once per file per process.
- */
 /** An Error's message, or the thrown value as text. */
 const messageOf = (e: unknown): string => (e instanceof Error ? e.message : String(e));
 
@@ -326,6 +290,11 @@ function isConnector(c: unknown): c is Connector {
   );
 }
 
+/**
+ * The fleet's added connectors: each entry's module, if it suits this
+ * engine (its range), is a connector, and does not take an engine
+ * connector's id. Loaded once per file per process.
+ */
 export function loadRegistry(
   fleetDir: string,
   version: string,
@@ -374,7 +343,7 @@ export function loadRegistry(
         const problems: string[] = [];
         for (const e of entries) {
           const c = modules[e.id];
-          const fits = satisfies(version, e.engine);
+          const fits = engineSuits(version, e.engine);
           if (builtIns.includes(e.id)) problems.push(`${e.id}: takes an engine connector's id`);
           else if (changed.has(e.id)) {
             problems.push(

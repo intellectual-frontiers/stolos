@@ -21,7 +21,7 @@
  * @module
  */
 
-import { exportedLiteral, type Literal, tsLiteral } from "@intellectual-frontiers/ifc-ts/kernel";
+import { exportedLiteral, tsLiteral } from "@intellectual-frontiers/ifc-ts/kernel";
 import { POPULATION_IDS, type PopulationId } from "./populations.ts";
 
 /** One person at the audit firm. */
@@ -161,7 +161,7 @@ export function engagementSource(e: Engagement): string {
 // Change it only with those commands: each change is a signed commit the auditor checks.
 import type { Engagement } from "@intellectual-frontiers/stolos/archon/audit/mod";
 
-export const engagement: Engagement = ${tsLiteral(e as unknown as Literal)};
+export const engagement: Engagement = ${tsLiteral(e)};
 `;
 }
 

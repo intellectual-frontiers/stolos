@@ -7,6 +7,7 @@
  * @module
  */
 
+/** What a metric is about: the machine's health, its security, or its state. */
 export type Group = "health" | "security" | "state";
 
 /** What a metric measures. */

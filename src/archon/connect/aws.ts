@@ -3,7 +3,7 @@
  * access key whose user (or role) has the managed SecurityAudit policy: the
  * account, IAM users, S3 buckets, EC2 instances in every enabled region, and
  * the root account's MFA and keys. Requests are signed with Signature
- * Version 4, in TypeScript (no AWS CLI). The query APIs, S3, S3 Control, and
+ * Version 4, in TypeScript (IFC TypeScript's `sigv4`; no AWS CLI). The query APIs, S3, S3 Control, and
  * GuardDuty read with GET.
  *
  * Spec 088 reads deeper, each part only where the key may: CloudTrail (every
@@ -18,7 +18,7 @@
  * @module
  */
 
-import { sha256, toHex } from "@intellectual-frontiers/ifc-ts/kernel";
+import { sigv4 } from "@intellectual-frontiers/ifc-ts/kernel";
 import type { http } from "@intellectual-frontiers/ifc-ts/runtime";
 import { AccessDenied, check, type Connector, fresh } from "./connector.ts";
 import { type Ctx, defineConnector, exchange, type FieldDef, mustRead } from "./sdk.ts";
@@ -32,33 +32,17 @@ import {
   SERVER,
 } from "./labels.ts";
 
-const enc = new TextEncoder();
-const hex = (b: ArrayBuffer): string => toHex(new Uint8Array(b));
-// HMAC-SHA256 on Web Crypto: SigV4's key derivation (a commons candidate: request signing, with s3/).
-async function hmac(key: BufferSource, data: string): Promise<ArrayBuffer> {
-  const k = await crypto.subtle.importKey("raw", key, { name: "HMAC", hash: "SHA-256" }, false, [
-    "sign",
-  ]);
-  return await crypto.subtle.sign("HMAC", k, enc.encode(data));
-}
-/** RFC 3986 encoding, as SigV4 wants it. */
-const rfc3986 = (s: string): string =>
-  encodeURIComponent(s).replace(
-    /[!'()*]/g,
-    (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`,
-  );
-
-/** A request to sign. */
+/** A request to sign: its parts, as the connector builds them. */
 export interface AwsRequest {
   /** GET or POST. */
-  method: string;
+  method: "GET" | "POST";
   /** The host, for example iam.amazonaws.com. */
   host: string;
   /** The path (/ for most query APIs). */
   path: string;
   /** Query parameters. */
   query: Record<string, string>;
-  /** Headers to send and sign (host and x-amz-date are added). */
+  /** Headers to send and sign (x-amz-date is added; host comes from the URL). */
   headers: Record<string, string>;
   /** The body. */
   body: string;
@@ -68,39 +52,31 @@ export interface AwsRequest {
   service: string;
 }
 
-/** Sign a request (SigV4): the headers to send, Authorization included. */
-export async function sigv4(
+/** The request's URL: its host, path and query (each name and value encoded, sorted by name). */
+export function awsUrl(r: Pick<AwsRequest, "host" | "path" | "query">): string {
+  const q = Object.entries(r.query)
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+    .join("&");
+  return `https://${r.host}${r.path}${q ? `?${q}` : ""}`;
+}
+
+/** The request signed by Signature Version 4 (IFC TypeScript's `sigv4`): the request to send. */
+export async function signed(
   r: AwsRequest,
-  key: { accessKeyId: string; secretAccessKey: string; sessionToken?: string },
+  credentials: sigv4.AwsCredentials,
   now: Date,
-): Promise<Record<string, string>> {
-  const amzDate = now
-    .toISOString()
-    .replace(/[-:]/g, "")
-    .replace(/\.\d+Z$/, "Z");
-  const day = amzDate.slice(0, 8);
-  const headers: Record<string, string> = { ...r.headers, host: r.host, "x-amz-date": amzDate };
-  if (key.sessionToken) headers["x-amz-security-token"] = key.sessionToken;
-  const names = Object.keys(headers)
-    .map((h) => h.toLowerCase())
-    .sort();
-  const lower = Object.fromEntries(Object.entries(headers).map(([k, v]) => [k.toLowerCase(), v]));
-  const canonicalHeaders = names
-    .map((h) => `${h}:${(lower[h] ?? "").trim().replace(/\s+/g, " ")}\n`)
-    .join("");
-  const signed = names.join(";");
-  const query = canonicalQuery(r.query);
-  const canonical = [r.method, r.path, query, canonicalHeaders, signed, await sha256(r.body)].join(
-    "\n",
+): Promise<http.OutRequest> {
+  const url = awsUrl(r);
+  const s = await sigv4.sign(
+    { method: r.method, url, headers: r.headers, body: r.body },
+    { credentials, region: r.region, service: r.service, date: now },
   );
-  const scope = `${day}/${r.region}/${r.service}/aws4_request`;
-  const toSign = ["AWS4-HMAC-SHA256", amzDate, scope, await sha256(canonical)].join("\n");
-  let k: ArrayBuffer = await hmac(enc.encode(`AWS4${key.secretAccessKey}`), day);
-  for (const part of [r.region, r.service, "aws4_request"]) k = await hmac(k, part);
-  const signature = hex(await hmac(k, toSign));
   return {
-    ...headers,
-    Authorization: `AWS4-HMAC-SHA256 Credential=${key.accessKeyId}/${scope}, SignedHeaders=${signed}, Signature=${signature}`,
+    method: r.method,
+    url,
+    headers: s.headers,
+    ...(r.body === "" ? {} : { body: r.body }),
   };
 }
 
@@ -110,17 +86,8 @@ export function xmlAll(xml: string, tag: string): string[] {
 }
 const xmlOne = (xml: string, tag: string): string => xmlAll(xml, tag)[0] ?? "";
 
-/** The query string SigV4 signs and sends: each name and value RFC 3986 encoded, sorted by name. */
-const canonicalQuery = (query: Record<string, string>): string =>
-  Object.entries(query)
-    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-    .map(([k, v]) => `${rfc3986(k)}=${rfc3986(v)}`)
-    .join("&");
-
 /** The access key a credential holds (a session token only where it has one). */
-const keyOf = (
-  c: Record<string, string>,
-): { accessKeyId: string; secretAccessKey: string; sessionToken?: string } => ({
+const keyOf = (c: Record<string, string>): sigv4.AwsCredentials => ({
   accessKeyId: c["accessKeyId"] ?? "",
   secretAccessKey: c["secretAccessKey"] ?? "",
   ...(c["sessionToken"] ? { sessionToken: c["sessionToken"] } : {}),
@@ -143,15 +110,7 @@ async function call(
   now: Date,
 ): Promise<string> {
   const req: AwsRequest = { method: "GET", body: "", ...r, headers: { ...r.headers } };
-  if (r.service === "s3") req.headers["x-amz-content-sha256"] = await sha256("");
-  const headers = await sigv4(req, keyOf(key), now);
-  delete headers["host"];
-  const q = canonicalQuery(r.query);
-  const res = await exchange(t, {
-    method: "GET",
-    url: `https://${r.host}${r.path}${q ? `?${q}` : ""}`,
-    headers,
-  });
+  const res = await exchange(t, await signed(req, keyOf(key), now));
   if (res.status === 403 || res.status === 401) {
     throw new AccessDenied(
       `${r.service} ${r.query["Action"] ?? r.path}: ${xmlOne(res.body, "Code") || res.status}`,
@@ -175,10 +134,10 @@ const JSON_TARGETS: Readonly<Record<"cloudtrail" | "config", string>> = {
 };
 
 /** Spec 088: a POST the guard lets through: a Describe, Get, or List action of CloudTrail or Config. */
-export const awsReadPost = (url: string, init: { headers?: Record<string, string> }): boolean => {
-  const service = url.match(/^https:\/\/(cloudtrail|config)\.[a-z0-9-]+\.amazonaws\.com\/$/)?.[1];
+export const awsReadPost = (r: http.OutRequest): boolean => {
+  const service = r.url.match(/^https:\/\/(cloudtrail|config)\.[a-z0-9-]+\.amazonaws\.com\/$/)?.[1];
   const target =
-    Object.entries(init.headers ?? {}).find(([k]) => k.toLowerCase() === "x-amz-target")?.[1] ?? "";
+    Object.entries(r.headers).find(([k]) => k.toLowerCase() === "x-amz-target")?.[1] ?? "";
   const prefix =
     service === "cloudtrail" || service === "config" ? `${JSON_TARGETS[service]}.` : undefined;
   return (
@@ -198,7 +157,7 @@ async function jsonCall<T>(
 ): Promise<T | undefined> {
   const host = `${service}.${region}.amazonaws.com`;
   const text = JSON.stringify(body);
-  const headers = await sigv4(
+  const req = await signed(
     {
       method: "POST",
       host,
@@ -215,13 +174,7 @@ async function jsonCall<T>(
     keyOf(ctx.cred),
     ctx.now,
   );
-  delete headers["host"];
-  const r = await exchange(ctx.http, {
-    method: "POST",
-    url: `https://${host}/`,
-    headers,
-    body: text,
-  });
+  const r = await exchange(ctx.http, req);
   if (r.status === 401 || r.status === 403) {
     throw new AccessDenied(`${service} ${action} in ${region}: ${r.status}`);
   }

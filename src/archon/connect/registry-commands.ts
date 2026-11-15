@@ -267,8 +267,8 @@ export async function connectorAdd(
 export async function connectorList(asJson = false, o: RegistryOptions = {}): Promise<number> {
   const { fleetDir, version } = where(o);
   const entries = registryEntries(await fs.readTextOr(registryFile(fleetDir)));
-  const { satisfies } = await import("./registry.ts");
-  const rows = entries.map((e) => ({ ...e, suits: satisfies(version, e.engine) === true }));
+  const { engineSuits } = await import("./registry.ts");
+  const rows = entries.map((e) => ({ ...e, suits: engineSuits(version, e.engine) === true }));
   if (asJson) {
     stdio.stdout.writeSync(`${JSON.stringify(rows, null, 2)}\n`);
     return 0;

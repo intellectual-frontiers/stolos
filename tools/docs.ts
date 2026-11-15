@@ -60,10 +60,10 @@ export const MERMAID = {
 export const PACKAGE = "@intellectual-frontiers/stolos";
 
 /**
- * Generated modules that are documented like any other (spec 089: the OCSF types and the D3FEND
- * names carry JSDoc from their standards); other `.auto.ts` files are data, not documented.
+ * Generated modules that are documented like any other (the FedRAMP 20x rules and the D3FEND names
+ * carry JSDoc from their sources, specs 076 and 089); other `.auto.ts` files are data.
  */
-const DOCUMENTED_AUTO = ["src/archon/ocsf/types.auto.ts", "src/archon/schema/d3fend.auto.ts"];
+const DOCUMENTED_AUTO = ["src/archon/fedramp/rules.auto.ts", "src/archon/schema/d3fend.auto.ts"];
 
 /** Every engine module the documentation covers, as repository paths (`src/archon/core/ui.ts`). */
 export async function sourceFiles(root = ROOT): Promise<string[]> {

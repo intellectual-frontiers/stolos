@@ -177,6 +177,18 @@ export async function latestRelease(repo: string, tagPrefix = ""): Promise<Relea
   };
 }
 
+/** A pinned release (spec 096): the one asset for this machine, with its pinned SHA-256. */
+export async function pinnedRelease(
+  pin: NonNullable<NonNullable<ToolDef["github"]>["pinned"]>,
+): Promise<Release> {
+  const a = await pin.asset();
+  return {
+    tag: pin.version,
+    version: pin.version,
+    assets: [{ name: a.name, url: a.url, digest: `sha256:${a.sha256}` }],
+  };
+}
+
 async function installedVersion(t: ToolDef): Promise<string | undefined> {
   const r = await run(argvOf(t.versionCommand));
   return r.ok ? versionFrom(r.stdout + r.stderr) : undefined;
@@ -386,9 +398,16 @@ async function syncOne(t: ToolDef, host: HostDef, reportOnly: boolean): Promise<
       return s;
     }
     if (!t.github) throw new Error(`${t.id}: an upstream binary names no GitHub release`);
-    const rel = await latestRelease(t.github.repo, t.github.tagPrefix);
+    const pin = t.github.pinned;
+    const rel = pin
+      ? await pinnedRelease(pin)
+      : await latestRelease(t.github.repo, t.github.tagPrefix);
     s.latest = rel.version;
-    if (s.installed && compareVersions(s.installed, rel.version) >= 0) {
+    // A pinned tool is at its pin exactly; any other is current at the newest or later.
+    if (
+      s.installed &&
+      (pin ? s.installed === pin.version : compareVersions(s.installed, rel.version) >= 0)
+    ) {
       s.action = "current";
       return s;
     }

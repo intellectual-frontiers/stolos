@@ -1,6 +1,6 @@
 /**
  * The secret ledger (spec 029): when each boot-machine secret last changed,
- * by name only. It holds no secret: it is what tells `deno task stolos vault
+ * by name only. It holds no secret: it is what tells `bun run stolos vault
  * status` (and the reminders) that something is newer than the last backup.
  * %LOCALAPPDATA%\stolos\vault\ledger.json (Linux: ~/.local/share/stolos/vault).
  *

@@ -25,7 +25,7 @@
  */
 
 import { errors, fs, path, proc, stdio, toError } from "@intellectual-frontiers/ifc-ts/runtime";
-import { tsLiteral } from "@intellectual-frontiers/ifc-ts/kernel";
+import { compact, tsLiteral } from "@intellectual-frontiers/ifc-ts/kernel";
 import { run } from "../core/exec.ts";
 import { P } from "../core/paths.ts";
 import { ownerOnly, writeSecret } from "../core/secrets.ts";
@@ -110,13 +110,6 @@ export type Observed = {
   listening: number[];
 };
 
-/** `{ [key]: value }`, or nothing where the value is undefined (an optional field left out). */
-export function given<K extends string, V>(key: K, value: V | undefined): { [k in K]?: V } {
-  const out: { [k in K]?: V } = {};
-  if (value !== undefined) out[key] = value;
-  return out;
-}
-
 const num = (v: string | undefined): number | undefined => {
   const n = Number(v);
   return v !== undefined && v !== "" && Number.isFinite(n) ? n : undefined;
@@ -143,12 +136,12 @@ export function toObserved(p: ProbeOutput): Observed {
       ...(os["flavor"] ? { flavor: os["flavor"] } : {}),
       ...(os["wsl"] ? { wsl: true } : {}),
     },
-    hardware: {
-      ...given("cpus", num(hw["cpus"])),
-      ...given("memoryMB", num(hw["memory_mb"])),
-      ...given("diskTotalGB", num(hw["disk_total_gb"])),
-      ...given("diskUsedPct", num(hw["disk_used_pct"])),
-    },
+    hardware: compact({
+      cpus: num(hw["cpus"]),
+      memoryMB: num(hw["memory_mb"]),
+      diskTotalGB: num(hw["disk_total_gb"]),
+      diskUsedPct: num(hw["disk_used_pct"]),
+    }),
     security: {
       diskEncryption: sec["disk_encryption"] || "unknown",
       firewall: sec["firewall"] || "unknown",
@@ -157,13 +150,13 @@ export function toObserved(p: ProbeOutput): Observed {
       ...(sec["antivirus"] ? { antivirus: sec["antivirus"] } : {}),
       admins: (sec["admins"] ?? "").split(/\s+/).filter(Boolean).sort(),
     },
-    software: {
-      ...(sw["manager"] ? { manager: sw["manager"] } : {}),
-      ...given("packages", num(sw["packages"])),
-      ...given("brewPackages", num(sw["brew_packages"])),
-      ...given("pendingUpdates", num(sw["pending_updates"])),
-      ...(sw["osquery"] ? { osquery: sw["osquery"] } : {}),
-    },
+    software: compact({
+      manager: sw["manager"] || undefined,
+      packages: num(sw["packages"]),
+      brewPackages: num(sw["brew_packages"]),
+      pendingUpdates: num(sw["pending_updates"]),
+      osquery: sw["osquery"] || undefined,
+    }),
     listening: (p["listening"]?.["ports"] ?? "")
       .split(/\s+/)
       .map(Number)

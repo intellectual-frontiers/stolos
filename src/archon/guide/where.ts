@@ -20,6 +20,7 @@
  */
 import { fs, path, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
 
+/** What `stolos` (no arguments) found about where you are: the facts its next step is chosen from. */
 export interface WhereFacts {
   /** The fleets of this repository. */
   fleets: string[];
@@ -199,14 +200,14 @@ export async function collectWhere(): Promise<WhereFacts> {
   const { run } = await import("../core/exec.ts");
   const fleets = listFleets(P.repo);
   const fleetId = P.fleetId && (await fs.exists(P.fleet)) ? P.fleetId : undefined;
-  const { readPin } = await import("../fleet/upgrade.ts");
-  const packageJson = await fs.readTextOr(path.join(P.repo, "package.json"));
+  const { LOCK_FILE, PIN_FILE, readPin } = await import("../fleet/upgrade.ts");
+  const packageJson = await fs.readTextOr(path.join(P.repo, PIN_FILE));
   const pin = packageJson === undefined ? undefined : readPin(packageJson);
   const base: WhereFacts = {
     fleets,
     ...(fleetId ? { fleetId } : {}),
     ...(pin ? { pinned: pin.tag } : {}),
-    locked: await fs.exists(path.join(P.repo, "bun.lock")),
+    locked: await fs.exists(path.join(P.repo, LOCK_FILE)),
     signers: { daily: 0, recovery: 0 },
     signingProblems: [],
     adminHash: false,

@@ -40,7 +40,7 @@ const autoinstall = (u: string): AutoInstall =>
 /** The runtime the engine left (spec 096), spelled in parts so this file does not name it. */
 const OLD_RUNTIME = new RegExp(["d", "eno"].join(""), "i");
 
-test("SHA-512 crypt matches glibc's reference vector", async () => {
+proves(["003-identity FR-003"], "SHA-512 crypt matches glibc's reference vector", async () => {
   assertEquals(
     await sha512Crypt("Hello world!", "saltstring"),
     "$6$saltstring$svn8UoSVapNtMuq1ukKS4tPQd8iKwSMHWjl/O817G3uBnIFNjnQJuesI68u4OTLiBFdcbYEdFCoEOfaS35inz1",
@@ -157,14 +157,14 @@ proves(
   ["096-bun-runtime FR-007"],
   "096: the first boot installs the pinned Bun, checking its SHA-256 before unpacking, then the engine bun.lock holds",
   async () => {
-    const { BUN_SHA256, BUN_VERSION, bunUrl } = await import("../src/archon/install/bun.ts");
+    const { BUN_SHA256, BUN_VERSION, bunDownload } = await import("../src/archon/core/bun-pin.ts");
     // The pin: one version, a SHA-256 for every platform.
     assert(/^\d+\.\d+\.\d+$/.test(BUN_VERSION), BUN_VERSION);
     for (const [platform, sha] of Object.entries(BUN_SHA256)) {
       assert(/^[0-9a-f]{64}$/.test(sha), platform);
     }
     assertEquals(
-      bunUrl("linux-x64"),
+      bunDownload("linux-x64").url,
       `https://github.com/oven-sh/bun/releases/download/bun-v${BUN_VERSION}/bun-linux-x64.zip`,
     );
     const s = firstBootScript(fleet(), host());
@@ -221,43 +221,47 @@ proves(["008-firewall FR-001"], "the ufw profile lists every modeled port", asyn
   assert(!f.onChange?.some((x) => x.kind === "run" && x.argv.includes("from")));
 });
 
-test("an earlier engine's Archon-LAN ufw rules are all deleted, by number", async () => {
-  const { DROP_LAN_RULES } = await import("../src/archon/capabilities/firewall.ts");
-  const dir = await fs.makeTempDir();
-  // A fake ufw: `status numbered` prints the rules file numbered; `--force delete N` drops line N.
-  const rules = `${dir}/rules`;
-  await fs.writeTextFile(
-    rules,
-    [
-      "Archon                     ALLOW IN    Anywhere",
-      "Archon-LAN                 ALLOW IN    10.0.0.0/8",
-      "Archon-LAN                 ALLOW IN    192.168.0.0/16",
-      "Archon (v6)                ALLOW IN    Anywhere (v6)",
-      "Archon-LAN (v6)            ALLOW IN    fc00::/7",
-    ].join("\n") + "\n",
-  );
-  await fs.writeTextFile(
-    `${dir}/ufw`,
-    `#!/bin/sh
+proves(
+  ["064-router-filters FR-002"],
+  "an earlier engine's Archon-LAN ufw rules are all deleted, by number",
+  async () => {
+    const { DROP_LAN_RULES } = await import("../src/archon/capabilities/firewall.ts");
+    const dir = await fs.makeTempDir();
+    // A fake ufw: `status numbered` prints the rules file numbered; `--force delete N` drops line N.
+    const rules = `${dir}/rules`;
+    await fs.writeTextFile(
+      rules,
+      [
+        "Archon                     ALLOW IN    Anywhere",
+        "Archon-LAN                 ALLOW IN    10.0.0.0/8",
+        "Archon-LAN                 ALLOW IN    192.168.0.0/16",
+        "Archon (v6)                ALLOW IN    Anywhere (v6)",
+        "Archon-LAN (v6)            ALLOW IN    fc00::/7",
+      ].join("\n") + "\n",
+    );
+    await fs.writeTextFile(
+      `${dir}/ufw`,
+      `#!/bin/sh
 if [ "$1 $2" = "status numbered" ]; then awk '{ printf "[%2d] %s\\n", NR, $0 }' ${rules}; exit 0; fi
 if [ "$1 $2" = "--force delete" ]; then sed -i "$3d" ${rules}; exit 0; fi
 exit 1
 `,
-  );
-  await fs.chmod(`${dir}/ufw`, 0o755);
-  const r = await proc.output(["sh", "-c", DROP_LAN_RULES], {
-    env: { PATH: `${dir}:${proc.env.get("PATH")}` },
-  });
-  assert(r.success, new TextDecoder().decode(r.stderr));
-  assertEquals(
-    (await fs.readTextFile(rules))
-      .trim()
-      .split("\n")
-      .map((l) => l.split(/\s{2,}/)[0]),
-    ["Archon", "Archon (v6)"],
-  );
-  await fs.remove(dir, { recursive: true });
-});
+    );
+    await fs.chmod(`${dir}/ufw`, 0o755);
+    const r = await proc.output(["sh", "-c", DROP_LAN_RULES], {
+      env: { PATH: `${dir}:${proc.env.get("PATH")}` },
+    });
+    assert(r.success, new TextDecoder().decode(r.stderr));
+    assertEquals(
+      (await fs.readTextFile(rules))
+        .trim()
+        .split("\n")
+        .map((l) => l.split(/\s{2,}/)[0]),
+      ["Archon", "Archon (v6)"],
+    );
+    await fs.remove(dir, { recursive: true });
+  },
+);
 
 proves(
   ["004-install FR-013"],

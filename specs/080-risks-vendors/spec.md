@@ -47,6 +47,7 @@ signer merges with a signed merge commit.
   A register or triage file that does not load is a failing result (RSK-14). The six SCF ids are
   added to `src/archon/compliance/scf.ts` with the names SCF 2026.3 gives them (checked against the
   pinned workbook).
+
 - **FR-005** Vendors are discovered (`src/archon/risk/vendors.ts`, `discoverVendors`) from:
   - SSO applications: the label `application` (OCSF), read by Okta (`/api/v1/apps`, which its
     Read-Only Administrator may list; Okta's own apps left out) and Microsoft Entra
@@ -59,6 +60,7 @@ signer merges with a signed merge commit.
   A typed table of well-known vendors (`WELL_KNOWN_VENDORS`: service domains, SSO catalog names,
   connectors) names the organization behind each; `vendors.ts` may claim more (`domains`, `apps`).
   Anything else is an unknown vendor, named by its registrable domain or its app.
+
 - **FR-006** Triage is `fleets/<fleet>/vendors.ts`, `export const vendors = defineVendors([...])`:
   each vendor's criticality (FIPS 199's potential impact: `low`, `moderate`, `high`, or
   `unassessed`) and the data it holds (OCSF data classification categories), with an optional owner

@@ -56,8 +56,12 @@ export function signersSource(list: SignerDef[]): string {
         )},\n    added: ${JSON.stringify(s.added)},\n  },\n`,
     )
     .join("");
-  return `// Written by stolos signers (spec 047): who may approve this fleet's changes.
-// Change it with stolos signers add/remove, in a commit signed by a key below.
+  return `/**
+ * Written by stolos signers (spec 047): who may approve this fleet's changes.
+ * Change it with stolos signers add/remove, in a commit signed by a key below.
+ *
+ * @module
+ */
 import type { SignerDef } from "@intellectual-frontiers/stolos/archon/model/types";
 
 export default [

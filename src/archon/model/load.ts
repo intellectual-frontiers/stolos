@@ -7,6 +7,7 @@
  * @module
  */
 
+import { createRequire } from "node:module";
 import { fs, path } from "@intellectual-frontiers/ifc-ts/runtime";
 import { getRecord, listRecords } from "../state/store.ts";
 import { listFleets, P } from "../core/paths.ts";
@@ -42,15 +43,21 @@ export class NoFleetError extends Error {
   }
 }
 
+/** The module cache (Bun keeps a file's module there, by its path). */
+const moduleCache: object = createRequire(import.meta.url).cache;
+
 /**
  * A named export of one of the fleet's own TypeScript files (fleet.ts, host.ts, registration.ts,
- * decisions.ts), which the fleet's type check covers; `fresh` reads it again after a change.
+ * decisions.ts), which the fleet's type check covers; `fresh` reads it again after a change: a new
+ * URL for Node, and the file's entry out of the module cache for Bun, which caches a file by its
+ * path whatever its query.
  */
 export async function fleetExport<T>(
   file: string,
   name: string,
   fresh = false,
 ): Promise<T | undefined> {
+  if (fresh) Reflect.deleteProperty(moduleCache, path.resolve(file));
   const mod: unknown = await import(path.toFileUrl(file).href + (fresh ? `?t=${Date.now()}` : ""));
   if (typeof mod !== "object" || mod === null) return undefined;
   const value: unknown = Reflect.get(mod, name);

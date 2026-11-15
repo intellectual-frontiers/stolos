@@ -71,12 +71,12 @@ flowchart LR
   (`deb_packages`, `users`, `sudoers`, `listening_ports`, `kernel_modules`) compared with the
   previous one; `systemctl list-unit-files` (state and vendor preset) against the plan;
   `snap
-  changes` and podman containers; `dpkg -S` on `/usr/local` and `/opt` (files no package
+changes` and podman containers; `dpkg -S` on `/usr/local` and `/opt` (files no package
   owns: an Article 5 flag); `debsums -c` or `dpkg --verify` (a modified package file: a **security
   alert**, mailed at once, never a proposal).
 - **FR-002** The **birth snapshot** (kind `birth`), taken once at first boot:
   `apt-mark
-  showmanual`, snaps, unit files and their states, login accounts, listening ports, and
+showmanual`, snaps, unit files and their states, login accounts, listening ports, and
   `/etc` at the first etckeeper commit.
 - **FR-003** Drift = what the host has, minus the plan, minus the birth snapshot. A unit new since
   birth is drift only when its state differs from its package's preset; an `/etc` file is drift when
@@ -96,7 +96,7 @@ flowchart LR
   else to the session of its own user and time, else to its day. A recording (FR-016) wins.
 - **FR-007** `archon propose` (tier mutate; anyone with sudo, decision 3): `--all`,
   `--intent
-  <id>`, or `--item <key>` (repeatable); `--action adopt|revert|local` for all,
+<id>`, or `--item <key>` (repeatable); `--action adopt|revert|local` for all,
   `--revert <key>` and `--local <key>` per item, `--until <day>` for local (default 30 days);
   `--reason` required (a recording's reason counts). The proposer is the person behind sudo
   (`SUDO_USER`). `--dry-run` prints `proposal.json` and sends nothing.
@@ -108,7 +108,7 @@ flowchart LR
   at most 16 KB.
 - **FR-009** Signed with the host's SSH host key:
   `ssh-keygen -Y sign -f
-  /etc/ssh/ssh_host_ed25519_key -n stolos-proposal`, as
+/etc/ssh/ssh_host_ed25519_key -n stolos-proposal`, as
   `proposal.json.sig`.
 - **FR-010** Mailed to the fleet's mailbox through archon notify: a text summary, with
   `proposal.json` and `proposal.json.sig` attached; a copy stays in

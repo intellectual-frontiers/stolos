@@ -5,6 +5,7 @@
  * @module
  */
 
+import { otel } from "@intellectual-frontiers/ifc-ts/kernel";
 import { fs } from "@intellectual-frontiers/ifc-ts/runtime";
 import {
   assert,
@@ -14,7 +15,6 @@ import {
   proves,
 } from "@intellectual-frontiers/ifc-ts/runtime/test";
 import { buildMime } from "../src/archon/notify/mime.ts";
-import { redact } from "../src/archon/notify/redact.ts";
 import {
   collapse,
   compose,
@@ -108,7 +108,7 @@ proves(["025-notify FR-009"], "redact: no secret survives", () => {
     "-----BEGIN OPENSSH PRIVATE KEY-----\nAAAA\n-----END OPENSSH PRIVATE KEY-----",
     "my-exact-secret-value",
   ].join("\n");
-  const out = redact(text, ["my-exact-secret-value"]);
+  const out = otel.redactText(text, ["my-exact-secret-value"]);
   for (const s of [
     SECRET.token,
     PLAIN_TOKEN,

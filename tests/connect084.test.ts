@@ -17,7 +17,7 @@ import { observationSource } from "../src/archon/connect/connector.ts";
 import { cloudflare } from "../src/archon/connect/cloudflare.ts";
 import { hetzner } from "../src/archon/connect/hetzner.ts";
 import { microsoft } from "../src/archon/connect/microsoft.ts";
-import { aws, sigv4, xmlAll } from "../src/archon/connect/aws.ts";
+import { aws, signed, xmlAll } from "../src/archon/connect/aws.ts";
 import { CONNECTORS, joinFleet } from "../src/archon/connect/commands.ts";
 
 const NOW = new Date("2026-11-15T12:00:00Z");
@@ -201,7 +201,7 @@ proves(
 );
 
 proves(
-  ["067-adopt FR-008", "067-adopt FR-009", "084-connectors FR-003"],
+  ["067-adopt FR-008", "067-adopt FR-009", "067-adopt FR-011", "084-connectors FR-003"],
   "067: Microsoft 365: users, Global Administrators, MFA; Azure optional",
   async () => {
     const G = "graph.microsoft.com/v1.0";
@@ -289,7 +289,7 @@ proves(
 
 proves(["067-adopt FR-010"], "067: AWS SigV4 matches AWS's published example", async () => {
   // docs.aws.amazon.com: "Signature Version 4 signing process" example (IAM ListUsers).
-  const h = await sigv4(
+  const r = await signed(
     {
       method: "GET",
       host: "iam.amazonaws.com",
@@ -303,12 +303,14 @@ proves(["067-adopt FR-010"], "067: AWS SigV4 matches AWS's published example", a
     { accessKeyId: "AKIDEXAMPLE", secretAccessKey: "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY" },
     new Date("2015-08-30T12:36:00Z"),
   );
+  assertEquals(r.url, "https://iam.amazonaws.com/?Action=ListUsers&Version=2010-05-08");
+  const h = r.headers;
   assertStringIncludes(
-    h["Authorization"] ?? "",
+    h["authorization"] ?? "",
     "Signature=5d672d79c15b13162d9279b0855cfba6789a8edb4c82c400e06b5924a6f2b5d7",
   );
   assertStringIncludes(
-    h["Authorization"] ?? "",
+    h["authorization"] ?? "",
     "Credential=AKIDEXAMPLE/20150830/us-east-1/iam/aws4_request",
   );
 });

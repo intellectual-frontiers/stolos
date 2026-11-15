@@ -38,11 +38,11 @@ import {
   number,
   object,
   oneOf,
+  otel,
   string,
   unknownValue,
 } from "@intellectual-frontiers/ifc-ts/kernel";
 import { fs, path as paths, proc } from "@intellectual-frontiers/ifc-ts/runtime";
-import { redact } from "../notify/redact.ts";
 import {
   type Action,
   type DriftItem,
@@ -359,13 +359,16 @@ export function buildProposal(input: ProposalInput): Proposal {
 }
 
 /**
- * The exact text that is signed and sent: pretty JSON, redacted until
- * redaction changes nothing (so the mail's own redaction is a no-op).
+ * The exact text that is signed and sent: pretty JSON, each string redacted
+ * on its own (a secret inside a value is found there, not hidden by its
+ * quotes), then the text redacted until redaction changes nothing (so the
+ * mail's own redaction is a no-op).
  */
 export function proposalText(p: Proposal): string {
-  let text = JSON.stringify(p, null, 2) + "\n";
+  const each = (_: string, v: unknown): unknown => (typeof v === "string" ? otel.redactText(v) : v);
+  let text = JSON.stringify(p, each, 2) + "\n";
   for (let i = 0; i < 5; i++) {
-    const next = redact(text);
+    const next = otel.redactText(text);
     if (next === text) return text;
     // Keep it JSON: redaction only replaces runs inside strings, but check.
     JSON.parse(next);
@@ -416,7 +419,7 @@ export async function signProposal(
   for (let n = 0; n < 8; n++) {
     const text = proposalText(cur);
     const sig = await sign(text);
-    if (redact(sig) === sig) {
+    if (otel.redactText(sig) === sig) {
       // The proposal as signed: its text is redacted (proposalText), so it is read back.
       const read = readProposal(text);
       if ("problem" in read) throw new Error(`a proposal that does not read back: ${read.problem}`);

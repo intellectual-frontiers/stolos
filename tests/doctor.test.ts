@@ -3,12 +3,7 @@
  *
  * @module
  */
-import {
-  assert,
-  assertEquals,
-  assertExists,
-  proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+import { assert, assertEquals, proves, the } from "@intellectual-frontiers/ifc-ts/runtime/test";
 import {
   aptRepos,
   explainCurl,
@@ -23,12 +18,6 @@ import {
 import { COMMANDS } from "../src/archon/commands/registry.ts";
 import { resolvePlan } from "../src/archon/model/resolve.ts";
 import { fleet, host } from "./fixtures.ts";
-
-/** A value the test expects to be there: fails the test where it is not. */
-function the<T>(value: T | undefined | null): T {
-  assertExists(value);
-  return value;
-}
 
 proves(["026-doctor FR-008"], "doctor: apt repositories from deb822 and one-line sources", () => {
   const repos = aptRepos([

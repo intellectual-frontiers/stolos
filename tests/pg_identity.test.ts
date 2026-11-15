@@ -10,6 +10,7 @@ import {
   assertExists,
   assertStringIncludes,
   proves,
+  the,
 } from "@intellectual-frontiers/ifc-ts/runtime/test";
 import { fleet, host } from "./fixtures.ts";
 import { resolvePlan } from "../src/archon/model/resolve.ts";
@@ -30,12 +31,6 @@ import {
   sudoersPg,
   systemServices,
 } from "../src/archon/pg/config.ts";
-
-/** A value the test expects to be there: fails the test where it is not. */
-function the<T>(value: T | undefined | null): T {
-  assertExists(value);
-  return value;
-}
 
 const pgFleet = () =>
   fleet({

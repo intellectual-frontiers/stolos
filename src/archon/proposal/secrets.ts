@@ -8,8 +8,7 @@
  * @module
  */
 
-import { sha256 } from "@intellectual-frontiers/ifc-ts/kernel";
-import { redact } from "../notify/redact.ts";
+import { otel, sha256 } from "@intellectual-frontiers/ifc-ts/kernel";
 import { patternOf, SECRET_INVENTORY } from "../model/secret-inventory.ts";
 import type { FileEvidence } from "./types.ts";
 
@@ -42,7 +41,7 @@ export function isSecretPath(path: string): boolean {
 
 /** Text that looks like it holds a key, a token, or a password (redaction would change it, or a long random string). */
 export function looksSecret(text: string): boolean {
-  if (redact(text) !== text) return true;
+  if (otel.redactText(text) !== text) return true;
   if (/BEGIN [A-Z ]*(PRIVATE KEY|OPENSSH)/.test(text)) return true;
   // A long run of base64-like characters with digits and mixed case: a key or token.
   for (const m of text.matchAll(/[A-Za-z0-9+/_=-]{40,}/g)) {
