@@ -61,3 +61,44 @@ encrypted email, and OS scheduling. It calls the API and knows nothing about the
   - The in-toto subject digests match the bundle and its items, and a DSSE envelope verifies.
   - Every kind gives the same bytes for the same input.
   - No email address or name goes out that the estate does not hold.
+
+## Part B: delivery
+
+- **FR-B01** Export jobs live in `fleet.ts` (`estate.exports`). Each job has:
+  - an id;
+  - kinds (`oscal`, `ocsf`, `otlp`, `cyclonedx`, `in-toto`);
+  - tenants (`<connector>:<account>`, with `*`), which limit what the estate formats carry (other
+    tenants' nodes and gaps are dropped; the fleet's people and machines only with `fleet:<id>`);
+  - OTLP on or off;
+  - email recipients, each with their S/MIME certificate;
+  - a sender, relay, and credential;
+  - a schedule.
+- **FR-B02** Delivery follows the owner's order:
+  1. to the fleet's OpenTelemetry collector (OTLP/HTTP) when one is configured;
+  2. otherwise, or when the collector fails, a file in the PC's state directory;
+  3. email when the job has recipients.
+- **FR-B03** Email is send-only (SMTP submission with TLS only, never reading a mailbox), through
+  the fleet's mail setup or a per-tenant credential (`stolos export credential <name>`). Every
+  message is S/MIME encrypted to its recipient's certificate:
+  - CMS AuthEnvelopedData with AES-256-GCM and RSA-OAEP SHA-256, written in TypeScript with
+    WebCrypto;
+  - `openssl cms -decrypt` reads it;
+  - one message per recipient;
+  - nothing is ever sent unencrypted.
+- **FR-B04** `stolos export schedule <job>` creates the operating system's own scheduled job:
+  - Windows Task Scheduler;
+  - a macOS LaunchAgent;
+  - a Linux systemd user timer.
+
+  `stolos export run <job>` is what it runs, and `stolos export list` lists the jobs. No secret is
+  written into a job.
+- **SC-B01** `tests/deliver092_test.ts` covers:
+  - DER vectors;
+  - an S/MIME round trip through openssl;
+  - the OTLP-or-file choice;
+  - job validation and tenant filters;
+  - the schedule files for each operating system;
+  - the SMTP dialogue against a fake TLS server, refusing plain text;
+  - no secret in any job file or run record.
+
+OpenPGP and EC certificates are later.
