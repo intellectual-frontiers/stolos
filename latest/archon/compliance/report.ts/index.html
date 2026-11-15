@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/compliance/report.ts - Stolos v0.93.0 documentation</title>
+  <title>archon/compliance/report.ts - Stolos v0.94.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.93.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.94.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -102,8 +102,10 @@
 managed server's verify, an adopted machine's policies, a cloud account's
 posture, the repository's signatures) is evidence for one or more SCF
 controls; each control's status is what its evidence says, and each
-framework requirement's status is what its controls say. Nothing here is
-asserted without evidence: a control with none says so.</p>
+framework requirement's status is what its controls say, through the SCF
+Council's own mappings (STRM) from the catalog (<code>catalog.ts</code>). Nothing here
+is asserted without evidence: a control with none says so; and no mapping
+is Stolos's own: without the catalog, the frameworks say it is not loaded.</p>
 </div><section class="section"  id="archon&#x2F;compliance&#x2F;report_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;compliance&#x2F;report_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
@@ -135,12 +137,12 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_combine" cl
     </div><div id="namespace_complianceview" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;report.ts&#x2F;~&#x2F;complianceView.html" title="complianceView">
-			    <span>complianceView</span><span>(<span><span>evidence<span>: <span class="td-ref">Evidence</span>[]</span></span></span>)<span>: <span class="td-ref">ComplianceView</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The whole view from evidence.</p>
+			    <span>complianceView</span><span>(<div class="ml-4"><div><span>evidence<span>: <span class="td-ref">Evidence</span>[]</span></span>,</div><div><span>catalog<span class="td-op">?</span><span>: <span class="td-ref">ScfCatalog</span></span></span></div></div>)<span>: <span class="td-ref">ComplianceView</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The whole view from evidence, with the frameworks when the catalog is loaded.</p>
 </div></div></div>
     </div><div id="namespace_controls" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;report.ts&#x2F;~&#x2F;controls.html" title="controls">
-			    <span>controls</span><span>(<span><span>evidence<span>: <span class="td-ref">Evidence</span>[]</span></span></span>)<span>: <span class="td-ref">ControlStatus</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Each control's status from the evidence.</p>
+			    <span>controls</span><span>(<div class="ml-4"><div><span>evidence<span>: <span class="td-ref">Evidence</span>[]</span></span>,</div><div><span>catalog<span class="td-op">?</span><span>: <span class="td-ref">ScfCatalog</span></span></span></div></div>)<span>: <span class="td-ref">ControlStatus</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Each control's status from the evidence, with the catalog's name, description, and mappings.</p>
 </div></div></div>
     </div><div id="namespace_fleetevidence" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -182,11 +184,25 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_combine" cl
   </defs>
 </svg>
 </a>
-Interfaces</h2></div><div class="namespaceSection"><div id="namespace_complianceview-1" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+Interfaces</h2></div><div class="namespaceSection"><div id="namespace_catalogcontrol" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;report.ts&#x2F;~&#x2F;CatalogControl.html" title="CatalogControl">
+			    <span>CatalogControl</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>An SCF control with what the catalog says about it.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;report.ts&#x2F;~&#x2F;CatalogControl.html#property_description">
+                  <span>description</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>SCF's description of it (when the catalog is loaded).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;report.ts&#x2F;~&#x2F;CatalogControl.html#property_maps">
+                  <span>maps</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-ref">FrameworkId</span><span>, </span><span class="td-kw">string</span>[]&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its requirements per framework, from SCF's STRM (empty without the catalog).</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_complianceview-1" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;report.ts&#x2F;~&#x2F;ComplianceView.html" title="ComplianceView">
 			    <span>ComplianceView</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Everything a framework page shows.</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;report.ts&#x2F;~&#x2F;ComplianceView.html#property_catalog">
+                  <span>catalog</span><span>: { version<span>: <span class="td-kw">string</span></span>; url<span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The SCF release the mappings are from, or undefined when it is not on this machine.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;report.ts&#x2F;~&#x2F;ComplianceView.html#property_controls">
                   <span>controls</span><span>: <span class="td-ref">ControlStatus</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Every control, with its evidence.</p>
 </div></div></li><li>
@@ -199,7 +215,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_compliance
 			    <span>ControlStatus</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One control, with its evidence.</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;report.ts&#x2F;~&#x2F;ControlStatus.html#property_control">
-                  <span>control</span><span>: <span class="td-ref">ScfControl</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The control.</p>
+                  <span>control</span><span>: <span class="td-ref">CatalogControl</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The control.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;report.ts&#x2F;~&#x2F;ControlStatus.html#property_evidence">
                   <span>evidence</span><span>: <span class="td-ref">Evidence</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its evidence.</p>
@@ -350,7 +366,7 @@ Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_coverage
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1540 symbols</span><svg
+              <span class="leading-none">view all 1573 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -365,7 +381,7 @@ Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_coverage
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/compliance/report_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_combine" title="combine">combine</a></li><li><a href="#namespace_complianceview" title="complianceView">complianceView</a></li><li><a href="#namespace_controls" title="controls">controls</a></li><li><a href="#namespace_fleetevidence" title="fleetEvidence">fleetEvidence</a></li><li><a href="#namespace_framework" title="framework">framework</a></li><li><a href="#namespace_serverevidence" title="serverEvidence">serverEvidence</a></li></ul></li><li><a href="#archon/compliance/report_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_complianceview-1" title="ComplianceView">ComplianceView</a></li><li><a href="#namespace_controlstatus" title="ControlStatus">ControlStatus</a></li><li><a href="#namespace_evidence" title="Evidence">Evidence</a></li><li><a href="#namespace_requirementstatus" title="RequirementStatus">RequirementStatus</a></li></ul></li><li><a href="#archon/compliance/report_ts_type-aliases" title="Type Aliases">Type Aliases</a></li><li><ul><li><a href="#namespace_coverage" title="Coverage">Coverage</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/compliance/report_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_combine" title="combine">combine</a></li><li><a href="#namespace_complianceview" title="complianceView">complianceView</a></li><li><a href="#namespace_controls" title="controls">controls</a></li><li><a href="#namespace_fleetevidence" title="fleetEvidence">fleetEvidence</a></li><li><a href="#namespace_framework" title="framework">framework</a></li><li><a href="#namespace_serverevidence" title="serverEvidence">serverEvidence</a></li></ul></li><li><a href="#archon/compliance/report_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_catalogcontrol" title="CatalogControl">CatalogControl</a></li><li><a href="#namespace_complianceview-1" title="ComplianceView">ComplianceView</a></li><li><a href="#namespace_controlstatus" title="ControlStatus">ControlStatus</a></li><li><a href="#namespace_evidence" title="Evidence">Evidence</a></li><li><a href="#namespace_requirementstatus" title="RequirementStatus">RequirementStatus</a></li></ul></li><li><a href="#archon/compliance/report_ts_type-aliases" title="Type Aliases">Type Aliases</a></li><li><ul><li><a href="#namespace_coverage" title="Coverage">Coverage</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>

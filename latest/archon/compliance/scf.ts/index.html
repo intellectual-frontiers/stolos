@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/compliance/scf.ts - Stolos v0.93.0 documentation</title>
+  <title>archon/compliance/scf.ts - Stolos v0.94.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.93.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.94.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -98,15 +98,14 @@
 </nav>
 <div id="searchResults"></div><div id="content">
     <main><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc"><div class="markdown"><p>Spec 068: the Secure Controls Framework (SCF) controls Stolos gives
-evidence for, and a starter mapping of each to the frameworks the fleet
-cares about first: HIPAA (the Security Rule, 45 CFR 164), PCI DSS v4.0,
-CMMC 2.0 Level 2 (NIST SP 800-171 r2), and SOC 2 (the 2017 Trust Services
-Criteria, Type 1 and Type 2 alike: Type 2 is the same criteria held over a
-period, which <code>git log</code> on the evidence files shows).</p>
-<p>This is a starter mapping written for orientation, not an audit: check
-every line against the SCF's own Set Theory Relationship Mapping (STRM)
-for each framework before an auditor relies on it.</p>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc"><div class="markdown"><p>Spec 071: the Secure Controls Framework (SCF) controls Stolos gives
+evidence for, and what it looks at for each. That is all Stolos writes
+itself: each control's official name, description, and its mappings to
+SOC 2, HIPAA, PCI DSS, CMMC, NIST SP 800-53 and 800-171, and FedRAMP are
+the SCF Council's own (its Set Theory Relationship Mapping, STRM), read
+from the pinned SCF release by <code>catalog.ts</code>. The names here are SCF's,
+kept for when the catalog is not on this PC yet; a test checks them
+against the workbook.</p>
 </div><section class="section"  id="archon&#x2F;compliance&#x2F;scf_ts_functions"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;compliance&#x2F;scf_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"
@@ -163,19 +162,16 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_scf" class=
 Interfaces</h2></div><div class="namespaceSection"><div id="namespace_scfcontrol" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;scf.ts&#x2F;~&#x2F;ScfControl.html" title="ScfControl">
-			    <span>ScfControl</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One SCF control: its name, and the requirements it maps to in each framework.</p>
+			    <span>ScfControl</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One SCF control Stolos gives evidence for.</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;scf.ts&#x2F;~&#x2F;ScfControl.html#property_how">
                   <span>how</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What Stolos looks at, in plain words.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;scf.ts&#x2F;~&#x2F;ScfControl.html#property_id">
-                  <span>id</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The SCF identifier (for example CRY-05).</p>
-</div></div></li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;scf.ts&#x2F;~&#x2F;ScfControl.html#property_maps">
-                  <span>maps</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-ref">FrameworkId</span><span>, </span><span class="td-kw">string</span>[]&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Requirements per framework (empty: no direct requirement).</p>
+                  <span>id</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The SCF identifier (for example CRY-07).</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;scf.ts&#x2F;~&#x2F;ScfControl.html#property_name">
-                  <span>name</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The SCF control's name.</p>
+                  <span>name</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The SCF control's name, as SCF has it.</p>
 </div></div></li></ul></div>
     </div></div>
 </section>
@@ -235,7 +231,7 @@ Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_framewor
 Variables</h2></div><div class="namespaceSection"><div id="namespace_frameworks" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;scf.ts&#x2F;~&#x2F;FRAMEWORKS.html" title="FRAMEWORKS">
-			    <span>FRAMEWORKS</span><span>: { id<span>: <span class="td-kw">string</span></span>; title<span>: <span class="td-kw">string</span></span>; short<span>: <span class="td-kw">string</span></span>;  }[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The frameworks, in the fleet's order of interest.</p>
+			    <span>FRAMEWORKS</span><span>: { id<span>: <span class="td-kw">string</span></span>; title<span>: <span class="td-kw">string</span></span>; short<span>: <span class="td-kw">string</span></span>;  }[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The frameworks, in the order the consoles show them; each maps through SCF's STRM.</p>
 </div></div></div>
     </div><div id="namespace_scf-1" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
@@ -315,7 +311,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_frameworks"
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1540 symbols</span><svg
+              <span class="leading-none">view all 1573 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
