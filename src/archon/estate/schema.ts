@@ -403,6 +403,7 @@ export const userAccount: LabelView = defineLabel({
     active: { type: "boolean", doc: "It can sign in." },
     admin: { type: "boolean", doc: "An administrator there." },
     mfa: { type: "boolean", doc: "It has a second factor." },
+    mfa_enforced: { type: "boolean", doc: "A second factor is enforced for it." },
     last_login: { type: "text", doc: "When it last signed in (ISO)." },
     service: { type: "boolean", doc: "A service or bot account, not a person." },
   },

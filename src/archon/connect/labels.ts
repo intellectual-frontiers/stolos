@@ -189,6 +189,73 @@ export const CLOUD_USER_ACCOUNT: LabelView = defineLabel({
   },
 });
 
+/** An organization a connector reads (OCSF organization): a tenant, a code host's organization. */
+export const ORGANIZATION: LabelView = defineLabel({
+  name: "organization",
+  terms: [{ from: "ocsf", term: "organization" }],
+  doc: "An organization: an identity provider's tenant, a code host's organization.",
+  props: {
+    mfa_required: { type: "boolean", doc: "It requires a second factor of its members." },
+  },
+});
+
+/** A role or group that grants access (D3FEND access control group), and who holds it. */
+export const ACCESS_CONTROL_GROUP: LabelView = defineLabel({
+  name: "access_control_group",
+  terms: [{ from: "d3fend", term: "access_control_group" }],
+  doc: "A role or group that grants access (an administrator role), and who holds it.",
+  props: {
+    members: { type: "integer", doc: "How many hold it." },
+    member_names: { type: "text", doc: "Who holds it (their sign-in names)." },
+  },
+});
+
+/** An assessment a source reports (OCSF assessment): who has registered a second factor. */
+export const ASSESSMENT: LabelView = defineLabel({
+  name: "assessment",
+  terms: [{ from: "ocsf", term: "assessment" }],
+  doc: "An assessment a source reports about its users (who has registered a second factor).",
+  props: {
+    registered: { type: "integer", doc: "How many pass it." },
+    unregistered: { type: "json", doc: "Who does not (their sign-in names, in order)." },
+  },
+});
+
+/** A security policy (OCSF policy): security defaults, a Conditional Access policy. */
+export const POLICY: LabelView = defineLabel({
+  name: "policy",
+  terms: [{ from: "ocsf", term: "policy" }],
+  doc: "A security policy a provider applies (security defaults, a Conditional Access policy).",
+  props: {
+    type: { type: "text", doc: "What kind of policy (the source's own words)." },
+    enabled: { type: "boolean", doc: "It is on." },
+  },
+});
+
+/** A product an account holds (OCSF product): a license. */
+export const PRODUCT: LabelView = defineLabel({
+  name: "product",
+  terms: [{ from: "ocsf", term: "product" }],
+  doc: "A product an account subscribes to (a license), and how much of it is used.",
+  props: {
+    used: { type: "integer", doc: "Units in use." },
+    bought: { type: "integer", doc: "Units bought." },
+  },
+});
+
+/** A cloud resource (D3FEND resource): an Azure subscription or anything in one. */
+export const RESOURCE: LabelView = defineLabel({
+  name: "resource",
+  terms: [{ from: "d3fend", term: "resource" }],
+  doc: "A resource in a cloud (a subscription, or anything in one).",
+  props: {
+    type: { type: "text", doc: "Its type (the provider's own name)." },
+    region: { type: "text", doc: "Where it is." },
+    state: { type: "text", doc: "Its state." },
+    subscription: { type: "text", doc: "The subscription it is in." },
+  },
+});
+
 /** Every connector label. */
 export const CONNECTOR_LABELS: readonly LabelView[] = [
   USER_ACCOUNT,
@@ -206,4 +273,10 @@ export const CONNECTOR_LABELS: readonly LabelView[] = [
   SOFTWARE,
   ACCOUNT,
   CLOUD_USER_ACCOUNT,
+  ORGANIZATION,
+  ACCESS_CONTROL_GROUP,
+  ASSESSMENT,
+  POLICY,
+  PRODUCT,
+  RESOURCE,
 ];

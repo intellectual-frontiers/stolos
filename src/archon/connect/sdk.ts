@@ -121,11 +121,21 @@ export interface ResourceDef<
   map(raw: Raw): Mapped<P>;
   /** Keep the vendor's record beside the mapped one (default: no; least data). */
   keepUnmapped?: boolean;
+  /** A denied read fails the observation instead of becoming a gap (the connector cannot work without it). */
+  required?: boolean;
   /** How it is listed in `estate assets`: its kind (default: the label) and a few facts. */
   asset?: (
     raw: Raw,
     m: Mapped<P>,
   ) => { kind?: string; facts?: Asset["facts"]; fleetMachine?: string } | undefined;
+}
+
+/** What posture is told besides the records: what could not be read, and when it was read. */
+export interface Seen {
+  /** The observation's gaps, each `<what>: <why>`. */
+  gaps: string[];
+  /** When it was read. */
+  now: Date;
 }
 
 /** A connector, as declared. */
@@ -155,8 +165,8 @@ export interface ConnectorDef<F extends Record<string, FieldDef>> {
   /** The resources it reads. */
   // deno-lint-ignore no-explicit-any
   resources: Record<string, ResourceDef<F, any, any>>;
-  /** Posture facts from the records (what the policies read). */
-  posture(records: ObservedRecord[], cred: CredOf<F>): Observation["posture"];
+  /** Posture facts from the records (what the policies read), knowing what could not be read and when. */
+  posture(records: ObservedRecord[], cred: CredOf<F>, seen: Seen): Observation["posture"];
   /** Its posture policies. */
   policies(o: Observation, now: number): PolicyResult[];
 }
@@ -298,18 +308,19 @@ export function defineConnector<F extends Record<string, FieldDef>>(
             }
           }
         } catch (e) {
-          if (e instanceof AccessDenied) gaps.push(`${name}: ${e.message}`);
+          if (e instanceof AccessDenied && !r.required) gaps.push(`${name}: ${e.message}`);
           else throw e;
         }
       }
       const { entities, rest } = toEntities(def.id, records);
+      const seen = { gaps: [...new Set(gaps)], now };
       return {
         at: now.toISOString().replace(/\.\d+Z$/, "Z"),
         provider: def.id,
         account: def.account(cred, records),
         assets,
-        posture: def.posture(records, cred),
-        gaps: [...new Set(gaps)],
+        posture: def.posture(records, cred, seen),
+        gaps: seen.gaps,
         ...(Object.keys(entities).length ? { entities } : {}),
         ...(rest.length ? { records: rest } : {}),
       };
@@ -347,7 +358,7 @@ export function toEntities(
         ...opt("admin", p.admin as boolean | undefined),
         ...opt("mfa", p.mfa as boolean | undefined),
         ...opt("lastLogin", p.last_login as string | undefined),
-        ...(p.service ? { service: true } : {}),
+        ...opt("service", p.service as boolean | undefined),
       });
     } else if (r.label === "code_repository") {
       e.repositories.push({
@@ -363,7 +374,7 @@ export function toEntities(
       e.people.push({
         email: String(p.email ?? ""),
         status: (p.status as "active" | "terminated" | "leave" | "unknown") ?? "unknown",
-        ...opt("name", (p.name as string | undefined) ?? r.display_name),
+        ...opt("name", p.name as string | undefined),
         ...opt("start", p.start_date as string | undefined),
         ...opt("end", p.end_date as string | undefined),
         ...opt("manager", p.manager as string | undefined),

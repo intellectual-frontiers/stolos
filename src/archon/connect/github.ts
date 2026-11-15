@@ -1,27 +1,36 @@
 /**
- * Spec 086: GitHub, read-only, for one organization: its members (who are
- * owners, who have no second factor), and its repositories (private or
- * public, whether the default branch is protected by branch protection or a
- * ruleset, how many approving reviews it needs, secret scanning, dependency
- * alerts). Evidence for change management (SCF CHG-03), MFA (IAC-37), least
- * privilege (IAC-30), and scanning (VPM-12).
+ * Spec 086, declared with spec 091's SDK: GitHub, read-only, for one
+ * organization: its members (who are owners, who have no second factor), and
+ * its repositories (private or public, whether the default branch is
+ * protected by branch protection or a ruleset, how many approving reviews it
+ * needs, secret scanning, dependency alerts). Evidence for change management
+ * (SCF CHG-03), MFA (IAC-37), least privilege (IAC-30), and scanning
+ * (VPM-12).
  *
  * @module
  */
 
-import {
-  AccessDenied,
-  check,
-  type Connector,
-  fresh,
-  getJson,
-  type Http,
-  linkPages,
-  orGap,
-} from "./connector.ts";
-import type { Account, Repository } from "./entities.ts";
+import { AccessDenied, check, type Connector, fresh } from "./connector.ts";
+import { defineConnector } from "./sdk.ts";
+import { CODE_REPOSITORY, ORGANIZATION, USER_ACCOUNT } from "./labels.ts";
 
 const API = "https://api.github.com";
+
+interface Org {
+  login: string;
+  name?: string;
+  two_factor_requirement_enabled?: boolean;
+}
+
+interface Member {
+  login: string;
+  id: number;
+  type: string;
+  /** Added here: an owner (undefined: the owners could not be read). */
+  owner?: boolean;
+  /** Added here: has a second factor (undefined: not readable with this token). */
+  mfa?: boolean;
+}
 
 interface Repo {
   name: string;
@@ -33,10 +42,16 @@ interface Repo {
     secret_scanning?: { status: string };
     dependabot_security_updates?: { status: string };
   };
+  /** Added here: the default branch is protected (branch protection or a ruleset). */
+  protected?: boolean;
+  /** Added here: approving reviews the default branch needs, when it is protected. */
+  reviews?: number;
 }
 
+const NO_2FA = "members without 2FA (an owner's token can read this)";
+
 /** GitHub (an organization). */
-export const github: Connector = {
+export const github: Connector = defineConnector({
   id: "github",
   title: "GitHub",
   logo: "github",
@@ -54,137 +69,173 @@ export const github: Connector = {
       label: "Make a fine-grained, read-only token",
     },
   },
-  fields: [
-    { name: "org", secret: false, hint: "your organization's login (github.com/<org>)" },
-    { name: "token", secret: true, hint: "the fine-grained token (read only)" },
-  ],
-  async observe(cred, http: Http, now) {
-    const h = {
+  fields: {
+    org: { secret: false, hint: "your organization's login (github.com/<org>)" },
+    token: { secret: true, hint: "the fine-grained token (read only)" },
+  },
+  auth: (cred) =>
+    Promise.resolve({
       Authorization: `Bearer ${cred.token}`,
       Accept: "application/vnd.github+json",
       "X-GitHub-Api-Version": "2022-11-28",
-    };
-    const gaps: string[] = [];
-    const org = await getJson<
-      { login: string; name?: string; two_factor_requirement_enabled?: boolean }
-    >(http, `${API}/orgs/${cred.org}`, h);
-    const members = await linkPages<{ login: string; id: number; type: string }>(
-      http,
-      `${API}/orgs/${cred.org}/members?per_page=100`,
-      h,
-    );
-    const owners = await orGap(
-      gaps,
-      "owners",
-      undefined as Array<{ login: string }> | undefined,
-      () => linkPages(http, `${API}/orgs/${cred.org}/members?role=admin&per_page=100`, h),
-    );
-    const no2fa = await orGap(
-      gaps,
-      "members without 2FA (an owner's token can read this)",
-      undefined as Array<{ login: string }> | undefined,
-      () => linkPages(http, `${API}/orgs/${cred.org}/members?filter=2fa_disabled&per_page=100`, h),
-    );
-    const ownerSet = new Set((owners ?? []).map((m) => m.login));
-    const no2faSet = new Set((no2fa ?? []).map((m) => m.login));
-    const accounts: Account[] = members.map((m) => ({
-      system: "github",
-      id: String(m.id),
-      name: m.login,
-      active: true,
-      ...(owners ? { admin: ownerSet.has(m.login) } : {}),
-      ...(no2fa ? { mfa: !no2faSet.has(m.login) } : {}),
-      ...(m.type === "Bot" ? { service: true } : {}),
-    }));
-    const repos =
-      (await linkPages<Repo>(http, `${API}/orgs/${cred.org}/repos?per_page=100&type=all`, h))
-        .filter((r) => !r.archived);
-    const repositories: Repository[] = [];
-    for (const r of repos) {
-      const branch = encodeURIComponent(r.default_branch);
-      let reviews: number | undefined;
-      let isProtected = false;
-      try {
-        const p = await getJson<
-          { required_pull_request_reviews?: { required_approving_review_count?: number } }
-        >(
-          http,
-          `${API}/repos/${r.full_name}/branches/${branch}/protection`,
-          h,
-        );
-        isProtected = true;
-        reviews = p.required_pull_request_reviews?.required_approving_review_count ?? 0;
-      } catch (e) {
-        if (e instanceof AccessDenied) gaps.push(`${r.full_name} branch protection: ${e.message}`);
-        // 404: no branch protection; a ruleset may still protect the branch.
-      }
-      if (!isProtected) {
-        type Rule = { type: string; parameters?: { required_approving_review_count?: number } };
-        const rules: Rule[] = await orGap(
-          gaps,
-          `${r.full_name} rulesets`,
-          [] as Rule[],
-          () =>
-            getJson<Rule[]>(http, `${API}/repos/${r.full_name}/rules/branches/${branch}`, h).catch(
-              (e) => {
-                if (e instanceof AccessDenied) throw e;
-                return [] as Rule[];
-              },
-            ),
-        );
-        const pr = rules.find((x) => x.type === "pull_request");
-        if (pr) {
-          isProtected = true;
-          reviews = pr.parameters?.required_approving_review_count ?? 0;
-        }
-      }
-      const sa = r.security_and_analysis;
-      repositories.push({
-        system: "github",
-        name: r.full_name,
-        private: r.private,
-        protected: isProtected,
-        ...(reviews !== undefined ? { reviews } : {}),
-        ...(sa?.secret_scanning ? { secretScanning: sa.secret_scanning.status === "enabled" } : {}),
-        ...(sa?.dependabot_security_updates
-          ? { dependencyAlerts: sa.dependabot_security_updates.status === "enabled" }
-          : {}),
-      });
-    }
-    const priv = repositories.filter((r) => r.private);
-    return {
-      at: now.toISOString().replace(/\.\d+Z$/, "Z"),
-      provider: "github",
-      account: org.name || org.login,
-      assets: [
-        ...members.map((m) => ({
-          kind: "member",
-          id: String(m.id),
-          name: m.login,
-          facts: { owner: ownerSet.has(m.login) },
-        })),
-        ...repositories.map((r) => ({
-          kind: "repository",
-          id: r.name,
-          name: r.name,
-          facts: { private: r.private, protected: !!r.protected, reviews: r.reviews ?? 0 },
-        })),
-      ],
-      posture: {
-        ...(org.two_factor_requirement_enabled !== undefined
-          ? { orgRequires2fa: org.two_factor_requirement_enabled }
-          : {}),
-        ...(owners ? { owners: owners.length } : {}),
-        ...(no2fa ? { membersWithout2fa: no2fa.length } : {}),
-        privateRepos: priv.length,
-        privateReposProtected: priv.filter((r) => r.protected).length,
-        privateReposReviewed: priv.filter((r) => (r.reviews ?? 0) >= 1).length,
-        ...(priv.some((r) => r.secretScanning !== undefined)
-          ? { privateReposSecretScanning: priv.filter((r) => r.secretScanning).length }
-          : {}),
+    }),
+  account: (cred, records) =>
+    records.find((r) => r.label === ORGANIZATION.name)?.display_name ?? cred.org,
+  resources: {
+    organization: {
+      label: ORGANIZATION,
+      ocsf: "cloud_resources_inventory_info",
+      required: true,
+      async *list(ctx) {
+        yield await ctx.json<Org>(`${API}/orgs/${ctx.cred.org}`);
       },
-      gaps,
-      entities: { accounts, repositories },
+      map: (o: Org) => ({
+        native_id: o.login,
+        display_name: o.name || o.login,
+        props: o.two_factor_requirement_enabled !== undefined
+          ? { mfa_required: o.two_factor_requirement_enabled }
+          : {},
+      }),
+      asset: () => undefined,
+    },
+    members: {
+      label: USER_ACCOUNT,
+      ocsf: "user_inventory",
+      required: true,
+      async *list(ctx) {
+        const members: Member[] = [];
+        for await (
+          const m of ctx.linkPages<Member>(`${API}/orgs/${ctx.cred.org}/members?per_page=100`)
+        ) members.push(m);
+        const logins = (url: string) => async () => {
+          const s = new Set<string>();
+          for await (const m of ctx.linkPages<{ login: string }>(url)) s.add(m.login);
+          return s;
+        };
+        const owners = await ctx.orGap(
+          "owners",
+          undefined as Set<string> | undefined,
+          logins(`${API}/orgs/${ctx.cred.org}/members?role=admin&per_page=100`),
+        );
+        const no2fa = await ctx.orGap(
+          NO_2FA,
+          undefined as Set<string> | undefined,
+          logins(`${API}/orgs/${ctx.cred.org}/members?filter=2fa_disabled&per_page=100`),
+        );
+        for (const m of members) {
+          yield {
+            ...m,
+            ...(owners ? { owner: owners.has(m.login) } : {}),
+            ...(no2fa ? { mfa: !no2fa.has(m.login) } : {}),
+          };
+        }
+      },
+      map: (m: Member) => ({
+        native_id: String(m.id),
+        display_name: m.login,
+        props: {
+          active: true,
+          ...(m.owner !== undefined ? { admin: m.owner } : {}),
+          ...(m.mfa !== undefined ? { mfa: m.mfa } : {}),
+          ...(m.type === "Bot" ? { service: true } : {}),
+        },
+      }),
+      asset: (m: Member) => ({ kind: "member", facts: { owner: !!m.owner } }),
+    },
+    repositories: {
+      label: CODE_REPOSITORY,
+      ocsf: "cloud_resources_inventory_info",
+      required: true,
+      async *list(ctx) {
+        const repos: Repo[] = [];
+        for await (
+          const r of ctx.linkPages<Repo>(`${API}/orgs/${ctx.cred.org}/repos?per_page=100&type=all`)
+        ) if (!r.archived) repos.push(r);
+        for (const r of repos) {
+          const branch = encodeURIComponent(r.default_branch);
+          // 404: no branch protection; a ruleset may still protect the branch.
+          const notFound = <T>(e: unknown): T | undefined => {
+            if (e instanceof AccessDenied) throw e;
+            return undefined;
+          };
+          type Protection = {
+            required_pull_request_reviews?: { required_approving_review_count?: number };
+          };
+          const p = await ctx.orGap(
+            `${r.full_name} branch protection`,
+            undefined as Protection | undefined,
+            () =>
+              ctx.json<Protection>(`${API}/repos/${r.full_name}/branches/${branch}/protection`)
+                .catch(notFound<Protection>),
+          );
+          let isProtected = p !== undefined;
+          let reviews = p?.required_pull_request_reviews?.required_approving_review_count ??
+            (p ? 0 : undefined);
+          if (!isProtected) {
+            type Rule = {
+              type: string;
+              parameters?: { required_approving_review_count?: number };
+            };
+            const rules = await ctx.orGap(
+              `${r.full_name} rulesets`,
+              [] as Rule[],
+              async () =>
+                (await ctx.json<Rule[]>(`${API}/repos/${r.full_name}/rules/branches/${branch}`)
+                  .catch(notFound<Rule[]>)) ?? [],
+            );
+            const pr = rules.find((x) => x.type === "pull_request");
+            if (pr) {
+              isProtected = true;
+              reviews = pr.parameters?.required_approving_review_count ?? 0;
+            }
+          }
+          yield { ...r, protected: isProtected, ...(reviews !== undefined ? { reviews } : {}) };
+        }
+      },
+      map: (r: Repo) => {
+        const sa = r.security_and_analysis;
+        return {
+          native_id: r.full_name,
+          display_name: r.full_name,
+          props: {
+            private: r.private,
+            protected: !!r.protected,
+            ...(r.reviews !== undefined ? { reviews: r.reviews } : {}),
+            ...(sa?.secret_scanning
+              ? { secret_scanning: sa.secret_scanning.status === "enabled" }
+              : {}),
+            ...(sa?.dependabot_security_updates
+              ? { dependency_alerts: sa.dependabot_security_updates.status === "enabled" }
+              : {}),
+          },
+        };
+      },
+      asset: (r: Repo) => ({
+        kind: "repository",
+        facts: { private: r.private, protected: !!r.protected, reviews: r.reviews ?? 0 },
+      }),
+    },
+  },
+  posture(records, _cred, { gaps }) {
+    const org = records.find((r) => r.label === ORGANIZATION.name);
+    const members = records.filter((r) => r.label === USER_ACCOUNT.name);
+    const read = (what: string) => !gaps.some((g) => g.startsWith(`${what}: `));
+    const priv = records.filter((r) => r.label === CODE_REPOSITORY.name && r.props.private);
+    return {
+      ...(org?.props.mfa_required !== undefined
+        ? { orgRequires2fa: org.props.mfa_required as boolean }
+        : {}),
+      ...(read("owners") ? { owners: members.filter((m) => m.props.admin).length } : {}),
+      ...(read(NO_2FA)
+        ? { membersWithout2fa: members.filter((m) => m.props.mfa === false).length }
+        : {}),
+      privateRepos: priv.length,
+      privateReposProtected: priv.filter((r) => r.props.protected).length,
+      privateReposReviewed: priv.filter((r) => ((r.props.reviews as number | undefined) ?? 0) >= 1)
+        .length,
+      ...(priv.some((r) => r.props.secret_scanning !== undefined)
+        ? { privateReposSecretScanning: priv.filter((r) => r.props.secret_scanning).length }
+        : {}),
     };
   },
   policies(o, now) {
@@ -241,4 +292,4 @@ export const github: Connector = {
       }),
     ];
   },
-};
+});
