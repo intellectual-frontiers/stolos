@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stolos v0.97.0</title>
+<link rel="stylesheet" href="./styles.css">
+<link rel="stylesheet" href="./page.css">
+<script src="./darkmode_toggle.js"></script>
+<style>
+  main { max-width: 60rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; }
+  main h1 { font-size: 1.8rem; margin-bottom: .5rem; }
+  main h2 { font-size: 1.1rem; margin: 1.5rem 0 .3rem; }
+  main li { margin: .15rem 0; }
+  .start { font-size: 1.1rem; padding: .8rem 1rem; border-radius: .5rem; background: rgba(127,127,127,.12); }
+</style>
+</head>
+<body>
+<main>
+<h1>Stolos v0.97.0</h1>
+<p>The fleet engine (its command is <code>archon</code>), documented from its TypeScript.</p>
+<p class="start">Start here: <a href="./mod.ts/index.html">the overview</a>, with how the
+pieces fit, in diagrams. Then the model: <a href="./archon/model/types.ts/index.html">types.ts</a>.
+Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
+<h2>Guides</h2>
+<ul>
+<li><a href="./archon/guide/mod.ts/index.html">Your Archon server: a guide for newcomers</a> What is on a server, and how to use it.</li>
+<li><a href="./archon/fleet/mod.ts/index.html">The fleet repository</a> Versions, upgrading, signing, troubleshooting.</li>
+<li><a href="./archon-boot/mod.ts/index.html">The boot machine</a> Tools, firewall, router, mail, the secrets vault.</li>
+<li><a href="./archon/model/mod.ts/index.html">Hosts</a> Adding, installing, re-installing, and retiring machines.</li>
+<li><a href="./archon/install/mod.ts/index.html">What happens during an install</a> The eleven steps, and where to look when one fails.</li>
+<li><a href="./archon/commands/mod.ts/index.html">Working on a host</a> Commands, observing, updates.</li>
+<li><a href="./archon/install/workstation-guide.ts/index.html">Your PC's Ubuntu (WSL) as a workstation</a> A managed workstation beside Windows.</li>
+<li><a href="./archon/console/mod.ts/index.html">The Stolos Console</a> The fleet in your browser, on your PC.</li>
+<li><a href="./archon/adopt/mod.ts/index.html">Adopted machines, devices, and clouds</a> Laptops, printers, and cloud accounts: observed, never changed.</li>
+<li><a href="./archon/compliance/mod.ts/index.html">Compliance</a> SCF controls; SOC 2, HIPAA, PCI DSS, CMMC, NIST, and FedRAMP; OSCAL exports.</li>
+<li><a href="./archon/evidence/mod.ts/index.html">Evidence bundles</a> A period's evidence, signed, for an auditor to check offline.</li>
+<li><a href="./archon/web/mod.ts/index.html">HTTPS on every server</a> Publishing services, certificates, the Archon Console.</li>
+<li><a href="./archon/telemetry/mod.ts/index.html">Telemetry</a> Where logs, metrics, and traces go.</li>
+<li><a href="./archon/mcp/mod.ts/index.html">The agent layer</a> AI agents and other MCP clients, limited by each server.</li>
+<li><a href="./archon/pg/mod.ts/index.html">PostgreSQL databases</a> Instances, connections, backups.</li>
+<li><a href="./archon/s3/mod.ts/index.html">S3 object storage</a> Buckets on a server.</li>
+<li><a href="./archon/smb/mod.ts/index.html">File shares (SMB)</a> Windows, macOS, and Linux file sharing.</li>
+<li><a href="./archon/state/mod.ts/index.html">SQL over your infrastructure</a> osquery and DuckDB, on one machine or every one.</li>
+<li><a href="./archon/dotfiles/mod.ts/index.html">Dotfiles</a> How they work, and how to change them.</li>
+<li><a href="./archon/vault/mod.ts/index.html">Disaster recovery</a> Losing the boot machine, a key, a server.</li>
+<li><a href="./archon/doctor/mod.ts/index.html">Troubleshooting</a> Symptoms, causes, and fixes.</li>
+<li><a href="./releasing.ts/index.html">Changing and releasing the engine</a> For the engine's own developers.</li>
+</ul>
+<h2>./</h2>
+<ul>
+<li><a href="./releasing.ts/index.html"><code>releasing.ts</code></a> This guide is for people who change the engine (this repository).</li>
+</ul>
+<h2>archon/</h2>
+<ul>
+<li><a href="./archon/build.ts/index.html"><code>build.ts</code></a> stolos validate and stolos build (spec 002): validate the fleet and every host plan (TypeScript, Article 10), then render each host's files into out/hosts/&lt;host&gt;/rootfs/.</li>
+<li><a href="./archon/main.ts/index.html"><code>main.ts</code></a> The command line, for both commands (spec 059): archon on each machine (servers, workstations) and stolos on your PC (src/stolos/main.ts), over one registry where every command says where it runs.</li>
+<li><a href="./archon/version.ts/index.html"><code>version.ts</code></a> The engine's version (spec 046-engine-instance).</li>
+</ul>
+<h2>archon-boot/</h2>
+<ul>
+<li><a href="./archon-boot/assets.ts/index.html"><code>assets.ts</code></a> Download Ubuntu's boot files and installer image once, verify each against its pinned SHA-256 (Article 12), and cache them on the boot machine.</li>
+<li><a href="./archon-boot/doctor.ts/index.html"><code>doctor.ts</code></a> deno task stolos boot doctor (spec 004): one read-only look at this boot machine, with the fix for each problem: the checkout (hosts install from GitHub, so local changes must be pushed), the…</li>
+<li><a href="./archon-boot/firewall.ts/index.html"><code>firewall.ts</code></a> Firewall check for boot serve (spec 004): warn, with the exact command, when this machine's firewall would block servers from reaching TFTP (UDP) or HTTP (TCP).</li>
+<li><a href="./archon-boot/grub.ts/index.html"><code>grub.ts</code></a> GRUB configs served to Ubuntu's network GRUB (spec 004).</li>
+<li><a href="./archon-boot/guard.ts/index.html"><code>guard.ts</code></a> Spec 051: the blank-disk guard.</li>
+<li><a href="./archon-boot/http.ts/index.html"><code>http.ts</code></a> A small HTTP/1.1 server for archon-boot (spec 004).</li>
+<li><a href="./archon-boot/mail.ts/index.html"><code>mail.ts</code></a> The boot machine's side of outbound mail (specs 025, 027): deno task stolos boot mail-setup store the Cloudflare API token (once) deno task stolos boot mail-push &lt;host&gt; give a running host the…</li>
+<li><a href="./archon-boot/main.ts/index.html"><code>main.ts</code></a> archon-boot (spec 004): the boot machine's side of a zero-touch install.</li>
+<li><a href="./archon-boot/mod.ts/index.html"><code>mod.ts</code></a> The boot machine is your Windows PC (a Linux PC works too).</li>
+<li><a href="./archon-boot/observe.ts/index.html"><code>observe.ts</code></a> deno task stolos boot observe (spec 023): recent installs from the boot server's own telemetry (the OTLP JSON files on this PC): when, how long, which step took the time, and what failed.</li>
+<li><a href="./archon-boot/pins.ts/index.html"><code>pins.ts</code></a> Ubuntu boot files archon-boot serves, pinned by SHA-256 (Article 12, spec 004).</li>
+<li><a href="./archon-boot/pretty.ts/index.html"><code>pretty.ts</code></a> The boot server's window (spec 004, Article 19; spec 049): a rendering of structured events, never their source.</li>
+<li><a href="./archon-boot/progress.ts/index.html"><code>progress.ts</code></a> Install and first-boot progress in the boot server's window (spec 004).</li>
+<li><a href="./archon-boot/reinstall.ts/index.html"><code>reinstall.ts</code></a> deno task stolos boot reinstall &lt;host&gt; (spec 004): one command from the boot machine re-installs a running host, with no one at its console: 1.</li>
+<li><a href="./archon-boot/retire.ts/index.html"><code>retire.ts</code></a> deno task stolos boot retire &lt;host&gt; --confirm-destroy &lt;host&gt; (spec 045): a server leaves the fleet, the reverse of stolos host add.</li>
+<li><a href="./archon-boot/server.ts/index.html"><code>server.ts</code></a> archon-boot's HTTP server (spec 004): UEFI HTTP Boot files, GRUB menus per host (by Boot URI, or by MAC when the model has one), the verified installer image, and each host's install config with…</li>
+<li><a href="./archon-boot/stall.ts/index.html"><code>stall.ts</code></a> Spec 051: a machine that takes the installer image and then goes quiet.</li>
+<li><a href="./archon-boot/telemetry.ts/index.html"><code>telemetry.ts</code></a> The boot server's own telemetry (spec 023).</li>
+<li><a href="./archon-boot/tftp.ts/index.html"><code>tftp.ts</code></a> A read-only TFTP server for PXE (spec 004): UEFI PXE firmware fetches shim over TFTP, shim fetches GRUB, and GRUB its menu, kernel, and initrd, all from the same server.</li>
+<li><a href="./archon-boot/web.ts/index.html"><code>web.ts</code></a> The boot machine's side of HTTPS (spec 032): deno task stolos boot web-setup store the Cloudflare DNS token (once) deno task stolos boot web-push &lt;host&gt; give a running server the token over SSH…</li>
+</ul>
+<h2>archon/adopt/</h2>
+<ul>
+<li><a href="./archon/adopt/adopt.ts/index.html"><code>adopt.ts</code></a> Spec 067: adopted machines.</li>
+<li><a href="./archon/adopt/checkin.ts/index.html"><code>checkin.ts</code></a> Spec 069: the check-in code.</li>
+<li><a href="./archon/adopt/commands.ts/index.html"><code>commands.ts</code></a> Spec 067: stolos host adopt | observe | check | release and stolos fleet query, on the controller PC.</li>
+<li><a href="./archon/adopt/discover.ts/index.html"><code>discover.ts</code></a> Spec 067: discovered machines: seen, not yet managed or adopted.</li>
+<li><a href="./archon/adopt/integrate.ts/index.html"><code>integrate.ts</code></a> Spec 069: integrate.</li>
+<li><a href="./archon/adopt/mod.ts/index.html"><code>mod.ts</code></a> Stolos manages the servers it installs.</li>
+<li><a href="./archon/adopt/policy.ts/index.html"><code>policy.ts</code></a> Spec 067: the policy pack for adopted machines.</li>
+<li><a href="./archon/adopt/probe.ts/index.html"><code>probe.ts</code></a> Spec 067: the probe an adopted machine runs for Stolos.</li>
+</ul>
+<h2>archon/apply/</h2>
+<ul>
+<li><a href="./archon/apply/apply.ts/index.html"><code>apply.ts</code></a> archon apply: converge a host to its plan (Article XI).</li>
+<li><a href="./archon/apply/apt.ts/index.html"><code>apt.ts</code></a> apt with real progress (spec 018): APT::Status-Fd=2 makes apt report &quot;pmstatus:&lt;pkg&gt;:&lt;percent&gt;:&lt;text&gt;&quot; and &quot;dlstatus:...&quot; lines on stderr, which drive the progress bar; everything else goes to the…</li>
+<li><a href="./archon/apply/ppa.ts/index.html"><code>ppa.ts</code></a> Maintainers' PPAs (spec 010, Article 5).</li>
+</ul>
+<h2>archon/backup/</h2>
+<ul>
+<li><a href="./archon/backup/backup.ts/index.html"><code>backup.ts</code></a> Backups (spec 016, Article 14): zstd tar archives of the host's own state and its durable data (spec 044), kept to a retention count, with a restore test.</li>
+</ul>
+<h2>archon/capabilities/</h2>
+<ul>
+<li><a href="./archon/capabilities/accounts.ts/index.html"><code>accounts.ts</code></a> 006-accounts: Archon's groups (sysusers.d), the operator sudo rule, and the ops account's GitHub access through this host's deploy key.</li>
+<li><a href="./archon/capabilities/backup.ts/index.html"><code>backup.ts</code></a> 016-backups: the host's own state is archived daily (zstd tar) into Ubuntu's /var/backups by default, kept to a retention count, and restore-tested.</li>
+<li><a href="./archon/capabilities/cli.ts/index.html"><code>cli.ts</code></a> 012-cli-mcp: the archon launcher on every host.</li>
+<li><a href="./archon/capabilities/cockpit.ts/index.html"><code>cockpit.ts</code></a> 022-cockpit: Ubuntu's web console on every server, with PCP's metric history (cockpit-bridge reads the archives spec 021 keeps).</li>
+<li><a href="./archon/capabilities/containers.ts/index.html"><code>containers.ts</code></a> 040-opt-in: opt-in containers on every server.</li>
+<li><a href="./archon/capabilities/data.ts/index.html"><code>data.ts</code></a> 044-durable (Article 23): what this server's data class is, where people see it.</li>
+<li><a href="./archon/capabilities/doctor.ts/index.html"><code>doctor.ts</code></a> 026-doctor: the network tools archon doctor calls.</li>
+<li><a href="./archon/capabilities/etckeeper.ts/index.html"><code>etckeeper.ts</code></a> 033-etckeeper: /etc's history in a local git repository (Ubuntu's etckeeper package): a commit before and after every apt run, one a day for anything else, and one per archon apply with its specs…</li>
+<li><a href="./archon/capabilities/firewall.ts/index.html"><code>firewall.ts</code></a> 008-firewall: Ubuntu's native firewall, ufw (nftables backend), with incoming traffic denied except the ports the model declares.</li>
+<li><a href="./archon/capabilities/guests.ts/index.html"><code>guests.ts</code></a> 017-guests: LXD (Ubuntu's native container and VM manager, a snap) with its default bridge (lxdbr0) and a directory storage pool, initialized once from a rendered preseed.</li>
+<li><a href="./archon/capabilities/mail.ts/index.html"><code>mail.ts</code></a> 027-mail: every server can send mail, the way programs expect to (/usr/sbin/sendmail, or SMTP on localhost:25).</li>
+<li><a href="./archon/capabilities/mod.ts/index.html"><code>mod.ts</code></a> Capabilities: one module per spec.</li>
+<li><a href="./archon/capabilities/notify.ts/index.html"><code>notify.ts</code></a> 025-notify: email the fleet's shared mailbox about major events.</li>
+<li><a href="./archon/capabilities/observability.ts/index.html"><code>observability.ts</code></a> 021-observability: every server and workstation observes itself with Ubuntu's own components, and OpenTelemetry (OTLP) is the only protocol anything speaks when data leaves where it was made.</li>
+<li><a href="./archon/capabilities/ops.ts/index.html"><code>ops.ts</code></a> 013-ops: the daily report (deterministic facts only).</li>
+<li><a href="./archon/capabilities/osquery.ts/index.html"><code>osquery.ts</code></a> 042-sql: osquery's daemon on every host, as infrastructure: always installed and running.</li>
+<li><a href="./archon/capabilities/passwords.ts/index.html"><code>passwords.ts</code></a> 037-smb, 039-pg-identity: one PAM hook keeps the copies of a person's Linux password that other protocols need in step with Linux: Samba's NT hash (SMB clients cannot prove a password any other…</li>
+<li><a href="./archon/capabilities/pg.ts/index.html"><code>pg.ts</code></a> 038-pg, 039-pg-identity, 040-opt-in: PostgreSQL instances on a server, from the model (host.pg.instances) and the host's record (the host's own archon.sql (opt-in pg)).</li>
+<li><a href="./archon/capabilities/platform.ts/index.html"><code>platform.ts</code></a> 001-platform: Ubuntu Server 26.04's own components, verified, never replaced (Article 2).</li>
+<li><a href="./archon/capabilities/services.ts/index.html"><code>services.ts</code></a> 039-pg-identity: the fleet's service accounts on every server.</li>
+<li><a href="./archon/capabilities/shell.ts/index.html"><code>shell.ts</code></a> 011-shell: per-user chezmoi data from personas, so chezmoi apply never prompts.</li>
+<li><a href="./archon/capabilities/smb.ts/index.html"><code>smb.ts</code></a> 037-smb: file shares over SMB (Samba) on every server, off until an operator turns them on with archon fs smb on; then on, across reboots and reinstalls, until archon fs smb off.</li>
+<li><a href="./archon/capabilities/ssh.ts/index.html"><code>ssh.ts</code></a> 007-ssh: OpenSSH hardening as a drop-in (Ubuntu reads sshd_config.d).</li>
+<li><a href="./archon/capabilities/state.ts/index.html"><code>state.ts</code></a> 014-state and 015-reconcile: hosts converge to the repository on a timer (Article 9), and capture their state daily into /var/lib/archon (runtime; spec 048: nothing is recorded in the repository).</li>
+<li><a href="./archon/capabilities/tools.ts/index.html"><code>tools.ts</code></a> 010-tools: the tool catalog, its apt packages, and the weekly tools sync.</li>
+<li><a href="./archon/capabilities/updates.ts/index.html"><code>updates.ts</code></a> 009-updates: Ubuntu's unattended-upgrades, as Ubuntu configures it, plus one override (spec 009): the -updates pocket too, so Ubuntu's stable bug-fix updates install daily alongside security updates.</li>
+<li><a href="./archon/capabilities/web.ts/index.html"><code>web.ts</code></a> 032-web: every server is HTTPS-ready from its first boot.</li>
+<li><a href="./archon/capabilities/workstation.ts/index.html"><code>workstation.ts</code></a> 020-workstation: Ubuntu on WSL (or a desktop) as an Archon workstation.</li>
+</ul>
+<h2>archon/commands/</h2>
+<ul>
+<li><a href="./archon/commands/mod.ts/index.html"><code>mod.ts</code></a> ssh alpha lands you in fish with the Archon prompt (bash stays the account's login shell for scripts and file copies; set ARCHON_NO_FISH=1 to stay in bash).</li>
+<li><a href="./archon/commands/registry.ts/index.html"><code>registry.ts</code></a> The command registry (Article 6).</li>
+</ul>
+<h2>archon/compliance/</h2>
+<ul>
+<li><a href="./archon/compliance/catalog.ts/index.html"><code>catalog.ts</code></a> Spec 071: the official catalogs, never Stolos's own.</li>
+<li><a href="./archon/compliance/commands.ts/index.html"><code>commands.ts</code></a> Specs 068 and 071: stolos compliance [--framework &lt;id&gt;] [--json]: the fleet's evidence by SCF control and by framework, from what this PC already knows (nothing is asked of a server); stolos…</li>
+<li><a href="./archon/compliance/mod.ts/index.html"><code>mod.ts</code></a> Stolos turns what it already checks into evidence for an auditor (specs 068 and 071).</li>
+<li><a href="./archon/compliance/oscal.ts/index.html"><code>oscal.ts</code></a> Spec 071: the fleet's compliance in OSCAL, NIST's machine-readable format, so an assessor's or an agency's tools read it without retyping.</li>
+<li><a href="./archon/compliance/report.ts/index.html"><code>report.ts</code></a> Spec 068: compliance as evidence.</li>
+<li><a href="./archon/compliance/scf.ts/index.html"><code>scf.ts</code></a> Spec 071: the Secure Controls Framework (SCF) controls Stolos gives evidence for, and what it looks at for each.</li>
+</ul>
+<h2>archon/connect/</h2>
+<ul>
+<li><a href="./archon/connect/aws.ts/index.html"><code>aws.ts</code></a> Spec 067 (clouds): AWS, read-only, with an access key whose user (or role) has the managed SecurityAudit policy: the account, IAM users, S3 buckets, EC2 instances in every enabled region, and the…</li>
+<li><a href="./archon/connect/cloudflare.ts/index.html"><code>cloudflare.ts</code></a> Spec 067 (clouds): Cloudflare, read-only: accounts, zones and their DNS records, Workers, Pages projects, R2 buckets, and tunnels; each zone's TLS settings and DNSSEC for the posture policies.</li>
+<li><a href="./archon/connect/commands.ts/index.html"><code>commands.ts</code></a> Spec 067 (clouds): stolos connect | observe | check | assets | disconnect.</li>
+<li><a href="./archon/connect/connector.ts/index.html"><code>connector.ts</code></a> Spec 084: connectors.</li>
+<li><a href="./archon/connect/entities.ts/index.html"><code>entities.ts</code></a> Spec 085: the normalized entities every source contributes to the estate graph: people (from HR systems), accounts (from identity providers, code hosts, clouds, SaaS), devices (managed, adopted,…</li>
+<li><a href="./archon/connect/estate.ts/index.html"><code>estate.ts</code></a> Spec 085: the estate graph.</li>
+<li><a href="./archon/connect/github.ts/index.html"><code>github.ts</code></a> Spec 086: GitHub, read-only, for one organization: its members (who are owners, who have no second factor), and its repositories (private or public, whether the default branch is protected by…</li>
+<li><a href="./archon/connect/google.ts/index.html"><code>google.ts</code></a> Spec 086: Google Workspace, read-only, through the Admin SDK Directory API: its users (suspended or not, administrators, enrolled in 2-Step Verification, last sign-in).</li>
+<li><a href="./archon/connect/hetzner.ts/index.html"><code>hetzner.ts</code></a> Spec 067 (clouds): Hetzner Cloud, read-only: one project's servers, volumes, firewalls, primary IPs, and load balancers.</li>
+<li><a href="./archon/connect/hris.ts/index.html"><code>hris.ts</code></a> Spec 086: HR systems (Cloud HCM suites), read-only: the roster only, the source of truth for who should have access.</li>
+<li><a href="./archon/connect/microsoft.ts/index.html"><code>microsoft.ts</code></a> Spec 067 (clouds): Microsoft 365 (Entra ID, through Microsoft Graph) and Azure (through Resource Manager), read-only, with one app registration's client credentials: the tenant, its domains, users…</li>
+<li><a href="./archon/connect/okta.ts/index.html"><code>okta.ts</code></a> Spec 086: Okta, read-only: its users (active, suspended, deprovisioned), who holds an administrator role, and who has enrolled a second factor.</li>
+</ul>
+<h2>archon/console/</h2>
+<ul>
+<li><a href="./archon/console/assets.ts/index.html"><code>assets.ts</code></a> Specs 065 and 066: what both consoles serve besides their pages: one stylesheet (color tokens, light and dark), the Archon and Stolos logos, and Datastar (vendored, pinned by its SHA-256, served…</li>
+<li><a href="./archon/console/auth.ts/index.html"><code>auth.ts</code></a> Spec 065: who is signed in to the console, and what they may do.</li>
+<li><a href="./archon/console/boot-timeline.ts/index.html"><code>boot-timeline.ts</code></a> Spec 066: the boot server's installs as a timeline, from boot.log (each line &lt;ISO time&gt; [address] [host:] message, spec 049): for each machine, the furthest of the eleven steps of the…</li>
+<li><a href="./archon/console/compliance-page.ts/index.html"><code>compliance-page.ts</code></a> Spec 068: the Compliance tab, in both consoles: each SCF control with its evidence, and each framework's requirements (SOC 2, HIPAA, PCI DSS, CMMC, NIST SP 800-53 and 800-171, FedRAMP) with what…</li>
+<li><a href="./archon/console/exec.ts/index.html"><code>exec.ts</code></a> Spec 065: how the Archon Console runs a command for the person signed in.</li>
+<li><a href="./archon/console/forms.ts/index.html"><code>forms.ts</code></a> Specs 065 and 066: every command a console offers is a form, generated from the command registry (the source of archon help, the man pages, and the MCP tools), so the web and the CLI cannot drift.</li>
+<li><a href="./archon/console/html.ts/index.html"><code>html.ts</code></a> Spec 065: the console's HTML, as typed TypeScript.</li>
+<li><a href="./archon/console/layout.ts/index.html"><code>layout.ts</code></a> Specs 065 and 066: both consoles' frame.</li>
+<li><a href="./archon/console/logos.ts/index.html"><code>logos.ts</code></a> Spec 065: product logos for the consoles, from Simple Icons 16.36.0 (https://simpleicons.org, CC0 1.0; each mark remains its owner's trademark, shown only to name the product it stands for).</li>
+<li><a href="./archon/console/machine.ts/index.html"><code>machine.ts</code></a> Spec 065: the Archon Console's real dependencies on a server: PAM, the system's accounts, the runner, the checkout of the fleet repository (the commit applied now, who signed it, the engine it…</li>
+<li><a href="./archon/console/mod.ts/index.html"><code>mod.ts</code></a> The fleet in your browser, on your PC only (spec 066).</li>
+<li><a href="./archon/console/pages.ts/index.html"><code>pages.ts</code></a> Spec 065: the Archon Console's pages, as typed functions of their data: sign-in, Overview, Actions, Activity, and Guide.</li>
+<li><a href="./archon/console/pam-worker.ts/index.html"><code>pam-worker.ts</code></a> Spec 065: the worker thread that runs {@link pamCheck} (PAM blocks for about two seconds after a wrong password; the web server keeps answering).</li>
+<li><a href="./archon/console/pam.ts/index.html"><code>pam.ts</code></a> Spec 065: checks a username and password with Linux itself (PAM).</li>
+<li><a href="./archon/console/pc.ts/index.html"><code>pc.ts</code></a> Spec 066: what the Stolos Console shows, gathered on the PC from the fleet repository and this PC's state: every machine (managed servers and workstations, adopted machines, cloud servers), the…</li>
+<li><a href="./archon/console/server.ts/index.html"><code>server.ts</code></a> Spec 065: the Archon Console's web server, as one request handler built from its dependencies (PAM, accounts, the runner, the data), so tests drive it with fakes and a server with the real ones.</li>
+<li><a href="./archon/console/stolos-launch.ts/index.html"><code>stolos-launch.ts</code></a> Spec 066: stolos console: the Stolos Console on this PC.</li>
+<li><a href="./archon/console/stolos-pages.ts/index.html"><code>stolos-pages.ts</code></a> Spec 066: the Stolos Console's pages, for the person who runs the fleet from their PC: the fleet at a glance, every machine (managed, adopted, in a cloud), the clouds, one SQL question to every…</li>
+<li><a href="./archon/console/stolos-server.ts/index.html"><code>stolos-server.ts</code></a> Spec 066: the Stolos Console's web server, on this PC only.</li>
+</ul>
+<h2>archon/containers/</h2>
+<ul>
+<li><a href="./archon/containers/catalog.ts/index.html"><code>catalog.ts</code></a> 040-opt-in: the catalog of opt-in containers.</li>
+<li><a href="./archon/containers/quadlet.ts/index.html"><code>quadlet.ts</code></a> 040-opt-in: a container as a Podman Quadlet file.</li>
+</ul>
+<h2>archon/core/</h2>
+<ul>
+<li><a href="./archon/core/announce.ts/index.html"><code>announce.ts</code></a> Tell a running boot server something happened on this PC (spec 004): an event (spec 049) it records and shows in its window and boot.log.</li>
+<li><a href="./archon/core/assets.ts/index.html"><code>assets.ts</code></a> Spec 046-engine-instance: read the engine's own text files (constitution, specifications, guides, the base dotfile layer) from the generated module, wherever the engine was loaded from (a checkout…</li>
+<li><a href="./archon/core/clock.ts/index.html"><code>clock.ts</code></a> Clock preflight (spec 016): apt rejects signatures that are &quot;not live until&quot; a future time when the host clock is behind, which silently skips trixie-security.</li>
+<li><a href="./archon/core/crypt.ts/index.html"><code>crypt.ts</code></a> SHA-512 crypt ($6$), the password hash Ubuntu's installer accepts in autoinstall identity.password (spec 003).</li>
+<li><a href="./archon/core/exec.ts/index.html"><code>exec.ts</code></a> Process execution through Deno.Command.</li>
+<li><a href="./archon/core/explain.ts/index.html"><code>explain.ts</code></a> Spec 052: every problem archon knows how to explain, by a stable code.</li>
+<li><a href="./archon/core/fsx.ts/index.html"><code>fsx.ts</code></a> Small filesystem helpers on Deno's native APIs.</li>
+<li><a href="./archon/core/guides.ts/index.html"><code>guides.ts</code></a> The guides: each is the @module documentation of the module beside the code it explains (so deno doc renders it, with its Mermaid diagrams, and it changes in the same commit as the code).</li>
+<li><a href="./archon/core/lock.ts/index.html"><code>lock.ts</code></a> One archon run at a time per host (specs 012, 017).</li>
+<li><a href="./archon/core/log.ts/index.html"><code>log.ts</code></a> Logging adapter over the calm-output UI (Article XXII, spec 018), plus journald through logger(1) (util-linux, native; Article XVIII).</li>
+<li><a href="./archon/core/net.ts/index.html"><code>net.ts</code></a> The boot machine's LAN addresses and the Boot URIs built from them (spec 004).</li>
+<li><a href="./archon/core/path.ts/index.html"><code>path.ts</code></a> Path helpers built on Node's native path module (bundled with Deno, no download needed).</li>
+<li><a href="./archon/core/paths.ts/index.html"><code>paths.ts</code></a> Well-known locations (spec 046-engine-instance).</li>
+<li><a href="./archon/core/registry-types.ts/index.html"><code>registry-types.ts</code></a> Types for the command registry (Article VI).</li>
+<li><a href="./archon/core/secret-ledger.ts/index.html"><code>secret-ledger.ts</code></a> The secret ledger (spec 029): when each boot-machine secret last changed, by name only.</li>
+<li><a href="./archon/core/secrets.ts/index.html"><code>secrets.ts</code></a> The boot machine's secret store (spec 003, Article 13): a per-user folder outside the repository (%APPDATA%\stolos\secrets on Windows, ~/.config/stolos/secrets elsewhere).</li>
+<li><a href="./archon/core/share.ts/index.html"><code>share.ts</code></a> The shared checkout (specs 001, 016): /srv/archon belongs to its owner (ops) and the archon-ops group, group-writable, so every operator can run archon and git there.</li>
+<li><a href="./archon/core/status.ts/index.html"><code>status.ts</code></a> The prompt's Archon segment (spec 009): every archon command ends by writing one short line to /var/lib/archon/status/prompt, and the oh-my-posh theme only reads that file, so the prompt stays…</li>
+<li><a href="./archon/core/telemetry.ts/index.html"><code>telemetry.ts</code></a> Archon's own telemetry (specs 021, 049; Article 27), through Deno's built-in OpenTelemetry: every command is a trace (one span per phase) and its results are metrics.</li>
+<li><a href="./archon/core/ts-literal.ts/index.html"><code>ts-literal.ts</code></a> TypeScript object literals for the files archon writes into a fleet repository (fleet.ts, decisions.ts): keys bare where they are identifiers (timezone: &quot;America/New_York&quot;), quoted only where they…</li>
+<li><a href="./archon/core/ui.ts/index.html"><code>ui.ts</code></a> Calm output (Article XXII, spec 018): quiet on success, loud and actionable on problems, full detail always in the log.</li>
+</ul>
+<h2>archon/device/</h2>
+<ul>
+<li><a href="./archon/device/commands.ts/index.html"><code>commands.ts</code></a> Spec 069: stolos device add | observe | check | remove, on the controller PC.</li>
+<li><a href="./archon/device/device.ts/index.html"><code>device.ts</code></a> Spec 069: devices: printers, routers, switches, access points, NAS boxes, cameras, UPSes.</li>
+<li><a href="./archon/device/snmp.ts/index.html"><code>snmp.ts</code></a> Spec 069: a small SNMPv3 client, read-only by construction: it sends only GET and GETNEXT, always with authentication and privacy (authPriv): HMAC-SHA-96 or HMAC-192-SHA-256 (RFC 3414, RFC 7860)…</li>
+</ul>
+<h2>archon/doctor/</h2>
+<ul>
+<li><a href="./archon/doctor/doctor.ts/index.html"><code>doctor.ts</code></a> archon doctor (spec 026): a quick, read-only look at whether this machine can reach what it depends on, with what is wrong and where to look.</li>
+<li><a href="./archon/doctor/email.ts/index.html"><code>email.ts</code></a> archon doctor's email checks (spec 026, for specs 025 and 027), shared by servers and the boot machine: the sending domain's records in DNS, the relay's credential, a login to the relay that sends…</li>
+<li><a href="./archon/doctor/mod.ts/index.html"><code>mod.ts</code></a> If the boot machine itself is lost, see [disaster recovery](disaster-recovery.md).</li>
+<li><a href="./archon/doctor/probe.ts/index.html"><code>probe.ts</code></a> archon doctor's building blocks (spec 026): one HTTP(S) probe with curl's own timings, what a curl failure means, and parsers for the output of Ubuntu's network tools.</li>
+</ul>
+<h2>archon/dotfiles/</h2>
+<ul>
+<li><a href="./archon/dotfiles/layers.ts/index.html"><code>layers.ts</code></a> 031-dotfile-layers: every user's chezmoi source is composed from layers, most general first (spec 046: the engine's base travels with the engine; the rest is in the fleet repository, under the…</li>
+<li><a href="./archon/dotfiles/mod.ts/index.html"><code>mod.ts</code></a> Every account's dotfiles (bash, fish, the prompt, tmux, git, and on workstations Claude Code's settings) are managed by chezmoi from the fleet repository.</li>
+<li><a href="./archon/dotfiles/report.ts/index.html"><code>report.ts</code></a> archon dotfiles [path] [--user &lt;u&gt;] (spec 031): which layer provides each of a user's dotfiles on this host.</li>
+<li><a href="./archon/dotfiles/sync.ts/index.html"><code>sync.ts</code></a> 031-dotfile-layers: write a user's composed chezmoi source from the repository's layers into /var/lib/archon-dotfiles/&lt;user&gt;: owned by root, readable by the user's group, so chezmoi reads it and…</li>
+</ul>
+<h2>archon/evidence/</h2>
+<ul>
+<li><a href="./archon/evidence/bundle.ts/index.html"><code>bundle.ts</code></a> Spec 072: evidence bundles.</li>
+<li><a href="./archon/evidence/commands.ts/index.html"><code>commands.ts</code></a> Spec 072: stolos evidence export --from &lt;date&gt; --to &lt;date&gt; gathers a period's evidence from the fleet repository and this PC, and signs it with your daily key (ssh-keygen asks its passphrase in…</li>
+<li><a href="./archon/evidence/mod.ts/index.html"><code>mod.ts</code></a> An auditor wants evidence they can check again themselves, not screenshots (spec 072).</li>
+</ul>
+<h2>archon/fleet/</h2>
+<ul>
+<li><a href="./archon/fleet/apply.ts/index.html"><code>apply.ts</code></a> Spec 060: stolos apply (or stolos push): your changes to the fleet, from this PC to every machine, in one command and at most one passphrase.</li>
+<li><a href="./archon/fleet/bootstrap.ts/index.html"><code>bootstrap.ts</code></a> Spec 062: the bootstrap scripts that make a PC a Stolos controller (Deno, Git, gh, the GitHub sign-in, the fleet cloned into $HOME/fleet, the stolos shortcut).</li>
+<li><a href="./archon/fleet/decisions.ts/index.html"><code>decisions.ts</code></a> Spec 047-intent-and-identity (Article 25): what operators decided for a host (which opt-ins are on, and whether their data is durable) lives in Git, in fleets/&lt;id&gt;/hosts/&lt;host&gt;/decisions.ts,…</li>
+<li><a href="./archon/fleet/mod.ts/index.html"><code>mod.ts</code></a> This guide is for whoever looks after a fleet repository (for example shah/fleet): the private repository that holds your fleets and that every host checks out at /srv/archon.</li>
+<li><a href="./archon/fleet/registration.ts/index.html"><code>registration.ts</code></a> Spec 047-intent-and-identity (Article 25): who a host is, in Git: fleets/&lt;id&gt;/hosts/&lt;host&gt;/registration.ts, written by stolos host add, in one fixed form.</li>
+<li><a href="./archon/fleet/scaffold.ts/index.html"><code>scaffold.ts</code></a> A new fleet repository's files (spec 046-engine-instance): what archon fleet init &lt;id&gt; writes into a repository that has none of them yet.</li>
+<li><a href="./archon/fleet/upgrade.ts/index.html"><code>upgrade.ts</code></a> stolos fleet upgrade &lt;tag&gt; (spec 046-engine-instance, Articles 9, 12, 24): move a fleet repository to another released version of the engine, safely.</li>
+<li><a href="./archon/fleet/use.ts/index.html"><code>use.ts</code></a> stolos fleet use &lt;id&gt;: which fleet of this repository every archon command in this checkout is for, remembered in .git/stolos/fleet (never committed, so each checkout chooses its own).</li>
+</ul>
+<h2>archon/guests/</h2>
+<ul>
+<li><a href="./archon/guests/guests.ts/index.html"><code>guests.ts</code></a> archon guest sync|list (spec 017): create missing LXD instances from the model and start stopped ones.</li>
+</ul>
+<h2>archon/guide/</h2>
+<ul>
+<li><a href="./archon/guide/command.ts/index.html"><code>command.ts</code></a> archon guide (spec 035): what's on this machine and how to use it, in the terminal, from the same source as the welcome page (guideFor).</li>
+<li><a href="./archon/guide/docs-command.ts/index.html"><code>docs-command.ts</code></a> stolos docs [name] and archon docs [name]: the engine's guides, offline and at this engine's version.</li>
+<li><a href="./archon/guide/guide.ts/index.html"><code>guide.ts</code></a> 035-welcome-guide: what is on this server and how to use it, in plain words, computed from the server's own plan (Article 4: one source).</li>
+<li><a href="./archon/guide/mod.ts/index.html"><code>mod.ts</code></a> This server is managed by Archon.</li>
+<li><a href="./archon/guide/where.ts/index.html"><code>where.ts</code></a> Spec 053: &quot;where am I&quot;.</li>
+</ul>
+<h2>archon/identity/</h2>
+<ul>
+<li><a href="./archon/identity/fleet-init.ts/index.html"><code>fleet-init.ts</code></a> stolos fleet init (spec 003): the fleet's identity, from your GitHub account as gh reports it.</li>
+<li><a href="./archon/identity/keys-commands.ts/index.html"><code>keys-commands.ts</code></a> Spec 057: stolos keys, every step of your signing keys in one place, and idempotent: each command looks at what is already there, does only what is missing, and can be run again at any time (after…</li>
+<li><a href="./archon/identity/keys.ts/index.html"><code>keys.ts</code></a> Spec 057: your signing keys, checked and fixed by one command.</li>
+<li><a href="./archon/identity/signers-commands.ts/index.html"><code>signers-commands.ts</code></a> stolos signers (spec 047-intent-and-identity): list, add, and remove the fleet's signers (fleets/&lt;id&gt;/signers.ts, in its fixed form), and, on a host in an emergency, trust a key a person types there.</li>
+<li><a href="./archon/identity/signers.ts/index.html"><code>signers.ts</code></a> Spec 047-intent-and-identity (Article 9): who may approve a fleet's changes, and how a host checks an approval before it applies anything.</li>
+</ul>
+<h2>archon/install/</h2>
+<ul>
+<li><a href="./archon/install/apt-busy.ts/index.html"><code>apt-busy.ts</code></a> Spec 054: powering a machine off while apt or dpkg runs can break dpkg's state (the lab did it: dpkg's files were left empty).</li>
+<li><a href="./archon/install/first-boot.ts/index.html"><code>first-boot.ts</code></a> archon first-boot (spec 005): run once by cloud-init on a freshly installed host, after the first-boot script cloned the repository with this host's deploy key.</li>
+<li><a href="./archon/install/host-add.ts/index.html"><code>host-add.ts</code></a> stolos host add (spec 004): write the host's model, give it its own GitHub deploy key (read-only access to this repository (spec 048); the private half stays in the boot machine's secret store),…</li>
+<li><a href="./archon/install/host-bootstrap.ts/index.html"><code>host-bootstrap.ts</code></a> stolos host bootstrap (spec 005): finish a host whose Ubuntu was installed by hand (from Ubuntu's ISO, a cloud image, anything) instead of by network boot.</li>
+<li><a href="./archon/install/host-keys.ts/index.html"><code>host-keys.ts</code></a> Each host's SSH identity (spec 004): its host keys are made once on the boot machine (ssh-keygen, as for the deploy key), kept in the secret store, and installed by cloud-init at every install.</li>
+<li><a href="./archon/install/mod.ts/index.html"><code>mod.ts</code></a> From power-on to Ready, in order.</li>
+<li><a href="./archon/install/netboot.ts/index.html"><code>netboot.ts</code></a> archon reboot [--netboot] (spec 004): for a re-install, boot from the network once (UEFI BootNext) and then reboot.</li>
+<li><a href="./archon/install/publish.ts/index.html"><code>publish.ts</code></a> Specs 004 and 045: what stolos host add and boot retire change in the checkout is built, committed, and pushed by the same command (pushing to main is approval, Article 9).</li>
+<li><a href="./archon/install/recognize.ts/index.html"><code>recognize.ts</code></a> Spec 051: how a machine becomes a host when it network-boots.</li>
+<li><a href="./archon/install/report.ts/index.html"><code>report.ts</code></a> First-boot progress to the boot server's window (spec 004): the install left the URL in /etc/archon/boot-events.</li>
+<li><a href="./archon/install/runnable.ts/index.html"><code>runnable.ts</code></a> Spec 063: before a machine is armed, check that what it will run is there.</li>
+<li><a href="./archon/install/ubuntu.ts/index.html"><code>ubuntu.ts</code></a> The Ubuntu point release hosts are installed from (spec 004 pins).</li>
+<li><a href="./archon/install/workstation-guide.ts/index.html"><code>workstation-guide.ts</code></a> Ubuntu on WSL (Windows Subsystem for Linux) can be an Archon **workstation**: it gets what makes the hosts pleasant to work on, managed the same way, and nothing that belongs to a server.</li>
+<li><a href="./archon/install/workstation.ts/index.html"><code>workstation.ts</code></a> stolos workstation add (spec 020): run inside Ubuntu on WSL (or on an Ubuntu desktop), from the checkout in /srv/archon, as your own user.</li>
+</ul>
+<h2>archon/mcp/</h2>
+<ul>
+<li><a href="./archon/mcp/mod.ts/index.html"><code>mod.ts</code></a> No AI agent runs on a server, and no server holds an AI credential (constitution Article 17, spec 030).</li>
+<li><a href="./archon/mcp/server.ts/index.html"><code>server.ts</code></a> archon mcp: a Model Context Protocol server over stdio (JSON-RPC 2.0, newline-delimited), implemented natively without an SDK (Article II).</li>
+</ul>
+<h2>archon/model/</h2>
+<ul>
+<li><a href="./archon/model/durable.ts/index.html"><code>durable.ts</code></a> 044-durable (Article 23): data that can come from end users is either durable (it exists nowhere else) or ephemeral (losing it is harmless).</li>
+<li><a href="./archon/model/export.ts/index.html"><code>export.ts</code></a> stolos export (spec 002 FR-006, spec 014): the fleet, hosts, specs, provenance, and snapshots as RDF (Turtle) under out/rdf/.</li>
+<li><a href="./archon/model/identity-check.ts/index.html"><code>identity-check.ts</code></a> Spec 051: a check that ties a host to the machine it installed on.</li>
+<li><a href="./archon/model/load.ts/index.html"><code>load.ts</code></a> Load the active fleet (fleets/&lt;id&gt;/fleet.ts, written by stolos fleet init) and every host (fleets/&lt;id&gt;/hosts/&lt;name&gt;/host.ts, written by stolos host add).</li>
+<li><a href="./archon/model/mod.ts/index.html"><code>mod.ts</code></a> Say how its machine will be recognized when it network-boots, with exactly one of: There is no default: without either, host add refuses and shows both.</li>
+<li><a href="./archon/model/providers.ts/index.html"><code>providers.ts</code></a> The fleet's outside providers as explicit choices (spec 046).</li>
+<li><a href="./archon/model/resolve.ts/index.html"><code>resolve.ts</code></a> Resolve a host into a HostPlan: run every capability, merge contributions, then run derive hooks over the merged plan (spec 002).</li>
+<li><a href="./archon/model/secret-inventory.ts/index.html"><code>secret-inventory.ts</code></a> The secret inventory (spec 028, constitution Article 13): every secret the fleet depends on, by name, where it lives, and how to make it again.</li>
+<li><a href="./archon/model/site.ts/index.html"><code>site.ts</code></a> The site (spec 028, constitution Article 21): the UniFi network as typed data.</li>
+<li><a href="./archon/model/types.ts/index.html"><code>types.ts</code></a> The Archon model (spec 002): a fleet with one shared identity and one file per host.</li>
+<li><a href="./archon/model/validate.ts/index.html"><code>validate.ts</code></a> TypeScript is the validator (Article 10, spec 002).</li>
+</ul>
+<h2>archon/notify/</h2>
+<ul>
+<li><a href="./archon/notify/commands.ts/index.html"><code>commands.ts</code></a> The archon notify commands (spec 025), on hosts, workstations, and the boot machine (deno task stolos boot notify runs the same code), and archon mail credential and mail test (spec 027).</li>
+<li><a href="./archon/notify/events.ts/index.html"><code>events.ts</code></a> Which events send a message (spec 025): major actions only, never every routine run.</li>
+<li><a href="./archon/notify/mime.ts/index.html"><code>mime.ts</code></a> Mail messages for archon notify (spec 025): RFC 5322 with MIME, a plain-text part and a simple HTML part, and small attachments.</li>
+<li><a href="./archon/notify/notify.ts/index.html"><code>notify.ts</code></a> archon notify (spec 025): major events, by email, to the fleet's shared mailbox.</li>
+<li><a href="./archon/notify/redact.ts/index.html"><code>redact.ts</code></a> Never send a secret (spec 025, Article 13): everything that goes into a message (body, subject, attachments that are text) passes through here.</li>
+<li><a href="./archon/notify/transport.ts/index.html"><code>transport.ts</code></a> How mail leaves (spec 025, spec 027): Cloudflare Email Service's authenticated SMTP submission, smtp.mx.cloudflare.net:465 with implicit TLS, user &quot;api_token&quot;, the password a Cloudflare API token…</li>
+<li><a href="./archon/notify/watch.ts/index.html"><code>watch.ts</code></a> archon notify watch (spec 025, user story 2): the events an operator must hear about even when nothing in Archon ran.</li>
+</ul>
+<h2>archon/observe/</h2>
+<ul>
+<li><a href="./archon/observe/discover.ts/index.html"><code>discover.ts</code></a> archon observe discover (spec 024): find a central OpenTelemetry collector and forward this machine's telemetry to it.</li>
+<li><a href="./archon/observe/fleet-status.ts/index.html"><code>fleet-status.ts</code></a> stolos fleet status (specs 021, 022): every server and workstation in the model, its last install and verify as it says them now (spec 048: asked over MCP, cached in this machine's archon.sql when…</li>
+<li><a href="./archon/observe/next.ts/index.html"><code>next.ts</code></a> &quot;What now?&quot; for a freshly installed server or workstation (specs 021, 022): how to reach it, its web console, and how to observe it.</li>
+<li><a href="./archon/observe/observe.ts/index.html"><code>observe.ts</code></a> archon observe (spec 021): what this machine records about itself, where, and within which limits; observe tui opens otel-tui on it; observe prune keeps PCP's metric archives within their size and…</li>
+<li><a href="./archon/observe/remote.ts/index.html"><code>remote.ts</code></a> Spec 048-observe-by-query: ask a server through its MCP server, over SSH as ops (spec 030, Article 17), the same way an agent does.</li>
+</ul>
+<h2>archon/optin/</h2>
+<ul>
+<li><a href="./archon/optin/data.ts/index.html"><code>data.ts</code></a> 044-durable (Article 23): archon data shows whether this server is durable or ephemeral and why; archon data set changes one opt-in's choice.</li>
+<li><a href="./archon/optin/optin.ts/index.html"><code>optin.ts</code></a> 040-opt-in: opt-in services and containers.</li>
+</ul>
+<h2>archon/otelui/</h2>
+<ul>
+<li><a href="./archon/otelui/otelui.ts/index.html"><code>otelui.ts</code></a> Spec 050-telemetry-ui: OpenObserve as an opt-in on any server.</li>
+</ul>
+<h2>archon/personas/</h2>
+<ul>
+<li><a href="./archon/personas/mod.ts/index.html"><code>mod.ts</code></a> Personas (spec 006).</li>
+</ul>
+<h2>archon/pg/</h2>
+<ul>
+<li><a href="./archon/pg/commands.ts/index.html"><code>commands.ts</code></a> 038-pg: archon pg list | status | ensure | start | stop | restart | reload | upgrade | remove | backup | restore | maintain | publish | unpublish | connect.</li>
+<li><a href="./archon/pg/config.ts/index.html"><code>config.ts</code></a> 038-pg: PostgreSQL instances as data.</li>
+<li><a href="./archon/pg/connections.ts/index.html"><code>connections.ts</code></a> 043-pg-connections: what this account's libpq would use, and how to reach an instance.</li>
+<li><a href="./archon/pg/converge.ts/index.html"><code>converge.ts</code></a> 038-pg, 039-pg-identity: make each instance what the model and the host's record say.</li>
+<li><a href="./archon/pg/mod.ts/index.html"><code>mod.ts</code></a> A server can keep several PostgreSQL instances side by side, each with a name, a major version, its own port, its own data directory, its own systemd unit, and its own log (spec 038).</li>
+<li><a href="./archon/pg/tui.ts/index.html"><code>tui.ts</code></a> archon pg admin-tui (rainfrog) and archon pg observe-tui (pgcenter top): each finds the instance the way archon pg show does (an instance Archon keeps, any cluster here, or a service section) and…</li>
+</ul>
+<h2>archon/prov/</h2>
+<ul>
+<li><a href="./archon/prov/prov.ts/index.html"><code>prov.ts</code></a> Provenance (spec 014, Article 16): every apply is recorded as an activity, kept in this machine's archon.sql (spec 048) and exported as W3C PROV (Turtle) by stolos export.</li>
+</ul>
+<h2>archon/reconcile/</h2>
+<ul>
+<li><a href="./archon/reconcile/reconcile.ts/index.html"><code>reconcile.ts</code></a> archon reconcile (Article IX): approval means origin/main.</li>
+</ul>
+<h2>archon/render/</h2>
+<ul>
+<li><a href="./archon/render/agent.ts/index.html"><code>agent.ts</code></a> The agent layer's project configuration (spec 030, Articles 4, 6, 17), rendered from the model for a workstation's checkout: .mcp.json with one MCP server per server host (archon-&lt;fleet&gt;-&lt;host&gt;,…</li>
+<li><a href="./archon/render/autoinstall.ts/index.html"><code>autoinstall.ts</code></a> Ubuntu autoinstall config for one host (spec 004) and the first-boot step inside it (spec 005).</li>
+<li><a href="./archon/render/fish.ts/index.html"><code>fish.ts</code></a> fish completions generated from the command registry (Article VI).</li>
+<li><a href="./archon/render/man.ts/index.html"><code>man.ts</code></a> Man pages and fish completions generated from the command registry and from the constitution and personas (Article 6).</li>
+<li><a href="./archon/render/motd.ts/index.html"><code>motd.ts</code></a> The login banner (update-motd) lines Archon adds, in the same calm, colored, emoji style as archon's own output (Article 19).</li>
+<li><a href="./archon/render/network-doc.ts/index.html"><code>network-doc.ts</code></a> The network reference (spec 028), rendered from the site model by stolos build into out/site/network-reference.html: the document the owner sends with each network change log (deno task stolos…</li>
+<li><a href="./archon/render/roff.ts/index.html"><code>roff.ts</code></a> Native roff generation (no dependencies): man(7) macros, written directly.</li>
+<li><a href="./archon/render/systemd.ts/index.html"><code>systemd.ts</code></a> Render systemd unit files (and other INI-style systemd configuration) from TypeScript objects.</li>
+</ul>
+<h2>archon/report/</h2>
+<ul>
+<li><a href="./archon/report/daily.ts/index.html"><code>daily.ts</code></a> archon report daily (spec 013): deterministic facts only.</li>
+</ul>
+<h2>archon/s3/</h2>
+<ul>
+<li><a href="./archon/s3/mod.ts/index.html"><code>mod.ts</code></a> Every server can serve S3-compatible object storage (RustFS).</li>
+<li><a href="./archon/s3/s3.ts/index.html"><code>s3.ts</code></a> 041-s3: S3 object storage (RustFS), an opt-in container (spec 040), managed with archon fs s3.</li>
+</ul>
+<h2>archon/shell/</h2>
+<ul>
+<li><a href="./archon/shell/emit.ts/index.html"><code>emit.ts</code></a> 036-cli-comforts: archon shell emit [bash|zsh|fish] prints the shell code for Archon's aliases, key bindings, prompt, and titles.</li>
+</ul>
+<h2>archon/smb/</h2>
+<ul>
+<li><a href="./archon/smb/commands.ts/index.html"><code>commands.ts</code></a> 037-smb: archon fs smb on | off | status.</li>
+<li><a href="./archon/smb/config.ts/index.html"><code>config.ts</code></a> 037-smb: Samba's configuration, as data.</li>
+<li><a href="./archon/smb/mod.ts/index.html"><code>mod.ts</code></a> Every server can share files with Windows, macOS, and Linux over SMB (Samba).</li>
+</ul>
+<h2>archon/state/</h2>
+<ul>
+<li><a href="./archon/state/capture.ts/index.html"><code>capture.ts</code></a> archon capture (spec 014, 048): read this host's actual state and compare it with the plan (drift).</li>
+<li><a href="./archon/state/inventory.ts/index.html"><code>inventory.ts</code></a> Spec 051: what this machine is, as it reports itself: make, model, serial, CPUs, memory, disks, and network cards, from its firmware tables, /proc, and /sys.</li>
+<li><a href="./archon/state/mod.ts/index.html"><code>mod.ts</code></a> Every host can answer questions about itself, its files, its databases, and its buckets in SQL (spec 042): | Tool | Asks | Where | | ----------- |…</li>
+<li><a href="./archon/state/query.ts/index.html"><code>query.ts</code></a> Spec 048-observe-by-query (Article 17): archon query answers one SELECT about this machine through osquery, including Archon's own tables (archon_install, archon_verify, archon_prov, archon_optin,…</li>
+<li><a href="./archon/state/state-command.ts/index.html"><code>state-command.ts</code></a> archon state (spec 048): what this machine recorded about itself (its install, its latest verify, the operators' switches) and whether it holds durable data, from its own archon.sql.</li>
+<li><a href="./archon/state/store.ts/index.html"><code>store.ts</code></a> Spec 048-observe-by-query (Article 25): what this machine recorded about itself (its install, its latest verify, what each run did, the operators' switches) stays on the machine, never in Git.</li>
+<li><a href="./archon/state/verify.ts/index.html"><code>verify.ts</code></a> archon verify (Article 15, spec 014): run every verification command in the host's plan and report each result.</li>
+</ul>
+<h2>archon/telemetry/</h2>
+<ul>
+<li><a href="./archon/telemetry/events.ts/index.html"><code>events.ts</code></a> Spec 049-telemetry (Article 27): events are structured at their source.</li>
+<li><a href="./archon/telemetry/mod.ts/index.html"><code>mod.ts</code></a> This guide is for anyone who looks after a fleet.</li>
+<li><a href="./archon/telemetry/signals.ts/index.html"><code>signals.ts</code></a> Spec 049-telemetry (Article 27): every signal Archon emits, declared once.</li>
+</ul>
+<h2>archon/tools/</h2>
+<ul>
+<li><a href="./archon/tools/catalog.ts/index.html"><code>catalog.ts</code></a> Tool catalog (spec 010, Article 5): the newest stable release of each tool, from its maintainers' PPA or the vendor's own apt repository when there is one (apt keeps it current), else its official…</li>
+<li><a href="./archon/tools/sync.ts/index.html"><code>sync.ts</code></a> archon tools sync (spec 008, Articles V and XII).</li>
+</ul>
+<h2>archon/tools/keys/</h2>
+<ul>
+<li><a href="./archon/tools/keys/github-cli.ts/index.html"><code>github-cli.ts</code></a> GitHub CLI's apt signing key (spec 010, Article 12), pinned.</li>
+<li><a href="./archon/tools/keys/microsoft.ts/index.html"><code>microsoft.ts</code></a> Microsoft's apt signing key (spec 036, Article 12), pinned: &quot;Microsoft (Release signing) &lt;gpgsecurity@microsoft.com&gt;&quot;, fingerprint BC528686B50D79E339D3721CEB3E94ADBE1229CF, from…</li>
+<li><a href="./archon/tools/keys/osquery.ts/index.html"><code>osquery.ts</code></a> osquery's apt signing key (spec 042, Article 12), pinned: &quot;osquery (osquery) &lt;osquery@fb.com&gt;&quot;, fingerprint 1484120AC4E9F8A1A577AEEE97A80C63C9D8B80B (RSA 4096, 2015-01-24), fetched from…</li>
+</ul>
+<h2>archon/update/</h2>
+<ul>
+<li><a href="./archon/update/operator.ts/index.html"><code>operator.ts</code></a> Spec 058: archon update on your PC (the boot machine, or any checkout of the fleet repository that is not an installed host).</li>
+<li><a href="./archon/update/update.ts/index.html"><code>update.ts</code></a> archon update (spec 015): bring everything up to date from GitHub in one command.</li>
+</ul>
+<h2>archon/vault/</h2>
+<ul>
+<li><a href="./archon/vault/commands.ts/index.html"><code>commands.ts</code></a> deno task stolos vault &lt;sub&gt; (specs 029 and 056): the boot machine's secrets, and their backup.</li>
+<li><a href="./archon/vault/mod.ts/index.html"><code>mod.ts</code></a> The boot machine (BOOTPC) holds the only live copy of the fleet's secrets: the admin password hash, each host's deploy key and SSH host keys, the Cloudflare DNS token, and the mail token.</li>
+<li><a href="./archon/vault/panel.ts/index.html"><code>panel.ts</code></a> The backup panel (spec 029, Article 19 and 22): one framed panel, amber, red when anything has been unbacked for more than 7 days or host identity keys were never backed up.</li>
+<li><a href="./archon/vault/reminder.ts/index.html"><code>reminder.ts</code></a> Backup reminders (spec 029, Article 22): hard to miss, calm (Article 19).</li>
+<li><a href="./archon/vault/restore.ts/index.html"><code>restore.ts</code></a> Spec 061: deno task stolos vault restore &lt;zip&gt; makes a freshly cloned PC the boot machine again from one backup ZIP (spec 056).</li>
+<li><a href="./archon/vault/state.ts/index.html"><code>state.ts</code></a> The vault's view of the boot machine's secrets (spec 029): what is there, what the inventory says each one is, and whether the last backup holds it as it is now.</li>
+<li><a href="./archon/vault/zip.ts/index.html"><code>zip.ts</code></a> Spec 056: the boot machine's backup is one ZIP file.</li>
+</ul>
+<h2>archon/web/</h2>
+<ul>
+<li><a href="./archon/web/acme.ts/index.html"><code>acme.ts</code></a> 032-web: a server's Let's Encrypt certificates survive its re-install.</li>
+<li><a href="./archon/web/cloudflare.ts/index.html"><code>cloudflare.ts</code></a> 032-web: the few Cloudflare API calls a server needs to keep its own DNS records (its name and wildcard, both to its private address, not proxied).</li>
+<li><a href="./archon/web/commands.ts/index.html"><code>commands.ts</code></a> 032-web on a server: archon web credential | dns | status.</li>
+<li><a href="./archon/web/config.ts/index.html"><code>config.ts</code></a> 032-web: the server's HTTPS front door, as data.</li>
+<li><a href="./archon/web/markdown.ts/index.html"><code>markdown.ts</code></a> 035-welcome-guide: the engine's guides (each module's @module JSDoc, src/archon/core/guides.ts) as HTML on the welcome page, so one text serves the repository, the man pages, and the server.</li>
+<li><a href="./archon/web/mod.ts/index.html"><code>mod.ts</code></a> Every server answers HTTPS from its first boot (spec 032).</li>
+<li><a href="./archon/web/serve.ts/index.html"><code>serve.ts</code></a> archon web serve (specs 032, 035): the welcome page and the guides on 127.0.0.1:8090, behind Traefik.</li>
+<li><a href="./archon/web/welcome.ts/index.html"><code>welcome.ts</code></a> 032-web and 035-welcome-guide: the welcome page every server shows at https://&lt;host&gt;.&lt;domain&gt; (and at any name or address nothing else claims), written for someone new to the server: what it is,…</li>
+</ul>
+<h2>stolos/</h2>
+<ul>
+<li><a href="./stolos/main.ts/index.html"><code>main.ts</code></a> stolos (spec 059): the fleet's command, on your PC, in the fleet repository (deno task stolos ...).</li>
+</ul>
+</main>
+</body>
+</html>
