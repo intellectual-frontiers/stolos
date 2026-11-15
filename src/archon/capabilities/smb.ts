@@ -75,9 +75,9 @@ export const smb =
           state: "masked",
           switch: SMB.switch,
           verify:
-            // Rendered from the host's own record (spec 048).
+            // Rendered from the host's own record (spec 048). On, smbd runs and 445 answers.
             on
-              ? `systemctl is-active --quiet ${SMB.unit}`
+              ? `sh -c 'systemctl is-active --quiet ${SMB.unit} && ss -Hltn "sport = :445" | grep -q .'`
               : `sh -c '! systemctl is-active --quiet ${SMB.unit}'`,
           spec: SPEC,
         },

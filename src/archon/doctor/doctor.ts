@@ -92,7 +92,7 @@ async function endpoints(fleet: FleetDef, host: HostDef): Promise<Endpoint[]> {
     out.push({ what: `apt ${new URL(r.uri).host} ${r.suite}`, url: inReleaseUrl(r) });
   }
   // The checkout's remote (reconcile pulls it) and GitHub's API (tools sync).
-  const remote = (await run(["git", "-C", P.repo, "remote", "get-url", "origin"])).stdout.trim();
+  const remote = (await t(5, ["git", "-C", P.repo, "remote", "get-url", "origin"])).stdout.trim();
   if (/^https:/.test(remote)) out.push({ what: "git remote", url: remote, anyHttp: true });
   out.push({
     what: "GitHub API (tools sync)",
@@ -138,7 +138,7 @@ export async function doctor(
   // ---------------------------------------------------------------- link
   const l = ui.phase("Link");
   const routes = JSON.parse(
-    (await run(["ip", "-j", "route", "show", "default"])).stdout || "[]",
+    (await t(5, ["ip", "-j", "route", "show", "default"])).stdout || "[]",
   ) as Array<{ gateway?: string; dev?: string }>;
   const def = routes[0];
   let gateway: string | undefined;
@@ -167,12 +167,12 @@ export async function doctor(
       );
     }
     const addrs = json(
-      (await run(["ip", "-j", "-4", "addr", "show", "dev", dev])).stdout || "[]",
+      (await t(5, ["ip", "-j", "-4", "addr", "show", "dev", dev])).stdout || "[]",
       IP_ADDR,
     );
     const addr = addrs.kind === "ok" ? addrs.value[0]?.addr_info?.[0] : undefined;
     const links = json(
-      (await run(["ip", "-j", "-s", "link", "show", "dev", dev])).stdout || "[]",
+      (await t(5, ["ip", "-j", "-s", "link", "show", "dev", dev])).stdout || "[]",
       IP_LINK_STATS,
     );
     const stats = links.kind === "ok" ? links.value[0]?.stats64 : undefined;
@@ -289,7 +289,7 @@ export async function doctor(
 
   // ---------------------------------------------------------------- IPv6
   const v6 = ui.phase("IPv6");
-  const route6 = (await run(["ip", "-6", "route", "show", "default"])).stdout.trim();
+  const route6 = (await t(5, ["ip", "-6", "route", "show", "default"])).stdout.trim();
   const aaaa = (
     await t(5, ["dig", "+time=2", "+tries=1", "+short", "AAAA", ARCHIVE])
   ).stdout.trim();
@@ -323,7 +323,7 @@ export async function doctor(
 
   // ---------------------------------------------------------------- time
   const tm = ui.phase("Time");
-  const td = await run(["timedatectl", "show", "-p", "NTPSynchronized", "--value"]);
+  const td = await t(5, ["timedatectl", "show", "-p", "NTPSynchronized", "--value"]);
   const synced = td.ok ? td.stdout.trim() : "unknown";
   const chrony = await t(5, ["chronyc", "-n", "tracking"]);
   const tr = chrony.ok ? parseChronyTracking(chrony.stdout) : {};
@@ -365,7 +365,7 @@ export async function doctor(
   const proxyEnv = ["https_proxy", "http_proxy", "HTTPS_PROXY", "HTTP_PROXY"]
     .map((k) => proc.env.get(k))
     .find(Boolean);
-  const aptProxy = (await run(["apt-config", "dump"])).stdout
+  const aptProxy = (await t(5, ["apt-config", "dump"])).stdout
     .split("\n")
     .filter((x) => /::Proxy/i.test(x));
   if (proxyEnv) pf.note(`proxy in the environment: ${proxyEnv}`);
@@ -412,7 +412,7 @@ export async function doctor(
   // GitHub over SSH, as ops with the deploy key: what reconcile and push use.
   if (
     /^(git@|ssh:)/.test(
-      (await run(["git", "-C", P.repo, "remote", "get-url", "origin"])).stdout.trim(),
+      (await t(5, ["git", "-C", P.repo, "remote", "get-url", "origin"])).stdout.trim(),
     )
   ) {
     const ls = await t(20, [
@@ -437,7 +437,7 @@ export async function doctor(
     }
   }
   // snapd's own connectivity check against the Snap Store.
-  if (proc.isRoot() && (await run(["sh", "-c", "command -v snap"])).ok) {
+  if (proc.isRoot() && (await t(5, ["sh", "-c", "command -v snap"])).ok) {
     const sc = await t(30, ["snap", "debug", "connectivity"]);
     const st = parseSnapConnectivity(sc.stdout);
     if (st?.pass) e.ok("Snap Store reachable (snap debug connectivity)");

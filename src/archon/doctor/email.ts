@@ -18,6 +18,9 @@ import { enqueue, flush, loadCredential, queued, readStatus, type Site } from ".
 import { probeSmtp, relayParts } from "../notify/transport.ts";
 import { isReservedDomain } from "../model/providers.ts";
 
+/** A Postfix tool with a time limit and the C locale (spec 026 FR-011; servers only). */
+const t = (argv: string[]) => run(["timeout", "10", ...argv], { env: { LC_ALL: "C" } });
+
 async function txt(name: string): Promise<string[]> {
   const r = await dns.resolveDns(name, "TXT");
   return r.kind === "ok" ? r.value.map((parts) => parts.join("")) : [];
@@ -130,15 +133,15 @@ export async function emailChecks(
         "sudo archon apply",
       );
     } else {
-      const active = (await run(["systemctl", "is-active", "postfix.service"])).stdout.trim();
+      const active = (await t(["systemctl", "is-active", "postfix.service"])).stdout.trim();
       if (active !== "active") {
         p.fail(`Postfix is ${active}`, "systemctl status postfix; journalctl -u postfix@- -n 50");
       }
-      const relayhost = (await run(["postconf", "-h", "relayhost"])).stdout.trim();
+      const relayhost = (await t(["postconf", "-h", "relayhost"])).stdout.trim();
       if (relayhost !== `[${host}]:${port}`) {
         p.fail(`Postfix relays to "${relayhost}", not [${host}]:${port}`, "sudo archon apply");
       }
-      const q = (await run(["postqueue", "-j"])).stdout
+      const q = (await t(["postqueue", "-j"])).stdout
         .split("\n")
         .filter(Boolean)
         .map((l) => {
@@ -243,7 +246,10 @@ async function sendTests(
     report,
     "",
   ].join("\n");
-  const s = await run(["/usr/sbin/sendmail", "-t", "-oi"], { stdin: msg });
+  const s = await run(["timeout", "30", "/usr/sbin/sendmail", "-t", "-oi"], {
+    stdin: msg,
+    env: { LC_ALL: "C" },
+  });
   if (s.ok) {
     p.ok(
       `test message handed to Postfix for ${site.to} (journalctl -t postfix/smtp shows the relay's answer)`,

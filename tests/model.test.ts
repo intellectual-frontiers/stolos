@@ -308,7 +308,7 @@ proves(
 );
 
 proves(
-  ["001-platform FR-006", "001-platform FR-007"],
+  ["001-platform FR-006", "001-platform FR-007", "024-discovery FR-005", "008-firewall FR-005"],
   "Article 20: no mDNS or LLMNR; avahi masked, not removed; resolved explicit; verified",
   () => {
     const plan = resolvePlan(host(), fleet());

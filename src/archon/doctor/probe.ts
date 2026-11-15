@@ -64,7 +64,8 @@ export async function probe(
   if (o.follow) argv.push("-L");
   // A GET of one byte where a HEAD is refused (GitHub's release assets).
   argv.push(...(o.get ? ["-r", "0-0"] : ["-I"]), url);
-  const r = await run(argv);
+  // curl's own limits (--connect-timeout, --max-time) bound it; the C locale for its messages.
+  const r = await run(argv, { env: { LC_ALL: "C" } });
   return parseProbe(url, r.code, r.stdout, r.stderr);
 }
 
