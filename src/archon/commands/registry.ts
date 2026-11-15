@@ -962,6 +962,11 @@ export const COMMANDS: Command[] = [
       description:
         "soc2, hipaa, pci, cmmc, nist80053, nist800171, or fedramp (default: a summary of each).",
       choices: ["soc2", "hipaa", "pci", "cmmc", "nist80053", "nist800171", "fedramp"],
+    }, {
+      name: "ocsf",
+      type: "boolean",
+      description:
+        "Print every result as an OCSF 1.9.0 Compliance Finding (class 2003), one JSON object per line.",
     }],
     examples: [{
       cmd: "deno task stolos compliance --framework hipaa",
@@ -969,7 +974,7 @@ export const COMMANDS: Command[] = [
     }],
     async run(a, ctx) {
       const { complianceCommand } = await import("../compliance/commands.ts");
-      return await complianceCommand(a.framework as string | undefined, ctx.json);
+      return await complianceCommand(a.framework as string | undefined, ctx.json, !!a.ocsf);
     },
   },
   {

@@ -16,6 +16,7 @@
  * @module
  */
 
+import type { ObservedRecord } from "./sdk.ts";
 import { join } from "../core/path.ts";
 import { P } from "../core/paths.ts";
 import { tsLiteral } from "../core/ts-literal.ts";
@@ -149,19 +150,21 @@ export interface Observation {
   gaps: string[];
   /** Spec 085: the people, accounts, devices, and repositories it found, for the estate graph. */
   entities?: Entities;
+  /** Spec 089: each record read, as a labeled node with its OCSF class (connectors made with defineConnector). */
+  records?: ObservedRecord[];
 }
 
 /** An HTTP GET or POST that returns parsed JSON or text; injectable for tests. */
 export type Http = (
   url: string,
   init?: { method?: string; headers?: Record<string, string>; body?: string },
-) => Promise<{ status: number; text: string; link?: string }>;
+) => Promise<{ status: number; text: string; link?: string; retryAfter?: string }>;
 
 /** The real one: fetch. */
 export const realHttp: Http = async (
   url,
   init,
-): Promise<{ status: number; text: string; link?: string }> => {
+): Promise<{ status: number; text: string; link?: string; retryAfter?: string }> => {
   const r = await fetch(url, {
     method: init?.method ?? "GET",
     headers: init?.headers,
@@ -169,7 +172,13 @@ export const realHttp: Http = async (
     signal: AbortSignal.timeout(30_000),
   });
   const link = r.headers.get("link");
-  return { status: r.status, text: await r.text(), ...(link ? { link } : {}) };
+  const retryAfter = r.headers.get("retry-after");
+  return {
+    status: r.status,
+    text: await r.text(),
+    ...(link ? { link } : {}),
+    ...(retryAfter ? { retryAfter } : {}),
+  };
 };
 
 /** A provider: how to connect, what to read, what to check. */

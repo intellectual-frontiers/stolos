@@ -23,7 +23,11 @@ import { FRAMEWORKS, SCF } from "./scf.ts";
 const CATALOG_HINT = "deno task stolos compliance catalog";
 
 /** Print the fleet's compliance view; exit 1 when a control fails. */
-export async function complianceCommand(fw?: string, json = false): Promise<number> {
+export async function complianceCommand(
+  fw?: string,
+  json = false,
+  ocsf = false,
+): Promise<number> {
   if (fw && !FRAMEWORKS.some((f) => f.id === fw)) {
     ui.phase("Compliance").fail(
       `no framework ${fw}`,
@@ -35,6 +39,24 @@ export async function complianceCommand(fw?: string, json = false): Promise<numb
   const catalog = await loadScf();
   const view = complianceView(fleetEvidence(await pcFacts()), catalog);
   const failing = view.controls.some((c) => c.status === "fail");
+  if (ocsf) {
+    // Spec 089: one OCSF Compliance Finding per piece of evidence and SCF control, as JSON Lines.
+    const { complianceFindings } = await import("../ocsf/finding.ts");
+    const { P } = await import("../core/paths.ts");
+    const fleet = P.fleetDir.split(/[\\/]/).pop() ?? "";
+    const now = new Date();
+    const seen = new Set<unknown>();
+    for (const c of view.controls) {
+      for (const e of c.evidence) {
+        if (seen.has(e)) continue;
+        seen.add(e);
+        for (const f of complianceFindings(e, { now, fleet, ...(catalog ? { catalog } : {}) })) {
+          console.log(JSON.stringify(f));
+        }
+      }
+    }
+    return failing ? 1 : 0;
+  }
   if (json) {
     console.log(JSON.stringify(fw ? view.frameworks.find((f) => f.id === fw) : view, null, 2));
     return failing ? 1 : 0;

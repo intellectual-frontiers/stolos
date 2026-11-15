@@ -32,14 +32,22 @@ export const MERMAID = {
   sha256: "a43bc1afd446f9c4cc66ac5dd45d02e8d65e26fc5344ec0ef787f88d6ddb6f9e",
 };
 
-/** Every engine module the documentation covers (generated `.auto.ts` files are not). */
+/**
+ * Generated modules that are documented like any other (spec 089: the OCSF types and the D3FEND
+ * names carry JSDoc from their standards); other `.auto.ts` files are data, not documented.
+ */
+const DOCUMENTED_AUTO = ["src/archon/ocsf/types.auto.ts", "src/archon/schema/d3fend.auto.ts"];
+
+/** Every engine module the documentation covers (generated `.auto.ts` files, except DOCUMENTED_AUTO, are not). */
 export async function sourceFiles(root = "src"): Promise<string[]> {
   const out: string[] = [];
   const walk = async (d: string) => {
     for await (const e of Deno.readDir(d)) {
       const p = `${d}/${e.name}`;
       if (e.isDirectory) await walk(p);
-      else if (p.endsWith(".ts") && !p.endsWith(".auto.ts")) out.push(p);
+      else if (p.endsWith(".ts") && (!p.endsWith(".auto.ts") || DOCUMENTED_AUTO.includes(p))) {
+        out.push(p);
+      }
     }
   };
   await walk(root);
