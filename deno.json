@@ -32,7 +32,8 @@
       "state/",
       ".specify/",
       "home/",
-      "vendor/"
+      "vendor/",
+      ".claude/"
     ]
   },
   "lint": {
@@ -49,7 +50,8 @@
       "state/",
       ".specify/",
       "home/",
-      "vendor/"
+      "vendor/",
+      ".claude/"
     ]
   }
 }
