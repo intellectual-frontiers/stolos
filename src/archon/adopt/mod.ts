@@ -108,10 +108,10 @@
  * ## The policies
  *
  * Each policy names the Secure Controls Framework (SCF) controls it gives evidence for: the disk is
- * encrypted (CRY-05), the firewall is on (END-05, NET-01), security updates install by themselves
- * (VPM-05), the OS is supported (TDA-17), SSH takes keys only (IAC-10), at most three administrators
- * (IAC-21), observed in the last week (AST-02, MON-01). This is a starter mapping: check it against
- * the SCF catalog before an audit relies on it.
+ * encrypted (CRY-07), the firewall is on (END-07, NET-02), security updates install by themselves
+ * (VPM-08), the OS is supported (AST-39), SSH takes keys only (IAC-14), at most three administrators
+ * (IAC-30), observed in the last week (AST-04, MON-02). The frameworks are reached from those through
+ * the SCF Council's own mappings (see [Compliance](../compliance/mod.ts)).
  *
  * ## Cloud accounts
  *

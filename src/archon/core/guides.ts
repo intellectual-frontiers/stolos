@@ -89,7 +89,7 @@ export const GUIDES: GuideDef[] = [
   {
     name: "compliance",
     title: "Compliance",
-    why: "SCF controls, and what they mean for HIPAA, PCI DSS, CMMC, and SOC 2.",
+    why: "SCF controls; SOC 2, HIPAA, PCI DSS, CMMC, NIST, and FedRAMP; OSCAL exports.",
     module: "src/archon/compliance/mod.ts",
   },
   {

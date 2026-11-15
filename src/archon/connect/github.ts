@@ -3,8 +3,8 @@
  * owners, who have no second factor), and its repositories (private or
  * public, whether the default branch is protected by branch protection or a
  * ruleset, how many approving reviews it needs, secret scanning, dependency
- * alerts). Evidence for change management (SCF CHG-02), MFA (IAC-06), least
- * privilege (IAC-21), and scanning (VPM-06).
+ * alerts). Evidence for change management (SCF CHG-03), MFA (IAC-37), least
+ * privilege (IAC-30), and scanning (VPM-12).
  *
  * @module
  */
@@ -196,7 +196,7 @@ export const github: Connector = {
       check(o, {
         id: "gh-2fa-required",
         title: "The organization requires two-factor authentication",
-        scf: ["IAC-06"],
+        scf: ["IAC-37"],
         fact: "orgRequires2fa",
         want: (v) => v === true,
         fix: "github.com/organizations/<org>/settings/security > Require two-factor authentication",
@@ -204,7 +204,7 @@ export const github: Connector = {
       check(o, {
         id: "gh-owners",
         title: "Two to four owners",
-        scf: ["IAC-21"],
+        scf: ["IAC-30"],
         fact: "owners",
         want: (v) => typeof v === "number" && v >= 2 && v <= 4,
         fix: "github.com/orgs/<org>/people > Role: Owner; make the rest Members",
@@ -213,7 +213,7 @@ export const github: Connector = {
       check(o, {
         id: "gh-protected",
         title: "Every private repository protects its default branch",
-        scf: ["CHG-02"],
+        scf: ["CHG-03"],
         fact: "privateReposProtected",
         want: all,
         show: of,
@@ -223,7 +223,7 @@ export const github: Connector = {
       check(o, {
         id: "gh-reviewed",
         title: "Every private repository requires an approving review",
-        scf: ["CHG-02"],
+        scf: ["CHG-03"],
         fact: "privateReposReviewed",
         want: all,
         show: of,
@@ -232,7 +232,7 @@ export const github: Connector = {
       check(o, {
         id: "gh-secret-scanning",
         title: "Every private repository scans for secrets",
-        scf: ["VPM-06"],
+        scf: ["VPM-12"],
         fact: "privateReposSecretScanning",
         want: all,
         show: of,

@@ -195,7 +195,7 @@ export function devicePolicies(
     return [{
       id: "observed",
       title: "Observed by Stolos",
-      scf: ["AST-02"],
+      scf: ["AST-04"],
       status: "fail",
       detail: "never observed",
       fix: `deno task stolos device observe ${d.name}`,
@@ -206,7 +206,7 @@ export function devicePolicies(
     {
       id: "observed",
       title: "Observed in the last 7 days",
-      scf: ["AST-02", "MON-01"],
+      scf: ["AST-04", "MON-02"],
       status: days <= 7 ? "pass" : "fail",
       detail: `last observed ${o.at.slice(0, 10)}`,
       fix: `deno task stolos device observe ${d.name}`,
@@ -214,14 +214,14 @@ export function devicePolicies(
     {
       id: "snmpv3",
       title: "Read only over encrypted SNMPv3 (authPriv)",
-      scf: ["CRY-03"],
+      scf: ["CRY-05"],
       status: "pass",
       detail: `user ${d.snmp.user}, ${d.snmp.auth === "sha256" ? "SHA-256" : "SHA-1"} and AES`,
     },
     {
       id: "owner",
       title: "It has an owner and a location",
-      scf: ["AST-03"],
+      scf: ["AST-07.1"],
       status: (d.owner || o.contact) && (d.location || o.location) ? "pass" : "warn",
       detail: `owner: ${d.owner || o.contact || "none"}; location: ${
         d.location || o.location || "none"
@@ -232,7 +232,7 @@ export function devicePolicies(
     {
       id: "restarted",
       title: "Restarted in the last 400 days (firmware updates restart a device)",
-      scf: ["VPM-05"],
+      scf: ["VPM-08"],
       status: o.uptimeDays <= 400 ? "pass" : "warn",
       detail: `up ${o.uptimeDays} days${o.firmware ? `; firmware ${o.firmware}` : ""}`,
       fix: "check the maker's site for firmware updates, and install them",

@@ -952,15 +952,16 @@ export const COMMANDS: Command[] = [
   {
     name: "compliance",
     summary:
-      "The fleet's evidence by SCF control, and by HIPAA, PCI DSS, CMMC, and SOC 2 requirement",
+      "The fleet's evidence by SCF control, and by each framework's requirements (SOC 2, HIPAA, PCI DSS, CMMC, NIST, FedRAMP)",
     description:
-      `Spec 068. From what this PC already knows (managed servers' last verify, adopted machines' policies, the clouds' posture, the repository's signatures): each Secure Controls Framework control's status and evidence, and each framework requirement's status through its controls. A starter mapping: check it against the SCF's own mappings before an auditor relies on it. Exits 1 when a control fails; --json for auditors.`,
+      `Specs 068 and 071. From what this PC already knows (managed servers' last verify, adopted machines' and devices' policies, the SaaS and cloud accounts' posture, the repository's signatures): each Secure Controls Framework control's status and evidence, and each framework requirement's status through its controls, by the SCF Council's own mappings (STRM; deno task stolos compliance catalog downloads them once). Exits 1 when a control fails; --json for auditors.`,
     tier: "read",
     args: [{
       name: "framework",
       type: "string",
-      description: "hipaa, pci, cmmc, or soc2 (default: a summary of each).",
-      choices: ["hipaa", "pci", "cmmc", "soc2"],
+      description:
+        "soc2, hipaa, pci, cmmc, nist80053, nist800171, or fedramp (default: a summary of each).",
+      choices: ["soc2", "hipaa", "pci", "cmmc", "nist80053", "nist800171", "fedramp"],
     }],
     examples: [{
       cmd: "deno task stolos compliance --framework hipaa",
@@ -969,6 +970,36 @@ export const COMMANDS: Command[] = [
     async run(a, ctx) {
       const { complianceCommand } = await import("../compliance/commands.ts");
       return await complianceCommand(a.framework as string | undefined, ctx.json);
+    },
+  },
+  {
+    name: "compliance catalog",
+    summary: "Download the SCF Council's and NIST's catalogs (pinned, SHA-256 checked), once",
+    description:
+      `Spec 071. Downloads the Secure Controls Framework workbook from the SCF Council's repository and NIST's OSCAL catalogs (SP 800-53 Rev 5, SP 800-171 Rev 3) from NIST's, each at a pinned commit; refuses any whose SHA-256 differs; reads them here and keeps what Stolos needs in this PC's state directory. Stolos does not redistribute them. --update downloads them again.`,
+    tier: "repo",
+    noMcp: true,
+    args: [{ name: "update", type: "boolean", description: "Download them again." }],
+    async run(a) {
+      const { catalogCommand } = await import("../compliance/commands.ts");
+      return await catalogCommand(!!a.update);
+    },
+  },
+  {
+    name: "compliance export",
+    summary: "The fleet's OSCAL documents: component definition, SSP, assessment results, POA&M",
+    description:
+      `Spec 071. Writes four OSCAL ${"1.2.3"} JSON documents to NIST SP 800-53 Rev 5, each control reached through the SCF Council's mappings: Stolos's component definition; a system security plan importing NIST's moderate baseline, with the fleet's machines as its inventory; assessment results (every observation, a finding per control); and a POA&M (each failing check open, each accepted risk a deviation approved). A machine, control, risk, or POA&M item keeps its UUID from one export to the next.`,
+    tier: "read",
+    noMcp: true,
+    args: [{
+      name: "out",
+      type: "string",
+      description: "The directory to write to (default: this PC's state directory, oscal/<fleet>).",
+    }],
+    async run(a) {
+      const { exportCommand } = await import("../compliance/commands.ts");
+      return await exportCommand(a.out as string | undefined);
     },
   },
   {
@@ -3007,6 +3038,8 @@ const PC_COMMANDS = new Set([
   "host integrate",
   "host accept",
   "compliance",
+  "compliance catalog",
+  "compliance export",
   "console",
   "discover",
   "connect",

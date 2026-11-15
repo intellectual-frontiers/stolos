@@ -1,12 +1,16 @@
 /**
  * Spec 068: the Compliance tab, in both consoles: each SCF control with its
- * evidence, and each framework's requirements (HIPAA, PCI DSS, CMMC, SOC 2)
- * with what their controls say. A starter mapping, said so on the page.
+ * evidence, and each framework's requirements (SOC 2, HIPAA, PCI DSS, CMMC,
+ * NIST SP 800-53 and 800-171, FedRAMP) with what their controls say, through
+ * the SCF Council's own mappings (spec 071). Without the catalog on this
+ * machine, the page says so and shows the controls alone.
  *
  * @module
  */
 
 import type { ComplianceView, ControlStatus, Coverage } from "../compliance/report.ts";
+import { criteriaOnly } from "../compliance/catalog.ts";
+import { FRAMEWORKS } from "../compliance/scf.ts";
 import { type Html, html } from "./html.ts";
 import { diagram } from "./layout.ts";
 
@@ -36,13 +40,19 @@ function controlBlock(c: ControlStatus, fw?: string): Html {
     <summary class="row spread"><span><span class="mono nowrap">${c.control.id}</span> <b>${c.control.name}</b></span>${
     pill(c.status)
   }</summary>
-    <p class="sub">${c.control.how}${
-    fw ? "" : html`
-      Maps to: ${Object.entries(c.control.maps).filter(([, r]) => r.length).map(([k, r]) =>
-        `${k.toUpperCase()} ${r.join(", ")}`
-      ).join("; ")}.
-    `
-  }</p>
+    <p class="sub">${c.control.how}</p>
+    ${c.control.description ? html`<p class="sub"><i>SCF:</i> ${c.control.description}</p>` : ""}
+    ${
+    fw || !c.control.description
+      ? ""
+      : html`<p class="sub">Maps to: ${
+        FRAMEWORKS.filter((f) => c.control.maps[f.id].length).map((f) =>
+          `${f.short} ${
+            (f.id === "soc2" ? criteriaOnly(c.control.maps[f.id]) : c.control.maps[f.id]).join(", ")
+          }`
+        ).join("; ")
+      }.</p>`
+  }
     ${
     c.evidence.length
       ? html`
@@ -101,9 +111,22 @@ export function compliancePage(
   </nav>`;
   return html`
     <div class="pagehead"><div><div class="crumb">${scope}</div><h1>Compliance</h1>
-      <p>What the evidence Stolos already collects (verify, the adopted machines' policies, the clouds' posture, the signatures) says about each Secure Controls Framework (SCF) control, and through SCF about HIPAA, PCI DSS, CMMC, and SOC 2.</p></div>
+      <p>What the evidence Stolos already collects (verify, the adopted machines' and devices' policies, the SaaS and cloud accounts' posture, the signatures) says about each Secure Controls Framework (SCF) control, and through SCF's own mappings about each framework.</p></div>
       ${exportHref
-        ? html`<a class="btn ghost" href="${exportHref}" download>Evidence (JSON)</a>`
+        ? html`
+          <div class="row"
+            style="gap:6px;flex-wrap:wrap"><a class="btn ghost" href="${exportHref}" download>Evidence (JSON)</a>${v
+                .catalog
+              ? [
+                ["system-security-plan.json", "OSCAL SSP"],
+                ["assessment-results.json", "OSCAL assessment results"],
+                ["poam.json", "OSCAL POA&M"],
+                ["component-definition.json", "OSCAL component"],
+              ].map(([f, l]) =>
+                html`<a class="btn ghost" href="/export/oscal/${f}" download>${l}</a>`
+              )
+              : ""}</div>
+        `
         : ""}</div>
     <p
       class="sub">As of ${now.toISOString().slice(0, 16).replace(
@@ -113,16 +136,26 @@ export function compliancePage(
     ${fw && !f
       ? html`<div class="notice bad">There is no framework "${fw}": choose one below.</div>`
       : ""}
-    <div
-      class="notice">A starter mapping, for orientation: check each line against the SCF's own mappings (STRM) before an auditor relies on it. Controls Stolos cannot observe (policies, training, contracts) are not here at all: they need evidence of their own.</div>
+    ${v.catalog
+      ? html`
+        <div
+          class="notice">Names and mappings are the SCF Council's: <a href="${v.catalog
+            .url}">SCF ${v
+            .catalog
+            .version}</a> and its Set Theory Relationship Mappings (STRM). Controls Stolos cannot observe (policies, training, contracts) are not here: they need evidence of their own.</div>
+      `
+      : html`
+        <div
+          class="notice warn">The SCF catalog is not on this machine yet, so there are no framework mappings to show. On the PC: <span class="mono">deno task stolos compliance catalog</span> (it downloads the SCF Council's workbook and checks its SHA-256).</div>
+      `}
     ${tabs}
     ${diagram(
       `flowchart LR
   verify["Managed servers: archon verify"] --> scf["SCF controls (${v.controls.length})"]
-  adopted["Adopted machines: policies"] --> scf
-  clouds["Clouds: posture"] --> scf
+  adopted["Adopted machines and devices: policies"] --> scf
+  clouds["SaaS and clouds: posture"] --> scf
   git["Repository: signatures"] --> scf
-  scf --> hipaa["HIPAA"] & pci["PCI DSS"] & cmmc["CMMC"] & soc2["SOC 2"]`,
+  scf -- "SCF STRM" --> soc2["SOC 2"] & hipaa["HIPAA"] & pci["PCI DSS"] & cmmc["CMMC"] & nist["NIST 800-53, 800-171"] & fedramp["FedRAMP"]`,
       "Evidence flows one way: from what machines and accounts show, through SCF, to each framework's requirements.",
     )}
     ${f
@@ -150,7 +183,7 @@ export function compliancePage(
                 ${f.id === "soc2"
                   ? html`
                     <p
-                      class="sub">SOC 2 Type 1 asks whether the controls are designed and in place on a date; Type 2 asks whether they worked over a period (often 6 to 12 months). The observations are commits, so <span class="mono">git log -p</span> on fleets/&lt;fleet&gt;/adopted and clouds is the period's record.</p>
+                      class="sub">SOC 2 Type 1 asks whether the controls are designed and in place on a date; Type 2 asks whether they worked over a period (often 6 to 12 months). The observations are commits, so <span class="mono">git log -p</span> on fleets/&lt;fleet&gt;/adopted and estate is the period's record.</p>
                   `
                   : ""}
                 </div>

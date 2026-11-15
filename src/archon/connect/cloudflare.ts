@@ -236,7 +236,7 @@ export const cloudflare: Connector = {
       check(o, {
         id: "cf-tls-strict",
         title: "Every zone verifies the origin's certificate (Full strict)",
-        scf: ["CRY-03", "NET-12"],
+        scf: ["CRY-05", "NET-37"],
         fact: "zonesStrictTls",
         want: every,
         show: (v) => `${v} of ${o.posture.zones} zone(s)`,
@@ -245,7 +245,7 @@ export const cloudflare: Connector = {
       check(o, {
         id: "cf-always-https",
         title: "Every zone redirects HTTP to HTTPS",
-        scf: ["CRY-03"],
+        scf: ["CRY-05"],
         fact: "zonesAlwaysHttps",
         want: every,
         show: (v) => `${v} of ${o.posture.zones} zone(s)`,
@@ -254,7 +254,7 @@ export const cloudflare: Connector = {
       check(o, {
         id: "cf-min-tls",
         title: "Every zone refuses TLS older than 1.2",
-        scf: ["CRY-03"],
+        scf: ["CRY-05"],
         fact: "zonesMinTls12",
         want: every,
         show: (v) => `${v} of ${o.posture.zones} zone(s)`,
@@ -263,7 +263,7 @@ export const cloudflare: Connector = {
       check(o, {
         id: "cf-dnssec",
         title: "Every zone signs its DNS (DNSSEC)",
-        scf: ["NET-10"],
+        scf: ["NET-13"],
         fact: "zonesDnssec",
         want: every,
         show: (v) => `${v} of ${o.posture.zones} zone(s)`,

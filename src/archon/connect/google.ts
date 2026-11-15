@@ -4,8 +4,8 @@
  * Verification, last sign-in). It signs in as a service account with
  * domain-wide delegation for one read-only scope, impersonating an
  * administrator; the JWT is signed here (RS256, WebCrypto), with no SDK.
- * Evidence for MFA, account management, and least privilege (SCF IAC-06,
- * IAC-15, IAC-21).
+ * Evidence for MFA, account management, and least privilege (SCF IAC-37,
+ * IAC-08, IAC-30).
  *
  * @module
  */
@@ -166,7 +166,7 @@ export const google: Connector = {
       check(o, {
         id: "gws-2sv-enrolled",
         title: "Every active user uses 2-Step Verification",
-        scf: ["IAC-06"],
+        scf: ["IAC-37"],
         fact: "activeWithout2sv",
         want: (v) => v === 0,
         show: (v) => `${of(v)} not enrolled`,
@@ -175,7 +175,7 @@ export const google: Connector = {
       check(o, {
         id: "gws-2sv-enforced",
         title: "2-Step Verification is enforced",
-        scf: ["IAC-06"],
+        scf: ["IAC-37"],
         fact: "activeNotEnforced2sv",
         want: (v) => v === 0,
         show: (v) => `${of(v)} not enforced`,
@@ -185,7 +185,7 @@ export const google: Connector = {
       check(o, {
         id: "gws-super-admins",
         title: "Two to four super administrators",
-        scf: ["IAC-21"],
+        scf: ["IAC-30"],
         fact: "superAdmins",
         want: (v) => typeof v === "number" && v >= 2 && v <= 4,
         fix:

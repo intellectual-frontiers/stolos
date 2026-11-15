@@ -430,9 +430,37 @@ export function stolosHandler(
           f,
         );
       }
-      if (path === "/compliance" || path === "/export/compliance.json") {
+      if (path.startsWith("/export/oscal/")) {
+        const { loadNist, loadScf } = await import("../compliance/catalog.ts");
+        const catalog = await loadScf();
+        const name = path.slice("/export/oscal/".length);
         const { complianceView, fleetEvidence } = await import("../compliance/report.ts");
-        const view = complianceView(fleetEvidence(f));
+        const { oscalExports } = await import("../compliance/oscal.ts");
+        const { VERSION } = await import("../version.ts");
+        const nist = await loadNist("nist80053");
+        const docs = catalog
+          ? await oscalExports({
+            view: complianceView(fleetEvidence(f), catalog),
+            fleet: f.fleet,
+            machines: f.machines.filter((m) => m.kind !== "discovered"),
+            ...(nist ? { titles: nist.titles } : {}),
+            version: VERSION,
+            now: new Date(),
+          })
+          : {};
+        if (!(name in docs)) return new Response("not found\n", { status: 404 });
+        return new Response(JSON.stringify(docs[name], null, 2) + "\n", {
+          headers: {
+            "content-type": "application/json",
+            "content-disposition": `attachment; filename="${f.fleet.id}-${name}"`,
+            "cache-control": "no-store",
+          },
+        });
+      }
+      if (path === "/compliance" || path === "/export/compliance.json") {
+        const { loadScf } = await import("../compliance/catalog.ts");
+        const { complianceView, fleetEvidence } = await import("../compliance/report.ts");
+        const view = complianceView(fleetEvidence(f), await loadScf());
         if (path.startsWith("/export/")) {
           return new Response(JSON.stringify(view, null, 2) + "\n", {
             headers: {

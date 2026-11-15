@@ -242,7 +242,7 @@ export const fakeRunner: StolosDeps["runner"] = async (argv, each) => {
   }
   for (let i = 0; i < 20; i++) {
     each(
-      i === 5 ? "   [warn] The firewall is on: firewall: off [END-05, NET-01]" : `[ok] step ${i}`,
+      i === 5 ? "   [warn] The firewall is on: firewall: off [END-07, NET-02]" : `[ok] step ${i}`,
     );
     await new Promise((r) => setTimeout(r, 15));
   }

@@ -225,7 +225,7 @@ Deno.test("067: an accepted risk shows as accepted until its date, then fails ag
   const fail = {
     id: "disk-encryption",
     title: "The disk is encrypted",
-    scf: ["CRY-05"],
+    scf: ["CRY-07"],
     status: "fail" as const,
     detail: "off",
   };

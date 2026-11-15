@@ -1,7 +1,7 @@
 /**
  * Spec 086: Okta, read-only: its users (active, suspended, deprovisioned),
  * who holds an administrator role, and who has enrolled a second factor.
- * Evidence for account management and MFA (SCF IAC-06, IAC-15, IAC-21).
+ * Evidence for account management and MFA (SCF IAC-37, IAC-08, IAC-30).
  *
  * @module
  */
@@ -96,7 +96,7 @@ export const okta: Connector = {
       check(o, {
         id: "okta-mfa",
         title: "Every active user has a second factor",
-        scf: ["IAC-06"],
+        scf: ["IAC-37"],
         fact: "activeWithoutMfa",
         want: (v) => v === 0,
         show: (v) => `${v} of ${o.posture.activeUsers} active users without one`,
@@ -105,7 +105,7 @@ export const okta: Connector = {
       check(o, {
         id: "okta-admins",
         title: "Two to four administrators",
-        scf: ["IAC-21"],
+        scf: ["IAC-30"],
         fact: "admins",
         want: (v) => typeof v === "number" && v >= 2 && v <= 4,
         fix: "Okta > Security > Administrators: remove roles nobody needs",

@@ -320,7 +320,7 @@ export const aws: Connector = {
       check(o, {
         id: "aws-root-mfa",
         title: "The root user has MFA",
-        scf: ["IAC-06"],
+        scf: ["IAC-37"],
         fact: "rootMfa",
         want: (v) => v === true,
         fix: "console.aws.amazon.com as root > Security credentials > Assign MFA device",
@@ -328,7 +328,7 @@ export const aws: Connector = {
       check(o, {
         id: "aws-root-keys",
         title: "The root user has no access keys",
-        scf: ["IAC-16"],
+        scf: ["IAC-10"],
         fact: "rootAccessKeys",
         want: (v) => v === false,
         fix: "console.aws.amazon.com as root > Security credentials > Access keys > Delete",
@@ -336,7 +336,7 @@ export const aws: Connector = {
       check(o, {
         id: "aws-s3-public",
         title: "S3 blocks public access for the whole account",
-        scf: ["DCH-01", "NET-01"],
+        scf: ["DCH-02", "NET-02"],
         fact: "s3BlockPublic",
         want: (v) => v === true,
         fix:
@@ -345,7 +345,7 @@ export const aws: Connector = {
       check(o, {
         id: "aws-imdsv2",
         title: "Every EC2 instance requires IMDSv2",
-        scf: ["CFG-02"],
+        scf: ["CFG-04"],
         fact: "ec2WithImdsV1",
         show: (v) => `${v} of ${o.posture.ec2Instances} instance(s) allow IMDSv1`,
         want: (v) => v === 0,

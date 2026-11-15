@@ -161,7 +161,7 @@ export const hetzner: Connector = {
       check(o, {
         id: "hz-backups",
         title: "Every server has Hetzner backups on",
-        scf: ["BCD-11"],
+        scf: ["BCD-24"],
         fact: "serversWithBackups",
         want: every,
         show: (v) => `${v} of ${o.posture.servers} server(s)`,
@@ -171,7 +171,7 @@ export const hetzner: Connector = {
       check(o, {
         id: "hz-firewall",
         title: "Every server has a Hetzner firewall",
-        scf: ["NET-01"],
+        scf: ["NET-02"],
         fact: "serversWithFirewall",
         want: every,
         show: (v) => `${v} of ${o.posture.servers} server(s)`,
@@ -180,7 +180,7 @@ export const hetzner: Connector = {
       check(o, {
         id: "hz-protect",
         title: "Every server is protected from deletion",
-        scf: ["BCD-01"],
+        scf: ["BCD-02"],
         fact: "serversDeleteProtected",
         want: every,
         show: (v) => `${v} of ${o.posture.servers} server(s)`,

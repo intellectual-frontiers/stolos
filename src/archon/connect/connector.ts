@@ -330,7 +330,7 @@ export function fresh(o: Observation, now: number, id: string): PolicyResult {
   return {
     id: "observed",
     title: "Observed in the last 7 days",
-    scf: ["AST-02", "MON-01"],
+    scf: ["AST-04", "MON-02"],
     status: days <= 7 ? "pass" : "fail",
     detail: `last observed ${o.at.slice(0, 10)}`,
     fix: `deno task stolos estate observe ${id}`,

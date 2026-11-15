@@ -149,7 +149,7 @@ input[type=text], input[type=password], input[type=search], select { font: inher
 .term .ok { color: #3CC98F; } .term .w { color: #F0B054; } .term .bad { color: #FF6B7D; } .term .dim { color: #8189A8; }
 .help { border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 0 10px 10px 0; padding: 12px 14px; }
 .help h3 { color: var(--accent); } .help p { margin: 6px 0 0; }
-.notice { border-radius: 10px; padding: 10px 12px; } .notice.bad { background: var(--bad-soft); color: var(--bad); } .notice.ok { background: var(--ok-soft); color: var(--ok); }
+.notice { border-radius: 10px; padding: 10px 12px; } .notice.bad { background: var(--bad-soft); color: var(--bad); } .notice.ok { background: var(--ok-soft); color: var(--ok); } .notice.warn { background: var(--warn-soft); color: var(--warn); }
 .signin { min-height: 100vh; display: grid; place-items: center; padding: 40px max(16px, env(safe-area-inset-right, 0px)) 40px max(16px, env(safe-area-inset-left, 0px)); }
 .signin .card { width: min(400px, 100%); padding: 28px; box-shadow: var(--shadow); }
 .signin .logos { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }

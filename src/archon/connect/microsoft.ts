@@ -287,7 +287,7 @@ export const microsoft: Connector = {
       check(o, {
         id: "ms-mfa-enforced",
         title: "MFA is enforced (security defaults or Conditional Access)",
-        scf: ["IAC-06"],
+        scf: ["IAC-37"],
         fact: "mfaEnforced",
         want: (v) => v === true,
         fix:
@@ -296,7 +296,7 @@ export const microsoft: Connector = {
       check(o, {
         id: "ms-mfa-registered",
         title: "Every member has registered MFA",
-        scf: ["IAC-06"],
+        scf: ["IAC-37"],
         fact: "membersWithoutMfa",
         show: (v) =>
           `${v} member(s) without MFA${v ? `: ${o.posture.membersWithoutMfaNames ?? ""}` : ""}`,
@@ -308,7 +308,7 @@ export const microsoft: Connector = {
       check(o, {
         id: "ms-global-admins",
         title: "Two to four Global Administrators",
-        scf: ["IAC-21"],
+        scf: ["IAC-30"],
         fact: "globalAdmins",
         show: (v) => `${v}: ${o.posture.globalAdminNames ?? "?"}`,
         want: (v) => typeof v === "number" && v >= 2 && v <= 4,

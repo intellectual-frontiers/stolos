@@ -378,14 +378,18 @@ export function consoleHandler(
           const d = await deps.data();
           const r = await deps.repo();
           const { complianceView, serverEvidence } = await import("../compliance/report.ts");
+          const { loadScf } = await import("../compliance/catalog.ts");
           const { compliancePage } = await import("./compliance-page.ts");
-          const view = complianceView(serverEvidence({
-            host: deps.host,
-            ...(d.verify ? { verify: d.verify } : {}),
-            ...(r.signer ? { signer: r.signer } : {}),
-            ...(r.commit ? { commit: r.commit.sha } : {}),
-            https: true,
-          }));
+          const view = complianceView(
+            serverEvidence({
+              host: deps.host,
+              ...(d.verify ? { verify: d.verify } : {}),
+              ...(r.signer ? { signer: r.signer } : {}),
+              ...(r.commit ? { commit: r.commit.sha } : {}),
+              https: true,
+            }),
+            await loadScf(),
+          );
           return frame(
             s,
             "Compliance",

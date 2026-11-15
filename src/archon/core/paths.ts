@@ -189,6 +189,15 @@ export const P = {
   get userState(): string {
     return join(userData, "stolos", "state", fleetId() || "_");
   },
+  /**
+   * Downloaded reference catalogs (spec 071: SCF, NIST), for every fleet on
+   * this machine; a server keeps them in /var/lib/archon/catalogs.
+   */
+  get catalogs(): string {
+    return readOr("/etc/archon/host") !== undefined
+      ? "/var/lib/archon/catalogs"
+      : join(userData, "stolos", "catalogs");
+  },
   /** Rendered by stolos build; never committed. */
   get out(): string {
     return join(repoRoot(), "out", fleetId() || "_");

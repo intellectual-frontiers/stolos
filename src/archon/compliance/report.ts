@@ -3,14 +3,17 @@
  * managed server's verify, an adopted machine's policies, a cloud account's
  * posture, the repository's signatures) is evidence for one or more SCF
  * controls; each control's status is what its evidence says, and each
- * framework requirement's status is what its controls say. Nothing here is
- * asserted without evidence: a control with none says so.
+ * framework requirement's status is what its controls say, through the SCF
+ * Council's own mappings (STRM) from the catalog (`catalog.ts`). Nothing here
+ * is asserted without evidence: a control with none says so; and no mapping
+ * is Stolos's own: without the catalog, the frameworks say it is not loaded.
  *
  * @module
  */
 
 import type { PolicyResult } from "../adopt/policy.ts";
 import type { PcFacts } from "../console/pc.ts";
+import { criteriaOnly, SCF_SOURCE, type ScfCatalog } from "./catalog.ts";
 import { type FrameworkId, FRAMEWORKS, SCF, type ScfControl } from "./scf.ts";
 
 /** One piece of evidence. */
@@ -34,10 +37,18 @@ export interface Evidence {
 /** A status for a control or a requirement. */
 export type Coverage = "pass" | "fail" | "partial" | "no evidence";
 
+/** An SCF control with what the catalog says about it. */
+export interface CatalogControl extends ScfControl {
+  /** SCF's description of it (when the catalog is loaded). */
+  description?: string;
+  /** Its requirements per framework, from SCF's STRM (empty without the catalog). */
+  maps: Record<FrameworkId, string[]>;
+}
+
 /** One control, with its evidence. */
 export interface ControlStatus {
   /** The control. */
-  control: ScfControl;
+  control: CatalogControl;
   /** Its status. */
   status: Coverage;
   /** Its evidence. */
@@ -64,11 +75,23 @@ export function combine(ss: Array<PolicyResult["status"] | Coverage>): Coverage 
   return "partial";
 }
 
-/** Each control's status from the evidence. */
-export function controls(evidence: Evidence[]): ControlStatus[] {
-  return SCF.map((control) => {
-    const ev = evidence.filter((e) => e.scf.includes(control.id));
-    return { control, evidence: ev, status: combine(ev.map((e) => e.status)) };
+const NO_MAPS = (): Record<FrameworkId, string[]> =>
+  Object.fromEntries(FRAMEWORKS.map((f) => [f.id, []])) as unknown as Record<
+    FrameworkId,
+    string[]
+  >;
+
+/** Each control's status from the evidence, with the catalog's name, description, and mappings. */
+export function controls(evidence: Evidence[], catalog?: ScfCatalog): ControlStatus[] {
+  return SCF.map((c) => {
+    const e = catalog?.controls[c.id];
+    const control: CatalogControl = {
+      ...c,
+      ...(e ? { name: e.name, description: e.description } : {}),
+      maps: e ? { ...NO_MAPS(), ...e.maps } : NO_MAPS(),
+    };
+    const ev = evidence.filter((x) => x.scf.includes(c.id));
+    return { control, evidence: ev, status: combine(ev.map((x) => x.status)) };
   });
 }
 
@@ -76,7 +99,9 @@ export function controls(evidence: Evidence[]): ControlStatus[] {
 export function framework(id: FrameworkId, cs: ControlStatus[]): RequirementStatus[] {
   const reqs = new Map<string, string[]>();
   for (const c of cs) {
-    for (const r of c.control.maps[id]) reqs.set(r, [...(reqs.get(r) ?? []), c.control.id]);
+    // SOC 2 by criterion (CC6.1), its points of focus (CC6.1-POF10) folded in.
+    const ids = id === "soc2" ? criteriaOnly(c.control.maps[id]) : c.control.maps[id];
+    for (const r of ids) reqs.set(r, [...(reqs.get(r) ?? []), c.control.id]);
   }
   return [...reqs].map(([rid, ids]) => ({
     id: rid,
@@ -98,7 +123,7 @@ export function fleetEvidence(f: PcFacts, now = Date.now()): Evidence[] {
   const recent = (iso?: string) => !!iso && now - Date.parse(iso) <= 7 * 86_400_000;
   for (const m of f.machines.filter((x) => x.kind === "server" || x.kind === "workstation")) {
     out.push({
-      scf: ["CFG-02"],
+      scf: ["CFG-04"],
       subject: m.name,
       source: "managed",
       check: "Matches its model (archon verify)",
@@ -116,7 +141,7 @@ export function fleetEvidence(f: PcFacts, now = Date.now()): Evidence[] {
         "deno task stolos fleet status, then the failing check's fix on the server (Archon Console)",
     });
     out.push({
-      scf: ["CRY-05"],
+      scf: ["CRY-07"],
       subject: m.name,
       source: "managed",
       check: "The disk is encrypted",
@@ -126,7 +151,7 @@ export function fleetEvidence(f: PcFacts, now = Date.now()): Evidence[] {
         "record how this server's data at rest is protected (full-disk encryption at install, or an encrypted volume for its data)",
     });
     out.push({
-      scf: ["AST-02", "MON-01"],
+      scf: ["AST-04", "MON-02"],
       subject: m.name,
       source: "managed",
       check: "Installed and recorded in the last 7 days",
@@ -186,7 +211,7 @@ export function fleetEvidence(f: PcFacts, now = Date.now()): Evidence[] {
     }
   }
   out.push({
-    scf: ["CHG-02"],
+    scf: ["CHG-03"],
     subject: f.fleet.repo,
     source: "repository",
     check: "Every commit servers apply is signed by a fleet signer",
@@ -199,7 +224,7 @@ export function fleetEvidence(f: PcFacts, now = Date.now()): Evidence[] {
   const daily = f.signers.filter((s) => s.role === "daily").length;
   const recovery = f.signers.filter((s) => s.role === "recovery").length;
   out.push({
-    scf: ["IAC-10"],
+    scf: ["IAC-14"],
     subject: f.fleet.repo,
     source: "repository",
     check: "Signing keys: one per person, and an offline recovery key",
@@ -208,7 +233,7 @@ export function fleetEvidence(f: PcFacts, now = Date.now()): Evidence[] {
     fix: "deno task stolos keys setup (in the terminal)",
   });
   out.push({
-    scf: ["AST-02"],
+    scf: ["AST-04"],
     subject: f.fleet.repo,
     source: "repository",
     check: "The asset inventory is in Git",
@@ -233,7 +258,7 @@ export function serverEvidence(o: {
   const v = o.verify;
   return [
     {
-      scf: ["CFG-02", "MON-01"],
+      scf: ["CFG-04", "MON-02"],
       subject: o.host,
       source: "managed",
       check: "Matches its model (archon verify)",
@@ -246,7 +271,7 @@ export function serverEvidence(o: {
       fix: "Actions, This server: verify",
     },
     {
-      scf: ["MON-01"],
+      scf: ["MON-02"],
       subject: o.host,
       source: "managed",
       check: "Verified in the last day",
@@ -255,7 +280,7 @@ export function serverEvidence(o: {
       fix: "the reconcile timer verifies every 15 minutes: is archon-reconcile.timer active?",
     },
     {
-      scf: ["CHG-02"],
+      scf: ["CHG-03"],
       subject: o.host,
       source: "repository",
       check: "The applied commit is signed by a fleet signer",
@@ -266,7 +291,7 @@ export function serverEvidence(o: {
       fix: "on the PC: deno task stolos apply",
     },
     {
-      scf: ["CRY-03"],
+      scf: ["CRY-05"],
       subject: o.host,
       source: "managed",
       check: "Its web pages are served over HTTPS only",
@@ -274,7 +299,7 @@ export function serverEvidence(o: {
       detail: o.https ? "Traefik redirects HTTP to HTTPS" : "no web service",
     },
     {
-      scf: ["AST-02"],
+      scf: ["AST-04"],
       subject: o.host,
       source: "repository",
       check: "Described in the fleet repository",
@@ -286,6 +311,8 @@ export function serverEvidence(o: {
 
 /** Everything a framework page shows. */
 export interface ComplianceView {
+  /** The SCF release the mappings are from, or undefined when it is not on this machine. */
+  catalog?: { version: string; url: string };
   /** Every control, with its evidence. */
   controls: ControlStatus[];
   /** Each framework's requirements. */
@@ -294,10 +321,11 @@ export interface ComplianceView {
   >;
 }
 
-/** The whole view from evidence. */
-export function complianceView(evidence: Evidence[]): ComplianceView {
-  const cs = controls(evidence);
+/** The whole view from evidence, with the frameworks when the catalog is loaded. */
+export function complianceView(evidence: Evidence[], catalog?: ScfCatalog): ComplianceView {
+  const cs = controls(evidence, catalog);
   return {
+    ...(catalog ? { catalog: { version: catalog.version, url: SCF_SOURCE.url } } : {}),
     controls: cs,
     frameworks: FRAMEWORKS.map((f) => ({ ...f, requirements: framework(f.id, cs) })),
   };

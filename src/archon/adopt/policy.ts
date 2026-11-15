@@ -2,9 +2,8 @@
  * Spec 067: the policy pack for adopted machines. Each policy reads an
  * observation and says pass, fail, or unknown, with the fix in plain words
  * for that operating system, and names the Secure Controls Framework (SCF)
- * controls it gives evidence for (spec 068 maps those to HIPAA, PCI DSS,
- * CMMC, and SOC 2). This is a starter mapping: verify it against the SCF's
- * own catalog before an audit relies on it.
+ * controls it gives evidence for (specs 068 and 071 reach each framework
+ * from those through the SCF Council's own mappings).
  *
  * @module
  */
@@ -65,7 +64,7 @@ export function policies(m: AdoptedDef, o: Observed | undefined, now = Date.now(
     return [{
       id: "observed",
       title: "Observed by Stolos",
-      scf: ["AST-02"],
+      scf: ["AST-04"],
       status: "fail",
       detail: "never observed",
       fix: `deno task stolos host observe ${m.name}`,
@@ -77,7 +76,7 @@ export function policies(m: AdoptedDef, o: Observed | undefined, now = Date.now(
   add({
     id: "observed",
     title: "Observed in the last 7 days",
-    scf: ["AST-02", "MON-01"],
+    scf: ["AST-04", "MON-02"],
     status: days <= 7 ? "pass" : "fail",
     detail: `last observed ${o.at.slice(0, 10)}`,
     fix: `deno task stolos host observe ${m.name}`,
@@ -85,7 +84,7 @@ export function policies(m: AdoptedDef, o: Observed | undefined, now = Date.now(
   add({
     id: "disk-encryption",
     title: "The disk is encrypted",
-    scf: ["CRY-05"],
+    scf: ["CRY-07"],
     status: o.security.diskEncryption === "on"
       ? "pass"
       : o.security.diskEncryption === "off"
@@ -101,7 +100,7 @@ export function policies(m: AdoptedDef, o: Observed | undefined, now = Date.now(
   add({
     id: "firewall",
     title: "The firewall is on",
-    scf: ["END-05", "NET-01"],
+    scf: ["END-07", "NET-02"],
     status: o.security.firewall === "on"
       ? "pass"
       : o.security.firewall === "off"
@@ -119,7 +118,7 @@ export function policies(m: AdoptedDef, o: Observed | undefined, now = Date.now(
   add({
     id: "auto-updates",
     title: "Security updates install by themselves",
-    scf: ["VPM-05"],
+    scf: ["VPM-08"],
     status: o.security.autoUpdates === "on"
       ? "pass"
       : o.security.autoUpdates === "manual"
@@ -142,7 +141,7 @@ export function policies(m: AdoptedDef, o: Observed | undefined, now = Date.now(
     add({
       id: "updates-waiting",
       title: "Few updates waiting",
-      scf: ["VPM-05"],
+      scf: ["VPM-08"],
       status: o.software.pendingUpdates <= 20 ? "pass" : "warn",
       detail: `${o.software.pendingUpdates} updates waiting`,
       fix: mac(o)
@@ -154,7 +153,7 @@ export function policies(m: AdoptedDef, o: Observed | undefined, now = Date.now(
   add({
     id: "supported-os",
     title: "The operating system is still supported",
-    scf: ["TDA-17"],
+    scf: ["AST-39"],
     status: sup === true ? "pass" : sup === false ? "fail" : "unknown",
     detail: `${o.os.name} ${o.os.version}`.trim(),
     fix: "upgrade to a supported release",
@@ -163,7 +162,7 @@ export function policies(m: AdoptedDef, o: Observed | undefined, now = Date.now(
     add({
       id: "ssh-keys-only",
       title: "SSH accepts keys, not passwords",
-      scf: ["IAC-10", "CFG-02"],
+      scf: ["IAC-14", "CFG-04"],
       status: o.security.sshPasswordAuth === "no" ? "pass" : "warn",
       detail: `PasswordAuthentication ${o.security.sshPasswordAuth}`,
       fix: "PasswordAuthentication no in /etc/ssh/sshd_config, then restart sshd",
@@ -186,7 +185,7 @@ export function policies(m: AdoptedDef, o: Observed | undefined, now = Date.now(
   add({
     id: "few-admins",
     title: "At most three administrators",
-    scf: ["IAC-21"],
+    scf: ["IAC-30"],
     status: o.security.admins.length === 0
       ? "unknown"
       : o.security.admins.length <= 3
@@ -200,7 +199,7 @@ export function policies(m: AdoptedDef, o: Observed | undefined, now = Date.now(
   add({
     id: "osquery",
     title: "osquery is installed (fleet-wide SQL questions)",
-    scf: ["MON-01"],
+    scf: ["MON-02"],
     status: o.software.osquery ? "pass" : "warn",
     detail: o.software.osquery ? `osquery ${o.software.osquery}` : "osquery is not installed",
     fix: win(o)
@@ -215,7 +214,7 @@ export function policies(m: AdoptedDef, o: Observed | undefined, now = Date.now(
     add({
       id: "adoption-current",
       title: "Adoption has not ended",
-      scf: ["AST-02"],
+      scf: ["AST-04"],
       status: m.until >= new Date(now).toISOString().slice(0, 10) ? "pass" : "fail",
       detail: `adopted until ${m.until}`,
       fix: `deno task stolos host release ${m.name}, or extend until in machine.ts`,

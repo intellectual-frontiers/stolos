@@ -125,7 +125,7 @@ export function estatePolicies(e: Estate): PolicyResult[] {
     out.push({
       id: "leavers",
       title: "People who left have no active accounts",
-      scf: ["IAC-07"],
+      scf: ["IAC-04"],
       status: leavers.length ? "fail" : "pass",
       detail: leavers.length
         ? `${leavers.length} active account(s) of people who left: ${
@@ -144,7 +144,7 @@ export function estatePolicies(e: Estate): PolicyResult[] {
     out.push({
       id: "orphans",
       title: "Every active account belongs to a person on the roster",
-      scf: ["IAC-15"],
+      scf: ["IAC-08"],
       status: orphans.length ? "warn" : "pass",
       detail: orphans.length
         ? `${orphans.length} account(s) with no person: ${
@@ -161,7 +161,7 @@ export function estatePolicies(e: Estate): PolicyResult[] {
     out.push({
       id: "devices-for-people",
       title: "Every active person has a known device",
-      scf: ["AST-02", "AST-03"],
+      scf: ["AST-04", "AST-07.1"],
       status: noDevice.length ? "warn" : "pass",
       detail: noDevice.length
         ? `${noDevice.length} without a device: ${list(noDevice, (x) => x.email)}`
@@ -176,7 +176,7 @@ export function estatePolicies(e: Estate): PolicyResult[] {
     out.push({
       id: "admins-mfa",
       title: "Every administrator signs in with a second factor",
-      scf: ["IAC-06"],
+      scf: ["IAC-37"],
       status: adminsNoMfa.length ? "fail" : "pass",
       detail: adminsNoMfa.length
         ? `${adminsNoMfa.length} without MFA: ${
@@ -191,7 +191,7 @@ export function estatePolicies(e: Estate): PolicyResult[] {
     out.push({
       id: "devices-encrypted",
       title: "Every device's disk is encrypted",
-      scf: ["CRY-05"],
+      scf: ["CRY-07"],
       status: plain.length ? "fail" : "pass",
       detail: plain.length
         ? `${plain.length} not encrypted: ${list(plain, (x) => x.name)}`
@@ -206,7 +206,7 @@ export function estatePolicies(e: Estate): PolicyResult[] {
     out.push({
       id: "repos-protected",
       title: "Every private repository protects its default branch",
-      scf: ["CHG-02"],
+      scf: ["CHG-03"],
       status: unprotected.length ? "fail" : "pass",
       detail: unprotected.length
         ? `${unprotected.length} unprotected: ${list(unprotected, (x) => x.name)}`
