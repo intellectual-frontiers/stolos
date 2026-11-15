@@ -710,6 +710,27 @@ export const COMMANDS: Command[] = [
     },
   },
   {
+    name: "compliance",
+    summary:
+      "The fleet's evidence by SCF control, and by HIPAA, PCI DSS, CMMC, and SOC 2 requirement",
+    description:
+      `Spec 068. From what this PC already knows (managed servers' last verify, adopted machines' policies, the clouds' posture, the repository's signatures): each Secure Controls Framework control's status and evidence, and each framework requirement's status through its controls. A starter mapping: check it against the SCF's own mappings before an auditor relies on it. Exits 1 when a control fails; --json for auditors.`,
+    tier: "read",
+    args: [{
+      name: "framework",
+      type: "string",
+      description: "hipaa, pci, cmmc, or soc2 (default: a summary of each).",
+    }],
+    examples: [{
+      cmd: "deno task stolos compliance --framework hipaa",
+      text: "Each HIPAA Security Rule requirement Stolos has evidence for.",
+    }],
+    async run(a, ctx) {
+      const { complianceCommand } = await import("../compliance/commands.ts");
+      return await complianceCommand(a.framework as string | undefined, ctx.json);
+    },
+  },
+  {
     name: "console",
     summary: "The Stolos Console: the fleet in your browser, on this PC only",
     description:
@@ -2608,6 +2629,7 @@ On a server, workstations reach it as ops over SSH (spec 030): ops' authorized_k
  */
 /** Commands run with `stolos` on your PC (the rest run with `archon` on each machine). */
 const PC_COMMANDS = new Set([
+  "compliance",
   "console",
   "discover",
   "cloud connect",

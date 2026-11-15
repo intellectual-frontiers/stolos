@@ -38,6 +38,7 @@ export const STOLOS_NAV: NavItem[] = [
   { group: "Fleet", label: "Installs", href: "/boot" },
   { group: "Fleet", label: "Changes", href: "/changes" },
   { group: "Fleet", label: "Trust", href: "/trust" },
+  { group: "Fleet", label: "Compliance", href: "/compliance" },
   { group: "Fleet", label: "Activity", href: "/activity" },
   { group: "Actions", label: "The fleet", href: "/actions/fleet" },
   { group: "Actions", label: "Servers", href: "/actions/machines" },
@@ -133,7 +134,15 @@ export const STOLOS_GROUPS: StolosGroup[] = [
     label: "Adopted machines",
     intro:
       "Machines someone else installed (your laptop, a colleague's desktop): Stolos observes and checks them over SSH with a probe key that can run one read-only script, and never changes them.",
-    names: ["discover", "host adopt", "host observe", "host check", "host release", "fleet query"],
+    names: [
+      "compliance",
+      "discover",
+      "host adopt",
+      "host observe",
+      "host check",
+      "host release",
+      "fleet query",
+    ],
     first: "host check",
     diagram: (f) =>
       `flowchart LR
@@ -870,6 +879,11 @@ export const PC_GUIDES: Array<{ name: string; title: string; why: string }> = [
     name: "adopted",
     title: "Adopted machines and clouds",
     why: "Laptops, desktops, and cloud accounts: observed, never changed.",
+  },
+  {
+    name: "compliance",
+    title: "Compliance",
+    why: "SCF controls, and what they mean for HIPAA, PCI DSS, CMMC, and SOC 2.",
   },
   { name: "boot-machine", title: "The boot machine", why: "Installing a server from this PC." },
   {

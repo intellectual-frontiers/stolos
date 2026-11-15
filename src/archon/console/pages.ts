@@ -28,6 +28,7 @@ export const ARCHON_NAV: NavItem[] = [
   { group: "Server", label: "Apps", href: "/apps" },
   { group: "Server", label: "Data", href: "/data" },
   { group: "Server", label: "Logs", href: "/logs" },
+  { group: "Server", label: "Compliance", href: "/compliance" },
   { group: "Server", label: "Activity", href: "/activity" },
   { group: "Actions", label: "This server", href: "/actions/server" },
   { group: "Actions", label: "PostgreSQL", href: "/actions/postgres" },

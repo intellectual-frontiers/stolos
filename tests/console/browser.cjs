@@ -11,6 +11,8 @@ const PAGES = [
   "/data",
   "/logs",
   "/activity",
+  "/compliance",
+  "/compliance?fw=pci",
   "/how",
   "/guide",
   "/actions/server",

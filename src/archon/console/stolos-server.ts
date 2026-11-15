@@ -409,6 +409,32 @@ export function stolosHandler(
           f,
         );
       }
+      if (path === "/compliance" || path === "/export/compliance.json") {
+        const { complianceView, fleetEvidence } = await import("../compliance/report.ts");
+        const view = complianceView(fleetEvidence(f));
+        if (path.startsWith("/export/")) {
+          return new Response(JSON.stringify(view, null, 2) + "\n", {
+            headers: {
+              "content-type": "application/json",
+              "content-disposition": `attachment; filename="${f.fleet.id}-compliance.json"`,
+              "cache-control": "no-store",
+            },
+          });
+        }
+        const { compliancePage } = await import("./compliance-page.ts");
+        return await frame(
+          s,
+          "Compliance",
+          "/compliance",
+          compliancePage(
+            view,
+            url.searchParams.get("fw") ?? undefined,
+            f.fleet.title,
+            "/export/compliance.json",
+          ),
+          f,
+        );
+      }
       if (path === "/clouds") return await frame(s, "Clouds", "/clouds", cloudsPage(f), f);
       if (path === "/query") {
         return await frame(

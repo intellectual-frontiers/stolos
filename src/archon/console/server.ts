@@ -377,6 +377,25 @@ export function consoleHandler(
           if (path === "/logs") return frame(s, "Logs", "/logs", logsPage(units, unit, deps.host));
           return journalStream(deps, unit, req.signal);
         }
+        if (path === "/compliance") {
+          const d = await deps.data();
+          const r = await deps.repo();
+          const { complianceView, serverEvidence } = await import("../compliance/report.ts");
+          const { compliancePage } = await import("./compliance-page.ts");
+          const view = complianceView(serverEvidence({
+            host: deps.host,
+            ...(d.verify ? { verify: d.verify } : {}),
+            ...(r.signer ? { signer: r.signer } : {}),
+            ...(r.commit ? { commit: r.commit.sha } : {}),
+            https: true,
+          }));
+          return frame(
+            s,
+            "Compliance",
+            "/compliance",
+            compliancePage(view, url.searchParams.get("fw") ?? undefined, deps.host),
+          );
+        }
         if (path === "/activity") {
           return frame(
             s,
