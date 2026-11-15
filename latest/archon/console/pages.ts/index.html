@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/console/pages.ts - Stolos v0.69.0 documentation</title>
+  <title>archon/console/pages.ts - Stolos v0.70.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.69.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.70.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -130,7 +130,7 @@ what happens when you press Run.</p>
 Functions</h2></div><div class="namespaceSection"><div id="namespace_actionspage" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;pages.ts&#x2F;~&#x2F;actionsPage.html" title="actionsPage">
-			    <span>actionsPage</span><span>(<div class="ml-4"><div><span>cmds<span>: <span class="td-ref">Command</span>[]</span></span>,</div><div><span>selected<span>: <span class="td-ref">Command</span></span></span>,</div><div><span>s<span>: <span class="td-ref">Session</span></span></span></div></div>)<span>: <span class="td-ref">Html</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Actions: every command as a form, with live output.</p>
+			    <span>actionsPage</span><span>(<div class="ml-4"><div><span>group<span>: <span class="td-ref">ActionGroup</span></span></span>,</div><div><span>cmds<span>: <span class="td-ref">Command</span>[]</span></span>,</div><div><span>selected<span>: <span class="td-ref">Command</span></span></span>,</div><div><span>s<span>: <span class="td-ref">Session</span></span></span>,</div><div><span>d<span>: <span class="td-ref">WelcomeData</span></span></span></div></div>)<span>: <span class="td-ref">Html</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One group's page: introduction, diagram, its commands, the form, and the terminal.</p>
 </div></div></div>
     </div><div id="namespace_activitypage" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -141,6 +141,11 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_actionspage
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;pages.ts&#x2F;~&#x2F;convergenceDiagram.html" title="convergenceDiagram">
 			    <span>convergenceDiagram</span><span>(<div class="ml-4"><div><span>d<span>: <span class="td-ref">WelcomeData</span></span></span>,</div><div><span>r<span>: <span class="td-ref">RepoFacts</span></span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The convergence loop, with this server's real commit and signer.</p>
+</div></div></div>
+    </div><div id="namespace_groupof" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;pages.ts&#x2F;~&#x2F;groupOf.html" title="groupOf">
+			    <span>groupOf</span><span>(<span><span>name<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">ActionGroup</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The group a command is in (&quot;server&quot; for anything not listed elsewhere).</p>
 </div></div></div>
     </div><div id="namespace_guidepage" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -187,7 +192,33 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_actionspage
   </defs>
 </svg>
 </a>
-Interfaces</h2></div><div class="namespaceSection"><div id="namespace_activityentry" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+Interfaces</h2></div><div class="namespaceSection"><div id="namespace_actiongroup" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;pages.ts&#x2F;~&#x2F;ActionGroup.html" title="ActionGroup">
+			    <span>ActionGroup</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A group of actions: its own page, introduction, diagram, and commands.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;pages.ts&#x2F;~&#x2F;ActionGroup.html#property_caption">
+                  <span>caption</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Under the diagram.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;pages.ts&#x2F;~&#x2F;ActionGroup.html#method_diagram_0">
+                  <span>diagram</span><span>(<span><span>d<span>: <span class="td-ref">WelcomeData</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How this part of the server works (Mermaid), from the server's data.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;pages.ts&#x2F;~&#x2F;ActionGroup.html#property_first">
+                  <span>first</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The command shown first.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;pages.ts&#x2F;~&#x2F;ActionGroup.html#method_has_0">
+                  <span>has</span><span>(<span><span>name<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">boolean</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Which commands belong here.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;pages.ts&#x2F;~&#x2F;ActionGroup.html#property_id">
+                  <span>id</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its address: /actions/&lt;id&gt;.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;pages.ts&#x2F;~&#x2F;ActionGroup.html#property_intro">
+                  <span>intro</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What it is about, for someone new to servers.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;pages.ts&#x2F;~&#x2F;ActionGroup.html#property_label">
+                  <span>label</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its name in the menu.</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_activityentry" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;pages.ts&#x2F;~&#x2F;ActivityEntry.html" title="ActivityEntry">
 			    <span>ActivityEntry</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One line of the activity record.</p>
@@ -252,7 +283,12 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_activityen
   </defs>
 </svg>
 </a>
-Variables</h2></div><div class="namespaceSection"><div id="namespace_archon_nav" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+Variables</h2></div><div class="namespaceSection"><div id="namespace_action_groups" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;pages.ts&#x2F;~&#x2F;ACTION_GROUPS.html" title="ACTION_GROUPS">
+			    <span>ACTION_GROUPS</span><span>: <span class="td-ref">ActionGroup</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The Archon Console's action groups, in menu order (every offered command is in exactly one).</p>
+</div></div></div>
+    </div><div id="namespace_archon_nav" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;pages.ts&#x2F;~&#x2F;ARCHON_NAV.html" title="ARCHON_NAV">
 			    <span>ARCHON_NAV</span><span>: <span class="td-ref">NavItem</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The Archon Console's menu.</p>
@@ -330,7 +366,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_archon_nav"
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1296 symbols</span><svg
+              <span class="leading-none">view all 1301 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -345,7 +381,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_archon_nav"
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/console/pages_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_actionspage" title="actionsPage">actionsPage</a></li><li><a href="#namespace_activitypage" title="activityPage">activityPage</a></li><li><a href="#namespace_convergencediagram" title="convergenceDiagram">convergenceDiagram</a></li><li><a href="#namespace_guidepage" title="guidePage">guidePage</a></li><li><a href="#namespace_howpage" title="howPage">howPage</a></li><li><a href="#namespace_overviewpage" title="overviewPage">overviewPage</a></li><li><a href="#namespace_signinpage" title="signinPage">signinPage</a></li></ul></li><li><a href="#archon/console/pages_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_activityentry" title="ActivityEntry">ActivityEntry</a></li><li><a href="#namespace_repofacts" title="RepoFacts">RepoFacts</a></li></ul></li><li><a href="#archon/console/pages_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_archon_nav" title="ARCHON_NAV">ARCHON_NAV</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/console/pages_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_actionspage" title="actionsPage">actionsPage</a></li><li><a href="#namespace_activitypage" title="activityPage">activityPage</a></li><li><a href="#namespace_convergencediagram" title="convergenceDiagram">convergenceDiagram</a></li><li><a href="#namespace_groupof" title="groupOf">groupOf</a></li><li><a href="#namespace_guidepage" title="guidePage">guidePage</a></li><li><a href="#namespace_howpage" title="howPage">howPage</a></li><li><a href="#namespace_overviewpage" title="overviewPage">overviewPage</a></li><li><a href="#namespace_signinpage" title="signinPage">signinPage</a></li></ul></li><li><a href="#archon/console/pages_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_actiongroup" title="ActionGroup">ActionGroup</a></li><li><a href="#namespace_activityentry" title="ActivityEntry">ActivityEntry</a></li><li><a href="#namespace_repofacts" title="RepoFacts">RepoFacts</a></li></ul></li><li><a href="#archon/console/pages_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_action_groups" title="ACTION_GROUPS">ACTION_GROUPS</a></li><li><a href="#namespace_archon_nav" title="ARCHON_NAV">ARCHON_NAV</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>

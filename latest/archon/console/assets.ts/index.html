@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/console/assets.ts - Stolos v0.69.0 documentation</title>
+  <title>archon/console/assets.ts - Stolos v0.70.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.69.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.70.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -177,6 +177,8 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_archon_logo
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;assets.ts&#x2F;~&#x2F;CONSOLE_CSS.html" title="CONSOLE_CSS">
 			    <span>CONSOLE_CSS</span><span>: <span class="td-str">`
+@font-face { font-family: "JetBrainsMono NF"; font-weight: 400; font-display: swap; src: url("/static/fonts/JetBrainsMonoNerdFontMono-Regular.woff2") format("woff2"); }
+@font-face { font-family: "JetBrainsMono NF"; font-weight: 700; font-display: swap; src: url("/static/fonts/JetBrainsMonoNerdFontMono-Bold.woff2") format("woff2"); }
 :root {
   --bg: #F6F7FB; --panel: #FFFFFF; --rail: #EEF0F7; --ink: #161A2E; --muted: #5B6178; --line: #DDE1EC;
   --accent: #4F46E5; --accent-soft: #EEF2FF; --ok: #0F8A5F; --ok-soft: #E6F6EF; --warn: #A15C00;
@@ -184,6 +186,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_archon_logo
   --shadow: 0 1px 2px rgba(22,26,46,.06), 0 8px 24px rgba(22,26,46,.06);
   --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+  --term: "JetBrainsMono NF", "JetBrainsMono Nerd Font", "Cascadia Code", ui-monospace, monospace;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
@@ -245,13 +248,18 @@ tr:last-child td { border-bottom: 0; }
 .stack { display: flex; flex-direction: column; gap: 10px; }
 .ring { width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center; flex: none; }
 .ring span { width: 60px; height: 60px; border-radius: 50%; background: var(--panel); display: grid; place-items: center; font-weight: 600; font-variant-numeric: tabular-nums; }
+.grid.actions { grid-template-columns: minmax(0, 320px) minmax(0, 1fr); align-items: start; }
+.grid.actions &gt; .cmdlist { position: sticky; top: 70px; max-height: calc(100vh - 90px); overflow: auto; padding: 6px; }
+.diagram pre.mermaid svg { max-height: 300px; }
 .cmdlist a { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--line); padding: 10px 6px; }
 .cmdlist a:hover, .cmdlist a[aria-current="true"] { background: var(--accent-soft); }
 .cmdlist .sub { grid-column: 1 / -1; }
 label.field { display: grid; gap: 4px; } label.field span { font-size: 12.5px; font-weight: 500; }
 label.check { display: flex; gap: 8px; align-items: center; }
 input[type=text], input[type=password], select { font: inherit; width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--panel); color: var(--ink); }
-.term { background: #0E1120; color: #D8DCEE; border-radius: 10px; padding: 14px; font-family: var(--mono); font-size: 12.5px; min-height: 200px; max-height: 70vh; overflow: auto; white-space: pre-wrap; word-break: break-word; }
+.term { background: #0E1120; color: #D8DCEE; border-radius: 10px; padding: 14px 16px; font-family: var(--term); font-size: 13px; line-height: 1.45;
+  height: max(420px, 62vh); overflow: auto; overscroll-behavior: contain; white-space: pre-wrap; word-break: break-word; resize: vertical; }
+.term &gt; div { min-height: 1.45em; }
 .term .ok { color: #3CC98F; } .term .w { color: #F0B054; } .term .bad { color: #FF6B7D; } .term .dim { color: #8189A8; }
 .help { border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 0 10px 10px 0; padding: 12px 14px; }
 .help h3 { color: var(--accent); } .help p { margin: 6px 0 0; }
@@ -267,7 +275,8 @@ input[type=text], input[type=password], select { font: inherit; width: 100%; bor
   .shell { grid-template-columns: minmax(0, 1fr); }
   .rail { flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--line); padding: 8px; }
   .rail .group { display: none; } .rail a { white-space: nowrap; }
-  .cols-3, .cols-2 { grid-template-columns: minmax(0, 1fr); }
+  .cols-3, .cols-2, .grid.actions { grid-template-columns: minmax(0, 1fr); }
+  .grid.actions &gt; .cmdlist { position: static; max-height: 40vh; }
   .fleetmark span, .brand small, .me .who { display: none; }
 }
 `</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Both consoles' stylesheet: tokens first (light, then dark), then the parts.</p>
@@ -288,6 +297,11 @@ input[type=text], input[type=password], select { font: inherit; width: 100%; bor
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;assets.ts&#x2F;~&#x2F;FAVICON.html" title="FAVICON">
 			    <span>FAVICON</span><span>: <span class="td-str">`&lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"&gt;&lt;rect width="32" height="32" rx="8" fill="#4F46E5"/&gt;&lt;path d="M8 25V15a8 8 0 0 1 16 0v10" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/&gt;&lt;rect x="13.5" y="5.5" width="5" height="5" rx="1.2" fill="#fff"/&gt;&lt;/svg&gt;`</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The favicon: Archon's mark.</p>
+</div></div></div>
+    </div><div id="namespace_fonts" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;assets.ts&#x2F;~&#x2F;FONTS.html" title="FONTS">
+			    <span>FONTS</span><span>: { path<span>: <span class="td-kw">string</span></span>; sha256<span>: <span class="td-kw">string</span></span>; url<span>: <span class="td-kw">string</span></span>; weight<span>: <span class="td-kw">number</span></span>;  }[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>JetBrainsMono Nerd Font (Nerd Fonts v3.5.0, OFL), for the consoles' terminals: fetched and checked like Mermaid.</p>
 </div></div></div>
     </div><div id="namespace_mermaid" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
@@ -379,7 +393,7 @@ input[type=text], input[type=password], select { font: inherit; width: 100%; bor
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1296 symbols</span><svg
+              <span class="leading-none">view all 1301 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -394,7 +408,7 @@ input[type=text], input[type=password], select { font: inherit; width: 100%; bor
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/console/assets_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_datastarsource" title="datastarSource">datastarSource</a></li><li><a href="#namespace_sha256hex" title="sha256Hex">sha256Hex</a></li><li><a href="#namespace_vendored" title="vendored">vendored</a></li></ul></li><li><a href="#archon/console/assets_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_archon_logo" title="ARCHON_LOGO">ARCHON_LOGO</a></li><li><a href="#namespace_console_css" title="CONSOLE_CSS">CONSOLE_CSS</a></li><li><a href="#namespace_datastar" title="DATASTAR">DATASTAR</a></li><li><a href="#namespace_favicon" title="FAVICON">FAVICON</a></li><li><a href="#namespace_mermaid" title="MERMAID">MERMAID</a></li><li><a href="#namespace_stolos_logo" title="STOLOS_LOGO">STOLOS_LOGO</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/console/assets_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_datastarsource" title="datastarSource">datastarSource</a></li><li><a href="#namespace_sha256hex" title="sha256Hex">sha256Hex</a></li><li><a href="#namespace_vendored" title="vendored">vendored</a></li></ul></li><li><a href="#archon/console/assets_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_archon_logo" title="ARCHON_LOGO">ARCHON_LOGO</a></li><li><a href="#namespace_console_css" title="CONSOLE_CSS">CONSOLE_CSS</a></li><li><a href="#namespace_datastar" title="DATASTAR">DATASTAR</a></li><li><a href="#namespace_favicon" title="FAVICON">FAVICON</a></li><li><a href="#namespace_fonts" title="FONTS">FONTS</a></li><li><a href="#namespace_mermaid" title="MERMAID">MERMAID</a></li><li><a href="#namespace_stolos_logo" title="STOLOS_LOGO">STOLOS_LOGO</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>
