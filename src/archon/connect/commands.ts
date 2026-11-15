@@ -29,6 +29,11 @@ import { deel } from "./deel.ts";
 import { gitlab } from "./gitlab.ts";
 import { gusto } from "./gusto.ts";
 import { jumpcloud } from "./jumpcloud.ts";
+import { jamf } from "./jamf.ts";
+import { kandji } from "./kandji.ts";
+import { crowdstrike } from "./crowdstrike.ts";
+import { sentinelone } from "./sentinelone.ts";
+import { defender, intune } from "./microsoft-endpoint.ts";
 import { justworks } from "./justworks.ts";
 import { okta } from "./okta.ts";
 import { hetzner } from "./hetzner.ts";
@@ -41,6 +46,12 @@ export const CONNECTORS: Connector[] = [
   google,
   okta,
   jumpcloud,
+  intune,
+  defender,
+  jamf,
+  kandji,
+  crowdstrike,
+  sentinelone,
   github,
   gitlab,
   bitbucket,

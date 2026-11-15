@@ -38,13 +38,23 @@ export const PERSON: LabelView = defineLabel({
 export const HARDWARE_DEVICE: LabelView = defineLabel({
   name: "hardware_device",
   terms: [{ from: "d3fend", term: "hardware_device" }],
-  doc: "A machine a connector knows (a directory's or an MDM's).",
+  doc: "A machine a connector knows (a directory's, an MDM's, or an EDR's).",
   props: {
     owner: { type: "text", doc: "Its owner's work email." },
     os_name: { type: "text", doc: "Its operating system." },
     serial_number: { type: "text", doc: "Its serial number." },
     encrypted: { type: "boolean", doc: "Its disk is encrypted." },
-    last_seen: { type: "text", doc: "When the source last saw it." },
+    last_seen: { type: "text", doc: "When the source last saw it (its last check-in)." },
+    hostname: { type: "text", doc: "Its hostname, as the source reports it." },
+    managed_by: {
+      type: "text",
+      doc: "The MDM or EDR that reports it (intune, jamf, crowdstrike, ...).",
+    },
+    sensor_healthy: {
+      type: "boolean",
+      doc: "Its EDR sensor is installed, reporting, and fully working.",
+    },
+    compliant: { type: "boolean", doc: "It meets its MDM's compliance policy." },
   },
 });
 

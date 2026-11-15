@@ -136,11 +136,20 @@
  * | Google Workspace        | users, administrators, 2-Step Verification                                    | 2-Step Verification used and enforced, 2 to 4 super administrators |
  * | Okta                    | users, administrator roles, second factors                                    | every active user has a second factor, 2 to 4 administrators       |
  * | JumpCloud               | users, administrators, second factors, devices and their disk encryption      | second factors for users and admins, 2 to 4 admins, encrypted disks |
+ * | Microsoft Intune        | managed devices: serial, OS, primary user, encryption, last sync, compliance  | encrypted disks, checked in within 14 days, compliant               |
+ * | Jamf Pro, Kandji        | computers: serial, OS, assigned user, FileVault, last check-in                | encrypted disks, checked in within 14 days                          |
+ * | Defender for Endpoint   | machines: OS, last seen, onboarding, sensor health                            | sensors healthy, every discovered device onboarded, seen in 14 days |
+ * | CrowdStrike Falcon      | hosts: serial, OS, last seen, reduced functionality mode                      | sensors fully working, seen within 14 days                          |
+ * | SentinelOne             | agents: serial, OS, last active, disk encryption, agent state, threats        | encrypted disks, agents working, no unresolved threat, active       |
  * | GitHub                  | members, owners, members without 2FA, repositories and their branch rules     | 2FA required, protected and reviewed branches, secret scanning     |
  * | GitLab                  | the group's 2FA rule, members (owners, 2FA), projects and protected branches  | 2FA required, protected and reviewed branches, secret push protection |
  * | Bitbucket Cloud         | members, owners, repositories and their branch restrictions                   | protected branches, required approvals, 2 to 4 owners               |
  * | BambooHR, Rippling      | the roster only: name, work email, status, start and end dates, manager       | (the estate graph checks every account against it)                 |
  * | Gusto, Deel, Justworks  | the roster only: name, work email, status, start and end dates, manager       | every leaver has an end date (the estate graph checks the rest)     |
+ *
+ * A laptop the probe adopted, Intune manages, and Falcon protects is one device in the estate: the
+ * graph merges every source's devices by serial number, then hostname, and records which source
+ * each property came from (the probe first, then the MDM, then the EDR).
  *
  * ```bash
  * deno task stolos connect github

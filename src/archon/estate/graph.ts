@@ -9,8 +9,10 @@
  *   `code_repository`. An account is linked to its person (`has_account`) by
  *   work email, or by a manual link in links.ts.
  * - **Machines** are fixed assets, deduplicated by serial number, then
- *   hostname (links.ts overrides). Each property records the source it came
- *   from, and each source's record is linked by `observed_as`.
+ *   hostname (links.ts overrides); a device with no serial number (an EDR's)
+ *   joins the machine with its hostname. Each property records the source it
+ *   came from (Stolos's own, then the probe, then MDMs, then EDRs: `SOURCE_RANK`),
+ *   and each source's record is linked by `observed_as`.
  * - **History**: first-seen and last-seen times come from Git. When a source
  *   could not read something (an observation), its earlier nodes are kept,
  *   marked stale, rather than dropped.
@@ -105,15 +107,61 @@ const repoProps = (r: Repository) => ({
   ...(r.dependencyAlerts !== undefined ? { dependency_alerts: r.dependencyAlerts } : {}),
 });
 
-/** A machine's key: links.ts first, then its serial number, then its hostname. */
-export function fixedAssetKey(d: Device, links: Record<string, string>): string {
+/** A machine's short hostname: lowercase, without its domain. */
+const shortName = (name: string) => name.trim().toLowerCase().split(".")[0];
+
+/**
+ * A machine's key: links.ts first, then its serial number, then its
+ * hostname. A device with no serial number (an EDR that does not report
+ * one) joins the machine another source knows by the same hostname and a
+ * serial number, when `serialByHostname` names exactly one.
+ */
+export function fixedAssetKey(
+  d: Device,
+  links: Record<string, string>,
+  serialByHostname?: Map<string, string | null>,
+): string {
   const manual = links[`device:${d.source}:${d.id}`];
   if (manual) return manual;
   if (d.serial) return `serial:${d.serial.trim().toUpperCase()}`;
-  return `hostname:${d.name.trim().toLowerCase().split(".")[0]}`;
+  const host = shortName(d.name);
+  return serialByHostname?.get(host) ?? `hostname:${host}`;
 }
 
-const SOURCE_RANK: Record<string, number> = { stolos: 0, adopted: 1, snmp: 2 };
+/**
+ * Each hostname's serial-number key, from the devices that report both; null
+ * when two machines share a hostname (a default name like "macbook-pro"),
+ * so a device with only that hostname is not joined to either.
+ */
+export function serialKeysByHostname(devices: Device[]): Map<string, string | null> {
+  const out = new Map<string, string | null>();
+  for (const d of devices) {
+    if (!d.serial?.trim()) continue;
+    const host = shortName(d.name);
+    const key = `serial:${d.serial.trim().toUpperCase()}`;
+    out.set(host, out.has(host) && out.get(host) !== key ? null : key);
+  }
+  return out;
+}
+
+/**
+ * Whose word wins for a machine's property when sources disagree (lower
+ * first): Stolos's own managed hosts, then its probe (adopted machines), then
+ * SNMP, then MDMs and directories (they enforce encryption and know the
+ * owner), then EDRs. A source not listed comes last.
+ */
+export const SOURCE_RANK: Record<string, number> = {
+  stolos: 0,
+  adopted: 1,
+  snmp: 2,
+  intune: 3,
+  jamf: 3,
+  kandji: 3,
+  jumpcloud: 4,
+  defender: 5,
+  crowdstrike: 5,
+  sentinelone: 5,
+};
 
 /** Build the graph. */
 export function buildGraph(
@@ -359,15 +407,16 @@ export function buildGraph(
   ].sort((a, b) => (SOURCE_RANK[a.source] ?? 9) - (SOURCE_RANK[b.source] ?? 9));
   const assets = new Map<string, Record<string, unknown>>();
   const assignments: Array<Record<string, unknown>> = [];
+  const byHostname = serialKeysByHostname(devices);
   for (const d of devices) {
-    const key = fixedAssetKey(d, s.links);
+    const key = fixedAssetKey(d, s.links, byHostname);
     const a = assets.get(key) ?? { fixed_asset_uid: key, managed: false };
     const set = (prop: string, v: unknown) => {
       if (v === undefined || v === null || v === "" || a[prop] !== undefined) return;
       a[prop] = v;
       put(nodePropertyProvenance, { node_uid: key, property: prop, source: d.source });
     };
-    set("hostname", d.name.toLowerCase().split(".")[0]);
+    set("hostname", shortName(d.name));
     set("serial_number", d.serial);
     set("os_name", d.os);
     set("encrypted", d.encrypted);
