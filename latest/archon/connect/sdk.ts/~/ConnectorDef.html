@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ConnectorDef - archon/connect/sdk.ts - Stolos v0.99.0 documentation</title>
+  <title>ConnectorDef - archon/connect/sdk.ts - Stolos v0.100.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;connect&#x2F;sdk.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.99.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.100.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -887,7 +887,7 @@ Methods</h2></div><div class="space-y-8"><div class="anchorable docEntry" id="me
   </defs>
 </svg>
 </a>
-<a class="font-bold font-lg link" href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;sdk.ts&#x2F;~&#x2F;ConnectorDef.account.html">account</a><span class="font-medium text-stone-500 dark:text-stone-200">(<span><span>cred<span>: <a href="../../../.././archon/connect/sdk.ts/~/CredOf.html" class="link td-ref">CredOf</a>&lt;<a href="#type_param_f" class="link td-ref">F</a>&gt;</span></span></span>)<span>: <span class="td-kw">string</span></span></span>
+<a class="font-bold font-lg link" href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;sdk.ts&#x2F;~&#x2F;ConnectorDef.account.html">account</a><span class="font-medium text-stone-500 dark:text-stone-200">(<div class="ml-4"><div><span>cred<span>: <a href="../../../.././archon/connect/sdk.ts/~/CredOf.html" class="link td-ref">CredOf</a>&lt;<a href="#type_param_f" class="link td-ref">F</a>&gt;</span></span>,</div><div><span>records<span>: <a href="../../../.././archon/connect/sdk.ts/~/ObservedRecord.html" class="link td-ref">ObservedRecord</a>[]</span></span></div></div>)<span>: <span class="td-kw">string</span></span></span>
       </code>
     </div><a
   class="sourceButton"
@@ -914,7 +914,7 @@ Methods</h2></div><div class="space-y-8"><div class="anchorable docEntry" id="me
   />
 </svg>
 </a>
-</div><div class="max-w-[75ch]"><div class="markdown"><p>The account, for people.</p>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>The account, for people (from the credential, or from what was read).</p>
 </div></div></div>
 <div class="anchorable docEntry" id="method_posture_0">
 
@@ -941,7 +941,7 @@ Methods</h2></div><div class="space-y-8"><div class="anchorable docEntry" id="me
   </defs>
 </svg>
 </a>
-<a class="font-bold font-lg link" href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;sdk.ts&#x2F;~&#x2F;ConnectorDef.posture.html">posture</a><span class="font-medium text-stone-500 dark:text-stone-200">(<div class="ml-4"><div><span>records<span>: <a href="../../../.././archon/connect/sdk.ts/~/ObservedRecord.html" class="link td-ref">ObservedRecord</a>[]</span></span>,</div><div><span>cred<span>: <a href="../../../.././archon/connect/sdk.ts/~/CredOf.html" class="link td-ref">CredOf</a>&lt;<a href="#type_param_f" class="link td-ref">F</a>&gt;</span></span></div></div>)<span>: <a href="../../../.././archon/connect/connector.ts/~/Observation.html" class="link td-ref">Observation</a>[<span class="td-str">"posture"</span>]</span></span>
+<a class="font-bold font-lg link" href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;sdk.ts&#x2F;~&#x2F;ConnectorDef.posture.html">posture</a><span class="font-medium text-stone-500 dark:text-stone-200">(<div class="ml-4"><div><span>records<span>: <a href="../../../.././archon/connect/sdk.ts/~/ObservedRecord.html" class="link td-ref">ObservedRecord</a>[]</span></span>,</div><div><span>cred<span>: <a href="../../../.././archon/connect/sdk.ts/~/CredOf.html" class="link td-ref">CredOf</a>&lt;<a href="#type_param_f" class="link td-ref">F</a>&gt;</span></span>,</div><div><span>seen<span>: <a href="../../../.././archon/connect/sdk.ts/~/Seen.html" class="link td-ref">Seen</a></span></span></div></div>)<span>: <a href="../../../.././archon/connect/connector.ts/~/Observation.html" class="link td-ref">Observation</a>[<span class="td-str">"posture"</span>]</span></span>
       </code>
     </div><a
   class="sourceButton"
@@ -968,7 +968,7 @@ Methods</h2></div><div class="space-y-8"><div class="anchorable docEntry" id="me
   />
 </svg>
 </a>
-</div><div class="max-w-[75ch]"><div class="markdown"><p>Posture facts from the records (what the policies read).</p>
+</div><div class="max-w-[75ch]"><div class="markdown"><p>Posture facts from the records (what the policies read), knowing what could not be read and when.</p>
 </div></div></div>
 <div class="anchorable docEntry" id="method_policies_0">
 

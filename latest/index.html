@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Stolos v0.99.0</title>
+<title>Stolos v0.100.0</title>
 <link rel="stylesheet" href="./styles.css">
 <link rel="stylesheet" href="./page.css">
 <script src="./darkmode_toggle.js"></script>
@@ -17,7 +17,7 @@
 </head>
 <body>
 <main>
-<h1>Stolos v0.99.0</h1>
+<h1>Stolos v0.100.0</h1>
 <p>The fleet engine (its command is <code>archon</code>), documented from its TypeScript.</p>
 <p class="start">Start here: <a href="./mod.ts/index.html">the overview</a>, with how the
 pieces fit, in diagrams. Then the model: <a href="./archon/model/types.ts/index.html">types.ts</a>.
@@ -148,17 +148,26 @@ Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 </ul>
 <h2>archon/connect/</h2>
 <ul>
-<li><a href="./archon/connect/aws.ts/index.html"><code>aws.ts</code></a> Spec 067 (clouds): AWS, read-only, with an access key whose user (or role) has the managed SecurityAudit policy: the account, IAM users, S3 buckets, EC2 instances in every enabled region, and the…</li>
-<li><a href="./archon/connect/cloudflare.ts/index.html"><code>cloudflare.ts</code></a> Spec 067 (clouds): Cloudflare, read-only: accounts, zones and their DNS records, Workers, Pages projects, R2 buckets, and tunnels; each zone's TLS settings and DNSSEC for the posture policies.</li>
+<li><a href="./archon/connect/aws.ts/index.html"><code>aws.ts</code></a> Spec 067 (clouds), declared with spec 091's SDK: AWS, read-only, with an access key whose user (or role) has the managed SecurityAudit policy: the account, IAM users, S3 buckets, EC2 instances in…</li>
+<li><a href="./archon/connect/bitbucket.ts/index.html"><code>bitbucket.ts</code></a> Spec 091: Bitbucket Cloud, read-only, for one workspace: its members (who are owners) and its repositories (private or public, whether the main branch is protected by branch restrictions, and how…</li>
+<li><a href="./archon/connect/cloudflare.ts/index.html"><code>cloudflare.ts</code></a> Spec 067 (clouds), declared with spec 091's SDK: Cloudflare, read-only: accounts, zones and their DNS records, Workers, Pages projects, R2 buckets, and tunnels; each zone's TLS settings and DNSSEC…</li>
+<li><a href="./archon/connect/codehost.ts/index.html"><code>codehost.ts</code></a> Spec 091: what the code-host connectors declared with the SDK share: a branch-name pattern matcher, the repositories' posture (private ones protected, reviewed, scanned for secrets), and the…</li>
 <li><a href="./archon/connect/commands.ts/index.html"><code>commands.ts</code></a> Spec 067 (clouds): stolos connect | observe | check | assets | disconnect.</li>
 <li><a href="./archon/connect/connector.ts/index.html"><code>connector.ts</code></a> Spec 084: connectors.</li>
+<li><a href="./archon/connect/deel.ts/index.html"><code>deel.ts</code></a> Spec 091: Deel (global HR, EOR, and contractors), read-only, the roster only: each person's work email, name, hiring status, start date, last day, direct manager, and hiring type (employee, EOR,…</li>
 <li><a href="./archon/connect/entities.ts/index.html"><code>entities.ts</code></a> Spec 085: the normalized entities every source contributes to the estate graph: people (from HR systems), accounts (from identity providers, code hosts, clouds, SaaS), devices (managed, adopted,…</li>
-<li><a href="./archon/connect/github.ts/index.html"><code>github.ts</code></a> Spec 086: GitHub, read-only, for one organization: its members (who are owners, who have no second factor), and its repositories (private or public, whether the default branch is protected by…</li>
-<li><a href="./archon/connect/google.ts/index.html"><code>google.ts</code></a> Spec 086: Google Workspace, read-only, through the Admin SDK Directory API: its users (suspended or not, administrators, enrolled in 2-Step Verification, last sign-in).</li>
-<li><a href="./archon/connect/hetzner.ts/index.html"><code>hetzner.ts</code></a> Spec 067 (clouds): Hetzner Cloud, read-only: one project's servers, volumes, firewalls, primary IPs, and load balancers.</li>
-<li><a href="./archon/connect/hris.ts/index.html"><code>hris.ts</code></a> Spec 086: HR systems (Cloud HCM suites), read-only: the roster only, the source of truth for who should have access.</li>
-<li><a href="./archon/connect/microsoft.ts/index.html"><code>microsoft.ts</code></a> Spec 067 (clouds): Microsoft 365 (Entra ID, through Microsoft Graph) and Azure (through Resource Manager), read-only, with one app registration's client credentials: the tenant, its domains, users…</li>
-<li><a href="./archon/connect/okta.ts/index.html"><code>okta.ts</code></a> Spec 086: Okta, read-only: its users (active, suspended, deprovisioned), who holds an administrator role, and who has enrolled a second factor.</li>
+<li><a href="./archon/connect/github.ts/index.html"><code>github.ts</code></a> Spec 086, declared with spec 091's SDK: GitHub, read-only, for one organization: its members (who are owners, who have no second factor), and its repositories (private or public, whether the…</li>
+<li><a href="./archon/connect/gitlab.ts/index.html"><code>gitlab.ts</code></a> Spec 091: GitLab (GitLab.com or a self-managed GitLab), read-only, for one top-level group: whether it requires two-factor authentication, its members (who are owners, and who has 2FA, which…</li>
+<li><a href="./archon/connect/google.ts/index.html"><code>google.ts</code></a> Spec 086, declared with spec 091's SDK: Google Workspace, read-only, through the Admin SDK Directory API: its users (suspended or not, administrators, enrolled in 2-Step Verification, last sign-in).</li>
+<li><a href="./archon/connect/gusto.ts/index.html"><code>gusto.ts</code></a> Spec 091: Gusto (payroll and HR), read-only, the roster only: each employee's work email, name, whether they have left (and when), hire date, manager, and employment status.</li>
+<li><a href="./archon/connect/hetzner.ts/index.html"><code>hetzner.ts</code></a> Spec 067 (clouds), declared with spec 091's SDK: Hetzner Cloud, read-only: one project's servers, volumes, firewalls, primary IPs, and load balancers.</li>
+<li><a href="./archon/connect/hris.ts/index.html"><code>hris.ts</code></a> Spec 086, declared with spec 091's SDK: HR systems (Cloud HCM suites), read-only: the roster only, the source of truth for who should have access.</li>
+<li><a href="./archon/connect/jumpcloud.ts/index.html"><code>jumpcloud.ts</code></a> Spec 091: JumpCloud (directory, SSO, and device management), read-only: its users (active, suspended, and whether they have enrolled a second factor), its console administrators (and whether they…</li>
+<li><a href="./archon/connect/justworks.ts/index.html"><code>justworks.ts</code></a> Spec 091: Justworks (PEO, payroll, and HR), read-only, the roster only: each member's work email, name, whether they are active, start and termination dates, manager, and employment type.</li>
+<li><a href="./archon/connect/labels.ts/index.html"><code>labels.ts</code></a> Spec 091: the labels connectors fill, declared once (spec 089).</li>
+<li><a href="./archon/connect/microsoft.ts/index.html"><code>microsoft.ts</code></a> Spec 067 (clouds), declared with spec 091's SDK: Microsoft 365 (Entra ID, through Microsoft Graph) and Azure (through Resource Manager), read-only, with one app registration's client credentials:…</li>
+<li><a href="./archon/connect/okta.ts/index.html"><code>okta.ts</code></a> Spec 086, declared with spec 091's SDK: Okta, read-only: its users (active, suspended, deprovisioned), who holds an administrator role, and who has enrolled a second factor.</li>
+<li><a href="./archon/connect/roster.ts/index.html"><code>roster.ts</code></a> Spec 091: what every HR connector declared with the SDK shares.</li>
 <li><a href="./archon/connect/sdk.ts/index.html"><code>sdk.ts</code></a> Spec 089: the connector SDK.</li>
 </ul>
 <h2>archon/console/</h2>

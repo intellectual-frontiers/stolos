@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/connect/sdk.ts - Stolos v0.99.0 documentation</title>
+  <title>archon/connect/sdk.ts - Stolos v0.100.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.99.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.100.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -192,6 +192,12 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_bearer" cla
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;sdk.ts&#x2F;~&#x2F;defineConnector.html" title="defineConnector">
 			    <span>defineConnector</span><span><span>&lt;<span><span class="td-tp">F</span><span><span class="td-kw"> extends </span><span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-ref">FieldDef</span>&gt;</span></span>&gt;</span>(<span><span>def<span>: <span class="td-ref">ConnectorDef</span>&lt;<span class="td-ref">F</span>&gt;</span></span></span>)<span>: <span><span class="td-ref">Connector</span><span class="td-op"> & </span>{ def<span>: <span class="td-ref">ConnectorDef</span>&lt;<span class="td-ref">F</span>&gt;</span>;  }</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Make a connector from its declaration.</p>
 </div></div></div>
+    </div><div id="namespace_mustread" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;sdk.ts&#x2F;~&#x2F;mustRead.html" title="mustRead">
+			    <span>mustRead</span><span><span>&lt;<span><span class="td-tp">T</span></span>&gt;</span>(<span><span>f<span>: () =&gt; <span class="td-ref">Promise</span>&lt;<span class="td-ref">T</span>&gt;</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">T</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A read the observation cannot do without: a denial fails the observation
+(an Error with the same message) instead of becoming the resource's gap.</p>
+</div></div></div>
     </div><div id="namespace_readonly" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;sdk.ts&#x2F;~&#x2F;readOnly.html" title="readOnly">
@@ -201,6 +207,14 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_bearer" cla
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;sdk.ts&#x2F;~&#x2F;recordedHttp.html" title="recordedHttp">
 			    <span>recordedHttp</span><span>(<div class="ml-4"><div><span>fixtures<span>: <span class="td-ref">Record</span>&lt;<div class="ml-indent"><div><span class="td-kw">string</span>,</div><div>{ status<span class="td-op">?</span><span>: <span class="td-kw">number</span></span>; body<span>: <span class="td-kw">unknown</span></span>; link<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</div></div>&gt;</span></span>,</div><div><span>calls<span class="td-op">?</span><span>: <span class="td-ref">Array</span>&lt;{ method<span>: <span class="td-kw">string</span></span>; url<span>: <span class="td-kw">string</span></span>;  }&gt;</span></span></div></div>)<span>: <span class="td-ref">Http</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Recorded responses, for tests: each URL to its status, body, and Link header; anything else is refused.</p>
+</div></div></div>
+    </div><div id="namespace_toentities" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;sdk.ts&#x2F;~&#x2F;toEntities.html" title="toEntities">
+			    <span>toEntities</span><span>(<div class="ml-4"><div><span>system<span>: <span class="td-kw">string</span></span></span>,</div><div><span>records<span>: <span class="td-ref">ObservedRecord</span>[]</span></span></div></div>)<span>: { entities<span>: <span class="td-ref">Entities</span></span>; rest<span>: <span class="td-ref">ObservedRecord</span>[]</span>;  }</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The estate's entities from a connector's records: <code>user_account</code> records
+are accounts, <code>code_repository</code> records repositories, <code>person</code> records
+(an HR roster) people, and <code>hardware_device</code> records devices. Other labels
+stay records (nodes of the estate graph as they are).</p>
 </div></div></div>
     </div><div id="namespace_withbackoff" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -238,7 +252,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_connectord
 			    <span>ConnectorDef</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A connector, as declared.</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;sdk.ts&#x2F;~&#x2F;ConnectorDef.html#method_account_0">
-                  <span>account</span><span>(<span><span>cred<span>: <span class="td-ref">CredOf</span>&lt;<span class="td-ref">F</span>&gt;</span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The account, for people.</p>
+                  <span>account</span><span>(<div class="ml-4"><div><span>cred<span>: <span class="td-ref">CredOf</span>&lt;<span class="td-ref">F</span>&gt;</span></span>,</div><div><span>records<span>: <span class="td-ref">ObservedRecord</span>[]</span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The account, for people (from the credential, or from what was read).</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;sdk.ts&#x2F;~&#x2F;ConnectorDef.html#method_auth_0">
                   <span>auth</span><span>(<div class="ml-4"><div><span>cred<span>: <span class="td-ref">CredOf</span>&lt;<span class="td-ref">F</span>&gt;</span></span>,</div><div><span>http<span>: <span class="td-ref">Http</span></span></span>,</div><div><span>now<span>: <span class="td-ref">Date</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The headers to send, given the credential (may call a token endpoint).</p>
@@ -262,7 +276,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_connectord
                   <span>policies</span><span>(<div class="ml-4"><div><span>o<span>: <span class="td-ref">Observation</span></span></span>,</div><div><span>now<span>: <span class="td-kw">number</span></span></span></div></div>)<span>: <span class="td-ref">PolicyResult</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its posture policies.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;sdk.ts&#x2F;~&#x2F;ConnectorDef.html#method_posture_0">
-                  <span>posture</span><span>(<div class="ml-4"><div><span>records<span>: <span class="td-ref">ObservedRecord</span>[]</span></span>,</div><div><span>cred<span>: <span class="td-ref">CredOf</span>&lt;<span class="td-ref">F</span>&gt;</span></span></div></div>)<span>: <span class="td-ref">Observation</span>[<span class="td-str">"posture"</span>]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Posture facts from the records (what the policies read).</p>
+                  <span>posture</span><span>(<div class="ml-4"><div><span>records<span>: <span class="td-ref">ObservedRecord</span>[]</span></span>,</div><div><span>cred<span>: <span class="td-ref">CredOf</span>&lt;<span class="td-ref">F</span>&gt;</span></span>,</div><div><span>seen<span>: <span class="td-ref">Seen</span></span></span></div></div>)<span>: <span class="td-ref">Observation</span>[<span class="td-str">"posture"</span>]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Posture facts from the records (what the policies read), knowing what could not be read and when.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;sdk.ts&#x2F;~&#x2F;ConnectorDef.html#property_recipe">
                   <span>recipe</span><span>: <span class="td-ref">Connector</span>[<span class="td-str">"recipe"</span>]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The quickest way to one.</p>
@@ -290,6 +304,9 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_connectord
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;sdk.ts&#x2F;~&#x2F;Ctx.html#method_cursorpages_0">
                   <span>cursorPages</span><span><span>&lt;<span><span class="td-tp">B</span></span><span>, </span><span><span class="td-tp">T</span></span>&gt;</span>(<div class="ml-4"><div><span>first<span>: <span class="td-kw">string</span></span></span>,</div><div><span>items<span>: (<span><span>body<span>: <span class="td-ref">B</span></span></span></span>) =&gt; <span><span class="td-ref">T</span>[]<span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span>,</div><div><span>next<span>: (<div class="ml-4"><div><span>body<span>: <span class="td-ref">B</span></span></span>,</div><div><span>url<span>: <span class="td-kw">string</span></span></span></div></div>) =&gt; <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span>,</div><div><span>headers<span class="td-op">?</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></span></div></div>)<span>: <span class="td-ref">AsyncGenerator</span>&lt;<span class="td-ref">T</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Every item of a list whose body says where the next page is.</p>
 </div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;sdk.ts&#x2F;~&#x2F;Ctx.html#method_fact_0">
+                  <span>fact</span><span>(<div class="ml-4"><div><span>name<span>: <span class="td-kw">string</span></span></span>,</div><div><span>value<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">number</span><span class="td-op"> | </span><span class="td-kw">boolean</span></span></span></span></div></div>)<span>: <span class="td-kw">void</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Record a posture fact read beside the records (an organization's setting, say): <code>posture</code> may override it.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;sdk.ts&#x2F;~&#x2F;Ctx.html#property_headers">
                   <span>headers</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Headers to send (from <code>auth</code>).</p>
 </div></div></li><li>
@@ -304,6 +321,9 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_connectord
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;sdk.ts&#x2F;~&#x2F;Ctx.html#property_now">
                   <span>now</span><span>: <span class="td-ref">Date</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Now.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;sdk.ts&#x2F;~&#x2F;Ctx.html#method_orgap_0">
+                  <span>orGap</span><span><span>&lt;<span><span class="td-tp">T</span></span>&gt;</span>(<div class="ml-4"><div><span>what<span>: <span class="td-kw">string</span></span></span>,</div><div><span>fallback<span>: <span class="td-ref">T</span></span></span>,</div><div><span>f<span>: () =&gt; <span class="td-ref">Promise</span>&lt;<span class="td-ref">T</span>&gt;</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">T</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Run <code>f</code>; a denied call becomes a gap named <code>what</code>, and <code>fallback</code> (a part read, the rest kept).</p>
 </div></div></li></ul></div>
     </div><div id="namespace_fielddef" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
@@ -364,6 +384,9 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_connectord
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;sdk.ts&#x2F;~&#x2F;ResourceDef.html" title="ResourceDef">
 			    <span>ResourceDef</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One resource a connector reads.</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;sdk.ts&#x2F;~&#x2F;ResourceDef.html#property_asset">
+                  <span>asset</span><span>: (<div class="ml-4"><div><span>raw<span>: <span class="td-ref">Raw</span></span></span>,</div><div><span>m<span>: <span class="td-ref">Mapped</span>&lt;<span class="td-ref">P</span>&gt;</span></span></div></div>) =&gt; <div class="ml-indent"><span>{ kind<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; facts<span class="td-op">?</span><span>: <span class="td-ref">Asset</span>[<span class="td-str">"facts"</span>]</span>; fleetMachine<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span><br /><span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></div></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How it is listed in <code>estate assets</code>: its kind (default: the label) and a few facts.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;sdk.ts&#x2F;~&#x2F;ResourceDef.html#property_keepunmapped">
                   <span>keepUnmapped</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Keep the vendor's record beside the mapped one (default: no; least data).</p>
 </div></div></li><li>
@@ -378,6 +401,20 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_connectord
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;sdk.ts&#x2F;~&#x2F;ResourceDef.html#property_ocsf">
                   <span>ocsf</span><span>: <span class="td-kw">keyof</span> <span class="td-ref">OCSF_CLASSES</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The OCSF class its records are emitted as.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;sdk.ts&#x2F;~&#x2F;ResourceDef.html#property_required">
+                  <span>required</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A denied read fails the observation instead of becoming a gap (the connector cannot work without it).</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_seen" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;sdk.ts&#x2F;~&#x2F;Seen.html" title="Seen">
+			    <span>Seen</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What posture is told besides the records: what could not be read, and when it was read.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;sdk.ts&#x2F;~&#x2F;Seen.html#property_gaps">
+                  <span>gaps</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The observation's gaps, each <code>&lt;what&gt;: &lt;why&gt;</code>.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;sdk.ts&#x2F;~&#x2F;Seen.html#property_now">
+                  <span>now</span><span>: <span class="td-ref">Date</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When it was read.</p>
 </div></div></li></ul></div>
     </div></div>
 </section>
@@ -482,7 +519,7 @@ Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_credof" 
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1847 symbols</span><svg
+              <span class="leading-none">view all 1896 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -497,7 +534,7 @@ Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_credof" 
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/connect/sdk_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_bearer" title="bearer">bearer</a></li><li><a href="#namespace_clientcredentials" title="clientCredentials">clientCredentials</a></li><li><a href="#namespace_defineconnector" title="defineConnector">defineConnector</a></li><li><a href="#namespace_readonly" title="readOnly">readOnly</a></li><li><a href="#namespace_recordedhttp" title="recordedHttp">recordedHttp</a></li><li><a href="#namespace_withbackoff" title="withBackoff">withBackoff</a></li></ul></li><li><a href="#archon/connect/sdk_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_connectordef" title="ConnectorDef">ConnectorDef</a></li><li><a href="#namespace_ctx" title="Ctx">Ctx</a></li><li><a href="#namespace_fielddef" title="FieldDef">FieldDef</a></li><li><a href="#namespace_mapped" title="Mapped">Mapped</a></li><li><a href="#namespace_observedrecord" title="ObservedRecord">ObservedRecord</a></li><li><a href="#namespace_resourcedef" title="ResourceDef">ResourceDef</a></li></ul></li><li><a href="#archon/connect/sdk_ts_type-aliases" title="Type Aliases">Type Aliases</a></li><li><ul><li><a href="#namespace_credof" title="CredOf">CredOf</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/connect/sdk_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_bearer" title="bearer">bearer</a></li><li><a href="#namespace_clientcredentials" title="clientCredentials">clientCredentials</a></li><li><a href="#namespace_defineconnector" title="defineConnector">defineConnector</a></li><li><a href="#namespace_mustread" title="mustRead">mustRead</a></li><li><a href="#namespace_readonly" title="readOnly">readOnly</a></li><li><a href="#namespace_recordedhttp" title="recordedHttp">recordedHttp</a></li><li><a href="#namespace_toentities" title="toEntities">toEntities</a></li><li><a href="#namespace_withbackoff" title="withBackoff">withBackoff</a></li></ul></li><li><a href="#archon/connect/sdk_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_connectordef" title="ConnectorDef">ConnectorDef</a></li><li><a href="#namespace_ctx" title="Ctx">Ctx</a></li><li><a href="#namespace_fielddef" title="FieldDef">FieldDef</a></li><li><a href="#namespace_mapped" title="Mapped">Mapped</a></li><li><a href="#namespace_observedrecord" title="ObservedRecord">ObservedRecord</a></li><li><a href="#namespace_resourcedef" title="ResourceDef">ResourceDef</a></li><li><a href="#namespace_seen" title="Seen">Seen</a></li></ul></li><li><a href="#archon/connect/sdk_ts_type-aliases" title="Type Aliases">Type Aliases</a></li><li><ul><li><a href="#namespace_credof" title="CredOf">CredOf</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/adopt/mod.ts - Stolos v0.99.0 documentation</title>
+  <title>archon/adopt/mod.ts - Stolos v0.100.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.99.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.100.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -687,14 +687,34 @@ deletes anything there (managing a cloud stays in that cloud's own console).</p>
 <td>every active user has a second factor, 2 to 4 administrators</td>
 </tr>
 <tr>
+<td>JumpCloud</td>
+<td>users, administrators, second factors, devices and their disk encryption</td>
+<td>second factors for users and admins, 2 to 4 admins, encrypted disks</td>
+</tr>
+<tr>
 <td>GitHub</td>
 <td>members, owners, members without 2FA, repositories and their branch rules</td>
 <td>2FA required, protected and reviewed branches, secret scanning</td>
 </tr>
 <tr>
+<td>GitLab</td>
+<td>the group's 2FA rule, members (owners, 2FA), projects and protected branches</td>
+<td>2FA required, protected and reviewed branches, secret push protection</td>
+</tr>
+<tr>
+<td>Bitbucket Cloud</td>
+<td>members, owners, repositories and their branch restrictions</td>
+<td>protected branches, required approvals, 2 to 4 owners</td>
+</tr>
+<tr>
 <td>BambooHR, Rippling</td>
 <td>the roster only: name, work email, status, start and end dates, manager</td>
 <td>(the estate graph checks every account against it)</td>
+</tr>
+<tr>
+<td>Gusto, Deel, Justworks</td>
+<td>the roster only: name, work email, status, start and end dates, manager</td>
+<td>every leaver has an end date (the estate graph checks the rest)</td>
 </tr>
 </tbody>
 </table>
@@ -893,7 +913,7 @@ A machine two sources see under different names is joined there too:
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1847 symbols</span><svg
+              <span class="leading-none">view all 1896 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
