@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/console/stolos-launch.ts - Stolos v0.115.0 documentation</title>
+  <title>archon/console/stolos-launch.ts - Stolos v0.116.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.115.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.116.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -136,10 +136,26 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_estatefor" 
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;stolos-launch.ts&#x2F;~&#x2F;githubCheck.html" title="githubCheck">
 			    <span>githubCheck</span><span>(<span><span>slug<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;{ login<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; push<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>; why<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Your GitHub login, and whether it may push to the fleet repository; or why it cannot tell.</p>
 </div></div></div>
+    </div><div id="namespace_openbrowser" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;stolos-launch.ts&#x2F;~&#x2F;openBrowser.html" title="openBrowser">
+			    <span>openBrowser</span><span>(<span><span>url<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">void</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Open a URL in this PC's browser (best effort: the link is printed anyway).</p>
+</div></div></div>
+    </div><div id="namespace_pcguidedoc" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;stolos-launch.ts&#x2F;~&#x2F;pcGuideDoc.html" title="pcGuideDoc">
+			    <span>pcGuideDoc</span><span>(<span><span>n<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A guide's page for the console (one of PC_GUIDES), as HTML.</p>
+</div></div></div>
+    </div><div id="namespace_pcintegrate" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;stolos-launch.ts&#x2F;~&#x2F;pcIntegrate.html" title="pcIntegrate">
+			    <span>pcIntegrate</span><span>(<div class="ml-4"><div><span>name<span>: <span class="td-kw">string</span></span></span>,</div><div><span>as<span>: <span class="td-kw">string</span>[]</span></span>,</div><div><span>repo<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;{ posix<span>: <span class="td-kw">string</span></span>; windows<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The lines to run on a machine for an integration (spec 069), for the active fleet.</p>
+</div></div></div>
     </div><div id="namespace_pcrunner" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;stolos-launch.ts&#x2F;~&#x2F;pcRunner.html" title="pcRunner">
-			    <span>pcRunner</span><span>(<span><span>repo<span class="td-op">?</span></span></span>)<span>: <span class="td-ref">PcRunner</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Runs <code>deno task stolos &lt;argv&gt;</code> in the fleet repository; this terminal is its input.</p>
+			    <span>pcRunner</span><span>(<div class="ml-4"><div><span>repo<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span>,</div><div><span>env<span class="td-op">?</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></span></div></div>)<span>: <span class="td-ref">PcRunner</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Runs <code>deno task stolos &lt;argv&gt;</code> in the fleet repository; this terminal is its
+input. <code>env</code> adds to its environment (spec 082: a client's scope).</p>
 </div></div></div>
     </div><div id="namespace_stolosconsole" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -249,7 +265,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_estate_ttl_
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 2723 symbols</span><svg
+              <span class="leading-none">view all 2772 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -264,7 +280,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_estate_ttl_
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/console/stolos-launch_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_estatefor" title="estateFor">estateFor</a></li><li><a href="#namespace_githubcheck" title="githubCheck">githubCheck</a></li><li><a href="#namespace_pcrunner" title="pcRunner">pcRunner</a></li><li><a href="#namespace_stolosconsole" title="stolosConsole">stolosConsole</a></li></ul></li><li><a href="#archon/console/stolos-launch_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_estate_ttl_ms" title="ESTATE_TTL_MS">ESTATE_TTL_MS</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/console/stolos-launch_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_estatefor" title="estateFor">estateFor</a></li><li><a href="#namespace_githubcheck" title="githubCheck">githubCheck</a></li><li><a href="#namespace_openbrowser" title="openBrowser">openBrowser</a></li><li><a href="#namespace_pcguidedoc" title="pcGuideDoc">pcGuideDoc</a></li><li><a href="#namespace_pcintegrate" title="pcIntegrate">pcIntegrate</a></li><li><a href="#namespace_pcrunner" title="pcRunner">pcRunner</a></li><li><a href="#namespace_stolosconsole" title="stolosConsole">stolosConsole</a></li></ul></li><li><a href="#archon/console/stolos-launch_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_estate_ttl_ms" title="ESTATE_TTL_MS">ESTATE_TTL_MS</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>

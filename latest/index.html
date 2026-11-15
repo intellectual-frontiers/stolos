@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Stolos v0.115.0</title>
+<title>Stolos v0.116.0</title>
 <link rel="stylesheet" href="./styles.css">
 <link rel="stylesheet" href="./page.css">
 <script src="./darkmode_toggle.js"></script>
@@ -17,7 +17,7 @@
 </head>
 <body>
 <main>
-<h1>Stolos v0.115.0</h1>
+<h1>Stolos v0.116.0</h1>
 <p>The fleet engine (its command is <code>archon</code>), documented from its TypeScript.</p>
 <p class="start">Start here: <a href="./mod.ts/index.html">the overview</a>, with how the
 pieces fit, in diagrams. Then the model: <a href="./archon/model/types.ts/index.html">types.ts</a>.
@@ -41,6 +41,7 @@ Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 <li><a href="./archon/evidence/mod.ts/index.html">Evidence bundles</a> A period's evidence, signed, for an auditor to check offline.</li>
 <li><a href="./archon/trust/mod.ts/index.html">Trust Center</a> A status page for customers, built from a verified evidence bundle.</li>
 <li><a href="./archon/audit/mod.ts/index.html">The auditor portal</a> Engagements, populations, reproducible samples, verifiable evidence, an audit trail.</li>
+<li><a href="./archon/clients/mod.ts/index.html">Clients: one PC, many client fleets</a> For providers: setting up clients, what stays apart, what the summary shows.</li>
 <li><a href="./archon/web/mod.ts/index.html">HTTPS on every server</a> Publishing services, certificates, the Archon Console.</li>
 <li><a href="./archon/telemetry/mod.ts/index.html">Telemetry</a> Where logs, metrics, and traces go.</li>
 <li><a href="./archon/mcp/mod.ts/index.html">The agent layer</a> AI agents and other MCP clients, limited by each server.</li>
@@ -156,6 +157,17 @@ Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 <li><a href="./archon/capabilities/updates.ts/index.html"><code>updates.ts</code></a> 009-updates: Ubuntu's unattended-upgrades, as Ubuntu configures it, plus one override (spec 009): the -updates pocket too, so Ubuntu's stable bug-fix updates install daily alongside security updates.</li>
 <li><a href="./archon/capabilities/web.ts/index.html"><code>web.ts</code></a> 032-web: every server is HTTPS-ready from its first boot.</li>
 <li><a href="./archon/capabilities/workstation.ts/index.html"><code>workstation.ts</code></a> 020-workstation: Ubuntu on WSL (or a desktop) as an Archon workstation.</li>
+</ul>
+<h2>archon/clients/</h2>
+<ul>
+<li><a href="./archon/clients/commands.ts/index.html"><code>commands.ts</code></a> Spec 082: the stolos clients commands (add, list, remove, use, summary, report, console) and --client &lt;id&gt;, which runs any command in one client's scope.</li>
+<li><a href="./archon/clients/console.ts/index.html"><code>console.ts</code></a> Spec 082: the provider's console (stolos clients console): one Stolos Console for every client, on this PC only (127.0.0.1, a one-time launch link, as spec 066).</li>
+<li><a href="./archon/clients/launch.ts/index.html"><code>launch.ts</code></a> Spec 082: each client's console inside the provider's console, built once per client, in that client's scope: its facts, estate, compliance, REST API, activity record, and caches come from its own…</li>
+<li><a href="./archon/clients/mod.ts/index.html"><code>mod.ts</code></a> Managed service providers and virtual CISOs look after many small companies' security.</li>
+<li><a href="./archon/clients/registry.ts/index.html"><code>registry.ts</code></a> Spec 082: the provider's registry of client checkouts.</li>
+<li><a href="./archon/clients/report.ts/index.html"><code>report.ts</code></a> Spec 082: stolos clients report --out &lt;folder&gt;: one report per client, each in its own folder (&lt;folder&gt;/&lt;client&gt;/), each read in that client's scope, plus the cross-client summary at the top…</li>
+<li><a href="./archon/clients/scope.ts/index.html"><code>scope.ts</code></a> Spec 082: running in one client's scope.</li>
+<li><a href="./archon/clients/summary.ts/index.html"><code>summary.ts</code></a> Spec 082: the cross-client summary.</li>
 </ul>
 <h2>archon/commands/</h2>
 <ul>

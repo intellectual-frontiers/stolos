@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/core/paths.ts - Stolos v0.115.0 documentation</title>
+  <title>archon/core/paths.ts - Stolos v0.116.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.115.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.116.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -111,6 +111,12 @@ checkout) its <code>examples/</code>. The fleet is ARCHON_FLEET (or --fleet), el
 /etc/archon/fleet (written at install), else this checkout's choice
 (<code>stolos fleet use &lt;id&gt;</code>, in .git/stolos/fleet, never committed), else the
 instance's only fleet.</p>
+<p>A provider's PC (spec 082) works for many clients, each in its own
+checkout: <code>--client &lt;id&gt;</code> (ARCHON_CLIENT) points ARCHON_REPO and
+ARCHON_FLEET at that client's checkout and fleet, and this PC's per-user
+folders (state, secrets, the key store) move under <code>stolos/clients/&lt;id&gt;/</code>,
+so no two clients ever share one. The catalogs (public reference data) and
+the boot cache stay shared.</p>
 <pre class="highlight"><code class="language-mermaid">flowchart TD
   repo{&quot;ARCHON_REPO?&quot;} --&gt;|set| inst[&quot;that folder&quot;]
   repo --&gt;|unset| up{&quot;a folder above with fleets/?&quot;}
@@ -187,7 +193,13 @@ instance's only fleet.</p>
   </defs>
 </svg>
 </a>
-Functions</h2></div><div class="namespaceSection"><div id="namespace_findfleetid" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+Functions</h2></div><div class="namespaceSection"><div id="namespace_clientid" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;paths.ts&#x2F;~&#x2F;clientId.html" title="clientId">
+			    <span>clientId</span><span>()<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The provider's client this run is for (ARCHON_CLIENT, which <code>--client</code>
+sets), or &quot;&quot; for none. Anything but a client id is refused: it names folders.</p>
+</div></div></div>
+    </div><div id="namespace_findfleetid" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;paths.ts&#x2F;~&#x2F;findFleetId.html" title="findFleetId">
 			    <span>findFleetId</span><span>(<span><span>repo<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The active fleet's id, or &quot;&quot; when it cannot be decided (see the header).</p>
@@ -242,7 +254,12 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_findfleetid
   </defs>
 </svg>
 </a>
-Variables</h2></div><div class="namespaceSection"><div id="namespace_engine_root" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+Variables</h2></div><div class="namespaceSection"><div id="namespace_client_id" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;paths.ts&#x2F;~&#x2F;CLIENT_ID.html" title="CLIENT_ID">
+			    <span>CLIENT_ID</span><span>: <span class="td-ref">RegExp</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A client's id (spec 082): lowercase letters, digits, and hyphens, as a folder name.</p>
+</div></div></div>
+    </div><div id="namespace_engine_root" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;paths.ts&#x2F;~&#x2F;ENGINE_ROOT.html" title="ENGINE_ROOT">
 			    <span>ENGINE_ROOT</span><span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's root folder, when it is a local checkout.</p>
@@ -255,7 +272,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_engine_root
     </div><div id="namespace_p" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;paths.ts&#x2F;~&#x2F;P.html" title="P">
-			    <span>P</span><span>: { bootCache; varLib<span>: <span class="td-kw">string</span></span>; keys<span>: <span class="td-kw">string</span></span>; installedRepo<span>: <span class="td-kw">string</span></span>; toolsRoot<span>: <span class="td-kw">string</span></span>; bin<span>: <span class="td-kw">string</span></span>; <span class="td-kw">get </span>repo()<span>: <span class="td-kw">string</span></span>; <span class="td-kw">get </span>fleetId()<span>: <span class="td-kw">string</span></span>; <span class="td-kw">get </span>fleetDir()<span>: <span class="td-kw">string</span></span>; <span class="td-kw">get </span>fleet()<span>: <span class="td-kw">string</span></span>; <span class="td-kw">get </span>hosts()<span>: <span class="td-kw">string</span></span>; <span class="td-kw">get </span>state()<span>: <span class="td-kw">string</span></span>; <span class="td-kw">get </span>userState()<span>: <span class="td-kw">string</span></span>; <span class="td-kw">get </span>catalogs()<span>: <span class="td-kw">string</span></span>; <span class="td-kw">get </span>out()<span>: <span class="td-kw">string</span></span>; <span class="td-kw">get </span>man()<span>: <span class="td-kw">string</span></span>; <span class="td-kw">get </span>mcpJson()<span>: <span class="td-kw">string</span></span>; <span class="td-kw">get </span>secrets()<span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where Archon's files live: the repository, the fleet, and this machine's caches and secrets.</p>
+			    <span>P</span><span>: { provider; bootCache; varLib<span>: <span class="td-kw">string</span></span>; keys<span>: <span class="td-kw">string</span></span>; installedRepo<span>: <span class="td-kw">string</span></span>; toolsRoot<span>: <span class="td-kw">string</span></span>; bin<span>: <span class="td-kw">string</span></span>; <span class="td-kw">get </span>repo()<span>: <span class="td-kw">string</span></span>; <span class="td-kw">get </span>fleetId()<span>: <span class="td-kw">string</span></span>; <span class="td-kw">get </span>clientId()<span>: <span class="td-kw">string</span></span>; <span class="td-kw">get </span>fleetDir()<span>: <span class="td-kw">string</span></span>; <span class="td-kw">get </span>fleet()<span>: <span class="td-kw">string</span></span>; <span class="td-kw">get </span>hosts()<span>: <span class="td-kw">string</span></span>; <span class="td-kw">get </span>state()<span>: <span class="td-kw">string</span></span>; <span class="td-kw">get </span>userState()<span>: <span class="td-kw">string</span></span>; <span class="td-kw">get </span>catalogs()<span>: <span class="td-kw">string</span></span>; <span class="td-kw">get </span>out()<span>: <span class="td-kw">string</span></span>; <span class="td-kw">get </span>man()<span>: <span class="td-kw">string</span></span>; <span class="td-kw">get </span>mcpJson()<span>: <span class="td-kw">string</span></span>; <span class="td-kw">get </span>secrets()<span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where Archon's files live: the repository, the fleet, and this machine's caches and secrets.</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;paths.ts&#x2F;~&#x2F;P.html#property_bin">
                   <span>bin</span><span>: <span class="td-kw">string</span></span></a></li><li>
@@ -265,6 +282,9 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_engine_root
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;paths.ts&#x2F;~&#x2F;P.html#accessor_catalogs">
                   <span>catalogs</span><span>()<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Downloaded reference catalogs (spec 071: SCF, NIST), for every fleet on
 this machine; a server keeps them in /var/lib/archon/catalogs.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;paths.ts&#x2F;~&#x2F;P.html#accessor_clientid">
+                  <span>clientId</span><span>()<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The provider's client this run is for (spec 082), or &quot;&quot; for none.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;paths.ts&#x2F;~&#x2F;P.html#accessor_fleet">
                   <span>fleet</span><span>()<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>fleets/&lt;id&gt;/fleet.ts, the fleet's model.</p>
@@ -293,6 +313,10 @@ which only archon-ops may enter.</p>
                   <span>mcpJson</span><span>()<span>: <span class="td-kw">string</span></span></span></a></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;paths.ts&#x2F;~&#x2F;P.html#accessor_out">
                   <span>out</span><span>()<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Rendered by stolos build; never committed.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;paths.ts&#x2F;~&#x2F;P.html#property_provider">
+                  <span>provider</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The provider's own folder on this PC (spec 082): the registry of client
+checkouts (clients.json) and the chosen client. Never in any repository.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;paths.ts&#x2F;~&#x2F;P.html#accessor_repo">
                   <span>repo</span><span>()<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The instance repository (the checkout hosts converge to).</p>
@@ -387,7 +411,7 @@ operator on a workstation cannot write /var/lib/archon.</p>
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 2723 symbols</span><svg
+              <span class="leading-none">view all 2772 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -402,7 +426,7 @@ operator on a workstation cannot write /var/lib/archon.</p>
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/core/paths_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_findfleetid" title="findFleetId">findFleetId</a></li><li><a href="#namespace_findinstanceroot" title="findInstanceRoot">findInstanceRoot</a></li><li><a href="#namespace_fleetchoicefile" title="fleetChoiceFile">fleetChoiceFile</a></li><li><a href="#namespace_listfleets" title="listFleets">listFleets</a></li><li><a href="#namespace_reporel" title="repoRel">repoRel</a></li><li><a href="#namespace_resetroots" title="resetRoots">resetRoots</a></li></ul></li><li><a href="#archon/core/paths_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_engine_root" title="ENGINE_ROOT">ENGINE_ROOT</a></li><li><a href="#namespace_engine_url" title="ENGINE_URL">ENGINE_URL</a></li><li><a href="#namespace_p" title="P">P</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/core/paths_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_clientid" title="clientId">clientId</a></li><li><a href="#namespace_findfleetid" title="findFleetId">findFleetId</a></li><li><a href="#namespace_findinstanceroot" title="findInstanceRoot">findInstanceRoot</a></li><li><a href="#namespace_fleetchoicefile" title="fleetChoiceFile">fleetChoiceFile</a></li><li><a href="#namespace_listfleets" title="listFleets">listFleets</a></li><li><a href="#namespace_reporel" title="repoRel">repoRel</a></li><li><a href="#namespace_resetroots" title="resetRoots">resetRoots</a></li></ul></li><li><a href="#archon/core/paths_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_client_id" title="CLIENT_ID">CLIENT_ID</a></li><li><a href="#namespace_engine_root" title="ENGINE_ROOT">ENGINE_ROOT</a></li><li><a href="#namespace_engine_url" title="ENGINE_URL">ENGINE_URL</a></li><li><a href="#namespace_p" title="P">P</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>
