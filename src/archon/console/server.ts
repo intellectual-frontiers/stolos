@@ -17,6 +17,7 @@ import type { Command } from "../core/registry-types.ts";
 import type { WelcomeData } from "../web/welcome.ts";
 import {
   CONSOLE_CSS,
+  CSS_URL,
   DATASTAR,
   datastarSource,
   FAVICON,
@@ -43,15 +44,20 @@ import {
   actionsPage,
   type ActivityEntry,
   activityPage,
+  appsPage,
   ARCHON_NAV,
+  dataPage,
   groupOf,
   guidePage,
   howPage,
+  logsPage,
   overviewPage,
   type RepoFacts,
+  servicesPage,
   signinPage,
 } from "./pages.ts";
 import type { Authenticator } from "./pam.ts";
+import type { ServicesFacts } from "./machine.ts";
 
 /** What the console needs from the machine: real on a server, fakes in tests. */
 export interface ConsoleDeps {
@@ -77,6 +83,14 @@ export interface ConsoleDeps {
   guideDoc(name: string): Promise<string | undefined>;
   /** Where large vendored files are cached (Mermaid). */
   cacheDir: string;
+  /** The optional services and units, live. */
+  services(): Promise<ServicesFacts>;
+  /** The journal, live, for a unit or everything, until the signal aborts. */
+  journal(
+    unit: string | undefined,
+    each: (line: string) => void,
+    signal: AbortSignal,
+  ): Promise<void>;
 }
 
 const htmlResponse = (body: string, status = 200, headers: Record<string, string> = {}) =>
@@ -188,9 +202,12 @@ export function consoleHandler(
     try {
       // ------------------------------------------------ open to anyone
       if (path === "/healthz") return new Response("ok\n");
-      if (path === "/static/console.css") {
+      if (path === CSS_URL || path === "/static/console.css") {
         return new Response(CONSOLE_CSS, {
-          headers: { "content-type": "text/css; charset=utf-8", "cache-control": "max-age=3600" },
+          headers: {
+            "content-type": "text/css; charset=utf-8",
+            "cache-control": path === CSS_URL ? "max-age=31536000, immutable" : "no-cache",
+          },
         });
       }
       if (path === "/static/favicon.svg") {
@@ -328,6 +345,25 @@ export function consoleHandler(
             actionsPage(group, offered, c, s, await deps.data()),
           );
         }
+        if (path === "/services") {
+          return frame(
+            s,
+            "Services",
+            "/services",
+            servicesPage(await deps.services(), s, deps.host),
+          );
+        }
+        if (path === "/apps") return frame(s, "Apps", "/apps", appsPage(await deps.data()));
+        if (path === "/data") {
+          return frame(s, "Data", "/data", dataPage(await deps.data(), await deps.services()));
+        }
+        if (path === "/logs" || path === "/logs/stream") {
+          const units = (await deps.services()).units.map((u) => u.unit);
+          const want = url.searchParams.get("unit") || undefined;
+          const unit = want && units.includes(want) ? want : undefined; // only the plan's units
+          if (path === "/logs") return frame(s, "Logs", "/logs", logsPage(units, unit, deps.host));
+          return journalStream(deps, unit, req.signal);
+        }
         if (path === "/activity") {
           return frame(
             s,
@@ -450,6 +486,39 @@ async function runCommand(
       state(code === 0 ? "Done" : `Failed (exit ${code})`);
       await deps.activity.add({ at: now(), user: s.user, from, kind: "run", detail: shown, code });
       ctl.close();
+    },
+  });
+  return new Response(stream, {
+    headers: {
+      "content-type": "text/event-stream",
+      "cache-control": "no-store",
+      "x-accel-buffering": "no",
+    },
+  });
+}
+
+/** The journal as server-sent events: the page's terminal gets each line as it comes. */
+function journalStream(deps: ConsoleDeps, unit: string | undefined, signal: AbortSignal): Response {
+  const enc = new TextEncoder();
+  const stream = new ReadableStream<Uint8Array>({
+    start(ctl) {
+      ctl.enqueue(enc.encode(patch(html`<div class="term" id="logs" aria-live="off"></div>`)));
+      deps.journal(unit, (l) => {
+        try {
+          ctl.enqueue(
+            enc.encode(
+              patch(html`<div class="${lineClass(l)}">${l}</div>`, {
+                selector: "#logs",
+                mode: "append",
+              }),
+            ),
+          );
+        } catch { /* the page went away */ }
+      }, signal).finally(() => {
+        try {
+          ctl.close();
+        } catch { /* already closed */ }
+      });
     },
   });
   return new Response(stream, {

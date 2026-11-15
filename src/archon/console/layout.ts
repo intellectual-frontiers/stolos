@@ -8,7 +8,7 @@
  * @module
  */
 
-import { ARCHON_LOGO, DATASTAR, MERMAID, STOLOS_LOGO } from "./assets.ts";
+import { ARCHON_LOGO, CSS_URL, DATASTAR, MERMAID, STOLOS_LOGO } from "./assets.ts";
 import { type Html, html, raw } from "./html.ts";
 
 /** One entry of the menu. */
@@ -86,7 +86,7 @@ function head(title: string): Html {
   return html`<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${title}</title>
 <link rel="icon" href="/static/favicon.svg">
-<link rel="stylesheet" href="/static/console.css">
+<link rel="stylesheet" href="${CSS_URL}">
 ${SCRIPTS}`;
 }
 

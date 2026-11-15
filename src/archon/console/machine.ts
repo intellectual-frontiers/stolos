@@ -87,3 +87,130 @@ export async function guideBody(
     repoBlob: `https://github.com/${repoSlug}/blob/main/`,
   }));
 }
+
+/** One optional service, as the console shows it. */
+export interface OptInRow {
+  /** Its switch (pg, s3, smb, otel-ui). */
+  name: string;
+  /** Its name for people. */
+  title: string;
+  /** On or off. */
+  on: boolean;
+  /** durable, ephemeral, "unchosen", or undefined when it holds no user data. */
+  data?: string;
+  /** When it was last switched (ISO time). */
+  since?: string;
+  /** Who switched it. */
+  by?: string;
+  /** The commands that turn it on and off, and show it. */
+  commands: { on: string; off: string; status: string };
+}
+
+/** One unit of the host's plan, with its live state. */
+export interface UnitRow {
+  /** The unit's name. */
+  unit: string;
+  /** The spec that wants it. */
+  spec: string;
+  /** systemd's ActiveState: active, failed, inactive, ... */
+  active: string;
+  /** systemd's SubState: running, exited, dead, ... */
+  sub: string;
+  /** Its unit file's state: enabled, disabled, masked, static, ... */
+  enabled: string;
+}
+
+/** What the Services page shows: the optional services and every unit of the plan. */
+export interface ServicesFacts {
+  /** The optional services. */
+  optIns: OptInRow[];
+  /** The units, with their live state. */
+  units: UnitRow[];
+}
+
+/** systemctl show's blocks (Id, ActiveState, SubState, UnitFileState), by unit. */
+export function parseUnitStates(
+  out: string,
+): Map<string, { active: string; sub: string; enabled: string }> {
+  const m = new Map<string, { active: string; sub: string; enabled: string }>();
+  for (const block of out.split(/\n\s*\n/)) {
+    const f = Object.fromEntries(
+      block.split("\n").map((l) => l.split("=", 2)).filter((x) => x.length === 2),
+    ) as Record<string, string>;
+    if (f.Id) {
+      m.set(f.Id, {
+        active: f.ActiveState ?? "",
+        sub: f.SubState ?? "",
+        enabled: f.UnitFileState ?? "",
+      });
+    }
+  }
+  return m;
+}
+
+/** This host's optional services and units, as they are now. */
+export async function servicesFacts(hostName: string): Promise<ServicesFacts> {
+  const { loadFleet, loadHosts } = await import("../model/load.ts");
+  const { resolvePlan } = await import("../model/resolve.ts");
+  const { OPT_INS, holdsUserData } = await import("../optin/optin.ts");
+  const host = (await loadHosts()).find((h) => h.name === hostName);
+  if (!host) throw new Error(`no host ${hostName} in the model`);
+  const plan = resolvePlan(host, await loadFleet());
+  const optIns = OPT_INS.map((o) => {
+    const r = host.optIn?.[o.name];
+    return {
+      name: o.name,
+      title: o.title,
+      on: r?.enabled === true,
+      ...(holdsUserData(o.name) ? { data: r?.data ?? (r?.enabled ? "unchosen" : undefined) } : {}),
+      ...(r?.at ? { since: r.at } : {}),
+      ...(r?.by ? { by: r.by } : {}),
+      commands: o.commands,
+    };
+  });
+  const names = [...new Set(plan.units.map((u) => u.unitName))].sort();
+  const show = names.length
+    ? await run(["systemctl", "show", "-p", "Id,ActiveState,SubState,UnitFileState", ...names])
+    : { stdout: "" };
+  const states = parseUnitStates(show.stdout);
+  const units = plan.units
+    .filter((u, i, all) => all.findIndex((x) => x.unitName === u.unitName) === i)
+    .map((u) => ({
+      unit: u.unitName,
+      spec: u.spec,
+      active: states.get(u.unitName)?.active ?? "unknown",
+      sub: states.get(u.unitName)?.sub ?? "",
+      enabled: states.get(u.unitName)?.enabled ?? "",
+    }))
+    .sort((a, b) => a.unit.localeCompare(b.unit));
+  return { optIns, units };
+}
+
+/**
+ * The journal, live, for the Logs page: the last lines, then each new one,
+ * until `signal` aborts. Only a unit of the host's plan (or everything).
+ */
+export async function journalTail(
+  unit: string | undefined,
+  each: (line: string) => void,
+  signal: AbortSignal,
+): Promise<void> {
+  const p = new Deno.Command("journalctl", {
+    args: ["--no-pager", "-o", "short-iso", "-n", "150", "-f", ...(unit ? ["-u", unit] : [])],
+    stdout: "piped",
+    stderr: "null",
+    signal,
+  }).spawn();
+  const dec = new TextDecoder();
+  let buf = "";
+  try {
+    for await (const chunk of p.stdout) {
+      buf += dec.decode(chunk, { stream: true });
+      let i;
+      while ((i = buf.indexOf("\n")) >= 0) {
+        each(buf.slice(0, i));
+        buf = buf.slice(i + 1);
+      }
+    }
+  } catch { /* aborted: the page went away */ }
+}

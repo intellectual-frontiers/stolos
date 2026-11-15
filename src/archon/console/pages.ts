@@ -14,6 +14,8 @@ import type { GuideItem } from "../guide/guide.ts";
 import { CATEGORIES } from "../guide/guide.ts";
 import type { WelcomeData } from "../web/welcome.ts";
 import { ARCHON_LOGO, STOLOS_LOGO } from "./assets.ts";
+import { logo, logoFor } from "./logos.ts";
+import type { ServicesFacts, UnitRow } from "./machine.ts";
 import type { Session } from "./auth.ts";
 import { commandForm, tierPill } from "./forms.ts";
 import { type Html, html } from "./html.ts";
@@ -22,6 +24,10 @@ import { diagram, type NavItem } from "./layout.ts";
 /** The Archon Console's menu. */
 export const ARCHON_NAV: NavItem[] = [
   { group: "Server", label: "Overview", href: "/" },
+  { group: "Server", label: "Services", href: "/services" },
+  { group: "Server", label: "Apps", href: "/apps" },
+  { group: "Server", label: "Data", href: "/data" },
+  { group: "Server", label: "Logs", href: "/logs" },
   { group: "Server", label: "Activity", href: "/activity" },
   { group: "Actions", label: "This server", href: "/actions/server" },
   { group: "Actions", label: "PostgreSQL", href: "/actions/postgres" },
@@ -463,6 +469,14 @@ export function groupOf(name: string): ActionGroup {
   return ACTION_GROUPS.find((g) => g.id !== "server" && g.has(name)) ?? ACTION_GROUPS[0];
 }
 
+/** What a search matches for a command: its name, summary, and group, lowercase, quote-free. */
+export function searchText(c: Command): string {
+  return `${c.name} ${c.summary} ${groupOf(c.name).label}`.toLowerCase().replace(
+    /[^a-z0-9 .,:/-]/g,
+    " ",
+  );
+}
+
 /** One group's page: introduction, diagram, its commands, the form, and the terminal. */
 export function actionsPage(
   group: ActionGroup,
@@ -482,13 +496,27 @@ export function actionsPage(
     </div>
     ${diagram(group.diagram(d), group.caption)}
     <div class="grid actions" style="margin-top:14px">
-      <nav class="card cmdlist" aria-label="${group.label} commands">${mine.map((c) =>
-        html`
-          <a href="/actions/${group.id}?cmd=${encodeURIComponent(c.name)}"
-            ${c.name === selected.name ? html`aria-current="true"` : ""}><span class="mono">${c
-              .name}</span>${tierPill(c.tier)}<span class="sub">${c.summary}</span></a>
-        `
-      )}</nav>
+      <nav class="card cmdlist" aria-label="${group.label} commands" data-signals="{q: ''}">
+        <input type="search" data-bind:q placeholder="Find any command" aria-label="Find any command" autocomplete="off">
+        ${mine.map((c) =>
+          html`
+            <a data-show="$q.trim() === ''" href="/actions/${group.id}?cmd=${encodeURIComponent(
+              c.name,
+            )}"
+              ${c.name === selected.name ? html`aria-current="true"` : ""}><span class="mono">${c
+                .name}</span>${tierPill(c.tier)}<span class="sub">${c.summary}</span></a>
+          `
+        )}${cmds.map((c) =>
+          html`
+            <a style="display:none"
+              data-show="$q.trim() !== '' && '${searchText(c)}'.includes($q.trim().toLowerCase())"
+              href="/actions/${groupOf(c.name).id}?cmd=${encodeURIComponent(
+                c.name,
+              )}"><span class="mono">${c.name}</span>${tierPill(c.tier)}<span class="sub">${groupOf(
+                c.name,
+              ).label} · ${c.summary}</span></a>
+          `
+        )}</nav>
       <div class="stack" style="min-width:0">
         ${commandForm(selected, s.role, "/actions/run")}
         <div class="card"><div class="row spread" style="margin-bottom:8px"><h2>Output</h2><span class="sub" id="runstate">Nothing running</span></div>
@@ -606,5 +634,228 @@ export function guidePage(
     <div class="card"><h2>Guides</h2><div class="stack">${guides.map((g) =>
       html`<a href="/guide/${g.name}">${g.title}</a>`
     )}</div></div></div>
+  `;
+}
+
+/** A unit's state as a pill. */
+function unitPill(u: UnitRow): Html {
+  const cls = u.active === "active"
+    ? "ok"
+    : u.active === "failed"
+    ? "bad"
+    : u.enabled === "masked"
+    ? "off"
+    : "warn";
+  const word = u.enabled === "masked" ? "off (masked)" : u.sub ? `${u.active}, ${u.sub}` : u.active;
+  return html`<span class="pill ${cls}">${word}</span>`;
+}
+
+/** Services: the optional ones with their switches, then every unit of the plan with its state. */
+export function servicesPage(sf: ServicesFacts, s: Session, host: string): Html {
+  const group = (cmd: string) => groupOf(cmd.replace(/^archon\s+/, ""));
+  const link = (cmd: string, label: string, ghost = true) => {
+    const name = cmd.replace(/^archon\s+/, "");
+    return html`<a class="btn${ghost ? " ghost" : ""}" href="/actions/${group(cmd).id}?cmd=${
+      encodeURIComponent(name)
+    }">${label}</a>`;
+  };
+  return html`
+    <div class="pagehead">
+      <div>
+        <div class="crumb">${host}</div>
+        <h1>Services</h1>
+        <p>What runs on this server. Optional services are off until an operator turns one on; turning on one that keeps
+      data asks whether its data is durable (kept, backed up) or ephemeral. Everything else is always on, because the
+      model in Git says so.</p>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Optional services</h2>
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Service</th>
+              <th>State</th>
+              <th>Data</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>${sf.optIns.map((o) =>
+            html`
+              <tr>
+                <td><span class="row" style="gap:8px">${logo(logoFor(o.title))}<b>${o
+                  .title}</b></span>${o.since
+                  ? html`<div class="sub">${o.on ? "on" : "off"} since ${
+                    o.since.slice(0, 16).replace("T", " ")
+                  } by ${o.by ?? "?"}</div>`
+                  : ""}</td>
+                <td><span class="pill ${o.on ? "ok" : "off"}">${o.on ? "on" : "off"}</span></td>
+                <td>${o.data
+                  ? html`<span class="pill ${
+                    o.data === "durable" ? "warn" : "off"
+                  }">${o.data}</span>`
+                  : html`<span class="sub">none</span>`}</td>
+                <td class="row" style="justify-content:flex-end">${o.on
+                  ? [
+                    link(o.commands.status, "Status"),
+                    s.role === "operator" ? link(o.commands.off, "Turn off") : "",
+                  ]
+                  : s.role === "operator"
+                  ? link(o.commands.on, "Turn on", false)
+                  : html`<span class="sub">an operator turns it on</span>`}</td>
+              </tr>
+            `
+          )}</tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <div
+        class="row spread"><h2>Always on</h2><span class="sub">${sf.units
+          .length} units from the model</span></div>
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Unit</th>
+              <th>State</th>
+              <th>Why it's here</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>${sf.units.map((u) =>
+            html`
+              <tr>
+                <td><span class="row" style="gap:8px">${logo(
+                  logoFor(u.unit),
+                  16,
+                )}<span class="mono">${u.unit}</span></span></td>
+                <td>${unitPill(u)}</td>
+                <td class="sub">spec ${u.spec}</td>
+                <td><a class="btn ghost" href="/logs?unit=${encodeURIComponent(
+                  u.unit,
+                )}">Logs</a></td>
+              </tr>
+            `
+          )}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+/** Apps: every address this server answers, with its logo. */
+export function appsPage(d: WelcomeData): Html {
+  return html`
+    <div class="pagehead">
+      <div>
+        <div class="crumb">${d.host}</div>
+        <h1>Apps</h1>
+        <p>Every address this server answers over HTTPS, each with a certificate that renews by itself. A container started
+      with the label <code>traefik.enable=true</code> appears here on its own.</p>
+      </div>
+    </div>
+    ${d.services.length
+      ? html`<div class="grid cols-3">${
+        d.services.map((x) =>
+          html`
+            <a class="card stack" style="text-decoration:none;color:var(--ink)" href="${x.url}"
+              target="_blank" rel="noopener">
+                        <span class="row" style="gap:10px">${logo(logoFor(x.name), 24)}<h2>${x
+                          .name}</h2>${x.source === "container"
+                          ? html`<span class="pill off">container</span>`
+                          : ""}</span>
+                        <span class="sub">${x.description ?? ""}</span><span class="mono sub">${x
+                          .url.replace("https://", "")}</span></a>
+          `
+        )
+      }</div>`
+      : html`
+        <div
+          class="card sub">No apps yet: this server has no web domain (fleet.web), or nothing is published.</div>
+      `}
+    ${d.unrouted.length
+      ? html`
+        <div class="help" style="margin-top:14px">
+          <h3>Listening but not published</h3>
+          <p>Ports ${d.unrouted.join(
+            ", ",
+          )} accept connections but have no HTTPS address. Add a route in the model to give one an address.</p>
+        </div>
+      `
+      : ""}
+  `;
+}
+
+/** Data: durable or ephemeral, why, and the backups. */
+export function dataPage(d: WelcomeData, sf: ServicesFacts): Html {
+  const durable = d.data?.class === "durable";
+  return html`
+    <div class="pagehead">
+      <div>
+        <div class="crumb">${d.host}</div>
+        <h1>Data</h1>
+        <p>Whether this server holds data that exists nowhere else. That decides what a reinstall may erase, and what is backed up.</p>
+      </div>
+    </div>
+    <div class="grid cols-2">
+      <div class="card stack"><div class="row"><span class="pill ${durable
+        ? "warn"
+        : "off"}">${d.data?.class ?? "unknown"}</span><h2>${durable
+        ? "This server holds data that exists nowhere else"
+        : "Nothing here exists only here"}</h2></div>
+        ${(d.data?.reasons ?? []).map((r) => html`<div class="sub">${r}</div>`)}
+        <div class="sub">${durable
+          ? "A reinstall keeps it, and nothing erases it without --confirm-destroy typed by a person."
+          : "A reinstall starts this server fresh; nothing is lost that is not also elsewhere."}</div></div>
+      ${diagram(
+        `flowchart TB
+  q{"data that exists<br/>nowhere else?"} -->|durable| k["kept across reinstalls<br/>backed up"]
+  q -->|ephemeral| e["recreated as needed"]
+  ${
+          sf.optIns.filter((o) => o.data).map((o, i) =>
+            `s${i}["${m(o.title)}: ${m(o.data!)}"] --> q`
+          ).join("\n  ")
+        }`,
+        "Each service that stores data is either durable or ephemeral; the server is durable if any of them is.",
+      )}
+    </div>
+    <div class="card" style="margin-top:14px"><h2>Backups</h2>${d.backup
+      ? html`
+        <p>Last backup: ${d.backup.last
+          ? d.backup.last.slice(0, 16).replace("T", " ")
+          : "never"} ${d.backup.ok === false
+          ? html`<span class="pill bad">failed</span>`
+          : d.backup.last
+          ? html`<span class="pill ok">ok</span>`
+          : ""}</p><a class="btn ghost"
+          href="/actions/storage?cmd=backup%20run">Back up now</a>
+      `
+      : html`<p class="sub">This server has no backup timer: nothing on it needs one.</p>`}</div>
+  `;
+}
+
+/** Logs: the journal, live, for one unit or everything. */
+export function logsPage(units: string[], selected: string | undefined, host: string): Html {
+  const q = selected ? `?unit=${encodeURIComponent(selected)}` : "";
+  return html`
+    <div class="pagehead">
+      <div>
+        <div class="crumb">${host}</div>
+        <h1>Logs</h1>
+        <p>The system journal, live: the last 150 lines, then each new one as it is written. Choose a service to see only its lines.
+      Older history is in Cockpit and the telemetry UI.</p>
+      </div>
+      <form method="get" action="/logs"
+        class="row"><select name="unit" aria-label="Service" onchange="this.form.submit()">
+        <option value="">everything</option>${units.map((u) =>
+          html`<option ${u === selected ? "selected" : ""}>${u}</option>`
+        )}
+      </select><noscript><button class="btn ghost">Show</button></noscript></form>
+    </div>
+    <div class="term" id="logs" data-init="@get('/logs/stream${q}')" aria-live="off">
+      <div class="dim">Connecting to the journal ...</div>
+    </div>
   `;
 }

@@ -77,6 +77,50 @@ function deps(): ConsoleDeps & {
     },
     guideDoc: () => Promise.resolve(undefined),
     cacheDir: "/nonexistent",
+    services: () =>
+      Promise.resolve({
+        optIns: [
+          {
+            name: "pg",
+            title: "PostgreSQL",
+            on: false,
+            commands: { on: "archon pg on", off: "archon pg off", status: "archon pg status" },
+          },
+          {
+            name: "otel-ui",
+            title: "Telemetry web UI (OpenObserve)",
+            on: true,
+            data: "ephemeral",
+            since: "2026-11-14T12:20:00Z",
+            by: "alice",
+            commands: {
+              on: "archon otel ui on",
+              off: "archon otel ui off",
+              status: "archon otel ui status",
+            },
+          },
+        ],
+        units: [
+          {
+            unit: "traefik.service",
+            spec: "032-web",
+            active: "active",
+            sub: "running",
+            enabled: "enabled",
+          },
+          {
+            unit: "smbd.service",
+            spec: "037-smb",
+            active: "inactive",
+            sub: "dead",
+            enabled: "masked",
+          },
+        ],
+      }),
+    journal: (unit, each) => {
+      each(`2026-11-15T01:00:00 alpha ${unit ?? "kernel"}[1]: <script>hi</script>`);
+      return Promise.resolve();
+    },
   };
 }
 
@@ -290,5 +334,29 @@ Deno.test("065 console: terminal color codes never reach the page", async () => 
   assertEquals(
     stripAnsi("\x1b[0m\x1b[1m\x1b[31merror\x1b[0m: Failed caching\r"),
     "error: Failed caching",
+  );
+});
+
+Deno.test("065 console: Services, Apps, Data, and Logs; the live journal only for the plan's units", async () => {
+  const d = deps();
+  const h = consoleHandler(d);
+  const { cookie } = await signIn(h, "alice", "right");
+  const svc = await (await h(req("/services", { cookie }))).text();
+  assertStringIncludes(svc, "PostgreSQL");
+  assertStringIncludes(svc, "Turn on");
+  assertStringIncludes(svc, "/actions/postgres?cmd=pg%20on");
+  assertStringIncludes(svc, "off (masked)");
+  assertStringIncludes(svc, 'class="brandlogo"');
+  for (const p of ["/apps", "/data", "/logs", "/logs?unit=traefik.service"]) {
+    assertEquals((await h(req(p, { cookie }))).status, 200, p);
+  }
+  let stream = await (await h(req("/logs/stream?unit=traefik.service", { cookie }))).text();
+  assertStringIncludes(stream, "traefik.service[1]: &lt;script&gt;");
+  stream = await (await h(req("/logs/stream?unit=../../etc/shadow", { cookie }))).text();
+  assertStringIncludes(stream, "kernel[1]", "an unknown unit means everything, never an argument");
+  const bob = (await signIn(h, "bob", "bobpw")).cookie;
+  assert(
+    !(await (await h(req("/services", { cookie: bob }))).text()).includes(">Turn on<"),
+    "only operators switch",
   );
 });

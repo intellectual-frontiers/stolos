@@ -102,7 +102,8 @@ export const web = (): Capability => ({ host, fleet }) => {
           // /etc and /usr stay read-only here.
           User: WEB.welcomeUser,
           Group: WEB.welcomeUser,
-          SupplementaryGroups: ["archon", "archon-ops", "shadow"],
+          // systemd-journal: the Logs page reads the journal.
+          SupplementaryGroups: ["archon", "archon-ops", "shadow", "systemd-journal"],
           ProtectSystem: "full",
           // No ProtectHome: the root step (sudo archon console exec) runs Deno from root's
           // module cache in /root/.cache/deno. archon-console itself cannot read /root (0700).

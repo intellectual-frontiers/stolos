@@ -243,7 +243,9 @@ export async function webServe(hostName: string): Promise<number> {
   const { pamAuthenticator } = await import("../console/pam.ts");
   const { Sessions, Throttle, systemAccounts } = await import("../console/auth.ts");
   const { systemRunner } = await import("../console/exec.ts");
-  const { activityLog, guideBody, repoFacts } = await import("../console/machine.ts");
+  const { activityLog, guideBody, journalTail, repoFacts, servicesFacts } = await import(
+    "../console/machine.ts"
+  );
   const fleet = await loadFleet();
   const handler = consoleHandler({
     host: hostName,
@@ -257,6 +259,8 @@ export async function webServe(hostName: string): Promise<number> {
     activity: activityLog(),
     guideDoc: (name) => guideBody(name, GUIDES, fleet.repository.slug),
     cacheDir: `${Deno.env.get("HOME") ?? "/var/cache/archon-web"}/vendor`,
+    services: () => cached("services", 5_000, () => servicesFacts(hostName)),
+    journal: journalTail,
   });
   const server = Deno.serve(
     { hostname: WEB.welcomeAddress, port: WEB.welcomePort, onListen: () => {} },

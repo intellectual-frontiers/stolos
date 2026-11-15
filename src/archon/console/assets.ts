@@ -8,6 +8,7 @@
  */
 
 import { ASSETS } from "../assets.auto.ts";
+import { VERSION } from "../version.ts";
 import { type Html, raw } from "./html.ts";
 
 /** Datastar's file in the engine, and its SHA-256 (checked by the tests). */
@@ -39,7 +40,7 @@ export const STOLOS_LOGO: Html = raw(
 export const FAVICON =
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#4F46E5"/><path d="M8 25V15a8 8 0 0 1 16 0v10" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><rect x="13.5" y="5.5" width="5" height="5" rx="1.2" fill="#fff"/></svg>`;
 
-/** Both consoles' stylesheet: tokens first (light, then dark), then the parts. */
+/** Both consoles' stylesheet: tokens first (light, then dark), then the parts. Served at {@link CSS_URL}. */
 export const CONSOLE_CSS = `
 @font-face { font-family: "JetBrainsMono NF"; font-weight: 400; font-display: swap; src: url("/static/fonts/JetBrainsMonoNerdFontMono-Regular.woff2") format("woff2"); }
 @font-face { font-family: "JetBrainsMono NF"; font-weight: 700; font-display: swap; src: url("/static/fonts/JetBrainsMonoNerdFontMono-Bold.woff2") format("woff2"); }
@@ -112,10 +113,13 @@ tr:last-child td { border-bottom: 0; }
 .stack { display: flex; flex-direction: column; gap: 10px; }
 .ring { width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center; flex: none; }
 .ring span { width: 60px; height: 60px; border-radius: 50%; background: var(--panel); display: grid; place-items: center; font-weight: 600; font-variant-numeric: tabular-nums; }
-.grid.actions { grid-template-columns: minmax(0, 320px) minmax(0, 1fr); align-items: start; }
+.grid.actions { grid-template-columns: minmax(240px, 300px) minmax(0, 1fr); align-items: start; }
 .grid.actions > .cmdlist { position: sticky; top: 70px; max-height: calc(100vh - 90px); overflow: auto; padding: 6px; }
 .diagram pre.mermaid svg { max-height: 300px; }
-.cmdlist a { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--line); padding: 10px 6px; }
+.cmdlist a { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--line); padding: 7px 8px; border-radius: 6px; }
+.cmdlist a .pill { font-size: 11px; padding: 1px 7px; }
+.cmdlist .sub { font-size: 12px; line-height: 1.35; }
+.cmdlist input[type=search] { width: 100%; margin-bottom: 6px; }
 .cmdlist a:hover, .cmdlist a[aria-current="true"] { background: var(--accent-soft); }
 .cmdlist .sub { grid-column: 1 / -1; }
 label.field { display: grid; gap: 4px; } label.field span { font-size: 12.5px; font-weight: 500; }
@@ -207,3 +211,6 @@ export async function vendored(
   } catch { /* serve it anyway; fetched again next time */ }
   return bytes;
 }
+
+/** The stylesheet's address: a new one per engine release, so a browser never keeps an old one. */
+export const CSS_URL: string = `/static/console-${VERSION}.css`;
