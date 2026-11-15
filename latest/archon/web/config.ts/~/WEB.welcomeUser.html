@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>WEB.welcomeUser - archon/web/config.ts - Stolos v0.67.0 documentation</title>
+  <title>WEB.welcomeUser - archon/web/config.ts - Stolos v0.68.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;web&#x2F;config.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.67.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.68.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -143,8 +143,9 @@
   />
 </svg>
 </a>
-</div><div><div class="space-y-7" id=""><div class="markdown"><p>Its dynamic account. Not the unit's own name: systemd refuses a dynamic
-account whose name exists, and the group archon-web does.</p>
+</div><div><div class="space-y-7" id=""><div class="markdown"><p>The Archon Console's own account (spec 065): in the shadow group (PAM
+checks passwords), archon (reads the model), and archon-ops (hands each
+command to <code>archon console exec</code> through sudo).</p>
 </div><section class="section"  id="type"><div>
       <h2 class="anchorable mb-1"><a href="#type" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"

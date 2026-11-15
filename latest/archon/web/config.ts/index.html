@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/web/config.ts - Stolos v0.67.0 documentation</title>
+  <title>archon/web/config.ts - Stolos v0.68.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.67.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.68.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -193,7 +193,7 @@ its address. None without fleet.web.</p>
 Variables</h2></div><div class="namespaceSection"><div id="namespace_web" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;config.ts&#x2F;~&#x2F;WEB.html" title="WEB">
-			    <span>WEB</span><span>: { staticConfig<span>: <span class="td-kw">string</span></span>; dynamicDir<span>: <span class="td-kw">string</span></span>; dynamicConfig<span>: <span class="td-kw">string</span></span>; unit<span>: <span class="td-kw">string</span></span>; welcomeUnit<span>: <span class="td-kw">string</span></span>; welcomeUser<span>: <span class="td-kw">string</span></span>; welcomeAddress<span>: <span class="td-kw">string</span></span>; welcomePort<span>: <span class="td-kw">number</span></span>; credential<span>: <span class="td-kw">string</span></span>; env<span>: <span class="td-kw">string</span></span>; delivered<span>: <span class="td-kw">string</span></span>; group<span>: <span class="td-kw">string</span></span>; podmanSocket<span>: <span class="td-kw">string</span></span>; acmeStorage<span>: <span class="td-kw">string</span></span>; resolver<span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The web front door's fixed paths, units, accounts and ports on a server (spec 032).</p>
+			    <span>WEB</span><span>: { staticConfig<span>: <span class="td-kw">string</span></span>; dynamicDir<span>: <span class="td-kw">string</span></span>; dynamicConfig<span>: <span class="td-kw">string</span></span>; unit<span>: <span class="td-kw">string</span></span>; welcomeUnit<span>: <span class="td-kw">string</span></span>; welcomeUser<span>: <span class="td-kw">string</span></span>; pamService<span>: <span class="td-kw">string</span></span>; welcomeAddress<span>: <span class="td-kw">string</span></span>; welcomePort<span>: <span class="td-kw">number</span></span>; credential<span>: <span class="td-kw">string</span></span>; env<span>: <span class="td-kw">string</span></span>; delivered<span>: <span class="td-kw">string</span></span>; group<span>: <span class="td-kw">string</span></span>; podmanSocket<span>: <span class="td-kw">string</span></span>; acmeStorage<span>: <span class="td-kw">string</span></span>; resolver<span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The web front door's fixed paths, units, accounts and ports on a server (spec 032).</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;config.ts&#x2F;~&#x2F;WEB.html#property_acmestorage">
                   <span>acmeStorage</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Traefik's ACME store: the Let's Encrypt account, certificates and keys.</p>
@@ -215,6 +215,9 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_web" class=
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;config.ts&#x2F;~&#x2F;WEB.html#property_group">
                   <span>group</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>May use the Podman socket (Traefik reads container labels there).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;config.ts&#x2F;~&#x2F;WEB.html#property_pamservice">
+                  <span>pamService</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The console's PAM service (/etc/pam.d/archon-console).</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;config.ts&#x2F;~&#x2F;WEB.html#property_podmansocket">
                   <span>podmanSocket</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Podman's Docker-compatible API socket.</p>
@@ -238,8 +241,9 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_web" class=
                   <span>welcomeUnit</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The welcome page: archon web serve, on loopback only.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;web&#x2F;config.ts&#x2F;~&#x2F;WEB.html#property_welcomeuser">
-                  <span>welcomeUser</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its dynamic account. Not the unit's own name: systemd refuses a dynamic
-account whose name exists, and the group archon-web does.</p>
+                  <span>welcomeUser</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The Archon Console's own account (spec 065): in the shadow group (PAM
+checks passwords), archon (reads the model), and archon-ops (hands each
+command to <code>archon console exec</code> through sudo).</p>
 </div></div></li></ul></div>
     </div></div>
 </section>
@@ -314,7 +318,7 @@ account whose name exists, and the group archon-web does.</p>
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1292 symbols</span><svg
+              <span class="leading-none">view all 1296 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
