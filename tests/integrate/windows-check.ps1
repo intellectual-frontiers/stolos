@@ -34,6 +34,7 @@ if (-not ($facts -match '^family=windows$')) {
   Write-Host '---- administrators_authorized_keys:'; icacls.exe 'C:\ProgramData\ssh\administrators_authorized_keys'
   Get-Content 'C:\ProgramData\ssh\administrators_authorized_keys' | ForEach-Object { $_.Substring(0, [Math]::Min(120, $_.Length)) }
   Write-Host '---- sshd_config Match:'; Select-String -Path 'C:\ProgramData\ssh\sshd_config' -Pattern 'Match|AuthorizedKeysFile'
+  Write-Host '---- ssh -v:'; ssh -v @o facts 2>&1 | Select-Object -Last 25
   Write-Host '---- OpenSSH log:'; Get-WinEvent -LogName 'OpenSSH/Operational' -MaxEvents 15 -ErrorAction SilentlyContinue | ForEach-Object { $_.Message }
   throw "the probe key did not run the probe: $facts"
 }

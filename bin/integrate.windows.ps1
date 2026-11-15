@@ -105,7 +105,8 @@ if ($Adopt) {
   # (OI)(CI): the probe inside inherits these, once the folder's own inheritance is removed.
   icacls.exe $Dir /inheritance:r /grant '*S-1-5-32-544:(OI)(CI)F' /grant '*S-1-5-18:(OI)(CI)F' /grant '*S-1-5-32-545:(OI)(CI)RX' | Out-Null
   $pub = (($Key -split '\s+')[0..1]) -join ' '
-  $line = "command=""powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $Probe"",restrict $pub stolos-probe@$Fleet"
+  # The same as "restrict", spelled out: Windows' OpenSSH refuses the connection on "restrict" (CI found it).
+  $line = "command=""powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $Probe"",no-pty,no-port-forwarding,no-agent-forwarding,no-X11-forwarding,no-user-rc $pub stolos-probe@$Fleet"
   Set-AuthFile ($keep + $line)
   Write-Host 'The read-only probe is installed, and only the fleet''s key may run it.'
 }
