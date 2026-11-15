@@ -1,4 +1,5 @@
 // Specs 040 (opt-in services and containers) and 041 (S3 object storage).
+import { engineFile } from "../src/archon/core/assets.ts";
 import { assert, assertEquals, assertStringIncludes } from "./assert.ts";
 import { fleet, host } from "./fixtures.ts";
 import { resolvePlan } from "../src/archon/model/resolve.ts";
@@ -185,7 +186,7 @@ Deno.test("041: the console's Key is the S3 secret: --show is typed by a person,
   assert(c.args.find((a) => a.name === "show")?.human === true);
   assert(!("show" in (toolFor(c).inputSchema.properties as Record<string, unknown>)));
   assertStringIncludes(c.description, "not your Linux password");
-  const doc = await Deno.readTextFile(new URL("../docs/s3.md", import.meta.url));
+  const doc = engineFile("docs/s3.md");
   assertStringIncludes(doc, "archon fs s3 key --show");
   assertStringIncludes(doc, "Login Failed");
 });

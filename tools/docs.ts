@@ -24,6 +24,7 @@
 
 import { DOC_LINT_BASELINE } from "./doc-baseline.ts";
 import { VERSION } from "../src/archon/version.ts";
+import { GUIDES } from "../src/archon/core/guides.ts";
 
 /** Mermaid, pinned: the diagrams in the HTML are drawn by this exact file. */
 export const MERMAID = {
@@ -106,6 +107,58 @@ export async function addMermaid(dir: string): Promise<number> {
   return pages;
 }
 
+/**
+ * Links in the guides, made for the page they are on: another guide
+ * (`pg.md`) goes to that guide's module page; anything else relative
+ * (`../specs/...`) goes to the engine's repository at this version.
+ */
+export function rewriteGuideLinks(html: string, depth: number): string {
+  const root = "../".repeat(depth);
+  return html.replace(/href="([^"]+)"/g, (all, target: string) => {
+    if (/^(https?:|mailto:|#|\.\/|\/)/.test(target) && !/^\.\/[a-z0-9-]+\.md/.test(target)) {
+      return all;
+    }
+    const [path, hash] = target.split("#");
+    const doc = path.match(/^(?:\.\/)?([a-z0-9-]+)\.md$/);
+    const g = doc ? GUIDES.find((x) => x.name === doc[1]) : undefined;
+    if (g) {
+      return `href="${root}${g.module.replace(/^src\//, "")}/index.html${hash ? `#${hash}` : ""}"`;
+    }
+    // deno doc's own links (to .html pages and folders) stay; a guide's links to repository files go to GitHub.
+    if (
+      /^(\.\.\/)+((specs|src|tests|bin|tools|home|vendor|\.github|\.specify)\/|[^/]+\.md$)/.test(
+        path,
+      )
+    ) {
+      return `href="https://github.com/intellectual-frontiers/stolos/blob/v${VERSION}/${
+        path.replace(/^(\.\.\/)+/, "")
+      }${hash ? `#${hash}` : ""}"`;
+    }
+    return all;
+  });
+}
+
+/** Rewrite the guides' links on every page; how many changed. */
+export async function guideLinks(dir: string): Promise<number> {
+  let n = 0;
+  const walk = async (d: string, depth: number) => {
+    for await (const e of Deno.readDir(d)) {
+      const p = `${d}/${e.name}`;
+      if (e.isDirectory) await walk(p, depth + 1);
+      else if (p.endsWith(".html")) {
+        const html = await Deno.readTextFile(p);
+        const next = rewriteGuideLinks(html, depth);
+        if (next !== html) {
+          await Deno.writeTextFile(p, next);
+          n++;
+        }
+      }
+    }
+  };
+  await walk(dir, 0);
+  return n;
+}
+
 /** A module's first sentence, from its `@module` JSDoc (plain text). */
 export function firstSentence(source: string): string {
   const m = source.match(/^\/\*\*([\s\S]*?)\*\//);
@@ -171,6 +224,16 @@ export async function frontPage(out: string, files: string[]): Promise<void> {
 <p class="start">Start here: <a href="./mod.ts/index.html">the overview</a>, with how the
 pieces fit, in diagrams. Then the model: <a href="./archon/model/types.ts/index.html">types.ts</a>.
 Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
+<h2>Guides</h2>
+<ul>
+${
+      GUIDES.map((g) =>
+        `<li><a href="./${esc(g.module.replace(/^src\//, ""))}/index.html">${esc(g.title)}</a> ${
+          esc(g.why)
+        }</li>`
+      ).join("\n")
+    }
+</ul>
 ${sections}
 </main>
 </body>
@@ -206,8 +269,11 @@ export async function build(out = "out/docs"): Promise<void> {
   }
   await Deno.writeFile(`${out}/mermaid.min.js`, js);
   await frontPage(out, files);
+  const links = await guideLinks(out);
   const pages = await addMermaid(out);
-  console.log(`docs: ${files.length} modules · ${pages} page(s) with diagrams · ${out}/index.html`);
+  console.log(
+    `docs: ${files.length} modules · ${pages} page(s) with diagrams · ${links} guide link(s) · ${out}/index.html`,
+  );
 }
 
 if (import.meta.main) {

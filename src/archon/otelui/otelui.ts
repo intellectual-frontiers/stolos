@@ -82,7 +82,7 @@ export async function otelUiStatus(hostName: string, json: boolean): Promise<num
       "off on this server: the Collector keeps telemetry locally and forwards it when a collector is found",
     );
     ui.next.push(
-      "to turn it on here: archon otel ui on --ephemeral (see man archon-otel-ui-on and docs/telemetry.md)",
+      "to turn it on here: archon otel ui on --ephemeral (see man archon-otel-ui-on and archon docs telemetry)",
     );
     return ui.finish();
   }

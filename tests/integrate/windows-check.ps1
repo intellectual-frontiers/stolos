@@ -30,7 +30,13 @@ Check adopt.txt @('adopt')
 
 $o = @('-i', "$env:TEMP\probe", '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=NUL', '-o', 'BatchMode=yes', "$env:USERNAME@localhost")
 $facts = ssh @o facts
-if (-not ($facts -match '^family=windows$')) { throw "the probe key did not run the probe: $facts" }
+if (-not ($facts -match '^family=windows$')) {
+  Write-Host '---- administrators_authorized_keys:'; icacls.exe 'C:\ProgramData\ssh\administrators_authorized_keys'
+  Get-Content 'C:\ProgramData\ssh\administrators_authorized_keys' | ForEach-Object { $_.Substring(0, [Math]::Min(120, $_.Length)) }
+  Write-Host '---- sshd_config Match:'; Select-String -Path 'C:\ProgramData\ssh\sshd_config' -Pattern 'Match|AuthorizedKeysFile'
+  Write-Host '---- OpenSSH log:'; Get-WinEvent -LogName 'OpenSSH/Operational' -MaxEvents 15 -ErrorAction SilentlyContinue | ForEach-Object { $_.Message }
+  throw "the probe key did not run the probe: $facts"
+}
 $other = ssh @o whoami 2>&1
 if ($other -match [regex]::Escape($env:USERNAME.ToLower())) { throw "the probe key ran another command: $other" }
 Write-Host 'over SSH: the probe key runs the probe, and nothing else'

@@ -13,8 +13,9 @@ The lab is [`lib.sh`](lib.sh); two scripts set it up:
   checkout of the engine** over HTTP on the lab bridge, so the machines run the engine under test.
 - [`fleet.sh`](fleet.sh), run by the reusable `.github/workflows/fleet-e2e.yml` from a fleet
   repository: its synthetic fleet, with the engine its `deno.json` pins (checked against its
-  `deno.lock`). See [docs/fleet-repository.md](../../docs/fleet-repository.md), "The synthetic
-  fleet".
+  `deno.lock`). See
+  [The fleet repository](https://intellectual-frontiers.github.io/stolos/latest/archon/fleet/mod.ts/index.html),
+  "The synthetic fleet".
 
 Either way, a run:
 

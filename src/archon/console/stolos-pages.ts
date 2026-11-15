@@ -15,6 +15,7 @@ import type { Observed } from "../adopt/adopt.ts";
 import { type Html, html } from "./html.ts";
 import { diagram, type NavItem } from "./layout.ts";
 import { logo, logoFor } from "./logos.ts";
+import { GUIDES } from "../core/guides.ts";
 
 /** The logo for an operating system's name. */
 export function osLogo(os: string): string | undefined {
@@ -97,6 +98,7 @@ export const STOLOS_GROUPS: StolosGroup[] = [
       "decide",
       "update",
       "explain",
+      "docs",
       "fleet use",
       "fleet init",
       "fleet upgrade",
@@ -1034,7 +1036,7 @@ export function bootPage(cards: Html, tail: string[]): Html {
       `flowchart LR
   power["Power on"] --> pxe["Network boot (your router)"] --> files["Boot files (TFTP, this PC)"] --> image["Ubuntu image (HTTP, this PC)"]
   image --> config["Install config + secrets"] --> install["Unattended install"] --> first["First boot: clone, apply"] --> ready["Ready: checks pass"]`,
-      "Eleven steps from power-on to Ready (docs/install-timeline.md): when one stops, its card says where.",
+      "Eleven steps from power-on to Ready (the install-timeline guide): when one stops, its card says where.",
     )}
     <div class="card" style="margin-top:14px">
       <h2>boot.log</h2>
@@ -1043,44 +1045,14 @@ export function bootPage(cards: Html, tail: string[]): Html {
   `;
 }
 
-/** The guides a PC person reads. */
-export const PC_GUIDES: Array<{ name: string; title: string; why: string }> = [
-  {
-    name: "console",
-    title: "The Stolos Console",
-    why: "How it signs you in, and where passphrases go.",
-  },
-  { name: "daily-use", title: "Daily use", why: "The commands you run most, and when." },
-  {
-    name: "fleet-repository",
-    title: "The fleet repository",
-    why: "What each file is, and who changes it.",
-  },
-  { name: "hosts", title: "Hosts", why: "Describing a server in TypeScript." },
-  {
-    name: "adopted",
-    title: "Adopted machines and clouds",
-    why: "Laptops, desktops, and cloud accounts: observed, never changed.",
-  },
-  {
-    name: "compliance",
-    title: "Compliance",
-    why: "SCF controls, and what they mean for HIPAA, PCI DSS, CMMC, and SOC 2.",
-  },
-  { name: "boot-machine", title: "The boot machine", why: "Installing a server from this PC." },
-  {
-    name: "install-timeline",
-    title: "What happens during an install",
-    why: "The eleven steps, and where to look when one fails.",
-  },
-  { name: "workstation", title: "Workstations", why: "A WSL distribution as a fleet workstation." },
-  {
-    name: "disaster-recovery",
-    title: "Disaster recovery",
-    why: "A lost PC, a lost key, a dead server.",
-  },
-  { name: "troubleshooting", title: "Troubleshooting", why: "When something says no." },
-];
+/** The guides, for the console's Guide page (one list: src/archon/core/guides.ts). */
+export const PC_GUIDES: Array<{ name: string; title: string; why: string }> = GUIDES.map((
+  { name, title, why },
+) => ({
+  name,
+  title,
+  why,
+}));
 
 /** The guide list. */
 export function stolosGuidePage(guides: Array<{ name: string; title: string; why: string }>): Html {

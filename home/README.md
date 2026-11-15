@@ -3,7 +3,7 @@
 The most general dotfile layer: every user on every host. More specific layers
 live under `dotfiles/` (per host, per user, per user on one host); `archon
 apply` composes them, in that order, into each user's chezmoi source under
-`/var/lib/archon-dotfiles/<user>`. See `docs/dotfiles.md` (`man
+`/var/lib/archon-dotfiles/<user>`. See the dotfiles guide (`archon docs dotfiles`, or src/archon/dotfiles/mod.ts) (`man
 archon-dotfiles`). Per-user data
 (`.archon.personas`, `.archon.features`, `.archon.fullName`, ...) is rendered
 by `archon apply` into `~/.config/chezmoi/chezmoi.json` from the personas in

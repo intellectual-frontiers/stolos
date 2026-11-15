@@ -34,7 +34,7 @@ everything here.
   `deno task docs` renders `out/docs/`; `deno task docs:lint` may only go down.
 - Write without em dashes: use commas, colons, parentheses, or separate sentences.
 
-## Before you push (the whole procedure: [docs/releasing.md](docs/releasing.md))
+## Before you push (the whole procedure: [Changing and releasing the engine](https://intellectual-frontiers.github.io/stolos/latest/releasing.ts/index.html))
 
 Raise the version, then run exactly what CI runs, and push only when it passes:
 
@@ -56,7 +56,7 @@ src/archon-boot/       the boot server (Windows or Linux)
 home/                  the base dotfile layer (fleets add their own on top)
 examples/fleets/lab/   the example fleet: what a fleet repository holds
 specs/                 Spec Kit specifications, one per capability
-docs/                  guides (served on each host, and as man pages)
+src/**/mod.ts          the guides: each module's @module JSDoc (deno doc; served on hosts, man pages, stolos docs)
 tools/                 generators and the version tool
 tests/                 deno task test; tests/e2e installs a VM end to end
 ```

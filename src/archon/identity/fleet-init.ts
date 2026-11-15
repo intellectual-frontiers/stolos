@@ -282,7 +282,7 @@ async function prepareRepository(id: string): Promise<void> {
     );
     return;
   }
-  // The lock is what makes the pin safe (docs/fleet-repository.md): make it now.
+  // The lock is what makes the pin safe (deno task stolos docs fleet-repository): make it now.
   r.status(`pinning the engine at ${tag} and hashing every file into deno.lock`);
   const cache = await run([
     Deno.execPath(),
@@ -382,7 +382,7 @@ export async function fleetInit(o: FleetInitOptions): Promise<void> {
     );
     ui.next.push(
       "the admin password hash is stored again; hosts keep theirs until their next install or apply",
-      "a rebuilt boot machine: deno task stolos vault recover-host-keys <host> for each host (docs/disaster-recovery.md)",
+      "a rebuilt boot machine: deno task stolos vault recover-host-keys <host> for each host (deno task stolos docs disaster-recovery)",
     );
     return;
   }

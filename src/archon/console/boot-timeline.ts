@@ -1,7 +1,7 @@
 /**
  * Spec 066: the boot server's installs as a timeline, from boot.log (each
  * line `<ISO time> [address] [host:] message`, spec 049): for each machine,
- * the furthest of the eleven steps of docs/install-timeline.md it reached,
+ * the furthest of the eleven steps of the install-timeline guide (src/archon/install/mod.ts) it reached,
  * and whether one failed.
  *
  * @module

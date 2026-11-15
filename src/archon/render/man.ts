@@ -140,7 +140,7 @@ export function constitutionPage(): string {
     markdownToRoff(md.replace(/^# .*\n/, ""));
 }
 
-/** Spec 035: the newcomer's guide, from docs/guide.md (also on the welcome page). */
+/** Spec 035: the newcomer's guide, from the guide module src/archon/guide/mod.ts (also on the welcome page). */
 export function guidePage(): string {
   const md = engineFile("docs/guide.md");
   return th("archon-guide", 7, MAN_DATE) +
@@ -149,7 +149,7 @@ export function guidePage(): string {
     ".SH SEE ALSO\n\\fBarchon\\fR(1), \\fBarchon\\-guide\\fR(1), \\fBarchon\\-dotfiles\\fR(7), \\fBarchon\\-constitution\\fR(7)\n";
 }
 
-/** Spec 031: how dotfiles work, from docs/dotfiles.md (one source for both). */
+/** Spec 031: how dotfiles work, from src/archon/dotfiles/mod.ts (one source for both). */
 export function dotfilesPage(): string {
   const md = engineFile("docs/dotfiles.md");
   return th("archon-dotfiles", 7, MAN_DATE) +
@@ -158,7 +158,7 @@ export function dotfilesPage(): string {
     ".SH SEE ALSO\n\\fBarchon\\fR(1), \\fBarchon\\-dotfiles\\fR(1), \\fBarchon\\-personas\\fR(7), \\fBchezmoi\\fR(1)\n";
 }
 
-/** Spec 038: PostgreSQL instances, from docs/pg.md (also served at /guide/pg). */
+/** Spec 038: PostgreSQL instances, from src/archon/pg/mod.ts (also served at /guide/pg). */
 export function pgPage(): string {
   const md = engineFile("docs/pg.md");
   return th("archon-pg", 7, MAN_DATE) +
@@ -167,7 +167,7 @@ export function pgPage(): string {
     ".SH SEE ALSO\n\\fBarchon\\fR(1), \\fBpg_lsclusters\\fR(1), \\fBpg_createcluster\\fR(1), \\fBpsql\\fR(1)\n";
 }
 
-/** Spec 042: SQL over infrastructure, from docs/sql.md (also served at /guide/sql). */
+/** Spec 042: SQL over infrastructure, from src/archon/state/mod.ts (also served at /guide/sql). */
 export function sqlPage(): string {
   const md = engineFile("docs/sql.md");
   return th("archon-sql", 7, MAN_DATE) +

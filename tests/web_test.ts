@@ -1,4 +1,5 @@
 // Specs 032 (HTTPS on every server) and 033 (etckeeper).
+import { guideUrl } from "../src/archon/core/guides.ts";
 import { assert, assertEquals, assertStringIncludes } from "./assert.ts";
 import { fleet, host } from "./fixtures.ts";
 import { resolvePlan } from "../src/archon/model/resolve.ts";
@@ -299,7 +300,7 @@ Deno.test("035: guides render from Markdown; links to other guides stay on the s
   );
   assertStringIncludes(html, '<h3 id="layers">Layers</h3>');
   assertStringIncludes(html, 'href="/guide/dotfiles"');
-  assertStringIncludes(html, 'href="https://github.com/a/b/blob/main/docs/hosts.md"');
+  assertStringIncludes(html, `href="${guideUrl("hosts")}"`);
   assertStringIncludes(html, 'href="https://github.com/a/b/blob/main/AGENTS.md"');
   assertStringIncludes(html, "<td><code>x</code></td><td>&lt;y&gt;</td>");
   assertStringIncludes(html, "<pre><code>echo &lt;hi&gt;</code></pre>");

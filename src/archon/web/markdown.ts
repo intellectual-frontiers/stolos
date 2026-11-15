@@ -1,5 +1,5 @@
 /**
- * 035-welcome-guide: the repository's guides (docs/*.md) as HTML on the welcome
+ * 035-welcome-guide: the engine's guides (each module's @module JSDoc, src/archon/core/guides.ts) as HTML on the welcome
  * page, so one text serves the repository, the man pages, and the server.
  * Handles what those guides use: headings, paragraphs, lists, tables, code
  * blocks, blockquotes, inline code, bold, italics, and links. Everything is
@@ -7,6 +7,8 @@
  *
  * @module
  */
+
+import { guideDef, guideUrl } from "../core/guides.ts";
 
 const esc = (s: string) =>
   s.replace(
@@ -27,9 +29,10 @@ function href(target: string, ctx: LinkContext): string {
   const [path, hash] = target.split("#");
   const doc = path.match(/^(?:\.\.\/docs\/|docs\/|\.\/)?([a-z0-9-]+)\.md$/);
   if (doc && ctx.served.includes(doc[1])) return `/guide/${doc[1]}${hash ? `#${hash}` : ""}`;
+  // Another guide, not served here: its page online, at this engine's version.
+  if (doc && guideDef(doc[1])) return `${guideUrl(doc[1])}${hash ? `#${hash}` : ""}`;
   const rel = path.replace(/^\.\.\//, "").replace(/^\.\//, "");
-  const inDocs = !path.startsWith("../") && !path.includes("/") ? `docs/${rel}` : rel;
-  return `${ctx.repoBlob}${inDocs}${hash ? `#${hash}` : ""}`;
+  return `${ctx.repoBlob}${rel}${hash ? `#${hash}` : ""}`;
 }
 
 /** Inline markup on already-escaped text. */

@@ -17,7 +17,7 @@ Deno.test("every machine command has a man page; fleet commands (stolos) have no
   }
 });
 
-Deno.test("059: every command says where it runs; stolos and archon do not overlap but for explain", async () => {
+Deno.test("059: every command says where it runs; stolos and archon do not overlap but for explain and docs", async () => {
   const { offeredOn } = await import("../src/archon/commands/registry.ts");
   for (const c of COMMANDS) assert(c.place, `${c.name} has no place`);
   const names = (p: "pc" | "machine") =>
@@ -25,7 +25,11 @@ Deno.test("059: every command says where it runs; stolos and archon do not overl
   const pc = names("pc");
   const machine = names("machine");
   const both = [...pc].filter((n) => machine.has(n)).sort();
-  assertEquals(both, ["apply", "explain", "update"], "apply and update are two commands: one each");
+  assertEquals(
+    both,
+    ["apply", "docs", "explain", "update"],
+    "apply and update are two commands: one each",
+  );
   for (const n of ["keys setup", "fleet init", "host add", "vault backup", "decide", "where"]) {
     assert(pc.has(n) && !machine.has(n), n);
   }

@@ -8,7 +8,7 @@
 
 import { ASSETS } from "../assets.auto.ts";
 
-/** One engine file by its path in the engine repository ("docs/guide.md"). */
+/** One engine file by its path in the engine repository ("docs/guide.md": a guide, extracted from its module). */
 export function engineFile(path: string): string {
   const t = ASSETS[path];
   if (t === undefined) throw new Error(`the engine has no file ${path}`);

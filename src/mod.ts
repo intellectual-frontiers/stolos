@@ -9,7 +9,8 @@
  *
  * Start with: `deno task stolos` in a fleet repository (where you are, and the
  * one thing to do next), then the model's types ({@link FleetDef} and
- * {@link HostDef} in `archon/model/types.ts`), then the guides in `docs/`.
+ * {@link HostDef} in `archon/model/types.ts`), then the guides: each folder's `mod.ts`
+ * documents it (listed in `archon/core/guides.ts`; offline: `deno task stolos docs`).
  *
  * ## Two repositories, one approval
  *

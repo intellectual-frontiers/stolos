@@ -22,7 +22,9 @@ Deno.test("055: every Mermaid diagram is one of the kinds we use, and closed", a
   for (const f of await sourceFiles()) {
     const text = await Deno.readTextFile(f);
     for (const m of text.matchAll(/```mermaid\n([\s\S]*?)```/g)) {
-      const first = m[1].split("\n")[0].replace(/^\s*\*\s?/, "").trim();
+      // A diagram may open with Mermaid's front matter (--- config ... ---): its kind comes after.
+      const lines = m[1].split("\n").map((l) => l.replace(/^\s*\*\s?/, "").trim());
+      const first = lines[0] === "---" ? lines[lines.indexOf("---", 1) + 1] ?? "" : lines[0];
       assert(kinds.test(first), `${f}: a mermaid block starts with "${first}"`);
       // A Markdown fence never closes inside the comment's own terminator.
       assert(!m[1].includes("*/"), `${f}: */ inside a diagram ends the comment`);

@@ -422,7 +422,7 @@ export async function vaultRestoreZip(
 
   ui.next.push("check everything: deno task stolos boot doctor");
   ui.next.push(
-    "keep the ZIP where you keep it safe; delete any copy you unzipped. If this PC replaces the boot machine: its address and firewall (docs/disaster-recovery.md)",
+    "keep the ZIP where you keep it safe; delete any copy you unzipped. If this PC replaces the boot machine: its address and firewall (deno task stolos docs disaster-recovery)",
   );
   return done();
 }

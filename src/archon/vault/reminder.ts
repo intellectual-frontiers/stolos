@@ -66,7 +66,7 @@ export async function remind(now = Date.now()): Promise<void> {
             `- ${s.name}: ${s.ref ? labelFor(s.ref, s.name) : "not in the inventory"}`
           ),
           "",
-          `If ${pcName()} failed now, these would have to be recreated (docs/disaster-recovery.md).`,
+          `If ${pcName()} failed now, these would have to be recreated (deno task stolos docs disaster-recovery).`,
         ].join("\n"),
         todo:
           "On the boot machine: deno task stolos vault backup, then move the ZIP somewhere safe",

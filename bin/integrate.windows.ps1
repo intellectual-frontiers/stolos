@@ -76,6 +76,10 @@ function Set-AuthFile($lines) {
   Set-Content -Path $Auth -Value $lines -Encoding ascii
   # sshd reads this file only when Administrators and SYSTEM alone may change it.
   icacls.exe $Auth /inheritance:r /grant '*S-1-5-32-544:F' /grant '*S-1-5-18:F' | Out-Null
+  # ... and only when Administrators (or SYSTEM) own it, not the person who ran this.
+  $acl = Get-Acl $Auth
+  $acl.SetOwner([Security.Principal.SecurityIdentifier]::new('S-1-5-32-544'))
+  Set-Acl -Path $Auth -AclObject $acl
 }
 $keep = @(); if (Test-Path $Auth) { $keep = @(Get-Content $Auth | Where-Object { $_ -notmatch "stolos-probe@$([regex]::Escape($Fleet))$" }) }
 

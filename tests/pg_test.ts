@@ -1,4 +1,5 @@
 // Spec 038: PostgreSQL instances (archon pg). Apps in these tests are examples (s-app1).
+import { engineFile } from "../src/archon/core/assets.ts";
 import { assert, assertEquals, assertStringIncludes } from "./assert.ts";
 import { fleet, host } from "./fixtures.ts";
 import { resolvePlan } from "../src/archon/model/resolve.ts";
@@ -413,7 +414,7 @@ Deno.test("038: the psql prompt, the guide, and the man page", async () => {
   assert(GUIDES.some((g) => g.name === "pg"));
   const { pgPage } = await import("../src/archon/render/man.ts");
   assertStringIncludes(pgPage(), "archon\\-pg");
-  const doc = await Deno.readTextFile("docs/pg.md");
+  const doc = engineFile("docs/pg.md");
   assertStringIncludes(doc, "Traefik is not in the path");
   assertStringIncludes(doc, "sslmode=verify-full sslrootcert=system");
 });

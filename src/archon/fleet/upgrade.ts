@@ -2,7 +2,7 @@
  * `stolos fleet upgrade <tag>` (spec 046-engine-instance, Articles 9, 12, 24):
  * move a fleet repository to another released version of the engine, safely.
  *
- * Why each step exists (docs/fleet-repository.md says it at length):
+ * Why each step exists (the fleet-repository guide, ./mod.ts, says it at length):
  *   1. The tag must be a release: the engine's own src/archon/version.ts at
  *      that tag must say the same version. A typo or a branch name is refused.
  *   2. Only forward, unless --downgrade: going back to an older engine is a
@@ -184,7 +184,7 @@ export async function fleetUpgrade(o: UpgradeOptions): Promise<number> {
   if (!text || !pin) {
     p.fail(
       `${denoJsonPath} has no @stolos/ pin to a tagged URL (…/stolos/vX.Y.Z/src/)`,
-      "see docs/fleet-repository.md, section 'The pin'",
+      "see deno task stolos docs fleet-repository, section 'The pin'",
     );
     return ui.finish();
   }

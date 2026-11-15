@@ -1,4 +1,5 @@
 // Spec 042: SQL over infrastructure.
+import { engineFile } from "../src/archon/core/assets.ts";
 import { assert, assertEquals, assertStringIncludes } from "./assert.ts";
 import { fleet, host } from "./fixtures.ts";
 import { resolvePlan } from "../src/archon/model/resolve.ts";
@@ -106,7 +107,7 @@ Deno.test("042: osqueryd is infrastructure: enabled and running everywhere, Arch
 });
 
 Deno.test("042: the guide, the served page, and the man page", async () => {
-  const doc = await Deno.readTextFile("docs/sql.md");
+  const doc = engineFile("docs/sql.md");
   for (
     const s of [
       "sudo osqueryi",

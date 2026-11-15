@@ -1,4 +1,5 @@
 // Spec 037: file shares over SMB, off until an operator turns them on.
+import { engineFile } from "../src/archon/core/assets.ts";
 import { assert, assertEquals, assertStringIncludes } from "./assert.ts";
 import { fleet, host } from "./fixtures.ts";
 import { resolvePlan } from "../src/archon/model/resolve.ts";
@@ -111,5 +112,5 @@ Deno.test("037: commands, backups, and the guide", async () => {
   assert(item.use!.some((u) => u.cmd === "\\\\smb.alpha.lab.example.net\\shared"));
   const { GUIDES } = await import("../src/archon/web/serve.ts");
   assert(GUIDES.some((g) => g.name === "smb"));
-  assertStringIncludes(await Deno.readTextFile("docs/smb.md"), "your Linux username and password");
+  assertStringIncludes(engineFile("docs/smb.md"), "your Linux username and password");
 });

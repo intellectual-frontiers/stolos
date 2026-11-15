@@ -188,7 +188,7 @@ By hand instead (the same as step 3 does):
 If you forgot the daily key's passphrase, the recovery key (in this ZIP) replaces the
 daily key: deno task stolos keys lost. If you forgot both passphrases, a person at
 each server must trust a new key there (archon signers trust). See the engine's
-docs/disaster-recovery.md.
+"deno task stolos docs disaster-recovery".
 `;
 }
 

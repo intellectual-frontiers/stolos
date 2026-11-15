@@ -317,7 +317,7 @@ export const COMMANDS: Command[] = [
     name: "fleet upgrade",
     summary: "Move this repository to another released engine version, locked and signed",
     description:
-      `Run in the fleet repository, on the boot machine or a workstation. Checks that the tag is a release (the engine's own version.ts at that tag says the same version), refuses an older version unless --downgrade, rewrites the @stolos/ pin in deno.json, builds deno.lock again through engine.ts (a hash of every engine file: hosts run with --frozen, so the lock is what makes your signature cover the engine's code), validates every fleet with the new engine, and makes one signed commit of deno.json, deno.lock, and engine.ts. Push it to approve it. If anything fails, nothing is committed (spec 046; docs/fleet-repository.md).`,
+      `Run in the fleet repository, on the boot machine or a workstation. Checks that the tag is a release (the engine's own version.ts at that tag says the same version), refuses an older version unless --downgrade, rewrites the @stolos/ pin in deno.json, builds deno.lock again through engine.ts (a hash of every engine file: hosts run with --frozen, so the lock is what makes your signature cover the engine's code), validates every fleet with the new engine, and makes one signed commit of deno.json, deno.lock, and engine.ts. Push it to approve it. If anything fails, nothing is committed (spec 046; the fleet-repository guide (stolos docs fleet-repository)).`,
     tier: "repo",
     noMcp: true,
     operation: true,
@@ -1199,7 +1199,7 @@ export const COMMANDS: Command[] = [
     name: "web status",
     summary: "This server's HTTPS: Traefik, the certificate, DNS, and every route",
     description:
-      `Shows whether Traefik and the welcome page run, which certificate answers on 443 (Let's Encrypt, or Traefik's self-signed one until it arrives), whether <host>.<domain> resolves to this server, and every route: the welcome page at https://<host>.<domain>, Traefik's dashboard at traefik.<host>.<domain>, each route from the model and its capabilities (cockpit.<host>.<domain>), and each guest that publishes a port. Containers (Podman) publish themselves with the label traefik.enable=true. Everything behind the proxy answers the local networks only (spec 032). See docs/web.md.`,
+      `Shows whether Traefik and the welcome page run, which certificate answers on 443 (Let's Encrypt, or Traefik's self-signed one until it arrives), whether <host>.<domain> resolves to this server, and every route: the welcome page at https://<host>.<domain>, Traefik's dashboard at traefik.<host>.<domain>, each route from the model and its capabilities (cockpit.<host>.<domain>), and each guest that publishes a port. Containers (Podman) publish themselves with the label traefik.enable=true. Everything behind the proxy answers the local networks only (spec 032). See the web guide (stolos docs web).`,
     tier: "read",
     operation: true,
     args: [],
@@ -1312,6 +1312,28 @@ export const COMMANDS: Command[] = [
       }
       const { consoleExec } = await import("../console/exec.ts");
       return await consoleExec(a.as as string, argv as string[]);
+    },
+  },
+  {
+    name: "docs",
+    summary: "The engine's guides, offline and at this version: list them, or read one",
+    description:
+      `Each guide is the documentation of the module beside the code it explains (deno doc renders them, with diagrams, on GitHub Pages). Without a name: every guide, with its page online. With one: the guide, in the terminal (its diagrams are drawn online). For example: docs fleet-repository, docs disaster-recovery, docs adopted.`,
+    tier: "read",
+    unlocked: true,
+    args: [{
+      name: "name",
+      type: "string",
+      positional: true,
+      description: "A guide (default: list them).",
+    }],
+    examples: [{
+      cmd: "deno task stolos docs disaster-recovery",
+      text: "What to do when the boot machine is lost.",
+    }],
+    async run(a, ctx) {
+      const { docsCommand } = await import("../guide/docs-command.ts");
+      return docsCommand(a.name as string | undefined, ctx.json);
     },
   },
   {
@@ -2004,7 +2026,7 @@ export const COMMANDS: Command[] = [
     name: "otel ui on",
     summary: "Turn on the telemetry web UI (OpenObserve) on this server; it collects for the fleet",
     description:
-      `The telemetry web UI is an opt-in container (specs 040, 050): every server has it, masked, until an operator runs this. --durable or --ephemeral is required (Article 23, spec 044); telemetry is usually ephemeral. OpenObserve (pinned by digest) starts under Podman, unprivileged, on 127.0.0.1; Traefik serves it on the local networks at otel.<host>.<domain>; its admin password is generated here, root only (archon otel ui password --show). This server's Collector then forwards everything it collects (journald, PCP, Archon's and apps' OTLP) to it, adding the credential itself, and accepts OTLP from the local networks on 4318: point otel.localdomain (router DNS) or telemetry.collector in fleet.ts at this server and the others find it within 15 minutes. Only telemetry from then on is forwarded. Until this is on anywhere, every server keeps its own telemetry and the headless Collector works as before. See docs/telemetry.md.`,
+      `The telemetry web UI is an opt-in container (specs 040, 050): every server has it, masked, until an operator runs this. --durable or --ephemeral is required (Article 23, spec 044); telemetry is usually ephemeral. OpenObserve (pinned by digest) starts under Podman, unprivileged, on 127.0.0.1; Traefik serves it on the local networks at otel.<host>.<domain>; its admin password is generated here, root only (archon otel ui password --show). This server's Collector then forwards everything it collects (journald, PCP, Archon's and apps' OTLP) to it, adding the credential itself, and accepts OTLP from the local networks on 4318: point otel.localdomain (router DNS) or telemetry.collector in fleet.ts at this server and the others find it within 15 minutes. Only telemetry from then on is forwarded. Until this is on anywhere, every server keeps its own telemetry and the headless Collector works as before. See the telemetry guide (stolos docs telemetry).`,
     tier: "mutate",
     operation: true,
     args: [...CHOICE_ARGS, CONFIRM_DESTROY_ARG("the host's name")],
@@ -2944,7 +2966,11 @@ const PC_COMMANDS = new Set([
 ]);
 
 for (const c of COMMANDS) {
-  c.place ??= c.name === "explain" ? "both" : PC_COMMANDS.has(c.name) ? "pc" : "machine";
+  c.place ??= c.name === "explain" || c.name === "docs"
+    ? "both"
+    : PC_COMMANDS.has(c.name)
+    ? "pc"
+    : "machine";
 }
 
 /** Whether a command is offered where `place` runs ("pc": stolos, "machine": archon). */
