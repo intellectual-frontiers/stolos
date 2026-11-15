@@ -169,11 +169,34 @@ export const SCF: ScfControl[] = [
     maps: { hipaa: ["164.312(d)"], pci: ["8.4.2"], cmmc: ["IA.L2-3.5.3"], soc2: ["CC6.1"] },
   },
   {
+    id: "IAC-07",
+    name: "User Provisioning & De-Provisioning",
+    how:
+      "People who left (the HR system) have no active account anywhere (identity, code, clouds).",
+    maps: {
+      hipaa: ["164.308(a)(3)(ii)(C)"],
+      pci: ["8.2.5"],
+      cmmc: ["PS.L2-3.9.2"],
+      soc2: ["CC6.2"],
+    },
+  },
+  {
     id: "IAC-10",
     name: "Authenticator Management",
     how:
       "SSH accepts keys, not passwords; signing keys are per person, with an offline recovery key.",
     maps: { hipaa: ["164.312(d)"], pci: ["8.3.1"], cmmc: ["IA.L2-3.5.10"], soc2: ["CC6.1"] },
+  },
+  {
+    id: "IAC-15",
+    name: "Account Management",
+    how: "Every active account belongs to a person on the roster, or is a known service account.",
+    maps: {
+      hipaa: ["164.308(a)(4)(ii)(C)"],
+      pci: ["8.2.4"],
+      cmmc: ["AC.L2-3.1.1"],
+      soc2: ["CC6.2"],
+    },
   },
   {
     id: "IAC-16",

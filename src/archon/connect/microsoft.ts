@@ -57,7 +57,8 @@ async function pages<T>(http: Http, url: string, auth: Record<string, string>): 
 /** Microsoft 365 and Azure. */
 export const microsoft: Connector = {
   id: "microsoft",
-  category: "identity",
+  serviceModels: ["SaaS", "PaaS", "IaaS"],
+  markets: ["access-management", "strategic-cloud-platform-services"],
   title: "Microsoft 365 and Azure",
   logo: "",
   connectHelp: [
@@ -252,6 +253,24 @@ export const microsoft: Connector = {
     } catch (e) {
       gaps.push(`Azure: ${(e as Error).message}`);
     }
+    // Spec 085: its people's accounts, for the estate graph.
+    const adminSet = new Set((admins ?? []).map((a) => (a.userPrincipalName ?? "").toLowerCase()));
+    const mfaOf = new Map(
+      (mfa ?? []).map((m) => [m.userPrincipalName.toLowerCase(), m.isMfaRegistered]),
+    );
+    const accounts = users.map((u) => {
+      const k = u.userPrincipalName.toLowerCase();
+      return {
+        system: "microsoft",
+        id: u.id,
+        name: u.userPrincipalName,
+        email: k,
+        active: u.accountEnabled,
+        ...(admins ? { admin: adminSet.has(k) } : {}),
+        ...(mfaOf.has(k) ? { mfa: mfaOf.get(k)! } : {}),
+        ...((u.userType ?? "Member") !== "Member" ? { service: false } : {}),
+      };
+    });
     return {
       at: now.toISOString().replace(/\.\d+Z$/, "Z"),
       provider: "microsoft",
@@ -259,6 +278,7 @@ export const microsoft: Connector = {
       assets,
       posture,
       gaps,
+      entities: { accounts },
     };
   },
   policies(o, now) {

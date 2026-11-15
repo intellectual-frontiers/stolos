@@ -40,7 +40,8 @@ interface Server {
 /** Hetzner Cloud. */
 export const hetzner: Connector = {
   id: "hetzner",
-  category: "cloud",
+  serviceModels: ["IaaS"],
+  markets: ["strategic-cloud-platform-services"],
   title: "Hetzner Cloud",
   logo: "hetzner",
   connectHelp: [

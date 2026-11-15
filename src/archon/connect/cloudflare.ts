@@ -43,7 +43,8 @@ async function one<T>(http: Http, path: string, auth: Record<string, string>): P
 /** Cloudflare. */
 export const cloudflare: Connector = {
   id: "cloudflare",
-  category: "cloud",
+  serviceModels: ["SaaS", "PaaS"],
+  markets: ["edge-development-platforms"],
   title: "Cloudflare",
   logo: "cloudflare",
   connectHelp: [

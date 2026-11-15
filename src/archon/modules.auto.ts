@@ -75,6 +75,8 @@ import "./connect/aws.ts";
 import "./connect/cloudflare.ts";
 import "./connect/commands.ts";
 import "./connect/connector.ts";
+import "./connect/entities.ts";
+import "./connect/estate.ts";
 import "./connect/hetzner.ts";
 import "./connect/microsoft.ts";
 import "./console/assets.ts";

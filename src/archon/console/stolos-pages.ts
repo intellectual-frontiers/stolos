@@ -166,7 +166,14 @@ export const STOLOS_GROUPS: StolosGroup[] = [
     label: "Connected accounts",
     intro:
       "What the fleet keeps in Cloudflare, Microsoft 365 and Azure, AWS, and Hetzner, read with read-only credentials. Stolos never changes a cloud.",
-    names: ["connect", "estate observe", "estate check", "estate assets", "disconnect"],
+    names: [
+      "connect",
+      "estate observe",
+      "estate check",
+      "estate assets",
+      "estate query",
+      "disconnect",
+    ],
     first: "estate check",
     diagram: (f) =>
       `flowchart LR

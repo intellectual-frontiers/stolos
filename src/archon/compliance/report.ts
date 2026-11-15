@@ -20,7 +20,7 @@ export interface Evidence {
   /** What it is about: a machine, a cloud account, the repository. */
   subject: string;
   /** Where it came from. */
-  source: "managed" | "adopted" | "device" | "cloud" | "repository";
+  source: "managed" | "adopted" | "device" | "cloud" | "estate" | "repository";
   /** The check, in words. */
   check: string;
   /** Its result. */
@@ -147,6 +147,17 @@ export function fleetEvidence(f: PcFacts, now = Date.now()): Evidence[] {
         ...(r.fix ? { fix: r.fix } : {}),
       });
     }
+  }
+  for (const r of f.estate ?? []) {
+    out.push({
+      scf: r.scf,
+      subject: "across systems",
+      source: "estate",
+      check: r.title,
+      status: r.status,
+      detail: r.detail,
+      ...(r.fix ? { fix: r.fix } : {}),
+    });
   }
   for (const d of f.devices ?? []) {
     for (const r of d.results) {

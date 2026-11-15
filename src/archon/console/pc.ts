@@ -89,6 +89,8 @@ export interface PcFacts {
   adopted: Array<{ machine: AdoptedDef; observed?: Observed; results: PolicyResult[] }>;
   /** Every cloud provider. */
   clouds: PcConnector[];
+  /** Spec 085: the cross-system policies over the estate graph. */
+  estate?: PolicyResult[];
   /** Devices read over SNMPv3, with their policies. */
   devices: Array<
     {
@@ -302,6 +304,16 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
     adopted,
     clouds,
     devices,
+    estate: await (async () => {
+      try {
+        const { loadEstate } = await import("../connect/commands.ts");
+        const { estatePolicies } = await import("../connect/estate.ts");
+        return estatePolicies(await loadEstate());
+      } catch (e) {
+        warn("the estate graph")(e);
+        return [];
+      }
+    })(),
     signers,
     git: { dirty, unapproved: pending, log, ...(diffText ? { diff: diffText } : {}) },
   };

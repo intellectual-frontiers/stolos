@@ -186,6 +186,13 @@ Deno.test("067: Microsoft 365: users, Global Administrators, MFA; Azure optional
   assertEquals(o.account, "Example Co");
   assertEquals(o.posture.membersWithoutMfa, 1);
   assertEquals(o.posture.mfaEnforced, true);
+  // Spec 085: its people's accounts, for the estate graph.
+  const acc = o.entities?.accounts ?? [];
+  assertEquals(acc.map((a) => [a.email, a.admin, a.mfa]), [["alice@example.org", true, true], [
+    "bob@example.org",
+    false,
+    false,
+  ]]);
   const by = Object.fromEntries(microsoft.policies(o, NOW.getTime()).map((p) => [p.id, p]));
   assertEquals(by["ms-mfa-registered"].status, "fail");
   assertStringIncludes(by["ms-mfa-registered"].fix!, "bob@example.org");

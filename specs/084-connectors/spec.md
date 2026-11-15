@@ -4,9 +4,13 @@ Epic intellectual-frontiers/stolos#7; issue intellectual-frontiers/stolos#12.
 
 ## Requirements
 
-- **FR-001** The cloud providers of spec 067 become connectors (`src/archon/connect/`), each with a
-  category: cloud, identity, code, hr, endpoint, ticketing, collaboration, secrets, vulnerability,
-  training. The principles stay: a read-only credential in the vault
+- **FR-001** The cloud providers of spec 067 become connectors (`src/archon/connect/`). Each is
+  labeled with the world's terms, never Stolos's own: its service models as NIST SP 800-145 defines
+  them (IaaS, PaaS, SaaS: what FedRAMP calls a cloud service offering's service model), and its
+  market categories as the analyst firms name them (Gartner Magic Quadrants and Market Guides,
+  Forrester Waves: Strategic Cloud Platform Services, Access Management, DevOps Platforms, Cloud HCM
+  Suites, Unified Endpoint Management Tools, IT Service Management Platforms, ...), each with its
+  source. The principles stay: a read-only credential in the vault
   (`connectors/<id>/credential.json`), a recipe for making it, observations as GENERATED TypeScript
   in `fleets/<fleet>/estate/<id>.ts`, gaps reported rather than failing, posture policies with SCF
   controls.

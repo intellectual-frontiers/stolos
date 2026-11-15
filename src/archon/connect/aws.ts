@@ -136,7 +136,8 @@ async function call(
 /** AWS. */
 export const aws: Connector = {
   id: "aws",
-  category: "cloud",
+  serviceModels: ["IaaS", "PaaS"],
+  markets: ["strategic-cloud-platform-services"],
   title: "Amazon Web Services",
   logo: "",
   connectHelp: [

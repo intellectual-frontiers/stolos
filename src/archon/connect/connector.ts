@@ -20,23 +20,102 @@ import { join } from "../core/path.ts";
 import { P } from "../core/paths.ts";
 import { tsLiteral } from "../core/ts-literal.ts";
 import type { PolicyResult } from "../adopt/policy.ts";
+import type { Entities } from "./entities.ts";
 
-/** The kinds of account a connector reads (spec 084). */
-export const CONNECTOR_CATEGORIES = [
-  "cloud",
-  "identity",
-  "code",
-  "hr",
-  "endpoint",
-  "ticketing",
-  "collaboration",
-  "secrets",
-  "vulnerability",
-  "training",
-] as const;
+/**
+ * NIST SP 800-145's cloud service models, the ones FedRAMP uses to describe
+ * a cloud service offering.
+ */
+export const SERVICE_MODELS = ["IaaS", "PaaS", "SaaS"] as const;
 
-/** One kind of account. */
-export type ConnectorCategory = typeof CONNECTOR_CATEGORIES[number];
+/** A NIST SP 800-145 service model. */
+export type ServiceModel = typeof SERVICE_MODELS[number];
+
+/** A market category, by the name an analyst firm uses for it, and where that name comes from. */
+export interface MarketCategory {
+  /** A short id. */
+  id: string;
+  /** The category's name, as published. */
+  name: string;
+  /** Where the name comes from. */
+  source: string;
+}
+
+/**
+ * The market categories connectors belong to, named as the analyst firms
+ * name them (spec 084): never Stolos's own words. Reports are renamed over
+ * time; the newest name is used.
+ */
+export const MARKET_CATEGORIES: MarketCategory[] = [
+  {
+    id: "strategic-cloud-platform-services",
+    name: "Strategic Cloud Platform Services",
+    source: "Gartner Magic Quadrant",
+  },
+  {
+    id: "edge-development-platforms",
+    name: "Edge Development Platforms",
+    source: "Forrester Wave",
+  },
+  { id: "access-management", name: "Access Management", source: "Gartner Magic Quadrant" },
+  {
+    id: "identity-governance-administration",
+    name: "Identity Governance and Administration",
+    source: "Gartner Magic Quadrant",
+  },
+  { id: "devops-platforms", name: "DevOps Platforms", source: "Gartner Magic Quadrant" },
+  { id: "cloud-hcm-suites", name: "Cloud HCM Suites", source: "Gartner Magic Quadrant" },
+  {
+    id: "unified-endpoint-management",
+    name: "Unified Endpoint Management Tools",
+    source: "Gartner Magic Quadrant",
+  },
+  {
+    id: "endpoint-protection-platforms",
+    name: "Endpoint Protection Platforms",
+    source: "Gartner Magic Quadrant",
+  },
+  {
+    id: "it-service-management",
+    name: "IT Service Management Platforms",
+    source: "Gartner Magic Quadrant",
+  },
+  {
+    id: "enterprise-agile-planning",
+    name: "Enterprise Agile Planning Tools",
+    source: "Gartner Magic Quadrant",
+  },
+  {
+    id: "workstream-collaboration",
+    name: "Workstream Collaboration",
+    source: "Gartner Market Guide",
+  },
+  {
+    id: "secrets-management",
+    name: "Secrets Management",
+    source: "Gartner Hype Cycle for Application Security",
+  },
+  {
+    id: "cnapp",
+    name: "Cloud-Native Application Protection Platforms",
+    source: "Gartner Market Guide",
+  },
+  {
+    id: "vulnerability-assessment",
+    name: "Vulnerability Assessment",
+    source: "Gartner Market Guide",
+  },
+  {
+    id: "security-awareness-training",
+    name: "Security Awareness Computer-Based Training",
+    source: "Gartner Market Guide",
+  },
+];
+
+/** A market category by id. */
+export function marketCategory(id: string): MarketCategory | undefined {
+  return MARKET_CATEGORIES.find((m) => m.id === id);
+}
 
 /** One thing in an account: a zone, a DNS record, a server, a bucket, a user, ... */
 export interface Asset {
@@ -68,6 +147,8 @@ export interface Observation {
   posture: Record<string, string | number | boolean>;
   /** What could not be read, and why (a missing permission, usually). */
   gaps: string[];
+  /** Spec 085: the people, accounts, devices, and repositories it found, for the estate graph. */
+  entities?: Entities;
 }
 
 /** An HTTP GET or POST that returns parsed JSON or text; injectable for tests. */
@@ -91,8 +172,10 @@ export const realHttp: Http = async (url, init): Promise<{ status: number; text:
 export interface Connector {
   /** Its id (the vault folder and the file name). */
   id: string;
-  /** What kind of account it reads. */
-  category: ConnectorCategory;
+  /** Its NIST SP 800-145 service models (what FedRAMP calls the offering's service model). */
+  serviceModels: ServiceModel[];
+  /** Its market categories, as the analyst firms name them (ids in MARKET_CATEGORIES). */
+  markets: string[];
   /** Its name for people. */
   title: string;
   /** The Simple Icons slug for its logo, or "" when its owner does not allow one there. */

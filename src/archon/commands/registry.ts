@@ -1086,6 +1086,36 @@ export const COMMANDS: Command[] = [
     },
   },
   {
+    name: "estate query",
+    summary: "One SQL question across every source: people, accounts, devices, repositories",
+    description:
+      `Spec 085. The estate graph: every connector's people, accounts, devices, and repositories, and the fleet's own machines (managed, adopted, SNMP devices), in an in-memory SQLite database, from the last observations in Git (no network). One SELECT. Tables: people (email, name, status, start, end, manager, type), accounts (system, id, name, email, active, admin, mfa, lastLogin, service), devices (source, id, name, owner, os, serial, encrypted, managed, seen), repositories (system, name, private, protected, reviews, secretScanning, dependencyAlerts). Booleans are 0 and 1.`,
+    tier: "read",
+    args: [{
+      name: "sql",
+      type: "string",
+      positional: true,
+      required: true,
+      description: "One SELECT.",
+    }],
+    examples: [
+      {
+        cmd:
+          'deno task stolos estate query "select system, name from accounts where admin = 1 and mfa = 0"',
+        text: "Administrators without a second factor, in every system.",
+      },
+      {
+        cmd:
+          "deno task stolos estate query \"select p.email, a.system from people p join accounts a on a.email = p.email where p.status = 'terminated' and a.active = 1\"",
+        text: "People who left, with accounts still on.",
+      },
+    ],
+    async run(a, ctx) {
+      const { estateQueryCommand } = await import("../connect/commands.ts");
+      return await estateQueryCommand(a.sql as string, ctx.json);
+    },
+  },
+  {
     name: "estate assets",
     summary: "Everything in the fleet's cloud accounts, as one table",
     description:
@@ -2917,6 +2947,7 @@ On a server, workstations reach it as ops over SSH (spec 030): ops' authorized_k
  */
 /** Commands run with `stolos` on your PC (the rest run with `archon` on each machine). */
 const PC_COMMANDS = new Set([
+  "estate query",
   "device add",
   "device observe",
   "device check",

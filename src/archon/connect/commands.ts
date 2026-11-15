@@ -171,14 +171,18 @@ export async function estateCheck(id?: string, json = false): Promise<number> {
     account: o.account,
     results: provider(o.provider)!.policies(o, now),
   }));
-  if (json) console.log(JSON.stringify(results, null, 2));
+  // Spec 085: what no single source can say, across every source.
+  const { estatePolicies } = await import("./estate.ts");
+  const across = id ? [] : estatePolicies(await loadEstate());
+  if (json) console.log(JSON.stringify({ accounts: results, acrossSystems: across }, null, 2));
   else {
     if (!all.length) {
       ui.phase("Estate").done("no account observed yet (deno task stolos connect cloudflare)");
     }
     for (const r of results) report(`${r.provider} (${r.account})`, r.results);
+    if (across.length) report("across systems", across);
   }
-  return results.some((r) => r.results.some((x) => x.status === "fail")) ? 1 : 0;
+  return [...results.flatMap((r) => r.results), ...across].some((x) => x.status === "fail") ? 1 : 0;
 }
 
 /** `stolos estate assets [provider] [--kind k] [--json]`: one table of everything observed. */
@@ -216,5 +220,73 @@ export async function connectorDisconnect(id: string): Promise<number> {
       observationFile(id).replace(P.repo + "/", "")
     } (delete it to forget)`,
   );
+  return 0;
+}
+
+/** Spec 085: the estate graph, from every observation and the fleet's own machines. */
+export async function loadEstate(): Promise<import("./estate.ts").Estate> {
+  const { buildEstate } = await import("./estate.ts");
+  const sources = (await loadObservations()).map((o) => o.entities ?? {});
+  const devices: import("./entities.ts").Device[] = [];
+  const { loadHosts } = await import("../model/load.ts");
+  for (const h of await loadHosts().catch(() => [])) {
+    devices.push({ source: "stolos", id: h.name, name: h.name, managed: true, os: "Ubuntu" });
+  }
+  const { loadAdopted } = await import("../adopt/adopt.ts");
+  for (const { machine, observed } of await loadAdopted()) {
+    const enc = observed?.security.diskEncryption;
+    devices.push({
+      source: "adopted",
+      id: machine.name,
+      name: machine.name,
+      managed: false,
+      ...(machine.owner ? { owner: machine.owner } : {}),
+      ...(observed
+        ? { os: `${observed.os.name} ${observed.os.version}`.trim(), seen: observed.at }
+        : {}),
+      ...(observed?.os.serial ? { serial: observed.os.serial } : {}),
+      ...(enc === "on" || enc === "off" ? { encrypted: enc === "on" } : {}),
+    });
+  }
+  const { loadDevices } = await import("../device/device.ts");
+  for (const { device, observed } of await loadDevices()) {
+    devices.push({
+      source: "snmp",
+      id: device.name,
+      name: device.name,
+      managed: false,
+      ...(device.owner ? { owner: device.owner } : {}),
+      ...(observed?.model ? { os: observed.model } : {}),
+      ...(observed?.serial ? { serial: observed.serial } : {}),
+      ...(observed ? { seen: observed.at } : {}),
+    });
+  }
+  return buildEstate([...sources, { devices }]);
+}
+
+/** `stolos estate query "<sql>"`: one SELECT across every source (people, accounts, devices, repositories). */
+export async function estateQueryCommand(sql: string, json = false): Promise<number> {
+  const { estateQuery, estateRefusal } = await import("./estate.ts");
+  const why = estateRefusal(sql);
+  if (why) {
+    ui.phase("Query").fail(
+      `refused: ${why}`,
+      `for example: deno task stolos estate query "select system, name from accounts where admin = 1"`,
+    );
+    return 1;
+  }
+  let rows: Array<Record<string, unknown>>;
+  try {
+    rows = estateQuery(await loadEstate(), sql);
+  } catch (e) {
+    ui.phase("Query").fail((e as Error).message, "tables: people, accounts, devices, repositories");
+    return 1;
+  }
+  if (json) console.log(JSON.stringify(rows, null, 2));
+  else {
+    const { table } = await import("../state/query.ts");
+    if (rows.length) console.log(table(rows));
+    console.log(`\n${rows.length} row(s)`);
+  }
   return 0;
 }
