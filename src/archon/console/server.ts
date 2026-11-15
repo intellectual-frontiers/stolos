@@ -377,18 +377,25 @@ export function consoleHandler(
         if (path === "/compliance") {
           const d = await deps.data();
           const r = await deps.repo();
-          const { complianceView, serverEvidence } = await import("../compliance/report.ts");
+          const { serverEvidence } = await import("../compliance/report.ts");
+          const { freshView, loadCadences } = await import("../compliance/freshness.ts");
           const { loadScf } = await import("../compliance/catalog.ts");
           const { compliancePage } = await import("./compliance-page.ts");
-          const view = complianceView(
+          // Spec 073: its verify's evidence, held to the managed cadence (15 minutes).
+          const view = freshView(
             serverEvidence({
               host: deps.host,
               ...(d.verify ? { verify: d.verify } : {}),
               ...(r.signer ? { signer: r.signer } : {}),
               ...(r.commit ? { commit: r.commit.sha } : {}),
               https: true,
-            }),
+            }).map((e) =>
+              e.source === "managed" && e.scf.includes("MON-02") && d.verify?.at
+                ? { ...e, observedAt: d.verify.at }
+                : e
+            ),
             await loadScf(),
+            { cadences: await loadCadences({ connectors: false }) },
           );
           return frame(
             s,

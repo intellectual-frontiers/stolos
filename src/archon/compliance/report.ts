@@ -32,6 +32,12 @@ export interface Evidence {
   detail: string;
   /** How to make it pass. */
   fix?: string;
+  /** Spec 073: when it was observed (ISO), when its source knows. */
+  observedAt?: string;
+  /** Spec 073: the connector it came from (cloud evidence), for its cadence. */
+  connector?: string;
+  /** Spec 073: older than its service level, so failing; `was` is what it said. */
+  stale?: { was: PolicyResult["status"]; ageMs: number; staleAfter: string };
 }
 
 /** A status for a control or a requirement. */

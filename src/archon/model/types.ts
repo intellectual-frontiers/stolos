@@ -8,6 +8,7 @@
  */
 
 import type { SiteDef } from "./site.ts";
+import type { CadenceOverrides } from "../compliance/freshness.ts";
 
 /** The site network model (spec 028), re-exported for the fleet types that use it. */
 export type {
@@ -218,6 +219,13 @@ export interface FleetDef {
    * schedule. See ExportJobDef.
    */
   estate?: { personSources?: string[]; exports?: ExportJobDef[] };
+  /**
+   * Compliance (spec 073). `cadence`: how often each source of evidence is
+   * observed and how late it may be before it is stale (a failing check,
+   * SCF MON-02). Default: managed servers every 15 minutes, everything else
+   * daily, each stale after twice its cadence, never more than 7 days.
+   */
+  compliance?: { cadence?: CadenceOverrides };
   /** Local observability limits for every host and workstation (spec 021). */
   observability?: Partial<ObservabilityDef>;
   /**

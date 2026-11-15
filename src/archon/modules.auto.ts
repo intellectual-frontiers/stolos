@@ -72,6 +72,8 @@ import "./commands/mod.ts";
 import "./commands/registry.ts";
 import "./compliance/catalog.ts";
 import "./compliance/commands.ts";
+import "./compliance/drift.ts";
+import "./compliance/freshness.ts";
 import "./compliance/mod.ts";
 import "./compliance/oscal.ts";
 import "./compliance/report.ts";

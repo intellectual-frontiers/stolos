@@ -12,6 +12,7 @@
  * deno task stolos compliance
  * deno task stolos compliance --framework hipaa
  * deno task stolos compliance export
+ * deno task stolos compliance drift --since 2026-11-01
  * ```
  *
  * `compliance catalog` downloads, once per PC, the SCF workbook from the SCF Council's repository
@@ -62,6 +63,68 @@
  *
  * See the delivery module (`src/archon/export/deliver.ts`) and its commands
  * (`src/archon/export/delivery-commands.ts`) for the send-only credential and the certificates.
+ *
+ * ## Freshness
+ *
+ * Evidence is only as good as its last observation (spec 073). Each source of evidence has a
+ * cadence and a service level, modeled on FedRAMP 20x's persistent validation, which expects
+ * machine-based validation every 3 to 7 days:
+ *
+ * | Source                        | Cadence                     | Stale after (service level) |
+ * | ----------------------------- | --------------------------- | --------------------------- |
+ * | Managed servers (verify)      | every 15 minutes            | 30 minutes                  |
+ * | Adopted machines              | daily                       | 2 days                      |
+ * | SNMP devices                  | daily                       | 2 days                      |
+ * | Connected accounts            | daily, or the connector's   | twice the cadence           |
+ * | The repository, estate graph  | read live from Git          | never stale                 |
+ *
+ * The service level is twice the cadence unless set, and never more than 7 days. A fleet overrides
+ * any of them in `fleets/<fleet>/fleet.ts`:
+ *
+ * ```ts ignore
+ * compliance: {
+ *   cadence: {
+ *     managed: { every: "1h" },
+ *     adopted: { every: "1d", staleAfter: "3d" },
+ *     connectors: { bamboohr: { every: "7d" } },
+ *   },
+ * },
+ * ```
+ *
+ * Every piece of evidence carries when it was observed. Evidence older than its service level is
+ * stale: it fails its own controls and MON-02 (Continuous Monitoring), and its fix is the command
+ * that observes its source again (`stolos fleet status`, `host observe`, `device observe`,
+ * `estate observe`). `stolos compliance` prints each control's newest and oldest evidence age and
+ * the stale sources; `--json` includes the ages; the Compliance tab shows them with a stale pill.
+ *
+ * ```mermaid
+ * flowchart LR
+ *   obs["Observations: verify, host observe, device observe, estate observe"] -- "observedAt" --> ev["Evidence"]
+ *   cad["Cadences: defaults, a connector's own, fleet.ts"] --> sl{"Older than its service level?"}
+ *   ev --> sl
+ *   sl -- "no" --> ctl["Its controls, as observed"]
+ *   sl -- "yes: stale" --> fail["Fails its controls and MON-02"]
+ *   ctl & fail --> drift["compliance drift: then and now"]
+ *   drift -- "--notify" --> mail["fleet.mail.to"]
+ * ```
+ *
+ * ### Drift
+ *
+ * `stolos compliance drift` compares each control's status now with its status at a past commit
+ * (`--since`: a commit, or the last commit before a date; default one day ago), from the
+ * observations in Git, each side held to the cadences as of its own time. With `--notify` it mails
+ * the changes to the fleet's mailbox through the fleet's notify path: control ids, subjects, checks,
+ * and statuses, never what a check found. Run it on a schedule with this PC's own scheduler, from
+ * the fleet checkout, for example daily at 07:10:
+ *
+ * ```sh
+ * # Linux or macOS (crontab -e)
+ * 10 7 * * * cd ~/fleet && deno task stolos compliance drift --notify
+ * # Windows (once, in a terminal)
+ * schtasks /Create /SC DAILY /ST 07:10 /TN "Stolos\compliance-drift" /TR "cmd /c cd /d %USERPROFILE%\fleet && deno task stolos compliance drift --notify"
+ * ```
+ *
+ * A change is mailed once an hour at most (the notify path's own deduplication).
  *
  * ## What it is, and is not
  *

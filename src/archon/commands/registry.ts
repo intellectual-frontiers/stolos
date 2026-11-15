@@ -954,7 +954,7 @@ export const COMMANDS: Command[] = [
     summary:
       "The fleet's evidence by SCF control, and by each framework's requirements (SOC 2, HIPAA, PCI DSS, CMMC, NIST, FedRAMP)",
     description:
-      `Specs 068 and 071. From what this PC already knows (managed servers' last verify, adopted machines' and devices' policies, the SaaS and cloud accounts' posture, the repository's signatures): each Secure Controls Framework control's status and evidence, and each framework requirement's status through its controls, by the SCF Council's own mappings (STRM; deno task stolos compliance catalog downloads them once). Exits 1 when a control fails; --json for auditors.`,
+      `Specs 068 and 071. From what this PC already knows (managed servers' last verify, adopted machines' and devices' policies, the SaaS and cloud accounts' posture, the repository's signatures): each Secure Controls Framework control's status and evidence, and each framework requirement's status through its controls, by the SCF Council's own mappings (STRM; deno task stolos compliance catalog downloads them once). Spec 073: each control's evidence age (newest and oldest), each source held to its cadence (managed servers verify every 15 minutes; adopted machines, devices, and accounts daily; compliance.cadence in fleet.ts overrides them); stale evidence is a failing check of its controls and of MON-02, with the command that observes it again. Exits 1 when a control fails; --json for auditors (with the ages).`,
     tier: "read",
     args: [{
       name: "framework",
@@ -1033,6 +1033,39 @@ export const COMMANDS: Command[] = [
     async run(a, ctx) {
       const { evidenceVerify } = await import("../evidence/commands.ts");
       return await evidenceVerify(a.bundle as string, a.signers as string | undefined, ctx.json);
+    },
+  },
+  {
+    name: "compliance drift",
+    summary:
+      "Which SCF controls changed status since a commit or a date; --notify mails the fleet's mailbox",
+    description:
+      `Spec 073. Compares each SCF control's status now (the working tree) with its status at a past commit of the fleet repository (--since: a commit, or the last commit before a date such as 2026-11-01 or "1 day ago"; default "1 day ago"), from the observations Git records (adopted machines, devices, connected accounts), each side held to the evidence cadences as of its own time, so evidence that went stale is drift too. Lists the controls whose status changed and the evidence under them. --notify mails a summary to the fleet's mailbox (fleet.mail.to) through the fleet's notify path: control ids, subjects, checks, and statuses only, never what a check found. Managed servers' verifies are in this PC's state, not in Git, so they are not compared. Run it on a schedule with this PC's own scheduler (the compliance guide shows how).`,
+    tier: "read",
+    noMcp: true,
+    args: [
+      {
+        name: "since",
+        type: "string",
+        description: 'A commit, or a date Git understands (default: "1 day ago").',
+      },
+      {
+        name: "notify",
+        type: "boolean",
+        description: "Mail a summary of the changes to the fleet's mailbox (nothing when none).",
+      },
+    ],
+    examples: [{
+      cmd: "deno task stolos compliance drift --since 2026-11-01 --notify",
+      text: "What changed since the first of November, mailed to the fleet's mailbox.",
+    }],
+    async run(a, ctx) {
+      const { driftCommand } = await import("../compliance/drift.ts");
+      return await driftCommand({
+        ...(a.since ? { since: a.since as string } : {}),
+        notify: !!a.notify,
+        json: ctx.json,
+      });
     },
   },
   {
@@ -3371,6 +3404,7 @@ const PC_COMMANDS = new Set([
   "host accept",
   "compliance",
   "compliance catalog",
+  "compliance drift",
   "compliance export",
   "export list",
   "export run",

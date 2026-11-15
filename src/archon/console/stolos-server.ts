@@ -165,12 +165,12 @@ async function pcOscal(
 ): Promise<Record<string, unknown>> {
   if (!catalog) return {};
   const { loadNist } = await import("../compliance/catalog.ts");
-  const { complianceView, fleetEvidence } = await import("../compliance/report.ts");
+  const { fleetFreshView, loadCadences } = await import("../compliance/freshness.ts");
   const { oscalExports } = await import("../compliance/oscal.ts");
   const { VERSION } = await import("../version.ts");
   const nist = await loadNist("nist80053");
   return await oscalExports({
-    view: complianceView(fleetEvidence(f), catalog),
+    view: fleetFreshView(f, catalog, { cadences: await loadCadences() }),
     fleet: f.fleet,
     machines: f.machines.filter((m) => m.kind !== "discovered"),
     ...(nist ? { titles: nist.titles } : {}),
@@ -495,8 +495,9 @@ export function stolosHandler(
       }
       if (path === "/compliance" || path === "/export/compliance.json") {
         const { loadScf } = await import("../compliance/catalog.ts");
-        const { complianceView, fleetEvidence } = await import("../compliance/report.ts");
-        const view = complianceView(fleetEvidence(f), await loadScf());
+        // Spec 073: with each control's evidence age; stale evidence fails (MON-02).
+        const { fleetFreshView, loadCadences } = await import("../compliance/freshness.ts");
+        const view = fleetFreshView(f, await loadScf(), { cadences: await loadCadences() });
         if (path.startsWith("/export/")) {
           return new Response(JSON.stringify(view, null, 2) + "\n", {
             headers: {

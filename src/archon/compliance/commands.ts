@@ -3,7 +3,9 @@
  * fleet's evidence by SCF control and by framework, from what this PC
  * already knows (nothing is asked of a server); `stolos compliance catalog`
  * downloads the SCF Council's and NIST's catalogs (pinned, SHA-256 checked);
- * `stolos compliance export` writes the fleet's OSCAL documents.
+ * `stolos compliance export` writes the fleet's OSCAL documents. Spec 073:
+ * each control shows its evidence's age, and stale evidence fails (MON-02);
+ * `stolos compliance drift` is in `drift.ts`.
  *
  * @module
  */
@@ -17,7 +19,7 @@ import {
   SCF_SOURCE,
   type ScfCatalog,
 } from "./catalog.ts";
-import { complianceView, fleetEvidence } from "./report.ts";
+import { fleetFreshView, formatAge, loadCadences, staleSubjects } from "./freshness.ts";
 import { FRAMEWORKS, SCF } from "./scf.ts";
 
 const CATALOG_HINT = "deno task stolos compliance catalog";
@@ -37,7 +39,8 @@ export async function complianceCommand(
   }
   const { pcFacts } = await import("../console/pc.ts");
   const catalog = await loadScf();
-  const view = complianceView(fleetEvidence(await pcFacts()), catalog);
+  // Spec 073: each piece of evidence held to its source's cadence; stale evidence fails.
+  const view = fleetFreshView(await pcFacts(), catalog, { cadences: await loadCadences() });
   const failing = view.controls.some((c) => c.status === "fail");
   if (ocsf) {
     // Spec 089: one OCSF Compliance Finding per piece of evidence and SCF control, as JSON Lines.
@@ -88,9 +91,40 @@ export async function complianceCommand(
     }
     p.done(`${f.requirements.length} requirement(s): ${line(f.requirements.map((r) => r.status))}`);
   }
+  {
+    // Spec 073: each control's evidence age (newest, oldest), and the stale evidence.
+    const { table } = await import("../state/query.ts");
+    const age = (ms?: number) => ms === undefined ? "" : formatAge(ms);
+    const rows = view.controls.filter((c) => c.evidence.length).map((c) => ({
+      control: c.control.id,
+      status: c.status,
+      evidence: c.evidence.length,
+      newest: age(c.freshness.newestAgeMs),
+      oldest: age(c.freshness.oldestAgeMs),
+      stale: c.freshness.stale || "",
+    }));
+    if (rows.length) console.log(table(rows) + "\n");
+    const fp = ui.phase("Freshness");
+    const stale = staleSubjects(view);
+    for (const s of stale) {
+      fp.warn(
+        `${s.subject} (${s.source}): observed ${
+          formatAge(s.ageMs)
+        } ago, stale after ${s.staleAfter}; ${s.checks} check(s) fail (MON-02)`,
+        s.fix ?? "",
+      );
+    }
+    const c = view.cadences.sources;
+    fp.done(
+      `${
+        stale.length ? `${stale.length} stale source(s)` : "no stale evidence"
+      }; cadences: managed ${c.managed.every} (stale after ${c.managed.staleAfter}), adopted ${c.adopted.every} (${c.adopted.staleAfter}), devices ${c.device.every} (${c.device.staleAfter}), accounts ${c.cloud.every} (${c.cloud.staleAfter})`,
+    );
+  }
   const s = ui.phase("SCF controls");
   for (const c of view.controls.filter((x) => x.status === "fail")) {
-    for (const e of c.evidence.filter((x) => x.status === "fail")) {
+    // Stale evidence is listed once per source under Freshness.
+    for (const e of c.evidence.filter((x) => x.status === "fail" && !x.stale)) {
       s.warn(`${c.control.id} ${e.subject}: ${e.check} (${e.detail})`, e.fix ?? "");
     }
   }
@@ -174,7 +208,7 @@ export async function oscalDocuments(now: Date = new Date()): Promise<OscalResul
   }
   const nist = await loadNist("nist80053");
   const docs = await oscalExports({
-    view: complianceView(fleetEvidence(f), catalog),
+    view: fleetFreshView(f, catalog, { cadences: await loadCadences() }),
     fleet: f.fleet,
     machines: f.machines.filter((m) => m.kind !== "discovered"),
     ...(nist ? { titles: nist.titles } : {}),

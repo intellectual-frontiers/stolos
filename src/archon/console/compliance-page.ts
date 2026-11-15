@@ -3,7 +3,8 @@
  * evidence, and each framework's requirements (SOC 2, HIPAA, PCI DSS, CMMC,
  * NIST SP 800-53 and 800-171, FedRAMP) with what their controls say, through
  * the SCF Council's own mappings (spec 071). Without the catalog on this
- * machine, the page says so and shows the controls alone.
+ * machine, the page says so and shows the controls alone. Spec 073: each
+ * control shows its evidence's age, and stale evidence carries a stale pill.
  *
  * @module
  */
@@ -11,6 +12,7 @@
 import type { ComplianceView, ControlStatus, Coverage } from "../compliance/report.ts";
 import { criteriaOnly } from "../compliance/catalog.ts";
 import { FRAMEWORKS } from "../compliance/scf.ts";
+import { controlFreshness, formatAge } from "../compliance/freshness.ts";
 import { type Html, html } from "./html.ts";
 import { diagram } from "./layout.ts";
 
@@ -18,7 +20,7 @@ const pill = (s: Coverage | string) =>
   html`<span class="pill ${
     s === "pass"
       ? "ok"
-      : s === "fail"
+      : s === "fail" || s === "stale"
       ? "bad"
       : s === "partial" || s === "warn" || s === "accepted"
       ? "warn"
@@ -35,11 +37,21 @@ function count(ss: Coverage[]): Html {
   `;
 }
 
-function controlBlock(c: ControlStatus, fw?: string): Html {
+/** Spec 073: the age of a control's evidence (newest, oldest), and a stale pill. */
+function ages(c: ControlStatus, now: number): Html {
+  const f = controlFreshness(c, now);
+  if (f.newestAgeMs === undefined) return html``;
+  const span = f.newestAgeMs === f.oldestAgeMs
+    ? `observed ${formatAge(f.newestAgeMs)} ago`
+    : `observed ${formatAge(f.newestAgeMs)} to ${formatAge(f.oldestAgeMs!)} ago`;
+  return html`<span class="sub nowrap">${span}</span> ${f.stale ? pill("stale") : ""}`;
+}
+
+function controlBlock(c: ControlStatus, now: number, fw?: string): Html {
   return html`<details class="card" id="${c.control.id}" ${c.status === "fail" ? "open" : ""}>
-    <summary class="row spread"><span><span class="mono nowrap">${c.control.id}</span> <b>${c.control.name}</b></span>${
-    pill(c.status)
-  }</summary>
+    <summary class="row spread"><span><span class="mono nowrap">${c.control.id}</span> <b>${c.control.name}</b></span><span class="row" style="gap:6px">${
+    ages(c, now)
+  } ${pill(c.status)}</span></summary>
     <p class="sub">${c.control.how}</p>
     ${c.control.description ? html`<p class="sub"><i>SCF:</i> ${c.control.description}</p>` : ""}
     ${
@@ -64,6 +76,7 @@ function controlBlock(c: ControlStatus, fw?: string): Html {
                 <th>Check</th>
                 <th>Result</th>
                 <th>Found</th>
+                <th>Observed</th>
                 <th>Fix</th>
               </tr>
             </thead>
@@ -74,6 +87,9 @@ function controlBlock(c: ControlStatus, fw?: string): Html {
                   <td>${e.check}</td>
                   <td>${pill(e.status)}</td>
                   <td class="sub">${e.detail}</td>
+                  <td class="sub nowrap">${e.observedAt
+                    ? `${formatAge(now - Date.parse(e.observedAt))} ago`
+                    : "live"} ${e.stale ? pill("stale") : ""}</td>
                   <td class="sub">${e.status === "pass" ? "" : e.fix ?? ""}</td>
                 </tr>
               `
@@ -132,7 +148,7 @@ export function compliancePage(
       class="sub">As of ${now.toISOString().slice(0, 16).replace(
         "T",
         " ",
-      )} UTC, from the last observations and verifies this console knows.</p>
+      )} UTC, from the last observations and verifies this console knows. Each source is observed on a cadence (managed servers verify every 15 minutes; adopted machines, devices, and accounts daily); evidence older than its service level is stale, and fails its controls and MON-02 (Continuous Monitoring) until it is observed again.</p>
     ${fw && !f
       ? html`<div class="notice bad">There is no framework "${fw}": choose one below.</div>`
       : ""}
@@ -189,7 +205,7 @@ export function compliancePage(
                 </div>
         <div class="stack" style="margin-top:14px">${v.controls.filter((c) =>
           c.control.maps[f.id].length
-        ).map((c) => controlBlock(c, f.id))}</div>
+        ).map((c) => controlBlock(c, now.getTime(), f.id))}</div>
       `
       : html`
         <div class="card" style="margin-top:14px">
@@ -197,7 +213,9 @@ export function compliancePage(
             v.controls.map((c) => c.status),
           )}</div>
         </div>
-        <div class="stack" style="margin-top:14px">${v.controls.map((c) => controlBlock(c))}</div>
+        <div class="stack" style="margin-top:14px">${v.controls.map((c) =>
+          controlBlock(c, now.getTime())
+        )}</div>
       `}
   `;
 }

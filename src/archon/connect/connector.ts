@@ -22,6 +22,7 @@ import { P } from "../core/paths.ts";
 import { tsLiteral } from "../core/ts-literal.ts";
 import type { PolicyResult } from "../adopt/policy.ts";
 import type { Entities } from "./entities.ts";
+import type { CadenceDef } from "../compliance/freshness.ts";
 
 /**
  * NIST SP 800-145's cloud service models, the ones FedRAMP uses to describe
@@ -212,6 +213,8 @@ export interface Connector {
   observe(cred: Record<string, string>, http: Http, now: Date): Promise<Observation>;
   /** Its posture policies. */
   policies(o: Observation, now: number): PolicyResult[];
+  /** Spec 073: how often it is observed, when not daily (a fleet may override it). */
+  cadence?: CadenceDef;
 }
 
 /** Where a provider's credential is in the vault. */

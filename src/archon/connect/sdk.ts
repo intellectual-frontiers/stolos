@@ -171,6 +171,8 @@ export interface ConnectorDef<F extends Record<string, FieldDef>> {
   posture(records: ObservedRecord[], cred: CredOf<F>, seen: Seen): Observation["posture"];
   /** Its posture policies. */
   policies(o: Observation, now: number): PolicyResult[];
+  /** Spec 073: how often it is observed, when not daily. */
+  cadence?: Connector["cadence"];
 }
 
 /** HTTP that refuses anything but GET, except POSTs to the given URL prefixes. */
@@ -280,6 +282,7 @@ export function defineConnector<F extends Record<string, FieldDef>>(
     connectHelp: def.connectHelp,
     recipe: def.recipe,
     fields: Object.entries(def.fields).map(([name, f]) => ({ name, ...f })),
+    ...(def.cadence ? { cadence: def.cadence } : {}),
     def,
     async observe(raw, http, now) {
       const cred = raw as CredOf<F>;
