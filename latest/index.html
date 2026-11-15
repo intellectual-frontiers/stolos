@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Stolos v0.111.0</title>
+<title>Stolos v0.112.0</title>
 <link rel="stylesheet" href="./styles.css">
 <link rel="stylesheet" href="./page.css">
 <script src="./darkmode_toggle.js"></script>
@@ -17,7 +17,7 @@
 </head>
 <body>
 <main>
-<h1>Stolos v0.111.0</h1>
+<h1>Stolos v0.112.0</h1>
 <p>The fleet engine (its command is <code>archon</code>), documented from its TypeScript.</p>
 <p class="start">Start here: <a href="./mod.ts/index.html">the overview</a>, with how the
 pieces fit, in diagrams. Then the model: <a href="./archon/model/types.ts/index.html">types.ts</a>.
@@ -35,6 +35,7 @@ Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 <li><a href="./archon/adopt/mod.ts/index.html">Adopted machines, devices, and clouds</a> Laptops, printers, and cloud accounts: observed, never changed.</li>
 <li><a href="./archon/compliance/mod.ts/index.html">Compliance</a> SCF controls; SOC 2, HIPAA, PCI DSS, CMMC, NIST, and FedRAMP; OSCAL exports.</li>
 <li><a href="./archon/controls/mod.ts/index.html">Custom controls</a> Your own controls in TypeScript: packs in the fleet repository, tested like code.</li>
+<li><a href="./archon/risk/mod.ts/index.html">Risks and vendors</a> The risk register and vendor inventory as code, reviewed through signed pull requests.</li>
 <li><a href="./archon/people/mod.ts/index.html">People controls</a> Joiners and leavers, access reviews, policies, training, and screening, as code.</li>
 <li><a href="./archon/evidence/mod.ts/index.html">Evidence bundles</a> A period's evidence, signed, for an auditor to check offline.</li>
 <li><a href="./archon/web/mod.ts/index.html">HTTPS on every server</a> Publishing services, certificates, the Archon Console.</li>
@@ -452,6 +453,17 @@ Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 <h2>archon/report/</h2>
 <ul>
 <li><a href="./archon/report/daily.ts/index.html"><code>daily.ts</code></a> archon report daily (spec 013): deterministic facts only.</li>
+</ul>
+<h2>archon/risk/</h2>
+<ul>
+<li><a href="./archon/risk/commands.ts/index.html"><code>commands.ts</code></a> Spec 080: stolos risks list | check | review and stolos vendors list | triage, on the controller PC, over the fleet repository and the estate graph built from Git.</li>
+<li><a href="./archon/risk/controls.ts/index.html"><code>controls.ts</code></a> Spec 080: the register and the vendors in the estate graph, and the controls over them, written on the control SDK (spec 078) like any other pack.</li>
+<li><a href="./archon/risk/fleet.ts/index.html"><code>fleet.ts</code></a> Spec 080: the fleet's register and vendors, read from the fleet repository (risks.ts, vendors.ts, controls/accepted.ts, adopted machines) and the estate graph, and run as the risk-register pack.</li>
+<li><a href="./archon/risk/mod.ts/index.html"><code>mod.ts</code></a> The risk register and the vendor inventory are code in the fleet repository (spec 080): a risk is a typed entry in fleets/&lt;fleet&gt;/risks.ts, a vendor's triage is a typed entry in…</li>
+<li><a href="./archon/risk/register.ts/index.html"><code>register.ts</code></a> Spec 080: the risk register, as TypeScript.</li>
+<li><a href="./archon/risk/review.ts/index.html"><code>review.ts</code></a> Spec 080: review through signed pull requests.</li>
+<li><a href="./archon/risk/schema.ts/index.html"><code>schema.ts</code></a> Spec 080: the tables the risk register and the vendor inventory add to the estate graph, declared once in spec 089's schema language.</li>
+<li><a href="./archon/risk/vendors.ts/index.html"><code>vendors.ts</code></a> Spec 080: the vendor inventory.</li>
 </ul>
 <h2>archon/s3/</h2>
 <ul>

@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>archon/compliance/impact.ts - Stolos v0.112.0 documentation</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="doc-current-file" content="">
+  <link rel="stylesheet" href="..&#x2F;..&#x2F;..&#x2F;styles.css">
+  <link rel="stylesheet" href="..&#x2F;..&#x2F;..&#x2F;page.css">
+  <link id="ddocResetStylesheet" rel="stylesheet" href="..&#x2F;..&#x2F;..&#x2F;reset.css"><link href="../../../comrak.css" rel="stylesheet" /><link href="../../../prism.css" rel="stylesheet" /><script src="../../../prism.js"></script><script src="..&#x2F;..&#x2F;..&#x2F;script.js" defer></script>
+  <script src="..&#x2F;..&#x2F;..&#x2F;darkmode_toggle.js"></script><script src="..&#x2F;..&#x2F;..&#x2F;search_index.js" defer></script>
+    <script src="..&#x2F;..&#x2F;..&#x2F;fuse.js" defer></script>
+    <script src="..&#x2F;..&#x2F;..&#x2F;search.js" defer></script></head>
+<body>
+<div class="ddoc">
+<div><nav id="topnav">
+  <div class="h-full">
+    <div class="flex items-center"><ul class="breadcrumbs">
+  <li>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.112.0</a>
+  </li><span class="text-black dark:text-white"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 16 16"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <path
+    fill-rule="evenodd"
+    clip-rule="evenodd"
+    d="M5.76748 11.8159C5.5378 11.577 5.54525 11.1972 5.78411 10.9675L8.93431 8L5.78411 5.0325C5.54525 4.80282 5.5378 4.423 5.76748 4.18413C5.99715 3.94527 6.37698 3.93782 6.61584 4.1675L10.2158 7.5675C10.3335 7.68062 10.4 7.83679 10.4 8C10.4 8.16321 10.3335 8.31938 10.2158 8.4325L6.61584 11.8325C6.37698 12.0622 5.99715 12.0547 5.76748 11.8159Z"
+    fill="currentColor"
+  />
+</svg>
+</span>archon&#x2F;compliance&#x2F;impact.ts</ul>
+</div>
+
+    <div class="flex items-center gap-2">
+      <button id="theme-toggle" type="button" aria-label="Toggle dark mode" style="display: none;"><svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="14"
+  height="14"
+  viewBox="0 0 24 24"
+  fill="currentColor"
+>
+  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+  <path
+    d="M12 1.992a10 10 0 1 0 9.236 13.838c.341 -.82 -.476 -1.644 -1.298 -1.31a6.5 6.5 0 0 1 -6.864 -10.787l.077 -.08c.551 -.63 .113 -1.653 -.758 -1.653h-.266l-.068 -.006l-.06 -.002z"
+  />
+</svg>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="14"
+  height="14"
+  viewBox="0 0 24 24"
+  fill="currentColor"
+  class="hidden"
+>
+  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+  <path
+    d="M12 19a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"
+  />
+  <path
+    d="M18.313 16.91l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.218 -1.567l.102 .07z"
+  />
+  <path
+    d="M7.007 16.993a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"
+  />
+  <path
+    d="M4 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"
+  />
+  <path
+    d="M21 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"
+  />
+  <path
+    d="M6.213 4.81l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.217 -1.567l.102 .07z"
+  />
+  <path
+    d="M19.107 4.893a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"
+  />
+  <path
+    d="M12 2a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"
+  />
+  <path
+    d="M12 7a5 5 0 1 1 -4.995 5.217l-.005 -.217l.005 -.217a5 5 0 0 1 4.995 -4.783z"
+  />
+</svg>
+</button>
+
+        <input
+          type="text"
+          id="searchbar"
+          style="display: none;"
+          class="py-2 px-2.5 mx-1 rounded text-sm border border-gray-300 bg-transparent dark:bg-gray-800 dark:border-gray-700"
+          />
+    </div>
+  </div>
+</nav>
+<div id="searchResults"></div><div id="content">
+    <main><section>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc"><div class="markdown"><p>Spec 074: compliance impact at the point of change. Given the fleet at a
+base commit and at a head commit (or the working tree), which SCF controls
+the change weakens or strengthens, with the framework requirements the SCF
+Council maps each to. <code>stolos apply</code> shows it before it commits;
+<code>stolos compliance impact</code> prints it (<code>--json</code>, <code>--markdown</code>); a fleet
+repository's pull requests get it as one comment (<code>workflow.ts</code>).</p>
+<p>Two kinds of change are found:</p>
+<ol>
+<li><strong>Model changes</strong>: <a href="../../.././archon/compliance/impact.ts/~/IMPLEMENTATIONS.html">IMPLEMENTATIONS</a> is Stolos's own statement of
+which SCF control each model setting implements and which direction
+weakens it (unattended upgrades off: VPM-08; SSH passwords accepted from
+more networks: IAC-14; a port opened: NET-02; a host out of backups:
+BCD-24). Each side's model is loaded and each host's plan resolved, then
+reduced to <a href="../../.././archon/compliance/impact.ts/~/FleetFacts.html">FleetFacts</a>, which the declarations compare.</li>
+<li><strong>Evidence changes</strong>: the observations Git records (adopted machines,
+devices, connected accounts) and the fleet's control packs, each side
+read as <code>compliance drift</code> reads them (<code>drift.ts</code>), compared per control.</li>
+</ol>
+<pre class="highlight"><code class="language-mermaid">flowchart LR
+  base[&quot;base commit&quot;] --&gt; fb[&quot;model: facts&quot;] &amp; eb[&quot;observations and packs: evidence&quot;]
+  head[&quot;head commit, or the working tree&quot;] --&gt; fh[&quot;model: facts&quot;] &amp; eh[&quot;observations and packs: evidence&quot;]
+  fb &amp; fh -- &quot;IMPLEMENTATIONS (Stolos's declarations)&quot; --&gt; mc[&quot;weakens / strengthens, per control&quot;]
+  eb &amp; eh -- &quot;compareViews (drift.ts)&quot; --&gt; ec[&quot;status changes, per control&quot;]
+  mc &amp; ec --&gt; ctl[&quot;affected SCF controls&quot;]
+  ctl -- &quot;SCF STRM (catalog, when cached)&quot; --&gt; fw[&quot;framework requirements&quot;]
+  mc --&gt; gate{&quot;compliance.gate (base's fleet.ts)&quot;}
+  gate -- &quot;allow, accepted risk, approval&quot; --&gt; ok[&quot;allowed&quot;]
+  gate -- &quot;none&quot; --&gt; block[&quot;blocked&quot;]
+</code><button class="copyButton" data-copy="flowchart LR
+  base[&quot;base commit&quot;] --&gt; fb[&quot;model: facts&quot;] &amp; eb[&quot;observations and packs: evidence&quot;]
+  head[&quot;head commit, or the working tree&quot;] --&gt; fh[&quot;model: facts&quot;] &amp; eh[&quot;observations and packs: evidence&quot;]
+  fb &amp; fh -- &quot;IMPLEMENTATIONS (Stolos's declarations)&quot; --&gt; mc[&quot;weakens / strengthens, per control&quot;]
+  eb &amp; eh -- &quot;compareViews (drift.ts)&quot; --&gt; ec[&quot;status changes, per control&quot;]
+  mc &amp; ec --&gt; ctl[&quot;affected SCF controls&quot;]
+  ctl -- &quot;SCF STRM (catalog, when cached)&quot; --&gt; fw[&quot;framework requirements&quot;]
+  mc --&gt; gate{&quot;compliance.gate (base's fleet.ts)&quot;}
+  gate -- &quot;allow, accepted risk, approval&quot; --&gt; ok[&quot;allowed&quot;]
+  gate -- &quot;none&quot; --&gt; block[&quot;blocked&quot;]
+"><svg
+  class="copy"
+  width="15"
+  height="15"
+  viewBox="0 0 15 15"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <rect x="2" y="2" width="7" height="7" fill="none" />
+  <rect x="6" y="6" width="7" height="7" fill="none" />
+  <path
+    d="M1.55566 2.7C1.55566 2.03726 2.09292 1.5 2.75566 1.5H8.75566C9.41841 1.5 9.95566 2.03726 9.95566 2.7V5.1H12.3557C13.0184 5.1 13.5557 5.63726 13.5557 6.3V12.3C13.5557 12.9627 13.0184 13.5 12.3557 13.5H6.35566C5.69292 13.5 5.15566 12.9627 5.15566 12.3V9.9H2.75566C2.09292 9.9 1.55566 9.36274 1.55566 8.7V2.7ZM6.35566 9.9V12.3H12.3557V6.3H9.95566V8.7C9.95566 9.36274 9.41841 9.9 8.75566 9.9H6.35566ZM8.75566 8.7V2.7H2.75566V8.7H8.75566Z"
+    fill="currentColor"
+  />
+</svg>
+<svg
+  class="check"
+  width="15"
+  height="15"
+  viewBox="0 0 24 24"
+  stroke-width="2"
+  stroke="currentColor"
+  fill="none"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+  <path d="M5 12l5 5l10 -10" />
+</svg>
+</button><code></code></pre>
+<p>The gate (<code>compliance.gate</code> in <code>fleet.ts</code>, <a href="../../.././archon/compliance/impact.ts/~/ComplianceGate.html">ComplianceGate</a>) is read
+from the base side, so a change cannot turn off the gate that judges it.
+With <code>block: &quot;weakens&quot;</code>, a weakening is allowed only when the gate's
+<code>allow</code> names it, when <code>fleets/&lt;fleet&gt;/controls/accepted.ts</code> accepts it
+(<code>policy: &quot;impact/&lt;key&gt;&quot;</code>, until a date), or when it is approved: a commit
+in the change carries the trailer <code>Compliance-Approved: &lt;keys&gt;</code> and a good
+signature by one of the base's signers (<code>signers.ts</code>). <code>stolos apply --approve &lt;keys&gt;</code> writes that trailer into the commit it signs.</p>
+</div><section class="section"  id="archon&#x2F;compliance&#x2F;impact_ts_functions"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;compliance&#x2F;impact_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Functions</h2></div><div class="namespaceSection"><div id="namespace_affectedcontrols" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;affectedControls.html" title="affectedControls">
+			    <span>affectedControls</span><span>(<div class="ml-4"><div><span>changes<span>: <span class="td-ref">ModelChange</span>[]</span></span>,</div><div><span>evidence<span>: <span class="td-ref">ControlChange</span>[]</span></span>,</div><div><span>catalog<span class="td-op">?</span><span>: <span class="td-ref">ScfCatalog</span></span></span></div></div>)<span>: <span class="td-ref">AffectedControl</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Group the changes per control, with names and requirements.</p>
+</div></div></div>
+    </div><div id="namespace_applyimpact" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;applyImpact.html" title="applyImpact">
+			    <span>applyImpact</span><span>(<span><span>o<span>: { base<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; approve<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">boolean</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos apply</code>'s &quot;Compliance impact&quot; phase: compare the working tree with
+<code>base</code> (what GitHub has); false when the gate blocks (nothing is committed).</p>
+</div></div></div>
+    </div><div id="namespace_approvalsin" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;approvalsIn.html" title="approvalsIn">
+			    <span>approvalsIn</span><span>(<div class="ml-4"><div><span>repo<span>: <span class="td-kw">string</span></span></span>,</div><div><span>base<span>: <span class="td-kw">string</span></span></span>,</div><div><span>head<span>: <span class="td-kw">string</span></span></span>,</div><div><span>signers<span>: <span class="td-ref">SignerDef</span>[]</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;{ approvals<span>: <span class="td-ref">Approval</span>[]</span>; unverified<span>: <span class="td-kw">string</span>[]</span>;  }&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The approvals in <code>base..head</code>: each commit with a <code>Compliance-Approved:</code>
+trailer and a good signature by one of <code>signers</code> (the base's, so a change
+cannot add the signer that approves it). Others are listed as unverified.</p>
+</div></div></div>
+    </div><div id="namespace_changekeys" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;changeKeys.html" title="changeKeys">
+			    <span>changeKeys</span><span>(<span><span>c<span>: { implementation<span>: <span class="td-kw">string</span></span>; subject<span>: <span class="td-kw">string</span></span>; scf<span>: <span class="td-kw">string</span></span>;  }</span></span></span>)<span>: <span class="td-kw">string</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The keys a model change is known by: &quot;updates&quot;, &quot;updates/alpha&quot;, &quot;VPM-08&quot;.</p>
+</div></div></div>
+    </div><div id="namespace_comparefacts" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;compareFacts.html" title="compareFacts">
+			    <span>compareFacts</span><span>(<div class="ml-4"><div><span>before<span>: <span class="td-ref">FleetFacts</span></span></span>,</div><div><span>after<span>: <span class="td-ref">FleetFacts</span></span></span></div></div>)<span>: { changes<span>: <span class="td-ref">ModelChange</span>[]</span>; added<span>: <span class="td-kw">string</span>[]</span>; removed<span>: <span class="td-kw">string</span>[]</span>;  }</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Compare two sides' facts: every declaration over every host on both sides, and the fleet.</p>
+</div></div></div>
+    </div><div id="namespace_computeimpact" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;computeImpact.html" title="computeImpact">
+			    <span>computeImpact</span><span>(<span><span>o<span>: <span class="td-ref">ImpactOptions</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span><span class="td-ref">Impact</span><span class="td-op"> | </span>{ error<span>: <span class="td-kw">string</span></span>;  }</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Compute the compliance impact of the change from <code>base</code> to <code>head</code> (or the working tree).</p>
+</div></div></div>
+    </div><div id="namespace_controlline" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;controlLine.html" title="controlLine">
+			    <span>controlLine</span><span>(<span><span>c<span>: <span class="td-ref">AffectedControl</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One line per affected control: &quot;VPM-08 Software &amp; Firmware Patching: HIPAA 164.308(a)(5)(ii)(B); ...&quot;.</p>
+</div></div></div>
+    </div><div id="namespace_extractfleets" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;extractFleets.html" title="extractFleets">
+			    <span>extractFleets</span><span>(<div class="ml-4"><div><span>repo<span>: <span class="td-kw">string</span></span></span>,</div><div><span>rev<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">string</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Copy a commit's <code>fleets/</code> folder into a new temporary folder, without
+touching the checkout, its index, or its worktrees. The caller removes it.</p>
+</div></div></div>
+    </div><div id="namespace_fleetfacts" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;fleetFacts.html" title="fleetFacts">
+			    <span>fleetFacts</span><span>(<div class="ml-4"><div><span>fleet<span>: <span class="td-ref">FleetDef</span></span></span>,</div><div><span>hosts<span>: <span class="td-ref">HostDef</span>[]</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">FleetFacts</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The facts of a fleet and its hosts (each host's plan resolved; one that fails is a problem).</p>
+</div></div></div>
+    </div><div id="namespace_hostfacts" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;hostFacts.html" title="hostFacts">
+			    <span>hostFacts</span><span>(<span><span>plan<span>: <span class="td-ref">HostPlan</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">HostFacts</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The facts of one host's plan.</p>
+</div></div></div>
+    </div><div id="namespace_impactcommand" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;impactCommand.html" title="impactCommand">
+			    <span>impactCommand</span><span>(<span><span>o<span class="td-op">?</span><span>: { base<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; head<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; json<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>; markdown<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>;  }</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos compliance impact</code>: print the impact; exit 1 when the gate blocks,
+2 when it cannot be computed.</p>
+</div></div></div>
+    </div><div id="namespace_impactmarkdown" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;impactMarkdown.html" title="impactMarkdown">
+			    <span>impactMarkdown</span><span>(<span><span>i<span>: <span class="td-ref">Impact</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The pull request comment (and <code>--markdown</code>): what the change affects, by control.</p>
+</div></div></div>
+    </div><div id="namespace_judge" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;judge.html" title="judge">
+			    <span>judge</span><span>(<span><span>o<span>: { gate<span class="td-op">?</span><span>: <span class="td-ref">ComplianceGate</span></span>; changes<span>: <span class="td-ref">ModelChange</span>[]</span>; evidence<span class="td-op">?</span><span>: <span class="td-ref">ControlChange</span>[]</span>; accepted<span class="td-op">?</span><span>: <span class="td-kw">readonly</span> <span class="td-ref">Acceptance</span>[]</span>; approvals<span class="td-op">?</span><span>: <span class="td-kw">readonly</span> <span class="td-ref">Approval</span>[]</span>; now<span class="td-op">?</span><span>: <span class="td-kw">number</span></span>;  }</span></span></span>)<span>: <span class="td-ref">GateResult</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Judge the weakenings of a change.</p>
+</div></div></div>
+    </div><div id="namespace_modelfactsat" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;modelFactsAt.html" title="modelFactsAt">
+			    <span>modelFactsAt</span><span>(<div class="ml-4"><div><span>root<span>: <span class="td-kw">string</span></span></span>,</div><div><span>fleet<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span>{ facts<span>: <span class="td-ref">FleetFacts</span></span>;  }<span class="td-op"> | </span>{ error<span>: <span class="td-kw">string</span></span>;  }</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One side's model, loaded from <code>root</code> (a checkout or an extracted commit): its facts.</p>
+</div></div></div>
+    </div><div id="namespace_parseapproval" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;parseApproval.html" title="parseApproval">
+			    <span>parseApproval</span><span>(<span><span>value<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">string</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Parse a trailer's value: keys separated by commas or spaces.</p>
+</div></div></div>
+    </div><div id="namespace_printimpact" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;printImpact.html" title="printImpact">
+			    <span>printImpact</span><span>(<div class="ml-4"><div><span>i<span>: <span class="td-ref">Impact</span></span></span>,</div><div><span>p<span>: <span class="td-ref">PhaseLike</span></span></span></div></div>)<span>: <span class="td-kw">void</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The impact as a terminal phase: weakenings as warnings, a blocked gate as a failure.</p>
+</div></div></div>
+    </div><div id="namespace_requirementtext" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;requirementText.html" title="requirementText">
+			    <span>requirementText</span><span>(<div class="ml-4"><div><span>fw<span>: <span class="td-ref">FrameworkId</span></span></span>,</div><div><span>ids<span>: <span class="td-kw">string</span>[]</span></span>,</div><div><span>max<span class="td-op">?</span><span>: <span class="td-kw">number</span></span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A framework's requirements, short: SOC 2 by criterion, at most <code>max</code> shown.</p>
+</div></div></div>
+    </div><div id="namespace_signersat" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;signersAt.html" title="signersAt">
+			    <span>signersAt</span><span>(<div class="ml-4"><div><span>repo<span>: <span class="td-kw">string</span></span></span>,</div><div><span>rev<span>: <span class="td-kw">string</span></span></span>,</div><div><span>fleet<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">SignerDef</span>[]&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The signers a commit's <code>signers.ts</code> lists (as <code>stolos signers</code> writes it), without running it.</p>
+</div></div></div>
+    </div><div id="namespace_sshpasswordnetworks" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;sshPasswordNetworks.html" title="sshPasswordNetworks">
+			    <span>sshPasswordNetworks</span><span>(<span><span>conf<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">string</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where sshd accepts passwords, from the drop-in Stolos renders (see <a href="../../.././archon/compliance/impact.ts/~/HostFacts.sshPasswords.html">HostFacts.sshPasswords</a>).</p>
+</div></div></div>
+    </div></div>
+</section>
+<section class="section"  id="archon&#x2F;compliance&#x2F;impact_ts_interfaces"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;compliance&#x2F;impact_ts_interfaces" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Interfaces</h2></div><div class="namespaceSection"><div id="namespace_affectedcontrol" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;AffectedControl.html" title="AffectedControl">
+			    <span>AffectedControl</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One affected SCF control, with what moved it.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;AffectedControl.html#property_changes">
+                  <span>changes</span><span>: <span class="td-ref">ModelChange</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The model changes.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;AffectedControl.html#property_direction">
+                  <span>direction</span><span>: <span class="td-ref">Direction</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Weakened (anything weakens it), else strengthened.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;AffectedControl.html#property_evidence">
+                  <span>evidence</span><span>: <span class="td-ref">ControlChange</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The evidence change, when its observed status changed.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;AffectedControl.html#property_id">
+                  <span>id</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The SCF id.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;AffectedControl.html#property_name">
+                  <span>name</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its SCF name.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;AffectedControl.html#property_requirements">
+                  <span>requirements</span><span>: <span class="td-ref">Partial</span>&lt;<span class="td-ref">Record</span>&lt;<span class="td-ref">FrameworkId</span><span>, </span><span class="td-kw">string</span>[]&gt;&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Framework requirements SCF maps it to (when the catalog is cached).</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_approval" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;Approval.html" title="Approval">
+			    <span>Approval</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A recorded approval: a signed commit's <code>Compliance-Approved:</code> trailer.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;Approval.html#property_commit">
+                  <span>commit</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The commit (&quot;(this commit)&quot; for the one <code>stolos apply --approve</code> is about to sign).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;Approval.html#property_covers">
+                  <span>covers</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What it approves: keys (see <a href="../../.././archon/compliance/impact.ts/~/changeKeys.html">changeKeys</a>), or &quot;all&quot;.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;Approval.html#property_signer">
+                  <span>signer</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Who signed it (the signer's name in signers.ts).</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_cadencefact" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;CadenceFact.html" title="CadenceFact">
+			    <span>CadenceFact</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A cadence, as the facts keep it.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;CadenceFact.html#property_every">
+                  <span>every</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How often (&quot;15m&quot;, &quot;1d&quot;).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;CadenceFact.html#property_everyms">
+                  <span>everyMs</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>every</code> in milliseconds.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;CadenceFact.html#property_staleafter">
+                  <span>staleAfter</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its service level.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;CadenceFact.html#property_staleafterms">
+                  <span>staleAfterMs</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>staleAfter</code> in milliseconds.</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_compliancegate" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;ComplianceGate.html" title="ComplianceGate">
+			    <span>ComplianceGate</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The gate (<code>compliance.gate</code> in <code>fleets/&lt;fleet&gt;/fleet.ts</code>): whether a change
+that weakens a control may be committed (<code>stolos apply</code>) or merged (the
+pull request's check). Default: never block, only show.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;ComplianceGate.html#property_allow">
+                  <span>allow</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Weakenings that never block: a declaration's id (&quot;firewall-ports&quot;), a
+declaration on one subject (&quot;updates/beta&quot;), or an SCF control (&quot;NET-02&quot;).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;ComplianceGate.html#property_block">
+                  <span>block</span><span>: <span><span class="td-str">"weakens"</span><span class="td-op"> | </span><span class="td-str">"never"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>&quot;weakens&quot;: refuse a change that weakens a control unless allowed; &quot;never&quot; (default): show only.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;ComplianceGate.html#property_evidence">
+                  <span>evidence</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Also block when observed evidence turns a control to fail (default false: shown only).</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_finding" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;Finding.html" title="Finding">
+			    <span>Finding</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What a declaration finds when it compares two sides.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;Finding.html#property_direction">
+                  <span>direction</span><span>: <span class="td-ref">Direction</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Which way.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;Finding.html#property_what">
+                  <span>what</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The change, in words: &quot;turns off unattended upgrades&quot;.</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_fleetfacts-1" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;FleetFacts.html" title="FleetFacts">
+			    <span>FleetFacts</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What a fleet's model says about the settings that implement controls.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;FleetFacts.html#property_agenttier">
+                  <span>agentTier</span><span>: <span class="td-ref">McpTier</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The tier agents get over MCP (spec 030).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;FleetFacts.html#property_cadence">
+                  <span>cadence</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-ref">CadenceFact</span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The evidence cadences (spec 073): each source, and each connector the fleet sets.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;FleetFacts.html#property_fleet">
+                  <span>fleet</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fleet's id.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;FleetFacts.html#property_gate">
+                  <span>gate</span><span>: <span class="td-ref">ComplianceGate</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The gate this side sets (spec 074).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;FleetFacts.html#property_hosts">
+                  <span>hosts</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-ref">HostFacts</span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Each host's facts, by name.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;FleetFacts.html#property_problems">
+                  <span>problems</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Hosts whose plan could not be resolved, with why.</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_gateitem" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;GateItem.html" title="GateItem">
+			    <span>GateItem</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One weakening the gate judged.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;GateItem.html#property_allowedby">
+                  <span>allowedBy</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What allowed it, when something did.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;GateItem.html#property_keys">
+                  <span>keys</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its keys: the declaration, the declaration on its subject, the SCF control.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;GateItem.html#property_what">
+                  <span>what</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The change, in words, with its subject.</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_gateresult" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;GateResult.html" title="GateResult">
+			    <span>GateResult</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The gate's verdict.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;GateResult.html#property_block">
+                  <span>block</span><span>: <span><span class="td-str">"weakens"</span><span class="td-op"> | </span><span class="td-str">"never"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The mode in force.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;GateResult.html#property_blocked">
+                  <span>blocked</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Whether the change is refused.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;GateResult.html#property_items">
+                  <span>items</span><span>: <span class="td-ref">GateItem</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Each weakening, and what allowed it.</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_hostfacts-1" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;HostFacts.html" title="HostFacts">
+			    <span>HostFacts</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What one host's resolved plan says about the settings that implement controls.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;HostFacts.html#property_admins">
+                  <span>admins</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The accounts with administrator rights.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;HostFacts.html#property_backup">
+                  <span>backup</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The daily backup timer (spec 016).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;HostFacts.html#property_backupkeep">
+                  <span>backupKeep</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How many archives are kept.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;HostFacts.html#property_backupscope">
+                  <span>backupScope</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What the backup holds: paths, and &quot;guest &lt;name&gt;&quot; for each durable guest (spec 044).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;HostFacts.html#property_etckeeper">
+                  <span>etckeeper</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>/etc kept in Git by etckeeper (spec 033).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;HostFacts.html#property_firewall">
+                  <span>firewall</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>ufw installed and enabled (spec 008).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;HostFacts.html#property_kind">
+                  <span>kind</span><span>: <span><span class="td-str">"server"</span><span class="td-op"> | </span><span class="td-str">"workstation"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Server or workstation.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;HostFacts.html#property_osquery">
+                  <span>osquery</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>osquery, for fleet-wide questions (spec 042).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;HostFacts.html#property_ports">
+                  <span>ports</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The ports open in the host's firewall, as &quot;22/tcp&quot;.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;HostFacts.html#property_sshpasswords">
+                  <span>sshPasswords</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where sshd accepts passwords (spec 007): the networks of its Match block,
+&quot;anywhere&quot; when it accepts them outside one, [] for keys only;
+undefined when Stolos does not configure sshd on the host.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;HostFacts.html#property_updates">
+                  <span>updates</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Unattended upgrades: the package, and apt-daily-upgrade.timer enabled (spec 009).</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_impact" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;Impact.html" title="Impact">
+			    <span>Impact</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The compliance impact of a change.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;Impact.html#property_base">
+                  <span>base</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The base commit.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;Impact.html#property_catalog">
+                  <span>catalog</span><span>: <span>{ version<span>: <span class="td-kw">string</span></span>;  }<span class="td-op"> | </span>{ missing<span>: <span class="td-kw">string</span></span>;  }</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The SCF catalog the requirements come from, or why there are none.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;Impact.html#property_changes">
+                  <span>changes</span><span>: <span class="td-ref">ModelChange</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The model changes.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;Impact.html#property_controls">
+                  <span>controls</span><span>: <span class="td-ref">AffectedControl</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Every affected control, weakened first.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;Impact.html#property_evidence">
+                  <span>evidence</span><span>: <span class="td-ref">ControlChange</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The observed changes, per control.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;Impact.html#property_fleet">
+                  <span>fleet</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fleet.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;Impact.html#property_gate">
+                  <span>gate</span><span>: <span class="td-ref">GateResult</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The gate's verdict.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;Impact.html#property_head">
+                  <span>head</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The head commit, or &quot;working tree&quot;.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;Impact.html#property_hosts">
+                  <span>hosts</span><span>: { added<span>: <span class="td-kw">string</span>[]</span>; removed<span>: <span class="td-kw">string</span>[]</span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Hosts added and removed (a new host is not compared with anything).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;Impact.html#property_problems">
+                  <span>problems</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What could not be read (a side's model, a host's plan).</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_impactoptions" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;ImpactOptions.html" title="ImpactOptions">
+			    <span>ImpactOptions</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What <a href="../../.././archon/compliance/impact.ts/~/computeImpact.html">computeImpact</a> is given.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;ImpactOptions.html#property_base">
+                  <span>base</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The base: a commit, branch, or tag (the merge base with the head is used).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;ImpactOptions.html#property_catalog">
+                  <span>catalog</span><span>: <span><span class="td-ref">ScfCatalog</span><span class="td-op"> | </span><span class="td-kw">null</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The SCF catalog (default: the cached one, if any).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;ImpactOptions.html#property_connectors">
+                  <span>connectors</span><span>: <span class="td-kw">import</span>(<span class="td-str">"../connect/connector.ts"</span>)<span>.Connector</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The connectors whose observations count (default: every one).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;ImpactOptions.html#property_fleet">
+                  <span>fleet</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fleet's id.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;ImpactOptions.html#property_head">
+                  <span>head</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The head: a commit (default: the working tree).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;ImpactOptions.html#property_modelonly">
+                  <span>modelOnly</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Skip the evidence comparison (model changes only).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;ImpactOptions.html#property_now">
+                  <span>now</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Now (accepted risks' dates, evidence ages).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;ImpactOptions.html#property_pendingapproval">
+                  <span>pendingApproval</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>An approval about to be signed (<code>stolos apply --approve</code>).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;ImpactOptions.html#property_repo">
+                  <span>repo</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fleet repository.</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_implementation" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;Implementation.html" title="Implementation">
+			    <span>Implementation</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How a model setting implements an SCF control: Stolos's own, explicit statement.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;Implementation.html#method_compare_0">
+                  <span>compare</span><span>(<div class="ml-4"><div><span>before<span>: <span class="td-ref">T</span></span></span>,</div><div><span>after<span>: <span class="td-ref">T</span></span></span></div></div>)<span>: <span><span class="td-ref">Finding</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Compare the two sides; undefined when the setting did not change.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;Implementation.html#property_id">
+                  <span>id</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its id, used in accepted risks (<code>impact/&lt;id&gt;</code>), approvals, and <code>gate.allow</code>.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;Implementation.html#property_scf">
+                  <span>scf</span><span>: <span class="td-ref">ScfId</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The SCF control the setting implements.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;Implementation.html#property_scope">
+                  <span>scope</span><span>: <span><span class="td-str">"host"</span><span class="td-op"> | </span><span class="td-str">"fleet"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Per host, or for the fleet as a whole.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;Implementation.html#property_setting">
+                  <span>setting</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The setting in the model, in words: where to look.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;Implementation.html#property_weakens">
+                  <span>weakens</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Which direction weakens the control, in words.</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_modelchange" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;ModelChange.html" title="ModelChange">
+			    <span>ModelChange</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One model change that moves a control.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;ModelChange.html#property_direction">
+                  <span>direction</span><span>: <span class="td-ref">Direction</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Which way.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;ModelChange.html#property_implementation">
+                  <span>implementation</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The declaration that found it.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;ModelChange.html#property_scf">
+                  <span>scf</span><span>: <span class="td-ref">ScfId</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The SCF control.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;ModelChange.html#property_subject">
+                  <span>subject</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A host's name, or &quot;fleet&quot;.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;ModelChange.html#property_what">
+                  <span>what</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The change, in words.</p>
+</div></div></li></ul></div>
+    </div></div>
+</section>
+<section class="section"  id="archon&#x2F;compliance&#x2F;impact_ts_type-aliases"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;compliance&#x2F;impact_ts_type-aliases" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_direction" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;Direction.html" title="Direction">
+			    <span>Direction</span><span> = <span><span class="td-str">"weakens"</span><span class="td-op"> | </span><span class="td-str">"strengthens"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Which way a change moves a control.</p>
+</div></div></div>
+    </div><div id="namespace_phaselike" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;PhaseLike.html" title="PhaseLike">
+			    <span>PhaseLike</span><span> = { ok(<span><span>m<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">void</span></span>; warn(<div class="ml-4"><div><span>m<span>: <span class="td-kw">string</span></span></span>,</div><div><span>fix<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">void</span></span>; fail(<div class="ml-4"><div><span>m<span>: <span class="td-kw">string</span></span></span>,</div><div><span>fix<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">void</span></span>; note(<span><span>m<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">void</span></span>; done(<span><span>m<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">void</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What printImpact writes to: a terminal phase, or a test's recorder.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;PhaseLike.html#method_done_0">
+                  <span>done</span><span>(<span><span>m<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">void</span></span></span></a></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;PhaseLike.html#method_fail_0">
+                  <span>fail</span><span>(<div class="ml-4"><div><span>m<span>: <span class="td-kw">string</span></span></span>,</div><div><span>fix<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">void</span></span></span></a></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;PhaseLike.html#method_note_0">
+                  <span>note</span><span>(<span><span>m<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">void</span></span></span></a></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;PhaseLike.html#method_ok_0">
+                  <span>ok</span><span>(<span><span>m<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">void</span></span></span></a></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;PhaseLike.html#method_warn_0">
+                  <span>warn</span><span>(<div class="ml-4"><div><span>m<span>: <span class="td-kw">string</span></span></span>,</div><div><span>fix<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">void</span></span></span></a></li></ul></div>
+    </div></div>
+</section>
+<section class="section"  id="archon&#x2F;compliance&#x2F;impact_ts_variables"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;compliance&#x2F;impact_ts_variables" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Variables</h2></div><div class="namespaceSection"><div id="namespace_approval_trailer" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;APPROVAL_TRAILER.html" title="APPROVAL_TRAILER">
+			    <span>APPROVAL_TRAILER</span><span>: <span class="td-str">"Compliance-Approved"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The trailer that records an approval in a commit message.</p>
+</div></div></div>
+    </div><div id="namespace_fleet_implementations" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;FLEET_IMPLEMENTATIONS.html" title="FLEET_IMPLEMENTATIONS">
+			    <span>FLEET_IMPLEMENTATIONS</span><span>: <span class="td-ref">Implementation</span>&lt;<span class="td-ref">FleetFacts</span>&gt;[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The settings of the fleet as a whole that implement a control.</p>
+</div></div></div>
+    </div><div id="namespace_host_implementations" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;HOST_IMPLEMENTATIONS.html" title="HOST_IMPLEMENTATIONS">
+			    <span>HOST_IMPLEMENTATIONS</span><span>: <span class="td-ref">Implementation</span>&lt;<span class="td-ref">HostFacts</span>&gt;[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The settings of each host that implement a control.</p>
+</div></div></div>
+    </div><div id="namespace_implementations" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;impact.ts&#x2F;~&#x2F;IMPLEMENTATIONS.html" title="IMPLEMENTATIONS">
+			    <span>IMPLEMENTATIONS</span><span>: <span class="td-ref">ReadonlyArray</span>&lt;<span><span class="td-ref">Implementation</span>&lt;<span class="td-ref">HostFacts</span>&gt;<span class="td-op"> | </span><span class="td-ref">Implementation</span>&lt;<span class="td-ref">FleetFacts</span>&gt;</span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Every declaration, host and fleet: what the comment and the docs list.</p>
+</div></div></div>
+    </div></div>
+</section>
+</div>
+</div>
+</section>
+</main><div class="toc">
+    <div><div class="usageContent">
+    <h3>Usage</h3><div class="markdown"><pre class="highlight"><code class="language-typescript">import * as mod from &quot;archon/compliance/impact.ts&quot;;
+</code><button class="copyButton" data-copy="import * as mod from &quot;archon/compliance/impact.ts&quot;;
+"><svg
+  class="copy"
+  width="15"
+  height="15"
+  viewBox="0 0 15 15"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <rect x="2" y="2" width="7" height="7" fill="none" />
+  <rect x="6" y="6" width="7" height="7" fill="none" />
+  <path
+    d="M1.55566 2.7C1.55566 2.03726 2.09292 1.5 2.75566 1.5H8.75566C9.41841 1.5 9.95566 2.03726 9.95566 2.7V5.1H12.3557C13.0184 5.1 13.5557 5.63726 13.5557 6.3V12.3C13.5557 12.9627 13.0184 13.5 12.3557 13.5H6.35566C5.69292 13.5 5.15566 12.9627 5.15566 12.3V9.9H2.75566C2.09292 9.9 1.55566 9.36274 1.55566 8.7V2.7ZM6.35566 9.9V12.3H12.3557V6.3H9.95566V8.7C9.95566 9.36274 9.41841 9.9 8.75566 9.9H6.35566ZM8.75566 8.7V2.7H2.75566V8.7H8.75566Z"
+    fill="currentColor"
+  />
+</svg>
+<svg
+  class="check"
+  width="15"
+  height="15"
+  viewBox="0 0 24 24"
+  stroke-width="2"
+  stroke="currentColor"
+  fill="none"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+  <path d="M5 12l5 5l10 -10" />
+</svg>
+</button><code></code></pre>
+</div></div><nav class="topSymbols">
+          <h3>Symbols</h3>
+          <ul><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;ensureHome.html" title="ensureHome"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
+                    ensureHome
+                  </span>
+                </a>
+              </li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;localHostName.html" title="localHostName"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
+                    localHostName
+                  </span>
+                </a>
+              </li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;Surface.html" title="Surface"><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
+<span class="hover:bg-TypeAlias/15 hover:bg-TypeAliasDark/15">
+                    Surface
+                  </span>
+                </a>
+              </li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;commandName.html" title="commandName"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
+                    commandName
+                  </span>
+                </a>
+              </li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;main.html" title="main"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
+                    main
+                  </span>
+                </a>
+              </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
+              <span class="leading-none">view all 2505 symbols</span><svg
+  width="16"
+  height="16"
+  viewBox="0 0 16 16"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <path
+    fill-rule="evenodd"
+    clip-rule="evenodd"
+    d="M5.76748 11.8159C5.5378 11.577 5.54525 11.1972 5.78411 10.9675L8.93431 8L5.78411 5.0325C5.54525 4.80282 5.5378 4.423 5.76748 4.18413C5.99715 3.94527 6.37698 3.93782 6.61584 4.1675L10.2158 7.5675C10.3335 7.68062 10.4 7.83679 10.4 8C10.4 8.16321 10.3335 8.31938 10.2158 8.4325L6.61584 11.8325C6.37698 12.0622 5.99715 12.0547 5.76748 11.8159Z"
+    fill="currentColor"
+  />
+</svg>
+</a></nav><nav class="documentNavigation">
+          <h3>Document Navigation</h3><ul><li><a href="#archon/compliance/impact_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_affectedcontrols" title="affectedControls">affectedControls</a></li><li><a href="#namespace_applyimpact" title="applyImpact">applyImpact</a></li><li><a href="#namespace_approvalsin" title="approvalsIn">approvalsIn</a></li><li><a href="#namespace_changekeys" title="changeKeys">changeKeys</a></li><li><a href="#namespace_comparefacts" title="compareFacts">compareFacts</a></li><li><a href="#namespace_computeimpact" title="computeImpact">computeImpact</a></li><li><a href="#namespace_controlline" title="controlLine">controlLine</a></li><li><a href="#namespace_extractfleets" title="extractFleets">extractFleets</a></li><li><a href="#namespace_fleetfacts" title="fleetFacts">fleetFacts</a></li><li><a href="#namespace_hostfacts" title="hostFacts">hostFacts</a></li><li><a href="#namespace_impactcommand" title="impactCommand">impactCommand</a></li><li><a href="#namespace_impactmarkdown" title="impactMarkdown">impactMarkdown</a></li><li><a href="#namespace_judge" title="judge">judge</a></li><li><a href="#namespace_modelfactsat" title="modelFactsAt">modelFactsAt</a></li><li><a href="#namespace_parseapproval" title="parseApproval">parseApproval</a></li><li><a href="#namespace_printimpact" title="printImpact">printImpact</a></li><li><a href="#namespace_requirementtext" title="requirementText">requirementText</a></li><li><a href="#namespace_signersat" title="signersAt">signersAt</a></li><li><a href="#namespace_sshpasswordnetworks" title="sshPasswordNetworks">sshPasswordNetworks</a></li></ul></li><li><a href="#archon/compliance/impact_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_affectedcontrol" title="AffectedControl">AffectedControl</a></li><li><a href="#namespace_approval" title="Approval">Approval</a></li><li><a href="#namespace_cadencefact" title="CadenceFact">CadenceFact</a></li><li><a href="#namespace_compliancegate" title="ComplianceGate">ComplianceGate</a></li><li><a href="#namespace_finding" title="Finding">Finding</a></li><li><a href="#namespace_fleetfacts-1" title="FleetFacts">FleetFacts</a></li><li><a href="#namespace_gateitem" title="GateItem">GateItem</a></li><li><a href="#namespace_gateresult" title="GateResult">GateResult</a></li><li><a href="#namespace_hostfacts-1" title="HostFacts">HostFacts</a></li><li><a href="#namespace_impact" title="Impact">Impact</a></li><li><a href="#namespace_impactoptions" title="ImpactOptions">ImpactOptions</a></li><li><a href="#namespace_implementation" title="Implementation">Implementation</a></li><li><a href="#namespace_modelchange" title="ModelChange">ModelChange</a></li></ul></li><li><a href="#archon/compliance/impact_ts_type-aliases" title="Type Aliases">Type Aliases</a></li><li><ul><li><a href="#namespace_direction" title="Direction">Direction</a></li><li><a href="#namespace_phaselike" title="PhaseLike">PhaseLike</a></li></ul></li><li><a href="#archon/compliance/impact_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_approval_trailer" title="APPROVAL_TRAILER">APPROVAL_TRAILER</a></li><li><a href="#namespace_fleet_implementations" title="FLEET_IMPLEMENTATIONS">FLEET_IMPLEMENTATIONS</a></li><li><a href="#namespace_host_implementations" title="HOST_IMPLEMENTATIONS">HOST_IMPLEMENTATIONS</a></li><li><a href="#namespace_implementations" title="IMPLEMENTATIONS">IMPLEMENTATIONS</a></li></ul></li></ul></nav></div>
+  </div></div>
+</div>
+</div>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  (() => {
+    const blocks = document.querySelectorAll("pre > code.language-mermaid");
+    if (!blocks.length || !window.mermaid) return;
+    for (const code of blocks) {
+      const div = document.createElement("div");
+      div.className = "mermaid";
+      div.textContent = code.textContent;
+      code.parentElement.replaceWith(div);
+    }
+    const dark = document.documentElement.classList.contains("dark") ||
+      matchMedia("(prefers-color-scheme: dark)").matches;
+    mermaid.initialize({ startOnLoad: false, theme: dark ? "dark" : "default", securityLevel: "strict" });
+    mermaid.run({ querySelector: ".mermaid" });
+  })();
+</script>
+</body>
+</html>
