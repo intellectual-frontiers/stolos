@@ -99,6 +99,12 @@ export const GUIDES: GuideDef[] = [
     module: "src/archon/controls/mod.ts",
   },
   {
+    name: "risks",
+    title: "Risks and vendors",
+    why: "The risk register and vendor inventory as code, reviewed through signed pull requests.",
+    module: "src/archon/risk/mod.ts",
+  },
+  {
     name: "people",
     title: "People controls",
     why: "Joiners and leavers, access reviews, policies, training, and screening, as code.",

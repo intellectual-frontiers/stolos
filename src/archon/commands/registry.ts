@@ -1035,6 +1035,90 @@ export const COMMANDS: Command[] = [
     },
   },
   {
+    name: "risks list",
+    aliases: ["risks"],
+    summary: "The risk register (fleets/<fleet>/risks.ts), highest level of risk first",
+    description:
+      `Spec 080. Lists each risk in fleets/<fleet>/risks.ts: its level (NIST SP 800-30 Rev 1 Table I-2, from its likelihood and impact), treatment (accept, mitigate, transfer, avoid), owner, next review, and status. --json for scripts. How to write it: deno task stolos docs risks.`,
+    tier: "read",
+    args: [],
+    async run(_a, ctx) {
+      const { risksList } = await import("../risk/commands.ts");
+      return await risksList(ctx.json);
+    },
+  },
+  {
+    name: "risks check",
+    summary: "Check the risk register and vendors: overdue reviews, owners, accepted risks, triage",
+    description:
+      `Spec 080. Runs the risk-register controls over the estate graph built from Git: an open risk past its next review fails (SCF RSK-14, RSK-13.2); an owner who is not an active person on the roster warns (RSK-11); an accepted risk past its date fails, and one no risk names warns (RSK-16.1); a discovered vendor not triaged in vendors.ts warns (TPM-08, TPM-09). Then names who approved the last change to risks.ts and vendors.ts (git verify-commit against signers.ts). Read-only. Exits 1 when a control fails; --json for scripts.`,
+    tier: "read",
+    args: [],
+    async run(_a, ctx) {
+      const { risksCheck } = await import("../risk/commands.ts");
+      return await risksCheck(ctx.json);
+    },
+  },
+  {
+    name: "risks review",
+    summary: "Record a risk's review: its next review date moves on, in a signed pull request",
+    description:
+      `Spec 080. From a clean checkout: a branch from the main branch on GitHub, risks.ts with the risk's nextReview moved on (by its reviewEveryDays, 90 by default, or to --next), one commit signed with your daily key (ssh-keygen asks its passphrase here), a push of that branch, and a pull request (gh pr create). Nothing is merged: a fleet signer approves by merging with a signed merge commit. --check shows the change and makes none. Terminal only.`,
+    tier: "repo",
+    noMcp: true,
+    args: [
+      {
+        name: "id",
+        type: "string",
+        positional: true,
+        required: true,
+        description: "The risk's id in risks.ts.",
+      },
+      { name: "next", type: "string", description: "The next review (YYYY-MM-DD)." },
+      { name: "note", type: "string", description: "What the review found, for the pull request." },
+      { name: "check", type: "boolean", description: "Show the change; make none." },
+    ],
+    async run(a) {
+      const { risksReview } = await import("../risk/commands.ts");
+      return await risksReview(a.id as string, {
+        ...(a.next ? { next: a.next as string } : {}),
+        ...(a.note ? { note: a.note as string } : {}),
+        check: !!a.check,
+      });
+    },
+  },
+  {
+    name: "vendors list",
+    aliases: ["vendors"],
+    summary:
+      "The fleet's vendors: discovered (SSO applications, DNS, connected accounts) and triaged",
+    description:
+      `Spec 080. Every vendor the estate reveals: the applications people sign in to through Okta or Entra, CNAME and MX records pointing at a third party, and each connected account's provider (and, later, billing), each as an organization (party_role supplier) in the estate graph, with its criticality (FIPS 199) and the data it holds (OCSF categories) from fleets/<fleet>/vendors.ts. Read-only; --json for scripts.`,
+    tier: "read",
+    args: [],
+    async run(_a, ctx) {
+      const { vendorsList } = await import("../risk/commands.ts");
+      return await vendorsList(ctx.json);
+    },
+  },
+  {
+    name: "vendors triage",
+    summary: "Vendors waiting for triage; --write opens a pull request adding them to vendors.ts",
+    description:
+      `Spec 080. Lists each discovered vendor that is not in fleets/<fleet>/vendors.ts, or whose criticality is still unassessed. With --write: from a clean checkout, a branch, vendors.ts with an entry for each new vendor (criticality "unassessed", for the reviewer to set), one signed commit, a push, and a pull request (gh pr create). A fleet signer approves by merging with a signed merge commit. Terminal only.`,
+    tier: "repo",
+    noMcp: true,
+    args: [{
+      name: "write",
+      type: "boolean",
+      description: "Open a pull request adding the new vendors to vendors.ts.",
+    }],
+    async run(a, ctx) {
+      const { vendorsTriage } = await import("../risk/commands.ts");
+      return await vendorsTriage({ write: !!a.write, json: ctx.json });
+    },
+  },
+  {
     name: "people status",
     aliases: ["people"],
     summary:
@@ -3664,6 +3748,11 @@ On a server, workstations reach it as ops over SSH (spec 030): ops' authorized_k
  */
 /** Commands run with `stolos` on your PC (the rest run with `archon` on each machine). */
 const PC_COMMANDS = new Set([
+  "risks list",
+  "risks check",
+  "risks review",
+  "vendors list",
+  "vendors triage",
   "estate query",
   "estate build",
   "estate osquery",

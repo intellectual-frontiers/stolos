@@ -337,7 +337,14 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
             });
           })().catch(warn("people controls"))
           : undefined;
-        return people ? [...r.runs, people] : r.runs;
+        // Spec 080: the risk register and vendor inventory, as a pack of their own.
+        const risk = estate
+          ? await (async () => {
+            const { fleetRisk } = await import("../risk/fleet.ts");
+            return (await fleetRisk(estate, { adopted })).run;
+          })().catch(warn("the risk register"))
+          : undefined;
+        return [...r.runs, ...(people ? [people] : []), ...(risk ? [risk] : [])];
       } catch (e) {
         warn("control packs")(e);
         return [];

@@ -11,7 +11,9 @@
  * - assessment results: every observation Stolos made, and a finding per
  *   control (satisfied or not);
  * - a plan of action and milestones (POA&M): each failing check, open, and
- *   each accepted risk, as a deviation approved until its date.
+ *   each accepted risk, as a deviation approved until its date; and (spec
+ *   080) each open risk in the fleet's risk register, with its SP 800-30
+ *   likelihood, impact, and level.
  *
  * UUIDs are UUIDv5 of what they name, so the same fleet exported twice names
  * the same things the same way, and a diff shows only what changed.
@@ -28,6 +30,7 @@
 
 import { NIST_MODERATE_PROFILE, NIST_SOURCES, OSCAL_VERSION, SCF_SOURCE } from "./catalog.ts";
 import type { ComplianceView, Coverage, Evidence } from "./report.ts";
+import type { Risk } from "../risk/register.ts";
 
 /** Stolos's UUIDv5 namespace (a fixed random UUID). */
 const NAMESPACE = "6f1d0c52-7a39-4c1e-9d0b-3e5b8a2f4c71";
@@ -66,6 +69,8 @@ export interface OscalInput {
   version: string;
   /** When. */
   now: Date;
+  /** Spec 080: the risk register (fleets/<fleet>/risks.ts); its open risks go in the POA&M. */
+  register?: readonly Risk[];
 }
 
 /** An SP 800-53 control, with the SCF controls that map to it and their status. */
@@ -480,6 +485,47 @@ export async function assessmentResults(i: OscalInput): Promise<unknown> {
   };
 }
 
+const STOLOS_NS = "https://github.com/intellectual-frontiers/stolos";
+
+/** NIST SP 800-30 Rev 1, the naming system of a register risk's facets. */
+export const SP800_30 = "https://doi.org/10.6028/NIST.SP.800-30r1";
+
+const registerProps = (r: Risk) => [
+  { name: "risk-register-id", ns: STOLOS_NS, value: r.id },
+  { name: "treatment", ns: STOLOS_NS, value: r.treatment },
+  { name: "owner", ns: STOLOS_NS, value: r.owner },
+  { name: "next-review", ns: STOLOS_NS, value: r.nextReview },
+];
+
+/**
+ * A risk from the register (spec 080) as an OSCAL risk: its SP 800-30 Rev 1
+ * likelihood, impact, and level as facets; accepted and transferred risks
+ * are deviations approved, mitigated and avoided ones are being remediated.
+ */
+export async function registerRisk(i: OscalInput, r: Risk): Promise<Record<string, unknown>> {
+  return {
+    uuid: await uuidFor(i.fleet.id, "risk", "register", r.id),
+    title: r.title,
+    description: r.description,
+    statement:
+      `Level of risk ${r.level} (likelihood ${r.likelihood}, impact ${r.impact}; NIST SP 800-30 Rev 1). Treatment: ${r.treatment}. Owner: ${r.owner}. Next review: ${r.nextReview}.`,
+    props: [...scfProps([...r.scf]), ...registerProps(r)],
+    status: r.treatment === "accept" || r.treatment === "transfer"
+      ? "deviation-approved"
+      : "remediating",
+    characterizations: [{
+      origin: {
+        actors: [{ type: "party", "actor-uuid": await uuidFor(i.fleet.id, "party", "fleet") }],
+      },
+      facets: [
+        { name: "likelihood", system: SP800_30, value: r.likelihood },
+        { name: "impact", system: SP800_30, value: r.impact },
+        { name: "risk", system: SP800_30, value: r.level },
+      ],
+    }],
+  };
+}
+
 /** The POA&M: each failing check, open; each accepted risk, a deviation approved until its date. */
 export async function poam(i: OscalInput): Promise<unknown> {
   const ev = allEvidence(i.view).filter((e) => e.status === "fail" || e.status === "accepted");
@@ -495,6 +541,10 @@ export async function poam(i: OscalInput): Promise<unknown> {
     status: e.status === "accepted" ? "deviation-approved" : "open",
     "related-observations": [{ "observation-uuid": obs[k].uuid }],
   })));
+  // Spec 080: the register's open risks, each with its SP 800-30 levels as facets.
+  const reg = (i.register ?? []).filter((r) => r.status === "open");
+  const regRisks = await Promise.all(reg.map((r) => registerRisk(i, r)));
+  const allRisks = [...risks, ...regRisks];
   return {
     "plan-of-action-and-milestones": {
       uuid: await uuidFor(i.fleet.id, "poam", iso(i.now)),
@@ -503,17 +553,27 @@ export async function poam(i: OscalInput): Promise<unknown> {
         "identifier-type": "https://ietf.org/rfc/rfc4122",
         id: await uuidFor(i.fleet.id, "component", "this-system"),
       },
-      ...(obs.length ? { observations: obs, risks } : {}),
-      "poam-items": await Promise.all(ev.map(async (e, k) => ({
-        uuid: await uuidFor(i.fleet.id, "poam-item", evidenceKey(e)),
-        title: `${e.subject}: ${e.check}`,
-        description: e.status === "accepted"
-          ? `A risk accepted: ${e.detail}`
-          : `${e.detail}${e.fix ? `. Fix: ${e.fix}` : ""}`,
-        props: scfProps(e.scf),
-        "related-observations": [{ "observation-uuid": obs[k].uuid }],
-        "related-risks": [{ "risk-uuid": risks[k].uuid }],
-      }))),
+      ...(obs.length ? { observations: obs } : {}),
+      ...(allRisks.length ? { risks: allRisks } : {}),
+      "poam-items": [
+        ...await Promise.all(ev.map(async (e, k) => ({
+          uuid: await uuidFor(i.fleet.id, "poam-item", evidenceKey(e)),
+          title: `${e.subject}: ${e.check}`,
+          description: e.status === "accepted"
+            ? `A risk accepted: ${e.detail}`
+            : `${e.detail}${e.fix ? `. Fix: ${e.fix}` : ""}`,
+          props: scfProps(e.scf),
+          "related-observations": [{ "observation-uuid": obs[k].uuid }],
+          "related-risks": [{ "risk-uuid": risks[k].uuid }],
+        }))),
+        ...await Promise.all(reg.map(async (r, k) => ({
+          uuid: await uuidFor(i.fleet.id, "poam-item", "register", r.id),
+          title: `Risk register: ${r.title}`,
+          description: `${r.description} Treatment: ${r.treatment}; next review ${r.nextReview}.`,
+          props: [...scfProps([...r.scf]), ...registerProps(r)],
+          "related-risks": [{ "risk-uuid": regRisks[k].uuid }],
+        }))),
+      ],
       "back-matter": await backMatter(i),
     },
   };

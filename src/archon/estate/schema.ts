@@ -128,9 +128,10 @@ export const edge: AnyTable = defineTable({
     src_uid: { type: "text", doc: "From.", required: true },
     verb: {
       type: "text",
-      doc: "has_account, observed_as, member_of, administers, affects.",
+      doc:
+        "has_account, observed_as, member_of, administers, affects, supplies (spec 080: a vendor, to what revealed it).",
       required: true,
-      values: ["has_account", "observed_as", "member_of", "administers", "affects"],
+      values: ["has_account", "observed_as", "member_of", "administers", "affects", "supplies"],
     },
     dst_uid: { type: "text", doc: "To.", required: true, index: true },
     source: { type: "text", doc: "The connector or derive step that made it.", required: true },
@@ -208,11 +209,11 @@ export const person: AnyTable = defineTable({
   key: ["party_uid"],
 });
 
-/** An organization: the fleet's own, for now. */
+/** An organization: the fleet's own, and (spec 080) its vendors. */
 export const organization: AnyTable = defineTable({
   name: "organization",
   terms: [{ from: "udm", term: "organization" }],
-  doc: "An organization (the fleet's own).",
+  doc: "An organization: the fleet's own, and its vendors (spec 080: party_role supplier).",
   columns: {
     party_uid: { type: "text", doc: "The party.", required: true, references: "party" },
     name: { type: "text", doc: "Its name.", required: true },

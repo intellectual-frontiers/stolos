@@ -129,6 +129,7 @@ Deno.test("086: Okta: active users, administrators, second factors", async () =>
     [`${D}/api/v1/iam/assignees/users`]: [200, [{ id: "u1" }]],
     [`${D}/api/v1/users/u1/factors`]: [200, [{ status: "ACTIVE" }]],
     [`${D}/api/v1/users/u2/factors`]: [200, []],
+    [`${D}/api/v1/apps`]: [200, []],
   });
   const o = await okta.observe({ domain: D, token: "t" }, http, NOW);
   assertEquals(o.entities!.accounts!.map((a) => [a.email, a.active, a.admin, a.mfa ?? null]), [

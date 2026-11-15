@@ -309,6 +309,31 @@ export const PASSWORD_STORE: LabelView = defineLabel({
   },
 });
 
+/**
+ * An application people sign in to through an identity provider (OCSF
+ * application): an Okta app integration, an Entra enterprise application.
+ * Spec 080 reads them to discover the fleet's vendors.
+ */
+export const APPLICATION: LabelView = defineLabel({
+  name: "application",
+  terms: [{ from: "ocsf", term: "application" }],
+  doc:
+    "An application people sign in to through the identity provider (single sign-on): its name and how it signs in.",
+  props: {
+    catalog_name: {
+      type: "text",
+      doc: "The identity provider's catalog name for it (Okta's app name), when it has one.",
+    },
+    sign_on_mode: {
+      type: "text",
+      doc: "How it signs in (SAML_2_0, OPENID_CONNECT, saml, oidc, ...).",
+    },
+    active: { type: "boolean", doc: "People can sign in to it." },
+    url: { type: "text", doc: "Its home page, when the identity provider knows it." },
+    publisher: { type: "text", doc: "Who publishes it, when the identity provider says." },
+  },
+});
+
 /** Every connector label. */
 export const CONNECTOR_LABELS: readonly LabelView[] = [
   USER_ACCOUNT,
@@ -334,4 +359,5 @@ export const CONNECTOR_LABELS: readonly LabelView[] = [
   RESOURCE,
   TICKET,
   PASSWORD_STORE,
+  APPLICATION,
 ];

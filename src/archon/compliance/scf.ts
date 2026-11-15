@@ -212,6 +212,39 @@ export const SCF_CONTROLS = [
     name: "Data Protection",
     how: "Storage is not public by default (S3 Block Public Access).",
   },
+  // Spec 080: the risk register and the vendor inventory.
+  {
+    id: "RSK-11",
+    name: "Risk Owner",
+    how: "Every open risk in risks.ts has an owner who is an active person on the roster.",
+  },
+  {
+    id: "RSK-13.2",
+    name: "Risk Assessment Update",
+    how: "Every open risk is reviewed by its next review date (a signed pull request).",
+  },
+  {
+    id: "RSK-14",
+    name: "Risk Register",
+    how: "The risk register is TypeScript in the fleet repository (risks.ts), changed by review.",
+  },
+  {
+    id: "RSK-16.1",
+    name: "Risk Treatment Options",
+    how:
+      "Each risk names its treatment (accept, mitigate, transfer, avoid); accepted risks end on a date.",
+  },
+  {
+    id: "TPM-08",
+    name: "Third-Party Inventories",
+    how:
+      "Vendors are discovered from SSO applications, DNS records, and connected accounts, and listed.",
+  },
+  {
+    id: "TPM-09",
+    name: "Third-Party Criticality Assessments",
+    how: "Every discovered vendor is triaged in vendors.ts: its criticality and the data it holds.",
+  },
 ] as const satisfies readonly ScfControl[];
 
 /**

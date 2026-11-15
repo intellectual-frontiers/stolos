@@ -3,7 +3,8 @@
  * through Microsoft Graph) and Azure (through Resource Manager), read-only,
  * with one app registration's client credentials: the tenant, its domains,
  * users and licenses, who is a Global Administrator, whether people have MFA,
- * and Azure's subscriptions and resources.
+ * the enterprise applications people sign in to (spec 080: vendors), and
+ * Azure's subscriptions and resources.
  *
  * @module
  */
@@ -12,6 +13,7 @@ import { AccessDenied, check, type Connector, fresh, getJson, type Http } from "
 import { type Ctx, defineConnector, type FieldDef } from "./sdk.ts";
 import {
   ACCESS_CONTROL_GROUP,
+  APPLICATION,
   ASSESSMENT,
   DOMAIN_NAME,
   ORGANIZATION,
@@ -307,6 +309,43 @@ export const microsoft: Connector = defineConnector({
       }),
       asset: () => undefined,
     },
+    // Spec 080: the enterprise applications people sign in to (Directory.Read.All lists them),
+    // so the vendors behind them are discovered. Microsoft's own, and the tenant's own app
+    // registrations (stolos-read among them), are not vendors.
+    "Enterprise applications": {
+      label: APPLICATION,
+      ocsf: "cloud_resources_inventory_info",
+      list: async function* (ctx) {
+        const own = new Set([
+          ...MICROSOFT_TENANTS,
+          ...(await pages<{ id: string }>(ctx, `${GRAPH}/organization`)).map((o) => o.id),
+        ]);
+        for (
+          const sp of await pages<ServicePrincipal>(
+            ctx,
+            `${GRAPH}/servicePrincipals?$select=id,appId,displayName,appOwnerOrganizationId,servicePrincipalType,accountEnabled,preferredSingleSignOnMode,homepage,publisherName&$top=999`,
+          )
+        ) {
+          if ((sp.servicePrincipalType ?? "Application") !== "Application") continue;
+          if (sp.appOwnerOrganizationId && own.has(sp.appOwnerOrganizationId)) continue;
+          yield sp;
+        }
+      },
+      map: (sp: ServicePrincipal) => ({
+        native_id: sp.id,
+        display_name: sp.displayName,
+        props: {
+          active: sp.accountEnabled !== false,
+          ...(sp.preferredSingleSignOnMode ? { sign_on_mode: sp.preferredSingleSignOnMode } : {}),
+          ...(sp.homepage ? { url: sp.homepage } : {}),
+          ...(sp.publisherName ? { publisher: sp.publisherName } : {}),
+        },
+      }),
+      asset: (sp: ServicePrincipal) => ({
+        kind: "sso-application",
+        facts: { signOn: sp.preferredSingleSignOnMode ?? "?" },
+      }),
+    },
     // Azure: only when the app was given Reader on a subscription. Anything that goes wrong is a gap.
     Azure: {
       label: RESOURCE,
@@ -437,6 +476,25 @@ interface Sku {
   consumedUnits: number;
   prepaidUnits?: { enabled: number };
 }
+
+/** An Entra service principal (an enterprise application). */
+interface ServicePrincipal {
+  id: string;
+  appId?: string;
+  displayName: string;
+  appOwnerOrganizationId?: string | null;
+  servicePrincipalType?: string;
+  accountEnabled?: boolean;
+  preferredSingleSignOnMode?: string | null;
+  homepage?: string | null;
+  publisherName?: string | null;
+}
+
+/** The tenants Microsoft's own first-party applications are registered in. */
+const MICROSOFT_TENANTS = [
+  "f8cdef31-a31e-4b4a-93e4-5f571e91255a",
+  "72f988bf-86f1-41af-91ab-2d7cd011db47",
+];
 
 interface CaPolicy {
   id?: string;

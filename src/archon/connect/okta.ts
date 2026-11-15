@@ -2,14 +2,15 @@
  * Spec 086, declared with spec 091's SDK: Okta, read-only: its users
  * (active, suspended, deprovisioned), who holds an administrator role, and
  * who has enrolled a second factor. Evidence for account management and MFA
- * (SCF IAC-37, IAC-08, IAC-30).
+ * (SCF IAC-37, IAC-08, IAC-30). Spec 080: its app integrations, so the
+ * vendors people sign in to are discovered.
  *
  * @module
  */
 
 import { check, type Connector, fresh } from "./connector.ts";
 import { bearer, defineConnector } from "./sdk.ts";
-import { USER_ACCOUNT } from "./labels.ts";
+import { APPLICATION, USER_ACCOUNT } from "./labels.ts";
 
 interface OktaUser {
   id: string;
@@ -21,6 +22,20 @@ interface OktaUser {
   /** Added here: whether they have an active second factor (undefined: not read). */
   mfa?: boolean;
 }
+
+/** An Okta app integration (GET /api/v1/apps). */
+interface OktaApp {
+  id: string;
+  /** Its catalog name (salesforce, slack, or <org>_<app>_1 for a custom one). */
+  name: string;
+  /** Its name for people. */
+  label: string;
+  status: string;
+  signOnMode?: string;
+}
+
+/** Okta's own apps (its dashboard, admin console, browser plugin, workflows): not vendors. */
+const oktaOwn = (name: string) => /^(okta_|saasure$|flow$)/.test(name);
 
 const ACTIVE = new Set(["ACTIVE", "PASSWORD_EXPIRED", "RECOVERY", "LOCKED_OUT"]);
 const base = (domain: string) => `https://${domain.replace(/^https?:\/\//, "").replace(/\/$/, "")}`;
@@ -98,8 +113,35 @@ export const okta: Connector = defineConnector({
       }),
       asset: (u: OktaUser) => ({ kind: "user", facts: { status: u.status, admin: !!u.admin } }),
     },
+    // Spec 080: the app integrations people sign in to (a Read-Only Administrator may list them),
+    // so the vendors behind them are discovered. Okta's own apps (its dashboard, its admin
+    // console, its browser plugin) are not vendors.
+    apps: {
+      label: APPLICATION,
+      ocsf: "cloud_resources_inventory_info",
+      async *list(ctx) {
+        const b = base(ctx.cred.domain);
+        for await (const a of ctx.linkPages<OktaApp>(`${b}/api/v1/apps?limit=200`)) {
+          if (!oktaOwn(a.name)) yield a;
+        }
+      },
+      map: (a: OktaApp) => ({
+        native_id: a.id,
+        display_name: a.label,
+        props: {
+          catalog_name: a.name,
+          active: a.status === "ACTIVE",
+          ...(a.signOnMode ? { sign_on_mode: a.signOnMode } : {}),
+        },
+      }),
+      asset: (a: OktaApp) => ({
+        kind: "sso-application",
+        facts: { status: a.status, signOn: a.signOnMode ?? "?" },
+      }),
+    },
   },
-  posture(records) {
+  posture(all) {
+    const records = all.filter((r) => r.label === USER_ACCOUNT.name);
     const active = records.filter((r) => r.props.active);
     const mfaKnown = active.some((r) => r.props.mfa !== undefined);
     const adminKnown = records.some((r) => r.props.admin !== undefined);

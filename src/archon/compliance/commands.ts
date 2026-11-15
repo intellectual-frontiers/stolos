@@ -207,7 +207,11 @@ export async function oscalDocuments(now: Date = new Date()): Promise<OscalResul
     return { ok: false, error: "no fleet chosen", fix: "deno task stolos fleet use <id>" };
   }
   const nist = await loadNist("nist80053");
+  // Spec 080: the risk register's open risks go in the POA&M (a register that does not load is left out).
+  const { loadRisks } = await import("../risk/register.ts");
+  const register = await loadRisks().catch(() => undefined);
   const docs = await oscalExports({
+    ...(register ? { register } : {}),
     view: fleetFreshView(f, catalog, { cadences: await loadCadences() }),
     fleet: f.fleet,
     machines: f.machines.filter((m) => m.kind !== "discovered"),

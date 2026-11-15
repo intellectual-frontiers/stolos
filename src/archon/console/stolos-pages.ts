@@ -195,6 +195,21 @@ ${
     caption: "Each observation is a file in Git: its history is the account's history.",
   },
   {
+    id: "risks",
+    label: "Risks and vendors",
+    intro:
+      "The risk register (risks.ts) and the vendors the fleet depends on (vendors.ts), as code in the fleet repository: discovered from SSO applications, DNS, and connected accounts, checked like any control, and changed only through a signed pull request (stolos risks review and stolos vendors triage --write, in the terminal).",
+    names: ["risks list", "risks check", "vendors list"],
+    first: "risks check",
+    diagram: () =>
+      `flowchart LR
+  risks["risks.ts"] --> check["risks check: reviews, owners, accepted risks"]
+  sso["SSO apps, DNS, accounts"] --> vendors["vendors list"]
+  vendors -- "not in vendors.ts" --> triage["vendors triage --write: a pull request"]
+  triage -- "a signer's signed merge" --> file["vendors.ts"]`,
+    caption: "A review is a pull request; a fleet signer's signed merge approves it.",
+  },
+  {
     id: "people",
     label: "People",
     intro:

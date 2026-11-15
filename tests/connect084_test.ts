@@ -180,6 +180,7 @@ Deno.test("067: Microsoft 365: users, Global Administrators, MFA; Azure optional
     }],
     [`${G}/policies/identitySecurityDefaultsEnforcementPolicy`]: [200, { isEnabled: true }],
     [`${G}/identity/conditionalAccess/policies`]: [403, {}],
+    [`${G}/servicePrincipals`]: [200, { value: [] }],
     "management.azure.com/subscriptions?": [200, { value: [] }],
   });
   const o = await microsoft.observe({ tenant: "t", clientId: "c", clientSecret: "s" }, http, NOW);
