@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Stolos v0.103.0</title>
+<title>Stolos v0.104.0</title>
 <link rel="stylesheet" href="./styles.css">
 <link rel="stylesheet" href="./page.css">
 <script src="./darkmode_toggle.js"></script>
@@ -17,7 +17,7 @@
 </head>
 <body>
 <main>
-<h1>Stolos v0.103.0</h1>
+<h1>Stolos v0.104.0</h1>
 <p>The fleet engine (its command is <code>archon</code>), documented from its TypeScript.</p>
 <p class="start">Start here: <a href="./mod.ts/index.html">the overview</a>, with how the
 pieces fit, in diagrams. Then the model: <a href="./archon/model/types.ts/index.html">types.ts</a>.
@@ -265,10 +265,16 @@ Every symbol: <a href="./all_symbols.html">all symbols</a> (searchable).</p>
 <ul>
 <li><a href="./archon/export/commands.ts/index.html"><code>commands.ts</code></a> Spec 092: stolos export &lt;kind&gt; [--out &lt;file&gt;] gathers what the kind needs from this PC (the estate graph from the fleet repository, the compliance view, an evidence bundle) and writes one…</li>
 <li><a href="./archon/export/cyclonedx.ts/index.html"><code>cyclonedx.ts</code></a> Spec 092: the fleet's compliance as a CycloneDX 1.6 attestation (CDXA): the standard, what the fleet claims for each requirement, the evidence behind each claim, and how far each claim conforms.</li>
+<li><a href="./archon/export/deliver.ts/index.html"><code>deliver.ts</code></a> Delivery of exports (spec 092, part B): where a job's documents go, by the owner's rule.</li>
+<li><a href="./archon/export/delivery-commands.ts/index.html"><code>delivery-commands.ts</code></a> The export delivery commands, on your PC (spec 092): deno task stolos export list the jobs, how each delivers, and its last run deno task stolos export run &lt;job&gt; make and deliver one job's…</li>
+<li><a href="./archon/export/der.ts/index.html"><code>der.ts</code></a> A small ASN.1 DER encoder and reader (ITU-T X.690), just enough for spec 092's S/MIME: build CMS structures (RFC 5652) and read the few fields of an X.509 certificate (RFC 5280) that encryption needs.</li>
 <li><a href="./archon/export/exports.ts/index.html"><code>exports.ts</code></a> Spec 092: the exports API.</li>
 <li><a href="./archon/export/intoto.ts/index.html"><code>intoto.ts</code></a> Spec 092: an evidence bundle (spec 072) as an in-toto Statement v1, and the DSSE envelope that carries a signed one.</li>
+<li><a href="./archon/export/jobs.ts/index.html"><code>jobs.ts</code></a> Spec 092's export jobs as the fleet declares them (estate.exports in fleets/&lt;id&gt;/fleet.ts, see ExportJobDef): checking them, matching their tenants, and reading what each needs at run time (the…</li>
 <li><a href="./archon/export/ocsf.ts/index.html"><code>ocsf.ts</code></a> Spec 092: the estate and the compliance view as OCSF 1.9.0 events, one JSON object per line (JSON Lines), for a SIEM or a data lake to read without a parser of its own.</li>
 <li><a href="./archon/export/otlp.ts/index.html"><code>otlp.ts</code></a> Spec 092: OCSF events as OpenTelemetry logs, in the OTLP/HTTP JSON encoding: the body of an ExportLogsServiceRequest that any OTLP receiver (a Collector, an observability backend) accepts at /v1/logs.</li>
+<li><a href="./archon/export/schedule.ts/index.html"><code>schedule.ts</code></a> Export jobs on a schedule, without Stolos open (spec 092): stolos export schedule &lt;job&gt; creates the operating system's own scheduled job on this PC, which runs deno task stolos --fleet &lt;fleet&gt;…</li>
+<li><a href="./archon/export/smime.ts/index.html"><code>smime.ts</code></a> S/MIME encryption for spec 092's emailed exports (RFC 8551), with WebCrypto only.</li>
 </ul>
 <h2>archon/fleet/</h2>
 <ul>

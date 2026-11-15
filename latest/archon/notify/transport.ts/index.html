@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/notify/transport.ts - Stolos v0.103.0 documentation</title>
+  <title>archon/notify/transport.ts - Stolos v0.104.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.103.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.104.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -144,7 +144,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_hostlabel" 
     </div><div id="namespace_probesmtp" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;transport.ts&#x2F;~&#x2F;probeSmtp.html" title="probeSmtp">
-			    <span>probeSmtp</span><span>(<div class="ml-4"><div><span>c<span>: <span class="td-ref">Credential</span></span></span>,</div><div><span>o<span>: { relay<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; ipv4<span>: <span class="td-kw">boolean</span></span>;  }</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">void</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Log in to the relay and leave, sending nothing (archon doctor, mail-setup).</p>
+			    <span>probeSmtp</span><span>(<div class="ml-4"><div><span>c<span>: <span class="td-ref">Credential</span></span></span>,</div><div><span>o<span>: <span class="td-ref">Omit</span>&lt;<span class="td-ref">SmtpOptions</span><span>, </span><span><span class="td-str">"file"</span><span class="td-op"> | </span><span class="td-str">"from"</span><span class="td-op"> | </span><span class="td-str">"to"</span></span>&gt;</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">void</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Log in to the relay and leave, sending nothing (archon doctor, mail-setup).</p>
 </div></div></div>
     </div><div id="namespace_relayparts" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -171,12 +171,12 @@ domain for the whole fleet, the machine in the subaddress (RFC 5233).</p>
     </div><div id="namespace_sendsmtp" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;transport.ts&#x2F;~&#x2F;sendSmtp.html" title="sendSmtp">
-			    <span>sendSmtp</span><span>(<div class="ml-4"><div><span>c<span>: <span class="td-ref">Credential</span></span></span>,</div><div><span>o<span>: { relay<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; ipv4<span>: <span class="td-kw">boolean</span></span>; from<span>: <span class="td-kw">string</span></span>; to<span>: <span class="td-kw">string</span></span>;  }</span></span>,</div><div><span>mime<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">string</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Send one RFC 5322 message (CRLF line ends) through the relay.</p>
+			    <span>sendSmtp</span><span>(<div class="ml-4"><div><span>c<span>: <span class="td-ref">Credential</span></span></span>,</div><div><span>o<span>: <span><span class="td-ref">Omit</span>&lt;<span class="td-ref">SmtpOptions</span><span>, </span><span class="td-str">"file"</span>&gt;<span class="td-op"> & </span>{ from<span>: <span class="td-kw">string</span></span>; to<span>: <span class="td-kw">string</span></span>;  }</span></span></span>,</div><div><span>mime<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">string</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Send one RFC 5322 message (CRLF line ends) through the relay.</p>
 </div></div></div>
     </div><div id="namespace_smtpconfig" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;transport.ts&#x2F;~&#x2F;smtpConfig.html" title="smtpConfig">
-			    <span>smtpConfig</span><span>(<div class="ml-4"><div><span>c<span>: <span class="td-ref">Credential</span></span></span>,</div><div><span>o<span>: { relay<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; ipv4<span>: <span class="td-kw">boolean</span></span>; from<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; to<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; file<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>curl's configuration for one SMTP session with the relay (token included: stdin only).</p>
+			    <span>smtpConfig</span><span>(<div class="ml-4"><div><span>c<span>: <span class="td-ref">Credential</span></span></span>,</div><div><span>o<span>: <span class="td-ref">SmtpOptions</span></span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>curl's configuration for one SMTP session with the relay (token included: stdin only).</p>
 </div></div></div>
     </div><div id="namespace_smtperror" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -185,6 +185,11 @@ domain for the whole fleet, the machine in the subaddress (RFC 5233).</p>
 in, the sender, the recipient, the message), what was tried there, the
 server's reply code, and the likely fix. curl reports the step and the code
 (&quot;RCPT failed: 500&quot;); the token is never part of it.</p>
+</div></div></div>
+    </div><div id="namespace_tlsfor" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;transport.ts&#x2F;~&#x2F;tlsFor.html" title="tlsFor">
+			    <span>tlsFor</span><span>(<span><span>port<span>: <span class="td-kw">number</span></span></span></span>)<span>: <span class="td-ref">SmtpTls</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The TLS mode for a port when none is given: STARTTLS on 587 and 25, implicit TLS otherwise.</p>
 </div></div></div>
     </div></div>
 </section>
@@ -221,7 +226,68 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_credential
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;transport.ts&#x2F;~&#x2F;Credential.html#property_token">
                   <span>token</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The API token (the SMTP password). A secret: never logged or sent.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;transport.ts&#x2F;~&#x2F;Credential.html#property_user">
+                  <span>user</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The SMTP user name, for a relay other than Cloudflare's (spec 092: a
+tenant's own send-only account). Default: RELAY_USER.</p>
 </div></div></li></ul></div>
+    </div><div id="namespace_smtpoptions" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;transport.ts&#x2F;~&#x2F;SmtpOptions.html" title="SmtpOptions">
+			    <span>SmtpOptions</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One SMTP session's options (curl's configuration is built from these).</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;transport.ts&#x2F;~&#x2F;SmtpOptions.html#property_cacert">
+                  <span>cacert</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A CA bundle to trust instead of the system's (tests with their own certificate).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;transport.ts&#x2F;~&#x2F;SmtpOptions.html#property_file">
+                  <span>file</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The message file to upload (none: log in and NOOP).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;transport.ts&#x2F;~&#x2F;SmtpOptions.html#property_from">
+                  <span>from</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The envelope sender.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;transport.ts&#x2F;~&#x2F;SmtpOptions.html#property_ipv4">
+                  <span>ipv4</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Reach it over IPv4 only.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;transport.ts&#x2F;~&#x2F;SmtpOptions.html#property_relay">
+                  <span>relay</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>host:port of the relay (default DEFAULT_RELAY).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;transport.ts&#x2F;~&#x2F;SmtpOptions.html#property_tls">
+                  <span>tls</span><span>: <span class="td-ref">SmtpTls</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How TLS starts (default by port, tlsFor). Either way TLS is required
+(<code>ssl-reqd</code>): curl refuses to log in or send over a connection without it.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;transport.ts&#x2F;~&#x2F;SmtpOptions.html#property_to">
+                  <span>to</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The envelope recipient.</p>
+</div></div></li></ul></div>
+    </div></div>
+</section>
+<section class="section"  id="archon&#x2F;notify&#x2F;transport_ts_type-aliases"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;notify&#x2F;transport_ts_type-aliases" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_smtptls" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;transport.ts&#x2F;~&#x2F;SmtpTls.html" title="SmtpTls">
+			    <span>SmtpTls</span><span> = <span><span class="td-str">"implicit"</span><span class="td-op"> | </span><span class="td-str">"starttls"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How TLS starts: at once (implicit, port 465), or by STARTTLS after EHLO (submission, port 587).</p>
+</div></div></div>
     </div></div>
 </section>
 <section class="section"  id="archon&#x2F;notify&#x2F;transport_ts_variables"><div>
@@ -340,7 +406,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_default_rel
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1994 symbols</span><svg
+              <span class="leading-none">view all 2091 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -355,7 +421,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_default_rel
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/notify/transport_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_hostlabel" title="hostLabel">hostLabel</a></li><li><a href="#namespace_parsesaslpasswd" title="parseSaslPasswd">parseSaslPasswd</a></li><li><a href="#namespace_probesmtp" title="probeSmtp">probeSmtp</a></li><li><a href="#namespace_relayparts" title="relayParts">relayParts</a></li><li><a href="#namespace_saslpasswd" title="saslPasswd">saslPasswd</a></li><li><a href="#namespace_secretsof" title="secretsOf">secretsOf</a></li><li><a href="#namespace_senderaddress" title="senderAddress">senderAddress</a></li><li><a href="#namespace_sendsmtp" title="sendSmtp">sendSmtp</a></li><li><a href="#namespace_smtpconfig" title="smtpConfig">smtpConfig</a></li><li><a href="#namespace_smtperror" title="smtpError">smtpError</a></li></ul></li><li><a href="#archon/notify/transport_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_credential" title="Credential">Credential</a></li></ul></li><li><a href="#archon/notify/transport_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_default_relay" title="DEFAULT_RELAY">DEFAULT_RELAY</a></li><li><a href="#namespace_email" title="EMAIL">EMAIL</a></li><li><a href="#namespace_relay_user" title="RELAY_USER">RELAY_USER</a></li><li><a href="#namespace_sasl_passwd" title="SASL_PASSWD">SASL_PASSWD</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/notify/transport_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_hostlabel" title="hostLabel">hostLabel</a></li><li><a href="#namespace_parsesaslpasswd" title="parseSaslPasswd">parseSaslPasswd</a></li><li><a href="#namespace_probesmtp" title="probeSmtp">probeSmtp</a></li><li><a href="#namespace_relayparts" title="relayParts">relayParts</a></li><li><a href="#namespace_saslpasswd" title="saslPasswd">saslPasswd</a></li><li><a href="#namespace_secretsof" title="secretsOf">secretsOf</a></li><li><a href="#namespace_senderaddress" title="senderAddress">senderAddress</a></li><li><a href="#namespace_sendsmtp" title="sendSmtp">sendSmtp</a></li><li><a href="#namespace_smtpconfig" title="smtpConfig">smtpConfig</a></li><li><a href="#namespace_smtperror" title="smtpError">smtpError</a></li><li><a href="#namespace_tlsfor" title="tlsFor">tlsFor</a></li></ul></li><li><a href="#archon/notify/transport_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_credential" title="Credential">Credential</a></li><li><a href="#namespace_smtpoptions" title="SmtpOptions">SmtpOptions</a></li></ul></li><li><a href="#archon/notify/transport_ts_type-aliases" title="Type Aliases">Type Aliases</a></li><li><ul><li><a href="#namespace_smtptls" title="SmtpTls">SmtpTls</a></li></ul></li><li><a href="#archon/notify/transport_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_default_relay" title="DEFAULT_RELAY">DEFAULT_RELAY</a></li><li><a href="#namespace_email" title="EMAIL">EMAIL</a></li><li><a href="#namespace_relay_user" title="RELAY_USER">RELAY_USER</a></li><li><a href="#namespace_sasl_passwd" title="SASL_PASSWD">SASL_PASSWD</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>

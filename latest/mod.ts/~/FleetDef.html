@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>FleetDef - mod.ts - Stolos v0.103.0 documentation</title>
+  <title>FleetDef - mod.ts - Stolos v0.104.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="mod.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;" class="contextLink">Stolos v0.103.0</a>
+    <a href="..&#x2F;..&#x2F;" class="contextLink">Stolos v0.104.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -1026,7 +1026,7 @@ keys. Default: the private ranges (your LAN and VLANs). [] means keys only.</p>
   </defs>
 </svg>
 </a>
-<span class="font-bold font-lg">estate</span><span class="font-medium text-stone-500 dark:text-stone-200"><span>: { personSources<span class="td-op">?</span><span>: <span class="td-kw">string</span>[]</span>;  }</span></span>
+<span class="font-bold font-lg">estate</span><span class="font-medium text-stone-500 dark:text-stone-200"><span>: { personSources<span class="td-op">?</span><span>: <span class="td-kw">string</span>[]</span>; exports<span class="td-op">?</span><span>: <span class="td-ref">ExportJobDef</span>[]</span>;  }</span></span>
       </code>
     </div><a
   class="sourceButton"
@@ -1058,6 +1058,10 @@ create people, in order; the first one connected is the source of truth
 and the others only link to its people. Default: bamboohr, rippling,
 gusto, deel, justworks, okta, jumpcloud, microsoft, google (HR systems,
 then identity providers).</p>
+<p><code>exports</code> (spec 092): export jobs, each for some of the estate's tenants,
+delivered to the fleet's OpenTelemetry collector, else to a file on this
+PC, and emailed (send-only, S/MIME) to its own recipients, on its own
+schedule. See ExportJobDef.</p>
 </div></div></div>
 <div class="anchorable docEntry" id="property_observability">
 

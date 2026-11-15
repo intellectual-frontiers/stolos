@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/model/types.ts - Stolos v0.103.0 documentation</title>
+  <title>archon/model/types.ts - Stolos v0.104.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.103.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.104.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -277,6 +277,91 @@ warning with their fix and never count as a failure (installed.json stays ok).</
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;DiskDef.html#property_match">
                   <span>match</span><span>: <span><span class="td-str">"largest"</span><span class="td-op"> | </span><span class="td-str">`/dev/${<span class="td-kw">string</span>}`</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Device path, or &quot;largest&quot; for the largest disk.</p>
 </div></div></li></ul></div>
+    </div><div id="namespace_exportemaildef" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;ExportEmailDef.html" title="ExportEmailDef">
+			    <span>ExportEmailDef</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where a job's files are emailed, and how they are sent (spec 092).</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;ExportEmailDef.html#property_credential">
+                  <span>credential</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A separate send-only credential on this PC, by name (<code>stolos export credential &lt;name&gt;</code>), for a tenant that sends through its own account.
+Default: the fleet's (<code>stolos boot mail-setup</code>).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;ExportEmailDef.html#property_from">
+                  <span>from</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The sender: a whole address, or a local part on <code>fleet.mail.domain</code>.
+Default: <code>exports+&lt;pc&gt;.&lt;tag&gt;@&lt;fleet.mail.domain&gt;</code>.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;ExportEmailDef.html#property_relay">
+                  <span>relay</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>host:port of the SMTP relay (default <code>fleet.mail.relay</code>, else Cloudflare's, port 465).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;ExportEmailDef.html#property_subject">
+                  <span>subject</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The subject (it is not encrypted, so keep it plain). Default: &quot;[Stolos] &lt;fleet&gt; export &lt;id&gt;&quot;.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;ExportEmailDef.html#property_to">
+                  <span>to</span><span>: <span class="td-ref">ExportRecipientDef</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The recipients; each gets their own copy, encrypted to their certificate only.</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_exportjobdef" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;ExportJobDef.html" title="ExportJobDef">
+			    <span>ExportJobDef</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One export job (spec 092): which documents, for which tenants, to whom, and
+when. Delivery: to the fleet's OpenTelemetry collector (OTLP/HTTP,
+<code>telemetry.collector</code>) when one is configured, otherwise to a file in this
+PC's state directory; with <code>email</code>, the files are also mailed, encrypted to
+each recipient's certificate. Nothing secret is in a job: the sending
+credential stays in this PC's secrets folder.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;ExportJobDef.html#property_email">
+                  <span>email</span><span>: <span class="td-ref">ExportEmailDef</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Also email the files (send-only, each copy encrypted to its recipient).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;ExportJobDef.html#property_id">
+                  <span>id</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its id, a DNS label: names the scheduled job and its folder (<code>stolos export run &lt;id&gt;</code>).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;ExportJobDef.html#property_kinds">
+                  <span>kinds</span><span>: <span class="td-ref">ExportKind</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The documents to export.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;ExportJobDef.html#property_otlp">
+                  <span>otlp</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Send to the fleet's OpenTelemetry collector when one is configured (default true).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;ExportJobDef.html#property_schedule">
+                  <span>schedule</span><span>: <span class="td-ref">ExportScheduleDef</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When it runs by itself (<code>stolos export schedule &lt;id&gt;</code> creates the OS's own job).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;ExportJobDef.html#property_tenants">
+                  <span>tenants</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The tenants it covers, by uid (<code>&lt;connector&gt;:&lt;account&gt;</code>, as in the estate
+graph: <code>fleet:&lt;fleet&gt;</code>, <code>aws:123456789012</code>); a trailing <code>*</code> matches a
+prefix (<code>aws:*</code>). Default: every tenant.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;ExportJobDef.html#property_title">
+                  <span>title</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What it is for, in one line.</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_exportrecipientdef" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;ExportRecipientDef.html" title="ExportRecipientDef">
+			    <span>ExportRecipientDef</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One recipient of emailed exports and their public certificate (spec 092).</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;ExportRecipientDef.html#property_address">
+                  <span>address</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Their email address.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;ExportRecipientDef.html#property_certificate">
+                  <span>certificate</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Their S/MIME certificate (X.509, RSA, PEM): a path relative to the fleet's
+folder (<code>fleets/&lt;id&gt;/certs/auditor.pem</code>), or the PEM text itself. It is
+public; the private key never leaves the recipient.</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_exportscheduledef" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;ExportScheduleDef.html" title="ExportScheduleDef">
+			    <span>ExportScheduleDef</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When an export job runs (spec 092), in the PC's local time.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;ExportScheduleDef.html#property_at">
+                  <span>at</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>HH:MM, 24-hour, local time (hourly uses only the minute). Default &quot;02:17&quot;.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;ExportScheduleDef.html#property_dayofmonth">
+                  <span>dayOfMonth</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>For monthly: the day of the month, 1 to 28 (default 1).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;ExportScheduleDef.html#property_every">
+                  <span>every</span><span>: <span><span class="td-str">"hourly"</span><span class="td-op"> | </span><span class="td-str">"daily"</span><span class="td-op"> | </span><span class="td-str">"weekly"</span><span class="td-op"> | </span><span class="td-str">"monthly"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How often.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;ExportScheduleDef.html#property_weekday">
+                  <span>weekday</span><span>: <span><span class="td-str">"mon"</span><span class="td-op"> | </span><span class="td-str">"tue"</span><span class="td-op"> | </span><span class="td-str">"wed"</span><span class="td-op"> | </span><span class="td-str">"thu"</span><span class="td-op"> | </span><span class="td-str">"fri"</span><span class="td-op"> | </span><span class="td-str">"sat"</span><span class="td-op"> | </span><span class="td-str">"sun"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>For weekly: the day (default &quot;mon&quot;).</p>
+</div></div></li></ul></div>
     </div><div id="namespace_filedef" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;FileDef.html" title="FileDef">
@@ -359,7 +444,7 @@ writes the first one from your GitHub account; edit it freely after, then
                   <span>admin</span><span>: { user<span>: <span class="td-kw">string</span></span>; uid<span>: <span class="td-kw">number</span></span>; github<span>: <span class="td-ref">GitHubIdentity</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fleet's admin: one person, one account on every host (spec 003).</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;FleetDef.html#property_estate">
-                  <span>estate</span><span>: { personSources<span class="td-op">?</span><span>: <span class="td-kw">string</span>[]</span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The estate graph (spec 090). <code>personSources</code>: the connectors that may
+                  <span>estate</span><span>: { personSources<span class="td-op">?</span><span>: <span class="td-kw">string</span>[]</span>; exports<span class="td-op">?</span><span>: <span class="td-ref">ExportJobDef</span>[]</span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The estate graph (spec 090). <code>personSources</code>: the connectors that may
 create people, in order; the first one connected is the source of truth
 and the others only link to its people. Default: bamboohr, rippling,
 gusto, deel, justworks, okta, jumpcloud, microsoft, google (HR systems,
@@ -1252,6 +1337,11 @@ more in its <code>capabilities</code>.</p>
 			    <span>DataClass</span><span> = <span><span class="td-str">"durable"</span><span class="td-op"> | </span><span class="td-str">"ephemeral"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Article 23 (spec 044): data that can come from end users is either durable
 (it exists nowhere else) or ephemeral (losing it is harmless).</p>
 </div></div></div>
+    </div><div id="namespace_exportkind" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;types.ts&#x2F;~&#x2F;ExportKind.html" title="ExportKind">
+			    <span>ExportKind</span><span> = <span><span class="td-str">"oscal"</span><span class="td-op"> | </span><span class="td-str">"ocsf"</span><span class="td-op"> | </span><span class="td-str">"otlp"</span><span class="td-op"> | </span><span class="td-str">"cyclonedx"</span><span class="td-op"> | </span><span class="td-str">"in-toto"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The kinds of export document (spec 092).</p>
+</div></div></div>
     </div><div id="namespace_ipv4" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;model&#x2F;site.ts&#x2F;~&#x2F;IPv4.html" title="IPv4">
@@ -1392,7 +1482,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_brand-1" cl
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1994 symbols</span><svg
+              <span class="leading-none">view all 2091 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -1407,7 +1497,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_brand-1" cl
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/model/types_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_aptrepodef" title="AptRepoDef">AptRepoDef</a></li><li><a href="#namespace_backupdef" title="BackupDef">BackupDef</a></li><li><a href="#namespace_capabilitycontext" title="CapabilityContext">CapabilityContext</a></li><li><a href="#namespace_checkdef" title="CheckDef">CheckDef</a></li><li><a href="#namespace_contribution" title="Contribution">Contribution</a></li><li><a href="#namespace_device" title="Device">Device</a></li><li><a href="#namespace_diskdef" title="DiskDef">DiskDef</a></li><li><a href="#namespace_filedef" title="FileDef">FileDef</a></li><li><a href="#namespace_firewallpolicy" title="FirewallPolicy">FirewallPolicy</a></li><li><a href="#namespace_fleetdef" title="FleetDef">FleetDef</a></li><li><a href="#namespace_githubidentity" title="GitHubIdentity">GitHubIdentity</a></li><li><a href="#namespace_githubsource" title="GitHubSource">GitHubSource</a></li><li><a href="#namespace_guestdef" title="GuestDef">GuestDef</a></li><li><a href="#namespace_hostdecisions" title="HostDecisions">HostDecisions</a></li><li><a href="#namespace_hostdef" title="HostDef">HostDef</a></li><li><a href="#namespace_hostplan" title="HostPlan">HostPlan</a></li><li><a href="#namespace_hostregistration" title="HostRegistration">HostRegistration</a></li><li><a href="#namespace_localdnsrecord" title="LocalDnsRecord">LocalDnsRecord</a></li><li><a href="#namespace_networkdef" title="NetworkDef">NetworkDef</a></li><li><a href="#namespace_observabilitydef" title="ObservabilityDef">ObservabilityDef</a></li><li><a href="#namespace_optinrecord" title="OptInRecord">OptInRecord</a></li><li><a href="#namespace_packagedef" title="PackageDef">PackageDef</a></li><li><a href="#namespace_persona" title="Persona">Persona</a></li><li><a href="#namespace_pgdatabasedef" title="PgDatabaseDef">PgDatabaseDef</a></li><li><a href="#namespace_pginstancedef" title="PgInstanceDef">PgInstanceDef</a></li><li><a href="#namespace_pgrecord" title="PgRecord">PgRecord</a></li><li><a href="#namespace_pgstate" title="PgState">PgState</a></li><li><a href="#namespace_portdef" title="PortDef">PortDef</a></li><li><a href="#namespace_providersdef" title="ProvidersDef">ProvidersDef</a></li><li><a href="#namespace_servicedef" title="ServiceDef">ServiceDef</a></li><li><a href="#namespace_signerdef" title="SignerDef">SignerDef</a></li><li><a href="#namespace_sitedef" title="SiteDef">SiteDef</a></li><li><a href="#namespace_sitenetwork" title="SiteNetwork">SiteNetwork</a></li><li><a href="#namespace_tooldef" title="ToolDef">ToolDef</a></li><li><a href="#namespace_unitdef" title="UnitDef">UnitDef</a></li><li><a href="#namespace_userdef" title="UserDef">UserDef</a></li><li><a href="#namespace_webfleetdef" title="WebFleetDef">WebFleetDef</a></li><li><a href="#namespace_webroute" title="WebRoute">WebRoute</a></li><li><a href="#namespace_wifinetwork" title="WifiNetwork">WifiNetwork</a></li></ul></li><li><a href="#archon/model/types_ts_type-aliases" title="Type Aliases">Type Aliases</a></li><li><ul><li><a href="#namespace_action" title="Action">Action</a></li><li><a href="#namespace_brand" title="Brand">Brand</a></li><li><a href="#namespace_capability" title="Capability">Capability</a></li><li><a href="#namespace_cidr" title="Cidr">Cidr</a></li><li><a href="#namespace_dataclass" title="DataClass">DataClass</a></li><li><a href="#namespace_ipv4" title="IPv4">IPv4</a></li><li><a href="#namespace_mcptier" title="McpTier">McpTier</a></li><li><a href="#namespace_personaid" title="PersonaId">PersonaId</a></li><li><a href="#namespace_port" title="Port">Port</a></li><li><a href="#namespace_specid" title="SpecId">SpecId</a></li><li><a href="#namespace_vlanid" title="VlanId">VlanId</a></li><li><a href="#namespace_zone" title="Zone">Zone</a></li></ul></li><li><a href="#archon/model/types_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_brand-1" title="BRAND">BRAND</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/model/types_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_aptrepodef" title="AptRepoDef">AptRepoDef</a></li><li><a href="#namespace_backupdef" title="BackupDef">BackupDef</a></li><li><a href="#namespace_capabilitycontext" title="CapabilityContext">CapabilityContext</a></li><li><a href="#namespace_checkdef" title="CheckDef">CheckDef</a></li><li><a href="#namespace_contribution" title="Contribution">Contribution</a></li><li><a href="#namespace_device" title="Device">Device</a></li><li><a href="#namespace_diskdef" title="DiskDef">DiskDef</a></li><li><a href="#namespace_exportemaildef" title="ExportEmailDef">ExportEmailDef</a></li><li><a href="#namespace_exportjobdef" title="ExportJobDef">ExportJobDef</a></li><li><a href="#namespace_exportrecipientdef" title="ExportRecipientDef">ExportRecipientDef</a></li><li><a href="#namespace_exportscheduledef" title="ExportScheduleDef">ExportScheduleDef</a></li><li><a href="#namespace_filedef" title="FileDef">FileDef</a></li><li><a href="#namespace_firewallpolicy" title="FirewallPolicy">FirewallPolicy</a></li><li><a href="#namespace_fleetdef" title="FleetDef">FleetDef</a></li><li><a href="#namespace_githubidentity" title="GitHubIdentity">GitHubIdentity</a></li><li><a href="#namespace_githubsource" title="GitHubSource">GitHubSource</a></li><li><a href="#namespace_guestdef" title="GuestDef">GuestDef</a></li><li><a href="#namespace_hostdecisions" title="HostDecisions">HostDecisions</a></li><li><a href="#namespace_hostdef" title="HostDef">HostDef</a></li><li><a href="#namespace_hostplan" title="HostPlan">HostPlan</a></li><li><a href="#namespace_hostregistration" title="HostRegistration">HostRegistration</a></li><li><a href="#namespace_localdnsrecord" title="LocalDnsRecord">LocalDnsRecord</a></li><li><a href="#namespace_networkdef" title="NetworkDef">NetworkDef</a></li><li><a href="#namespace_observabilitydef" title="ObservabilityDef">ObservabilityDef</a></li><li><a href="#namespace_optinrecord" title="OptInRecord">OptInRecord</a></li><li><a href="#namespace_packagedef" title="PackageDef">PackageDef</a></li><li><a href="#namespace_persona" title="Persona">Persona</a></li><li><a href="#namespace_pgdatabasedef" title="PgDatabaseDef">PgDatabaseDef</a></li><li><a href="#namespace_pginstancedef" title="PgInstanceDef">PgInstanceDef</a></li><li><a href="#namespace_pgrecord" title="PgRecord">PgRecord</a></li><li><a href="#namespace_pgstate" title="PgState">PgState</a></li><li><a href="#namespace_portdef" title="PortDef">PortDef</a></li><li><a href="#namespace_providersdef" title="ProvidersDef">ProvidersDef</a></li><li><a href="#namespace_servicedef" title="ServiceDef">ServiceDef</a></li><li><a href="#namespace_signerdef" title="SignerDef">SignerDef</a></li><li><a href="#namespace_sitedef" title="SiteDef">SiteDef</a></li><li><a href="#namespace_sitenetwork" title="SiteNetwork">SiteNetwork</a></li><li><a href="#namespace_tooldef" title="ToolDef">ToolDef</a></li><li><a href="#namespace_unitdef" title="UnitDef">UnitDef</a></li><li><a href="#namespace_userdef" title="UserDef">UserDef</a></li><li><a href="#namespace_webfleetdef" title="WebFleetDef">WebFleetDef</a></li><li><a href="#namespace_webroute" title="WebRoute">WebRoute</a></li><li><a href="#namespace_wifinetwork" title="WifiNetwork">WifiNetwork</a></li></ul></li><li><a href="#archon/model/types_ts_type-aliases" title="Type Aliases">Type Aliases</a></li><li><ul><li><a href="#namespace_action" title="Action">Action</a></li><li><a href="#namespace_brand" title="Brand">Brand</a></li><li><a href="#namespace_capability" title="Capability">Capability</a></li><li><a href="#namespace_cidr" title="Cidr">Cidr</a></li><li><a href="#namespace_dataclass" title="DataClass">DataClass</a></li><li><a href="#namespace_exportkind" title="ExportKind">ExportKind</a></li><li><a href="#namespace_ipv4" title="IPv4">IPv4</a></li><li><a href="#namespace_mcptier" title="McpTier">McpTier</a></li><li><a href="#namespace_personaid" title="PersonaId">PersonaId</a></li><li><a href="#namespace_port" title="Port">Port</a></li><li><a href="#namespace_specid" title="SpecId">SpecId</a></li><li><a href="#namespace_vlanid" title="VlanId">VlanId</a></li><li><a href="#namespace_zone" title="Zone">Zone</a></li></ul></li><li><a href="#archon/model/types_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_brand-1" title="BRAND">BRAND</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>

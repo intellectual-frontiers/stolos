@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>sendSmtp - archon/notify/transport.ts - Stolos v0.103.0 documentation</title>
+  <title>sendSmtp - archon/notify/transport.ts - Stolos v0.104.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;notify&#x2F;transport.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.103.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.104.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -165,7 +165,7 @@
   </defs>
 </svg>
 </a>
-<span class="font-bold">sendSmtp</span><span class="font-medium">(<div class="ml-4"><div><span>c<span>: <a href="../../../.././archon/notify/transport.ts/~/Credential.html" class="link td-ref">Credential</a></span></span>,</div><div><span>o<span>: { relay<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; ipv4<span>: <span class="td-kw">boolean</span></span>; from<span>: <span class="td-kw">string</span></span>; to<span>: <span class="td-kw">string</span></span>;  }</span></span>,</div><div><span>mime<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">string</span>&gt;</span> </span>
+<span class="font-bold">sendSmtp</span><span class="font-medium">(<div class="ml-4"><div><span>c<span>: <a href="../../../.././archon/notify/transport.ts/~/Credential.html" class="link td-ref">Credential</a></span></span>,</div><div><span>o<span>: <span><span class="td-ref">Omit</span>&lt;<a href="../../../.././archon/notify/transport.ts/~/SmtpOptions.html" class="link td-ref">SmtpOptions</a><span>, </span><span class="td-str">"file"</span>&gt;<span class="td-op"> & </span>{ from<span>: <span class="td-kw">string</span></span>; to<span>: <span class="td-kw">string</span></span>;  }</span></span></span>,</div><div><span>mime<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">string</span>&gt;</span> </span>
       </code><div class="space-y-7" id=""><div class="markdown"><p>Send one RFC 5322 message (CRLF line ends) through the relay.</p>
 </div><section class="section"  id="parameters"><div>
       <h2 class="anchorable mb-1"><a href="#parameters" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
@@ -268,7 +268,7 @@ Parameters</h2></div><div class="space-y-8"><div class="anchorable docEntry" id=
   </defs>
 </svg>
 </a>
-<span class="font-bold font-lg">o</span><span class="font-medium text-stone-500 dark:text-stone-200"><span>: { relay<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; ipv4<span>: <span class="td-kw">boolean</span></span>; from<span>: <span class="td-kw">string</span></span>; to<span>: <span class="td-kw">string</span></span>;  }</span></span>
+<span class="font-bold font-lg">o</span><span class="font-medium text-stone-500 dark:text-stone-200"><span>: <span><span class="td-ref">Omit</span>&lt;<a href="../../../.././archon/notify/transport.ts/~/SmtpOptions.html" class="link td-ref">SmtpOptions</a><span>, </span><span class="td-str">"file"</span>&gt;<span class="td-op"> & </span>{ from<span>: <span class="td-kw">string</span></span>; to<span>: <span class="td-kw">string</span></span>;  }</span></span></span>
       </code>
     </div><a
   class="sourceButton"

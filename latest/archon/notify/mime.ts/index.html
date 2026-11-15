@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/notify/mime.ts - Stolos v0.103.0 documentation</title>
+  <title>archon/notify/mime.ts - Stolos v0.104.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.103.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.104.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -156,6 +156,14 @@ fixed in tests). Date and Message-ID are set here.</p>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;mime.ts&#x2F;~&#x2F;headerValue.html" title="headerValue">
 			    <span>headerValue</span><span>(<span><span>s<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A header value, RFC 2047-encoded when it is not plain ASCII.</p>
+</div></div></div>
+    </div><div id="namespace_mimeentity" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;notify&#x2F;mime.ts&#x2F;~&#x2F;mimeEntity.html" title="mimeEntity">
+			    <span>mimeEntity</span><span>(<div class="ml-4"><div><span>m<span>: <span class="td-ref">Pick</span>&lt;<span class="td-ref">Mail</span><span>, </span><span><span class="td-str">"text"</span><span class="td-op"> | </span><span class="td-str">"html"</span><span class="td-op"> | </span><span class="td-str">"attachments"</span></span>&gt;</span></span>,</div><div><span>boundarySeed<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The body as one MIME entity (CRLF line ends): its Content-Type header, a
+blank line, then a multipart/mixed body (plain text and HTML as
+multipart/alternative, base64), then each attachment. buildMime puts the
+message headers in front; spec 092 encrypts it whole (S/MIME).</p>
 </div></div></div>
     </div></div>
 </section>
@@ -298,7 +306,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_attachment
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1994 symbols</span><svg
+              <span class="leading-none">view all 2091 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -313,7 +321,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_attachment
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/notify/mime_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_base64" title="base64">base64</a></li><li><a href="#namespace_base64url" title="base64url">base64url</a></li><li><a href="#namespace_buildmime" title="buildMime">buildMime</a></li><li><a href="#namespace_displayname" title="displayName">displayName</a></li><li><a href="#namespace_escapehtml" title="escapeHtml">escapeHtml</a></li><li><a href="#namespace_headervalue" title="headerValue">headerValue</a></li></ul></li><li><a href="#archon/notify/mime_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_attachment" title="Attachment">Attachment</a></li><li><a href="#namespace_mail" title="Mail">Mail</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/notify/mime_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_base64" title="base64">base64</a></li><li><a href="#namespace_base64url" title="base64url">base64url</a></li><li><a href="#namespace_buildmime" title="buildMime">buildMime</a></li><li><a href="#namespace_displayname" title="displayName">displayName</a></li><li><a href="#namespace_escapehtml" title="escapeHtml">escapeHtml</a></li><li><a href="#namespace_headervalue" title="headerValue">headerValue</a></li><li><a href="#namespace_mimeentity" title="mimeEntity">mimeEntity</a></li></ul></li><li><a href="#archon/notify/mime_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_attachment" title="Attachment">Attachment</a></li><li><a href="#namespace_mail" title="Mail">Mail</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>
