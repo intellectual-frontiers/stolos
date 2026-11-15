@@ -13,6 +13,7 @@
  * @module
  */
 
+import { errors, type ServeInfo } from "@intellectual-frontiers/ifc-ts/runtime";
 import type { Command } from "../core/registry-types.ts";
 import type { WelcomeData } from "../web/welcome.ts";
 import {
@@ -37,7 +38,7 @@ import {
 } from "./auth.ts";
 import type { Runner } from "./exec.ts";
 import { argvFor, consoleCommands, shellWords } from "./forms.ts";
-import { esc, type Html, html, raw } from "./html.ts";
+import { esc, formText, type Html, html, raw } from "./html.ts";
 import { bare, page } from "./layout.ts";
 import {
   ACTION_GROUPS,
@@ -58,7 +59,7 @@ import {
   servicesPage,
   signinPage,
 } from "./pages.ts";
-import type { Authenticator } from "./pam.ts";
+import { type Authenticator, PAM_UNSUPPORTED } from "./pam.ts";
 import type { ServicesFacts } from "./machine.ts";
 
 /** What the console needs from the machine: real on a server, fakes in tests. */
@@ -126,11 +127,32 @@ export const redirect = (to: string, headers: Record<string, string> = {}): Resp
  * (it trusts no forwarded headers): so the header counts only on a loopback
  * connection, and its last entry is the one Traefik added.
  */
-export function clientAddress(req: Request, info?: Deno.ServeHandlerInfo): string {
-  const a = (info?.remoteAddr as Deno.NetAddr | undefined)?.hostname ?? "unknown";
+export function clientAddress(req: Request, info?: ServeInfo): string {
+  const a = info?.remoteAddr.hostname ?? "unknown";
   const loopback = a === "127.0.0.1" || a === "::1" || a === "unknown";
-  const xff = req.headers.get("x-forwarded-for")?.split(",").map((x) => x.trim()).filter(Boolean);
-  return loopback && xff?.length ? xff[xff.length - 1] : a;
+  const xff = req.headers
+    .get("x-forwarded-for")
+    ?.split(",")
+    .map((x) => x.trim())
+    .filter(Boolean);
+  return loopback ? (xff?.at(-1) ?? a) : a;
+}
+
+/**
+ * Whether `user` signs in with `password`, or "unsupported" where this runtime cannot check a
+ * password (Node: spec 096 FR-010).
+ */
+export async function passwordMatches(
+  auth: Authenticator,
+  user: string,
+  password: string,
+): Promise<boolean | "unsupported"> {
+  try {
+    return await auth.check(user, password);
+  } catch (e) {
+    if (e instanceof errors.NotSupported) return "unsupported";
+    throw e;
+  }
 }
 
 /** Whether a POST comes from this site: its Origin (when the browser sends one) matches the Host. */
@@ -153,7 +175,9 @@ export function patch(
     "event: datastar-patch-elements",
     ...(o.mode ? [`data: mode ${o.mode}`] : []),
     ...(o.selector ? [`data: selector ${o.selector}`] : []),
-    ...String(elements).split("\n").map((l) => `data: elements ${l}`),
+    ...String(elements)
+      .split("\n")
+      .map((l) => `data: elements ${l}`),
   ];
   return lines.join("\n") + "\n\n";
 }
@@ -163,12 +187,12 @@ export function lineClass(l: string): string {
   return /^\s*\[ok\]/.test(l)
     ? "ok"
     : /^\s*\[FAIL\]|^error|failed|refus/i.test(l)
-    ? "bad"
-    : /^\s*\[(!!|!|warn|\.\.)\]|warning/i.test(l)
-    ? "w"
-    : /^==>|^\s+(fix|log|explain):/.test(l)
-    ? "dim"
-    : "";
+      ? "bad"
+      : /^\s*\[(!!|!|warn|\.\.)\]|warning/i.test(l)
+        ? "w"
+        : /^==>|^\s+(fix|log|explain):/.test(l)
+          ? "dim"
+          : "";
 }
 
 /** The consoles' static files (stylesheet, icon, Datastar, Mermaid, fonts), or undefined. */
@@ -198,26 +222,26 @@ export async function staticFile(path: string, cacheDir: string): Promise<Respon
     const b = await vendored(MERMAID, cacheDir);
     return b
       ? new Response(b, {
-        headers: {
-          "content-type": "text/javascript; charset=utf-8",
-          "cache-control": "max-age=31536000, immutable",
-        },
-      })
+          headers: {
+            "content-type": "text/javascript; charset=utf-8",
+            "cache-control": "max-age=31536000, immutable",
+          },
+        })
       : new Response("// Mermaid is not available on this server yet\n", {
-        status: 503,
-        headers: { "content-type": "text/javascript" },
-      });
+          status: 503,
+          headers: { "content-type": "text/javascript" },
+        });
   }
   const font = FONTS.find((f) => f.url === path);
   if (font) {
     const b = await vendored(font, cacheDir);
     return b
       ? new Response(b, {
-        headers: {
-          "content-type": "font/woff2",
-          "cache-control": "max-age=31536000, immutable",
-        },
-      })
+          headers: {
+            "content-type": "font/woff2",
+            "cache-control": "max-age=31536000, immutable",
+          },
+        })
       : new Response("", { status: 503 });
   }
   return undefined;
@@ -226,21 +250,30 @@ export async function staticFile(path: string, cacheDir: string): Promise<Respon
 /** The console's request handler. */
 export function consoleHandler(
   deps: ConsoleDeps,
-): (req: Request, info?: Deno.ServeHandlerInfo) => Promise<Response> {
+): (req: Request, info?: ServeInfo) => Promise<Response> {
   const offered = consoleCommands("machine");
   const byName = new Map(offered.map((c) => [c.name, c]));
 
   const frame = async (s: Session, title: string, current: string, body: Html) => {
     const d = await deps.data();
-    return htmlResponse(page({
-      product: "archon",
-      title,
-      subtitle: `${deps.host} · ${d.os}`,
-      fleet: { id: d.title, repo: d.repo.slug },
-      user: { name: s.name, user: s.user, role: s.role === "operator" ? "operator" : "can look" },
-      nav: ARCHON_NAV,
-      current,
-    }, body));
+    return htmlResponse(
+      page(
+        {
+          product: "archon",
+          title,
+          subtitle: `${deps.host} · ${d.os}`,
+          fleet: { id: d.title, repo: d.repo.slug },
+          user: {
+            name: s.name,
+            user: s.user,
+            role: s.role === "operator" ? "operator" : "can look",
+          },
+          nav: ARCHON_NAV,
+          current,
+        },
+        body,
+      ),
+    );
   };
 
   /** A session from the cookie (the only way in: no Basic credentials, which would make a session per request). */
@@ -265,8 +298,8 @@ export function consoleHandler(
       if (path === "/signin" && req.method === "POST") {
         if (!sameOrigin(req)) return new Response("cross-site sign-in refused\n", { status: 403 });
         const form = await req.formData();
-        const user = String(form.get("user") ?? "").trim();
-        const password = String(form.get("password") ?? "");
+        const user = formText(form.get("user")).trim();
+        const password = formText(form.get("password"));
         const d = await deps.data();
         const again = (error: string, status = 401) =>
           htmlResponse(
@@ -284,7 +317,10 @@ export function consoleHandler(
           );
         }
         const account = await deps.accounts(user);
-        if (!account || !(await deps.auth.check(user, password))) {
+        const matches = account ? await passwordMatches(deps.auth, user, password) : false;
+        if (matches === "unsupported")
+          return again(`Cannot sign in here: ${PAM_UNSUPPORTED}.`, 501);
+        if (!account || !matches) {
           deps.throttle.failed(from);
           deps.throttle.failed(`user:${user}`);
           await deps.activity.add({
@@ -345,9 +381,11 @@ export function consoleHandler(
           const group = ACTION_GROUPS.find((g) => g.id === ag[1]);
           if (!group) return htmlResponse("not found\n", 404);
           const wanted = byName.get(url.searchParams.get("cmd") ?? "");
-          const c = wanted && groupOf(wanted.name).id === group.id
-            ? wanted
-            : byName.get(group.first) ?? offered.find((x) => groupOf(x.name).id === group.id)!;
+          const c =
+            wanted && groupOf(wanted.name).id === group.id
+              ? wanted
+              : (byName.get(group.first) ?? offered.find((x) => groupOf(x.name).id === group.id));
+          if (!c) return htmlResponse("not found\n", 404);
           return frame(
             s,
             group.label,
@@ -392,7 +430,7 @@ export function consoleHandler(
             }).map((e) =>
               e.source === "managed" && e.scf.includes("MON-02") && d.verify?.at
                 ? { ...e, observedAt: d.verify.at }
-                : e
+                : e,
             ),
             await loadScf(),
             { cadences: await loadCadences({ connectors: false }) },
@@ -441,9 +479,9 @@ export function consoleHandler(
             guidePage(d.guide, d.guides, new Set(byName.keys()), deps.host),
           );
         }
-        const g = path.match(/^\/guide\/([a-z0-9-]+)$/);
+        const g = path.match(/^\/guide\/([a-z0-9-]+)$/)?.[1];
         if (g) {
-          const body = await deps.guideDoc(g[1]);
+          const body = await deps.guideDoc(g);
           if (body) {
             return frame(
               s,
@@ -477,9 +515,9 @@ async function runCommand(
   deps: ConsoleDeps,
 ): Promise<Response> {
   const form = Object.fromEntries(
-    [...(await req.formData()).entries()].map(([k, v]) => [k, String(v)]),
+    [...(await req.formData()).entries()].map(([k, v]) => [k, formText(v)]),
   );
-  const cmd = byName.get(form.command ?? "");
+  const cmd = byName.get(form["command"] ?? "");
   const enc = new TextEncoder();
   const now = () => new Date().toISOString();
   const stream = new ReadableStream<Uint8Array>({
@@ -488,18 +526,20 @@ async function runCommand(
       const state = (text: string) =>
         send(patch(html`<span class="sub" id="runstate">${text}</span>`));
       const refuse = async (why: string) => {
-        send(patch(html`
-          <div class="term" id="output">
-            <div class="bad">${why}</div>
-          </div>
-        `));
+        send(
+          patch(html`
+            <div class="term" id="output">
+              <div class="bad">${why}</div>
+            </div>
+          `),
+        );
         state("Not run");
         await deps.activity.add({
           at: now(),
           user: s.user,
           from,
           kind: "refused",
-          detail: `${form.command ?? "?"}: ${why}`,
+          detail: `${form["command"] ?? "?"}: ${why}`,
         });
         ctl.close();
       };
@@ -512,28 +552,32 @@ async function runCommand(
         );
       }
       const destroying = r.tier === "destructive" || r.args["confirm-destroy"] !== undefined;
-      if (destroying && !(await deps.auth.check(s.user, form.password ?? ""))) {
+      const again = destroying
+        ? await passwordMatches(deps.auth, s.user, form["password"] ?? "")
+        : true;
+      if (again === "unsupported")
+        return refuse(`Destroying data needs your password again: ${PAM_UNSUPPORTED}.`);
+      if (!again) {
         return refuse("Destroying data needs your password again, and it did not match.");
       }
       const shown = `archon ${shellWords(r.argv)}`;
-      send(patch(html`
-        <div class="term" id="output">
-          <div class="dim">$ ${shown}   (as ${s.user})</div>
-        </div>
-      `));
+      send(
+        patch(html`
+          <div class="term" id="output">
+            <div class="dim">$ ${shown} (as ${s.user})</div>
+          </div>
+        `),
+      );
       state("Running ...");
       let code = 1;
       try {
-        code = await deps.runner.run(
-          s.user,
-          r.argv,
-          (l) =>
-            send(
-              patch(html`<div class="${lineClass(l)}">${l || " "}</div>`, {
-                selector: "#output",
-                mode: "append",
-              }),
-            ),
+        code = await deps.runner.run(s.user, r.argv, (l) =>
+          send(
+            patch(html`<div class="${lineClass(l)}">${l || " "}</div>`, {
+              selector: "#output",
+              mode: "append",
+            }),
+          ),
         );
       } catch (e) {
         send(
@@ -563,22 +607,32 @@ function journalStream(deps: ConsoleDeps, unit: string | undefined, signal: Abor
   const stream = new ReadableStream<Uint8Array>({
     start(ctl) {
       ctl.enqueue(enc.encode(patch(html`<div class="term" id="logs" aria-live="off"></div>`)));
-      deps.journal(unit, (l) => {
-        try {
-          ctl.enqueue(
-            enc.encode(
-              patch(html`<div class="${lineClass(l)}">${l}</div>`, {
-                selector: "#logs",
-                mode: "append",
-              }),
-            ),
-          );
-        } catch { /* the page went away */ }
-      }, signal).finally(() => {
-        try {
-          ctl.close();
-        } catch { /* already closed */ }
-      });
+      void deps
+        .journal(
+          unit,
+          (l) => {
+            try {
+              ctl.enqueue(
+                enc.encode(
+                  patch(html`<div class="${lineClass(l)}">${l}</div>`, {
+                    selector: "#logs",
+                    mode: "append",
+                  }),
+                ),
+              );
+            } catch {
+              /* the page went away */
+            }
+          },
+          signal,
+        )
+        .finally(() => {
+          try {
+            ctl.close();
+          } catch {
+            /* already closed */
+          }
+        });
     },
   });
   return new Response(stream, {

@@ -124,19 +124,19 @@ export interface ArchonEvent {
   /** What happened, in plain words. */
   message: string;
   /** The host it is about. */
-  host?: string;
+  host?: string | undefined;
   /** The client's address (client.address). */
-  address?: string;
+  address?: string | undefined;
   /** Its severity, when not the usual one. */
-  severity?: Severity;
+  severity?: Severity | undefined;
   /** Structured details. */
-  attrs?: Record<string, string | number | boolean>;
+  attrs?: Record<string, string | number | boolean> | undefined;
   /** Milliseconds since the epoch (default: now). */
-  time?: number;
+  time?: number | undefined;
   /** The trace and span it belongs to (W3C ids, hex). */
-  traceId?: string;
+  traceId?: string | undefined;
   /** The span it belongs to. */
-  spanId?: string;
+  spanId?: string | undefined;
 }
 
 const SEVERITY_NUMBER: Record<Severity, number> = { debug: 5, info: 9, warn: 13, error: 17 };
@@ -174,15 +174,17 @@ export function otlpValue(v: unknown): OtlpAnyValue {
   if (typeof v === "string") return { stringValue: v };
   if (Array.isArray(v)) return { arrayValue: { values: v.map(otlpValue) } };
   if (typeof v === "object") return { kvlistValue: { values: otlpAttributes(v) } };
-  return { stringValue: String(v) };
+  return { stringValue: typeof v === "symbol" ? v.toString() : typeof v };
 }
 
 /** An object's entries as OTLP attributes (undefined entries left out). */
 export function otlpAttributes(o: object): OtlpKeyValue[] {
-  return Object.entries(o).filter(([, v]) => v !== undefined).map(([key, v]) => ({
-    key,
-    value: otlpValue(v),
-  }));
+  return Object.entries(o)
+    .filter(([, v]) => v !== undefined)
+    .map(([key, v]) => ({
+      key,
+      value: otlpValue(v),
+    }));
 }
 
 const value = (v: string | number | boolean): OtlpAnyValue => otlpValue(v);
@@ -219,37 +221,72 @@ export function toLogsRequest(
   scope = "archon",
 ): Record<string, unknown> {
   return {
-    resourceLogs: [{
-      resource: {
-        attributes: Object.entries(resource).map(([key, v]) => ({ key, value: value(v) })),
+    resourceLogs: [
+      {
+        resource: {
+          attributes: Object.entries(resource).map(([key, v]) => ({ key, value: value(v) })),
+        },
+        scopeLogs: [{ scope: { name: scope }, logRecords: events.map(toLogRecord) }],
       },
-      scopeLogs: [{ scope: { name: scope }, logRecords: events.map(toLogRecord) }],
-    }],
+    ],
   };
 }
 
 /** Back from a log record (what a renderer reads), or undefined when it is not an Archon event. */
 export function fromLogRecord(r: Record<string, unknown>): ArchonEvent | undefined {
   const attrs: Record<string, string | number | boolean> = {};
-  for (const a of (r.attributes ?? []) as Array<{ key: string; value: Record<string, unknown> }>) {
-    const v = a.value.stringValue ?? a.value.boolValue ?? a.value.doubleValue ??
-      (a.value.intValue !== undefined ? Number(a.value.intValue) : undefined);
-    if (v !== undefined) attrs[a.key] = v as string | number | boolean;
+  const list = Array.isArray(r["attributes"]) ? (r["attributes"] as unknown[]) : [];
+  for (const a of list) {
+    if (!isRecord(a) || typeof a["key"] !== "string" || !isRecord(a["value"])) continue;
+    const v = attributeValue(a["value"]);
+    if (v !== undefined) attrs[a["key"]] = v;
   }
   const name = attrs["archon.event"];
-  if (typeof name !== "string" || !(name in EVENTS)) return undefined;
+  if (typeof name !== "string" || !isEventName(name)) return undefined;
   const { "archon.event": _n, "archon.host": host, "client.address": address, ...rest } = attrs;
-  const body = (r.body as { stringValue?: string } | undefined)?.stringValue ?? "";
-  const sev = String(r.severityText ?? "").toLowerCase() as Severity;
+  const bodyValue = r["body"];
+  const body =
+    isRecord(bodyValue) && typeof bodyValue["stringValue"] === "string"
+      ? bodyValue["stringValue"]
+      : "";
+  const sevText = r["severityText"];
+  const sev = (typeof sevText === "string" ? sevText : "").toLowerCase();
+  const time = r["timeUnixNano"];
   return {
-    name: name as EventName,
+    name,
     message: body,
     ...(typeof host === "string" ? { host } : {}),
     ...(typeof address === "string" ? { address } : {}),
-    ...(sev in SEVERITY_NUMBER ? { severity: sev } : {}),
+    ...(isSeverity(sev) ? { severity: sev } : {}),
     ...(Object.keys(rest).length ? { attrs: rest } : {}),
-    time: Number(BigInt(String(r.timeUnixNano ?? "0")) / 1_000_000n),
+    time: Number(
+      BigInt(typeof time === "string" || typeof time === "number" ? time : "0") / 1_000_000n,
+    ),
   };
+}
+
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+
+function isEventName(name: string): name is EventName {
+  return name in EVENTS;
+}
+
+function isSeverity(s: string): s is Severity {
+  return s in SEVERITY_NUMBER;
+}
+
+/** An OTLP attribute's value, as the scalar it carries. */
+function attributeValue(v: Record<string, unknown>): string | number | boolean | undefined {
+  const s = v["stringValue"];
+  if (typeof s === "string") return s;
+  const b = v["boolValue"];
+  if (typeof b === "boolean") return b;
+  const d = v["doubleValue"];
+  if (typeof d === "number") return d;
+  const i = v["intValue"];
+  return typeof i === "string" || typeof i === "number" ? Number(i) : undefined;
 }
 
 /** The plain line (boot.log): address, host, message, as the window's text without decoration. */

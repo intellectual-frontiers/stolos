@@ -1,13 +1,13 @@
 /**
  * The archon notify commands (spec 025), on hosts, workstations, and the boot
- * machine (deno task stolos boot notify runs the same code), and archon mail
+ * machine (bun run stolos boot notify runs the same code), and archon mail
  * credential and mail test (spec 027).
  *
  * @module
  */
 
-import { ensureDir, exists } from "../core/fsx.ts";
-import { isRoot, run } from "../core/exec.ts";
+import { fs, proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
+import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
 import {
   enqueue,
@@ -33,11 +33,11 @@ export async function installCredential(json: string): Promise<void> {
   const c = JSON.parse(json) as Credential;
   if (typeof c.token !== "string" || !c.token) throw new Error("not an archon mail credential");
   const relay = (await loadFleet().catch(() => undefined))?.mail?.relay ?? DEFAULT_RELAY;
-  await ensureDir("/etc/postfix");
-  await Deno.writeTextFile(HOST_NOTIFY.credential, saslPasswd(c, relay), { mode: 0o600 });
-  await Deno.chmod(HOST_NOTIFY.credential, 0o600);
+  await fs.ensureDir("/etc/postfix");
+  await fs.writeTextFile(HOST_NOTIFY.credential, saslPasswd(c, relay), { mode: 0o600 });
+  await fs.chmod(HOST_NOTIFY.credential, 0o600);
   await run(["chown", "root:root", HOST_NOTIFY.credential]);
-  if (await exists("/usr/sbin/postfix")) {
+  if (await fs.exists("/usr/sbin/postfix")) {
     await run(["systemctl", "try-reload-or-restart", "postfix.service"]);
   }
 }
@@ -75,7 +75,7 @@ export interface SendArgs {
 export async function notifySend(a: SendArgs, o: { wait: boolean }): Promise<number> {
   const s = await site();
   const p = ui.phase("Notify");
-  const body = a.bodyFile ? await Deno.readTextFile(a.bodyFile) : a.body ?? "";
+  const body = a.bodyFile ? await fs.readTextFile(a.bodyFile) : (a.body ?? "");
   // A full subject is sent as given; a short one becomes "[Archon] <host>: <subject>".
   const full = /^\[|^Lab /.test(a.subject);
   const r = await enqueue(s, {
@@ -90,8 +90,8 @@ export async function notifySend(a: SendArgs, o: { wait: boolean }): Promise<num
     p.fail(
       `notifications are not configured on ${s.name}`,
       s.role === "boot"
-        ? "deno task stolos boot mail-setup"
-        : `on the boot machine: deno task stolos boot mail-push ${s.name}`,
+        ? "bun run stolos boot mail-setup"
+        : `on the boot machine: bun run stolos boot mail-push ${s.name}`,
     );
     return 1;
   }
@@ -111,21 +111,27 @@ export async function notifySend(a: SendArgs, o: { wait: boolean }): Promise<num
   }
   const f = await flush(s, { force: true });
   if (f.sent) p.done(`sent to ${s.to}`);
-  else {p.fail(
+  else {
+    p.fail(
       `not sent yet: ${f.error ?? "queued"}`,
       "archon notify status; it is retried with backoff",
-    );}
+    );
+  }
   return f.sent ? 0 : 1;
 }
 
 /** archon notify test: send a test message now and wait for the relay (exit code 0 when sent). */
 export async function notifyTest(): Promise<number> {
   const s = await site();
-  return await notifySend({
-    subject: `[Archon] ${s.name}: notification test`,
-    body: `This is a test from ${s.name} (${s.role === "boot" ? "the boot machine" : s.role}).\n` +
-      `If it arrived, archon notify works here. Nothing needs to be done.`,
-  }, { wait: true });
+  return await notifySend(
+    {
+      subject: `[Archon] ${s.name}: notification test`,
+      body:
+        `This is a test from ${s.name} (${s.role === "boot" ? "the boot machine" : s.role}).\n` +
+        `If it arrived, archon notify works here. Nothing needs to be done.`,
+    },
+    { wait: true },
+  );
 }
 
 /**
@@ -138,8 +144,8 @@ export async function notifyStatus(o: { check: boolean }): Promise<number> {
   const s = await site();
   const st = await readStatus(s);
   const cred = await loadCredential(s).catch(() => undefined);
-  const configured = s.role === "boot" || isRoot() ? !!cred : st.configured;
-  const q = isRoot() || s.role === "boot" ? (await queued(s)).length : st.queue;
+  const configured = s.role === "boot" || proc.isRoot() ? !!cred : st.configured;
+  const q = proc.isRoot() || s.role === "boot" ? (await queued(s)).length : st.queue;
   const lines = [
     `mailbox    ${s.to ?? "(none: mail in fleets/<fleet>/fleet.ts)"}`,
     `from       ${s.from ?? "-"}`,
@@ -148,8 +154,8 @@ export async function notifyStatus(o: { check: boolean }): Promise<number> {
     `last send  ${
       st.lastSend
         ? `${st.lastSend.at} ${
-          st.lastSend.ok ? "ok" : `FAILED: ${st.lastSend.error}`
-        } · ${st.lastSend.subject}`
+            st.lastSend.ok ? "ok" : `FAILED: ${st.lastSend.error}`
+          } · ${st.lastSend.subject}`
         : "none yet"
     }`,
     `queue      ${q}${st.oldest && q ? ` (oldest ${st.oldest})` : ""}`,
@@ -160,16 +166,16 @@ export async function notifyStatus(o: { check: boolean }): Promise<number> {
     const problem = !s.to
       ? undefined // the fleet does not use notifications
       : !configured
-      ? "mail is not configured (on the boot machine: deno task stolos boot mail-push <host>)"
-      : st.lastSend && !st.lastSend.ok
-      ? `the last send failed: ${st.lastSend.error}`
-      : stuck
-      ? `${q} message(s) waiting for more than 6 hours`
-      : undefined;
-    console.log(problem ?? "notifications ok");
+        ? "mail is not configured (on the boot machine: bun run stolos boot mail-push <host>)"
+        : st.lastSend && !st.lastSend.ok
+          ? `the last send failed: ${st.lastSend.error}`
+          : stuck
+            ? `${q} message(s) waiting for more than 6 hours`
+            : undefined;
+    stdio.stdout.writeSync(`${problem ?? "notifications ok"}\n`);
     return problem ? 1 : 0;
   }
-  for (const l of lines) console.log(l);
+  for (const l of lines) stdio.stdout.writeSync(`${l}\n`);
   return 0;
 }
 
@@ -181,24 +187,24 @@ export async function notifyFlush(): Promise<number> {
   const s = await site();
   const f = await flush(s);
   if (f.sent || f.failed) {
-    console.log(`sent ${f.sent}${f.failed ? `, failed ${f.failed}: ${f.error}` : ""}`);
+    ui.say(`sent ${f.sent}${f.failed ? `, failed ${f.failed}: ${f.error ?? ""}` : ""}`);
   }
   return 0;
 }
 
 /**
- * archon mail credential: the credential JSON on stdin (deno task stolos boot
+ * archon mail credential: the credential JSON on stdin (bun run stolos boot
  * mail-push). Then the doctor's email checks, mailed to the shared mailbox
  * through archon and Postfix, so the new token is proven where it matters.
  */
 export async function mailCredential(): Promise<number> {
-  const json = await new Response(Deno.stdin.readable).text();
+  const json = await new Response(stdio.stdin.readable).text();
   await installCredential(json);
-  console.log(`installed ${HOST_NOTIFY.credential} (root only); Postfix reloaded`);
+  ui.say(`installed ${HOST_NOTIFY.credential} (root only); Postfix reloaded`);
   const s = await site();
   const { emailChecks } = await import("../doctor/email.ts");
   const p = ui.phase("Email");
-  await emailChecks(s, p, `on the boot machine: deno task stolos boot mail-push ${s.name}`, {
+  await emailChecks(s, p, `on the boot machine: bun run stolos boot mail-push ${s.name}`, {
     send: "new token",
   });
   return p.level === "fail" ? 1 : 0;
@@ -211,7 +217,7 @@ export async function mailCredential(): Promise<number> {
  */
 export async function mailTest(hostName: string): Promise<number> {
   const p = ui.phase("Mail");
-  if (!(await exists("/usr/sbin/sendmail"))) {
+  if (!(await fs.exists("/usr/sbin/sendmail"))) {
     p.fail("no /usr/sbin/sendmail: Postfix is not installed yet", "sudo archon apply");
     return 1;
   }

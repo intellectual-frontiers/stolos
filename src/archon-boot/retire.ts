@@ -1,5 +1,5 @@
 /**
- * `deno task stolos boot retire <host> --confirm-destroy <host>` (spec 045): a
+ * `bun run stolos boot retire <host> --confirm-destroy <host>` (spec 045): a
  * server leaves the fleet, the reverse of `stolos host add`. From the boot
  * machine, with the name repeated by a person:
  *   1. asks the host, if it answers, whether it is durable (archon data), and
@@ -17,10 +17,9 @@
  * @module
  */
 
+import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { ui } from "../archon/core/ui.ts";
 import { P, repoRel } from "../archon/core/paths.ts";
-import { join } from "../archon/core/path.ts";
-import { exists, readTextOr } from "../archon/core/fsx.ts";
 import { loadTokens, readSecret, saveTokens, SECRETS } from "../archon/core/secrets.ts";
 import { hostFile, loadFleet, loadServers } from "../archon/model/load.ts";
 import { forgetHostKeys } from "../archon/install/host-keys.ts";
@@ -31,7 +30,7 @@ import { parseData } from "./reinstall.ts";
 export function retireRefusal(
   name: string,
   confirm: string | undefined,
-  agent = Deno.env.get("ARCHON_AGENT"),
+  agent = proc.env.get("ARCHON_AGENT"),
 ): string | undefined {
   if (confirm !== undefined && agent) {
     return `--confirm-destroy is typed by a person, not an agent (${agent})`;
@@ -51,23 +50,22 @@ export const publishedNames = (host: string, domain: string): string[] => [
 /** The host's model is gone from this checkout but still in its last commit. */
 async function removedButCommitted(name: string): Promise<boolean> {
   const rel = repoRel(hostFile(name));
-  if (await exists(hostFile(name))) return false;
-  const r = await new Deno.Command("git", {
-    args: ["-C", P.repo, "cat-file", "-e", `HEAD:${rel}`],
-    stdout: "null",
-    stderr: "null",
-  }).output().catch(() => ({ code: 1 }));
+  if (await fs.exists(hostFile(name))) return false;
+  const r = await proc
+    .output(["git", "-C", P.repo, "cat-file", "-e", `HEAD:${rel}`], {
+      stdout: "null",
+      stderr: "null",
+    })
+    .catch(() => ({ code: 1 }));
   return r.code === 0;
 }
 
 async function askData(target: string): Promise<string | undefined> {
   try {
-    const r = await new Deno.Command("ssh", {
-      args: ["-o", "BatchMode=yes", "-o", "ConnectTimeout=10", target, "archon data --json"],
-      stdin: "null",
-      stdout: "piped",
-      stderr: "null",
-    }).output();
+    const r = await proc.output(
+      ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", target, "archon data --json"],
+      { stdin: "null", stdout: "piped", stderr: "null" },
+    );
     return r.code === 255 ? undefined : new TextDecoder().decode(r.stdout);
   } catch {
     return undefined;
@@ -75,7 +73,7 @@ async function askData(target: string): Promise<string | undefined> {
 }
 
 /**
- * `deno task stolos boot retire <host> --confirm-destroy <host>`: remove a server
+ * `bun run stolos boot retire <host> --confirm-destroy <host>`: remove a server
  * from the fleet in the steps the module describes. `push` false leaves the
  * commit for the owner to push (--no-push). Returns the exit code (2 for an
  * unknown host).
@@ -87,7 +85,7 @@ export async function retire(
 ): Promise<number> {
   const hosts = await loadServers();
   const host = hosts.find((h) => h.name === name);
-  if (name && !host && push && await removedButCommitted(name)) {
+  if (name && !host && push && (await removedButCommitted(name))) {
     // Run again after a retirement left uncommitted: finish it.
     ui.header("Stolos retire", name);
     const refusal = retireRefusal(name, confirm);
@@ -97,15 +95,12 @@ export async function retire(
     }
     ui.phase("Repository").done(`${name} is already removed here; committing and pushing it`);
     const { publishChange } = await import("../archon/install/publish.ts");
-    await publishChange(
-      [repoRel(join(P.hosts, name))],
-      `045-retire: retire ${name}`,
-    );
+    await publishChange([repoRel(path.join(P.hosts, name))], `045-retire: retire ${name}`);
     return ui.finish();
   }
   if (!name || !host) {
-    console.error(
-      `usage: deno task stolos boot retire <host> --confirm-destroy <host>  (known: ${
+    ui.say(
+      `usage: bun run stolos boot retire <host> --confirm-destroy <host>  (known: ${
         hosts.map((h) => h.name).join(", ") || "none"
       })`,
     );
@@ -124,9 +119,9 @@ export async function retire(
   }
   const recorded = hostData(host);
   const what = data
-    ? (data.class === "durable"
+    ? data.class === "durable"
       ? describeData({ class: "durable", reasons: data.reasons })
-      : "ephemeral")
+      : "ephemeral"
     : `not answering; its records say ${describeData(recorded)}`;
   const refusal = retireRefusal(name, confirm);
   if (refusal) {
@@ -174,8 +169,8 @@ export async function retire(
 
   const pc = ui.phase("This PC");
   await saveTokens(tokens.filter((t) => t.host !== name));
-  const secrets = join(P.secrets, "hosts", name);
-  if (await exists(secrets)) await Deno.remove(secrets, { recursive: true });
+  const secrets = path.join(P.secrets, "hosts", name);
+  if (await fs.exists(secrets)) await fs.remove(secrets, { recursive: true });
   const forgot = await forgetHostKeys([
     name,
     ...(host.dnsName ? [host.dnsName] : []),
@@ -189,38 +184,39 @@ export async function retire(
   );
 
   const r = ui.phase("Repository");
-  const model = join(P.hosts, name);
-  if (await exists(model)) await Deno.remove(model, { recursive: true });
+  const model = path.join(P.hosts, name);
+  if (await fs.exists(model)) await fs.remove(model, { recursive: true });
   // Spec 048: what this machine last heard from the host goes too.
   const { removeRecords } = await import("../archon/state/store.ts");
   await removeRecords(name).catch(() => {});
   const removed = [repoRel(model)];
   r.done(`removed ${removed.join(" and ")} from this checkout`);
   const { publishChange } = await import("../archon/install/publish.ts");
-  const published = push && await publishChange(removed, `045-retire: retire ${name}`);
+  const published = push && (await publishChange(removed, `045-retire: retire ${name}`));
 
   const { notify } = await import("../archon/notify/events.ts");
   await notify({
     event: `${name} retired`,
     level: "warn",
-    what:
-      `deno task stolos boot retire ${name}: its DNS records, deploy key, install token, SSH identity, model, and records were removed (it was ${what}). The machine itself was not touched.`,
+    what: `bun run stolos boot retire ${name}: its DNS records, deploy key, install token, SSH identity, model, and records were removed (it was ${what}). The machine itself was not touched.`,
     todo: "Remove its local DNS record in the router, then its line in fleets/<fleet>/site.ts.",
     key: `retire:${name}`,
   }).catch(() => {});
 
-  const site = (await readTextOr(join(P.fleetDir, "site.ts"))) ?? "";
+  const site = (await fs.readTextOr(path.join(P.fleetDir, "site.ts"))) ?? "";
   return ui.finish({
     next: [
-      ...(published ? [] : [
-        `build, commit, and push the removal: deno task stolos apply -m "045-retire: retire ${name}"`,
-      ]),
+      ...(published
+        ? []
+        : [
+            `build, commit, and push the removal: bun run stolos apply -m "045-retire: retire ${name}"`,
+          ]),
       ...(host.dnsName && site.includes(host.dnsName)
         ? [
-          `the router: remove the local DNS record ${host.dnsName}, then its line in fleets/<fleet>/site.ts (Article 21)`,
-        ]
+            `the router: remove the local DNS record ${host.dnsName}, then its line in fleets/<fleet>/site.ts (Article 21)`,
+          ]
         : []),
-      "deno task stolos vault backup  (the vault still holds its old secrets until then)",
+      "bun run stolos vault backup  (the vault still holds its old secrets until then)",
       `the machine still runs ${name}'s install: power it off, or install it as a new host (stolos host add)`,
     ],
   });

@@ -10,7 +10,7 @@
  * In PowerShell:
  *
  * ```powershell
- * winget install --id DenoLand.Deno
+ * winget install --id Oven-sh.Bun
  * winget install --id Git.Git
  * winget install --id GitHub.cli
  * ```
@@ -36,11 +36,11 @@
  * New-NetFirewallRule -DisplayName "Archon boot (TFTP)" -Direction Inbound -Protocol UDP -LocalPort 69 -Profile Any -Action Allow
  * ```
  *
- * If Windows once asked whether to allow Deno on public networks and you declined, it added a rule
- * that blocks Deno and overrides these. Remove it:
+ * If Windows once asked whether to allow Bun on public networks and you declined, it added a rule
+ * that blocks Bun and overrides these. Remove it:
  *
  * ```powershell
- * Get-NetFirewallRule -Direction Inbound -Action Block | Where-Object { ($_ | Get-NetFirewallApplicationFilter).Program -like "*deno*" } | Remove-NetFirewallRule
+ * Get-NetFirewallRule -Direction Inbound -Action Block | Where-Object { ($_ | Get-NetFirewallApplicationFilter).Program -like "*bun*" } | Remove-NetFirewallRule
  * ```
  *
  * `boot serve` and `boot doctor` check all of this and print the exact command when something would
@@ -90,7 +90,7 @@
  * ## Describe your fleet (once)
  *
  * ```powershell
- * deno task stolos fleet init
+ * bun run stolos fleet init
  * git add -A; git commit -m "003-identity: fleet init"; git push
  * ```
  *
@@ -109,8 +109,8 @@
  *
  * Every server answers HTTPS as `<host>.lab.example.net` with a Let's Encrypt certificate, through
  * Cloudflare's DNS challenge (spec 032). Create a Cloudflare token with Zone > DNS > Edit and Zone >
- * Zone > Read on `example.net`, then `deno task stolos boot web-setup`. Servers get it at install, or
- * now with `deno task stolos boot web-push <host>`. See [web.md](web.md).
+ * Zone > Read on `example.net`, then `bun run stolos boot web-setup`. Servers get it at install, or
+ * now with `bun run stolos boot web-push <host>`. See [web.md](web.md).
  *
  * ## Email (once, recommended)
  *
@@ -137,16 +137,16 @@
  * **On this PC:**
  *
  * ```powershell
- * deno task stolos boot mail-setup           # paste the token (hidden); then this PC mails its check results
- * deno task stolos boot mail-push alpha     # give a running server the token; it mails its check results
- * deno task stolos boot doctor --send        # check again, and mail the email findings
+ * bun run stolos boot mail-setup           # paste the token (hidden); then this PC mails its check results
+ * bun run stolos boot mail-push alpha     # give a running server the token; it mails its check results
+ * bun run stolos boot doctor --send        # check again, and mail the email findings
  * ```
  *
  * The token is stored in this PC's secrets folder (`mail.json`), never in git; servers get it at their
  * next install (and mail their check results from the first boot), or now with `mail-push`, and keep
  * it in `/etc/postfix/sasl_passwd` (root only). Anyone holding it can send mail as the onboarded
  * domain. To revoke it: **Manage Account > Account API Tokens**, `archon mail`, **Delete**; then
- * create a new one, `mail-setup`, and `mail-push` each server. `deno task stolos boot doctor` and
+ * create a new one, `mail-setup`, and `mail-push` each server. `bun run stolos boot doctor` and
  * `archon doctor` check the domain's records, the token, and (on servers) Postfix.
  *
  * ## Run the boot server
@@ -154,7 +154,7 @@
  * ```powershell
  * cd C:\archon
  * git pull
- * deno task stolos boot serve
+ * bun run stolos boot serve
  * ```
  *
  * Leave it running while hosts install. It:
@@ -180,13 +180,14 @@
  *
  * ## The boot server's own telemetry
  *
- * The boot server records itself with OpenTelemetry, and keeps it on this PC only (spec 023):
- * `%LOCALAPPDATA%\stolos\boot\telemetry\otlp-<date>.jsonl`, in OpenTelemetry's own file format, kept
- * 30 days and 256 MB at most. Each install is one trace, with a span per step.
+ * The boot server records itself with OpenTelemetry, in its own process, and keeps it on this PC
+ * only (spec 023): `%LOCALAPPDATA%\stolos\boot\telemetry\boot.otlp.jsonl` (its traces and metrics,
+ * 256 MB at most) and `otlp-<date>.jsonl` (what its window shows), in OpenTelemetry's own file
+ * format. Each install is one trace, with a span per step.
  *
  * ```powershell
- * deno task stolos boot observe          # recent installs: each step and how long it took, what failed
- * deno task stolos boot observe --last 20
+ * bun run stolos boot observe          # recent installs: each step and how long it took, what failed
+ * bun run stolos boot observe --last 20
  * ```
  *
  * To watch it live, run [otel-tui](https://github.com/ymtdzzz/otel-tui) on this PC while `boot serve`
@@ -199,10 +200,10 @@
  * you keep somewhere safe (constitution Article 13):
  *
  * ```powershell
- * deno task stolos vault status     # every secret: changed when, backed up when (⚠ = not backed up)
- * deno task stolos vault backup     # writes the ZIP, reads it back, and says where it is
- * deno task stolos vault restore <zip>   # a fresh PC: put the ZIP back (checks it; never overwrites)
- * deno task stolos vault list       # the ZIPs not yet moved out of the backup folder
+ * bun run stolos vault status     # every secret: changed when, backed up when (⚠ = not backed up)
+ * bun run stolos vault backup     # writes the ZIP, reads it back, and says where it is
+ * bun run stolos vault restore <zip>   # a fresh PC: put the ZIP back (checks it; never overwrites)
+ * bun run stolos vault list       # the ZIPs not yet moved out of the backup folder
  * ```
  *
  * ```mermaid
@@ -243,7 +244,7 @@
  * change your servers: treat it like the keys to them.
  *
  * To restore (spec 061), clone the fleet repository on the new PC, `cd` into it, and run
- * `deno task stolos vault restore <zip>`. It checks the ZIP (every file against its SHA-256) before
+ * `bun run stolos vault restore <zip>`. It checks the ZIP (every file against its SHA-256) before
  * writing anything, puts each file back (the secrets readable by you only, the daily key in `.ssh`,
  * the recovery key in the key store), and runs `keys setup`, which asks for your daily passphrase once
  * for a test signature. It never overwrites: a file already there and different stops it, naming the
@@ -275,8 +276,8 @@
  * mailbox:
  *
  * ```powershell
- * deno task stolos build
- * deno task stolos boot notify --subject "Lab Network Runbook Change Log 2026-11-12" --body-file changes.txt --attach out\site\network-reference.html
+ * bun run stolos build
+ * bun run stolos boot notify --subject "Lab Network Runbook Change Log 2026-11-12" --body-file changes.txt --attach out\site\network-reference.html
  * ```
  *
  * If this PC's address changes, set `site.bootServer.address`: `stolos build` then lists every UniFi
@@ -285,7 +286,7 @@
  * ## Check the boot machine
  *
  * ```powershell
- * deno task stolos boot doctor
+ * bun run stolos boot doctor
  * ```
  *
  * Read-only. It checks the checkout (uncommitted or unpushed host changes, which hosts would not see),
@@ -297,24 +298,24 @@
  *
  * | Command                                                                                        | Does                                                                                                                                                      |
  * | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
- * | `deno task stolos boot serve`                                                                  | serve installs (leave it running)                                                                                                                         |
- * | `deno task stolos boot doctor [--send]`                                                        | check this machine (and its email), with fixes; `--send` mails the email findings                                                                         |
- * | `deno task stolos boot observe [--last 5]`                                                     | recent installs from the boot server's telemetry                                                                                                          |
- * | `deno task stolos boot status`                                                                 | hosts, armed or not, MACs learned, Boot URIs                                                                                                              |
- * | `deno task stolos fleet status`                                                                | every server and workstation: last install, and how to reach and observe it                                                                               |
- * | `deno task stolos boot arm <host> [--claim] [--confirm-destroy <host>]`                        | allow one install of a host (`--claim`: the next unknown machine becomes it; a host recorded as durable needs `--confirm-destroy`)                        |
- * | `deno task stolos boot retire <host> --confirm-destroy <host>`                                 | a server leaves the fleet: its DNS, deploy key, identity, model, and records ([hosts](hosts.md#retire-a-host))                                            |
- * | `deno task stolos boot reinstall <host> [--confirm-destroy <host>]`                            | re-install a running host, nobody at the console; a durable host, or one that cannot be reached, needs `--confirm-destroy` ([hosts](hosts.md#re-install)) |
- * | `deno task stolos vault status [--lost]`                                                       | every secret, and whether the last backup has it                                                                                                          |
- * | `deno task stolos vault backup` · `restore` · `list`                                           | the backup ZIP: write it; restore it on a fresh PC (`restore <zip>`); the ZIPs not yet moved                                                              |
- * | `deno task stolos boot web-setup`                                                              | store the Cloudflare DNS token for HTTPS certificates and server records (once)                                                                           |
- * | `deno task stolos boot web-push <host>`                                                        | give a running server that token                                                                                                                          |
- * | `deno task stolos boot mail-setup`                                                             | store the Cloudflare token for mail (once)                                                                                                                |
- * | `deno task stolos boot mail-push <host>`                                                       | give a running server the token, then test its mail                                                                                                       |
- * | `deno task stolos boot notify --subject <s> [--body <t> \| --body-file <f>] [--attach <f>]...` | email the mailbox from this PC (also `notify test`, `notify status`)                                                                                      |
- * | `deno task stolos fleet init`                                                                  | create the fleet (once)                                                                                                                                   |
- * | `deno task stolos host add <name> --claim \| --mac-address <mac>`                              | add a host                                                                                                                                                |
- * | `deno task stolos host bootstrap <name> --ssh user@address`                                    | finish a host whose Ubuntu was installed by hand                                                                                                          |
+ * | `bun run stolos boot serve`                                                                  | serve installs (leave it running)                                                                                                                         |
+ * | `bun run stolos boot doctor [--send]`                                                        | check this machine (and its email), with fixes; `--send` mails the email findings                                                                         |
+ * | `bun run stolos boot observe [--last 5]`                                                     | recent installs from the boot server's telemetry                                                                                                          |
+ * | `bun run stolos boot status`                                                                 | hosts, armed or not, MACs learned, Boot URIs                                                                                                              |
+ * | `bun run stolos fleet status`                                                                | every server and workstation: last install, and how to reach and observe it                                                                               |
+ * | `bun run stolos boot arm <host> [--claim] [--confirm-destroy <host>]`                        | allow one install of a host (`--claim`: the next unknown machine becomes it; a host recorded as durable needs `--confirm-destroy`)                        |
+ * | `bun run stolos boot retire <host> --confirm-destroy <host>`                                 | a server leaves the fleet: its DNS, deploy key, identity, model, and records ([hosts](hosts.md#retire-a-host))                                            |
+ * | `bun run stolos boot reinstall <host> [--confirm-destroy <host>]`                            | re-install a running host, nobody at the console; a durable host, or one that cannot be reached, needs `--confirm-destroy` ([hosts](hosts.md#re-install)) |
+ * | `bun run stolos vault status [--lost]`                                                       | every secret, and whether the last backup has it                                                                                                          |
+ * | `bun run stolos vault backup` · `restore` · `list`                                           | the backup ZIP: write it; restore it on a fresh PC (`restore <zip>`); the ZIPs not yet moved                                                              |
+ * | `bun run stolos boot web-setup`                                                              | store the Cloudflare DNS token for HTTPS certificates and server records (once)                                                                           |
+ * | `bun run stolos boot web-push <host>`                                                        | give a running server that token                                                                                                                          |
+ * | `bun run stolos boot mail-setup`                                                             | store the Cloudflare token for mail (once)                                                                                                                |
+ * | `bun run stolos boot mail-push <host>`                                                       | give a running server the token, then test its mail                                                                                                       |
+ * | `bun run stolos boot notify --subject <s> [--body <t> \| --body-file <f>] [--attach <f>]...` | email the mailbox from this PC (also `notify test`, `notify status`)                                                                                      |
+ * | `bun run stolos fleet init`                                                                  | create the fleet (once)                                                                                                                                   |
+ * | `bun run stolos host add <name> --claim \| --mac-address <mac>`                              | add a host                                                                                                                                                |
+ * | `bun run stolos host bootstrap <name> --ssh user@address`                                    | finish a host whose Ubuntu was installed by hand                                                                                                          |
  *
  * ## What is kept where
  *
@@ -325,7 +326,7 @@
  * | hosts' SSH host keys as this PC trusts them                                                                                                | `%USERPROFILE%\.ssh\known_hosts`                                   | no      |
  * | fleet, hosts, specs, dotfiles, what hosts recorded                                                                                         | `C:\archon`                                                        | yes     |
  *
- * Back up the secrets folder (`deno task stolos vault backup`): without it, a re-installed host gets
+ * Back up the secrets folder (`bun run stolos vault backup`): without it, a re-installed host gets
  * new SSH host keys and a new deploy key (`host add <name> --force`).
  *
  * @module

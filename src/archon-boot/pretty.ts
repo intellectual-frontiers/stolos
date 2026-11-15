@@ -57,10 +57,10 @@ const STYLE: Partial<Record<EventName, Style>> = {
 
 /** Boot files by what they are (an attribute, not the text). */
 function fileStyle(e: ArchonEvent): Style {
-  const f = String(e.attrs?.file ?? "");
+  const f = String(e.attrs?.["file"] ?? "");
   if (/^(bootx64|grubx64)\.efi$/.test(f)) return { icon: "🥾", ascii: ">" };
   if (/^(linux|initrd)$/.test(f)) return { icon: "🐧", ascii: ">" };
-  return e.attrs?.via === "TFTP" ? { icon: "📡", ascii: ">" } : { icon: "🌐", ascii: ">" };
+  return e.attrs?.["via"] === "TFTP" ? { icon: "📡", ascii: ">" } : { icon: "🌐", ascii: ">" };
 }
 
 function styleOf(e: ArchonEvent): Style {
@@ -76,10 +76,7 @@ function styleOf(e: ArchonEvent): Style {
 let last = { key: "", at: 0 };
 
 /** One event's line for the window, or undefined to keep it out (it is still recorded). */
-export function render(
-  e: ArchonEvent,
-  verbose = ui.verbose,
-): string | undefined {
+export function render(e: ArchonEvent, verbose = ui.verbose): string | undefined {
   const now = e.time ?? Date.now();
   if (!verbose && severityOf(e) === "debug") return undefined;
   // The same event again within 3 seconds (the shim fetches bootx64.efi twice).
@@ -95,7 +92,7 @@ export function render(
     }),
   );
   // "Next:" steps: indented under the Ready line, one per line, no icon.
-  if (e.name === "boot.next" && e.attrs?.step) {
+  if (e.name === "boot.next" && e.attrs?.["step"]) {
     return `${" ".repeat(12)}${ui.dim("│")} ${nextStep(e.message)}`;
   }
   const s = styleOf(e);
@@ -104,10 +101,10 @@ export function render(
     s.tone === "ok"
       ? ui.green(t)
       : s.tone === "fail"
-      ? ui.red(t)
-      : s.tone === "warn"
-      ? ui.yellow(t)
-      : t;
+        ? ui.red(t)
+        : s.tone === "warn"
+          ? ui.yellow(t)
+          : t;
   // Who: the host once it is known (its address after the message), else the address.
   const who = e.host
     ? ui.bold(ui.cyan(e.host.padEnd(14)))
@@ -121,10 +118,11 @@ export function render(
 function nextStep(s: string): string {
   const m = s.match(/^(\S+)\s{2,}(.*?)(\s{2,}.*)?$/);
   if (!m) return s;
-  return `${ui.dim(m[1].padEnd(9))} ${ui.bold(m[2])}${m[3] ? ui.dim(m[3]) : ""}`;
+  const [, label = "", command = "", rest] = m;
+  return `${ui.dim(label.padEnd(9))} ${ui.bold(command)}${rest ? ui.dim(rest) : ""}`;
 }
 
 /** For tests. */
-export function resetPretty() {
+export function resetPretty(): void {
   last = { key: "", at: 0 };
 }

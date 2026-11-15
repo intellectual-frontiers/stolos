@@ -7,6 +7,7 @@
  * @module
  */
 
+import { proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "../archon/core/exec.ts";
 
 /** A port the boot server needs reachable from the network. */
@@ -52,14 +53,15 @@ export interface WinState {
 const covers = (profile: string, cat: string) =>
   profile === "Any" || profile.split(/,\s*/).some((p) => cat.startsWith(p));
 
-const portIn = (ports: string[], port: number) =>
+const portIn = (ports: string[], port: number): boolean =>
   ports.some((p) => {
     if (p === "Any") return true;
-    const [a, b] = p.split("-").map(Number);
+    const [a = Number.NaN, b] = p.split("-").map(Number);
     return b ? port >= a && port <= b : port === a;
   });
 
-const isDeno = (program: string) => /deno(\.exe)?$/i.test(program);
+/** The boot server's own program: Bun (or Node, its backup runtime), run by you. */
+const isRuntime = (program: string): boolean => /(^|[\\/])(bun|node)(\.exe)?$/i.test(program);
 
 /** Which needs Windows would block, and why. Block rules win over allow rules. */
 export function evaluateWindows(
@@ -75,7 +77,7 @@ export function evaluateWindows(
         (r.protocol === "Any" || r.protocol.toUpperCase() === n.protocol) &&
         portIn(r.ports, n.port) &&
         !r.scoped &&
-        (r.program === "Any" || isDeno(r.program));
+        (r.program === "Any" || isRuntime(r.program));
       const block = s.rules.find((r) => r.action === "Block" && applies(r));
       if (block) {
         out.push({
@@ -97,9 +99,9 @@ export function evaluateWindows(
       if (!allows.some((r) => !r.remote?.length || r.remote.includes("Any"))) {
         out.push({
           ...n,
-          reason: `it is allowed only from ${
-            allows.flatMap((r) => r.remote ?? []).join(", ")
-          }, so servers on other networks cannot reach it`,
+          reason: `it is allowed only from ${allows
+            .flatMap((r) => r.remote ?? [])
+            .join(", ")}, so servers on other networks cannot reach it`,
         });
         break;
       }
@@ -126,11 +128,11 @@ $rules = @(Get-NetFirewallRule -Direction Inbound -Enabled True | ForEach-Object
   $sec = $secs[$_.InstanceID]; $svc = $svcs[$_.InstanceID]; $if = $ifs[$_.InstanceID]; $ift = $ifts[$_.InstanceID]
   $prog = "$($af.Program)"
   # Rules limited to a Windows user, a service, an app package, or particular
-  # interfaces do not apply to the boot server (Deno, run by you).
+  # interfaces do not apply to the boot server (Bun, run by you).
   $scoped = ($sec.LocalUser -and "$($sec.LocalUser)" -ne 'Any') -or ($svc.Service -and "$($svc.Service)" -ne 'Any') -or
     ($af.Package -and "$($af.Package)" -ne 'Any' -and "$($af.Package)" -ne '') -or
     ($if.InterfaceAlias -and "$($if.InterfaceAlias)" -ne 'Any') -or ($ift.InterfaceType -and "$($ift.InterfaceType)" -ne 'Any')
-  if (($pf.Protocol -in 'TCP','UDP','Any') -and ($prog -eq 'Any' -or $prog -like '*deno*')) {
+  if (($pf.Protocol -in 'TCP','UDP','Any') -and ($prog -eq 'Any' -or $prog -like '*bun.exe' -or $prog -like '*node.exe')) {
     [pscustomobject]@{ name = $_.DisplayName; action = "$($_.Action)"; profile = "$($_.Profile)";
       protocol = "$($pf.Protocol)"; ports = @($pf.LocalPort | ForEach-Object { "$_" }); program = $prog;
       remote = @($ad.RemoteAddress | ForEach-Object { "$_" }); scoped = [bool]$scoped }
@@ -149,9 +151,10 @@ export function normalizeWinState(raw: WinState): WinState {
       ports: [x.ports ?? []].flat(),
       // PowerShell returns empty entries for "any address": drop them, so a rule
       // open to every network is not mistaken for one limited to a few addresses.
-      remote: [x.remote ?? []].flat().map((a: string) => String(a).trim()).filter((a: string) =>
-        a && a !== "*"
-      ),
+      remote: [x.remote ?? []]
+        .flat()
+        .map((a: string) => String(a).trim())
+        .filter((a: string) => a && a !== "*"),
       program: x.program || "Any",
     })),
   };
@@ -171,16 +174,14 @@ async function windows(needs: Need[]): Promise<string[]> {
       `Allow it from every network (PowerShell as Administrator): New-NetFirewallRule -DisplayName "Archon boot (${b.what})" -Direction Inbound -Protocol ${b.protocol} -LocalPort ${b.port} -Profile Any -RemoteAddress Any -Action Allow`,
     );
   }
-  if (blocked.some((b) => b.rule && isDeno(b.rule.program))) {
+  if (blocked.some((b) => b.rule && isRuntime(b.rule.program))) {
     lines.push(
-      'Remove the rule that blocks Deno (PowerShell as Administrator): Get-NetFirewallRule -Direction Inbound -Action Block | Where-Object { ($_ | Get-NetFirewallApplicationFilter).Program -like "*deno*" } | Remove-NetFirewallRule',
+      'Remove the rule that blocks Bun (PowerShell as Administrator): Get-NetFirewallRule -Direction Inbound -Action Block | Where-Object { ($_ | Get-NetFirewallApplicationFilter).Program -like "*bun*" } | Remove-NetFirewallRule',
     );
   }
-  for (
-    const name of new Set(
-      blocked.flatMap((b) => b.rule && !isDeno(b.rule.program) ? [b.rule.name] : []),
-    )
-  ) {
+  for (const name of new Set(
+    blocked.flatMap((b) => (b.rule && !isRuntime(b.rule.program) ? [b.rule.name] : [])),
+  )) {
     lines.push(
       `"${name}" blocks every program; another tool created it. If servers cannot reach this PC, see what it is before disabling it: Get-NetFirewallRule -DisplayName "${name}" | Format-List`,
     );
@@ -196,13 +197,15 @@ async function windows(needs: Need[]): Promise<string[]> {
 /** ufw status output: which needs it does not allow. */
 export function evaluateUfw(status: string, needs: Need[]): Need[] {
   if (!/^Status: active/m.test(status)) return [];
-  return needs.filter((n) =>
-    !status.split("\n").some((l) => {
-      const m = l.match(/^(\d+)(?::(\d+))?(?:\/(tcp|udp))?\s+ALLOW IN/i);
-      if (!m) return false;
-      const lo = Number(m[1]), hi = Number(m[2] ?? m[1]);
-      return n.port >= lo && n.port <= hi && (!m[3] || m[3].toUpperCase() === n.protocol);
-    })
+  return needs.filter(
+    (n) =>
+      !status.split("\n").some((l) => {
+        const m = l.match(/^(\d+)(?::(\d+))?(?:\/(tcp|udp))?\s+ALLOW IN/i);
+        if (!m) return false;
+        const lo = Number(m[1]),
+          hi = Number(m[2] ?? m[1]);
+        return n.port >= lo && n.port <= hi && (!m[3] || m[3].toUpperCase() === n.protocol);
+      }),
   );
 }
 
@@ -224,7 +227,8 @@ async function linux(needs: Need[]): Promise<string[]> {
     const ports = await run(["firewall-cmd", "--list-ports"]);
     const services = await run(["firewall-cmd", "--list-services"]);
     for (const n of needs) {
-      const open = ports.stdout.split(/\s+/).includes(`${n.port}/${n.protocol.toLowerCase()}`) ||
+      const open =
+        ports.stdout.split(/\s+/).includes(`${n.port}/${n.protocol.toLowerCase()}`) ||
         (n.port === 69 && services.stdout.split(/\s+/).includes("tftp"));
       if (!open) {
         lines.push(
@@ -239,7 +243,7 @@ async function linux(needs: Need[]): Promise<string[]> {
 /** Warnings for this machine's firewall; empty when it is fine or cannot be read. */
 export async function firewallWarnings(needs: Need[]): Promise<string[]> {
   try {
-    return Deno.build.os === "windows" ? await windows(needs) : await linux(needs);
+    return proc.build.os === "windows" ? await windows(needs) : await linux(needs);
   } catch {
     return [];
   }

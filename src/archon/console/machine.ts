@@ -7,10 +7,10 @@
  * @module
  */
 
+import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { engineFileOr } from "../core/assets.ts";
 import { run } from "../core/exec.ts";
-import { readTextOr } from "../core/fsx.ts";
-import { join } from "../core/path.ts";
+import { ui } from "../core/ui.ts";
 import { P } from "../core/paths.ts";
 import { markdownToHtml } from "../web/markdown.ts";
 import type { ActivityEntry, RepoFacts } from "./pages.ts";
@@ -20,9 +20,10 @@ export const ACTIVITY_FILE = "/var/lib/archon-console/activity.jsonl";
 
 /** The checkout this server applies: the commit, its signer (as servers check it), the engine, the signers. */
 export async function repoFacts(repo = P.repo): Promise<RepoFacts> {
-  const git = (args: string[]) => run(["git", "-c", `safe.directory=${repo}`, "-C", repo, ...args]);
+  const git = (args: string[]): ReturnType<typeof run> =>
+    run(["git", "-c", `safe.directory=${repo}`, "-C", repo, ...args]);
   const log = await git(["log", "-1", "--format=%h%x09%s%x09%an%x09%cI"]);
-  const [sha, subject, author, at] = log.stdout.trim().split("\t");
+  const [sha, subject = "", author = "", at = ""] = log.stdout.trim().split("\t");
   const v = await git([
     "-c",
     "gpg.format=ssh",
@@ -34,12 +35,14 @@ export async function repoFacts(repo = P.repo): Promise<RepoFacts> {
   ]);
   const signer = (v.stderr + v.stdout).match(/Good "git" signature for (\S+) with/)?.[1];
   const { readPin } = await import("../fleet/upgrade.ts");
-  const pin = readPin((await readTextOr(join(repo, "deno.json"))) ?? "");
+  const pin = readPin((await fs.readTextOr(path.join(repo, "package.json"))) ?? "");
   let signers: RepoFacts["signers"] = [];
   try {
     const { loadSigners } = await import("../identity/signers.ts");
     signers = (await loadSigners()).map((s) => ({ name: s.name, role: s.role }));
-  } catch { /* no signers.ts: none shown */ }
+  } catch {
+    /* no signers.ts: none shown */
+  }
   return {
     ...(log.ok && sha ? { commit: { sha, subject, author, at } } : {}),
     ...(signer ? { signer } : {}),
@@ -56,19 +59,24 @@ export function activityLog(file = ACTIVITY_FILE): {
   return {
     async add(e) {
       try {
-        await Deno.writeTextFile(file, JSON.stringify(e) + "\n", { append: true, create: true });
-      } catch { /* the record is best effort; the journal has the run too */ }
-      console.log(`${e.kind}: ${e.user} from ${e.from}${e.detail ? `: ${e.detail}` : ""}`);
+        await fs.writeTextFile(file, JSON.stringify(e) + "\n", { append: true, create: true });
+      } catch {
+        /* the record is best effort; the journal has the run too */
+      }
+      ui.say(`${e.kind}: ${e.user} from ${e.from}${e.detail ? `: ${e.detail}` : ""}`);
     },
     async recent(n) {
-      const lines = ((await readTextOr(file)) ?? "").trim().split("\n").filter(Boolean);
-      return lines.slice(-n).reverse().flatMap((l) => {
-        try {
-          return [JSON.parse(l) as ActivityEntry];
-        } catch {
-          return [];
-        }
-      });
+      const lines = ((await fs.readTextOr(file)) ?? "").trim().split("\n").filter(Boolean);
+      return lines
+        .slice(-n)
+        .reverse()
+        .flatMap((l) => {
+          try {
+            return [JSON.parse(l) as ActivityEntry];
+          } catch {
+            return [];
+          }
+        });
     },
   };
 }
@@ -82,10 +90,12 @@ export async function guideBody(
   if (!guides.some((g) => g.name === name)) return undefined;
   const md = engineFileOr(`docs/${name}.md`);
   if (!md) return undefined;
-  return await Promise.resolve(markdownToHtml(md, {
-    served: guides.map((g) => g.name),
-    repoBlob: `https://github.com/${repoSlug}/blob/main/`,
-  }));
+  return await Promise.resolve(
+    markdownToHtml(md, {
+      served: guides.map((g) => g.name),
+      repoBlob: `https://github.com/${repoSlug}/blob/main/`,
+    }),
+  );
 }
 
 /** One optional service, as the console shows it. */
@@ -97,7 +107,7 @@ export interface OptInRow {
   /** On or off. */
   on: boolean;
   /** durable, ephemeral, "unchosen", or undefined when it holds no user data. */
-  data?: string;
+  data?: string | undefined;
   /** When it was last switched (ISO time). */
   since?: string;
   /** Who switched it. */
@@ -135,13 +145,17 @@ export function parseUnitStates(
   const m = new Map<string, { active: string; sub: string; enabled: string }>();
   for (const block of out.split(/\n\s*\n/)) {
     const f = Object.fromEntries(
-      block.split("\n").map((l) => l.split("=", 2)).filter((x) => x.length === 2),
+      block
+        .split("\n")
+        .map((l) => l.split("=", 2))
+        .filter((x) => x.length === 2),
     ) as Record<string, string>;
-    if (f.Id) {
-      m.set(f.Id, {
-        active: f.ActiveState ?? "",
-        sub: f.SubState ?? "",
-        enabled: f.UnitFileState ?? "",
+    const id = f["Id"];
+    if (id) {
+      m.set(id, {
+        active: f["ActiveState"] ?? "",
+        sub: f["SubState"] ?? "",
+        enabled: f["UnitFileState"] ?? "",
       });
     }
   }
@@ -195,15 +209,23 @@ export async function journalTail(
   each: (line: string) => void,
   signal: AbortSignal,
 ): Promise<void> {
-  const p = new Deno.Command("journalctl", {
-    args: ["--no-pager", "-o", "short-iso", "-n", "150", "-f", ...(unit ? ["-u", unit] : [])],
-    stdout: "piped",
-    stderr: "null",
-    signal,
-  }).spawn();
+  const p = proc.spawn(
+    [
+      "journalctl",
+      "--no-pager",
+      "-o",
+      "short-iso",
+      "-n",
+      "150",
+      "-f",
+      ...(unit ? ["-u", unit] : []),
+    ],
+    { stdin: "null", stdout: "piped", stderr: "null", signal },
+  );
   const dec = new TextDecoder();
   let buf = "";
   try {
+    if (!p.stdout) return;
     for await (const chunk of p.stdout) {
       buf += dec.decode(chunk, { stream: true });
       let i;
@@ -212,5 +234,7 @@ export async function journalTail(
         buf = buf.slice(i + 1);
       }
     }
-  } catch { /* aborted: the page went away */ }
+  } catch {
+    /* aborted: the page went away */
+  }
 }

@@ -86,9 +86,14 @@ export interface ListQuery {
 const INTEGER = /^(0|[1-9][0-9]{0,8})$/;
 
 /** A filter value as SQLite stores the column's type, or why it cannot be one. */
-export function filterValue(c: TypedColumn, raw: string): { value: string | number } | {
-  error: string;
-} {
+export function filterValue(
+  c: TypedColumn,
+  raw: string,
+):
+  | { value: string | number }
+  | {
+      error: string;
+    } {
   switch (c.type) {
     case "boolean":
       if (raw === "true" || raw === "1") return { value: 1 };
@@ -106,6 +111,7 @@ export function filterValue(c: TypedColumn, raw: string): { value: string | numb
     }
     case "json":
       return { error: `${c.name} holds JSON and cannot be filtered on` };
+    case "text":
     default:
       if (c.values && !c.values.includes(raw)) {
         return { error: `${c.name} is one of ${c.values.join(", ")}` };
@@ -139,9 +145,9 @@ export function listQuery(r: Resource, params: URLSearchParams): ListQuery | { e
       const c = r.columns.find((x) => x.name === k);
       if (!c) {
         return {
-          error: `${r.name} has no column ${k} (its columns: ${
-            r.columns.map((x) => x.name).join(", ")
-          })`,
+          error: `${r.name} has no column ${k} (its columns: ${r.columns
+            .map((x) => x.name)
+            .join(", ")})`,
         };
       }
       const f = filterValue(c, v);
@@ -166,7 +172,7 @@ export function jsonRow(r: Resource, row: Record<string, unknown>): Record<strin
         out[c.name] = null;
       }
     } else if (typeof v === "bigint") out[c.name] = Number(v);
-    else if (c.type === "text") out[c.name] = String(v);
+    else if (c.type === "text") out[c.name] = typeof v === "string" ? v : JSON.stringify(v);
     else out[c.name] = v;
   }
   return out;
@@ -179,15 +185,19 @@ export function listRows(e: Estate, r: Resource, q: ListQuery): Page {
     : "";
   const values = q.filters.map((f) => f.value);
   const total = Number(
-    (e.db.prepare(`SELECT count(*) AS n FROM ${r.name}${where}`).get(...values) as {
-      n: number | bigint;
-    }).n,
+    (
+      e.db.prepare(`SELECT count(*) AS n FROM ${r.name}${where}`).get(...values) as {
+        n: number | bigint;
+      }
+    ).n,
   );
-  const rows = e.db.prepare(
-    `SELECT ${r.columns.map((c) => c.name).join(", ")} FROM ${r.name}${where} ORDER BY ${
-      r.order.join(", ")
-    } LIMIT ? OFFSET ?`,
-  ).all(...values, q.limit, q.offset) as Array<Record<string, unknown>>;
+  const rows = e.db
+    .prepare(
+      `SELECT ${r.columns.map((c) => c.name).join(", ")} FROM ${r.name}${where} ORDER BY ${r.order.join(
+        ", ",
+      )} LIMIT ? OFFSET ?`,
+    )
+    .all(...values, q.limit, q.offset) as Array<Record<string, unknown>>;
   return {
     items: rows.map((x) => jsonRow(r, x)),
     limit: q.limit,

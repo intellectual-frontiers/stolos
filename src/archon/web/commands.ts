@@ -4,7 +4,7 @@
  * @module
  */
 
-import { ensureDir, exists, readTextOr } from "../core/fsx.ts";
+import { fs, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
 import { loadFleet, loadHosts } from "../model/load.ts";
@@ -55,13 +55,15 @@ export function dnsDue(
  */
 export async function webDnsCheck(hostName: string): Promise<number> {
   const { fleet } = await hostOf(hostName);
-  if (!fleet.web || !(await exists(WEB.credential))) return 0;
+  if (!fleet.web || !(await fs.exists(WEB.credential))) return 0;
   const address = await serverAddress();
   if (!address) return 0;
   let last: { address?: string; at?: string } | undefined;
   try {
-    last = JSON.parse((await readTextOr(DNS_STATE)) ?? "");
-  } catch { /* none yet */ }
+    last = JSON.parse((await fs.readTextOr(DNS_STATE)) ?? "") as typeof last;
+  } catch {
+    /* none yet */
+  }
   const due = dnsDue(address, last);
   if (!due) return 0;
   const code = await webDns(hostName);
@@ -75,8 +77,7 @@ export async function webDnsCheck(hostName: string): Promise<number> {
     await notify({
       event: `${hostName}: new address ${address}`,
       level: "info",
-      what:
-        `${hostName}'s address changed from ${last.address} to ${address} (a new DHCP lease). Its Cloudflare records now point at ${address}.`,
+      what: `${hostName}'s address changed from ${last.address} to ${address} (a new DHCP lease). Its Cloudflare records now point at ${address}.`,
       todo: "Nothing.",
       key: `dns:${hostName}:${address}`,
     }).catch(() => {});
@@ -90,32 +91,30 @@ export async function installWebCredential(json: string): Promise<void> {
   if (typeof c.token !== "string" || !/^\S{20,}$/.test(c.token)) {
     throw new Error("not an archon web credential");
   }
-  await ensureDir("/etc/archon/web");
-  await Deno.chmod("/etc/archon/web", 0o755);
-  for (
-    const [path, text] of [
-      [WEB.credential, JSON.stringify(c, null, 2) + "\n"],
-      // lego (Traefik's ACME client) reads both; one token with both permissions serves.
-      [WEB.env, `CF_DNS_API_TOKEN=${c.token}\nCF_ZONE_API_TOKEN=${c.token}\n`],
-    ] as const
-  ) {
-    await Deno.writeTextFile(path, text, { mode: 0o600 });
-    await Deno.chmod(path, 0o600);
+  await fs.ensureDir("/etc/archon/web");
+  await fs.chmod("/etc/archon/web", 0o755);
+  for (const [path, text] of [
+    [WEB.credential, JSON.stringify(c, null, 2) + "\n"],
+    // lego (Traefik's ACME client) reads both; one token with both permissions serves.
+    [WEB.env, `CF_DNS_API_TOKEN=${c.token}\nCF_ZONE_API_TOKEN=${c.token}\n`],
+  ] as const) {
+    await fs.writeTextFile(path, text, { mode: 0o600 });
+    await fs.chmod(path, 0o600);
     await run(["chown", "root:root", path]);
   }
   await run(["systemctl", "try-restart", WEB.unit]);
 }
 
-/** archon web credential: the token from stdin (deno task stolos boot web-push), then the records. */
+/** archon web credential: the token from stdin (bun run stolos boot web-push), then the records. */
 export async function webCredential(hostName: string): Promise<number> {
   const p = ui.phase("Cloudflare token");
-  const json = await new Response(Deno.stdin.readable).text();
+  const json = await new Response(stdio.stdin.readable).text();
   try {
     await installWebCredential(json);
   } catch (e) {
     p.fail(
       (e as Error).message,
-      "deno task stolos boot web-setup on the boot machine, then web-push",
+      "bun run stolos boot web-setup on the boot machine, then web-push",
     );
     return 1;
   }
@@ -131,11 +130,11 @@ export async function webDns(hostName: string): Promise<number> {
     p.done("no fleet.web: nothing to publish");
     return 0;
   }
-  const raw = await readTextOr(WEB.credential);
+  const raw = await fs.readTextOr(WEB.credential);
   if (!raw) {
     p.warn(
       "no Cloudflare token on this server",
-      "on the boot machine: deno task stolos boot web-setup, then deno task stolos boot web-push <host>",
+      "on the boot machine: bun run stolos boot web-setup, then bun run stolos boot web-push <host>",
     );
     return 1;
   }
@@ -153,11 +152,11 @@ export async function webDns(hostName: string): Promise<number> {
       `archon ${host.name} (spec 032)`,
     );
     p.done(done.map((d) => `${d.name} ${d.action}`).join(" · ") + ` → ${address}`);
-    await Deno.writeTextFile(
-      DNS_STATE,
-      JSON.stringify({ address, at: new Date().toISOString() }) + "\n",
-      { mode: 0o644 },
-    ).catch(() => {}); // not root: nothing remembered, the next check publishes again
+    await fs
+      .writeTextFile(DNS_STATE, JSON.stringify({ address, at: new Date().toISOString() }) + "\n", {
+        mode: 0o644,
+      })
+      .catch(() => {}); // not root: nothing remembered, the next check publishes again
     return 0;
   } catch (e) {
     p.fail(
@@ -206,9 +205,9 @@ export async function webStatus(hostName: string): Promise<number> {
     c.warn(
       `${cert.issuer} (self-signed until Let's Encrypt answers)`,
       name
-        ? (await exists(WEB.env))
+        ? (await fs.exists(WEB.env))
           ? `journalctl -u ${WEB.unit} | grep -i acme`
-          : "deno task stolos boot web-push <host> (no Cloudflare token here yet)"
+          : "bun run stolos boot web-push <host> (no Cloudflare token here yet)"
         : "set fleet.web in fleets/<fleet>/fleet.ts for a Let's Encrypt certificate",
     );
     c.done(`expires ${cert.notAfter}`);
@@ -229,16 +228,15 @@ export async function webStatus(hostName: string): Promise<number> {
     `https://${name ?? host.name}   the Archon Console (sign in with your account)`,
     ...(name ? [`https://traefik.${name}   Traefik's dashboard`] : []),
     ...(name
-      ? plan.routes.map((r) =>
-        `https://${r.name}.${name}   → ${backendUrl(r)}${
-          r.description ? `   ${r.description}` : ""
-        }`
-      )
+      ? plan.routes.map(
+          (r) =>
+            `https://${r.name}.${name}   → ${backendUrl(r)}${
+              r.description ? `   ${r.description}` : ""
+            }`,
+        )
       : []),
   ];
-  ui.pause(); // the spinner would draw over these lines
-  for (const l of lines) console.log(`  ${l}`);
-  ui.resume();
+  for (const l of lines) ui.say(l);
   rt.done(
     `${plan.routes.length} published route(s) · containers: label traefik.enable=true (podman)`,
   );

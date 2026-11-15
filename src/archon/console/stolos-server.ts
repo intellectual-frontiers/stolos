@@ -9,7 +9,7 @@
  *   SameSite=Strict). No password and no new key: whoever can read your
  *   terminal is you.
  * - POSTs come from this page only (Origin, and Datastar's own header).
- * - Commands run as `deno task stolos ...` in the fleet repository, one at a
+ * - Commands run as `bun run stolos ...` in the fleet repository, one at a
  *   time, with this terminal as their input: a passphrase or token is typed
  *   there, never in the browser.
  * - Under `/v1/`, a read-only REST API for the estate (spec 094,
@@ -21,6 +21,7 @@
  * @module
  */
 
+import type { ServeInfo } from "@intellectual-frontiers/ifc-ts/runtime";
 import type { Command } from "../core/registry-types.ts";
 import type { ScfCatalog } from "../compliance/catalog.ts";
 import type { Estate } from "../estate/graph.ts";
@@ -28,7 +29,8 @@ import type { AuditDeps } from "../audit/portal.ts";
 import { COMMANDS, offeredOn } from "../commands/registry.ts";
 import { cookieOf, IDLE_MS, type Session, type Sessions } from "./auth.ts";
 import { argvFor, NOT_IN_CONSOLE, shellWords } from "./forms.ts";
-import { type Html, html, raw } from "./html.ts";
+import { formText, type Html, html, raw } from "./html.ts";
+import { ui } from "../core/ui.ts";
 import { bare, page } from "./layout.ts";
 import {
   actionsView,
@@ -89,9 +91,12 @@ export const TERMINAL_ONLY: Set<string> = new Set(["console", "signers add", "si
 
 /** The commands the Stolos Console offers. Keys that change, restores, and the console itself stay in the terminal. */
 export function stolosCommands(): Command[] {
-  return COMMANDS.filter((c) =>
-    offeredOn(c, "pc") && !NOT_IN_CONSOLE.has(c.name) && !TERMINAL_ONLY.has(c.name) &&
-    (!c.noMcp || PERSON_ONLY.has(c.name))
+  return COMMANDS.filter(
+    (c) =>
+      offeredOn(c, "pc") &&
+      !NOT_IN_CONSOLE.has(c.name) &&
+      !TERMINAL_ONLY.has(c.name) &&
+      (!c.noMcp || PERSON_ONLY.has(c.name)),
   );
 }
 
@@ -126,7 +131,7 @@ export function stolosCookie(s: Session | undefined): string {
     : `${STOLOS_COOKIE}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0`;
 }
 
-/** Runs `deno task stolos <argv>`: each output line, then the exit code. */
+/** Runs `bun run stolos <argv>`: each output line, then the exit code. */
 export type PcRunner = (argv: string[], each: (line: string) => void) => Promise<number>;
 
 /** What the Stolos Console needs: real on the PC, fakes in tests. */
@@ -178,7 +183,7 @@ async function pcOscal(
   const { oscalExports } = await import("../compliance/oscal.ts");
   const { VERSION } = await import("../version.ts");
   const nist = await loadNist("nist80053");
-  return await oscalExports({
+  const docs = await oscalExports({
     view: fleetFreshView(f, catalog, { cadences: await loadCadences() }),
     fleet: f.fleet,
     machines: f.machines.filter((m) => m.kind !== "discovered"),
@@ -186,6 +191,7 @@ async function pcOscal(
     version: VERSION,
     now: new Date(),
   });
+  return { ...docs };
 }
 
 /** boot.log, followed: the cards and new lines as they come (Datastar patches), until the page goes. */
@@ -218,7 +224,9 @@ function bootStream(deps: StolosDeps, signal: AbortSignal): Response {
       }
       try {
         ctl.close();
-      } catch { /* already closed */ }
+      } catch {
+        /* already closed */
+      }
     },
   });
   return new Response(stream, {
@@ -229,7 +237,7 @@ function bootStream(deps: StolosDeps, signal: AbortSignal): Response {
 /** The Stolos Console's request handler. */
 export function stolosHandler(
   deps: StolosDeps,
-): (req: Request, info?: Deno.ServeHandlerInfo) => Promise<Response> {
+): (req: Request, info?: ServeInfo) => Promise<Response> {
   const offered = stolosCommands();
   const byName = new Map(offered.map((c) => [c.name, c]));
   const hosts = new Set([`127.0.0.1:${deps.port}`, `localhost:${deps.port}`]);
@@ -244,7 +252,7 @@ export function stolosHandler(
     return await apiHandler(req, {
       fleet: f.fleet.id,
       port: deps.port,
-      estate: deps.estate,
+      estate: () => deps.estate(),
       oscal: async () => await pcOscal(f, await catalog()),
       catalog,
       evidenceDir: deps.evidenceDir,
@@ -253,32 +261,40 @@ export function stolosHandler(
 
   const frame = async (s: Session, title: string, current: string, body: Html, f?: PcFacts) => {
     const facts = f ?? (await deps.facts());
-    return htmlResponse(page({
-      product: "stolos",
-      title,
-      subtitle: `this PC · ${deps.person.user}`,
-      fleet: { id: facts.fleet.title, repo: facts.fleet.repo },
-      user: {
-        name: s.name,
-        user: deps.person.github ? `${s.user} · GitHub ${deps.person.github}` : s.user,
-        role: "fleet operator",
-      },
-      // Spec 082: a provider's client's pages lead back to the list of clients (also on a phone).
-      nav: deps.scope
-        ? [...STOLOS_NAV, { group: "Provider", label: "All clients", href: deps.scope.href }]
-        : STOLOS_NAV,
-      current,
-      ...(deps.scope ? { scope: deps.scope } : {}),
-    }, body));
+    return htmlResponse(
+      page(
+        {
+          product: "stolos",
+          title,
+          subtitle: `this PC · ${deps.person.user}`,
+          fleet: { id: facts.fleet.title, repo: facts.fleet.repo },
+          user: {
+            name: s.name,
+            user: deps.person.github ? `${s.user} · GitHub ${deps.person.github}` : s.user,
+            role: "fleet operator",
+          },
+          // Spec 082: a provider's client's pages lead back to the list of clients (also on a phone).
+          nav: deps.scope
+            ? [...STOLOS_NAV, { group: "Provider", label: "All clients", href: deps.scope.href }]
+            : STOLOS_NAV,
+          current,
+          ...(deps.scope ? { scope: deps.scope } : {}),
+        },
+        body,
+      ),
+    );
   };
 
   const run = async (req: Request, s: Session): Promise<Response> => {
     const form = Object.fromEntries(
-      [...(await req.formData()).entries()].map(([k, v]) => [k, String(v)]),
+      [...(await req.formData()).entries()].map(([k, v]) => [k, formText(v)]),
     );
     // A pasted check-in code may wrap: it has no spaces of its own.
-    for (const k of ["check-in", "import"]) if (form[k]) form[k] = form[k].replace(/\s+/g, "");
-    const cmd = byName.get(form.command ?? "");
+    for (const k of ["check-in", "import"]) {
+      const v = form[k];
+      if (v) form[k] = v.replace(/\s+/g, "");
+    }
+    const cmd = byName.get(form["command"] ?? "");
     const enc = new TextEncoder();
     const stream = new ReadableStream<Uint8Array>({
       async start(ctl) {
@@ -292,11 +308,13 @@ export function stolosHandler(
             }),
           );
         const refuse = (why: string) => {
-          send(patch(html`
-            <div class="term" id="output">
-              <div class="bad">${why}</div>
-            </div>
-          `));
+          send(
+            patch(html`
+              <div class="term" id="output">
+                <div class="bad">${why}</div>
+              </div>
+            `),
+          );
           state("Not run");
           ctl.close();
         };
@@ -307,12 +325,14 @@ export function stolosHandler(
           return refuse("Another command is running: it may be waiting for you in the terminal.");
         }
         busy = true;
-        const shown = `deno task stolos ${shellWords(r.argv)}`;
-        send(patch(html`
-          <div class="term" id="output">
-            <div class="dim">$ ${shown}</div>
-          </div>
-        `));
+        const shown = `bun run stolos ${shellWords(r.argv)}`;
+        send(
+          patch(html`
+            <div class="term" id="output">
+              <div class="dim">$ ${shown}</div>
+            </div>
+          `),
+        );
         state("Running ... (if it asks for a passphrase, type it in the terminal)");
         let code = 1;
         try {
@@ -340,7 +360,7 @@ export function stolosHandler(
   };
 
   const query = async (req: Request, s: Session): Promise<Response> => {
-    const sql = String((await req.formData()).get("sql") ?? "").trim();
+    const sql = formText((await req.formData()).get("sql")).trim();
     const enc = new TextEncoder();
     const stream = new ReadableStream<Uint8Array>({
       async start(ctl) {
@@ -357,7 +377,7 @@ export function stolosHandler(
         busy = true;
         state("Asking every machine ...");
         const lines: string[] = [];
-        let code = 1;
+        let code: number;
         try {
           code = await deps.runner(["fleet", "query", sql, "--json"], (l) => lines.push(l));
         } finally {
@@ -366,17 +386,21 @@ export function stolosHandler(
         const text = lines.join("\n");
         const start = text.indexOf("[");
         try {
-          const answers = JSON.parse(text.slice(start, text.lastIndexOf("]") + 1));
+          const answers = JSON.parse(text.slice(start, text.lastIndexOf("]") + 1)) as Parameters<
+            typeof answerTable
+          >[0];
           send(patch(answerTable(answers)));
           state(code === 0 ? "Answered" : "Answered, with machines that did not answer");
         } catch {
-          send(patch(html`
-            <div class="card" id="answer">
-              <div class="term">${lines.map((l) =>
-                html`<div class="${lineClass(l)}">${l}</div>`
-              )}</div>
-            </div>
-          `));
+          send(
+            patch(html`
+              <div class="card" id="answer">
+                <div class="term">
+                  ${lines.map((l) => html`<div class="${lineClass(l)}">${l}</div>`)}
+                </div>
+              </div>
+            `),
+          );
           state("Refused or failed");
         }
         await deps.activity.add({
@@ -410,11 +434,14 @@ export function stolosHandler(
         if (!deps.launch.redeem(url.searchParams.get("t"))) {
           return htmlResponse(bare("Stolos Console", launchPage()), 401);
         }
-        const s = deps.sessions.create({
-          user: deps.person.user,
-          name: deps.person.name,
-          groups: ["archon-ops"],
-        }, "this PC");
+        const s = deps.sessions.create(
+          {
+            user: deps.person.user,
+            name: deps.person.name,
+            groups: ["archon-ops"],
+          },
+          "this PC",
+        );
         await deps.activity.add({
           at: new Date().toISOString(),
           user: s.user,
@@ -569,9 +596,8 @@ export function stolosHandler(
         const needsName = ["adopt", "discover", "server", "workstation"].includes(what);
         let lines;
         if (needsName && /^[a-z][a-z0-9-]{0,62}$/.test(name)) {
-          const as = what === "adopt" && url.searchParams.get("osquery")
-            ? ["adopt", "osquery"]
-            : [what];
+          const as =
+            what === "adopt" && url.searchParams.get("osquery") ? ["adopt", "osquery"] : [what];
           lines = await deps.integrate(name, as);
         }
         const { allConnectors } = await import("../connect/commands.ts");
@@ -633,7 +659,9 @@ export function stolosHandler(
         const g = STOLOS_GROUPS.find((x) => x.id === path.slice(9));
         if (!g) return new Response("not found\n", { status: 404 });
         const want = url.searchParams.get("cmd") ?? g.first;
-        const selected = byName.get(want) ?? byName.get(g.first) ??
+        const selected =
+          byName.get(want) ??
+          byName.get(g.first) ??
           offered.find((c) => stolosGroupOf(c.name).id === g.id);
         if (!selected) return new Response("nothing offered here\n", { status: 404 });
         const values = Object.fromEntries([...url.searchParams].filter(([k]) => k !== "cmd"));
@@ -657,9 +685,9 @@ export function stolosHandler(
       if (path === "/guide") {
         return await frame(s, "Guide", "/guide", stolosGuidePage(deps.guides), f);
       }
-      const gm = path.match(/^\/guide\/([a-z0-9-]+)$/);
+      const gm = path.match(/^\/guide\/([a-z0-9-]+)$/)?.[1];
       if (gm) {
-        const doc = await deps.guideDoc(gm[1]);
+        const doc = await deps.guideDoc(gm);
         if (!doc) return new Response("no such guide\n", { status: 404 });
         return await frame(
           s,
@@ -671,7 +699,7 @@ export function stolosHandler(
       }
       return new Response("not found\n", { status: 404 });
     } catch (e) {
-      console.error(`console: ${path}: ${(e as Error).stack ?? e}`);
+      ui.say(`console: ${path}: ${e instanceof Error ? (e.stack ?? e.message) : String(e)}`);
       return htmlResponse(
         bare(
           "Error",

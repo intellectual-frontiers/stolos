@@ -1,6 +1,17 @@
-// Spec 065: the Archon Console's web server, driven with fakes: sign-in, sessions, the cross-site
-// rules, who may run what, destroying data, and the live output of a run.
-import { assert, assertEquals, assertStringIncludes } from "./assert.ts";
+/**
+ * Spec 065: the Archon Console's web server, driven with fakes: sign-in, sessions, the cross-site
+ * rules, who may run what, destroying data, and the live output of a run.
+ *
+ * @module
+ */
+
+import type { ServeInfo } from "@intellectual-frontiers/ifc-ts/runtime";
+import {
+  assert,
+  assertEquals,
+  assertStringIncludes,
+  test,
+} from "@intellectual-frontiers/ifc-ts/runtime/test";
 import {
   clientAddress,
   type ConsoleDeps,
@@ -11,6 +22,7 @@ import {
 import { Sessions, Throttle } from "../src/archon/console/auth.ts";
 import type { ActivityEntry } from "../src/archon/console/pages.ts";
 import type { WelcomeData } from "../src/archon/web/welcome.ts";
+import { must } from "./console/tree.ts";
 
 const PEOPLE: Record<string, { pw: string; groups: string[]; name: string }> = {
   alice: { pw: "right", groups: ["alice", "sudo"], name: "Alice Example" },
@@ -67,10 +79,13 @@ function deps(): ConsoleDeps & {
         },
         signer: "alice-daily",
         engine: "v0.66.0",
-        signers: [{ name: "alice-daily", role: "daily" }, {
-          name: "alice-recovery",
-          role: "recovery",
-        }],
+        signers: [
+          { name: "alice-daily", role: "daily" },
+          {
+            name: "alice-recovery",
+            role: "recovery",
+          },
+        ],
       }),
     activity: {
       add: (e) => (log.push(e), Promise.resolve()),
@@ -126,15 +141,19 @@ function deps(): ConsoleDeps & {
 }
 
 const BASE = "https://alpha.lab.example.net";
-const req = (path: string, init: RequestInit & { cookie?: string } = {}) => {
+const req = (path: string, init: RequestInit & { cookie?: string | undefined } = {}): Request => {
   const h = new Headers(init.headers);
   h.set("host", "alpha.lab.example.net");
   h.set("x-forwarded-for", "10.0.0.5");
   if (init.cookie) h.set("cookie", init.cookie);
   return new Request(BASE + path, { ...init, headers: h });
 };
-const form = (o: Record<string, string>) => new URLSearchParams(o);
-async function signIn(h: ReturnType<typeof consoleHandler>, user: string, pw: string) {
+const form = (o: Record<string, string>): URLSearchParams => new URLSearchParams(o);
+async function signIn(
+  h: ReturnType<typeof consoleHandler>,
+  user: string,
+  pw: string,
+): Promise<{ r: Response; cookie: string }> {
   const r = await h(
     req("/signin", {
       method: "POST",
@@ -143,10 +162,10 @@ async function signIn(h: ReturnType<typeof consoleHandler>, user: string, pw: st
     }),
   );
   const c = r.headers.get("set-cookie") ?? "";
-  return { r, cookie: c.split(";")[0] };
+  return { r, cookie: c.split(";")[0] ?? "" };
 }
 
-Deno.test("065 console: nothing without signing in; a wrong password is refused and recorded", async () => {
+test("065 console: nothing without signing in; a wrong password is refused and recorded", async () => {
   const d = deps();
   const h = consoleHandler(d);
   let r = await h(req("/"));
@@ -161,14 +180,14 @@ Deno.test("065 console: nothing without signing in; a wrong password is refused 
   assertEquals((await signIn(h, "root", "x")).r.status, 401, "no such account here");
 });
 
-Deno.test("065 console: sign in, see the overview with its live diagram, sign out", async () => {
+test("065 console: sign in, see the overview with its live diagram, sign out", async () => {
   const d = deps();
   const h = consoleHandler(d);
   const { r, cookie } = await signIn(h, "alice", "right");
   assertEquals(r.status, 303);
   assert(
-    /HttpOnly/.test(r.headers.get("set-cookie")!) &&
-      /SameSite=Strict/.test(r.headers.get("set-cookie")!),
+    /HttpOnly/.test(must(r.headers.get("set-cookie"))) &&
+      /SameSite=Strict/.test(must(r.headers.get("set-cookie"))),
   );
   const page = await (await h(req("/", { cookie }))).text();
   assertStringIncludes(page, "All checks pass");
@@ -177,19 +196,17 @@ Deno.test("065 console: sign in, see the overview with its live diagram, sign ou
   assertStringIncludes(page, "a7c1e94");
   assertStringIncludes(page, "alice-daily");
   assertEquals((await h(req("/actions", { cookie }))).headers.get("location"), "/actions/server");
-  for (
-    const p of [
-      "/how",
-      "/actions/server",
-      "/actions/postgres?cmd=pg%20on",
-      "/actions/storage",
-      "/actions/web",
-      "/actions/mail",
-      "/actions/shell",
-      "/activity",
-      "/guide",
-    ]
-  ) {
+  for (const p of [
+    "/how",
+    "/actions/server",
+    "/actions/postgres?cmd=pg%20on",
+    "/actions/storage",
+    "/actions/web",
+    "/actions/mail",
+    "/actions/shell",
+    "/activity",
+    "/guide",
+  ]) {
     assertEquals((await h(req(p, { cookie }))).status, 200, p);
   }
   const out = await h(req("/signout", { method: "POST", cookie, headers: { origin: BASE } }));
@@ -197,13 +214,13 @@ Deno.test("065 console: sign in, see the overview with its live diagram, sign ou
   assertEquals((await h(req("/", { cookie }))).status, 303, "signed out");
 });
 
-Deno.test("065 console: five wrong tries pause the address", async () => {
+test("065 console: five wrong tries pause the address", async () => {
   const h = consoleHandler(deps());
   for (let i = 0; i < 5; i++) await signIn(h, "alice", "wrong");
   assertEquals((await signIn(h, "alice", "right")).r.status, 429);
 });
 
-Deno.test("065 console: another site cannot sign in or run anything", async () => {
+test("065 console: another site cannot sign in or run anything", async () => {
   const d = deps();
   const h = consoleHandler(d);
   const evil = await h(
@@ -242,16 +259,18 @@ const run = async (
   cookie: string,
   f: Record<string, string>,
 ) =>
-  await (await h(
-    req("/actions/run", {
-      method: "POST",
-      cookie,
-      body: form(f),
-      headers: { origin: BASE, "datastar-request": "true" },
-    }),
-  )).text();
+  await (
+    await h(
+      req("/actions/run", {
+        method: "POST",
+        cookie,
+        body: form(f),
+        headers: { origin: BASE, "datastar-request": "true" },
+      }),
+    )
+  ).text();
 
-Deno.test("065 console: a run streams its output, escaped, and is recorded with the person", async () => {
+test("065 console: a run streams its output, escaped, and is recorded with the person", async () => {
   const d = deps();
   const h = consoleHandler(d);
   const { cookie } = await signIn(h, "alice", "right");
@@ -266,13 +285,16 @@ Deno.test("065 console: a run streams its output, escaped, and is recorded with 
   assertEquals(d.log.at(-1)?.detail, "archon verify");
 });
 
-Deno.test("065 console: people who are not operators look but cannot change; destroying needs the password", async () => {
+test("065 console: people who are not operators look but cannot change; destroying needs the password", async () => {
   const d = deps();
   const h = consoleHandler(d);
   const bob = (await signIn(h, "bob", "bobpw")).cookie;
   assertStringIncludes(await run(h, bob, { command: "verify" }), "Done");
   assertStringIncludes(await run(h, bob, { command: "reboot" }), "Only operators");
-  assertEquals(d.ran.map((x) => x.argv.join(" ")), ["verify"]);
+  assertEquals(
+    d.ran.map((x) => x.argv.join(" ")),
+    ["verify"],
+  );
   const alice = (await signIn(h, "alice", "right")).cookie;
   assertStringIncludes(
     await run(h, alice, { command: "pg remove", name: "prime", "confirm-destroy": "prime" }),
@@ -291,7 +313,7 @@ Deno.test("065 console: people who are not operators look but cannot change; des
   assertEquals(d.log.filter((e) => e.kind === "refused").length, 2);
 });
 
-Deno.test("065 console: no Basic credentials (no session per request)", async () => {
+test("065 console: no Basic credentials (no session per request)", async () => {
   const h = consoleHandler(deps());
   const r = await h(
     req("/activity", { headers: { authorization: "Basic " + btoa("alice:right") } }),
@@ -299,13 +321,9 @@ Deno.test("065 console: no Basic credentials (no session per request)", async ()
   assertEquals(r.status, 303);
 });
 
-Deno.test("065 console: the address is Traefik's, and wrong passwords are throttled per account too", async () => {
-  const loop = {
-    remoteAddr: { hostname: "127.0.0.1", port: 1, transport: "tcp" },
-  } as Deno.ServeHandlerInfo;
-  const far = {
-    remoteAddr: { hostname: "203.0.113.9", port: 1, transport: "tcp" },
-  } as Deno.ServeHandlerInfo;
+test("065 console: the address is Traefik's, and wrong passwords are throttled per account too", async () => {
+  const loop: ServeInfo = { remoteAddr: { hostname: "127.0.0.1", port: 1 } };
+  const far: ServeInfo = { remoteAddr: { hostname: "203.0.113.9", port: 1 } };
   const x = (v: string) => new Request(BASE, { headers: { "x-forwarded-for": v } });
   assertEquals(clientAddress(x("1.2.3.4, 10.0.0.5"), loop), "10.0.0.5");
   assertEquals(clientAddress(x("1.2.3.4"), far), "203.0.113.9");
@@ -324,14 +342,14 @@ Deno.test("065 console: the address is Traefik's, and wrong passwords are thrott
   assertEquals((await attempt(50, "right")).status, 429);
 });
 
-Deno.test("065 console: pages carry a content security policy and nosniff", async () => {
+test("065 console: pages carry a content security policy and nosniff", async () => {
   const h = consoleHandler(deps());
   const r = await h(req("/signin"));
   assertStringIncludes(r.headers.get("content-security-policy") ?? "", "frame-ancestors 'none'");
   assertEquals(r.headers.get("x-content-type-options"), "nosniff");
 });
 
-Deno.test("065 console: event format and line colors", () => {
+test("065 console: event format and line colors", () => {
   assertEquals(
     patch("<p>a\nb</p>", { selector: "#x", mode: "append" }),
     "event: datastar-patch-elements\ndata: mode append\ndata: selector #x\ndata: elements <p>a\ndata: elements b</p>\n\n",
@@ -345,12 +363,15 @@ Deno.test("065 console: event format and line colors", () => {
   );
 });
 
-Deno.test("065 console: every command is on exactly one action page, each page has some", async () => {
+test("065 console: every command is on exactly one action page, each page has some", async () => {
   const { ACTION_GROUPS, groupOf } = await import("../src/archon/console/pages.ts");
   const { consoleCommands } = await import("../src/archon/console/forms.ts");
   const cmds = consoleCommands("machine");
   for (const g of ACTION_GROUPS) {
-    assert(cmds.some((c) => groupOf(c.name).id === g.id), `${g.id} has commands`);
+    assert(
+      cmds.some((c) => groupOf(c.name).id === g.id),
+      `${g.id} has commands`,
+    );
     assert(
       cmds.some((c) => c.name === g.first),
       `${g.id} starts with an offered command (${g.first})`,
@@ -358,7 +379,7 @@ Deno.test("065 console: every command is on exactly one action page, each page h
   }
 });
 
-Deno.test("065 console: terminal color codes never reach the page", async () => {
+test("065 console: terminal color codes never reach the page", async () => {
   const { stripAnsi } = await import("../src/archon/console/exec.ts");
   assertEquals(
     stripAnsi("\x1b[0m\x1b[1m\x1b[31merror\x1b[0m: Failed caching\r"),
@@ -366,7 +387,7 @@ Deno.test("065 console: terminal color codes never reach the page", async () => 
   );
 });
 
-Deno.test("065 console: Services, Apps, Data, and Logs; the live journal only for the plan's units", async () => {
+test("065 console: Services, Apps, Data, and Logs; the live journal only for the plan's units", async () => {
   const d = deps();
   const h = consoleHandler(d);
   const { cookie } = await signIn(h, "alice", "right");
@@ -390,7 +411,7 @@ Deno.test("065 console: Services, Apps, Data, and Logs; the live journal only fo
   );
 });
 
-Deno.test("065 console: a viewer's Activity shows only their own entries", async () => {
+test("065 console: a viewer's Activity shows only their own entries", async () => {
   const d = deps();
   const h = consoleHandler(d);
   await signIn(h, "alice", "right");

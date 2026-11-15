@@ -95,13 +95,14 @@ const errors = (...codes: number[]) =>
 
 /** A filter parameter for a column (JSON columns are not filterable). */
 function filterParam(c: TypedColumn): Schema {
-  const base = c.type === "boolean"
-    ? { type: "boolean" }
-    : c.type === "integer"
-    ? { type: "integer" }
-    : c.type === "real"
-    ? { type: "number" }
-    : { type: "string", ...(c.values ? { enum: [...c.values] } : {}) };
+  const base =
+    c.type === "boolean"
+      ? { type: "boolean" }
+      : c.type === "integer"
+        ? { type: "integer" }
+        : c.type === "real"
+          ? { type: "number" }
+          : { type: "string", ...(c.values ? { enum: [...c.values] } : {}) };
   return {
     name: c.name,
     in: "query",
@@ -252,12 +253,14 @@ export function openApiDocument(o: { port?: number; version?: string } = {}): Sc
       description:
         "The fleet's OSCAL component definition, system security plan, assessment results, or POA&M (spec 071). They need the SCF catalog on this PC (stolos compliance --download).",
       tags: ["compliance"],
-      parameters: [{
-        name: "document",
-        in: "path",
-        required: true,
-        schema: { type: "string", enum: [...OSCAL_DOCUMENTS] },
-      }],
+      parameters: [
+        {
+          name: "document",
+          in: "path",
+          required: true,
+          schema: { type: "string", enum: [...OSCAL_DOCUMENTS] },
+        },
+      ],
       responses: {
         "200": json(ref("oscal_document"), "The document."),
         ...errors(401, 404),
@@ -285,13 +288,15 @@ export function openApiDocument(o: { port?: number; version?: string } = {}): Sc
       summary: "Download an evidence bundle",
       description: "The signed ZIP; check it with stolos evidence verify.",
       tags: ["compliance"],
-      parameters: [{
-        name: "bundle",
-        in: "path",
-        required: true,
-        description: "Its file name (letters, digits, dot, dash, underscore; ends in .zip).",
-        schema: { type: "string", pattern: "^[A-Za-z0-9][A-Za-z0-9._-]*\\.zip$" },
-      }],
+      parameters: [
+        {
+          name: "bundle",
+          in: "path",
+          required: true,
+          description: "Its file name (letters, digits, dot, dash, underscore; ends in .zip).",
+          schema: { type: "string", pattern: "^[A-Za-z0-9][A-Za-z0-9._-]*\\.zip$" },
+        },
+      ],
       responses: {
         "200": {
           description: "The bundle.",
@@ -316,11 +321,13 @@ export function openApiDocument(o: { port?: number; version?: string } = {}): Sc
       description:
         "Every estate table and view (spec 090), the findings also as OCSF Compliance Findings, the OSCAL documents (spec 071), and the evidence bundles (spec 072). It answers only on 127.0.0.1, only GET and HEAD, and only for the console's signed-in session (its cookie). Generated from the estate schema's declarations (spec 094).",
     },
-    servers: [{
-      url: "http://127.0.0.1:{port}",
-      description: "The Stolos Console on this PC.",
-      variables: { port: { default: String(o.port ?? 8091) } },
-    }],
+    servers: [
+      {
+        url: "http://127.0.0.1:{port}",
+        description: "The Stolos Console on this PC.",
+        variables: { port: { default: String(o.port ?? 8091) } },
+      },
+    ],
     security: [{ session: [] }],
     tags: [
       { name: "meta", description: "The API itself." },
@@ -354,15 +361,14 @@ export function openApiDocument(o: { port?: number; version?: string } = {}): Sc
           name: "format",
           in: "query",
           required: false,
-          description:
-            `ocsf: the findings as OCSF Compliance Findings (as Accept: ${OCSF_MEDIA_TYPE}).`,
+          description: `ocsf: the findings as OCSF Compliance Findings (as Accept: ${OCSF_MEDIA_TYPE}).`,
           schema: { type: "string", enum: ["json", "ocsf"], default: "json" },
         },
       },
       responses: {
         e400: errorResponse("The request's parameters are not ones this resource takes."),
         e401: errorResponse(
-          "No signed-in console session: open the launch link `deno task stolos console` prints.",
+          "No signed-in console session: open the launch link `bun run stolos console` prints.",
         ),
         e404: errorResponse("No such resource."),
         e500: errorResponse(

@@ -8,10 +8,9 @@
  * @module
  */
 
+import { fs, path, proc, type Server, serve } from "@intellectual-frontiers/ifc-ts/runtime";
 import { engineFileOr } from "../core/assets.ts";
 import { run } from "../core/exec.ts";
-import { readTextOr } from "../core/fsx.ts";
-import { join } from "../core/path.ts";
 import { P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";
 import { markdownToHtml } from "../web/markdown.ts";
@@ -38,20 +37,21 @@ export async function githubCheck(
 }
 
 /**
- * Runs `deno task stolos <argv>` in the fleet repository; this terminal is its
+ * Runs `bun run stolos <argv>` in the fleet repository; this terminal is its
  * input. `env` adds to its environment (spec 082: a client's scope).
  */
 export function pcRunner(repo: string = P.repo, env: Record<string, string> = {}): PcRunner {
   return async (argv, each) => {
-    const p = new Deno.Command(Deno.execPath(), {
-      args: ["task", "-q", "stolos", ...argv],
+    const { engineRuntime } = await import("../install/bun.ts");
+    const p = proc.spawn([engineRuntime(), "stolos.ts", ...argv], {
       cwd: repo,
       env: { ...env, ARCHON_PLAIN: "1", NO_COLOR: "1", ARCHON_VIA: "console" },
       stdin: "inherit",
       stdout: "piped",
       stderr: "piped",
-    }).spawn();
-    const pump = async (s: ReadableStream<Uint8Array>) => {
+    });
+    const pump = async (s: ReadableStream<Uint8Array> | null): Promise<void> => {
+      if (!s) return;
       const dec = new TextDecoder();
       let buf = "";
       for await (const c of s) {
@@ -99,9 +99,9 @@ export function pcGuideDoc(n: string): Promise<string | undefined> {
   return Promise.resolve(
     md
       ? markdownToHtml(md, {
-        served: PC_GUIDES.map((g) => g.name),
-        repoBlob: "https://github.com/intellectual-frontiers/stolos/blob/main/",
-      })
+          served: PC_GUIDES.map((g) => g.name),
+          repoBlob: "https://github.com/intellectual-frontiers/stolos/blob/main/",
+        })
       : undefined,
   );
 }
@@ -129,20 +129,26 @@ export async function pcIntegrate(
 
 /** Open a URL in this PC's browser (best effort: the link is printed anyway). */
 export function openBrowser(url: string): void {
-  const cmd = Deno.build.os === "windows"
-    ? ["rundll32", "url.dll,FileProtocolHandler", url]
-    : Deno.build.os === "darwin"
-    ? ["open", url]
-    : ["xdg-open", url];
+  const cmd =
+    proc.build.os === "windows"
+      ? ["rundll32", "url.dll,FileProtocolHandler", url]
+      : proc.build.os === "darwin"
+        ? ["open", url]
+        : ["xdg-open", url];
   try {
-    new Deno.Command(cmd[0], { args: cmd.slice(1), stdout: "null", stderr: "null" }).spawn();
-  } catch { /* no browser opener: the link is printed */ }
+    proc.spawn(cmd, { stdin: "null", stdout: "null", stderr: "null" }).unref();
+  } catch {
+    /* no browser opener: the link is printed */
+  }
 }
 
 /** `stolos console [--port n] [--no-open] [--no-github]`; with `audit`, the auditor portal's link instead (spec 083). */
-export async function stolosConsole(
-  o: { port?: number; open?: boolean; github?: boolean; audit?: string },
-): Promise<number> {
+export async function stolosConsole(o: {
+  port?: number;
+  open?: boolean;
+  github?: boolean;
+  audit?: string;
+}): Promise<number> {
   const c = ui.phase("Console");
   const facts = await pcFacts();
   let github: string | undefined;
@@ -157,9 +163,9 @@ export async function stolosConsole(
     }
     github = g.login;
   }
-  const name = (await run(["git", "-C", P.repo, "config", "user.name"])).stdout.trim() || github ||
-    "you";
-  const user = Deno.env.get("USER") ?? Deno.env.get("USERNAME") ?? "you";
+  const name =
+    (await run(["git", "-C", P.repo, "config", "user.name"])).stdout.trim() || github || "you";
+  const user = proc.env.get("USER") ?? proc.env.get("USERNAME") ?? "you";
   const port = o.port ?? 8091;
   const launch = new Launch();
   const { auditDeps } = await import("../audit/commands.ts");
@@ -172,7 +178,7 @@ export async function stolosConsole(
         !ac
           ? `no engagement ${o.audit}`
           : `engagement ${o.audit} is ${engagementState(ac.engagement)}`,
-        "deno task stolos audit list",
+        "bun run stolos audit list",
       );
       return 1;
     }
@@ -184,23 +190,23 @@ export async function stolosConsole(
     sessions: new Sessions(),
     facts: () => pcFacts(),
     runner: pcRunner(),
-    activity: activityLog(join(P.state, "console-activity.jsonl")),
+    activity: activityLog(path.join(P.state, "console-activity.jsonl")),
     guides: PC_GUIDES,
     guideDoc: pcGuideDoc,
     integrate: (name, as) => pcIntegrate(name, as, facts.fleet.repo),
-    bootLog: async () => (await readTextOr(join(P.bootCache, "boot.log"))) ?? "",
-    cacheDir: join(P.state, "console-cache"),
+    bootLog: async () => (await fs.readTextOr(path.join(P.bootCache, "boot.log"))) ?? "",
+    cacheDir: path.join(P.state, "console-cache"),
     estate: estateFor(),
-    evidenceDir: join(P.state, "evidence"),
+    evidenceDir: path.join(P.state, "evidence"),
     audit,
   });
-  let server: Deno.HttpServer;
+  let server: Server;
   try {
-    server = Deno.serve({ hostname: "127.0.0.1", port, onListen: () => {} }, handler);
+    server = await serve({ hostname: "127.0.0.1", port }, handler);
   } catch (e) {
     c.fail(
       `port ${port} is taken (${(e as Error).message})`,
-      `deno task stolos console --port ${port + 1}`,
+      `bun run stolos console --port ${port + 1}`,
     );
     return 1;
   }
@@ -212,14 +218,15 @@ export async function stolosConsole(
       github ? ` (GitHub ${github} may push to ${facts.fleet.repo})` : ""
     }`,
   );
-  console.log(`\n  Open (works once, for two minutes, on this PC only):\n\n    ${url}\n`);
+  ui.say("Open (works once, for two minutes, on this PC only):");
+  ui.say(`  ${url}`);
   if (o.audit) {
-    console.log(
-      `  The link is for the auditor: it opens engagement ${o.audit} only, read-only, for at most four hours.`,
+    ui.say(
+      `The link is for the auditor: it opens engagement ${o.audit} only, read-only, for at most four hours.`,
     );
   }
-  console.log("  Passphrases and tokens a command asks for are typed here, in this terminal.");
-  console.log("  Ctrl+C stops the console.\n");
+  ui.say("Passphrases and tokens a command asks for are typed here, in this terminal.");
+  ui.say("Ctrl+C stops the console.");
   if (o.open !== false) openBrowser(url);
   await server.finished;
   return 0;

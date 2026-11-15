@@ -70,15 +70,21 @@ export function zoneOf(web: { domain: string; zone?: string }): string {
 export function hostRoutes(host: HostDef): WebRoute[] {
   return [
     ...(host.web?.routes ?? []).map((r) => ({ ...r, spec: "032-web" as const })),
-    ...(host.guests ?? []).filter((g) => g.web).map((g) => ({
-      name: g.name,
-      port: g.web!.port,
-      // LXD's own DNS for its bridge (spec 017), wired into systemd-resolved.
-      address: `${g.name}.lxd`,
-      https: g.web!.https,
-      description: `LXD ${g.kind} ${g.name}`,
-      spec: "032-web" as const,
-    })),
+    ...(host.guests ?? []).flatMap((g): WebRoute[] =>
+      g.web
+        ? [
+            {
+              name: g.name,
+              port: g.web.port,
+              // LXD's own DNS for its bridge (spec 017), wired into systemd-resolved.
+              address: `${g.name}.lxd`,
+              ...(g.web.https === undefined ? {} : { https: g.web.https }),
+              description: `LXD ${g.kind} ${g.name}`,
+              spec: "032-web",
+            },
+          ]
+        : [],
+    ),
   ];
 }
 
@@ -118,17 +124,17 @@ export function traefikStatic(plan: Pick<HostPlan, "host" | "fleet" | "units">):
     },
     ...(name
       ? {
-        certificatesResolvers: {
-          [WEB.resolver]: {
-            acme: {
-              ...(email ? { email } : {}),
-              caServer: ACME_DIRECTORIES[providersOf(plan.fleet).acme],
-              storage: WEB.acmeStorage,
-              dnsChallenge: { provider: "cloudflare", resolvers: ["1.1.1.1:53", "1.0.0.1:53"] },
+          certificatesResolvers: {
+            [WEB.resolver]: {
+              acme: {
+                ...(email ? { email } : {}),
+                caServer: ACME_DIRECTORIES[providersOf(plan.fleet).acme],
+                storage: WEB.acmeStorage,
+                dnsChallenge: { provider: "cloudflare", resolvers: ["1.1.1.1:53", "1.0.0.1:53"] },
+              },
             },
           },
-        },
-      }
+        }
       : {}),
     providers: {
       file: { directory: WEB.dynamicDir, watch: true },
@@ -142,18 +148,16 @@ export function traefikStatic(plan: Pick<HostPlan, "host" | "fleet" | "units">):
     },
     ...(otel
       ? {
-        metrics: { otlp: { http: { endpoint: "http://127.0.0.1:4318/v1/metrics" } } },
-        tracing: { otlp: { http: { endpoint: "http://127.0.0.1:4318/v1/traces" } } },
-      }
+          metrics: { otlp: { http: { endpoint: "http://127.0.0.1:4318/v1/metrics" } } },
+          tracing: { otlp: { http: { endpoint: "http://127.0.0.1:4318/v1/traces" } } },
+        }
       : {}),
   };
   return JSON.stringify(config, null, 2) + "\n";
 }
 
 /** Traefik's dynamic configuration: the welcome page and every route. */
-export function traefikDynamic(
-  plan: Pick<HostPlan, "host" | "fleet" | "routes">,
-): string {
+export function traefikDynamic(plan: Pick<HostPlan, "host" | "fleet" | "routes">): string {
   const name = fqdn(plan.fleet, plan.host);
   const routers: Record<string, unknown> = {
     // Any name or address that no other route claims: the welcome page.
@@ -165,8 +169,8 @@ export function traefikDynamic(
     },
   };
   if (name) {
-    routers.welcome = { rule: `Host(\`${name}\`)`, service: "welcome" };
-    routers.traefik = { rule: `Host(\`traefik.${name}\`)`, service: "api@internal" };
+    routers["welcome"] = { rule: `Host(\`${name}\`)`, service: "welcome" };
+    routers["traefik"] = { rule: `Host(\`traefik.${name}\`)`, service: "api@internal" };
     for (const r of plan.routes) {
       routers[r.name] = { rule: `Host(\`${r.name}.${name}\`)`, service: r.name };
       services[r.name] = {

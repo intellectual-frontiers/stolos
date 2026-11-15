@@ -5,20 +5,19 @@
  * @module
  */
 
+import { fs, path as paths } from "@intellectual-frontiers/ifc-ts/runtime";
 import { createHash } from "node:crypto";
 import { P } from "../archon/core/paths.ts";
-import { join } from "../archon/core/path.ts";
-import { ensureDir, exists } from "../archon/core/fsx.ts";
 import type { Phase } from "../archon/core/ui.ts";
 import { UBUNTU } from "./pins.ts";
 
 /** The folder that caches this Ubuntu point release's boot files and image. */
-export const cacheDir = (): string => join(P.bootCache, UBUNTU.point);
+export const cacheDir = (): string => paths.join(P.bootCache, UBUNTU.point);
 
 /** A file's SHA-256, in hex, read in chunks (installer images are several GB). */
 export async function sha256File(path: string): Promise<string> {
   const h = createHash("sha256");
-  const f = await Deno.open(path);
+  const f = await fs.open(path);
   for await (const chunk of f.readable) h.update(chunk);
   return h.digest("hex");
 }
@@ -28,7 +27,7 @@ async function download(url: string, to: string, p: Phase, label: string): Promi
   if (!res.ok || !res.body) throw new Error(`${url}: HTTP ${res.status}`);
   const total = Number(res.headers.get("content-length")) || 0;
   const tmp = `${to}.partial`;
-  const f = await Deno.open(tmp, { create: true, write: true, truncate: true });
+  const f = await fs.open(tmp, { create: true, write: true, truncate: true });
   let got = 0;
   let last = 0;
   for await (const chunk of res.body) {
@@ -44,21 +43,21 @@ async function download(url: string, to: string, p: Phase, label: string): Promi
     }
   }
   f.close();
-  await Deno.rename(tmp, to);
+  await fs.rename(tmp, to);
 }
 
 /** Ensure one verified file in the cache; returns its path. */
 async function ensure(name: string, url: string, sha: string, p: Phase): Promise<string> {
   const dir = cacheDir();
-  await ensureDir(dir);
-  const path = join(dir, name);
-  if ((await exists(path)) && (await sha256File(path)) === sha) return path;
+  await fs.ensureDir(dir);
+  const path = paths.join(dir, name);
+  if ((await fs.exists(path)) && (await sha256File(path)) === sha) return path;
   p.status(`downloading ${name}`);
   await download(url, path, p, name);
   p.status(`verifying ${name}`);
   const got = await sha256File(path);
   if (got !== sha) {
-    await Deno.remove(path).catch(() => {});
+    await fs.remove(path).catch(() => {});
     throw new Error(
       `${name}: SHA-256 ${got} does not match the pin ${sha} (Article 12); nothing is served`,
     );

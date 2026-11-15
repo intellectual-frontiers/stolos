@@ -9,12 +9,12 @@
  * @module
  */
 
-import { count, parseTraceparent } from "../core/telemetry.ts";
+import { otel } from "@intellectual-frontiers/ifc-ts/kernel";
+import { fs, path as paths, proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
+import { count } from "../core/telemetry.ts";
 import { COMMANDS } from "../commands/registry.ts";
 import type { Command, Parsed, Tier } from "../core/registry-types.ts";
 import { effectiveTier, GLOBAL_ARGS } from "../core/registry-types.ts";
-import { join } from "../core/path.ts";
-import { listFiles, readTextOr } from "../core/fsx.ts";
 import { P } from "../core/paths.ts";
 import { engineFile, engineSpecs } from "../core/assets.ts";
 import type { McpTier } from "../model/types.ts";
@@ -91,9 +91,10 @@ export function toolFor(c: Command): McpTool {
   return {
     name: mcpToolName(c),
     title: `archon ${c.name}`,
-    description: `${c.summary}. ${c.description.split(/\n\s*\n/)[0]} (tier: ${c.tier}; man archon-${
-      c.name.replace(/ /g, "-")
-    })`,
+    description: `${c.summary}. ${c.description.split(/\n\s*\n/)[0]} (tier: ${c.tier}; man archon-${c.name.replace(
+      / /g,
+      "-",
+    )})`,
     inputSchema: { type: "object", properties, required },
     annotations: {
       readOnlyHint: c.tier === "read",
@@ -109,12 +110,14 @@ export function argvFor(c: Command, args: Record<string, unknown>): string[] {
   for (const a of c.args) {
     const v = args[a.name];
     if (v === undefined || v === null || v === false) continue;
-    if (a.positional) argv.push(String(v));
+    const text = typeof v === "string" ? v : JSON.stringify(v);
+    if (a.positional) argv.push(text);
     else if (a.type === "boolean") argv.push(`--${a.name}`);
-    else argv.push(`--${a.name}`, String(v));
+    else argv.push(`--${a.name}`, text);
   }
-  if (typeof args.host === "string") argv.push("--host", args.host);
-  if (args.json === true) argv.push("--json");
+  const host = args["host"];
+  if (typeof host === "string") argv.push("--host", host);
+  if (args["json"] === true) argv.push("--json");
   return argv;
 }
 
@@ -139,7 +142,7 @@ async function resources(): Promise<Resource[]> {
       uri: "archon://operating-rules",
       name: "Operating rules (AGENTS.md of the fleet's repository)",
       mimeType: "text/markdown",
-      path: join(P.repo, "AGENTS.md"),
+      path: paths.join(P.repo, "AGENTS.md"),
     },
   ];
   for (const d of engineSpecs()) {
@@ -151,39 +154,43 @@ async function resources(): Promise<Resource[]> {
     });
   }
   for (const sec of ["man1", "man7"]) {
-    for (const f of await listFiles(join(P.man, sec))) {
+    for (const f of await fs.listFiles(paths.join(P.man, sec))) {
       out.push({
         uri: `archon://man/${f}`,
         name: `man ${f}`,
         mimeType: "text/troff",
-        path: join(P.man, sec, f),
+        path: paths.join(P.man, sec, f),
       });
     }
   }
-  for (const f of await listFiles(join(P.varLib, "reports"), ".md")) {
+  for (const f of await fs.listFiles(paths.join(P.varLib, "reports"), ".md")) {
     out.push({
       uri: `archon://reports/${f}`,
       name: `Report ${f}`,
       mimeType: "text/markdown",
-      path: join(P.varLib, "reports", f),
+      path: paths.join(P.varLib, "reports", f),
     });
   }
   return out;
 }
 
 /** One line in the journal per call (tag archon-mcp), with the SSH client. */
-async function journalCall(name: string, args: Record<string, unknown>, verdict: string) {
-  const via = Deno.env.get("SSH_CLIENT")?.split(" ")[0] ?? "local";
+async function journalCall(
+  name: string,
+  args: Record<string, unknown>,
+  verdict: string,
+): Promise<void> {
+  const via = proc.env.get("SSH_CLIENT")?.split(" ")[0] ?? "local";
   try {
-    await new Deno.Command("logger", {
-      args: [
+    await proc.output(
+      [
+        "logger",
         "-t",
         "archon-mcp",
         `${verdict} ${name} ${JSON.stringify(args)} from ${via}`.slice(0, 2000),
       ],
-      stdout: "null",
-      stderr: "null",
-    }).output();
+      { stdout: "null", stderr: "null" },
+    );
   } catch {
     // No logger (not a Linux host): nothing to record.
   }
@@ -194,7 +201,7 @@ async function callTool(
   args: Record<string, unknown>,
   limit: McpTier,
   traceparent?: string,
-) {
+): Promise<ToolResult> {
   const c = COMMANDS.find((x) => !x.noMcp && mcpToolName(x) === name);
   if (!c) return { content: [{ type: "text", text: `unknown tool ${name}` }], isError: true };
   const human = c.args.find((a) => a.human && args[a.name] !== undefined);
@@ -202,51 +209,56 @@ async function callTool(
     await journalCall(name, args, "refused");
     count("archon.mcp.calls", 1, { "archon.tool": name, "archon.result": "refused" });
     return {
-      content: [{
-        type: "text",
-        text:
-          `refused: --${human.name} is typed by a person, never passed by an agent (Article 23). Ask the owner to run archon ${c.name} themselves.`,
-      }],
+      content: [
+        {
+          type: "text",
+          text: `refused: --${human.name} is typed by a person, never passed by an agent (Article 23). Ask the owner to run archon ${c.name} themselves.`,
+        },
+      ],
       isError: true,
     };
   }
   if (!allowed(c, args, limit)) {
     await journalCall(name, args, "refused");
     count("archon.mcp.calls", 1, { "archon.tool": name, "archon.result": "refused" });
-    const hint = c.readOnlyWith && RANK[c.tier] > RANK[limit]
-      ? ` Only with ${c.readOnlyWith}: true.`
-      : "";
+    const hint =
+      c.readOnlyWith && RANK[c.tier] > RANK[limit] ? ` Only with ${c.readOnlyWith}: true.` : "";
     return {
-      content: [{
-        type: "text",
-        text:
-          `refused: archon ${c.name} is tier ${c.tier}; this server allows up to ${limit} over MCP (fleet.mcp.maxTier, spec 030).${hint} Run it yourself over SSH as the admin if it is needed.`,
-      }],
+      content: [
+        {
+          type: "text",
+          text: `refused: archon ${c.name} is tier ${c.tier}; this server allows up to ${limit} over MCP (fleet.mcp.maxTier, spec 030).${hint} Run it yourself over SSH as the admin if it is needed.`,
+        },
+      ],
       isError: true,
     };
   }
   await journalCall(name, args, "call");
   count("archon.mcp.calls", 1, { "archon.tool": name, "archon.result": "served" });
-  const self = Deno.env.get("ARCHON_SELF") ?? "/usr/local/bin/archon";
-  const p = new Deno.Command(self, {
-    args: argvFor(c, args),
-    stdout: "piped",
-    stderr: "piped",
+  const self = proc.env.get("ARCHON_SELF") ?? "/usr/local/bin/archon";
+  const r = await proc.output([self, ...argvFor(c, args)], {
     stdin: "null",
     env: {
-      ARCHON_AGENT: Deno.env.get("ARCHON_AGENT") ?? "mcp",
+      ARCHON_AGENT: proc.env.get("ARCHON_AGENT") ?? "mcp",
       NO_COLOR: "1",
       // Spec 049: the caller's trace continues in the command it asked for.
-      ...(parseTraceparent(traceparent) ? { TRACEPARENT: traceparent! } : {}),
+      ...(traceparent !== undefined && otel.parseTraceparent(traceparent).kind === "ok"
+        ? { TRACEPARENT: traceparent }
+        : {}),
     },
   });
-  const r = await p.output();
   const dec = new TextDecoder();
-  const text = [dec.decode(r.stdout).trim(), dec.decode(r.stderr).trim()].filter(Boolean).join(
-    "\n\n",
-  );
+  const text = [dec.decode(r.stdout).trim(), dec.decode(r.stderr).trim()]
+    .filter(Boolean)
+    .join("\n\n");
   return { content: [{ type: "text", text: text || `(exit ${r.code})` }], isError: r.code !== 0 };
 }
+
+/** A tool call's result, as MCP's `tools/call` answers it. */
+type ToolResult = {
+  content: Array<{ type: "text"; text: string }>;
+  isError: boolean;
+};
 
 /** One JSON-RPC 2.0 message from the client: a request (with `id`) or a notification. */
 export type Msg = {
@@ -260,13 +272,19 @@ export type Msg = {
   params?: Record<string, unknown>;
 };
 
+const str = (v: unknown): string | undefined => (typeof v === "string" ? v : undefined);
+const record = (v: unknown): Record<string, unknown> | undefined =>
+  typeof v === "object" && v !== null && !Array.isArray(v)
+    ? (v as Record<string, unknown>)
+    : undefined;
+
 /**
  * Answer one JSON-RPC message, serving tools up to `limit`: the JSON-RPC
  * response, or undefined for notifications (nothing to send).
  */
-export async function handle(msg: Msg, limit: McpTier = "mutate"): Promise<unknown | undefined> {
-  const reply = (result: unknown) => ({ jsonrpc: "2.0", id: msg.id, result });
-  const error = (code: number, message: string) => ({
+export async function handle(msg: Msg, limit: McpTier = "mutate"): Promise<unknown> {
+  const reply = (result: unknown): unknown => ({ jsonrpc: "2.0", id: msg.id, result });
+  const error = (code: number, message: string): unknown => ({
     jsonrpc: "2.0",
     id: msg.id,
     error: { code, message },
@@ -274,11 +292,10 @@ export async function handle(msg: Msg, limit: McpTier = "mutate"): Promise<unkno
   switch (msg.method) {
     case "initialize":
       return reply({
-        protocolVersion: (msg.params?.protocolVersion as string) ?? PROTOCOL,
+        protocolVersion: str(msg.params?.["protocolVersion"]) ?? PROTOCOL,
         capabilities: { tools: { listChanged: false }, resources: { listChanged: false } },
         serverInfo: { name: "archon", version: "2.0.0" },
-        instructions:
-          `Archon operates this Ubuntu server from the model in /srv/archon. Follow the constitution (resource archon://constitution) and the operating rules (archon://operating-rules). Tools up to tier ${limit} are served; destructive ones never. Read-only tools are safe; host-mutating tools need the human's approval. Model changes are made in the workstation's checkout and pushed to main; servers converge from it.`,
+        instructions: `Archon operates this Ubuntu server from the model in /srv/archon. Follow the constitution (resource archon://constitution) and the operating rules (archon://operating-rules). Tools up to tier ${limit} are served; destructive ones never. Read-only tools are safe; host-mutating tools need the human's approval. Model changes are made in the workstation's checkout and pushed to main; servers converge from it.`,
       });
     case "notifications/initialized":
     case "notifications/cancelled":
@@ -290,27 +307,33 @@ export async function handle(msg: Msg, limit: McpTier = "mutate"): Promise<unkno
     case "tools/call":
       return reply(
         await callTool(
-          String(msg.params?.name),
-          (msg.params?.arguments as Record<string, unknown>) ?? {},
+          String(msg.params?.["name"]),
+          record(msg.params?.["arguments"]) ?? {},
           limit,
-          (msg.params?._meta as { traceparent?: string } | undefined)?.traceparent,
+          str(record(msg.params?.["_meta"])?.["traceparent"]),
         ),
       );
     case "resources/list":
       return reply({ resources: (await resources()).map(({ path: _p, text: _t, ...r }) => r) });
     case "resources/read": {
-      const r = (await resources()).find((x) => x.uri === msg.params?.uri);
-      if (!r) return error(-32002, `resource not found: ${msg.params?.uri}`);
+      const uri = msg.params?.["uri"];
+      const r = (await resources()).find((x) => x.uri === uri);
+      if (!r) return error(-32002, `resource not found: ${String(uri)}`);
       return reply({
-        contents: [{
-          uri: r.uri,
-          mimeType: r.mimeType,
-          text: r.text ?? (r.path ? (await readTextOr(r.path)) ?? "" : ""),
-        }],
+        contents: [
+          {
+            uri: r.uri,
+            mimeType: r.mimeType,
+            text: r.text ?? (r.path ? await fs.readTextOr(r.path, "") : ""),
+          },
+        ],
       });
     }
+    case undefined:
     default:
-      return msg.id === undefined ? undefined : error(-32601, `method not found: ${msg.method}`);
+      return msg.id === undefined
+        ? undefined
+        : error(-32601, `method not found: ${String(msg.method)}`);
   }
 }
 
@@ -324,10 +347,10 @@ export async function serveMcp(maxTier?: string): Promise<void> {
   const dec = new TextDecoder();
   const enc = new TextEncoder();
   let buf = "";
-  const write = async (obj: unknown) => {
-    await Deno.stdout.write(enc.encode(JSON.stringify(obj) + "\n"));
+  const write = async (obj: unknown): Promise<void> => {
+    await stdio.stdout.write(enc.encode(JSON.stringify(obj) + "\n"));
   };
-  for await (const chunk of Deno.stdin.readable) {
+  for await (const chunk of stdio.stdin.readable) {
     buf += dec.decode(chunk, { stream: true });
     let nl;
     while ((nl = buf.indexOf("\n")) >= 0) {
@@ -336,7 +359,7 @@ export async function serveMcp(maxTier?: string): Promise<void> {
       if (!line) continue;
       let msg: Msg;
       try {
-        msg = JSON.parse(line);
+        msg = JSON.parse(line) as Msg;
       } catch {
         await write({ jsonrpc: "2.0", id: null, error: { code: -32700, message: "parse error" } });
         continue;

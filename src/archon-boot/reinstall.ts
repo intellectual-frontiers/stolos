@@ -1,5 +1,5 @@
 /**
- * `deno task stolos boot reinstall <host>` (spec 004): one command from the boot
+ * `bun run stolos boot reinstall <host>` (spec 004): one command from the boot
  * machine re-installs a running host, with no one at its console:
  *   1. the boot server must be running (it serves the install);
  *   2. (spec 048: the host keeps its own records; nothing is pushed);
@@ -14,6 +14,7 @@
  * @module
  */
 
+import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { ui } from "../archon/core/ui.ts";
 import { armHost, loadTokens, readSecret, SECRETS, writeSecret } from "../archon/core/secrets.ts";
 import { type AcmeCarry, deliverable, describeCarry } from "../archon/web/acme.ts";
@@ -33,12 +34,11 @@ async function ssh(
   show: boolean,
 ): Promise<{ code: number; stderr: string }> {
   try {
-    const r = await new Deno.Command("ssh", {
-      args: [...SSH_OPTS, ...legacyKeys, target, command],
+    const r = await proc.output(["ssh", ...SSH_OPTS, ...legacyKeys, target, command], {
       stdin: "null",
       stdout: show ? "inherit" : "null",
       stderr: show ? "inherit" : "piped",
-    }).output();
+    });
     return { code: r.code, stderr: show ? "" : new TextDecoder().decode(r.stderr) };
   } catch {
     return { code: 255, stderr: "" }; // no ssh client
@@ -52,12 +52,11 @@ async function sshOutput(
   anyExit = false,
 ): Promise<string | undefined> {
   try {
-    const r = await new Deno.Command("ssh", {
-      args: [...SSH_OPTS, ...legacyKeys, target, command],
+    const r = await proc.output(["ssh", ...SSH_OPTS, ...legacyKeys, target, command], {
       stdin: "null",
       stdout: "piped",
       stderr: "null",
-    }).output();
+    });
     return r.code === 0 || (anyExit && r.code !== 255)
       ? new TextDecoder().decode(r.stdout)
       : undefined;
@@ -76,7 +75,7 @@ async function carryCertificates(name: string, target: string): Promise<string> 
   const raw = await sshOutput(target, "archon web acme-export");
   let carry: AcmeCarry | undefined;
   try {
-    carry = raw ? JSON.parse(raw.trim().split("\n").at(-1)!) as AcmeCarry : undefined;
+    carry = raw ? (JSON.parse(raw.trim().split("\n").at(-1) ?? "") as AcmeCarry) : undefined;
   } catch {
     carry = undefined;
   }
@@ -84,40 +83,37 @@ async function carryCertificates(name: string, target: string): Promise<string> 
     const kept = await readSecret(SECRETS.acme(name));
     let prev: AcmeCarry | undefined;
     try {
-      prev = kept ? JSON.parse(kept) as AcmeCarry : undefined;
+      prev = kept ? (JSON.parse(kept) as AcmeCarry) : undefined;
     } catch {
       prev = undefined;
     }
     if (prev && deliverable(prev)) {
-      const line =
-        `Let's Encrypt certificate: could not read it from ${name}; the copy from the previous reinstall is reused (${
-          describeCarry(prev)
-        })`;
+      const line = `Let's Encrypt certificate: could not read it from ${name}; the copy from the previous reinstall is reused (${describeCarry(
+        prev,
+      )})`;
       c.warn(line, `ssh ${target} sudo archon web acme-export`);
       return line;
     }
-    const line =
-      `Let's Encrypt certificate: could not read it from ${name}; the new install asks Let's Encrypt for one (a minute or two of a self-signed certificate)`;
+    const line = `Let's Encrypt certificate: could not read it from ${name}; the new install asks Let's Encrypt for one (a minute or two of a self-signed certificate)`;
     c.warn(line, `ssh ${target} sudo archon web acme-export`);
     return line;
   }
   if (!carry.certificates.length) {
-    const line =
-      `Let's Encrypt certificate: ${name} has none yet; the new install asks Let's Encrypt for one`;
+    const line = `Let's Encrypt certificate: ${name} has none yet; the new install asks Let's Encrypt for one`;
     c.done(line);
     return line;
   }
   await writeSecret(SECRETS.acme(name), JSON.stringify(carry, null, 2) + "\n");
   if (!deliverable(carry)) {
-    const line = `Let's Encrypt certificate: ${
-      describeCarry(carry)
-    } expires within a day; the new install asks Let's Encrypt for a new one`;
+    const line = `Let's Encrypt certificate: ${describeCarry(
+      carry,
+    )} expires within a day; the new install asks Let's Encrypt for a new one`;
     c.warn(line, `journalctl -u traefik on ${name} (why was it not renewed?)`);
     return line;
   }
-  const line = `Let's Encrypt certificate carried over (${
-    describeCarry(carry)
-  }): the new install serves it from its first minute, with no new request to Let's Encrypt`;
+  const line = `Let's Encrypt certificate carried over (${describeCarry(
+    carry,
+  )}): the new install serves it from its first minute, with no new request to Let's Encrypt`;
   c.done(line);
   return line;
 }
@@ -125,17 +121,16 @@ async function carryCertificates(name: string, target: string): Promise<string> 
 /** The MAC of a running host's default-route interface, over SSH. */
 async function macOf(target: string): Promise<string | undefined> {
   try {
-    const r = await new Deno.Command("ssh", {
-      args: [
+    const r = await proc.output(
+      [
+        "ssh",
         ...SSH_OPTS,
         ...legacyKeys,
         target,
         "cat /sys/class/net/$(ip route show default | awk '{print $5; exit}')/address",
       ],
-      stdin: "null",
-      stdout: "piped",
-      stderr: "null",
-    }).output();
+      { stdin: "null", stdout: "piped", stderr: "null" },
+    );
     const mac = new TextDecoder().decode(r.stdout).trim().toLowerCase();
     return /^([0-9a-f]{2}:){5}[0-9a-f]{2}$/.test(mac) ? mac : undefined;
   } catch {
@@ -148,11 +143,18 @@ export function parseData(
   raw: string | undefined,
 ): { class: string; reasons: string[] } | undefined {
   try {
-    const j = JSON.parse(raw ?? "");
-    if (j?.class === "durable" || j?.class === "ephemeral") {
-      return { class: j.class, reasons: Array.isArray(j.reasons) ? j.reasons.map(String) : [] };
+    const j: unknown = JSON.parse(raw ?? "");
+    if (typeof j !== "object" || j === null || !("class" in j)) return undefined;
+    if (j.class === "durable" || j.class === "ephemeral") {
+      const reasons = "reasons" in j && Array.isArray(j.reasons) ? (j.reasons as unknown[]) : [];
+      return {
+        class: j.class,
+        reasons: reasons.map((r) => (typeof r === "string" ? r : JSON.stringify(r))),
+      };
     }
-  } catch { /* not JSON */ }
+  } catch {
+    /* not JSON */
+  }
   return undefined;
 }
 
@@ -165,7 +167,7 @@ export function destroyRefusal(
   name: string,
   data: { class: string; reasons: string[] } | undefined,
   confirm: string | undefined,
-  agent = Deno.env.get("ARCHON_AGENT"),
+  agent = proc.env.get("ARCHON_AGENT"),
 ): string | undefined {
   if (confirm !== undefined && agent) {
     return `--confirm-destroy is typed by a person, not an agent (${agent})`;
@@ -192,7 +194,7 @@ export function recordedData(
 const KEY_CHANGED = /REMOTE HOST IDENTIFICATION HAS CHANGED|Host key verification failed/;
 
 /**
- * `deno task stolos boot reinstall <host>`: re-install a running host over the
+ * `bun run stolos boot reinstall <host>`: re-install a running host over the
  * network in the steps the module describes. `port` is the boot server's HTTP
  * port and `confirmDestroy` is the repeated name a durable host needs. A host
  * that cannot be asked needs it too. Returns the exit code (2 for an
@@ -200,12 +202,12 @@ const KEY_CHANGED = /REMOTE HOST IDENTIFICATION HAS CHANGED|Host key verificatio
  */
 export async function reinstall(
   name: string | undefined,
-  o: { port: number; confirmDestroy?: string },
+  o: { port: number; confirmDestroy?: string | undefined },
 ): Promise<number> {
   const hosts = await loadServers();
   if (!name || !hosts.some((h) => h.name === name)) {
-    console.error(
-      `usage: deno task stolos boot reinstall <host> [--confirm-destroy <host>]  (known: ${
+    ui.say(
+      `usage: bun run stolos boot reinstall <host> [--confirm-destroy <host>]  (known: ${
         hosts.map((h) => h.name).join(", ") || "none"
       })`,
     );
@@ -215,11 +217,12 @@ export async function reinstall(
 
   const b = ui.phase("Boot server");
   const up = await fetch(`http://127.0.0.1:${o.port}/health`, { signal: AbortSignal.timeout(3000) })
-    .then((r) => r.ok).catch(() => false);
+    .then((r) => r.ok)
+    .catch(() => false);
   if (!up) {
     b.fail(
       `the boot server is not running on port ${o.port}`,
-      "start it in another window: deno task stolos boot serve (leave it running), then run this again",
+      "start it in another window: bun run stolos boot serve (leave it running), then run this again",
     );
     return ui.finish();
   }
@@ -237,8 +240,8 @@ export async function reinstall(
     g.done(
       rn.tip
         ? `${rn.tip.slice(0, 10)}${rn.signer ? `, signed by ${rn.signer}` : ""}${
-          rn.unreachable ? " (the last fetched: GitHub did not answer)" : ""
-        }`
+            rn.unreachable ? " (the last fetched: GitHub did not answer)" : ""
+          }`
         : "not on GitHub (nothing to check)",
     );
   }
@@ -257,7 +260,7 @@ export async function reinstall(
       // state and reboots it, and the re-install brings the real keys.
       legacyKeys = [
         "-o",
-        `UserKnownHostsFile=${await Deno.makeTempFile({ prefix: "archon-known-hosts-" })}`,
+        `UserKnownHostsFile=${await fs.makeTempFile({ prefix: "archon-known-hosts-" })}`,
         "-o",
         "StrictHostKeyChecking=accept-new",
       ];
@@ -282,9 +285,9 @@ export async function reinstall(
       return ui.finish();
     }
     s.warn(
-      `${name} does not answer over SSH (as ${fleet.admin.user}, at ${
-        [name, ...known].join(", ")
-      })`,
+      `${name} does not answer over SSH (as ${fleet.admin.user}, at ${[name, ...known].join(
+        ", ",
+      )})`,
       `it is armed anyway: power it on and pick network boot once from its boot menu (F7 on an MS-01)`,
     );
     // Not reached: nothing proves which machine boots next, so its installer
@@ -306,8 +309,8 @@ export async function reinstall(
     data?.class === "ephemeral"
       ? `${name} is ephemeral: nothing on it holds end users' data that exists nowhere else`
       : `${name} is ${
-        data ? describeData({ class: "durable", reasons: data.reasons }) : "of unknown data class"
-      }: erasing it as confirmed (--confirm-destroy ${name})`,
+          data ? describeData({ class: "durable", reasons: data.reasons }) : "of unknown data class"
+        }: erasing it as confirmed (--confirm-destroy ${name})`,
   );
 
   // Spec 048: what the host recorded about itself stays on it and goes with
@@ -319,27 +322,29 @@ export async function reinstall(
   await notify({
     event: `↻ reinstall of ${name} started`,
     level: "warn",
-    what:
-      `deno task stolos boot reinstall ${name}: its state was pushed, it is armed and rebooting from the network. Its disk is erased and Ubuntu installed again.\n\n${certificate}.`,
+    what: `bun run stolos boot reinstall ${name}: its state was pushed, it is armed and rebooting from the network. Its disk is erased and Ubuntu installed again.\n\n${certificate}.`,
     todo: `Nothing, unless no "${name}: ✓ Ready" message follows within about 30 minutes.`,
     key: `reinstall:${name}:${new Date().toISOString().slice(0, 13)}`,
   });
   const a = ui.phase("Arm");
   // The MAC it network-boots from (its default route's interface), so the boot
   // server knows it even when this PC has no record of it (a rebuilt boot machine).
-  const model = hosts.find((h) => h.name === name)!;
-  const mac = model.mac ?? await macOf(target);
+  const model = hosts.find((h) => h.name === name);
+  const mac = model?.mac ?? (await macOf(target));
   const t = await armHost(name, 0, mac, { reinstall: !!mac });
   a.done(`${name} is armed for one install${mac ? ` (MAC ${mac})` : ""}`);
 
   const r = ui.phase("Reboot");
   const { announce } = await import("../archon/core/announce.ts");
-  await announce({
-    name: "boot.reboot",
-    host: name,
-    message:
-      "rebooting from the network (boot reinstall); its install starts when it network-boots",
-  }, o.port);
+  await announce(
+    {
+      name: "boot.reboot",
+      host: name,
+      message:
+        "rebooting from the network (boot reinstall); its install starts when it network-boots",
+    },
+    o.port,
+  );
   await announce({ name: "boot.certificate", host: name, message: certificate }, o.port);
   ui.pause();
   const rebooted = (await ssh(target, "archon reboot --netboot", true)).code;
@@ -355,7 +360,7 @@ export async function reinstall(
   return ui.finish({
     next: [
       `watch the boot server window: installer steps, first boot, then "${name}: ready. Next:" with how to reach and observe it`,
-      "or later: deno task stolos fleet status",
+      "or later: bun run stolos fleet status",
     ],
   });
 }

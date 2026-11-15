@@ -13,7 +13,7 @@
 
 import { LOCAL_UI_ENDPOINT } from "../otelui/otelui.ts";
 import { OTEL_UI } from "../containers/catalog.ts";
-import { readTextOr } from "../core/fsx.ts";
+import { fs } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
 import { loadFleet } from "../model/load.ts";
@@ -106,13 +106,15 @@ export function centralConfig(
       journald: { directory: "/var/log/journal", priority: "info" },
       "prometheus/pcp": {
         config: {
-          scrape_configs: [{
-            job_name: "pcp",
-            scrape_interval: "60s",
-            metrics_path: "/metrics",
-            params: { names: [pcpNames.join(",")] },
-            static_configs: [{ targets: [OBSERVE.pmproxy] }],
-          }],
+          scrape_configs: [
+            {
+              job_name: "pcp",
+              scrape_interval: "60s",
+              metrics_path: "/metrics",
+              params: { names: [pcpNames.join(",")] },
+              static_configs: [{ targets: [OBSERVE.pmproxy] }],
+            },
+          ],
         },
       },
     },
@@ -120,12 +122,14 @@ export function centralConfig(
       // PCP's metrics keep their own names, under pcp.* (spec 024): mapping
       // them to OpenTelemetry's system.* conventions waits for the dashboards.
       "metricstransform/pcp": {
-        transforms: [{
-          include: "^(.*)$",
-          match_type: "regexp",
-          action: "update",
-          new_name: "pcp.$${1}",
-        }],
+        transforms: [
+          {
+            include: "^(.*)$",
+            match_type: "regexp",
+            action: "update",
+            new_name: "pcp.$${1}",
+          },
+        ],
       },
     },
     exporters: {
@@ -161,8 +165,11 @@ export function centralConfig(
       },
     },
   };
-  return "# Written by archon observe discover (spec 024). Do not edit.\n" +
-    JSON.stringify(config, null, 2) + "\n";
+  return (
+    "# Written by archon observe discover (spec 024). Do not edit.\n" +
+    JSON.stringify(config, null, 2) +
+    "\n"
+  );
 }
 
 /**
@@ -180,9 +187,8 @@ export async function discover(host: HostDef, check = false): Promise<number> {
     p.status(`trying ${c.endpoint} (${c.source})`);
     tried.push(c);
     // The web UI here needs its credential to accept OTLP: its health says it is up.
-    const up = c.source === "local-ui"
-      ? await healthy(OTEL_UI.health)
-      : await acceptsOtlp(c.endpoint);
+    const up =
+      c.source === "local-ui" ? await healthy(OTEL_UI.health) : await acceptsOtlp(c.endpoint);
     if (up) {
       found = c;
       break;
@@ -193,7 +199,7 @@ export async function discover(host: HostDef, check = false): Promise<number> {
   const boot = tried.find((c) => c.source === "boot");
   if (!found && boot) {
     p.note(
-      `the boot PC (${boot.endpoint}) is not collecting: it does only while \`deno task stolos boot serve\` runs on it (optional; see the telemetry guide (stolos docs telemetry))`,
+      `the boot PC (${boot.endpoint}) is not collecting: it does only while \`bun run stolos boot serve\` runs on it (optional; see the telemetry guide (stolos docs telemetry))`,
     );
   } else if (!found && !fleet.site?.bootServer) {
     p.note(
@@ -201,24 +207,26 @@ export async function discover(host: HostDef, check = false): Promise<number> {
     );
   }
   const want = found ? centralConfig(found.endpoint, CORE_PCP_METRICS, found.source) : "{}\n";
-  if ((await readTextOr(CENTRAL.config)) !== want) {
+  if ((await fs.readTextOr(CENTRAL.config)) !== want) {
     p.change(
       found ? `forward to ${found.endpoint} (${found.source})` : "forward nothing: local only",
     );
     if (!check) {
-      await Deno.writeTextFile(CENTRAL.config, want, { mode: 0o644 });
+      await fs.writeTextFile(CENTRAL.config, want, { mode: 0o644 });
       await run(["systemctl", "try-restart", OBSERVE.collectorUnit]);
     }
   }
   if (!check) {
-    await Deno.writeTextFile(
-      CENTRAL.status,
-      JSON.stringify({
-        endpoint: found?.endpoint ?? null,
-        source: found?.source ?? null,
-        checked: new Date().toISOString(),
-      }) + "\n",
-    ).catch(() => {});
+    await fs
+      .writeTextFile(
+        CENTRAL.status,
+        JSON.stringify({
+          endpoint: found?.endpoint ?? null,
+          source: found?.source ?? null,
+          checked: new Date().toISOString(),
+        }) + "\n",
+      )
+      .catch(() => undefined);
   }
   p.done(found ? `${found.endpoint} (found by ${found.source})` : "none found: local only");
   return 0;
@@ -229,7 +237,10 @@ export async function lastDiscovery(): Promise<
   { endpoint: string | null; source: string | null } | undefined
 > {
   try {
-    return JSON.parse((await readTextOr(CENTRAL.status)) ?? "");
+    return JSON.parse(await fs.readTextOr(CENTRAL.status, "")) as {
+      endpoint: string | null;
+      source: string | null;
+    };
   } catch {
     return undefined;
   }

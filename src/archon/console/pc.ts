@@ -9,13 +9,15 @@
  * @module
  */
 
+import { fs, path } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "../core/exec.ts";
-import { readTextOr } from "../core/fsx.ts";
-import { join } from "../core/path.ts";
+import { ui } from "../core/ui.ts";
 import { P } from "../core/paths.ts";
 import type { PolicyResult } from "../adopt/policy.ts";
 import type { AdoptedDef, Observed } from "../adopt/adopt.ts";
 import type { Observation } from "../connect/connector.ts";
+import type { PackRun } from "../controls/run.ts";
+import type { DeviceDef, DeviceObserved } from "../device/device.ts";
 
 /** One machine, whatever its kind. */
 export interface PcMachine {
@@ -92,25 +94,25 @@ export interface PcFacts {
   /** Spec 085: the cross-system policies over the estate graph. */
   estate?: PolicyResult[];
   /** Spec 078: the fleet's own control packs (fleets/<fleet>/controls/), with their results. */
-  controls?: import("../controls/run.ts").PackRun[];
+  controls?: PackRun[];
   /** Devices read over SNMPv3, with their policies. */
-  devices: Array<
-    {
-      device: import("../device/device.ts").DeviceDef;
-      observed?: import("../device/device.ts").DeviceObserved;
-      results: PolicyResult[];
-    }
-  >;
+  devices: Array<{
+    device: DeviceDef;
+    observed?: DeviceObserved;
+    results: PolicyResult[];
+  }>;
   /** The signers. */
   signers: Array<{ name: string; role: string; added: string; key: string }>;
   /** The repository: uncommitted files, commits servers would refuse, recent history. */
   git: { dirty: string[]; unapproved: string[]; log: PcCommit[]; diff?: string };
 }
 
-const warn = (what: string) => (e: unknown) => {
-  console.error(`warning: ${what}: ${(e as Error).message}`);
-  return undefined;
-};
+const warn =
+  (what: string) =>
+  (e: unknown): undefined => {
+    ui.say(`warning: ${what}: ${e instanceof Error ? e.message : String(e)}`);
+    return undefined;
+  };
 
 /** Gather the facts (each part on its own: a broken part leaves the rest). */
 export async function pcFacts(repo = P.repo): Promise<PcFacts> {
@@ -120,7 +122,6 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
   const { policies } = await import("../adopt/policy.ts");
   const { allConnectors, loadObservations } = await import("../connect/commands.ts");
   const { connectorCredPath } = await import("../connect/connector.ts");
-  const { exists } = await import("../core/fsx.ts");
   const { readPin } = await import("../fleet/upgrade.ts");
   const fleet = await loadFleet().catch(warn("fleet.ts"));
   const hosts = (await loadHosts().catch(warn("hosts"))) ?? [];
@@ -140,7 +141,8 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
       P.state,
     ).catch(warn(`${h.name} verify record`));
     const latest = v?.body && (!inst?.at || v.body.since >= inst.at) ? v.body : undefined;
-    const checks = latest ??
+    const checks =
+      latest ??
       (inst?.body.checks
         ? { passed: inst.body.checks.passed, total: inst.body.checks.total, failed: [] }
         : undefined);
@@ -150,15 +152,13 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
       "applied",
       "latest",
       P.state,
-    )
-      .catch(warn(`${h.name} applied record`));
+    ).catch(warn(`${h.name} applied record`));
     const sync = await getRecord<{ at: string; blocked?: string }>(
       h.name,
       "sync",
       "latest",
       P.state,
-    )
-      .catch(warn(`${h.name} sync record`));
+    ).catch(warn(`${h.name} sync record`));
     machines.push({
       name: h.name,
       kind: server ? "server" : "workstation",
@@ -170,14 +170,17 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
       ...(applied?.body ? { applied: applied.body } : {}),
       ...(sync?.body
         ? {
-          sync: { at: sync.body.at, ...(sync.body.blocked ? { blocked: sync.body.blocked } : {}) },
-        }
+            sync: {
+              at: sync.body.at,
+              ...(sync.body.blocked ? { blocked: sync.body.blocked } : {}),
+            },
+          }
         : {}),
       ...(server && domain ? { console: `https://${h.name}.${domain}/` } : {}),
     });
   }
   const now = Date.now();
-  const adopted = (await loadAdopted().catch(warn("adopted machines")) ?? []).map((a) => ({
+  const adopted = ((await loadAdopted().catch(warn("adopted machines"))) ?? []).map((a) => ({
     ...a,
     results: policies(a.machine, a.observed, now),
   }));
@@ -236,19 +239,20 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
       id: c.id,
       title: c.title,
       logo: c.logo,
-      connected: await exists(connectorCredPath(c.id)),
+      connected: await fs.exists(connectorCredPath(c.id)),
       ...(o ? { observed: o } : {}),
       results: o ? c.policies(o, now) : [],
     });
     for (const a of o?.assets ?? []) {
+      if (!o) continue;
       if (!["server", "ec2-instance"].includes(a.kind) || a.fleetMachine) continue;
       machines.push({
         name: a.name,
         kind: "cloud",
         where: `${c.title}${a.where ? `, ${a.where}` : ""}`,
-        seen: o!.at,
+        seen: o.at,
         failing: [],
-        ...(a.facts?.image ? { os: String(a.facts.image) } : {}),
+        ...((image) => (typeof image === "string" ? { os: image } : {}))(a.facts?.["image"]),
       });
     }
   }
@@ -264,20 +268,21 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
   } catch (e) {
     warn("signers.ts")(e);
   }
-  const git = (args: string[]) => run(["git", "-C", repo, ...args]);
+  const git = (args: string[]): ReturnType<typeof run> => run(["git", "-C", repo, ...args]);
   const dirty = (await git(["status", "--porcelain"])).stdout.split("\n").filter(Boolean);
   // What Apply would commit (tracked files; new files are listed above), at most 400 lines.
   const diffText = dirty.length
     ? (await git(["diff", "HEAD", "--no-color"])).stdout.split("\n").slice(0, 400).join("\n")
     : "";
   const { unapproved } = await import("../fleet/apply.ts");
-  const pending = await unapproved(git, repo).catch(warn("unapproved commits")) ?? [];
+  const pending = (await unapproved(git, repo).catch(warn("unapproved commits"))) ?? [];
   const waiting = new Set(pending.map((l) => l.split(" ")[0]));
-  const log = (await git(["log", "-20", "--format=%H%x09%s%x09%an%x09%cI"])).stdout.trim().split(
-    "\n",
-  )
-    .filter(Boolean).map((l) => {
-      const [sha, subject, author, at] = l.split("\t");
+  const log = (await git(["log", "-20", "--format=%H%x09%s%x09%an%x09%cI"])).stdout
+    .trim()
+    .split("\n")
+    .filter(Boolean)
+    .map((l) => {
+      const [sha = "", subject = "", author = "", at = ""] = l.split("\t");
       return {
         sha: sha.slice(0, 10),
         subject,
@@ -295,7 +300,7 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
   const { loadEstate } = await import("../estate/commands.ts");
   const { estatePolicies } = await import("../estate/graph.ts");
   const estate = await loadEstate().catch(warn("the estate graph"));
-  const pin = readPin((await readTextOr(join(repo, "deno.json"))) ?? "");
+  const pin = readPin((await fs.readTextOr(path.join(repo, "package.json"))) ?? "");
   const { repoSlug } = await import("../fleet/bootstrap.ts");
   return {
     fleet: {
@@ -330,19 +335,19 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
         // Spec 077: the people controls, when the fleet keeps people files.
         const people = estate
           ? await (async () => {
-            const { peoplePackRun } = await import("../people/commands.ts");
-            const { loadAccepted } = await import("../controls/run.ts");
-            return await peoplePackRun(estate, {
-              accepted: await loadAccepted().catch(() => []),
-            });
-          })().catch(warn("people controls"))
+              const { peoplePackRun } = await import("../people/commands.ts");
+              const { loadAccepted } = await import("../controls/run.ts");
+              return await peoplePackRun(estate, {
+                accepted: await loadAccepted().catch(() => []),
+              });
+            })().catch(warn("people controls"))
           : undefined;
         // Spec 080: the risk register and vendor inventory, as a pack of their own.
         const risk = estate
           ? await (async () => {
-            const { fleetRisk } = await import("../risk/fleet.ts");
-            return (await fleetRisk(estate, { adopted })).run;
-          })().catch(warn("the risk register"))
+              const { fleetRisk } = await import("../risk/fleet.ts");
+              return (await fleetRisk(estate, { adopted })).run;
+            })().catch(warn("the risk register"))
           : undefined;
         return [...r.runs, ...(people ? [people] : []), ...(risk ? [risk] : [])];
       } catch (e) {

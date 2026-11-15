@@ -108,7 +108,9 @@ export class Sessions {
   /** Start a session for an account, from an address. */
   create(a: Account, from: string): Session {
     const bytes = crypto.getRandomValues(new Uint8Array(32));
-    const id = btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_")
+    const id = btoa(String.fromCharCode(...bytes))
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
       .replace(/=+$/, "");
     const t = this.#now();
     const s: Session = {

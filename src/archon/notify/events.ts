@@ -6,9 +6,7 @@
  * @module
  */
 
-import { join } from "../core/path.ts";
-import { readTextOr } from "../core/fsx.ts";
-import { isRoot } from "../core/exec.ts";
+import { fs, path as paths, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { P } from "../core/paths.ts";
 import { loadFleet, loadHosts } from "../model/load.ts";
 import { networkOf } from "../model/resolve.ts";
@@ -18,10 +16,9 @@ import { bootSite, enqueue, type Event, hostSite, kick, type Site } from "./noti
 export async function localSite(hostName?: string): Promise<Site | undefined> {
   try {
     const fleet = await loadFleet();
-    const name = hostName ??
-      ((await readTextOr("/etc/archon/host"))?.trim() || undefined);
+    const name = hostName ?? ((await fs.readTextOr("/etc/archon/host"))?.trim() || undefined);
     const host = name ? (await loadHosts()).find((h) => h.name === name) : undefined;
-    if (host && Deno.build.os === "linux" && (await readTextOr("/etc/archon/host"))) {
+    if (host && proc.build.os === "linux" && (await fs.readTextOr("/etc/archon/host"))) {
       return hostSite(
         fleet,
         host.name,
@@ -41,7 +38,7 @@ export async function notify(ev: Event, hostName?: string): Promise<string> {
     const site = await localSite(hostName);
     if (!site) return "not configured";
     // Hosts: only root may write the spool; others go through `archon notify send`.
-    if (site.role !== "boot" && !isRoot()) return "skipped (not root)";
+    if (site.role !== "boot" && !proc.isRoot()) return "skipped (not root)";
     const r = await enqueue(site, ev);
     if (r === "queued") await kick(site);
     return r;
@@ -73,14 +70,14 @@ export interface Health {
 /** Read HEALTH (or another path, in tests); empty when missing or not JSON. */
 async function readHealth(path = HEALTH): Promise<Health> {
   try {
-    return JSON.parse((await readTextOr(path)) ?? "{}");
+    return JSON.parse((await fs.readTextOr(path)) ?? "{}") as Health;
   } catch {
     return {};
   }
 }
 
 async function writeHealth(h: Health, path = HEALTH) {
-  await Deno.writeTextFile(path, JSON.stringify(h, null, 2) + "\n").catch(() => {});
+  await fs.writeTextFile(path, JSON.stringify(h, null, 2) + "\n").catch(() => {});
 }
 
 const hhmm = (iso: string, tz: string) =>
@@ -124,57 +121,71 @@ export async function applyOutcome(
   log: string | null,
   timezone: string,
 ): Promise<void> {
-  if (!isRoot()) return;
+  if (!proc.isRoot()) return;
   const h = await readHealth();
   const { next, send } = applyTransition(h.apply, ok);
   const prevSince = h.apply?.since;
   h.apply = next;
   await writeHealth(h);
   if (!send) return;
-  const since = send === "recovered" ? prevSince ?? next.since : next.since;
-  await notify({
-    event: send === "recovered"
-      ? `✓ apply recovered (failing since ${hhmm(since, timezone)})`
-      : `✗ apply ${send === "failing" ? "failing" : "still failing"} since ${
-        hhmm(since, timezone)
-      }`,
-    level: send === "recovered" ? "info" : "fail",
-    what: send === "recovered"
-      ? `archon apply succeeds again on ${hostName}.`
-      : `archon apply failed on ${hostName}:\n${
-        failing.slice(0, 20).map((l) => `- ${l}`).join("\n") || "- (see the log)"
-      }`,
-    todo: send === "recovered"
-      ? undefined
-      : `Look at the failing lines and the log; archon verify shows each fix. The reconcile timer retries every 15 minutes.`,
-    log: log ?? undefined,
-    attach: send === "recovered" || !log ? [] : [log],
-    key: `apply:${send}:${since}`,
-  }, hostName);
+  const since = send === "recovered" ? (prevSince ?? next.since) : next.since;
+  await notify(
+    {
+      event:
+        send === "recovered"
+          ? `✓ apply recovered (failing since ${hhmm(since, timezone)})`
+          : `✗ apply ${send === "failing" ? "failing" : "still failing"} since ${hhmm(
+              since,
+              timezone,
+            )}`,
+      level: send === "recovered" ? "info" : "fail",
+      what:
+        send === "recovered"
+          ? `archon apply succeeds again on ${hostName}.`
+          : `archon apply failed on ${hostName}:\n${
+              failing
+                .slice(0, 20)
+                .map((l) => `- ${l}`)
+                .join("\n") || "- (see the log)"
+            }`,
+      todo:
+        send === "recovered"
+          ? undefined
+          : `Look at the failing lines and the log; archon verify shows each fix. The reconcile timer retries every 15 minutes.`,
+      log: log ?? undefined,
+      attach: send === "recovered" || !log ? [] : [log],
+      key: `apply:${send}:${since}`,
+    },
+    hostName,
+  );
   await rebootCheck(hostName);
 }
 
 /** Updates that need a reboot: one message per boot. */
 export async function rebootCheck(hostName: string): Promise<void> {
-  if (!isRoot()) return;
-  const flag = await readTextOr("/run/reboot-required");
+  if (!proc.isRoot()) return;
+  const flag = await fs.readTextOr("/run/reboot-required");
   if (flag === undefined) return;
-  const bootId = (await readTextOr("/proc/sys/kernel/random/boot_id"))?.trim() ?? "";
+  const bootId = (await fs.readTextOr("/proc/sys/kernel/random/boot_id"))?.trim() ?? "";
   const h = await readHealth();
   if (h.rebootNotified === bootId) return;
   h.rebootNotified = bootId;
   await writeHealth(h);
-  const pkgs = ((await readTextOr("/run/reboot-required.pkgs")) ?? "").split("\n").filter(Boolean);
-  await notify({
-    event: "⚠ updates need a reboot",
-    level: "warn",
-    what: `Installed updates need a reboot to take effect${
-      pkgs.length ? `: ${[...new Set(pkgs)].join(", ")}` : ""
-    }.`,
-    todo:
-      `Reboot ${hostName} when convenient: archon reboot (from your local network: ssh ${hostName} archon reboot).`,
-    key: `reboot-required:${bootId}`,
-  }, hostName);
+  const pkgs = ((await fs.readTextOr("/run/reboot-required.pkgs")) ?? "")
+    .split("\n")
+    .filter(Boolean);
+  await notify(
+    {
+      event: "⚠ updates need a reboot",
+      level: "warn",
+      what: `Installed updates need a reboot to take effect${
+        pkgs.length ? `: ${[...new Set(pkgs)].join(", ")}` : ""
+      }.`,
+      todo: `Reboot ${hostName} when convenient: archon reboot (from your local network: ssh ${hostName} archon reboot).`,
+      key: `reboot-required:${bootId}`,
+    },
+    hostName,
+  );
 }
 
 /** archon verify as root: a check that passed before and fails now. */
@@ -182,7 +193,7 @@ export async function verifyOutcome(
   hostName: string,
   checks: Array<{ resource: string; ok: boolean; output: string; level?: string }>,
 ): Promise<void> {
-  if (!isRoot()) return;
+  if (!proc.isRoot()) return;
   const h = await readHealth();
   const failingNow = checks.filter((c) => !c.ok && c.level !== "warn").map((c) => c.resource);
   const before = new Set(h.verifyFailing ?? []);
@@ -191,16 +202,19 @@ export async function verifyOutcome(
   await writeHealth(h);
   const regressed = known ? failingNow.filter((c) => !before.has(c)) : [];
   if (!regressed.length) return;
-  const lines = checks.filter((c) => regressed.includes(c.resource)).map((c) =>
-    `- ${c.resource}: ${c.output}`
+  const lines = checks
+    .filter((c) => regressed.includes(c.resource))
+    .map((c) => `- ${c.resource}: ${c.output}`);
+  await notify(
+    {
+      event: `✗ verify: ${regressed.length} check(s) now failing`,
+      level: "fail",
+      what: `Checks that passed before now fail:\n${lines.join("\n")}`,
+      todo: `archon verify on ${hostName} shows each fix.`,
+      key: `verify:${regressed.sort().join(",")}`,
+    },
+    hostName,
   );
-  await notify({
-    event: `✗ verify: ${regressed.length} check(s) now failing`,
-    level: "fail",
-    what: `Checks that passed before now fail:\n${lines.join("\n")}`,
-    todo: `archon verify on ${hostName} shows each fix.`,
-    key: `verify:${regressed.sort().join(",")}`,
-  }, hostName);
 }
 
 /** Backups: every failure, and a summary once a week. */
@@ -210,31 +224,36 @@ export async function backupOutcome(
   detail: string,
   log: string | null,
 ): Promise<void> {
-  if (!isRoot()) return;
+  if (!proc.isRoot()) return;
   if (!ok) {
-    await notify({
-      event: "✗ backup failed",
-      level: "fail",
-      what: detail,
-      todo:
-        `archon backup run on ${hostName} to retry; archon backup verify to restore-test the newest archive.`,
-      log: log ?? undefined,
-      attach: log ? [log] : [],
-      key: `backup:fail:${new Date().toISOString().slice(0, 10)}`,
-    }, hostName);
+    await notify(
+      {
+        event: "✗ backup failed",
+        level: "fail",
+        what: detail,
+        todo: `archon backup run on ${hostName} to retry; archon backup verify to restore-test the newest archive.`,
+        log: log ?? undefined,
+        attach: log ? [log] : [],
+        key: `backup:fail:${new Date().toISOString().slice(0, 10)}`,
+      },
+      hostName,
+    );
     return;
   }
   const h = await readHealth();
   if (h.backupSummaryAt && Date.now() - Date.parse(h.backupSummaryAt) < 7 * 86_400_000) return;
   h.backupSummaryAt = new Date().toISOString();
   await writeHealth(h);
-  await notify({
-    event: "✓ backups this week",
-    what: detail,
-    key: `backup:week:${h.backupSummaryAt.slice(0, 10)}`,
-  }, hostName);
+  await notify(
+    {
+      event: "✓ backups this week",
+      what: detail,
+      key: `backup:week:${h.backupSummaryAt.slice(0, 10)}`,
+    },
+    hostName,
+  );
 }
 
 export { HEALTH, readHealth };
 /** Internals kept reachable for tests (the path helpers this module uses). */
-export const _test = { join, P };
+export const _test = { join: paths.join, P };

@@ -38,7 +38,7 @@ export async function fleetStatus(): Promise<number> {
   const hosts = await loadHosts();
   const tokens = await loadTokens().catch(() => []);
   if (!hosts.length) {
-    ui.next.push("no hosts yet: deno task stolos host add <name> (or workstation add, in WSL)");
+    ui.next.push("no hosts yet: bun run stolos host add <name> (or workstation add, in WSL)");
     return 0;
   }
   // Spec 048: ask every server live (its MCP server, over SSH as ops), all at
@@ -48,35 +48,45 @@ export async function fleetStatus(): Promise<number> {
   const { writeKnownHosts } = await import("../fleet/registration.ts");
   const knownHosts = await writeKnownHosts().catch((e) => {
     // Without it, ssh checks the servers against your own known_hosts only.
-    console.error(`warning: known_hosts.auto (from Git) not written: ${(e as Error).message}`);
+    ui.say(`warning: known_hosts.auto (from Git) not written: ${(e as Error).message}`);
     return undefined;
   });
   await Promise.all(
-    hosts.filter((h) => h.kind !== "workstation").map(async (h) => {
-      const target = mcpServers([h], P.fleetId)[0]?.target;
-      if (!target) return;
-      const r = await callRemoteTool(target, "archon_state", { json: true }, {
-        timeoutMs: 15_000,
-        knownHosts,
-      });
-      if (!r.ok) return live.set(h.name, { ok: false, why: r.text.split("\n").pop() });
-      try {
-        const st = JSON.parse(r.text) as HostState;
-        if (st.install) {
-          await putRecord(h.name, "install", "install", st.install.body, P.state, st.install.at);
+    hosts
+      .filter((h) => h.kind !== "workstation")
+      .map(async (h) => {
+        const target = mcpServers([h], P.fleetId)[0]?.target;
+        if (!target) return;
+        const r = await callRemoteTool(
+          target,
+          "archon_state",
+          { json: true },
+          {
+            timeoutMs: 15_000,
+            ...(knownHosts === undefined ? {} : { knownHosts }),
+          },
+        );
+        if (!r.ok) {
+          live.set(h.name, { ok: false, why: r.text.split("\n").pop() ?? "" });
+          return;
         }
-        if (st.verify) {
-          await putRecord(h.name, "verify", "latest", st.verify, P.state, st.verify.since);
+        try {
+          const st = JSON.parse(r.text) as HostState;
+          if (st.install) {
+            await putRecord(h.name, "install", "install", st.install.body, P.state, st.install.at);
+          }
+          if (st.verify) {
+            await putRecord(h.name, "verify", "latest", st.verify, P.state, st.verify.since);
+          }
+          if (st.inventory) await putRecord(h.name, "inventory", "latest", st.inventory, P.state);
+          // Spec 066: the commit it applies, and its last pull (the Stolos Console shows them).
+          if (st.applied) await putRecord(h.name, "applied", "latest", st.applied, P.state);
+          if (st.sync) await putRecord(h.name, "sync", "latest", st.sync, P.state, st.sync.at);
+          live.set(h.name, { ok: true });
+        } catch {
+          live.set(h.name, { ok: false, why: "unreadable answer" });
         }
-        if (st.inventory) await putRecord(h.name, "inventory", "latest", st.inventory, P.state);
-        // Spec 066: the commit it applies, and its last pull (the Stolos Console shows them).
-        if (st.applied) await putRecord(h.name, "applied", "latest", st.applied, P.state);
-        if (st.sync) await putRecord(h.name, "sync", "latest", st.sync, P.state, st.sync.at);
-        live.set(h.name, { ok: true });
-      } catch {
-        live.set(h.name, { ok: false, why: "unreadable answer" });
-      }
-    }),
+      }),
   );
   for (const h of hosts) {
     const p = ui.phase(h.name);
@@ -105,26 +115,28 @@ export async function fleetStatus(): Promise<number> {
         kind,
         rec.installed
           ? `installed ${rec.installed.slice(0, 16).replace("T", " ")}${
-            latest
-              ? ` · ${latest.passed}/${latest.total} checks${
-                latest.warned.length ? `, ${latest.warned.length} warning(s)` : ""
-              } (verified ${latest.since.slice(0, 16).replace("T", " ")})`
-              : rec.checks
-              ? ` · ${rec.checks.passed}/${rec.checks.total} checks at install`
-              : ""
-          }${!latest && rec.ok === false ? " · with problems" : ""}`
+              latest
+                ? ` · ${latest.passed}/${latest.total} checks${
+                    latest.warned.length ? `, ${latest.warned.length} warning(s)` : ""
+                  } (verified ${latest.since.slice(0, 16).replace("T", " ")})`
+                : rec.checks
+                  ? ` · ${rec.checks.passed}/${rec.checks.total} checks at install`
+                  : ""
+            }${!latest && rec.ok === false ? " · with problems" : ""}`
           : "not installed yet",
         // Article 23: from the model here (the host itself says it live: archon data).
         h.kind === "workstation" ? "" : describeData(hostData(h)),
         liveToken(tokens, h.name) ? "armed for an install" : "",
-      ].filter(Boolean).join(" · "),
+      ]
+        .filter(Boolean)
+        .join(" · "),
     );
     ui.next.push(
       `${h.name}:`,
       ...nextSteps({
         host: h,
         fleet,
-        address: t?.addresses?.at(-1),
+        ...((a) => (a === undefined ? {} : { address: a }))(t?.addresses?.at(-1)),
       }).map((l) => `  ${l}`),
     );
   }

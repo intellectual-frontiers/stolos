@@ -6,6 +6,7 @@
  * @module
  */
 
+import { proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { currentTraceparent, span } from "../core/telemetry.ts";
 
 /** A server's answer to one MCP tool call. */
@@ -47,20 +48,13 @@ export async function callRemoteTool(
   const argv = o.command ?? ["ssh", ...sshArgs(target, 8, o.knownHosts)];
   const traceparent = o.traceparent ?? currentTraceparent();
   const end = span("archon.remote", { "archon.tool": tool });
-  const child = new Deno.Command(argv[0], {
-    args: argv.slice(1),
-    stdin: "piped",
-    stdout: "piped",
-    stderr: "piped",
-  }).spawn();
+  const child = proc.spawn(argv, { stdin: "piped", stdout: "piped", stderr: "piped" });
+  if (!child.stdin || !child.stdout || !child.stderr)
+    throw new Error("ssh's streams were not piped");
   const enc = new TextEncoder();
   const w = child.stdin.getWriter();
-  const send = (m: unknown) => w.write(enc.encode(JSON.stringify(m) + "\n"));
-  const timer = setTimeout(() => {
-    try {
-      child.kill("SIGTERM");
-    } catch { /* gone */ }
-  }, o.timeoutMs ?? 20_000);
+  const send = (m: unknown): Promise<void> => w.write(enc.encode(JSON.stringify(m) + "\n"));
+  const timer = setTimeout(() => child.kill("SIGTERM"), o.timeoutMs ?? 20_000);
   try {
     await send({
       jsonrpc: "2.0",
@@ -83,12 +77,13 @@ export async function callRemoteTool(
         ...(traceparent ? { _meta: { traceparent } } : {}),
       },
     });
-    const reader = child.stdout.pipeThrough(new TextDecoderStream()).getReader();
+    const reader = child.stdout.getReader();
+    const dec = new TextDecoder();
     let buf = "";
     for (;;) {
       const { value, done } = await reader.read();
       if (done) break;
-      buf += value;
+      buf += dec.decode(value, { stream: true });
       let nl: number;
       while ((nl = buf.indexOf("\n")) >= 0) {
         const line = buf.slice(0, nl).trim();
@@ -100,19 +95,20 @@ export async function callRemoteTool(
           error?: { message: string };
         };
         try {
-          msg = JSON.parse(line);
+          msg = JSON.parse(line) as typeof msg;
         } catch {
           continue;
         }
         if (msg.id !== 2) continue;
-        await reader.cancel().catch(() => {});
+        await reader.cancel().catch(() => undefined);
         if (msg.error) return { ok: false, text: msg.error.message };
         const text = (msg.result?.content ?? []).map((c) => c.text ?? "").join("\n");
         return { ok: !msg.result?.isError, text };
       }
     }
+    const stderr = child.stderr;
     const err = new TextDecoder().decode(
-      (await child.stderr.getReader().read()).value ?? new Uint8Array(),
+      (await stderr.getReader().read()).value ?? new Uint8Array(),
     );
     return { ok: false, text: err.trim() || "no answer" };
   } catch (e) {
@@ -120,10 +116,8 @@ export async function callRemoteTool(
   } finally {
     end();
     clearTimeout(timer);
-    await w.close().catch(() => {});
-    try {
-      child.kill("SIGTERM");
-    } catch { /* gone */ }
-    await child.status.catch(() => {});
+    await w.close().catch(() => undefined);
+    child.kill("SIGTERM");
+    await child.status.catch(() => undefined);
   }
 }

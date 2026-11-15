@@ -25,7 +25,7 @@ export interface Service {
   /** Its HTTPS address (for example `https://cockpit.alpha.lab.example.net`). */
   url: string;
   /** What it is, in a few words. */
-  description?: string;
+  description?: string | undefined;
   /** Where it comes from: the server itself, its model, or a container's label. */
   source: "system" | "model" | "container";
 }
@@ -35,42 +35,57 @@ export interface WelcomeData {
   /** The host's name in the model. */
   host: string;
   /** Its full name (for example `alpha.lab.example.net`); unset without fleet.web. */
-  fqdn?: string;
+  fqdn?: string | undefined;
   /** The fleet's title. */
   title: string;
   /** "Ubuntu 26.04.1 LTS" */
   os: string;
   /** The server's address on the local network, if known. */
-  address?: string;
+  address?: string | undefined;
   /** The fleet repository: `owner/name` and its GitHub URL. */
   repo: { slug: string; url: string };
   /**
    * Archon's last run on this host (its status file): the command, its
    * counts, whether commits wait to be pushed, and when.
    */
-  lastRun?: {
-    command: string;
-    failures: number;
-    warnings: number;
-    deferred: number;
-    push: boolean;
-    at: string;
-  };
+  lastRun?:
+    | {
+        command: string;
+        failures: number;
+        warnings: number;
+        deferred: number;
+        push: boolean;
+        at: string;
+      }
+    | undefined;
   /** The last archon verify: when, how many checks passed of how many, and which failed. */
-  verify?: { at: string; passed: number; total: number; failed: string[] };
+  verify?: { at: string; passed: number; total: number; failed: string[] } | undefined;
   /** The install record (spec 048): when, whether it succeeded, and its checks. */
-  installed?: { at?: string; ok?: boolean; checks?: { passed: number; total: number } };
+  installed?:
+    | {
+        at?: string | undefined;
+        ok?: boolean | undefined;
+        checks?: { passed: number; total: number } | undefined;
+      }
+    | undefined;
   /** The certificate Traefik serves on 443: its issuer and expiry, as openssl prints them. */
-  certificate?: { issuer: string; notAfter: string };
+  certificate?: { issuer: string; notAfter: string } | undefined;
   /**
    * Ubuntu's updates: how many wait (unset when unknown), whether a reboot is
    * needed and for which packages, and when they last installed by themselves.
    */
-  updates?: { pending?: number; reboot: boolean; rebootPackages: string[]; lastRun?: string };
+  updates?:
+    | {
+        pending?: number | undefined;
+        reboot: boolean;
+        rebootPackages: string[];
+        lastRun?: string | undefined;
+      }
+    | undefined;
   /** The last backup run, when the host has the backup timer: when it ended and whether it succeeded. */
-  backup?: { last?: string; ok?: boolean };
+  backup?: { last?: string | undefined; ok?: boolean | undefined } | undefined;
   /** Article 23 (spec 044): durable or ephemeral, and why. */
-  data?: { class: "durable" | "ephemeral"; reasons: string[] };
+  data?: { class: "durable" | "ephemeral"; reasons: string[] } | undefined;
   /** The apps and pages behind the proxy (none without fleet.web). */
   services: Service[];
   /** Ports open to the network with nothing published (internal ones excluded). */
@@ -78,29 +93,33 @@ export interface WelcomeData {
   /** What is installed and how to use it, from the host's plan (spec 035). */
   guide: GuideItem[];
   /** How an AI agent reaches this server (spec 035); servers only. */
-  agent?: AgentSetup;
+  agent?: AgentSetup | undefined;
   /** Guides served at /guide/<name>. */
   guides: Array<{ name: string; title: string }>;
   /** The fleet admin's username (for the ssh command shown). */
   admin: string;
   /** The fleet's mailbox, where alerts go; unset without mail. */
-  mailbox?: string;
+  mailbox?: string | undefined;
   /** When the data was gathered: `YYYY-MM-DD HH:MM UTC`. */
   generated: string;
 }
 
-const esc = (s: string) =>
-  s.replace(
-    /[&<>"']/g,
-    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!,
-  );
+const ENTITIES: Readonly<Record<string, string>> = {
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;",
+};
+
+const esc = (s: string): string => s.replace(/[&<>"']/g, (c) => ENTITIES[c] ?? c);
 
 /** Nerd Font and other private-use glyphs, which browsers show as boxes. */
 export const stripGlyphs = (s: string): string =>
-  s.replace(/[-]|\uDB80[\uDC00-\uDFFF]|[\u{F0000}-\u{FFFFD}]/gu, "").replace(
-    /\s{2,}/g,
-    " ",
-  ).trim();
+  s
+    .replace(/[-]|\uDB80[\uDC00-\uDFFF]|[\u{F0000}-\u{FFFFD}]/gu, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
 
 function when(iso: string | undefined, now: Date): string {
   if (!iso) return "never";
@@ -131,9 +150,11 @@ export function health(d: WelcomeData): { level: Level; headline: string; todo: 
   if (d.verify?.failed.length) {
     bump("warn");
     todo.push(
-      `${d.verify.failed.length} check${d.verify.failed.length === 1 ? "" : "s"} need attention (${
-        d.verify.failed.slice(0, 3).join(", ")
-      }${d.verify.failed.length > 3 ? ", ..." : ""}): archon verify shows a fix for each.`,
+      `${d.verify.failed.length} check${d.verify.failed.length === 1 ? "" : "s"} need attention (${d.verify.failed
+        .slice(0, 3)
+        .join(
+          ", ",
+        )}${d.verify.failed.length > 3 ? ", ..." : ""}): archon verify shows a fix for each.`,
     );
   }
   if (d.updates?.reboot) {
@@ -149,11 +170,12 @@ export function health(d: WelcomeData): { level: Level; headline: string; todo: 
     todo.push("The last backup failed: journalctl -u archon-backup shows why.");
   }
   const checks = d.verify ? `all ${d.verify.total} checks pass` : "no checks recorded yet";
-  const headline = level === "ok"
-    ? `Healthy: ${checks}.`
-    : level === "warn"
-    ? "Working, with something to look at."
-    : "Something failed.";
+  const headline =
+    level === "ok"
+      ? `Healthy: ${checks}.`
+      : level === "warn"
+        ? "Working, with something to look at."
+        : "Something failed.";
   return { level, headline, todo };
 }
 
@@ -264,44 +286,45 @@ const cmd = (s: string) =>
 
 function guideSection(items: GuideItem[], guides: string[]): string {
   const order: Category[] = ["shell", "web", "watch", "safety", "email", "work"];
-  return order.map((cat, i) => {
-    const these = items.filter((x) => x.category === cat);
-    if (!these.length) return "";
-    const c = CATEGORIES[cat];
-    return `<details${i < 2 ? " open" : ""}>
+  return order
+    .map((cat, i) => {
+      const these = items.filter((x) => x.category === cat);
+      if (!these.length) return "";
+      const c = CATEGORIES[cat];
+      return `<details${i < 2 ? " open" : ""}>
 <summary>${c.emoji} ${esc(c.title)} <span class="tag">${these.length}</span></summary>
 <div class="inner">
 <p class="sub" style="margin:0 0 4px">${esc(c.intro)}</p>
-${
-      these.map((x) =>
-        `<div class="item" id="${esc(x.id)}">
+${these
+  .map(
+    (x) =>
+      `<div class="item" id="${esc(x.id)}">
 <h3>${esc(x.title)}</h3>
 <div>${esc(x.what)}</div>
 ${
-          x.use?.length
-            ? `<table class="uses">${
-              x.use.map((u) => `<tr><td>${cmd(u.cmd)}</td><td>${esc(u.why)}</td></tr>`).join("")
-            }</table>`
-            : ""
-        }
+  x.use?.length
+    ? `<table class="uses">${x.use
+        .map((u) => `<tr><td>${cmd(u.cmd)}</td><td>${esc(u.why)}</td></tr>`)
+        .join("")}</table>`
+    : ""
+}
 ${
-          x.links?.length || (x.guide && guides.includes(x.guide))
-            ? `<div class="links">${
-              [
-                ...(x.links ?? []).map((l) => `<a href="${esc(l.href)}">${esc(l.label)}</a>`),
-                ...(x.guide && guides.includes(x.guide)
-                  ? [`<a href="/guide/${esc(x.guide)}">Read the guide</a>`]
-                  : []),
-              ].join("")
-            }</div>`
-            : ""
-        }
-</div>`
-      ).join("\n")
-    }
+  x.links?.length || (x.guide && guides.includes(x.guide))
+    ? `<div class="links">${[
+        ...(x.links ?? []).map((l) => `<a href="${esc(l.href)}">${esc(l.label)}</a>`),
+        ...(x.guide && guides.includes(x.guide)
+          ? [`<a href="/guide/${esc(x.guide)}">Read the guide</a>`]
+          : []),
+      ].join("")}</div>`
+    : ""
+}
+</div>`,
+  )
+  .join("\n")}
 </div>
 </details>`;
-  }).join("\n");
+    })
+    .join("\n");
 }
 
 /** The prominent "manage it with an AI agent" section (spec 035). */
@@ -314,15 +337,15 @@ function agentSection(a: AgentSetup, guide: boolean): string {
 <div class="card" style="border-color:var(--link)">
 <p style="margin-top:0">An AI coding agent on your own computer (any agent that speaks <strong>MCP</strong>) can check on this server, explain what it finds, and make changes for you, the right way: through the fleet's repository. Nothing AI-related runs on the server, and the server itself limits what an agent may do.</p>
 <ol class="steps">
-${
-    agentSteps(a).map((s) =>
-      `<li><strong>${esc(s.title)}.</strong> ${esc(s.text)}${s.cmds.map(block).join("")}</li>`
-    ).join("\n")
-  }
+${agentSteps(a)
+  .map(
+    (s) => `<li><strong>${esc(s.title)}.</strong> ${esc(s.text)}${s.cmds.map(block).join("")}</li>`,
+  )
+  .join("\n")}
 </ol>
-<div class="links">${guide ? '<a href="/guide/agent">The full guide to agents</a>' : ""}<a href="${
-    esc(a.repoUrl)
-  }">The repository</a></div>
+<div class="links">${guide ? '<a href="/guide/agent">The full guide to agents</a>' : ""}<a href="${esc(
+    a.repoUrl,
+  )}">The repository</a></div>
 </div>`;
 }
 
@@ -334,39 +357,40 @@ export function renderWelcome(d: WelcomeData, now = new Date()): string {
   const fact = (k: string, v: string) => `<div><span>${esc(k)}</span>${v}</div>`;
   const lastRun = d.lastRun
     ? `archon ${esc(d.lastRun.command)}, ${
-      d.lastRun.failures
-        ? '<span style="color:var(--fail)">with problems</span>'
-        : d.lastRun.warnings
-        ? "with warnings"
-        : "succeeded"
-    }, ${when(d.lastRun.at, now)}${
-      d.lastRun.push ? "<br><small>local commits not on GitHub yet</small>" : ""
-    }`
+        d.lastRun.failures
+          ? '<span style="color:var(--fail)">with problems</span>'
+          : d.lastRun.warnings
+            ? "with warnings"
+            : "succeeded"
+      }, ${when(d.lastRun.at, now)}${
+        d.lastRun.push ? "<br><small>local commits not on GitHub yet</small>" : ""
+      }`
     : "none recorded yet";
   const checks = d.verify
     ? `${d.verify.passed} of ${d.verify.total} pass, checked ${when(d.verify.at, now)}`
     : d.installed?.checks
-    ? `${d.installed.checks.passed} of ${d.installed.checks.total} at install (run archon verify)`
-    : "not checked yet";
+      ? `${d.installed.checks.passed} of ${d.installed.checks.total} at install (run archon verify)`
+      : "not checked yet";
   const updates = d.updates
     ? `${
-      d.updates.pending === undefined
-        ? ""
-        : d.updates.pending === 0
-        ? "up to date"
-        : `${d.updates.pending} waiting`
-    }${d.updates.lastRun ? `, installed by themselves ${when(d.updates.lastRun, now)}` : ""}${
-      d.updates.reboot
-        ? `<br><span style="color:var(--warn)">restart needed${
-          d.updates.rebootPackages.length
-            ? ` (${esc(d.updates.rebootPackages.slice(0, 3).join(", "))})`
-            : ""
-        }</span>`
-        : ""
-    }`
+        d.updates.pending === undefined
+          ? ""
+          : d.updates.pending === 0
+            ? "up to date"
+            : `${d.updates.pending} waiting`
+      }${d.updates.lastRun ? `, installed by themselves ${when(d.updates.lastRun, now)}` : ""}${
+        d.updates.reboot
+          ? `<br><span style="color:var(--warn)">restart needed${
+              d.updates.rebootPackages.length
+                ? ` (${esc(d.updates.rebootPackages.slice(0, 3).join(", "))})`
+                : ""
+            }</span>`
+          : ""
+      }`
     : "unknown";
-  const glossaryTerms = GLOSSARY.map(([t, def]) => `<dt>${esc(t)}</dt><dd>${esc(def)}</dd>`)
-    .join("");
+  const glossaryTerms = GLOSSARY.map(([t, def]) => `<dt>${esc(t)}</dt><dd>${esc(def)}</dd>`).join(
+    "",
+  );
   const containerExample =
     "sudo podman run -d --name hello --label traefik.enable=true docker.io/traefik/whoami";
 
@@ -375,11 +399,11 @@ export function renderWelcome(d: WelcomeData, now = new Date()): string {
     `<h1>${esc(d.host)}</h1>
 <p class="sub">${esc(d.title)} · ${esc(d.os)}${d.address ? ` · ${esc(d.address)}` : ""}</p>
 
-<p class="lead">This is <strong>${
-      esc(d.host)
-    }</strong>, a server managed by Archon. Everything on it is described in one place, the fleet's <a href="${
-      esc(d.repo.url)
-    }">repository</a>: changes are made there, and the server applies them by itself. You don't need to install or configure things here by hand, and anything done by hand is undone the next time the server is set up again.</p>
+<p class="lead">This is <strong>${esc(
+      d.host,
+    )}</strong>, a server managed by Archon. Everything on it is described in one place, the fleet's <a href="${esc(
+      d.repo.url,
+    )}">repository</a>: changes are made there, and the server applies them by itself. You don't need to install or configure things here by hand, and anything done by hand is undone the next time the server is set up again.</p>
 
 <h2>How it's doing</h2>
 <div class="card">
@@ -391,114 +415,121 @@ export function renderWelcome(d: WelcomeData, now = new Date()): string {
 <div class="facts">
 ${fact("Checks", checks)}
 ${fact("Last archon run", lastRun)}
+${fact(
+  "Web certificate",
+  d.certificate
+    ? `<span style="color:var(${trusted ? "--ok" : "--warn"})">${
+        trusted ? "Trusted (Let's Encrypt)" : "Temporary (self-signed)"
+      }</span>, renews by itself; valid until ${esc(d.certificate.notAfter)}`
+    : "none yet",
+)}
 ${
-      fact(
-        "Web certificate",
-        d.certificate
-          ? `<span style="color:var(${trusted ? "--ok" : "--warn"})">${
-            trusted ? "Trusted (Let's Encrypt)" : "Temporary (self-signed)"
-          }</span>, renews by itself; valid until ${esc(d.certificate.notAfter)}`
-          : "none yet",
+  d.data
+    ? fact(
+        "Data",
+        d.data.class === "durable"
+          ? `<span style="color:var(--warn)"><strong>Durable</strong></span>: ${esc(
+              d.data.reasons.join(", "),
+            )} hold data that exists nowhere else; reinstalls and wipes need a confirmation by name<br><small>your home directory is not kept across a reinstall</small>`
+          : "Ephemeral: nothing here holds people's data that exists nowhere else<br><small>your home directory is not kept across a reinstall</small>",
       )
-    }
-${
-      d.data
-        ? fact(
-          "Data",
-          d.data.class === "durable"
-            ? `<span style="color:var(--warn)"><strong>Durable</strong></span>: ${
-              esc(d.data.reasons.join(", "))
-            } hold data that exists nowhere else; reinstalls and wipes need a confirmation by name<br><small>your home directory is not kept across a reinstall</small>`
-            : "Ephemeral: nothing here holds people's data that exists nowhere else<br><small>your home directory is not kept across a reinstall</small>",
-        )
-        : ""
-    }
+    : ""
+}
 ${fact("Security updates", updates)}
-${
-      fact(
-        "Backups",
-        d.backup?.last
-          ? `last ${when(d.backup.last, now)}${
-            d.backup.ok === false ? ' <span style="color:var(--warn)">(failed)</span>' : ""
-          }`
-          : "none yet (every night)",
-      )
-    }
-${
-      fact(
-        "Set up",
-        d.installed?.at
-          ? `${esc(d.installed.at.slice(0, 16).replace("T", " "))} UTC, from the repository`
-          : "no install record",
-      )
-    }
+${fact(
+  "Backups",
+  d.backup?.last
+    ? `last ${when(d.backup.last, now)}${
+        d.backup.ok === false ? ' <span style="color:var(--warn)">(failed)</span>' : ""
+      }`
+    : "none yet (every night)",
+)}
+${fact(
+  "Set up",
+  d.installed?.at
+    ? `${esc(d.installed.at.slice(0, 16).replace("T", " "))} UTC, from the repository`
+    : "no install record",
+)}
 </div>
 </div>
 
-${d.agent ? agentSection(d.agent, d.guides.some((g) => g.name === "agent")) : ""}
+${
+  d.agent
+    ? agentSection(
+        d.agent,
+        d.guides.some((g) => g.name === "agent"),
+      )
+    : ""
+}
 
 <h2>Apps on this server</h2>
 <div class="card">
 ${
-      d.services.length
-        ? d.services.map((s) =>
-          `<div class="svc"><div><a href="${esc(s.url)}"><strong>${esc(s.name)}</strong></a>${
-            s.description ? ` <span class="sub">· ${esc(s.description)}</span>` : ""
-          }</div><div><a href="${esc(s.url)}">${
-            esc(s.url.replace(/^https:\/\//, ""))
-          }</a> <span class="tag">${
-            s.source === "container"
-              ? "container"
-              : s.source === "model"
-              ? "from the model"
-              : "built in"
-          }</span></div></div>`
-        ).join("\n")
-        : '<div class="svc">No apps yet.</div>'
-    }
+  d.services.length
+    ? d.services
+        .map(
+          (s) =>
+            `<div class="svc"><div><a href="${esc(s.url)}"><strong>${esc(s.name)}</strong></a>${
+              s.description ? ` <span class="sub">· ${esc(s.description)}</span>` : ""
+            }</div><div><a href="${esc(s.url)}">${esc(
+              s.url.replace(/^https:\/\//, ""),
+            )}</a> <span class="tag">${
+              s.source === "container"
+                ? "container"
+                : s.source === "model"
+                  ? "from the model"
+                  : "built in"
+            }</span></div></div>`,
+        )
+        .join("\n")
+    : '<div class="svc">No apps yet.</div>'
+}
 </div>
-<p class="sub">Every app here is reachable from wherever the router lets people in. To add one, run a container with the label ${
-      cmd("traefik.enable=true")
-    } (see <a href="#containers">Run an app in a container</a>), or add it to this server's model.${
+<p class="sub">Every app here is reachable from wherever the router lets people in. To add one, run a container with the label ${cmd(
+      "traefik.enable=true",
+    )} (see <a href="#containers">Run an app in a container</a>), or add it to this server's model.${
       d.unrouted.length
         ? ` Open to the network here but not published yet: port${
-          d.unrouted.length === 1 ? "" : "s"
-        } ${
-          d.unrouted.map((p) => `<code>${p}</code>`).join(" ")
-        }; to publish one, add <code>web: { routes: [{ name: "app", port: ${
-          d.unrouted[0]
-        } }] }</code> to this server's model.`
+            d.unrouted.length === 1 ? "" : "s"
+          } ${d.unrouted
+            .map((p) => `<code>${p}</code>`)
+            .join(" ")}; to publish one, add <code>web: { routes: [{ name: "app", port: ${
+            d.unrouted[0]
+          } }] }</code> to this server's model.`
         : ""
     }</p>
 
 <h2>First steps</h2>
 <div class="card">
 <ol class="steps">
-<li><strong>Log in.</strong> From a terminal on your computer: ${
-      cmd(`ssh ${d.admin}@${name}`)
-    } (or your own username).</li>
-<li><strong>Check it's healthy.</strong> ${
-      cmd("archon verify")
-    } runs every check and shows a fix for anything that fails.</li>
+<li><strong>Log in.</strong> From a terminal on your computer: ${cmd(
+      `ssh ${d.admin}@${name}`,
+    )} (or your own username).</li>
+<li><strong>Check it's healthy.</strong> ${cmd(
+      "archon verify",
+    )} runs every check and shows a fix for anything that fails.</li>
 <li><strong>Look around in your browser.</strong> Open <a href="${
       d.services.find((s) => s.name === "cockpit")?.url ?? `https://${d.host}:9090`
     }">Cockpit</a> and log in with your username and password.</li>
 <li><strong>Run your first app.</strong> ${cmd(containerExample)}${
       d.fqdn ? ` then open <a href="https://hello.${esc(d.fqdn)}">hello.${esc(d.fqdn)}</a>` : ""
     }.</li>
-<li><strong>Learn what's here.</strong> ${
-      cmd("archon guide")
-    } lists it in the terminal, and the section below explains each part.</li>
-<li><strong>Change something the right way.</strong> Edit the <a href="${
-      esc(d.repo.url)
-    }">repository</a>, commit, and push; the server applies it within 15 minutes, or at once with ${
-      cmd("archon update")
-    }.</li>
+<li><strong>Learn what's here.</strong> ${cmd(
+      "archon guide",
+    )} lists it in the terminal, and the section below explains each part.</li>
+<li><strong>Change something the right way.</strong> Edit the <a href="${esc(
+      d.repo.url,
+    )}">repository</a>, commit, and push; the server applies it within 15 minutes, or at once with ${cmd(
+      "archon update",
+    )}.</li>
 </ol>
 </div>
 
 <h2>What's on this server, and how to use it</h2>
-${guideSection(d.guide, d.guides.map((g) => g.name))}
+${guideSection(
+  d.guide,
+  d.guides.map((g) => g.name),
+)}
 
 <h2>Guides</h2>
 <div class="card"><div class="links" style="margin:0">
@@ -511,9 +542,9 @@ ${d.guides.map((g) => `<a href="/guide/${esc(g.name)}">${esc(g.title)}</a>`).joi
 <div class="inner"><dl class="glossary">${glossaryTerms}</dl></div>
 </details>
 
-<footer>Managed by Archon from <a href="${esc(d.repo.url)}">${
-      esc(d.repo.slug)
-    }</a> · reachable from wherever the router lets people in${
+<footer>Managed by Archon from <a href="${esc(d.repo.url)}">${esc(
+      d.repo.slug,
+    )}</a> · reachable from wherever the router lets people in${
       d.mailbox ? ` · alerts and mail go to ${esc(d.mailbox)}` : ""
     } · this page was made ${esc(d.generated)}; reload for the latest.</footer>`,
   );

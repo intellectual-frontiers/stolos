@@ -8,13 +8,13 @@
  * @module
  */
 
+import { fs, path as paths, proc, serve } from "@intellectual-frontiers/ifc-ts/runtime";
 import { getRecord } from "../state/store.ts";
 import { hostData } from "../model/durable.ts";
-import { join } from "../core/path.ts";
-import { readTextOr } from "../core/fsx.ts";
 
 import { engineFileOr } from "../core/assets.ts";
 import { run } from "../core/exec.ts";
+import { ui } from "../core/ui.ts";
 import { STATUS_DIR } from "../core/status.ts";
 import type { LastRun, LastVerify } from "../core/status.ts";
 import { loadFleet, loadHosts } from "../model/load.ts";
@@ -48,7 +48,7 @@ async function cached<T>(key: string, ms: number, f: () => Promise<T>): Promise<
 }
 
 async function osName(): Promise<string> {
-  const rel = (await readTextOr("/etc/os-release")) ?? "";
+  const rel = (await fs.readTextOr("/etc/os-release")) ?? "";
   return rel.match(/^PRETTY_NAME="?([^"\n]*)"?$/m)?.[1] ?? "Ubuntu";
 }
 
@@ -59,7 +59,7 @@ export function listeningPorts(ss: string): number[] {
     const local = line.trim().split(/\s+/)[3];
     const m = local?.match(/^(.*):(\d+)$/);
     if (!m) continue;
-    const addr = m[1].replace(/^\[|\]$/g, "").replace(/%.*$/, "");
+    const addr = (m[1] ?? "").replace(/^\[|\]$/g, "").replace(/%.*$/, "");
     if (/^127\./.test(addr) || addr === "::1" || addr === "::ffff:127.0.0.1") continue;
     ports.add(Number(m[2]));
   }
@@ -69,16 +69,18 @@ export function listeningPorts(ss: string): number[] {
 /** A unit's last run: when it ended, and whether it succeeded. */
 async function lastRunOf(unit: string): Promise<{ at?: string; ok?: boolean }> {
   return parseLastRun(
-    (await run([
-      "systemctl",
-      "show",
-      unit,
-      "--timestamp=unix",
-      "-p",
-      "ExecMainExitTimestamp",
-      "-p",
-      "Result",
-    ])).stdout,
+    (
+      await run([
+        "systemctl",
+        "show",
+        unit,
+        "--timestamp=unix",
+        "-p",
+        "ExecMainExitTimestamp",
+        "-p",
+        "Result",
+      ])
+    ).stdout,
   );
 }
 
@@ -98,7 +100,7 @@ export function routersToServices(
     if (r.provider !== "docker" || r.status === "disabled") continue;
     const host = r.rule?.match(/Host\(`([^`]+)`\)/)?.[1];
     if (!host) continue;
-    out.push({ name: host.split(".")[0], url: `https://${host}`, source: "container" });
+    out.push({ name: host.split(".")[0] ?? host, url: `https://${host}`, source: "container" });
   }
   return out;
 }
@@ -114,7 +116,7 @@ async function traefikRouters(name: string): Promise<Service[]> {
     `https://traefik.${name}/api/http/routers`,
   ]);
   try {
-    return routersToServices(JSON.parse(r.stdout));
+    return routersToServices(JSON.parse(r.stdout) as Parameters<typeof routersToServices>[0]);
   } catch {
     return [];
   }
@@ -122,7 +124,7 @@ async function traefikRouters(name: string): Promise<Service[]> {
 
 async function json<T>(path: string): Promise<T | undefined> {
   try {
-    return JSON.parse((await readTextOr(path)) ?? "") as T;
+    return JSON.parse((await fs.readTextOr(path)) ?? "") as T;
   } catch {
     return undefined;
   }
@@ -147,24 +149,24 @@ export async function welcomeData(hostName: string): Promise<WelcomeData> {
     const r = await run(["apt", "list", "--upgradable"], { env: { LANG: "C" } });
     return r.ok ? r.stdout.split("\n").filter((l) => l.includes("[upgradable")).length : undefined;
   });
-  const rebootPkgs = (await readTextOr("/run/reboot-required.pkgs")) ?? "";
+  const rebootPkgs = (await fs.readTextOr("/run/reboot-required.pkgs")) ?? "";
   const containers = name ? await cached("routers", 15_000, () => traefikRouters(name)) : [];
   const services: Service[] = name
     ? [
-      ...plan.routes.map((r) => ({
-        name: r.name,
-        url: `https://${r.name}.${name}`,
-        description: r.description,
-        source: (r.spec === "032-web" ? "model" : "system") as Service["source"],
-      })),
-      {
-        name: "traefik",
-        url: `https://traefik.${name}`,
-        description: "the web front door's dashboard: every route, live",
-        source: "system",
-      },
-      ...containers.filter((c) => !plan.routes.some((r) => r.name === c.name)),
-    ]
+        ...plan.routes.map((r) => ({
+          name: r.name,
+          url: `https://${r.name}.${name}`,
+          description: r.description,
+          source: r.spec === "032-web" ? ("model" as const) : ("system" as const),
+        })),
+        {
+          name: "traefik",
+          url: `https://traefik.${name}`,
+          description: "the web front door's dashboard: every route, live",
+          source: "system",
+        },
+        ...containers.filter((c) => !plan.routes.some((r) => r.name === c.name)),
+      ]
     : [];
   // Ports already behind the proxy, and the proxy's and the system's own.
   const known = new Set([
@@ -186,27 +188,28 @@ export async function welcomeData(hostName: string): Promise<WelcomeData> {
     os: await osName(),
     address: await serverAddress(host),
     repo: { slug: fleet.repository.slug, url: `https://github.com/${fleet.repository.slug}` },
-    lastRun: await json<LastRun>(join(STATUS_DIR, "last.json")),
-    verify: await json<LastVerify>(join(STATUS_DIR, "verify.json")),
+    lastRun: await json<LastRun>(paths.join(STATUS_DIR, "last.json")),
+    verify: await json<LastVerify>(paths.join(STATUS_DIR, "verify.json")),
     installed: installed?.installed
       ? { at: installed.installed, ok: installed.ok, checks: installed.checks }
       : undefined,
     certificate,
     updates: {
       pending,
-      reboot: !!(await readTextOr("/run/reboot-required")),
+      reboot: !!(await fs.readTextOr("/run/reboot-required")),
       rebootPackages: rebootPkgs.split("\n").filter(Boolean),
       lastRun: (await lastRunOf("apt-daily-upgrade.service")).at,
     },
     backup: plan.units.some((u) => u.unitName === "archon-backup.timer")
       ? await (async () => {
-        const b = await lastRunOf("archon-backup.service");
-        return { last: b.at, ok: b.ok };
-      })()
+          const b = await lastRunOf("archon-backup.service");
+          return { last: b.at, ok: b.ok };
+        })()
       : undefined,
-    data: host.kind === "workstation"
-      ? undefined
-      : (({ class: c, reasons }) => ({ class: c, reasons }))(hostData(host)),
+    data:
+      host.kind === "workstation"
+        ? undefined
+        : (({ class: c, reasons }) => ({ class: c, reasons }))(hostData(host)),
     services,
     unrouted,
     guide: guideFor(plan),
@@ -243,9 +246,8 @@ export async function webServe(hostName: string): Promise<number> {
   const { pamAuthenticator } = await import("../console/pam.ts");
   const { Sessions, Throttle, systemAccounts } = await import("../console/auth.ts");
   const { systemRunner } = await import("../console/exec.ts");
-  const { activityLog, guideBody, journalTail, repoFacts, servicesFacts } = await import(
-    "../console/machine.ts"
-  );
+  const { activityLog, guideBody, journalTail, repoFacts, servicesFacts } =
+    await import("../console/machine.ts");
   const fleet = await loadFleet();
   const handler = consoleHandler({
     host: hostName,
@@ -258,15 +260,12 @@ export async function webServe(hostName: string): Promise<number> {
     repo: () => cached("repo", 15_000, () => repoFacts()),
     activity: activityLog(),
     guideDoc: (name) => guideBody(name, GUIDES, fleet.repository.slug),
-    cacheDir: `${Deno.env.get("HOME") ?? "/var/cache/archon-web"}/vendor`,
+    cacheDir: `${proc.env.get("HOME") ?? "/var/cache/archon-web"}/vendor`,
     services: () => cached("services", 5_000, () => servicesFacts(hostName)),
     journal: journalTail,
   });
-  const server = Deno.serve(
-    { hostname: WEB.welcomeAddress, port: WEB.welcomePort, onListen: () => {} },
-    handler,
-  );
-  console.log(`Archon Console on http://${WEB.welcomeAddress}:${WEB.welcomePort} (behind Traefik)`);
+  const server = await serve({ hostname: WEB.welcomeAddress, port: WEB.welcomePort }, handler);
+  ui.say(`Archon Console on http://${WEB.welcomeAddress}:${WEB.welcomePort} (behind Traefik)`);
   await server.finished;
   return 0;
 }

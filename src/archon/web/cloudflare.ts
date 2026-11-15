@@ -30,12 +30,7 @@ export interface ARecord {
 /** The fetch function the calls use: the global `fetch`, or a fake in tests. */
 export type Fetch = typeof fetch;
 
-async function call<T>(
-  f: Fetch,
-  token: string,
-  path: string,
-  init: RequestInit = {},
-): Promise<T> {
+async function call<T>(f: Fetch, token: string, path: string, init: RequestInit = {}): Promise<T> {
   const r = await f(`${API}${path}`, {
     signal: AbortSignal.timeout(30_000),
     ...init,
@@ -45,7 +40,7 @@ async function call<T>(
       ...(init.headers ?? {}),
     },
   });
-  const body = await r.json().catch(() => ({})) as {
+  const body = (await r.json().catch(() => ({}))) as {
     success?: boolean;
     errors?: Array<{ message: string }>;
     result?: T;

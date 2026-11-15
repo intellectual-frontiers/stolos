@@ -13,7 +13,11 @@ import type { ArchonEvent } from "../archon/telemetry/events.ts";
 import dgram from "node:dgram";
 import { Buffer } from "node:buffer";
 
-const RRQ = 1, DATA = 3, ACK = 4, ERROR = 5, OACK = 6;
+const RRQ = 1,
+  DATA = 3,
+  ACK = 4,
+  ERROR = 5,
+  OACK = 6;
 
 /** Options for the TFTP server. */
 export interface TftpOptions {
@@ -42,7 +46,8 @@ export function parseRequest(
   if (!file || !mode) return undefined;
   const opts: Record<string, string> = {};
   for (let i = 0; i + 1 < rest.length; i += 2) {
-    if (rest[i]) opts[rest[i].toLowerCase()] = rest[i + 1];
+    const k = rest[i];
+    if (k) opts[k.toLowerCase()] = rest[i + 1] ?? "";
   }
   return { file, mode: mode.toLowerCase(), opts };
 }
@@ -62,20 +67,22 @@ export function negotiate(
   window: number;
 } {
   const out: Record<string, string> = {};
-  let blksize = 512, timeout = 1, window = 1;
-  if (opts.blksize) {
+  let blksize = 512,
+    timeout = 1,
+    window = 1;
+  if (opts["blksize"]) {
     // 1468 fits an Ethernet frame without fragmentation.
-    blksize = Math.max(8, Math.min(1468, Number(opts.blksize) || 512));
-    out.blksize = String(blksize);
+    blksize = Math.max(8, Math.min(1468, Number(opts["blksize"]) || 512));
+    out["blksize"] = String(blksize);
   }
-  if (opts.tsize !== undefined) out.tsize = String(size);
-  if (opts.timeout) {
-    timeout = Math.max(1, Math.min(255, Number(opts.timeout) || 1));
-    out.timeout = String(timeout);
+  if (opts["tsize"] !== undefined) out["tsize"] = String(size);
+  if (opts["timeout"]) {
+    timeout = Math.max(1, Math.min(255, Number(opts["timeout"]) || 1));
+    out["timeout"] = String(timeout);
   }
-  if (opts.windowsize) {
-    window = Math.max(1, Math.min(64, Number(opts.windowsize) || 1));
-    out.windowsize = String(window);
+  if (opts["windowsize"]) {
+    window = Math.max(1, Math.min(64, Number(opts["windowsize"]) || 1));
+    out["windowsize"] = String(window);
   }
   return { out, blksize, timeout, window };
 }
@@ -102,7 +109,7 @@ async function transfer(
       return;
     }
     if (m[1] === ERROR) pending?.(-2);
-    else if (m[1] === ACK) pending?.((m[2] << 8) | m[3]);
+    else if (m[1] === ACK) pending?.(((m[2] ?? 0) << 8) | (m[3] ?? 0));
   });
   const ackOf = (lo: number, hi: number): Promise<number> =>
     new Promise((resolve) => {
@@ -166,7 +173,8 @@ async function transfer(
  */
 export function serveTftp(o: TftpOptions): Promise<{ close: () => void }> {
   const sock = dgram.createSocket("udp4");
-  sock.on("message", async (m: Buffer, r: { address: string; port: number }) => {
+  sock.on("message", (m: Buffer, r: { address: string; port: number }) => void answer(m, r));
+  const answer = async (m: Buffer, r: { address: string; port: number }): Promise<void> => {
     const req = parseRequest(new Uint8Array(m));
     if (!req) {
       sock.send(errorPacket(4, "only reads are served"), r.port, r.address);
@@ -187,20 +195,21 @@ export function serveTftp(o: TftpOptions): Promise<{ close: () => void }> {
         attrs: { via: "TFTP", file: req.file },
       });
     }
-  });
+  };
   return new Promise((resolve, reject) => {
     sock.once("error", (e: Error & { code?: string }) =>
       reject(
         e.code === "EADDRINUSE"
           ? new Error(
-            `UDP port ${o.port} is in use: stop the other TFTP server (Tftpd64, Windows Deployment Services)`,
-          )
+              `UDP port ${o.port} is in use: stop the other TFTP server (Tftpd64, Windows Deployment Services)`,
+            )
           : e.code === "EACCES"
-          ? new Error(
-            `UDP port ${o.port} needs privileges on Linux: run boot serve with sudo, or use --tftp-port and point the router there`,
-          )
-          : e,
-      ));
+            ? new Error(
+                `UDP port ${o.port} needs privileges on Linux: run boot serve with sudo, or use --tftp-port and point the router there`,
+              )
+            : e,
+      ),
+    );
     sock.bind(o.port, "0.0.0.0", () => resolve({ close: () => sock.close() }));
   });
 }

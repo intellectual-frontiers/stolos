@@ -25,6 +25,7 @@
  * @module
  */
 
+import { proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "../core/exec.ts";
 import { effectiveTier, parseArgs } from "../core/registry-types.ts";
 import { type AccountLookup, mayRun, roleOf, systemAccounts, USERNAME } from "./auth.ts";
@@ -42,10 +43,11 @@ export interface Runner {
   run(user: string, argv: string[], line: (s: string) => void): Promise<number>;
 }
 
+const ANSI = new RegExp(`${String.fromCharCode(27)}\\[[0-9;?]*[A-Za-z]`, "g");
+
 /** Terminal color codes (sudo drops NO_COLOR for its own process), removed from what the page shows. */
 export function stripAnsi(s: string): string {
-  // deno-lint-ignore no-control-regex
-  return s.replace(/\x1b\[[0-9;?]*[A-Za-z]/g, "").replace(/\r/g, "");
+  return s.replace(ANSI, "").replace(/\r/g, "");
 }
 
 /** Read a stream's lines as they come. */
@@ -66,28 +68,33 @@ async function lines(stream: ReadableStream<Uint8Array>, each: (s: string) => vo
 /** The server's runner: `sudo -n archon console exec --as <user> --argv <JSON>`, output as it comes. */
 export const systemRunner: Runner = {
   async run(user, argv, line) {
-    const p = new Deno.Command("sudo", {
-      args: ["-n", ARCHON_BIN, "console", "exec", "--as", user, "--argv", JSON.stringify(argv)],
-      // A person's request, not an agent's: nothing of this process's environment passes on.
-      clearEnv: true,
-      env: {
-        PATH: "/usr/sbin:/usr/bin:/sbin:/bin",
-        LANG: "C.UTF-8",
-        NO_COLOR: "1",
-        ARCHON_PLAIN: "1",
+    const p = proc.spawn(
+      ["sudo", "-n", ARCHON_BIN, "console", "exec", "--as", user, "--argv", JSON.stringify(argv)],
+      {
+        // A person's request, not an agent's: nothing of this process's environment passes on.
+        clearEnv: true,
+        env: {
+          PATH: "/usr/sbin:/usr/bin:/sbin:/bin",
+          LANG: "C.UTF-8",
+          NO_COLOR: "1",
+          ARCHON_PLAIN: "1",
+        },
+        stdin: "null",
+        stdout: "piped",
+        stderr: "piped",
       },
-      stdin: "null",
-      stdout: "piped",
-      stderr: "piped",
-    }).spawn();
-    await Promise.all([lines(p.stdout, line), lines(p.stderr, line)]);
+    );
+    await Promise.all([
+      p.stdout ? lines(p.stdout, line) : undefined,
+      p.stderr ? lines(p.stderr, line) : undefined,
+    ]);
     return (await p.status).code;
   },
 };
 
 /** Why `console exec` refuses this request, or undefined when it may run. */
 export async function execRefusal(
-  o: { sudoUser?: string; as: string; argv: string[] },
+  o: { sudoUser?: string | undefined; as: string; argv: string[] },
   accounts: AccountLookup = systemAccounts,
 ): Promise<string | undefined> {
   if (o.sudoUser !== CONSOLE_USER) return `only the Archon Console (${CONSOLE_USER}) runs this`;
@@ -119,16 +126,18 @@ export async function execRefusal(
  * person's name, stream its output, mail the mailbox after a change.
  */
 export async function consoleExec(as: string, argv: string[]): Promise<number> {
-  const refusal = await execRefusal({ sudoUser: Deno.env.get("SUDO_USER"), as, argv });
+  const refusal = await execRefusal({ sudoUser: proc.env.get("SUDO_USER"), as, argv });
   if (refusal) {
-    console.error(`archon console exec: ${refusal}`);
+    stdio.stderr.writeSync(`archon console exec: ${refusal}\n`);
     return 2;
   }
   const { findCommand } = await import("../commands/registry.ts");
-  const found = findCommand(argv, "machine")!;
+  const found = findCommand(argv, "machine");
+  if (!found) return 2; // execRefusal has already refused it
   const tier = effectiveTier(found.cmd, parseArgs(found.cmd, found.rest));
-  const p = new Deno.Command("systemd-run", {
-    args: [
+  const p = proc.spawn(
+    [
+      "systemd-run",
       "--pipe",
       "--wait",
       "--quiet",
@@ -144,10 +153,8 @@ export async function consoleExec(as: string, argv: string[]): Promise<number> {
       ARCHON_BIN,
       ...argv,
     ],
-    stdin: "null",
-    stdout: "inherit",
-    stderr: "inherit",
-  }).spawn();
+    { stdin: "null", stdout: "inherit", stderr: "inherit" },
+  );
   const code = (await p.status).code;
   if (tier !== "read") {
     const { notify } = await import("../notify/events.ts");

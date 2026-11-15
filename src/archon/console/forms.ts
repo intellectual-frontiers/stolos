@@ -45,7 +45,8 @@ export function consoleCommands(place: "machine" | "pc"): Command[] {
 
 /** An argument list as a person would type it in a shell (quoted where needed). */
 export function shellWords(argv: string[]): string {
-  return argv.map((a) => /^[A-Za-z0-9_@%+=:,./-]+$/.test(a) ? a : `'${a.replace(/'/g, `'\\''`)}'`)
+  return argv
+    .map((a) => (/^[A-Za-z0-9_@%+=:,./-]+$/.test(a) ? a : `'${a.replace(/'/g, `'\\''`)}'`))
     .join(" ");
 }
 
@@ -54,10 +55,10 @@ export function tierWords(t: Tier): string {
   return t === "read"
     ? "looks only"
     : t === "repo"
-    ? "changes the repository"
-    : t === "mutate"
-    ? "changes the server"
-    : "destroys data";
+      ? "changes the repository"
+      : t === "mutate"
+        ? "changes the server"
+        : "destroys data";
 }
 
 /** A tier as a pill. */
@@ -67,9 +68,7 @@ export function tierPill(t: Tier): Html {
 }
 
 /** The result of reading a command's form: its argument list and tier, or why not. */
-export type FormResult =
-  | { argv: string[]; args: Parsed; tier: Tier }
-  | { error: string };
+export type FormResult = { argv: string[]; args: Parsed; tier: Tier } | { error: string };
 
 /**
  * A form's values as `cmd`'s argument list. Positional arguments first, in
@@ -117,37 +116,48 @@ function field(a: ArgSpec, value?: string): Html {
   const id = `f-${a.name}`;
   if (a.type === "boolean") {
     return html`
-      <label
-        class="check"><input type="checkbox" id="${id}" name="${a.name}" ${value === "on"
-          ? "checked"
-          : ""}> <span><span class="mono">--${a.name}</span> <span class="sub">${a
-          .description}</span></span></label>
+      <label class="check"
+        ><input type="checkbox" id="${id}" name="${a.name}" ${value === "on" ? "checked" : ""} />
+        <span
+          ><span class="mono">--${a.name}</span> <span class="sub">${a.description}</span></span
+        ></label
+      >
     `;
   }
   const label = a.positional ? a.name : `--${a.name}`;
   if (a.choices) {
     return html`
-      <label
-        class="field"><span><span class="mono">${label}</span>${a.required
-          ? " (required)"
-          : ""} <span class="sub">${a.description}</span></span><select id="${id}" name="${a
-          .name}">${a.required ? "" : html`<option value="">(none)</option>`}${a.choices.map((c) =>
-            html`<option value="${c}" ${c === value ? "selected" : ""}>${c}</option>`
-          )}</select></label>
+      <label class="field"
+        ><span
+          ><span class="mono">${label}</span>${a.required ? " (required)" : ""}
+          <span class="sub">${a.description}</span></span
+        ><select id="${id}" name="${a.name}">
+          ${a.required ? "" : html`<option value="">(none)</option>`}${a.choices.map(
+            (c) => html`<option value="${c}" ${c === value ? "selected" : ""}>${c}</option>`,
+          )}
+        </select></label
+      >
     `;
   }
-  const placeholder = a.name === "confirm-destroy"
-    ? "type the name it destroys, to confirm"
-    : a.default !== undefined
-    ? String(a.default)
-    : "";
+  const placeholder =
+    a.name === "confirm-destroy"
+      ? "type the name it destroys, to confirm"
+      : a.default !== undefined
+        ? String(a.default)
+        : "";
   return html`
-    <label
-      class="field"><span><span class="mono">${label}</span>${a.required
-        ? " (required)"
-        : ""} <span class="sub">${a
-        .description}</span></span><input type="text" id="${id}" name="${a.name}" value="${value ??
-        ""}" placeholder="${placeholder}" autocomplete="off"></label>
+    <label class="field"
+      ><span
+        ><span class="mono">${label}</span>${a.required ? " (required)" : ""}
+        <span class="sub">${a.description}</span></span
+      ><input
+        type="text"
+        id="${id}"
+        name="${a.name}"
+        value="${value ?? ""}"
+        placeholder="${placeholder}"
+        autocomplete="off"
+    /></label>
   `;
 }
 
@@ -176,34 +186,50 @@ export function commandForm(
   const tier = cmd.tier;
   const allowed = (o.may ?? ((t: Tier) => mayRun(role, t)))(tier);
   const destroy = tier === "destructive" || cmd.args.some((a) => a.name === "confirm-destroy");
-  return html`<form class="card stack" id="cmdform" data-on:submit="@post('${post}', {contentType: 'form'})">
-  <input type="hidden" name="command" value="${cmd.name}">
-  <div class="row spread"><h2 class="mono">${cmd.name}</h2>${tierPill(tier)}</div>
-  <p class="sub" style="margin:0">${cmd.summary}</p>
-  ${cmd.args.map((a) => field(a, values[a.name]))}
-  ${
-    destroy && allowed && o.password !== false
-      ? html`
-        <label
-          class="field"><span>Your password, again <span class="sub">(only to destroy data)</span></span><input type="password" name="password" autocomplete="current-password"></label>
-      `
-      : ""
-  }
-  <div class="row">
+  return html`<form
+    class="card stack"
+    id="cmdform"
+    data-on:submit="@post('${post}', {contentType: 'form'})"
+  >
+    <input type="hidden" name="command" value="${cmd.name}" />
+    <div class="row spread">
+      <h2 class="mono">${cmd.name}</h2>
+      ${tierPill(tier)}
+    </div>
+    <p class="sub" style="margin:0">${cmd.summary}</p>
+    ${cmd.args.map((a) => field(a, values[a.name]))}
     ${
-    allowed
-      ? html`<button class="btn${
-        tier === "destructive" ? " danger" : ""
-      }" type="submit">Run</button>`
-      : html`<span class="notice bad">Only operators (members of sudo or archon-ops) may run this.</span>`
-  }
-    <span class="sub">${
-    o.footnote ??
-      `Runs as you; recorded in Activity${
-        tier === "read" ? "" : ", and mailed to the fleet's mailbox"
-      }.`
-  }</span>
-  </div>
-  <details><summary class="sub">About this command</summary><div class="sub" style="white-space:pre-wrap">${cmd.description}</div></details>
-</form>`;
+      destroy && allowed && o.password !== false
+        ? html`
+            <label class="field"
+              ><span>Your password, again <span class="sub">(only to destroy data)</span></span
+              ><input type="password" name="password" autocomplete="current-password"
+            /></label>
+          `
+        : ""
+    }
+    <div class="row">
+      ${
+        allowed
+          ? html`<button class="btn${tier === "destructive" ? " danger" : ""}" type="submit">
+              Run
+            </button>`
+          : html`<span class="notice bad"
+              >Only operators (members of sudo or archon-ops) may run this.</span
+            >`
+      }
+      <span class="sub"
+        >${
+          o.footnote ??
+          `Runs as you; recorded in Activity${
+            tier === "read" ? "" : ", and mailed to the fleet's mailbox"
+          }.`
+        }</span
+      >
+    </div>
+    <details>
+      <summary class="sub">About this command</summary>
+      <div class="sub" style="white-space:pre-wrap">${cmd.description}</div>
+    </details>
+  </form>`;
 }

@@ -44,7 +44,7 @@ export interface Frame {
 /** Initials for the avatar. */
 export function initials(name: string): string {
   const p = name.trim().split(/\s+/);
-  return ((p[0]?.[0] ?? "?") + (p.length > 1 ? p[p.length - 1][0] : "")).toUpperCase();
+  return ((p[0]?.[0] ?? "?") + (p.length > 1 ? (p.at(-1)?.[0] ?? "") : "")).toUpperCase();
 }
 
 /** The scripts every page loads: Datastar always; Mermaid when the page has a diagram. */
@@ -85,11 +85,14 @@ const SCRIPTS = raw(`<script type="module" src="${DATASTAR.url}"></script>
 
 /** The head: title, styles, favicon, scripts. */
 function head(title: string): Html {
-  return html`<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${title}</title>
-<link rel="icon" href="/static/favicon.svg">
-<link rel="stylesheet" href="${CSS_URL}">
-${SCRIPTS}`;
+  return html`<meta charset="utf-8" /><meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
+    <title>${title}</title>
+    <link rel="icon" href="/static/favicon.svg" />
+    <link rel="stylesheet" href="${CSS_URL}" />
+    ${SCRIPTS}`;
 }
 
 /** A whole page: the frame around `body`. */
@@ -98,46 +101,69 @@ export function page(f: Frame, body: Html): string {
   return html`
     <!doctype html>
     <html lang="en">
-      <head>${head(`${f.title} · ${f.subtitle.split(" ")[0]}`)}</head>
+      <head>
+        ${head(`${f.title} · ${f.subtitle.split(" ")[0]}`)}
+      </head>
       <body>
         <a class="skip" href="#main">Skip to the page</a>
         <header class="top">
-          ${f.product === "stolos"
-            ? html`
-              <a class="brand" href="/">${STOLOS_LOGO}<b>Stolos</b><small>${f.subtitle}</small></a>
-              <div class="fleetmark"><span>${f.scope
-                ? html`
-                  client <b>${f.scope.label}</b> · <a href="${f.scope
-                    .href}">All clients</a> ·
+          ${
+            f.product === "stolos"
+              ? html`
+                  <a class="brand" href="/"
+                    >${STOLOS_LOGO}<b>Stolos</b><small>${f.subtitle}</small></a
+                  >
+                  <div class="fleetmark">
+                    <span
+                      >${
+                        f.scope
+                          ? html`
+                              client <b>${f.scope.label}</b> ·
+                              <a href="${f.scope.href}">All clients</a> ·
+                            `
+                          : ""
+                      }fleet
+                      ${f.fleet.id} · ${f.fleet.repo}</span
+                    >
+                  </div>
                 `
-                : ""}fleet ${f.fleet.id} · ${f.fleet.repo}</span></div>
-            `
-            : html`
-              <a class="brand" href="/">${ARCHON_LOGO}<b>Archon</b><small>${f.subtitle}</small></a>
-              <div
-                class="fleetmark">${STOLOS_LOGO}<b>Stolos</b><span>fleet ${f.fleet.id} · ${f.fleet
-                  .repo}</span></div>
-            `}
+              : html`
+                  <a class="brand" href="/"
+                    >${ARCHON_LOGO}<b>Archon</b><small>${f.subtitle}</small></a
+                  >
+                  <div class="fleetmark">
+                    ${STOLOS_LOGO}<b>Stolos</b><span>fleet ${f.fleet.id} · ${f.fleet.repo}</span>
+                  </div>
+                `
+          }
           <div class="me">
-            <div class="who"><div>${f.user.name}</div><small>${f.user.user} · ${f.user
-              .role}</small></div>
+            <div class="who">
+              <div>${f.user.name}</div>
+              <small>${f.user.user} · ${f.user.role}</small>
+            </div>
             <div class="avatar" aria-hidden="true">${initials(f.user.name)}</div>
-            <form method="post"
-              action="/signout"><button class="btn ghost" type="submit">Sign out</button></form>
+            <form method="post" action="/signout">
+              <button class="btn ghost" type="submit">Sign out</button>
+            </form>
           </div>
         </header>
         <div class="shell">
           <nav class="rail" aria-label="Pages">
-        ${groups.map((g) =>
-          html`<div class="group">${g}</div>${
-            f.nav.filter((n) => n.group === g).map((n) =>
-              html`<a href="${n.href}" ${
-                n.href === f.current ? raw('aria-current="page"') : ""
-              }>${n.label}</a>`
-            )
-          }`
-        )}
-      </nav>
+            ${groups.map(
+              (g) =>
+                html`<div class="group">${g}</div>
+                  ${f.nav
+                    .filter((n) => n.group === g)
+                    .map(
+                      (n) =>
+                        html`<a
+                          href="${n.href}"
+                          ${n.href === f.current ? raw('aria-current="page"') : ""}
+                          >${n.label}</a
+                        >`,
+                    )}`,
+            )}
+          </nav>
           <main id="main">${body}</main>
         </div>
       </body>
@@ -150,15 +176,20 @@ export function bare(title: string, body: Html): string {
   return html`
     <!doctype html>
     <html lang="en">
-      <head>${head(title)}</head>
-      <body>${body}</body>
+      <head>
+        ${head(title)}
+      </head>
+      <body>
+        ${body}
+      </body>
     </html>
   `.s;
 }
 
 /** A Mermaid diagram (its text is escaped; Mermaid reads the text, not markup). */
 export function diagram(source: string, caption?: string): Html {
-  return html`<figure class="card diagram"><pre class="mermaid">${source}</pre>${
-    caption ? html`<figcaption class="sub">${caption}</figcaption>` : ""
-  }</figure>`;
+  return html`<figure class="card diagram">
+    <pre class="mermaid">${source}</pre>
+    ${caption ? html`<figcaption class="sub">${caption}</figcaption>` : ""}
+  </figure>`;
 }

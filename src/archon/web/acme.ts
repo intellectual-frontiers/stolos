@@ -1,6 +1,6 @@
 /**
  * 032-web: a server's Let's Encrypt certificates survive its re-install. Before
- * `deno task stolos boot reinstall` reboots a server, it copies Traefik's ACME store
+ * `bun run stolos boot reinstall` reboots a server, it copies Traefik's ACME store
  * (the Let's Encrypt account, the certificates, and their keys) to the boot
  * machine; the install hands it back, and the first boot puts it in place
  * before Traefik first starts. Traefik then serves the trusted certificate
@@ -12,7 +12,7 @@
  * @module
  */
 
-import { ensureDir, exists, readTextOr } from "../core/fsx.ts";
+import { fs, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "../core/exec.ts";
 
 /** Traefik's ACME store (spec 032: Traefik's state directory). */
@@ -92,12 +92,10 @@ export function describeCarry(c: AcmeCarry): string {
 
 /** `archon web acme-export` (root): the store and each certificate's expiry, as JSON. */
 export async function exportAcme(hostName: string): Promise<number> {
-  const acme = await readTextOr(ACME_STORE);
+  const acme = await fs.readTextOr(ACME_STORE);
   const certificates: CarriedCertificate[] = [];
   for (const c of storeCertificates(acme ?? "")) {
-    const pem = new TextDecoder().decode(
-      Uint8Array.from(atob(c.pem), (ch) => ch.charCodeAt(0)),
-    );
+    const pem = new TextDecoder().decode(Uint8Array.from(atob(c.pem), (ch) => ch.charCodeAt(0)));
     const r = await run(["openssl", "x509", "-noout", "-enddate"], { stdin: pem });
     const end = r.stdout.match(/notAfter=(.*)/)?.[1];
     const t = end ? Date.parse(end) : NaN;
@@ -109,9 +107,9 @@ export async function exportAcme(hostName: string): Promise<number> {
     host: hostName,
     exported: new Date().toISOString(),
     certificates,
-    acme: certificates.length ? acme! : "",
+    acme: certificates.length ? (acme ?? "") : "",
   };
-  console.log(JSON.stringify(out));
+  stdio.stdout.writeSync(`${JSON.stringify(out)}\n`);
   return 0;
 }
 
@@ -120,19 +118,19 @@ export async function exportAcme(hostName: string): Promise<number> {
  * 0600), unless Traefik already has one. Returns what happened, for the log.
  */
 export async function importAcme(): Promise<string | undefined> {
-  if (!(await exists(ACME_DELIVERED))) return undefined;
-  const acme = await Deno.readTextFile(ACME_DELIVERED);
-  await Deno.remove(ACME_DELIVERED);
-  if ((await readTextOr(ACME_STORE))?.trim()) {
+  if (!(await fs.exists(ACME_DELIVERED))) return undefined;
+  const acme = await fs.readTextFile(ACME_DELIVERED);
+  await fs.remove(ACME_DELIVERED);
+  if ((await fs.readTextOr(ACME_STORE))?.trim()) {
     return "Traefik already has certificates here: the carried copy was not needed";
   }
-  await ensureDir("/var/lib/traefik");
-  await Deno.writeTextFile(ACME_STORE, acme, { mode: 0o600 });
-  await Deno.chmod(ACME_STORE, 0o600);
-  await Deno.chmod("/var/lib/traefik", 0o700);
+  await fs.ensureDir("/var/lib/traefik");
+  await fs.writeTextFile(ACME_STORE, acme, { mode: 0o600 });
+  await fs.chmod(ACME_STORE, 0o600);
+  await fs.chmod("/var/lib/traefik", 0o700);
   await run(["chown", "-R", "traefik:traefik", "/var/lib/traefik"]);
   const names = storeCertificates(acme).flatMap((c) => [c.main, ...c.sans]);
-  return `restored the Let's Encrypt certificate carried from the previous install (${
-    names.join(", ")
-  }): Traefik serves it from its first start, with no new request to Let's Encrypt`;
+  return `restored the Let's Encrypt certificate carried from the previous install (${names.join(
+    ", ",
+  )}): Traefik serves it from its first start, with no new request to Let's Encrypt`;
 }

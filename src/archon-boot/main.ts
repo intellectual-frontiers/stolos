@@ -1,33 +1,32 @@
 /**
  * archon-boot (spec 004): the boot machine's side of a zero-touch install.
- * Runs with Deno on Windows or Linux:
+ * Runs with Bun (or Node 26) on Windows or Linux:
  *
- *   deno task stolos boot serve [--port 8080]   serve PXE (TFTP, UDP 69), UEFI HTTP Boot, and installs
- *   deno task stolos boot reinstall <host> [--confirm-destroy <host>]
+ *   bun run stolos boot serve [--port 8080]   serve PXE (TFTP, UDP 69), UEFI HTTP Boot, and installs
+ *   bun run stolos boot reinstall <host> [--confirm-destroy <host>]
  *                                        push its state, arm it, network-boot it once (over SSH);
  *                                        a durable host needs --confirm-destroy (Article 23)
- *   deno task stolos boot retire <host> --confirm-destroy <host> [--no-push]
+ *   bun run stolos boot retire <host> --confirm-destroy <host> [--no-push]
  *                                        a server leaves the fleet, committed and pushed (spec 045)
- *   deno task stolos boot arm <host> --claim | --mac-address <mac> [--confirm-destroy <host>]
+ *   bun run stolos boot arm <host> --claim | --mac-address <mac> [--confirm-destroy <host>]
  *                                        allow one (re)install of a host
- *   deno task stolos boot status                hosts, Boot URIs, MACs, armed or not
- *   deno task stolos boot doctor                check this boot machine, with a fix for each problem
- *   deno task stolos boot observe               recent installs from the boot server's own telemetry
- *   deno task stolos vault <sub>           back up and restore this PC's secrets (spec 029)
- *   deno task stolos boot mail-setup            store the mail relay's token (Cloudflare, spec 027)
- *   deno task stolos boot mail-push <host>      give a running host that token over SSH
- *   deno task stolos boot web-setup             store the Cloudflare DNS token (HTTPS, spec 032)
- *   deno task stolos boot web-push <host>       give a running server that token over SSH
- *   deno task stolos boot notify --subject ...  email the mailbox from this PC (also: notify test | status)
+ *   bun run stolos boot status                hosts, Boot URIs, MACs, armed or not
+ *   bun run stolos boot doctor                check this boot machine, with a fix for each problem
+ *   bun run stolos boot observe               recent installs from the boot server's own telemetry
+ *   bun run stolos vault <sub>           back up and restore this PC's secrets (spec 029)
+ *   bun run stolos boot mail-setup            store the mail relay's token (Cloudflare, spec 027)
+ *   bun run stolos boot mail-push <host>      give a running host that token over SSH
+ *   bun run stolos boot web-setup             store the Cloudflare DNS token (HTTPS, spec 032)
+ *   bun run stolos boot web-push <host>       give a running server that token over SSH
+ *   bun run stolos boot notify --subject ...  email the mailbox from this PC (also: notify test | status)
  *
  * @module
  */
 
+import { fs, path as paths, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { VERSION } from "../archon/version.ts";
 import { ui } from "../archon/core/ui.ts";
 import { P, resetRoots } from "../archon/core/paths.ts";
-import { join } from "../archon/core/path.ts";
-import { ensureDir } from "../archon/core/fsx.ts";
 import { armHost, liveToken, loadTokens } from "../archon/core/secrets.ts";
 import { loadFleet, loadServers } from "../archon/model/load.ts";
 import { ensureAssets } from "./assets.ts";
@@ -35,26 +34,33 @@ import { handler, serve } from "./server.ts";
 import { serveTftp } from "./tftp.ts";
 import { trustHost } from "../archon/install/host-keys.ts";
 import { reinstall } from "./reinstall.ts";
-import { initBootTelemetry, recordEvents, SINK, startSink, TELEMETRY_DIR } from "./telemetry.ts";
+import { initBootTelemetry, recordEvents, stopBootTelemetry, TELEMETRY_DIR } from "./telemetry.ts";
 import { firewallWarnings, type Need } from "./firewall.ts";
 import { UBUNTU } from "./pins.ts";
 import { render } from "./pretty.ts";
 import { type ArchonEvent, plainLine } from "../archon/telemetry/events.ts";
 import { addressFacing, bootUri, lanAddresses, preferAddress } from "../archon/core/net.ts";
 
-function opt(args: string[], name: string): string | undefined {
+function opt(args: readonly string[], name: string): string | undefined {
   const i = args.indexOf(`--${name}`);
   if (i >= 0) return args[i + 1];
-  return args.find((a) => a.startsWith(`--${name}=`))?.split("=").slice(1).join("=");
+  return args
+    .find((a) => a.startsWith(`--${name}=`))
+    ?.split("=")
+    .slice(1)
+    .join("=");
 }
 
 /** The boot server's log (spec 004): %LOCALAPPDATA%\\stolos\\boot\\boot.log, one previous copy kept. */
 async function openBootLog(): Promise<{ path: string; write: (line: string) => void }> {
-  const path = join(P.bootCache, "boot.log");
-  await ensureDir(P.bootCache);
-  const size = await Deno.stat(path).then((s) => s.size).catch(() => 0);
-  if (size > 5_000_000) await Deno.rename(path, `${path}.1`).catch(() => {});
-  const f = await Deno.open(path, { create: true, append: true });
+  const path = paths.join(P.bootCache, "boot.log");
+  await fs.ensureDir(P.bootCache);
+  const size = await fs
+    .stat(path)
+    .then((s) => s.size)
+    .catch(() => 0);
+  if (size > 5_000_000) await fs.rename(path, `${path}.1`).catch(() => {});
+  const f = await fs.open(path, { create: true, append: true });
   const enc = new TextEncoder();
   f.writeSync(enc.encode(`${new Date().toISOString()} == boot serve started\n`));
   return {
@@ -62,18 +68,20 @@ async function openBootLog(): Promise<{ path: string; write: (line: string) => v
     write: (line) => {
       try {
         f.writeSync(enc.encode(line + "\n"));
-      } catch { /* the log is best effort */ }
+      } catch {
+        /* the log is best effort */
+      }
     },
   };
 }
 
-async function main(args: string[]): Promise<number> {
+async function main(args: readonly string[]): Promise<number> {
   const cmd = args[0];
   if (cmd === "arm") {
     const name = args[1];
     if (!name || !(await loadServers()).some((h) => h.name === name)) {
-      console.error(
-        `usage: deno task stolos boot arm <host> --claim | --mac-address <mac> [--confirm-destroy <host>]  (known: ${
+      ui.say(
+        `usage: bun run stolos boot arm <host> --claim | --mac-address <mac> [--confirm-destroy <host>]  (known: ${
           (await loadServers()).map((h) => h.name).join(", ") || "none"
         })`,
       );
@@ -87,45 +95,47 @@ async function main(args: string[]): Promise<number> {
       opt(args, "confirm-destroy"),
     );
     if (refusal) {
-      console.error(`${refusal} (from the records in this checkout: git pull first)`);
+      ui.say(`${refusal} (from the records in this checkout: git pull first)`);
       return 1;
     }
     // Spec 051: how its machine is recognized: --claim or --mac-address (or the MAC
     // its own machine reported when it installed).
-    const { recognition, describeRecognition, CLAIM_MINUTES } = await import(
-      "../archon/install/recognize.ts"
-    );
-    const { loadRegistration, writeRegistration } = await import(
-      "../archon/fleet/registration.ts"
-    );
+    const { recognition, describeRecognition, CLAIM_MINUTES } =
+      await import("../archon/install/recognize.ts");
+    const { loadRegistration, writeRegistration } = await import("../archon/fleet/registration.ts");
     const reg = await loadRegistration(name);
-    const how = recognition(name, {
-      claim: args.includes("--claim"),
-      macAddress: opt(args, "mac-address"),
-      command: "deno task stolos boot arm",
-    }, reg);
+    const macAddress = opt(args, "mac-address");
+    const how = recognition(
+      name,
+      {
+        claim: args.includes("--claim"),
+        ...(macAddress === undefined ? {} : { macAddress }),
+        command: "bun run stolos boot arm",
+      },
+      reg,
+    );
     if ("refusal" in how) {
-      console.error(how.refusal);
+      ui.say(how.refusal);
       return 2;
     }
     const claim = how.kind === "claim";
     if (how.kind === "mac" && reg && reg.mac !== how.mac) {
       // A person named the network card: that is the host's registered MAC from now on.
       const file = await writeRegistration(name, { ...reg, mac: how.mac, macSource: "operator" });
-      console.log(`${file}: mac ${how.mac} (commit and push it, signed, to keep it)`);
+      ui.say(`${file}: mac ${how.mac} (commit and push it, signed, to keep it)`);
     }
     // Spec 063: what its first boot will run must be on GitHub, signed by a fleet signer.
     {
       const { checkRunnable } = await import("../archon/install/runnable.ts");
       const rn = await checkRunnable([name]);
       if (rn.unreachable) {
-        console.error(`could not ask GitHub (${rn.unreachable}); checked the last fetched commit`);
+        ui.say(`could not ask GitHub (${rn.unreachable}); checked the last fetched commit`);
       }
       if (rn.problems.length) {
         for (const p of rn.problems) {
-          console.error(`${p.what}\n  fix: ${p.fix}  (deno task stolos explain ${p.code})`);
+          ui.say(`${p.what}\n  fix: ${p.fix}  (bun run stolos explain ${p.code})`);
         }
-        console.error(`${name} is not armed: nothing will be installed until this is fixed.`);
+        ui.say(`${name} is not armed: nothing will be installed until this is fixed.`);
         return 1;
       }
     }
@@ -135,20 +145,21 @@ async function main(args: string[]): Promise<number> {
     });
     // Its install brings its own SSH host keys (kept on this machine): trust them now.
     const names = await trustHost(name, t.addresses ?? []);
-    console.log(`This PC trusts ${name}'s SSH host keys (${names.join(", ")}).`);
-    console.log(
-      `${name} is armed for one install: ${
-        describeRecognition(name, how)
-      }. Power it on while 'deno task stolos boot serve' runs.`,
+    ui.say(`This PC trusts ${name}'s SSH host keys (${names.join(", ")}).`);
+    ui.say(
+      `${name} is armed for one install: ${describeRecognition(
+        name,
+        how,
+      )}. Power it on while 'bun run stolos boot serve' runs.`,
     );
     if (confirmed) {
-      console.log(
+      ui.say(
         claim
           ? `--confirm-destroy with --claim: the next unknown machine to network-boot in ${CLAIM_MINUTES} minutes is erased, whatever its disks hold.`
           : `--confirm-destroy: its disks are erased even if they are not blank (this install only).`,
       );
     } else {
-      console.log(
+      ui.say(
         "Its installer erases no disk that is not blank: if it finds one, it stops before writing anything and says what it found.",
       );
     }
@@ -161,7 +172,7 @@ async function main(args: string[]): Promise<number> {
   if (cmd === "reinstall") {
     if (args.includes("--force")) {
       // Never did anything; the decision it stood for is --confirm-destroy.
-      console.error(
+      ui.say(
         "boot reinstall has no --force: to reinstall a durable host, or one that cannot be reached, repeat its name: --confirm-destroy <host>",
       );
       return 2;
@@ -204,7 +215,7 @@ async function main(args: string[]): Promise<number> {
     const { doctor } = await import("./doctor.ts");
     return await doctor({
       port: Number(opt(args, "port") ?? 8080),
-      send: args.includes("--send") ? "deno task stolos boot doctor --send" : undefined,
+      send: args.includes("--send") ? "bun run stolos boot doctor --send" : undefined,
     });
   }
   if (cmd === "status") {
@@ -217,56 +228,56 @@ async function main(args: string[]): Promise<number> {
     for (const h of await loadServers()) {
       const t = liveToken(tokens, h.name);
       const learned = tokens.find((x) => x.host === h.name)?.mac;
-      const claim = t?.claimUntil && Date.parse(t.claimUntil) > Date.now()
-        ? ` · claims the next unknown machine until ${new Date(t.claimUntil).toLocaleTimeString()}`
-        : "";
+      const claim =
+        t?.claimUntil && Date.parse(t.claimUntil) > Date.now()
+          ? ` · claims the next unknown machine until ${new Date(t.claimUntil).toLocaleTimeString()}`
+          : "";
       const mac = (h.mac ?? (learned ? `${learned} (learned)` : "MAC not known yet")) + claim;
-      const mark = ui.emoji ? (t ? "🎯" : "💤") : (t ? ">" : "-");
-      console.log(
+      const mark = ui.emoji ? (t ? "🎯" : "💤") : t ? ">" : "-";
+      ui.say(
         `${mark} ${ui.bold(ui.cyan(h.name.padEnd(14)))} ${
           t ? ui.green(`armed since ${new Date(t.armed).toLocaleString()}`) : ui.dim("not armed")
         }\n` +
-          `${" ".repeat(ui.emoji ? 3 : 2)}${"".padEnd(14)} ${ui.dim("Boot URI")} ${
-            ui.blue(bootUri(ip, Number(opt(args, "port") ?? 8080), h.name))
-          } ${ui.dim(`· ${mac}`)}`,
+          `${" ".repeat(ui.emoji ? 3 : 2)}${"".padEnd(14)} ${ui.dim("Boot URI")} ${ui.blue(
+            bootUri(ip, Number(opt(args, "port") ?? 8080), h.name),
+          )} ${ui.dim(`· ${mac}`)}`,
       );
     }
     return 0;
   }
   if (cmd !== "serve") {
-    console.error(
-      "usage: deno task stolos boot serve [--address <this-pc>] [--port 8080] [--tftp-port 69 | --no-tftp] [--stall-watch]\n" +
-        "       deno task stolos boot reinstall <host> [--confirm-destroy <host>]\n" +
-        "       deno task stolos boot arm <host> --claim | --mac-address <mac> [--confirm-destroy <host>]\n" +
-        "       deno task stolos boot retire <host> --confirm-destroy <host> [--no-push]\n" +
-        "       deno task stolos boot status | doctor | observe [--last 5]\n" +
-        "       deno task stolos vault status | backup | restore | list | recover-host-keys <host>\n" +
-        "       deno task stolos boot mail-setup | mail-push <host> | web-setup | web-push <host>\n" +
-        "       deno task stolos boot notify --subject <s> ... | notify test | status",
+    ui.say(
+      "usage: bun run stolos boot serve [--address <this-pc>] [--port 8080] [--tftp-port 69 | --no-tftp] [--stall-watch]\n" +
+        "       bun run stolos boot reinstall <host> [--confirm-destroy <host>]\n" +
+        "       bun run stolos boot arm <host> --claim | --mac-address <mac> [--confirm-destroy <host>]\n" +
+        "       bun run stolos boot retire <host> --confirm-destroy <host> [--no-push]\n" +
+        "       bun run stolos boot status | doctor | observe [--last 5]\n" +
+        "       bun run stolos vault status | backup | restore | list | recover-host-keys <host>\n" +
+        "       bun run stolos boot mail-setup | mail-push <host> | web-setup | web-push <host>\n" +
+        "       bun run stolos boot notify --subject <s> ... | notify test | status",
     );
     return 2;
   }
 
   const port = Number(opt(args, "port") ?? 8080);
-  // Spec 023: the boot server's own telemetry, kept in local files on this PC.
-  await initBootTelemetry();
-  await startSink().catch((e) =>
-    console.error(
-      `telemetry: could not listen on ${SINK.hostname}:${SINK.port} (${(e as Error).message})`,
-    )
-  );
+  // Spec 023: the boot server's own telemetry, in this process, kept in local files on this PC.
+  initBootTelemetry();
+  // Ctrl+C: what the telemetry still holds goes to its journal first.
+  proc.addSignalListener("SIGINT", () => {
+    void stopBootTelemetry().finally(() => proc.exit(130));
+  });
   // The address servers reach this PC at (the router's next-server), when auto-detection picks another.
   preferAddress(opt(args, "address"));
-  const proxy = opt(args, "proxy") ?? Deno.env.get("ARCHON_BOOT_PROXY");
-  const caFile = opt(args, "ca-file") ?? Deno.env.get("ARCHON_BOOT_CA_FILE");
-  const githubApi = opt(args, "github-api") ?? Deno.env.get("ARCHON_GITHUB_API");
+  const proxy = opt(args, "proxy") ?? proc.env.get("ARCHON_BOOT_PROXY");
+  const caFile = opt(args, "ca-file") ?? proc.env.get("ARCHON_BOOT_CA_FILE");
+  const githubApi = opt(args, "github-api") ?? proc.env.get("ARCHON_GITHUB_API");
   ui.header("Stolos boot serve", `Ubuntu ${UBUNTU.point} · port ${port}`);
   // Spec 029: the backup panel at the start, and the reminders hourly while serving.
   {
     const { showPanelNow, remind } = await import("../archon/vault/reminder.ts");
     await showPanelNow();
     await remind();
-    setInterval(() => remind(), 3600_000);
+    setInterval(() => void remind(), 3600_000);
   }
   const f = ui.phase("Fleet");
   const fleet = await loadFleet();
@@ -307,7 +318,7 @@ async function main(args: string[]): Promise<number> {
     // Spec 051: a hint, off unless asked for.
     stallWatch: args.includes("--stall-watch"),
     proxy,
-    caPem: caFile ? await Deno.readTextFile(caFile) : undefined,
+    caPem: caFile ? await fs.readTextFile(caFile) : undefined,
     githubApi,
     emit: (e: ArchonEvent) => {
       // Spec 049: the event is the source. It is recorded as an OpenTelemetry
@@ -317,13 +328,13 @@ async function main(args: string[]): Promise<number> {
       recordEvents([ev], resource).catch(() => {});
       logFile.write(`${new Date(ev.time).toISOString()} ${plainLine(ev)}`);
       const shown = render(ev);
-      if (shown !== undefined) console.log(shown);
+      if (shown !== undefined) ui.say(shown);
     },
   };
   // One handler for HTTP and TFTP (PXE): identical files and menus, and one
   // memory of what each machine fetched (Boot URIs, progress, HTTP arrivals).
   const h = handler(assets, serveOpts);
-  serve(serveOpts, h);
+  await serve(serveOpts, h);
   const tftpPort = Number(opt(args, "tftp-port") ?? 69);
   if (!args.includes("--no-tftp")) {
     await serveTftp({
@@ -348,35 +359,35 @@ async function main(args: string[]): Promise<number> {
       : `PXE: DHCP next-server ${ip}, boot file bootx64.efi (TFTP, UDP ${tftpPort}) · HTTP port ${port}`,
   );
   const icon = (e: string, a: string) => (ui.emoji ? e : a);
-  console.log(
-    `\n   ${icon("🌐", "*")} ${ui.bold("UEFI HTTP Boot URIs")} ${
-      ui.dim("(for firmware that takes one)")
-    }`,
+  ui.say(
+    `\n   ${icon("🌐", "*")} ${ui.bold("UEFI HTTP Boot URIs")} ${ui.dim(
+      "(for firmware that takes one)",
+    )}`,
   );
   for (const h of hosts) {
-    console.log(`      ${ui.cyan(h.name.padEnd(14))} ${ui.blue(bootUri(ip, port, h.name))}`);
+    ui.say(`      ${ui.cyan(h.name.padEnd(14))} ${ui.blue(bootUri(ip, port, h.name))}`);
   }
-  console.log(
-    `      ${ui.dim("any machine".padEnd(14))} ${ui.blue(bootUri(ip, port))}  ${
-      ui.dim("(by MAC, else a menu; default: its own disk)")
-    }`,
+  ui.say(
+    `      ${ui.dim("any machine".padEnd(14))} ${ui.blue(bootUri(ip, port))}  ${ui.dim(
+      "(by MAC, else a menu; default: its own disk)",
+    )}`,
   );
   for (const other of ips.slice(1)) {
-    console.log(`      ${"".padEnd(14)} ${ui.dim(`also reachable at ${other}`)}`);
+    ui.say(`      ${"".padEnd(14)} ${ui.dim(`also reachable at ${other}`)}`);
   }
-  console.log(`   ${icon("📝", "*")} ${ui.dim("log".padEnd(10))} ${logFile.path}`);
-  console.log(
-    `   ${icon("📈", "*")} ${ui.dim("telemetry".padEnd(10))} ${TELEMETRY_DIR} ${
-      ui.dim("(OpenTelemetry, this PC only)")
-    }`,
+  ui.say(`   ${icon("📝", "*")} ${ui.dim("log".padEnd(10))} ${logFile.path}`);
+  ui.say(
+    `   ${icon("📈", "*")} ${ui.dim("telemetry".padEnd(10))} ${TELEMETRY_DIR} ${ui.dim(
+      "(OpenTelemetry, this PC only)",
+    )}`,
   );
-  console.log(
+  ui.say(
     `\n   ${icon("👀", "...")} ${ui.bold("Waiting for machines")} ${ui.dim("(Ctrl+C to stop)")}\n`,
   );
   // Read-only check of this machine's firewall; warnings only, in the background.
   const needs: Need[] = [{ protocol: "TCP", port, what: "HTTP" }];
   if (!args.includes("--no-tftp")) needs.push({ protocol: "UDP", port: tftpPort, what: "TFTP" });
-  firewallWarnings(needs).then((lines) => {
+  void firewallWarnings(needs).then((lines) => {
     for (const l of lines) serveOpts.emit({ name: "boot.firewall", message: l });
   });
   await new Promise(() => {});
@@ -387,21 +398,23 @@ async function main(args: string[]): Promise<number> {
  * Run as a program and exit: from this file, or from a fleet repository's own
  * entry file, which imports this one through `@stolos/` (spec 046-engine-instance).
  */
-export async function run(argv: string[] = Deno.args): Promise<never> {
+export async function run(argv: readonly string[] = proc.args): Promise<never> {
   const code = await bootMain(argv);
   ui.printPanel(); // spec 029: a secret changed and is not backed up yet
-  Deno.exit(code);
+  proc.exit(code);
 }
 
 /** `stolos boot <sub>` (spec 059): the boot server's commands; returns the exit code. */
-export async function bootMain(argv: string[]): Promise<number> {
+export async function bootMain(argv: readonly string[]): Promise<number> {
   // Spec 046: --fleet <id> (anywhere) chooses the fleet of this repository.
   const i = argv.findIndex((a) => a === "--fleet" || a.startsWith("--fleet="));
-  if (i >= 0) {
-    const id = argv[i].includes("=") ? argv[i].split("=", 2)[1] : argv[i + 1];
-    argv = [...argv.slice(0, i), ...argv.slice(i + (argv[i].includes("=") ? 1 : 2))];
+  const flag = argv[i];
+  if (flag !== undefined) {
+    const inline = flag.includes("=");
+    const id = inline ? flag.split("=", 2)[1] : argv[i + 1];
+    argv = [...argv.slice(0, i), ...argv.slice(i + (inline ? 1 : 2))];
     if (id) {
-      Deno.env.set("ARCHON_FLEET", id);
+      proc.env.set("ARCHON_FLEET", id);
       resetRoots();
     }
   }

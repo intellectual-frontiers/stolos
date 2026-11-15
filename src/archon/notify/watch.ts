@@ -25,8 +25,8 @@
  * @module
  */
 
-import { join } from "../core/path.ts";
-import { readTextOr } from "../core/fsx.ts";
+import { absurd } from "@intellectual-frontiers/ifc-ts/kernel";
+import { fs, path as paths, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "../core/exec.ts";
 import { loadFleet } from "../model/load.ts";
 import { localNetworks } from "../capabilities/ssh.ts";
@@ -77,7 +77,7 @@ export type Signal =
   | { kind: "unit-failed"; unit: string; detail: string }
   | { kind: "mail-bounced"; to: string; detail: string };
 
-const text = (m: Entry["MESSAGE"]) =>
+const text = (m: Entry["MESSAGE"]): string =>
   typeof m === "string" ? m : Array.isArray(m) ? new TextDecoder().decode(new Uint8Array(m)) : "";
 
 /** The journal entries that matter, as signals. Pure: tested without a journal. */
@@ -86,45 +86,63 @@ export function classify(e: Entry): Signal | undefined {
   const id = e.SYSLOG_IDENTIFIER ?? e._COMM ?? "";
   if (/^sshd/.test(id)) {
     let m = msg.match(/^Accepted (\S+) for (\S+) from (\S+) port \d+(?: ssh2)?(?:: (.+))?$/);
-    if (m) return { kind: "login", method: m[1], user: m[2], from: m[3], key: m[4] };
+    if (m)
+      return {
+        kind: "login",
+        method: m[1] ?? "",
+        user: m[2] ?? "",
+        from: m[3] ?? "",
+        ...(m[4] === undefined ? {} : { key: m[4] }),
+      };
     m = msg.match(
       /^Failed (?:password|publickey|keyboard-interactive\/pam) for (invalid user )?(\S+) from (\S+) port/,
     );
-    if (m) return { kind: "login-failed", invalidUser: !!m[1], user: m[2], from: m[3] };
+    if (m) return { kind: "login-failed", invalidUser: !!m[1], user: m[2] ?? "", from: m[3] ?? "" };
     m = msg.match(/^Invalid user (\S*) from (\S+) port/);
-    if (m) return { kind: "login-failed", invalidUser: true, user: m[1] || "(empty)", from: m[2] };
+    if (m)
+      return { kind: "login-failed", invalidUser: true, user: m[1] || "(empty)", from: m[2] ?? "" };
     return undefined;
   }
   if (id === "sudo") {
     const m = msg.match(
       /^\s*(\S+) : (.*(?:incorrect password attempts?|user NOT in sudoers|command not allowed|NOT allowed).*)$/,
     );
-    if (m) return { kind: "sudo-refused", user: m[1], detail: m[2] };
+    if (m) return { kind: "sudo-refused", user: m[1] ?? "", detail: m[2] ?? "" };
     return undefined;
   }
   if (id === "su") {
     let m = msg.match(/session opened for user (\S+?)(?:\(uid=\d+\))? by (\S+?)(?:\(uid=\d+\))?$/);
-    if (m) return { kind: "su", user: m[1], by: m[2] };
+    if (m) return { kind: "su", user: m[1] ?? "", by: m[2] ?? "" };
     m = msg.match(/^FAILED (?:SU|su) \(to (\S+)\) (\S+)/);
-    if (m) return { kind: "sudo-refused", user: m[2], detail: `su to ${m[1]} failed` };
+    if (m) return { kind: "sudo-refused", user: m[2] ?? "", detail: `su to ${m[1] ?? ""} failed` };
     return undefined;
   }
   if (id === "login" || id === "agetty") {
-    const m = msg.match(/session opened for user (\S+?)(?:\(uid=\d+\))?/) ??
+    const m =
+      msg.match(/session opened for user (\S+?)(?:\(uid=\d+\))?/) ??
       msg.match(/^ROOT LOGIN ON (\S+)/);
     if (m && /session opened/.test(msg)) {
-      return { kind: "console", user: m[1], via: "the console (keyboard, screen, or AMT)" };
+      return { kind: "console", user: m[1] ?? "", via: "the console (keyboard, screen, or AMT)" };
     }
-    if (m) return { kind: "console", user: "root", via: m[1] };
+    if (m) return { kind: "console", user: "root", via: m[1] ?? "" };
     return undefined;
   }
   if (
-    ["useradd", "userdel", "usermod", "groupadd", "groupdel", "gpasswd", "passwd", "chpasswd"]
-      .includes(id)
+    [
+      "useradd",
+      "userdel",
+      "usermod",
+      "groupadd",
+      "groupdel",
+      "gpasswd",
+      "passwd",
+      "chpasswd",
+    ].includes(id)
   ) {
     if (
-      /^(new user|new group|delete user|delete group|add '|delete '|change user|password changed|members of group|lock user|unlock user|failed)/i
-        .test(msg)
+      /^(new user|new group|delete user|delete group|add '|delete '|change user|password changed|members of group|lock user|unlock user|failed)/i.test(
+        msg,
+      )
     ) {
       return { kind: "account", detail: `${id}: ${msg}` };
     }
@@ -135,8 +153,9 @@ export function classify(e: Entry): Signal | undefined {
       return { kind: "kernel", what: "out of memory: a process was killed", detail: msg };
     }
     if (
-      /I\/O error|critical medium error|Buffer I\/O error|EXT4-fs error|BTRFS (error|critical)|XFS .*(metadata I\/O error|Corruption)|nvme.*(timeout|reset controller)/i
-        .test(msg)
+      /I\/O error|critical medium error|Buffer I\/O error|EXT4-fs error|BTRFS (error|critical)|XFS .*(metadata I\/O error|Corruption)|nvme.*(timeout|reset controller)/i.test(
+        msg,
+      )
     ) {
       return { kind: "kernel", what: "disk or filesystem error", detail: msg };
     }
@@ -151,13 +170,13 @@ export function classify(e: Entry): Signal | undefined {
   // Postfix (spec 027): mail the relay refused for good. Deferrals retry by themselves.
   if (id === "postfix/smtp" || id === "postfix/error") {
     const m = msg.match(/ to=<([^>]*)>.* status=bounced \((.*)\)$/);
-    if (m) return { kind: "mail-bounced", to: m[1], detail: m[2] };
+    if (m) return { kind: "mail-bounced", to: m[1] ?? "", detail: m[2] ?? "" };
     return undefined;
   }
   if (id === "systemd") {
     const m = msg.match(/^(\S+\.(?:service|mount|socket)): Failed with result '([^']+)'/);
     if (!m) return undefined;
-    const unit = e.UNIT ?? m[1];
+    const unit = e.UNIT ?? m[1] ?? "";
     if (/^archon-/.test(unit)) return undefined; // apply and the jobs report themselves
     return { kind: "unit-failed", unit, detail: msg };
   }
@@ -168,20 +187,21 @@ export function classify(e: Entry): Signal | undefined {
 
 function ipv4ToInt(ip: string): number | undefined {
   const p = ip.split(".").map(Number);
+  const [a = -1, b = -1, c = -1, d = -1] = p;
   if (p.length !== 4 || p.some((x) => !Number.isInteger(x) || x < 0 || x > 255)) return undefined;
-  return ((p[0] << 24) >>> 0) + (p[1] << 16) + (p[2] << 8) + p[3];
+  return ((a << 24) >>> 0) + (b << 16) + (c << 8) + d;
 }
 
 /** Is `ip` inside one of `cidrs`? (IPv4 exactly; IPv6 by its leading hex groups.) */
 export function inNetworks(ip: string, cidrs: string[]): boolean {
   const v4 = ipv4ToInt(ip.replace(/^::ffff:/, ""));
   for (const c of cidrs) {
-    const [net, bits = "32"] = c.split("/");
+    const [net = "", bits = "32"] = c.split("/");
     const n4 = ipv4ToInt(net);
     if (v4 !== undefined && n4 !== undefined) {
       const b = Number(bits);
       const mask = b === 0 ? 0 : (~0 << (32 - b)) >>> 0;
-      if (((v4 & mask) >>> 0) === ((n4 & mask) >>> 0)) return true;
+      if ((v4 & mask) >>> 0 === (n4 & mask) >>> 0) return true;
     } else if (v4 === undefined && n4 === undefined) {
       const lower = ip.toLowerCase();
       if (net === "fc00::" && /^f[cd]/.test(lower)) return true;
@@ -220,7 +240,7 @@ export async function readWatch(path = WATCH.state): Promise<WatchState> {
       failed: {},
       keys: {},
       disk: {},
-      ...JSON.parse((await readTextOr(path)) ?? "{}"),
+      ...(JSON.parse((await fs.readTextOr(path)) ?? "{}") as Partial<WatchState>),
     };
   } catch {
     return { seen: {}, failed: {}, keys: {}, disk: {} };
@@ -228,9 +248,7 @@ export async function readWatch(path = WATCH.state): Promise<WatchState> {
 }
 
 async function writeWatch(s: WatchState, path = WATCH.state) {
-  await Deno.writeTextFile(path, JSON.stringify(s, null, 2) + "\n", { mode: 0o600 }).catch(
-    () => {},
-  );
+  await fs.writeTextFile(path, JSON.stringify(s, null, 2) + "\n", { mode: 0o600 }).catch(() => {});
 }
 
 // ---------------------------------------------------------------- messages
@@ -251,7 +269,7 @@ export function eventFor(
     local: string[];
     seen: Record<string, string[]>;
     keyNames: Record<string, string>;
-    fromName?: string;
+    fromName?: string | undefined;
   },
 ): Event | undefined {
   const h = ctx.host;
@@ -268,8 +286,7 @@ export function eventFor(
           what: `root logged in to ${h} from ${
             ctx.fromName ?? sig.from
           } with ${sig.method}. sshd is configured with PermitRootLogin no, so its configuration was changed.`,
-          todo:
-            `If this was not you: disconnect the host from the network (or power it off), then re-install it (deno task stolos boot reinstall ${h}). archon verify shows the sshd drift.`,
+          todo: `If this was not you: disconnect the host from the network (or power it off), then re-install it (bun run stolos boot reinstall ${h}). archon verify shows the sshd drift.`,
           key: `login:root:${sig.from}:${hour()}`,
         };
       }
@@ -291,10 +308,13 @@ export function eventFor(
             ? `This is the first login for ${sig.user} from this address that ${h} has seen.`
             : "",
           `Logins by the same user from the same address and method are reported once an hour.`,
-        ].filter(Boolean).join("\n"),
-        todo: level === "warn"
-          ? `If this was not you or someone you expect: on ${h}, who and last -a show the sessions; sudo loginctl terminate-user ${sig.user} ends them; then change the password and check ~${sig.user}/.ssh/authorized_keys.`
-          : undefined,
+        ]
+          .filter(Boolean)
+          .join("\n"),
+        todo:
+          level === "warn"
+            ? `If this was not you or someone you expect: on ${h}, who and last -a show the sessions; sudo loginctl terminate-user ${sig.user} ends them; then change the password and check ~${sig.user}/.ssh/authorized_keys.`
+            : undefined,
         key: `login:${sig.user}:${sig.from}:${sig.method}:${hour()}`,
       };
     }
@@ -305,16 +325,14 @@ export function eventFor(
         }`,
         level: "warn",
         what: `${sig.user} logged in to ${h} on ${sig.via}, not over SSH.`,
-        todo:
-          `If nobody should be at ${h}'s console, check AMT's session log and the machine's physical access.`,
+        todo: `If nobody should be at ${h}'s console, check AMT's session log and the machine's physical access.`,
         key: `console:${sig.user}:${hour()}`,
       };
     case "su":
       return {
         event: `⚠ su: ${sig.by} became ${sig.user}`,
         level: "warn",
-        what:
-          `${sig.by} opened a shell as ${sig.user} with su on ${h}. Archon itself uses sudo, never su.`,
+        what: `${sig.by} opened a shell as ${sig.user} with su on ${h}. Archon itself uses sudo, never su.`,
         key: `su:${sig.by}:${sig.user}:${hour()}`,
       };
     case "sudo-refused":
@@ -322,16 +340,14 @@ export function eventFor(
         event: `✗ refused: ${sig.user} tried to gain privileges`,
         level: "fail",
         what: `On ${h}: ${sig.user}: ${sig.detail}`,
-        todo:
-          `If this was not you mistyping a password, someone has ${sig.user}'s session: who, last -a, and journalctl -t sudo on ${h}.`,
+        todo: `If this was not you mistyping a password, someone has ${sig.user}'s session: who, last -a, and journalctl -t sudo on ${h}.`,
         key: `sudo:${sig.user}:${hour()}`,
       };
     case "account":
       return {
         event: "⚠ accounts changed",
         level: "warn",
-        what:
-          `On ${h}: ${sig.detail}\nArchon's own apply makes such changes when the model changes; anything else is a change outside the spec loop.`,
+        what: `On ${h}: ${sig.detail}\nArchon's own apply makes such changes when the model changes; anything else is a change outside the spec loop.`,
         todo: `archon apply --check on ${h} shows any difference from the model.`,
         key: `account:${sig.detail}`,
       };
@@ -358,12 +374,14 @@ export function eventFor(
         event: `⚠ mail to ${sig.to} bounced`,
         level: "warn",
         what: `Postfix on ${h} could not deliver a message to ${sig.to}: ${sig.detail}`,
-        todo:
-          `journalctl -t postfix/smtp on ${h}; archon doctor (Email) checks the relay, the token, and the domain's records.`,
+        todo: `journalctl -t postfix/smtp on ${h}; archon doctor (Email) checks the relay, the token, and the domain's records.`,
         key: `bounce:${sig.to}:${hour()}`,
       };
-    default:
+    case "login-failed":
+      // Counted as they come, and reported once an hour (failedSummary).
       return undefined;
+    default:
+      return absurd(sig);
   }
 }
 
@@ -384,19 +402,24 @@ export function failedSummary(
     level: "warn",
     what: [
       `Failed SSH logins on ${host} since the last report:`,
-      ...rows.slice(0, 30).map(([ip, f]) =>
-        `- ${ip}${inNetworks(ip, local) ? " (local)" : ""}: ${f.count} attempt${
-          f.count === 1 ? "" : "s"
-        }, users ${f.users.slice(0, 8).join(", ")}${f.users.length > 8 ? ", ..." : ""} (${
-          f.first.slice(11, 16)
-        } to ${f.last.slice(11, 16)} UTC)`
-      ),
+      ...rows
+        .slice(0, 30)
+        .map(
+          ([ip, f]) =>
+            `- ${ip}${inNetworks(ip, local) ? " (local)" : ""}: ${f.count} attempt${
+              f.count === 1 ? "" : "s"
+            }, users ${f.users.slice(0, 8).join(", ")}${f.users.length > 8 ? ", ..." : ""} (${f.first.slice(
+              11,
+              16,
+            )} to ${f.last.slice(11, 16)} UTC)`,
+        ),
       outside
         ? `${outside} of the addresses are outside the local networks: is SSH reachable from the internet? It should not be.`
         : "",
-    ].filter(Boolean).join("\n"),
-    todo:
-      `Keys only from outside the local networks, and root never logs in, so guessing cannot succeed; still, find out where the attempts come from. journalctl -t sshd-session -t sshd on ${host}.`,
+    ]
+      .filter(Boolean)
+      .join("\n"),
+    todo: `Keys only from outside the local networks, and root never logs in, so guessing cannot succeed; still, find out where the attempts come from. journalctl -t sshd-session -t sshd on ${host}.`,
     key: `ssh-failed:${hour()}`,
   };
 }
@@ -407,21 +430,31 @@ export function failedSummary(
 async function fingerprints(path: string): Promise<Array<{ fp: string; name: string }>> {
   const r = await run(["ssh-keygen", "-lf", path]);
   if (!r.ok) return [];
-  return r.stdout.split("\n").filter(Boolean).map((l) => {
-    const [, fp, ...rest] = l.split(" ");
-    return { fp, name: rest.join(" ").replace(/\s*\([A-Z0-9-]+\)$/, "") };
-  });
+  return r.stdout
+    .split("\n")
+    .filter(Boolean)
+    .map((l) => {
+      const [, fp = "", ...rest] = l.split(" ");
+      return { fp, name: rest.join(" ").replace(/\s*\([A-Z0-9-]+\)$/, "") };
+    });
 }
 
 async function authorizedKeyFiles(): Promise<string[]> {
   const out: string[] = [];
-  const passwd = (await readTextOr("/etc/passwd")) ?? "";
+  const passwd = (await fs.readTextOr("/etc/passwd")) ?? "";
   for (const l of passwd.split("\n")) {
     const f = l.split(":");
-    if (f.length < 7) continue;
+    const home = f[5];
+    if (f.length < 7 || home === undefined) continue;
     for (const name of ["authorized_keys", "authorized_keys2"]) {
-      const p = join(f[5], ".ssh", name);
-      if (await Deno.stat(p).then(() => true).catch(() => false)) out.push(p);
+      const p = paths.join(home, ".ssh", name);
+      if (
+        await fs
+          .stat(p)
+          .then(() => true)
+          .catch(() => false)
+      )
+        out.push(p);
     }
   }
   return [...new Set(out)];
@@ -452,8 +485,7 @@ async function checkKeys(host: string, s: WatchState): Promise<Record<string, st
         ...removed.map((k) => `- ${k}`),
         `archon apply writes these files from the model (admin keys from GitHub); a change nobody made there is a way back in.`,
       ].join("\n"),
-      todo:
-        `If you did not change the model or your GitHub keys: archon apply on ${host} restores the file; then find out who changed it (journalctl around that time).`,
+      todo: `If you did not change the model or your GitHub keys: archon apply on ${host} restores the file; then find out who changed it (journalctl around that time).`,
       key: `keys:${p}:${added.concat(removed).join(",")}`,
     });
   }
@@ -481,18 +513,17 @@ async function checkDisk(host: string, s: WatchState): Promise<void> {
   for (const l of r.stdout.split("\n").slice(1)) {
     const f = l.trim().split(/\s+/);
     if (f.length < 6) continue;
-    const pct = Number(f[4].replace("%", ""));
+    const pct = Number((f[4] ?? "").replace("%", ""));
     const mount = f.slice(5).join(" ");
     if (pct < 90 || s.disk[mount] === today) continue;
     s.disk[mount] = today;
     await notify({
       event: `${pct >= 97 ? "✗" : "⚠"} ${mount} is ${pct}% full`,
       level: pct >= 97 ? "fail" : "warn",
-      what: `${mount} on ${host} (${f[0]}) is ${pct}% full: ${
-        Math.round(Number(f[3]) / 1024)
-      } MB free.`,
-      todo:
-        `sudo du -xh --max-depth=2 ${mount} | sort -h | tail on ${host}; archon observe prune frees metric archives; old backups are in /var/backups/archon.`,
+      what: `${mount} on ${host} (${f[0]}) is ${pct}% full: ${Math.round(
+        Number(f[3]) / 1024,
+      )} MB free.`,
+      todo: `sudo du -xh --max-depth=2 ${mount} | sort -h | tail on ${host}; archon observe prune frees metric archives; old backups are in /var/backups/archon.`,
       key: `disk:${mount}:${today}`,
     });
   }
@@ -500,17 +531,19 @@ async function checkDisk(host: string, s: WatchState): Promise<void> {
 
 /** Booted: once per boot, and whether the previous one ended cleanly. */
 async function checkBoot(host: string, s: WatchState): Promise<void> {
-  const bootId = (await readTextOr("/proc/sys/kernel/random/boot_id"))?.trim();
+  const bootId = (await fs.readTextOr("/proc/sys/kernel/random/boot_id"))?.trim();
   if (!bootId || s.bootId === bootId) return;
   const firstEver = s.bootId === undefined;
   s.bootId = bootId;
   if (firstEver) return;
   const prev = await run(["journalctl", "-b", "-1", "-n", "60", "-o", "cat", "--no-pager"]);
-  const clean = prev.ok &&
-    /Reached target (System )?(Power-Off|Reboot|Shutdown|.*Final Step)|systemd-shutdown|Journal stopped/i
-      .test(prev.stdout);
+  const clean =
+    prev.ok &&
+    /Reached target (System )?(Power-Off|Reboot|Shutdown|.*Final Step)|systemd-shutdown|Journal stopped/i.test(
+      prev.stdout,
+    );
   const known = prev.ok;
-  const up = (await readTextOr("/proc/uptime"))?.split(" ")[0];
+  const up = (await fs.readTextOr("/proc/uptime"))?.split(" ")[0];
   await notify({
     event: known && !clean ? "⚠ booted after an unclean shutdown" : "booted",
     level: known && !clean ? "warn" : "info",
@@ -519,12 +552,13 @@ async function checkBoot(host: string, s: WatchState): Promise<void> {
       !known
         ? "The previous boot's journal is not available, so whether it shut down cleanly is unknown."
         : clean
-        ? "The previous boot shut down cleanly (a reboot or power-off that someone or something asked for)."
-        : "The previous boot did not shut down cleanly: a power loss, a hang, a kernel crash, or a hard reset.",
+          ? "The previous boot shut down cleanly (a reboot or power-off that someone or something asked for)."
+          : "The previous boot did not shut down cleanly: a power loss, a hang, a kernel crash, or a hard reset.",
     ].join("\n"),
-    todo: known && !clean
-      ? `journalctl -b -1 -e on ${host} shows how the previous boot ended.`
-      : undefined,
+    todo:
+      known && !clean
+        ? `journalctl -b -1 -e on ${host} shows how the previous boot ended.`
+        : undefined,
     key: `boot:${bootId}`,
   });
 }
@@ -554,35 +588,46 @@ export async function watch(hostName: string): Promise<number> {
   await writeWatch(s);
 
   let dirty = false;
-  const rev = async () =>
+  const rev = async (): Promise<string> =>
     (await run(["git", "-C", "/srv/archon", "rev-parse", "HEAD"])).stdout.trim();
   const startedAt = await rev();
-  const tick = setInterval(async () => {
-    try {
-      // A new checkout (archon update, reconcile): restart on the new code.
-      if ((await rev()) !== startedAt) {
-        await writeWatch(s);
-        Deno.exit(0);
-      }
-      keyNames = await checkKeys(hostName, s);
-      await checkDisk(hostName, s);
-      const last = s.failedReportedAt ? Date.parse(s.failedReportedAt) : 0;
-      if (Object.keys(s.failed).length && Date.now() - last >= 3600_000) {
-        const ev = failedSummary(hostName, s.failed, local);
-        if (ev) await notify(ev);
-        s.failed = {};
-        s.failedReportedAt = new Date().toISOString();
-      }
-      await writeWatch(s);
-      dirty = false;
-    } catch { /* the next tick tries again */ }
-  }, 600_000);
+  const tick = setInterval(
+    () =>
+      void (async (): Promise<void> => {
+        try {
+          // A new checkout (archon update, reconcile): restart on the new code.
+          if ((await rev()) !== startedAt) {
+            await writeWatch(s);
+            proc.exit(0);
+          }
+          keyNames = await checkKeys(hostName, s);
+          await checkDisk(hostName, s);
+          const last = s.failedReportedAt ? Date.parse(s.failedReportedAt) : 0;
+          if (Object.keys(s.failed).length && Date.now() - last >= 3600_000) {
+            const ev = failedSummary(hostName, s.failed, local);
+            if (ev) await notify(ev);
+            s.failed = {};
+            s.failedReportedAt = new Date().toISOString();
+          }
+          await writeWatch(s);
+          dirty = false;
+        } catch {
+          /* the next tick tries again */
+        }
+      })(),
+    600_000,
+  );
 
   const args = ["-f", "-o", "json", "--no-pager"];
   args.push(...(s.cursor ? [`--after-cursor=${s.cursor}`] : ["--since=now"]));
-  const child = new Deno.Command("journalctl", { args, stdout: "piped", stderr: "null" }).spawn();
+  const child = proc.spawn(["journalctl", ...args], {
+    stdin: "null",
+    stdout: "piped",
+    stderr: "null",
+  });
+  if (!child.stdout) throw new Error("journalctl's output was not piped");
   const saver = setInterval(() => {
-    if (dirty) writeWatch(s).then(() => (dirty = false));
+    if (dirty) void writeWatch(s).then(() => (dirty = false));
   }, 30_000);
   let buf = "";
   const dec = new TextDecoder();
@@ -594,7 +639,7 @@ export async function watch(hostName: string): Promise<number> {
       buf = buf.slice(i + 1);
       let e: Entry;
       try {
-        e = JSON.parse(line);
+        e = JSON.parse(line) as Entry;
       } catch {
         continue;
       }
@@ -603,9 +648,10 @@ export async function watch(hostName: string): Promise<number> {
       const sig = classify(e);
       if (!sig) continue;
       if (sig.kind === "login-failed") {
-        const at = new Date(Number(e.__REALTIME_TIMESTAMP ?? Date.now() * 1000) / 1000)
-          .toISOString();
-        const f = s.failed[sig.from] ??= { count: 0, users: [], first: at, last: at };
+        const at = new Date(
+          Number(e.__REALTIME_TIMESTAMP ?? Date.now() * 1000) / 1000,
+        ).toISOString();
+        const f = (s.failed[sig.from] ??= { count: 0, users: [], first: at, last: at });
         f.count++;
         f.last = at;
         if (!f.users.includes(sig.user)) f.users.push(sig.user);
@@ -619,7 +665,7 @@ export async function watch(hostName: string): Promise<number> {
         fromName: "from" in sig ? await reverse(sig.from) : undefined,
       });
       if (sig.kind === "login") {
-        const list = s.seen[sig.user] ??= [];
+        const list = (s.seen[sig.user] ??= []);
         if (!list.includes(sig.from)) list.push(sig.from);
         if (list.length > 50) list.shift();
       }

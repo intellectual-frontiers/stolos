@@ -9,22 +9,34 @@
  * @module
  */
 
+import { proc } from "@intellectual-frontiers/ifc-ts/runtime";
+
+/** How long an installer may go quiet after taking the image. */
 export const STALL_MS = 6 * 60_000;
+
+/** Starts a timer; gives what clears it. */
+export type SetTimer = (f: () => void, ms: number) => unknown;
 
 /** Watches installers that took the image (off by default: boot serve --stall-watch). Keyed by host when known, else by address. */
 export class StallWatch {
   #timers = new Map<string, unknown>();
+  private readonly onStall: (address: string) => void;
+  private readonly ms: number;
+  private readonly set: SetTimer;
+  private readonly clear: (id: unknown) => void;
   /** onStall is called with the key when nothing more came within ms. */
   constructor(
-    private onStall: (address: string) => void,
-    private ms = STALL_MS,
-    private set: (f: () => void, ms: number) => unknown = (f, ms) => {
-      const id = setTimeout(f, ms);
-      Deno.unrefTimer(id); // never keeps the process alive
-      return id;
-    },
-    private clear: (id: unknown) => void = (id) => clearTimeout(id as number),
-  ) {}
+    onStall: (address: string) => void,
+    ms = STALL_MS,
+    // A timer that never keeps the process alive.
+    set: SetTimer = (f, ms) => proc.unrefTimer(f, ms),
+    clear: (id: unknown) => void = (id) => (id as proc.Timer).clear(),
+  ) {
+    this.onStall = onStall;
+    this.ms = ms;
+    this.set = set;
+    this.clear = clear;
+  }
 
   /** The whole installer image was requested from this address. */
   imageServed(address: string): void {
@@ -58,7 +70,7 @@ export class StallWatch {
 export function stallMessage(host: string | undefined): string {
   return `${host ?? "this machine"} took the installer image ${
     STALL_MS / 60_000
-  } minutes ago and has not asked for its configuration: its installer has most likely run out of memory. Ubuntu's network installer holds the whole image in memory and needs about 8 GiB of RAM. With less, install Ubuntu by hand (or from its cloud image) and finish it with: deno task stolos host bootstrap ${
+  } minutes ago and has not asked for its configuration: its installer has most likely run out of memory. Ubuntu's network installer holds the whole image in memory and needs about 8 GiB of RAM. With less, install Ubuntu by hand (or from its cloud image) and finish it with: bun run stolos host bootstrap ${
     host ?? "<host>"
   } --ssh <user>@<address>`;
 }

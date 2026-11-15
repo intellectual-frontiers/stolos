@@ -21,9 +21,10 @@ import type { ScfCatalog } from "../compliance/catalog.ts";
 import type { Evidence } from "../compliance/report.ts";
 import type { PolicyResult } from "../adopt/policy.ts";
 import type { Estate } from "../estate/graph.ts";
-import { join } from "../core/path.ts";
+import { errors, fs, path as paths } from "@intellectual-frontiers/ifc-ts/runtime";
 import { complianceFindings } from "../ocsf/finding.ts";
 import { VERSION } from "../version.ts";
+import { ui } from "../core/ui.ts";
 import { OCSF_MEDIA_TYPE, openApiDocument, OSCAL_DOCUMENTS } from "./openapi.ts";
 import { listQuery, listRows, type Page, resourceNamed, RESOURCES } from "./resources.ts";
 
@@ -73,12 +74,12 @@ export function apiError(status: number, error: string, headers: HeadersInit = {
 export function apiUnauthorized(): Response {
   return apiError(
     401,
-    "sign in first: open the launch link `deno task stolos console` prints; the API answers the console's session (its cookie)",
+    "sign in first: open the launch link `bun run stolos console` prints; the API answers the console's session (its cookie)",
   );
 }
 
 /** The evidence list's paging (it has no columns to filter on). */
-const paging = (params: URLSearchParams) =>
+const paging = (params: URLSearchParams): ReturnType<typeof listQuery> =>
   listQuery({ name: "evidence", kind: "view", doc: "", columns: [], order: [] }, params);
 
 /** Every evidence bundle in a directory, newest first. */
@@ -87,9 +88,9 @@ export async function evidenceBundles(
 ): Promise<Array<{ name: string; size: number; modified: string | null; href: string }>> {
   const out = [];
   try {
-    for await (const e of Deno.readDir(dir)) {
+    for await (const e of fs.readDir(dir)) {
       if (!e.isFile || !BUNDLE_NAME.test(e.name)) continue;
-      const st = await Deno.lstat(join(dir, e.name));
+      const st = await fs.lstat(paths.join(dir, e.name));
       if (!st.isFile) continue;
       out.push({
         name: e.name,
@@ -99,32 +100,40 @@ export async function evidenceBundles(
       });
     }
   } catch (x) {
-    if (!(x instanceof Deno.errors.NotFound)) throw x;
+    if (!(x instanceof errors.NotFound)) throw x;
   }
-  return out.sort((a, b) =>
-    (b.modified ?? "").localeCompare(a.modified ?? "") || a.name.localeCompare(b.name)
+  return out.sort(
+    (a, b) => (b.modified ?? "").localeCompare(a.modified ?? "") || a.name.localeCompare(b.name),
   );
 }
 
 /** A finding row as the evidence OCSF's mapping reads (spec 089). */
 function findingEvidence(row: Record<string, unknown>, fleet: string): Evidence {
   return {
-    scf: [String(row.scf_control)],
-    subject: row.subject_uid == null ? fleet : String(row.subject_uid),
+    scf: [cell(row["scf_control"]) ?? ""],
+    subject: cell(row["subject_uid"]) ?? fleet,
     source: "estate",
-    check: String(row.policy_id),
-    status: String(row.status) as PolicyResult["status"],
-    detail: row.detail == null ? "" : String(row.detail),
-    ...(row.fix == null ? {} : { fix: String(row.fix) }),
+    check: cell(row["policy_id"]) ?? "",
+    status: (cell(row["status"]) ?? "") as PolicyResult["status"],
+    detail: cell(row["detail"]) ?? "",
+    ...((fix) => (fix === undefined ? {} : { fix }))(cell(row["fix"])),
   };
 }
 
-const wantsOcsf = (req: Request, params: URLSearchParams) =>
+/** A database cell as text, or undefined where it is null. */
+function cell(v: unknown): string | undefined {
+  if (v === null || v === undefined) return undefined;
+  if (typeof v === "string") return v;
+  if (typeof v === "number" || typeof v === "bigint" || typeof v === "boolean") return String(v);
+  return JSON.stringify(v);
+}
+
+const wantsOcsf = (req: Request, params: URLSearchParams): boolean =>
   params.get("format") === "ocsf" ||
   (params.get("format") === null &&
-    (req.headers.get("accept") ?? "").split(",").some((t) =>
-      t.trim().split(";")[0].toLowerCase() === OCSF_MEDIA_TYPE
-    ));
+    (req.headers.get("accept") ?? "")
+      .split(",")
+      .some((t) => (t.trim().split(";")[0] ?? "").toLowerCase() === OCSF_MEDIA_TYPE));
 
 async function answer(req: Request, url: URL, src: ApiSource): Promise<Response> {
   const path = url.pathname === "/v1" ? API_PREFIX : url.pathname;
@@ -155,7 +164,7 @@ async function answer(req: Request, url: URL, src: ApiSource): Promise<Response>
     if (!doc) {
       return apiError(
         404,
-        "the OSCAL documents need the SCF catalog on this PC: deno task stolos compliance --download",
+        "the OSCAL documents need the SCF catalog on this PC: bun run stolos compliance --download",
       );
     }
     return apiJson(doc);
@@ -184,7 +193,7 @@ async function answer(req: Request, url: URL, src: ApiSource): Promise<Response>
     }
     const listed = (await evidenceBundles(src.evidenceDir)).find((b) => b.name === name);
     if (!listed) return apiError(404, `no evidence bundle ${name} on this PC`);
-    const file = await Deno.open(join(src.evidenceDir, name), { read: true });
+    const file = await fs.open(paths.join(src.evidenceDir, name), { read: true });
     return new Response(file.readable, {
       headers: {
         "content-type": "application/zip",
@@ -211,10 +220,10 @@ async function answer(req: Request, url: URL, src: ApiSource): Promise<Response>
         ...page,
         items: page.items.flatMap((row) =>
           complianceFindings(findingEvidence(row, src.fleet), {
-            now: new Date(Date.parse(String(row.observed_at)) || Date.now()),
+            now: new Date(Date.parse(cell(row["observed_at"]) ?? "") || Date.now()),
             fleet: src.fleet,
             ...(catalog ? { catalog } : {}),
-          })
+          }),
         ),
       },
       200,
@@ -233,7 +242,9 @@ export async function apiHandler(req: Request, src: ApiSource): Promise<Response
   try {
     r = await answer(req, new URL(req.url), src);
   } catch (e) {
-    console.error(`api: ${new URL(req.url).pathname}: ${(e as Error).stack ?? e}`);
+    ui.say(
+      `api: ${new URL(req.url).pathname}: ${e instanceof Error ? (e.stack ?? e.message) : String(e)}`,
+    );
     r = apiError(500, `${(e as Error).message} (the console's terminal has the details)`);
   }
   if (req.method === "HEAD") {

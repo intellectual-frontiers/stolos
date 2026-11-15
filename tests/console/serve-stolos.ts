@@ -1,6 +1,12 @@
-// Spec 066: the Stolos Console with a fake fleet and a fake runner, for the browser test
-// (tests/console/stolos-browser.cjs, CI's console-browser job) and the server tests.
-// Usage: deno run -A tests/console/serve-stolos.ts <port>
+/**
+ * Spec 066: the Stolos Console with a fake fleet and a fake runner, for the browser test
+ * (tests/console/stolos-browser.cjs, CI's console-browser job) and the server tests.
+ * Usage: bun tests/console/serve-stolos.ts <port>
+ *
+ * @module
+ */
+
+import { fs, proc, serve } from "@intellectual-frontiers/ifc-ts/runtime";
 import { Sessions } from "../../src/archon/console/auth.ts";
 import type { ActivityEntry } from "../../src/archon/console/pages.ts";
 import type { PcFacts } from "../../src/archon/console/pc.ts";
@@ -19,6 +25,7 @@ import {
   type ScfCatalog,
 } from "../../src/archon/compliance/catalog.ts";
 import { FRAMEWORKS } from "../../src/archon/compliance/scf.ts";
+import { must } from "./tree.ts";
 
 const now = new Date().toISOString().replace(/\.\d+Z$/, "Z");
 const mac = toObserved(
@@ -46,12 +53,14 @@ const machines = [
     hostKeys: [],
     adopted: "2026-11-02",
     owner: "bob",
-    accepted: [{
-      policy: "firewall",
-      reason: "the office router filters; this desktop serves nothing",
-      by: "Alice Example",
-      until: "2099-01-01",
-    }],
+    accepted: [
+      {
+        policy: "firewall",
+        reason: "the office router filters; this desktop serves nothing",
+        by: "Alice Example",
+        until: "2099-01-01",
+      },
+    ],
   },
 ];
 const cf: Observation = {
@@ -112,7 +121,7 @@ export const FACTS: PcFacts = {
     },
     { name: "wsl-alice", kind: "workstation", os: "Ubuntu", failing: [] },
     ...machines.map((m, i) => {
-      const o = [mac, desk][i];
+      const o = must([mac, desk][i]);
       const rs = policies(m, o, t);
       return {
         name: m.name,
@@ -148,33 +157,35 @@ export const FACTS: PcFacts = {
   ],
   adopted: machines.map((m, i) => ({
     machine: m,
-    observed: [mac, desk][i],
+    observed: must([mac, desk][i]),
     results: policies(m, [mac, desk][i], t),
   })),
-  devices: [{
-    device: {
-      name: "front-printer",
-      kind: "printer",
-      address: "10.0.30.40",
-      owner: "office",
-      location: "front desk",
-      snmp: { user: "stolos", auth: "sha256" },
-      added: now,
+  devices: [
+    {
+      device: {
+        name: "front-printer",
+        kind: "printer",
+        address: "10.0.30.40",
+        owner: "office",
+        location: "front desk",
+        snmp: { user: "stolos", auth: "sha256" },
+        added: now,
+      },
+      observed: {
+        at: now,
+        description: "Example LaserJet, firmware 2026.1",
+        sysName: "front-printer",
+        objectId: "1.3.6.1.4.1.11.2.3.9.1",
+        contact: "office",
+        location: "front desk",
+        uptimeDays: 12,
+        interfaces: 1,
+        serial: "VNB0000000",
+        model: "LaserJet Example",
+      },
+      results: [],
     },
-    observed: {
-      at: now,
-      description: "Example LaserJet, firmware 2026.1",
-      sysName: "front-printer",
-      objectId: "1.3.6.1.4.1.11.2.3.9.1",
-      contact: "office",
-      location: "front desk",
-      uptimeDays: 12,
-      interfaces: 1,
-      serial: "VNB0000000",
-      model: "LaserJet Example",
-    },
-    results: [],
-  }].map((d) => ({
+  ].map((d) => ({
     ...d,
     device: d.device as DeviceDef,
     results: devicePolicies(d.device as DeviceDef, d.observed),
@@ -217,34 +228,37 @@ export const FACTS: PcFacts = {
 };
 
 /** A boot.log with one finished install and one under way. */
-export const BOOT_LOG = [
-  "2026-11-15T10:00:01Z 10.0.30.59 TFTP bootx64.efi",
-  "2026-11-15T10:00:03Z 10.0.30.59 alpha: armed, starting its install",
-  "2026-11-15T10:00:09Z 10.0.30.59 TFTP linux",
-  "2026-11-15T10:01:40Z 10.0.30.59 alpha: installer image (whole)",
-  "2026-11-15T10:02:10Z 10.0.30.59 alpha: install config sent (network on aa:bb:cc:00:00:01)",
-  "2026-11-15T10:04:00Z 10.0.30.59 alpha: installer: copying Ubuntu to the disk",
-  "2026-11-15T10:08:00Z 10.0.30.59 alpha: install finished; disarmed",
-  "2026-11-15T10:09:00Z 10.0.30.59 alpha: First boot: installing Deno, cloning the repository",
-  "2026-11-15T10:10:30Z 10.0.30.59 alpha: [ok] Verify: 142 passed",
-  "2026-11-15T10:10:31Z 10.0.30.59 alpha: Ready: 142/142 checks · ssh alpha",
-  "2026-11-15T11:00:01Z 10.0.30.60 TFTP grubx64.efi",
-  "2026-11-15T11:00:03Z 10.0.30.60 beta: claimed by beta",
-  "2026-11-15T11:01:50Z 10.0.30.60 beta: installer image (whole)",
-].join("\n") + "\n";
+export const BOOT_LOG =
+  [
+    "2026-11-15T10:00:01Z 10.0.30.59 TFTP bootx64.efi",
+    "2026-11-15T10:00:03Z 10.0.30.59 alpha: armed, starting its install",
+    "2026-11-15T10:00:09Z 10.0.30.59 TFTP linux",
+    "2026-11-15T10:01:40Z 10.0.30.59 alpha: installer image (whole)",
+    "2026-11-15T10:02:10Z 10.0.30.59 alpha: install config sent (network on aa:bb:cc:00:00:01)",
+    "2026-11-15T10:04:00Z 10.0.30.59 alpha: installer: copying Ubuntu to the disk",
+    "2026-11-15T10:08:00Z 10.0.30.59 alpha: install finished; disarmed",
+    "2026-11-15T10:09:00Z 10.0.30.59 alpha: First boot: installing Bun, cloning the repository",
+    "2026-11-15T10:10:30Z 10.0.30.59 alpha: [ok] Verify: 142 passed",
+    "2026-11-15T10:10:31Z 10.0.30.59 alpha: Ready: 142/142 checks · ssh alpha",
+    "2026-11-15T11:00:01Z 10.0.30.60 TFTP grubx64.efi",
+    "2026-11-15T11:00:03Z 10.0.30.60 beta: claimed by beta",
+    "2026-11-15T11:01:50Z 10.0.30.60 beta: installer image (whole)",
+  ].join("\n") + "\n";
 
 /** A fake runner: lines, and fleet query answers as JSON. */
 export const fakeRunner: StolosDeps["runner"] = async (argv, each) => {
   if (argv[0] === "fleet" && argv[1] === "query") {
-    if (/shadow/.test(argv[2])) {
+    if (/shadow/.test(argv[2] ?? "")) {
       each("   [FAIL] refused: the table shadow is never served (secrets or reaching out)");
       return 1;
     }
-    each(JSON.stringify([
-      { machine: "alpha", kind: "managed", rows: [{ name: "Ubuntu", version: "26.04" }] },
-      { machine: "alice-mbp", kind: "adopted", rows: [{ name: "macOS", version: "15.1" }] },
-      { machine: "bob-desk", kind: "adopted", error: "osquery is not installed here" },
-    ]));
+    each(
+      JSON.stringify([
+        { machine: "alpha", kind: "managed", rows: [{ name: "Ubuntu", version: "26.04" }] },
+        { machine: "alice-mbp", kind: "adopted", rows: [{ name: "macOS", version: "15.1" }] },
+        { machine: "bob-desk", kind: "adopted", error: "osquery is not installed here" },
+      ]),
+    );
     return 1;
   }
   for (let i = 0; i < 20; i++) {
@@ -272,57 +286,62 @@ const estateObs = (provider: string, account: string, entities: Observation["ent
 
 /** The fake fleet's estate (spec 090): people, accounts, a repository, machines, and findings. */
 export function fakeEstate(): Estate {
-  const e = buildGraph({
-    fleet: "lab",
-    sources: [
-      estateObs("bamboohr", "example", {
-        people: [
-          { email: "alice@example.org", name: "Alice", status: "active", type: "employee" },
-          { email: "bob@example.org", name: "Bob", status: "terminated", end: "2026-10-31" },
-        ],
-      }),
-      estateObs("okta", "example.okta.com", {
-        accounts: [
-          {
-            system: "okta",
-            id: "1",
-            name: "alice",
-            email: "alice@example.org",
-            active: true,
-            admin: true,
-            mfa: false,
-          },
-          {
-            system: "okta",
-            id: "2",
-            name: "bob",
-            email: "bob@example.org",
-            active: true,
-            admin: false,
-            mfa: true,
-          },
-        ],
-      }),
-      estateObs("github", "example", {
-        accounts: [{ system: "github", id: "3", name: "ci-bot", active: true, service: true }],
-        repositories: [{ system: "github", name: "example/app", private: true, protected: false }],
-      }),
-    ],
-    machines: [
-      { source: "stolos", id: "alpha", name: "alpha", managed: true, os: "Ubuntu" },
-      {
-        source: "adopted",
-        id: "alice-mbp",
-        name: "alice-mbp",
-        owner: "alice@example.org",
-        managed: false,
-        serial: "C02EXAMPLE",
-        encrypted: true,
-      },
-      { source: "adopted", id: "bob-desk", name: "bob-desk", managed: false, encrypted: false },
-    ],
-    links: {},
-  }, { now: new Date("2026-11-15T12:00:00Z") });
+  const e = buildGraph(
+    {
+      fleet: "lab",
+      sources: [
+        estateObs("bamboohr", "example", {
+          people: [
+            { email: "alice@example.org", name: "Alice", status: "active", type: "employee" },
+            { email: "bob@example.org", name: "Bob", status: "terminated", end: "2026-10-31" },
+          ],
+        }),
+        estateObs("okta", "example.okta.com", {
+          accounts: [
+            {
+              system: "okta",
+              id: "1",
+              name: "alice",
+              email: "alice@example.org",
+              active: true,
+              admin: true,
+              mfa: false,
+            },
+            {
+              system: "okta",
+              id: "2",
+              name: "bob",
+              email: "bob@example.org",
+              active: true,
+              admin: false,
+              mfa: true,
+            },
+          ],
+        }),
+        estateObs("github", "example", {
+          accounts: [{ system: "github", id: "3", name: "ci-bot", active: true, service: true }],
+          repositories: [
+            { system: "github", name: "example/app", private: true, protected: false },
+          ],
+        }),
+      ],
+      machines: [
+        { source: "stolos", id: "alpha", name: "alpha", managed: true, os: "Ubuntu" },
+        {
+          source: "adopted",
+          id: "alice-mbp",
+          name: "alice-mbp",
+          owner: "alice@example.org",
+          managed: false,
+          serial: "C02EXAMPLE",
+          encrypted: true,
+        },
+        { source: "adopted", id: "bob-desk", name: "bob-desk", managed: false, encrypted: false },
+      ],
+      links: {},
+    },
+    { now: new Date("2026-11-15T12:00:00Z") },
+  );
   estatePolicies(e, new Date("2026-11-15T12:00:00Z"));
   return e;
 }
@@ -332,14 +351,17 @@ export const FAKE_CATALOG: ScfCatalog = {
   format: CATALOG_FORMAT,
   version: SCF_SOURCE.version,
   controls: Object.fromEntries(
-    ["CRY-07", "CHG-03", "IAC-06", "IAC-15", "END-04"].map((id) => [id, {
-      domain: "Example",
-      name: id,
-      description: `${id}, for the tests.`,
-      maps: Object.fromEntries(
-        FRAMEWORKS.map((f) => [f.id, f.id === "nist80053" ? ["AC-2"] : []]),
-      ) as ScfCatalog["controls"][string]["maps"],
-    }]),
+    ["CRY-07", "CHG-03", "IAC-06", "IAC-15", "END-04"].map((id) => [
+      id,
+      {
+        domain: "Example",
+        name: id,
+        description: `${id}, for the tests.`,
+        maps: Object.fromEntries(
+          FRAMEWORKS.map((f) => [f.id, f.id === "nist80053" ? ["AC-2"] : []]),
+        ) as ScfCatalog["controls"][string]["maps"],
+      },
+    ]),
   ),
 };
 
@@ -350,15 +372,15 @@ export async function fakeConsole(
 ): Promise<{ handler: ReturnType<typeof stolosHandler>; launch: Launch; evidenceDir: string }> {
   const log: ActivityEntry[] = [];
   const launch = new Launch();
-  const state = await Deno.makeTempDir();
+  const state = await fs.makeTempDir();
   const evidenceDir = `${state}/evidence`;
-  await Deno.mkdir(evidenceDir);
-  await Deno.writeTextFile(`${state}/secret.txt`, "not for the API\n");
-  await Deno.writeFile(
+  await fs.mkdir(evidenceDir);
+  await fs.writeTextFile(`${state}/secret.txt`, "not for the API\n");
+  await fs.writeFile(
     `${evidenceDir}/lab-evidence-2026-01-01-to-2026-06-30.zip`,
-    new Uint8Array([0x50, 0x4b, 0x05, 0x06, ...new Array(18).fill(0)]),
+    new Uint8Array([0x50, 0x4b, 0x05, 0x06, ...new Array<number>(18).fill(0)]),
   );
-  await Deno.writeTextFile(`${evidenceDir}/notes.txt`, "not a bundle\n");
+  await fs.writeTextFile(`${evidenceDir}/notes.txt`, "not a bundle\n");
   const estate = fakeEstate();
   const handler = stolosHandler({
     port,
@@ -386,7 +408,7 @@ export async function fakeConsole(
       });
     },
     bootLog: () => Promise.resolve(BOOT_LOG),
-    cacheDir: await Deno.makeTempDir(),
+    cacheDir: await fs.makeTempDir(),
     estate: () => Promise.resolve(estate),
     evidenceDir,
     catalog: () => Promise.resolve(FAKE_CATALOG),
@@ -396,16 +418,15 @@ export async function fakeConsole(
 }
 
 if (import.meta.main) {
-  const port = Number(Deno.args[0] ?? 8098);
+  const port = Number(proc.args[0] ?? 8098);
   const { handler, launch } = await fakeConsole(port);
   // Test only: a fresh launch link (the real console prints it in the terminal).
-  Deno.serve(
-    { port, hostname: "127.0.0.1", onListen: () => console.log("listening") },
-    (req) =>
-      new URL(req.url).pathname === "/__test/launch"
-        ? new Response(launch.issue())
-        : new URL(req.url).pathname === "/healthz"
+  await serve({ port, hostname: "127.0.0.1" }, (req) =>
+    new URL(req.url).pathname === "/__test/launch"
+      ? new Response(launch.issue())
+      : new URL(req.url).pathname === "/healthz"
         ? new Response("ok\n")
         : handler(req),
   );
+  console.log("listening");
 }

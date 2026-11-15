@@ -16,6 +16,7 @@
  * @module
  */
 
+import { fs, type tcp } from "@intellectual-frontiers/ifc-ts/runtime";
 import { explainHint } from "../archon/core/ui.ts";
 import type { ArchonEvent } from "../archon/telemetry/events.ts";
 import {
@@ -27,6 +28,7 @@ import {
 } from "./telemetry.ts";
 import { loadFleet, loadServers } from "../archon/model/load.ts";
 import type { HostDef } from "../archon/model/types.ts";
+import type { AcmeCarry } from "../archon/web/acme.ts";
 import { metaData, userData } from "../archon/render/autoinstall.ts";
 import { liveToken, loadTokens, readSecret, saveTokens, SECRETS } from "../archon/core/secrets.ts";
 import type { Assets } from "./assets.ts";
@@ -38,16 +40,18 @@ import { describe, type InstallerEvent } from "./progress.ts";
 import { installEnd, installProblem, installStep, served } from "./telemetry.ts";
 import { type Handler, listen } from "./http.ts";
 
-/** Options for the boot server (`deno task stolos boot serve`). */
+/** Options for the boot server (`bun run stolos boot serve`). */
 export interface ServeOptions {
   /** The HTTP port the boot server listens on (GRUB, the installer and the servers reach it). */
   port: number;
   /** Proxy the installer and first boot should use (sites behind one; optional). */
-  proxy?: string;
+  proxy?: string | undefined;
   /** PEM of a CA that proxy needs trusted (optional). */
-  caPem?: string;
+  caPem?: string | undefined;
   /** GitHub Enterprise or a releases mirror (optional). */
-  githubApi?: string;
+  githubApi?: string | undefined;
+  /** The address to listen on (every IPv4 address by default). */
+  hostname?: string | undefined;
   /** Spec 049: every event, structured; the window and boot.log render it. */
   emit: (e: ArchonEvent) => void;
   /**
@@ -61,17 +65,17 @@ export interface ServeOptions {
 /** How long a machine's address stays tied to the host named in its Boot URI. */
 const BOOT_URI_MEMORY_MS = 15 * 60 * 1000;
 
-const text = (body: string, status = 200) =>
+const text = (body: string, status = 200): Response =>
   new Response(body, { status, headers: { "content-type": "text/plain; charset=utf-8" } });
 
 async function file(path: string, req: Request): Promise<Response> {
-  const st = await Deno.stat(path);
+  const st = await fs.stat(path);
   const range = req.headers.get("range")?.match(/^bytes=(\d+)-(\d*)$/);
-  const f = await Deno.open(path);
+  const f = await fs.open(path);
   if (range) {
     const start = Number(range[1]);
     const end = range[2] ? Number(range[2]) : st.size - 1;
-    await f.seek(start, Deno.SeekMode.Start);
+    await f.seek(start, "start");
     const len = end - start + 1;
     let left = len;
     const body = new ReadableStream<Uint8Array>({
@@ -108,8 +112,8 @@ async function file(path: string, req: Request): Promise<Response> {
 }
 
 /** Serve HTTP with the given handler: the same one TFTP uses, so they share what they saw. */
-export function serve(o: ServeOptions, h: Handler): Deno.Listener {
-  return listen(o.port, h);
+export function serve(o: ServeOptions, h: Handler): Promise<tcp.Listener> {
+  return listen(o.port, h, o.hostname ?? "0.0.0.0");
 }
 
 /** The request handler, shared by HTTP and TFTP (PXE). */
@@ -136,20 +140,23 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
   const stalls = new StallWatch(
     o.stallWatch
       ? (key) => {
-        const host = key.startsWith("host:") ? key.slice(5) : installing.get(key);
-        const address = key.startsWith("host:") ? undefined : key;
-        o.emit({
-          name: "boot.stalled",
-          severity: "warn",
-          address,
-          host,
-          message: `${stallMessage(host)} (${explainHint("E051-INSTALLER-STALLED")})`,
-          attrs: { code: "E051-INSTALLER-STALLED" },
-        });
-        if (host) {
-          installProblem(host, "the installer went quiet after taking the image (too little RAM?)");
+          const host = key.startsWith("host:") ? key.slice(5) : installing.get(key);
+          const address = key.startsWith("host:") ? undefined : key;
+          o.emit({
+            name: "boot.stalled",
+            severity: "warn",
+            address,
+            host,
+            message: `${stallMessage(host)} (${explainHint("E051-INSTALLER-STALLED")})`,
+            attrs: { code: "E051-INSTALLER-STALLED" },
+          });
+          if (host) {
+            installProblem(
+              host,
+              "the installer went quiet after taking the image (too little RAM?)",
+            );
+          }
         }
-      }
       : () => {},
   );
   const addressHost = (from: string): string | undefined => {
@@ -182,12 +189,19 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
     return text(hostMenu(host, base, t?.token));
   };
   const milestones = new Map<string, Set<string>>();
+  const asset = (n: string): string => {
+    const p = assets.files[n];
+    if (p === undefined) throw new Error(`no boot file ${n} in the cache`);
+    return p;
+  };
   const fleetOtlp = otlpHandler(FLEET_TELEMETRY_DIR, FLEET_KEEP, FLEET_OTLP_PATH);
   return async (req, from) => {
     if (req.headers.get("x-archon-via") !== "tftp") lastHttp = Date.now();
     const url = new URL(req.url);
     // Shim asks for its second stage as "\\grubx64.efi" (a backslash path).
-    const path = decodeURIComponent(url.pathname).replace(/\\/g, "/").replace(/\/{2,}/g, "/");
+    const path = decodeURIComponent(url.pathname)
+      .replace(/\\/g, "/")
+      .replace(/\/{2,}/g, "/");
     // Everything the host is told to fetch next points back at the address it used.
     const base = `http://${req.headers.get("host") ?? `${url.hostname}:${o.port}`}/`;
     try {
@@ -198,7 +212,7 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
         /^\/(?:boot\/)?(?:([a-z0-9-]+)\/)?(bootx64\.efi|grubx64\.efi|linux|initrd)$/,
       );
       if (boot) {
-        const [, name, what] = boot;
+        const [, name, what = ""] = boot;
         if (name) {
           if (!(await loadServers()).some((h) => h.name === name)) {
             o.emit({
@@ -219,11 +233,7 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
           attrs: { via, file: what },
         });
         if (req.method === "GET") {
-          served(
-            what,
-            (await Deno.stat(assets.files[what])).size,
-            via === "TFTP" ? "tftp" : "http",
-          );
+          served(what, (await fs.stat(asset(what))).size, via === "TFTP" ? "tftp" : "http");
           const h = installing.get(from);
           if (h && (what === "linux" || what === "initrd")) installStep(h, "loading the installer");
         }
@@ -234,29 +244,27 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
             o.emit({
               name: "boot.http.missing",
               address: from,
-              message:
-                `loaded the installer over TFTP but has not reached HTTP port ${o.port} in 3 minutes: allow TCP ${o.port} inbound on this PC (README step 1), and between networks on the router`,
+              message: `loaded the installer over TFTP but has not reached HTTP port ${o.port} in 3 minutes: allow TCP ${o.port} inbound on this PC (README step 1), and between networks on the router`,
             });
           }, 180_000);
         }
-        return await file(assets.files[what], req);
+        return await file(asset(what), req);
       }
       // A router still set up for another boot loader (for example netboot.xyz)
       // asks for its file: serve Ubuntu's shim anyway, and say how to fix it.
-      const other = path.match(/^\/([^/]+\.efi)$/);
+      const other = path.match(/^\/([^/]+\.efi)$/)?.[1];
       if (
-        other && !/^(revocations|mmx64|fbx64)\.efi$/.test(other[1]) &&
+        other &&
+        !/^(revocations|mmx64|fbx64)\.efi$/.test(other) &&
         req.headers.get("x-archon-via") === "tftp"
       ) {
         o.emit({
           name: "boot.file.substituted",
           address: from,
-          message: `TFTP ${
-            other[1]
-          }: serving bootx64.efi instead (set the router's boot file name to bootx64.efi)`,
-          attrs: { via: "TFTP", file: other[1] },
+          message: `TFTP ${other}: serving bootx64.efi instead (set the router's boot file name to bootx64.efi)`,
+          attrs: { via: "TFTP", file: other },
         });
-        return await file(assets.files["bootx64.efi"], req);
+        return await file(asset("bootx64.efi"), req);
       }
       if (path === "/boot/grub/grub.cfg" || path === "/grub/grub.cfg") {
         const name = addressHost(from);
@@ -271,30 +279,34 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
         }
         return text(mainMenu());
       }
-      const menu = path.match(/^\/boot\/hosts\/([0-9a-f:]{17})\.cfg$/);
-      if (menu) {
-        const host = await byMac(menu[1]);
+      const mac = path.match(/^\/boot\/hosts\/([0-9a-f:]{17})\.cfg$/)?.[1];
+      if (mac) {
+        const host = await byMac(mac);
         if (host) return await menuFor(host, from, base, req.method);
         const tokens = await loadTokens();
         // `boot arm <host> --claim`: the next unknown machine becomes that host.
         const hosts = await loadServers();
-        const claims = tokens.filter((t) =>
-          t.claimUntil && Date.parse(t.claimUntil) > Date.now() && liveToken(tokens, t.host) &&
-          hosts.some((h) => h.name === t.host && !h.mac)
+        const claims = tokens.filter(
+          (t) =>
+            t.claimUntil &&
+            Date.parse(t.claimUntil) > Date.now() &&
+            liveToken(tokens, t.host) &&
+            hosts.some((h) => h.name === t.host && !h.mac),
         );
-        if (claims.length === 1) {
-          const t = claims[0];
-          t.mac = menu[1];
+        const [t] = claims;
+        if (claims.length === 1 && t) {
+          t.mac = mac;
           delete t.claimUntil;
           await saveTokens(tokens);
           o.emit({
             name: "boot.claimed",
             address: from,
             host: t.host,
-            message: `unknown machine ${menu[1]} claimed (boot arm --claim)`,
-            attrs: { mac: menu[1] },
+            message: `unknown machine ${mac} claimed (boot arm --claim)`,
+            attrs: { mac },
           });
-          return await menuFor(hosts.find((h) => h.name === t.host)!, from, base, req.method);
+          const claimed = hosts.find((h) => h.name === t.host);
+          if (claimed) return await menuFor(claimed, from, base, req.method);
         }
         // An armed host without a known MAC, booting from its own address (the
         // router's fixed IP for it, or where it was installed from): that host.
@@ -303,20 +315,19 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
           const t = liveToken(tokens, h.name);
           return !h.mac && t && !t.mac && (h.ip === fromAddr || t.addresses?.includes(fromAddr));
         });
-        if (byAddr.length === 1) {
-          const t = tokens.find((x) => x.host === byAddr[0].name)!;
-          t.mac = menu[1];
+        const [only] = byAddr;
+        const known = only && tokens.find((x) => x.host === only.name);
+        if (byAddr.length === 1 && only && known) {
+          known.mac = mac;
           await saveTokens(tokens);
           o.emit({
             name: "boot.recognized",
             address: from,
-            host: byAddr[0].name,
-            message: `recognized by its address; MAC ${
-              menu[1]
-            } learned (recorded in its registration.ts when its install finishes)`,
-            attrs: { mac: menu[1] },
+            host: only.name,
+            message: `recognized by its address; MAC ${mac} learned (recorded in its registration.ts when its install finishes)`,
+            attrs: { mac },
           });
-          return await menuFor(byAddr[0], from, base, req.method);
+          return await menuFor(only, from, base, req.method);
         }
         const armed = hosts
           .map((h) => ({ host: h, token: liveToken(tokens, h.name)?.token }))
@@ -334,12 +345,10 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
               name: "boot.mismatch",
               address: from,
               host: h.name,
-              attrs: { mac: menu[1], expected: h.mac!, code: "E051-MAC-MISMATCH" },
-              message: `unknown machine ${
-                menu[1]
-              } network-booted while ${h.name} waits for ${h.mac}. If it is ${h.name}, its MAC was mistyped: deno task stolos boot arm ${h.name} --mac-address ${
-                menu[1]
-              } (or --claim). Nothing was installed. (${explainHint("E051-MAC-MISMATCH")})`,
+              attrs: { mac, expected: h.mac ?? "", code: "E051-MAC-MISMATCH" },
+              message: `unknown machine ${mac} network-booted while ${h.name} waits for ${
+                h.mac ?? ""
+              }. If it is ${h.name}, its MAC was mistyped: bun run stolos boot arm ${h.name} --mac-address ${mac} (or --claim). Nothing was installed. (${explainHint("E051-MAC-MISMATCH")})`,
             });
           }
         }
@@ -347,12 +356,12 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
           o.emit({
             name: "boot.unknown",
             address: from,
-            attrs: { mac: menu[1] },
-            message: `unknown machine ${menu[1]}: ${
+            attrs: { mac },
+            message: `unknown machine ${mac}: ${
               armed.length
-                ? `menu of armed hosts (${
-                  armed.map((a) => a.host.name).join(", ")
-                }), default boots its own disk`
+                ? `menu of armed hosts (${armed
+                    .map((a) => a.host.name)
+                    .join(", ")}), default boots its own disk`
                 : "nothing armed, booting its own disk"
             }`,
           });
@@ -365,11 +374,13 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
       // Events from this PC's own commands (arm, reinstall): loopback only.
       if (path === "/local/event" && req.method === "POST") {
         if (!/^(127\.0\.0\.1|::1|::ffff:127\.0\.0\.1)$/.test(from)) return text("no\n", 403);
-        const e = await req.json().catch(() => ({})) as Partial<ArchonEvent>;
+        const e = (await req.json().catch(() => ({}))) as Partial<ArchonEvent>;
         // Only events this PC's commands announce (spec 049): a known name and a message.
         if (
-          typeof e.name === "string" && /^boot\.(armed|reboot|certificate)$/.test(e.name) &&
-          typeof e.message === "string" && e.message.trim()
+          typeof e.name === "string" &&
+          /^boot\.(armed|reboot|certificate)$/.test(e.name) &&
+          typeof e.message === "string" &&
+          e.message.trim()
         ) {
           // Spec 049: an install's trace starts when it is armed.
           if (e.name === "boot.armed" && typeof e.host === "string") installStep(e.host, "armed");
@@ -393,11 +404,12 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
             host: installing.get(from),
             message: `installer image (${req.headers.get("range") ?? "whole"})`,
           });
-          const h = installing.get(from) ??
+          const h =
+            installing.get(from) ??
             (lastMenu && Date.now() - lastMenu.at < 10 * 60_000 ? lastMenu.host : undefined);
           if (h) installStep(h, "downloading Ubuntu");
           if (!req.headers.get("range")) stalls.imageServed(h ? `host:${h}` : from);
-          served(UBUNTU.iso.name, (await Deno.stat(assets.iso)).size, "http");
+          served(UBUNTU.iso.name, (await fs.stat(assets.iso)).size, "http");
         }
         return await file(assets.iso, req);
       }
@@ -406,7 +418,7 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
         /^\/install\/([a-z0-9-]+)\/([A-Za-z0-9_-]+)\/(?:([0-9A-Fa-f:]{17})\/)?(user-data|meta-data|vendor-data|network-config|done|event|guard\.sh|facts)$/,
       );
       if (inst) {
-        const [, name, token, rawMac, what] = inst;
+        const [, name = "", token = "", rawMac, what = ""] = inst;
         const bootMac = rawMac?.toLowerCase();
         stalls.heard(`host:${name}`);
         stalls.heard(from);
@@ -415,9 +427,10 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
           const rec = (await loadTokens()).find((x) => x.host === name && x.token === token);
           const fresh = rec && (!rec.done || Date.now() - Date.parse(rec.done) < 3 * 3600_000);
           if (!fresh || req.method !== "POST") return text("no\n", 403);
-          const e = await req.json().catch(() => ({})) as InstallerEvent;
-          if (!milestones.has(name)) milestones.set(name, new Set());
-          const ev = describe(e, milestones.get(name)!);
+          const e = (await req.json().catch(() => ({}))) as InstallerEvent;
+          const seen = milestones.get(name) ?? new Set<string>();
+          milestones.set(name, seen);
+          const ev = describe(e, seen);
           if (ev) {
             o.emit({ ...ev, address: from, host: name });
             // Spec 023: the install's trace follows the same milestones.
@@ -434,9 +447,7 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
                     ev.name === "boot.ready" ? "ready" : "installed, with problems"
                   }. Next:`,
                 });
-                for (
-                  const l of nextSteps({ host: h, fleet: await loadFleet(), address: from })
-                ) {
+                for (const l of nextSteps({ host: h, fleet: await loadFleet(), address: from })) {
                   o.emit({
                     name: "boot.next",
                     host: name,
@@ -451,7 +462,7 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
               installStep(
                 name,
                 ev.name === "boot.firstboot.phase"
-                  ? `first boot: ${ev.attrs?.phase}`
+                  ? `first boot: ${String(ev.attrs?.["phase"] ?? "")}`
                   : ev.message.replace(/^installer: /, ""),
               );
             }
@@ -477,9 +488,8 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
           // Spec 051: the network card it installed from, as the machine reported
           // it, is its registered MAC from now on (a fact, not something typed).
           if (bootMac) {
-            const { loadRegistration, writeRegistration } = await import(
-              "../archon/fleet/registration.ts"
-            );
+            const { loadRegistration, writeRegistration } =
+              await import("../archon/fleet/registration.ts");
             const reg = await loadRegistration(name).catch(() => undefined);
             if (reg && (reg.mac !== bootMac || reg.macSource !== "installed")) {
               const file = await writeRegistration(name, {
@@ -491,8 +501,7 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
                 name: "boot.learned",
                 host: name,
                 attrs: { mac: bootMac },
-                message:
-                  `${file}: mac ${bootMac}, as the machine reported it; commit and push it (signed) to keep it`,
+                message: `${file}: mac ${bootMac}, as the machine reported it; commit and push it (signed) to keep it`,
               });
             }
           }
@@ -581,9 +590,9 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
         // Spec 032: the certificates boot reinstall carried, unless they expire within a day.
         const { deliverable, describeCarry } = await import("../archon/web/acme.ts");
         const carriedRaw = await readSecret(SECRETS.acme(name));
-        let carry: import("../archon/web/acme.ts").AcmeCarry | undefined;
+        let carry: AcmeCarry | undefined;
         try {
-          carry = carriedRaw ? JSON.parse(carriedRaw) : undefined;
+          carry = carriedRaw ? (JSON.parse(carriedRaw) as AcmeCarry) : undefined;
         } catch {
           carry = undefined;
         }
@@ -594,9 +603,9 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
             severity: "warn",
             address: from,
             host: name,
-            message: `its carried Let's Encrypt certificate (${
-              describeCarry(carry)
-            }) is too close to expiry to reuse; it asks Let's Encrypt for a new one`,
+            message: `its carried Let's Encrypt certificate (${describeCarry(
+              carry,
+            )}) is too close to expiry to reuse; it asks Let's Encrypt for a new one`,
           });
         }
         const extras = [
@@ -605,7 +614,9 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
           mailCredential && "mail token",
           webCredential && "Cloudflare DNS token",
           acme && carry && `Let's Encrypt certificate (${describeCarry(carry)})`,
-        ].filter(Boolean).join(", ");
+        ]
+          .filter(Boolean)
+          .join(", ");
         o.emit({
           name: "boot.config",
           address: from,
@@ -621,21 +632,29 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
               fleet: await loadFleet(),
               host,
               base: `${base}install/${name}/${token}/${bootMac ? `${bootMac}/` : ""}`,
-              proxy: o.proxy,
-              caPem: o.caPem,
-              githubApi: o.githubApi,
-              bootMac,
-              traceparent: installTraceparent(name),
+              ...(o.proxy === undefined ? {} : { proxy: o.proxy }),
+              ...(o.caPem === undefined ? {} : { caPem: o.caPem }),
+              ...(o.githubApi === undefined ? {} : { githubApi: o.githubApi }),
+              ...(bootMac === undefined ? {} : { bootMac }),
+              ...((tp) => (tp === undefined ? {} : { traceparent: tp }))(installTraceparent(name)),
             },
-            { passwordHash, deployKey, hostKeys, mailCredential, webCredential, acme },
+            {
+              passwordHash,
+              hostKeys,
+              ...(deployKey === undefined ? {} : { deployKey }),
+              ...(mailCredential === undefined ? {} : { mailCredential }),
+              ...(webCredential === undefined ? {} : { webCredential }),
+              ...(acme === undefined ? {} : { acme }),
+            },
           ),
         );
       }
       const via = req.headers.get("x-archon-via") === "tftp" ? "TFTP" : req.method;
       // Files GRUB and the shim look for and do without: debug, not a problem.
       const probe =
-        /^\/?(revocations\.efi|grub\/x86_64-efi\/[a-z]+\.lst|grub\/grub\.cfg-[0-9a-f-]+)$/i
-          .test(path.replace(/^\//, ""));
+        /^\/?(revocations\.efi|grub\/x86_64-efi\/[a-z]+\.lst|grub\/grub\.cfg-[0-9a-f-]+)$/i.test(
+          path.replace(/^\//, ""),
+        );
       o.emit({
         name: probe ? "boot.file.probe" : "boot.not-found",
         address: from,

@@ -6,7 +6,7 @@
  * `stolos` commands as forms.
  *
  * ```bash
- * deno task stolos console
+ * bun run stolos console
  * ```
  *
  * ```mermaid
@@ -20,7 +20,7 @@
  *   B->>C: /launch?t=... (once, within two minutes)
  *   C->>B: a session cookie (HttpOnly, SameSite=Strict)
  *   B->>C: Run "apply"
- *   C->>T: deno task stolos apply (asks for a passphrase here, if it needs one)
+ *   C->>T: bun run stolos apply (asks for a passphrase here, if it needs one)
  *   C-->>B: the output, line by line
  * ```
  *

@@ -61,7 +61,7 @@ F=/tmp/archon-facts
   done
 } >"$F"
 A=$(curl -fsS --noproxy "*" -m 30 -X POST -H 'content-type: text/plain' --data-binary @"$F" "\${B}facts") ||
-  A="stop: the boot server did not answer, so nothing was erased (is deno task stolos boot serve running?)"
+  A="stop: the boot server did not answer, so nothing was erased (is bun run stolos boot serve running?)"
 case "$A" in
   ok*) exit 0 ;;
 esac
@@ -74,15 +74,15 @@ poweroff -f
 /** What a machine says about itself, before its install (from its firmware tables, /proc, and its disks). */
 export interface MachineFacts {
   /** Its maker (firmware filler such as "To Be Filled By O.E.M." is dropped). */
-  vendor?: string;
+  vendor?: string | undefined;
   /** Its model. */
-  model?: string;
+  model?: string | undefined;
   /** Its serial number. */
-  serial?: string;
+  serial?: string | undefined;
   /** Its memory, in KiB. */
-  memKiB?: number;
+  memKiB?: number | undefined;
   /** Its CPUs. */
-  cpus?: number;
+  cpus?: number | undefined;
   /** Its disks: name, size in bytes, and how attached (nvme, sata, usb, virtio). */
   disks: Array<{ name: string; bytes: number; transport?: string }>;
   /** Partition tables and filesystems found: "/dev/sda gpt", "/dev/sda2 ext4". */
@@ -122,19 +122,18 @@ const gb = (bytes: number) =>
 
 /** One line, as the machine describes itself. */
 export function describeFacts(f: MachineFacts): string {
-  const who = [f.vendor, f.model].filter(Boolean).join(" ") ||
-    "a machine that does not name itself";
+  const who =
+    [f.vendor, f.model].filter(Boolean).join(" ") || "a machine that does not name itself";
   const ram = f.memKiB ? `${(f.memKiB / 1048576).toFixed(1)} GiB RAM` : "RAM unknown";
   const disks =
-    f.disks.map((d) => `${d.name} ${gb(d.bytes)}${d.transport ? ` ${d.transport}` : ""}`)
+    f.disks
+      .map((d) => `${d.name} ${gb(d.bytes)}${d.transport ? ` ${d.transport}` : ""}`)
       .join(", ") || "no disks";
   return `${who}${f.serial ? `, serial ${f.serial}` : ""}, ${f.cpus ?? "?"} CPUs, ${ram}, ${disks}`;
 }
 
 /** The guard's answer: go (and why), or stop (why, and the command that lets it go on). */
-export type GuardDecision =
-  | { go: true; why: string }
-  | { go: false; why: string; fix: string };
+export type GuardDecision = { go: true; why: string } | { go: false; why: string; fix: string };
 
 /** Whether this install may go on (see the header). */
 export function guardDecision(
@@ -148,8 +147,7 @@ export function guardDecision(
     return {
       go: false,
       why: "the installer sees no disk to install to",
-      fix:
-        "check the machine's disks and its storage controller setting (AHCI, not RAID) in its firmware",
+      fix: "check the machine's disks and its storage controller setting (AHCI, not RAID) in its firmware",
     };
   }
   if (!f.signatures.length) return { go: true, why: "every disk is blank" };
@@ -170,12 +168,11 @@ export function guardDecision(
   }
   return {
     go: false,
-    why: `its disks are not blank (${
-      f.signatures.join("; ")
-    }), so the install stopped before writing anything`,
-    fix:
-      `if this is the machine you mean and its disks may be erased: deno task stolos boot arm ${host} --claim --confirm-destroy ${host} (or --mac-address ${
-        bootMac ?? "<mac>"
-      } instead of --claim), then network-boot it again`,
+    why: `its disks are not blank (${f.signatures.join(
+      "; ",
+    )}), so the install stopped before writing anything`,
+    fix: `if this is the machine you mean and its disks may be erased: bun run stolos boot arm ${host} --claim --confirm-destroy ${host} (or --mac-address ${
+      bootMac ?? "<mac>"
+    } instead of --claim), then network-boot it again`,
   };
 }

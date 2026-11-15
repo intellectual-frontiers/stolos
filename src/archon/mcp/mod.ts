@@ -54,7 +54,7 @@
  * - "Read today's daily report for alpha and tell me what needs attention."
  * - "Why did the reconcile timer fail last night on alpha?" (`archon_observe`, the journal)
  * - "Add ripgrep to the tools" (the spec loop in [`AGENTS.md`](../AGENTS.md): a spec, the model,
- *   `deno task stolos build`, a commit you approve, then `archon_update` on each server, or the
+ *   `bun run stolos build`, a commit you approve, then `archon_update` on each server, or the
  *   reconcile timer)
  *
  * Model changes happen in your checkout and reach the servers through `main`; MCP is for looking at
@@ -69,7 +69,7 @@
  * | `repo`              | also change the repository (signers, hosts)                   |
  * | `mutate` (default)  | also converge, restart, update, back up (each asks you first) |
  *
- * Change it in `fleets/<fleet>/fleet.ts`, then `deno task stolos build`, commit, and push; every
+ * Change it in `fleets/<fleet>/fleet.ts`, then `bun run stolos build`, commit, and push; every
  * server rewrites ops' keys at its next converge.
  *
  * ## Another agent, or a local model

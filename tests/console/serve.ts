@@ -1,5 +1,11 @@
-// Spec 065: the Archon Console with fakes (no PAM, no systemd), for the browser test
-// (tests/console/browser.cjs, CI's console-browser job). Usage: deno run -A tests/console/serve.ts <port>
+/**
+ * Spec 065: the Archon Console with fakes (no PAM, no systemd), for the browser test
+ * (tests/console/browser.cjs, CI's console-browser job). Usage: bun tests/console/serve.ts <port>
+ *
+ * @module
+ */
+
+import { fs, proc, serve } from "@intellectual-frontiers/ifc-ts/runtime";
 import { consoleHandler } from "../../src/archon/console/server.ts";
 import { Sessions, Throttle } from "../../src/archon/console/auth.ts";
 import type { ActivityEntry } from "../../src/archon/console/pages.ts";
@@ -70,17 +76,20 @@ const h = consoleHandler({
       },
       signer: "alice-daily",
       engine: "v0.0.0",
-      signers: [{ name: "alice-daily", role: "daily" }, {
-        name: "alice-recovery",
-        role: "recovery",
-      }],
+      signers: [
+        { name: "alice-daily", role: "daily" },
+        {
+          name: "alice-recovery",
+          role: "recovery",
+        },
+      ],
     }),
   activity: {
     add: (e) => (log.push(e), Promise.resolve()),
     recent: (n) => Promise.resolve(log.slice(-n).reverse()),
   },
   guideDoc: () => Promise.resolve(undefined),
-  cacheDir: await Deno.makeTempDir(),
+  cacheDir: await fs.makeTempDir(),
   services: () =>
     Promise.resolve({
       optIns: [
@@ -91,13 +100,15 @@ const h = consoleHandler({
           commands: { on: "archon pg on", off: "archon pg off", status: "archon pg status" },
         },
       ],
-      units: [{
-        unit: "traefik.service",
-        spec: "032-web",
-        active: "active",
-        sub: "running",
-        enabled: "enabled",
-      }],
+      units: [
+        {
+          unit: "traefik.service",
+          spec: "032-web",
+          active: "active",
+          sub: "running",
+          enabled: "enabled",
+        },
+      ],
     }),
   journal: async (unit, each, signal) => {
     for (let i = 0; i < 25 && !signal.aborted; i++) {
@@ -109,15 +120,13 @@ const h = consoleHandler({
   },
 });
 // Plain HTTP on loopback for the test: the Secure flag is dropped so the browser keeps the cookie.
-Deno.serve({
-  port: Number(Deno.args[0] ?? 8099),
-  hostname: "127.0.0.1",
-  onListen: () => console.log("listening"),
-}, (req, info) =>
+await serve({ port: Number(proc.args[0] ?? 8099), hostname: "127.0.0.1" }, (req, info) =>
   h(req, info).then((r) => {
     const c = r.headers.get("set-cookie");
     if (!c) return r;
     const hh = new Headers(r.headers);
     hh.set("set-cookie", c.replace("; Secure", ""));
     return new Response(r.body, { status: r.status, headers: hh });
-  }));
+  }),
+);
+console.log("listening");

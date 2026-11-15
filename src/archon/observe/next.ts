@@ -30,9 +30,7 @@ export function nextSteps(o: NextOptions): string[] {
   const server = o.host.kind !== "workstation";
   const lines: string[] = [];
   if (server) {
-    lines.push(
-      `connect   ssh ${name}${addr ? `   (or ssh ${o.fleet.admin.user}@${addr})` : ""}`,
-    );
+    lines.push(`connect   ssh ${name}${addr ? `   (or ssh ${o.fleet.admin.user}@${addr})` : ""}`);
     if (localNetworks(o.fleet).length && o.fleet.web) {
       lines.push(
         `cockpit   https://cockpit.${name}.${o.fleet.web.domain}   Cockpit: system, services, logs, metric history; your password; from your local network`,

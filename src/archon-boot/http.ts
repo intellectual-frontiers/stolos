@@ -1,12 +1,14 @@
 /**
- * A small HTTP/1.1 server for archon-boot (spec 004). Deno.serve sends header
- * names in lowercase, which HTTP allows, but GRUB's HTTP client compares
+ * A small HTTP/1.1 server for archon-boot (spec 004), on raw TCP. A web server's
+ * `Headers` keep names in lowercase, which HTTP allows, but GRUB's HTTP client compares
  * "Content-Length: " case-sensitively and then reads every file as empty.
  * This transport writes canonical header names, keeps connections alive
  * (GRUB sends HEAD then GET on one connection), and streams bodies.
  *
  * @module
  */
+
+import { tcp } from "@intellectual-frontiers/ifc-ts/runtime";
 
 /** Answers one request; `from` is the client's address. */
 export type Handler = (req: Request, from: string) => Promise<Response>;
@@ -16,13 +18,13 @@ const CANON: Record<string, string> = {
   "content-length": "Content-Length",
   "content-range": "Content-Range",
   "accept-ranges": "Accept-Ranges",
-  "connection": "Connection",
-  "date": "Date",
-  "location": "Location",
+  connection: "Connection",
+  date: "Date",
+  location: "Location",
 };
 
-const canonical = (name: string) =>
-  CANON[name] ?? name.replace(/(^|-)([a-z])/g, (_m, d, c) => d + c.toUpperCase());
+const canonical = (name: string): string =>
+  CANON[name] ?? name.replace(/(^|-)([a-z])/g, (_m, d: string, c: string) => d + c.toUpperCase());
 
 const REASON: Record<number, string> = {
   200: "OK",
@@ -43,70 +45,89 @@ function indexOfCrlfCrlf(buf: Uint8Array, len: number): number {
   return -1;
 }
 
-async function writeAll(conn: Deno.Conn, data: Uint8Array) {
-  let off = 0;
-  while (off < data.length) off += await conn.write(data.subarray(off));
+/** A connection's bytes as they come, kept until a request has used them. */
+class Incoming {
+  private buf = new Uint8Array(16384);
+  private len = 0;
+  private readonly reader: ReadableStreamDefaultReader<Uint8Array>;
+  constructor(readable: ReadableStream<Uint8Array>) {
+    this.reader = readable.getReader();
+  }
+  /** Read once more into the buffer; false at the end of the connection or past 1 MB. */
+  private async more(): Promise<boolean> {
+    const r = await this.reader.read();
+    if (r.done) return false;
+    if (this.len + r.value.length > this.buf.length) {
+      if (this.len + r.value.length > 1 << 20) return false;
+      const bigger = new Uint8Array(Math.max(this.buf.length * 2, this.len + r.value.length));
+      bigger.set(this.buf.subarray(0, this.len));
+      this.buf = bigger;
+    }
+    this.buf.set(r.value, this.len);
+    this.len += r.value.length;
+    return true;
+  }
+  /** One request head (without its blank line), or undefined where the connection ended first. */
+  async head(): Promise<string | undefined> {
+    let end = indexOfCrlfCrlf(this.buf, this.len);
+    while (end < 0) {
+      if (!(await this.more())) return undefined;
+      end = indexOfCrlfCrlf(this.buf, this.len);
+    }
+    const head = dec.decode(this.buf.subarray(0, end));
+    this.take(end + 4);
+    return head;
+  }
+  /** The next `n` bytes (a small request body), or undefined where the connection ended first. */
+  async bytes(n: number): Promise<Uint8Array<ArrayBuffer> | undefined> {
+    while (this.len < n) if (!(await this.more())) return undefined;
+    const out = this.buf.slice(0, n);
+    this.take(n);
+    return out;
+  }
+  private take(n: number): void {
+    this.buf.copyWithin(0, n, this.len);
+    this.len -= n;
+  }
+  /** Stop reading. */
+  release(): void {
+    this.reader.releaseLock();
+  }
 }
 
-async function serveConn(conn: Deno.Conn, handler: Handler, port: number) {
-  const from = (conn.remoteAddr as Deno.NetAddr).hostname;
-  let buf = new Uint8Array(16384);
-  let len = 0;
+async function serveConn(conn: tcp.Conn, handler: Handler, port: number): Promise<void> {
+  const from = conn.remoteAddr.hostname;
+  const incoming = new Incoming(conn.readable);
+  const out = conn.writable.getWriter();
   try {
     while (true) {
       // Read one request head.
-      let end = indexOfCrlfCrlf(buf, len);
-      while (end < 0) {
-        if (len === buf.length) {
-          if (buf.length > 1 << 20) return;
-          const bigger = new Uint8Array(buf.length * 2);
-          bigger.set(buf.subarray(0, len));
-          buf = bigger;
-        }
-        const n = await conn.read(buf.subarray(len));
-        if (n === null) return;
-        len += n;
-        end = indexOfCrlfCrlf(buf, len);
-      }
-      const head = dec.decode(buf.subarray(0, end));
-      let rest = buf.slice(end + 4, len);
-      const [requestLine, ...lines] = head.split("\r\n");
-      const [method, target] = requestLine.split(" ");
+      const head = await incoming.head();
+      if (head === undefined) return;
+      const [requestLine = "", ...lines] = head.split("\r\n");
+      const [method = "GET", target = "/"] = requestLine.split(" ");
       const headers = new Headers();
       for (const l of lines) {
         const i = l.indexOf(":");
         if (i > 0) headers.append(l.slice(0, i).trim(), l.slice(i + 1).trim());
       }
       // A small request body (the installer's POST .../done).
-      const bodyLen = Number(headers.get("content-length") ?? 0);
-      while (rest.length < bodyLen) {
-        const more = new Uint8Array(bodyLen - rest.length);
-        const n = await conn.read(more);
-        if (n === null) return;
-        const joined = new Uint8Array(rest.length + n);
-        joined.set(rest);
-        joined.set(more.subarray(0, n), rest.length);
-        rest = joined;
-      }
-      const body = rest.subarray(0, bodyLen);
-      const leftover = rest.subarray(bodyLen);
-      buf = new Uint8Array(Math.max(16384, leftover.length));
-      buf.set(leftover);
-      len = leftover.length;
+      const body = await incoming.bytes(Number(headers.get("content-length") ?? 0));
+      if (body === undefined) return;
 
       const host = headers.get("host") ?? `localhost:${port}`;
       const req = new Request(`http://${host}${target}`, {
         method,
         headers,
-        body: method === "GET" || method === "HEAD" ? undefined : body,
+        ...(method === "GET" || method === "HEAD" ? {} : { body }),
       });
       const res = await handler(req, from);
       // UEFI's HTTP driver (which Ubuntu's GRUB uses after HTTP Boot) waits
       // for a body after HEAD on a kept-alive connection; close after HEAD so
       // its next request starts on a fresh connection.
-      const keepAlive = method !== "HEAD" &&
-        (headers.get("connection") ?? "").toLowerCase() !== "close";
-      let out = `HTTP/1.1 ${res.status} ${REASON[res.status] ?? "OK"}\r\n`;
+      const keepAlive =
+        method !== "HEAD" && (headers.get("connection") ?? "").toLowerCase() !== "close";
+      let head2 = `HTTP/1.1 ${res.status} ${REASON[res.status] ?? "OK"}\r\n`;
       const resHeaders = new Headers(res.headers);
       let bodyBytes: Uint8Array | undefined;
       if (!resHeaders.has("content-length") && res.body) {
@@ -116,31 +137,42 @@ async function serveConn(conn: Deno.Conn, handler: Handler, port: number) {
       if (!res.body) resHeaders.set("content-length", "0");
       resHeaders.set("connection", keepAlive ? "keep-alive" : "close");
       resHeaders.set("date", new Date().toUTCString());
-      for (const [k, v] of resHeaders) out += `${canonical(k)}: ${v}\r\n`;
-      await writeAll(conn, enc.encode(out + "\r\n"));
+      for (const [k, v] of resHeaders) head2 += `${canonical(k)}: ${v}\r\n`;
+      await out.write(enc.encode(head2 + "\r\n"));
       if (method !== "HEAD") {
-        if (bodyBytes) await writeAll(conn, bodyBytes);
-        else if (res.body) { for await (const chunk of res.body) await writeAll(conn, chunk); }
+        if (bodyBytes) await out.write(bodyBytes);
+        else if (res.body) {
+          for await (const chunk of res.body) await out.write(chunk);
+        }
       } else await res.body?.cancel();
       if (!keepAlive) return;
     }
   } catch {
     // Client went away mid-transfer; nothing to do.
   } finally {
-    try {
-      conn.close();
-    } catch { /* already closed */ }
+    incoming.release();
+    out.releaseLock();
+    conn.close();
   }
 }
 
 /**
- * Listen on `port` on every IPv4 address and serve each connection with
- * `handler` in the background. Returns the listener so the caller can close it.
+ * Listen on `port` on `hostname` (every IPv4 address by default: the machines being installed
+ * reach this PC over the LAN) and serve each connection with `handler` in the background.
+ * Returns the listener so the caller can close it.
  */
-export function listen(port: number, handler: Handler): Deno.Listener {
-  const listener = Deno.listen({ port, hostname: "0.0.0.0" });
-  (async () => {
-    for await (const conn of listener) serveConn(conn, handler, port);
+export async function listen(
+  port: number,
+  handler: Handler,
+  hostname = "0.0.0.0",
+): Promise<tcp.Listener> {
+  const listener = await tcp.listen({ port, hostname });
+  void (async (): Promise<void> => {
+    try {
+      for await (const conn of listener) void serveConn(conn, handler, port);
+    } catch {
+      /* closed */
+    }
   })();
   return listener;
 }

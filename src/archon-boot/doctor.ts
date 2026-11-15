@@ -1,5 +1,5 @@
 /**
- * `deno task stolos boot doctor` (spec 004): one read-only look at this boot machine,
+ * `bun run stolos boot doctor` (spec 004): one read-only look at this boot machine,
  * with the fix for each problem: the checkout (hosts install from GitHub, so
  * local changes must be pushed), the model, secrets, Ubuntu's files, the
  * network, the ports, and the firewall. It changes nothing.
@@ -7,8 +7,7 @@
  * @module
  */
 
-import { join } from "../archon/core/path.ts";
-import { exists } from "../archon/core/fsx.ts";
+import { fs, path, tcp } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "../archon/core/exec.ts";
 import { P } from "../archon/core/paths.ts";
 import { ui } from "../archon/core/ui.ts";
@@ -26,10 +25,12 @@ import { firewallWarnings } from "./firewall.ts";
  * `embedded` joins a caller's run (vault restore) instead of starting one.
  * Returns the exit code (nonzero when a check fails).
  */
-export async function doctor(
-  o: { port: number; send?: string; embedded?: boolean },
-): Promise<number> {
-  // Embedded (vault restore runs it): its phases join the caller's run and summary.
+export async function doctor(o: {
+  port: number;
+  send?: string | undefined;
+  embedded?: boolean;
+}): Promise<number> {
+  // Embedded (vault restore runs it): its phases path.join the caller's run and summary.
   if (o.embedded) ui.say(`${ui.emoji ? "🩺" : "*"} ${ui.dim("boot doctor")}`);
   else ui.header("Stolos boot doctor", "read-only");
 
@@ -41,7 +42,8 @@ export async function doctor(
   const branch = (await git(["rev-parse", "--abbrev-ref", "HEAD"])).stdout.trim();
   // The whole repository, new files included (fleets/<fleet>/ first of all); .gitignore keeps out/ out.
   const dirty = (await git(["status", "--porcelain", "--untracked-files=all"])).stdout
-    .split("\n").filter(Boolean);
+    .split("\n")
+    .filter(Boolean);
   const ahead = Number((await git(["rev-list", "--count", `origin/${branch}..HEAD`])).stdout) || 0;
   const behind = Number((await git(["rev-list", "--count", `HEAD..origin/${branch}`])).stdout) || 0;
   if (!fetched) {
@@ -49,17 +51,20 @@ export async function doctor(
   }
   if (dirty.length) {
     g.fail(
-      `${dirty.length} change(s) not committed (${
-        dirty.map((l) => l.slice(3)).slice(0, 3).join(", ")
-      }${dirty.length > 3 ? ", ..." : ""}): hosts install from GitHub and would not see them`,
-      'deno task stolos apply -m "<what changed>"',
+      `${dirty.length} change(s) not committed (${dirty
+        .map((l) => l.slice(3))
+        .slice(0, 3)
+        .join(
+          ", ",
+        )}${dirty.length > 3 ? ", ..." : ""}): hosts install from GitHub and would not see them`,
+      'bun run stolos apply -m "<what changed>"',
     );
   }
   if (ahead) {
-    g.fail(`${ahead} commit(s) not pushed: hosts would not see them`, "deno task stolos apply");
+    g.fail(`${ahead} commit(s) not pushed: hosts would not see them`, "bun run stolos apply");
   }
   if (behind) {
-    g.warn(`${behind} new commit(s) on GitHub`, "deno task stolos update, then restart boot serve");
+    g.warn(`${behind} new commit(s) on GitHub`, "bun run stolos update, then restart boot serve");
   }
   g.done(dirty.length || ahead || behind ? "needs attention" : `${branch}, in step with GitHub`);
 
@@ -67,7 +72,7 @@ export async function doctor(
   const m = ui.phase("Model");
   const { loadModel } = await import("../archon/build.ts");
   const model = await loadModel().catch((e) => {
-    m.fail((e as Error).message, "deno task stolos fleet init");
+    m.fail((e as Error).message, "bun run stolos fleet init");
     return undefined;
   });
   if (model) {
@@ -92,17 +97,19 @@ export async function doctor(
 
   // ------------------------------------------------------------- secrets
   const s = ui.phase("Secrets");
-  if (!(await exists(SECRETS.adminPasswordHash))) {
-    s.fail("no admin password hash", "deno task stolos fleet init");
+  if (!(await fs.exists(SECRETS.adminPasswordHash))) {
+    s.fail("no admin password hash", "bun run stolos fleet init");
   }
   for (const h of (model?.hosts ?? []).filter((x) => x.kind !== "workstation")) {
-    if (!(await exists(SECRETS.deployKey(h.name)))) {
+    if (!(await fs.exists(SECRETS.deployKey(h.name)))) {
       s.warn(
         `${h.name} has no deploy key: it will clone over HTTPS and cannot push`,
-        `deno task stolos host add ${h.name} --force`,
+        `bun run stolos host add ${h.name} --force`,
       );
     }
-    const keys = await Promise.all(HOST_KEY_TYPES.map((t) => exists(SECRETS.hostKey(h.name, t))));
+    const keys = await Promise.all(
+      HOST_KEY_TYPES.map((t) => fs.exists(SECRETS.hostKey(h.name, t))),
+    );
     if (!keys.every(Boolean)) {
       s.note(`${h.name}: SSH host keys are created at its next install (or boot arm)`);
     }
@@ -113,12 +120,11 @@ export async function doctor(
   const va = await assess();
   if (va.unbacked.length) {
     const names = va.unbacked.map((x) => x.name);
-    (va.severity === "red" ? s.fail : s.warn).call(
-      s,
+    (va.severity === "red" ? s.fail.bind(s) : s.warn.bind(s))(
       `${names.length} secret(s) ${
         va.lastBackup ? "newer than the last backup" : "never backed up"
       }: ${names.slice(0, 4).join(", ")}${names.length > 4 ? ", ..." : ""}`,
-      "deno task stolos vault backup, then move the ZIP somewhere safe",
+      "bun run stolos vault backup, then move the ZIP somewhere safe",
     );
   }
   await remind();
@@ -129,12 +135,12 @@ export async function doctor(
   const u = ui.phase("Ubuntu files");
   const missing: string[] = [];
   for (const name of [...Object.keys(UBUNTU.files), UBUNTU.iso.name]) {
-    if (!(await exists(join(cacheDir(), name)))) missing.push(name);
+    if (!(await fs.exists(path.join(cacheDir(), name)))) missing.push(name);
   }
   if (missing.length) {
     u.pending(
       `not downloaded yet: ${missing.join(", ")} (about 3 GB, once)`,
-      "deno task stolos boot serve downloads and verifies them the first time it starts",
+      "bun run stolos boot serve downloads and verifies them the first time it starts",
     );
   }
   u.done(
@@ -148,11 +154,15 @@ export async function doctor(
   const ips = lanAddresses();
   if (!ips.length) n.fail("no LAN address", "connect this PC to the network the servers boot from");
   const up = await fetch(`http://127.0.0.1:${o.port}/health`, { signal: AbortSignal.timeout(2000) })
-    .then((r) => r.ok).catch(() => false);
+    .then((r) => r.ok)
+    .catch(() => false);
   if (!up) {
-    for (const [proto, port] of [["TCP", o.port], ["UDP", 69]] as const) {
+    for (const [proto, port] of [
+      ["TCP", o.port],
+      ["UDP", 69],
+    ] as const) {
       try {
-        if (proto === "TCP") Deno.listen({ port, hostname: "0.0.0.0" }).close();
+        if (proto === "TCP") (await tcp.listen({ port, hostname: "0.0.0.0" })).close();
         else {
           const { default: dgram } = await import("node:dgram");
           const sock = dgram.createSocket("udp4");
@@ -191,24 +201,28 @@ export async function doctor(
   // --------------------------------------------------------------- hosts
   const h = ui.phase("Hosts");
   const tokens = await loadTokens();
-  const lines = (model?.hosts ?? []).filter((x) => x.kind !== "workstation").map((x) => {
-    const t = tokens.find((y) => y.host === x.name);
-    return `${x.name}: ${liveToken(tokens, x.name) ? "armed" : "not armed"}${
-      x.mac ?? t?.mac ? ` · ${x.mac ?? t?.mac}` : ""
-    }`;
-  });
+  const lines = (model?.hosts ?? [])
+    .filter((x) => x.kind !== "workstation")
+    .map((x) => {
+      const t = tokens.find((y) => y.host === x.name);
+      return `${x.name}: ${liveToken(tokens, x.name) ? "armed" : "not armed"}${
+        (x.mac ?? t?.mac) ? ` · ${x.mac ?? t?.mac}` : ""
+      }`;
+    });
   h.done(lines.join(" · ") || "none");
   // --------------------------------------------------------------- email
   const em = ui.phase("Email");
   const { emailChecks } = await import("../archon/doctor/email.ts");
   const { bootSite } = await import("../archon/notify/notify.ts");
-  const fleetForMail = await (await import("../archon/model/load.ts")).loadFleet().catch(() =>
-    undefined
-  );
+  const fleetForMail = await (
+    await import("../archon/model/load.ts")
+  )
+    .loadFleet()
+    .catch(() => undefined);
   await emailChecks(
     fleetForMail ? bootSite(fleetForMail) : undefined,
     em,
-    "deno task stolos boot mail-setup",
+    "bun run stolos boot mail-setup",
     { send: o.send },
   );
 

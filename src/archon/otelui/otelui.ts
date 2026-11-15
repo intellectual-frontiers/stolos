@@ -14,7 +14,7 @@
  * @module
  */
 
-import { ensureDir, exists, readTextOr } from "../core/fsx.ts";
+import { fs, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
 import { newPassword } from "../pg/config.ts";
@@ -37,23 +37,23 @@ export const OTEL_UI_PATHS = {
 
 /** Where this server's Collector sends when the UI is on here. */
 export const LOCAL_UI_ENDPOINT = `http://127.0.0.1:${
-  OTEL_UI.ports[0].host
+  OTEL_UI.ports[0]?.host ?? 5080
 }/api/${OTEL_UI_PATHS.org}`;
 
 /** Before the container first starts: its admin and the Collector's credential, root only. */
 export async function prepareOtelUi(s: Sink): Promise<void> {
-  if ((await exists(OTEL_UI.secrets)) && (await exists(OTEL_UI_PATHS.collectorEnv))) return;
+  if ((await fs.exists(OTEL_UI.secrets)) && (await fs.exists(OTEL_UI_PATHS.collectorEnv))) return;
   s.change(`${OTEL_UI_PATHS.dir} (telemetry web UI credentials, root only)`);
   if (s.check) return;
   const password = newPassword();
-  await ensureDir(OTEL_UI_PATHS.dir);
-  await Deno.chmod(OTEL_UI_PATHS.dir, 0o700);
-  await Deno.writeTextFile(
+  await fs.ensureDir(OTEL_UI_PATHS.dir);
+  await fs.chmod(OTEL_UI_PATHS.dir, 0o700);
+  await fs.writeTextFile(
     OTEL_UI.secrets,
     `ZO_ROOT_USER_EMAIL=${OTEL_UI_PATHS.admin}\nZO_ROOT_USER_PASSWORD=${password}\n`,
     { mode: 0o600 },
   );
-  await Deno.writeTextFile(
+  await fs.writeTextFile(
     OTEL_UI_PATHS.collectorEnv,
     `ARCHON_OTEL_UI_AUTH=${btoa(`${OTEL_UI_PATHS.admin}:${password}`)}\n`,
     { mode: 0o600 },
@@ -66,14 +66,16 @@ export async function otelUiStatus(hostName: string, json: boolean): Promise<num
   const host = (await loadHosts()).find((h) => h.name === hostName);
   if (!host) throw new Error(`no host ${hostName} in the model`);
   const on = host.optIn?.[OTEL_UI.name]?.enabled === true;
-  const ready = on &&
-    (await run(["curl", "-fsS", "-o", "/dev/null", "--max-time", "3", OTEL_UI.health])).ok;
+  const ready =
+    on && (await run(["curl", "-fsS", "-o", "/dev/null", "--max-time", "3", OTEL_UI.health])).ok;
   const n = fqdn(fleet, host);
   const url = `https://otel.${n ?? host.name}`;
   const { lastDiscovery } = await import("../observe/discover.ts");
   const forward = await lastDiscovery();
   if (json) {
-    console.log(JSON.stringify({ on, ready, url: on ? url : null, forwardsTo: forward ?? null }));
+    stdio.stdout.writeSync(
+      `${JSON.stringify({ on, ready, url: on ? url : null, forwardsTo: forward ?? null })}\n`,
+    );
     return 0;
   }
   const p = ui.phase("Telemetry web UI");
@@ -105,7 +107,7 @@ export async function otelUiStatus(hostName: string, json: boolean): Promise<num
 
 /** archon otel ui password --show: the admin's sign-in, typed by a person (never over MCP). */
 export async function otelUiPassword(show: boolean): Promise<number> {
-  const env = (await readTextOr(OTEL_UI.secrets)) ?? "";
+  const env = await fs.readTextOr(OTEL_UI.secrets, "");
   const pw = env.match(/^ZO_ROOT_USER_PASSWORD=(.*)$/m)?.[1];
   const p = ui.phase("Telemetry web UI sign-in");
   if (!pw) {
@@ -113,6 +115,6 @@ export async function otelUiPassword(show: boolean): Promise<number> {
     return ui.finish();
   }
   p.done(`user ${OTEL_UI_PATHS.admin}${show ? "" : " · add --show to print the password"}`);
-  if (show) console.log(pw);
+  if (show) stdio.stdout.writeSync(`${pw}\n`);
   return ui.finish();
 }

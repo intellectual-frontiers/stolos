@@ -14,6 +14,7 @@
  * @module
  */
 
+import { fs } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "../core/exec.ts";
 
 /** The SMTP relay, host:port, when the fleet names none (`fleet.mail.relay`): Cloudflare, implicit TLS. */
@@ -55,11 +56,11 @@ export function secretsOf(c: Credential | undefined): string[] {
   return c ? [c.token] : [];
 }
 
-const quote = (s: string) => `"${s.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+const quote = (s: string): string => `"${s.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
 
 /** Split `host:port`; the port is 465 when missing or not a number. */
 export function relayParts(relay = DEFAULT_RELAY): { host: string; port: number } {
-  const [host, port] = relay.split(":");
+  const [host = "", port] = relay.split(":");
   return { host, port: Number(port) || 465 };
 }
 
@@ -107,10 +108,10 @@ export function smtpConfig(c: Credential, o: SmtpOptions): string {
   ];
   if (o.ipv4) lines.push("ipv4");
   if (o.cacert) lines.push(`cacert = ${quote(o.cacert)}`);
-  if (o.file) {
+  if (o.file && o.from !== undefined && o.to !== undefined) {
     lines.push(
-      `mail-from = ${quote(o.from!)}`,
-      `mail-rcpt = ${quote(o.to!)}`,
+      `mail-from = ${quote(o.from)}`,
+      `mail-rcpt = ${quote(o.to)}`,
       `upload-file = ${quote(o.file)}`,
     );
   } else {
@@ -139,15 +140,15 @@ export function smtpError(
   const code = msg.match(/failed: (\d{3})/)?.[1];
   const said = code ? ` (the server answered ${code})` : "";
   if (exit === 67 || /535|Login denied/i.test(msg)) {
-    return `logging in to ${relay} failed: Cloudflare refused the API token${said}. It is revoked, expired, or lacks Email Sending: Edit; make a new one: deno task stolos boot mail-setup`;
+    return `logging in to ${relay} failed: Cloudflare refused the API token${said}. It is revoked, expired, or lacks Email Sending: Edit; make a new one: bun run stolos boot mail-setup`;
   }
   if (/RCPT failed/i.test(msg)) {
     const to = ctx.to ?? "?";
     return EMAIL.test(to)
       ? `${relay} refused the recipient ${to}${said}: check the address in fleet.mail.to (fleets/<fleet>/fleet.ts) for a typo, or a mailbox that does not exist`
-      : `${relay} refused the recipient ${
-        JSON.stringify(to)
-      }${said}: it is not an email address. Set fleet.mail.to in fleets/<fleet>/fleet.ts to the shared mailbox (for example ops@example.com)`;
+      : `${relay} refused the recipient ${JSON.stringify(
+          to,
+        )}${said}: it is not an email address. Set fleet.mail.to in fleets/<fleet>/fleet.ts to the shared mailbox (for example ops@example.com)`;
   }
   if (/MAIL failed|\b550\b/i.test(msg)) {
     const domain = ctx.from?.split("@")[1] ?? "the sender's domain";
@@ -178,14 +179,14 @@ export async function sendSmtp(
   o: Omit<SmtpOptions, "file"> & { from: string; to: string },
   mime: string,
 ): Promise<string> {
-  const file = await Deno.makeTempFile({ prefix: "archon-mail-", suffix: ".eml" });
+  const file = await fs.makeTempFile({ prefix: "archon-mail-", suffix: ".eml" });
   try {
-    await Deno.writeTextFile(file, mime, { mode: 0o600 });
+    await fs.writeTextFile(file, mime, { mode: 0o600 });
     const r = await run(["curl", "-K", "-"], { stdin: smtpConfig(c, { ...o, file }) });
     if (!r.ok) throw new Error(smtpError(r.code, r.stderr, o));
     return "sent";
   } finally {
-    await Deno.remove(file).catch(() => {});
+    await fs.remove(file).catch(() => undefined);
   }
 }
 
@@ -215,5 +216,5 @@ export function saslPasswd(c: Credential, relay = DEFAULT_RELAY): string {
 /** The token back out of Postfix's file (archon's own sends use the same one). */
 export function parseSaslPasswd(text: string): Credential | undefined {
   const m = text.match(/^\[[^\]]+\]:\d+\s+api_token:(\S+)\s*$/m);
-  return m ? { token: m[1], created: "" } : undefined;
+  return m?.[1] ? { token: m[1], created: "" } : undefined;
 }

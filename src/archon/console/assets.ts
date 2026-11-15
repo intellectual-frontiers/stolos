@@ -7,6 +7,8 @@
  * @module
  */
 
+import { sha256 } from "@intellectual-frontiers/ifc-ts/kernel";
+import { fs } from "@intellectual-frontiers/ifc-ts/runtime";
 import { ASSETS } from "../assets.auto.ts";
 import { VERSION } from "../version.ts";
 import { type Html, raw } from "./html.ts";
@@ -37,8 +39,7 @@ export const STOLOS_LOGO: Html = raw(
 );
 
 /** The favicon: Archon's mark. */
-export const FAVICON =
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#4F46E5"/><path d="M8 25V15a8 8 0 0 1 16 0v10" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><rect x="13.5" y="5.5" width="5" height="5" rx="1.2" fill="#fff"/></svg>`;
+export const FAVICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#4F46E5"/><path d="M8 25V15a8 8 0 0 1 16 0v10" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><rect x="13.5" y="5.5" width="5" height="5" rx="1.2" fill="#fff"/></svg>`;
 
 /** Both consoles' stylesheet: tokens first (light, then dark), then the parts. Served at {@link CSS_URL}. */
 export const CONSOLE_CSS = `
@@ -191,12 +192,6 @@ export const FONTS = [
   },
 ] as const;
 
-/** SHA-256 of some bytes, as lowercase hex. */
-export async function sha256Hex(data: Uint8Array<ArrayBuffer>): Promise<string> {
-  const d = await crypto.subtle.digest("SHA-256", data);
-  return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
 /**
  * A large vendored file, from beside this engine (the checkout, or the
  * release on GitHub this engine was imported from), checked against its
@@ -208,25 +203,32 @@ export async function vendored(
   cacheDir: string,
   base: string = new URL("../../../", import.meta.url).href,
 ): Promise<Uint8Array<ArrayBuffer> | undefined> {
-  const cached = `${cacheDir}/${file.path.split("/").pop()}`;
+  const cached = `${cacheDir}/${file.path.split("/").pop() ?? file.path}`;
   try {
-    const b = await Deno.readFile(cached);
-    if ((await sha256Hex(b)) === file.sha256) return b;
-  } catch { /* not cached yet */ }
-  let bytes: Uint8Array<ArrayBuffer> | undefined;
+    const b = await fs.readFile(cached);
+    if ((await sha256(b)) === file.sha256) return new Uint8Array(b);
+  } catch {
+    /* not cached yet */
+  }
+  let bytes: Uint8Array<ArrayBuffer>;
   try {
     const url = new URL(file.path, base);
-    bytes = url.protocol === "file:" ? await Deno.readFile(url) : new Uint8Array(
-      await (await fetch(url, { signal: AbortSignal.timeout(30_000) })).arrayBuffer(),
-    );
+    bytes =
+      url.protocol === "file:"
+        ? new Uint8Array(await fs.readFile(url))
+        : new Uint8Array(
+            await (await fetch(url, { signal: AbortSignal.timeout(30_000) })).arrayBuffer(),
+          );
   } catch {
     return undefined;
   }
-  if ((await sha256Hex(bytes)) !== file.sha256) return undefined;
+  if ((await sha256(bytes)) !== file.sha256) return undefined;
   try {
-    await Deno.mkdir(cacheDir, { recursive: true });
-    await Deno.writeFile(cached, bytes);
-  } catch { /* serve it anyway; fetched again next time */ }
+    await fs.mkdir(cacheDir, { recursive: true });
+    await fs.writeFile(cached, bytes);
+  } catch {
+    /* serve it anyway; fetched again next time */
+  }
   return bytes;
 }
 

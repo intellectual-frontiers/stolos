@@ -1,7 +1,11 @@
-// deno-lint-ignore-file -- browser code (page.evaluate runs in Chromium), run by Node
-// Spec 065: the Archon Console in a real browser (Playwright, Chromium): sign in, every page at desktop and
-// phone width (nothing wider than the screen, every field labeled, no script errors), a run streamed to the
-// page, the live log, the search, and a person who may only look. Usage: node tests/console/browser.cjs <port>
+/**
+ * Spec 065: the Archon Console in a real browser (Playwright, Chromium): sign in, every page at desktop and
+ * phone width (nothing wider than the screen, every field labeled, no script errors), a run streamed to the
+ * page, the live log, the search, and a person who may only look. Usage: node tests/console/browser.cjs <port>
+ *
+ * @module
+ */
+
 const { chromium } = require("playwright");
 const base = `http://127.0.0.1:${process.argv[2] ?? 8099}`;
 const PAGES = [
@@ -37,12 +41,16 @@ async function signIn(page, user, pw) {
 
 (async () => {
   const browser = await chromium.launch();
-  for (
-    const [label, viewport] of [["desktop", { width: 1400, height: 900 }], ["phone", {
-      width: 400,
-      height: 860,
-    }]]
-  ) {
+  for (const [label, viewport] of [
+    ["desktop", { width: 1400, height: 900 }],
+    [
+      "phone",
+      {
+        width: 400,
+        height: 860,
+      },
+    ],
+  ]) {
     const page = await browser.newPage({ viewport });
     page.on("pageerror", (e) => problems.push(`${label}: script error: ${e.message}`));
     await signIn(page, "alice", "right-password");
@@ -51,9 +59,11 @@ async function signIn(page, user, pw) {
       const r = await page.evaluate(() => ({
         wide: document.documentElement.scrollWidth - window.innerWidth,
         unlabeled: [...document.querySelectorAll("input:not([type=hidden]), select, textarea")]
-          .filter((el) =>
-            !el.closest("label") && !el.getAttribute("aria-label") &&
-            !(el.id && document.querySelector(`label[for="${el.id}"]`))
+          .filter(
+            (el) =>
+              !el.closest("label") &&
+              !el.getAttribute("aria-label") &&
+              !(el.id && document.querySelector(`label[for="${el.id}"]`)),
           )
           .map((el) => el.name || el.type),
       }));
@@ -70,27 +80,27 @@ async function signIn(page, user, pw) {
   await signIn(page, "alice", "right-password");
   await page.goto(`${base}/actions/server?cmd=verify`);
   await page.click("#cmdform button[type=submit]");
-  await page.waitForFunction(
-    () => document.querySelector("#runstate")?.textContent === "Done",
-    null,
-    { timeout: 20000 },
-  )
+  await page
+    .waitForFunction(() => document.querySelector("#runstate")?.textContent === "Done", null, {
+      timeout: 20000,
+    })
     .catch(() => problems.push("a run never reached Done"));
   check((await page.locator("#output > div").count()) >= 30, "the run's lines did not all arrive");
   // The live log.
   await page.goto(`${base}/logs?unit=traefik.service`);
-  await page.waitForFunction(() => document.querySelectorAll("#logs > div").length >= 20, null, {
-    timeout: 15000,
-  })
+  await page
+    .waitForFunction(() => document.querySelectorAll("#logs > div").length >= 20, null, {
+      timeout: 15000,
+    })
     .catch(() => problems.push("the log did not stream"));
   // The search finds a command in another group.
   await page.goto(`${base}/actions/shell`);
   await page.fill("input[type=search]", "pg publish");
   await page.waitForTimeout(300);
   const found = await page.evaluate(() =>
-    [...document.querySelectorAll(".cmdlist a")].filter((a) => a.offsetParent !== null).map((a) =>
-      a.querySelector(".mono").textContent
-    )
+    [...document.querySelectorAll(".cmdlist a")]
+      .filter((a) => a.offsetParent !== null)
+      .map((a) => a.querySelector(".mono").textContent),
   );
   check(found.includes("pg publish"), `search found ${JSON.stringify(found)}`);
   // Someone who may only look.

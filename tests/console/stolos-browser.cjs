@@ -1,8 +1,12 @@
-// deno-lint-ignore-file -- browser code (page.evaluate runs in Chromium), run by Node
-// Spec 066: the Stolos Console in a real browser (Playwright, Chromium): the one-time launch link, every page
-// at desktop and phone width (nothing wider than the screen, every field labeled, no script errors), a run
-// streamed to the page, a fleet query as a table (and a refused one), the machine filter, the search, and the
-// guards (another Host, a used link). Usage: node tests/console/stolos-browser.cjs <port> [screenshot-dir]
+/**
+ * Spec 066: the Stolos Console in a real browser (Playwright, Chromium): the one-time launch link, every page
+ * at desktop and phone width (nothing wider than the screen, every field labeled, no script errors), a run
+ * streamed to the page, a fleet query as a table (and a refused one), the machine filter, the search, and the
+ * guards (another Host, a used link). Usage: node tests/console/stolos-browser.cjs <port> [screenshot-dir]
+ *
+ * @module
+ */
+
 const { chromium } = require("playwright");
 const http = require("http");
 const port = process.argv[2] ?? 8098;
@@ -51,7 +55,7 @@ const get = (path, headers = {}) =>
       let b = "";
       r.on("data", (c) => (b += c));
       r.on("end", () => ok({ status: r.statusCode, body: b }));
-    })
+    }),
   );
 
 async function launch(page) {
@@ -69,12 +73,16 @@ async function launch(page) {
   );
   check((await get("/")).status === 401, "a page without a session was served");
   const browser = await chromium.launch();
-  for (
-    const [label, viewport] of [["desktop", { width: 1400, height: 900 }], ["phone", {
-      width: 390,
-      height: 860,
-    }]]
-  ) {
+  for (const [label, viewport] of [
+    ["desktop", { width: 1400, height: 900 }],
+    [
+      "phone",
+      {
+        width: 390,
+        height: 860,
+      },
+    ],
+  ]) {
     const page = await browser.newPage({ viewport });
     page.on("pageerror", (e) => problems.push(`${label}: script error: ${e.message}`));
     const used = await launch(page);
@@ -93,9 +101,11 @@ async function launch(page) {
         wide: document.documentElement.scrollWidth - window.innerWidth,
         h1: document.querySelector("h1")?.textContent ?? "",
         unlabeled: [...document.querySelectorAll("input:not([type=hidden]), select, textarea")]
-          .filter((el) =>
-            !el.closest("label") && !el.getAttribute("aria-label") &&
-            !(el.id && document.querySelector(`label[for="${el.id}"]`))
+          .filter(
+            (el) =>
+              !el.closest("label") &&
+              !el.getAttribute("aria-label") &&
+              !(el.id && document.querySelector(`label[for="${el.id}"]`)),
           )
           .map((el) => el.name || el.type),
       }));
@@ -124,14 +134,13 @@ async function launch(page) {
     "the address did not fill the form",
   );
   await page.click("#cmdform button[type=submit]");
-  await page.waitForFunction(
-    () => document.querySelector("#runstate")?.textContent === "Done",
-    null,
-    { timeout: 20000 },
-  )
+  await page
+    .waitForFunction(() => document.querySelector("#runstate")?.textContent === "Done", null, {
+      timeout: 20000,
+    })
     .catch(() => problems.push("a run never reached Done"));
   check((await page.locator("#output > div").count()) >= 20, "the run's lines did not all arrive");
-  check(await page.locator("#output .w").count() >= 1, "a warning line was not colored");
+  check((await page.locator("#output .w").count()) >= 1, "a warning line was not colored");
   // The wizard: choose, get the line, paste a code, and it runs host adopt with it.
   await page.goto(`${base}/add`);
   await page.fill("input[name=name]", "alice-laptop");
@@ -143,11 +152,10 @@ async function launch(page) {
   );
   await page.fill("textarea[name=check-in]", "stolos1:AAAA\nBBBB");
   await page.click("#cmdform button[type=submit]");
-  await page.waitForFunction(
-    () => document.querySelector("#runstate")?.textContent === "Done",
-    null,
-    { timeout: 20000 },
-  )
+  await page
+    .waitForFunction(() => document.querySelector("#runstate")?.textContent === "Done", null, {
+      timeout: 20000,
+    })
     .catch(() => problems.push("the pasted code did not run"));
   check(
     (await page.textContent("#output")).includes(
@@ -158,9 +166,9 @@ async function launch(page) {
   // A fleet query, as a table; a refused one says why.
   await page.goto(`${base}/query`);
   await page.click("#queryform button[type=submit]");
-  await page.waitForSelector("#answer table", { timeout: 15000 }).catch(() =>
-    problems.push("no answer table")
-  );
+  await page
+    .waitForSelector("#answer table", { timeout: 15000 })
+    .catch(() => problems.push("no answer table"));
   const cells = await page.locator("#answer td").allTextContents();
   check(cells.includes("alice-mbp") && cells.includes("15.1"), `the answer: ${cells.join("|")}`);
   check(
@@ -169,11 +177,12 @@ async function launch(page) {
   );
   await page.fill("input[name=sql]", "select * from shadow");
   await page.click("#queryform button[type=submit]");
-  await page.waitForFunction(
-    () => document.querySelector("#runstate")?.textContent?.startsWith("Refused"),
-    null,
-    { timeout: 15000 },
-  )
+  await page
+    .waitForFunction(
+      () => document.querySelector("#runstate")?.textContent?.startsWith("Refused"),
+      null,
+      { timeout: 15000 },
+    )
     .catch(() => problems.push("a refused query did not say so"));
   check(
     (await page.textContent("#answer")).includes("never served"),
@@ -183,8 +192,8 @@ async function launch(page) {
   await page.goto(`${base}/machines`);
   await page.fill("input[type=search]", "macos");
   await page.waitForTimeout(300);
-  const shown = await page.evaluate(() =>
-    [...document.querySelectorAll("tbody tr")].filter((r) => r.offsetParent !== null).length
+  const shown = await page.evaluate(
+    () => [...document.querySelectorAll("tbody tr")].filter((r) => r.offsetParent !== null).length,
   );
   check(shown === 1, `the filter shows ${shown} machines for "macos"`);
   // The search finds a command in another group.
@@ -192,9 +201,9 @@ async function launch(page) {
   await page.fill(".cmdlist input[type=search]", "connect");
   await page.waitForTimeout(300);
   const found = await page.evaluate(() =>
-    [...document.querySelectorAll(".cmdlist a")].filter((a) => a.offsetParent !== null).map((a) =>
-      a.querySelector(".mono").textContent
-    )
+    [...document.querySelectorAll(".cmdlist a")]
+      .filter((a) => a.offsetParent !== null)
+      .map((a) => a.querySelector(".mono").textContent),
   );
   check(found.includes("connect"), `search found ${JSON.stringify(found)}`);
   // Keys that change are not offered here.

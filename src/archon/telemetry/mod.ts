@@ -28,7 +28,7 @@
  * 1. **The telemetry web UI on this very server**, if it is on here (see below).
  * 2. **`telemetry.collector`** in `fleets/<id>/fleet.ts`, if you set one.
  * 3. **`otel.localdomain`**: a name in your router's local DNS.
- * 4. **The boot PC**, while its boot server runs (`deno task stolos boot serve`). It keeps a week of
+ * 4. **The boot PC**, while its boot server runs (`bun run stolos boot serve`). It keeps a week of
  *    what it receives, in its boot cache (`telemetry/fleet/`), and shows it in otel-tui when that runs
  *    on the PC. It is optional: when it is not running, servers say so (`archon observe discover`
  *    prints how to start it) and keep their telemetry locally.
@@ -68,7 +68,7 @@
  *
  * Within 15 minutes every server forwards there (or run `sudo archon observe discover` on one to see
  * it happen now). Check from the boot machine:
- * `deno task stolos fleet query "select * from
+ * `bun run stolos fleet query "select * from
  * archon_install"` works as before; in the UI, each
  * server shows up by its `host.name`.
  *
@@ -87,7 +87,7 @@
  * | What you see                                              | What it means                                                 | What to do                                                                                                                                                             |
  * | --------------------------------------------------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
  * | `archon observe discover`: `none found: local only`       | no collector answered                                         | nothing is wrong; turn on the web UI somewhere, or start the boot PC's boot server, if you want telemetry in one place                                                 |
- * | `the boot PC (...) is not collecting`                     | its boot server is not running                                | on the boot PC: `deno task stolos boot serve` (or ignore it if you do not use it)                                                                                      |
+ * | `the boot PC (...) is not collecting`                     | its boot server is not running                                | on the boot PC: `bun run stolos boot serve` (or ignore it if you do not use it)                                                                                      |
  * | `archon otel ui status`: `on, but not answering yet`      | OpenObserve is starting (the first start downloads its image) | wait a minute; `systemctl status archon-otel-ui`; `journalctl -u archon-otel-ui`                                                                                       |
  * | other servers do not appear in the UI                     | they have not found it yet                                    | check `otel.localdomain` resolves to the UI server (`getent hosts otel.localdomain` on one of them), or set `telemetry.collector`; then `sudo archon observe discover` |
  * | `otel ui on` refuses without `--durable` or `--ephemeral` | the forced choice of Article 23                               | telemetry is usually `--ephemeral`                                                                                                                                     |

@@ -23,9 +23,9 @@
  * @module
  */
 
-import { join } from "../core/path.ts";
-import { ensureDir, exists, readTextOr } from "../core/fsx.ts";
-import { isRoot, run } from "../core/exec.ts";
+import { fromBase64, toBase64 } from "@intellectual-frontiers/ifc-ts/kernel";
+import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { run } from "../core/exec.ts";
 import { P } from "../core/paths.ts";
 import { SECRETS } from "../core/secrets.ts";
 import type { FleetDef } from "../model/types.ts";
@@ -57,9 +57,9 @@ export interface Site {
   /** Path of the status file (`archon notify status` reads it). */
   status: string;
   /** The fleet's mailbox (`fleet.mail.to`); unset when the fleet has no mail. */
-  to?: string;
+  to?: string | undefined;
   /** The sender address (spec 027); unset when the fleet has no mail. */
-  from?: string;
+  from?: string | undefined;
   /** host:port of the SMTP relay (Cloudflare Email Service). */
   relay: string;
   /** Reach the relay over IPv4 only (the network has no IPv6). */
@@ -108,7 +108,7 @@ export function hostSite(
 
 /** The boot machine's user, as a mail local part (Windows USERNAME, else USER). */
 export function bootUser(): string {
-  const u = (Deno.env.get("USERNAME") ?? Deno.env.get("USER") ?? "archon").toLowerCase();
+  const u = (proc.env.get("USERNAME") ?? proc.env.get("USER") ?? "archon").toLowerCase();
   return u.replace(/[^a-z0-9._-]/g, "") || "archon";
 }
 
@@ -117,14 +117,14 @@ export function bootUser(): string {
  * credential in its secrets folder, and `<user>+<pc>.<tag>@<domain>` as sender.
  */
 export function bootSite(fleet: FleetDef): Site {
-  const name = Deno.hostname().split(".")[0].toLowerCase();
-  const dir = join(P.bootCache, "..", "notify");
+  const name = (proc.hostname().split(".")[0] ?? "").toLowerCase();
+  const dir = path.join(P.bootCache, "..", "notify");
   return {
     role: "boot",
     name,
     credential: SECRETS.mail,
     spool: dir,
-    status: join(dir, "status.json"),
+    status: path.join(dir, "status.json"),
     to: fleet.mail?.to,
     // The boot machine: <the person running it>+<pc>.<tag>@<domain> (alice+bootpc.lab@...).
     from: fleet.mail ? senderAddress(fleet.mail, name, bootUser()) : undefined,
@@ -139,12 +139,14 @@ export function bootSite(fleet: FleetDef): Site {
  * machine; undefined when missing or unreadable.
  */
 export async function loadCredential(site: Site): Promise<Credential | undefined> {
-  const text = (await readTextOr(site.credential)) ?? "";
+  const text = await fs.readTextOr(site.credential, "");
   // Hosts: Postfix's sasl_passwd line; the boot machine: JSON in its secrets folder.
   if (site.role !== "boot") return parseSaslPasswd(text);
   try {
-    const c = JSON.parse(text);
-    return typeof c?.token === "string" ? c as Credential : undefined;
+    const c: unknown = JSON.parse(text);
+    return typeof c === "object" && c !== null && "token" in c && typeof c.token === "string"
+      ? (c as Credential)
+      : undefined;
   } catch {
     return undefined;
   }
@@ -157,22 +159,22 @@ export interface Event {
   /** What happened, short: "✗ apply failing since 14:04". */
   event: string;
   /** How serious it is; `"info"` by default. */
-  level?: Level;
+  level?: Level | undefined;
   /** The details: a few lines. */
   what: string;
   /** What a person or assistant should do, if anything. */
-  todo?: string;
+  todo?: string | undefined;
   /** Path of the full log, named in the message (not attached by itself). */
-  log?: string;
+  log?: string | undefined;
   /** Files to attach (redacted, trimmed, about 1 MB in all). */
-  attach?: string[];
+  attach?: string[] | undefined;
   /** Messages with the same key within an hour are sent once. */
-  key?: string;
+  key?: string | undefined;
   /**
    * archon notify send: this exact subject (for example "Lab Network Runbook
    * Change Log ..."), and `what` as the whole body.
    */
-  subject?: string;
+  subject?: string | undefined;
 }
 
 /** A composed message waiting in the spool (one JSON file, named by its id). */
@@ -190,7 +192,7 @@ export interface Queued {
   /** How serious it is. */
   level: Level;
   /** The deduplication key, if any (sent as `X-Archon-Key`). */
-  key?: string;
+  key?: string | undefined;
   /** Attached files, contents in base64. */
   attachments: Array<{ name: string; type: string; b64: string }>;
   /** How many sends have failed so far. */
@@ -198,48 +200,51 @@ export interface Queued {
   /** When to try next (ISO 8601); see BACKOFF_MIN. */
   nextAt: string;
   /** The last send error, redacted. */
-  lastError?: string;
+  lastError?: string | undefined;
 }
 
 const MAX_ATTACH = 1_000_000;
 
 async function commit(): Promise<string> {
-  return (await run(["git", "-C", P.repo, "rev-parse", "--short", "HEAD"])).stdout.trim() ||
-    "unknown";
+  return (
+    (await run(["git", "-C", P.repo, "rev-parse", "--short", "HEAD"])).stdout.trim() || "unknown"
+  );
 }
 
 /** Files to attach: text redacted and trimmed to its end, gzipped when large; about 1 MB in all. */
 export async function attachments(
-  paths: string[],
+  files: string[],
   exact: string[],
 ): Promise<Queued["attachments"]> {
   const out: Queued["attachments"] = [];
   let total = 0;
-  for (const p of paths) {
-    const raw = await Deno.readFile(p).catch(() => undefined);
+  for (const p of files) {
+    const raw = await fs.readFile(p).catch(() => undefined);
     if (!raw) continue;
-    const name = p.split(/[\\/]/).pop()!;
+    const name = p.split(/[\\/]/).pop() ?? p;
     let text = redact(new TextDecoder().decode(raw), exact);
     if (text.length > 256_000) text = "[trimmed to the last 256 KB]\n" + text.slice(-256_000);
-    let data = new TextEncoder().encode(text);
+    let data: Uint8Array = new TextEncoder().encode(text);
     let file = name;
     let type = /\.html?$/.test(name)
       ? "text/html"
       : /\.json$/.test(name)
-      ? "application/json"
-      : "text/plain";
+        ? "application/json"
+        : "text/plain";
     if (data.length > 64_000) {
       data = new Uint8Array(
-        await new Response(new Blob([data]).stream().pipeThrough(new CompressionStream("gzip")))
-          .arrayBuffer(),
+        await new Response(
+          new Blob([data as Uint8Array<ArrayBuffer>])
+            .stream()
+            .pipeThrough(new CompressionStream("gzip")),
+        ).arrayBuffer(),
       );
       file = `${name}.gz`;
       type = "application/gzip";
     }
     if (total + data.length > MAX_ATTACH) continue;
     total += data.length;
-    const { base64 } = await import("./mime.ts");
-    out.push({ name: file, type, b64: base64(data) });
+    out.push({ name: file, type, b64: toBase64(data) });
   }
   return out;
 }
@@ -265,15 +270,15 @@ export async function compose(site: Site, ev: Event, exact: string[] = []): Prom
       id: `${now.getTime()}-${crypto.randomUUID().slice(0, 8)}`,
       created: now.toISOString(),
       subject,
-      text: `${body}\n\n-- sent with archon notify from ${site.name} (${
-        now.toISOString().slice(0, 16).replace("T", " ")
-      } UTC)`,
-      html:
-        `<div style="font-family:system-ui,sans-serif;font-size:14px"><pre style="white-space:pre-wrap;font-family:inherit">${
-          escapeHtml(body)
-        }</pre><p style="color:#888;font-size:12px">sent with archon notify from ${
-          escapeHtml(site.name)
-        }</p></div>`,
+      text: `${body}\n\n-- sent with archon notify from ${site.name} (${now
+        .toISOString()
+        .slice(0, 16)
+        .replace("T", " ")} UTC)`,
+      html: `<div style="font-family:system-ui,sans-serif;font-size:14px"><pre style="white-space:pre-wrap;font-family:inherit">${escapeHtml(
+        body,
+      )}</pre><p style="color:#888;font-size:12px">sent with archon notify from ${escapeHtml(
+        site.name,
+      )}</p></div>`,
       level: ev.level ?? "info",
       key: ev.key,
       attachments: await attachments(ev.attach ?? [], exact),
@@ -303,14 +308,15 @@ export async function compose(site: Site, ev: Event, exact: string[] = []): Prom
   const color = ev.level === "fail" ? "#b00020" : ev.level === "warn" ? "#9a6700" : "#1a7f37";
   const html = `<div style="font-family:system-ui,sans-serif;font-size:14px">
 <h3 style="color:${color};margin:0 0 8px">${escapeHtml(ev.event)}</h3>
-<table style="border-collapse:collapse">${
-    fields.map(([k, v]) =>
-      `<tr><td style="padding:2px 12px 2px 0;color:#555">${k}</td><td>${escapeHtml(v)}</td></tr>`
-    ).join("")
-  }</table>
-<h4 style="margin:12px 0 4px">What happened</h4><pre style="white-space:pre-wrap">${
-    escapeHtml(what)
-  }</pre>
+<table style="border-collapse:collapse">${fields
+    .map(
+      ([k, v]) =>
+        `<tr><td style="padding:2px 12px 2px 0;color:#555">${k}</td><td>${escapeHtml(v)}</td></tr>`,
+    )
+    .join("")}</table>
+<h4 style="margin:12px 0 4px">What happened</h4><pre style="white-space:pre-wrap">${escapeHtml(
+    what,
+  )}</pre>
 <h4 style="margin:12px 0 4px">What to do</h4><p>${escapeHtml(todo)}</p>
 ${ev.log ? `<p style="color:#555">Log: <code>${escapeHtml(ev.log)}</code></p>` : ""}
 <p style="color:#888;font-size:12px">archon notify (spec 025)</p></div>`;
@@ -334,9 +340,9 @@ const DEDUPE_MS = 3600_000;
 /** Backoff between attempts: 1 min, 5 min, 15 min, 1 h, then every 3 h. */
 export const BACKOFF_MIN = [1, 5, 15, 60, 180];
 
-async function readJson<T>(path: string, fallback: T): Promise<T> {
+async function readJson<T>(file: string, fallback: T): Promise<T> {
   try {
-    return JSON.parse((await readTextOr(path)) ?? "") as T;
+    return JSON.parse(await fs.readTextOr(file, "")) as T;
   } catch {
     return fallback;
   }
@@ -348,12 +354,12 @@ export async function enqueue(
   ev: Event,
 ): Promise<"queued" | "duplicate" | "not configured" | "failed"> {
   try {
-    if (!site.to || !(await exists(site.credential))) return "not configured";
-    await ensureDir(site.spool);
-    if (Deno.build.os !== "windows" && isRoot()) {
-      await Deno.chmod(site.spool, 0o700).catch(() => {});
+    if (!site.to || !(await fs.exists(site.credential))) return "not configured";
+    await fs.ensureDir(site.spool);
+    if (proc.build.os !== "windows" && proc.isRoot()) {
+      await fs.chmod(site.spool, 0o700).catch(() => undefined);
     }
-    const keysPath = join(site.spool, "keys.json");
+    const keysPath = path.join(site.spool, "keys.json");
     const keys = await readJson<Record<string, string>>(keysPath, {});
     const now = Date.now();
     for (const [k, at] of Object.entries(keys)) {
@@ -361,10 +367,12 @@ export async function enqueue(
     }
     if (ev.key && keys[ev.key]) return "duplicate";
     if (ev.key) keys[ev.key] = new Date(now).toISOString();
-    await Deno.writeTextFile(keysPath, JSON.stringify(keys));
+    await fs.writeTextFile(keysPath, JSON.stringify(keys));
     const cred = await loadCredential(site);
     const q = await compose(site, ev, secretsOf(cred));
-    await Deno.writeTextFile(join(site.spool, `${q.id}.json`), JSON.stringify(q), { mode: 0o600 });
+    await fs.writeTextFile(path.join(site.spool, `${q.id}.json`), JSON.stringify(q), {
+      mode: 0o600,
+    });
     return "queued";
   } catch {
     return "failed";
@@ -374,12 +382,12 @@ export async function enqueue(
 /** The messages in the spool, oldest first, with their file paths. */
 export async function queued(site: Site): Promise<Array<{ path: string; q: Queued }>> {
   const out: Array<{ path: string; q: Queued }> = [];
-  if (!(await exists(site.spool))) return out;
-  for await (const e of Deno.readDir(site.spool)) {
+  if (!(await fs.exists(site.spool))) return out;
+  for await (const e of fs.readDir(site.spool)) {
     if (!e.isFile || !/^\d+-[0-9a-f]{8}\.json$/.test(e.name)) continue;
-    const path = join(site.spool, e.name);
-    const q = await readJson<Queued | undefined>(path, undefined);
-    if (q) out.push({ path, q });
+    const file = path.join(site.spool, e.name);
+    const q = await readJson<Queued | undefined>(file, undefined);
+    if (q) out.push({ path: file, q });
   }
   return out.sort((a, b) => a.q.created.localeCompare(b.q.created));
 }
@@ -389,15 +397,15 @@ export interface Status {
   /** A credential and a mailbox are both set. */
   configured: boolean;
   /** The mailbox messages go to. */
-  to?: string;
+  to?: string | undefined;
   /** How mail is sent (`"cloudflare"`), unset without a credential. */
-  method?: string;
+  method?: string | undefined;
   /** The last send attempt: when, whether it worked, its subject, and the error if not. */
   lastSend?: { at: string; ok: boolean; subject: string; error?: string };
   /** How many messages are waiting. */
   queue: number;
   /** When the oldest waiting message was composed (ISO 8601). */
-  oldest?: string;
+  oldest?: string | undefined;
 }
 
 /** The site's status file, or "not configured, empty queue" when there is none. */
@@ -405,9 +413,9 @@ export async function readStatus(site: Site): Promise<Status> {
   return await readJson<Status>(site.status, { configured: false, queue: 0 });
 }
 
-async function writeStatus(site: Site, s: Status) {
-  await ensureDir(join(site.status, ".."));
-  await Deno.writeTextFile(site.status, JSON.stringify(s, null, 2) + "\n").catch(() => {});
+async function writeStatus(site: Site, s: Status): Promise<void> {
+  await fs.ensureDir(path.join(site.status, ".."));
+  await fs.writeTextFile(site.status, JSON.stringify(s, null, 2) + "\n").catch(() => undefined);
 }
 
 /**
@@ -419,24 +427,25 @@ export function collapse(
   now = Date.now(),
 ): { summary?: Omit<Queued, "id">; drop: Queued[] } {
   const old = items.filter((q) => now - Date.parse(q.created) > 3600_000);
-  if (old.length < 5) return { drop: [] };
+  const first = old[0];
+  if (old.length < 5 || first === undefined) return { drop: [] };
   const lines = old.map((q) => `- ${q.created.slice(0, 16).replace("T", " ")} UTC  ${q.subject}`);
-  const host = old[0].subject.match(/^\[Archon\] ([^:]+):/)?.[1] ?? "archon";
+  const host = first.subject.match(/^\[Archon\] ([^:]+):/)?.[1] ?? "archon";
   const worst: Level = old.some((q) => q.level === "fail")
     ? "fail"
     : old.some((q) => q.level === "warn")
-    ? "warn"
-    : "info";
+      ? "warn"
+      : "info";
   return {
     summary: {
       created: new Date(now).toISOString(),
       subject: `[Archon] ${host}: ${old.length} messages were queued while mail could not be sent`,
-      text: `These messages could not be sent and are summarized here:\n\n${
-        lines.join("\n")
-      }\n\nDetails are in each host's logs.\n\n-- archon notify (spec 025)`,
-      html: `<p>These messages could not be sent and are summarized here:</p><pre>${
-        escapeHtml(lines.join("\n"))
-      }</pre>`,
+      text: `These messages could not be sent and are summarized here:\n\n${lines.join(
+        "\n",
+      )}\n\nDetails are in each host's logs.\n\n-- archon notify (spec 025)`,
+      html: `<p>These messages could not be sent and are summarized here:</p><pre>${escapeHtml(
+        lines.join("\n"),
+      )}</pre>`,
       level: worst,
       attachments: [],
       attempts: 0,
@@ -453,7 +462,7 @@ export const sendDeps = { smtp: sendSmtp };
 export async function flush(
   site: Site,
   o: { force?: boolean } = {},
-): Promise<{ sent: number; failed: number; error?: string }> {
+): Promise<{ sent: number; failed: number; error?: string | undefined }> {
   const cred = await loadCredential(site);
   const status = await readStatus(site);
   status.configured = !!cred && !!site.to;
@@ -468,46 +477,57 @@ export async function flush(
   const { summary, drop } = collapse(items.map((x) => x.q));
   if (summary) {
     for (const d of drop) {
-      await Deno.remove(items.find((x) => x.q.id === d.id)!.path).catch(() => {});
+      const file = items.find((x) => x.q.id === d.id)?.path;
+      if (file !== undefined) await fs.remove(file).catch(() => undefined);
     }
     const id = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
-    await Deno.writeTextFile(join(site.spool, `${id}.json`), JSON.stringify({ id, ...summary }), {
-      mode: 0o600,
-    });
+    await fs.writeTextFile(
+      path.join(site.spool, `${id}.json`),
+      JSON.stringify({ id, ...summary }),
+      {
+        mode: 0o600,
+      },
+    );
     items = await queued(site);
   }
   let sent = 0;
   let failed = 0;
   let error: string | undefined;
-  for (const { path, q } of items) {
+  const from = site.from;
+  const to = site.to;
+  for (const { path: file, q } of items) {
     if (!o.force && Date.parse(q.nextAt) > Date.now()) continue;
     const mime = buildMime({
-      from: site.from,
+      from,
       // The machine by name in the inbox; replies go to the shared mailbox, not the sender.
       fromName: `${site.name} (Archon)`,
-      to: site.to,
+      to,
       subject: q.subject,
       text: q.text,
       html: q.html,
       headers: {
-        "Reply-To": site.to,
+        "Reply-To": to,
         "X-Archon-Level": q.level,
         ...(q.key ? { "X-Archon-Key": q.key } : {}),
       },
       attachments: q.attachments.map((a) => ({
         name: a.name,
         type: a.type,
-        data: Uint8Array.from(atob(a.b64), (c) => c.charCodeAt(0)),
+        data: ((r) => (r.kind === "ok" ? r.value : new Uint8Array()))(fromBase64(a.b64)),
       })),
     });
     try {
-      await sendDeps.smtp(cred, {
-        relay: site.relay,
-        ipv4: site.ipv4,
-        from: site.from,
-        to: site.to,
-      }, mime);
-      await Deno.remove(path).catch(() => {});
+      await sendDeps.smtp(
+        cred,
+        {
+          relay: site.relay,
+          ipv4: site.ipv4,
+          from,
+          to,
+        },
+        mime,
+      );
+      await fs.remove(file).catch(() => undefined);
       sent++;
       status.lastSend = { at: new Date().toISOString(), ok: true, subject: q.subject };
     } catch (e) {
@@ -515,10 +535,9 @@ export async function flush(
       error = redact((e as Error).message, secretsOf(cred));
       q.attempts++;
       q.lastError = error;
-      q.nextAt = new Date(
-        Date.now() + BACKOFF_MIN[Math.min(q.attempts - 1, BACKOFF_MIN.length - 1)] * 60_000,
-      ).toISOString();
-      await Deno.writeTextFile(path, JSON.stringify(q), { mode: 0o600 }).catch(() => {});
+      const wait = BACKOFF_MIN[Math.min(q.attempts - 1, BACKOFF_MIN.length - 1)] ?? 180;
+      q.nextAt = new Date(Date.now() + wait * 60_000).toISOString();
+      await fs.writeTextFile(file, JSON.stringify(q), { mode: 0o600 }).catch(() => undefined);
       status.lastSend = { at: new Date().toISOString(), ok: false, subject: q.subject, error };
       break; // the relay is not answering: the rest waits for the next flush
     }
@@ -533,8 +552,8 @@ export async function flush(
 /** Start sending now without waiting for it (hosts: the flush service). */
 export async function kick(site: Site): Promise<void> {
   if (site.role === "boot") {
-    await flush(site).catch(() => {});
+    await flush(site).catch(() => undefined);
     return;
   }
-  await run(["systemctl", "start", "--no-block", HOST_NOTIFY.flushUnit]).catch(() => {});
+  await run(["systemctl", "start", "--no-block", HOST_NOTIFY.flushUnit]).catch(() => undefined);
 }

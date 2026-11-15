@@ -7,9 +7,8 @@
  * @module
  */
 
-import { join } from "../core/path.ts";
-import { exists } from "../core/fsx.ts";
-import { run, which } from "../core/exec.ts";
+import { fs, path as paths, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
 import { loadFleet } from "../model/load.ts";
 import type { HostDef } from "../model/types.ts";
@@ -19,7 +18,7 @@ import { CORE_PCP_METRICS, observabilityPolicy, OBSERVE } from "../capabilities/
 export function parseSize(s: string): number {
   const m = s.trim().match(/^(\d+(?:\.\d+)?)\s*([KMGT]?)i?B?$/i);
   if (!m) throw new Error(`not a size: ${s}`);
-  const exp = { "": 0, K: 1, M: 2, G: 3, T: 4 }[m[2].toUpperCase() as "" | "K" | "M" | "G" | "T"];
+  const exp = "KMGT".indexOf((m[2] ?? "").toUpperCase()) + 1;
   return Math.round(Number(m[1]) * 1024 ** exp);
 }
 
@@ -31,7 +30,7 @@ export function fmtBytes(n: number): string {
     n /= 1024;
     i++;
   }
-  return `${n.toFixed(n >= 10 || i === 0 ? 0 : 1)} ${u[i]}`;
+  return `${n.toFixed(n >= 10 || i === 0 ? 0 : 1)} ${u[i] ?? "B"}`;
 }
 
 /** One PCP archive: its files share a base name such as 20261111.00.10 or 20261110. */
@@ -51,17 +50,17 @@ const ARCHIVE_FILE = /^(\d{8}(?:\.\d{2}\.\d{2})?)\.(index|meta|\d+)(\.[a-z]+)?$/
 /** Every PCP archive under `root`, grouped by base name. */
 export async function pcpArchives(root = OBSERVE.pcpArchives): Promise<Archive[]> {
   const out = new Map<string, Archive>();
-  if (!(await exists(root))) return [];
-  for await (const host of Deno.readDir(root)) {
+  if (!(await fs.exists(root))) return [];
+  for await (const host of fs.readDir(root)) {
     if (!host.isDirectory) continue;
-    const dir = join(root, host.name);
-    for await (const f of Deno.readDir(dir)) {
-      const m = f.isFile ? f.name.match(ARCHIVE_FILE) : null;
-      if (!m) continue;
-      const key = `${dir}/${m[1]}`;
-      const a = out.get(key) ?? { dir, base: m[1], files: [], bytes: 0 };
+    const dir = paths.join(root, host.name);
+    for await (const f of fs.readDir(dir)) {
+      const base = f.isFile ? f.name.match(ARCHIVE_FILE)?.[1] : undefined;
+      if (base === undefined) continue;
+      const key = `${dir}/${base}`;
+      const a = out.get(key) ?? { dir, base, files: [], bytes: 0 };
       a.files.push(f.name);
-      a.bytes += (await Deno.stat(join(dir, f.name))).size;
+      a.bytes += (await fs.stat(paths.join(dir, f.name))).size;
       out.set(key, a);
     }
   }
@@ -73,7 +72,8 @@ export async function pcpArchives(root = OBSERVE.pcpArchives): Promise<Archive[]
 export async function freePercent(path: string): Promise<number | undefined> {
   const r = await run(["df", "--output=size,avail", "-B1", path]);
   const nums = r.stdout.trim().split("\n").pop()?.trim().split(/\s+/).map(Number);
-  return nums && nums[0] ? (100 * nums[1]) / nums[0] : undefined;
+  const [size = 0, avail = 0] = nums ?? [];
+  return size ? (100 * avail) / size : undefined;
 }
 
 /**
@@ -117,7 +117,9 @@ export async function prune(host: HostDef, check = false): Promise<number> {
   );
   for (const a of drop) {
     p.change(`remove ${a.dir}/${a.base} (${fmtBytes(a.bytes)})`);
-    if (!check) { for (const f of a.files) await Deno.remove(join(a.dir, f)).catch(() => {}); }
+    if (!check) {
+      for (const f of a.files) await fs.remove(paths.join(a.dir, f)).catch(() => undefined);
+    }
   }
   const total = archives.reduce((n, a) => n + a.bytes, 0) - drop.reduce((n, a) => n + a.bytes, 0);
   p.done(
@@ -131,9 +133,9 @@ export async function prune(host: HostDef, check = false): Promise<number> {
 async function sizeOf(dir: string): Promise<number | undefined> {
   let n = 0;
   try {
-    if (!(await exists(dir))) return 0;
-    for await (const e of Deno.readDir(dir)) {
-      if (e.isFile) n += (await Deno.stat(join(dir, e.name)).catch(() => ({ size: 0 }))).size;
+    if (!(await fs.exists(dir))) return 0;
+    for await (const e of fs.readDir(dir)) {
+      if (e.isFile) n += (await fs.stat(paths.join(dir, e.name)).catch(() => ({ size: 0 }))).size;
     }
   } catch {
     return undefined; // not readable by this user
@@ -141,17 +143,22 @@ async function sizeOf(dir: string): Promise<number | undefined> {
   return n;
 }
 
-const active = async (unit: string) => (await run(["systemctl", "is-active", unit])).stdout.trim();
+const active = async (unit: string): Promise<string> =>
+  (await run(["systemctl", "is-active", unit])).stdout.trim();
 
 /** `archon observe`: what this host records about itself (metrics, logs, traces), where, and how much. */
 export async function observe(host: HostDef): Promise<number> {
   const o = observabilityPolicy(await loadFleet(), host);
 
   const l = ui.phase("Logs");
-  const usage = (await run(["journalctl", "--disk-usage"])).stdout.match(/take up ([\d.]+\s*\S+)/)
-    ?.[1];
-  const first = (await run(["journalctl", "-q", "--no-pager", "-o", "short-iso", "--lines=+1"]))
-    .stdout.trim().slice(0, 10);
+  const usage = (await run(["journalctl", "--disk-usage"])).stdout.match(
+    /take up ([\d.]+\s*\S+)/,
+  )?.[1];
+  const first = (
+    await run(["journalctl", "-q", "--no-pager", "-o", "short-iso", "--lines=+1"])
+  ).stdout
+    .trim()
+    .slice(0, 10);
   l.done(
     `journald ${usage ?? "?"} of ${o.logsMaxSize}${
       first ? ` · since ${first}` : ""
@@ -183,27 +190,26 @@ export async function observe(host: HostDef): Promise<number> {
   const { lastDiscovery } = await import("./discover.ts");
   const found = await lastDiscovery();
   c.done(
-    `Collector ${state} on ${OBSERVE.otlpHttp} · Archon's OTLP ${
-      ((n) => n === undefined ? "(size: root only)" : fmtBytes(n))(await sizeOf(OBSERVE.otlpDir))
-    } (up to ${o.tracesDays} days, 64 MB) · ${
+    `Collector ${state} on ${OBSERVE.otlpHttp} · Archon's OTLP ${((n) =>
+      n === undefined ? "(size: root only)" : fmtBytes(n))(
+      await sizeOf(OBSERVE.otlpDir),
+    )} (up to ${o.tracesDays} days, 64 MB) · ${
       found?.endpoint
         ? `forwarding to ${found.endpoint} (found by ${found.source})`
         : "no central collector found: local only"
     }`,
   );
 
-  ui.next.push(
-    "live: btop · OpenTelemetry view: archon observe tui · logs: journalctl -f",
-  );
+  ui.next.push("live: btop · OpenTelemetry view: archon observe tui · logs: journalctl -f");
   return 0;
 }
 
 /** otel-tui on this machine's telemetry: PCP's core metrics live, Archon's recent OTLP. */
 export async function observeTui(): Promise<number> {
-  const bin = await which("otel-tui");
+  const bin = proc.which("otel-tui");
   if (!bin) {
-    console.error("otel-tui is not installed yet: sudo archon tools sync");
-    return 1;
+    ui.phase("otel-tui").fail("not installed yet", "sudo archon tools sync");
+    return ui.finish();
   }
   const args = [
     "--host",
@@ -215,12 +221,7 @@ export async function observeTui(): Promise<number> {
     "--prom-target",
     `http://${OBSERVE.pmproxy}/metrics?names=${CORE_PCP_METRICS.join(",")}`,
   ];
-  if (await exists(OBSERVE.otlpFile)) args.push("--from-json-file", OBSERVE.otlpFile);
-  const r = await new Deno.Command(bin, {
-    args,
-    stdin: "inherit",
-    stdout: "inherit",
-    stderr: "inherit",
-  }).spawn().status;
+  if (await fs.exists(OBSERVE.otlpFile)) args.push("--from-json-file", OBSERVE.otlpFile);
+  const r = await proc.spawn([bin, ...args]).status;
   return r.code;
 }
