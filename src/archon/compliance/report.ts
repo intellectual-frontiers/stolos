@@ -115,6 +115,16 @@ export function fleetEvidence(f: PcFacts, now = Date.now()): Evidence[] {
         "deno task stolos fleet status, then the failing check's fix on the server (Archon Console)",
     });
     out.push({
+      scf: ["CRY-05"],
+      subject: m.name,
+      source: "managed",
+      check: "The disk is encrypted",
+      status: "unknown",
+      detail: "Archon does not check disk encryption on managed servers yet",
+      fix:
+        "record how this server's data at rest is protected (full-disk encryption at install, or an encrypted volume for its data)",
+    });
+    out.push({
       scf: ["AST-02", "MON-01"],
       subject: m.name,
       source: "managed",

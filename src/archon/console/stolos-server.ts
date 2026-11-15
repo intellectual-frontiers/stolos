@@ -19,7 +19,7 @@
 import type { Command } from "../core/registry-types.ts";
 import { COMMANDS, offeredOn } from "../commands/registry.ts";
 import { cookieOf, IDLE_MS, type Session, type Sessions } from "./auth.ts";
-import { argvFor, NOT_IN_CONSOLE } from "./forms.ts";
+import { argvFor, NOT_IN_CONSOLE, shellWords } from "./forms.ts";
 import { type Html, html, raw } from "./html.ts";
 import { bare, page } from "./layout.ts";
 import { actionsView, type ActivityEntry, activityPage } from "./pages.ts";
@@ -67,10 +67,13 @@ export const PERSON_ONLY: Set<string> = new Set([
   "keys check-recovery",
 ]);
 
+/** Changes to who the fleet trusts, and the console itself: in the terminal only. */
+export const TERMINAL_ONLY: Set<string> = new Set(["console", "signers add", "signers remove"]);
+
 /** The commands the Stolos Console offers. Keys that change, restores, and the console itself stay in the terminal. */
 export function stolosCommands(): Command[] {
   return COMMANDS.filter((c) =>
-    offeredOn(c, "pc") && !NOT_IN_CONSOLE.has(c.name) && c.name !== "console" &&
+    offeredOn(c, "pc") && !NOT_IN_CONSOLE.has(c.name) && !TERMINAL_ONLY.has(c.name) &&
     (!c.noMcp || PERSON_ONLY.has(c.name))
   );
 }
@@ -232,7 +235,7 @@ export function stolosHandler(
           return refuse("Another command is running: it may be waiting for you in the terminal.");
         }
         busy = true;
-        const shown = `deno task stolos ${r.argv.join(" ")}`;
+        const shown = `deno task stolos ${shellWords(r.argv)}`;
         send(patch(html`
           <div class="term" id="output">
             <div class="dim">$ ${shown}</div>
@@ -373,7 +376,13 @@ export function stolosHandler(
       if (path === "/") return await frame(s, "Overview", "/", stolosOverview(f), f);
       if (path === "/machines") return await frame(s, "Machines", "/machines", machinesPage(f), f);
       if (path.startsWith("/machines/")) {
-        const body = machinePage(f, decodeURIComponent(path.slice(10)));
+        let name = "";
+        try {
+          name = decodeURIComponent(path.slice(10));
+        } catch {
+          return new Response("no such machine\n", { status: 404 });
+        }
+        const body = machinePage(f, name);
         return body
           ? await frame(s, decodeURIComponent(path.slice(10)), "/machines", body, f)
           : new Response("no such machine\n", { status: 404 });

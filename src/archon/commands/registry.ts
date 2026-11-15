@@ -720,6 +720,7 @@ export const COMMANDS: Command[] = [
       name: "framework",
       type: "string",
       description: "hipaa, pci, cmmc, or soc2 (default: a summary of each).",
+      choices: ["hipaa", "pci", "cmmc", "soc2"],
     }],
     examples: [{
       cmd: "deno task stolos compliance --framework hipaa",
@@ -769,7 +770,7 @@ export const COMMANDS: Command[] = [
     name: "cloud connect",
     summary: "Connect a cloud account read-only: Cloudflare, Microsoft 365 and Azure, AWS, Hetzner",
     description:
-      `Spec 067. Shows how to make a read-only credential in the provider's console (Stolos never changes a cloud), asks for it here (secrets are not echoed), keeps it in this PC's vault (clouds/<provider>/credential.json), and takes a first observation. Providers: cloudflare, microsoft (Microsoft 365 and Azure), aws, hetzner.`,
+      `Spec 067. Shows how to make a read-only credential in the provider's console (Stolos never changes a cloud), asks for it in the terminal where Stolos runs (secrets are not echoed; from the Stolos Console, type it in the console's terminal), keeps it in this PC's vault (clouds/<provider>/credential.json), and takes a first observation. Providers: cloudflare, microsoft (Microsoft 365 and Azure), aws, hetzner.`,
     tier: "repo",
     args: [{
       name: "provider",
@@ -777,6 +778,7 @@ export const COMMANDS: Command[] = [
       positional: true,
       required: true,
       description: "cloudflare, microsoft, aws, or hetzner.",
+      choices: ["cloudflare", "microsoft", "aws", "hetzner"],
     }],
     examples: [{
       cmd: "deno task stolos cloud connect cloudflare",
@@ -798,6 +800,7 @@ export const COMMANDS: Command[] = [
       type: "string",
       positional: true,
       description: "One provider (default: every connected one).",
+      choices: ["cloudflare", "microsoft", "aws", "hetzner"],
     }],
     async run(a) {
       const { cloudObserve } = await import("../cloud/commands.ts");
@@ -815,6 +818,7 @@ export const COMMANDS: Command[] = [
       type: "string",
       positional: true,
       description: "One provider (default: all).",
+      choices: ["cloudflare", "microsoft", "aws", "hetzner"],
     }],
     async run(a, ctx) {
       const { cloudCheck } = await import("../cloud/commands.ts");
@@ -833,6 +837,7 @@ export const COMMANDS: Command[] = [
         type: "string",
         positional: true,
         description: "One provider (default: all).",
+        choices: ["cloudflare", "microsoft", "aws", "hetzner"],
       },
       { name: "kind", type: "string", description: "Only this kind of asset." },
     ],
@@ -861,6 +866,7 @@ export const COMMANDS: Command[] = [
       positional: true,
       required: true,
       description: "cloudflare, microsoft, aws, or hetzner.",
+      choices: ["cloudflare", "microsoft", "aws", "hetzner"],
     }],
     async run(a) {
       const { cloudDisconnect } = await import("../cloud/commands.ts");

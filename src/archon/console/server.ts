@@ -4,7 +4,7 @@
  * it with fakes and a server with the real ones.
  *
  * - `/signin` (form, PAM) and `/signout`; everything else needs a session
- *   (a cookie) or, for a GET, HTTP Basic credentials (scripts).
+ *   (a cookie). Wrong passwords are throttled by address and by account.
  * - POSTs come from this site only: the Origin must match the Host, and a run
  *   must carry Datastar's own header (another site's form cannot set it).
  * - `/actions/run` streams the command's output as server-sent events
@@ -36,7 +36,7 @@ import {
   type Throttle,
 } from "./auth.ts";
 import type { Runner } from "./exec.ts";
-import { argvFor, consoleCommands } from "./forms.ts";
+import { argvFor, consoleCommands, shellWords } from "./forms.ts";
 import { esc, type Html, html, raw } from "./html.ts";
 import { bare, page } from "./layout.ts";
 import {
@@ -106,6 +106,10 @@ export const htmlResponse = (
       "cache-control": "no-store",
       "x-frame-options": "DENY",
       "referrer-policy": "same-origin",
+      "x-content-type-options": "nosniff",
+      // Datastar evaluates its attribute expressions, and the pages carry one inline script.
+      "content-security-policy":
+        "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
       ...headers,
     },
   });
@@ -114,12 +118,17 @@ export const htmlResponse = (
 export const redirect = (to: string, headers: Record<string, string> = {}): Response =>
   new Response(null, { status: 303, headers: { location: to, ...headers } });
 
-/** The address a request came from: Traefik's X-Forwarded-For, else the connection's. */
+/**
+ * The address a request came from. The console listens on 127.0.0.1 behind
+ * Traefik, which replaces any X-Forwarded-For a client sends with its own
+ * (it trusts no forwarded headers): so the header counts only on a loopback
+ * connection, and its last entry is the one Traefik added.
+ */
 export function clientAddress(req: Request, info?: Deno.ServeHandlerInfo): string {
-  const xff = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  if (xff) return xff;
-  const a = info?.remoteAddr as Deno.NetAddr | undefined;
-  return a?.hostname ?? "unknown";
+  const a = (info?.remoteAddr as Deno.NetAddr | undefined)?.hostname ?? "unknown";
+  const loopback = a === "127.0.0.1" || a === "::1" || a === "unknown";
+  const xff = req.headers.get("x-forwarded-for")?.split(",").map((x) => x.trim()).filter(Boolean);
+  return loopback && xff?.length ? xff[xff.length - 1] : a;
 }
 
 /** Whether a POST comes from this site: its Origin (when the browser sends one) matches the Host. */
@@ -232,26 +241,9 @@ export function consoleHandler(
     }, body));
   };
 
-  /** A session from the cookie, or (GET only) Basic credentials checked with PAM. */
-  const who = async (req: Request, from: string): Promise<Session | undefined> => {
-    const s = deps.sessions.get(cookieOf(req.headers.get("cookie"), COOKIE));
-    if (s) return s;
-    const auth = req.headers.get("authorization");
-    if (req.method !== "GET" || !auth?.startsWith("Basic ")) return undefined;
-    if (!deps.throttle.allowed(from)) return undefined;
-    let user = "", password = "";
-    try {
-      [user, password] = atob(auth.slice(6)).split(/:(.*)/s, 2) as [string, string];
-    } catch {
-      return undefined;
-    }
-    const account = await deps.accounts(user);
-    if (!account || !(await deps.auth.check(user, password ?? ""))) {
-      deps.throttle.failed(from);
-      return undefined;
-    }
-    return deps.sessions.create(account, from); // short-lived in practice: Basic sends no cookie
-  };
+  /** A session from the cookie (the only way in: no Basic credentials, which would make a session per request). */
+  const who = (req: Request): Session | undefined =>
+    deps.sessions.get(cookieOf(req.headers.get("cookie"), COOKIE));
 
   return async (req, info) => {
     const url = new URL(req.url);
@@ -282,7 +274,8 @@ export function consoleHandler(
             ),
             status,
           );
-        if (!deps.throttle.allowed(from)) {
+        // By address and by account: a forged or rotating address still cannot guess one account's password.
+        if (!deps.throttle.allowed(from) || !deps.throttle.allowed(`user:${user}`)) {
           return again(
             "Too many wrong tries from your address: wait a minute, then try again.",
             429,
@@ -291,6 +284,7 @@ export function consoleHandler(
         const account = await deps.accounts(user);
         if (!account || !(await deps.auth.check(user, password))) {
           deps.throttle.failed(from);
+          deps.throttle.failed(`user:${user}`);
           await deps.activity.add({
             at: new Date().toISOString(),
             user: user || "?",
@@ -301,6 +295,7 @@ export function consoleHandler(
           return again("That username and password do not match an account on this server.");
         }
         deps.throttle.succeeded(from);
+        deps.throttle.succeeded(`user:${user}`);
         const s = deps.sessions.create(account, from);
         await deps.activity.add({
           at: new Date().toISOString(),
@@ -329,7 +324,7 @@ export function consoleHandler(
       }
 
       // ------------------------------------------------ signed in
-      const s = await who(req, from);
+      const s = who(req);
       if (!s) {
         return req.method === "GET"
           ? redirect("/signin")
@@ -487,7 +482,7 @@ async function runCommand(
       if (destroying && !(await deps.auth.check(s.user, form.password ?? ""))) {
         return refuse("Destroying data needs your password again, and it did not match.");
       }
-      const shown = `archon ${r.argv.join(" ")}`;
+      const shown = `archon ${shellWords(r.argv)}`;
       send(patch(html`
         <div class="term" id="output">
           <div class="dim">$ ${shown}   (as ${s.user})</div>

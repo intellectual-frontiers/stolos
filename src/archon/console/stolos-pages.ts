@@ -174,8 +174,8 @@ ${
     id: "trust",
     label: "Signers and keys",
     intro:
-      "Who may approve changes: each signer's public key is in signers.ts, and servers refuse a commit no signer signed. Keys that change are set up in the terminal (deno task stolos keys setup), never here.",
-    names: ["signers", "signers add", "signers remove", "keys", "keys check-recovery"],
+      "Who may approve changes: each signer's public key is in signers.ts, and servers refuse a commit no signer signed. Adding or removing a signer, and keys that change, are done in the terminal (deno task stolos signers add, keys setup), never here.",
+    names: ["signers", "keys", "keys check-recovery"],
     first: "keys",
     diagram: (f) =>
       `flowchart LR
@@ -264,7 +264,10 @@ export function stolosOverview(f: PcFacts, now = Date.now()): Html {
               html`
                 <div class="row spread"
                   style="padding:6px 0;border-top:1px solid var(--line)"><span><b>${x
-                    .name}</b> ${kindPill(x.kind)} <span class="sub">${x.failing.slice(0, 3).join(
+                    .name}</b> ${kindPill(x.kind)} <span class="sub">not met: ${x.failing.slice(
+                      0,
+                      3,
+                    ).join(
                       "; ",
                     )}</span></span><a class="btn ghost" href="/machines/${encodeURIComponent(
                       x.name,
@@ -322,7 +325,7 @@ export function machinesPage(f: PcFacts, now = Date.now()): Html {
     <div class="card scroll" data-signals="{q: ''}">
       <input type="search" data-bind:q placeholder="Filter by name, kind, OS, owner" aria-label="Filter machines" autocomplete="off" style="margin-bottom:10px">
       <table>
-        <thead><tr><th>Name</th><th>Kind</th><th>OS</th><th>Where</th><th>Owner</th><th>Checks</th><th>Seen</th><th></th></tr></thead>
+        <thead><tr><th>Name</th><th>Kind</th><th>OS</th><th>Where</th><th>Owner</th><th>Checks</th><th>Last record</th><th></th></tr></thead>
         <tbody>${f.machines.map((x) => {
           const text = `${x.name} ${x.kind} ${x.os ?? ""} ${x.owner ?? ""} ${x.where ?? ""}`
             .toLowerCase().replace(/[^a-z0-9 .:-]/g, " ");
@@ -790,8 +793,8 @@ export function machinesCsv(f: PcFacts): string {
     "owner",
     "checks_passed",
     "checks_total",
-    "failing",
-    "last_seen",
+    "not_met",
+    "last_record",
   ];
   const rows = f.machines.map((x) =>
     [

@@ -58,12 +58,15 @@ export function parseBootLog(text: string): InstallProgress[] {
       p = undefined;
     }
     p ??= { host, step: 1, failed: false, last: "", at };
+    const before = p.step;
     INSTALL_STEPS.forEach((s, i) => {
       if (i + 1 > p!.step && s.seen.test(message) && !(i + 1 === 10 && p!.step < 9)) {
         p!.step = i + 1;
       }
     });
-    if (/✗|\[FAIL\]|Done with problems|failed/i.test(message)) p.failed = true;
+    // A failure is the boot server's own mark, not the word "failed" (for example "0 failed").
+    if (/^(✗|❌)|\[FAIL\]|Done with problems/.test(message.trim())) p.failed = true;
+    else if (p.step > before) p.failed = false;
     p.last = message;
     p.at = at;
     byHost.set(host, p);

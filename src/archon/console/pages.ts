@@ -156,7 +156,7 @@ export function overviewPage(d: WelcomeData, r: RepoFacts, s: Session): Html {
         v.failed.map((f) =>
           html`
             <div class="row spread"
-              style="padding:8px 0;border-bottom:1px solid var(--line)"><span class="mono">${f}</span><a class="btn ghost" href="/actions/server?cmd=verify">See the fix</a></div>
+              style="padding:8px 0;border-bottom:1px solid var(--line)"><span class="mono">${f}</span><a class="btn ghost" href="/actions/server?cmd=verify">Check again (prints the fix)</a></div>
           `
         )
       }</div>`

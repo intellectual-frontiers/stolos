@@ -31,6 +31,8 @@ export interface ArgSpec {
    * MCP, and refused when an agent runs the command (ARCHON_AGENT is set).
    */
   human?: boolean;
+  /** The only values it takes (a console shows a choice). */
+  choices?: string[];
 }
 
 /** A command's arguments, parsed: name to value. */

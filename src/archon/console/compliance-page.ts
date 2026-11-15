@@ -79,6 +79,7 @@ export function compliancePage(
   fw: string | undefined,
   scope: string,
   exportHref?: string,
+  now = new Date(),
 ): Html {
   const f = v.frameworks.find((x) => x.id === fw);
   const tabs =
@@ -98,6 +99,14 @@ export function compliancePage(
       ${exportHref
         ? html`<a class="btn ghost" href="${exportHref}" download>Evidence (JSON)</a>`
         : ""}</div>
+    <p
+      class="sub">As of ${now.toISOString().slice(0, 16).replace(
+        "T",
+        " ",
+      )} UTC, from the last observations and verifies this console knows.</p>
+    ${fw && !f
+      ? html`<div class="notice bad">There is no framework "${fw}": choose one below.</div>`
+      : ""}
     <div
       class="notice">A starter mapping, for orientation: check each line against the SCF's own mappings (STRM) before an auditor relies on it. Controls Stolos cannot observe (policies, training, contracts) are not here at all: they need evidence of their own.</div>
     ${tabs}

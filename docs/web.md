@@ -36,7 +36,8 @@ commands that change the server; destroying data also needs the password again a
 confirmation (`--confirm-destroy`). A command runs as you: `archon console exec` checks again, as
 root, that you may run it, then systemd runs it with your name, so every record names you, and a
 change is mailed to the fleet's mailbox. Five wrong passwords in a minute pause sign-ins from that
-address. Scripts may use HTTP Basic credentials for pages they only read.
+address. Only a signed-in browser session is accepted (no HTTP Basic); wrong passwords are throttled
+by address and by account.
 
 ## Once: the Cloudflare token
 

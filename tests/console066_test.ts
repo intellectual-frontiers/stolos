@@ -208,3 +208,38 @@ Deno.test("066: boot.log as install timelines: Ready, under way, stopped, and ar
   );
   assertEquals(again.find((x) => x.host === "alpha")!.step, 3);
 });
+
+Deno.test("066 acceptance: choices, long values, quoting, bad addresses, signers in the terminal", async () => {
+  const { argvFor, shellWords } = await import("../src/archon/console/forms.ts");
+  const connect = stolosCommands().find((c) => c.name === "cloud connect")!;
+  assert(
+    "error" in argvFor(connect, { provider: "cloudfare" }),
+    "a misspelled provider is refused",
+  );
+  assert(!("error" in argvFor(connect, { provider: "cloudflare" })));
+  const check = stolosCommands().find((c) => c.name === "host check")!;
+  assert("error" in argvFor(check, { name: "x".repeat(2001) }), "a very long value is refused");
+  assertEquals(
+    shellWords(["host", "adopt", "a b", "it's", "<img>"]),
+    `host adopt 'a b' 'it'\\''s' '<img>'`,
+  );
+  const names = stolosCommands().map((c) => c.name);
+  assert(
+    !names.includes("signers add") && !names.includes("signers remove"),
+    "trust changes stay in the terminal",
+  );
+  const { get } = await signedIn();
+  assertEquals((await get("/machines/%E0%A4%A")).status, 404);
+  assertStringIncludes(await (await get("/compliance?fw=bogus")).text(), "There is no framework");
+});
+
+Deno.test("066 acceptance: 'failed' in a passing line does not stop an install", async () => {
+  const { parseBootLog } = await import("../src/archon/console/boot-timeline.ts");
+  const p = parseBootLog([
+    "2026-11-15T10:00:03Z 10.0.30.59 alpha: armed, starting its install",
+    "2026-11-15T10:01:00Z 10.0.30.59 alpha: installer: retrying a failed mirror",
+    "2026-11-15T10:09:00Z 10.0.30.59 alpha: First boot: installing Deno, cloning the repository",
+    "2026-11-15T10:10:30Z 10.0.30.59 alpha: Verify: 142 passed, 0 failed",
+  ].join("\n"));
+  assertEquals([p[0].step, p[0].failed], [10, false]);
+});

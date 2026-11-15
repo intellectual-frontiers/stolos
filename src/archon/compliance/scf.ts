@@ -88,7 +88,8 @@ export const SCF: ScfControl[] = [
   {
     id: "CRY-05",
     name: "Encrypting Data At Rest",
-    how: "Disks of adopted machines are encrypted (FileVault, LUKS).",
+    how:
+      "Disks are encrypted: adopted machines are checked (FileVault, LUKS); managed servers are listed as not checked yet.",
     maps: {
       hipaa: ["164.312(a)(2)(iv)"],
       pci: ["3.5.1"],

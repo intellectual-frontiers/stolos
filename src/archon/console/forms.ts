@@ -43,6 +43,12 @@ export function consoleCommands(place: "machine" | "pc"): Command[] {
   return COMMANDS.filter((c) => offeredOn(c, place) && !c.noMcp && !NOT_IN_CONSOLE.has(c.name));
 }
 
+/** An argument list as a person would type it in a shell (quoted where needed). */
+export function shellWords(argv: string[]): string {
+  return argv.map((a) => /^[A-Za-z0-9_@%+=:,./-]+$/.test(a) ? a : `'${a.replace(/'/g, `'\\''`)}'`)
+    .join(" ");
+}
+
 /** A tier in plain words, for people. */
 export function tierWords(t: Tier): string {
   return t === "read"
@@ -92,6 +98,10 @@ export function argvFor(cmd: Command, form: Record<string, string | undefined>):
     }
     if (value.startsWith("-")) return { error: `${a.name} may not start with "-"` };
     if (/[\0\r\n]/.test(value)) return { error: `${a.name} must be one line` };
+    if (value.length > 2000) return { error: `${a.name} is too long` };
+    if (a.choices && !a.choices.includes(value)) {
+      return { error: `${a.name} is one of: ${a.choices.join(", ")}` };
+    }
     args[a.name] = value;
     if (a.positional) positional.push(value);
     else options.push(`--${a.name}`, value);
@@ -112,6 +122,17 @@ function field(a: ArgSpec, value?: string): Html {
     `;
   }
   const label = a.positional ? a.name : `--${a.name}`;
+  if (a.choices) {
+    return html`
+      <label
+        class="field"><span><span class="mono">${label}</span>${a.required
+          ? " (required)"
+          : ""} <span class="sub">${a.description}</span></span><select id="${id}" name="${a
+          .name}">${a.required ? "" : html`<option value="">(none)</option>`}${a.choices.map((c) =>
+            html`<option value="${c}" ${c === value ? "selected" : ""}>${c}</option>`
+          )}</select></label>
+    `;
+  }
   const placeholder = a.name === "confirm-destroy"
     ? "type the name it destroys, to confirm"
     : a.default !== undefined

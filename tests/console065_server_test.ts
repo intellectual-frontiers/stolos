@@ -2,6 +2,7 @@
 // rules, who may run what, destroying data, and the live output of a run.
 import { assert, assertEquals, assertStringIncludes } from "./assert.ts";
 import {
+  clientAddress,
   type ConsoleDeps,
   consoleHandler,
   lineClass,
@@ -290,16 +291,44 @@ Deno.test("065 console: people who are not operators look but cannot change; des
   assertEquals(d.log.filter((e) => e.kind === "refused").length, 2);
 });
 
-Deno.test("065 console: Basic credentials work for a script's GET", async () => {
+Deno.test("065 console: no Basic credentials (no session per request)", async () => {
   const h = consoleHandler(deps());
   const r = await h(
     req("/activity", { headers: { authorization: "Basic " + btoa("alice:right") } }),
   );
-  assertEquals(r.status, 200);
-  assertEquals(
-    (await h(req("/activity", { headers: { authorization: "Basic " + btoa("alice:no") } }))).status,
-    303,
-  );
+  assertEquals(r.status, 303);
+});
+
+Deno.test("065 console: the address is Traefik's, and wrong passwords are throttled per account too", async () => {
+  const loop = {
+    remoteAddr: { hostname: "127.0.0.1", port: 1, transport: "tcp" },
+  } as Deno.ServeHandlerInfo;
+  const far = {
+    remoteAddr: { hostname: "203.0.113.9", port: 1, transport: "tcp" },
+  } as Deno.ServeHandlerInfo;
+  const x = (v: string) => new Request(BASE, { headers: { "x-forwarded-for": v } });
+  assertEquals(clientAddress(x("1.2.3.4, 10.0.0.5"), loop), "10.0.0.5");
+  assertEquals(clientAddress(x("1.2.3.4"), far), "203.0.113.9");
+  const h = consoleHandler(deps());
+  const attempt = (i: number, pw: string) =>
+    h(
+      new Request(BASE + "/signin", {
+        method: "POST",
+        headers: { host: "alpha.lab.example.net", origin: BASE, "x-forwarded-for": `10.9.0.${i}` },
+        body: form({ user: "alice", password: pw }),
+      }),
+      loop,
+    );
+  for (let i = 0; i < 5; i++) assertEquals((await attempt(i, "wrong")).status, 401);
+  // A new address each time: the account is still throttled.
+  assertEquals((await attempt(50, "right")).status, 429);
+});
+
+Deno.test("065 console: pages carry a content security policy and nosniff", async () => {
+  const h = consoleHandler(deps());
+  const r = await h(req("/signin"));
+  assertStringIncludes(r.headers.get("content-security-policy") ?? "", "frame-ancestors 'none'");
+  assertEquals(r.headers.get("x-content-type-options"), "nosniff");
 });
 
 Deno.test("065 console: event format and line colors", () => {
