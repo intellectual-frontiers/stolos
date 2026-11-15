@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/schema/define.ts - Stolos v0.102.0 documentation</title>
+  <title>archon/schema/define.ts - Stolos v0.103.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.102.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.103.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -216,6 +216,11 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_definelabel
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;schema&#x2F;define.ts&#x2F;~&#x2F;tableSql.html" title="tableSql">
 			    <span>tableSql</span><span>(<span><span>t<span>: <span class="td-ref">AnyTable</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A table's CREATE TABLE and CREATE INDEX statements.</p>
 </div></div></div>
+    </div><div id="namespace_typedcolumns" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;schema&#x2F;define.ts&#x2F;~&#x2F;typedColumns.html" title="typedColumns">
+			    <span>typedColumns</span><span>(<span><span>d<span>: <span><span class="td-ref">AnyTable</span><span class="td-op"> | </span><span class="td-ref">ViewDef</span></span></span></span></span>)<span>: <span class="td-ref">TypedColumn</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The typed columns of a table or a view, in order; a view's column given only as its doc is text (spec 094).</p>
+</div></div></div>
     </div><div id="namespace_upsertsql" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;schema&#x2F;define.ts&#x2F;~&#x2F;upsertSql.html" title="upsertSql">
@@ -337,13 +342,51 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_anytable" 
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;schema&#x2F;define.ts&#x2F;~&#x2F;TableDef.html#property_terms">
                   <span>terms</span><span>: <span class="td-kw">readonly</span> <span class="td-ref">TermRef</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The standard terms its name is made of.</p>
 </div></div></li></ul></div>
+    </div><div id="namespace_typedcolumn" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;schema&#x2F;define.ts&#x2F;~&#x2F;TypedColumn.html" title="TypedColumn">
+			    <span>TypedColumn</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One column of a table or a view, typed.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;schema&#x2F;define.ts&#x2F;~&#x2F;TypedColumn.html#property_doc">
+                  <span>doc</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What it holds.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;schema&#x2F;define.ts&#x2F;~&#x2F;TypedColumn.html#property_name">
+                  <span>name</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its name.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;schema&#x2F;define.ts&#x2F;~&#x2F;TypedColumn.html#property_required">
+                  <span>required</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Never null (a table's key or required column, or a view's required column).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;schema&#x2F;define.ts&#x2F;~&#x2F;TypedColumn.html#property_type">
+                  <span>type</span><span>: <span class="td-ref">ColumnType</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its type.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;schema&#x2F;define.ts&#x2F;~&#x2F;TypedColumn.html#property_values">
+                  <span>values</span><span>: <span class="td-kw">readonly</span> <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The values it takes, when declared.</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_viewcolumn" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;schema&#x2F;define.ts&#x2F;~&#x2F;ViewColumn.html" title="ViewColumn">
+			    <span>ViewColumn</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A view's column with its type (spec 094): the REST API and its OpenAPI
+document read the type. A column given only as its doc (a string) is text.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;schema&#x2F;define.ts&#x2F;~&#x2F;ViewColumn.html#property_doc">
+                  <span>doc</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What it holds, for people.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;schema&#x2F;define.ts&#x2F;~&#x2F;ViewColumn.html#property_required">
+                  <span>required</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Never null.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;schema&#x2F;define.ts&#x2F;~&#x2F;ViewColumn.html#property_type">
+                  <span>type</span><span>: <span class="td-ref">ColumnType</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its type, as the SELECT yields it (booleans 0 and 1, JSON as text).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;schema&#x2F;define.ts&#x2F;~&#x2F;ViewColumn.html#property_values">
+                  <span>values</span><span>: <span class="td-kw">readonly</span> <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The values it takes.</p>
+</div></div></li></ul></div>
     </div><div id="namespace_viewdef" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;schema&#x2F;define.ts&#x2F;~&#x2F;ViewDef.html" title="ViewDef">
 			    <span>ViewDef</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A view, as declared.</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;schema&#x2F;define.ts&#x2F;~&#x2F;ViewDef.html#property_columns">
-                  <span>columns</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its columns and what each holds.</p>
+                  <span>columns</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-ref">ViewColumn</span></span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its columns: what each holds (text), or its type with that (spec 094).</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;schema&#x2F;define.ts&#x2F;~&#x2F;ViewDef.html#property_doc">
                   <span>doc</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What it shows.</p>
@@ -524,7 +567,7 @@ tenant (tenant_uid, connector). Spec 090 declares them.</p>
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1962 symbols</span><svg
+              <span class="leading-none">view all 1994 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -539,7 +582,7 @@ tenant (tenant_uid, connector). Spec 090 declares them.</p>
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/schema/define_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_definelabel" title="defineLabel">defineLabel</a></li><li><a href="#namespace_definetable" title="defineTable">defineTable</a></li><li><a href="#namespace_defineview" title="defineView">defineView</a></li><li><a href="#namespace_ordered" title="ordered">ordered</a></li><li><a href="#namespace_rowparams" title="rowParams">rowParams</a></li><li><a href="#namespace_schemadoc" title="schemaDoc">schemaDoc</a></li><li><a href="#namespace_schemaproblems" title="schemaProblems">schemaProblems</a></li><li><a href="#namespace_schemasql" title="schemaSql">schemaSql</a></li><li><a href="#namespace_tablesql" title="tableSql">tableSql</a></li><li><a href="#namespace_upsertsql" title="upsertSql">upsertSql</a></li><li><a href="#namespace_viewsql" title="viewSql">viewSql</a></li></ul></li><li><a href="#archon/schema/define_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_anytable" title="AnyTable">AnyTable</a></li><li><a href="#namespace_column" title="Column">Column</a></li><li><a href="#namespace_labeldef" title="LabelDef">LabelDef</a></li><li><a href="#namespace_tabledef" title="TableDef">TableDef</a></li><li><a href="#namespace_viewdef" title="ViewDef">ViewDef</a></li></ul></li><li><a href="#archon/schema/define_ts_type-aliases" title="Type Aliases">Type Aliases</a></li><li><ul><li><a href="#namespace_columntype" title="ColumnType">ColumnType</a></li><li><a href="#namespace_labelview" title="LabelView">LabelView</a></li><li><a href="#namespace_requiredkeys" title="RequiredKeys">RequiredKeys</a></li><li><a href="#namespace_rowof" title="RowOf">RowOf</a></li><li><a href="#namespace_valueof" title="ValueOf">ValueOf</a></li></ul></li><li><a href="#archon/schema/define_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_graph" title="GRAPH">GRAPH</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/schema/define_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_definelabel" title="defineLabel">defineLabel</a></li><li><a href="#namespace_definetable" title="defineTable">defineTable</a></li><li><a href="#namespace_defineview" title="defineView">defineView</a></li><li><a href="#namespace_ordered" title="ordered">ordered</a></li><li><a href="#namespace_rowparams" title="rowParams">rowParams</a></li><li><a href="#namespace_schemadoc" title="schemaDoc">schemaDoc</a></li><li><a href="#namespace_schemaproblems" title="schemaProblems">schemaProblems</a></li><li><a href="#namespace_schemasql" title="schemaSql">schemaSql</a></li><li><a href="#namespace_tablesql" title="tableSql">tableSql</a></li><li><a href="#namespace_typedcolumns" title="typedColumns">typedColumns</a></li><li><a href="#namespace_upsertsql" title="upsertSql">upsertSql</a></li><li><a href="#namespace_viewsql" title="viewSql">viewSql</a></li></ul></li><li><a href="#archon/schema/define_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_anytable" title="AnyTable">AnyTable</a></li><li><a href="#namespace_column" title="Column">Column</a></li><li><a href="#namespace_labeldef" title="LabelDef">LabelDef</a></li><li><a href="#namespace_tabledef" title="TableDef">TableDef</a></li><li><a href="#namespace_typedcolumn" title="TypedColumn">TypedColumn</a></li><li><a href="#namespace_viewcolumn" title="ViewColumn">ViewColumn</a></li><li><a href="#namespace_viewdef" title="ViewDef">ViewDef</a></li></ul></li><li><a href="#archon/schema/define_ts_type-aliases" title="Type Aliases">Type Aliases</a></li><li><ul><li><a href="#namespace_columntype" title="ColumnType">ColumnType</a></li><li><a href="#namespace_labelview" title="LabelView">LabelView</a></li><li><a href="#namespace_requiredkeys" title="RequiredKeys">RequiredKeys</a></li><li><a href="#namespace_rowof" title="RowOf">RowOf</a></li><li><a href="#namespace_valueof" title="ValueOf">ValueOf</a></li></ul></li><li><a href="#archon/schema/define_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_graph" title="GRAPH">GRAPH</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>

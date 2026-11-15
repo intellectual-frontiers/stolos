@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/console/stolos-server.ts - Stolos v0.102.0 documentation</title>
+  <title>archon/console/stolos-server.ts - Stolos v0.103.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.102.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.103.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -111,6 +111,8 @@ terminal is you.</li>
 <li>Commands run as <code>deno task stolos ...</code> in the fleet repository, one at a
 time, with this terminal as their input: a passphrase or token is typed
 there, never in the browser.</li>
+<li>Under <code>/v1/</code>, a read-only REST API for the estate (spec 094,
+<code>../api/handler.ts</code>): GET and HEAD only, for the same signed-in session.</li>
 </ul>
 </div><section class="section"  id="archon&#x2F;console&#x2F;stolos-server_ts_classes"><div>
       <h2 class="anchorable mb-1"><a href="#archon&#x2F;console&#x2F;stolos-server_ts_classes" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
@@ -224,6 +226,15 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_stolosdeps
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;stolos-server.ts&#x2F;~&#x2F;StolosDeps.html#property_cachedir">
                   <span>cacheDir</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where Mermaid and the fonts are cached.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;stolos-server.ts&#x2F;~&#x2F;StolosDeps.html#method_catalog_0">
+                  <span>catalog</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span><span class="td-ref">ScfCatalog</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The SCF catalog, when it is on this PC (default: the cached one).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;stolos-server.ts&#x2F;~&#x2F;StolosDeps.html#method_estate_0">
+                  <span>estate</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">Estate</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The estate graph with its findings, for the REST API (spec 094).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;stolos-server.ts&#x2F;~&#x2F;StolosDeps.html#property_evidencedir">
+                  <span>evidenceDir</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The directory with this PC's evidence bundles (spec 072), for the REST API.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;stolos-server.ts&#x2F;~&#x2F;StolosDeps.html#method_facts_0">
                   <span>facts</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">PcFacts</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fleet's facts.</p>
@@ -400,7 +411,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_launch_ms" 
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1962 symbols</span><svg
+              <span class="leading-none">view all 1994 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
