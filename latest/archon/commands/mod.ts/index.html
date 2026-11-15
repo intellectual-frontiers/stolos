@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/commands/mod.ts - Stolos v0.117.0 documentation</title>
+  <title>archon/commands/mod.ts - Stolos v0.118.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.117.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.118.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -888,7 +888,7 @@ call (<code>journalctl -t archon-mcp</code>). See <a href="../../../archon/mcp/m
   </defs>
 </svg>
 </a>Changing a host</h2>
-<p>Every change follows the spec loop in <a href="https://github.com/intellectual-frontiers/stolos/blob/v0.117.0/AGENTS.md"><code>AGENTS.md</code></a>: spec, model, <code>stolos build</code>,
+<p>Every change follows the spec loop in <a href="https://github.com/intellectual-frontiers/stolos/blob/v0.118.0/AGENTS.md"><code>AGENTS.md</code></a>: spec, model, <code>stolos build</code>,
 <code>archon apply --check</code>, commit and push, then <code>archon apply</code> (or wait for the converge timer),
 <code>archon verify</code>. Never change a host by hand outside that loop. If a change was made by hand
 anyway, it has a way back into the model: <code>archon drift</code>, then <code>sudo archon propose</code>, and on your

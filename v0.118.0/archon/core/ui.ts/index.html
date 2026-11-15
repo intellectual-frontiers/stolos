@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>archon/core/ui.ts - Stolos v0.118.0 documentation</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="doc-current-file" content="">
+  <link rel="stylesheet" href="..&#x2F;..&#x2F;..&#x2F;styles.css">
+  <link rel="stylesheet" href="..&#x2F;..&#x2F;..&#x2F;page.css">
+  <link id="ddocResetStylesheet" rel="stylesheet" href="..&#x2F;..&#x2F;..&#x2F;reset.css"><link href="../../../comrak.css" rel="stylesheet" /><link href="../../../prism.css" rel="stylesheet" /><script src="../../../prism.js"></script><script src="..&#x2F;..&#x2F;..&#x2F;script.js" defer></script>
+  <script src="..&#x2F;..&#x2F;..&#x2F;darkmode_toggle.js"></script><script src="..&#x2F;..&#x2F;..&#x2F;search_index.js" defer></script>
+    <script src="..&#x2F;..&#x2F;..&#x2F;fuse.js" defer></script>
+    <script src="..&#x2F;..&#x2F;..&#x2F;search.js" defer></script></head>
+<body>
+<div class="ddoc">
+<div><nav id="topnav">
+  <div class="h-full">
+    <div class="flex items-center"><ul class="breadcrumbs">
+  <li>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.118.0</a>
+  </li><span class="text-black dark:text-white"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 16 16"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <path
+    fill-rule="evenodd"
+    clip-rule="evenodd"
+    d="M5.76748 11.8159C5.5378 11.577 5.54525 11.1972 5.78411 10.9675L8.93431 8L5.78411 5.0325C5.54525 4.80282 5.5378 4.423 5.76748 4.18413C5.99715 3.94527 6.37698 3.93782 6.61584 4.1675L10.2158 7.5675C10.3335 7.68062 10.4 7.83679 10.4 8C10.4 8.16321 10.3335 8.31938 10.2158 8.4325L6.61584 11.8325C6.37698 12.0622 5.99715 12.0547 5.76748 11.8159Z"
+    fill="currentColor"
+  />
+</svg>
+</span>archon&#x2F;core&#x2F;ui.ts</ul>
+</div>
+
+    <div class="flex items-center gap-2">
+      <button id="theme-toggle" type="button" aria-label="Toggle dark mode" style="display: none;"><svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="14"
+  height="14"
+  viewBox="0 0 24 24"
+  fill="currentColor"
+>
+  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+  <path
+    d="M12 1.992a10 10 0 1 0 9.236 13.838c.341 -.82 -.476 -1.644 -1.298 -1.31a6.5 6.5 0 0 1 -6.864 -10.787l.077 -.08c.551 -.63 .113 -1.653 -.758 -1.653h-.266l-.068 -.006l-.06 -.002z"
+  />
+</svg>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="14"
+  height="14"
+  viewBox="0 0 24 24"
+  fill="currentColor"
+  class="hidden"
+>
+  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+  <path
+    d="M12 19a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"
+  />
+  <path
+    d="M18.313 16.91l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.218 -1.567l.102 .07z"
+  />
+  <path
+    d="M7.007 16.993a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"
+  />
+  <path
+    d="M4 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"
+  />
+  <path
+    d="M21 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"
+  />
+  <path
+    d="M6.213 4.81l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.217 -1.567l.102 .07z"
+  />
+  <path
+    d="M19.107 4.893a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"
+  />
+  <path
+    d="M12 2a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"
+  />
+  <path
+    d="M12 7a5 5 0 1 1 -4.995 5.217l-.005 -.217l.005 -.217a5 5 0 0 1 4.995 -4.783z"
+  />
+</svg>
+</button>
+
+        <input
+          type="text"
+          id="searchbar"
+          style="display: none;"
+          class="py-2 px-2.5 mx-1 rounded text-sm border border-gray-300 bg-transparent dark:bg-gray-800 dark:border-gray-700"
+          />
+    </div>
+  </div>
+</nav>
+<div id="searchResults"></div><div id="content">
+    <main><section>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc"><div class="markdown"><p>Calm output (Article XXII, spec 018): quiet on success, loud and actionable
+on problems, full detail always in the log. Native Deno only.</p>
+<p>✅ Packages         86 installed (1m12s)
+⠸ Files            [██████░░░░] 30/47  /etc/ssh/sshd_config.d/50-archon.conf</p>
+<p>Terminal: spinner, progress bar, in-place redraw, colors, emoji.
+Pipe/timer/journald: plain final lines only. NO_COLOR disables color.
+Non-UTF-8 locale or ARCHON_PLAIN=1: ASCII marks ([ok] [warn] [FAIL]).</p>
+</div><section class="section"  id="archon&#x2F;core&#x2F;ui_ts_classes"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;core&#x2F;ui_ts_classes" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Classes</h2></div><div class="namespaceSection"><div id="namespace_phase" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Class bg-Class/15 dark:text-ClassDark dark:bg-ClassDark/15" title="Class">c</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Phase.html" title="Phase">
+			    <span>Phase</span><span>(<div class="ml-4"><div><span>name<span>: <span class="td-kw">string</span></span></span>,</div><div><span>ui<span>: <span class="td-ref">Ui</span></span></span></div></div>)</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One phase of a run (&quot;Packages&quot;, &quot;Verify&quot;, ...): its progress, its items, its problems, and its one-line result.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Phase.html#method_change_0">
+                  <span>change</span><span>(<span><span>msg<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">void</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A change it made.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Phase.html#property_changes">
+                  <span>changes</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How many changes it made.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Phase.html#method_defer_0">
+                  <span>defer</span><span>(<span><span>msg<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">void</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A disruptive change left for later (shown with how to run it).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Phase.html#property_deferred">
+                  <span>deferred</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How many disruptive changes it left for later.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Phase.html#method_done_0">
+                  <span>done</span><span>(<span><span>result<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">void</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Set the one-line result shown when the phase ends.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Phase.html#method_fail_0">
+                  <span>fail</span><span>(<div class="ml-4"><div><span>msg<span>: <span class="td-kw">string</span></span></span>,</div><div><span>fix<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span>,</div><div><span>code<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">void</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A failure: shown, with its fix and code; the run exits 1.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Phase.html#property_fails">
+                  <span>fails</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How many failures.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Phase.html#accessor_level">
+                  <span>level</span><span>()<span>: <span class="td-ref">Level</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How it ended: fail when anything failed, else warn, else ok.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Phase.html#method_note_0">
+                  <span>note</span><span>(<span><span>msg<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">void</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Detail for the log only (shown dimmed with --verbose).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Phase.html#method_ok_0">
+                  <span>ok</span><span>(<span><span>msg<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">void</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>An item already right.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Phase.html#property_oks">
+                  <span>oks</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How many items were already right.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Phase.html#method_pending_0">
+                  <span>pending</span><span>(<div class="ml-4"><div><span>msg<span>: <span class="td-kw">string</span></span></span>,</div><div><span>next<span>: <span class="td-kw">string</span></span></span>,</div><div><span>code<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">void</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Not set up yet (spec 052): its next step; never a failure or a warning.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Phase.html#property_pendings">
+                  <span>pendings</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How many items are not set up yet.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Phase.html#property_progress">
+                  <span>progress</span><span>: { n<span>: <span class="td-kw">number</span></span>; total<span>: <span class="td-kw">number</span></span>; label<span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its progress bar's state.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Phase.html#property_result">
+                  <span>result</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its one-line result, when set.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Phase.html#method_skip_0">
+                  <span>skip</span><span>(<span><span>msg<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">void</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>An item it skipped.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Phase.html#property_skipped">
+                  <span>skipped</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How many items it skipped.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Phase.html#property_started">
+                  <span>started</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When it started (the Ui's clock).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Phase.html#method_status_0">
+                  <span>status</span><span>(<span><span>label<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">void</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A label without a known total (spinner only).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Phase.html#method_step_0">
+                  <span>step</span><span>(<div class="ml-4"><div><span>n<span>: <span class="td-kw">number</span></span></span>,</div><div><span>total<span>: <span class="td-kw">number</span></span></span>,</div><div><span>label<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">void</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Update the progress bar (n of total) with a short label.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Phase.html#method_summary_0">
+                  <span>summary</span><span>()<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its one-line result: set by done(), or counted from its items.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Phase.html#method_warn_0">
+                  <span>warn</span><span>(<div class="ml-4"><div><span>msg<span>: <span class="td-kw">string</span></span></span>,</div><div><span>fix<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span>,</div><div><span>code<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">void</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A warning: shown, with its fix and code; never fails the run.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Phase.html#property_warns">
+                  <span>warns</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How many warnings.</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_ui" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Class bg-Class/15 dark:text-ClassDark dark:bg-ClassDark/15" title="Class">c</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html" title="Ui">
+			    <span>Ui</span><span>(<span><span>o<span class="td-op">?</span><span>: <span class="td-ref">UiOptions</span></span></span></span>)</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The terminal output of an archon run: a header, phases with progress, problems with fixes, and a closing summary whose color always matches the exit code.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#method_active_0">
+                  <span>active</span><span>(<span><span>name<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Phase</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The active phase, or a fresh one named <code>name</code>.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#property_blue">
+                  <span>blue</span><span>: (<span><span>s<span>: <span class="td-kw">string</span></span></span></span>) =&gt; <span class="td-kw">unknown</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Blue text.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#property_bold">
+                  <span>bold</span><span>: (<span><span>s<span>: <span class="td-kw">string</span></span></span></span>) =&gt; <span class="td-kw">unknown</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Bold text.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#property_color">
+                  <span>color</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Using color.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#method_confirm_0">
+                  <span>confirm</span><span>(<span><span>question<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">boolean</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Ask a yes/no question without fighting the spinner.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#property_cyan">
+                  <span>cyan</span><span>: (<span><span>s<span>: <span class="td-kw">string</span></span></span></span>) =&gt; <span class="td-kw">unknown</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Cyan text.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#property_deferhint">
+                  <span>deferHint</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How to run the deferred changes.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#property_deferred">
+                  <span>deferred</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Every disruptive change left for later.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#property_detached">
+                  <span>detached</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The terminal is gone (an SSH session dropped); output goes only to the run log.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#property_dim">
+                  <span>dim</span><span>: (<span><span>s<span>: <span class="td-kw">string</span></span></span></span>) =&gt; <span class="td-kw">unknown</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Dimmed text.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#property_emoji">
+                  <span>emoji</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Using emoji.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#method_endphase_0">
+                  <span>endPhase</span><span>(<span><span>p<span>: <span class="td-ref">Phase</span></span></span></span>)<span>: <span class="td-kw">void</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>End a phase: its mark, name, result, and time.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#method_finish_0">
+                  <span>finish</span><span>(<span><span>o<span class="td-op">?</span><span>: { title<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; next<span class="td-op">?</span><span>: <span class="td-kw">string</span>[]</span>;  }</span></span></span>)<span>: <span class="td-kw">number</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Print the closing summary and return the exit code.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#property_green">
+                  <span>green</span><span>: (<span><span>s<span>: <span class="td-kw">string</span></span></span></span>) =&gt; <span class="td-kw">unknown</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Green text (success).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#method_header_0">
+                  <span>header</span><span>(<div class="ml-4"><div><span>title<span>: <span class="td-kw">string</span></span></span>,</div><div><span>subtitle<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">void</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The run's header: its title and what it acts on.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#method_item_0">
+                  <span>item</span><span>(<div class="ml-4"><div><span>kind<span>: <span><span class="td-str">"change"</span><span class="td-op"> | </span><span class="td-str">"ok"</span><span class="td-op"> | </span><span class="td-str">"skip"</span><span class="td-op"> | </span><span class="td-str">"defer"</span><span class="td-op"> | </span><span class="td-str">"note"</span></span></span></span>,</div><div><span>msg<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">void</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One item of the current phase (shown with -v; always logged).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#property_listeners">
+                  <span>listeners</span><span>: <span class="td-ref">Array</span>&lt;<div class="ml-indent"><div>{ start<span class="td-op">?</span>(<span><span>name<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">void</span></span>; end<span class="td-op">?</span>(<div class="ml-4"><div><span>name<span>: <span class="td-kw">string</span></span></span>,</div><div><span>level<span>: <span class="td-kw">string</span></span></span>,</div><div><span>summary<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">void</span></span>;  }</div></div>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Phase listeners (telemetry: each phase is a span).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#method_log_0">
+                  <span>log</span><span>(<span><span>line<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">number</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Write a line to the log; returns its line number.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#property_logpath">
+                  <span>logPath</span><span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">null</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The run's log file.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#property_magenta">
+                  <span>magenta</span><span>: (<span><span>s<span>: <span class="td-kw">string</span></span></span></span>) =&gt; <span class="td-kw">unknown</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Magenta text.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#property_next">
+                  <span>next</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Suggested next steps printed under the closing line.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#property_now">
+                  <span>now</span><span>: () =&gt; <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The clock (milliseconds).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#property_onphaseend">
+                  <span>onPhaseEnd</span><span>: (<div class="ml-4"><div><span>name<span>: <span class="td-kw">string</span></span></span>,</div><div><span>level<span>: <span class="td-kw">string</span></span></span>,</div><div><span>summary<span>: <span class="td-kw">string</span></span></span></div></div>) =&gt; <span class="td-kw">void</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Called as each phase ends (the first boot reports progress to the boot server).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#property_panel">
+                  <span>panel</span><span>: { lines<span>: <span class="td-kw">string</span>[]</span>; level<span>: <span><span class="td-str">"amber"</span><span class="td-op"> | </span><span class="td-str">"red"</span></span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The secrets backup panel (spec 029), shown once: by finish, or by the entry point on exit.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#method_pause_0">
+                  <span>pause</span><span>()<span>: <span class="td-kw">void</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Stop drawing (another program uses the terminal, or a prompt is shown).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#method_phase_0">
+                  <span>phase</span><span>(<span><span>name<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Phase</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Start a phase (the previous one ends).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#method_printpanel_0">
+                  <span>printPanel</span><span>()<span>: <span class="td-kw">void</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Print the backup panel, once (calm: one panel per run).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#method_problem_0">
+                  <span>problem</span><span>(<div class="ml-4"><div><span>level<span>: <span class="td-ref">ProblemLevel</span></span></span>,</div><div><span>phase<span>: <span class="td-kw">string</span></span></span>,</div><div><span>message<span>: <span class="td-kw">string</span></span></span>,</div><div><span>fix<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span>,</div><div><span>code<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">void</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Record a problem: shown now, and again when the run ends. A known raw error from another tool gets its code and fix (spec 052).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#property_problems">
+                  <span>problems</span><span>: <span class="td-ref">Problem</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Every problem so far.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#property_quiet">
+                  <span>quiet</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Showing nothing on screen.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#property_red">
+                  <span>red</span><span>: (<span><span>s<span>: <span class="td-kw">string</span></span></span></span>) =&gt; <span class="td-kw">unknown</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Red text (failures).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#method_redraw_0">
+                  <span>redraw</span><span>()<span>: <span class="td-kw">void</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Draw the current phase's line again (spinner, progress).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#method_resume_0">
+                  <span>resume</span><span>()<span>: <span class="td-kw">void</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Draw again after pause().</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#method_say_0">
+                  <span>say</span><span>(<span><span>msg<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">void</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One visible line under the current phase (a destination, a step done).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#property_started">
+                  <span>started</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When the run started.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#property_tty">
+                  <span>tty</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Drawing for a terminal.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#method_uselog_0">
+                  <span>useLog</span><span>(<span><span>path<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">null</span></span></span></span></span>)<span>: <span class="td-kw">void</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Start logging to a file (call before the first phase).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#property_verbose">
+                  <span>verbose</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Showing every item.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Ui.html#property_yellow">
+                  <span>yellow</span><span>: (<span><span>s<span>: <span class="td-kw">string</span></span></span></span>) =&gt; <span class="td-kw">unknown</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Yellow text (warnings).</p>
+</div></div></li></ul></div>
+    </div></div>
+</section>
+<section class="section"  id="archon&#x2F;core&#x2F;ui_ts_functions"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;core&#x2F;ui_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Functions</h2></div><div class="namespaceSection"><div id="namespace_defaultlogpath" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;defaultLogPath.html" title="defaultLogPath">
+			    <span>defaultLogPath</span><span>()<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">null</span></span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where this run's log goes: /var/log/archon as root; else the program's folder
+(Windows: %LOCALAPPDATA%\stolos\log; Linux: ~/.local/state/&lt;program&gt;/log).</p>
+</div></div></div>
+    </div><div id="namespace_emojiterminal" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;emojiTerminal.html" title="emojiTerminal">
+			    <span>emojiTerminal</span><span>()<span>: <span class="td-kw">boolean</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Can this terminal show emoji? A UTF-8 locale says so on Linux. Windows sets
+no locale variables, so its modern terminals are recognized directly:
+Windows Terminal (WT_SESSION), VS Code and others (TERM_PROGRAM), ConEmu.
+ARCHON_PLAIN=1 turns them off; ARCHON_EMOJI=1 turns them on.</p>
+</div></div></div>
+    </div><div id="namespace_explainhint" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;explainHint.html" title="explainHint">
+			    <span>explainHint</span><span>(<span><span>code<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How to explain a code where this runs: <code>deno task stolos explain &lt;code&gt;</code> on your PC, else <code>archon explain &lt;code&gt;</code>.</p>
+</div></div></div>
+    </div><div id="namespace_fmtduration" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;fmtDuration.html" title="fmtDuration">
+			    <span>fmtDuration</span><span>(<span><span>ms<span>: <span class="td-kw">number</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A duration for people: &quot;850ms&quot;, &quot;12s&quot;, &quot;3m05s&quot;.</p>
+</div></div></div>
+    </div><div id="namespace_setlogprogram" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;setLogProgram.html" title="setLogProgram">
+			    <span>setLogProgram</span><span>(<span><span>name<span>: <span><span class="td-str">"stolos"</span><span class="td-op"> | </span><span class="td-str">"archon"</span></span></span></span></span>)<span>: <span class="td-kw">void</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Set which program writes the run log (its folder is named after it), and names it in hints.</p>
+</div></div></div>
+    </div><div id="namespace_truncate" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;truncate.html" title="truncate">
+			    <span>truncate</span><span>(<div class="ml-4"><div><span>s<span>: <span class="td-kw">string</span></span></span>,</div><div><span>width<span>: <span class="td-kw">number</span></span></span>,</div><div><span>ansi<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Truncate to a visible width, ignoring ANSI escape sequences.</p>
+</div></div></div>
+    </div></div>
+</section>
+<section class="section"  id="archon&#x2F;core&#x2F;ui_ts_interfaces"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;core&#x2F;ui_ts_interfaces" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Interfaces</h2></div><div class="namespaceSection"><div id="namespace_problem" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Problem.html" title="Problem">
+			    <span>Problem</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A problem a run found, shown again under &quot;Needs attention&quot; (or &quot;Not set up yet&quot;) when it ends.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Problem.html#property_code">
+                  <span>code</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A stable code: archon explain &lt;code&gt; (spec 052).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Problem.html#property_fix">
+                  <span>fix</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How to fix it (for pending: the next step).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Problem.html#property_level">
+                  <span>level</span><span>: <span class="td-ref">ProblemLevel</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Failure, warning, or not set up yet.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Problem.html#property_logline">
+                  <span>logLine</span><span>: <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its line in the run's log, when there is one.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Problem.html#property_message">
+                  <span>message</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What happened.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Problem.html#property_phase">
+                  <span>phase</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The phase it happened in.</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_uioptions" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;UiOptions.html" title="UiOptions">
+			    <span>UiOptions</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How a <a href="../../.././archon/core/ui.ts/~/Ui.html">Ui</a> draws: the defaults come from the terminal and the environment.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;UiOptions.html#property_color">
+                  <span>color</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Use color; default: a terminal without NO_COLOR.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;UiOptions.html#property_emoji">
+                  <span>emoji</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Use emoji; default: where the terminal shows them.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;UiOptions.html#property_logpath">
+                  <span>logPath</span><span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">null</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The run's log file (null: none).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;UiOptions.html#property_now">
+                  <span>now</span><span>: () =&gt; <span class="td-kw">number</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The clock, in milliseconds (tests give their own).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;UiOptions.html#property_quiet">
+                  <span>quiet</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Show nothing (the log still records everything).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;UiOptions.html#property_tty">
+                  <span>tty</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Draw for a terminal (spinner, redraws); default: stdout is a terminal.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;UiOptions.html#property_verbose">
+                  <span>verbose</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Show every item as it happens, dimmed.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;UiOptions.html#property_write">
+                  <span>write</span><span>: (<span><span>s<span>: <span class="td-kw">string</span></span></span></span>) =&gt; <span class="td-kw">void</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where output goes; default: stdout.</p>
+</div></div></li></ul></div>
+    </div></div>
+</section>
+<section class="section"  id="archon&#x2F;core&#x2F;ui_ts_type-aliases"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;core&#x2F;ui_ts_type-aliases" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_level" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;Level.html" title="Level">
+			    <span>Level</span><span> = <span><span class="td-str">"ok"</span><span class="td-op"> | </span><span class="td-str">"warn"</span><span class="td-op"> | </span><span class="td-str">"fail"</span><span class="td-op"> | </span><span class="td-str">"defer"</span><span class="td-op"> | </span><span class="td-str">"skip"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>How a phase ended: ok, with warnings, failed, deferred (a disruptive change left for later), or skipped.</p>
+</div></div></div>
+    </div><div id="namespace_problemlevel" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;ProblemLevel.html" title="ProblemLevel">
+			    <span>ProblemLevel</span><span> = <span><span class="td-str">"warn"</span><span class="td-op"> | </span><span class="td-str">"fail"</span><span class="td-op"> | </span><span class="td-str">"pending"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Spec 052: four states, the same everywhere. &quot;fail&quot; and &quot;warn&quot; are problems;
+&quot;pending&quot; is something not set up yet, expected until someone does it (a
+token not pushed, a certificate not issued yet): shown with its next step,
+never a failure, never counted as a warning.</p>
+</div></div></div>
+    </div></div>
+</section>
+<section class="section"  id="archon&#x2F;core&#x2F;ui_ts_variables"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;core&#x2F;ui_ts_variables" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Variables</h2></div><div class="namespaceSection"><div id="namespace_ui-1" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;core&#x2F;ui.ts&#x2F;~&#x2F;ui.html" title="ui">
+			    <span>ui</span><span>: <span class="td-ref">Ui</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The process-wide UI.</p>
+</div></div></div>
+    </div></div>
+</section>
+</div>
+</div>
+</section>
+</main><div class="toc">
+    <div><div class="usageContent">
+    <h3>Usage</h3><div class="markdown"><pre class="highlight"><code class="language-typescript">import * as mod from &quot;archon/core/ui.ts&quot;;
+</code><button class="copyButton" data-copy="import * as mod from &quot;archon/core/ui.ts&quot;;
+"><svg
+  class="copy"
+  width="15"
+  height="15"
+  viewBox="0 0 15 15"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <rect x="2" y="2" width="7" height="7" fill="none" />
+  <rect x="6" y="6" width="7" height="7" fill="none" />
+  <path
+    d="M1.55566 2.7C1.55566 2.03726 2.09292 1.5 2.75566 1.5H8.75566C9.41841 1.5 9.95566 2.03726 9.95566 2.7V5.1H12.3557C13.0184 5.1 13.5557 5.63726 13.5557 6.3V12.3C13.5557 12.9627 13.0184 13.5 12.3557 13.5H6.35566C5.69292 13.5 5.15566 12.9627 5.15566 12.3V9.9H2.75566C2.09292 9.9 1.55566 9.36274 1.55566 8.7V2.7ZM6.35566 9.9V12.3H12.3557V6.3H9.95566V8.7C9.95566 9.36274 9.41841 9.9 8.75566 9.9H6.35566ZM8.75566 8.7V2.7H2.75566V8.7H8.75566Z"
+    fill="currentColor"
+  />
+</svg>
+<svg
+  class="check"
+  width="15"
+  height="15"
+  viewBox="0 0 24 24"
+  stroke-width="2"
+  stroke="currentColor"
+  fill="none"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+  <path d="M5 12l5 5l10 -10" />
+</svg>
+</button><code></code></pre>
+</div></div><nav class="topSymbols">
+          <h3>Symbols</h3>
+          <ul><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;ensureHome.html" title="ensureHome"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
+                    ensureHome
+                  </span>
+                </a>
+              </li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;localHostName.html" title="localHostName"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
+                    localHostName
+                  </span>
+                </a>
+              </li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;Surface.html" title="Surface"><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
+<span class="hover:bg-TypeAlias/15 hover:bg-TypeAliasDark/15">
+                    Surface
+                  </span>
+                </a>
+              </li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;commandName.html" title="commandName"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
+                    commandName
+                  </span>
+                </a>
+              </li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;main.html" title="main"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
+                    main
+                  </span>
+                </a>
+              </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
+              <span class="leading-none">view all 2920 symbols</span><svg
+  width="16"
+  height="16"
+  viewBox="0 0 16 16"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <path
+    fill-rule="evenodd"
+    clip-rule="evenodd"
+    d="M5.76748 11.8159C5.5378 11.577 5.54525 11.1972 5.78411 10.9675L8.93431 8L5.78411 5.0325C5.54525 4.80282 5.5378 4.423 5.76748 4.18413C5.99715 3.94527 6.37698 3.93782 6.61584 4.1675L10.2158 7.5675C10.3335 7.68062 10.4 7.83679 10.4 8C10.4 8.16321 10.3335 8.31938 10.2158 8.4325L6.61584 11.8325C6.37698 12.0622 5.99715 12.0547 5.76748 11.8159Z"
+    fill="currentColor"
+  />
+</svg>
+</a></nav><nav class="documentNavigation">
+          <h3>Document Navigation</h3><ul><li><a href="#archon/core/ui_ts_classes" title="Classes">Classes</a></li><li><ul><li><a href="#namespace_phase" title="Phase">Phase</a></li><li><a href="#namespace_ui" title="Ui">Ui</a></li></ul></li><li><a href="#archon/core/ui_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_defaultlogpath" title="defaultLogPath">defaultLogPath</a></li><li><a href="#namespace_emojiterminal" title="emojiTerminal">emojiTerminal</a></li><li><a href="#namespace_explainhint" title="explainHint">explainHint</a></li><li><a href="#namespace_fmtduration" title="fmtDuration">fmtDuration</a></li><li><a href="#namespace_setlogprogram" title="setLogProgram">setLogProgram</a></li><li><a href="#namespace_truncate" title="truncate">truncate</a></li></ul></li><li><a href="#archon/core/ui_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_problem" title="Problem">Problem</a></li><li><a href="#namespace_uioptions" title="UiOptions">UiOptions</a></li></ul></li><li><a href="#archon/core/ui_ts_type-aliases" title="Type Aliases">Type Aliases</a></li><li><ul><li><a href="#namespace_level" title="Level">Level</a></li><li><a href="#namespace_problemlevel" title="ProblemLevel">ProblemLevel</a></li></ul></li><li><a href="#archon/core/ui_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_ui-1" title="ui">ui</a></li></ul></li></ul></nav></div>
+  </div></div>
+</div>
+</div>
+</body>
+</html>
