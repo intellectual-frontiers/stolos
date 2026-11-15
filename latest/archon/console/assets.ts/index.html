@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/console/assets.ts - Stolos v0.66.0 documentation</title>
+  <title>archon/console/assets.ts - Stolos v0.67.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.66.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.67.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -129,6 +129,19 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_datastarsou
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;assets.ts&#x2F;~&#x2F;datastarSource.html" title="datastarSource">
 			    <span>datastarSource</span><span>()<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Datastar's source, as the engine carries it.</p>
+</div></div></div>
+    </div><div id="namespace_sha256hex" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;assets.ts&#x2F;~&#x2F;sha256Hex.html" title="sha256Hex">
+			    <span>sha256Hex</span><span>(<span><span>data<span>: <span class="td-ref">Uint8Array</span>&lt;<span class="td-ref">ArrayBuffer</span>&gt;</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">string</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>SHA-256 of some bytes, as lowercase hex.</p>
+</div></div></div>
+    </div><div id="namespace_vendored" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;assets.ts&#x2F;~&#x2F;vendored.html" title="vendored">
+			    <span>vendored</span><span>(<div class="ml-4"><div><span>file<span>: { path<span>: <span class="td-kw">string</span></span>; sha256<span>: <span class="td-kw">string</span></span>;  }</span></span>,</div><div><span>cacheDir<span>: <span class="td-kw">string</span></span></span>,</div><div><span>base<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span><span class="td-ref">Uint8Array</span>&lt;<span class="td-ref">ArrayBuffer</span>&gt;<span class="td-op"> | </span><span class="td-kw">undefined</span></span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A large vendored file, from beside this engine (the checkout, or the
+release on GitHub this engine was imported from), checked against its
+SHA-256 and kept in <code>cacheDir</code> (fetched once per version). Undefined when it
+cannot be had or does not match: the page then works without it.</p>
 </div></div></div>
     </div></div>
 </section>
@@ -246,6 +259,9 @@ input[type=text], input[type=password], select { font: inherit; width: 100%; bor
 .signin { min-height: 100vh; display: grid; place-items: center; padding: 40px max(16px, env(safe-area-inset-right, 0px)) 40px max(16px, env(safe-area-inset-left, 0px)); }
 .signin .card { width: min(400px, 100%); padding: 28px; box-shadow: var(--shadow); }
 .signin .logos { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.diagram { margin: 0; overflow-x: auto; } .diagram pre.mermaid { margin: 0; background: transparent; text-align: center; }
+.diagram pre.mermaid.plain { text-align: left; font-family: var(--mono); font-size: 12px; white-space: pre; }
+.diagram figcaption { margin-top: 8px; }
 .prose { max-width: 78ch; } .prose pre { background: var(--code); padding: 10px; border-radius: 8px; overflow-x: auto; }
 @media (max-width: 860px) {
   .shell { grid-template-columns: minmax(0, 1fr); }
@@ -273,6 +289,18 @@ input[type=text], input[type=password], select { font: inherit; width: 100%; bor
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;assets.ts&#x2F;~&#x2F;FAVICON.html" title="FAVICON">
 			    <span>FAVICON</span><span>: <span class="td-str">`&lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"&gt;&lt;rect width="32" height="32" rx="8" fill="#4F46E5"/&gt;&lt;path d="M8 25V15a8 8 0 0 1 16 0v10" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/&gt;&lt;rect x="13.5" y="5.5" width="5" height="5" rx="1.2" fill="#fff"/&gt;&lt;/svg&gt;`</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The favicon: Archon's mark.</p>
 </div></div></div>
+    </div><div id="namespace_mermaid" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;assets.ts&#x2F;~&#x2F;MERMAID.html" title="MERMAID">
+			    <span>MERMAID</span><span>: { path<span>: <span class="td-kw">string</span></span>; sha256<span>: <span class="td-kw">string</span></span>; url<span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Mermaid's browser bundle in the engine's repository, and its SHA-256 (5.5 MB: never in the modules).</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;assets.ts&#x2F;~&#x2F;MERMAID.html#property_path">
+                  <span>path</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;assets.ts&#x2F;~&#x2F;MERMAID.html#property_sha256">
+                  <span>sha256</span><span>: <span class="td-kw">string</span></span></a></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;assets.ts&#x2F;~&#x2F;MERMAID.html#property_url">
+                  <span>url</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where the consoles serve it.</p>
+</div></div></li></ul></div>
     </div><div id="namespace_stolos_logo" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;assets.ts&#x2F;~&#x2F;STOLOS_LOGO.html" title="STOLOS_LOGO">
@@ -351,7 +379,7 @@ input[type=text], input[type=password], select { font: inherit; width: 100%; bor
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1267 symbols</span><svg
+              <span class="leading-none">view all 1292 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -366,7 +394,7 @@ input[type=text], input[type=password], select { font: inherit; width: 100%; bor
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/console/assets_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_datastarsource" title="datastarSource">datastarSource</a></li></ul></li><li><a href="#archon/console/assets_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_archon_logo" title="ARCHON_LOGO">ARCHON_LOGO</a></li><li><a href="#namespace_console_css" title="CONSOLE_CSS">CONSOLE_CSS</a></li><li><a href="#namespace_datastar" title="DATASTAR">DATASTAR</a></li><li><a href="#namespace_favicon" title="FAVICON">FAVICON</a></li><li><a href="#namespace_stolos_logo" title="STOLOS_LOGO">STOLOS_LOGO</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/console/assets_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_datastarsource" title="datastarSource">datastarSource</a></li><li><a href="#namespace_sha256hex" title="sha256Hex">sha256Hex</a></li><li><a href="#namespace_vendored" title="vendored">vendored</a></li></ul></li><li><a href="#archon/console/assets_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_archon_logo" title="ARCHON_LOGO">ARCHON_LOGO</a></li><li><a href="#namespace_console_css" title="CONSOLE_CSS">CONSOLE_CSS</a></li><li><a href="#namespace_datastar" title="DATASTAR">DATASTAR</a></li><li><a href="#namespace_favicon" title="FAVICON">FAVICON</a></li><li><a href="#namespace_mermaid" title="MERMAID">MERMAID</a></li><li><a href="#namespace_stolos_logo" title="STOLOS_LOGO">STOLOS_LOGO</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>

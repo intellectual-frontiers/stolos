@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>CONSOLE_CSS - archon/console/assets.ts - Stolos v0.66.0 documentation</title>
+  <title>CONSOLE_CSS - archon/console/assets.ts - Stolos v0.67.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;console&#x2F;assets.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.66.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.67.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -252,6 +252,9 @@ input[type=text], input[type=password], select { font: inherit; width: 100%; bor
 .signin { min-height: 100vh; display: grid; place-items: center; padding: 40px max(16px, env(safe-area-inset-right, 0px)) 40px max(16px, env(safe-area-inset-left, 0px)); }
 .signin .card { width: min(400px, 100%); padding: 28px; box-shadow: var(--shadow); }
 .signin .logos { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.diagram { margin: 0; overflow-x: auto; } .diagram pre.mermaid { margin: 0; background: transparent; text-align: center; }
+.diagram pre.mermaid.plain { text-align: left; font-family: var(--mono); font-size: 12px; white-space: pre; }
+.diagram figcaption { margin-top: 8px; }
 .prose { max-width: 78ch; } .prose pre { background: var(--code); padding: 10px; border-radius: 8px; overflow-x: auto; }
 @media (max-width: 860px) {
   .shell { grid-template-columns: minmax(0, 1fr); }
