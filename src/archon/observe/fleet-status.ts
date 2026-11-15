@@ -69,6 +69,9 @@ export async function fleetStatus(): Promise<number> {
           await putRecord(h.name, "verify", "latest", st.verify, P.state, st.verify.since);
         }
         if (st.inventory) await putRecord(h.name, "inventory", "latest", st.inventory, P.state);
+        // Spec 066: the commit it applies, and its last pull (the Stolos Console shows them).
+        if (st.applied) await putRecord(h.name, "applied", "latest", st.applied, P.state);
+        if (st.sync) await putRecord(h.name, "sync", "latest", st.sync, P.state, st.sync.at);
         live.set(h.name, { ok: true });
       } catch {
         live.set(h.name, { ok: false, why: "unreadable answer" });

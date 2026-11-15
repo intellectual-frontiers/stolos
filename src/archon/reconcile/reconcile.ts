@@ -46,11 +46,46 @@ export function blockingChanges(porcelain: string): string {
   return porcelain.split("\n").filter((l) => l.trim()).join("\n");
 }
 
+/** What the last pull did, for the PC (archon state, spec 066): when, the commits, and why not. */
+export interface SyncStatus {
+  /** When it ran (ISO). */
+  at: string;
+  /** HEAD after it. */
+  head: string;
+  /** origin's commit. */
+  remote: string;
+  /** Whether HEAD is origin's commit. */
+  current: boolean;
+  /** Why HEAD could not reach origin's commit (an unsigned commit, a failed fetch, ...). */
+  blocked?: string;
+}
+
+/** Where the last pull is recorded. */
+export const SYNC_STATUS = "/var/lib/archon/status/sync.json";
+
 /**
  * Fetch origin/main as the checkout's owner (who holds the host's deploy key, spec 006)
  * and fast-forward when the working tree is clean. With `check`, only fetch.
+ * As root, the outcome is recorded for the PC (SYNC_STATUS).
  */
 export async function syncCheckout(opts: { check?: boolean } = {}): Promise<SyncResult> {
+  const r = await syncOnce(opts);
+  if (!opts.check && isRoot()) {
+    const s: SyncStatus = {
+      at: new Date().toISOString(),
+      head: r.head,
+      remote: r.remote,
+      current: r.current || (!r.blocked && r.pulled.length > 0),
+      ...(r.blocked ? { blocked: r.blocked } : {}),
+    };
+    await Deno.writeTextFile(SYNC_STATUS, JSON.stringify(s) + "\n").catch((e) =>
+      log.warn(`${SYNC_STATUS} not written: ${(e as Error).message}`)
+    );
+  }
+  return r;
+}
+
+async function syncOnce(opts: { check?: boolean }): Promise<SyncResult> {
   const repo = P.repo;
   const owner = (await run(["stat", "-c", "%U", repo])).stdout.trim() || "root";
   // As root, act as the owner (who holds the gh login); otherwise as yourself

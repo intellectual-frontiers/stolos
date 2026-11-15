@@ -243,3 +243,54 @@ Deno.test("066 acceptance: 'failed' in a passing line does not stop an install",
   ].join("\n"));
   assertEquals([p[0].step, p[0].failed], [10, false]);
 });
+
+Deno.test("066: why a server did not take a change, in plain words", async () => {
+  const { syncAdvice } = await import("../src/archon/console/stolos-pages.ts");
+  assertEquals(
+    syncAdvice("a1b2 is not signed by a fleet signer (archon explain E047-UNSIGNED)").href,
+    "/changes",
+  );
+  assertStringIncludes(
+    syncAdvice("fetch failed as ops: Could not resolve host").what,
+    "could not fetch",
+  );
+  assertStringIncludes(
+    syncAdvice("working tree has uncommitted changes").what,
+    "changed on the server",
+  );
+  const { get } = await signedIn();
+  const alpha = await (await get("/machines/alpha")).text();
+  assertStringIncludes(alpha, "Its last pull");
+  assertStringIncludes(alpha, "not signed by a fleet signer");
+  assertStringIncludes(await (await get("/")).text(), "did not take the newest change");
+});
+
+Deno.test("066: Activity between dates, and as CSV", async () => {
+  const { activityBetween, activityCsv } = await import("../src/archon/console/pages.ts");
+  const es = [
+    {
+      at: "2026-11-01T10:00:00Z",
+      user: "alice",
+      from: "this PC",
+      kind: "run" as const,
+      detail: "where",
+      code: 0,
+    },
+    {
+      at: "2026-11-10T10:00:00Z",
+      user: "alice",
+      from: "this PC",
+      kind: "run" as const,
+      detail: 'a "b", c',
+      code: 1,
+    },
+  ];
+  assertEquals(activityBetween(es, "2026-11-05", undefined).length, 1);
+  assertEquals(activityBetween(es, "bad", "2026-11-02").length, 1);
+  const csv = activityCsv(es);
+  assertStringIncludes(csv, '"a ""b"", c"');
+  assertEquals(csv.split("\r\n")[0], "at_utc,user,from,kind,detail,exit_code");
+  const { get } = await signedIn();
+  const r = await get("/export/activity.csv");
+  assertEquals(r.headers.get("content-type"), "text/csv; charset=utf-8");
+});

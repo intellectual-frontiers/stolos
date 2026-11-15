@@ -222,6 +222,7 @@ const score = (x?: { pass: number; total: number }) =>
 export function stolosOverview(f: PcFacts, now = Date.now()): Html {
   const by = (k: PcMachine["kind"]) => f.machines.filter((x) => x.kind === k).length;
   const failing = f.machines.filter((x) => x.failing.length);
+  const stuck = f.machines.filter((x) => x.sync?.blocked);
   const cloudFails = f.clouds.flatMap((c) =>
     c.results.filter((r) => r.status === "fail").map((r) => ({ c, r }))
   );
@@ -251,8 +252,20 @@ export function stolosOverview(f: PcFacts, now = Date.now()): Html {
     </div>
     <div class="grid cols-2" style="margin-top:14px">
       <div class="card"><h2>Needs attention</h2>
-        ${failing.length || cloudFails.length || f.git.unapproved.length
+        ${failing.length || cloudFails.length || f.git.unapproved.length || stuck.length
           ? html`${
+            stuck.map((x) =>
+              html`
+                <div class="row spread"
+                  style="padding:6px 0"><span><b>${x
+                    .name}</b> did not take the newest change <span class="sub">${syncAdvice(
+                      x.sync!.blocked!,
+                    ).what}</span></span><a class="btn ghost" href="/machines/${encodeURIComponent(
+                      x.name,
+                    )}">Why</a></div>
+              `
+            )
+          }${
             f.git.unapproved.length
               ? html`
                 <div class="row spread"
@@ -311,6 +324,94 @@ export function stolosOverview(f: PcFacts, now = Date.now()): Html {
   `;
 }
 
+/** Why a server's last pull stopped, in plain words, and what to do. */
+export function syncAdvice(blocked: string): { what: string; fix: string; href?: string } {
+  if (/E047|not signed|signer|untrusted/i.test(blocked)) {
+    return {
+      what:
+        "the newest commit is not signed by a fleet signer, so the server refuses it (that is the protection working)",
+      fix: "Approve it here: Apply signs one commit that approves everything before it.",
+      href: "/changes",
+    };
+  }
+  if (/fetch failed|Authentication|could not read|403|401|resolve|timed out/i.test(blocked)) {
+    return {
+      what: "the server could not fetch from GitHub (network, DNS, or its deploy key)",
+      fix:
+        "Open its Archon Console and run network diagnostics (Actions, This server: doctor); check the deploy key is on GitHub.",
+    };
+  }
+  if (/uncommitted|does not come after/i.test(blocked)) {
+    return {
+      what: "its checkout was changed on the server itself, so it will not overwrite it",
+      fix:
+        "Changes are made here and applied, never on the server: ask for help before discarding anything on it.",
+    };
+  }
+  return {
+    what: blocked,
+    fix: "Open its Archon Console: Activity and Logs show the reconcile's last run.",
+  };
+}
+
+const applies = (x: PcMachine) =>
+  !x.applied
+    ? ""
+    : html`<span class="mono">${x.applied.commit}</span> ${
+      x.sync?.blocked
+        ? html`<span class="pill bad">stuck</span>`
+        : x.upToDate === false
+        ? html`<span class="pill warn">behind</span>`
+        : x.upToDate
+        ? html`<span class="pill ok">newest</span>`
+        : ""
+    }`;
+
+/** A managed server's changes: what it applies, its last pull, and why it stopped. */
+function changeCard(x: PcMachine, f: PcFacts, now: number): Html {
+  if (x.kind !== "server") return html``;
+  const newest = f.git.log[0];
+  const advice = x.sync?.blocked ? syncAdvice(x.sync.blocked) : undefined;
+  return html`<div class="card"><h2>Changes</h2>
+    ${
+    x.applied
+      ? html`<p>It applies <span class="mono">${x.applied.commit}</span> "${x.applied.subject}" (${
+        ago(x.applied.at, now)
+      }).
+        ${
+        x.upToDate
+          ? "That is the repository's newest commit."
+          : newest
+          ? html`The newest is <span class="mono">${
+            newest.sha.slice(0, 7)
+          }</span> "${newest.subject}".`
+          : ""
+      }</p>`
+      : html`<p class="sub">This PC has no record of what it applies: Ask every server now (fleet status).</p>`
+  }
+    ${
+    x.sync
+      ? advice
+        ? html`
+          <div
+            class="notice bad"><b>Its last pull (${ago(x.sync.at, now)}) stopped:</b> ${advice
+              .what}.<br>${advice.fix} ${advice.href
+              ? html`<a href="${advice.href}">Open Changes</a>`
+              : ""}<details><summary class="sub">The server's words</summary><span class="mono">${x
+              .sync.blocked}</span></details></div>
+        `
+        : html`
+          <p
+            class="sub">Its last pull (${ago(
+              x.sync.at,
+              now,
+            )}) went fine. Servers pull every 15 minutes; a change you applied arrives within that.</p>
+        `
+      : ""
+  }
+  </div>`;
+}
+
 /** Every machine, one table. */
 export function machinesPage(f: PcFacts, now = Date.now()): Html {
   return html`
@@ -326,7 +427,7 @@ export function machinesPage(f: PcFacts, now = Date.now()): Html {
     <div class="card scroll" data-signals="{q: ''}">
       <input type="search" data-bind:q placeholder="Filter by name, kind, OS, owner" aria-label="Filter machines" autocomplete="off" style="margin-bottom:10px">
       <table>
-        <thead><tr><th>Name</th><th>Kind</th><th>OS</th><th>Where</th><th>Owner</th><th>Checks</th><th>Last record</th><th></th></tr></thead>
+        <thead><tr><th>Name</th><th>Kind</th><th>OS</th><th>Where</th><th>Owner</th><th>Checks</th><th>Applies</th><th>Last record</th><th></th></tr></thead>
         <tbody>${f.machines.map((x) => {
           const text = `${x.name} ${x.title ?? ""} ${x.kind} ${x.os ?? ""} ${x.owner ?? ""} ${
             x.where ?? ""
@@ -340,6 +441,7 @@ export function machinesPage(f: PcFacts, now = Date.now()): Html {
               <td class="mono">${x.where ?? ""}</td>
               <td>${x.owner ?? ""}</td>
               <td>${x.kind === "cloud" ? "" : score(x.score)}</td>
+              <td>${applies(x)}</td>
               <td class="sub">${ago(x.seen, now)}</td>
               <td>${x.console
                 ? html`<a class="btn ghost" href="${x.console}" target="_blank" rel="noopener">Archon Console</a>`
@@ -485,7 +587,8 @@ export function machinePage(f: PcFacts, name: string, now = Date.now()): Html | 
         </div>
       `
       : html`
-        <div class="grid cols-2">
+        ${changeCard(x, f, now)}
+        <div class="grid cols-2" style="margin-top:14px">
           <div class="card"><h2>Checks</h2><div class="v">${score(x.score)}</div>
                   ${x.failing.length
                     ? html`<ul>${x.failing.map((y) => html`<li class="mono">${y}</li>`)}</ul>`
@@ -656,7 +759,16 @@ export function changesPage(f: PcFacts, now = Date.now()): Html {
       <a class="btn" href="/actions/fleet?cmd=apply">Apply</a></div>
     <div class="grid cols-2">
       <div class="card"><h2>Not applied yet</h2>${f.git.dirty.length
-        ? html`<ul class="mono">${f.git.dirty.map((l) => html`<li>${l}</li>`)}</ul>`
+        ? html`<ul class="mono">${f.git.dirty.map((l) => html`<li>${l}</li>`)}</ul>${
+          f.git.diff
+            ? html`
+              <details>
+                <summary>What Apply will commit (the diff)</summary>
+                <pre class="term" style="height:auto;max-height:420px">${f.git.diff}</pre>
+              </details>
+            `
+            : ""
+        }`
         : html`<p class="sub">Nothing: the repository matches its last commit.</p>`}</div>
       <div class="card"><h2>Waiting for approval</h2>${f.git.unapproved.length
         ? html`

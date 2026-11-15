@@ -42,6 +42,8 @@ import { bare, page } from "./layout.ts";
 import {
   ACTION_GROUPS,
   actionsPage,
+  activityBetween,
+  activityCsv,
   type ActivityEntry,
   activityPage,
   appsPage,
@@ -391,12 +393,32 @@ export function consoleHandler(
             compliancePage(view, url.searchParams.get("fw") ?? undefined, deps.host),
           );
         }
-        if (path === "/activity") {
+        if (path === "/activity" || path === "/export/activity.csv") {
+          // A viewer sees only their own entries (others' sign-ins and addresses are operators' business).
+          const mine = (e: ActivityEntry) => s.role === "operator" || e.user === s.user;
+          const all = activityBetween(
+            (await deps.activity.recent(100_000)).filter(mine),
+            url.searchParams.get("from") ?? undefined,
+            url.searchParams.get("to") ?? undefined,
+          );
+          if (path.startsWith("/export/")) {
+            return new Response(activityCsv(all), {
+              headers: {
+                "content-type": "text/csv; charset=utf-8",
+                "content-disposition": `attachment; filename="${deps.host}-activity.csv"`,
+                "cache-control": "no-store",
+              },
+            });
+          }
           return frame(
             s,
             "Activity",
             "/activity",
-            activityPage(await deps.activity.recent(200), deps.host),
+            activityPage(all.slice(0, 500), deps.host, {
+              from: url.searchParams.get("from") ?? undefined,
+              to: url.searchParams.get("to") ?? undefined,
+              ...(s.role === "operator" ? {} : { note: "As a viewer, you see your own entries." }),
+            }),
           );
         }
         if (path === "/guide") {

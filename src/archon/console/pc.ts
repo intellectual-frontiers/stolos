@@ -41,6 +41,12 @@ export interface PcMachine {
   failing: string[];
   /** Its Archon Console, for a managed server with a web domain. */
   console?: string;
+  /** A managed server's applied commit, as it last said (short hash, subject, when). */
+  applied?: { commit: string; subject: string; at: string };
+  /** A managed server's last pull: when, and why it stopped, if it did. */
+  sync?: { at: string; blocked?: string };
+  /** Whether its applied commit is the repository's newest (undefined: not known). */
+  upToDate?: boolean;
 }
 
 /** One cloud account, observed. */
@@ -86,7 +92,7 @@ export interface PcFacts {
   /** The signers. */
   signers: Array<{ name: string; role: string; added: string; key: string }>;
   /** The repository: uncommitted files, commits servers would refuse, recent history. */
-  git: { dirty: string[]; unapproved: string[]; log: PcCommit[] };
+  git: { dirty: string[]; unapproved: string[]; log: PcCommit[]; diff?: string };
 }
 
 const warn = (what: string) => (e: unknown) => {
@@ -127,6 +133,20 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
         ? { passed: inst.body.checks.passed, total: inst.body.checks.total, failed: [] }
         : undefined);
     const server = h.kind !== "workstation";
+    const applied = await getRecord<{ commit: string; subject: string; at: string }>(
+      h.name,
+      "applied",
+      "latest",
+      P.state,
+    )
+      .catch(warn(`${h.name} applied record`));
+    const sync = await getRecord<{ at: string; blocked?: string }>(
+      h.name,
+      "sync",
+      "latest",
+      P.state,
+    )
+      .catch(warn(`${h.name} sync record`));
     machines.push({
       name: h.name,
       kind: server ? "server" : "workstation",
@@ -135,6 +155,12 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
       ...(inst?.at ? { seen: inst.at } : {}),
       ...(checks ? { score: { pass: checks.passed, total: checks.total } } : {}),
       failing: latest?.failed ?? [],
+      ...(applied?.body ? { applied: applied.body } : {}),
+      ...(sync?.body
+        ? {
+          sync: { at: sync.body.at, ...(sync.body.blocked ? { blocked: sync.body.blocked } : {}) },
+        }
+        : {}),
       ...(server && domain ? { console: `https://${h.name}.${domain}/` } : {}),
     });
   }
@@ -196,6 +222,10 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
   }
   const git = (args: string[]) => run(["git", "-C", repo, ...args]);
   const dirty = (await git(["status", "--porcelain"])).stdout.split("\n").filter(Boolean);
+  // What Apply would commit (tracked files; new files are listed above), at most 400 lines.
+  const diffText = dirty.length
+    ? (await git(["diff", "HEAD", "--no-color"])).stdout.split("\n").slice(0, 400).join("\n")
+    : "";
   const { unapproved } = await import("../fleet/apply.ts");
   const pending = await unapproved(git, repo).catch(warn("unapproved commits")) ?? [];
   const waiting = new Set(pending.map((l) => l.split(" ")[0]));
@@ -212,6 +242,12 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
         approved: !waiting.has(sha.slice(0, 10)),
       };
     });
+  const newest = log[0]?.sha;
+  for (const m of machines) {
+    if (m.applied && newest) {
+      m.upToDate = newest.startsWith(m.applied.commit) || m.applied.commit.startsWith(newest);
+    }
+  }
   const pin = readPin((await readTextOr(join(repo, "deno.json"))) ?? "");
   const { repoSlug } = await import("../fleet/bootstrap.ts");
   return {
@@ -226,6 +262,6 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
     adopted,
     clouds,
     signers,
-    git: { dirty, unapproved: pending, log },
+    git: { dirty, unapproved: pending, log, ...(diffText ? { diff: diffText } : {}) },
   };
 }

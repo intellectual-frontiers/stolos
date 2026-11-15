@@ -41,7 +41,15 @@ export function stateDir(): string {
 }
 
 /** What a record is about. */
-export type Kind = "install" | "verify" | "prov" | "optin" | "pg" | "inventory";
+export type Kind =
+  | "install"
+  | "verify"
+  | "prov"
+  | "optin"
+  | "pg"
+  | "inventory"
+  | "applied"
+  | "sync";
 
 /** One record: a host's fact of one kind, by name. */
 export interface StateRecord<T = unknown> {

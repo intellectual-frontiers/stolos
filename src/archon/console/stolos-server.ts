@@ -22,7 +22,13 @@ import { cookieOf, IDLE_MS, type Session, type Sessions } from "./auth.ts";
 import { argvFor, NOT_IN_CONSOLE, shellWords } from "./forms.ts";
 import { type Html, html, raw } from "./html.ts";
 import { bare, page } from "./layout.ts";
-import { actionsView, type ActivityEntry, activityPage } from "./pages.ts";
+import {
+  actionsView,
+  activityBetween,
+  activityCsv,
+  type ActivityEntry,
+  activityPage,
+} from "./pages.ts";
 import type { PcFacts } from "./pc.ts";
 import { installCards, parseBootLog } from "./boot-timeline.ts";
 import { htmlResponse, lineClass, patch, redirect, sameOrigin, staticFile } from "./server.ts";
@@ -457,12 +463,24 @@ export function stolosHandler(
       if (path === "/changes") return await frame(s, "Changes", "/changes", changesPage(f), f);
       if (path === "/trust") return await frame(s, "Trust", "/trust", trustPage(f), f);
       if (path === "/how") return await frame(s, "How it works", "/how", stolosHowPage(f), f);
-      if (path === "/activity") {
+      if (path === "/activity" || path === "/export/activity.csv") {
+        const from = url.searchParams.get("from") ?? undefined,
+          to = url.searchParams.get("to") ?? undefined;
+        const all = activityBetween(await deps.activity.recent(100_000), from, to);
+        if (path.startsWith("/export/")) {
+          return new Response(activityCsv(all), {
+            headers: {
+              "content-type": "text/csv; charset=utf-8",
+              "content-disposition": 'attachment; filename="stolos-activity.csv"',
+              "cache-control": "no-store",
+            },
+          });
+        }
         return await frame(
           s,
           "Activity",
           "/activity",
-          activityPage(await deps.activity.recent(200), "this PC"),
+          activityPage(all.slice(0, 500), "this PC", { from, to }),
           f,
         );
       }

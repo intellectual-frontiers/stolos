@@ -25,6 +25,15 @@ new password or key to keep.
 - **FR-005** Form values are single arguments (never a shell), may not start with "-", and are one
   line, as in the Archon Console (spec 065).
 
+- **FR-006** Each server records its last pull (`/var/lib/archon/status/sync.json`: when, the
+  commit, and why it stopped) and `archon state` reports it with the applied commit; `fleet status`
+  keeps both on the PC. The console shows each server's applied commit (newest, behind, or stuck),
+  and a stuck pull's reason in plain words with its fix (an unsigned commit: Apply).
+- **FR-007** Changes shows the diff Apply would commit. Activity filters by UTC date and downloads
+  as CSV; on a server, a viewer sees only their own entries.
+- **FR-008** Text and buttons meet 4.5:1 contrast in light and dark; tables show a shadow where more
+  is to the side; diagrams on a phone scroll at a readable size; every page has a skip link.
+
 ## Success criteria
 
 - **SC-001** `tests/console066_test.ts`: launch links (once, two minutes), the Host and Origin

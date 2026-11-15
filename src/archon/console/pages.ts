@@ -570,24 +570,47 @@ export function actionsView(v: ActionsView): Html {
 }
 
 /** Activity: who did what, from where. */
-export function activityPage(entries: ActivityEntry[], host: string): Html {
+export function activityPage(
+  entries: ActivityEntry[],
+  host: string,
+  o: { from?: string; to?: string; note?: string } = {},
+): Html {
   const pill = (e: ActivityEntry) =>
     e.kind === "run"
       ? html`<span class="pill ${e.code === 0 ? "ok" : "bad"}">${
         e.code === 0 ? "done" : `exit ${e.code}`
       }</span>`
       : e.kind === "refused" || e.kind === "sign-in failed"
-      ? html`<span class="pill bad">${e.kind}</span>`
-      : html`<span class="pill off">${e.kind}</span>`;
+      ? html`<span class="pill bad">${e.kind === "refused" ? "refused" : "failed"}</span>`
+      : html`<span class="pill ok">ok</span>`;
+  const what = (e: ActivityEntry) =>
+    e.kind === "run" ? e.detail : `${e.kind.replace("-", " ")}${e.detail ? ` (${e.detail})` : ""}`;
+  const q = new URLSearchParams({
+    ...(o.from ? { from: o.from } : {}),
+    ...(o.to ? { to: o.to } : {}),
+  }).toString();
   return html`
     <div class="pagehead">
       <div>
         <div class="crumb">${host}</div>
         <h1>Activity</h1>
         <p>Who signed in and what they ran from this console, newest first. Commands also record themselves where they
-      always do (the journal, this server's database), naming the person.</p>
+      always do (the journal, this server's database), naming the person.${o.note
+        ? ` ${o.note}`
+        : ""}</p>
       </div>
+      <a class="btn ghost" href="/export/activity.csv${q ? `?${q}` : ""}" download>Download CSV</a>
     </div>
+    <form class="card row" method="get" action="/activity"
+      style="gap:10px;flex-wrap:wrap;margin-bottom:14px">
+      <label class="field"
+        style="max-width:200px"><span>From (UTC date)</span><input type="date" name="from" value="${o
+          .from ?? ""}"></label>
+      <label class="field"
+        style="max-width:200px"><span>To (UTC date)</span><input type="date" name="to" value="${o
+          .to ?? ""}"></label>
+      <button class="btn ghost" type="submit">Show</button>
+    </form>
     <div class="card scroll">
       <table>
         <thead>
@@ -606,7 +629,7 @@ export function activityPage(entries: ActivityEntry[], host: string): Html {
                 <td class="mono">${e.at.slice(0, 16).replace("T", " ")}</td>
                 <td>${e.user}</td>
                 <td class="mono">${e.from}</td>
-                <td class="mono">${e.detail}</td>
+                <td class="mono">${what(e)}</td>
                 <td>${pill(e)}</td>
               </tr>
             `
@@ -619,6 +642,29 @@ export function activityPage(entries: ActivityEntry[], host: string): Html {
       </table>
     </div>
   `;
+}
+
+/** Entries between two UTC dates (YYYY-MM-DD, both included); a bad date is ignored. */
+export function activityBetween(
+  entries: ActivityEntry[],
+  from?: string,
+  to?: string,
+): ActivityEntry[] {
+  const day = (d?: string) => d && /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : undefined;
+  const f = day(from), t = day(to);
+  return entries.filter((e) => (!f || e.at.slice(0, 10) >= f) && (!t || e.at.slice(0, 10) <= t));
+}
+
+/** Activity as CSV, for an auditor. */
+export function activityCsv(entries: ActivityEntry[]): string {
+  const cell = (v: unknown) => {
+    const x = String(v ?? "");
+    return /[",\n]/.test(x) ? `"${x.replace(/"/g, '""')}"` : x;
+  };
+  return [
+    "at_utc,user,from,kind,detail,exit_code",
+    ...entries.map((e) => [e.at, e.user, e.from, e.kind, e.detail, e.code].map(cell).join(",")),
+  ].join("\r\n") + "\r\n";
 }
 
 /** Guide: what's here and how to use it, each with the actions that do it. */

@@ -28,8 +28,38 @@ export interface HostState {
   optIns: Record<string, unknown>;
   /** Its data class (Article 23). */
   data: { class: string; reasons: string[] };
+  /** Spec 066: the commit this host applies now (its checkout's HEAD). */
+  applied?: { commit: string; subject: string; at: string };
+  /** Spec 066: what its last pull did (and why it could not, when it could not). */
+  sync?: import("../reconcile/reconcile.ts").SyncStatus;
   /** When this was read. */
   at: string;
+}
+
+/** The checkout's HEAD and the last pull's record, when there are any. */
+async function applied(): Promise<Pick<HostState, "applied" | "sync">> {
+  const { P } = await import("../core/paths.ts");
+  const { run } = await import("../core/exec.ts");
+  const { readTextOr } = await import("../core/fsx.ts");
+  const { SYNC_STATUS } = await import("../reconcile/reconcile.ts");
+  const g = await run([
+    "git",
+    "-c",
+    `safe.directory=${P.repo}`,
+    "-C",
+    P.repo,
+    "log",
+    "-1",
+    "--format=%h%x09%s%x09%cI",
+  ]);
+  const [commit, subject, at] = g.ok ? g.stdout.trim().split("\t") : [];
+  let sync;
+  try {
+    sync = JSON.parse((await readTextOr(SYNC_STATUS)) ?? "null") ?? undefined;
+  } catch {
+    sync = undefined; // a half-written file: the next pull writes it again
+  }
+  return { ...(commit ? { applied: { commit, subject, at } } : {}), ...(sync ? { sync } : {}) };
 }
 
 /** Read it from archon.sql. */
@@ -49,6 +79,7 @@ export async function hostState(hostName: string, dir = stateDir()): Promise<Hos
     ...(inventory ? { inventory } : {}),
     optIns,
     data: { class: d.class, reasons: d.reasons },
+    ...(await applied()),
     at: new Date().toISOString(),
   };
 }

@@ -389,3 +389,15 @@ Deno.test("065 console: Services, Apps, Data, and Logs; the live journal only fo
     "only operators switch",
   );
 });
+
+Deno.test("065 console: a viewer's Activity shows only their own entries", async () => {
+  const d = deps();
+  const h = consoleHandler(d);
+  await signIn(h, "alice", "right");
+  const bob = await signIn(h, "bob", "bobpw");
+  const page = await (await h(req("/activity", { cookie: bob.cookie }))).text();
+  assert(!page.includes(">alice<"), "a viewer sees another person's entries");
+  assertStringIncludes(page, "you see your own entries");
+  const csv = await (await h(req("/export/activity.csv", { cookie: bob.cookie }))).text();
+  assert(!csv.includes("alice"), "the viewer's CSV has another person's entries");
+});

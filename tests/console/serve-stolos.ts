@@ -86,6 +86,12 @@ export const FACTS: PcFacts = {
       score: { pass: 141, total: 142 },
       failing: ["apt:ipv4-only"],
       console: "https://alpha.lab.example.org/",
+      applied: { commit: "f6e5d4c", subject: "lab: approve", at: now },
+      sync: {
+        at: now,
+        blocked: "a1b2c3d4e5 is not signed by a fleet signer (archon explain E047-UNSIGNED)",
+      },
+      upToDate: false,
     },
     {
       name: "beta",
