@@ -21,6 +21,7 @@ import { activityLog } from "./machine.ts";
 import { pcFacts } from "./pc.ts";
 import { PC_GUIDES } from "./stolos-pages.ts";
 import { Launch, type PcRunner, stolosHandler } from "./stolos-server.ts";
+import type { Estate } from "../estate/graph.ts";
 
 /** Your GitHub login, and whether it may push to the fleet repository; or why it cannot tell. */
 export async function githubCheck(
@@ -62,6 +63,29 @@ export function pcRunner(repo = P.repo): PcRunner {
     };
     await Promise.all([pump(p.stdout), pump(p.stderr)]);
     return (await p.status).code;
+  };
+}
+
+/** How long the REST API reuses the estate graph it built (spec 094). */
+export const ESTATE_TTL_MS = 60_000;
+
+/** The estate graph from the fleet repository, with its findings, built at most once a minute. */
+export function estateFor(): () => Promise<Estate> {
+  let at = 0;
+  let last: Promise<Estate> | undefined;
+  return () => {
+    if (!last || Date.now() - at > ESTATE_TTL_MS) {
+      at = Date.now();
+      last = (async () => {
+        const { loadEstate } = await import("../estate/commands.ts");
+        const { estatePolicies } = await import("../estate/graph.ts");
+        const e = await loadEstate();
+        estatePolicies(e);
+        return e;
+      })();
+      last.catch(() => (last = undefined));
+    }
+    return last;
   };
 }
 
@@ -137,6 +161,8 @@ export async function stolosConsole(
     },
     bootLog: async () => (await readTextOr(join(P.bootCache, "boot.log"))) ?? "",
     cacheDir: join(P.state, "console-cache"),
+    estate: estateFor(),
+    evidenceDir: join(P.state, "evidence"),
   });
   let server: Deno.HttpServer;
   try {

@@ -53,6 +53,31 @@
  * Commands that change keys (`keys setup`, `keys rotate`, `keys lost`) and `vault restore` stay in the
  * terminal: they are rare, and each deserves your full attention.
  *
+ * ## The REST API (read-only)
+ *
+ * The console also answers JSON under `/v1/` (spec 094), for scripts and tools on this PC. It is
+ * read-only (GET and HEAD; anything else is 405), on 127.0.0.1 only, and for the signed-in console
+ * session: there are no API keys. A request without the session's cookie gets 401. A local tool
+ * uses the cookie your browser holds (`stolos_session`, from the browser's developer tools).
+ *
+ * | Route                     | What it answers                                                       |
+ * | ------------------------- | --------------------------------------------------------------------- |
+ * | `/v1/`                    | What it serves                                                        |
+ * | `/v1/openapi.json`        | The OpenAPI 3.1 document, generated from the estate schema            |
+ * | `/v1/<table or view>`     | Every estate table and view: `{ items, limit, offset, total }`        |
+ * | `/v1/finding?format=ocsf` | The findings as OCSF Compliance Findings (or `Accept: application/vnd.ocsf+json`) |
+ * | `/v1/oscal/<document>`    | `component-definition`, `system-security-plan`, `assessment-results`, `poam` |
+ * | `/v1/evidence/`           | The evidence bundles on this PC (`stolos evidence export`), to download |
+ *
+ * A list takes `limit` (default 100, at most 1000), `offset`, and an equality filter on any of its
+ * columns: `?status=active`, `?admin=true`. Booleans are `true` and `false`. Every value is bound
+ * as a parameter, never written into the SQL.
+ *
+ * ```bash
+ * curl -s --cookie "stolos_session=<the cookie's value>" \
+ *   "http://127.0.0.1:8091/v1/user_account?admin=true&mfa=false&limit=20"
+ * ```
+ *
  * @module
  */
 

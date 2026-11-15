@@ -12,11 +12,15 @@
  * - Commands run as `deno task stolos ...` in the fleet repository, one at a
  *   time, with this terminal as their input: a passphrase or token is typed
  *   there, never in the browser.
+ * - Under `/v1/`, a read-only REST API for the estate (spec 094,
+ *   `../api/handler.ts`): GET and HEAD only, for the same signed-in session.
  *
  * @module
  */
 
 import type { Command } from "../core/registry-types.ts";
+import type { ScfCatalog } from "../compliance/catalog.ts";
+import type { Estate } from "../estate/graph.ts";
 import { COMMANDS, offeredOn } from "../commands/registry.ts";
 import { cookieOf, IDLE_MS, type Session, type Sessions } from "./auth.ts";
 import { argvFor, NOT_IN_CONSOLE, shellWords } from "./forms.ts";
@@ -146,6 +150,33 @@ export interface StolosDeps {
   bootLog(): Promise<string>;
   /** Where Mermaid and the fonts are cached. */
   cacheDir: string;
+  /** The estate graph with its findings, for the REST API (spec 094). */
+  estate(): Promise<Estate>;
+  /** The directory with this PC's evidence bundles (spec 072), for the REST API. */
+  evidenceDir: string;
+  /** The SCF catalog, when it is on this PC (default: the cached one). */
+  catalog?(): Promise<ScfCatalog | undefined>;
+}
+
+/** The fleet's OSCAL documents (spec 071), by file name; none without the SCF catalog. */
+async function pcOscal(
+  f: PcFacts,
+  catalog: ScfCatalog | undefined,
+): Promise<Record<string, unknown>> {
+  if (!catalog) return {};
+  const { loadNist } = await import("../compliance/catalog.ts");
+  const { complianceView, fleetEvidence } = await import("../compliance/report.ts");
+  const { oscalExports } = await import("../compliance/oscal.ts");
+  const { VERSION } = await import("../version.ts");
+  const nist = await loadNist("nist80053");
+  return await oscalExports({
+    view: complianceView(fleetEvidence(f), catalog),
+    fleet: f.fleet,
+    machines: f.machines.filter((m) => m.kind !== "discovered"),
+    ...(nist ? { titles: nist.titles } : {}),
+    version: VERSION,
+    now: new Date(),
+  });
 }
 
 /** boot.log, followed: the cards and new lines as they come (Datastar patches), until the page goes. */
@@ -194,6 +225,22 @@ export function stolosHandler(
   const byName = new Map(offered.map((c) => [c.name, c]));
   const hosts = new Set([`127.0.0.1:${deps.port}`, `localhost:${deps.port}`]);
   let busy = false;
+  const catalog = async () =>
+    deps.catalog
+      ? await deps.catalog()
+      : await (await import("../compliance/catalog.ts")).loadScf();
+  const api = async (req: Request) => {
+    const f = await deps.facts();
+    const { apiHandler } = await import("../api/handler.ts");
+    return await apiHandler(req, {
+      fleet: f.fleet.id,
+      port: deps.port,
+      estate: deps.estate,
+      oscal: async () => await pcOscal(f, await catalog()),
+      catalog,
+      evidenceDir: deps.evidenceDir,
+    });
+  };
 
   const frame = async (s: Session, title: string, current: string, body: Html, f?: PcFacts) => {
     const facts = f ?? (await deps.facts());
@@ -365,6 +412,10 @@ export function stolosHandler(
         return redirect("/", { "set-cookie": stolosCookie(s) });
       }
       const s = deps.sessions.get(cookieOf(req.headers.get("cookie"), STOLOS_COOKIE));
+      // Spec 094: the read-only REST API, for this session (and local tools with its cookie).
+      if (path === "/v1" || path.startsWith("/v1/")) {
+        return s ? await api(req) : (await import("../api/handler.ts")).apiUnauthorized();
+      }
       if (!s) return htmlResponse(bare("Stolos Console", launchPage()), 401);
       if (req.method === "POST") {
         if (!sameOrigin(req)) return new Response("cross-site request refused\n", { status: 403 });
@@ -431,23 +482,8 @@ export function stolosHandler(
         );
       }
       if (path.startsWith("/export/oscal/")) {
-        const { loadNist, loadScf } = await import("../compliance/catalog.ts");
-        const catalog = await loadScf();
         const name = path.slice("/export/oscal/".length);
-        const { complianceView, fleetEvidence } = await import("../compliance/report.ts");
-        const { oscalExports } = await import("../compliance/oscal.ts");
-        const { VERSION } = await import("../version.ts");
-        const nist = await loadNist("nist80053");
-        const docs = catalog
-          ? await oscalExports({
-            view: complianceView(fleetEvidence(f), catalog),
-            fleet: f.fleet,
-            machines: f.machines.filter((m) => m.kind !== "discovered"),
-            ...(nist ? { titles: nist.titles } : {}),
-            version: VERSION,
-            now: new Date(),
-          })
-          : {};
+        const docs = await pcOscal(f, await catalog());
         if (!(name in docs)) return new Response("not found\n", { status: 404 });
         return new Response(JSON.stringify(docs[name], null, 2) + "\n", {
           headers: {

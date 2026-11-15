@@ -167,6 +167,13 @@ Deno.test("066: every page answers, and the downloads are for auditors", async (
       "/guide",
       "/activity",
       "/actions/vault",
+      // Spec 094: the REST API (tests/api094_test.ts has the rest).
+      "/v1/",
+      "/v1/openapi.json",
+      "/v1/device",
+      "/v1/finding?format=ocsf",
+      "/v1/oscal/assessment-results",
+      "/v1/evidence/",
     ]
   ) {
     assertEquals((await get(p)).status, 200, p);

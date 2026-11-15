@@ -73,6 +73,21 @@ export interface TableDef<C extends Record<string, Column> = Record<string, Colu
   key: readonly (keyof C & string)[];
 }
 
+/**
+ * A view's column with its type (spec 094): the REST API and its OpenAPI
+ * document read the type. A column given only as its doc (a string) is text.
+ */
+export interface ViewColumn {
+  /** Its type, as the SELECT yields it (booleans 0 and 1, JSON as text). */
+  type: ColumnType;
+  /** What it holds, for people. */
+  doc: string;
+  /** Never null. */
+  required?: boolean;
+  /** The values it takes. */
+  values?: readonly string[];
+}
+
 /** A view, as declared. */
 export interface ViewDef {
   /** "view". */
@@ -83,8 +98,8 @@ export interface ViewDef {
   terms: readonly TermRef[];
   /** What it shows. */
   doc: string;
-  /** Its columns and what each holds. */
-  columns: Record<string, string>;
+  /** Its columns: what each holds (text), or its type with that (spec 094). */
+  columns: Record<string, string | ViewColumn>;
   /** Its SELECT. */
   select: string;
   /** The tables and views it reads. */
@@ -152,12 +167,19 @@ export function defineLabel<P extends Record<string, Column>>(d: LabelDef<P>): L
     terms: d.terms,
     doc: d.doc,
     columns: {
-      [`${d.name}_uid`]: `The node's uid ("<connector>:<tenant>:<native id>").`,
-      connector: "The connector it came from.",
-      tenant_uid: "The tenant it belongs to.",
-      native_id: "Its id in the source system.",
+      [`${d.name}_uid`]: {
+        type: "text",
+        doc: `The node's uid ("<connector>:<tenant>:<native id>").`,
+        required: true,
+      },
+      connector: { type: "text", doc: "The connector it came from.", required: true },
+      tenant_uid: { type: "text", doc: "The tenant it belongs to.", required: true },
+      native_id: { type: "text", doc: "Its id in the source system.", required: true },
       display_name: "Its name for people.",
-      ...Object.fromEntries(cols.map((c) => [c, d.props[c].doc])),
+      ...Object.fromEntries(cols.map((c): [string, ViewColumn] => {
+        const p = d.props[c];
+        return [c, { type: p.type, doc: p.doc, ...(p.values ? { values: p.values } : {}) }];
+      })),
     },
     select: [
       `SELECT n.node_uid AS ${d.name}_uid, t.connector, n.tenant_uid, n.native_id, n.display_name`,
@@ -302,6 +324,34 @@ export function schemaProblems(defs: ReadonlyArray<AnyTable | ViewDef>): string[
     }
   }
   return out;
+}
+
+/** One column of a table or a view, typed. */
+export interface TypedColumn {
+  /** Its name. */
+  name: string;
+  /** Its type. */
+  type: ColumnType;
+  /** What it holds. */
+  doc: string;
+  /** Never null (a table's key or required column, or a view's required column). */
+  required: boolean;
+  /** The values it takes, when declared. */
+  values?: readonly string[];
+}
+
+/** The typed columns of a table or a view, in order; a view's column given only as its doc is text (spec 094). */
+export function typedColumns(d: AnyTable | ViewDef): TypedColumn[] {
+  return Object.entries(d.columns).map(([name, c]): TypedColumn => {
+    if (typeof c === "string") return { name, type: "text", doc: c, required: false };
+    return {
+      name,
+      type: c.type,
+      doc: c.doc,
+      required: Boolean(c.required) || (d.kind === "table" && d.key.includes(name)),
+      ...(c.values ? { values: c.values } : {}),
+    };
+  });
 }
 
 /** The schema's documentation: each table and view, its columns, and an ER diagram. */

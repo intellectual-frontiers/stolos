@@ -963,6 +963,10 @@ export function stolosHowPage(f: PcFacts): Html {
   You->>Server: Archon Console (https)`,
       "A change, from your keyboard to every server.",
     )}
+    <div class="card">
+      <h3>For scripts: a read-only REST API</h3>
+      <p>This console also answers JSON under <a href="/v1/">/v1/</a>: every estate table and view, the findings as OCSF, the OSCAL documents, and the evidence bundles. GET only, on this PC only, for this signed-in session (its cookie). Its OpenAPI 3.1 document is <a href="/v1/openapi.json">/v1/openapi.json</a>; the Console guide shows an example.</p>
+    </div>
   `;
 }
 

@@ -12,6 +12,13 @@ import { toObserved } from "../../src/archon/adopt/adopt.ts";
 import { parseProbe } from "../../src/archon/adopt/probe.ts";
 import { cloudflare } from "../../src/archon/connect/cloudflare.ts";
 import type { Observation } from "../../src/archon/connect/connector.ts";
+import { buildGraph, type Estate, estatePolicies } from "../../src/archon/estate/graph.ts";
+import {
+  CATALOG_FORMAT,
+  SCF_SOURCE,
+  type ScfCatalog,
+} from "../../src/archon/compliance/catalog.ts";
+import { FRAMEWORKS } from "../../src/archon/compliance/scf.ts";
 
 const now = new Date().toISOString().replace(/\.\d+Z$/, "Z");
 const mac = toObserved(
@@ -250,12 +257,108 @@ export const fakeRunner: StolosDeps["runner"] = async (argv, each) => {
   return 0;
 };
 
-/** The console with fakes; `launch` is exposed for tests. */
+const estateObs = (provider: string, account: string, entities: Observation["entities"]) => ({
+  connector: provider,
+  observation: {
+    at: "2026-11-01T00:00:00Z",
+    provider,
+    account,
+    assets: [],
+    posture: {},
+    gaps: [],
+    entities,
+  } as Observation,
+});
+
+/** The fake fleet's estate (spec 090): people, accounts, a repository, machines, and findings. */
+export function fakeEstate(): Estate {
+  const e = buildGraph({
+    fleet: "lab",
+    sources: [
+      estateObs("bamboohr", "example", {
+        people: [
+          { email: "alice@example.org", name: "Alice", status: "active", type: "employee" },
+          { email: "bob@example.org", name: "Bob", status: "terminated", end: "2026-10-31" },
+        ],
+      }),
+      estateObs("okta", "example.okta.com", {
+        accounts: [
+          {
+            system: "okta",
+            id: "1",
+            name: "alice",
+            email: "alice@example.org",
+            active: true,
+            admin: true,
+            mfa: false,
+          },
+          {
+            system: "okta",
+            id: "2",
+            name: "bob",
+            email: "bob@example.org",
+            active: true,
+            admin: false,
+            mfa: true,
+          },
+        ],
+      }),
+      estateObs("github", "example", {
+        accounts: [{ system: "github", id: "3", name: "ci-bot", active: true, service: true }],
+        repositories: [{ system: "github", name: "example/app", private: true, protected: false }],
+      }),
+    ],
+    machines: [
+      { source: "stolos", id: "alpha", name: "alpha", managed: true, os: "Ubuntu" },
+      {
+        source: "adopted",
+        id: "alice-mbp",
+        name: "alice-mbp",
+        owner: "alice@example.org",
+        managed: false,
+        serial: "C02EXAMPLE",
+        encrypted: true,
+      },
+      { source: "adopted", id: "bob-desk", name: "bob-desk", managed: false, encrypted: false },
+    ],
+    links: {},
+  }, { now: new Date("2026-11-15T12:00:00Z") });
+  estatePolicies(e, new Date("2026-11-15T12:00:00Z"));
+  return e;
+}
+
+/** A small SCF catalog (the real one is downloaded): enough for the OSCAL documents. */
+export const FAKE_CATALOG: ScfCatalog = {
+  format: CATALOG_FORMAT,
+  version: SCF_SOURCE.version,
+  controls: Object.fromEntries(
+    ["CRY-07", "CHG-03", "IAC-06", "IAC-15", "END-04"].map((id) => [id, {
+      domain: "Example",
+      name: id,
+      description: `${id}, for the tests.`,
+      maps: Object.fromEntries(
+        FRAMEWORKS.map((f) => [f.id, f.id === "nist80053" ? ["AC-2"] : []]),
+      ) as ScfCatalog["controls"][string]["maps"],
+    }]),
+  ),
+};
+
+/** The console with fakes; `launch` and the evidence directory are exposed for tests. */
 export async function fakeConsole(
   port: number,
-): Promise<{ handler: ReturnType<typeof stolosHandler>; launch: Launch }> {
+): Promise<{ handler: ReturnType<typeof stolosHandler>; launch: Launch; evidenceDir: string }> {
   const log: ActivityEntry[] = [];
   const launch = new Launch();
+  const state = await Deno.makeTempDir();
+  const evidenceDir = `${state}/evidence`;
+  await Deno.mkdir(evidenceDir);
+  await Deno.writeTextFile(`${state}/secret.txt`, "not for the API\n");
+  await Deno.writeFile(
+    `${evidenceDir}/lab-evidence-2026-01-01-to-2026-06-30.zip`,
+    new Uint8Array([0x50, 0x4b, 0x05, 0x06, ...new Array(18).fill(0)]),
+  );
+  await Deno.writeTextFile(`${evidenceDir}/notes.txt`, "not a bundle\n");
+  const estate = fakeEstate();
   const handler = stolosHandler({
     port,
     person: { user: "alice", name: "Alice Example", github: "alice-example" },
@@ -283,8 +386,11 @@ export async function fakeConsole(
     },
     bootLog: () => Promise.resolve(BOOT_LOG),
     cacheDir: await Deno.makeTempDir(),
+    estate: () => Promise.resolve(estate),
+    evidenceDir,
+    catalog: () => Promise.resolve(FAKE_CATALOG),
   });
-  return { handler, launch };
+  return { handler, launch, evidenceDir };
 }
 
 if (import.meta.main) {
