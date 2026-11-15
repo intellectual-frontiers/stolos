@@ -5,7 +5,7 @@
     "": {
       "name": "@intellectual-frontiers/stolos",
       "dependencies": {
-        "@intellectual-frontiers/ifc-ts": "https://github.com/intellectual-frontiers/.github/releases/download/ifc-ts-v0.3.0/intellectual-frontiers-ifc-ts-0.3.0.tgz",
+        "@intellectual-frontiers/ifc-ts": "https://github.com/intellectual-frontiers/.github/releases/download/ifc-ts-v0.4.0/intellectual-frontiers-ifc-ts-0.4.0.tgz",
         "ajv": "8.17.1",
       },
       "devDependencies": {
@@ -15,7 +15,7 @@
     },
   },
   "packages": {
-    "@intellectual-frontiers/ifc-ts": ["@intellectual-frontiers/ifc-ts@https://github.com/intellectual-frontiers/.github/releases/download/ifc-ts-v0.3.0/intellectual-frontiers-ifc-ts-0.3.0.tgz", {}, "sha512-OGwaSdFXerflneObJFzVTCzNcb32bIq41D3Tee238gEaq1DfR9oCaJ44NKZT9v1cfcVvWjKvLdetZd0LJAHjbw=="],
+    "@intellectual-frontiers/ifc-ts": ["@intellectual-frontiers/ifc-ts@https://github.com/intellectual-frontiers/.github/releases/download/ifc-ts-v0.4.0/intellectual-frontiers-ifc-ts-0.4.0.tgz", {}, "sha512-WnYIgLmSgpo6QFzHvhp8eOxSnCRdpjtlkdxKUccji4F056Yx2JYr2UK5v3IR2JJ+sYqeMYPIr3+rKVD9P9y2uA=="],
 
     "@types/node": ["@types/node@26.6.6", "", { "dependencies": { "undici-types": "~8.9.0" } }, "sha512-MzQj+8Kx3XI40OmUAE6Qoh58ZMNstNNMwn2nfd3qWsfe7nDNSqJNzes4njhz6AHwrSHOffSLwXU6yb474Q4aog=="],
 
