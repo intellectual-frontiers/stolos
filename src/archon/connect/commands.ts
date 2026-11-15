@@ -36,6 +36,11 @@ import { sentinelone } from "./sentinelone.ts";
 import { defender, intune } from "./microsoft-endpoint.ts";
 import { justworks } from "./justworks.ts";
 import { okta } from "./okta.ts";
+import { jira } from "./jira.ts";
+import { linear } from "./linear.ts";
+import { slack } from "./slack.ts";
+import { onepassword } from "./onepassword.ts";
+import { bitwarden } from "./bitwarden.ts";
 import { hetzner } from "./hetzner.ts";
 import { microsoft } from "./microsoft.ts";
 
@@ -60,6 +65,11 @@ export const CONNECTORS: Connector[] = [
   gusto,
   deel,
   justworks,
+  jira,
+  linear,
+  slack,
+  onepassword,
+  bitwarden,
   aws,
   hetzner,
 ];

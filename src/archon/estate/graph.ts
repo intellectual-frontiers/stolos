@@ -69,6 +69,9 @@ export const PERSON_SOURCES = [
   "google",
 ];
 
+/** Spec 087: the password managers; every active person should have an account in one. */
+export const PASSWORD_MANAGERS = ["onepassword", "bitwarden"];
+
 /** The estate graph. */
 export interface Estate {
   /** The database. */
@@ -568,6 +571,27 @@ export function estatePolicies(e: Estate, now = new Date()): PolicyResult[] {
         : "every administrator has MFA",
       fix: "require MFA for administrators in each system (and register it for these people)",
       subjects: bad.map((x) => x.uid),
+    });
+  }
+  // Spec 087: password manager coverage, when one is connected and people are known.
+  const pm = PASSWORD_MANAGERS.map((c) => `'${c}'`).join(", ");
+  if (people && count(`SELECT count(*) AS n FROM tenant WHERE connector IN (${pm})`)) {
+    const uncovered = rows(
+      `SELECT u.email_addr AS email, u.uid FROM user_inventory u WHERE u.status = 'active'
+       AND NOT EXISTS (SELECT 1 FROM edge e JOIN user_account a ON a.user_account_uid = e.dst_uid
+         WHERE e.src_uid = u.uid AND e.verb = 'has_account' AND a.active = 1 AND a.connector IN (${pm}))
+       ORDER BY u.email_addr`,
+    );
+    out.push({
+      id: "password-manager",
+      title: "Every active person has a password manager account",
+      scf: ["IAC-14"],
+      status: uncovered.length ? "warn" : "pass",
+      detail: uncovered.length
+        ? `${uncovered.length} without one: ${list(uncovered, (x) => x.email)}`
+        : "every active person has an active password manager account",
+      fix: "invite each of them to the company's password manager (and have them accept)",
+      subjects: uncovered.map((x) => x.uid),
     });
   }
   if (count("SELECT count(*) AS n FROM fixed_asset WHERE encrypted IS NOT NULL")) {

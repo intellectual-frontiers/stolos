@@ -266,6 +266,49 @@ export const RESOURCE: LabelView = defineLabel({
   },
 });
 
+/**
+ * A ticket in an IT service management or work-tracking system (OCSF ticket):
+ * a change, an incident, or other work, and the commits or pull requests it
+ * links (spec 087).
+ */
+export const TICKET: LabelView = defineLabel({
+  name: "ticket",
+  terms: [{ from: "ocsf", term: "ticket" }],
+  doc:
+    "A ticket in a service management or work-tracking system (a change, an incident, other work) and the development work it links.",
+  props: {
+    title: { type: "text", doc: "Its title." },
+    type: {
+      type: "text",
+      doc: "change, incident, or other (from its issue type, project, or labels).",
+      values: ["change", "incident", "other"],
+    },
+    status: { type: "text", doc: "Its status (the source's own word)." },
+    project: { type: "text", doc: "Its project or team." },
+    created: { type: "text", doc: "When it was opened (ISO)." },
+    resolved: { type: "text", doc: "When it was resolved or closed (ISO)." },
+    links: { type: "json", doc: "The commit SHAs and pull request URLs it links." },
+    commits: { type: "integer", doc: "How many commits it links (as the source counts them)." },
+    pull_requests: {
+      type: "integer",
+      doc: "How many pull requests it links (as the source counts them).",
+    },
+    src_url: { type: "text", doc: "Where it is (its URL)." },
+  },
+});
+
+/** A shared vault or collection in a password manager (D3FEND password store), and who can open it. */
+export const PASSWORD_STORE: LabelView = defineLabel({
+  name: "password_store",
+  terms: [{ from: "d3fend", term: "password_store" }],
+  doc: "A shared vault or collection in a password manager, and who has access to it.",
+  props: {
+    members: { type: "integer", doc: "How many people can open it (directly or through a group)." },
+    member_names: { type: "text", doc: "Who can open it (their email addresses)." },
+    granting_groups: { type: "integer", doc: "How many groups grant access to it." },
+  },
+});
+
 /** Every connector label. */
 export const CONNECTOR_LABELS: readonly LabelView[] = [
   USER_ACCOUNT,
@@ -289,4 +332,6 @@ export const CONNECTOR_LABELS: readonly LabelView[] = [
   POLICY,
   PRODUCT,
   RESOURCE,
+  TICKET,
+  PASSWORD_STORE,
 ];

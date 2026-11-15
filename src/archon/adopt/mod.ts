@@ -146,6 +146,11 @@
  * | Bitbucket Cloud         | members, owners, repositories and their branch restrictions                   | protected branches, required approvals, 2 to 4 owners               |
  * | BambooHR, Rippling      | the roster only: name, work email, status, start and end dates, manager       | (the estate graph checks every account against it)                 |
  * | Gusto, Deel, Justworks  | the roster only: name, work email, status, start and end dates, manager       | every leaver has an end date (the estate graph checks the rest)     |
+ * | Jira (Cloud)            | people, admin groups, 90 days of tickets (type, status, linked commits)       | changes recorded as tickets and linked to commits, 2 to 4 admins    |
+ * | Linear                  | workspace SAML, people, admins, 90 days of issues and attached pull requests  | SAML sign-in, changes linked to commits, 2 to 4 admins              |
+ * | Slack                   | workspace, people, owners and admins, guests, two-factor, shared channels     | every member has 2FA, 2 to 4 admins, shared channels reviewed       |
+ * | 1Password               | people (active, suspended, not yet joined)                                    | everyone invited has joined (the estate graph checks coverage)      |
+ * | Bitwarden               | members, owners and admins, two-step login, collections and who opens them    | two-step login required and on, 2 to 4 admins                       |
  *
  * A laptop the probe adopted, Intune manages, and Falcon protects is one device in the estate: the
  * graph merges every source's devices by serial number, then hostname, and records which source

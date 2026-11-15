@@ -305,6 +305,11 @@ Deno.test("067: every provider says how to make a read-only credential, and name
     "gusto",
     "deel",
     "justworks",
+    "jira",
+    "linear",
+    "slack",
+    "onepassword",
+    "bitwarden",
     "aws",
     "hetzner",
   ]);
