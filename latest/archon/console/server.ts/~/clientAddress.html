@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>clientAddress - archon/console/server.ts - Stolos v0.78.0 documentation</title>
+  <title>clientAddress - archon/console/server.ts - Stolos v0.79.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="archon&#x2F;console&#x2F;server.ts">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.78.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.79.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -166,7 +166,10 @@
 </svg>
 </a>
 <span class="font-bold">clientAddress</span><span class="font-medium">(<div class="ml-4"><div><span>req<span>: <a href="https://deno.land/api@v2.9.8?s=Request" class="link td-ref">Request</a></span></span>,</div><div><span>info<span class="td-op">?</span><span>: <a href="https://deno.land/api@v2.9.8?s=Deno.ServeHandlerInfo" class="link td-ref">Deno.ServeHandlerInfo</a></span></span></div></div>)<span>: <span class="td-kw">string</span></span> </span>
-      </code><div class="space-y-7" id=""><div class="markdown"><p>The address a request came from: Traefik's X-Forwarded-For, else the connection's.</p>
+      </code><div class="space-y-7" id=""><div class="markdown"><p>The address a request came from. The console listens on 127.0.0.1 behind
+Traefik, which replaces any X-Forwarded-For a client sends with its own
+(it trusts no forwarded headers): so the header counts only on a loopback
+connection, and its last entry is the one Traefik added.</p>
 </div><section class="section"  id="parameters"><div>
       <h2 class="anchorable mb-1"><a href="#parameters" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
   width="16"

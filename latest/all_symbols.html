@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>All Symbols - Stolos v0.78.0 documentation</title>
+  <title>All Symbols - Stolos v0.79.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href=".&#x2F;" class="contextLink">Stolos v0.78.0</a>
+    <a href=".&#x2F;" class="contextLink">Stolos v0.79.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -6927,7 +6927,7 @@ with what their controls say. A starter mapping, said so on the page.</p>
 Functions</h2></div><div class="namespaceSection"><div id="namespace_compliancepage" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;compliance-page.ts&#x2F;~&#x2F;compliancePage.html" title="compliancePage">
-			    <span>compliancePage</span><span>(<div class="ml-4"><div><span>v<span>: <span class="td-ref">ComplianceView</span></span></span>,</div><div><span>fw<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span>,</div><div><span>scope<span>: <span class="td-kw">string</span></span></span>,</div><div><span>exportHref<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Html</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The Compliance page: <code>fw</code> is a framework id, or undefined for every SCF control.</p>
+			    <span>compliancePage</span><span>(<div class="ml-4"><div><span>v<span>: <span class="td-ref">ComplianceView</span></span></span>,</div><div><span>fw<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span></span></span>,</div><div><span>scope<span>: <span class="td-kw">string</span></span></span>,</div><div><span>exportHref<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span>,</div><div><span>now<span class="td-op">?</span><span>: <span class="td-ref">Date</span></span></span></div></div>)<span>: <span class="td-ref">Html</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The Compliance page: <code>fw</code> is a framework id, or undefined for every SCF control.</p>
 </div></div></div>
     </div></div>
 </section>
@@ -7112,6 +7112,11 @@ Datastar posts it and streams the output into #output.</p>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;forms.ts&#x2F;~&#x2F;consoleCommands.html" title="consoleCommands">
 			    <span>consoleCommands</span><span>(<span><span>place<span>: <span><span class="td-str">"machine"</span><span class="td-op"> | </span><span class="td-str">"pc"</span></span></span></span></span>)<span>: <span class="td-ref">Command</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The commands a console offers where <code>place</code> runs (&quot;machine&quot;: archon; &quot;pc&quot;: stolos).</p>
+</div></div></div>
+    </div><div id="namespace_shellwords" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;forms.ts&#x2F;~&#x2F;shellWords.html" title="shellWords">
+			    <span>shellWords</span><span>(<span><span>argv<span>: <span class="td-kw">string</span>[]</span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>An argument list as a person would type it in a shell (quoted where needed).</p>
 </div></div></div>
     </div><div id="namespace_tierpill" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -8307,7 +8312,10 @@ it with fakes and a server with the real ones.</p>
 Functions</h2></div><div class="namespaceSection"><div id="namespace_clientaddress" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;server.ts&#x2F;~&#x2F;clientAddress.html" title="clientAddress">
-			    <span>clientAddress</span><span>(<div class="ml-4"><div><span>req<span>: <span class="td-ref">Request</span></span></span>,</div><div><span>info<span class="td-op">?</span><span>: <span class="td-ref">Deno.ServeHandlerInfo</span></span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The address a request came from: Traefik's X-Forwarded-For, else the connection's.</p>
+			    <span>clientAddress</span><span>(<div class="ml-4"><div><span>req<span>: <span class="td-ref">Request</span></span></span>,</div><div><span>info<span class="td-op">?</span><span>: <span class="td-ref">Deno.ServeHandlerInfo</span></span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The address a request came from. The console listens on 127.0.0.1 behind
+Traefik, which replaces any X-Forwarded-For a client sends with its own
+(it trusts no forwarded headers): so the header counts only on a loopback
+connection, and its last entry is the one Traefik added.</p>
 </div></div></div>
     </div><div id="namespace_consolehandler" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -8916,6 +8924,11 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_launch_ms" 
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;stolos-server.ts&#x2F;~&#x2F;STOLOS_COOKIE.html" title="STOLOS_COOKIE">
 			    <span>STOLOS_COOKIE</span><span>: <span class="td-str">"stolos_session"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The Stolos Console's cookie.</p>
+</div></div></div>
+    </div><div id="namespace_terminal_only" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;stolos-server.ts&#x2F;~&#x2F;TERMINAL_ONLY.html" title="TERMINAL_ONLY">
+			    <span>TERMINAL_ONLY</span><span>: <span class="td-ref">Set</span>&lt;<span class="td-kw">string</span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Changes to who the fleet trusts, and the console itself: in the terminal only.</p>
 </div></div></div>
     </div></div>
 </section>
@@ -10333,6 +10346,9 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_argspec" c
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;ArgSpec.html" title="ArgSpec">
 			    <span>ArgSpec</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One argument of a command: an option (--name) or a positional value.</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;ArgSpec.html#property_choices">
+                  <span>choices</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The only values it takes (a console shows a choice).</p>
+</div></div></li><li>
                 <a href=".&#x2F;.&#x2F;archon&#x2F;core&#x2F;registry-types.ts&#x2F;~&#x2F;ArgSpec.html#property_default">
                   <span>default</span><span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">boolean</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its value when it is not given.</p>
 </div></div></li><li>
@@ -26067,7 +26083,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_tag" class=
     </div><div id="namespace_version" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;version.ts&#x2F;~&#x2F;VERSION.html" title="VERSION">
-			    <span>VERSION</span><span>: <span class="td-str">"0.78.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
+			    <span>VERSION</span><span>: <span class="td-str">"0.79.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
 from GitHub (<code>@stolos/</code> → raw.githubusercontent.com/.../v&lt;VERSION&gt;/src/), so
 every push to main raises it and the release workflow tags that commit
 v&lt;VERSION&gt;. <code>deno task version bump</code> raises the minor number (0.1.0, 0.2.0,
@@ -27362,7 +27378,7 @@ never written in a host file.</p>
 Variables</h2></div><div class="namespaceSection"><div id="namespace_version-1" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;version.ts&#x2F;~&#x2F;VERSION.html" title="VERSION">
-			    <span>VERSION</span><span>: <span class="td-str">"0.78.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
+			    <span>VERSION</span><span>: <span class="td-str">"0.79.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
 from GitHub (<code>@stolos/</code> → raw.githubusercontent.com/.../v&lt;VERSION&gt;/src/), so
 every push to main raises it and the release workflow tags that commit
 v&lt;VERSION&gt;. <code>deno task version bump</code> raises the minor number (0.1.0, 0.2.0,

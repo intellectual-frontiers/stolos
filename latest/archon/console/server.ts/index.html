@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/console/server.ts - Stolos v0.78.0 documentation</title>
+  <title>archon/console/server.ts - Stolos v0.79.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.78.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.79.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -103,7 +103,7 @@ from its dependencies (PAM, accounts, the runner, the data), so tests drive
 it with fakes and a server with the real ones.</p>
 <ul>
 <li><code>/signin</code> (form, PAM) and <code>/signout</code>; everything else needs a session
-(a cookie) or, for a GET, HTTP Basic credentials (scripts).</li>
+(a cookie). Wrong passwords are throttled by address and by account.</li>
 <li>POSTs come from this site only: the Origin must match the Host, and a run
 must carry Datastar's own header (another site's form cannot set it).</li>
 <li><code>/actions/run</code> streams the command's output as server-sent events
@@ -135,7 +135,10 @@ must carry Datastar's own header (another site's form cannot set it).</li>
 Functions</h2></div><div class="namespaceSection"><div id="namespace_clientaddress" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;server.ts&#x2F;~&#x2F;clientAddress.html" title="clientAddress">
-			    <span>clientAddress</span><span>(<div class="ml-4"><div><span>req<span>: <span class="td-ref">Request</span></span></span>,</div><div><span>info<span class="td-op">?</span><span>: <span class="td-ref">Deno.ServeHandlerInfo</span></span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The address a request came from: Traefik's X-Forwarded-For, else the connection's.</p>
+			    <span>clientAddress</span><span>(<div class="ml-4"><div><span>req<span>: <span class="td-ref">Request</span></span></span>,</div><div><span>info<span class="td-op">?</span><span>: <span class="td-ref">Deno.ServeHandlerInfo</span></span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The address a request came from. The console listens on 127.0.0.1 behind
+Traefik, which replaces any X-Forwarded-For a client sends with its own
+(it trusts no forwarded headers): so the header counts only on a loopback
+connection, and its last entry is the one Traefik added.</p>
 </div></div></div>
     </div><div id="namespace_consolehandler" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -314,7 +317,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_consoledep
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1449 symbols</span><svg
+              <span class="leading-none">view all 1451 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
