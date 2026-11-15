@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/adopt/mod.ts - Stolos v0.90.0 documentation</title>
+  <title>archon/adopt/mod.ts - Stolos v0.91.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.90.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.91.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -605,17 +605,17 @@ the SCF catalog before an audit relies on it.</p>
 <p>Stolos can also see what the fleet keeps in its clouds, read-only: it never creates, changes, or
 deletes anything there (managing a cloud stays in that cloud's own console).</p>
 <pre class="highlight"><code class="language-mermaid">flowchart LR
-  vault[&quot;Vault: clouds/&amp;lt;provider&amp;gt;/credential.json (read-only)&quot;] --&gt; observe[&quot;deno task stolos cloud observe&quot;]
+  vault[&quot;Vault: connectors/&amp;lt;provider&amp;gt;/credential.json (read-only)&quot;] --&gt; observe[&quot;deno task stolos estate observe&quot;]
   observe -- &quot;HTTPS GET&quot; --&gt; cf[&quot;Cloudflare&quot;] &amp; ms[&quot;Microsoft 365 and Azure&quot;] &amp; aws[&quot;AWS&quot;] &amp; hz[&quot;Hetzner&quot;]
-  observe --&gt; file[&quot;fleets/&amp;lt;fleet&amp;gt;/clouds/&amp;lt;provider&amp;gt;.ts (GENERATED)&quot;]
-  file --&gt; check[&quot;cloud check: posture policies (SCF)&quot;]
-  file --&gt; assets[&quot;cloud assets: one table&quot;]
+  observe --&gt; file[&quot;fleets/&amp;lt;fleet&amp;gt;/estate/&amp;lt;provider&amp;gt;.ts (GENERATED)&quot;]
+  file --&gt; check[&quot;estate check: posture policies (SCF)&quot;]
+  file --&gt; assets[&quot;estate assets: one table&quot;]
 </code><button class="copyButton" data-copy="flowchart LR
-  vault[&quot;Vault: clouds/&amp;lt;provider&amp;gt;/credential.json (read-only)&quot;] --&gt; observe[&quot;deno task stolos cloud observe&quot;]
+  vault[&quot;Vault: connectors/&amp;lt;provider&amp;gt;/credential.json (read-only)&quot;] --&gt; observe[&quot;deno task stolos estate observe&quot;]
   observe -- &quot;HTTPS GET&quot; --&gt; cf[&quot;Cloudflare&quot;] &amp; ms[&quot;Microsoft 365 and Azure&quot;] &amp; aws[&quot;AWS&quot;] &amp; hz[&quot;Hetzner&quot;]
-  observe --&gt; file[&quot;fleets/&amp;lt;fleet&amp;gt;/clouds/&amp;lt;provider&amp;gt;.ts (GENERATED)&quot;]
-  file --&gt; check[&quot;cloud check: posture policies (SCF)&quot;]
-  file --&gt; assets[&quot;cloud assets: one table&quot;]
+  observe --&gt; file[&quot;fleets/&amp;lt;fleet&amp;gt;/estate/&amp;lt;provider&amp;gt;.ts (GENERATED)&quot;]
+  file --&gt; check[&quot;estate check: posture policies (SCF)&quot;]
+  file --&gt; assets[&quot;estate assets: one table&quot;]
 "><svg
   class="copy"
   width="15"
@@ -678,8 +678,8 @@ deletes anything there (managing a cloud stays in that cloud's own console).</p>
 </tr>
 </tbody>
 </table>
-<pre class="highlight"><code class="language-bash">deno task stolos cloud connect cloudflare
-</code><button class="copyButton" data-copy="deno task stolos cloud connect cloudflare
+<pre class="highlight"><code class="language-bash">deno task stolos connect cloudflare
+</code><button class="copyButton" data-copy="deno task stolos connect cloudflare
 "><svg
   class="copy"
   width="15"
@@ -714,12 +714,12 @@ deletes anything there (managing a cloud stays in that cloud's own console).</p>
 <p><code>connect</code> shows how to make a read-only credential in the provider's console, asks for it here
 (nothing you type is shown), keeps it in the vault, and observes once. Then:</p>
 <ul>
-<li><code>deno task stolos cloud observe</code> reads every connected account again (daily is plenty);</li>
-<li><code>deno task stolos cloud check</code> reports the posture (<code>--json</code> for an auditor);</li>
-<li><code>deno task stolos cloud assets --kind dns-record</code> lists every DNS record and the machine it points
+<li><code>deno task stolos estate observe</code> reads every connected account again (daily is plenty);</li>
+<li><code>deno task stolos estate check</code> reports the posture (<code>--json</code> for an auditor);</li>
+<li><code>deno task stolos estate assets --kind dns-record</code> lists every DNS record and the machine it points
 at;</li>
-<li><code>git log -p fleets/&lt;fleet&gt;/clouds/cloudflare.ts</code> shows what changed, and when;</li>
-<li><code>deno task stolos cloud disconnect cloudflare</code> forgets the credential (revoke it in Cloudflare
+<li><code>git log -p fleets/&lt;fleet&gt;/estate/cloudflare.ts</code> shows what changed, and when;</li>
+<li><code>deno task stolos disconnect cloudflare</code> forgets the credential (revoke it in Cloudflare
 too).</li>
 </ul>
 <p>A part the credential may not read (Workers, say) is listed as not readable, not as a failure.</p>
@@ -794,7 +794,7 @@ too).</li>
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1509 symbols</span><svg
+              <span class="leading-none">view all 1511 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

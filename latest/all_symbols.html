@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>All Symbols - Stolos v0.90.0 documentation</title>
+  <title>All Symbols - Stolos v0.91.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href=".&#x2F;" class="contextLink">Stolos v0.90.0</a>
+    <a href=".&#x2F;" class="contextLink">Stolos v0.91.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -5541,609 +5541,10 @@ in front of you (Remote - SSH, or the WSL extension on Windows).</p>
 </div>
     </div>
     <div>
-      <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;aws.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;cloud&#x2F;aws.ts</a>
-
-      <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-62"><div class="markdown_summary"><p>Spec 067 (clouds): AWS, read-only, with an access key whose user (or role)
-has the managed SecurityAudit policy: the account, IAM users, S3 buckets,
-EC2 instances in every enabled region, and the root account's MFA and keys.
-Requests are signed with Signature Version 4, in TypeScript (no AWS CLI).</p>
-</div><section class="section"  id="archon&#x2F;cloud&#x2F;aws_ts_functions"><div>
-      <h2 class="anchorable mb-1"><a href="#archon&#x2F;cloud&#x2F;aws_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
-  width="16"
-  height="16"
-  viewBox="0 0 14 14"
-  fill="none"
-  xmlns="http://www.w3.org/2000/svg"
->
-  <g clip-path="url(#clip0_1081_1237)">
-    <path
-      fill-rule="evenodd"
-      clip-rule="evenodd"
-      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
-      fill="currentColor"
-    />
-  </g>
-  <defs>
-    <clipPath id="clip0_1081_1237">
-      <rect width="14" height="14" fill="white" />
-    </clipPath>
-  </defs>
-</svg>
-</a>
-Functions</h2></div><div class="namespaceSection"><div id="namespace_sigv4" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<div class="namespaceItemContent">
-		    <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;aws.ts&#x2F;~&#x2F;sigv4.html" title="sigv4">
-			    <span>sigv4</span><span>(<div class="ml-4"><div><span>r<span>: <span class="td-ref">AwsRequest</span></span></span>,</div><div><span>key<span>: { accessKeyId<span>: <span class="td-kw">string</span></span>; secretAccessKey<span>: <span class="td-kw">string</span></span>; sessionToken<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></span>,</div><div><span>now<span>: <span class="td-ref">Date</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Sign a request (SigV4): the headers to send, Authorization included.</p>
-</div></div></div>
-    </div><div id="namespace_xmlall" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<div class="namespaceItemContent">
-		    <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;aws.ts&#x2F;~&#x2F;xmlAll.html" title="xmlAll">
-			    <span>xmlAll</span><span>(<div class="ml-4"><div><span>xml<span>: <span class="td-kw">string</span></span></span>,</div><div><span>tag<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">string</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Every &lt;tag&gt;...&lt;/tag&gt;'s inner text.</p>
-</div></div></div>
-    </div></div>
-</section>
-<section class="section"  id="archon&#x2F;cloud&#x2F;aws_ts_interfaces"><div>
-      <h2 class="anchorable mb-1"><a href="#archon&#x2F;cloud&#x2F;aws_ts_interfaces" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
-  width="16"
-  height="16"
-  viewBox="0 0 14 14"
-  fill="none"
-  xmlns="http://www.w3.org/2000/svg"
->
-  <g clip-path="url(#clip0_1081_1237)">
-    <path
-      fill-rule="evenodd"
-      clip-rule="evenodd"
-      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
-      fill="currentColor"
-    />
-  </g>
-  <defs>
-    <clipPath id="clip0_1081_1237">
-      <rect width="14" height="14" fill="white" />
-    </clipPath>
-  </defs>
-</svg>
-</a>
-Interfaces</h2></div><div class="namespaceSection"><div id="namespace_awsrequest" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
-<div class="namespaceItemContent">
-		    <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;aws.ts&#x2F;~&#x2F;AwsRequest.html" title="AwsRequest">
-			    <span>AwsRequest</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A request to sign.</p>
-</div></div><ul class="namespaceItemContentSubItems"><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;aws.ts&#x2F;~&#x2F;AwsRequest.html#property_body">
-                  <span>body</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The body.</p>
-</div></div></li><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;aws.ts&#x2F;~&#x2F;AwsRequest.html#property_headers">
-                  <span>headers</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Headers to send and sign (host and x-amz-date are added).</p>
-</div></div></li><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;aws.ts&#x2F;~&#x2F;AwsRequest.html#property_host">
-                  <span>host</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The host, for example iam.amazonaws.com.</p>
-</div></div></li><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;aws.ts&#x2F;~&#x2F;AwsRequest.html#property_method">
-                  <span>method</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>GET or POST.</p>
-</div></div></li><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;aws.ts&#x2F;~&#x2F;AwsRequest.html#property_path">
-                  <span>path</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The path (/ for most query APIs).</p>
-</div></div></li><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;aws.ts&#x2F;~&#x2F;AwsRequest.html#property_query">
-                  <span>query</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Query parameters.</p>
-</div></div></li><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;aws.ts&#x2F;~&#x2F;AwsRequest.html#property_region">
-                  <span>region</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The region.</p>
-</div></div></li><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;aws.ts&#x2F;~&#x2F;AwsRequest.html#property_service">
-                  <span>service</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The service name in the signature (iam, sts, s3, ec2).</p>
-</div></div></li></ul></div>
-    </div></div>
-</section>
-<section class="section"  id="archon&#x2F;cloud&#x2F;aws_ts_variables"><div>
-      <h2 class="anchorable mb-1"><a href="#archon&#x2F;cloud&#x2F;aws_ts_variables" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
-  width="16"
-  height="16"
-  viewBox="0 0 14 14"
-  fill="none"
-  xmlns="http://www.w3.org/2000/svg"
->
-  <g clip-path="url(#clip0_1081_1237)">
-    <path
-      fill-rule="evenodd"
-      clip-rule="evenodd"
-      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
-      fill="currentColor"
-    />
-  </g>
-  <defs>
-    <clipPath id="clip0_1081_1237">
-      <rect width="14" height="14" fill="white" />
-    </clipPath>
-  </defs>
-</svg>
-</a>
-Variables</h2></div><div class="namespaceSection"><div id="namespace_aws" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
-<div class="namespaceItemContent">
-		    <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;aws.ts&#x2F;~&#x2F;aws.html" title="aws">
-			    <span>aws</span><span>: <span class="td-ref">CloudProvider</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>AWS.</p>
-</div></div></div>
-    </div></div>
-</section>
-</div>
-</div>
-</section>
-</div>
-    </div>
-    <div>
-      <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloud.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;cloud&#x2F;cloud.ts</a>
-
-      <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-63"><div class="markdown_summary"><p>Spec 067 (clouds): what the fleet has in its cloud accounts, for people and
-auditors. Stolos reads each account with a read-only credential kept in the
-vault, writes what it found to <code>fleets/&lt;fleet&gt;/clouds/&lt;provider&gt;.ts</code>
-(GENERATED, so <code>git log -p</code> is the account's history), and checks a few
-posture policies. It never changes a cloud: managing clouds is out of scope.</p>
-</div><section class="section"  id="archon&#x2F;cloud&#x2F;cloud_ts_classes"><div>
-      <h2 class="anchorable mb-1"><a href="#archon&#x2F;cloud&#x2F;cloud_ts_classes" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
-  width="16"
-  height="16"
-  viewBox="0 0 14 14"
-  fill="none"
-  xmlns="http://www.w3.org/2000/svg"
->
-  <g clip-path="url(#clip0_1081_1237)">
-    <path
-      fill-rule="evenodd"
-      clip-rule="evenodd"
-      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
-      fill="currentColor"
-    />
-  </g>
-  <defs>
-    <clipPath id="clip0_1081_1237">
-      <rect width="14" height="14" fill="white" />
-    </clipPath>
-  </defs>
-</svg>
-</a>
-Classes</h2></div><div class="namespaceSection"><div id="namespace_clouddenied" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Class bg-Class/15 dark:text-ClassDark dark:bg-ClassDark/15" title="Class">c</div></div>
-<div class="namespaceItemContent">
-		    <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloud.ts&#x2F;~&#x2F;CloudDenied.html" title="CloudDenied">
-			    <span>CloudDenied</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A call the credential is not allowed to make: a gap, not a failure.</p>
-</div></div></div>
-    </div></div>
-</section>
-<section class="section"  id="archon&#x2F;cloud&#x2F;cloud_ts_functions"><div>
-      <h2 class="anchorable mb-1"><a href="#archon&#x2F;cloud&#x2F;cloud_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
-  width="16"
-  height="16"
-  viewBox="0 0 14 14"
-  fill="none"
-  xmlns="http://www.w3.org/2000/svg"
->
-  <g clip-path="url(#clip0_1081_1237)">
-    <path
-      fill-rule="evenodd"
-      clip-rule="evenodd"
-      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
-      fill="currentColor"
-    />
-  </g>
-  <defs>
-    <clipPath id="clip0_1081_1237">
-      <rect width="14" height="14" fill="white" />
-    </clipPath>
-  </defs>
-</svg>
-</a>
-Functions</h2></div><div class="namespaceSection"><div id="namespace_check" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<div class="namespaceItemContent">
-		    <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloud.ts&#x2F;~&#x2F;check.html" title="check">
-			    <span>check</span><span>(<div class="ml-4"><div><span>o<span>: <span class="td-ref">CloudObserved</span></span></span>,</div><div><span>p<span>: { id<span>: <span class="td-kw">string</span></span>; title<span>: <span class="td-kw">string</span></span>; scf<span>: <span class="td-kw">string</span>[]</span>; fact<span>: <span class="td-kw">string</span></span>; want<span>: (<span><span>v<span>: <span class="td-kw">unknown</span></span></span></span>) =&gt; <span class="td-kw">boolean</span></span>; fix<span>: <span class="td-kw">string</span></span>; warnOnly<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>; show<span class="td-op">?</span><span>: (<span><span>v<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">number</span><span class="td-op"> | </span><span class="td-kw">boolean</span></span></span></span></span>) =&gt; <span class="td-kw">string</span></span>;  }</span></span></div></div>)<span>: <span class="td-ref">PolicyResult</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One posture policy from a boolean (or unknown when the fact is missing).</p>
-</div></div></div>
-    </div><div id="namespace_cloudcredpath" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<div class="namespaceItemContent">
-		    <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloud.ts&#x2F;~&#x2F;cloudCredPath.html" title="cloudCredPath">
-			    <span>cloudCredPath</span><span>(<span><span>id<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where a provider's credential is in the vault.</p>
-</div></div></div>
-    </div><div id="namespace_cloudfile" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<div class="namespaceItemContent">
-		    <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloud.ts&#x2F;~&#x2F;cloudFile.html" title="cloudFile">
-			    <span>cloudFile</span><span>(<span><span>id<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where a provider's observation is in the fleet repository.</p>
-</div></div></div>
-    </div><div id="namespace_cloudsource" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<div class="namespaceItemContent">
-		    <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloud.ts&#x2F;~&#x2F;cloudSource.html" title="cloudSource">
-			    <span>cloudSource</span><span>(<span><span>o<span>: <span class="td-ref">CloudObserved</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The observation's TypeScript.</p>
-</div></div></div>
-    </div><div id="namespace_fresh" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<div class="namespaceItemContent">
-		    <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloud.ts&#x2F;~&#x2F;fresh.html" title="fresh">
-			    <span>fresh</span><span>(<div class="ml-4"><div><span>o<span>: <span class="td-ref">CloudObserved</span></span></span>,</div><div><span>now<span>: <span class="td-kw">number</span></span></span>,</div><div><span>id<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">PolicyResult</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The observed-recently policy every provider has.</p>
-</div></div></div>
-    </div><div id="namespace_getjson" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<div class="namespaceItemContent">
-		    <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloud.ts&#x2F;~&#x2F;getJson.html" title="getJson">
-			    <span>getJson</span><span><span>&lt;<span><span class="td-tp">T</span></span>&gt;</span>(<div class="ml-4"><div><span>http<span>: <span class="td-ref">Http</span></span></span>,</div><div><span>url<span>: <span class="td-kw">string</span></span></span>,</div><div><span>headers<span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></span>,</div><div><span>method<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span>,</div><div><span>body<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">T</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A JSON body, or a clear error naming the call.</p>
-</div></div></div>
-    </div><div id="namespace_orgap" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<div class="namespaceItemContent">
-		    <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloud.ts&#x2F;~&#x2F;orGap.html" title="orGap">
-			    <span>orGap</span><span><span>&lt;<span><span class="td-tp">T</span></span>&gt;</span>(<div class="ml-4"><div><span>gaps<span>: <span class="td-kw">string</span>[]</span></span>,</div><div><span>what<span>: <span class="td-kw">string</span></span></span>,</div><div><span>fallback<span>: <span class="td-ref">T</span></span></span>,</div><div><span>f<span>: () =&gt; <span class="td-ref">Promise</span>&lt;<span class="td-ref">T</span>&gt;</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">T</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Run <code>f</code>; a denial becomes a gap and <code>fallback</code>.</p>
-</div></div></div>
-    </div><div id="namespace_realhttp" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<div class="namespaceItemContent">
-		    <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloud.ts&#x2F;~&#x2F;realHttp.html" title="realHttp">
-			    <span>realHttp</span><span>(<div class="ml-4"><div><span>url</span>,</div><div><span>init</span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;{ status<span>: <span class="td-kw">number</span></span>; text<span>: <span class="td-kw">string</span></span>;  }&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The real one: fetch.</p>
-</div></div></div>
-    </div></div>
-</section>
-<section class="section"  id="archon&#x2F;cloud&#x2F;cloud_ts_interfaces"><div>
-      <h2 class="anchorable mb-1"><a href="#archon&#x2F;cloud&#x2F;cloud_ts_interfaces" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
-  width="16"
-  height="16"
-  viewBox="0 0 14 14"
-  fill="none"
-  xmlns="http://www.w3.org/2000/svg"
->
-  <g clip-path="url(#clip0_1081_1237)">
-    <path
-      fill-rule="evenodd"
-      clip-rule="evenodd"
-      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
-      fill="currentColor"
-    />
-  </g>
-  <defs>
-    <clipPath id="clip0_1081_1237">
-      <rect width="14" height="14" fill="white" />
-    </clipPath>
-  </defs>
-</svg>
-</a>
-Interfaces</h2></div><div class="namespaceSection"><div id="namespace_cloudasset" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
-<div class="namespaceItemContent">
-		    <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloud.ts&#x2F;~&#x2F;CloudAsset.html" title="CloudAsset">
-			    <span>CloudAsset</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One thing in a cloud account: a zone, a DNS record, a server, a bucket, a user, ...</p>
-</div></div><ul class="namespaceItemContentSubItems"><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloud.ts&#x2F;~&#x2F;CloudAsset.html#property_facts">
-                  <span>facts</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">number</span><span class="td-op"> | </span><span class="td-kw">boolean</span></span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The few facts worth seeing (no secrets: providers never return them to a read-only token).</p>
-</div></div></li><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloud.ts&#x2F;~&#x2F;CloudAsset.html#property_fleetmachine">
-                  <span>fleetMachine</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The managed host or adopted machine it belongs to, when Stolos can tell.</p>
-</div></div></li><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloud.ts&#x2F;~&#x2F;CloudAsset.html#property_id">
-                  <span>id</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The provider's id for it.</p>
-</div></div></li><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloud.ts&#x2F;~&#x2F;CloudAsset.html#property_kind">
-                  <span>kind</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What it is: zone, dns-record, worker, r2-bucket, server, s3-bucket, user, ...</p>
-</div></div></li><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloud.ts&#x2F;~&#x2F;CloudAsset.html#property_name">
-                  <span>name</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its name for people.</p>
-</div></div></li><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloud.ts&#x2F;~&#x2F;CloudAsset.html#property_where">
-                  <span>where</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where it is (region, location, zone), when that means something.</p>
-</div></div></li></ul></div>
-    </div><div id="namespace_cloudobserved" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
-<div class="namespaceItemContent">
-		    <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloud.ts&#x2F;~&#x2F;CloudObserved.html" title="CloudObserved">
-			    <span>CloudObserved</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What one cloud account holds, as observed.</p>
-</div></div><ul class="namespaceItemContentSubItems"><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloud.ts&#x2F;~&#x2F;CloudObserved.html#property_account">
-                  <span>account</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The account (or tenant, or project) for people.</p>
-</div></div></li><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloud.ts&#x2F;~&#x2F;CloudObserved.html#property_assets">
-                  <span>assets</span><span>: <span class="td-ref">CloudAsset</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Everything found.</p>
-</div></div></li><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloud.ts&#x2F;~&#x2F;CloudObserved.html#property_at">
-                  <span>at</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When (ISO time).</p>
-</div></div></li><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloud.ts&#x2F;~&#x2F;CloudObserved.html#property_gaps">
-                  <span>gaps</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What could not be read, and why (a missing permission, usually).</p>
-</div></div></li><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloud.ts&#x2F;~&#x2F;CloudObserved.html#property_posture">
-                  <span>posture</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">number</span><span class="td-op"> | </span><span class="td-kw">boolean</span></span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Posture facts the policies read (per provider).</p>
-</div></div></li><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloud.ts&#x2F;~&#x2F;CloudObserved.html#property_provider">
-                  <span>provider</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The provider: cloudflare, microsoft, aws, hetzner.</p>
-</div></div></li></ul></div>
-    </div><div id="namespace_cloudprovider" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
-<div class="namespaceItemContent">
-		    <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloud.ts&#x2F;~&#x2F;CloudProvider.html" title="CloudProvider">
-			    <span>CloudProvider</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A provider: how to connect, what to read, what to check.</p>
-</div></div><ul class="namespaceItemContentSubItems"><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloud.ts&#x2F;~&#x2F;CloudProvider.html#property_connecthelp">
-                  <span>connectHelp</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What to create in the provider's console, step by step: read-only access only.</p>
-</div></div></li><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloud.ts&#x2F;~&#x2F;CloudProvider.html#property_fields">
-                  <span>fields</span><span>: <span class="td-ref">Array</span>&lt;{ name<span>: <span class="td-kw">string</span></span>; secret<span>: <span class="td-kw">boolean</span></span>; hint<span>: <span class="td-kw">string</span></span>;  }&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fields the credential has (one is a token; several make a JSON credential).</p>
-</div></div></li><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloud.ts&#x2F;~&#x2F;CloudProvider.html#property_id">
-                  <span>id</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its id (the vault folder and the file name).</p>
-</div></div></li><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloud.ts&#x2F;~&#x2F;CloudProvider.html#property_logo">
-                  <span>logo</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The Simple Icons slug for its logo, or &quot;&quot; when its owner does not allow one there.</p>
-</div></div></li><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloud.ts&#x2F;~&#x2F;CloudProvider.html#method_observe_0">
-                  <span>observe</span><span>(<div class="ml-4"><div><span>cred<span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></span>,</div><div><span>http<span>: <span class="td-ref">Http</span></span></span>,</div><div><span>now<span>: <span class="td-ref">Date</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">CloudObserved</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Read the account.</p>
-</div></div></li><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloud.ts&#x2F;~&#x2F;CloudProvider.html#method_policies_0">
-                  <span>policies</span><span>(<div class="ml-4"><div><span>o<span>: <span class="td-ref">CloudObserved</span></span></span>,</div><div><span>now<span>: <span class="td-kw">number</span></span></span></div></div>)<span>: <span class="td-ref">PolicyResult</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its posture policies.</p>
-</div></div></li><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloud.ts&#x2F;~&#x2F;CloudProvider.html#property_recipe">
-                  <span>recipe</span><span>: { open<span class="td-op">?</span><span>: { href<span>: <span class="td-kw">string</span></span>; label<span>: <span class="td-kw">string</span></span>;  }</span>; shell<span class="td-op">?</span><span>: { where<span>: <span class="td-kw">string</span></span>; href<span>: <span class="td-kw">string</span></span>; command<span>: <span class="td-kw">string</span></span>;  }</span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The quickest way to a read-only credential: a page to open, or a command for the provider's own browser shell.</p>
-</div></div></li><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloud.ts&#x2F;~&#x2F;CloudProvider.html#property_title">
-                  <span>title</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its name for people.</p>
-</div></div></li></ul></div>
-    </div></div>
-</section>
-<section class="section"  id="archon&#x2F;cloud&#x2F;cloud_ts_type-aliases"><div>
-      <h2 class="anchorable mb-1"><a href="#archon&#x2F;cloud&#x2F;cloud_ts_type-aliases" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
-  width="16"
-  height="16"
-  viewBox="0 0 14 14"
-  fill="none"
-  xmlns="http://www.w3.org/2000/svg"
->
-  <g clip-path="url(#clip0_1081_1237)">
-    <path
-      fill-rule="evenodd"
-      clip-rule="evenodd"
-      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
-      fill="currentColor"
-    />
-  </g>
-  <defs>
-    <clipPath id="clip0_1081_1237">
-      <rect width="14" height="14" fill="white" />
-    </clipPath>
-  </defs>
-</svg>
-</a>
-Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_http" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
-<div class="namespaceItemContent">
-		    <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloud.ts&#x2F;~&#x2F;Http.html" title="Http">
-			    <span>Http</span><span> = (<div class="ml-4"><div><span>url<span>: <span class="td-kw">string</span></span></span>,</div><div><span>init<span class="td-op">?</span><span>: { method<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; headers<span class="td-op">?</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span>; body<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></span></div></div>) =&gt; <span class="td-ref">Promise</span>&lt;{ status<span>: <span class="td-kw">number</span></span>; text<span>: <span class="td-kw">string</span></span>;  }&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>An HTTP GET or POST that returns parsed JSON or text; injectable for tests.</p>
-</div></div></div>
-    </div></div>
-</section>
-</div>
-</div>
-</section>
-</div>
-    </div>
-    <div>
-      <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloudflare.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;cloud&#x2F;cloudflare.ts</a>
-
-      <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-64"><div class="markdown_summary"><p>Spec 067 (clouds): Cloudflare, read-only: accounts, zones and their DNS
-records, Workers, Pages projects, R2 buckets, and tunnels; each zone's
-TLS settings and DNSSEC for the posture policies.</p>
-</div><section class="section"  id="archon&#x2F;cloud&#x2F;cloudflare_ts_variables"><div>
-      <h2 class="anchorable mb-1"><a href="#archon&#x2F;cloud&#x2F;cloudflare_ts_variables" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
-  width="16"
-  height="16"
-  viewBox="0 0 14 14"
-  fill="none"
-  xmlns="http://www.w3.org/2000/svg"
->
-  <g clip-path="url(#clip0_1081_1237)">
-    <path
-      fill-rule="evenodd"
-      clip-rule="evenodd"
-      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
-      fill="currentColor"
-    />
-  </g>
-  <defs>
-    <clipPath id="clip0_1081_1237">
-      <rect width="14" height="14" fill="white" />
-    </clipPath>
-  </defs>
-</svg>
-</a>
-Variables</h2></div><div class="namespaceSection"><div id="namespace_cloudflare" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
-<div class="namespaceItemContent">
-		    <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;cloudflare.ts&#x2F;~&#x2F;cloudflare.html" title="cloudflare">
-			    <span>cloudflare</span><span>: <span class="td-ref">CloudProvider</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Cloudflare.</p>
-</div></div></div>
-    </div></div>
-</section>
-</div>
-</div>
-</section>
-</div>
-    </div>
-    <div>
-      <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;commands.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;cloud&#x2F;commands.ts</a>
-
-      <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-65"><div class="markdown_summary"><p>Spec 067 (clouds): <code>stolos cloud connect | observe | check | assets | disconnect</code>.
-Read-only visibility into the fleet's cloud accounts; managing them is out of scope.</p>
-</div><section class="section"  id="archon&#x2F;cloud&#x2F;commands_ts_functions"><div>
-      <h2 class="anchorable mb-1"><a href="#archon&#x2F;cloud&#x2F;commands_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
-  width="16"
-  height="16"
-  viewBox="0 0 14 14"
-  fill="none"
-  xmlns="http://www.w3.org/2000/svg"
->
-  <g clip-path="url(#clip0_1081_1237)">
-    <path
-      fill-rule="evenodd"
-      clip-rule="evenodd"
-      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
-      fill="currentColor"
-    />
-  </g>
-  <defs>
-    <clipPath id="clip0_1081_1237">
-      <rect width="14" height="14" fill="white" />
-    </clipPath>
-  </defs>
-</svg>
-</a>
-Functions</h2></div><div class="namespaceSection"><div id="namespace_cloudassets" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<div class="namespaceItemContent">
-		    <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;commands.ts&#x2F;~&#x2F;cloudAssets.html" title="cloudAssets">
-			    <span>cloudAssets</span><span>(<div class="ml-4"><div><span>id<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span>,</div><div><span>kind<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span>,</div><div><span>json<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos cloud assets [provider] [--kind k] [--json]</code>: one table of everything observed.</p>
-</div></div></div>
-    </div><div id="namespace_cloudcheck" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<div class="namespaceItemContent">
-		    <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;commands.ts&#x2F;~&#x2F;cloudCheck.html" title="cloudCheck">
-			    <span>cloudCheck</span><span>(<div class="ml-4"><div><span>id<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span>,</div><div><span>json<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos cloud check [provider] [--json]</code>.</p>
-</div></div></div>
-    </div><div id="namespace_cloudconnect" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<div class="namespaceItemContent">
-		    <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;commands.ts&#x2F;~&#x2F;cloudConnect.html" title="cloudConnect">
-			    <span>cloudConnect</span><span>(<div class="ml-4"><div><span>id<span>: <span class="td-kw">string</span></span></span>,</div><div><span>http<span class="td-op">?</span><span>: <span class="td-ref">Http</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos cloud connect &lt;provider&gt;</code>: how to make a read-only credential, then type it (hidden).</p>
-</div></div></div>
-    </div><div id="namespace_clouddisconnect" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<div class="namespaceItemContent">
-		    <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;commands.ts&#x2F;~&#x2F;cloudDisconnect.html" title="cloudDisconnect">
-			    <span>cloudDisconnect</span><span>(<span><span>id<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos cloud disconnect &lt;provider&gt;</code>: the credential goes from the vault; the last observation stays in Git.</p>
-</div></div></div>
-    </div><div id="namespace_cloudobserve" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<div class="namespaceItemContent">
-		    <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;commands.ts&#x2F;~&#x2F;cloudObserve.html" title="cloudObserve">
-			    <span>cloudObserve</span><span>(<div class="ml-4"><div><span>id<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span>,</div><div><span>http<span class="td-op">?</span><span>: <span class="td-ref">Http</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos cloud observe [provider]</code>.</p>
-</div></div></div>
-    </div><div id="namespace_joinfleet" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<div class="namespaceItemContent">
-		    <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;commands.ts&#x2F;~&#x2F;joinFleet.html" title="joinFleet">
-			    <span>joinFleet</span><span>(<div class="ml-4"><div><span>o<span>: <span class="td-ref">CloudObserved</span></span></span>,</div><div><span>machines<span>: <span class="td-kw">string</span>[]</span></span>,</div><div><span>domain<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">CloudObserved</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Mark the assets that belong to a fleet machine: a DNS record or server named after it.</p>
-</div></div></div>
-    </div><div id="namespace_loadclouds" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<div class="namespaceItemContent">
-		    <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;commands.ts&#x2F;~&#x2F;loadClouds.html" title="loadClouds">
-			    <span>loadClouds</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">CloudObserved</span>[]&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Each provider's last observation, from the fleet repository.</p>
-</div></div></div>
-    </div></div>
-</section>
-<section class="section"  id="archon&#x2F;cloud&#x2F;commands_ts_variables"><div>
-      <h2 class="anchorable mb-1"><a href="#archon&#x2F;cloud&#x2F;commands_ts_variables" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
-  width="16"
-  height="16"
-  viewBox="0 0 14 14"
-  fill="none"
-  xmlns="http://www.w3.org/2000/svg"
->
-  <g clip-path="url(#clip0_1081_1237)">
-    <path
-      fill-rule="evenodd"
-      clip-rule="evenodd"
-      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
-      fill="currentColor"
-    />
-  </g>
-  <defs>
-    <clipPath id="clip0_1081_1237">
-      <rect width="14" height="14" fill="white" />
-    </clipPath>
-  </defs>
-</svg>
-</a>
-Variables</h2></div><div class="namespaceSection"><div id="namespace_clouds" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
-<div class="namespaceItemContent">
-		    <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;commands.ts&#x2F;~&#x2F;CLOUDS.html" title="CLOUDS">
-			    <span>CLOUDS</span><span>: <span class="td-ref">CloudProvider</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Every provider, in the fleet's order of importance.</p>
-</div></div></div>
-    </div></div>
-</section>
-</div>
-</div>
-</section>
-</div>
-    </div>
-    <div>
-      <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;hetzner.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;cloud&#x2F;hetzner.ts</a>
-
-      <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-66"><div class="markdown_summary"><p>Spec 067 (clouds): Hetzner Cloud, read-only: one project's servers,
-volumes, firewalls, primary IPs, and load balancers.</p>
-</div><section class="section"  id="archon&#x2F;cloud&#x2F;hetzner_ts_variables"><div>
-      <h2 class="anchorable mb-1"><a href="#archon&#x2F;cloud&#x2F;hetzner_ts_variables" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
-  width="16"
-  height="16"
-  viewBox="0 0 14 14"
-  fill="none"
-  xmlns="http://www.w3.org/2000/svg"
->
-  <g clip-path="url(#clip0_1081_1237)">
-    <path
-      fill-rule="evenodd"
-      clip-rule="evenodd"
-      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
-      fill="currentColor"
-    />
-  </g>
-  <defs>
-    <clipPath id="clip0_1081_1237">
-      <rect width="14" height="14" fill="white" />
-    </clipPath>
-  </defs>
-</svg>
-</a>
-Variables</h2></div><div class="namespaceSection"><div id="namespace_hetzner" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
-<div class="namespaceItemContent">
-		    <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;hetzner.ts&#x2F;~&#x2F;hetzner.html" title="hetzner">
-			    <span>hetzner</span><span>: <span class="td-ref">CloudProvider</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Hetzner Cloud.</p>
-</div></div></div>
-    </div></div>
-</section>
-</div>
-</div>
-</section>
-</div>
-    </div>
-    <div>
-      <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;microsoft.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;cloud&#x2F;microsoft.ts</a>
-
-      <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-67"><div class="markdown_summary"><p>Spec 067 (clouds): Microsoft 365 (Entra ID, through Microsoft Graph) and
-Azure (through Resource Manager), read-only, with one app registration's
-client credentials: the tenant, its domains, users and licenses, who is a
-Global Administrator, whether people have MFA, and Azure's subscriptions
-and resources.</p>
-</div><section class="section"  id="archon&#x2F;cloud&#x2F;microsoft_ts_variables"><div>
-      <h2 class="anchorable mb-1"><a href="#archon&#x2F;cloud&#x2F;microsoft_ts_variables" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
-  width="16"
-  height="16"
-  viewBox="0 0 14 14"
-  fill="none"
-  xmlns="http://www.w3.org/2000/svg"
->
-  <g clip-path="url(#clip0_1081_1237)">
-    <path
-      fill-rule="evenodd"
-      clip-rule="evenodd"
-      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
-      fill="currentColor"
-    />
-  </g>
-  <defs>
-    <clipPath id="clip0_1081_1237">
-      <rect width="14" height="14" fill="white" />
-    </clipPath>
-  </defs>
-</svg>
-</a>
-Variables</h2></div><div class="namespaceSection"><div id="namespace_microsoft" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
-<div class="namespaceItemContent">
-		    <a href=".&#x2F;.&#x2F;archon&#x2F;cloud&#x2F;microsoft.ts&#x2F;~&#x2F;microsoft.html" title="microsoft">
-			    <span>microsoft</span><span>: <span class="td-ref">CloudProvider</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Microsoft 365 and Azure.</p>
-</div></div></div>
-    </div></div>
-</section>
-</div>
-</div>
-</section>
-</div>
-    </div>
-    <div>
       <a href=".&#x2F;.&#x2F;archon&#x2F;commands&#x2F;mod.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;commands&#x2F;mod.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-68"><div class="markdown_summary"><h1>Working on a host</h1>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-62"><div class="markdown_summary"><h1>Working on a host</h1>
 </div></div>
 </div>
 </section>
@@ -6153,7 +5554,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_microsoft" 
       <a href=".&#x2F;.&#x2F;archon&#x2F;commands&#x2F;registry.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;commands&#x2F;registry.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-69"><div class="markdown_summary"><p>The command registry (Article 6). One definition per capability; the CLI,
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-63"><div class="markdown_summary"><p>The command registry (Article 6). One definition per capability; the CLI,
 MCP tools, man pages, completions, and the agent's permissions come from here.
 Implementations load lazily.</p>
 </div><section class="section"  id="archon&#x2F;commands&#x2F;registry_ts_functions"><div>
@@ -6260,7 +5661,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_commands" c
       <a href=".&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;commands.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;compliance&#x2F;commands.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-70"><div class="markdown_summary"><p>Spec 068: <code>stolos compliance [--framework hipaa|pci|cmmc|soc2] [--json]</code>:
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-64"><div class="markdown_summary"><p>Spec 068: <code>stolos compliance [--framework hipaa|pci|cmmc|soc2] [--json]</code>:
 the fleet's evidence by SCF control and by framework, from what this PC
 already knows (nothing is asked of a server).</p>
 </div><section class="section"  id="archon&#x2F;compliance&#x2F;commands_ts_functions"><div>
@@ -6302,7 +5703,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_compliancec
       <a href=".&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;mod.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;compliance&#x2F;mod.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-71"><div class="markdown_summary"><h1>Compliance</h1>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-65"><div class="markdown_summary"><h1>Compliance</h1>
 </div></div>
 </div>
 </section>
@@ -6312,7 +5713,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_compliancec
       <a href=".&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;report.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;compliance&#x2F;report.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-72"><div class="markdown_summary"><p>Spec 068: compliance as evidence. Every result Stolos already has (a
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-66"><div class="markdown_summary"><p>Spec 068: compliance as evidence. Every result Stolos already has (a
 managed server's verify, an adopted machine's policies, a cloud account's
 posture, the repository's signatures) is evidence for one or more SCF
 controls; each control's status is what its evidence says, and each
@@ -6502,7 +5903,7 @@ Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_coverage
       <a href=".&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;scf.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;compliance&#x2F;scf.ts</a>
 
       <div class="ml-4 mt-2"><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-73"><div class="markdown_summary"><p>Spec 068: the Secure Controls Framework (SCF) controls Stolos gives
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-67"><div class="markdown_summary"><p>Spec 068: the Secure Controls Framework (SCF) controls Stolos gives
 evidence for, and a starter mapping of each to the frameworks the fleet
 cares about first: HIPAA (the Security Rule, 45 CFR 164), PCI DSS v4.0,
 CMMC 2.0 Level 2 (NIST SP 800-171 r2), and SOC 2 (the 2017 Trust Services
@@ -6642,6 +6043,643 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_frameworks"
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;compliance&#x2F;scf.ts&#x2F;~&#x2F;SCF.html" title="SCF">
 			    <span>SCF</span><span>: <span class="td-ref">ScfControl</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The controls, by SCF id.</p>
+</div></div></div>
+    </div></div>
+</section>
+</div>
+</div>
+</section>
+</div>
+    </div>
+    <div>
+      <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;aws.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;connect&#x2F;aws.ts</a>
+
+      <div class="ml-4 mt-2"><section>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-68"><div class="markdown_summary"><p>Spec 067 (clouds): AWS, read-only, with an access key whose user (or role)
+has the managed SecurityAudit policy: the account, IAM users, S3 buckets,
+EC2 instances in every enabled region, and the root account's MFA and keys.
+Requests are signed with Signature Version 4, in TypeScript (no AWS CLI).</p>
+</div><section class="section"  id="archon&#x2F;connect&#x2F;aws_ts_functions"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;connect&#x2F;aws_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Functions</h2></div><div class="namespaceSection"><div id="namespace_sigv4" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;aws.ts&#x2F;~&#x2F;sigv4.html" title="sigv4">
+			    <span>sigv4</span><span>(<div class="ml-4"><div><span>r<span>: <span class="td-ref">AwsRequest</span></span></span>,</div><div><span>key<span>: { accessKeyId<span>: <span class="td-kw">string</span></span>; secretAccessKey<span>: <span class="td-kw">string</span></span>; sessionToken<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></span>,</div><div><span>now<span>: <span class="td-ref">Date</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Sign a request (SigV4): the headers to send, Authorization included.</p>
+</div></div></div>
+    </div><div id="namespace_xmlall" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;aws.ts&#x2F;~&#x2F;xmlAll.html" title="xmlAll">
+			    <span>xmlAll</span><span>(<div class="ml-4"><div><span>xml<span>: <span class="td-kw">string</span></span></span>,</div><div><span>tag<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">string</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Every &lt;tag&gt;...&lt;/tag&gt;'s inner text.</p>
+</div></div></div>
+    </div></div>
+</section>
+<section class="section"  id="archon&#x2F;connect&#x2F;aws_ts_interfaces"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;connect&#x2F;aws_ts_interfaces" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Interfaces</h2></div><div class="namespaceSection"><div id="namespace_awsrequest" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;aws.ts&#x2F;~&#x2F;AwsRequest.html" title="AwsRequest">
+			    <span>AwsRequest</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A request to sign.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;aws.ts&#x2F;~&#x2F;AwsRequest.html#property_body">
+                  <span>body</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The body.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;aws.ts&#x2F;~&#x2F;AwsRequest.html#property_headers">
+                  <span>headers</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Headers to send and sign (host and x-amz-date are added).</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;aws.ts&#x2F;~&#x2F;AwsRequest.html#property_host">
+                  <span>host</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The host, for example iam.amazonaws.com.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;aws.ts&#x2F;~&#x2F;AwsRequest.html#property_method">
+                  <span>method</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>GET or POST.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;aws.ts&#x2F;~&#x2F;AwsRequest.html#property_path">
+                  <span>path</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The path (/ for most query APIs).</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;aws.ts&#x2F;~&#x2F;AwsRequest.html#property_query">
+                  <span>query</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Query parameters.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;aws.ts&#x2F;~&#x2F;AwsRequest.html#property_region">
+                  <span>region</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The region.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;aws.ts&#x2F;~&#x2F;AwsRequest.html#property_service">
+                  <span>service</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The service name in the signature (iam, sts, s3, ec2).</p>
+</div></div></li></ul></div>
+    </div></div>
+</section>
+<section class="section"  id="archon&#x2F;connect&#x2F;aws_ts_variables"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;connect&#x2F;aws_ts_variables" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Variables</h2></div><div class="namespaceSection"><div id="namespace_aws" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;aws.ts&#x2F;~&#x2F;aws.html" title="aws">
+			    <span>aws</span><span>: <span class="td-ref">Connector</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>AWS.</p>
+</div></div></div>
+    </div></div>
+</section>
+</div>
+</div>
+</section>
+</div>
+    </div>
+    <div>
+      <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;cloudflare.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;connect&#x2F;cloudflare.ts</a>
+
+      <div class="ml-4 mt-2"><section>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-69"><div class="markdown_summary"><p>Spec 067 (clouds): Cloudflare, read-only: accounts, zones and their DNS
+records, Workers, Pages projects, R2 buckets, and tunnels; each zone's
+TLS settings and DNSSEC for the posture policies.</p>
+</div><section class="section"  id="archon&#x2F;connect&#x2F;cloudflare_ts_variables"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;connect&#x2F;cloudflare_ts_variables" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Variables</h2></div><div class="namespaceSection"><div id="namespace_cloudflare" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;cloudflare.ts&#x2F;~&#x2F;cloudflare.html" title="cloudflare">
+			    <span>cloudflare</span><span>: <span class="td-ref">Connector</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Cloudflare.</p>
+</div></div></div>
+    </div></div>
+</section>
+</div>
+</div>
+</section>
+</div>
+    </div>
+    <div>
+      <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;commands.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;connect&#x2F;commands.ts</a>
+
+      <div class="ml-4 mt-2"><section>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-70"><div class="markdown_summary"><p>Spec 067 (clouds): <code>stolos connect | observe | check | assets | disconnect</code>.
+Read-only visibility into the fleet's cloud accounts; managing them is out of scope.</p>
+</div><section class="section"  id="archon&#x2F;connect&#x2F;commands_ts_functions"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;connect&#x2F;commands_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Functions</h2></div><div class="namespaceSection"><div id="namespace_connectorconnect" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;commands.ts&#x2F;~&#x2F;connectorConnect.html" title="connectorConnect">
+			    <span>connectorConnect</span><span>(<div class="ml-4"><div><span>id<span>: <span class="td-kw">string</span></span></span>,</div><div><span>http<span class="td-op">?</span><span>: <span class="td-ref">Http</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos connect &lt;provider&gt;</code>: how to make a read-only credential, then type it (hidden).</p>
+</div></div></div>
+    </div><div id="namespace_connectordisconnect" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;commands.ts&#x2F;~&#x2F;connectorDisconnect.html" title="connectorDisconnect">
+			    <span>connectorDisconnect</span><span>(<span><span>id<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos disconnect &lt;provider&gt;</code>: the credential goes from the vault; the last observation stays in Git.</p>
+</div></div></div>
+    </div><div id="namespace_estateassets" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;commands.ts&#x2F;~&#x2F;estateAssets.html" title="estateAssets">
+			    <span>estateAssets</span><span>(<div class="ml-4"><div><span>id<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span>,</div><div><span>kind<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span>,</div><div><span>json<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos estate assets [provider] [--kind k] [--json]</code>: one table of everything observed.</p>
+</div></div></div>
+    </div><div id="namespace_estatecheck" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;commands.ts&#x2F;~&#x2F;estateCheck.html" title="estateCheck">
+			    <span>estateCheck</span><span>(<div class="ml-4"><div><span>id<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span>,</div><div><span>json<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos estate check [provider] [--json]</code>.</p>
+</div></div></div>
+    </div><div id="namespace_estateobserve" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;commands.ts&#x2F;~&#x2F;estateObserve.html" title="estateObserve">
+			    <span>estateObserve</span><span>(<div class="ml-4"><div><span>id<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span>,</div><div><span>http<span class="td-op">?</span><span>: <span class="td-ref">Http</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-kw">number</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p><code>stolos estate observe [provider]</code>.</p>
+</div></div></div>
+    </div><div id="namespace_joinfleet" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;commands.ts&#x2F;~&#x2F;joinFleet.html" title="joinFleet">
+			    <span>joinFleet</span><span>(<div class="ml-4"><div><span>o<span>: <span class="td-ref">Observation</span></span></span>,</div><div><span>machines<span>: <span class="td-kw">string</span>[]</span></span>,</div><div><span>domain<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Observation</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Mark the assets that belong to a fleet machine: a DNS record or server named after it.</p>
+</div></div></div>
+    </div><div id="namespace_loadobservations" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;commands.ts&#x2F;~&#x2F;loadObservations.html" title="loadObservations">
+			    <span>loadObservations</span><span>()<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">Observation</span>[]&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Each provider's last observation, from the fleet repository.</p>
+</div></div></div>
+    </div></div>
+</section>
+<section class="section"  id="archon&#x2F;connect&#x2F;commands_ts_variables"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;connect&#x2F;commands_ts_variables" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Variables</h2></div><div class="namespaceSection"><div id="namespace_connectors" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;commands.ts&#x2F;~&#x2F;CONNECTORS.html" title="CONNECTORS">
+			    <span>CONNECTORS</span><span>: <span class="td-ref">Connector</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Every provider, in the fleet's order of importance.</p>
+</div></div></div>
+    </div></div>
+</section>
+</div>
+</div>
+</section>
+</div>
+    </div>
+    <div>
+      <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;connect&#x2F;connector.ts</a>
+
+      <div class="ml-4 mt-2"><section>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-71"><div class="markdown_summary"><p>Spec 084: connectors. Each reads one outside account (a cloud, an identity
+provider, a code host, an HR system, ...) with a read-only credential kept
+in the vault, writes what it found to <code>fleets/&lt;fleet&gt;/estate/&lt;id&gt;.ts</code>
+(GENERATED, so <code>git log -p</code> is the account's history), and checks posture
+policies tagged with SCF controls. A connector never changes the account.</p>
+</div><section class="section"  id="archon&#x2F;connect&#x2F;connector_ts_classes"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;connect&#x2F;connector_ts_classes" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Classes</h2></div><div class="namespaceSection"><div id="namespace_accessdenied" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Class bg-Class/15 dark:text-ClassDark dark:bg-ClassDark/15" title="Class">c</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;AccessDenied.html" title="AccessDenied">
+			    <span>AccessDenied</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A call the credential is not allowed to make: a gap, not a failure.</p>
+</div></div></div>
+    </div></div>
+</section>
+<section class="section"  id="archon&#x2F;connect&#x2F;connector_ts_functions"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;connect&#x2F;connector_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Functions</h2></div><div class="namespaceSection"><div id="namespace_check" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;check.html" title="check">
+			    <span>check</span><span>(<div class="ml-4"><div><span>o<span>: <span class="td-ref">Observation</span></span></span>,</div><div><span>p<span>: { id<span>: <span class="td-kw">string</span></span>; title<span>: <span class="td-kw">string</span></span>; scf<span>: <span class="td-kw">string</span>[]</span>; fact<span>: <span class="td-kw">string</span></span>; want<span>: (<span><span>v<span>: <span class="td-kw">unknown</span></span></span></span>) =&gt; <span class="td-kw">boolean</span></span>; fix<span>: <span class="td-kw">string</span></span>; warnOnly<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>; show<span class="td-op">?</span><span>: (<span><span>v<span>: <span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">number</span><span class="td-op"> | </span><span class="td-kw">boolean</span></span></span></span></span>) =&gt; <span class="td-kw">string</span></span>;  }</span></span></div></div>)<span>: <span class="td-ref">PolicyResult</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One posture policy from a boolean (or unknown when the fact is missing).</p>
+</div></div></div>
+    </div><div id="namespace_connectorcredpath" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;connectorCredPath.html" title="connectorCredPath">
+			    <span>connectorCredPath</span><span>(<span><span>id<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where a provider's credential is in the vault.</p>
+</div></div></div>
+    </div><div id="namespace_fresh" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;fresh.html" title="fresh">
+			    <span>fresh</span><span>(<div class="ml-4"><div><span>o<span>: <span class="td-ref">Observation</span></span></span>,</div><div><span>now<span>: <span class="td-kw">number</span></span></span>,</div><div><span>id<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">PolicyResult</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The observed-recently policy every provider has.</p>
+</div></div></div>
+    </div><div id="namespace_getjson" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;getJson.html" title="getJson">
+			    <span>getJson</span><span><span>&lt;<span><span class="td-tp">T</span></span>&gt;</span>(<div class="ml-4"><div><span>http<span>: <span class="td-ref">Http</span></span></span>,</div><div><span>url<span>: <span class="td-kw">string</span></span></span>,</div><div><span>headers<span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></span>,</div><div><span>method<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span>,</div><div><span>body<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">T</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A JSON body, or a clear error naming the call.</p>
+</div></div></div>
+    </div><div id="namespace_observationfile" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;observationFile.html" title="observationFile">
+			    <span>observationFile</span><span>(<span><span>id<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where a provider's observation is in the fleet repository.</p>
+</div></div></div>
+    </div><div id="namespace_observationsource" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;observationSource.html" title="observationSource">
+			    <span>observationSource</span><span>(<span><span>o<span>: <span class="td-ref">Observation</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The observation's TypeScript.</p>
+</div></div></div>
+    </div><div id="namespace_orgap" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;orGap.html" title="orGap">
+			    <span>orGap</span><span><span>&lt;<span><span class="td-tp">T</span></span>&gt;</span>(<div class="ml-4"><div><span>gaps<span>: <span class="td-kw">string</span>[]</span></span>,</div><div><span>what<span>: <span class="td-kw">string</span></span></span>,</div><div><span>fallback<span>: <span class="td-ref">T</span></span></span>,</div><div><span>f<span>: () =&gt; <span class="td-ref">Promise</span>&lt;<span class="td-ref">T</span>&gt;</span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">T</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Run <code>f</code>; a denial becomes a gap and <code>fallback</code>.</p>
+</div></div></div>
+    </div><div id="namespace_realhttp" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;realHttp.html" title="realHttp">
+			    <span>realHttp</span><span>(<div class="ml-4"><div><span>url</span>,</div><div><span>init</span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;{ status<span>: <span class="td-kw">number</span></span>; text<span>: <span class="td-kw">string</span></span>;  }&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The real one: fetch.</p>
+</div></div></div>
+    </div></div>
+</section>
+<section class="section"  id="archon&#x2F;connect&#x2F;connector_ts_interfaces"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;connect&#x2F;connector_ts_interfaces" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Interfaces</h2></div><div class="namespaceSection"><div id="namespace_asset" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Asset.html" title="Asset">
+			    <span>Asset</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One thing in an account: a zone, a DNS record, a server, a bucket, a user, ...</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Asset.html#property_facts">
+                  <span>facts</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">number</span><span class="td-op"> | </span><span class="td-kw">boolean</span></span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The few facts worth seeing (no secrets: providers never return them to a read-only token).</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Asset.html#property_fleetmachine">
+                  <span>fleetMachine</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The managed host or adopted machine it belongs to, when Stolos can tell.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Asset.html#property_id">
+                  <span>id</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The provider's id for it.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Asset.html#property_kind">
+                  <span>kind</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What it is: zone, dns-record, worker, r2-bucket, server, s3-bucket, user, ...</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Asset.html#property_name">
+                  <span>name</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its name for people.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Asset.html#property_where">
+                  <span>where</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where it is (region, location, zone), when that means something.</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_connector" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Connector.html" title="Connector">
+			    <span>Connector</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A provider: how to connect, what to read, what to check.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Connector.html#property_category">
+                  <span>category</span><span>: <span class="td-ref">ConnectorCategory</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What kind of account it reads.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Connector.html#property_connecthelp">
+                  <span>connectHelp</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What to create in the provider's console, step by step: read-only access only.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Connector.html#property_fields">
+                  <span>fields</span><span>: <span class="td-ref">Array</span>&lt;{ name<span>: <span class="td-kw">string</span></span>; secret<span>: <span class="td-kw">boolean</span></span>; hint<span>: <span class="td-kw">string</span></span>;  }&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fields the credential has (one is a token; several make a JSON credential).</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Connector.html#property_id">
+                  <span>id</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its id (the vault folder and the file name).</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Connector.html#property_logo">
+                  <span>logo</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The Simple Icons slug for its logo, or &quot;&quot; when its owner does not allow one there.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Connector.html#method_observe_0">
+                  <span>observe</span><span>(<div class="ml-4"><div><span>cred<span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></span>,</div><div><span>http<span>: <span class="td-ref">Http</span></span></span>,</div><div><span>now<span>: <span class="td-ref">Date</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">Observation</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Read the account.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Connector.html#method_policies_0">
+                  <span>policies</span><span>(<div class="ml-4"><div><span>o<span>: <span class="td-ref">Observation</span></span></span>,</div><div><span>now<span>: <span class="td-kw">number</span></span></span></div></div>)<span>: <span class="td-ref">PolicyResult</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its posture policies.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Connector.html#property_recipe">
+                  <span>recipe</span><span>: { open<span class="td-op">?</span><span>: { href<span>: <span class="td-kw">string</span></span>; label<span>: <span class="td-kw">string</span></span>;  }</span>; shell<span class="td-op">?</span><span>: { where<span>: <span class="td-kw">string</span></span>; href<span>: <span class="td-kw">string</span></span>; command<span>: <span class="td-kw">string</span></span>;  }</span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The quickest way to a read-only credential: a page to open, or a command for the provider's own browser shell.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Connector.html#property_title">
+                  <span>title</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its name for people.</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_observation" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Observation.html" title="Observation">
+			    <span>Observation</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What one cloud account holds, as observed.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Observation.html#property_account">
+                  <span>account</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The account (or tenant, or project) for people.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Observation.html#property_assets">
+                  <span>assets</span><span>: <span class="td-ref">Asset</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Everything found.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Observation.html#property_at">
+                  <span>at</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When (ISO time).</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Observation.html#property_gaps">
+                  <span>gaps</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What could not be read, and why (a missing permission, usually).</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Observation.html#property_posture">
+                  <span>posture</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span><span class="td-kw">string</span><span class="td-op"> | </span><span class="td-kw">number</span><span class="td-op"> | </span><span class="td-kw">boolean</span></span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Posture facts the policies read (per provider).</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Observation.html#property_provider">
+                  <span>provider</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The provider: cloudflare, microsoft, aws, hetzner.</p>
+</div></div></li></ul></div>
+    </div></div>
+</section>
+<section class="section"  id="archon&#x2F;connect&#x2F;connector_ts_type-aliases"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;connect&#x2F;connector_ts_type-aliases" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_connectorcategory" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;ConnectorCategory.html" title="ConnectorCategory">
+			    <span>ConnectorCategory</span><span> = <span class="td-ref">CONNECTOR_CATEGORIES</span>[<span class="td-kw">number</span>]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One kind of account.</p>
+</div></div></div>
+    </div><div id="namespace_http" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;Http.html" title="Http">
+			    <span>Http</span><span> = (<div class="ml-4"><div><span>url<span>: <span class="td-kw">string</span></span></span>,</div><div><span>init<span class="td-op">?</span><span>: { method<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; headers<span class="td-op">?</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span>; body<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></span></div></div>) =&gt; <span class="td-ref">Promise</span>&lt;{ status<span>: <span class="td-kw">number</span></span>; text<span>: <span class="td-kw">string</span></span>;  }&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>An HTTP GET or POST that returns parsed JSON or text; injectable for tests.</p>
+</div></div></div>
+    </div></div>
+</section>
+<section class="section"  id="archon&#x2F;connect&#x2F;connector_ts_variables"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;connect&#x2F;connector_ts_variables" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Variables</h2></div><div class="namespaceSection"><div id="namespace_connector_categories" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;connector.ts&#x2F;~&#x2F;CONNECTOR_CATEGORIES.html" title="CONNECTOR_CATEGORIES">
+			    <span>CONNECTOR_CATEGORIES</span><span>: <div class="ml-indent"><span><span class="td-str">"cloud"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"identity"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"code"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"hr"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"endpoint"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"ticketing"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"collaboration"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"secrets"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"vulnerability"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"training"</span></span></div>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The kinds of account a connector reads (spec 084).</p>
+</div></div></div>
+    </div></div>
+</section>
+</div>
+</div>
+</section>
+</div>
+    </div>
+    <div>
+      <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;hetzner.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;connect&#x2F;hetzner.ts</a>
+
+      <div class="ml-4 mt-2"><section>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-72"><div class="markdown_summary"><p>Spec 067 (clouds): Hetzner Cloud, read-only: one project's servers,
+volumes, firewalls, primary IPs, and load balancers.</p>
+</div><section class="section"  id="archon&#x2F;connect&#x2F;hetzner_ts_variables"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;connect&#x2F;hetzner_ts_variables" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Variables</h2></div><div class="namespaceSection"><div id="namespace_hetzner" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;hetzner.ts&#x2F;~&#x2F;hetzner.html" title="hetzner">
+			    <span>hetzner</span><span>: <span class="td-ref">Connector</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Hetzner Cloud.</p>
+</div></div></div>
+    </div></div>
+</section>
+</div>
+</div>
+</section>
+</div>
+    </div>
+    <div>
+      <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;microsoft.ts&#x2F;index.html" class="link text-xl font-bold">archon&#x2F;connect&#x2F;microsoft.ts</a>
+
+      <div class="ml-4 mt-2"><section>
+  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc-73"><div class="markdown_summary"><p>Spec 067 (clouds): Microsoft 365 (Entra ID, through Microsoft Graph) and
+Azure (through Resource Manager), read-only, with one app registration's
+client credentials: the tenant, its domains, users and licenses, who is a
+Global Administrator, whether people have MFA, and Azure's subscriptions
+and resources.</p>
+</div><section class="section"  id="archon&#x2F;connect&#x2F;microsoft_ts_variables"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;connect&#x2F;microsoft_ts_variables" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Variables</h2></div><div class="namespaceSection"><div id="namespace_microsoft" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;connect&#x2F;microsoft.ts&#x2F;~&#x2F;microsoft.html" title="microsoft">
+			    <span>microsoft</span><span>: <span class="td-ref">Connector</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Microsoft 365 and Azure.</p>
 </div></div></div>
     </div></div>
 </section>
@@ -8598,30 +8636,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_pcfacts" cl
   </defs>
 </svg>
 </a>
-Interfaces</h2></div><div class="namespaceSection"><div id="namespace_pccloud" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
-<div class="namespaceItemContent">
-		    <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcCloud.html" title="PcCloud">
-			    <span>PcCloud</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One cloud account, observed.</p>
-</div></div><ul class="namespaceItemContentSubItems"><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcCloud.html#property_connected">
-                  <span>connected</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Connected on this PC (its credential is in the vault).</p>
-</div></div></li><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcCloud.html#property_id">
-                  <span>id</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The provider's id.</p>
-</div></div></li><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcCloud.html#property_logo">
-                  <span>logo</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its logo (Simple Icons slug), or &quot;&quot;.</p>
-</div></div></li><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcCloud.html#property_observed">
-                  <span>observed</span><span>: <span class="td-ref">CloudObserved</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The last observation, when there is one.</p>
-</div></div></li><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcCloud.html#property_results">
-                  <span>results</span><span>: <span class="td-ref">PolicyResult</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its posture policies.</p>
-</div></div></li><li>
-                <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcCloud.html#property_title">
-                  <span>title</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its name for people.</p>
-</div></div></li></ul></div>
-    </div><div id="namespace_pccommit" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+Interfaces</h2></div><div class="namespaceSection"><div id="namespace_pccommit" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcCommit.html" title="PcCommit">
 			    <span>PcCommit</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One commit of the fleet repository.</p>
@@ -8641,6 +8656,29 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_pccloud" c
                 <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcCommit.html#property_subject">
                   <span>subject</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Subject.</p>
 </div></div></li></ul></div>
+    </div><div id="namespace_pcconnector" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcConnector.html" title="PcConnector">
+			    <span>PcConnector</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One cloud account, observed.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcConnector.html#property_connected">
+                  <span>connected</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Connected on this PC (its credential is in the vault).</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcConnector.html#property_id">
+                  <span>id</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The provider's id.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcConnector.html#property_logo">
+                  <span>logo</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its logo (Simple Icons slug), or &quot;&quot;.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcConnector.html#property_observed">
+                  <span>observed</span><span>: <span class="td-ref">Observation</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The last observation, when there is one.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcConnector.html#property_results">
+                  <span>results</span><span>: <span class="td-ref">PolicyResult</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its posture policies.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcConnector.html#property_title">
+                  <span>title</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its name for people.</p>
+</div></div></li></ul></div>
     </div><div id="namespace_pcfacts-1" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcFacts.html" title="PcFacts">
@@ -8650,7 +8688,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_pccloud" c
                   <span>adopted</span><span>: <span class="td-ref">Array</span>&lt;<div class="ml-indent"><div>{ machine<span>: <span class="td-ref">AdoptedDef</span></span>; observed<span class="td-op">?</span><span>: <span class="td-ref">Observed</span></span>; results<span>: <span class="td-ref">PolicyResult</span>[]</span>;  }</div></div>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Adopted machines with their observations and policies.</p>
 </div></div></li><li>
                 <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcFacts.html#property_clouds">
-                  <span>clouds</span><span>: <span class="td-ref">PcCloud</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Every cloud provider.</p>
+                  <span>clouds</span><span>: <span class="td-ref">PcConnector</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Every cloud provider.</p>
 </div></div></li><li>
                 <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcFacts.html#property_devices">
                   <span>devices</span><span>: <span class="td-ref">Array</span>&lt;<div class="ml-indent"><div>{ device<span>: <span class="td-kw">import</span>(<span class="td-str">"../device/device.ts"</span>)<span>.DeviceDef</span></span>; observed<span class="td-op">?</span><span>: <span class="td-kw">import</span>(<span class="td-str">"../device/device.ts"</span>)<span>.DeviceObserved</span></span>; results<span>: <span class="td-ref">PolicyResult</span>[]</span>;  }</div></div>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Devices read over SNMPv3, with their policies.</p>
@@ -8965,7 +9003,7 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_addpage" cl
     </div><div id="namespace_addstep" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;stolos-pages.ts&#x2F;~&#x2F;addStep.html" title="addStep">
-			    <span>addStep</span><span>(<span><span>o<span>: { what<span>: <span class="td-kw">string</span></span>; name<span>: <span class="td-kw">string</span></span>; lines<span class="td-op">?</span><span>: { posix<span>: <span class="td-kw">string</span></span>; windows<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span>; clouds<span>: <span class="td-ref">PcCloud</span>[]</span>; recipes<span>: <span class="td-ref">Record</span>&lt;<div class="ml-indent"><div><span class="td-kw">string</span>,</div><div>{ open<span class="td-op">?</span><span>: { href<span>: <span class="td-kw">string</span></span>; label<span>: <span class="td-kw">string</span></span>;  }</span>; shell<span class="td-op">?</span><span>: { where<span>: <span class="td-kw">string</span></span>; href<span>: <span class="td-kw">string</span></span>; command<span>: <span class="td-kw">string</span></span>;  }</span>;  }</div></div>&gt;</span>; snmpHelp<span>: <span class="td-kw">string</span>[]</span>;  }</span></span></span>)<span>: <span class="td-ref">Html</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Step two: the line to run, and the box for the check-in code.</p>
+			    <span>addStep</span><span>(<span><span>o<span>: { what<span>: <span class="td-kw">string</span></span>; name<span>: <span class="td-kw">string</span></span>; lines<span class="td-op">?</span><span>: { posix<span>: <span class="td-kw">string</span></span>; windows<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span>; clouds<span>: <span class="td-ref">PcConnector</span>[]</span>; recipes<span>: <span class="td-ref">Record</span>&lt;<div class="ml-indent"><div><span class="td-kw">string</span>,</div><div>{ open<span class="td-op">?</span><span>: { href<span>: <span class="td-kw">string</span></span>; label<span>: <span class="td-kw">string</span></span>;  }</span>; shell<span class="td-op">?</span><span>: { where<span>: <span class="td-kw">string</span></span>; href<span>: <span class="td-kw">string</span></span>; command<span>: <span class="td-kw">string</span></span>;  }</span>;  }</div></div>&gt;</span>; snmpHelp<span>: <span class="td-kw">string</span>[]</span>;  }</span></span></span>)<span>: <span class="td-ref">Html</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Step two: the line to run, and the box for the check-in code.</p>
 </div></div></div>
     </div><div id="namespace_ago" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -8987,10 +9025,10 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_addpage" cl
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;stolos-pages.ts&#x2F;~&#x2F;changesPage.html" title="changesPage">
 			    <span>changesPage</span><span>(<div class="ml-4"><div><span>f<span>: <span class="td-ref">PcFacts</span></span></span>,</div><div><span>now<span class="td-op">?</span></span></div></div>)<span>: <span class="td-ref">Html</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The changes waiting, and the history.</p>
 </div></div></div>
-    </div><div id="namespace_cloudspage" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+    </div><div id="namespace_connectorspage" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
-		    <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;stolos-pages.ts&#x2F;~&#x2F;cloudsPage.html" title="cloudsPage">
-			    <span>cloudsPage</span><span>(<div class="ml-4"><div><span>f<span>: <span class="td-ref">PcFacts</span></span></span>,</div><div><span>now<span class="td-op">?</span></span></div></div>)<span>: <span class="td-ref">Html</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The clouds.</p>
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;stolos-pages.ts&#x2F;~&#x2F;connectorsPage.html" title="connectorsPage">
+			    <span>connectorsPage</span><span>(<div class="ml-4"><div><span>f<span>: <span class="td-ref">PcFacts</span></span></span>,</div><div><span>now<span class="td-op">?</span></span></div></div>)<span>: <span class="td-ref">Html</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The clouds.</p>
 </div></div></div>
     </div><div id="namespace_evidence-1" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -27378,7 +27416,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_tag" class=
     </div><div id="namespace_version" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;version.ts&#x2F;~&#x2F;VERSION.html" title="VERSION">
-			    <span>VERSION</span><span>: <span class="td-str">"0.90.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
+			    <span>VERSION</span><span>: <span class="td-str">"0.91.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
 from GitHub (<code>@stolos/</code> → raw.githubusercontent.com/.../v&lt;VERSION&gt;/src/), so
 every push to main raises it and the release workflow tags that commit
 v&lt;VERSION&gt;. <code>deno task version bump</code> raises the minor number (0.1.0, 0.2.0,
@@ -28683,7 +28721,7 @@ never written in a host file.</p>
 Variables</h2></div><div class="namespaceSection"><div id="namespace_version-1" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;version.ts&#x2F;~&#x2F;VERSION.html" title="VERSION">
-			    <span>VERSION</span><span>: <span class="td-str">"0.90.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
+			    <span>VERSION</span><span>: <span class="td-str">"0.91.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
 from GitHub (<code>@stolos/</code> → raw.githubusercontent.com/.../v&lt;VERSION&gt;/src/), so
 every push to main raises it and the release workflow tags that commit
 v&lt;VERSION&gt;. <code>deno task version bump</code> raises the minor number (0.1.0, 0.2.0,
