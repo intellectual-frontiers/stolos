@@ -710,6 +710,19 @@ export const COMMANDS: Command[] = [
     },
   },
   {
+    name: "discover",
+    summary:
+      "Machines seen on this PC's network or in the fleet's clouds, not yet managed or adopted",
+    description:
+      `Spec 067. Reads this PC's neighbor table (machines it has talked to; nothing is scanned) and the cloud observations in Git (servers and instances no fleet machine owns), and lists what the fleet does not know, by MAC, address, or name. Records nothing. Adopt the ones you are responsible for with host adopt.`,
+    tier: "read",
+    args: [],
+    async run(_a, ctx) {
+      const { discover } = await import("../adopt/commands.ts");
+      return await discover(ctx.json);
+    },
+  },
+  {
     name: "cloud connect",
     summary: "Connect a cloud account read-only: Cloudflare, Microsoft 365 and Azure, AWS, Hetzner",
     description:
@@ -2573,6 +2586,7 @@ On a server, workstations reach it as ops over SSH (spec 030): ops' authorized_k
  */
 /** Commands run with `stolos` on your PC (the rest run with `archon` on each machine). */
 const PC_COMMANDS = new Set([
+  "discover",
   "cloud connect",
   "cloud observe",
   "cloud check",

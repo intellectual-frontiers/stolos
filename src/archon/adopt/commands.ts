@@ -330,3 +330,58 @@ export async function fleetQuery(sql: string, json = false): Promise<number> {
   );
   return answers.some((a) => a.error) ? 1 : 0;
 }
+
+/** `stolos discover`: machines seen on this PC's network or in the clouds, not yet in the fleet. */
+export async function discover(json = false): Promise<number> {
+  const { neighbors, unknownMachines } = await import("./discover.ts");
+  type D = import("./discover.ts").Discovered;
+  const { loadHosts } = await import("../model/load.ts");
+  const { loadRegistration } = await import("../fleet/registration.ts");
+  const { loadClouds } = await import("../cloud/commands.ts");
+  const hosts = await loadHosts();
+  const adopted = await loadAdopted();
+  const macs: string[] = [];
+  for (const h of hosts) {
+    if (h.mac) macs.push(h.mac);
+    const r = await loadRegistration(h.name);
+    if (r?.mac) macs.push(r.mac);
+  }
+  const seen: D[] = (await neighbors()).map((n) => ({
+    source: "lan",
+    address: n.address,
+    id: n.mac,
+  }));
+  for (const o of await loadClouds()) {
+    for (const a of o.assets) {
+      if (!["server", "ec2-instance"].includes(a.kind) || a.fleetMachine) continue;
+      const address = String(a.facts?.ipv4 ?? a.facts?.publicIp ?? "");
+      seen.push({ source: o.provider, address, id: a.id, name: a.name });
+    }
+  }
+  const found = unknownMachines(seen, {
+    macs,
+    addresses: adopted.map((a) => a.machine.ssh.address),
+    names: [...hosts.map((h) => h.name), ...adopted.map((a) => a.machine.name)],
+  });
+  if (json) {
+    console.log(JSON.stringify(found, null, 2));
+    return 0;
+  }
+  const { table } = await import("../state/query.ts");
+  if (found.length) {
+    console.log(
+      table(
+        found.map((d) => ({ source: d.source, address: d.address, id: d.id, name: d.name ?? "" })),
+      ),
+    );
+  }
+  ui.phase("Discover").done(
+    `${found.length} machine(s) seen that the fleet does not know (from this PC's neighbor table and the cloud observations; nothing was scanned)`,
+  );
+  if (found.length) {
+    ui.next.push(
+      "adopt one you are responsible for: deno task stolos host adopt <name> --ssh <user>@<address>",
+    );
+  }
+  return 0;
+}

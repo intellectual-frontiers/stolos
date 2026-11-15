@@ -60,3 +60,18 @@ should answer for every machine, while managing only the ones it installed.
 
 - **SC-003** `tests/cloud067_test.ts`: each provider against a fake API (inventory, gaps, posture),
   AWS's published SigV4 example, and only GET requests (Microsoft's token POST aside).
+
+## Discovered
+
+- **FR-012** `stolos discover` lists machines the fleet does not know, from what this PC already
+  has: its neighbor table (`ip neigh`, `arp -an`, `arp -a`) and the cloud observations in Git
+  (servers and instances no fleet machine owns). It scans nothing and records nothing; each one can
+  be adopted with `host adopt`.
+- **SC-004** `tests/adopt067_test.ts`: the three neighbor-table formats (macOS's unpadded octets
+  included) and the match against the fleet by MAC, address, and name.
+
+## Later
+
+Approved actions on adopted machines (a named, signed change the owner allows, such as installing
+osquery), user-space dotfiles and tools for adopted workstations, cloud costs, and daily cloud
+change summaries.

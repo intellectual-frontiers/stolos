@@ -24,6 +24,7 @@ import "../mod.ts";
 import "../stolos/main.ts";
 import "./adopt/adopt.ts";
 import "./adopt/commands.ts";
+import "./adopt/discover.ts";
 import "./adopt/policy.ts";
 import "./adopt/probe.ts";
 import "./apply/apply.ts";

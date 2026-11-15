@@ -182,3 +182,31 @@ Deno.test("067: fleet query refuses what the servers refuse", () => {
   assert(queryRefusal("select 1; select 2"));
   assert(queryRefusal("drop table users"));
 });
+
+Deno.test("067: discover reads Linux, macOS, and Windows neighbor tables; knows the fleet's", async () => {
+  const { parseNeighbors, unknownMachines } = await import("../src/archon/adopt/discover.ts");
+  const linux =
+    "192.168.1.1 dev eth0 lladdr aa:bb:cc:00:00:01 REACHABLE\n192.168.1.9 dev eth0  FAILED\n";
+  const mac =
+    "? (192.168.1.20) at aa:bb:cc:0:0:2 on en0 ifscope [ethernet]\n? (192.168.1.21) at aa:bb:cc:00:00:02 on en0\n? (192.168.1.255) at ff:ff:ff:ff:ff:ff on en0\n";
+  const win =
+    "  192.168.1.30          aa-bb-cc-00-00-03     dynamic\n  224.0.0.22            01-00-5e-00-00-16     static\n";
+  assertEquals(parseNeighbors(linux), [{ address: "192.168.1.1", mac: "aa:bb:cc:00:00:01" }]);
+  assertEquals(parseNeighbors(mac), [
+    { address: "192.168.1.20", mac: "aa:bb:cc:00:00:02" },
+    { address: "192.168.1.21", mac: "aa:bb:cc:00:00:02" },
+  ]);
+  assertEquals(parseNeighbors(win), [{ address: "192.168.1.30", mac: "aa:bb:cc:00:00:03" }]);
+  const seen = [
+    { source: "lan", address: "192.168.1.1", id: "aa:bb:cc:00:00:01" },
+    { source: "lan", address: "192.168.1.30", id: "AA:BB:CC:00:00:03" },
+    { source: "hetzner", address: "198.51.100.2", id: "2", name: "scratch" },
+    { source: "hetzner", address: "198.51.100.1", id: "1", name: "server1" },
+  ];
+  const left = unknownMachines(seen, {
+    macs: ["aa:bb:cc:00:00:03"],
+    addresses: ["192.168.1.1"],
+    names: ["server1"],
+  });
+  assertEquals(left.map((d) => d.id), ["2"]);
+});

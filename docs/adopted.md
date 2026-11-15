@@ -39,6 +39,12 @@ nothing.
 `fleet query` needs osquery on the machine (`brew install --cask osquery` on a Mac); the policies do
 not.
 
+## Discovered machines
+
+`deno task stolos discover` lists the machines this PC has seen on its network (its neighbor table)
+and the cloud servers no fleet machine owns. It scans nothing and records nothing; adopt the ones
+you are responsible for.
+
 ## The policies
 
 Each policy names the Secure Controls Framework (SCF) controls it gives evidence for: the disk is
