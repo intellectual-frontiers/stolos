@@ -156,6 +156,7 @@ export const hetzner: CloudProvider = {
         scf: ["BCD-11"],
         fact: "serversWithBackups",
         want: every,
+        show: (v) => `${v} of ${o.posture.servers} server(s)`,
         fix: `${fix} > Backups > Enable (or record that its data is backed up another way)`,
         warnOnly: true,
       }),
@@ -165,6 +166,7 @@ export const hetzner: CloudProvider = {
         scf: ["NET-01"],
         fact: "serversWithFirewall",
         want: every,
+        show: (v) => `${v} of ${o.posture.servers} server(s)`,
         fix: `${fix} > Firewalls > Apply firewall (the cloud's firewall is this fleet's router)`,
       }),
       check(o, {
@@ -173,6 +175,7 @@ export const hetzner: CloudProvider = {
         scf: ["BCD-01"],
         fact: "serversDeleteProtected",
         want: every,
+        show: (v) => `${v} of ${o.posture.servers} server(s)`,
         fix: `${fix} > the three dots > Change protection > Protect against deletion`,
         warnOnly: true,
       }),

@@ -82,6 +82,11 @@ jobs:
           deno run -A tests/console/serve.ts 8099 &
           for i in $(seq 1 60); do curl -sf http://127.0.0.1:8099/healthz && break; sleep 1; done
           NODE_PATH=/tmp/pw/node_modules node tests/console/browser.cjs 8099
+      - name: The Stolos Console in a browser (spec 066)
+        run: |
+          deno run -A tests/console/serve-stolos.ts 8098 &
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:8098/healthz && break; sleep 1; done
+          NODE_PATH=/tmp/pw/node_modules node tests/console/stolos-browser.cjs 8098
 
   tag:
     needs: [check, bootstrap-windows, console-browser]

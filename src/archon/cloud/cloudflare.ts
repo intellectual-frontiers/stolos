@@ -231,6 +231,7 @@ export const cloudflare: CloudProvider = {
         scf: ["CRY-03", "NET-12"],
         fact: "zonesStrictTls",
         want: every,
+        show: (v) => `${v} of ${o.posture.zones} zone(s)`,
         fix: `${zoneFix} > Overview > Full (strict)`,
       }),
       check(o, {
@@ -239,6 +240,7 @@ export const cloudflare: CloudProvider = {
         scf: ["CRY-03"],
         fact: "zonesAlwaysHttps",
         want: every,
+        show: (v) => `${v} of ${o.posture.zones} zone(s)`,
         fix: `${zoneFix} > Edge Certificates > Always Use HTTPS`,
       }),
       check(o, {
@@ -247,6 +249,7 @@ export const cloudflare: CloudProvider = {
         scf: ["CRY-03"],
         fact: "zonesMinTls12",
         want: every,
+        show: (v) => `${v} of ${o.posture.zones} zone(s)`,
         fix: `${zoneFix} > Edge Certificates > Minimum TLS Version: 1.2`,
       }),
       check(o, {
@@ -255,6 +258,7 @@ export const cloudflare: CloudProvider = {
         scf: ["NET-10"],
         fact: "zonesDnssec",
         want: every,
+        show: (v) => `${v} of ${o.posture.zones} zone(s)`,
         fix:
           "dash.cloudflare.com > the zone > DNS > Settings > Enable DNSSEC (then add the DS record at the registrar)",
         warnOnly: true,

@@ -127,6 +127,16 @@ function field(a: ArgSpec, value?: string): Html {
   `;
 }
 
+/** How a console's forms differ (the Stolos Console: the person at the PC may run everything). */
+export interface FormOptions {
+  /** Whether the person may run a tier (default: the Archon Console's roles). */
+  may?: (t: Tier) => boolean;
+  /** Ask for the password again before destroying data (default: yes). */
+  password?: boolean;
+  /** The line beside the Run button. */
+  footnote?: string;
+}
+
 /**
  * A command's form: what it does, its fields, and the run button. People who
  * may not run it see why; destroying data asks for the password again.
@@ -137,9 +147,10 @@ export function commandForm(
   role: Role,
   post: string,
   values: Record<string, string> = {},
+  o: FormOptions = {},
 ): Html {
   const tier = cmd.tier;
-  const allowed = mayRun(role, tier);
+  const allowed = (o.may ?? ((t: Tier) => mayRun(role, t)))(tier);
   const destroy = tier === "destructive" || cmd.args.some((a) => a.name === "confirm-destroy");
   return html`<form class="card stack" id="cmdform" data-on:submit="@post('${post}', {contentType: 'form'})">
   <input type="hidden" name="command" value="${cmd.name}">
@@ -147,7 +158,7 @@ export function commandForm(
   <p class="sub" style="margin:0">${cmd.summary}</p>
   ${cmd.args.map((a) => field(a, values[a.name]))}
   ${
-    destroy && allowed
+    destroy && allowed && o.password !== false
       ? html`
         <label
           class="field"><span>Your password, again <span class="sub">(only to destroy data)</span></span><input type="password" name="password" autocomplete="current-password"></label>
@@ -162,9 +173,12 @@ export function commandForm(
       }" type="submit">Run</button>`
       : html`<span class="notice bad">Only operators (members of sudo or archon-ops) may run this.</span>`
   }
-    <span class="sub">Runs as you; recorded in Activity${
-    tier === "read" ? "" : ", and mailed to the fleet's mailbox"
-  }.</span>
+    <span class="sub">${
+    o.footnote ??
+      `Runs as you; recorded in Activity${
+        tier === "read" ? "" : ", and mailed to the fleet's mailbox"
+      }.`
+  }</span>
   </div>
   <details><summary class="sub">About this command</summary><div class="sub" style="white-space:pre-wrap">${cmd.description}</div></details>
 </form>`;

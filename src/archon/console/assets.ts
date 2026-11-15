@@ -120,11 +120,20 @@ tr:last-child td { border-bottom: 0; }
 .cmdlist a .pill { font-size: 11px; padding: 1px 7px; }
 .cmdlist .sub { font-size: 12px; line-height: 1.35; }
 .cmdlist input[type=search] { width: 100%; margin-bottom: 6px; }
+.nowrap { white-space: nowrap; }
+.steps { display: flex; flex-wrap: wrap; gap: 4px; list-style: none; padding: 0; margin: 10px 0; counter-reset: step; }
+.steps li { counter-increment: step; font-size: 12px; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+.steps li::before { content: counter(step) ". "; }
+.steps li.ok { background: color-mix(in srgb, var(--ok) 14%, transparent); border-color: transparent; color: var(--ink); }
+.steps li.now { border-color: var(--warn); color: var(--ink); font-weight: 600; }
+.steps li.bad { background: color-mix(in srgb, var(--bad) 16%, transparent); border-color: var(--bad); color: var(--ink); }
+.me form .btn { white-space: nowrap; }
+@media (max-width: 640px) { .me .who { display: none; } .fleetmark span { display: none; } }
 .cmdlist a:hover, .cmdlist a[aria-current="true"] { background: var(--accent-soft); }
 .cmdlist .sub { grid-column: 1 / -1; }
 label.field { display: grid; gap: 4px; } label.field span { font-size: 12.5px; font-weight: 500; }
 label.check { display: flex; gap: 8px; align-items: center; }
-input[type=text], input[type=password], select { font: inherit; width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--panel); color: var(--ink); }
+input[type=text], input[type=password], input[type=search], select { font: inherit; width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--panel); color: var(--ink); }
 .term { background: #0E1120; color: #D8DCEE; border-radius: 10px; padding: 14px 16px; font-family: var(--term); font-size: 13px; line-height: 1.45;
   height: max(420px, 62vh); overflow: auto; overscroll-behavior: contain; white-space: pre-wrap; word-break: break-word; resize: vertical; }
 .term > div { min-height: 1.45em; }

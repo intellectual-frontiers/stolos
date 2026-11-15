@@ -337,6 +337,7 @@ export const aws: CloudProvider = {
         title: "Every EC2 instance requires IMDSv2",
         scf: ["CFG-02"],
         fact: "ec2WithImdsV1",
+        show: (v) => `${v} of ${o.posture.ec2Instances} instance(s) allow IMDSv1`,
         want: (v) => v === 0,
         fix:
           "EC2 > the instance > Actions > Instance settings > Modify instance metadata options > IMDSv2: Required",

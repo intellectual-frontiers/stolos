@@ -17,7 +17,7 @@ import { ARCHON_LOGO, STOLOS_LOGO } from "./assets.ts";
 import { logo, logoFor } from "./logos.ts";
 import type { ServicesFacts, UnitRow } from "./machine.ts";
 import type { Session } from "./auth.ts";
-import { commandForm, tierPill } from "./forms.ts";
+import { commandForm, type FormOptions, tierPill } from "./forms.ts";
 import { type Html, html } from "./html.ts";
 import { diagram, type NavItem } from "./layout.ts";
 
@@ -485,7 +485,47 @@ export function actionsPage(
   s: Session,
   d: WelcomeData,
 ): Html {
-  const mine = cmds.filter((c) => groupOf(c.name).id === group.id);
+  return actionsView({
+    group,
+    groupOf,
+    cmds,
+    selected,
+    role: s.role,
+    diagram: group.diagram(d),
+  });
+}
+
+/** What an Actions page shows (either console). */
+export interface ActionsView {
+  /** The group shown. */
+  group: { id: string; label: string; intro: string; caption: string };
+  /** Which group a command is in. */
+  groupOf(name: string): { id: string; label: string };
+  /** Every command offered (the search covers them all). */
+  cmds: Command[];
+  /** The command whose form is shown. */
+  selected: Command;
+  /** The person's role. */
+  role: Session["role"];
+  /** The group's diagram (Mermaid). */
+  diagram: string;
+  /** A note above the form (the Stolos Console: passphrases go in the terminal). */
+  note?: Html;
+  /** How the forms differ in this console. */
+  form?: FormOptions;
+  /** Values to fill in (from the address: ?name=...). */
+  values?: Record<string, string>;
+}
+
+/** An Actions page: the group's commands on the left, the form and its live output on the right. */
+export function actionsView(v: ActionsView): Html {
+  const { group, cmds, selected } = v;
+  const text = (c: Command) =>
+    `${c.name} ${c.summary} ${v.groupOf(c.name).label}`.toLowerCase().replace(
+      /[^a-z0-9 .,:/-]/g,
+      " ",
+    );
+  const mine = cmds.filter((c) => v.groupOf(c.name).id === group.id);
   return html`
     <div class="pagehead">
       <div>
@@ -494,7 +534,7 @@ export function actionsPage(
         <p>${group.intro}</p>
       </div>
     </div>
-    ${diagram(group.diagram(d), group.caption)}
+    ${diagram(v.diagram, group.caption)}
     <div class="grid actions" style="margin-top:14px">
       <nav class="card cmdlist" aria-label="${group.label} commands" data-signals="{q: ''}">
         <input type="search" data-bind:q placeholder="Find any command" aria-label="Find any command" autocomplete="off">
@@ -509,16 +549,18 @@ export function actionsPage(
         )}${cmds.map((c) =>
           html`
             <a style="display:none"
-              data-show="$q.trim() !== '' && '${searchText(c)}'.includes($q.trim().toLowerCase())"
-              href="/actions/${groupOf(c.name).id}?cmd=${encodeURIComponent(
+              data-show="$q.trim() !== '' && '${text(c)}'.includes($q.trim().toLowerCase())"
+              href="/actions/${v.groupOf(c.name).id}?cmd=${encodeURIComponent(
                 c.name,
-              )}"><span class="mono">${c.name}</span>${tierPill(c.tier)}<span class="sub">${groupOf(
-                c.name,
-              ).label} · ${c.summary}</span></a>
+              )}"><span class="mono">${c.name}</span>${tierPill(c.tier)}<span class="sub">${v
+                .groupOf(
+                  c.name,
+                ).label} · ${c.summary}</span></a>
           `
         )}</nav>
       <div class="stack" style="min-width:0">
-        ${commandForm(selected, s.role, "/actions/run")}
+        ${v.note ?? ""}
+        ${commandForm(selected, v.role, "/actions/run", v.values ?? {}, v.form)}
         <div class="card"><div class="row spread" style="margin-bottom:8px"><h2>Output</h2><span class="sub" id="runstate">Nothing running</span></div>
           <div class="term" id="output" aria-live="polite"><div class="dim">Run the command to see its output here, live.</div></div></div>
       </div>

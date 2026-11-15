@@ -265,6 +265,8 @@ export const microsoft: CloudProvider = {
         title: "Every member has registered MFA",
         scf: ["IAC-06"],
         fact: "membersWithoutMfa",
+        show: (v) =>
+          `${v} member(s) without MFA${v ? `: ${o.posture.membersWithoutMfaNames ?? ""}` : ""}`,
         want: (v) => v === 0,
         fix: `ask each person in membersWithoutMfaNames to sign in at aka.ms/mysecurityinfo: ${
           o.posture.membersWithoutMfaNames ?? ""
@@ -275,6 +277,7 @@ export const microsoft: CloudProvider = {
         title: "Two to four Global Administrators",
         scf: ["IAC-21"],
         fact: "globalAdmins",
+        show: (v) => `${v}: ${o.posture.globalAdminNames ?? "?"}`,
         want: (v) => typeof v === "number" && v >= 2 && v <= 4,
         fix: `entra.microsoft.com > Roles and administrators > Global Administrator (now: ${
           o.posture.globalAdminNames ?? "?"

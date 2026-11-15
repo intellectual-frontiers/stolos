@@ -1,0 +1,493 @@
+/**
+ * Spec 066: the Stolos Console's web server, on this PC only.
+ *
+ * - It listens on 127.0.0.1 and answers only requests whose Host is
+ *   127.0.0.1 or localhost on its port (a web page elsewhere cannot reach it
+ *   through DNS rebinding).
+ * - Sign-in is a one-time launch link the terminal prints (`/launch?t=...`):
+ *   it works once, for two minutes, and becomes a session cookie (HttpOnly,
+ *   SameSite=Strict). No password and no new key: whoever can read your
+ *   terminal is you.
+ * - POSTs come from this page only (Origin, and Datastar's own header).
+ * - Commands run as `deno task stolos ...` in the fleet repository, one at a
+ *   time, with this terminal as their input: a passphrase or token is typed
+ *   there, never in the browser.
+ *
+ * @module
+ */
+
+import type { Command } from "../core/registry-types.ts";
+import { COMMANDS, offeredOn } from "../commands/registry.ts";
+import { cookieOf, IDLE_MS, type Session, type Sessions } from "./auth.ts";
+import { argvFor, NOT_IN_CONSOLE } from "./forms.ts";
+import { type Html, html, raw } from "./html.ts";
+import { bare, page } from "./layout.ts";
+import { actionsView, type ActivityEntry, activityPage } from "./pages.ts";
+import type { PcFacts } from "./pc.ts";
+import { installCards, parseBootLog } from "./boot-timeline.ts";
+import { htmlResponse, lineClass, patch, redirect, sameOrigin, staticFile } from "./server.ts";
+import {
+  answerTable,
+  bootPage,
+  changesPage,
+  cloudsPage,
+  evidence,
+  launchPage,
+  machinePage,
+  machinesCsv,
+  machinesPage,
+  queryPage,
+  STOLOS_GROUPS,
+  STOLOS_NAV,
+  stolosGroupOf,
+  stolosGuidePage,
+  stolosHowPage,
+  stolosOverview,
+  terminalNote,
+  trustPage,
+} from "./stolos-pages.ts";
+
+/** The Stolos Console's cookie. */
+export const STOLOS_COOKIE = "stolos_session";
+
+/** How long a launch link works. */
+export const LAUNCH_MS = 120_000;
+
+/** Commands the PC console offers although agents may not (a person is at this PC). */
+export const PERSON_ONLY: Set<string> = new Set([
+  "apply",
+  "fleet upgrade",
+  "fleet trust",
+  "decide",
+  "update",
+  "vault status",
+  "vault list",
+  "vault backup",
+  "keys",
+  "keys check-recovery",
+]);
+
+/** The commands the Stolos Console offers. Keys that change, restores, and the console itself stay in the terminal. */
+export function stolosCommands(): Command[] {
+  return COMMANDS.filter((c) =>
+    offeredOn(c, "pc") && !NOT_IN_CONSOLE.has(c.name) && c.name !== "console" &&
+    (!c.noMcp || PERSON_ONLY.has(c.name))
+  );
+}
+
+/** One-time launch links. */
+export class Launch {
+  #tokens = new Map<string, number>();
+  #now: () => number;
+  /** A clock (tests pass their own). */
+  constructor(now: () => number = Date.now) {
+    this.#now = now;
+  }
+  /** A new token. */
+  issue(): string {
+    const b = crypto.getRandomValues(new Uint8Array(32));
+    const t = [...b].map((x) => x.toString(16).padStart(2, "0")).join("");
+    this.#tokens.set(t, this.#now());
+    return t;
+  }
+  /** Whether a token is good: once, within LAUNCH_MS. */
+  redeem(t: string | null): boolean {
+    if (!t) return false;
+    const at = this.#tokens.get(t);
+    this.#tokens.delete(t);
+    return at !== undefined && this.#now() - at <= LAUNCH_MS;
+  }
+}
+
+/** A session cookie for the PC (no Secure: it is plain HTTP on the loopback, which browsers treat as secure). */
+export function stolosCookie(s: Session | undefined): string {
+  return s
+    ? `${STOLOS_COOKIE}=${s.id}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${IDLE_MS / 1000}`
+    : `${STOLOS_COOKIE}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0`;
+}
+
+/** Runs `deno task stolos <argv>`: each output line, then the exit code. */
+export type PcRunner = (argv: string[], each: (line: string) => void) => Promise<number>;
+
+/** What the Stolos Console needs: real on the PC, fakes in tests. */
+export interface StolosDeps {
+  /** The port it listens on (for the Host check). */
+  port: number;
+  /** The person at this PC. */
+  person: { user: string; name: string; github?: string };
+  /** The launch links. */
+  launch: Launch;
+  /** The sessions. */
+  sessions: Sessions;
+  /** The fleet's facts. */
+  facts(): Promise<PcFacts>;
+  /** Runs a stolos command. */
+  runner: PcRunner;
+  /** The activity record. */
+  activity: { add(e: ActivityEntry): Promise<void>; recent(n: number): Promise<ActivityEntry[]> };
+  /** The guides offered (docs/<name>.md). */
+  guides: Array<{ name: string; title: string; why: string }>;
+  /** A guide's page. */
+  guideDoc(name: string): Promise<string | undefined>;
+  /** The boot server's log (boot.log), or "" when it has none. */
+  bootLog(): Promise<string>;
+  /** Where Mermaid and the fonts are cached. */
+  cacheDir: string;
+}
+
+/** boot.log, followed: the cards and new lines as they come (Datastar patches), until the page goes. */
+function bootStream(deps: StolosDeps, signal: AbortSignal): Response {
+  const enc = new TextEncoder();
+  const stream = new ReadableStream<Uint8Array>({
+    async start(ctl) {
+      let seen = (await deps.bootLog()).length;
+      for (let i = 0; i < 3600 && !signal.aborted; i++) {
+        await new Promise((r) => setTimeout(r, 1000));
+        const log = await deps.bootLog();
+        if (log.length === seen) continue;
+        const fresh = log.length > seen ? log.slice(seen) : log;
+        seen = log.length;
+        try {
+          ctl.enqueue(enc.encode(patch(installCards(parseBootLog(log)))));
+          for (const l of fresh.split("\n").filter(Boolean)) {
+            ctl.enqueue(
+              enc.encode(
+                patch(html`<div class="${lineClass(l)}">${l}</div>`, {
+                  selector: "#bootlog",
+                  mode: "append",
+                }),
+              ),
+            );
+          }
+        } catch {
+          break; // the page went away
+        }
+      }
+      try {
+        ctl.close();
+      } catch { /* already closed */ }
+    },
+  });
+  return new Response(stream, {
+    headers: { "content-type": "text/event-stream", "cache-control": "no-store" },
+  });
+}
+
+/** The Stolos Console's request handler. */
+export function stolosHandler(
+  deps: StolosDeps,
+): (req: Request, info?: Deno.ServeHandlerInfo) => Promise<Response> {
+  const offered = stolosCommands();
+  const byName = new Map(offered.map((c) => [c.name, c]));
+  const hosts = new Set([`127.0.0.1:${deps.port}`, `localhost:${deps.port}`]);
+  let busy = false;
+
+  const frame = async (s: Session, title: string, current: string, body: Html, f?: PcFacts) => {
+    const facts = f ?? (await deps.facts());
+    return htmlResponse(page({
+      product: "stolos",
+      title,
+      subtitle: `this PC · ${deps.person.user}`,
+      fleet: { id: facts.fleet.title, repo: facts.fleet.repo },
+      user: {
+        name: s.name,
+        user: deps.person.github ? `${s.user} · GitHub ${deps.person.github}` : s.user,
+        role: "fleet operator",
+      },
+      nav: STOLOS_NAV,
+      current,
+    }, body));
+  };
+
+  const run = async (req: Request, s: Session): Promise<Response> => {
+    const form = Object.fromEntries(
+      [...(await req.formData()).entries()].map(([k, v]) => [k, String(v)]),
+    );
+    const cmd = byName.get(form.command ?? "");
+    const enc = new TextEncoder();
+    const stream = new ReadableStream<Uint8Array>({
+      async start(ctl) {
+        const send = (x: string) => ctl.enqueue(enc.encode(x));
+        const state = (t: string) => send(patch(html`<span class="sub" id="runstate">${t}</span>`));
+        const out = (l: string, cls = lineClass(l)) =>
+          send(
+            patch(html`<div class="${cls}">${l || " "}</div>`, {
+              selector: "#output",
+              mode: "append",
+            }),
+          );
+        const refuse = (why: string) => {
+          send(patch(html`
+            <div class="term" id="output">
+              <div class="bad">${why}</div>
+            </div>
+          `));
+          state("Not run");
+          ctl.close();
+        };
+        if (!cmd) return refuse("That command is not offered here (run it in the terminal).");
+        const r = argvFor(cmd, form);
+        if ("error" in r) return refuse(r.error);
+        if (busy) {
+          return refuse("Another command is running: it may be waiting for you in the terminal.");
+        }
+        busy = true;
+        const shown = `deno task stolos ${r.argv.join(" ")}`;
+        send(patch(html`
+          <div class="term" id="output">
+            <div class="dim">$ ${shown}</div>
+          </div>
+        `));
+        state("Running ... (if it asks for a passphrase, type it in the terminal)");
+        let code = 1;
+        try {
+          code = await deps.runner(r.argv, (l) => out(l));
+        } catch (e) {
+          out((e as Error).message, "bad");
+        } finally {
+          busy = false;
+        }
+        state(code === 0 ? "Done" : `Failed (exit ${code})`);
+        await deps.activity.add({
+          at: new Date().toISOString(),
+          user: s.user,
+          from: "this PC",
+          kind: "run",
+          detail: shown,
+          code,
+        });
+        ctl.close();
+      },
+    });
+    return new Response(stream, {
+      headers: { "content-type": "text/event-stream", "cache-control": "no-store" },
+    });
+  };
+
+  const query = async (req: Request, s: Session): Promise<Response> => {
+    const sql = String((await req.formData()).get("sql") ?? "").trim();
+    const enc = new TextEncoder();
+    const stream = new ReadableStream<Uint8Array>({
+      async start(ctl) {
+        const send = (x: string) => ctl.enqueue(enc.encode(x));
+        const state = (t: string) => send(patch(html`<span class="sub" id="runstate">${t}</span>`));
+        if (/[\0\r\n]/.test(sql) || sql.startsWith("-") || !sql) {
+          state("Not asked: one line, one SELECT");
+          return ctl.close();
+        }
+        if (busy) {
+          state("Another command is running");
+          return ctl.close();
+        }
+        busy = true;
+        state("Asking every machine ...");
+        const lines: string[] = [];
+        let code = 1;
+        try {
+          code = await deps.runner(["fleet", "query", sql, "--json"], (l) => lines.push(l));
+        } finally {
+          busy = false;
+        }
+        const text = lines.join("\n");
+        const start = text.indexOf("[");
+        try {
+          const answers = JSON.parse(text.slice(start, text.lastIndexOf("]") + 1));
+          send(patch(answerTable(answers)));
+          state(code === 0 ? "Answered" : "Answered, with machines that did not answer");
+        } catch {
+          send(patch(html`
+            <div class="card" id="answer">
+              <div class="term">${lines.map((l) =>
+                html`<div class="${lineClass(l)}">${l}</div>`
+              )}</div>
+            </div>
+          `));
+          state("Refused or failed");
+        }
+        await deps.activity.add({
+          at: new Date().toISOString(),
+          user: s.user,
+          from: "this PC",
+          kind: "run",
+          detail: `fleet query ${sql}`,
+          code,
+        });
+        ctl.close();
+      },
+    });
+    return new Response(stream, {
+      headers: { "content-type": "text/event-stream", "cache-control": "no-store" },
+    });
+  };
+
+  return async (req) => {
+    const url = new URL(req.url);
+    const path = url.pathname;
+    if (!hosts.has(req.headers.get("host") ?? "")) {
+      return new Response("This console answers only on 127.0.0.1 and localhost.\n", {
+        status: 421,
+      });
+    }
+    try {
+      const st = await staticFile(path, deps.cacheDir);
+      if (st) return st;
+      if (path === "/launch") {
+        if (!deps.launch.redeem(url.searchParams.get("t"))) {
+          return htmlResponse(bare("Stolos Console", launchPage()), 401);
+        }
+        const s = deps.sessions.create({
+          user: deps.person.user,
+          name: deps.person.name,
+          groups: ["archon-ops"],
+        }, "this PC");
+        await deps.activity.add({
+          at: new Date().toISOString(),
+          user: s.user,
+          from: "this PC",
+          kind: "sign-in",
+          detail: "launch link",
+        });
+        return redirect("/", { "set-cookie": stolosCookie(s) });
+      }
+      const s = deps.sessions.get(cookieOf(req.headers.get("cookie"), STOLOS_COOKIE));
+      if (!s) return htmlResponse(bare("Stolos Console", launchPage()), 401);
+      if (req.method === "POST") {
+        if (!sameOrigin(req)) return new Response("cross-site request refused\n", { status: 403 });
+        if (path === "/signout") {
+          deps.sessions.end(s.id);
+          return redirect("/launch", { "set-cookie": stolosCookie(undefined) });
+        }
+        if (!req.headers.get("datastar-request")) return new Response("refused\n", { status: 403 });
+        if (path === "/actions/run") return await run(req, s);
+        if (path === "/query/run") return await query(req, s);
+        return new Response("not found\n", { status: 404 });
+      }
+      if (path === "/signout") {
+        deps.sessions.end(s.id);
+        return htmlResponse(bare("Signed out", launchPage()), 200, {
+          "set-cookie": stolosCookie(undefined),
+        });
+      }
+      if (path === "/boot/stream") return bootStream(deps, req.signal);
+      const f = await deps.facts();
+      if (path === "/") return await frame(s, "Overview", "/", stolosOverview(f), f);
+      if (path === "/machines") return await frame(s, "Machines", "/machines", machinesPage(f), f);
+      if (path.startsWith("/machines/")) {
+        const body = machinePage(f, decodeURIComponent(path.slice(10)));
+        return body
+          ? await frame(s, decodeURIComponent(path.slice(10)), "/machines", body, f)
+          : new Response("no such machine\n", { status: 404 });
+      }
+      if (path === "/export/machines.csv") {
+        return new Response(machinesCsv(f), {
+          headers: {
+            "content-type": "text/csv; charset=utf-8",
+            "content-disposition": `attachment; filename="${f.fleet.id}-machines.csv"`,
+            "cache-control": "no-store",
+          },
+        });
+      }
+      if (path === "/export/evidence.json") {
+        return new Response(JSON.stringify(evidence(f), null, 2) + "\n", {
+          headers: {
+            "content-type": "application/json",
+            "content-disposition": `attachment; filename="${f.fleet.id}-evidence.json"`,
+            "cache-control": "no-store",
+          },
+        });
+      }
+      if (path === "/boot") {
+        const log = await deps.bootLog();
+        return await frame(
+          s,
+          "Installs",
+          "/boot",
+          bootPage(
+            installCards(parseBootLog(log)),
+            log.trim().split("\n").filter(Boolean).slice(-80),
+          ),
+          f,
+        );
+      }
+      if (path === "/clouds") return await frame(s, "Clouds", "/clouds", cloudsPage(f), f);
+      if (path === "/query") {
+        return await frame(
+          s,
+          "Ask every machine",
+          "/query",
+          queryPage(url.searchParams.get("sql") ?? "select name, version from os_version"),
+          f,
+        );
+      }
+      if (path === "/changes") return await frame(s, "Changes", "/changes", changesPage(f), f);
+      if (path === "/trust") return await frame(s, "Trust", "/trust", trustPage(f), f);
+      if (path === "/how") return await frame(s, "How it works", "/how", stolosHowPage(f), f);
+      if (path === "/activity") {
+        return await frame(
+          s,
+          "Activity",
+          "/activity",
+          activityPage(await deps.activity.recent(200), "this PC"),
+          f,
+        );
+      }
+      if (path === "/actions") return redirect("/actions/fleet");
+      if (path.startsWith("/actions/")) {
+        const g = STOLOS_GROUPS.find((x) => x.id === path.slice(9));
+        if (!g) return new Response("not found\n", { status: 404 });
+        const want = url.searchParams.get("cmd") ?? g.first;
+        const selected = byName.get(want) ?? byName.get(g.first) ??
+          offered.find((c) => stolosGroupOf(c.name).id === g.id);
+        if (!selected) return new Response("nothing offered here\n", { status: 404 });
+        const values = Object.fromEntries([...url.searchParams].filter(([k]) => k !== "cmd"));
+        const body = actionsView({
+          group: g,
+          groupOf: stolosGroupOf,
+          cmds: offered,
+          selected,
+          role: "operator",
+          diagram: g.diagram(f),
+          note: terminalNote(),
+          form: {
+            may: () => true,
+            password: false,
+            footnote: "Runs here, as you, in the fleet repository; recorded in Activity.",
+          },
+          values,
+        });
+        return await frame(s, g.label, `/actions/${g.id}`, body, f);
+      }
+      if (path === "/guide") {
+        return await frame(s, "Guide", "/guide", stolosGuidePage(deps.guides), f);
+      }
+      const gm = path.match(/^\/guide\/([a-z0-9-]+)$/);
+      if (gm) {
+        const doc = await deps.guideDoc(gm[1]);
+        if (!doc) return new Response("no such guide\n", { status: 404 });
+        return await frame(
+          s,
+          "Guide",
+          "/guide",
+          html`<article class="card prose">${raw(doc)}</article>`,
+          f,
+        );
+      }
+      return new Response("not found\n", { status: 404 });
+    } catch (e) {
+      console.error(`console: ${path}: ${(e as Error).stack ?? e}`);
+      return htmlResponse(
+        bare(
+          "Error",
+          html`
+            <div class="card" style="max-width:640px;margin:10vh auto">
+              <h1>Something went wrong</h1>
+              <p class="mono">${(e as Error).message}</p>
+              <p class="sub">The terminal where the console runs has the details.</p>
+            </div>
+          `,
+        ),
+        500,
+      );
+    }
+  };
+}

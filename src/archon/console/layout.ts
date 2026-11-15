@@ -99,10 +99,17 @@ export function page(f: Frame, body: Html): string {
       <head>${head(`${f.title} · ${f.subtitle.split(" ")[0]}`)}</head>
       <body>
         <header class="top">
-          <a class="brand" href="/">${ARCHON_LOGO}<b>Archon</b><small>${f.subtitle}</small></a>
-          <div
-            class="fleetmark">${STOLOS_LOGO}<b>Stolos</b><span>fleet ${f.fleet.id} · ${f.fleet
-              .repo}</span></div>
+          ${f.product === "stolos"
+            ? html`
+              <a class="brand" href="/">${STOLOS_LOGO}<b>Stolos</b><small>${f.subtitle}</small></a>
+              <div class="fleetmark"><span>fleet ${f.fleet.id} · ${f.fleet.repo}</span></div>
+            `
+            : html`
+              <a class="brand" href="/">${ARCHON_LOGO}<b>Archon</b><small>${f.subtitle}</small></a>
+              <div
+                class="fleetmark">${STOLOS_LOGO}<b>Stolos</b><span>fleet ${f.fleet.id} · ${f.fleet
+                  .repo}</span></div>
+            `}
           <div class="me">
             <div class="who"><div>${f.user.name}</div><small>${f.user.user} · ${f.user
               .role}</small></div>

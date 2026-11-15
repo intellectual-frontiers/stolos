@@ -710,6 +710,28 @@ export const COMMANDS: Command[] = [
     },
   },
   {
+    name: "console",
+    summary: "The Stolos Console: the fleet in your browser, on this PC only",
+    description:
+      `Spec 066. Checks that your GitHub account (gh) may push to the fleet repository, listens on 127.0.0.1, and prints a one-time launch link (it works once, for two minutes) and opens it. Every machine (managed, adopted, in a cloud), the clouds, one SQL question to every machine, the changes waiting and who may approve them, and the stolos commands as forms. Commands run here, in the fleet repository: a passphrase or token they ask for is typed in this terminal, never in the browser. Ctrl+C stops it.`,
+    tier: "read",
+    noMcp: true,
+    args: [
+      { name: "port", type: "string", description: "The port on 127.0.0.1 (default 8091)." },
+      { name: "no-open", type: "boolean", description: "Print the link; do not open a browser." },
+      { name: "no-github", type: "boolean", description: "Skip the GitHub check (offline)." },
+    ],
+    examples: [{ cmd: "deno task stolos console", text: "Open the console in your browser." }],
+    async run(a) {
+      const port = a.port ? Number(a.port) : undefined;
+      if (port !== undefined && !(Number.isInteger(port) && port > 1023 && port < 65536)) {
+        throw new Error(`--port ${a.port}: a port from 1024 to 65535`);
+      }
+      const { stolosConsole } = await import("../console/stolos-launch.ts");
+      return await stolosConsole({ port, open: !a["no-open"], github: !a["no-github"] });
+    },
+  },
+  {
     name: "discover",
     summary:
       "Machines seen on this PC's network or in the fleet's clouds, not yet managed or adopted",
@@ -2586,6 +2608,7 @@ On a server, workstations reach it as ops over SSH (spec 030): ops' authorized_k
  */
 /** Commands run with `stolos` on your PC (the rest run with `archon` on each machine). */
 const PC_COMMANDS = new Set([
+  "console",
   "discover",
   "cloud connect",
   "cloud observe",

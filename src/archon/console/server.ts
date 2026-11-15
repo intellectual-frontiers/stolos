@@ -93,7 +93,12 @@ export interface ConsoleDeps {
   ): Promise<void>;
 }
 
-const htmlResponse = (body: string, status = 200, headers: Record<string, string> = {}) =>
+/** An HTML response, never cached or framed. */
+export const htmlResponse = (
+  body: string,
+  status = 200,
+  headers: Record<string, string> = {},
+): Response =>
   new Response(body, {
     status,
     headers: {
@@ -105,7 +110,8 @@ const htmlResponse = (body: string, status = 200, headers: Record<string, string
     },
   });
 
-const redirect = (to: string, headers: Record<string, string> = {}) =>
+/** A redirect after a POST (303). */
+export const redirect = (to: string, headers: Record<string, string> = {}): Response =>
   new Response(null, { status: 303, headers: { location: to, ...headers } });
 
 /** The address a request came from: Traefik's X-Forwarded-For, else the connection's. */
@@ -152,6 +158,58 @@ export function lineClass(l: string): string {
     : /^==>|^\s+(fix|log|explain):/.test(l)
     ? "dim"
     : "";
+}
+
+/** The consoles' static files (stylesheet, icon, Datastar, Mermaid, fonts), or undefined. */
+export async function staticFile(path: string, cacheDir: string): Promise<Response | undefined> {
+  if (path === CSS_URL || path === "/static/console.css") {
+    return new Response(CONSOLE_CSS, {
+      headers: {
+        "content-type": "text/css; charset=utf-8",
+        "cache-control": path === CSS_URL ? "max-age=31536000, immutable" : "no-cache",
+      },
+    });
+  }
+  if (path === "/static/favicon.svg") {
+    return new Response(FAVICON, {
+      headers: { "content-type": "image/svg+xml", "cache-control": "max-age=86400" },
+    });
+  }
+  if (path === DATASTAR.url) {
+    return new Response(datastarSource(), {
+      headers: {
+        "content-type": "text/javascript; charset=utf-8",
+        "cache-control": "max-age=31536000, immutable",
+      },
+    });
+  }
+  if (path === MERMAID.url) {
+    const b = await vendored(MERMAID, cacheDir);
+    return b
+      ? new Response(b, {
+        headers: {
+          "content-type": "text/javascript; charset=utf-8",
+          "cache-control": "max-age=31536000, immutable",
+        },
+      })
+      : new Response("// Mermaid is not available on this server yet\n", {
+        status: 503,
+        headers: { "content-type": "text/javascript" },
+      });
+  }
+  const font = FONTS.find((f) => f.url === path);
+  if (font) {
+    const b = await vendored(font, cacheDir);
+    return b
+      ? new Response(b, {
+        headers: {
+          "content-type": "font/woff2",
+          "cache-control": "max-age=31536000, immutable",
+        },
+      })
+      : new Response("", { status: 503 });
+  }
+  return undefined;
 }
 
 /** The console's request handler. */
@@ -202,53 +260,8 @@ export function consoleHandler(
     try {
       // ------------------------------------------------ open to anyone
       if (path === "/healthz") return new Response("ok\n");
-      if (path === CSS_URL || path === "/static/console.css") {
-        return new Response(CONSOLE_CSS, {
-          headers: {
-            "content-type": "text/css; charset=utf-8",
-            "cache-control": path === CSS_URL ? "max-age=31536000, immutable" : "no-cache",
-          },
-        });
-      }
-      if (path === "/static/favicon.svg") {
-        return new Response(FAVICON, {
-          headers: { "content-type": "image/svg+xml", "cache-control": "max-age=86400" },
-        });
-      }
-      if (path === DATASTAR.url) {
-        return new Response(datastarSource(), {
-          headers: {
-            "content-type": "text/javascript; charset=utf-8",
-            "cache-control": "max-age=31536000, immutable",
-          },
-        });
-      }
-      if (path === MERMAID.url) {
-        const b = await vendored(MERMAID, deps.cacheDir);
-        return b
-          ? new Response(b, {
-            headers: {
-              "content-type": "text/javascript; charset=utf-8",
-              "cache-control": "max-age=31536000, immutable",
-            },
-          })
-          : new Response("// Mermaid is not available on this server yet\n", {
-            status: 503,
-            headers: { "content-type": "text/javascript" },
-          });
-      }
-      const font = FONTS.find((f) => f.url === path);
-      if (font) {
-        const b = await vendored(font, deps.cacheDir);
-        return b
-          ? new Response(b, {
-            headers: {
-              "content-type": "font/woff2",
-              "cache-control": "max-age=31536000, immutable",
-            },
-          })
-          : new Response("", { status: 503 });
-      }
+      const st = await staticFile(path, deps.cacheDir);
+      if (st) return st;
       if (path === "/signin" && req.method === "GET") {
         const d = await deps.data();
         return htmlResponse(

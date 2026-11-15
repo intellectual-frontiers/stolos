@@ -158,6 +158,7 @@ export function check(
     want: (v: unknown) => boolean;
     fix: string;
     warnOnly?: boolean;
+    show?: (v: string | number | boolean) => string;
   },
 ): PolicyResult {
   const v = o.posture[p.fact];
@@ -167,7 +168,13 @@ export function check(
     title: p.title,
     scf: p.scf,
     status,
-    detail: v === undefined ? `${p.fact}: not readable` : `${p.fact}: ${v}`,
+    detail: v === undefined
+      ? "not readable with this credential"
+      : p.show
+      ? p.show(v)
+      : typeof v === "boolean"
+      ? (v ? "yes" : "no")
+      : String(v),
     fix: p.fix,
   };
 }
