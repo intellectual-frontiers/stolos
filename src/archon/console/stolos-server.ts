@@ -33,6 +33,8 @@ import type { PcFacts } from "./pc.ts";
 import { installCards, parseBootLog } from "./boot-timeline.ts";
 import { htmlResponse, lineClass, patch, redirect, sameOrigin, staticFile } from "./server.ts";
 import {
+  addPage,
+  addStep,
   answerTable,
   bootPage,
   changesPage,
@@ -138,6 +140,8 @@ export interface StolosDeps {
   guides: Array<{ name: string; title: string; why: string }>;
   /** A guide's page. */
   guideDoc(name: string): Promise<string | undefined>;
+  /** The lines to run on a machine for an integration (and its probe key, made now), spec 069. */
+  integrate(name: string, as: string[]): Promise<{ posix: string; windows?: string }>;
   /** The boot server's log (boot.log), or "" when it has none. */
   bootLog(): Promise<string>;
   /** Where Mermaid and the fonts are cached. */
@@ -212,6 +216,8 @@ export function stolosHandler(
     const form = Object.fromEntries(
       [...(await req.formData()).entries()].map(([k, v]) => [k, String(v)]),
     );
+    // A pasted check-in code may wrap: it has no spaces of its own.
+    for (const k of ["check-in", "import"]) if (form[k]) form[k] = form[k].replace(/\s+/g, "");
     const cmd = byName.get(form.command ?? "");
     const enc = new TextEncoder();
     const stream = new ReadableStream<Uint8Array>({
@@ -447,6 +453,35 @@ export function stolosHandler(
             f.fleet.title,
             "/export/compliance.json",
           ),
+          f,
+        );
+      }
+      if (path === "/add") {
+        const what = url.searchParams.get("what");
+        const name = (url.searchParams.get("name") ?? "").trim().toLowerCase();
+        if (!what) return await frame(s, "Add a machine", "/add", addPage(name), f);
+        const needsName = ["adopt", "discover", "server", "workstation"].includes(what);
+        let lines;
+        if (needsName && /^[a-z][a-z0-9-]{0,62}$/.test(name)) {
+          const as = what === "adopt" && url.searchParams.get("osquery")
+            ? ["adopt", "osquery"]
+            : [what];
+          lines = await deps.integrate(name, as);
+        }
+        const { CLOUDS } = await import("../cloud/commands.ts");
+        const { SNMP_HELP } = await import("../device/commands.ts");
+        return await frame(
+          s,
+          "Add a machine",
+          "/add",
+          addStep({
+            what,
+            name,
+            ...(lines ? { lines } : {}),
+            clouds: f.clouds,
+            recipes: Object.fromEntries(CLOUDS.map((c) => [c.id, c.recipe])),
+            snmpHelp: SNMP_HELP,
+          }),
           f,
         );
       }

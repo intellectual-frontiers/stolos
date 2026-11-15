@@ -12,7 +12,53 @@ flowchart LR
   pc -- "observed.ts" --> git["Fleet repository"]
 ```
 
-## Adopt a machine
+## The easy way: one line on the machine
+
+In the Stolos Console, **Add a machine** asks what it is (a laptop, a device, a cloud account, a
+server to manage, a workstation) and gives you one line to run on it, or to send to its owner. The
+same from the command line:
+
+```bash
+deno task stolos host integrate alice-laptop --as adopt
+```
+
+On the machine, the line (`bin/integrate.sh` on Linux and macOS, `bin/integrate.windows.ps1` on
+Windows) lists every change it will make and asks once. It ends by printing a **check-in code**
+(`stolos1:...`): paste it into the console, or:
+
+```bash
+deno task stolos host adopt alice-laptop --check-in stolos1:...
+```
+
+The code carries the machine's public SSH keys, so they are pinned without trusting the first
+connection. `--as discover` changes nothing on the machine: `discover --import <code>` records it.
+
+| `--as`        | On the machine                                                   |
+| ------------- | ---------------------------------------------------------------- |
+| `discover`    | nothing: it only reads its facts                                 |
+| `adopt`       | SSH on, the read-only probe, the probe key's forced-command line |
+| `osquery`     | with adopt: osquery, for `fleet query`                           |
+| `server`      | an Ubuntu installed by hand, ready for `host bootstrap`          |
+| `workstation` | Ubuntu or WSL as a managed fleet workstation                     |
+
+Windows is adopted the same way: the line turns on Windows' own OpenSSH Server and installs a
+PowerShell probe (BitLocker, Windows Firewall, Windows Update, Defender, Administrators).
+
+## Devices
+
+Printers, routers, switches, access points, NAS boxes, cameras, and UPSes are read over SNMPv3,
+encrypted and read only (Stolos sends only GET and GETNEXT; never SNMPv1 or v2c). Make a read-only
+SNMPv3 user on the device (authPriv, SHA-256, AES), then:
+
+```bash
+deno task stolos device add front-printer --address 10.0.30.40 --kind printer --user stolos
+```
+
+Its passphrases are typed in the terminal and kept in the vault; its model, serial, firmware,
+uptime, contact, and location go to `fleets/<fleet>/devices/front-printer/observed.ts`.
+`device check` reports its policies (observed, an owner and location, restarted for firmware).
+
+## Adopt a machine over your own SSH
 
 ```bash
 deno task stolos host adopt alice-mbp --ssh alice@alice-mbp.local --owner alice

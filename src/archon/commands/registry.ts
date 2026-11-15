@@ -597,6 +597,138 @@ export const COMMANDS: Command[] = [
     },
   },
   {
+    name: "device add",
+    summary:
+      "Add a device (printer, router, switch, NAS, camera, UPS) read over SNMPv3: encrypted, read-only",
+    description:
+      `Spec 069. Records the device in fleets/<fleet>/devices/<name>/device.ts, asks for its SNMPv3 passphrases here (not echoed; from the Stolos Console, in the console's terminal) and keeps them in this PC's vault, then reads it once: model, serial, firmware, uptime, contact and location. It shows where to make a read-only SNMPv3 user on common devices. Only SNMPv3 with authentication and privacy (authPriv): never v1 or v2c. Stolos only reads (GET and GETNEXT).`,
+    tier: "repo",
+    args: [
+      {
+        name: "name",
+        type: "string",
+        positional: true,
+        required: true,
+        description: "Its name in the fleet: front-printer, core-switch.",
+      },
+      {
+        name: "address",
+        type: "string",
+        required: true,
+        description: "Its address or name on the network.",
+      },
+      {
+        name: "kind",
+        type: "string",
+        required: true,
+        description: "What it is.",
+        choices: [
+          "router",
+          "switch",
+          "access-point",
+          "firewall",
+          "printer",
+          "nas",
+          "camera",
+          "ups",
+          "other",
+        ],
+      },
+      {
+        name: "user",
+        type: "string",
+        required: true,
+        description: "The SNMPv3 user made on the device for Stolos.",
+      },
+      {
+        name: "auth",
+        type: "string",
+        description: "Authentication: sha256 (default) or sha.",
+        choices: ["sha256", "sha"],
+      },
+      { name: "port", type: "string", description: "Its SNMP port (default 161)." },
+      {
+        name: "title",
+        type: "string",
+        description: 'What it is, for people: "Front desk printer".',
+      },
+      { name: "owner", type: "string", description: "Who is responsible for it." },
+      { name: "location", type: "string", description: "Where it is: a room, a rack." },
+    ],
+    examples: [{
+      cmd:
+        "deno task stolos device add front-printer --address 10.0.30.40 --kind printer --user stolos",
+      text: "A printer, read over SNMPv3.",
+    }],
+    async run(a) {
+      const { deviceAdd } = await import("../device/commands.ts");
+      return await deviceAdd({
+        name: a.name as string,
+        address: a.address as string,
+        kind: a.kind as string,
+        user: a.user as string,
+        ...(a.auth ? { auth: a.auth as string } : {}),
+        ...(a.port ? { port: a.port as string } : {}),
+        ...(a.title ? { title: a.title as string } : {}),
+        ...(a.owner ? { owner: a.owner as string } : {}),
+        ...(a.location ? { location: a.location as string } : {}),
+      });
+    },
+  },
+  {
+    name: "device observe",
+    summary: "Read every device (or one) now over SNMPv3, and record what it said in Git",
+    description:
+      `Spec 069. Writes fleets/<fleet>/devices/<name>/observed.ts (GENERATED). Keep it with deno task stolos apply.`,
+    tier: "repo",
+    args: [{
+      name: "name",
+      type: "string",
+      positional: true,
+      description: "One device (default: all).",
+    }],
+    async run(a) {
+      const { deviceObserve } = await import("../device/commands.ts");
+      return await deviceObserve(a.name as string | undefined);
+    },
+  },
+  {
+    name: "device check",
+    summary:
+      "The devices' policies: observed, encrypted SNMPv3, an owner and location, restarted for firmware",
+    description:
+      `Spec 069. From the last observations, each with its SCF controls. Exits 1 when any fails; --json for auditors.`,
+    tier: "read",
+    args: [{
+      name: "name",
+      type: "string",
+      positional: true,
+      description: "One device (default: all).",
+    }],
+    async run(a, ctx) {
+      const { deviceCheck } = await import("../device/commands.ts");
+      return await deviceCheck(a.name as string | undefined, ctx.json);
+    },
+  },
+  {
+    name: "device remove",
+    summary: "Stop reading a device: its files and its SNMP passphrases go",
+    description:
+      `Spec 069. Removes fleets/<fleet>/devices/<name>/ and its passphrases from the vault. Remove the SNMPv3 user on the device too.`,
+    tier: "repo",
+    args: [{
+      name: "name",
+      type: "string",
+      positional: true,
+      required: true,
+      description: "The device.",
+    }],
+    async run(a) {
+      const { deviceRemove } = await import("../device/commands.ts");
+      return await deviceRemove(a.name as string);
+    },
+  },
+  {
     name: "host integrate",
     summary:
       "The one line to run on a machine to bring it into the fleet (discover, adopt, server, workstation)",
@@ -2763,6 +2895,10 @@ On a server, workstations reach it as ops over SSH (spec 030): ops' authorized_k
  */
 /** Commands run with `stolos` on your PC (the rest run with `archon` on each machine). */
 const PC_COMMANDS = new Set([
+  "device add",
+  "device observe",
+  "device check",
+  "device remove",
   "host integrate",
   "host accept",
   "compliance",

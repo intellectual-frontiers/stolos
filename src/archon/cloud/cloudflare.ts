@@ -51,6 +51,12 @@ export const cloudflare: CloudProvider = {
     "Account Resources: your account; Zone Resources: All zones from that account",
     "Create Token, then copy it (Cloudflare shows it once)",
   ],
+  recipe: {
+    open: {
+      href: "https://dash.cloudflare.com/profile/api-tokens",
+      label: "Open Cloudflare's API Tokens page",
+    },
+  },
   fields: [{ name: "token", secret: true, hint: "the API token (read-only)" }],
   async observe(cred, http, now) {
     const auth = { Authorization: `Bearer ${cred.token}` };

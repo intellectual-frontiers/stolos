@@ -143,6 +143,14 @@ export const aws: CloudProvider = {
     "Permissions: Attach policies directly > SecurityAudit (AWS managed, read-only)",
     "The user > Security credentials > Create access key > Third-party service; copy both halves",
   ],
+  recipe: {
+    shell: {
+      where: "AWS CloudShell (the >_ icon at the top of the AWS console), as an administrator",
+      href: "https://console.aws.amazon.com/cloudshell/home",
+      command:
+        "aws iam create-user --user-name stolos-read && aws iam attach-user-policy --user-name stolos-read --policy-arn arn:aws:iam::aws:policy/SecurityAudit && aws iam create-access-key --user-name stolos-read",
+    },
+  },
   fields: [
     { name: "accessKeyId", secret: false, hint: "Access key ID (AKIA...)" },
     { name: "secretAccessKey", secret: true, hint: "Secret access key" },

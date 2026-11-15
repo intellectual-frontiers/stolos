@@ -20,7 +20,7 @@ export interface Evidence {
   /** What it is about: a machine, a cloud account, the repository. */
   subject: string;
   /** Where it came from. */
-  source: "managed" | "adopted" | "cloud" | "repository";
+  source: "managed" | "adopted" | "device" | "cloud" | "repository";
   /** The check, in words. */
   check: string;
   /** Its result. */
@@ -141,6 +141,19 @@ export function fleetEvidence(f: PcFacts, now = Date.now()): Evidence[] {
         scf: r.scf,
         subject: a.machine.name,
         source: "adopted",
+        check: r.title,
+        status: r.status,
+        detail: r.detail,
+        ...(r.fix ? { fix: r.fix } : {}),
+      });
+    }
+  }
+  for (const d of f.devices ?? []) {
+    for (const r of d.results) {
+      out.push({
+        scf: r.scf,
+        subject: d.device.name,
+        source: "device",
         check: r.title,
         status: r.status,
         detail: r.detail,

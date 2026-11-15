@@ -45,6 +45,12 @@ export const SCF: ScfControl[] = [
     maps: { hipaa: ["164.310(d)(1)"], pci: ["12.5.1"], cmmc: ["CM.L2-3.4.1"], soc2: ["CC6.1"] },
   },
   {
+    id: "AST-03",
+    name: "Asset Ownership Assignment",
+    how: "Every device has someone responsible for it and a known location.",
+    maps: { hipaa: ["164.310(d)(1)"], pci: ["12.5.1"], cmmc: ["CM.L2-3.4.1"], soc2: ["CC6.1"] },
+  },
+  {
     id: "MON-01",
     name: "Continuous Monitoring",
     how: "Machines are observed and verified on a schedule; osquery answers questions fleet-wide.",

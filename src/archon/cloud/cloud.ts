@@ -75,6 +75,11 @@ export interface CloudProvider {
   logo: string;
   /** What to create in the provider's console, step by step: read-only access only. */
   connectHelp: string[];
+  /** The quickest way to a read-only credential: a page to open, or a command for the provider's own browser shell. */
+  recipe: {
+    open?: { href: string; label: string };
+    shell?: { where: string; href: string; command: string };
+  };
   /** The fields the credential has (one is a token; several make a JSON credential). */
   fields: Array<{ name: string; secret: boolean; hint: string }>;
   /** Read the account. */

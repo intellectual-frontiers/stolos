@@ -28,10 +28,27 @@ plain words, say yes once, and copy one line back.
   to run (both POSIX and Windows where they apply), at this engine's tag, with the fleet, the probe
   key (made now in the vault), and the probe's checksum filled in.
 
+- **FR-005** Devices: `device add | observe | check | remove` read printers, routers, switches,
+  access points, NAS boxes, cameras, and UPSes over SNMPv3 with authentication and privacy only
+  (HMAC-SHA-96 or HMAC-192-SHA-256, AES-128-CFB), in TypeScript, sending only GET and GETNEXT.
+  Passphrases are typed in the terminal and kept in the vault (`devices/<name>/snmp.json`).
+  Policies: observed recently, read over encrypted SNMPv3, an owner and location (SCF AST-03),
+  restarted in the last 400 days (firmware).
+- **FR-006** Clouds: each provider has a recipe for its read-only credential (a page to open, or a
+  command for the provider's own browser shell: AWS CloudShell, Azure Cloud Shell); cloud servers no
+  fleet machine owns appear under Machines, with Adopt.
+- **FR-007** The Stolos Console's **Add a machine** asks what it is in plain words (a laptop, just
+  record it, a device, a cloud account, a server to manage, a workstation), shows the line to run
+  with a copy button, and takes the check-in code in a box. Machines lists discovered machines and
+  devices.
+
 ## Success criteria
 
 - **SC-001** `tests/integrate069_test.ts`: the code's parsing (and its refusals), the one-liners,
   and integrate.sh for real: discover writes nothing, a wrong checksum installs nothing, adopt and
   undo.
+- **SC-003** `tests/snmp069_test.ts`: RFC 3414's key localization vector, NIST SP 800-38A's
+  AES-CFB128 vector, and, where snmpd is installed (CI), SHA-256 and SHA-1 users with AES, a walk,
+  and a wrong passphrase and an unknown user refused in plain words.
 - **SC-002** CI: Debian, Fedora, Arch, and Alpine (BusyBox) containers; macOS; Windows with OpenSSH
   Server turned on by the script and the probe key proven to run the probe and nothing else.

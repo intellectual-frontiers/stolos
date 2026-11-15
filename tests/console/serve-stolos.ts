@@ -7,6 +7,7 @@ import type { PcFacts } from "../../src/archon/console/pc.ts";
 import { Launch, type StolosDeps, stolosHandler } from "../../src/archon/console/stolos-server.ts";
 import { PC_GUIDES } from "../../src/archon/console/stolos-pages.ts";
 import { policies } from "../../src/archon/adopt/policy.ts";
+import { type DeviceDef, devicePolicies } from "../../src/archon/device/device.ts";
 import { toObserved } from "../../src/archon/adopt/adopt.ts";
 import { parseProbe } from "../../src/archon/adopt/probe.ts";
 import { cloudflare } from "../../src/archon/cloud/cloudflare.ts";
@@ -118,11 +119,58 @@ export const FACTS: PcFacts = {
       };
     }),
     { name: "scratch", kind: "cloud", where: "Hetzner Cloud, fsn1-dc14", seen: now, failing: [] },
+    {
+      name: "front-printer",
+      kind: "device",
+      os: "LaserJet Example",
+      where: "10.0.30.40",
+      owner: "office",
+      serial: "VNB0000000",
+      seen: now,
+      score: { pass: 4, total: 4 },
+      failing: [],
+    },
+    {
+      name: "front-desk",
+      kind: "discovered",
+      os: "Windows 11 Pro 26100",
+      where: "10.0.30.77",
+      seen: now,
+      failing: [],
+    },
   ],
   adopted: machines.map((m, i) => ({
     machine: m,
     observed: [mac, desk][i],
     results: policies(m, [mac, desk][i], t),
+  })),
+  devices: [{
+    device: {
+      name: "front-printer",
+      kind: "printer",
+      address: "10.0.30.40",
+      owner: "office",
+      location: "front desk",
+      snmp: { user: "stolos", auth: "sha256" },
+      added: now,
+    },
+    observed: {
+      at: now,
+      description: "Example LaserJet, firmware 2026.1",
+      sysName: "front-printer",
+      objectId: "1.3.6.1.4.1.11.2.3.9.1",
+      contact: "office",
+      location: "front desk",
+      uptimeDays: 12,
+      interfaces: 1,
+      serial: "VNB0000000",
+      model: "LaserJet Example",
+    },
+    results: [],
+  }].map((d) => ({
+    ...d,
+    device: d.device as DeviceDef,
+    results: devicePolicies(d.device as DeviceDef, d.observed),
   })),
   clouds: [
     {
@@ -222,6 +270,17 @@ export async function fakeConsole(
     guides: PC_GUIDES,
     guideDoc: (n) =>
       Promise.resolve(n === "daily-use" ? "<h1>Daily use</h1><p>Example.</p>" : undefined),
+    integrate: async (_name, as) => {
+      const { integrateLines } = await import("../../src/archon/adopt/integrate.ts");
+      return await integrateLines({
+        as: as as never,
+        fleet: "lab",
+        ...(as.includes("adopt")
+          ? { key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIexampleexampleexampleexample0000" }
+          : {}),
+        tag: "v0.0.0",
+      });
+    },
     bootLog: () => Promise.resolve(BOOT_LOG),
     cacheDir: await Deno.makeTempDir(),
   });

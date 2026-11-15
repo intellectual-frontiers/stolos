@@ -98,7 +98,10 @@ export function argvFor(cmd: Command, form: Record<string, string | undefined>):
     }
     if (value.startsWith("-")) return { error: `${a.name} may not start with "-"` };
     if (/[\0\r\n]/.test(value)) return { error: `${a.name} must be one line` };
-    if (value.length > 2000) return { error: `${a.name} is too long` };
+    // A check-in code (spec 069) is long; every other value is short.
+    if (value.length > (a.name === "check-in" || a.name === "import" ? 100_000 : 2000)) {
+      return { error: `${a.name} is too long` };
+    }
     if (a.choices && !a.choices.includes(value)) {
       return { error: `${a.name} is one of: ${a.choices.join(", ")}` };
     }

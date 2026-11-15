@@ -33,6 +33,7 @@ import type { PcCloud, PcFacts, PcMachine } from "./pc.ts";
 export const STOLOS_NAV: NavItem[] = [
   { group: "Fleet", label: "Overview", href: "/" },
   { group: "Fleet", label: "Machines", href: "/machines" },
+  { group: "Fleet", label: "Add a machine", href: "/add" },
   { group: "Fleet", label: "Clouds", href: "/clouds" },
   { group: "Fleet", label: "Ask every machine", href: "/query" },
   { group: "Fleet", label: "Installs", href: "/boot" },
@@ -42,7 +43,7 @@ export const STOLOS_NAV: NavItem[] = [
   { group: "Fleet", label: "Activity", href: "/activity" },
   { group: "Actions", label: "The fleet", href: "/actions/fleet" },
   { group: "Actions", label: "Servers", href: "/actions/machines" },
-  { group: "Actions", label: "Adopted machines", href: "/actions/adopted" },
+  { group: "Actions", label: "Adopted and devices", href: "/actions/adopted" },
   { group: "Actions", label: "Clouds", href: "/actions/clouds" },
   { group: "Actions", label: "Signers and keys", href: "/actions/trust" },
   { group: "Actions", label: "Vault and backups", href: "/actions/vault" },
@@ -131,7 +132,7 @@ export const STOLOS_GROUPS: StolosGroup[] = [
   },
   {
     id: "adopted",
-    label: "Adopted machines",
+    label: "Adopted machines and devices",
     intro:
       "Machines someone else installed (your laptop, a colleague's desktop): Stolos observes and checks them over SSH with a probe key that can run one read-only script, and never changes them.",
     names: [
@@ -143,6 +144,10 @@ export const STOLOS_GROUPS: StolosGroup[] = [
       "host check",
       "host accept",
       "host release",
+      "device add",
+      "device observe",
+      "device check",
+      "device remove",
       "fleet query",
     ],
     first: "host integrate",
@@ -212,7 +217,15 @@ export function stolosGroupOf(name: string): StolosGroup {
 }
 
 const kindPill = (k: PcMachine["kind"]) =>
-  html`<span class="pill ${k === "server" ? "ok" : k === "adopted" ? "tier" : "off"}">${k}</span>`;
+  html`<span class="pill ${
+    k === "server" || k === "workstation"
+      ? "ok"
+      : k === "adopted" || k === "device"
+      ? "tier"
+      : k === "discovered"
+      ? "warn"
+      : "off"
+  }">${k}</span>`;
 
 const score = (x?: { pass: number; total: number }) =>
   !x
@@ -423,7 +436,7 @@ export function machinesPage(f: PcFacts, now = Date.now()): Html {
         <p>Managed servers and workstations, adopted machines, and servers seen in a cloud account. An auditor's asset list: download it as CSV, and every check's result with its SCF controls as JSON.</p>
       </div>
       <div
-        class="row"><a class="btn ghost" href="/export/machines.csv" download>Download CSV</a><a class="btn ghost" href="/export/evidence.json" download>Evidence (JSON)</a><a class="btn" href="/actions/adopted?cmd=discover">Find machines not listed</a></div>
+        class="row"><a class="btn ghost" href="/export/machines.csv" download>Download CSV</a><a class="btn ghost" href="/export/evidence.json" download>Evidence (JSON)</a><a class="btn" href="/add">Add a machine</a></div>
     </div>
     <div class="card scroll" data-signals="{q: ''}">
       <input type="search" data-bind:q placeholder="Filter by name, kind, OS, owner" aria-label="Filter machines" autocomplete="off" style="margin-bottom:10px">
@@ -540,6 +553,40 @@ function observedFacts(o: Observed): Html {
   `;
 }
 
+function deviceBlock(f: PcFacts, name: string): Html {
+  const d = f.devices.find((y) => y.device.name === name);
+  if (!d) return html``;
+  const o = d.observed;
+  const row = (k: string, v: unknown) =>
+    v === undefined || v === "" ? "" : html`
+      <tr>
+        <td class="sub">${k}</td>
+        <td>${String(v)}</td>
+      </tr>
+    `;
+  return html`
+    <div class="grid cols-2">
+      <div class="card scroll"><h2>Policies</h2>${policyTable(d.results)}</div>
+      <div class="card scroll"><h2>What it said (SNMPv3)</h2>${o
+        ? html`
+          <table>
+            <tbody>${row("Model", o.model)}${row("Description", o.description)}${row(
+              "Serial",
+              o.serial,
+            )}${row("Firmware", o.firmware)}${row("Name", o.sysName)}${row(
+              "Contact",
+              o.contact,
+            )}${row("Location", o.location)}${row("Up", `${o.uptimeDays} days`)}${row(
+              "Interfaces",
+              o.interfaces,
+            )}</tbody>
+          </table>
+        `
+        : html`<p class="sub">Never observed.</p>`}</div>
+    </div>
+  `;
+}
+
 /** One machine's page. */
 export function machinePage(f: PcFacts, name: string, now = Date.now()): Html | undefined {
   const x = f.machines.find((y) => y.name === name);
@@ -556,11 +603,19 @@ export function machinePage(f: PcFacts, name: string, now = Date.now()): Html | 
         }: Stolos observes and checks it, and never changes it. Observed ${ago(x.seen, now)}.`
         : x.kind === "cloud"
         ? `Seen in ${x.where}; not managed or adopted.`
+        : x.kind === "device"
+        ? `A device Stolos reads over encrypted SNMPv3 (read only). Observed ${ago(x.seen, now)}.`
+        : x.kind === "discovered"
+        ? `Discovered ${ago(x.seen, now)}: recorded, not yet adopted or managed.`
         : `Managed by Stolos: its description is fleets/${f.fleet.id}/hosts/${x.name}.ts. Installed ${
           ago(x.seen, now)
         }.`}</p></div>
       ${x.kind === "adopted"
         ? html`<a class="btn" href="/actions/adopted?cmd=host%20observe&name=${q}">Observe now</a>`
+        : x.kind === "device"
+        ? html`<a class="btn" href="/actions/adopted?cmd=device%20observe&name=${q}">Observe now</a>`
+        : x.kind === "discovered" || x.kind === "cloud"
+        ? html`<a class="btn" href="/add?name=${q}">Adopt it</a>`
         : x.console
         ? html`<a class="btn" href="${x.console}" target="_blank" rel="noopener">Open its Archon Console</a>`
         : ""}</div>
@@ -579,12 +634,14 @@ export function machinePage(f: PcFacts, name: string, now = Date.now()): Html | 
               .fleet.id}/adopted/${x.name}/observed.ts</span></p>
         </div>
       `
-      : x.kind === "cloud"
+      : x.kind === "device"
+      ? deviceBlock(f, x.name)
+      : x.kind === "cloud" || x.kind === "discovered"
       ? html`
         <div class="card">
-          <p>Adopt it if the fleet is responsible for it: <span class="mono">deno task stolos host adopt ${x
-            .name.replace(/[^a-z0-9-]/gi, "-")
-            .toLowerCase()} --ssh &lt;user&gt;@&lt;address&gt;</span></p>
+          <p>If the fleet is responsible for it, adopt it: Stolos will observe and check it, and never change it.
+          <a href="/add?name=${q}">Add a machine</a> gives the one line to run on it.</p>
+          ${x.serial ? html`<p class="sub">Serial ${x.serial}</p>` : ""}
         </div>
       `
       : html`
@@ -1064,4 +1121,216 @@ export function launchPage(): Html {
 /** Commands for the search and grouping. */
 export function stolosCommandsIn(cmds: Command[], g: StolosGroup): Command[] {
   return cmds.filter((c) => stolosGroupOf(c.name).id === g.id);
+}
+
+/** What the "Add a machine" wizard offers, in plain words. */
+export const ADD_CHOICES: Array<{ id: string; title: string; text: string }> = [
+  {
+    id: "adopt",
+    title: "A laptop or desktop someone uses",
+    text:
+      "Stolos looks at it (read only) and checks it: disk encryption, firewall, updates. It never changes it.",
+  },
+  {
+    id: "discover",
+    title: "Just record a machine",
+    text: "Nothing changes on it: it is listed, so the fleet knows it exists. Adopt it later.",
+  },
+  {
+    id: "device",
+    title: "A printer, router, switch, NAS, camera, or UPS",
+    text: "Read over encrypted SNMPv3: model, serial, firmware, uptime.",
+  },
+  {
+    id: "cloud",
+    title: "A cloud account",
+    text: "Cloudflare, Microsoft 365 and Azure, AWS, Hetzner: read only, never changed.",
+  },
+  {
+    id: "server",
+    title: "A server we will manage",
+    text: "Ubuntu installed by hand, made ready for Stolos to manage it.",
+  },
+  {
+    id: "workstation",
+    title: "This kind of PC as a fleet workstation",
+    text: "Ubuntu, or Ubuntu in WSL on Windows: set up from the fleet repository.",
+  },
+];
+
+function copyable(text: string, label: string): Html {
+  return html`
+    <div class="stack" style="gap:6px">
+      <div class="sub">${label}</div>
+      <pre class="term"
+        style="height:auto;min-height:0;white-space:pre-wrap;word-break:break-all">${text}</pre>
+      <div><button type="button" class="btn ghost" onclick="navigator.clipboard.writeText(this.parentElement.previousElementSibling.textContent).then(()=>{this.textContent='Copied'})">Copy</button></div>
+    </div>
+  `;
+}
+
+/** Step one: what is it, and its name. */
+export function addPage(name = ""): Html {
+  return html`
+    <div class="pagehead">
+      <div>
+        <div class="crumb">Fleet</div>
+        <h1>Add a machine</h1>
+        <p>Bring a machine, a device, or a cloud account into the fleet. Choose what it is; the next page gives the one thing to do.</p>
+      </div>
+    </div>
+    ${diagram(
+      `flowchart LR
+  you["1. Choose what it is"] --> cmd["2. Run one line on it (or give it to its owner)"]
+  cmd --> code["3. It prints a check-in code"]
+  code --> paste["4. Paste the code here"]
+  paste --> fleet["It is in the fleet"]`,
+      "Nothing on the machine changes until its owner reads what will change, and says yes.",
+    )}
+    <form class="card stack" method="get" action="/add" style="margin-top:14px">
+      <fieldset class="stack"
+        style="border:0;padding:0;margin:0"><legend class="sub">What are you adding?</legend>
+      ${ADD_CHOICES.map((c, i) =>
+        html`
+          <label
+            class="check"><input type="radio" name="what" value="${c.id}" ${i === 0
+              ? "checked"
+              : ""}> <span><b>${c.title}</b> <span class="sub">${c.text}</span></span></label>
+        `
+      )}</fieldset>
+      <label
+        class="field"><span>Its name in the fleet <span class="sub">(lowercase, digits, -: alice-laptop; not needed for a cloud account)</span></span><input type="text" name="name" value="${name}" autocomplete="off"></label>
+      <label
+        class="check"><input type="checkbox" name="osquery"> <span>Also allow SQL questions about it <span class="sub">(installs osquery; laptops and desktops)</span></span></label>
+      <div><button class="btn" type="submit">Next</button></div>
+    </form>
+  `;
+}
+
+/** Step two: the line to run, and the box for the check-in code. */
+export function addStep(o: {
+  what: string;
+  name: string;
+  lines?: { posix: string; windows?: string };
+  clouds: PcCloud[];
+  recipes: Record<
+    string,
+    {
+      open?: { href: string; label: string };
+      shell?: { where: string; href: string; command: string };
+    }
+  >;
+  snmpHelp: string[];
+}): Html {
+  const c = ADD_CHOICES.find((x) => x.id === o.what);
+  const q = encodeURIComponent(o.name);
+  const terminal = html`
+    <div class="card" style="margin-top:14px">
+      <div class="row spread"
+        style="margin-bottom:8px"><h2>Output</h2><span class="sub" id="runstate">Nothing running</span></div>
+      <div class="term" id="output" aria-live="polite">
+        <div class="dim">After you paste the code, what happens shows here.</div>
+      </div>
+    </div>
+  `;
+  const paste = (command: string, field: string, extra: Html | string = "") =>
+    html`
+      <form class="card stack" id="cmdform" style="margin-top:14px"
+        data-on:submit="@post('/actions/run', {contentType: 'form'})">
+            <h2>2. Paste the check-in code</h2>
+            <p class="sub" style="margin:0">The line ends by printing a code that starts with stolos1: (its owner can email or message it to you).</p>
+            <input type="hidden" name="command" value="${command}">${extra}
+            <label class="field"><span>Check-in code</span><textarea name="${field}" rows="3" autocomplete="off" spellcheck="false" placeholder="stolos1:..."></textarea></label>
+            <div><button class="btn" type="submit">Add it</button></div>
+          </form>
+    `;
+  const head = html`
+    <div class="pagehead">
+      <div>
+        <div class="crumb"><a href="/add">Add a machine</a></div>
+        <h1>${c?.title ?? "Add"}${o.name ? `: ${o.name}` : ""}</h1>
+        <p>${c?.text ?? ""}</p>
+      </div>
+    </div>
+  `;
+  if (o.what === "cloud") {
+    return html`${head}<div class="stack">${
+      o.clouds.map((x) => {
+        const r = o.recipes[x.id] ?? {};
+        return html`<div class="card stack"><div class="row spread"><h2>${
+          x.logo ? logo(x.logo, 20) : ""
+        } ${x.title}</h2>${x.connected ? html`<span class="pill ok">connected</span>` : ""}</div>
+        ${
+          r.open
+            ? html`<p><a href="${r.open.href}" target="_blank" rel="noopener">${r.open.label}</a></p>`
+            : ""
+        }
+        ${
+          r.shell
+            ? html`
+              <p class="sub"
+                style="margin:0">Or, in <a href="${r.shell.href}" target="_blank" rel="noopener">${r
+                  .shell.where}</a>:</p>${copyable(
+                    r.shell.command,
+                    "it makes a read-only identity and prints its keys",
+                  )}
+            `
+            : ""
+        }
+        <div><a class="btn" href="/actions/clouds?cmd=cloud%20connect&provider=${x.id}">Connect ${x.title} (read only)</a></div>
+      </div>`;
+      })
+    }</div>`;
+  }
+  if (o.what === "device") {
+    return html`${head}<div class="card stack"><h2>1. On the device</h2>${
+      o.snmpHelp.map((l) => html`<p class="sub" style="margin:0">${l}</p>`)
+    }
+      <div><a class="btn" href="/actions/adopted?cmd=device%20add&name=${q}">2. Add it: its address and SNMPv3 user</a></div>
+      <p class="sub">Its passphrases are typed in the terminal where the console runs, never here.</p></div>`;
+  }
+  if (!o.lines) {
+    return html`${head}<div class="notice bad">Give it a name first: <a href="/add">back</a>.</div>`;
+  }
+  const where = o.what === "server"
+    ? "On the server (Ubuntu), signed in as its administrator:"
+    : "On the machine, in a terminal (macOS: Terminal; Linux; Windows: Ubuntu in WSL):";
+  return html`
+    ${head}
+        <div class="card stack"><h2>1. Run this on ${o.name}</h2>
+          <p class="sub" style="margin:0">Or send it to its owner. It shows what it will change and asks once; nothing changes until they say yes.</p>
+          ${copyable(o.lines.posix, where)}
+          ${o.lines.windows
+            ? copyable(
+              o.lines.windows,
+              "Or on Windows, in PowerShell (right-click, Run as administrator):",
+            )
+            : ""}
+        </div>
+        ${o.what === "adopt"
+          ? html`${
+            paste(
+              "host adopt",
+              "check-in",
+              html`<input type="hidden" name="name" value="${o.name}">`,
+            )
+          }${terminal}`
+          : o.what === "discover"
+          ? html`${
+            paste("discover", "import", html`<input type="hidden" name="name" value="${o.name}">`)
+          }${terminal}`
+          : o.what === "server"
+          ? html`
+            <div class="card" style="margin-top:14px">
+              <h2>2. Then</h2>
+              <p>When it prints its code, add the server here: <a href="/actions/machines?cmd=host%20add&name=${q}">host add</a>, then <a href="/actions/machines?cmd=host%20bootstrap&name=${q}">host bootstrap</a>.</p>
+            </div>
+          `
+          : html`
+            <div class="card" style="margin-top:14px">
+              <h2>2. Then</h2>
+              <p>On the workstation, when it finishes: <span class="mono">deno task stolos apply</span>. It appears under Machines.</p>
+            </div>
+          `}
+  `;
 }

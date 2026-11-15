@@ -21,8 +21,8 @@ import type { CloudObserved } from "../cloud/cloud.ts";
 export interface PcMachine {
   /** Its name in the fleet (or the cloud's). */
   name: string;
-  /** server or workstation (managed), adopted, or cloud (seen in a cloud account only). */
-  kind: "server" | "workstation" | "adopted" | "cloud";
+  /** server or workstation (managed), adopted, device (SNMP), discovered (recorded, not yet adopted), or cloud. */
+  kind: "server" | "workstation" | "adopted" | "device" | "discovered" | "cloud";
   /** Its operating system, when known. */
   os?: string;
   /** Where it is: an address, a cloud and region. */
@@ -89,6 +89,14 @@ export interface PcFacts {
   adopted: Array<{ machine: AdoptedDef; observed?: Observed; results: PolicyResult[] }>;
   /** Every cloud provider. */
   clouds: PcCloud[];
+  /** Devices read over SNMPv3, with their policies. */
+  devices: Array<
+    {
+      device: import("../device/device.ts").DeviceDef;
+      observed?: import("../device/device.ts").DeviceObserved;
+      results: PolicyResult[];
+    }
+  >;
   /** The signers. */
   signers: Array<{ name: string; role: string; added: string; key: string }>;
   /** The repository: uncommitted files, commits servers would refuse, recent history. */
@@ -184,6 +192,38 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
       failing: a.results.filter((r) => r.status === "fail").map((r) => r.title),
     });
   }
+  const { loadDevices, devicePolicies } = await import("../device/device.ts");
+  const devices = ((await loadDevices().catch(warn("devices"))) ?? []).map((d) => ({
+    ...d,
+    results: devicePolicies(d.device, d.observed, now),
+  }));
+  for (const d of devices) {
+    machines.push({
+      name: d.device.name,
+      kind: "device",
+      os: d.observed?.model ?? d.device.kind,
+      where: d.device.address,
+      ...(d.device.owner ? { owner: d.device.owner } : {}),
+      ...(d.device.title ? { title: d.device.title } : {}),
+      ...(d.observed?.serial ? { serial: d.observed.serial } : {}),
+      ...(d.observed ? { seen: d.observed.at } : {}),
+      score: { pass: d.results.filter((r) => r.status === "pass").length, total: d.results.length },
+      failing: d.results.filter((r) => r.status === "fail").map((r) => r.title),
+    });
+  }
+  const { loadDiscovered } = await import("../adopt/integrate.ts");
+  for (const d of (await loadDiscovered().catch(warn("discovered.ts"))) ?? []) {
+    machines.push({
+      name: d.name,
+      kind: "discovered",
+      ...(d.os ? { os: d.os } : {}),
+      where: d.addresses[0] ?? d.hostname,
+      ...(d.owner ? { owner: d.owner } : {}),
+      ...(d.serial ? { serial: d.serial } : {}),
+      seen: d.at,
+      failing: [],
+    });
+  }
   const observed = (await loadClouds().catch(warn("cloud observations"))) ?? [];
   const clouds: PcCloud[] = [];
   for (const c of CLOUDS) {
@@ -261,6 +301,7 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
     machines,
     adopted,
     clouds,
+    devices,
     signers,
     git: { dirty, unapproved: pending, log, ...(diffText ? { diff: diffText } : {}) },
   };

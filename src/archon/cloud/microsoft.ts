@@ -66,6 +66,18 @@ export const microsoft: CloudProvider = {
     "Azure (optional): portal.azure.com > Subscriptions > each one > Access control (IAM) > Add role assignment > Reader > the app",
     "Overview: copy the Directory (tenant) ID and Application (client) ID",
   ],
+  recipe: {
+    open: {
+      href: "https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade",
+      label: "Open Entra app registrations",
+    },
+    shell: {
+      where: "Azure Cloud Shell (Bash), for Azure only: a read-only identity on one subscription",
+      href: "https://shell.azure.com",
+      command:
+        'az ad sp create-for-rbac --name stolos-read --role Reader --scopes "/subscriptions/$(az account show --query id -o tsv)"',
+    },
+  },
   fields: [
     { name: "tenant", secret: false, hint: "Directory (tenant) ID" },
     { name: "clientId", secret: false, hint: "Application (client) ID" },

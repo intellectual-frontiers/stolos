@@ -32,6 +32,8 @@ jobs:
         run: deno fmt --check
       - name: Documentation (JSDoc problems may only go down; spec 055)
         run: deno task docs:lint
+      - name: snmpd, for the SNMPv3 test against a real agent (spec 069)
+        run: sudo apt-get install -y --no-install-recommends snmpd >/dev/null && sudo systemctl stop snmpd || true
       - name: Tests
         run: deno task test
       - name: The version was raised (push to main)

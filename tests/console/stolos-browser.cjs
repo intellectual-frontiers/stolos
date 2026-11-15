@@ -15,6 +15,13 @@ const PAGES = [
   "/machines/bob-desk",
   "/machines/alpha",
   "/machines/scratch",
+  "/machines/front-printer",
+  "/machines/front-desk",
+  "/add",
+  "/add?what=adopt&name=alice-laptop&osquery=on",
+  "/add?what=discover&name=front-desk",
+  "/add?what=device&name=lobby-camera",
+  "/add?what=cloud",
   "/clouds",
   "/boot",
   "/query",
@@ -125,6 +132,29 @@ async function launch(page) {
     .catch(() => problems.push("a run never reached Done"));
   check((await page.locator("#output > div").count()) >= 20, "the run's lines did not all arrive");
   check(await page.locator("#output .w").count() >= 1, "a warning line was not colored");
+  // The wizard: choose, get the line, paste a code, and it runs host adopt with it.
+  await page.goto(`${base}/add`);
+  await page.fill("input[name=name]", "alice-laptop");
+  await page.click("form.card button[type=submit]");
+  await page.waitForURL(/what=adopt/);
+  check(
+    (await page.textContent("pre.term")).includes("integrate.sh | sh -s -- --adopt"),
+    "the wizard did not show the line",
+  );
+  await page.fill("textarea[name=check-in]", "stolos1:AAAA\nBBBB");
+  await page.click("#cmdform button[type=submit]");
+  await page.waitForFunction(
+    () => document.querySelector("#runstate")?.textContent === "Done",
+    null,
+    { timeout: 20000 },
+  )
+    .catch(() => problems.push("the pasted code did not run"));
+  check(
+    (await page.textContent("#output")).includes(
+      "host adopt alice-laptop --check-in stolos1:AAAABBBB",
+    ),
+    `the run: ${(await page.textContent("#output")).slice(0, 200)}`,
+  );
   // A fleet query, as a table; a refused one says why.
   await page.goto(`${base}/query`);
   await page.click("#queryform button[type=submit]");

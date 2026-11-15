@@ -47,6 +47,12 @@ export const hetzner: CloudProvider = {
     "Permissions: Read (never Read & Write)",
     "Copy it (Hetzner shows it once); one token reads one project",
   ],
+  recipe: {
+    open: {
+      href: "https://console.hetzner.cloud/projects",
+      label: "Open your Hetzner Cloud projects (Security > API tokens)",
+    },
+  },
   fields: [{ name: "token", secret: true, hint: "the project's API token (Read)" }],
   async observe(cred, http, now) {
     const auth = { Authorization: `Bearer ${cred.token}` };

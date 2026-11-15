@@ -120,6 +120,21 @@ export async function stolosConsole(
           : undefined,
       );
     },
+    integrate: async (name, as) => {
+      const { integrateLines } = await import("../adopt/integrate.ts");
+      const { ensureProbeKey } = await import("../adopt/adopt.ts");
+      const key = as.includes("adopt") ? await ensureProbeKey(name, P.fleetId) : undefined;
+      const fleet = as.includes("server")
+        ? await (await import("../model/load.ts")).loadFleet()
+        : undefined;
+      return await integrateLines({
+        as: as as never,
+        fleet: P.fleetId,
+        ...(key ? { key } : {}),
+        ...(fleet ? { github: fleet.admin.github.login } : {}),
+        ...(as.includes("workstation") ? { repo: facts.fleet.repo } : {}),
+      });
+    },
     bootLog: async () => (await readTextOr(join(P.bootCache, "boot.log"))) ?? "",
     cacheDir: join(P.state, "console-cache"),
   });

@@ -79,6 +79,17 @@ export const SECRET_INVENTORY: SecretRef[] = [
     spec: "067-adopt",
   },
   {
+    id: "device-snmp",
+    label: "<host> SNMPv3 passphrases",
+    path: "devices/<host>/snmp.json",
+    purpose:
+      "read the device <host> over SNMPv3 (authentication and privacy passphrases of a read-only user made on it; spec 069)",
+    holder: "boot-machine",
+    recreate:
+      "make a new read-only SNMPv3 user on the device; deno task stolos device add <host> ... again",
+    spec: "069-integrate",
+  },
+  {
     id: "probe-key-pub",
     label: "<host> probe key (public)",
     path: "adopted/<host>/probe_key.pub",
