@@ -150,8 +150,8 @@ export interface ConnectorDef<F extends Record<string, FieldDef>> {
   tokenEndpoints?: (cred: CredOf<F>) => string[];
   /** The headers to send, given the credential (may call a token endpoint). */
   auth(cred: CredOf<F>, http: Http, now: Date): Promise<Record<string, string>>;
-  /** The account, for people. */
-  account(cred: CredOf<F>): string;
+  /** The account, for people (from the credential, or from what was read). */
+  account(cred: CredOf<F>, records: ObservedRecord[]): string;
   /** The resources it reads. */
   // deno-lint-ignore no-explicit-any
   resources: Record<string, ResourceDef<F, any, any>>;
@@ -306,7 +306,7 @@ export function defineConnector<F extends Record<string, FieldDef>>(
       return {
         at: now.toISOString().replace(/\.\d+Z$/, "Z"),
         provider: def.id,
-        account: def.account(cred),
+        account: def.account(cred, records),
         assets,
         posture: def.posture(records, cred),
         gaps: [...new Set(gaps)],
@@ -436,4 +436,17 @@ export async function clientCredentials(
   }
   if (r.status >= 400) throw new Error(`${new URL(tokenUrl).pathname}: HTTP ${r.status}`);
   return bearer((JSON.parse(r.text) as { access_token: string }).access_token);
+}
+
+/**
+ * A read the observation cannot do without: a denial fails the observation
+ * (an Error with the same message) instead of becoming the resource's gap.
+ */
+export async function mustRead<T>(f: () => Promise<T>): Promise<T> {
+  try {
+    return await f();
+  } catch (e) {
+    if (e instanceof AccessDenied) throw new Error(e.message);
+    throw e;
+  }
 }

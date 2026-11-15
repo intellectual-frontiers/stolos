@@ -82,6 +82,7 @@ import "./connect/github.ts";
 import "./connect/google.ts";
 import "./connect/hetzner.ts";
 import "./connect/hris.ts";
+import "./connect/labels.ts";
 import "./connect/microsoft.ts";
 import "./connect/okta.ts";
 import "./connect/sdk.ts";

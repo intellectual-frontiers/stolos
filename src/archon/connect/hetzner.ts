@@ -1,28 +1,31 @@
 /**
- * Spec 067 (clouds): Hetzner Cloud, read-only: one project's servers,
- * volumes, firewalls, primary IPs, and load balancers.
+ * Spec 067 (clouds), declared with spec 091's SDK: Hetzner Cloud, read-only:
+ * one project's servers, volumes, firewalls, primary IPs, and load
+ * balancers. Every list is needed: a denied one fails the observation.
  *
  * @module
  */
 
-import { type Asset, check, type Connector, fresh, getJson, type Http } from "./connector.ts";
+import { check, type Connector, fresh, type Observation } from "./connector.ts";
+import { type Ctx, defineConnector, type FieldDef, mustRead } from "./sdk.ts";
+import { FIREWALL, IP_ADDRESS, LOAD_BALANCER, SERVER, VOLUME } from "./labels.ts";
 
 const API = "https://api.hetzner.cloud/v1";
 
-async function all<T>(http: Http, what: string, auth: Record<string, string>): Promise<T[]> {
-  const out: T[] = [];
-  for (let page = 1; page <= 50; page++) {
-    const r = await getJson<
-      Record<string, unknown> & { meta?: { pagination?: { next_page: number | null } } }
-    >(
-      http,
-      `${API}/${what}?per_page=50&page=${page}`,
-      auth,
-    );
-    out.push(...((r[what] as T[]) ?? []));
-    if (!r.meta?.pagination?.next_page) break;
-  }
-  return out;
+/** Every item of one list (each a required read: a denial fails the observation). */
+async function* all<T>(ctx: Ctx<{ token: FieldDef }>, what: string): AsyncGenerator<T> {
+  const out = await mustRead(async () => {
+    const items: T[] = [];
+    for (let page = 1; page <= 50; page++) {
+      const r = await ctx.json<
+        Record<string, unknown> & { meta?: { pagination?: { next_page: number | null } } }
+      >(`${API}/${what}?per_page=50&page=${page}`);
+      items.push(...((r[what] as T[]) ?? []));
+      if (!r.meta?.pagination?.next_page) break;
+    }
+    return items;
+  });
+  yield* out;
 }
 
 interface Server {
@@ -37,13 +40,43 @@ interface Server {
   image?: { description?: string } | null;
 }
 
+interface Volume {
+  id: number;
+  name: string;
+  size: number;
+  location?: { name: string };
+  server: number | null;
+  protection?: { delete: boolean };
+}
+
+interface Firewall {
+  id: number;
+  name: string;
+  rules?: unknown[];
+  applied_to?: unknown[];
+}
+
+interface PrimaryIp {
+  id: number;
+  name: string;
+  ip: string;
+  type: string;
+  assignee_id: number | null;
+}
+
+interface LoadBalancer {
+  id: number;
+  name: string;
+  location?: { name: string };
+}
+
 /** Hetzner Cloud. */
-export const hetzner: Connector = {
+export const hetzner: Connector = defineConnector({
   id: "hetzner",
-  serviceModels: ["IaaS"],
-  markets: ["strategic-cloud-platform-services"],
   title: "Hetzner Cloud",
   logo: "hetzner",
+  serviceModels: ["IaaS"],
+  markets: ["strategic-cloud-platform-services"],
   connectHelp: [
     "console.hetzner.cloud > your project > Security > API tokens > Generate API token",
     "Permissions: Read (never Read & Write)",
@@ -55,17 +88,30 @@ export const hetzner: Connector = {
       label: "Open your Hetzner Cloud projects (Security > API tokens)",
     },
   },
-  fields: [{ name: "token", secret: true, hint: "the project's API token (Read)" }],
-  async observe(cred, http, now) {
-    const auth = { Authorization: `Bearer ${cred.token}` };
-    const assets: Asset[] = [];
-    const servers = await all<Server>(http, "servers", auth);
-    for (const s of servers) {
-      assets.push({
+  fields: { token: { secret: true, hint: "the project's API token (Read)" } },
+  auth: (cred) => Promise.resolve({ Authorization: `Bearer ${cred.token}` }),
+  // A credential written by hand may name its project.
+  account: (cred) => (cred as Record<string, string>).project || "Hetzner Cloud project",
+  resources: {
+    servers: {
+      label: SERVER,
+      ocsf: "cloud_resources_inventory_info",
+      list: (ctx) => all<Server>(ctx, "servers"),
+      map: (s: Server) => ({
+        native_id: String(s.id),
+        display_name: s.name,
+        ...(s.datacenter?.name ? { where: s.datacenter.name } : {}),
+        props: {
+          status: s.status,
+          ...(s.server_type?.name ? { type: s.server_type.name } : {}),
+          ...(s.datacenter?.name ? { region: s.datacenter.name } : {}),
+          backups: !!s.backup_window,
+          protected: s.protection?.delete === true,
+          firewalled: (s.public_net?.firewalls?.length ?? 0) > 0,
+        },
+      }),
+      asset: (s: Server) => ({
         kind: "server",
-        id: String(s.id),
-        name: s.name,
-        where: s.datacenter?.name,
         facts: {
           status: s.status,
           type: s.server_type?.name ?? "",
@@ -75,82 +121,82 @@ export const hetzner: Connector = {
           firewalls: s.public_net?.firewalls?.length ?? 0,
           deleteProtection: s.protection?.delete === true,
         },
-      });
-    }
-    for (
-      const v of await all<
-        {
-          id: number;
-          name: string;
-          size: number;
-          location?: { name: string };
-          server: number | null;
-        }
-      >(http, "volumes", auth)
-    ) {
-      assets.push({
+      }),
+    },
+    volumes: {
+      label: VOLUME,
+      ocsf: "cloud_resources_inventory_info",
+      list: (ctx) => all<Volume>(ctx, "volumes"),
+      map: (v: Volume) => ({
+        native_id: String(v.id),
+        display_name: v.name,
+        ...(v.location?.name ? { where: v.location.name } : {}),
+        props: {
+          size_gb: v.size,
+          ...(v.server !== null && v.server !== undefined ? { server: String(v.server) } : {}),
+          ...(v.protection ? { protected: v.protection.delete === true } : {}),
+        },
+      }),
+      asset: (v: Volume) => ({
         kind: "volume",
-        id: String(v.id),
-        name: v.name,
-        where: v.location?.name,
         facts: { sizeGB: v.size, attached: v.server !== null },
-      });
-    }
-    for (
-      const f of await all<{ id: number; name: string; rules?: unknown[]; applied_to?: unknown[] }>(
-        http,
-        "firewalls",
-        auth,
-      )
-    ) {
-      assets.push({
+      }),
+    },
+    firewalls: {
+      label: FIREWALL,
+      ocsf: "cloud_resources_inventory_info",
+      list: (ctx) => all<Firewall>(ctx, "firewalls"),
+      map: (f: Firewall) => ({
+        native_id: String(f.id),
+        display_name: f.name,
+        props: { rules: f.rules?.length ?? 0 },
+      }),
+      asset: (f: Firewall) => ({
         kind: "firewall",
-        id: String(f.id),
-        name: f.name,
         facts: { rules: f.rules?.length ?? 0, appliedTo: f.applied_to?.length ?? 0 },
-      });
-    }
-    for (
-      const ip of await all<
-        { id: number; name: string; ip: string; type: string; assignee_id: number | null }
-      >(http, "primary_ips", auth)
-    ) {
-      assets.push({
+      }),
+    },
+    primaryIps: {
+      label: IP_ADDRESS,
+      ocsf: "cloud_resources_inventory_info",
+      list: (ctx) => all<PrimaryIp>(ctx, "primary_ips"),
+      map: (ip: PrimaryIp) => ({
+        native_id: String(ip.id),
+        display_name: ip.name,
+        props: {
+          address: ip.ip,
+          type: ip.type,
+          ...(ip.assignee_id !== null && ip.assignee_id !== undefined
+            ? { assigned_to: String(ip.assignee_id) }
+            : {}),
+        },
+      }),
+      asset: (ip: PrimaryIp) => ({
         kind: "primary-ip",
-        id: String(ip.id),
-        name: ip.name,
         facts: { ip: ip.ip, type: ip.type, assigned: ip.assignee_id !== null },
-      });
-    }
-    for (
-      const lb of await all<{ id: number; name: string; location?: { name: string } }>(
-        http,
-        "load_balancers",
-        auth,
-      )
-    ) {
-      assets.push({
-        kind: "load-balancer",
-        id: String(lb.id),
-        name: lb.name,
-        where: lb.location?.name,
-      });
-    }
+      }),
+    },
+    loadBalancers: {
+      label: LOAD_BALANCER,
+      ocsf: "cloud_resources_inventory_info",
+      list: (ctx) => all<LoadBalancer>(ctx, "load_balancers"),
+      map: (lb: LoadBalancer) => ({
+        native_id: String(lb.id),
+        display_name: lb.name,
+        ...(lb.location?.name ? { where: lb.location.name } : {}),
+        props: lb.location?.name ? { region: lb.location.name } : {},
+      }),
+      asset: () => ({ kind: "load-balancer" }),
+    },
+  },
+  posture(records): Observation["posture"] {
+    const servers = records.filter((r) => r.label === SERVER.name).map((r) => r.props);
+    if (!servers.length) return {};
     return {
-      at: now.toISOString().replace(/\.\d+Z$/, "Z"),
-      provider: "hetzner",
-      account: cred.project || "Hetzner Cloud project",
-      assets,
-      posture: servers.length
-        ? ({
-          servers: servers.length,
-          serversWithBackups: servers.filter((s) => s.backup_window).length,
-          serversWithFirewall:
-            servers.filter((s) => (s.public_net?.firewalls?.length ?? 0) > 0).length,
-          serversDeleteProtected: servers.filter((s) => s.protection?.delete).length,
-        } as Record<string, number>)
-        : {},
-      gaps: [],
+      servers: servers.length,
+      serversWithBackups: servers.filter((p) => p.backups).length,
+      serversWithFirewall: servers.filter((p) => p.firewalled).length,
+      serversDeleteProtected: servers.filter((p) => p.protected).length,
     };
   },
   policies(o, now) {
@@ -189,4 +235,4 @@ export const hetzner: Connector = {
       }),
     ];
   },
-};
+});

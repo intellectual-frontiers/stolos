@@ -7,7 +7,7 @@
  * @module
  */
 
-import { check, fresh } from "./connector.ts";
+import { check, type Connector, fresh } from "./connector.ts";
 import { bearer, defineConnector } from "./sdk.ts";
 import { USER_ACCOUNT } from "./labels.ts";
 
@@ -26,7 +26,7 @@ const ACTIVE = new Set(["ACTIVE", "PASSWORD_EXPIRED", "RECOVERY", "LOCKED_OUT"])
 const base = (domain: string) => `https://${domain.replace(/^https?:\/\//, "").replace(/\/$/, "")}`;
 
 /** Okta. */
-export const okta = defineConnector({
+export const okta: Connector = defineConnector({
   id: "okta",
   title: "Okta",
   logo: "okta",

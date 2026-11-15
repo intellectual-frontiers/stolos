@@ -68,6 +68,12 @@ export const DOMAIN_NAME: LabelView = defineLabel({
   props: {
     status: { type: "text", doc: "Its status at the provider." },
     dnssec: { type: "boolean", doc: "DNSSEC is on." },
+    ssl: {
+      type: "text",
+      doc: "How the provider's proxy reaches the origin (off, flexible, full, strict).",
+    },
+    always_use_https: { type: "text", doc: "HTTP is redirected to HTTPS (on or off)." },
+    min_tls_version: { type: "text", doc: "The oldest TLS version accepted (1.0, 1.1, 1.2, 1.3)." },
   },
 });
 
@@ -95,6 +101,7 @@ export const CLOUD_STORAGE: LabelView = defineLabel({
   props: {
     region: { type: "text", doc: "Where it is." },
     public_access_blocked: { type: "boolean", doc: "Public access is blocked." },
+    created: { type: "text", doc: "When it was created (ISO)." },
   },
 });
 
@@ -132,6 +139,7 @@ export const IP_ADDRESS: LabelView = defineLabel({
   terms: [{ from: "d3fend", term: "ip_address" }],
   doc: "A public IP address a cloud assigns.",
   props: {
+    address: { type: "text", doc: "The address." },
     type: { type: "text", doc: "ipv4 or ipv6." },
     assigned_to: { type: "text", doc: "What it is assigned to." },
   },
@@ -142,7 +150,43 @@ export const SOFTWARE: LabelView = defineLabel({
   name: "software",
   terms: [{ from: "d3fend", term: "software" }],
   doc: "Software a provider runs for the fleet: a serverless function, a static site, a tunnel.",
-  props: { kind: { type: "text", doc: "worker, pages, tunnel, ..." } },
+  props: {
+    kind: { type: "text", doc: "worker, pages, tunnel, ..." },
+    status: { type: "text", doc: "Its state (a tunnel's health)." },
+    modified: { type: "text", doc: "When it last changed (ISO)." },
+  },
+});
+
+/** A cloud or SaaS account itself (OCSF account): an AWS account, a Cloudflare account. */
+export const ACCOUNT: LabelView = defineLabel({
+  name: "account",
+  terms: [{ from: "ocsf", term: "account" }],
+  doc: "A cloud or SaaS account itself (an AWS account, a Cloudflare account) and its settings.",
+  props: {
+    caller: { type: "text", doc: "The identity that read it (an ARN)." },
+    root_mfa: { type: "boolean", doc: "Its root user has MFA." },
+    root_access_keys: { type: "boolean", doc: "Its root user has access keys." },
+    public_access_blocked: {
+      type: "boolean",
+      doc: "Its object storage blocks public access account-wide.",
+    },
+    regions: { type: "integer", doc: "How many of its compute regions were listed." },
+  },
+});
+
+/**
+ * A cloud's own identity (D3FEND cloud user account): an AWS IAM user. Kept
+ * as a record, not an estate account: it signs in to the cloud's API, not
+ * as a person on the roster.
+ */
+export const CLOUD_USER_ACCOUNT: LabelView = defineLabel({
+  name: "cloud_user_account",
+  terms: [{ from: "d3fend", term: "cloud_user_account" }],
+  doc: "A cloud's own user (an AWS IAM user).",
+  props: {
+    created: { type: "text", doc: "When it was created (ISO)." },
+    password_last_used: { type: "text", doc: "When its password last signed in (ISO)." },
+  },
 });
 
 /** Every connector label. */
@@ -160,4 +204,6 @@ export const CONNECTOR_LABELS: readonly LabelView[] = [
   LOAD_BALANCER,
   IP_ADDRESS,
   SOFTWARE,
+  ACCOUNT,
+  CLOUD_USER_ACCOUNT,
 ];

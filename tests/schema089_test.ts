@@ -302,9 +302,10 @@ Deno.test("089: HTTP is read-only except declared token endpoints; 429 and 503 b
 });
 
 Deno.test("089: a declared connector pages, maps, records OCSF classes, and turns denials into gaps", async () => {
+  // Spec 091: user_account records become estate accounts; a label that stays a record.
   const account = defineLabel({
-    name: "user_account",
-    terms: [{ from: "d3fend", term: "user_account" }],
+    name: "cloud_user_account",
+    terms: [{ from: "d3fend", term: "cloud_user_account" }],
     doc: "",
     props: { email: { type: "text", doc: "" }, admin: { type: "boolean", doc: "" } },
   });
@@ -389,8 +390,8 @@ Deno.test("089: a declared connector pages, maps, records OCSF classes, and turn
     new Date("2026-11-15T00:00:00Z"),
   );
   assertEquals(o.records?.map((r) => [r.label, r.ocsf_class_uid, r.native_id]), [
-    ["user_account", 5003, "1"],
-    ["user_account", 5003, "2"],
+    ["cloud_user_account", 5003, "1"],
+    ["cloud_user_account", 5003, "2"],
   ]);
   assertEquals(o.records?.[0].unmapped, { id: "1", login: "alice@example.com", admin: true });
   assertEquals(o.posture, { admins: 1 });
