@@ -296,14 +296,19 @@ export async function fleetUpgrade(o: UpgradeOptions): Promise<number> {
   }
   v.done(fleets.length ? `${fleets.join(", ")} valid with ${o.tag}` : "no fleets yet");
 
-  // Spec 062: the bootstrap scripts and .gitattributes, as this engine writes them.
+  // Spec 062: the bootstrap scripts and .gitattributes, as this engine writes them;
+  // spec 074: the compliance-impact workflow too.
   const { bootstrapFiles, repoSlug } = await import("./bootstrap.ts");
   const { GITATTRIBUTES_TEXT } = await import("./scaffold.ts");
+  const { IMPACT_WORKFLOW_PATH, IMPACT_WORKFLOW_TEXT } = await import(
+    "../compliance/workflow.ts"
+  );
   const refreshed: string[] = [];
   for (
     const [rel, want] of Object.entries({
       ...bootstrapFiles(await repoSlug(repo)),
       ".gitattributes": GITATTRIBUTES_TEXT,
+      [IMPACT_WORKFLOW_PATH]: IMPACT_WORKFLOW_TEXT,
     })
   ) {
     const p = join(repo, rel);

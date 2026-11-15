@@ -9,7 +9,8 @@
  *   c["checks<br/>(fleet, branch, keys)"] --> u["catch up<br/>(fast-forward)"]
  *   u --> b["build<br/>(validate, render)"]
  *   b --> s["show what changes"]
- *   s --> k["one signed commit<br/>(your passphrase)"]
+ *   s --> ci["compliance impact<br/>(the gate, spec 074)"]
+ *   ci --> k["one signed commit<br/>(your passphrase)"]
  *   k --> v["verify: a key<br/>servers trust"]
  *   v --> p["push: every machine<br/>within 15 minutes"]
  * ```
@@ -27,6 +28,12 @@ export interface FleetApplyOptions {
   message?: string;
   /** Show the checks, the build, and what would be committed; change nothing. */
   check?: boolean;
+  /**
+   * Spec 074: approve weakenings the compliance gate blocks ("updates/beta",
+   * "NET-02", "all"): written into the signed commit as the trailer
+   * `Compliance-Approved: <keys>`.
+   */
+  approve?: string;
 }
 
 const last = (r: { stderr: string; stdout: string }) =>
@@ -182,6 +189,16 @@ export async function fleetApply(o: FleetApplyOptions = {}): Promise<number> {
     (approve.length
       ? `${P.fleetId}: approve ${approve.length} commit(s) not signed by a fleet signer`
       : `${P.fleetId}: ${what || "changes"}`).slice(0, 200);
+
+  // 4b. Spec 074: the controls this change weakens or strengthens, and the fleet's gate.
+  if (what || ahead) {
+    const { applyImpact } = await import("../compliance/impact.ts");
+    const pass = await applyImpact({
+      ...(exists ? { base: remote } : {}),
+      ...(o.approve ? { approve: o.approve } : {}),
+    });
+    if (!pass && !o.check) return fail();
+  }
   if (o.check) {
     ui.next.push(`to commit and push it: deno task stolos apply -m "${message}"`);
     return 0;
@@ -213,6 +230,8 @@ export async function fleetApply(o: FleetApplyOptions = {}): Promise<number> {
         ...(what ? [] : ["--allow-empty"]),
         "-m",
         message,
+        // Spec 074: the approval travels in the signed commit, as a trailer.
+        ...(o.approve ? ["-m", `Compliance-Approved: ${o.approve.trim()}`] : []),
       ]))
     ) {
       k.fail(

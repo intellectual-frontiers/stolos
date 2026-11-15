@@ -13,6 +13,7 @@
  * deno task stolos compliance --framework hipaa
  * deno task stolos compliance export
  * deno task stolos compliance drift --since 2026-11-01
+ * deno task stolos compliance impact
  * ```
  *
  * `compliance catalog` downloads, once per PC, the SCF workbook from the SCF Council's repository
@@ -159,6 +160,95 @@
  * ```
  *
  * A change is mailed once an hour at most (the notify path's own deduplication).
+ *
+ * ## Compliance impact at the point of change
+ *
+ * Drift says what changed after the fact; impact says it before (spec 074). `stolos apply` shows a
+ * "Compliance impact" phase before it commits, `stolos compliance impact` prints the same, and
+ * every pull request to the fleet repository gets it as one comment:
+ *
+ * ```sh
+ * deno task stolos compliance impact                                   # the working tree vs GitHub's main
+ * deno task stolos compliance impact --base main --head my-branch --markdown
+ * ```
+ *
+ * It compares the fleet at a base commit with a head commit (or the working tree). Each side's
+ * model is loaded and every host's plan resolved, then held against Stolos's declarations of which
+ * model setting implements which SCF control, and which direction weakens it. These are Stolos's
+ * own statements, typed data in `impact.ts` (`IMPLEMENTATIONS`), each tested:
+ *
+ * | Setting (declaration)                                     | SCF control | Weakens it                              |
+ * | --------------------------------------------------------- | ----------- | --------------------------------------- |
+ * | unattended upgrades, `updates()` (`updates`)              | VPM-08      | turned off                              |
+ * | `fleet.ssh.passwordFrom`, sshd (`ssh-passwords`)          | IAC-14      | passwords from more networks            |
+ * | the host firewall, `firewall()` (`firewall`)              | NET-02      | turned off                              |
+ * | the ports each capability opens (`firewall-ports`)        | NET-02      | a port opened                           |
+ * | the daily backup, `backup()` (`backup`)                   | BCD-24      | the host removed from backups           |
+ * | `host.backup`, durable guests (`backup-scope`)            | BCD-24      | less held, fewer archives kept          |
+ * | osquery, `osquery()` (`osquery`)                          | MON-02      | removed                                 |
+ * | `compliance.cadence` (`cadence`)                          | MON-02      | observed less often, or stale later     |
+ * | etckeeper, `etckeeper()` (`etckeeper`)                    | CHG-03      | /etc changes no longer recorded         |
+ * | `host.users[].admin` (`admins`)                           | IAC-30      | more administrators                     |
+ * | `fleet.mcp.maxTier` (`agent-tier`)                        | IAC-30      | a higher tier for agents                |
+ *
+ * It also compares the evidence Git records (adopted machines, devices, connected accounts) and the
+ * fleet's control packs on both sides, per control, as drift does. Each affected control is listed
+ * with its SCF name and, when the SCF catalog is cached on the machine that runs it, the framework
+ * requirements the SCF Council maps it to; without the catalog, it says so.
+ *
+ * ```mermaid
+ * flowchart LR
+ *   change["a change: the working tree, or a pull request"] --> sides["the fleet at the base and at the head"]
+ *   sides --> model["each host's plan: Stolos's declarations"] & ev["observations and control packs"]
+ *   model & ev --> ctl["affected SCF controls: weakened or strengthened"]
+ *   ctl -- "SCF STRM" --> fw["framework requirements"]
+ *   ctl --> apply["stolos apply: the Compliance impact phase"]
+ *   ctl --> pr["the pull request: one comment, a check"]
+ *   ctl --> gate{"compliance.gate (the base's)"}
+ *   gate -- "allow, accepted risk, signed approval" --> go["committed, merged"]
+ *   gate -- "none" --> stop["refused"]
+ * ```
+ *
+ * ### The gate
+ *
+ * By default impact only shows. A fleet that wants weakenings stopped sets the gate in
+ * `fleets/<fleet>/fleet.ts`:
+ *
+ * ```ts ignore
+ * compliance: {
+ *   gate: {
+ *     block: "weakens",            // default "never"
+ *     allow: ["firewall-ports"],   // never blocks: a declaration, "<declaration>/<host>", or an SCF id
+ *     evidence: false,             // true: observed evidence turning a control to fail blocks too
+ *   },
+ * },
+ * ```
+ *
+ * The gate is read from the base, so a change cannot turn off the gate that judges it. A weakening
+ * the gate blocks is let through by one of:
+ *
+ * - an accepted risk in `fleets/<fleet>/controls/accepted.ts` (spec 078), with the policy
+ *   `impact/<key>` (`impact/updates/beta`, `impact/VPM-08`), who, why, and until when; after the
+ *   date it blocks again. Evidence from an adopted machine whose own `accepted` list covers the
+ *   failing policy is accepted, not failing, so it does not block either;
+ * - an approval: a commit in the change whose message carries the trailer
+ *   `Compliance-Approved: <keys>` (or `all`) and a good signature by one of the base's signers
+ *   (`signers.ts` at the base, so a change cannot add the signer that approves it). `stolos apply
+ *   --approve updates/beta` writes the trailer into the commit it signs.
+ *
+ * A weakening's keys are its declaration (`updates`), the declaration on its host (`updates/beta`),
+ * and its SCF control (`VPM-08`).
+ *
+ * ### On pull requests
+ *
+ * `stolos fleet init` writes `.github/workflows/compliance-impact.yml` into a new fleet repository,
+ * and `stolos fleet upgrade` writes it again when it changes. On each pull request it downloads the
+ * SCF catalog (pinned, SHA-256 checked), runs `stolos compliance impact --base <base> --head <head>
+ * --markdown` for each fleet, and posts one comment (created once, then updated) when a control is
+ * affected; its check fails when the gate blocks. It uses GitHub's own `GITHUB_TOKEN`, limited to
+ * `contents: read` and `pull-requests: write` and given only to the step that comments, and two
+ * actions, each pinned to a commit: `actions/checkout` and `denoland/setup-deno`. A pull request
+ * from a fork gets a read-only token: its check still runs, and the impact is in the run's summary.
  *
  * ## What it is, and is not
  *

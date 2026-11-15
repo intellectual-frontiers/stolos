@@ -10,6 +10,7 @@ import { bootstrapFiles, repoSlug } from "./bootstrap.ts";
 import { join } from "../core/path.ts";
 import { exists } from "../core/fsx.ts";
 import { ENGINE_ENTRY, ENGINE_ENTRY_TEXT } from "./upgrade.ts";
+import { IMPACT_WORKFLOW_PATH, IMPACT_WORKFLOW_TEXT } from "../compliance/workflow.ts";
 
 /** Where released engines are served from; the tag is appended. */
 export const ENGINE_BASE = "https://raw.githubusercontent.com/intellectual-frontiers/stolos/";
@@ -125,6 +126,8 @@ export function scaffoldFiles(tag: string, base = ENGINE_BASE, slug = ""): Recor
     ".gitignore": GITIGNORE_TEXT,
     ".vscode/settings.json": VSCODE_SETTINGS_TEXT,
     ".vscode/extensions.json": VSCODE_EXTENSIONS_TEXT,
+    // Spec 074: each pull request's compliance impact, as one comment; the gate as a check.
+    [IMPACT_WORKFLOW_PATH]: IMPACT_WORKFLOW_TEXT,
   };
 }
 

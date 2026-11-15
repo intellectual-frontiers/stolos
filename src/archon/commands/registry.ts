@@ -57,7 +57,7 @@ export const COMMANDS: Command[] = [
     aliases: ["push"],
     summary: "Your changes to the fleet, to every machine: check, build, one signed commit, push",
     description:
-      `One command instead of build, git add, git commit, and git push (spec 060; stolos push is the same command). In order, stopping at the first problem with its fix: checks (a fleet is chosen, this is its branch, your keys can sign); catches up with GitHub (fast-forward only; your uncommitted edits are kept); builds (validate and render: an invalid model commits nothing); shows what changes, by fleet and host; makes one signed commit (your passphrase, once; -m gives the message, else it is written from what changed); verifies that servers will trust it; and pushes. Every machine applies it within 15 minutes. With nothing new, it says so and does nothing. --check stops before the commit.`,
+      `One command instead of build, git add, git commit, and git push (spec 060; stolos push is the same command). In order, stopping at the first problem with its fix: checks (a fleet is chosen, this is its branch, your keys can sign); catches up with GitHub (fast-forward only; your uncommitted edits are kept); builds (validate and render: an invalid model commits nothing); shows what changes, by fleet and host; shows its compliance impact (spec 074: the SCF controls the change weakens or strengthens, with their framework requirements; with compliance.gate { block: "weakens" } in fleet.ts, a weakening without an accepted risk or an approval commits nothing, and --approve <keys> approves it in the signed commit); makes one signed commit (your passphrase, once; -m gives the message, else it is written from what changed); verifies that servers will trust it; and pushes. Every machine applies it within 15 minutes. With nothing new, it says so and does nothing. --check stops before the commit.`,
     tier: "repo",
     place: "pc",
     operation: true,
@@ -74,6 +74,12 @@ export const COMMANDS: Command[] = [
         type: "boolean",
         description: "Checks, catch-up report, build, and what would be committed; change nothing.",
       },
+      {
+        name: "approve",
+        type: "string",
+        description:
+          'Approve weakenings the compliance gate blocks, in the signed commit (trailer Compliance-Approved): keys such as "updates/beta", "NET-02", or "all".',
+      },
     ],
     examples: [
       {
@@ -81,10 +87,18 @@ export const COMMANDS: Command[] = [
         text: "Build, sign, and push.",
       },
       { cmd: "deno task stolos push", text: "The same (push is another name for apply)." },
+      {
+        cmd: 'deno task stolos apply -m "lab: beta off unattended upgrades" --approve updates/beta',
+        text: "Approve the one weakening the gate blocks, as a fleet signer.",
+      },
     ],
     async run(a) {
       const { fleetApply } = await import("../fleet/apply.ts");
-      return await fleetApply({ message: a.message as string | undefined, check: !!a.check });
+      return await fleetApply({
+        message: a.message as string | undefined,
+        check: !!a.check,
+        ...(a.approve ? { approve: a.approve as string } : {}),
+      });
     },
   },
   {
@@ -1183,6 +1197,51 @@ export const COMMANDS: Command[] = [
         ...(a.since ? { since: a.since as string } : {}),
         notify: !!a.notify,
         json: ctx.json,
+      });
+    },
+  },
+  {
+    name: "compliance impact",
+    summary:
+      "The SCF controls a change weakens or strengthens, with their framework requirements; the gate's verdict",
+    description:
+      `Spec 074. Compares the fleet at --base (default: the fleet's branch on GitHub, origin/<branch>; the merge base with the head is used) with --head (a commit; default: the working tree). Model changes: each host's plan and the fleet's settings, against Stolos's declarations of which setting implements which SCF control and which direction weakens it (unattended upgrades: VPM-08; SSH passwords: IAC-14; the host firewall and its ports: NET-02; backups: BCD-24; osquery and the evidence cadences: MON-02; etckeeper: CHG-03; administrators and the agents' tier: IAC-30). Evidence changes: the observations in Git and the fleet's control packs, per control, as compliance drift reads them. Each affected control is listed with its SCF name and, when the SCF catalog is cached, the framework requirements the SCF Council maps it to. The gate (compliance.gate in fleet.ts, read from the base): with block "weakens", a weakening blocks unless gate.allow names it, an accepted risk covers it (policy "impact/<key>" in controls/accepted.ts), or a commit in the change signed by one of the base's signers carries "Compliance-Approved: <key>". Exits 1 when the gate blocks, 2 when the impact cannot be computed. --markdown prints the pull request comment (the fleet repository's compliance-impact workflow runs it); --json for scripts. Runs each side's fleet.ts and host.ts (as build does), read-only.`,
+    tier: "read",
+    noMcp: true,
+    args: [
+      {
+        name: "base",
+        type: "string",
+        description: "The base commit, branch, or tag (default: origin/<branch>, else HEAD).",
+      },
+      {
+        name: "head",
+        type: "string",
+        description: "The head commit (default: the working tree).",
+      },
+      {
+        name: "markdown",
+        type: "boolean",
+        description: "Print the pull request comment (Markdown).",
+      },
+    ],
+    examples: [
+      {
+        cmd: "deno task stolos compliance impact",
+        text: "What your uncommitted change does to the fleet's controls, against GitHub's main.",
+      },
+      {
+        cmd: "deno task stolos compliance impact --base main --head feature --markdown",
+        text: "A branch's impact, as the pull request comment shows it.",
+      },
+    ],
+    async run(a, ctx) {
+      const { impactCommand } = await import("../compliance/impact.ts");
+      return await impactCommand({
+        ...(a.base ? { base: a.base as string } : {}),
+        ...(a.head ? { head: a.head as string } : {}),
+        json: ctx.json,
+        markdown: !!a.markdown,
       });
     },
   },
@@ -3619,6 +3678,7 @@ const PC_COMMANDS = new Set([
   "compliance",
   "compliance catalog",
   "compliance drift",
+  "compliance impact",
   "controls list",
   "controls run",
   "controls test",

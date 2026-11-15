@@ -43,7 +43,21 @@ import { type Cadences, fleetFreshView, type FreshView } from "./freshness.ts";
 export async function repoEvidence(
   r: RepoReader,
   fleet: string,
-  o: { now: number; connectors: Connector[]; cadences?: Cadences; catalog?: ScfCatalog },
+  o: {
+    now: number;
+    connectors: Connector[];
+    cadences?: Cadences;
+    catalog?: ScfCatalog;
+    /**
+     * Spec 074: the fleet's own control packs, run over what this side holds;
+     * their results are kept as evidence (source "control pack").
+     */
+    packs?: (i: {
+      adopted: PcFacts["adopted"];
+      devices: PcFacts["devices"];
+      connectors: Array<{ connector: string; observed: Observation }>;
+    }) => Promise<NonNullable<PcFacts["controls"]>>;
+  },
 ): Promise<FreshView> {
   const base = `fleets/${fleet}`;
   const lit = async <T>(path: string, name: string): Promise<T | undefined> => {
@@ -92,12 +106,20 @@ export async function repoEvidence(
       results: c.policies(observed, o.now),
     });
   }
+  const controls = o.packs
+    ? await o.packs({
+      adopted,
+      devices,
+      connectors: clouds.map((c) => ({ connector: c.id, observed: c.observed! })),
+    })
+    : undefined;
   const facts: PcFacts = {
     fleet: { id: fleet, title: fleet, repo: "" },
     machines: [],
     adopted,
     clouds,
     devices,
+    ...(controls ? { controls } : {}),
     signers: [],
     git: { dirty: [], unapproved: [], log: [] },
   };
@@ -107,7 +129,8 @@ export async function repoEvidence(
   });
   // Only what the repository records: the repository's own checks need this PC's state.
   const keep = (e: Evidence) =>
-    e.source === "adopted" || e.source === "device" || e.source === "cloud";
+    e.source === "adopted" || e.source === "device" || e.source === "cloud" ||
+    (!!o.packs && e.source === "control pack");
   const { combine } = await import("./report.ts");
   return {
     ...v,

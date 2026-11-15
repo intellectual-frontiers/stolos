@@ -142,9 +142,11 @@ Deno.test("046: fleet upgrade locks, validates, and signs; refuses what is not a
     assertEquals(await sh(repo, "git", "status", "--porcelain"), "", "nothing left over");
     assertEquals(
       (await sh(repo, "git", "show", "--name-only", "--format=", "HEAD")).split("\n").sort(),
-      // Spec 062: the bootstrap scripts and .gitattributes come with the engine.
+      // Spec 062: the bootstrap scripts and .gitattributes come with the engine;
+      // spec 074: the compliance-impact workflow too.
       [
         ".gitattributes",
+        ".github/workflows/compliance-impact.yml",
         "bin/bootstrap.sh",
         "bin/bootstrap.windows.ps1",
         "deno.json",

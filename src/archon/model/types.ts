@@ -9,6 +9,7 @@
 
 import type { SiteDef } from "./site.ts";
 import type { CadenceOverrides } from "../compliance/freshness.ts";
+import type { ComplianceGate } from "../compliance/impact.ts";
 
 /** The site network model (spec 028), re-exported for the fleet types that use it. */
 export type {
@@ -224,8 +225,15 @@ export interface FleetDef {
    * observed and how late it may be before it is stale (a failing check,
    * SCF MON-02). Default: managed servers every 15 minutes, everything else
    * daily, each stale after twice its cadence, never more than 7 days.
+   *
+   * `gate` (spec 074): whether a change that weakens a control may be
+   * committed (`stolos apply`) or merged (the pull request's check):
+   * `{ block: "weakens" }` refuses one unless `allow` names it, an accepted
+   * risk (`impact/<key>` in controls/accepted.ts) covers it, or a commit
+   * signed by a fleet signer approves it (`Compliance-Approved: <key>`).
+   * Default: never block, only show.
    */
-  compliance?: { cadence?: CadenceOverrides };
+  compliance?: { cadence?: CadenceOverrides; gate?: ComplianceGate };
   /** Local observability limits for every host and workstation (spec 021). */
   observability?: Partial<ObservabilityDef>;
   /**
