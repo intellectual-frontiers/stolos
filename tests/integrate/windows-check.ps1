@@ -20,7 +20,9 @@ foreach ($shell in 'powershell', 'pwsh') {
 Check discover.txt @('discover')
 if (Test-Path 'C:\ProgramData\stolos') { throw '--discover changed this PC' }
 
-ssh-keygen -q -t ed25519 -N '""' -f "$env:TEMP\probe" | Out-Null
+# Through Deno, so the passphrase is exactly empty (PowerShell 7 passes '""' as two quote characters).
+deno eval "await new Deno.Command('ssh-keygen', { args: ['-q', '-t', 'ed25519', '-N', '', '-f', Deno.env.get('TEMP') + '/probe'] }).output()"
+if (-not (Test-Path "$env:TEMP\probe")) { throw 'no test key' }
 $pub = Get-Content "$env:TEMP\probe.pub"
 $sha = (deno eval "const t=Deno.readTextFileSync('bin/stolos-probe.ps1');const h=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));console.log([...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,'0')).join(''))").Trim()
 & powershell -NoProfile -ExecutionPolicy Bypass -File bin/integrate.windows.ps1 --adopt --fleet ci --key "$pub" --probe-sha256 $sha --yes *> adopt.txt
