@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/adopt/adopt.ts - Stolos v0.79.0 documentation</title>
+  <title>archon/adopt/adopt.ts - Stolos v0.80.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.79.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.80.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -264,11 +264,33 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_adopteddir"
   </defs>
 </svg>
 </a>
-Interfaces</h2></div><div class="namespaceSection"><div id="namespace_adopteddef" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+Interfaces</h2></div><div class="namespaceSection"><div id="namespace_acceptance" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;adopt&#x2F;adopt.ts&#x2F;~&#x2F;Acceptance.html" title="Acceptance">
+			    <span>Acceptance</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One accepted risk: a policy that may fail, why, who said so, and until when.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;adopt&#x2F;adopt.ts&#x2F;~&#x2F;Acceptance.html#property_by">
+                  <span>by</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Who accepted it.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;adopt&#x2F;adopt.ts&#x2F;~&#x2F;Acceptance.html#property_policy">
+                  <span>policy</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The policy's id (disk-encryption, firewall, ...).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;adopt&#x2F;adopt.ts&#x2F;~&#x2F;Acceptance.html#property_reason">
+                  <span>reason</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Why, in words an auditor reads.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;adopt&#x2F;adopt.ts&#x2F;~&#x2F;Acceptance.html#property_until">
+                  <span>until</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Until when (YYYY-MM-DD); after it the policy fails again.</p>
+</div></div></li></ul></div>
+    </div><div id="namespace_adopteddef" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;adopt&#x2F;adopt.ts&#x2F;~&#x2F;AdoptedDef.html" title="AdoptedDef">
 			    <span>AdoptedDef</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>An adopted machine, as the fleet declares it (machine.ts).</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;adopt&#x2F;adopt.ts&#x2F;~&#x2F;AdoptedDef.html#property_accepted">
+                  <span>accepted</span><span>: <span class="td-ref">Acceptance</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Risks the owner accepted, each for a while: a policy that fails is shown
+as accepted (not as passing) until the date, with who and why (for an
+auditor). Written by <code>stolos host accept</code>.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;adopt&#x2F;adopt.ts&#x2F;~&#x2F;AdoptedDef.html#property_adopted">
                   <span>adopted</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When it was adopted (ISO time).</p>
 </div></div></li><li>
@@ -419,7 +441,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_machine_nam
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1451 symbols</span><svg
+              <span class="leading-none">view all 1454 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -434,7 +456,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_machine_nam
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/adopt/adopt_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_adopteddir" title="adoptedDir">adoptedDir</a></li><li><a href="#namespace_ensureprobekey" title="ensureProbeKey">ensureProbeKey</a></li><li><a href="#namespace_installscript" title="installScript">installScript</a></li><li><a href="#namespace_loadadopted" title="loadAdopted">loadAdopted</a></li><li><a href="#namespace_machinesource" title="machineSource">machineSource</a></li><li><a href="#namespace_observe" title="observe">observe</a></li><li><a href="#namespace_observedsource" title="observedSource">observedSource</a></li><li><a href="#namespace_probe" title="probe">probe</a></li><li><a href="#namespace_probekeypath" title="probeKeyPath">probeKeyPath</a></li><li><a href="#namespace_releasescript" title="releaseScript">releaseScript</a></li><li><a href="#namespace_runasyou" title="runAsYou">runAsYou</a></li><li><a href="#namespace_scanhostkeys" title="scanHostKeys">scanHostKeys</a></li><li><a href="#namespace_toobserved" title="toObserved">toObserved</a></li></ul></li><li><a href="#archon/adopt/adopt_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_adopteddef" title="AdoptedDef">AdoptedDef</a></li><li><a href="#namespace_observed" title="Observed">Observed</a></li></ul></li><li><a href="#archon/adopt/adopt_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_machine_name" title="MACHINE_NAME">MACHINE_NAME</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/adopt/adopt_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_adopteddir" title="adoptedDir">adoptedDir</a></li><li><a href="#namespace_ensureprobekey" title="ensureProbeKey">ensureProbeKey</a></li><li><a href="#namespace_installscript" title="installScript">installScript</a></li><li><a href="#namespace_loadadopted" title="loadAdopted">loadAdopted</a></li><li><a href="#namespace_machinesource" title="machineSource">machineSource</a></li><li><a href="#namespace_observe" title="observe">observe</a></li><li><a href="#namespace_observedsource" title="observedSource">observedSource</a></li><li><a href="#namespace_probe" title="probe">probe</a></li><li><a href="#namespace_probekeypath" title="probeKeyPath">probeKeyPath</a></li><li><a href="#namespace_releasescript" title="releaseScript">releaseScript</a></li><li><a href="#namespace_runasyou" title="runAsYou">runAsYou</a></li><li><a href="#namespace_scanhostkeys" title="scanHostKeys">scanHostKeys</a></li><li><a href="#namespace_toobserved" title="toObserved">toObserved</a></li></ul></li><li><a href="#archon/adopt/adopt_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_acceptance" title="Acceptance">Acceptance</a></li><li><a href="#namespace_adopteddef" title="AdoptedDef">AdoptedDef</a></li><li><a href="#namespace_observed" title="Observed">Observed</a></li></ul></li><li><a href="#archon/adopt/adopt_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_machine_name" title="MACHINE_NAME">MACHINE_NAME</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>
