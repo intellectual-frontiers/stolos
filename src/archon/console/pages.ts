@@ -22,8 +22,13 @@ import { diagram, type NavItem } from "./layout.ts";
 /** The Archon Console's menu. */
 export const ARCHON_NAV: NavItem[] = [
   { group: "Server", label: "Overview", href: "/" },
-  { group: "Operate", label: "Actions", href: "/actions" },
-  { group: "Operate", label: "Activity", href: "/activity" },
+  { group: "Server", label: "Activity", href: "/activity" },
+  { group: "Actions", label: "This server", href: "/actions/server" },
+  { group: "Actions", label: "PostgreSQL", href: "/actions/postgres" },
+  { group: "Actions", label: "Storage and data", href: "/actions/storage" },
+  { group: "Actions", label: "Web and telemetry", href: "/actions/web" },
+  { group: "Actions", label: "Mail and alerts", href: "/actions/mail" },
+  { group: "Actions", label: "Your shell", href: "/actions/shell" },
   { group: "Learn", label: "How it works", href: "/how" },
   { group: "Learn", label: "Guide", href: "/guide" },
 ];
@@ -108,7 +113,7 @@ export function overviewPage(d: WelcomeData, r: RepoFacts, s: Session): Html {
   return html`
     <div class="pagehead"><div><div class="crumb">${d.host}</div><h1>Overview</h1>
       <p>Whether this server matches its description in Git, and what to do when it doesn't.</p></div>
-      <a class="btn" href="/actions?cmd=verify">Check everything now</a></div>
+      <a class="btn" href="/actions/server?cmd=verify">Check everything now</a></div>
     <div class="grid cols-3">
       <div class="card row" style="flex-wrap:nowrap; gap:16px">
         <div class="ring" style="${ring}"><span>${v ? v.passed : "?"}</span></div>
@@ -144,7 +149,7 @@ export function overviewPage(d: WelcomeData, r: RepoFacts, s: Session): Html {
         v.failed.map((f) =>
           html`
             <div class="row spread"
-              style="padding:8px 0;border-bottom:1px solid var(--line)"><span class="mono">${f}</span><a class="btn ghost" href="/actions?cmd=verify">See the fix</a></div>
+              style="padding:8px 0;border-bottom:1px solid var(--line)"><span class="mono">${f}</span><a class="btn ghost" href="/actions/server?cmd=verify">See the fix</a></div>
           `
         )
       }</div>`
@@ -323,54 +328,171 @@ export function howPage(d: WelcomeData, r: RepoFacts): Html {
   `;
 }
 
-/** Actions: every command as a form, with live output. */
-export function actionsPage(cmds: Command[], selected: Command, s: Session): Html {
-  const groupOf = (c: Command) =>
-    c.name.startsWith("pg ")
-      ? "PostgreSQL"
-      : c.name.startsWith("fs ")
-      ? "Files and storage"
-      : c.name.startsWith("web") || c.name.startsWith("otel")
-      ? "Web and telemetry"
-      : c.name.startsWith("notify") || c.name.startsWith("mail")
-      ? "Mail and alerts"
-      : ["update", "apply", "verify", "doctor", "capture", "reboot", "poweroff", "tools sync"]
-          .includes(c.name)
-      ? "This server"
-      : "More";
-  const groups = [...new Set(cmds.map(groupOf))].sort((a, b) =>
-    a === "This server" ? -1 : b === "This server" ? 1 : a.localeCompare(b)
-  );
+/** A group of actions: its own page, introduction, diagram, and commands. */
+export interface ActionGroup {
+  /** Its address: /actions/<id>. */
+  id: string;
+  /** Its name in the menu. */
+  label: string;
+  /** What it is about, for someone new to servers. */
+  intro: string;
+  /** Which commands belong here. */
+  has(name: string): boolean;
+  /** The command shown first. */
+  first: string;
+  /** How this part of the server works (Mermaid), from the server's data. */
+  diagram(d: WelcomeData): string;
+  /** Under the diagram. */
+  caption: string;
+}
+
+/** The Archon Console's action groups, in menu order (every offered command is in exactly one). */
+export const ACTION_GROUPS: ActionGroup[] = [
+  {
+    id: "server",
+    label: "This server",
+    intro:
+      "Bring the server up to date with Git, check it, and restart or turn it off. Updating is what the 15-minute timer does; running it here just does it now.",
+    has: (n) =>
+      [
+        "update",
+        "apply",
+        "verify",
+        "doctor",
+        "capture",
+        "state",
+        "reboot",
+        "poweroff",
+        "tools sync",
+        "guest sync",
+        "report daily",
+        "explain",
+        "query",
+      ]
+        .includes(n),
+    first: "verify",
+    diagram: (d) =>
+      `flowchart LR
+  u["archon update"] --> p["pull ${m(d.repo.slug)}"] --> s{"signed by a<br/>fleet signer?"}
+  s -->|yes| a["apply: packages, accounts,<br/>files, services, tools"] --> v["verify: every check"]
+  s -->|no| r["refuse: nothing changes"]
+  v --> h["health on Overview"]`,
+    caption: "archon update, step by step. archon verify is the last box alone: it only looks.",
+  },
+  {
+    id: "postgres",
+    label: "PostgreSQL",
+    intro:
+      "Databases on this server, off until an operator turns them on. You sign in with your Linux account: on the server without a password, from elsewhere with your Linux password over TLS.",
+    has: (n) => n.startsWith("pg "),
+    first: "pg status",
+    diagram: (d) =>
+      `flowchart LR
+  you["you, on ${
+        m(d.host)
+      }<br/>psql service=prime"] -->|"socket: who you are,<br/>no password"| pg[("PostgreSQL<br/>instance prime")]
+  app["an app or a laptop"] -->|"TLS 1.3, your Linux password<br/>pg-prime.${
+        m(d.fqdn ?? d.host)
+      }"| pg
+  pg -->|"pg backup: a dump"| dump["/srv/archon-data<br/>(backed up when durable)"]`,
+    caption:
+      "How people and apps reach a database. Publishing (pg publish) opens the TLS path; the router decides from where.",
+  },
+  {
+    id: "storage",
+    label: "Storage and data",
+    intro:
+      "File sharing (SMB) and S3 buckets, and whether this server holds data that exists nowhere else. Turning a service on asks you to choose: durable (kept and backed up) or ephemeral (losing it is harmless).",
+    has: (n) =>
+      n.startsWith("fs ") || n.startsWith("backup ") || ["data", "data set", "opt-in"].includes(n),
+    first: "data",
+    diagram: () =>
+      `flowchart TB
+  on["turn on SMB, S3, or PostgreSQL"] --> q{"does it hold data that<br/>exists nowhere else?"}
+  q -->|"yes: durable"| d["kept across reinstalls,<br/>backed up, erased only with<br/>--confirm-destroy typed by a person"]
+  q -->|"no: ephemeral"| e["recreated as needed;<br/>a reinstall starts it empty"]`,
+    caption: "Durable or ephemeral: the one question every service that stores data asks.",
+  },
+  {
+    id: "web",
+    label: "Web and telemetry",
+    intro:
+      "Traefik answers HTTPS for this server and its apps, with certificates from Let's Encrypt. Telemetry collects logs and metrics, and can show the whole fleet's in one place.",
+    has: (n) => n.startsWith("web ") || n.startsWith("otel ") || n.startsWith("observe"),
+    first: "web status",
+    diagram: (d) =>
+      `flowchart LR
+  b["your browser"] -->|"HTTPS"| t["Traefik<br/>*.${m(d.fqdn ?? d.host)}"]
+  le["Let's Encrypt"] -->|"certificate<br/>(DNS challenge in Cloudflare)"| t
+  t --> c["Archon Console"]
+  t --> k["Cockpit"]
+  t --> a["apps and containers<br/>(label traefik.enable=true)"]
+  o["OpenTelemetry Collector"] -->|"logs, metrics"| ui["telemetry UI"]`,
+    caption: "Everything web goes through Traefik on 443; the certificate renews by itself.",
+  },
+  {
+    id: "mail",
+    label: "Mail and alerts",
+    intro:
+      "This server mails the fleet's mailbox when something needs a person: a failed update, a login from a new address, a change made here. Messages wait in a queue until they are sent.",
+    has: (n) => n.startsWith("notify ") || n.startsWith("mail "),
+    first: "notify status",
+    diagram: (d) =>
+      `flowchart LR
+  ev["an event: a failure,<br/>a login, a change"] --> q["queue on ${m(d.host)}"]
+  q -->|"Cloudflare Email Sending"| mb["${m(d.mailbox ?? "the fleet's mailbox")}"]`,
+    caption: "How alerts reach you. notify status shows the queue; notify test sends one.",
+  },
+  {
+    id: "shell",
+    label: "Your shell",
+    intro:
+      "Your shell, prompt, and settings on this server come from the fleet repository (dotfiles), the same on every server. These show what you have and where each file comes from.",
+    has: (n) => ["shell status", "dotfiles"].includes(n),
+    first: "dotfiles",
+    diagram: () =>
+      `flowchart LR
+  e["the engine's base layer"] --> f["the fleet's layer<br/>(home/ in the repository)"] --> u["your files on this server"]
+  l["~/.bashrc.local, ~/.config/fish/local.fish<br/>(this machine only, never touched)"] --> u`,
+    caption: "Dotfiles in layers: change one in the repository, and every server you use follows.",
+  },
+];
+
+/** The group a command is in ("server" for anything not listed elsewhere). */
+export function groupOf(name: string): ActionGroup {
+  return ACTION_GROUPS.find((g) => g.id !== "server" && g.has(name)) ?? ACTION_GROUPS[0];
+}
+
+/** One group's page: introduction, diagram, its commands, the form, and the terminal. */
+export function actionsPage(
+  group: ActionGroup,
+  cmds: Command[],
+  selected: Command,
+  s: Session,
+  d: WelcomeData,
+): Html {
+  const mine = cmds.filter((c) => groupOf(c.name).id === group.id);
   return html`
     <div class="pagehead">
       <div>
-        <div class="crumb">archon</div>
-        <h1>Actions</h1>
-        <p>Every <code>archon</code> command for this machine, as a form: the same list as <code>archon help</code>, so
-      nothing here is web-only. Each says what it does to the server before you run it.</p>
+        <div class="crumb">Actions</div>
+        <h1>${group.label}</h1>
+        <p>${group.intro}</p>
       </div>
     </div>
-    <div class="grid" style="grid-template-columns: minmax(0, 340px) minmax(0, 1fr)">
-      <nav class="card cmdlist" style="padding:6px" aria-label="Commands">
-        ${groups.map((g) =>
-          html`<div class="k" style="padding:10px 6px 4px">${g}</div>${
-            cmds.filter((c) => groupOf(c) === g).map((c) =>
-              html`
-                <a href="/actions?cmd=${encodeURIComponent(c.name)}"
-                  ${c.name === selected.name
-                    ? html`aria-current="true"`
-                    : ""}><span class="mono">${c.name}</span>${tierPill(
-                      c.tier,
-                    )}<span class="sub">${c.summary}</span></a>
-              `
-            )
-          }`
-        )}
-      </nav>
+    ${diagram(group.diagram(d), group.caption)}
+    <div class="grid actions" style="margin-top:14px">
+      <nav class="card cmdlist" aria-label="${group.label} commands">${mine.map((c) =>
+        html`
+          <a href="/actions/${group.id}?cmd=${encodeURIComponent(c.name)}"
+            ${c.name === selected.name ? html`aria-current="true"` : ""}><span class="mono">${c
+              .name}</span>${tierPill(c.tier)}<span class="sub">${c.summary}</span></a>
+        `
+      )}</nav>
       <div class="stack" style="min-width:0">
         ${commandForm(selected, s.role, "/actions/run")}
         <div class="card"><div class="row spread" style="margin-bottom:8px"><h2>Output</h2><span class="sub" id="runstate">Nothing running</span></div>
-          <div class="term" id="output" aria-live="polite"><span class="dim">Run the command to see its output here, live.</span></div></div>
+          <div class="term" id="output" aria-live="polite"><div class="dim">Run the command to see its output here, live.</div></div></div>
       </div>
     </div>
   `;

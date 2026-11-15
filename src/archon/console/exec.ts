@@ -42,6 +42,12 @@ export interface Runner {
   run(user: string, argv: string[], line: (s: string) => void): Promise<number>;
 }
 
+/** Terminal color codes (sudo drops NO_COLOR for its own process), removed from what the page shows. */
+export function stripAnsi(s: string): string {
+  // deno-lint-ignore no-control-regex
+  return s.replace(/\x1b\[[0-9;?]*[A-Za-z]/g, "").replace(/\r/g, "");
+}
+
 /** Read a stream's lines as they come. */
 async function lines(stream: ReadableStream<Uint8Array>, each: (s: string) => void): Promise<void> {
   const dec = new TextDecoder();
@@ -50,11 +56,11 @@ async function lines(stream: ReadableStream<Uint8Array>, each: (s: string) => vo
     buf += dec.decode(chunk, { stream: true });
     let i;
     while ((i = buf.indexOf("\n")) >= 0) {
-      each(buf.slice(0, i));
+      each(stripAnsi(buf.slice(0, i)));
       buf = buf.slice(i + 1);
     }
   }
-  if (buf) each(buf);
+  if (buf) each(stripAnsi(buf));
 }
 
 /** The server's runner: `sudo -n archon console exec --as <user> --argv <JSON>`, output as it comes. */

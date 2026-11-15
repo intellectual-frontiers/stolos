@@ -41,6 +41,8 @@ export const FAVICON =
 
 /** Both consoles' stylesheet: tokens first (light, then dark), then the parts. */
 export const CONSOLE_CSS = `
+@font-face { font-family: "JetBrainsMono NF"; font-weight: 400; font-display: swap; src: url("/static/fonts/JetBrainsMonoNerdFontMono-Regular.woff2") format("woff2"); }
+@font-face { font-family: "JetBrainsMono NF"; font-weight: 700; font-display: swap; src: url("/static/fonts/JetBrainsMonoNerdFontMono-Bold.woff2") format("woff2"); }
 :root {
   --bg: #F6F7FB; --panel: #FFFFFF; --rail: #EEF0F7; --ink: #161A2E; --muted: #5B6178; --line: #DDE1EC;
   --accent: #4F46E5; --accent-soft: #EEF2FF; --ok: #0F8A5F; --ok-soft: #E6F6EF; --warn: #A15C00;
@@ -48,6 +50,7 @@ export const CONSOLE_CSS = `
   --shadow: 0 1px 2px rgba(22,26,46,.06), 0 8px 24px rgba(22,26,46,.06);
   --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+  --term: "JetBrainsMono NF", "JetBrainsMono Nerd Font", "Cascadia Code", ui-monospace, monospace;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
@@ -109,13 +112,18 @@ tr:last-child td { border-bottom: 0; }
 .stack { display: flex; flex-direction: column; gap: 10px; }
 .ring { width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center; flex: none; }
 .ring span { width: 60px; height: 60px; border-radius: 50%; background: var(--panel); display: grid; place-items: center; font-weight: 600; font-variant-numeric: tabular-nums; }
+.grid.actions { grid-template-columns: minmax(0, 320px) minmax(0, 1fr); align-items: start; }
+.grid.actions > .cmdlist { position: sticky; top: 70px; max-height: calc(100vh - 90px); overflow: auto; padding: 6px; }
+.diagram pre.mermaid svg { max-height: 300px; }
 .cmdlist a { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--line); padding: 10px 6px; }
 .cmdlist a:hover, .cmdlist a[aria-current="true"] { background: var(--accent-soft); }
 .cmdlist .sub { grid-column: 1 / -1; }
 label.field { display: grid; gap: 4px; } label.field span { font-size: 12.5px; font-weight: 500; }
 label.check { display: flex; gap: 8px; align-items: center; }
 input[type=text], input[type=password], select { font: inherit; width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--panel); color: var(--ink); }
-.term { background: #0E1120; color: #D8DCEE; border-radius: 10px; padding: 14px; font-family: var(--mono); font-size: 12.5px; min-height: 200px; max-height: 70vh; overflow: auto; white-space: pre-wrap; word-break: break-word; }
+.term { background: #0E1120; color: #D8DCEE; border-radius: 10px; padding: 14px 16px; font-family: var(--term); font-size: 13px; line-height: 1.45;
+  height: max(420px, 62vh); overflow: auto; overscroll-behavior: contain; white-space: pre-wrap; word-break: break-word; resize: vertical; }
+.term > div { min-height: 1.45em; }
 .term .ok { color: #3CC98F; } .term .w { color: #F0B054; } .term .bad { color: #FF6B7D; } .term .dim { color: #8189A8; }
 .help { border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 0 10px 10px 0; padding: 12px 14px; }
 .help h3 { color: var(--accent); } .help p { margin: 6px 0 0; }
@@ -131,7 +139,8 @@ input[type=text], input[type=password], select { font: inherit; width: 100%; bor
   .shell { grid-template-columns: minmax(0, 1fr); }
   .rail { flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--line); padding: 8px; }
   .rail .group { display: none; } .rail a { white-space: nowrap; }
-  .cols-3, .cols-2 { grid-template-columns: minmax(0, 1fr); }
+  .cols-3, .cols-2, .grid.actions { grid-template-columns: minmax(0, 1fr); }
+  .grid.actions > .cmdlist { position: static; max-height: 40vh; }
   .fleetmark span, .brand small, .me .who { display: none; }
 }
 `;
@@ -143,6 +152,22 @@ export const MERMAID = {
   /** Where the consoles serve it. */
   url: "/static/mermaid-12.2.0.min.js",
 } as const;
+
+/** JetBrainsMono Nerd Font (Nerd Fonts v3.5.0, OFL), for the consoles' terminals: fetched and checked like Mermaid. */
+export const FONTS = [
+  {
+    path: "vendor/fonts/JetBrainsMonoNerdFontMono-Regular.woff2",
+    sha256: "451a92bb8a46c3eb5225980660d891b113721dbea9bd132f060b0433a5a9272b",
+    url: "/static/fonts/JetBrainsMonoNerdFontMono-Regular.woff2",
+    weight: 400,
+  },
+  {
+    path: "vendor/fonts/JetBrainsMonoNerdFontMono-Bold.woff2",
+    sha256: "c577750dfa534a925c918af50b74b1c47bfb7e382a729c46fe603a34079c654d",
+    url: "/static/fonts/JetBrainsMonoNerdFontMono-Bold.woff2",
+    weight: 700,
+  },
+] as const;
 
 /** SHA-256 of some bytes, as lowercase hex. */
 export async function sha256Hex(data: Uint8Array<ArrayBuffer>): Promise<string> {

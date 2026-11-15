@@ -66,8 +66,18 @@ const SCRIPTS = raw(`<script type="module" src="${DATASTAR.url}"></script>
     try { await loading; await window.mermaid.run({ nodes }); }
     catch { nodes.forEach((n) => n.classList.add("plain")); }
   };
+  // Terminals follow their output, unless you scrolled up to read.
+  const follow = () => document.querySelectorAll(".term").forEach((t) => {
+    if (t.dataset.held !== "1") t.scrollTop = t.scrollHeight;
+  });
+  addEventListener("scroll", (e) => {
+    const t = e.target;
+    if (t instanceof Element && t.classList.contains("term")) {
+      t.dataset.held = t.scrollHeight - t.scrollTop - t.clientHeight > 40 ? "1" : "0";
+    }
+  }, true);
   addEventListener("DOMContentLoaded", draw);
-  new MutationObserver(draw).observe(document.documentElement, { childList: true, subtree: true });
+  new MutationObserver(() => { draw(); follow(); }).observe(document.documentElement, { childList: true, subtree: true });
 })();
 </script>`);
 

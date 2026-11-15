@@ -131,7 +131,20 @@ Deno.test("065 console: sign in, see the overview with its live diagram, sign ou
   assertStringIncludes(page, 'class="mermaid"');
   assertStringIncludes(page, "a7c1e94");
   assertStringIncludes(page, "alice-daily");
-  for (const p of ["/how", "/actions", "/actions?cmd=pg%20on", "/activity", "/guide"]) {
+  assertEquals((await h(req("/actions", { cookie }))).headers.get("location"), "/actions/server");
+  for (
+    const p of [
+      "/how",
+      "/actions/server",
+      "/actions/postgres?cmd=pg%20on",
+      "/actions/storage",
+      "/actions/web",
+      "/actions/mail",
+      "/actions/shell",
+      "/activity",
+      "/guide",
+    ]
+  ) {
     assertEquals((await h(req(p, { cookie }))).status, 200, p);
   }
   const out = await h(req("/signout", { method: "POST", cookie, headers: { origin: BASE } }));
@@ -252,4 +265,30 @@ Deno.test("065 console: event format and line colors", () => {
   );
   assertEquals(lineClass("[ok] Units  46 up to date"), "ok");
   assertEquals(lineClass("[FAIL] verify  2 failed"), "bad");
+  assertEquals(
+    lineClass("[!!] Web   certificate renews in 9 days"),
+    "w",
+    "a warning, not a failure",
+  );
+});
+
+Deno.test("065 console: every command is on exactly one action page, each page has some", async () => {
+  const { ACTION_GROUPS, groupOf } = await import("../src/archon/console/pages.ts");
+  const { consoleCommands } = await import("../src/archon/console/forms.ts");
+  const cmds = consoleCommands("machine");
+  for (const g of ACTION_GROUPS) {
+    assert(cmds.some((c) => groupOf(c.name).id === g.id), `${g.id} has commands`);
+    assert(
+      cmds.some((c) => c.name === g.first),
+      `${g.id} starts with an offered command (${g.first})`,
+    );
+  }
+});
+
+Deno.test("065 console: terminal color codes never reach the page", async () => {
+  const { stripAnsi } = await import("../src/archon/console/exec.ts");
+  assertEquals(
+    stripAnsi("\x1b[0m\x1b[1m\x1b[31merror\x1b[0m: Failed caching\r"),
+    "error: Failed caching",
+  );
 });

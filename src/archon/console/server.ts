@@ -15,7 +15,15 @@
 
 import type { Command } from "../core/registry-types.ts";
 import type { WelcomeData } from "../web/welcome.ts";
-import { CONSOLE_CSS, DATASTAR, datastarSource, FAVICON, MERMAID, vendored } from "./assets.ts";
+import {
+  CONSOLE_CSS,
+  DATASTAR,
+  datastarSource,
+  FAVICON,
+  FONTS,
+  MERMAID,
+  vendored,
+} from "./assets.ts";
 import {
   type AccountLookup,
   COOKIE,
@@ -31,10 +39,12 @@ import { argvFor, consoleCommands } from "./forms.ts";
 import { esc, type Html, html, raw } from "./html.ts";
 import { bare, page } from "./layout.ts";
 import {
+  ACTION_GROUPS,
   actionsPage,
   type ActivityEntry,
   activityPage,
   ARCHON_NAV,
+  groupOf,
   guidePage,
   howPage,
   overviewPage,
@@ -121,9 +131,9 @@ export function patch(
 export function lineClass(l: string): string {
   return /^\s*\[ok\]/.test(l)
     ? "ok"
-    : /^\s*\[(FAIL|!!)\]|fail|refus/i.test(l)
+    : /^\s*\[FAIL\]|^error|failed|refus/i.test(l)
     ? "bad"
-    : /^\s*\[(!|warn|\.\.)\]|warning/i.test(l)
+    : /^\s*\[(!!|!|warn|\.\.)\]|warning/i.test(l)
     ? "w"
     : /^==>|^\s+(fix|log|explain):/.test(l)
     ? "dim"
@@ -210,6 +220,18 @@ export function consoleHandler(
             headers: { "content-type": "text/javascript" },
           });
       }
+      const font = FONTS.find((f) => f.url === path);
+      if (font) {
+        const b = await vendored(font, deps.cacheDir);
+        return b
+          ? new Response(b, {
+            headers: {
+              "content-type": "font/woff2",
+              "cache-control": "max-age=31536000, immutable",
+            },
+          })
+          : new Response("", { status: 503 });
+      }
       if (path === "/signin" && req.method === "GET") {
         const d = await deps.data();
         return htmlResponse(
@@ -290,9 +312,21 @@ export function consoleHandler(
         if (path === "/how") {
           return frame(s, "How it works", "/how", howPage(await deps.data(), await deps.repo()));
         }
-        if (path === "/actions") {
-          const c = byName.get(url.searchParams.get("cmd") ?? "verify") ?? byName.get("verify")!;
-          return frame(s, "Actions", "/actions", actionsPage(offered, c, s));
+        if (path === "/actions") return redirect("/actions/server");
+        const ag = path.match(/^\/actions\/([a-z]+)$/);
+        if (ag) {
+          const group = ACTION_GROUPS.find((g) => g.id === ag[1]);
+          if (!group) return htmlResponse("not found\n", 404);
+          const wanted = byName.get(url.searchParams.get("cmd") ?? "");
+          const c = wanted && groupOf(wanted.name).id === group.id
+            ? wanted
+            : byName.get(group.first) ?? offered.find((x) => groupOf(x.name).id === group.id)!;
+          return frame(
+            s,
+            group.label,
+            `/actions/${group.id}`,
+            actionsPage(group, offered, c, s, await deps.data()),
+          );
         }
         if (path === "/activity") {
           return frame(
