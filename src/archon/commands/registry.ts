@@ -1252,6 +1252,86 @@ export const COMMANDS: Command[] = [
     },
   },
   {
+    name: "trust build",
+    summary: "A Trust Center: a status page for customers, built from a verified evidence bundle",
+    description:
+      `Spec 081. Verifies the bundle first (as evidence verify does) and refuses it, with each reason, when anything is wrong. Then writes a static, self-contained page (index.html: no requests, light and dark, phone width) from the bundle alone: the company, the period, the signer; each framework requirement's status through the SCF Council's mappings of the SCF release the bundle names (without that catalog on this PC, NIST SP 800-53 from the bundle's own findings); each SCF control's status, its checks, and its evidence age when signed (stale evidence fails, spec 073; a bundle older than 7 days makes every status stale); and each claim's backing item by SHA-256, with how to check it with evidence verify, sha256sum, and ssh-keygen. --public (the default) leaves out subjects, hostnames, people, what each check found, and item names, and publishes a summary bundle beside the page, signed by the full bundle's signer (--key; ssh-keygen asks the passphrase), or with --on-request no bundle at all. --gated shows everything and publishes the full bundle: host it only behind your own access (the trust guide). Terminal only.`,
+    tier: "read",
+    noMcp: true,
+    args: [
+      {
+        name: "bundle",
+        type: "string",
+        required: true,
+        description: "The evidence bundle (a ZIP, spec 072).",
+      },
+      {
+        name: "out",
+        type: "string",
+        description:
+          "The folder to write (default: this PC's state directory, trust/public or trust/gated).",
+      },
+      {
+        name: "frameworks",
+        type: "string",
+        description: "Only these frameworks, by id, comma-separated (soc2,hipaa).",
+      },
+      { name: "public", type: "boolean", description: "Redacted, for anyone (the default)." },
+      {
+        name: "gated",
+        type: "boolean",
+        description: "Everything in the bundle, for people behind your own access.",
+      },
+      {
+        name: "on-request",
+        type: "boolean",
+        description: "Public: publish no bundle; the evidence is available on request.",
+      },
+      {
+        name: "key",
+        type: "string",
+        description:
+          "Public: the private key to sign the summary with (default: Git's signing key, your daily key).",
+      },
+      {
+        name: "signers",
+        type: "string",
+        description: "An allowed_signers file you trust, to verify the bundle with.",
+      },
+      {
+        name: "contact",
+        type: "string",
+        description: "Where to ask for the evidence (an https: or mailto: link).",
+      },
+    ],
+    examples: [
+      {
+        cmd:
+          "deno task stolos trust build --bundle lab-evidence-2026-07-01-to-2026-09-30.zip --out trust",
+        text: "A public Trust Center, with a signed summary bundle beside it.",
+      },
+      {
+        cmd:
+          "deno task stolos trust build --bundle lab-evidence-2026-07-01-to-2026-09-30.zip --gated --frameworks soc2,hipaa",
+        text: "SOC 2 and HIPAA with every detail, to host behind Cloudflare Access.",
+      },
+    ],
+    async run(a) {
+      const { trustBuild } = await import("../trust/commands.ts");
+      return await trustBuild({
+        bundle: a.bundle as string,
+        ...(a.out ? { out: a.out as string } : {}),
+        ...(a.frameworks ? { frameworks: a.frameworks as string } : {}),
+        ...(a.public ? { public: true } : {}),
+        ...(a.gated ? { gated: true } : {}),
+        ...(a["on-request"] ? { onRequest: true } : {}),
+        ...(a.key ? { key: a.key as string } : {}),
+        ...(a.signers ? { signers: a.signers as string } : {}),
+        ...(a.contact ? { contact: a.contact as string } : {}),
+      });
+    },
+  },
+  {
     name: "compliance drift",
     summary:
       "Which SCF controls changed status since a commit or a date; --notify mails the fleet's mailbox",
@@ -3779,6 +3859,7 @@ const PC_COMMANDS = new Set([
   "export credential",
   "evidence export",
   "evidence verify",
+  "trust build",
   "people status",
   "people review",
   "people ack",

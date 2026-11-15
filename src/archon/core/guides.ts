@@ -117,6 +117,12 @@ export const GUIDES: GuideDef[] = [
     module: "src/archon/evidence/mod.ts",
   },
   {
+    name: "trust",
+    title: "Trust Center",
+    why: "A status page for customers, built from a verified evidence bundle.",
+    module: "src/archon/trust/mod.ts",
+  },
+  {
     name: "web",
     title: "HTTPS on every server",
     why: "Publishing services, certificates, the Archon Console.",

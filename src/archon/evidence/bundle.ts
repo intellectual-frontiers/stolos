@@ -44,7 +44,9 @@ export type ItemKind =
   | "oscal"
   | "signers"
   // Spec 077: an access review as committed (its approving commit is a "commit" item).
-  | "people";
+  | "people"
+  // Spec 081: a Trust Center's public summary (one control, or the index), redacted.
+  | "summary";
 
 /** One item, before it is stored. */
 export interface Item {
