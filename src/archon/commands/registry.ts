@@ -756,6 +756,43 @@ export const COMMANDS: Command[] = [
     },
   },
   {
+    name: "console exec",
+    summary: "Run a command for the Archon Console's signed-in person (the console's account only)",
+    description:
+      `Used by the Archon Console (spec 065), never by people: runs one archon command for the person signed in to the console, as a transient systemd service outside the console's sandbox, with SUDO_USER set to that person so every record names them. Accepts only the console's own account (archon-console, through sudo), and checks again that the person may run the command (their groups and the command's tier). After a command that changes the server, mails the fleet's mailbox.`,
+    tier: "mutate",
+    noMcp: true,
+    args: [
+      {
+        name: "as",
+        type: "string",
+        required: true,
+        description: "The person signed in to the console.",
+      },
+      {
+        name: "argv",
+        type: "string",
+        required: true,
+        description:
+          'The command and its arguments, as a JSON list of strings (["pg","on","--durable"]).',
+      },
+    ],
+    async run(a) {
+      let argv: unknown;
+      try {
+        argv = JSON.parse(a.argv as string);
+      } catch {
+        argv = undefined;
+      }
+      if (!Array.isArray(argv) || !argv.every((x) => typeof x === "string")) {
+        console.error("archon console exec: --argv must be a JSON list of strings");
+        return 2;
+      }
+      const { consoleExec } = await import("../console/exec.ts");
+      return await consoleExec(a.as as string, argv as string[]);
+    },
+  },
+  {
     name: "guide",
     summary: "What's on this machine and how to use it, in plain words",
     description:

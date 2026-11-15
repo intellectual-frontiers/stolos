@@ -58,6 +58,8 @@ import "./capabilities/workstation.ts";
 import "./commands/registry.ts";
 import "./console/assets.ts";
 import "./console/auth.ts";
+import "./console/exec.ts";
+import "./console/forms.ts";
 import "./console/html.ts";
 import "./console/pam-worker.ts";
 import "./console/pam.ts";
