@@ -30,7 +30,7 @@
     "fedramp": "bun tools/fedramp-gen.ts"
   },
   "dependencies": {
-    "@intellectual-frontiers/ifc-ts": "https://github.com/intellectual-frontiers/.github/releases/download/ifc-ts-v0.2.0/intellectual-frontiers-ifc-ts-0.2.0.tgz",
+    "@intellectual-frontiers/ifc-ts": "https://github.com/intellectual-frontiers/.github/releases/download/ifc-ts-v0.3.0/intellectual-frontiers-ifc-ts-0.3.0.tgz",
     "ajv": "8.17.1"
   },
   "devDependencies": {
