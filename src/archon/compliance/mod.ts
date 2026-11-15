@@ -48,6 +48,40 @@
  * document against NIST's OSCAL schema. Fill in what Stolos cannot know (the system's
  * categorization, the controls it cannot observe) before you submit an SSP.
  *
+ * ## FedRAMP 20x
+ *
+ * FedRAMP 20x measures a cloud service by Key Security Indicators (KSI), not by a list of controls,
+ * and publishes them as machine-readable rules: the Consolidated Rules for 2026, from FedRAMP's
+ * own repository (`FedRAMP/rules`, vendored at a pinned commit with its SHA-256 in
+ * `vendor/fedramp/`). `deno task fedramp` generates `src/archon/fedramp/rules.auto.ts` from them:
+ * every KSI with the NIST SP 800-53 controls FedRAMP maps it to, which KSIs Class A must address
+ * (`FRC-CLA-MFR`), and each class's cadences.
+ *
+ * ```sh
+ * deno task stolos compliance fedramp --class A
+ * deno task stolos compliance fedramp --class B --out sdr-class-b.json --overview https://trust.example.com/fedramp/cpo.json
+ * ```
+ *
+ * ```mermaid
+ * flowchart LR
+ *   checks["Stolos checks (by SCF control)"] -- "a reason per KSI (Stolos's own)" --> ksi["46 KSIs (FedRAMP's)"]
+ *   checks -- "SCF STRM" --> nist["SP 800-53"]
+ *   ksi -- "FedRAMP's mapping" --> nist
+ *   ksi --> a["Class A: 7 KSIs, monthly validation (SHOULD)"]
+ *   ksi --> b["Class B: every KSI, validation every 7 days (MUST)"]
+ *   a & b --> sdr["Security Decision Record (FedRAMP's JSON schema)"]
+ * ```
+ *
+ * Each KSI is either covered by Stolos's checks, with the reason in plain words and, where the
+ * SCF Council's STRM reaches the KSI's own SP 800-53 controls, those links; or listed as not
+ * observable, with why (a person's process, a document, a contract, or something Stolos does not
+ * read). Those the provider supplies itself. The package is the Security Decision Record that
+ * `SDR-CSX-KSI` asks for, valid against FedRAMP's schema: each KSI's measures and their cycle,
+ * the automated tests and their results with when each was observed, and the rules on automation
+ * (`FRC-CSX-VVK`), machine validation (`VDR-TFR-MVX`), and package upkeep (`CPO-CSX-CPM`) with
+ * how the fleet's evidence meets them for the class. The independent assessment and historical
+ * metrics (`SDR-CSX-KMT`) are not Stolos's to write yet.
+ *
  * ## Delivering them on a schedule
  *
  * An export job (`estate.exports` in `fleets/<fleet>/fleet.ts`, spec 092) delivers the OSCAL

@@ -77,6 +77,7 @@ export const PERSON_ONLY: Set<string> = new Set([
   "vault backup",
   "keys",
   "keys check-recovery",
+  "compliance fedramp",
 ]);
 
 /** Changes to who the fleet trusts, and the console itself: in the terminal only. */

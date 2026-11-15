@@ -1107,6 +1107,47 @@ export const COMMANDS: Command[] = [
     },
   },
   {
+    name: "compliance fedramp",
+    summary:
+      "FedRAMP 20x: each Key Security Indicator for Class A or B, and its validation package (the Security Decision Record)",
+    description:
+      `Spec 076. Each FedRAMP 20x Key Security Indicator (KSI) the class asks for, from FedRAMP's Consolidated Rules (Class A: the seven of FRC-CLA-MFR; Class B: all of them), with the Stolos checks that give evidence for it and their results and observation times, or why Stolos cannot observe it (a person's process, a document, a contract). --out writes the Security Decision Record in FedRAMP's JSON format (SDR-CSX-KSI), with the cadences the rules set for the class (VDR-TFR-MVX, CPO-CSX-CPM). From what this PC already knows; nothing is asked of a server. Exits 1 when a KSI's checks fail.`,
+    tier: "read",
+    noMcp: true,
+    args: [
+      {
+        name: "class",
+        type: "string",
+        description: "A or B (default B).",
+        choices: ["A", "B", "a", "b"],
+      },
+      {
+        name: "out",
+        type: "string",
+        description: "Write the Security Decision Record (JSON) to this file.",
+      },
+      {
+        name: "overview",
+        type: "string",
+        description:
+          "Your Certification Package Overview's URI, which the record names (default: a placeholder).",
+      },
+    ],
+    examples: [{
+      cmd: "deno task stolos compliance fedramp --class A --out sdr-class-a.json",
+      text: "The Class A Security Decision Record, from the fleet's current evidence.",
+    }],
+    async run(a, ctx) {
+      const { fedrampCommand } = await import("../fedramp/commands.ts");
+      return await fedrampCommand({
+        ...(a.class ? { cls: a.class as string } : {}),
+        ...(a.out ? { out: a.out as string } : {}),
+        ...(a.overview ? { overview: a.overview as string } : {}),
+        json: ctx.json,
+      });
+    },
+  },
+  {
     name: "export list",
     summary: "The export jobs: kinds, tenants, where each delivers, its schedule, its last run",
     description:
@@ -3406,6 +3447,7 @@ const PC_COMMANDS = new Set([
   "compliance catalog",
   "compliance drift",
   "compliance export",
+  "compliance fedramp",
   "export list",
   "export run",
   "export schedule",

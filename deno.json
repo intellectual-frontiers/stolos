@@ -14,7 +14,8 @@
     "check": "deno check src/ tests/ examples/ tools/",
     "lint": "deno lint",
     "fmt": "deno fmt",
-    "ocsf": "deno run -A tools/ocsf-gen.ts"
+    "ocsf": "deno run -A tools/ocsf-gen.ts",
+    "fedramp": "deno run -A tools/fedramp-gen.ts"
   },
   "imports": {
     "@stolos/": "./src/"
