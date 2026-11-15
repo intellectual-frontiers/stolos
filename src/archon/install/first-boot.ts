@@ -211,7 +211,7 @@ export async function firstBoot(host: HostDef): Promise<number> {
       }${failed ? `, ${failed} problem(s)` : ""}.`,
       todo: failed
         ? `ssh ${host.name}, then archon verify (the install record: archon query "select * from archon_install").`
-        : `ssh ${host.name}; archon observe; Cockpit at https://${host.name}:9090 from the local network.`,
+        : `ssh ${host.name}; archon observe; Cockpit at https://${host.name}:9090 (where the router lets you in).`,
       key: `install:${host.name}:${head}:${new Date().toISOString().slice(0, 13)}`,
     },
     host.name,

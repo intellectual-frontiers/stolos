@@ -122,7 +122,7 @@ export const jira: Connector = defineConnector({
     "Copy the token, your site (example.atlassian.net), and the account's email",
     "Who is an administrator is read from Jira's default administrators groups (site-admins, jira-admins-...); the account needs Browse users and groups to read them",
     "Atlassian does not show second factors or last sign-ins to a Jira token (that is Atlassian Guard, in admin.atlassian.com): the estate graph checks MFA in your identity provider",
-    "Commit and pull request counts need a development tool connected to Jira (GitHub for Jira, GitLab, Bitbucket)",
+    "Jira shows each issue's commit and pull request counts, not their SHAs, and only with a development tool connected to Jira (GitHub for Jira, GitLab, Bitbucket)",
   ],
   recipe: {
     open: {

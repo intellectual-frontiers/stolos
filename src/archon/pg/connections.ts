@@ -814,7 +814,7 @@ export async function pgShow(
     return 0;
   }
   if (f === "jdbc" && !t.network) {
-    const msg = `JDBC connects over TCP with a password, and on this server ${name} takes neither: an operator publishes it (archon pg publish ${name}, or --local-only), then archon pg show ${name} --form jdbc --remote.`;
+    const msg = `JDBC connects over TCP with a password, and on this server ${name} takes neither: an operator publishes it (archon pg publish ${name}; the router decides who reaches it), then archon pg show ${name} --form jdbc --remote.`;
     if (json) stdio.stdout.writeSync(`${JSON.stringify({ ok: false, error: msg })}\n`);
     else stdio.stderr.writeSync(`${msg}\n`);
     return 1;

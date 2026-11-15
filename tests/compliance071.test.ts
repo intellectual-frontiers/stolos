@@ -346,3 +346,29 @@ function got<T>(value: T | undefined | null, what = "a value"): T {
   assertExists(value, `${what} is missing`);
   return value;
 }
+
+proves(
+  ["071-catalogs-oscal FR-001"],
+  "071: Stolos's own list of SCF controls holds only each id, SCF's name, and what Stolos looks at",
+  async () => {
+    const { SCF_CONTROLS } = await import("../src/archon/compliance/scf.ts");
+    assertEquals(SCF.length, SCF_CONTROLS.length);
+    for (const c of SCF_CONTROLS) {
+      assertEquals(Object.keys(c).sort(), ["how", "id", "name"], c.id);
+      assert(/^[A-Z]{3}-\d{2}(\.\d+)?$/.test(c.id), c.id);
+      assert(c.name.trim() !== "" && c.how.trim() !== "", c.id);
+    }
+    // Descriptions and mappings are SCF's, from the catalog (never written here).
+    const src = await fs.readTextFile("src/archon/compliance/scf.ts");
+    assert(!/\b(description|maps|soc2|hipaa)\s*:/.test(src.slice(src.indexOf("SCF_CONTROLS"))));
+    // Against SCF 2026.3 itself, where this PC has it (bun run stolos compliance catalog): every
+    // id is SCF's, with SCF's own name.
+    const catalog = await loadScf();
+    if (catalog !== undefined) {
+      assertEquals(catalog.version, "2026.3");
+      for (const c of SCF_CONTROLS) {
+        assertEquals(catalog.controls[c.id]?.name, c.name, `${c.id} in SCF ${catalog.version}`);
+      }
+    }
+  },
+);

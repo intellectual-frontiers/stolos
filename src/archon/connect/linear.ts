@@ -148,7 +148,7 @@ export const linear: Connector = defineConnector({
     "Linear > Settings > Account > Security & access > Personal API keys > New API key",
     "Permissions: Only select permissions > Read (nothing else); Team access: All teams you have access to",
     "If you cannot make a key, a workspace admin allows member API keys (Settings > Security)",
-    "Copy the key",
+    "Copy the key (Linear's API is GraphQL: Stolos reads it only through its own query documents, never a mutation)",
     "Linear has no second factor of its own: require SAML sign-in (Business and Enterprise plans) and your identity provider's MFA",
     "Commits and pull requests are attached to issues by Linear's GitHub, GitLab, or Bitbucket integration (use the issue ID in the branch name)",
   ],

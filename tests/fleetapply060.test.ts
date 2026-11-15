@@ -35,7 +35,13 @@ proves(["060-stolos-apply FR-001"], "060: what changed, by fleet and host", () =
 });
 
 proves(
-  ["060-stolos-apply FR-001", "060-stolos-apply FR-002"],
+  [
+    "060-stolos-apply FR-001",
+    "060-stolos-apply FR-002",
+    "060-stolos-apply FR-003",
+    "060-stolos-apply FR-005",
+    "060-stolos-apply FR-006",
+  ],
   "060: apply commits once (signed), verifies, pushes; push is the same; again does nothing",
   async () => {
     const sb = await sandbox("archon-apply-");
@@ -107,6 +113,11 @@ proves(
       );
       const t = await checkTip(origin, head, "", allowed);
       assert(t.ok, t.reason);
+      // A new repository (no branch on GitHub before): the first push set the upstream.
+      assertEquals(
+        await sh(repo, "git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"),
+        "origin/main",
+      );
 
       // Again: nothing to do.
       r = await stolos(["apply"]);
@@ -142,8 +153,66 @@ proves(
       );
       r = await stolos(["apply"]);
       assertStringIncludes(r.out, "up to date");
+
+      // No passphrase is remembered: no file this left behind holds it (but the askpass helper
+      // this test wrote), and no ssh-agent was started (the socket it was given is still absent).
+      const left: string[] = [];
+      for (const f of await fs.walkFiles(home)) {
+        if (f === "askpass.sh" || f.split(/[\\/]/).includes("node_modules")) continue;
+        const bytes = await fs.readFile(path.join(home, f)).catch(() => new Uint8Array());
+        if (new TextDecoder().decode(bytes).includes(PASS)) left.push(f);
+      }
+      assertEquals(left, [], "the passphrase is in no file");
+      assert(!(await fs.exists(env["SSH_AUTH_SOCK"] ?? "")), "no ssh-agent");
     } finally {
       await fs.remove(sb.home, { recursive: true });
     }
+  },
+);
+
+/** The modules of the commands spec 060 FR-004 names, whose messages once said `git push`. */
+const PUSHING = [
+  "src/archon/identity/keys-commands.ts", // keys setup, rotate, lost
+  "src/archon/update/operator.ts", // update
+  "src/archon/fleet/upgrade.ts", // fleet upgrade
+  "src/archon/fleet/decisions.ts", // decide
+  "src/archon/install/host-add.ts", // host add
+  "src/archon/install/publish.ts", // host add, boot retire
+  "src/archon-boot/retire.ts", // boot retire
+  "src/archon/install/workstation.ts", // workstation add
+  "src/archon/guide/where.ts", // where
+  "src/archon/doctor/doctor.ts", // doctor
+  "src/archon-boot/doctor.ts", // boot doctor
+];
+/** `git push` as advice (not `git push --no-verify`, which skips the check once, nor a failure's own name). */
+const GIT_PUSH = /\bgit push\b(?! --no-verify)(?!: )(?! failed)/;
+
+proves(
+  ["060-stolos-apply FR-004"],
+  "060: no message of keys, update, fleet upgrade, decide, host add, retire, workstation add, where or doctor says git push; the README neither",
+  async () => {
+    const bad: string[] = [];
+    for (const f of PUSHING) {
+      (await fs.readTextFile(f)).split("\n").forEach((line, i) => {
+        // Code, not its documentation comments.
+        if (/^\s*(\*|\/\/|\/\*\*)/.test(line)) return;
+        if (GIT_PUSH.test(line)) bad.push(`${f}:${i + 1}: ${line.trim()}`);
+      });
+    }
+    const { COMMANDS } = await import("../src/archon/commands/registry.ts");
+    const named =
+      /^(keys( (setup|rotate|lost|rotate-recovery))?|update|fleet upgrade|decide|host add|boot retire|workstation add|where|doctor|boot doctor)$/;
+    const commands = COMMANDS.filter((c) => named.test(c.name));
+    assert(commands.length >= 9, commands.map((c) => c.name).join(", "));
+    for (const c of commands) {
+      for (const t of [c.summary, c.description, ...(c.examples ?? []).map((e) => e.text)]) {
+        if (GIT_PUSH.test(t)) bad.push(`${c.name}: ${t}`);
+      }
+    }
+    (await fs.readTextFile("README.md")).split("\n").forEach((line, i) => {
+      if (GIT_PUSH.test(line)) bad.push(`README.md:${i + 1}: ${line.trim()}`);
+    });
+    assertEquals(bad, []);
+    assertStringIncludes(await fs.readTextFile("README.md"), "bun run stolos apply");
   },
 );

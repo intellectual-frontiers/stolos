@@ -774,3 +774,35 @@ proves(
     }
   },
 );
+
+/** A guide's section: from its heading to the next heading of its level or higher (outside code). */
+function guideSection(md: string, heading: string): string {
+  const lines = md.split("\n");
+  const start = lines.indexOf(heading);
+  assert(start >= 0, `"${heading}" in the guide`);
+  const level = heading.indexOf(" ");
+  let fence = false;
+  const out: string[] = [];
+  for (const l of lines.slice(start + 1)) {
+    if (/^\s*```/.test(l)) fence = !fence;
+    if (!fence && new RegExp(`^#{1,${level}} `).test(l)) break;
+    out.push(l);
+  }
+  return out.join("\n");
+}
+
+proves(["077-people-controls FR-015"], "077: the guide people is the people module's", async () => {
+  const { engineFile } = await import("../src/archon/core/assets.ts");
+  const { guideDef, guideMarkdown } = await import("../src/archon/core/guides.ts");
+  assertEquals(guideDef("people")?.module, "src/archon/people/mod.ts");
+  const md = engineFile("docs/people.md");
+  assertEquals(guideMarkdown(await fs.readTextFile("src/archon/people/mod.ts")), md);
+  for (const h of [
+    "## Joiners and leavers",
+    "## Access reviews",
+    "## Policies",
+    "## Training and screening",
+  ]) {
+    assert(guideSection(md, h).trim().length > 0, h);
+  }
+});

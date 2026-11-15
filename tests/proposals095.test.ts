@@ -1450,3 +1450,125 @@ proves(
     }
   },
 );
+
+proves(
+  ["095-proposals FR-002"],
+  "095: the birth snapshot: manual packages, snaps, unit files and states, login accounts, listening ports, /etc's first commit; taken once",
+  async () => {
+    const { birthFrom, recordBirth } = await import("../src/archon/proposal/collect.ts");
+    const { getRecord } = await import("../src/archon/state/store.ts");
+    const r = raw();
+    const b = await birthFrom(r, "abc123first");
+    assertEquals(b.at, r.at);
+    assertEquals(b.manualPackages, ["etckeeper", "git", "nginx", "openssh-server", "tool"]);
+    assertEquals(b.snaps, ["htop"]);
+    assertEquals(b.units["ssh.service"], parseUnitFiles(r.unitFiles)["ssh.service"]?.state);
+    assert(Object.keys(b.units).length > 0);
+    assertEquals(b.users, ["alice", "carol"], "accounts with a login (UID 1000 and up)");
+    assert(
+      b.listening.includes("tcp/22") && b.listening.includes("tcp/443"),
+      b.listening.join(" "),
+    );
+    assertEquals(b.etcCommit, "abc123first");
+    assertEquals(b.late, undefined, "taken at install");
+    // Once: a birth already recorded is never replaced (first boot takes it: install/first-boot.ts).
+    const dir = await fs.makeTempDir();
+    try {
+      await putRecord("alpha", "birth", "birth", BIRTH, dir, BIRTH.at);
+      assertEquals(await recordBirth("alpha", dir), BIRTH);
+      assertEquals((await getRecord<Birth>("alpha", "birth", "birth", dir))?.body, BIRTH);
+    } finally {
+      await fs.remove(dir, { recursive: true });
+    }
+    assertStringIncludes(
+      await fs.readTextFile("src/archon/install/first-boot.ts"),
+      "await recordBirth(host.name)",
+    );
+  },
+);
+
+proves(
+  ["095-proposals FR-005"],
+  "095: archon drift: what is not proposed yet; --all the rest too; alerts first, exit 1 while one is open; read tier, so an MCP tool",
+  async () => {
+    const { COMMANDS } = await import("../src/archon/commands/registry.ts");
+    const { listed } = await import("../src/archon/mcp/server.ts");
+    const drift = the(COMMANDS.find((c) => c.name === "drift"));
+    assertEquals(drift.tier, "read");
+    assertEquals(drift.mutateWith, "collect");
+    assert(listed(drift, "read"), "an MCP tool at the read tier");
+    assertEquals(drift.args.map((a) => a.name).sort(), ["all", "collect"]);
+    // The daily report collects (as root), then includes the same text (report/daily.ts).
+    const daily = await fs.readTextFile("src/archon/report/daily.ts");
+    assertStringIncludes(daily, "if (proc.isRoot()) await collect(host);");
+    assertStringIncludes(daily, "driftText(host.name, v.items, v.alerts,");
+    const dir = await fs.makeTempDir();
+    try {
+      const host = the((await loadHosts()).find((h) => h.name === "alpha"));
+      const view = planView(await planFor(host));
+      await storeCollection("alpha", raw(), view, dir);
+      await putRecord("alpha", "birth", "birth", BIRTH, dir);
+      const v = await loadDrift(host, dir);
+      assert(v.alerts.length > 0 && v.items.length > 2, "the fixture has alerts and items");
+      // One proposed, one kept local, one rejected: only the rest is shown without --all.
+      const [a, b, c] = v.items;
+      const items = v.items.map((i) =>
+        i === a
+          ? { ...i, proposal: "p1" }
+          : i === b
+            ? { ...i, localUntil: "2099-01-01" }
+            : i === c
+              ? { ...i, rejected: true }
+              : i,
+      );
+      const open = unproposed(items);
+      assertEquals(open.length, items.length - 3);
+      const text = driftText("alpha", items, v.alerts);
+      assert(text.startsWith("SECURITY ALERT"), "alerts first");
+      assertStringIncludes(
+        text,
+        `${open.length} change(s) on alpha made outside Stolos, not proposed yet:`,
+      );
+      for (const i of [a, b, c]) assert(!text.includes(`  ${i?.key}  `), `${i?.key} is not shown`);
+      const all = driftText("alpha", items, v.alerts, { all: true });
+      for (const i of [a, b, c]) assertStringIncludes(all, `  ${i?.key}  `);
+      assertStringIncludes(all, "in proposal p1");
+      assertStringIncludes(all, "local until 2099-01-01");
+      assertStringIncludes(all, "rejected: stays flagged");
+    } finally {
+      await fs.remove(dir, { recursive: true });
+    }
+    // archon drift itself, on a host's own records: exit 1 while an alert is open, else 0.
+    const { sandbox } = await import("./sandbox.ts");
+    const sb = await sandbox("archon-drift-");
+    try {
+      const src = (rel: string): string => new URL(`../src/archon/${rel}`, import.meta.url).href;
+      const script = `${sb.home}/drift.ts`;
+      await fs.writeTextFile(
+        script,
+        `import { loadHosts } from ${JSON.stringify(src("model/load.ts"))};
+import { planFor } from ${JSON.stringify(src("build.ts"))};
+import { planView, storeCollection } from ${JSON.stringify(src("proposal/collect.ts"))};
+import { putRecord } from ${JSON.stringify(src("state/store.ts"))};
+import { driftCommand } from ${JSON.stringify(src("proposal/server.ts"))};
+import { P } from ${JSON.stringify(src("core/paths.ts"))};
+const host = (await loadHosts()).find((h) => h.name === "alpha");
+if (!host) throw new Error("no alpha");
+const raw = ${JSON.stringify({ ...raw(), osquery: undefined })};
+if (process.argv[2] === "clean") raw.modified = "";
+await storeCollection("alpha", raw, planView(await planFor(host)), P.state);
+await putRecord("alpha", "birth", "birth", ${JSON.stringify(BIRTH)}, P.state);
+console.log("code=" + (await driftCommand(host, {})));
+`,
+      );
+      let r = await sb.run(script, ["clean"]);
+      assert(!r.out.includes("SECURITY ALERT"), r.out);
+      assertStringIncludes(r.out, "code=0");
+      r = await sb.run(script, []);
+      assert(r.out.trimStart().startsWith("SECURITY ALERT"), r.out);
+      assertStringIncludes(r.out, "code=1");
+    } finally {
+      await fs.remove(sb.home, { recursive: true });
+    }
+  },
+);

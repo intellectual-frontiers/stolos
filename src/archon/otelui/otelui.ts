@@ -97,7 +97,7 @@ export async function otelUiStatus(hostName: string, json: boolean): Promise<num
   p.done(
     `${
       ready ? "ready" : "starting"
-    } · ${url} (local networks) · sign in: archon otel ui password --show`,
+    } · ${url} (the router decides who reaches it) · sign in: archon otel ui password --show`,
   );
   ui.next.push(
     `other servers send here once otel.localdomain (router DNS) or telemetry.collector in fleet.ts names ${host.name}`,

@@ -33,13 +33,13 @@ export function nextSteps(o: NextOptions): string[] {
     lines.push(`connect   ssh ${name}${addr ? `   (or ssh ${o.fleet.admin.user}@${addr})` : ""}`);
     if (localNetworks(o.fleet).length && o.fleet.web) {
       lines.push(
-        `cockpit   https://cockpit.${name}.${o.fleet.web.domain}   Cockpit: system, services, logs, metric history; your password; from your local network`,
+        `cockpit   https://cockpit.${name}.${o.fleet.web.domain}   Cockpit: system, services, logs, metric history; your password; where the router lets you in`,
       );
     } else if (localNetworks(o.fleet).length) {
       lines.push(
         `web       https://${name}:9090${
           addr ? `   (or https://${addr}:9090)` : ""
-        }   Cockpit: system, services, logs, metric history; your password; from your local network; accept its certificate once`,
+        }   Cockpit: system, services, logs, metric history; your password; where the router lets you in; accept its certificate once`,
       );
     }
   } else {

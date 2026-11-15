@@ -102,6 +102,7 @@ export const bitbucket: Connector = defineConnector<typeof FIELDS>({
     "Atlassian account (a workspace member; an owner's account also reads who the owners are) > Security > Create and manage API tokens > Create API token with scopes",
     "App: Bitbucket; scopes, all read only: read:workspace:bitbucket, read:user:bitbucket, read:repository:bitbucket",
     "Set an expiry, create it, and copy the token; with it, the account's email and the workspace's id",
+    "Bitbucket's API does not show members' two-factor status: the estate graph checks MFA in your identity provider",
   ],
   recipe: {
     open: {

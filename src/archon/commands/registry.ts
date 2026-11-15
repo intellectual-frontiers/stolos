@@ -342,7 +342,7 @@ export const COMMANDS: Command[] = [
   {
     name: "fleet status",
     summary: "Every server and workstation: last install, and how to reach and observe it",
-    description: `Lists every host in the model with its last install as it recorded it (the host's own archon.sql (opt-in installed): when, checks, problems) and whether it is armed, then how to reach and observe each: ssh, Cockpit's address (servers, from the local networks), archon observe, btop, archon observe tui, archon verify. On the boot machine it also shows the address each host last installed from. Read-only.`,
+    description: `Lists every host in the model with its last install as it recorded it (the host's own archon.sql (opt-in installed): when, checks, problems) and whether it is armed, then how to reach and observe each: ssh, Cockpit's address (servers; the router decides who reaches it), archon observe, btop, archon observe tui, archon verify. On the boot machine it also shows the address each host last installed from. Read-only.`,
     tier: "read",
     operation: true,
     args: [],
@@ -494,7 +494,7 @@ export const COMMANDS: Command[] = [
   {
     name: "fleet upgrade",
     summary: "Move this repository to another released engine version, locked and signed",
-    description: `Run in the fleet repository, on the boot machine or a workstation. Checks that the tag is a release (the engine's own version.ts at that tag says the same version), refuses an older version unless --downgrade, rewrites the engine's release URL in package.json, runs bun install so bun.lock holds the new release's integrity (hosts install with --frozen-lockfile, so the lock is what makes your signature cover the engine's code), validates every fleet with the new engine, and makes one signed commit of package.json and bun.lock. Push it to approve it. If anything fails, nothing is committed (spec 046; the fleet-repository guide (stolos docs fleet-repository)).`,
+    description: `Run in the fleet repository, on the boot machine or a workstation. Checks that the tag is a release (the engine's own version.ts at that tag says the same version), refuses an older version unless --downgrade, rewrites the engine's release URL in package.json, runs bun install so bun.lock holds the new release's integrity (hosts install with --frozen-lockfile, so the lock is what makes your signature cover the engine's code), validates every fleet with the new engine, and makes one signed commit of package.json and bun.lock. Push it to approve it. If anything fails, nothing is committed (spec 046; the fleet-repository guide (bun run stolos docs fleet-repository)).`,
     tier: "repo",
     noMcp: true,
     operation: true,
@@ -516,7 +516,7 @@ export const COMMANDS: Command[] = [
     examples: [
       {
         cmd: "bun run stolos fleet upgrade v0.8.0",
-        text: "Adopt the engine v0.8.0, then git push to approve it.",
+        text: "Adopt the engine v0.8.0, then bun run stolos apply to approve it.",
       },
     ],
     async run(a: Parsed): Promise<number> {
@@ -2228,7 +2228,7 @@ export const COMMANDS: Command[] = [
   {
     name: "connector add",
     summary: "Add a connector from a pinned URL (a tag or a commit), checked, with a lock entry",
-    description: `Spec 088. Adds a connector Stolos does not ship, the way the fleet takes the engine: <source>@<ref>, where the source is https://github.com/<owner>/<repo>[/<path>] (read from raw.githubusercontent.com; the path defaults to mod.ts) and the ref a version tag or a full commit SHA (a branch is refused). It loads the module in its own process with no network, files, or secrets (imports from its host only), and checks it: a connector made with defineConnector, an id no other connector has, labels that follow the naming rules (D3FEND, OCSF, UDM), only SCF ids Stolos knows, a read-only credential, an engine range this engine is in, and its own recorded-fixture tests, which must pass. Then it writes the import and Stolos's lock entry to fleets/<fleet>/connectors.ts and the hash of every file it loads to the fleet's lock. Commit and push to approve. --index <url> finds <id>@<tag> in an index anyone can host (stolos docs connectors).`,
+    description: `Spec 088. Adds a connector Stolos does not ship, the way the fleet takes the engine: <source>@<ref>, where the source is https://github.com/<owner>/<repo>[/<path>] (read from raw.githubusercontent.com; the path defaults to mod.ts) and the ref a version tag or a full commit SHA (a branch is refused). It loads the module in its own process with no network, files, or secrets (imports from its host only), and checks it: a connector made with defineConnector, an id no other connector has, labels that follow the naming rules (D3FEND, OCSF, UDM), only SCF ids Stolos knows, a read-only credential, an engine range this engine is in, and its own recorded-fixture tests, which must pass. Then it writes the import and Stolos's lock entry to fleets/<fleet>/connectors.ts and the hash of every file it loads to the fleet's lock. Commit and push to approve. --index <url> finds <id>@<tag> in an index anyone can host (bun run stolos docs connectors).`,
     tier: "repo",
     noMcp: true,
     args: [
@@ -2695,7 +2695,7 @@ export const COMMANDS: Command[] = [
   {
     name: "web status",
     summary: "This server's HTTPS: Traefik, the certificate, DNS, and every route",
-    description: `Shows whether Traefik and the welcome page run, which certificate answers on 443 (Let's Encrypt, or Traefik's self-signed one until it arrives), whether <host>.<domain> resolves to this server, and every route: the welcome page at https://<host>.<domain>, Traefik's dashboard at traefik.<host>.<domain>, each route from the model and its capabilities (cockpit.<host>.<domain>), and each guest that publishes a port. Containers (Podman) publish themselves with the label traefik.enable=true. Everything behind the proxy answers the local networks only (spec 032). See the web guide (stolos docs web).`,
+    description: `Shows whether Traefik and the welcome page run, which certificate answers on 443 (Let's Encrypt, or Traefik's self-signed one until it arrives), whether <host>.<domain> resolves to this server, and every route: the welcome page at https://<host>.<domain>, Traefik's dashboard at traefik.<host>.<domain>, each route from the model and its capabilities (cockpit.<host>.<domain>), and each guest that publishes a port. Containers (Podman) publish themselves with the label traefik.enable=true. Who reaches anything behind the proxy is the router's decision (spec 064). See the web guide (bun run stolos docs web).`,
     tier: "read",
     operation: true,
     args: [],
@@ -2844,7 +2844,7 @@ export const COMMANDS: Command[] = [
   {
     name: "fs smb on",
     summary: "Turn on SMB file sharing (Windows, macOS, Linux) on this server",
-    description: `Starts Samba on this server and records the decision in the host's own archon.sql (opt-in smb) (who, when), so every apply and reboot keeps it on until an operator runs archon fs smb off. Clients on the local networks connect to smb.<host>.<domain> (for example \\\\smb.alpha.lab.example.net\\shared): one share, shared, for everyone with an account, and each account's own home folder. --durable or --ephemeral is required (Article 23, spec 044): durable shares are archived nightly and guarded; ephemeral ones are not. SMB3 only, encryption when the client supports it, no guests. People sign in with their own Linux username and password: Samba keeps a copy, updated by PAM whenever the password is typed on the server (Cockpit, sudo, a password login, passwd); an account not on this server gets no access. The mailbox is told. The switch is in this machine's own archon.sql (spec 048).`,
+    description: `Starts Samba on this server and records the decision in the host's own archon.sql (opt-in smb) (who, when), so every apply and reboot keeps it on until an operator runs archon fs smb off. Clients connect to smb.<host>.<domain> (who reaches it is the router's decision) (for example \\\\smb.alpha.lab.example.net\\shared): one share, shared, for everyone with an account, and each account's own home folder. --durable or --ephemeral is required (Article 23, spec 044): durable shares are archived nightly and guarded; ephemeral ones are not. SMB3 only, encryption when the client supports it, no guests. People sign in with their own Linux username and password: Samba keeps a copy, updated by PAM whenever the password is typed on the server (Cockpit, sudo, a password login, passwd); an account not on this server gets no access. The mailbox is told. The switch is in this machine's own archon.sql (spec 048).`,
     tier: "mutate",
     operation: true,
     args: [...CHOICE_ARGS, CONFIRM_DESTROY_ARG("the host's name")],
@@ -3397,7 +3397,7 @@ export const COMMANDS: Command[] = [
   {
     name: "pg test",
     summary: "Test an external connection: TLS to the published name, with a password you type",
-    description: `Connects to NAME (default prime) the way a client on another machine does: to its published name, never localhost, over TLS with the server's certificate verified (sslmode=verify-full), as you (or --user) with a password you type (not echoed, not stored: it reaches psql through a private, temporary password file removed at once). Reports who you connected as, the server's and your addresses, and the TLS version; on failure, the likely cause and its fix: the password (PostgreSQL learns your Linux password when you type it on the server after publishing: sudo -k && sudo -v there), the certificate, the address not admitted (--local-only), the name not resolving, or nothing answering (firewall, router). Run it from another machine (a workstation) to test the firewall and the router too. Interactive, so not an MCP tool (spec 043).`,
+    description: `Connects to NAME (default prime) the way a client on another machine does: to its published name, never localhost, over TLS with the server's certificate verified (sslmode=verify-full), as you (or --user) with a password you type (not echoed, not stored: it reaches psql through a private, temporary password file removed at once). Reports who you connected as, the server's and your addresses, and the TLS version; on failure, the likely cause and its fix: the password (PostgreSQL learns your Linux password when you type it on the server after publishing: sudo -k && sudo -v there), the certificate, the name not resolving, or nothing answering (firewall, router). Run it from another machine (a workstation) to test the firewall and the router too. Interactive, so not an MCP tool (spec 043).`,
     tier: "read",
     unlocked: true,
     noMcp: true,
@@ -3536,7 +3536,7 @@ export const COMMANDS: Command[] = [
   {
     name: "otel ui on",
     summary: "Turn on the telemetry web UI (OpenObserve) on this server; it collects for the fleet",
-    description: `The telemetry web UI is an opt-in container (specs 040, 050): every server has it, masked, until an operator runs this. --durable or --ephemeral is required (Article 23, spec 044); telemetry is usually ephemeral. OpenObserve (pinned by digest) starts under Podman, unprivileged, on 127.0.0.1; Traefik serves it on the local networks at otel.<host>.<domain>; its admin password is generated here, root only (archon otel ui password --show). This server's Collector then forwards everything it collects (journald, PCP, Archon's and apps' OTLP) to it, adding the credential itself, and accepts OTLP from the local networks on 4318: point otel.localdomain (router DNS) or telemetry.collector in fleet.ts at this server and the others find it within 15 minutes. Only telemetry from then on is forwarded. Until this is on anywhere, every server keeps its own telemetry and the headless Collector works as before. See the telemetry guide (stolos docs telemetry).`,
+    description: `The telemetry web UI is an opt-in container (specs 040, 050): every server has it, masked, until an operator runs this. --durable or --ephemeral is required (Article 23, spec 044); telemetry is usually ephemeral. OpenObserve (pinned by digest) starts under Podman, unprivileged, on 127.0.0.1; Traefik serves it at otel.<host>.<domain>; its admin password is generated here, root only (archon otel ui password --show). This server's Collector then forwards everything it collects (journald, PCP, Archon's and apps' OTLP) to it, adding the credential itself, and accepts OTLP on 4318 (the router decides from where): point otel.localdomain (router DNS) or telemetry.collector in fleet.ts at this server and the others find it within 15 minutes. Only telemetry from then on is forwarded. Until this is on anywhere, every server keeps its own telemetry and the headless Collector works as before. See the telemetry guide (bun run stolos docs telemetry).`,
     tier: "mutate",
     operation: true,
     args: [...CHOICE_ARGS, CONFIRM_DESTROY_ARG("the host's name")],

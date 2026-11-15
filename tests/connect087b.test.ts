@@ -861,3 +861,26 @@ proves(
     assert(!estatePolicies(none, NOW).some((x) => x.id === "password-manager"));
   },
 );
+
+proves(
+  ["087-wave2-connectors FR-006"],
+  "087b: the vendors' limits are stated in each connector's connect steps",
+  () => {
+    const steps = (id: string): string => {
+      const c = CONNECTORS.find((x) => x.id === id);
+      assert(c, id);
+      return c.connectHelp.join("\n");
+    };
+    const op = steps("onepassword");
+    assert(
+      /Users API is in preview/.test(op) && /does not show roles, two-factor status/.test(op),
+      op,
+    );
+    assert(
+      /two-factor status only to an admin's or owner's token/.test(steps("slack")),
+      steps("slack"),
+    );
+    assert(/commit and pull request counts, not their SHAs/.test(steps("jira")), steps("jira"));
+    assert(/GraphQL: Stolos reads it only through its own query documents/.test(steps("linear")));
+  },
+);

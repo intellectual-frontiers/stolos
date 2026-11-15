@@ -669,3 +669,43 @@ function got<T>(value: T | undefined | null, what = "a value"): T {
   assertExists(value, `${what} is missing`);
   return value;
 }
+
+/** A guide's section: from its heading to the next heading of its level or higher (outside code). */
+function guideSection(md: string, heading: string): string {
+  const lines = md.split("\n");
+  const start = lines.indexOf(heading);
+  assert(start >= 0, `"${heading}" in the guide`);
+  const level = heading.indexOf(" ");
+  let fence = false;
+  const out: string[] = [];
+  for (const l of lines.slice(start + 1)) {
+    if (/^\s*```/.test(l)) fence = !fence;
+    if (!fence && new RegExp(`^#{1,${level}} `).test(l)) break;
+    out.push(l);
+  }
+  return out.join("\n");
+}
+
+proves(
+  ["078-control-sdk FR-012"],
+  "078: the guide controls is the module a fleet imports, by the package's own path",
+  async () => {
+    const { engineFile } = await import("../src/archon/core/assets.ts");
+    const { guideDef, guideMarkdown } = await import("../src/archon/core/guides.ts");
+    assertEquals(guideDef("controls")?.module, "src/archon/controls/mod.ts");
+    const md = engineFile("docs/controls.md");
+    assertEquals(guideMarkdown(await fs.readTextFile("src/archon/controls/mod.ts")), md);
+    assertStringIncludes(md, "@intellectual-frontiers/stolos/archon/controls/mod");
+    for (const h of ["## A control", "## A pack in the fleet repository", "## Testing a control"]) {
+      assert(guideSection(md, h).trim().length > 0, h);
+    }
+    // The package maps that path to the module (a fleet's pack.ts imports it: the test above).
+    const pkg = JSON.parse(await fs.readTextFile("package.json")) as {
+      exports: Record<string, string>;
+    };
+    assertEquals(pkg.exports["./*"], "./src/*.ts");
+    const mod = await import("../src/archon/controls/mod.ts");
+    assertEquals(typeof mod.defineControl, "function");
+    assertEquals(typeof mod.defineControlPack, "function");
+  },
+);

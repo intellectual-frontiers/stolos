@@ -22,6 +22,7 @@ import { policies } from "../src/archon/adopt/policy.ts";
 import { toObserved } from "../src/archon/adopt/adopt.ts";
 import { CONNECTORS } from "../src/archon/connect/commands.ts";
 import { FACTS } from "./console/serve-stolos.ts";
+import { at, list } from "./fixtures.ts";
 
 /** A two-control catalog shaped like SCF's (the real one comes from the SCF Council, spec 071). */
 const none = { soc2: [], hipaa: [], pci: [], cmmc: [], nist80053: [], nist800171: [], fedramp: [] };
@@ -174,3 +175,50 @@ function got<T>(value: T | undefined | null, what = "a value"): T {
   assertExists(value, `${what} is missing`);
   return value;
 }
+
+proves(
+  ["068-compliance FR-004"],
+  "068: stolos compliance [--framework hipaa|pci|cmmc|soc2] [--json]",
+  async () => {
+    const { fs, path, proc } = await import("@intellectual-frontiers/ifc-ts/runtime");
+    const { sandbox, linkEngine } = await import("./sandbox.ts");
+    const { COMMANDS } = await import("../src/archon/commands/registry.ts");
+    const fw = COMMANDS.find((c) => c.name === "compliance")?.args.find(
+      (a) => a.name === "framework",
+    );
+    for (const id of ["hipaa", "pci", "cmmc", "soc2"]) assert(fw?.choices?.includes(id), id);
+    const sb = await sandbox("stolos-compliance-");
+    try {
+      const repo = path.join(sb.home, "fleet");
+      await fs.mkdir(path.join(repo, "fleets"), { recursive: true });
+      assertEquals((await proc.run(["git", "init", "-q", repo], { stdin: "null" })).code, 0);
+      await fs.copy("examples/fleets/lab", path.join(repo, "fleets", "lab"));
+      await linkEngine(repo);
+      const env = { ARCHON_REPO: repo, ARCHON_FLEET: "lab" };
+      const run = (args: string[]) =>
+        sb.run("src/stolos/main.ts", ["compliance", ...args], "", env);
+      const json = (out: string): unknown =>
+        JSON.parse(out.slice(out.indexOf("{"), out.lastIndexOf("}") + 1));
+      // --json: every SCF control Stolos looks at, with its status, and each framework.
+      let r = await run(["--json"]);
+      const view = json(r.out);
+      const controls = list(at(view, "controls"));
+      assertEquals(controls.length, SCF.length, r.out);
+      for (const c of controls) assert(typeof at(c, "status") === "string");
+      const frameworks = list(at(view, "frameworks")).map((f) => at(f, "id"));
+      for (const id of ["soc2", "hipaa", "pci", "cmmc"]) assert(frameworks.includes(id), id);
+      // --framework: that framework alone.
+      for (const id of ["hipaa", "pci", "cmmc", "soc2"]) {
+        r = await run(["--framework", id, "--json"]);
+        assertEquals(at(json(r.out), "id"), id, r.out);
+      }
+      // Without --json: words, and a framework that is not one is refused.
+      r = await run([]);
+      assert(!r.out.trimStart().startsWith("{"), r.out);
+      r = await run(["--framework", "iso"]);
+      assertEquals(r.code === 0, false, r.out);
+    } finally {
+      await fs.remove(sb.home, { recursive: true });
+    }
+  },
+);

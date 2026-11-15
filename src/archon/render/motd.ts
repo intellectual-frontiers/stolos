@@ -47,6 +47,7 @@ export function archonMotd(fleet: FleetDef, host: HostDef, cockpitFromLan: boole
           }\${r}   \${d}Cockpit: system, services, logs, metric history\${r}`,
         ]
       : []),
+    `    🧭 \${d}who reaches this server is the router's decision: it restricts no network itself\${r}`,
     `    📊 \${c}archon observe\${r} \${d}·\${r} \${c}btop\${r} \${d}·\${r} \${c}archon observe tui\${r}   \${d}logs, metrics, limits\${r}`,
     `    ✅ \${c}archon verify\${r} \${d}·\${r} \${c}archon web status\${r}   \${d}every check, with a fix for each\${r}`,
     `    📘 \${c}archon guide\${r}   \${d}what's here, how to use it, and how to manage it with an AI agent\${r}`,

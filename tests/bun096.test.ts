@@ -47,7 +47,7 @@ async function engineFiles(): Promise<string[]> {
 }
 
 proves(
-  ["096-bun-runtime FR-001"],
+  ["096-bun-runtime FR-001", "096-bun-runtime FR-008"],
   "096: no file of the engine names the old runtime or imports npm:, jsr: or a URL",
   async () => {
     // A word of its own, or a part of a name (`OTEL_` and the old name, spec 096 FR-008).

@@ -492,3 +492,35 @@ test("094: an estate that cannot be read is a JSON 500, not a page", async () =>
     ui.quiet = quiet;
   }
 });
+
+/** A guide's section: from its heading to the next heading of its level or higher (outside code). */
+function guideSection(md: string, heading: string): string {
+  const lines = md.split("\n");
+  const start = lines.indexOf(heading);
+  assert(start >= 0, `"${heading}" in the guide`);
+  const level = heading.indexOf(" ");
+  let fence = false;
+  const out: string[] = [];
+  for (const l of lines.slice(start + 1)) {
+    if (/^\s*```/.test(l)) fence = !fence;
+    if (!fence && new RegExp(`^#{1,${level}} `).test(l)) break;
+    out.push(l);
+  }
+  return out.join("\n");
+}
+
+proves(
+  ["094-rest-api FR-006"],
+  "094: the Console guide's REST section has a curl example with the session cookie; How it works has its card",
+  async () => {
+    const { engineFile } = await import("../src/archon/core/assets.ts");
+    const s = guideSection(engineFile("docs/console.md"), "## The REST API (read-only)");
+    assertStringIncludes(s, '```bash\ncurl -s --cookie "stolos_session=');
+    assertStringIncludes(s, "/v1/user_account?");
+    assertStringIncludes(s, "no API keys");
+    const c = await signedIn();
+    const how = await (await c.req("/how")).text();
+    assertStringIncludes(how, "<h3>For scripts: a read-only REST API</h3>");
+    assertStringIncludes(how, '<a href="/v1/openapi.json">/v1/openapi.json</a>');
+  },
+);

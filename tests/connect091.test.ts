@@ -44,7 +44,7 @@ function result(
 const DENIED = { status: 403, body: { message: "403 Forbidden" } };
 
 proves(
-  ["091-connectors FR-003"],
+  ["091-connectors FR-003", "086-wave1-connectors FR-003"],
   "091: the six are registered, labeled, and offered by every connector command",
   () => {
     const ids = ["jumpcloud", "gitlab", "bitbucket", "gusto", "deel", "justworks"];
@@ -679,3 +679,237 @@ proves(["091-connectors FR-003"], "091: branch patterns and Bitbucket's restrict
     { protected: true, reviews: 2 },
   );
 });
+
+proves(
+  ["091-connectors FR-004"],
+  "091: the vendors' limits are stated in each connector's connect steps",
+  () => {
+    const steps = (id: string): string => {
+      const c = CONNECTORS.find((x) => x.id === id);
+      assert(c, id);
+      return c.connectHelp.join("\n");
+    };
+    assertStringIncludes(steps("gusto"), "Gusto offers no self-serve API token");
+    assertStringIncludes(steps("gusto"), "OAuth");
+    assertStringIncludes(steps("justworks"), "Justworks offers no self-serve API token");
+    assertStringIncludes(steps("justworks"), "partner apps");
+    assertStringIncludes(
+      steps("bitbucket"),
+      "Bitbucket's API does not show members' two-factor status",
+    );
+    assertStringIncludes(steps("gitlab"), "two-factor status only to owners");
+    assertStringIncludes(steps("gitlab"), "approval rules need a paid GitLab tier");
+  },
+);
+
+proves(
+  ["091-connectors FR-001"],
+  "091: every connector is declared with defineConnector; records carry D3FEND, OCSF or UDM labels; four become entities",
+  async () => {
+    const { CONNECTOR_LABELS } = await import("../src/archon/connect/labels.ts");
+    const { toEntities } = await import("../src/archon/connect/sdk.ts");
+    const labels = new Set(CONNECTOR_LABELS.map((l) => l.name));
+    for (const l of CONNECTOR_LABELS) {
+      assert(
+        l.terms.length > 0 && l.terms.every((t) => ["d3fend", "ocsf", "udm"].includes(t.from)),
+        l.name,
+      );
+    }
+    const ported = [
+      "cloudflare",
+      "hetzner",
+      "aws",
+      "microsoft",
+      "google",
+      "github",
+      "okta",
+      "bamboohr",
+      "rippling",
+    ];
+    for (const c of CONNECTORS) {
+      assert("def" in c, `${c.id} is declared with defineConnector`);
+      const def: unknown = Reflect.get(c, "def");
+      const resources = Reflect.get(def as object, "resources") as Record<
+        string,
+        { label: { name: string } }
+      >;
+      for (const [name, r] of Object.entries(resources)) {
+        assert(labels.has(r.label.name), `${c.id}.${name}: ${r.label.name} is a connector label`);
+      }
+    }
+    for (const id of ported)
+      assert(
+        CONNECTORS.some((c) => c.id === id),
+        id,
+      );
+    const rec = (label: string) => ({
+      label,
+      ocsf_class_uid: 0,
+      native_id: label,
+      display_name: label,
+      props: {},
+    });
+    const { entities, rest } = toEntities("x", [
+      rec("user_account"),
+      rec("code_repository"),
+      rec("person"),
+      rec("hardware_device"),
+      rec("server"),
+    ]);
+    assertEquals(
+      [
+        entities.accounts?.length,
+        entities.repositories?.length,
+        entities.people?.length,
+        entities.devices?.length,
+      ],
+      [1, 1, 1, 1],
+    );
+    assertEquals(
+      rest.map((r) => r.label),
+      ["server"],
+    );
+  },
+);
+
+proves(
+  ["091-connectors FR-002"],
+  "091: the SDK: orGap, required and mustRead, account from the records, posture with gaps and now, ctx.fact, asset()",
+  async () => {
+    const {
+      defineConnector,
+      mustRead,
+      recordedHttp: rec,
+    } = await import("../src/archon/connect/sdk.ts");
+    const { ORGANIZATION, USER_ACCOUNT } = await import("../src/archon/connect/labels.ts");
+    const B = "https://api.example.invalid";
+    type User = { id: string; login: string; admin: boolean; mfa?: boolean };
+    const make = (requireSecrets: boolean) =>
+      defineConnector({
+        id: "example",
+        title: "Example",
+        logo: "",
+        serviceModels: ["SaaS"],
+        markets: ["access-management"],
+        connectHelp: ["a read-only token"],
+        recipe: {},
+        fields: { token: { secret: true, hint: "the token" } },
+        auth: () => Promise.resolve({ authorization: "Bearer t" }),
+        // The account's name comes from what was read.
+        account: (_cred, records) =>
+          records.find((r) => r.label === "organization")?.display_name ?? "?",
+        resources: {
+          org: {
+            label: ORGANIZATION,
+            ocsf: "user_inventory",
+            async *list(ctx) {
+              const o = await mustRead(() => ctx.json<{ name: string; mfa: boolean }>(`${B}/org`));
+              ctx.fact("org_mfa_required", o.mfa);
+              yield o;
+            },
+            map: (o: { name: string; mfa: boolean }) => ({
+              native_id: o.name,
+              display_name: o.name,
+              props: { mfa_required: o.mfa },
+            }),
+          },
+          users: {
+            label: USER_ACCOUNT,
+            ocsf: "user_inventory",
+            async *list(ctx) {
+              for (const u of await ctx.json<User[]>(`${B}/users`)) {
+                // A part read and the rest kept: a denied factor read is a gap, the user stays.
+                const mfa = await ctx.orGap("factors", undefined as boolean | undefined, () =>
+                  ctx.json<{ active: boolean }>(`${B}/users/${u.id}/factors`).then((f) => f.active),
+                );
+                yield { ...u, ...(mfa === undefined ? {} : { mfa }) };
+              }
+            },
+            map: (u: User) => ({
+              native_id: u.id,
+              display_name: u.login,
+              props: {
+                active: true,
+                admin: u.admin,
+                ...(u.mfa === undefined ? {} : { mfa: u.mfa }),
+              },
+            }),
+            asset: (u: User) =>
+              u.admin ? { kind: "administrator", facts: { login: u.login } } : undefined,
+          },
+          secrets: {
+            label: ORGANIZATION,
+            ocsf: "user_inventory",
+            required: requireSecrets,
+            async *list(ctx) {
+              yield await ctx.json<{ name: string }>(`${B}/secrets`);
+            },
+            map: (o: { name: string }) => ({ native_id: o.name, display_name: o.name, props: {} }),
+          },
+        },
+        posture: (records, _cred, seen) => ({
+          admins: records.filter((r) => r.props["admin"] === true).length,
+          gaps: seen.gaps.length,
+          at: seen.now.toISOString(),
+        }),
+        policies: () => [],
+      });
+    const DENIED = { status: 403, body: {} };
+    const answers = {
+      [`${B}/org`]: { body: { name: "Example Co", mfa: true } },
+      [`${B}/users`]: {
+        body: [
+          { id: "1", login: "alice", admin: true },
+          { id: "2", login: "bob", admin: false },
+        ],
+      },
+      [`${B}/users/1/factors`]: { body: { active: true } },
+      [`${B}/users/2/factors`]: DENIED,
+      [`${B}/secrets`]: DENIED,
+    };
+    const NOW = new Date("2026-11-15T12:00:00Z");
+    const o = await make(false).observe({ token: "t" }, rec(answers), NOW);
+    assertEquals(o.account, "Example Co", "account(cred, records)");
+    assertEquals(o.posture["org_mfa_required"], true, "ctx.fact");
+    assertEquals(o.posture["admins"], 1);
+    assertEquals(o.posture["gaps"], 2, "posture is told the gaps");
+    assertEquals(o.posture["at"], "2026-11-15T12:00:00.000Z", "and when");
+    assert(
+      o.gaps.some((g) => g.startsWith("factors: ")),
+      o.gaps.join("; "),
+    );
+    assert(
+      o.gaps.some((g) => g.startsWith("secrets: ")),
+      "a denied resource is a gap",
+    );
+    assertEquals(
+      o.entities?.accounts?.map((a) => [a.name, a.mfa ?? null]),
+      [
+        ["alice", true],
+        ["bob", null],
+      ],
+      "bob kept, his factors a gap",
+    );
+    assertEquals(
+      o.assets.filter((a) => a.kind === "administrator").map((a) => [a.name, a.facts?.["login"]]),
+      [["alice", "alice"]],
+      "asset() names estate assets' kind and facts, and leaves out what it returns nothing for",
+    );
+    // required: a denied read fails the observation instead.
+    const failed = await make(true)
+      .observe({ token: "t" }, rec(answers), NOW)
+      .then(
+        () => "",
+        (e: unknown) => (e instanceof Error ? e.message : String(e)),
+      );
+    assertStringIncludes(failed, "403");
+    // mustRead: a denial inside a resource fails it too.
+    const noOrg = await make(false)
+      .observe({ token: "t" }, rec({ ...answers, [`${B}/org`]: DENIED }), NOW)
+      .then(
+        () => "",
+        (e: unknown) => (e instanceof Error ? e.message : String(e)),
+      );
+    assertStringIncludes(noOrg, "403");
+  },
+);

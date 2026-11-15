@@ -68,6 +68,7 @@ export const gitlab: Connector = defineConnector<typeof FIELDS>({
     "GitLab: your top-level group > Settings > Access tokens > Add new token (or your avatar > Edit profile > Access tokens)",
     "Scope: read_api only (read-only); role: Owner, because GitLab shows members' two-factor status only to owners (a lower role works, and 2FA is then listed as not readable)",
     "Set an expiry date, create it, and copy the token; your GitLab's address (https://gitlab.com, or your own) and the group's path",
+    "Merge request approval rules need a paid GitLab tier (Premium or Ultimate); on Free they are read as none",
   ],
   recipe: {
     open: {

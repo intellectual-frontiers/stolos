@@ -129,7 +129,7 @@ proves(
 );
 
 proves(
-  ["090-estate-graph FR-002", "090-estate-graph FR-003"],
+  ["090-estate-graph FR-002", "090-estate-graph FR-003", "086-wave1-connectors FR-002"],
   "090: people come only from the source of truth; others link to them",
   () => {
     const e = buildGraph(
@@ -387,7 +387,7 @@ const write = (
     );
 
 proves(
-  ["090-estate-graph FR-005", "090-estate-graph FR-007"],
+  ["090-estate-graph FR-005", "090-estate-graph FR-007", "086-wave1-connectors FR-002"],
   "090: from Git: the fleet as it was, first and last seen, and what a query gained and lost",
   async () => {
     const dir = await fs.makeTempDir();

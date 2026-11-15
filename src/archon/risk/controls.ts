@@ -172,7 +172,7 @@ export const reviewDue: EstateControl = defineControl({
       return {
         status: "warn",
         detail: "the risk register lists no open risk (fleets/<fleet>/risks.ts)",
-        fix: "write the register: fleets/<fleet>/risks.ts (stolos docs risks)",
+        fix: "write the register: fleets/<fleet>/risks.ts (bun run stolos docs risks)",
       };
     }
     const due = rows.filter((r) => txt(r["next_review"]) < today(now));

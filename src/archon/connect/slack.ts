@@ -127,7 +127,7 @@ export const slack: Connector = defineConnector({
   connectHelp: [
     "api.slack.com/apps > Create New App > From scratch: name it (Stolos read-only) and pick the workspace",
     "OAuth & Permissions > User Token Scopes, all read-only: users:read, users:read.email, team:read, channels:read, groups:read",
-    "Install to Workspace, signed in as a workspace admin or owner (Slack shows each member's two-factor status only to them)",
+    "Install to Workspace, signed in as a workspace admin or owner (Slack shows each member's two-factor status only to an admin's or owner's token)",
     "Copy the User OAuth Token (xoxp-...)",
     "Private channels are listed only when that person is in them; guests need a paid plan; Slack has no API for the require-two-factor setting outside Enterprise Grid",
   ],

@@ -8,6 +8,7 @@ import {
   assert,
   assertEquals,
   assertExists,
+  assertStringIncludes,
   proves,
   test,
 } from "@intellectual-frontiers/ifc-ts/runtime/test";
@@ -361,3 +362,33 @@ function got<T>(value: T | undefined | null, what = "a value"): T {
   assertExists(value, `${what} is missing`);
   return value;
 }
+
+/** A guide's section: from its heading to the next heading of its level or higher (outside code). */
+function guideSection(md: string, heading: string): string {
+  const lines = md.split("\n");
+  const start = lines.indexOf(heading);
+  assert(start >= 0, `"${heading}" in the guide`);
+  const level = heading.indexOf(" ");
+  let fence = false;
+  const out: string[] = [];
+  for (const l of lines.slice(start + 1)) {
+    if (/^\s*```/.test(l)) fence = !fence;
+    if (!fence && new RegExp(`^#{1,${level}} `).test(l)) break;
+    out.push(l);
+  }
+  return out.join("\n");
+}
+
+proves(
+  ["076-fedramp-20x FR-006"],
+  "076: the compliance guide explains FedRAMP 20x, with a diagram",
+  async () => {
+    const { engineFile } = await import("../src/archon/core/assets.ts");
+    const s = guideSection(engineFile("docs/compliance.md"), "## FedRAMP 20x");
+    assertStringIncludes(s, "```mermaid\n");
+    for (const w of ["Key Security Indicators", "Class A", "Class B", "Security Decision Record"]) {
+      assertStringIncludes(s, w);
+    }
+    assertStringIncludes(s, "bun run stolos compliance fedramp --class A");
+  },
+);

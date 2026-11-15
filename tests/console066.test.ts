@@ -361,3 +361,208 @@ proves(["066-stolos-console FR-007"], "066: Activity between dates, and as CSV",
   const r = await get("/export/activity.csv");
   assertEquals(r.headers.get("content-type"), "text/csv; charset=utf-8");
 });
+
+/** WCAG 2's relative luminance of a #RRGGBB color. */
+function luminance(hex: string): number {
+  const ch = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+  const [r = 0, g = 0, b = 0] = ch.map((c) =>
+    c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4,
+  );
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+/** WCAG 2's contrast ratio of two colors. */
+function contrast(a: string, b: string): number {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return ((hi ?? 0) + 0.05) / ((lo ?? 0) + 0.05);
+}
+/** The color tokens of a block of the stylesheet (`--name: #RRGGBB`). */
+function tokens(css: string): Record<string, string> {
+  return Object.fromEntries(
+    [...css.matchAll(/--([a-z-]+):\s*(#[0-9A-Fa-f]{6})\b/g)].map((m) => [m[1] ?? "", m[2] ?? ""]),
+  );
+}
+/** Whether every <table> of a page is inside an element of class `cls`. */
+function tablesInside(page: string, cls: string): string[] {
+  const VOID = new Set([
+    "br",
+    "img",
+    "input",
+    "meta",
+    "link",
+    "hr",
+    "source",
+    "path",
+    "rect",
+    "circle",
+  ]);
+  const stack: Array<{ tag: string; scroll: boolean }> = [];
+  const bad: string[] = [];
+  for (const m of page.matchAll(/<(\/?)([a-zA-Z][a-zA-Z0-9-]*)([^>]*?)(\/?)>/g)) {
+    const [, close, name = "", attrs = "", self] = m;
+    const tag = name.toLowerCase();
+    if (close) {
+      const i = stack.map((x) => x.tag).lastIndexOf(tag);
+      if (i >= 0) stack.length = i;
+      continue;
+    }
+    if (tag === "table" && !stack.some((x) => x.scroll))
+      bad.push(page.slice(m.index - 120, m.index));
+    if (VOID.has(tag) || self) continue;
+    const c = /class="([^"]*)"/.exec(attrs)?.[1] ?? "";
+    stack.push({ tag, scroll: c.split(/\s+/).includes(cls) });
+  }
+  return bad;
+}
+
+proves(
+  ["066-stolos-console FR-008"],
+  "066: 4.5:1 contrast in light and dark; tables scroll with a shadow; diagrams scroll on a phone; a skip link",
+  async () => {
+    const { CONSOLE_CSS } = await import("../src/archon/console/assets.ts");
+    const dark = CONSOLE_CSS.slice(CONSOLE_CSS.indexOf("@media (prefers-color-scheme: dark)"));
+    const light = tokens(CONSOLE_CSS.slice(0, CONSOLE_CSS.indexOf("@media (prefers-color-scheme")));
+    // Text on each surface, buttons, links, and each pill's text on its own background.
+    const pairs: Array<[string, string]> = [
+      ["ink", "bg"],
+      ["ink", "panel"],
+      ["ink", "rail"],
+      ["ink", "code"],
+      ["muted", "bg"],
+      ["muted", "panel"],
+      ["muted", "rail"],
+      ["muted", "code"],
+      ["accent", "panel"],
+      ["accent", "bg"],
+      ["on-accent", "accent"],
+      ["accent", "accent-soft"],
+      ["ok", "ok-soft"],
+      ["warn", "warn-soft"],
+      ["bad", "bad-soft"],
+    ];
+    for (const [scheme, t] of [
+      ["light", light],
+      ["dark", { ...light, ...tokens(dark) }],
+    ] as const) {
+      for (const [fg, bg] of pairs) {
+        const a = t[fg];
+        const b = t[bg];
+        assert(a !== undefined && b !== undefined, `${scheme}: --${fg} and --${bg}`);
+        const r = contrast(a, b);
+        assert(r >= 4.5, `${scheme}: --${fg} on --${bg} is ${r.toFixed(2)}:1`);
+      }
+    }
+    // A table wider than its card scrolls sideways, with a shadow at the edge where more is.
+    const scroll = CONSOLE_CSS.slice(CONSOLE_CSS.indexOf(".scroll {"));
+    assertStringIncludes(scroll.slice(0, 900), "overflow-x: auto");
+    assertStringIncludes(scroll.slice(0, 900), "radial-gradient(farthest-side at 0 50%");
+    assertStringIncludes(
+      scroll.slice(0, 900),
+      "background-attachment: local, local, scroll, scroll",
+    );
+    // A diagram on a phone keeps a readable size and scrolls.
+    assertStringIncludes(CONSOLE_CSS, ".diagram { overflow-x: auto; }");
+    assertStringIncludes(
+      CONSOLE_CSS,
+      "@media (max-width: 640px) { .diagram svg { min-width: 620px; } }",
+    );
+    assertStringIncludes(CONSOLE_CSS, ".skip:focus {");
+    const { get } = await signedIn();
+    for (const p of [
+      "/",
+      "/machines",
+      "/machines/alice-mbp",
+      "/machines/front-printer",
+      "/add",
+      "/add?what=cloud",
+      "/clouds",
+      "/boot",
+      "/query",
+      "/changes",
+      "/trust",
+      "/compliance",
+      "/compliance?fw=hipaa",
+      "/activity",
+      "/how",
+      "/guide",
+      "/actions/fleet",
+      "/actions/adopted",
+    ]) {
+      const page = await (await get(p)).text();
+      assertStringIncludes(page, '<a class="skip" href="#main">Skip to the page</a>', p);
+      assertStringIncludes(page, 'id="main"', p);
+      assertEquals(tablesInside(page, "scroll"), [], `${p}: a table outside .scroll`);
+      for (const d of page.matchAll(/<pre class="mermaid"/g)) {
+        assert(
+          page.lastIndexOf('class="card diagram"', d.index) >= 0,
+          `${p}: a diagram outside .diagram`,
+        );
+      }
+    }
+  },
+);
+
+proves(
+  ["069-integrate FR-006"],
+  "069: each cloud has a recipe for a read-only credential; cloud servers no machine owns are under Machines, with Adopt",
+  async () => {
+    const { CONNECTORS } = await import("../src/archon/connect/commands.ts");
+    const clouds = CONNECTORS.filter((c) => c.serviceModels.includes("IaaS"));
+    assert(clouds.length >= 4, clouds.map((c) => c.id).join(", "));
+    for (const c of clouds) {
+      const r = c.recipe;
+      assert(r.open !== undefined || r.shell !== undefined, `${c.id}: a page to open or a command`);
+      if (r.open) assert(/^https:\/\//.test(r.open.href), `${c.id}: ${r.open.href}`);
+      if (r.shell) assert(/^https:\/\//.test(r.shell.href) && r.shell.command.length > 0, c.id);
+    }
+    const shell = (id: string) => CONNECTORS.find((c) => c.id === id)?.recipe.shell?.where ?? "";
+    assertStringIncludes(shell("aws"), "AWS CloudShell");
+    assertStringIncludes(shell("microsoft"), "Azure Cloud Shell");
+    const { get } = await signedIn();
+    const add = await (await get("/add?what=cloud")).text();
+    assertStringIncludes(add, "AWS CloudShell");
+    assertStringIncludes(add, "it makes a read-only identity and prints its keys");
+    assertStringIncludes(add, ">\n          Copy\n        </button>");
+    assertStringIncludes(add, "/actions/clouds?cmd=connect&provider=hetzner");
+    const machines = await (await get("/machines")).text();
+    assertStringIncludes(machines, '<a href="/machines/scratch"><b>scratch</b></a>');
+    assertStringIncludes(machines, "Hetzner Cloud, fsn1-dc14");
+    const scratch = await (await get("/machines/scratch")).text();
+    assertStringIncludes(scratch, 'href="/add?name=scratch">Adopt it</a>');
+  },
+);
+
+proves(
+  ["069-integrate FR-007"],
+  "069: Add a machine asks what it is in plain words, shows the line with Copy, takes the check-in code; Machines lists what was discovered",
+  async () => {
+    const { ADD_CHOICES } = await import("../src/archon/console/stolos-pages.ts");
+    assertEquals(
+      ADD_CHOICES.map((c) => c.id),
+      ["adopt", "discover", "device", "cloud", "server", "workstation"],
+    );
+    const { get } = await signedIn();
+    const add = await (await get("/add")).text();
+    for (const c of ADD_CHOICES) {
+      assertStringIncludes(add, `value="${c.id}"`);
+      assertStringIncludes(add, c.title);
+    }
+    for (const words of [
+      "laptop",
+      "Just record",
+      "printer",
+      "cloud",
+      "server we will manage",
+      "workstation",
+    ]) {
+      assertStringIncludes(add, words);
+    }
+    const step = await (await get("/add?what=adopt&name=alice-laptop")).text();
+    assertStringIncludes(step, "Run this on alice-laptop");
+    assertStringIncludes(step, "navigator.clipboard.writeText");
+    assertStringIncludes(step, "Paste the check-in code");
+    assertStringIncludes(step, 'name="check-in"');
+    assertStringIncludes(step, 'name="command" value="host adopt"');
+    const machines = await (await get("/machines")).text();
+    for (const m of ["front-desk", "front-printer"]) assertStringIncludes(machines, m);
+  },
+);

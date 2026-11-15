@@ -262,9 +262,9 @@ proves(
       assertStringIncludes(r.out, `would run: git clone ${s.src} ${there}`);
       assertStringIncludes(r.out, "[ok] Node");
       assert(!(await exists(there)), "--dry-run changes nothing");
-      r = await s.boot("--repo", s.src, "--runtime=deno", "--dry-run");
+      r = await s.boot("--repo", s.src, "--runtime=python", "--dry-run");
       assertEquals(r.code, 1, r.out);
-      assertStringIncludes(r.out, "deno is not bun or node");
+      assertStringIncludes(r.out, "python is not bun or node");
       r = await s.boot("--frobnicate");
       assertEquals(r.code, 2, r.out);
       assertStringIncludes(r.out, "unknown option: --frobnicate (see --help)");

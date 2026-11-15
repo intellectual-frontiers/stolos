@@ -88,7 +88,7 @@ export async function controlsList(json = false): Promise<number> {
       : `no packs in ${controlsDir()}`,
   );
   if (!packs.length) {
-    ui.next.push("add one: fleets/<fleet>/controls/<pack>/pack.ts (stolos docs controls)");
+    ui.next.push("add one: fleets/<fleet>/controls/<pack>/pack.ts (bun run stolos docs controls)");
   }
   return fail();
 }

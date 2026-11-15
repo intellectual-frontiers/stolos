@@ -4,7 +4,12 @@
  * @module
  */
 
-import { assert, assertEquals, proves } from "@intellectual-frontiers/ifc-ts/runtime/test";
+import {
+  assert,
+  assertEquals,
+  assertStringIncludes,
+  proves,
+} from "@intellectual-frontiers/ifc-ts/runtime/test";
 import { DatabaseSync } from "node:sqlite";
 import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import type { Observation } from "../src/archon/connect/connector.ts";
@@ -261,4 +266,39 @@ proves(
     }
   },
   { skip: !osqueryi && "osqueryi is not installed (CI installs it)" },
+);
+
+/** A guide's section: from its heading to the next heading of its level or higher (outside code). */
+function guideSection(md: string, heading: string): string {
+  const lines = md.split("\n");
+  const start = lines.indexOf(heading);
+  assert(start >= 0, `"${heading}" in the guide`);
+  const level = heading.indexOf(" ");
+  let fence = false;
+  const out: string[] = [];
+  for (const l of lines.slice(start + 1)) {
+    if (/^\s*```/.test(l)) fence = !fence;
+    if (!fence && new RegExp(`^#{1,${level}} `).test(l)) break;
+    out.push(l);
+  }
+  return out.join("\n");
+}
+
+proves(
+  ["093-osquery FR-005", "093-osquery FR-006"],
+  "093: the docs: the adopted guide's estate section and estate/commands.ts, each with a diagram; TEXT columns said",
+  async () => {
+    const { engineFile } = await import("../src/archon/core/assets.ts");
+    const s = guideSection(engineFile("docs/adopted.md"), "### The estate graph in osquery");
+    assertStringIncludes(s, "```mermaid\n");
+    assertStringIncludes(s, "Every column is text in osquery");
+    const { guideMarkdown } = await import("../src/archon/core/guides.ts");
+    const commands = guideMarkdown(await fs.readTextFile("src/archon/estate/commands.ts"));
+    assertStringIncludes(guideSection(commands, "## osquery (spec 093)"), "```mermaid\n");
+    const atc = guideMarkdown(await fs.readTextFile("src/archon/estate/osquery.ts"));
+    assertStringIncludes(
+      atc,
+      "Every column is TEXT in\nosquery (integers and booleans arrive as their decimal text; NULL as an\nempty value)",
+    );
+  },
 );

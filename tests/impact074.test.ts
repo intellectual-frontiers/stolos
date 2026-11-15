@@ -770,3 +770,140 @@ function got<T>(value: T | undefined | null, what = "a value"): T {
   assertExists(value, `${what} is missing`);
   return value;
 }
+
+/** A guide's section: from its heading to the next heading of its level or higher (outside code). */
+function guideSection(md: string, heading: string): string {
+  const lines = md.split("\n");
+  const start = lines.indexOf(heading);
+  assert(start >= 0, `"${heading}" in the guide`);
+  const level = heading.indexOf(" ");
+  let fence = false;
+  const out: string[] = [];
+  for (const l of lines.slice(start + 1)) {
+    if (/^\s*```/.test(l)) fence = !fence;
+    if (!fence && new RegExp(`^#{1,${level}} `).test(l)) break;
+    out.push(l);
+  }
+  return out.join("\n");
+}
+
+proves(
+  ["074-change-impact FR-011"],
+  "074: the compliance guide has a section on change impact, with a Mermaid diagram",
+  async () => {
+    const { engineFile } = await import("../src/archon/core/assets.ts");
+    const { guideDef } = await import("../src/archon/core/guides.ts");
+    assertEquals(guideDef("compliance")?.module, "src/archon/compliance/mod.ts");
+    const s = guideSection(
+      engineFile("docs/compliance.md"),
+      "## Compliance impact at the point of change",
+    );
+    assertStringIncludes(s, "```mermaid\n");
+    for (const w of ["stolos apply", "stolos compliance impact", "### The gate", "pull request"]) {
+      assertStringIncludes(s, w);
+    }
+  },
+);
+
+proves(
+  ["074-change-impact FR-006"],
+  "074: stolos apply shows Compliance impact after Changes; the gate blocks the commit; --approve writes the trailer",
+  async () => {
+    const { linkEngine } = await import("./sandbox.ts");
+    const PASS = "correct horse battery staple";
+    const sb = await sandbox("stolos-apply-impact-");
+    try {
+      const home = sb.home;
+      const askpass = path.join(home, "askpass.sh");
+      await fs.writeTextFile(askpass, `#!/bin/sh\necho '${PASS}'\n`);
+      await fs.chmod(askpass, 0o755);
+      const gitconfig = path.join(home, "gitconfig");
+      await fs.writeTextFile(gitconfig, "[user]\n\tname = t\n\temail = t@example.invalid\n");
+      const env: Record<string, string> = {
+        GIT_CONFIG_GLOBAL: gitconfig,
+        GIT_CONFIG_NOSYSTEM: "1",
+        ARCHON_TEST_PASSPHRASE: PASS,
+        SSH_ASKPASS: askpass,
+        SSH_ASKPASS_REQUIRE: "force",
+        DISPLAY: ":0",
+        SSH_AUTH_SOCK: path.join(home, "no-agent"),
+      };
+      const sh = async (cwd: string, ...a: string[]): Promise<string> => {
+        const r = await proc.run(a, {
+          cwd,
+          env: { ...proc.env.toObject(), ...env, HOME: home },
+          stdin: "null",
+        });
+        if (!r.success) throw new Error(`${a.join(" ")}: ${r.stderr}`);
+        return r.stdout.trim();
+      };
+      const origin = path.join(home, "origin.git");
+      const repo = path.join(home, "fleet");
+      await sh(home, "git", "init", "-q", "--bare", "-b", "main", origin);
+      await sh(home, "git", "clone", "-q", origin, repo);
+      await fs.mkdir(path.join(repo, "fleets"), { recursive: true });
+      await fs.copy("examples/fleets/lab", path.join(repo, "fleets", "lab"));
+      await linkEngine(repo);
+      await fs.remove(path.join(repo, "fleets", "lab", "signers.ts"));
+      await fs.writeTextFile(path.join(repo, ".gitignore"), "out/\nnode_modules/\n");
+      await fs.writeTextFile(
+        path.join(repo, "package.json"),
+        JSON.stringify({ scripts: { stolos: `bun ${proc.cwd()}/src/stolos/main.ts` } }) + "\n",
+      );
+      const fleetTs = path.join(repo, "fleets/lab/fleet.ts");
+      await fs.writeTextFile(
+        fleetTs,
+        (await fs.readTextFile(fleetTs)).replace(
+          '  timezone: "America/New_York",',
+          '  timezone: "America/New_York",\n  compliance: { gate: { block: "weakens" } },',
+        ),
+      );
+      const stolos = (args: string[]) =>
+        sb.run("src/stolos/main.ts", args, "", { ...env, ARCHON_REPO: repo, ARCHON_FLEET: "lab" });
+      assertEquals((await stolos(["keys", "setup"])).code, 0);
+      let r = await stolos(["apply", "-m", "lab: the fleet"]);
+      assertEquals(r.code, 0, r.out);
+      assertStringIncludes(r.out, "the first push: nothing to compare with");
+      const base = await sh(origin, "git", "rev-parse", "main");
+
+      // A weakening (beta without unattended upgrades): shown as a warning; the gate blocks.
+      const beta = path.join(repo, "fleets/lab/hosts/beta/host.ts");
+      const before = await fs.readTextFile(beta);
+      await fs.writeTextFile(
+        beta,
+        before.replace(
+          "capabilities: foundation(),",
+          "capabilities: foundation().filter((_, i) => i !== 4),",
+        ),
+      );
+      r = await stolos(["apply", "-m", "lab: beta"]);
+      assertEquals(r.code, 1, r.out);
+      const changes = r.out.indexOf("Changes");
+      const impact = r.out.indexOf("Compliance impact");
+      assert(changes > 0 && impact > changes, r.out);
+      assertStringIncludes(r.out, "beta: turns off unattended upgrades: VPM-08");
+      assertStringIncludes(r.out, "the gate blocks: beta: turns off unattended upgrades");
+      assert(!/\[ok\] Commit/.test(r.out), "nothing committed");
+      assertEquals(await sh(repo, "git", "rev-parse", "HEAD"), base, "nothing committed here");
+      assertEquals(await sh(origin, "git", "rev-parse", "main"), base, "nothing pushed");
+
+      // --approve: the approval is a trailer of the one signed commit, pushed.
+      r = await stolos(["apply", "-m", "lab: beta", "--approve", "updates/beta"]);
+      assertEquals(r.code, 0, r.out);
+      assert(r.out.indexOf("Compliance impact") < r.out.indexOf("Commit"), r.out);
+      assertStringIncludes(
+        await sh(origin, "git", "log", "-1", "--format=%B", "main"),
+        "Compliance-Approved: updates/beta",
+      );
+      assertStringIncludes(r.out, "signed by a key the servers trust");
+
+      // Turning them back on strengthens it: a pass, and nothing blocks.
+      await fs.writeTextFile(beta, before);
+      r = await stolos(["apply", "-m", "lab: beta again"]);
+      assertEquals(r.code, 0, r.out);
+      assertStringIncludes(r.out, "0 control(s) weakened, 1 strengthened");
+    } finally {
+      await fs.remove(sb.home, { recursive: true }).catch(() => {});
+    }
+  },
+);

@@ -199,11 +199,11 @@ export async function discover(host: HostDef, check = false): Promise<number> {
   const boot = tried.find((c) => c.source === "boot");
   if (!found && boot) {
     p.note(
-      `the boot PC (${boot.endpoint}) is not collecting: it does only while \`bun run stolos boot serve\` runs on it (optional; see the telemetry guide (stolos docs telemetry))`,
+      `the boot PC (${boot.endpoint}) is not collecting: it does only while \`bun run stolos boot serve\` runs on it (optional; see the telemetry guide (bun run stolos docs telemetry))`,
     );
   } else if (!found && !fleet.site?.bootServer) {
     p.note(
-      "no collector: telemetry stays on this machine (journald, PCP, Archon's OTLP files). To keep it in one place, turn on the web UI on a server (archon otel ui on --ephemeral) or run the boot PC's boot server (the telemetry guide (stolos docs telemetry))",
+      "no collector: telemetry stays on this machine (journald, PCP, Archon's OTLP files). To keep it in one place, turn on the web UI on a server (archon otel ui on --ephemeral) or run the boot PC's boot server (the telemetry guide (bun run stolos docs telemetry))",
     );
   }
   const want = found ? centralConfig(found.endpoint, CORE_PCP_METRICS, found.source) : "{}\n";

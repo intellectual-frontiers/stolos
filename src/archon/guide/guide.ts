@@ -254,7 +254,7 @@ export function guideFor(plan: HostPlan): GuideItem[] {
       id: "smb",
       category: "web",
       title: "File shares for Windows, macOS, and Linux (SMB)",
-      what: `One shared folder for everyone with an account, and your own home folder, at ${smbHost}, from the local networks. Sign in with your Linux username and password. Off until an operator turns it on; then it stays on until turned off.`,
+      what: `One shared folder for everyone with an account, and your own home folder, at ${smbHost}, from wherever the router lets people in. Sign in with your Linux username and password. Off until an operator turns it on; then it stays on until turned off.`,
       use: [
         { cmd: "archon fs smb status", why: "on or off, and how to connect" },
         {
@@ -297,7 +297,7 @@ export function guideFor(plan: HostPlan): GuideItem[] {
       id: "pg",
       category: "web",
       title: "PostgreSQL databases",
-      what: `Named PostgreSQL instances (prime is PostgreSQL 18), off until an operator turns them on. You connect as yourself (your Linux account is your database identity, no password on the server); apps run as their own service accounts. Private to this server unless an operator publishes one (then ${pgHost} over TLS with your Linux password, from wherever the router lets clients through, or the local networks only). A protected database needs an explicit COMMIT.`,
+      what: `Named PostgreSQL instances (prime is PostgreSQL 18), off until an operator turns them on. You connect as yourself (your Linux account is your database identity, no password on the server); apps run as their own service accounts. Private to this server unless an operator publishes one (then ${pgHost} over TLS with your Linux password, from wherever the router lets clients through). A protected database needs an explicit COMMIT.`,
       use: [
         { cmd: "psql service=prime", why: "connect as yourself (no password)" },
         { cmd: "archon pg list", why: "every instance, its version, port, and status" },

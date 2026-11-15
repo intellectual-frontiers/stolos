@@ -117,7 +117,7 @@ export const OPT_INS: OptInDef[] = [
       return [
         `Web UI: https://otel.${
           n ?? host.name
-        } (local networks) · sign in: archon otel ui password --show`,
+        } (the router decides who reaches it) · sign in: archon otel ui password --show`,
         `This server now collects the fleet's telemetry on port 4318: point otel.localdomain (router DNS) or telemetry.collector in fleet.ts at ${host.name}; servers find it within 15 minutes.`,
         "Only telemetry from now on is forwarded; what came before stays where it was (spec 050).",
       ];

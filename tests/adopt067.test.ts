@@ -279,3 +279,71 @@ proves(
     assertEquals(accept(m, [{ ...fail, status: "pass" }])[0]?.status, "pass");
   },
 );
+
+proves(
+  ["067-adopt FR-006"],
+  "067: host release removes the probe and its key line over your own SSH, then the model and the probe key",
+  async () => {
+    const { sandbox, linkEngine } = await import("./sandbox.ts");
+    const { path } = await import("@intellectual-frontiers/ifc-ts/runtime");
+    const sb = await sandbox("stolos-release-");
+    try {
+      const repo = path.join(sb.home, "fleet");
+      await fs.mkdir(path.join(repo, "fleets"), { recursive: true });
+      await fs.copy("examples/fleets/lab", path.join(repo, "fleets", "lab"));
+      await linkEngine(repo);
+      const dir = path.join(repo, "fleets", "lab", "adopted", "alice-mbp");
+      await fs.mkdir(dir, { recursive: true });
+      await fs.writeTextFile(path.join(dir, "machine.ts"), machineSource(machine));
+      // The probe key, in this PC's vault.
+      const keys = path.join(sb.home, "config", "stolos", "secrets", "lab", "adopted", "alice-mbp");
+      await fs.mkdir(keys, { recursive: true });
+      await fs.writeTextFile(path.join(keys, "probe_key"), "PRIVATE\n");
+      await fs.writeTextFile(path.join(keys, "probe_key.pub"), "ssh-ed25519 AAAAC3Nzprobe pc\n");
+      // The machine, as adopt left it: the probe, and its key's line beside the owner's own key.
+      const there = path.join(sb.home, "alice-mbp");
+      await fs.mkdir(path.join(there, ".ssh"), { recursive: true });
+      await fs.writeTextFile(
+        path.join(there, ".ssh", "authorized_keys"),
+        "ssh-ed25519 AAAAC3Nzowner alice@laptop\n",
+      );
+      const install = await proc.run(["sh", "-s"], {
+        input: installScript("ssh-ed25519 AAAAC3Nzprobe", "lab"),
+        env: { HOME: there, PATH: proc.env.get("PATH") ?? "/usr/bin:/bin" },
+        clearEnv: true,
+      });
+      assertEquals(install.code, 0, install.stderr);
+      const probe = path.join(there, ".local", "bin", "stolos-probe");
+      assert(await fs.exists(probe), "the probe is installed");
+      assertStringIncludes(
+        await fs.readTextFile(path.join(there, ".ssh", "authorized_keys")),
+        "stolos-probe@lab",
+      );
+      // "Your own SSH": a stand-in ssh that runs what it is given on the machine above.
+      const bin = path.join(sb.home, "bin");
+      await fs.mkdir(bin);
+      await fs.writeTextFile(path.join(bin, "ssh"), `#!/bin/sh\nHOME="${there}" exec sh -s\n`);
+      await fs.chmod(path.join(bin, "ssh"), 0o755);
+      const r = await sb.run("src/stolos/main.ts", ["host", "release", "alice-mbp"], "", {
+        ARCHON_REPO: repo,
+        ARCHON_FLEET: "lab",
+        PATH: `${bin}:${sb.env["PATH"] ?? ""}`,
+      });
+      assertEquals(r.code, 0, r.out);
+      assertStringIncludes(r.out, "stolos-probe removed");
+      assertStringIncludes(r.out, "alice-mbp released: its model and probe key are gone");
+      assert(!(await fs.exists(probe)), "the probe is gone");
+      assertEquals(
+        await fs.readTextFile(path.join(there, ".ssh", "authorized_keys")),
+        "ssh-ed25519 AAAAC3Nzowner alice@laptop\n",
+        "only the probe's line went",
+      );
+      assert(!(await fs.exists(dir)), "the model is gone");
+      assert(!(await fs.exists(path.join(keys, "probe_key"))), "the probe key is gone");
+      assert(!(await fs.exists(path.join(keys, "probe_key.pub"))));
+    } finally {
+      await fs.remove(sb.home, { recursive: true });
+    }
+  },
+  { skip: proc.build.os === "windows" && "the stand-in ssh is a shell script" },
+);

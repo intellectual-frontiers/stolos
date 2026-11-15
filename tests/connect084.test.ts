@@ -428,3 +428,140 @@ proves(
     }
   },
 );
+
+proves(
+  ["084-connectors FR-002"],
+  "084: stolos connect, disconnect, estate observe | check | assets; the console's page is Connected accounts",
+  async () => {
+    const { fs, path } = await import("@intellectual-frontiers/ifc-ts/runtime");
+    const { sandbox, linkEngine } = await import("./sandbox.ts");
+    const { COMMANDS } = await import("../src/archon/commands/registry.ts");
+    for (const n of ["connect", "disconnect", "estate observe", "estate check", "estate assets"]) {
+      assert(
+        COMMANDS.some((c) => c.name === n),
+        n,
+      );
+    }
+    const { STOLOS_NAV } = await import("../src/archon/console/stolos-pages.ts");
+    assert(STOLOS_NAV.some((n) => n.label === "Connected accounts" && n.href === "/clouds"));
+    const sb = await sandbox("stolos-estate-");
+    try {
+      const repo = path.join(sb.home, "fleet");
+      await fs.mkdir(path.join(repo, "fleets"), { recursive: true });
+      await fs.copy("examples/fleets/lab", path.join(repo, "fleets", "lab"));
+      await linkEngine(repo);
+      const env = { ARCHON_REPO: repo, ARCHON_FLEET: "lab" };
+      const stolos = (args: string[], stdin = "") => sb.run("src/stolos/main.ts", args, stdin, env);
+      // The last observation, in Git, as estate observe writes it.
+      const o = await cloudflare.observe({ token: "t" }, cfFake(), NOW);
+      await fs.mkdir(path.join(repo, "fleets", "lab", "estate"), { recursive: true });
+      await fs.writeTextFile(
+        path.join(repo, "fleets", "lab", "estate", "cloudflare.ts"),
+        observationSource(o),
+      );
+      let r = await stolos(["estate", "assets", "--json"]);
+      assertEquals(r.code, 0, r.out);
+      const rows = JSON.parse(
+        r.out.slice(r.out.indexOf("["), r.out.lastIndexOf("]") + 1),
+      ) as Array<{
+        provider: string;
+        kind: string;
+      }>;
+      assert(
+        rows.some((a) => a.provider === "cloudflare" && a.kind === "zone"),
+        r.out,
+      );
+      r = await stolos(["estate", "check", "--json"]);
+      const checked = JSON.parse(r.out.slice(r.out.indexOf("{"), r.out.lastIndexOf("}") + 1)) as {
+        accounts: Array<{ provider: string; results: Array<{ id: string; status: string }> }>;
+      };
+      const cf = checked.accounts.find((a) => a.provider === "cloudflare");
+      assertEquals(cf?.results.find((p) => p.id === "cf-min-tls")?.status, "fail");
+      assertEquals(r.code, 1, "a failing policy fails the check");
+      // Nothing connected on this PC: observe reads nothing and says how to connect.
+      r = await stolos(["estate", "observe", "cloudflare"]);
+      assertStringIncludes(r.out, "not connected (bun run stolos connect cloudflare)");
+      // connect asks for the read-only credential (here: none given, so nothing is kept).
+      r = await stolos(["connect", "cloudflare"], "\n");
+      assertStringIncludes(r.out, "make a read-only credential");
+      const cred = path.join(
+        sb.home,
+        "config",
+        "stolos",
+        "secrets",
+        "lab",
+        "connectors",
+        "cloudflare",
+      );
+      assert(!(await fs.exists(path.join(cred, "credential.json"))));
+      // disconnect: the credential leaves the vault; the observation stays in Git.
+      await fs.mkdir(cred, { recursive: true });
+      await fs.writeTextFile(path.join(cred, "credential.json"), '{"token":"t"}\n');
+      r = await stolos(["disconnect", "cloudflare"]);
+      assertEquals(r.code, 0, r.out);
+      assertStringIncludes(r.out, "the credential is gone from this PC's vault");
+      assert(!(await fs.exists(path.join(cred, "credential.json"))));
+      assert(await fs.exists(path.join(repo, "fleets", "lab", "estate", "cloudflare.ts")));
+    } finally {
+      await fs.remove(sb.home, { recursive: true });
+    }
+  },
+);
+
+/** Cloudflare's recorded answers (the first test's), for a whole observation. */
+function cfFake(): ReturnType<typeof fake> {
+  return fake({
+    [`${CF}/accounts?`]: [
+      200,
+      {
+        result: [{ id: "a1", name: "Example Co" }],
+        result_info: { page: 1, total_pages: 1 },
+      },
+    ],
+    [`${CF}/accounts/a1/workers/scripts`]: [403, { success: false }],
+    [`${CF}/accounts/a1/pages/projects`]: [
+      200,
+      {
+        result: [{ id: "p1", name: "site", subdomain: "site.pages.dev" }],
+      },
+    ],
+    [`${CF}/accounts/a1/r2/buckets`]: [
+      200,
+      {
+        result: { buckets: [{ name: "backups", location: "ENAM" }] },
+      },
+    ],
+    [`${CF}/accounts/a1/cfd_tunnel`]: [200, { result: [] }],
+    [`${CF}/zones?`]: [
+      200,
+      {
+        result: [{ id: "z1", name: "example.org", status: "active", plan: { name: "Free" } }],
+      },
+    ],
+    [`${CF}/zones/z1/settings/ssl`]: [200, { result: { value: "strict" } }],
+    [`${CF}/zones/z1/settings/always_use_https`]: [200, { result: { value: "on" } }],
+    [`${CF}/zones/z1/settings/min_tls_version`]: [200, { result: { value: "1.0" } }],
+    [`${CF}/zones/z1/dnssec`]: [200, { result: { status: "disabled" } }],
+    [`${CF}/zones/z1/dns_records`]: [
+      200,
+      {
+        result: [
+          {
+            id: "r1",
+            type: "A",
+            name: "server1.example.org",
+            content: "203.0.113.10",
+            proxied: false,
+          },
+          {
+            id: "r2",
+            type: "CNAME",
+            name: "www.example.org",
+            content: "site.pages.dev",
+            proxied: true,
+          },
+        ],
+      },
+    ],
+  });
+}

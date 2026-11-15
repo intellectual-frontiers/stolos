@@ -66,7 +66,7 @@ export const onepassword: Connector = defineConnector({
     "Sign in to 1Password.com as an owner or administrator > Integrations (or Directory) > OAuth Application",
     "Grant type: Client credentials; name it Stolos read-only; scopes: users.view only (read; leave users.suspend and users.reactivate off)",
     "Copy the client ID and secret (the secret is shown once), your account ID, and where the account is (1password.com, 1password.ca, 1password.eu, ent.1password.com)",
-    "1Password's API does not show roles, two-factor status, or vaults: check those in the admin console (Policies > Two-factor authentication; Reports). The estate graph checks that every active person has an account",
+    "1Password's Users API is in preview, and it does not show roles, two-factor status, or vaults: check those in the admin console (Policies > Two-factor authentication; Reports). The estate graph checks that every active person has an account",
   ],
   recipe: {
     open: {
