@@ -585,9 +585,9 @@ Deno.test("092: no personal fields beyond what the estate holds", async () => {
   }
 });
 
-Deno.test("092: stolos export <kind> is a read-tier command with every kind", () => {
+Deno.test("092: stolos export <kind> keeps the repo tier (it writes out/rdf) and has every kind", () => {
   const c = COMMANDS.find((x) => x.name === "export")!;
-  assertEquals(c.tier, "read");
+  assertEquals(c.tier, "repo");
   assertEquals(c.place, "pc");
   const kind = c.args.find((a) => a.name === "kind")!;
   assertEquals(kind.choices, ["rdf", ...EXPORT_KINDS]);
