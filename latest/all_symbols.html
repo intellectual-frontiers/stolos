@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>All Symbols - Stolos v0.81.0 documentation</title>
+  <title>All Symbols - Stolos v0.82.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href=".&#x2F;" class="contextLink">Stolos v0.81.0</a>
+    <a href=".&#x2F;" class="contextLink">Stolos v0.82.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -6374,7 +6374,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_archon_logo
 @font-face { font-family: "JetBrainsMono NF"; font-weight: 700; font-display: swap; src: url("/static/fonts/JetBrainsMonoNerdFontMono-Bold.woff2") format("woff2"); }
 :root {
   --bg: #F6F7FB; --panel: #FFFFFF; --rail: #EEF0F7; --ink: #161A2E; --muted: #5B6178; --line: #DDE1EC;
-  --accent: #4F46E5; --accent-soft: #EEF2FF; --ok: #0F8A5F; --ok-soft: #E6F6EF; --warn: #A15C00;
+  --accent: #4F46E5; --accent-soft: #EEF2FF; --on-accent: #FFFFFF; --ok: #0B6E4C; --ok-soft: #E6F6EF; --warn: #A15C00;
   --warn-soft: #FFF4E0; --bad: #C2283A; --bad-soft: #FDECEE; --code: #F1F3F9;
   --shadow: 0 1px 2px rgba(22,26,46,.06), 0 8px 24px rgba(22,26,46,.06);
   --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -6384,7 +6384,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_archon_logo
 }
 @media (prefers-color-scheme: dark) {
   :root { --bg: #0F1220; --panel: #171B2D; --rail: #13172A; --ink: #E7E9F3; --muted: #9AA0B8; --line: #2A3048;
-    --accent: #8B87FF; --accent-soft: #23264A; --ok: #3CC98F; --ok-soft: #12302A; --warn: #F0B054; --warn-soft: #34290F;
+    --accent: #8B87FF; --accent-soft: #23264A; --on-accent: #0F1220; --ok: #3CC98F; --ok-soft: #12302A; --warn: #F0B054; --warn-soft: #34290F;
     --bad: #FF6B7D; --bad-soft: #3A1820; --code: #1D2236; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.3);
     color-scheme: dark; }
 }
@@ -6429,14 +6429,21 @@ main { padding: 22px max(16px, env(safe-area-inset-right, 0px)) 40px max(16px, e
 .pill.ok { background: var(--ok-soft); color: var(--ok); } .pill.warn { background: var(--warn-soft); color: var(--warn); }
 .pill.bad { background: var(--bad-soft); color: var(--bad); } .pill.off { background: var(--code); color: var(--muted); }
 .pill.tier { background: var(--accent-soft); color: var(--accent); }
-.btn { display: inline-block; border: 1px solid var(--accent); background: var(--accent); color: #fff; border-radius: 8px; padding: 7px 14px; font-weight: 500; text-decoration: none; }
+.btn { display: inline-block; border: 1px solid var(--accent); background: var(--accent); color: var(--on-accent); border-radius: 8px; padding: 7px 14px; font-weight: 500; text-decoration: none; }
 .btn.ghost { background: transparent; color: var(--accent); } .btn.danger { background: var(--bad); border-color: var(--bad); }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
 table { width: 100%; border-collapse: collapse; }
 th { text-align: left; font-size: 11.5px; color: var(--muted); font-weight: 500; letter-spacing: .04em; text-transform: uppercase; padding: 8px 10px; border-bottom: 1px solid var(--line); }
 td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
 tr:last-child td { border-bottom: 0; }
-.scroll { overflow-x: auto; }
+.scroll { overflow-x: auto; background-color: var(--panel);
+  /* Shadows at an edge with more to see: a hint to scroll sideways on a narrow screen. */
+  background-image: linear-gradient(90deg, var(--panel) 30%, transparent), linear-gradient(270deg, var(--panel) 30%, transparent),
+    radial-gradient(farthest-side at 0 50%, rgba(0,0,0,.2), transparent), radial-gradient(farthest-side at 100% 50%, rgba(0,0,0,.2), transparent);
+  background-position: left, right, left, right; background-size: 40px 100%, 40px 100%, 12px 100%, 12px 100%;
+  background-repeat: no-repeat; background-attachment: local, local, scroll, scroll; }
+.diagram { overflow-x: auto; }
+@media (max-width: 640px) { .diagram svg { min-width: 620px; } }
 .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; } .spread { justify-content: space-between; }
 .stack { display: flex; flex-direction: column; gap: 10px; }
 .ring { width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center; flex: none; }
@@ -7824,10 +7831,20 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_actionspage
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;pages.ts&#x2F;~&#x2F;actionsView.html" title="actionsView">
 			    <span>actionsView</span><span>(<span><span>v<span>: <span class="td-ref">ActionsView</span></span></span></span>)<span>: <span class="td-ref">Html</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>An Actions page: the group's commands on the left, the form and its live output on the right.</p>
 </div></div></div>
+    </div><div id="namespace_activitybetween" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;pages.ts&#x2F;~&#x2F;activityBetween.html" title="activityBetween">
+			    <span>activityBetween</span><span>(<div class="ml-4"><div><span>entries<span>: <span class="td-ref">ActivityEntry</span>[]</span></span>,</div><div><span>from<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span>,</div><div><span>to<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">ActivityEntry</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Entries between two UTC dates (YYYY-MM-DD, both included); a bad date is ignored.</p>
+</div></div></div>
+    </div><div id="namespace_activitycsv" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;pages.ts&#x2F;~&#x2F;activityCsv.html" title="activityCsv">
+			    <span>activityCsv</span><span>(<span><span>entries<span>: <span class="td-ref">ActivityEntry</span>[]</span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Activity as CSV, for an auditor.</p>
+</div></div></div>
     </div><div id="namespace_activitypage" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;pages.ts&#x2F;~&#x2F;activityPage.html" title="activityPage">
-			    <span>activityPage</span><span>(<div class="ml-4"><div><span>entries<span>: <span class="td-ref">ActivityEntry</span>[]</span></span>,</div><div><span>host<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Html</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Activity: who did what, from where.</p>
+			    <span>activityPage</span><span>(<div class="ml-4"><div><span>entries<span>: <span class="td-ref">ActivityEntry</span>[]</span></span>,</div><div><span>host<span>: <span class="td-kw">string</span></span></span>,</div><div><span>o<span class="td-op">?</span><span>: { from<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; to<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; note<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></span></div></div>)<span>: <span class="td-ref">Html</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Activity: who did what, from where.</p>
 </div></div></div>
     </div><div id="namespace_appspage" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -8266,7 +8283,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_pccloud" c
                   <span>fleet</span><span>: { id<span>: <span class="td-kw">string</span></span>; title<span>: <span class="td-kw">string</span></span>; repo<span>: <span class="td-kw">string</span></span>; domain<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; engine<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fleet: id, title, its repository, web domain, and engine pin.</p>
 </div></div></li><li>
                 <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcFacts.html#property_git">
-                  <span>git</span><span>: { dirty<span>: <span class="td-kw">string</span>[]</span>; unapproved<span>: <span class="td-kw">string</span>[]</span>; log<span>: <span class="td-ref">PcCommit</span>[]</span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The repository: uncommitted files, commits servers would refuse, recent history.</p>
+                  <span>git</span><span>: { dirty<span>: <span class="td-kw">string</span>[]</span>; unapproved<span>: <span class="td-kw">string</span>[]</span>; log<span>: <span class="td-ref">PcCommit</span>[]</span>; diff<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The repository: uncommitted files, commits servers would refuse, recent history.</p>
 </div></div></li><li>
                 <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcFacts.html#property_machines">
                   <span>machines</span><span>: <span class="td-ref">PcMachine</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Every machine.</p>
@@ -8279,6 +8296,9 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_pccloud" c
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcMachine.html" title="PcMachine">
 			    <span>PcMachine</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One machine, whatever its kind.</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcMachine.html#property_applied">
+                  <span>applied</span><span>: { commit<span>: <span class="td-kw">string</span></span>; subject<span>: <span class="td-kw">string</span></span>; at<span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A managed server's applied commit, as it last said (short hash, subject, when).</p>
+</div></div></li><li>
                 <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcMachine.html#property_console">
                   <span>console</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its Archon Console, for a managed server with a web domain.</p>
 </div></div></li><li>
@@ -8306,8 +8326,14 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_pccloud" c
                 <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcMachine.html#property_serial">
                   <span>serial</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its serial number, when the probe could read it.</p>
 </div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcMachine.html#property_sync">
+                  <span>sync</span><span>: { at<span>: <span class="td-kw">string</span></span>; blocked<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A managed server's last pull: when, and why it stopped, if it did.</p>
+</div></div></li><li>
                 <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcMachine.html#property_title">
                   <span>title</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What it is, for people (an adopted machine's title).</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcMachine.html#property_uptodate">
+                  <span>upToDate</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Whether its applied commit is the repository's newest (undefined: not known).</p>
 </div></div></li><li>
                 <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcMachine.html#property_where">
                   <span>where</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where it is: an address, a cloud and region.</p>
@@ -8644,6 +8670,11 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_ago" class=
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;stolos-pages.ts&#x2F;~&#x2F;stolosOverview.html" title="stolosOverview">
 			    <span>stolosOverview</span><span>(<div class="ml-4"><div><span>f<span>: <span class="td-ref">PcFacts</span></span></span>,</div><div><span>now<span class="td-op">?</span></span></div></div>)<span>: <span class="td-ref">Html</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fleet at a glance.</p>
+</div></div></div>
+    </div><div id="namespace_syncadvice" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;console&#x2F;stolos-pages.ts&#x2F;~&#x2F;syncAdvice.html" title="syncAdvice">
+			    <span>syncAdvice</span><span>(<span><span>blocked<span>: <span class="td-kw">string</span></span></span></span>)<span>: { what<span>: <span class="td-kw">string</span></span>; fix<span>: <span class="td-kw">string</span></span>; href<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Why a server's last pull stopped, in plain words, and what to do.</p>
 </div></div></div>
     </div><div id="namespace_terminalnote" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -22057,7 +22088,8 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_blockingcha
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;reconcile&#x2F;reconcile.ts&#x2F;~&#x2F;syncCheckout.html" title="syncCheckout">
 			    <span>syncCheckout</span><span>(<span><span>opts<span class="td-op">?</span><span>: { check<span class="td-op">?</span><span>: <span class="td-kw">boolean</span></span>;  }</span></span></span>)<span>: <span class="td-ref">Promise</span>&lt;<span class="td-ref">SyncResult</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Fetch origin/main as the checkout's owner (who holds the host's deploy key, spec 006)
-and fast-forward when the working tree is clean. With <code>check</code>, only fetch.</p>
+and fast-forward when the working tree is clean. With <code>check</code>, only fetch.
+As root, the outcome is recorded for the PC (SYNC_STATUS).</p>
 </div></div></div>
     </div></div>
 </section>
@@ -22107,6 +22139,56 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_syncresult
                 <a href=".&#x2F;.&#x2F;archon&#x2F;reconcile&#x2F;reconcile.ts&#x2F;~&#x2F;SyncResult.html#property_remote">
                   <span>remote</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>origin/main's commit.</p>
 </div></div></li></ul></div>
+    </div><div id="namespace_syncstatus" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;reconcile&#x2F;reconcile.ts&#x2F;~&#x2F;SyncStatus.html" title="SyncStatus">
+			    <span>SyncStatus</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What the last pull did, for the PC (archon state, spec 066): when, the commits, and why not.</p>
+</div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;reconcile&#x2F;reconcile.ts&#x2F;~&#x2F;SyncStatus.html#property_at">
+                  <span>at</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When it ran (ISO).</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;reconcile&#x2F;reconcile.ts&#x2F;~&#x2F;SyncStatus.html#property_blocked">
+                  <span>blocked</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Why HEAD could not reach origin's commit (an unsigned commit, a failed fetch, ...).</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;reconcile&#x2F;reconcile.ts&#x2F;~&#x2F;SyncStatus.html#property_current">
+                  <span>current</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Whether HEAD is origin's commit.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;reconcile&#x2F;reconcile.ts&#x2F;~&#x2F;SyncStatus.html#property_head">
+                  <span>head</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>HEAD after it.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;reconcile&#x2F;reconcile.ts&#x2F;~&#x2F;SyncStatus.html#property_remote">
+                  <span>remote</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>origin's commit.</p>
+</div></div></li></ul></div>
+    </div></div>
+</section>
+<section class="section"  id="archon&#x2F;reconcile&#x2F;reconcile_ts_variables"><div>
+      <h2 class="anchorable mb-1"><a href="#archon&#x2F;reconcile&#x2F;reconcile_ts_variables" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
+  width="16"
+  height="16"
+  viewBox="0 0 14 14"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g clip-path="url(#clip0_1081_1237)">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
+      fill="currentColor"
+    />
+  </g>
+  <defs>
+    <clipPath id="clip0_1081_1237">
+      <rect width="14" height="14" fill="white" />
+    </clipPath>
+  </defs>
+</svg>
+</a>
+Variables</h2></div><div class="namespaceSection"><div id="namespace_sync_status" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
+<div class="namespaceItemContent">
+		    <a href=".&#x2F;.&#x2F;archon&#x2F;reconcile&#x2F;reconcile.ts&#x2F;~&#x2F;SYNC_STATUS.html" title="SYNC_STATUS">
+			    <span>SYNC_STATUS</span><span>: <span class="td-str">"/var/lib/archon/status/sync.json"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where the last pull is recorded.</p>
+</div></div></div>
     </div></div>
 </section>
 </div>
@@ -23736,6 +23818,9 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_hoststate-
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;state&#x2F;state-command.ts&#x2F;~&#x2F;HostState.html" title="HostState">
 			    <span>HostState</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What a machine recorded about itself (archon state; MCP archon_state).</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;state&#x2F;state-command.ts&#x2F;~&#x2F;HostState.html#property_applied">
+                  <span>applied</span><span>: { commit<span>: <span class="td-kw">string</span></span>; subject<span>: <span class="td-kw">string</span></span>; at<span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Spec 066: the commit this host applies now (its checkout's HEAD).</p>
+</div></div></li><li>
                 <a href=".&#x2F;.&#x2F;archon&#x2F;state&#x2F;state-command.ts&#x2F;~&#x2F;HostState.html#property_at">
                   <span>at</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When this was read.</p>
 </div></div></li><li>
@@ -23753,6 +23838,9 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_hoststate-
 </div></div></li><li>
                 <a href=".&#x2F;.&#x2F;archon&#x2F;state&#x2F;state-command.ts&#x2F;~&#x2F;HostState.html#property_optins">
                   <span>optIns</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">unknown</span>&gt;</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Opt-ins and their records.</p>
+</div></div></li><li>
+                <a href=".&#x2F;.&#x2F;archon&#x2F;state&#x2F;state-command.ts&#x2F;~&#x2F;HostState.html#property_sync">
+                  <span>sync</span><span>: <span class="td-kw">import</span>(<span class="td-str">"../reconcile/reconcile.ts"</span>)<span>.SyncStatus</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Spec 066: what its last pull did (and why it could not, when it could not).</p>
 </div></div></li><li>
                 <a href=".&#x2F;.&#x2F;archon&#x2F;state&#x2F;state-command.ts&#x2F;~&#x2F;HostState.html#property_verify">
                   <span>verify</span><span>: <span class="td-ref">RecordedVerify</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its latest verify.</p>
@@ -23907,7 +23995,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_staterecor
 Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_kind" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;state&#x2F;store.ts&#x2F;~&#x2F;Kind.html" title="Kind">
-			    <span>Kind</span><span> = <span><span class="td-str">"install"</span><span class="td-op"> | </span><span class="td-str">"verify"</span><span class="td-op"> | </span><span class="td-str">"prov"</span><span class="td-op"> | </span><span class="td-str">"optin"</span><span class="td-op"> | </span><span class="td-str">"pg"</span><span class="td-op"> | </span><span class="td-str">"inventory"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What a record is about.</p>
+			    <span>Kind</span><span> = <div class="ml-indent"><span><span class="td-str">"install"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"verify"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"prov"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"optin"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"pg"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"inventory"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"applied"</span></span><br /><span><span class="td-op"> | </span><span class="td-str">"sync"</span></span></div></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What a record is about.</p>
 </div></div></div>
     </div></div>
 </section>
@@ -26123,7 +26211,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_tag" class=
     </div><div id="namespace_version" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;version.ts&#x2F;~&#x2F;VERSION.html" title="VERSION">
-			    <span>VERSION</span><span>: <span class="td-str">"0.81.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
+			    <span>VERSION</span><span>: <span class="td-str">"0.82.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
 from GitHub (<code>@stolos/</code> → raw.githubusercontent.com/.../v&lt;VERSION&gt;/src/), so
 every push to main raises it and the release workflow tags that commit
 v&lt;VERSION&gt;. <code>deno task version bump</code> raises the minor number (0.1.0, 0.2.0,
@@ -27418,7 +27506,7 @@ never written in a host file.</p>
 Variables</h2></div><div class="namespaceSection"><div id="namespace_version-1" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
 <div class="namespaceItemContent">
 		    <a href=".&#x2F;.&#x2F;archon&#x2F;version.ts&#x2F;~&#x2F;VERSION.html" title="VERSION">
-			    <span>VERSION</span><span>: <span class="td-str">"0.81.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
+			    <span>VERSION</span><span>: <span class="td-str">"0.82.0"</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engine's version (spec 046-engine-instance). A fleet imports the engine
 from GitHub (<code>@stolos/</code> → raw.githubusercontent.com/.../v&lt;VERSION&gt;/src/), so
 every push to main raises it and the release workflow tags that commit
 v&lt;VERSION&gt;. <code>deno task version bump</code> raises the minor number (0.1.0, 0.2.0,

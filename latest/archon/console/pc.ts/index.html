@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/console/pc.ts - Stolos v0.81.0 documentation</title>
+  <title>archon/console/pc.ts - Stolos v0.82.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.81.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.82.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -215,7 +215,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_pccloud" c
                   <span>fleet</span><span>: { id<span>: <span class="td-kw">string</span></span>; title<span>: <span class="td-kw">string</span></span>; repo<span>: <span class="td-kw">string</span></span>; domain<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; engine<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The fleet: id, title, its repository, web domain, and engine pin.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcFacts.html#property_git">
-                  <span>git</span><span>: { dirty<span>: <span class="td-kw">string</span>[]</span>; unapproved<span>: <span class="td-kw">string</span>[]</span>; log<span>: <span class="td-ref">PcCommit</span>[]</span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The repository: uncommitted files, commits servers would refuse, recent history.</p>
+                  <span>git</span><span>: { dirty<span>: <span class="td-kw">string</span>[]</span>; unapproved<span>: <span class="td-kw">string</span>[]</span>; log<span>: <span class="td-ref">PcCommit</span>[]</span>; diff<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The repository: uncommitted files, commits servers would refuse, recent history.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcFacts.html#property_machines">
                   <span>machines</span><span>: <span class="td-ref">PcMachine</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Every machine.</p>
@@ -228,6 +228,9 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_pccloud" c
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcMachine.html" title="PcMachine">
 			    <span>PcMachine</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One machine, whatever its kind.</p>
 </div></div><ul class="namespaceItemContentSubItems"><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcMachine.html#property_applied">
+                  <span>applied</span><span>: { commit<span>: <span class="td-kw">string</span></span>; subject<span>: <span class="td-kw">string</span></span>; at<span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A managed server's applied commit, as it last said (short hash, subject, when).</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcMachine.html#property_console">
                   <span>console</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its Archon Console, for a managed server with a web domain.</p>
 </div></div></li><li>
@@ -255,8 +258,14 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_pccloud" c
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcMachine.html#property_serial">
                   <span>serial</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its serial number, when the probe could read it.</p>
 </div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcMachine.html#property_sync">
+                  <span>sync</span><span>: { at<span>: <span class="td-kw">string</span></span>; blocked<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A managed server's last pull: when, and why it stopped, if it did.</p>
+</div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcMachine.html#property_title">
                   <span>title</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What it is, for people (an adopted machine's title).</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcMachine.html#property_uptodate">
+                  <span>upToDate</span><span>: <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Whether its applied commit is the repository's newest (undefined: not known).</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;pc.ts&#x2F;~&#x2F;PcMachine.html#property_where">
                   <span>where</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where it is: an address, a cloud and region.</p>
@@ -334,7 +343,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_pccloud" c
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1454 symbols</span><svg
+              <span class="leading-none">view all 1459 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

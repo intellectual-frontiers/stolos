@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/console/assets.ts - Stolos v0.81.0 documentation</title>
+  <title>archon/console/assets.ts - Stolos v0.82.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.81.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.82.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -181,7 +181,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_archon_logo
 @font-face { font-family: "JetBrainsMono NF"; font-weight: 700; font-display: swap; src: url("/static/fonts/JetBrainsMonoNerdFontMono-Bold.woff2") format("woff2"); }
 :root {
   --bg: #F6F7FB; --panel: #FFFFFF; --rail: #EEF0F7; --ink: #161A2E; --muted: #5B6178; --line: #DDE1EC;
-  --accent: #4F46E5; --accent-soft: #EEF2FF; --ok: #0F8A5F; --ok-soft: #E6F6EF; --warn: #A15C00;
+  --accent: #4F46E5; --accent-soft: #EEF2FF; --on-accent: #FFFFFF; --ok: #0B6E4C; --ok-soft: #E6F6EF; --warn: #A15C00;
   --warn-soft: #FFF4E0; --bad: #C2283A; --bad-soft: #FDECEE; --code: #F1F3F9;
   --shadow: 0 1px 2px rgba(22,26,46,.06), 0 8px 24px rgba(22,26,46,.06);
   --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -191,7 +191,7 @@ Variables</h2></div><div class="namespaceSection"><div id="namespace_archon_logo
 }
 @media (prefers-color-scheme: dark) {
   :root { --bg: #0F1220; --panel: #171B2D; --rail: #13172A; --ink: #E7E9F3; --muted: #9AA0B8; --line: #2A3048;
-    --accent: #8B87FF; --accent-soft: #23264A; --ok: #3CC98F; --ok-soft: #12302A; --warn: #F0B054; --warn-soft: #34290F;
+    --accent: #8B87FF; --accent-soft: #23264A; --on-accent: #0F1220; --ok: #3CC98F; --ok-soft: #12302A; --warn: #F0B054; --warn-soft: #34290F;
     --bad: #FF6B7D; --bad-soft: #3A1820; --code: #1D2236; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.3);
     color-scheme: dark; }
 }
@@ -236,14 +236,21 @@ main { padding: 22px max(16px, env(safe-area-inset-right, 0px)) 40px max(16px, e
 .pill.ok { background: var(--ok-soft); color: var(--ok); } .pill.warn { background: var(--warn-soft); color: var(--warn); }
 .pill.bad { background: var(--bad-soft); color: var(--bad); } .pill.off { background: var(--code); color: var(--muted); }
 .pill.tier { background: var(--accent-soft); color: var(--accent); }
-.btn { display: inline-block; border: 1px solid var(--accent); background: var(--accent); color: #fff; border-radius: 8px; padding: 7px 14px; font-weight: 500; text-decoration: none; }
+.btn { display: inline-block; border: 1px solid var(--accent); background: var(--accent); color: var(--on-accent); border-radius: 8px; padding: 7px 14px; font-weight: 500; text-decoration: none; }
 .btn.ghost { background: transparent; color: var(--accent); } .btn.danger { background: var(--bad); border-color: var(--bad); }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
 table { width: 100%; border-collapse: collapse; }
 th { text-align: left; font-size: 11.5px; color: var(--muted); font-weight: 500; letter-spacing: .04em; text-transform: uppercase; padding: 8px 10px; border-bottom: 1px solid var(--line); }
 td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
 tr:last-child td { border-bottom: 0; }
-.scroll { overflow-x: auto; }
+.scroll { overflow-x: auto; background-color: var(--panel);
+  /* Shadows at an edge with more to see: a hint to scroll sideways on a narrow screen. */
+  background-image: linear-gradient(90deg, var(--panel) 30%, transparent), linear-gradient(270deg, var(--panel) 30%, transparent),
+    radial-gradient(farthest-side at 0 50%, rgba(0,0,0,.2), transparent), radial-gradient(farthest-side at 100% 50%, rgba(0,0,0,.2), transparent);
+  background-position: left, right, left, right; background-size: 40px 100%, 40px 100%, 12px 100%, 12px 100%;
+  background-repeat: no-repeat; background-attachment: local, local, scroll, scroll; }
+.diagram { overflow-x: auto; }
+@media (max-width: 640px) { .diagram svg { min-width: 620px; } }
 .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; } .spread { justify-content: space-between; }
 .stack { display: flex; flex-direction: column; gap: 10px; }
 .ring { width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center; flex: none; }
@@ -412,7 +419,7 @@ input[type=text], input[type=password], input[type=search], select { font: inher
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1454 symbols</span><svg
+              <span class="leading-none">view all 1459 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
