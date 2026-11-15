@@ -468,5 +468,34 @@ export async function doctor(
     { send: o.send },
   );
 
+  // ------------------------------------------------------------ proposals
+  // Spec 095: changes made outside Stolos that wait on a person (what was collected; read-only).
+  if (host.kind !== "workstation") {
+    const pr = ui.phase("Proposals");
+    try {
+      const { loadDrift } = await import("../proposal/server.ts");
+      const { waiting, waitingLine } = await import("../proposal/record.ts");
+      const v = await loadDrift(host);
+      if (!v.state) pr.done("nothing collected yet (sudo archon drift --collect)");
+      else {
+        const w = waiting(v);
+        if (v.alerts.length) {
+          pr.fail(
+            `SECURITY ALERT: ${v.alerts.length} package file(s) modified`,
+            "archon drift lists them; reinstall the package, or re-create the host",
+          );
+        }
+        if (w.due) {
+          pr.warn(
+            waitingLine(w),
+            "archon drift, then sudo archon propose; on your PC: stolos proposal",
+          );
+        } else pr.done(waitingLine(w));
+      }
+    } catch (e) {
+      pr.warn(`not read: ${(e as Error).message}`, "sudo archon drift --collect");
+    }
+  }
+
   return 0; // the closing summary counts the problems
 }

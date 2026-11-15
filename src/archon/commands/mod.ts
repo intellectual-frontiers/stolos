@@ -15,6 +15,7 @@
  * archon verify              # every check, with a fix for anything failing
  * archon doctor              # can this host reach what it needs? network and email, with where to look
  * archon capture             # drift from the model (writes nothing)
+ * archon drift               # what changed outside Stolos, with who and when (spec 095)
  * archon state               # what this machine recorded: install, latest verify, switches, data
  * archon query "select * from archon_verify"   # ask this machine anything, in SQL (osquery)
  * sudo archon update         # pull from GitHub, validate, apply, tools, verify
@@ -219,7 +220,9 @@
  *
  * Every change follows the spec loop in [`AGENTS.md`](../AGENTS.md): spec, model, `stolos build`,
  * `archon apply --check`, commit and push, then `archon apply` (or wait for the converge timer),
- * `archon verify`. Never change a host by hand outside that loop.
+ * `archon verify`. Never change a host by hand outside that loop. If a change was made by hand
+ * anyway, it has a way back into the model: `archon drift`, then `sudo archon propose`, and on your
+ * PC `deno task stolos proposal accept` ([proposals](proposals.md)).
  *
  * @module
  */

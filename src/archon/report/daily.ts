@@ -110,13 +110,18 @@ async function outsideStolos(host: HostDef): Promise<string> {
     const { collect } = await import("../proposal/collect.ts");
     const { loadDrift } = await import("../proposal/server.ts");
     const { driftText } = await import("../proposal/drift.ts");
+    const { remind, waiting, waitingLine } = await import("../proposal/record.ts");
     if (isRoot()) await collect(host);
     const v = await loadDrift(host);
     if (!v.state) return "nothing collected yet (sudo archon drift --collect)";
-    return driftText(host.name, v.items, v.alerts, {
-      birthLate: v.birth?.late,
-      collected: v.state.at,
-    });
+    // Spec 095: what waits on a person; a reminder after 3 days (at most every 3 days).
+    const w = waiting(v);
+    const reminded = isRoot() ? await remind(host, w) : false;
+    return [
+      waitingLine(w) + (reminded ? " (reminder mailed)" : ""),
+      "",
+      driftText(host.name, v.items, v.alerts, { birthLate: v.birth?.late, collected: v.state.at }),
+    ].join("\n");
   } catch (e) {
     return `not collected: ${(e as Error).message}`;
   }

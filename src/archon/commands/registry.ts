@@ -3885,6 +3885,33 @@ export const COMMANDS: Command[] = [
     },
   },
   {
+    name: "record",
+    summary: 'Record a change made by hand: archon record "reason", the work, archon record done',
+    description:
+      `Spec 095: archon record "why" starts a recording; archon record done ends it, collects, and shows everything that changed outside Stolos in between as one intent, with that reason (sudo archon propose --intent <its id> proposes it; the recording's reason counts as the written reason). archon record alone shows the recording that runs. One at a time per host.`,
+    tier: "mutate",
+    args: [{
+      name: "reason",
+      type: "string",
+      positional: true,
+      description: 'Why the change is made ("nginx for the app"), or done to end the recording.',
+    }],
+    examples: [
+      { cmd: 'archon record "nginx for the app"', text: "Start recording." },
+      { cmd: "archon record done", text: "End it; its changes become one intent to propose." },
+    ],
+    seeAlso: ["archon-propose", "archon-drift"],
+    async run(a, ctx) {
+      const { recordCommand } = await import("../proposal/record.ts");
+      const { proposer } = await import("../proposal/propose.ts");
+      return await recordCommand(
+        await requireHost(ctx.hostName),
+        a.reason as string | undefined,
+        proposer(),
+      );
+    },
+  },
+  {
     name: "proposal import",
     summary: "Import proposals mailed by servers: verify each against the host's key in Git",
     description:

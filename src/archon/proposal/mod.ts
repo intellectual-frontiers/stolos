@@ -85,6 +85,44 @@
  * `/etc/shadow` or an SSH host key), and anything that looks like a key, is sent as its SHA-256 hash
  * only. A file's content is sent only when it is a small text file with nothing secret in it.
  *
+ * ## Recording a change
+ *
+ * When you know you are about to change a server by hand, say so first:
+ *
+ * ```sh
+ * archon record "nginx for the app"
+ * sudo apt install nginx            # ... the work ...
+ * archon record done                # shows what changed, as one intent
+ * sudo archon propose --intent r-202611141458
+ * ```
+ *
+ * Everything observed between the two is one intent with your reason, which also counts as the
+ * proposal's written reason. One recording runs at a time; `archon record` alone shows it.
+ *
+ * ## The hold: a hand edit is not undone at once
+ *
+ * The reconcile timer applies every 15 minutes, and would undo a hand edit to something the plan
+ * manages (a file a capability writes, a unit it enables or masks) before anyone could propose it.
+ * So before each apply, archon reads sudo's journal: a managed item that differs from the plan and
+ * that someone's sudo command named is **held**. Apply leaves it alone (it says so, with who and
+ * until when) for up to 7 days, or until its proposal is decided in Git, whichever comes first;
+ * proposing it as `revert` ends the hold at once. Then the model in Git wins, as always.
+ *
+ * ```mermaid
+ * stateDiagram-v2
+ *   [*] --> held: changed under sudo
+ *   held --> ended: 7 days, or revert
+ *   held --> proposed: archon propose
+ *   proposed --> ended: accepted or rejected in Git, or 7 days
+ *   ended --> [*]: apply converges it to the model
+ * ```
+ *
+ * ## Reminders
+ *
+ * The daily report and `archon doctor` count the changes not proposed yet and the proposals not
+ * decided. When either has waited more than 3 days, the daily report mails a reminder (at most
+ * every 3 days).
+ *
  * ## On your PC
  *
  * Nothing reads the mailbox for you (no IMAP, no new credential): save the message (`.eml`), or its

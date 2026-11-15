@@ -130,6 +130,10 @@ export interface Hold {
   command: string;
   /** The proposal it is in, once proposed. */
   proposal?: string;
+  /** Why it ended (expired, decided, reverted); unset while active. */
+  ended?: string;
+  /** When it ended (ISO). */
+  endedAt?: string;
 }
 
 /** Everything drift is computed from. */
@@ -333,7 +337,7 @@ export function computeDrift(input: DriftInput): DriftItem[] {
   }
   for (const h of input.holds ?? []) {
     const it = items.find((x) => x.key === h.key);
-    if (it && h.until > now.toISOString()) it.heldUntil = h.until;
+    if (it && !h.ended && h.until > now.toISOString()) it.heldUntil = h.until;
   }
   return items.sort((a, b) => a.key.localeCompare(b.key));
 }

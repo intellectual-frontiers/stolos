@@ -280,11 +280,13 @@ async function keep(
 
 /** A proposed item's hold now waits for its decision; a revert ends it (the model wins now). */
 async function endOrTieHolds(host: string, p: Proposal, dir: string): Promise<void> {
-  const { getRecord, removeRecords } = await import("../state/store.ts");
+  const { getRecord } = await import("../state/store.ts");
   for (const it of p.items.filter((i) => i.managed)) {
     const h = await getRecord<Hold>(host, "hold", it.key, dir);
-    if (!h) continue;
-    if (it.action === "revert") await removeRecords(host, "hold", it.key, dir);
-    else await putRecord(host, "hold", it.key, { ...h.body, proposal: p.id }, dir, h.at);
+    if (!h || h.body.ended) continue;
+    const next: Hold = it.action === "revert"
+      ? { ...h.body, proposal: p.id, ended: "reverted", endedAt: p.at }
+      : { ...h.body, proposal: p.id };
+    await putRecord(host, "hold", it.key, next, dir, h.at);
   }
 }

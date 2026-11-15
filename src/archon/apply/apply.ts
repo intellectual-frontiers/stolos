@@ -20,6 +20,7 @@ import { planFor } from "../build.ts";
 import { groupsFor } from "../personas/mod.ts";
 import type { Action, FileDef, HostDef, HostPlan, UnitDef, UserDef } from "../model/types.ts";
 import { homeOf } from "../model/load.ts";
+import type { Hold } from "../proposal/drift.ts";
 
 /** What `archon apply` does. */
 export interface ApplyOptions {
@@ -247,11 +248,44 @@ async function applyPlan(host: HostDef, opts: ApplyOptions, _started: Date): Pro
     );
   }
 
+  // Spec 095 (the owner's decision 1): a managed file or unit a person changed under sudo is
+  // held, up to 7 days or until its proposal is decided; then the model wins.
+  let held: Map<string, Hold> | undefined;
+  const holds = async (): Promise<Map<string, Hold>> => {
+    if (held) return held;
+    held = new Map();
+    if (r.sandbox || plan.host.kind === "workstation") return held;
+    try {
+      const h = await import("../proposal/hold.ts");
+      held = opts.check || !isRoot() ? await h.activeHolds(host.name) : await h.refreshHolds(plan);
+    } catch (e) {
+      if (e instanceof Deno.errors.PermissionDenied && !isRoot()) r.unreadable.push("holds");
+      else {
+        r.p.warn(
+          `holds not read: ${(e as Error).message}`,
+          "archon drift shows what was changed by hand",
+        );
+      }
+    }
+    return held;
+  };
+  const heldNote = async (key: string): Promise<string | undefined> => {
+    const h = (await holds()).get(key);
+    if (!h) return undefined;
+    const { heldLine } = await import("../proposal/hold.ts");
+    return heldLine(h);
+  };
+
   if (want("files")) {
     r.p = ui.phase("Files");
     const fBefore = r.mark();
     for (const [i, f] of plan.files.entries()) {
       r.p.step(i + 1, plan.files.length, f.path);
+      const note = await heldNote(`file:${f.path}`);
+      if (note) {
+        r.skip(`${f.path}: ${note}`);
+        continue;
+      }
       await r.guard(f.path, () => file(f, r));
     }
     if (!r.sandbox) await actions(r);
@@ -282,6 +316,11 @@ async function applyPlan(host: HostDef, opts: ApplyOptions, _started: Date): Pro
     const uBefore = r.mark();
     for (const [i, u] of plan.units.entries()) {
       r.p.step(i + 1, plan.units.length, u.unitName);
+      const note = await heldNote(`unit:${u.unitName}`);
+      if (note) {
+        r.skip(`${u.unitName}: ${note}`);
+        continue;
+      }
       await r.guard(u.unitName, () => unit(u, r));
     }
     const uChanged = r.mark() - uBefore;

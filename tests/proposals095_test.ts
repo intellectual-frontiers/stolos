@@ -66,6 +66,17 @@ import {
   specId,
 } from "../src/archon/proposal/edit.ts";
 import { loadProposalDecisions } from "../src/archon/proposal/decisions.ts";
+import { activeHolds, heldLine, holdEnds, refreshHolds } from "../src/archon/proposal/hold.ts";
+import {
+  endRecording,
+  remind,
+  startRecording,
+  waiting,
+  waitingLine,
+} from "../src/archon/proposal/record.ts";
+import { recordings } from "../src/archon/proposal/propose.ts";
+import type { SudoEntry } from "../src/archon/proposal/parse.ts";
+import type { Hold } from "../src/archon/proposal/drift.ts";
 
 // ------------------------------------------------------------------ fixtures
 
@@ -1072,4 +1083,183 @@ Deno.test("095: on the host, a rejected proposal's items are flagged; accepted l
     undefined,
     "past its day: drift again",
   );
+});
+
+// ------------------------------------------------------------------ phase 4: hold, record, reminders
+
+Deno.test("095: the hold: a managed item a person changed under sudo is kept 7 days, or until decided", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const host = (await loadHosts()).find((h) => h.name === "alpha")!;
+    const plan = await planFor(host);
+    const file = plan.files.find((f) => f.path.startsWith("/etc/") && f.content !== undefined)!;
+    const unitName = "avahi-daemon.service"; // the plan masks it (spec 001, Article 20)
+    const t0 = Date.parse("2026-11-14T15:00:00Z");
+    const day = 86_400_000;
+    let entries: SudoEntry[] = [
+      {
+        who: "alice",
+        at: new Date(t0).toISOString(),
+        command: `/usr/bin/vim ${file.path}`,
+        as: "root",
+        pwd: "/",
+      },
+      {
+        who: "alice",
+        at: new Date(t0 + 60_000).toISOString(),
+        command: `/usr/bin/systemctl unmask avahi-daemon`,
+        as: "root",
+        pwd: "/",
+      },
+      {
+        who: "bob",
+        at: new Date(t0).toISOString(),
+        command: `/usr/bin/vim /etc/not-managed`,
+        as: "root",
+        pwd: "/",
+      },
+    ];
+    const look = {
+      file: (p: string) =>
+        Promise.resolve(p === file.path ? file.content + "\n# by hand\n" : undefined),
+      unit: (_u: string) => Promise.resolve("enabled"),
+      sudo: (_since: string) => Promise.resolve(entries),
+    };
+    const at = (ms: number) => new Date(t0 + ms);
+    let h = await refreshHolds(plan, { dir, now: at(day), look, decisions: {} });
+    assertEquals([...h.keys()].sort(), [`file:${file.path}`, `unit:${unitName}`]);
+    assertEquals(h.get(`file:${file.path}`)!.until, new Date(t0 + 7 * day).toISOString());
+    assertStringIncludes(
+      heldLine(h.get(`file:${file.path}`)!),
+      "held: alice changed it under sudo",
+    );
+    // apply --check reads the same holds (it never changes them).
+    assertEquals([...(await activeHolds("alpha", dir)).keys()].length, 2);
+
+    // Proposed: the hold now waits for the decision in Git; accepted ends it.
+    await putRecord("alpha", "hold", `unit:${unitName}`, {
+      ...h.get(`unit:${unitName}`)!,
+      proposal: "p1",
+    }, dir);
+    h = await refreshHolds(plan, {
+      dir,
+      now: at(2 * day),
+      look,
+      decisions: { p1: { decision: "accepted", by: "bob", at: "t" } },
+    });
+    assertEquals([...h.keys()], [`file:${file.path}`]);
+    // The same sudo command never holds it again...
+    h = await refreshHolds(plan, { dir, now: at(3 * day), look, decisions: {} });
+    assertEquals([...h.keys()], [`file:${file.path}`]);
+    // ...a newer one does.
+    entries = [...entries, { ...entries[1], at: new Date(t0 + 4 * day).toISOString() }];
+    h = await refreshHolds(plan, { dir, now: at(4 * day), look, decisions: {} });
+    assertEquals([...h.keys()].sort(), [`file:${file.path}`, `unit:${unitName}`]);
+    // After 7 days the model wins.
+    h = await refreshHolds(plan, { dir, now: at(7 * day + 1000), look, decisions: {} });
+    assertEquals([...h.keys()], [`unit:${unitName}`], "the file's hold expired");
+    const ended = (await listRecords<Hold>("alpha", "hold", dir)).find((r) =>
+      r.name === `file:${file.path}`
+    )!;
+    assertStringIncludes(ended.body.ended ?? "", "expired (7 days)");
+    // Drift shows what is held, and stops showing it once the hold ended.
+    assertEquals(holdEnds(ended.body, {}, at(8 * day)), "expired (7 days): the model wins");
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("095: archon record: one recording at a time; what changed while it ran is one intent with its reason", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const t = new Date("2026-11-14T14:58:00Z");
+    const r = await startRecording("alpha", "nginx for the app", "alice", dir, t);
+    assertEquals(r.id, "r-202611141458");
+    let err = "";
+    try {
+      await startRecording("alpha", "another", "bob", dir, t);
+    } catch (e) {
+      err = (e as Error).message;
+    }
+    assertStringIncludes(err, "archon record done first");
+    const done = await endRecording("alpha", dir, new Date("2026-11-14T15:10:00Z"));
+    assertEquals(done.end, "2026-11-14T15:10:00.000Z");
+    const recs = await recordings("alpha", dir);
+    assertEquals(recs.map((x) => x.id), ["r-202611141458"]);
+    const { items, observations } = await driftFixture();
+    const intents = groupItems(items, observations, recs);
+    const i = intents.find((x) => x.id === done.id)!;
+    assertEquals(i.reason, "nginx for the app");
+    assert(
+      i.items.includes("package:nginx") && i.items.includes("file:/etc/nginx/sites-available/app"),
+    );
+    // Its reason is the written reason.
+    const c = choose(items, intents, { intent: done.id });
+    assertEquals(c.reason, "nginx for the app");
+    // A modified package binary is an alert, never an item to propose.
+    let refused = "";
+    try {
+      choose(items, intents, { item: "file:/usr/bin/sudo", reason: "x" });
+    } catch (e) {
+      refused = (e as Error).message;
+    }
+    assertStringIncludes(refused, "no drift item file:/usr/bin/sudo");
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("095: reminders: drift not proposed or proposals not decided after 3 days, mailed at most every 3 days", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const host = (await loadHosts()).find((h) => h.name === "alpha")!;
+    const items = [
+      item("package:nginx", [{ op: "packages.add", name: "nginx" }], {
+        at: "2026-11-10T00:00:00Z",
+      }),
+    ];
+    const proposals = [{
+      id: "p1",
+      at: "2026-11-13T00:00:00Z",
+      by: "alice",
+      reason: "r",
+      items: [],
+      sent: "queued",
+    }];
+    const now = new Date("2026-11-14T06:00:00Z");
+    const w = waiting({ items, proposals, decisions: {} }, now);
+    assertEquals(w, {
+      unproposed: 1,
+      oldestUnproposed: "2026-11-10T00:00:00Z",
+      waiting: 1,
+      oldestWaiting: "2026-11-13T00:00:00Z",
+      due: true,
+    });
+    assertStringIncludes(
+      waitingLine(w),
+      "1 change(s) outside Stolos not proposed (oldest 2026-11-10)",
+    );
+    assert(
+      !waiting({
+        items: [],
+        proposals,
+        decisions: { p1: { decision: "accepted", by: "b", at: "t" } },
+      }, now).due,
+    );
+    const sent: Event[] = [];
+    const send = (ev: Event) => (sent.push(ev), Promise.resolve("queued"));
+    assert(await remind(host, w, dir, now, send));
+    assert(
+      !(await remind(host, w, dir, new Date(now.getTime() + 86_400_000), send)),
+      "not again the next day",
+    );
+    assert(
+      await remind(host, w, dir, new Date(now.getTime() + 4 * 86_400_000), send),
+      "again after 3 days",
+    );
+    assertEquals(sent.length, 2);
+    assertStringIncludes(sent[0].event, "reminder");
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
 });
