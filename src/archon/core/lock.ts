@@ -1,108 +1,82 @@
 /**
- * One archon run at a time per host (specs 012, 017). The reconcile timer
- * applies every 15 minutes; without this it could apply, or fetch, in the
- * middle of someone's `archon update` or bootstrap. Children of a run that
- * holds the lock (bootstrap and update hand-offs, reconcile's apply) inherit
- * it through ARCHON_LOCK_HELD instead of waiting for their own parent.
+ * One archon run at a time per host (specs 012, 017), on IFC TypeScript's `lock`. The reconcile
+ * timer applies every 15 minutes; without this it could apply, or fetch, in the middle of someone's
+ * `archon update` or bootstrap. Children of a run that holds the lock (bootstrap and update
+ * hand-offs, reconcile's apply) inherit it through `ARCHON_LOCK_HELD` instead of waiting for their
+ * own parent. The lock file says who holds it: the command, and who started it (`ARCHON_AGENT`: the
+ * reconcile timer, an agent over MCP, a terminal), so a waiting run can say what it waits for.
+ *
+ * @example
+ * ```ts
+ * import { hostLock } from "./lock.ts";
+ * const held = await hostLock({ wait: false });
+ * if (held === undefined) console.log("another archon run is in progress");
+ * else held.release();
+ * ```
  *
  * @module
  */
+import { lock, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 
-/** The host lock file (an advisory lock; the holder's details sit beside it in `<path>.holder`). */
+/** The host lock file. */
 export const LOCK_PATH = "/run/archon.lock";
 
-/** Who holds the lock (written by the holder, read by whoever waits). */
-export interface Holder {
-  /** The holder's process ID. */
-  pid: number;
-  /** The archon command it runs, without options ("reconcile", "update"). */
-  command: string;
-  /** ARCHON_AGENT: timer, reconciler, mcp, or the person's own terminal. */
-  agent?: string;
-  /** When it took the lock (ISO 8601). */
-  since: string;
-}
+/** The variable a run that holds the lock sets for its children. */
+export const LOCK_HELD_ENV = "ARCHON_LOCK_HELD";
 
-const holderPath = (lock: string) => `${lock}.holder`;
-
-/** The current holder, if its process still runs. */
-export async function readHolder(path = LOCK_PATH): Promise<Holder | undefined> {
-  try {
-    const h = JSON.parse(await Deno.readTextFile(holderPath(path))) as Holder;
-    await Deno.stat(`/proc/${h.pid}`);
-    return h;
-  } catch {
-    return undefined;
+/** Who started a run, from `ARCHON_AGENT`, as a person reads it. */
+export function agentOf(agent: string | undefined): string {
+  switch (agent) {
+    case "reconciler":
+      return "the reconcile timer";
+    case "timer":
+      return "a timer";
+    case "mcp":
+      return "an agent over MCP";
+    case undefined:
+    case "":
+      return "a terminal";
+    default:
+      return agent;
   }
 }
 
-/** "archon reconcile (pid 4242, the reconcile timer, running for 3m 12s)" */
-export function describeHolder(h: Holder, now = Date.now()): string {
-  const secs = Math.max(0, Math.round((now - Date.parse(h.since)) / 1000));
-  const age = secs >= 60 ? `${Math.floor(secs / 60)}m ${secs % 60}s` : `${secs}s`;
-  const who = h.agent === "reconciler"
-    ? "the reconcile timer"
-    : h.agent === "timer"
-    ? "a timer"
-    : h.agent === "mcp"
-    ? "an agent over MCP"
-    : h.agent
-    ? h.agent
-    : "a terminal";
-  return `archon ${h.command} (pid ${h.pid}, ${who}, running for ${age})`;
-}
-
-/** A taken host lock. */
-export interface Held {
-  /** Release the lock (also clears ARCHON_LOCK_HELD); safe to call twice. */
-  release(): void;
+/** What the lock file says this run is: `archon reconcile, the reconcile timer`. */
+export function holderCommand(
+  args: readonly string[] = proc.args,
+  agent: string | undefined = proc.env.get("ARCHON_AGENT"),
+): string {
+  const command = args
+    .filter((a) => !a.startsWith("-"))
+    .slice(0, 3)
+    .join(" ");
+  return `archon${command === "" ? "" : ` ${command}`}, ${agentOf(agent)}`;
 }
 
 /**
- * Take the host lock. Returns undefined when `wait` is false and another run
- * holds it. `onWait` is called once if the lock is not free within a second.
+ * Take the host lock. Undefined when `wait` is false and another run holds it; `onWait` is called
+ * once, with the holder, when the lock is not free. Where the lock file cannot be made at all (not
+ * root, no `/run`), there is nothing to coordinate with, and a lock that releases nothing is given.
  */
 export async function hostLock(
-  opts: { wait: boolean; onWait?: (holder?: Holder) => void },
-  path = LOCK_PATH,
-): Promise<Held | undefined> {
-  if (Deno.env.get("ARCHON_LOCK_HELD") === "1") return { release() {} };
-  let file: Deno.FsFile;
-  try {
-    file = await Deno.open(path, { read: true, write: true, create: true, mode: 0o600 });
-  } catch {
-    return { release() {} }; // not root, or no /run: nothing to coordinate with
-  }
-  const locked = file.lock(true).then(() => true);
-  const first = await Promise.race([
-    locked,
-    new Promise<false>((r) => setTimeout(() => r(false), opts.wait ? 1000 : 150)),
-  ]);
-  if (!first) {
-    if (!opts.wait) {
-      file.close(); // the pending lock request ends with the descriptor
-      return undefined;
-    }
-    opts.onWait?.(await readHolder(path));
-    await locked;
-  }
-  Deno.env.set("ARCHON_LOCK_HELD", "1");
-  try {
-    const h: Holder = {
-      pid: Deno.pid,
-      command: Deno.args.filter((a) => !a.startsWith("-")).slice(0, 3).join(" ") || "archon",
-      agent: Deno.env.get("ARCHON_AGENT"),
-      since: new Date().toISOString(),
-    };
-    await Deno.writeTextFile(holderPath(path), JSON.stringify(h) + "\n", { mode: 0o644 });
-  } catch { /* advisory only */ }
-  return {
-    release() {
-      Deno.env.delete("ARCHON_LOCK_HELD");
-      try {
-        file.unlock();
-        file.close();
-      } catch { /* already closed */ }
-    },
+  opts: { readonly wait: boolean; readonly onWait?: (holder: lock.Holder | undefined) => void },
+  path: string = LOCK_PATH,
+): Promise<lock.Held | undefined> {
+  const options: lock.LockOptions = {
+    wait: opts.wait,
+    command: holderCommand(),
+    inheritEnv: LOCK_HELD_ENV,
+    ...(opts.onWait === undefined ? {} : { onWait: opts.onWait }),
   };
+  try {
+    return await lock.acquireLock(path, options);
+  } catch {
+    const holder: lock.Holder = {
+      pid: proc.pid,
+      command: options.command ?? "archon",
+      since: new Date().toISOString(),
+      token: "",
+    };
+    return { holder, release: () => {} };
+  }
 }

@@ -1,8 +1,16 @@
 /**
- * The boot machine's LAN addresses and the Boot URIs built from them (spec 004).
+ * The boot machine's LAN addresses and the Boot URIs built from them (spec 004), from IFC
+ * TypeScript's `proc.networkInterfaces`.
+ *
+ * @example
+ * ```ts
+ * import { bootUri } from "./net.ts";
+ * bootUri("10.0.0.5", 8080, "alpha"); // "http://10.0.0.5:8080/boot/alpha/bootx64.efi"
+ * ```
  *
  * @module
  */
+import { proc } from "@intellectual-frontiers/ifc-ts/runtime";
 
 /** The boot server's default HTTP port. */
 export const BOOT_PORT = 8080;
@@ -23,32 +31,38 @@ export function preferAddress(a: string | undefined): void {
 export function lanAddresses(): string[] {
   let found: string[] = [];
   try {
-    found = Deno.networkInterfaces()
-      .filter((i) =>
-        i.family === "IPv4" && !i.address.startsWith("127.") && !i.address.startsWith("169.254.")
+    found = proc
+      .networkInterfaces()
+      .filter(
+        (i) =>
+          i.family === "IPv4" && !i.address.startsWith("127.") && !i.address.startsWith("169.254."),
       )
       .sort((a, b) => Number(VIRTUAL.test(a.name)) - Number(VIRTUAL.test(b.name)))
       .map((i) => i.address);
-  } catch { /* no interface list */ }
-  return preferred ? [preferred, ...found.filter((a) => a !== preferred)] : found;
+  } catch {
+    /* no interface list */
+  }
+  return preferred !== undefined ? [preferred, ...found.filter((a) => a !== preferred)] : found;
 }
 
 /** The Boot URI for the BIOS: a host's own (recognized without its MAC), or the generic one. */
 export function bootUri(address: string, port = BOOT_PORT, host?: string): string {
-  return `http://${address}:${port}/boot/${host ? `${host}/` : ""}bootx64.efi`;
+  return `http://${address}:${port}/boot/${host !== undefined && host !== "" ? `${host}/` : ""}bootx64.efi`;
 }
 
-const toInt = (ip: string) => ip.split(".").reduce((n, o) => (n << 8) + Number(o), 0) >>> 0;
+const toInt = (ip: string): number => ip.split(".").reduce((n, o) => (n << 8) + Number(o), 0) >>> 0;
 
 /** This machine's address on the client's subnet (what a PXE client can reach), else the first LAN address. */
 export function addressFacing(client: string): string | undefined {
-  if (preferred) return preferred;
+  if (preferred !== undefined) return preferred;
   try {
-    for (const i of Deno.networkInterfaces()) {
-      if (i.family !== "IPv4" || !i.netmask) continue;
+    for (const i of proc.networkInterfaces()) {
+      if (i.family !== "IPv4" || i.netmask === "") continue;
       const mask = toInt(i.netmask);
-      if (mask && (toInt(i.address) & mask) === (toInt(client) & mask)) return i.address;
+      if (mask !== 0 && (toInt(i.address) & mask) === (toInt(client) & mask)) return i.address;
     }
-  } catch { /* no interface list */ }
+  } catch {
+    /* no interface list */
+  }
   return lanAddresses()[0];
 }

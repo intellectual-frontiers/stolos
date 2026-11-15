@@ -1,8 +1,7 @@
 node_modules/
-.deno/
 *.log
 # Rendered by archon build on each machine (spec 002); never committed.
 out/
-# The engine keeps no lockfile; a fleet repository commits its own.
-deno.lock
+# The test record, its reports and the ledger of a local run (spec 096); CI keeps them as artifacts.
+test-results/
 examples/.mcp.json

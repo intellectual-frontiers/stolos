@@ -8,6 +8,7 @@
  * @module
  */
 
+import { proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import type { ArchonEvent } from "../telemetry/events.ts";
 
 /**
@@ -17,7 +18,7 @@ import type { ArchonEvent } from "../telemetry/events.ts";
  */
 export async function announce(
   event: Pick<ArchonEvent, "name" | "host" | "message" | "attrs">,
-  port = Number(Deno.env.get("ARCHON_BOOT_PORT")) || 8080,
+  port = Number(proc.env.get("ARCHON_BOOT_PORT")) || 8080,
 ): Promise<boolean> {
   try {
     const r = await fetch(`http://127.0.0.1:${port}/local/event`, {

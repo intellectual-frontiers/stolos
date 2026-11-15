@@ -1,9 +1,9 @@
 /**
- * The engine's version (spec 046-engine-instance). A fleet imports the engine
- * from GitHub (`@stolos/` → raw.githubusercontent.com/.../v<VERSION>/src/), so
- * every push to main raises it and the release workflow tags that commit
- * v<VERSION>. `deno task version bump` raises the minor number (0.1.0, 0.2.0,
- * ...); `deno task version check` fails when main already has this version.
+ * The engine's version (specs 046-engine-instance, 096-bun-runtime). Every push to main raises it,
+ * and the release workflow tags that commit `v<VERSION>` and attaches the package built from it,
+ * which a fleet repository depends on by its URL. `bun run version bump` raises the minor number
+ * (0.1.0, 0.2.0, ...) here and in `package.json`; `bun run version check` fails when main already
+ * has this version or the two files differ.
  *
  * @module
  */

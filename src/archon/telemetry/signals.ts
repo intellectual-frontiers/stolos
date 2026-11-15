@@ -1,5 +1,6 @@
 /**
  * Spec 049-telemetry (Article 27): every signal Archon emits, declared once.
+ * `core/telemetry.ts` makes IFC TypeScript's signal registry from these lists.
  * The telemetry module accepts only these names (TypeScript checks every call),
  * `man 7 archon-telemetry` is rendered from this list, and the tests read it.
  *
@@ -97,10 +98,14 @@ export const METRICS = {
 /** A metric's name (from {@link METRICS}). */
 export type MetricName = keyof typeof METRICS;
 
-/** Span names (a command's span is "archon <command>"; each phase is a child span). */
+/**
+ * Span names (spec 096: each a kind of IFC TypeScript's signal registry, built from this list in
+ * core/telemetry.ts). A run of a command is one `archon.run` (its command in `archon.command`);
+ * each phase is a child `archon.phase` (its name in `archon.phase`).
+ */
 export const SPANS = {
-  "archon <command>": "One run of an archon command: the root of its trace.",
-  "<phase>": "One phase of a run (as printed: Model, Packages, Units, ...).",
+  "archon.run": "One run of an archon or stolos command: the root of its trace.",
+  "archon.phase": "One phase of a run (as printed: Model, Packages, Units, ...).",
   "archon.query": "One archon query through osqueryi.",
   "archon.remote": "One call to a server's MCP server (fleet status, fleet query).",
 } as const;
@@ -121,6 +126,7 @@ export const ATTRIBUTES = {
   "archon.kind": "A record's kind in archon.sql.",
   "archon.phase": "The phase a log record is about (archon.phase and archon.problem events).",
   "archon.fix": "The fix a problem's record suggests.",
+  "archon.code": "A problem's stable code (archon explain <code>, spec 052).",
   "archon.event": "A log record's event name (telemetry/events.ts).",
   "archon.phase.result": "A phase's summary line.",
   "archon.phase.level": "A phase's worst level (ok, warn, fail).",

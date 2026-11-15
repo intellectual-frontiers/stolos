@@ -5,6 +5,7 @@
  *
  * @module
  */
+import { proc } from "@intellectual-frontiers/ifc-ts/runtime";
 
 export type Tier = "read" | "repo" | "mutate" | "destructive";
 
@@ -123,16 +124,16 @@ export function parseArgs(cmd: Command, argv: string[]): Parsed {
   const positionals = cmd.args.filter((a) => a.positional);
   let pi = 0;
   for (let i = 0; i < argv.length; i++) {
-    let a = argv[i];
+    let a = argv[i] ?? "";
     // A one-letter form: -m "text" is --message "text".
     const short = /^-([a-zA-Z])$/.exec(a)?.[1];
-    if (short) {
+    if (short !== undefined) {
       const s = cmd.args.find((x) => x.short === short);
       if (!s) throw new Error(`unknown option -${short} for '${cmd.name}'`);
       a = `--${s.name}`;
     }
     if (a.startsWith("--")) {
-      const [k, inline] = a.slice(2).split("=", 2);
+      const [k = "", inline] = a.slice(2).split("=", 2);
       const spec = cmd.args.find((x) => x.name === k && !x.positional);
       if (!spec) throw new Error(`unknown option --${k} for 'archon ${cmd.name}'`);
       if (spec.type === "boolean") out[k] = inline === undefined ? true : inline !== "false";
@@ -147,7 +148,7 @@ export function parseArgs(cmd: Command, argv: string[]): Parsed {
       out[spec.name] = a;
     }
   }
-  const agent = Deno.env.get("ARCHON_AGENT");
+  const agent = proc.env.get("ARCHON_AGENT");
   for (const s of cmd.args) {
     if (s.human && out[s.name] !== undefined && agent) {
       throw new Error(

@@ -18,14 +18,18 @@ export function engineFile(path: string): string {
 /** Engine files under a folder ("home"), as paths relative to it. */
 export function engineFiles(dir: string): string[] {
   const pre = dir.replace(/\/$/, "") + "/";
-  return Object.keys(ASSETS).filter((k) => k.startsWith(pre)).map((k) => k.slice(pre.length));
+  return Object.keys(ASSETS)
+    .filter((k) => k.startsWith(pre))
+    .map((k) => k.slice(pre.length));
 }
 
 /** The engine's specifications, by id ("004-install"). */
 export function engineSpecs(): string[] {
   return [
     ...new Set(
-      Object.keys(ASSETS).filter((k) => k.startsWith("specs/")).map((k) => k.split("/")[1]),
+      Object.keys(ASSETS)
+        .filter((k) => k.startsWith("specs/"))
+        .map((k) => k.split("/")[1] ?? ""),
     ),
   ].sort();
 }

@@ -10,12 +10,19 @@
 
 import { P } from "./paths.ts";
 import { run } from "./exec.ts";
+import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 
 /** Where the status files live: `prompt`, `prompt-plain`, `last.json` and `verify.json`. */
 export const STATUS_DIR = "/var/lib/archon/status";
 
 // Nerd Font glyphs (the theme already needs a Nerd Font).
-const G = { ok: "", fail: "", warn: "", lock: "", push: "" };
+const G = {
+  ok: "\u{f00c}",
+  fail: "\u{f00d}",
+  warn: "\u{f071}",
+  lock: "\u{f023}",
+  push: "\u{f093}",
+};
 
 /** How an archon command's run went, as the prompt shows it. */
 export interface RunStatus {
@@ -41,8 +48,8 @@ export function promptLine(s: RunStatus, push: boolean): string {
     s.failures
       ? `${G.fail} ${s.command}`
       : s.warnings
-      ? `${G.warn} ${s.command}`
-      : `${G.ok} ${s.command}`,
+        ? `${G.warn} ${s.command}`
+        : `${G.ok} ${s.command}`,
   ];
   if (s.deferred) parts.push(`${G.lock} ${s.deferred}`);
   if (push) parts.push(`${G.push} push`);
@@ -51,9 +58,7 @@ export function promptLine(s: RunStatus, push: boolean): string {
 
 /** The same status in words, for the plain prompt (spec 036): "update ok, push". */
 export function promptLinePlain(s: RunStatus, push: boolean): string {
-  const parts = [
-    `${s.command} ${s.failures ? "FAILED" : s.warnings ? "warn" : "ok"}`,
-  ];
+  const parts = [`${s.command} ${s.failures ? "FAILED" : s.warnings ? "warn" : "ok"}`];
   if (s.deferred) parts.push(`${s.deferred} deferred`);
   if (push) parts.push("push");
   return parts.join(", ");
@@ -80,24 +85,26 @@ export interface LastVerify {
 }
 
 async function writeText(name: string, text: string): Promise<void> {
-  const tmp = `${STATUS_DIR}/.${name}.${Deno.pid}`;
-  await Deno.writeTextFile(tmp, text, { mode: 0o664 });
-  await Deno.chmod(tmp, 0o664);
-  await Deno.rename(tmp, `${STATUS_DIR}/${name}`);
+  const tmp = `${STATUS_DIR}/.${name}.${proc.pid}`;
+  await fs.writeTextFile(tmp, text, { mode: 0o664 });
+  await fs.chmod(tmp, 0o664);
+  await fs.rename(tmp, `${STATUS_DIR}/${name}`);
 }
 
 async function writeJson(name: string, data: unknown): Promise<void> {
-  const tmp = `${STATUS_DIR}/.${name}.${Deno.pid}`;
-  await Deno.writeTextFile(tmp, JSON.stringify(data) + "\n", { mode: 0o664 });
-  await Deno.chmod(tmp, 0o664);
-  await Deno.rename(tmp, `${STATUS_DIR}/${name}`);
+  const tmp = `${STATUS_DIR}/.${name}.${proc.pid}`;
+  await fs.writeTextFile(tmp, JSON.stringify(data) + "\n", { mode: 0o664 });
+  await fs.chmod(tmp, 0o664);
+  await fs.rename(tmp, `${STATUS_DIR}/${name}`);
 }
 
 /** Save the last verify for the welcome page (`verify.json`). Best effort: errors are ignored. */
 export async function writeVerify(v: LastVerify): Promise<void> {
   try {
     await writeJson("verify.json", v);
-  } catch { /* no status directory, or not writable */ }
+  } catch {
+    /* no status directory, or not writable */
+  }
 }
 
 /**
@@ -107,13 +114,18 @@ export async function writeVerify(v: LastVerify): Promise<void> {
 export async function writeStatus(s: RunStatus): Promise<void> {
   try {
     const push = await pushPending();
-    await writeJson("last.json", { ...s, push, at: new Date().toISOString() } satisfies LastRun)
-      .catch(() => {});
+    await writeJson("last.json", {
+      ...s,
+      push,
+      at: new Date().toISOString(),
+    } satisfies LastRun).catch(() => {});
     await writeText("prompt-plain", promptLinePlain(s, push) + "\n").catch(() => {});
     const line = promptLine(s, push);
-    const tmp = `${STATUS_DIR}/.prompt.${Deno.pid}`;
-    await Deno.writeTextFile(tmp, line + "\n", { mode: 0o664 });
-    await Deno.chmod(tmp, 0o664);
-    await Deno.rename(tmp, `${STATUS_DIR}/prompt`);
-  } catch { /* no status directory, or not writable */ }
+    const tmp = `${STATUS_DIR}/.prompt.${proc.pid}`;
+    await fs.writeTextFile(tmp, line + "\n", { mode: 0o664 });
+    await fs.chmod(tmp, 0o664);
+    await fs.rename(tmp, `${STATUS_DIR}/prompt`);
+  } catch {
+    /* no status directory, or not writable */
+  }
 }

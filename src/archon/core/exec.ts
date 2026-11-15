@@ -1,191 +1,144 @@
 /**
- * Process execution through Deno.Command. Archon calls Debian's own binaries
- * (apt-get, systemctl, nft, useradd, ...) directly, never through a shell.
+ * The engine's way of running a program (spec 096-bun-runtime), on IFC TypeScript's `proc`. Archon
+ * calls Ubuntu's own binaries (apt-get, systemctl, nft, useradd, ...) directly, by their argument
+ * vector, never through a shell. Two things here are the engine's own, beyond `proc.run`:
+ *
+ * - a program that is not installed is an outcome, exit code 127 with "command not found", never an
+ *   exception, so a check on a machine that lacks a tool reads like any other failure;
+ * - `asUser` runs it as another account through runuser(1), from that account's home folder (spec
+ *   009: never root's working directory, which the account usually cannot read).
+ *
+ * `stream` gives a program's output line by line as it comes (apt's progress), splitting on carriage
+ * returns as well as line feeds. Everything else (`which`, `isRoot`, `must`, `splitArgs`) is IFC
+ * TypeScript's: `proc.which`, `proc.isRoot`, `proc.must`, and the kernel's `splitArgs`.
+ *
+ * @example
+ * ```ts
+ * import { run } from "./exec.ts";
+ * const r = await run(["systemctl", "is-active", "ssh"]);
+ * if (r.code === 127) console.log("no systemd here");
+ * ```
  *
  * @module
  */
+import { errors, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 
-export interface RunResult {
-  /** The exit code. */
-  code: number;
-  /** What it printed. */
-  stdout: string;
-  /** What it printed as errors. */
-  stderr: string;
-  /** Exit code 0. */
-  ok: boolean;
-}
+/** What a program did. */
+export type RunResult = {
+  /** The exit code (127 where the program is not installed). */
+  readonly code: number;
+  /** What it printed (empty with `inherit`). */
+  readonly stdout: string;
+  /** What it printed as errors (empty with `inherit`). */
+  readonly stderr: string;
+  /** Whether the exit code was 0. */
+  readonly ok: boolean;
+};
 
-/** How to run a command. */
-export interface RunOptions {
-  /** Its working directory. */
-  cwd?: string;
-  /** Its environment (added to this process's). */
-  env?: Record<string, string>;
+/** How to run a program. */
+export type RunOptions = {
+  /** Its working folder. */
+  readonly cwd?: string;
+  /** Variables added to its environment. */
+  readonly env?: Readonly<Record<string, string>>;
   /** Text for its standard input. */
-  stdin?: string;
-  /** Run as this user via runuser(1) (requires root). */
-  asUser?: string;
-  /** Stream output to the terminal instead of capturing it. */
-  inherit?: boolean;
+  readonly stdin?: string;
+  /** Run it as this account through runuser(1) (needs root). */
+  readonly asUser?: string;
+  /** Its output goes to this process's terminal instead of being kept. */
+  readonly inherit?: boolean;
+};
+
+/** The result of a program that is not installed. */
+function notFound(program: string): RunResult {
+  return { code: 127, ok: false, stdout: "", stderr: `${program}: command not found` };
 }
 
-/** A user's home directory from the account database (or "/"). */
-export async function homeDir(user: string): Promise<string> {
-  try {
-    const c = await new Deno.Command("getent", {
-      args: ["passwd", user],
-      stdout: "piped",
-      stderr: "null",
-    })
-      .output();
-    return new TextDecoder().decode(c.stdout).trim().split(":")[5] || "/";
-  } catch {
-    return "/";
-  }
+/** An account's home folder from the account database (getent), or `/`. */
+export async function homeOf(user: string): Promise<string> {
+  const r = await run(["getent", "passwd", user]);
+  return (r.ok ? r.stdout.trim().split(":")[5] : undefined) || "/";
 }
 
-/** Run a command (no shell); never throws: a missing program is exit code 127 with its message. */
-export async function run(argv: string[], opts: RunOptions = {}): Promise<RunResult> {
+/** This process's account name (`USER`, else `LOGNAME`), or "" where neither is set. */
+export function currentUser(): string {
+  return proc.env.get("USER") ?? proc.env.get("LOGNAME") ?? "";
+}
+
+/** Run a program, by its argument vector, to its end. Never throws for a program that is not installed (127). */
+export async function run(argv: readonly string[], opts: RunOptions = {}): Promise<RunResult> {
   let cmd = argv;
   let cwd = opts.cwd;
-  if (opts.asUser && opts.asUser !== currentUser()) {
+  if (opts.asUser !== undefined && opts.asUser !== currentUser()) {
     cmd = ["runuser", "-u", opts.asUser, "--", ...argv];
-    // Spec 009: never inherit root's working directory, which the target user
-    // usually cannot read (chezmoi failed with "stat .: permission denied").
-    cwd ??= await homeDir(opts.asUser);
+    cwd ??= await homeOf(opts.asUser);
   }
   try {
-    const c = new Deno.Command(cmd[0], {
-      args: cmd.slice(1),
-      cwd,
-      env: opts.env,
-      stdin: opts.stdin !== undefined ? "piped" : "null",
-      stdout: opts.inherit ? "inherit" : "piped",
-      stderr: opts.inherit ? "inherit" : "piped",
+    const r = await proc.run(cmd, {
+      ...(cwd === undefined ? {} : { cwd }),
+      ...(opts.env === undefined ? {} : { env: opts.env }),
+      ...(opts.stdin === undefined ? {} : { input: opts.stdin }),
+      stdout: opts.inherit === true ? "inherit" : "piped",
+      stderr: opts.inherit === true ? "inherit" : "piped",
     });
-    const child = c.spawn();
-    if (opts.stdin !== undefined) {
-      const w = child.stdin.getWriter();
-      await w.write(new TextEncoder().encode(opts.stdin));
-      await w.close();
-    }
-    const r = await child.output();
-    const dec = new TextDecoder();
-    return {
-      code: r.code,
-      ok: r.code === 0,
-      stdout: opts.inherit ? "" : dec.decode(r.stdout),
-      stderr: opts.inherit ? "" : dec.decode(r.stderr),
-    };
+    return { code: r.code, ok: r.success, stdout: r.stdout, stderr: r.stderr };
   } catch (e) {
-    if (e instanceof Deno.errors.NotFound) {
-      return { code: 127, ok: false, stdout: "", stderr: `${cmd[0]}: command not found` };
-    }
+    if (e instanceof errors.NotFound) return notFound(cmd[0] ?? "");
     throw e;
   }
 }
 
-/** Run and throw on failure. */
-export async function must(argv: string[], opts: RunOptions = {}): Promise<string> {
-  const r = await run(argv, opts);
-  if (!r.ok) {
-    throw new Error(`${argv.join(" ")} failed (${r.code}): ${r.stderr.trim() || r.stdout.trim()}`);
+/** A stream's text, line by line (split on `\r` and `\n`, blank lines dropped), to `onLine`. */
+async function pump(
+  stream: ReadableStream<Uint8Array> | null,
+  onLine: (line: string) => void,
+): Promise<void> {
+  if (stream === null) return;
+  const dec = new TextDecoder();
+  let buf = "";
+  for await (const bytes of stream) {
+    buf += dec.decode(bytes, { stream: true });
+    for (let i = buf.search(/[\r\n]/); i >= 0; i = buf.search(/[\r\n]/)) {
+      const line = buf.slice(0, i);
+      buf = buf.slice(i + 1);
+      if (line.trim() !== "") onLine(line);
+    }
   }
-  return r.stdout;
-}
-
-/** The full path of a program on PATH, if there is one. */
-export async function which(bin: string): Promise<string | undefined> {
-  for (const dir of (Deno.env.get("PATH") ?? "/usr/local/bin:/usr/bin:/bin").split(":")) {
-    try {
-      const p = `${dir}/${bin}`;
-      const s = await Deno.stat(p);
-      if (s.isFile) return p;
-    } catch { /* keep looking */ }
-  }
-  return undefined;
-}
-
-/** Running as root. */
-export function isRoot(): boolean {
-  return Deno.uid?.() === 0;
-}
-
-/** This process's user name. */
-export function currentUser(): string {
-  return Deno.env.get("USER") ?? Deno.env.get("LOGNAME") ?? "";
+  buf += dec.decode();
+  if (buf.trim() !== "") onLine(buf);
 }
 
 /**
- * Split a command line into argv without invoking a shell. Supports single
- * and double quotes. Verification commands (archon:verifiedBy) use this.
- */
-export function splitArgs(line: string): string[] {
-  const out: string[] = [];
-  let cur = "";
-  let q: string | undefined;
-  let has = false;
-  for (const ch of line) {
-    if (q) {
-      if (ch === q) q = undefined;
-      else cur += ch;
-    } else if (ch === "'" || ch === '"') {
-      q = ch;
-      has = true;
-    } else if (/\s/.test(ch)) {
-      if (cur || has) out.push(cur);
-      cur = "";
-      has = false;
-    } else cur += ch;
-  }
-  if (q) throw new Error(`unterminated quote in: ${line}`);
-  if (cur || has) out.push(cur);
-  return out;
-}
-
-/**
- * Run a command and receive its output line by line (for progress bars).
- * Returns the exit code; nothing reaches the terminal.
+ * Run a program and receive its output line by line as it comes (for progress bars); nothing
+ * reaches the terminal. Gives the exit code (127 where the program is not installed).
  */
 export async function stream(
-  argv: string[],
+  argv: readonly string[],
   opts: {
-    env?: Record<string, string>;
-    cwd?: string;
-    onLine: (line: string, from: "stdout" | "stderr") => void;
+    readonly env?: Readonly<Record<string, string>>;
+    readonly cwd?: string;
+    readonly onLine: (line: string, from: "stdout" | "stderr") => void;
   },
 ): Promise<number> {
-  let child;
+  let child: proc.Child;
   try {
-    child = new Deno.Command(argv[0], {
-      args: argv.slice(1),
-      env: opts.env,
-      cwd: opts.cwd,
+    child = proc.spawn(argv, {
+      ...(opts.env === undefined ? {} : { env: opts.env }),
+      ...(opts.cwd === undefined ? {} : { cwd: opts.cwd }),
       stdin: "null",
       stdout: "piped",
       stderr: "piped",
-    }).spawn();
+    });
   } catch (e) {
-    if (e instanceof Deno.errors.NotFound) {
-      opts.onLine(`${argv[0]}: command not found`, "stderr");
+    if (e instanceof errors.NotFound) {
+      opts.onLine(`${argv[0] ?? ""}: command not found`, "stderr");
       return 127;
     }
     throw e;
   }
-  const pump = async (rs: ReadableStream<Uint8Array>, from: "stdout" | "stderr") => {
-    let buf = "";
-    for await (const chunk of rs.pipeThrough(new TextDecoderStream())) {
-      buf += chunk;
-      let i;
-      while ((i = buf.search(/[\r\n]/)) >= 0) {
-        const line = buf.slice(0, i);
-        buf = buf.slice(i + 1);
-        if (line.trim()) opts.onLine(line, from);
-      }
-    }
-    if (buf.trim()) opts.onLine(buf, from);
-  };
-  await Promise.all([pump(child.stdout, "stdout"), pump(child.stderr, "stderr")]);
+  await Promise.all([
+    pump(child.stdout, (l) => opts.onLine(l, "stdout")),
+    pump(child.stderr, (l) => opts.onLine(l, "stderr")),
+  ]);
   return (await child.status).code;
 }

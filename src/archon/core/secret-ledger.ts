@@ -8,20 +8,19 @@
  */
 
 import { P } from "./paths.ts";
-import { join, relative } from "./path.ts";
-import { ensureDir, readTextOr } from "./fsx.ts";
+import { fs, path } from "@intellectual-frontiers/ifc-ts/runtime";
 
 /** The vault's local folder on the boot machine (holds the ledger; no secret). */
-export const VAULT_LOCAL: string = join(P.bootCache, "..", "vault");
+export const VAULT_LOCAL: string = path.join(P.bootCache, "..", "vault");
 /** The ledger file: `ledger.json` in `VAULT_LOCAL`. */
-export const LEDGER: string = join(VAULT_LOCAL, "ledger.json");
+export const LEDGER: string = path.join(VAULT_LOCAL, "ledger.json");
 
 /**
  * The ledger for this run: `LEDGER`, or, for a provider's client (spec 082),
  * `clients/<id>/ledger.json` beside it, so each client's backups are tracked apart.
  */
 export function ledgerFile(): string {
-  return P.clientId ? join(VAULT_LOCAL, "clients", P.clientId, "ledger.json") : LEDGER;
+  return P.clientId !== "" ? path.join(VAULT_LOCAL, "clients", P.clientId, "ledger.json") : LEDGER;
 }
 
 /** The record of the last backup (spec 056): its ZIP, where it was written, and what it held. */
@@ -47,22 +46,28 @@ export interface Ledger {
 }
 
 /** Read the ledger; a missing or unreadable file reads as an empty one. */
-export async function readLedger(path = ledgerFile()): Promise<Ledger> {
+export async function readLedger(file = ledgerFile()): Promise<Ledger> {
   try {
-    return { changes: {}, ...JSON.parse((await readTextOr(path)) ?? "{}") };
+    const read: unknown = JSON.parse((await fs.readTextOr(file)) ?? "{}");
+    // The ledger is advisory and only this module writes it: its shape is trusted as written.
+    return {
+      changes: {},
+      ...(typeof read === "object" && read !== null ? (read as Partial<Ledger>) : {}),
+    };
   } catch {
     return { changes: {} };
   }
 }
 
 /** Write the ledger (as formatted JSON), creating the vault folder first. */
-export async function writeLedger(l: Ledger, path = ledgerFile()): Promise<void> {
-  await ensureDir(join(path, ".."));
-  await Deno.writeTextFile(path, JSON.stringify(l, null, 2) + "\n");
+export async function writeLedger(l: Ledger, file = ledgerFile()): Promise<void> {
+  await fs.ensureDir(path.dirname(file));
+  await fs.writeTextFile(file, JSON.stringify(l, null, 2) + "\n");
 }
 
 /** The secret's name: its path inside the secrets folder, with forward slashes. */
-export const secretName = (path: string): string => relative(P.secrets, path).replace(/\\/g, "/");
+export const secretName = (file: string): string =>
+  path.relative(P.secrets, file).replace(/\\/g, "/");
 
 /** Secrets changed by this process (for the closing panel). */
 export const changedThisRun = new Set<string>();
@@ -71,8 +76,8 @@ export const changedThisRun = new Set<string>();
  * Record that a secret was written (or removed) now, then prepare the
  * closing panel. Never throws: the ledger is advisory.
  */
-export async function recordChange(path: string, removed = false): Promise<void> {
-  const name = secretName(path);
+export async function recordChange(file: string, removed = false): Promise<void> {
+  const name = secretName(file);
   changedThisRun.add(name);
   try {
     const l = await readLedger();
@@ -84,5 +89,7 @@ export async function recordChange(path: string, removed = false): Promise<void>
     // The closing panel (spec 029): what is now newer than the last backup.
     const { preparePanel } = await import("../vault/reminder.ts");
     await preparePanel();
-  } catch { /* the ledger is advisory: a secret write never fails on it */ }
+  } catch {
+    /* the ledger is advisory: a secret write never fails on it */
+  }
 }

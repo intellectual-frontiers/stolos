@@ -35,10 +35,7 @@ export async function checkClock(
 /** A skew in seconds for people, rounded: "3m behind", "2h ahead", "0s ahead". */
 export function describeSkew(skew: number): string {
   const a = Math.abs(skew);
-  const amount = a >= 3600
-    ? `${Math.round(a / 3600)}h`
-    : a >= 60
-    ? `${Math.round(a / 60)}m`
-    : `${a}s`;
+  const amount =
+    a >= 3600 ? `${Math.round(a / 3600)}h` : a >= 60 ? `${Math.round(a / 60)}m` : `${a}s`;
   return `${amount} ${skew < 0 ? "behind" : "ahead"}`;
 }

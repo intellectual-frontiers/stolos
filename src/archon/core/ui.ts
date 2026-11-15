@@ -1,6 +1,8 @@
 /**
  * Calm output (Article XXII, spec 018): quiet on success, loud and actionable
- * on problems, full detail always in the log. Native Deno only.
+ * on problems, full detail always in the log. On IFC TypeScript's `tty`,
+ * `stdio` and `fs`; this is the one module of the engine that writes for a
+ * person to the terminal (the lint rule `ifc/terminal-writers` allows it alone).
  *
  *   ✅ Packages         86 installed (1m12s)
  *   ⠸ Files            [██████░░░░] 30/47  /etc/ssh/sshd_config.d/50-archon.conf
@@ -11,6 +13,7 @@
  *
  * @module
  */
+import { fs, proc, stdio, tty } from "@intellectual-frontiers/ifc-ts/runtime";
 import { translate } from "./explain.ts";
 
 // ARCHON_VERBOSE=1 (or -v): every item is shown, dimmed, as it happens.
@@ -63,12 +66,9 @@ export interface UiOptions {
   now?: () => number;
 }
 
-const env = (k: string) => {
-  try {
-    return Deno.env.get(k);
-  } catch {
-    return undefined;
-  }
+const env = (k: string): string | undefined => {
+  const v = proc.env.get(k);
+  return v === "" ? undefined : v;
 };
 
 function utf8Locale(): boolean {
@@ -83,13 +83,17 @@ function utf8Locale(): boolean {
  * ARCHON_PLAIN=1 turns them off; ARCHON_EMOJI=1 turns them on.
  */
 export function emojiTerminal(): boolean {
-  if (env("ARCHON_PLAIN")) return false;
-  if (env("ARCHON_EMOJI")) return true;
+  if (env("ARCHON_PLAIN") !== undefined) return false;
+  if (env("ARCHON_EMOJI") !== undefined) return true;
   if (utf8Locale()) return true;
-  if (Deno.build.os === "windows") {
-    return !!(env("WT_SESSION") || env("TERM_PROGRAM") || env("ConEmuANSI") === "ON");
+  if (proc.build.os === "windows") {
+    return (
+      env("WT_SESSION") !== undefined ||
+      env("TERM_PROGRAM") !== undefined ||
+      env("ConEmuANSI") === "ON"
+    );
   }
-  return Deno.build.os === "darwin" && !!env("TERM_PROGRAM");
+  return proc.build.os === "darwin" && env("TERM_PROGRAM") !== undefined;
 }
 
 const MARKS = {
@@ -151,62 +155,68 @@ export class Phase {
   progress?: { n: number; total: number; label: string };
   /** When it started (the Ui's clock). */
   readonly started: number;
+  /** Its name, as printed. */
+  readonly name: string;
+  /** The Ui it belongs to. */
+  readonly ui: Ui;
   /** A phase of `ui`, named `name`; started by {@link Ui.phase}. */
-  constructor(readonly name: string, readonly ui: Ui) {
+  constructor(name: string, ui: Ui) {
+    this.name = name;
+    this.ui = ui;
     this.started = ui.now();
   }
   /** Update the progress bar (n of total) with a short label. */
-  step(n: number, total: number, label = "") {
+  step(n: number, total: number, label = ""): void {
     this.progress = { n, total, label };
     this.ui.redraw();
   }
   /** A label without a known total (spinner only). */
-  status(label: string) {
+  status(label: string): void {
     this.progress = { n: 0, total: 0, label };
     this.ui.redraw();
   }
   /** A change it made. */
-  change(msg: string) {
+  change(msg: string): void {
     this.changes++;
     this.ui.item("change", msg);
   }
   /** An item already right. */
-  ok(msg: string) {
+  ok(msg: string): void {
     this.oks++;
     this.ui.item("ok", msg);
   }
   /** An item it skipped. */
-  skip(msg: string) {
+  skip(msg: string): void {
     this.skipped++;
     this.ui.item("skip", msg);
   }
   /** A disruptive change left for later (shown with how to run it). */
-  defer(msg: string) {
+  defer(msg: string): void {
     this.deferred++;
     this.ui.deferred.push(msg);
     this.ui.item("defer", msg);
   }
   /** A warning: shown, with its fix and code; never fails the run. */
-  warn(msg: string, fix?: string, code?: string) {
+  warn(msg: string, fix?: string, code?: string): void {
     this.warns++;
     this.ui.problem("warn", this.name, msg, fix, code);
   }
   /** A failure: shown, with its fix and code; the run exits 1. */
-  fail(msg: string, fix?: string, code?: string) {
+  fail(msg: string, fix?: string, code?: string): void {
     this.fails++;
     this.ui.problem("fail", this.name, msg, fix, code);
   }
   /** Not set up yet (spec 052): its next step; never a failure or a warning. */
-  pending(msg: string, next: string, code?: string) {
+  pending(msg: string, next: string, code?: string): void {
     this.pendings++;
     this.ui.problem("pending", this.name, msg, next, code);
   }
   /** Detail for the log only (shown dimmed with --verbose). */
-  note(msg: string) {
+  note(msg: string): void {
     this.ui.item("note", msg);
   }
   /** Set the one-line result shown when the phase ends. */
-  done(result?: string) {
+  done(result?: string): void {
     if (result !== undefined) this.result = result;
     this.ui.endPhase(this);
   }
@@ -269,36 +279,39 @@ export class Ui {
   }
   /** The run's log file. */
   logPath: string | null;
-  private current?: Phase;
+  private current: Phase | undefined;
   private phases: Phase[] = [];
   private write: (s: string) => void;
-  private logFile?: Deno.FsFile;
+  private logFile: fs.FsFile | undefined;
   private logLines = 0;
   private spinIndex = 0;
-  private timer?: ReturnType<typeof setInterval>;
+  private timer: proc.Timer | undefined;
   private enc = new TextEncoder();
   /** The terminal is gone (an SSH session dropped); output goes only to the run log. */
   detached = false;
 
   /** A Ui with these options (see {@link UiOptions}). */
   constructor(o: UiOptions = {}) {
-    this.tty = o.tty ?? Deno.stderr.isTerminal();
-    this.color = o.color ?? (!env("NO_COLOR") && (this.tty || !!env("FORCE_COLOR")));
+    this.tty = o.tty ?? tty.isTerminal("stderr");
+    this.color =
+      o.color ?? (env("NO_COLOR") === undefined && (this.tty || env("FORCE_COLOR") !== undefined));
     this.emoji = o.emoji ?? emojiTerminal();
-    this.verbose = o.verbose ?? !!env("ARCHON_VERBOSE");
+    this.verbose = o.verbose ?? env("ARCHON_VERBOSE") !== undefined;
     this.quiet = o.quiet ?? false;
     this.now = o.now ?? Date.now;
     this.started = Number(env("ARCHON_UI_START")) || this.now();
-    this.write = o.write ?? ((s) => {
-      // After the terminal goes away (an SSH session dropped mid-run) keep
-      // going: the run log still records everything.
-      if (this.detached) return;
-      try {
-        Deno.stderr.writeSync(this.enc.encode(s));
-      } catch {
-        this.detached = true;
-      }
-    });
+    this.write =
+      o.write ??
+      ((s) => {
+        // After the terminal goes away (an SSH session dropped mid-run) keep
+        // going: the run log still records everything.
+        if (this.detached) return;
+        try {
+          stdio.stderr.writeSync(s);
+        } catch {
+          this.detached = true;
+        }
+      });
     this.logPath = o.logPath === undefined ? null : o.logPath;
   }
 
@@ -311,34 +324,34 @@ export class Ui {
     return this.color ? `\x1b[${code}m${s}\x1b[0m` : s;
   }
   /** Dimmed text. */
-  dim = (s: string) => this.c("2", s);
+  dim = (s: string): string => this.c("2", s);
   /** Bold text. */
-  bold = (s: string) => this.c("1", s);
+  bold = (s: string): string => this.c("1", s);
   /** Red text (failures). */
-  red = (s: string) => this.c("31", s);
+  red = (s: string): string => this.c("31", s);
   /** Yellow text (warnings). */
-  yellow = (s: string) => this.c("33", s);
+  yellow = (s: string): string => this.c("33", s);
   /** Green text (success). */
-  green = (s: string) => this.c("32", s);
+  green = (s: string): string => this.c("32", s);
   /** Cyan text. */
-  cyan = (s: string) => this.c("36", s);
+  cyan = (s: string): string => this.c("36", s);
   /** Blue text. */
-  blue = (s: string) => this.c("34", s);
+  blue = (s: string): string => this.c("34", s);
   /** Magenta text. */
-  magenta = (s: string) => this.c("35", s);
+  magenta = (s: string): string => this.c("35", s);
 
   /** Open the run log lazily (operations only). */
-  private openLog() {
+  private openLog(): void {
     if (this.logFile || this.logPath === null) return;
     try {
-      this.logFile = Deno.openSync(this.logPath, { create: true, append: true });
+      this.logFile = fs.openSync(this.logPath, { create: true, append: true });
     } catch {
       this.logPath = null;
     }
   }
 
   /** Start logging to a file (call before the first phase). */
-  useLog(path: string | null) {
+  useLog(path: string | null): void {
     this.logPath = path;
     if (path) this.openLog();
   }
@@ -355,12 +368,12 @@ export class Ui {
   }
 
   /** Erase the spinner's line. */
-  private clearLine() {
+  private clearLine(): void {
     if (this.tty) this.write("\r\x1b[2K");
   }
 
   /** Write a line on screen (and in the log). */
-  private out(line: string) {
+  private out(line: string): void {
     if (this.quiet) return;
     this.clearLine();
     this.write(line + "\n");
@@ -368,7 +381,7 @@ export class Ui {
   }
 
   /** The run's header: its title and what it acts on. */
-  header(title: string, subtitle = "") {
+  header(title: string, subtitle = ""): void {
     this.log(`== ${title}${subtitle ? ` · ${subtitle}` : ""}`);
     if (env("ARCHON_UI_CONTINUE")) return;
     const head = `${this.m.start} ${this.bold(this.cyan(title))}${
@@ -389,7 +402,9 @@ export class Ui {
     for (const l of this.listeners) {
       try {
         l.start?.(name);
-      } catch { /* telemetry is best effort */ }
+      } catch {
+        /* telemetry is best effort */
+      }
     }
     this.log(`-- ${name}`);
     this.startSpinner();
@@ -403,21 +418,16 @@ export class Ui {
   }
 
   /** One item of the current phase (shown with -v; always logged). */
-  item(kind: "change" | "ok" | "skip" | "defer" | "note", msg: string) {
+  item(kind: "change" | "ok" | "skip" | "defer" | "note", msg: string): void {
     this.log(`   ${kind.padEnd(6)} ${msg}`);
     if (!this.verbose || this.quiet) return;
-    const mark = kind === "change"
-      ? "~"
-      : kind === "defer"
-      ? this.m.defer
-      : kind === "skip"
-      ? "-"
-      : " ";
+    const mark =
+      kind === "change" ? "~" : kind === "defer" ? this.m.defer : kind === "skip" ? "-" : " ";
     this.out(this.dim(`     ${mark} ${msg}`));
   }
 
   /** Record a problem: shown now, and again when the run ends. A known raw error from another tool gets its code and fix (spec 052). */
-  problem(level: ProblemLevel, phase: string, message: string, fix?: string, code?: string) {
+  problem(level: ProblemLevel, phase: string, message: string, fix?: string, code?: string): void {
     // Spec 052: a raw tool error gets its plain cause and fix, when it is a known one.
     if (!fix || !code) {
       const t = translate(message);
@@ -432,13 +442,17 @@ export class Ui {
       }${code ? ` [${code}]` : ""}`,
     );
     if (this.problems.some((p) => p.level === level && p.message === message)) return;
-    this.problems.push({ level, phase, message, fix, ...(code ? { code } : {}), logLine });
+    this.problems.push({
+      level,
+      phase,
+      message,
+      ...(fix !== undefined ? { fix } : {}),
+      ...(code !== undefined ? { code } : {}),
+      logLine,
+    });
     const mark = this.m[level];
-    const text = level === "fail"
-      ? this.red(message)
-      : level === "warn"
-      ? this.yellow(message)
-      : message;
+    const text =
+      level === "fail" ? this.red(message) : level === "warn" ? this.yellow(message) : message;
     this.out(`   ${mark} ${text}`);
   }
 
@@ -450,10 +464,11 @@ export class Ui {
   }
 
   /** Draw the current phase's line again (spinner, progress). */
-  redraw() {
+  redraw(): void {
     if (!this.tty || this.quiet || !this.current) return;
     const p = this.current;
-    const spin = (this.emoji ? SPIN.emoji : SPIN.ascii)[this.spinIndex % (this.emoji ? 10 : 4)];
+    const spin =
+      (this.emoji ? SPIN.emoji : SPIN.ascii)[this.spinIndex % (this.emoji ? 10 : 4)] ?? "";
     let line = `${this.c("36", spin)} ${p.name.padEnd(16)}`;
     if (p.progress?.total) {
       line += ` ${this.bar(p.progress.n, p.progress.total)} ${p.progress.n}/${p.progress.total}`;
@@ -461,7 +476,7 @@ export class Ui {
     if (p.progress?.label) line += `  ${this.dim(p.progress.label)}`;
     const cols = (() => {
       try {
-        const c = Deno.consoleSize().columns;
+        const c = tty.consoleSize()?.columns ?? 0;
         return c >= 20 ? c : 100;
       } catch {
         return 100;
@@ -471,21 +486,20 @@ export class Ui {
   }
 
   /** Start the spinner (terminals only). */
-  private startSpinner() {
+  private startSpinner(): void {
     if (!this.tty || this.quiet || this.timer !== undefined) return;
-    const t = setInterval(() => {
+    // A timer that never keeps the process alive, set again on each tick.
+    const tick = (): void => {
       this.spinIndex++;
       this.redraw();
-    }, 100);
-    this.timer = t;
-    try {
-      Deno.unrefTimer(t as unknown as number);
-    } catch { /* older Deno */ }
+      this.timer = proc.unrefTimer(tick, 100);
+    };
+    this.timer = proc.unrefTimer(tick, 100);
   }
 
   /** Stop the spinner. */
-  private stopSpinner() {
-    if (this.timer !== undefined) clearInterval(this.timer);
+  private stopSpinner(): void {
+    this.timer?.clear();
     this.timer = undefined;
   }
 
@@ -498,52 +512,68 @@ export class Ui {
   }> = [];
 
   /** End a phase: its mark, name, result, and time. */
-  endPhase(p: Phase) {
+  endPhase(p: Phase): void {
     if (!this.phases.includes(p) || (p as { ended?: boolean }).ended) return;
     (p as { ended?: boolean }).ended = true;
     try {
       this.onPhaseEnd?.(p.name, p.level, p.summary());
       for (const l of this.listeners) l.end?.(p.name, p.level, p.summary());
-    } catch { /* progress is best effort */ }
+    } catch {
+      /* progress is best effort */
+    }
     if (this.current === p) this.current = undefined;
     if (!this.current) this.stopSpinner();
     const took = this.now() - p.started;
     const time = took >= 5000 ? this.dim(` (${fmtDuration(took)})`) : "";
     const mark = this.m[p.level];
-    const summary = p.level === "fail"
-      ? this.red(p.summary())
-      : p.level === "warn"
-      ? this.yellow(p.summary())
-      : p.summary();
+    const summary =
+      p.level === "fail"
+        ? this.red(p.summary())
+        : p.level === "warn"
+          ? this.yellow(p.summary())
+          : p.summary();
     this.log(`-- ${p.name}: ${p.summary()} (${fmtDuration(took)})`);
     this.out(`${mark} ${this.bold(p.name.padEnd(16))} ${summary}${time}`);
   }
 
   /** Pause in-place drawing (for prompts). */
   /** One visible line under the current phase (a destination, a step done). */
-  say(msg: string) {
+  say(msg: string): void {
     this.log(`   ${msg}`);
     this.out(`   ${msg}`);
   }
 
   /** Stop drawing (another program uses the terminal, or a prompt is shown). */
-  pause() {
+  pause(): void {
     this.stopSpinner();
     this.clearLine();
   }
   /** Draw again after pause(). */
-  resume() {
+  resume(): void {
     if (this.current) this.startSpinner();
   }
 
-  /** Ask a yes/no question without fighting the spinner. */
-  confirm(question: string): boolean {
-    if (!Deno.stdin.isTerminal()) return false;
+  /**
+   * Ask a question at the terminal without fighting the spinner, and give the line typed (without
+   * its line ending), or undefined where standard input is not a terminal or ends first. The
+   * portable form of `prompt()`, which Node does not have.
+   */
+  async ask(question: string): Promise<string | undefined> {
+    if (!tty.isTerminal("stdin")) return undefined;
     this.pause();
-    const answer = globalThis.confirm(`\n${question}`);
+    this.write(`${question} `);
+    const answer = await readLine();
     this.resume();
-    this.log(`?  ${question} -> ${answer ? "yes" : "no"}`);
+    this.log(`?  ${question} -> ${answer === undefined ? "(no answer)" : "(answered)"}`);
     return answer;
+  }
+
+  /** Ask a yes/no question without fighting the spinner: yes only for `y` or `yes`. */
+  async confirm(question: string): Promise<boolean> {
+    const answer = await this.ask(`\n${question} [y/N]`);
+    const yes = answer !== undefined && /^y(es)?$/i.test(answer.trim());
+    this.log(`?  ${question} -> ${yes ? "yes" : "no"}`);
+    return yes;
   }
 
   /** Print the closing summary and return the exit code. */
@@ -557,9 +587,9 @@ export class Ui {
     this.finished = true;
     // A caller that ran this as a step (stolos update runs boot doctor) reads the counts.
     const summaryFile = env("STOLOS_SUMMARY");
-    if (summaryFile) {
+    if (summaryFile !== undefined) {
       try {
-        Deno.writeTextFileSync(
+        fs.writeTextFileSync(
           summaryFile,
           JSON.stringify({
             fails: fails.length,
@@ -583,11 +613,12 @@ export class Ui {
     const rule = (title: string) =>
       this.bold(`${this.emoji ? "━━" : "=="} ${title} ${(this.emoji ? "━" : "=").repeat(40)}`);
     const show = (p: Problem) => {
-      const msg = p.level === "fail"
-        ? this.red(p.message)
-        : p.level === "warn"
-        ? this.yellow(p.message)
-        : p.message;
+      const msg =
+        p.level === "fail"
+          ? this.red(p.message)
+          : p.level === "warn"
+            ? this.yellow(p.message)
+            : p.message;
       this.out(`${this.m[p.level]} ${this.bold(p.phase.toLowerCase().padEnd(14))} ${msg}`);
       if (p.fix) {
         this.out(
@@ -617,11 +648,9 @@ export class Ui {
     this.out("");
     if (fails.length) {
       this.out(
-        `${this.m.bad} ${
-          this.red(
-            `${o.title ?? "finished"} with ${fails.length} failure${fails.length > 1 ? "s" : ""}`,
-          )
-        } in ${took}${this.dim(where)}`,
+        `${this.m.bad} ${this.red(
+          `${o.title ?? "finished"} with ${fails.length} failure${fails.length > 1 ? "s" : ""}`,
+        )} in ${took}${this.dim(where)}`,
       );
     } else {
       this.out(`${this.m.done} ${this.green(o.title ?? "done")} in ${took}${this.dim(where)}`);
@@ -634,9 +663,25 @@ export class Ui {
     );
     try {
       this.logFile?.close();
-    } catch { /* closed */ }
+    } catch {
+      /* closed */
+    }
     this.logFile = undefined;
     return fails.length ? 1 : 0;
+  }
+}
+
+/** One line read from standard input, without its line ending; undefined where the input ends first. */
+async function readLine(): Promise<string | undefined> {
+  const dec = new TextDecoder();
+  const one = new Uint8Array(1);
+  let line = "";
+  for (;;) {
+    const n = await stdio.stdin.read(one);
+    if (n === null) return line === "" ? undefined : line;
+    const ch = dec.decode(one.subarray(0, n), { stream: true });
+    if (ch === "\n") return line.replace(/\r$/, "");
+    line += ch;
   }
 }
 
@@ -660,15 +705,15 @@ export function truncate(s: string, width: number, ansi = true): string {
 }
 
 /** The program writing logs: "stolos" on your PC, "archon" on a machine (spec 059). */
-let logProgram = Deno.build.os === "windows" ? "stolos" : "archon";
+let logProgram = proc.build.os === "windows" ? "stolos" : "archon";
 /** Set which program writes the run log (its folder is named after it), and names it in hints. */
 export function setLogProgram(name: "stolos" | "archon"): void {
   logProgram = name;
 }
 
-/** How to explain a code where this runs: `deno task stolos explain <code>` on your PC, else `archon explain <code>`. */
+/** How to explain a code where this runs: `bun run stolos explain <code>` on your PC, else `archon explain <code>`. */
 export function explainHint(code: string): string {
-  return logProgram === "stolos" ? `deno task stolos explain ${code}` : `archon explain ${code}`;
+  return logProgram === "stolos" ? `bun run stolos explain ${code}` : `archon explain ${code}`;
 }
 
 /**
@@ -677,22 +722,22 @@ export function explainHint(code: string): string {
  */
 export function defaultLogPath(): string | null {
   const inherited = env("ARCHON_LOG");
-  if (inherited) return inherited;
+  if (inherited !== undefined) return inherited;
   const stamp = new Date().toISOString().replace(/[:.]/g, "").slice(0, 15);
-  const root = Deno.uid?.() === 0;
+  const root = proc.isRoot();
   // Windows: %LOCALAPPDATA%\stolos\log (beside boot.log), with Windows separators.
-  const win = Deno.build.os === "windows";
+  const win = proc.build.os === "windows";
   const sep = win ? "\\" : "/";
   const dir = win
     ? `${
-      env("LOCALAPPDATA") ?? `${env("USERPROFILE") ?? "C:"}\\AppData\\Local`
-    }\\${logProgram}\\log`
+        env("LOCALAPPDATA") ?? `${env("USERPROFILE") ?? "C:"}\\AppData\\Local`
+      }\\${logProgram}\\log`
     : root
-    ? "/var/log/archon"
-    : `${env("HOME") ?? "/tmp"}/.local/state/${logProgram}/log`;
+      ? "/var/log/archon"
+      : `${env("HOME") ?? "/tmp"}/.local/state/${logProgram}/log`;
   try {
-    Deno.mkdirSync(dir, { recursive: true });
-    return `${dir}${sep}${stamp}-${Deno.pid}.log`;
+    fs.mkdirSync(dir, { recursive: true });
+    return `${dir}${sep}${stamp}-${proc.pid}.log`;
   } catch {
     return null;
   }

@@ -8,8 +8,7 @@
  */
 
 import { P } from "./paths.ts";
-import { join } from "./path.ts";
-import { ensureDir, exists, readTextOr } from "./fsx.ts";
+import { fs, path as paths, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "./exec.ts";
 import { recordChange } from "./secret-ledger.ts";
 
@@ -21,26 +20,27 @@ export const SECRETS = {
     return P.secrets;
   },
   get adminPasswordHash(): string {
-    return join(P.secrets, "admin-password.hash");
+    return paths.join(P.secrets, "admin-password.hash");
   },
-  deployKey: (host: string) => join(P.secrets, "hosts", host, "deploy_key"),
-  deployKeyPub: (host: string) => join(P.secrets, "hosts", host, "deploy_key.pub"),
+  deployKey: (host: string): string => paths.join(P.secrets, "hosts", host, "deploy_key"),
+  deployKeyPub: (host: string): string => paths.join(P.secrets, "hosts", host, "deploy_key.pub"),
   /** The server's Let's Encrypt store, carried across a re-install (spec 032). */
-  acme: (host: string) => join(P.secrets, "hosts", host, "acme.json"),
+  acme: (host: string): string => paths.join(P.secrets, "hosts", host, "acme.json"),
   /** The host's SSH host keys (spec 004): its identity across re-installs. */
-  hostKey: (host: string, type: string) => join(P.secrets, "hosts", host, `ssh_host_${type}_key`),
+  hostKey: (host: string, type: string): string =>
+    paths.join(P.secrets, "hosts", host, `ssh_host_${type}_key`),
   /** The mail relay's credential (spec 027): a Cloudflare API token with Email Sending: Edit. */
   get mail(): string {
-    return join(P.secrets, "mail.json");
+    return paths.join(P.secrets, "mail.json");
   },
   /** A send-only mail credential an export job names (spec 092): mail-<name>.json. */
-  exportMail: (name: string) => join(P.secrets, `mail-${name}.json`),
+  exportMail: (name: string): string => paths.join(P.secrets, `mail-${name}.json`),
   /** The Cloudflare DNS token (spec 032): Zone Read and DNS Edit on the fleet's zone. */
   get web(): string {
-    return join(P.secrets, "web.json");
+    return paths.join(P.secrets, "web.json");
   },
   get tokens(): string {
-    return join(P.secrets, "install-tokens.json");
+    return paths.join(P.secrets, "install-tokens.json");
   },
 };
 
@@ -52,35 +52,33 @@ export const SECRETS = {
  * rewritten (and is not a change).
  */
 export async function writeSecret(path: string, content: string): Promise<void> {
-  if ((await readTextOr(path)) === content) return;
-  await ensureDir(join(path, ".."));
-  if (Deno.build.os !== "windows") await Deno.chmod(join(path, ".."), 0o700).catch(() => {});
-  await Deno.writeTextFile(path, content, { mode: 0o600 });
-  if (Deno.build.os !== "windows") await Deno.chmod(path, 0o600);
+  if ((await fs.readTextOr(path)) === content) return;
+  await fs.ensureDir(paths.dirname(path));
+  if (proc.build.os !== "windows") await fs.chmod(paths.dirname(path), 0o700).catch(() => {});
+  await fs.writeTextFile(path, content, { mode: 0o600 });
+  if (proc.build.os !== "windows") await fs.chmod(path, 0o600);
   else await ownerOnly(path);
   await recordChange(path);
 }
 
 /** Remove a secret (and record it, so the vault knows). */
 export async function removeSecret(path: string): Promise<void> {
-  if (!(await exists(path))) return;
-  await Deno.remove(path);
+  if (!(await fs.exists(path))) return;
+  await fs.remove(path);
   await recordChange(path, true);
 }
 
 /** Windows: this user only (no inherited access), the equivalent of 0600. */
 export async function ownerOnly(path: string): Promise<void> {
-  const user = Deno.env.get("USERNAME");
-  if (!user) return;
+  const user = proc.env.get("USERNAME");
+  if (user === undefined || user === "") return;
   await run(["icacls", path, "/inheritance:r", "/grant:r", `${user}:F`]).catch(() => {});
 }
 
 /** A secret's content, or undefined. */
 export async function readSecret(path: string): Promise<string | undefined> {
-  return (await readTextOr(path))?.trim();
+  return (await fs.readTextOr(path))?.trim();
 }
-
-export { exists };
 
 /** One armed install (the boot machine's own record). */
 export interface InstallToken {
@@ -116,8 +114,8 @@ const TOKEN_LIFE_AFTER_USE_MS = 2 * 60 * 60 * 1000;
 
 /** Every armed install. */
 export async function loadTokens(): Promise<InstallToken[]> {
-  const raw = await readTextOr(SECRETS.tokens);
-  return raw ? JSON.parse(raw) as InstallToken[] : [];
+  const raw = await fs.readTextOr(SECRETS.tokens);
+  return raw ? (JSON.parse(raw) as InstallToken[]) : [];
 }
 
 /** Write them back. */
@@ -137,9 +135,8 @@ export async function armHost(
   const mac = knownMac?.toLowerCase() ?? prev?.mac;
   const tokens = all.filter((t) => t.host !== host);
   const bytes = crypto.getRandomValues(new Uint8Array(18));
-  const token = btoa(String.fromCharCode(...bytes)).replace(
-    /[+/=]/g,
-    (c) => c === "+" ? "-" : c === "/" ? "_" : "",
+  const token = btoa(String.fromCharCode(...bytes)).replace(/[+/=]/g, (c) =>
+    c === "+" ? "-" : c === "/" ? "_" : "",
   );
   // Keep the MAC learned from an earlier install, for `boot status`.
   const t: InstallToken = {
@@ -151,8 +148,8 @@ export async function armHost(
     ...(claimMinutes
       ? { claimUntil: new Date(Date.now() + claimMinutes * 60_000).toISOString() }
       : mac
-      ? { mac }
-      : {}),
+        ? { mac }
+        : {}),
     ...(o.confirmDestroy ? { confirmDestroy: true as const } : {}),
     ...(o.reinstall ? { reinstall: true as const } : {}),
   };
@@ -167,8 +164,8 @@ export async function armHost(
       claimMinutes
         ? `; the next unknown machine to network-boot in ${claimMinutes} minutes becomes ${host}`
         : mac
-        ? ` as the machine with network card ${mac}`
-        : ""
+          ? ` as the machine with network card ${mac}`
+          : ""
     }${
       o.confirmDestroy
         ? "; its disks will be erased even if they are not blank (--confirm-destroy)"

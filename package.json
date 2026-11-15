@@ -1,0 +1,44 @@
+{
+  "name": "@intellectual-frontiers/stolos",
+  "version": "0.118.0",
+  "description": "Stolos, the fleet engine: the archon command, the boot server, and everything general about turning bare metal into a converged, verified Ubuntu host (spec 096-bun-runtime).",
+  "license": "BUSL-1.1",
+  "type": "module",
+  "exports": {
+    "./package.json": "./package.json",
+    "./*": "./src/*.ts"
+  },
+  "engines": {
+    "node": ">=26",
+    "bun": ">=1.4.4"
+  },
+  "scripts": {
+    "stolos": "bun src/stolos/main.ts",
+    "archon": "bun src/archon/main.ts",
+    "check": "tsc -p tsconfig.json",
+    "lint": "bun x bun@1.4.4-canary.20261115.1 lint --no-script --type-aware --max-warnings 0 src tools tests examples",
+    "fmt": "bun fmt",
+    "fmt:check": "bun fmt --check",
+    "test": "bun tools/test.ts",
+    "test:ci": "bun tools/test.ts --runtime bun,node --report tap,junit,ctrf,sarif,md,html,oscal --ledger test-results/ledger.jsonl",
+    "gen": "bun tools/gen-assets.ts",
+    "version": "bun tools/version.ts",
+    "docs": "bun tools/docs.ts",
+    "docs:lint": "bun tools/docs.ts lint",
+    "ci": "bun tools/gen-assets.ts --check && bun run check && bun run lint && bun fmt --check && bun run docs:lint && bun run test:ci && bun tools/version.ts check origin/main",
+    "ocsf": "bun tools/ocsf-gen.ts",
+    "fedramp": "bun tools/fedramp-gen.ts"
+  },
+  "dependencies": {
+    "@intellectual-frontiers/ifc-ts": "https://github.com/intellectual-frontiers/.github/releases/download/ifc-ts-v0.2.0/intellectual-frontiers-ifc-ts-0.2.0.tgz",
+    "ajv": "8.17.1"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "typescript": "7.0.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/intellectual-frontiers/stolos.git"
+  }
+}

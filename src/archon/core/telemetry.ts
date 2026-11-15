@@ -1,20 +1,22 @@
 /**
- * Archon's own telemetry (specs 021, 049; Article 27), through Deno's built-in
- * OpenTelemetry: every command is a trace (one span per phase) and its results
- * are metrics. Console output (errors, --json) is exported by Deno as logs
- * linked to the trace; the journal reaches the Collector through journald.
- * Every name comes from telemetry/signals.ts.
+ * Archon's own telemetry (specs 021, 049, 096; Article 27), through IFC TypeScript's signals
+ * (`runtime/otel`, commons 0006-signals): every command is a trace, an `archon.run` span with one
+ * `archon.phase` span per phase, its results are metrics, and its problems are `archon.problem` log
+ * records in that trace. Every name comes from `telemetry/signals.ts` and `telemetry/events.ts`, and
+ * the registry below is made from them, so a name that is not declared does not compile.
  *
- * The launcher sets OTEL_DENO and points OTLP at the local Collector, with the
- * fleet, host, engine version, and commit as resource attributes. A run
- * continues a trace begun elsewhere when TRACEPARENT is set (an MCP call's
- * `_meta.traceparent`, an SSH command from the boot machine). Without
- * OTEL_DENO, or if the API cannot load, everything here is a no-op.
+ * The pipeline is configured by OpenTelemetry's own variables (`OTEL_EXPORTER_OTLP_ENDPOINT`,
+ * `OTEL_SERVICE_NAME`, `OTEL_RESOURCE_ATTRIBUTES`, ...), which the launcher sets to the local
+ * Collector with the fleet, host, engine version and commit as resource attributes; without an
+ * endpoint it looks for a Collector on `localhost:4318` and is silent where none listens. A run
+ * continues a trace begun elsewhere when `TRACEPARENT` is set (an MCP call's `_meta.traceparent`,
+ * an SSH command from the boot machine), and every program it runs through `proc` is given its
+ * `TRACEPARENT` in turn. Nothing reads `OTEL_DENO`.
  *
  * ```mermaid
  * flowchart LR
- *   run["an archon run"] --> trace["a trace: its phases as spans"]
- *   run --> events["its problems as log records"]
+ *   run["an archon run"] --> trace["a trace: archon.run, its phases as archon.phase"]
+ *   run --> events["its problems as archon.problem log records"]
  *   trace --> col{"collector"}
  *   events --> col
  *   col -->|on the host| local["the local OpenTelemetry Collector"]
@@ -22,198 +24,229 @@
  *   local -->|opt-in| ui["OpenObserve"]
  * ```
  *
+ * @example
+ * ```ts
+ * import { endRun, flushEvents, initTelemetry, span, startRun } from "./telemetry.ts";
+ * initTelemetry("archon", "0.1.0");
+ * startRun("verify", { "archon.fleet": "lab" });
+ * const end = span("archon.query", { "archon.table": "archon_verify" });
+ * end(true);
+ * endRun(0, 0, 0);
+ * await flushEvents([]);
+ * ```
+ *
  * @module
  */
+import {
+  err,
+  ok,
+  otel as kotel,
+  type Result,
+  signals,
+} from "@intellectual-frontiers/ifc-ts/kernel";
+import { otel } from "@intellectual-frontiers/ifc-ts/runtime";
+import { ATTRIBUTES, type MetricName, METRICS, SPANS } from "../telemetry/signals.ts";
+import { EVENTS } from "../telemetry/events.ts";
 
-import { type MetricName, METRICS } from "../telemetry/signals.ts";
-import { type ArchonEvent, toLogsRequest } from "../telemetry/events.ts";
-import { redact } from "../notify/redact.ts";
-
-/** Span or metric attributes: OpenTelemetry's flat key to value map. */
+/** Span, metric and log attributes: OpenTelemetry's flat key to value map. */
 export type Attrs = Record<string, string | number | boolean>;
-/** A span's identity, as a W3C traceparent carries it. */
-export interface SpanContext {
-  /** The trace ID: 32 lowercase hex digits, not all zero. */
-  traceId: string;
-  /** The parent span's ID: 16 lowercase hex digits, not all zero. */
-  spanId: string;
-  /** Trace flags (bit 0: sampled). */
-  traceFlags: number;
-  /** True when the context came from another process. */
-  isRemote?: boolean;
-}
-interface Span {
-  setAttribute(k: string, v: string | number | boolean): void;
-  setStatus(s: { code: number; message?: string }): void;
-  spanContext(): SpanContext;
-  end(): void;
-}
-interface Instrument {
-  add?(v: number, a?: Attrs): void;
-  record?(v: number, a?: Attrs): void;
-}
-interface Meter {
-  createCounter(n: string, o?: { unit?: string; description?: string }): Instrument;
-  createHistogram(n: string, o?: { unit?: string; description?: string }): Instrument;
-  createGauge?(n: string, o?: { unit?: string; description?: string }): Instrument;
-}
-interface OtelApi {
-  trace: {
-    getTracer(n: string): {
-      startSpan(name: string, o?: { attributes?: Attrs }, ctx?: unknown): Span;
-    };
-    setSpan(ctx: unknown, s: Span): unknown;
-    setSpanContext(ctx: unknown, sc: SpanContext): unknown;
+
+/** Every attribute of `telemetry/signals.ts`, each optional: `archon.check` a boolean, the rest text. */
+const SCHEMA: signals.AttributeSchema = Object.fromEntries(
+  Object.keys(ATTRIBUTES).map((k) => [`${k}?`, k === "archon.check" ? "boolean" : "string"]),
+);
+
+/** A span kind of `SPANS`. */
+type SpanName = keyof typeof SPANS;
+
+/** The declarations the registry is made of, typed by the lists they come from. */
+type Declarations = {
+  readonly [K in SpanName]: signals.SpanDeclaration;
+} & {
+  readonly [K in MetricName]: (typeof METRICS)[K]["kind"] extends "histogram"
+    ? signals.HistogramDeclaration & { readonly signal: "histogram" }
+    : signals.InstrumentDeclaration & { readonly signal: (typeof METRICS)[K]["kind"] };
+} & {
+  readonly "archon.problem": signals.LogDeclaration;
+};
+
+const SEVERITY: Readonly<Record<string, kotel.SeverityNumber>> = {
+  debug: 5,
+  info: 9,
+  warn: 13,
+  error: 17,
+};
+
+function declarations(): Declarations {
+  const spans = Object.fromEntries(
+    Object.entries(SPANS).map(([name, description]) => [
+      name,
+      {
+        signal: "span",
+        role: name === "archon.run" || name === "archon.phase" ? "step" : "detail",
+        description,
+        attributes: SCHEMA,
+      },
+    ]),
+  );
+  const metrics = Object.fromEntries(
+    Object.entries(METRICS).map(([name, m]) => [
+      name,
+      {
+        signal: m.kind,
+        role: "none",
+        unit: "unit" in m ? m.unit : "1",
+        description: m.description,
+        attributes: SCHEMA,
+      },
+    ]),
+  );
+  const problem: signals.LogDeclaration = {
+    signal: "log",
+    role: "warning",
+    severity: SEVERITY[EVENTS["archon.problem"].severity] ?? 13,
+    description: EVENTS["archon.problem"].description,
+    attributes: SCHEMA,
   };
-  context: { active(): unknown };
-  metrics: { getMeter(n: string): Meter };
-  SpanStatusCode: { OK: number; ERROR: number };
+  // The shapes are those of `Declarations`, made from the same lists.
+  return { ...spans, ...metrics, "archon.problem": problem } as unknown as Declarations;
 }
 
-let api: OtelApi | undefined;
-let root: Span | undefined;
-let rootCtx: unknown;
-let started = 0;
-const phases = new Map<string, Span>();
+/** Archon's signal registry (commons 0006-signals FR-009), made from `telemetry/signals.ts`. */
+export const ARCHON_SIGNALS: signals.Registry<Declarations> = signals.defineSignals(declarations());
+
+type Kinds = Declarations;
+type Open = {
+  readonly handle: signals.SpanHandle<Kinds, SpanName>;
+  readonly end: (r: Result<void, string>) => void;
+};
+
+let started: otel.Started<Kinds> | undefined;
+let root: Open | undefined;
+let lastRoot: Open | undefined;
+let startedAt = 0;
+const phases = new Map<string, Open>();
 const runAttrs: Attrs = {};
-const instruments = new Map<string, Instrument>();
-/** Spec 049: this run's events (phases, problems), sent as OTLP log records at its end. */
-const runEvents: ArchonEvent[] = [];
 
-/** Load the API when OpenTelemetry is on; silently off otherwise. */
-export async function initTelemetry(): Promise<void> {
-  if (!Deno.env.get("OTEL_DENO")) return;
-  try {
-    api = (await import("npm:@opentelemetry/api@1.9.0")) as unknown as OtelApi;
-  } catch {
-    api = undefined;
-  }
-}
-
-/** Attribute values never carry a secret (Article 13): the same redaction as mail. */
+/** Attribute values never carry a secret (Article 13): IFC TypeScript's redaction of text. */
 export function clean(a: Attrs): Attrs {
   return Object.fromEntries(
-    Object.entries(a).map(([k, v]) => [k, typeof v === "string" ? redact(v) : v]),
+    Object.entries(a).map(([k, v]) => [k, typeof v === "string" ? kotel.redactText(v) : v]),
   );
 }
 
-const TRACEPARENT = /^00-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})$/;
+/**
+ * Start this process's telemetry, as `service` (`archon`, `stolos`, `archon-boot`) unless
+ * `OTEL_SERVICE_NAME` says otherwise. Safe to call twice; the first call wins.
+ */
+export function initTelemetry(service = "archon", version?: string): void {
+  if (started !== undefined) return;
+  started = otel.startTelemetry({
+    registry: ARCHON_SIGNALS,
+    service,
+    ...(version === undefined ? {} : { version }),
+  });
+}
 
-/** A W3C traceparent, parsed, or undefined. */
-export function parseTraceparent(tp: string | undefined): SpanContext | undefined {
-  const m = tp?.trim().match(TRACEPARENT);
-  if (!m || /^0+$/.test(m[1]) || /^0+$/.test(m[2])) return undefined;
-  return { traceId: m[1], spanId: m[2], traceFlags: parseInt(m[3], 16), isRemote: true };
+/** A span opened now and ended later by the caller (a run, a phase), under `parent`. */
+function open(
+  kind: SpanName,
+  attrs: Attrs,
+  parent: kotel.SpanContext | undefined,
+): Open | undefined {
+  if (started === undefined) return undefined;
+  let handle: signals.SpanHandle<Kinds, SpanName> | undefined;
+  let end: ((r: Result<void, string>) => void) | undefined;
+  void started.telemetry.span(
+    kind,
+    clean(attrs),
+    (s) => {
+      handle = s;
+      return new Promise<Result<void, string>>((resolve) => (end = resolve));
+    },
+    parent === undefined ? {} : { parent },
+  );
+  return handle === undefined || end === undefined ? undefined : { handle, end };
 }
 
 /** This run's traceparent, to hand to the next process (MCP, SSH), or undefined. */
 export function currentTraceparent(): string | undefined {
-  if (!root) return undefined;
-  const c = root.spanContext();
-  return `00-${c.traceId}-${c.spanId}-${c.traceFlags.toString(16).padStart(2, "0")}`;
+  return root?.handle.traceparent;
 }
 
-function instrument(name: MetricName): Instrument | undefined {
-  if (!api) return undefined;
-  let i = instruments.get(name);
-  if (!i) {
-    const spec = METRICS[name];
-    const meter = api.metrics.getMeter("archon");
-    const o = { description: spec.description, ...("unit" in spec ? { unit: spec.unit } : {}) };
-    i = spec.kind === "histogram"
-      ? meter.createHistogram(name, o)
-      : spec.kind === "gauge"
-      ? (meter.createGauge?.(name, o) ?? {})
-      : meter.createCounter(name, o);
-    instruments.set(name, i);
-  }
-  return i;
-}
+/** The metrics of one kind. */
+type MetricOf<S extends "counter" | "histogram" | "gauge"> = {
+  [K in MetricName]: (typeof METRICS)[K]["kind"] extends S ? K : never;
+}[MetricName];
+
+const isCounter = (n: MetricName): n is MetricOf<"counter"> => METRICS[n].kind === "counter";
+const isHistogram = (n: MetricName): n is MetricOf<"histogram"> => METRICS[n].kind === "histogram";
+const isGauge = (n: MetricName): n is MetricOf<"gauge"> => METRICS[n].kind === "gauge";
 
 /** Add to a counter declared in signals.ts. */
 export function count(name: MetricName, n = 1, attrs: Attrs = {}): void {
-  if (n) instrument(name)?.add?.(n, clean({ ...runAttrs, ...attrs }));
+  if (started === undefined || n === 0 || !isCounter(name)) return;
+  void started.telemetry.add(name, n, clean({ ...runAttrs, ...attrs }));
 }
 
 /** Record a histogram or gauge value declared in signals.ts. */
 export function measure(name: MetricName, v: number, attrs: Attrs = {}): void {
-  instrument(name)?.record?.(v, clean({ ...runAttrs, ...attrs }));
+  if (started === undefined) return;
+  const a = clean({ ...runAttrs, ...attrs });
+  if (isHistogram(name)) void started.telemetry.record(name, v, a);
+  else if (isGauge(name)) void started.telemetry.set(name, v, a);
 }
 
-/** Start this run's trace (continuing TRACEPARENT when given). */
-export function startRun(command: string, attrs: Attrs = {}, program = "archon"): void {
-  if (!api) return;
+/** Start this run's trace (continuing `TRACEPARENT` when given): one `archon.run` span. */
+export function startRun(command: string, attrs: Attrs = {}): void {
+  if (started === undefined || root !== undefined) return;
   Object.assign(runAttrs, clean({ "archon.command": command, ...attrs }));
-  started = performance.now();
-  const parent = parseTraceparent(Deno.env.get("TRACEPARENT"));
-  const ctx = parent
-    ? api.trace.setSpanContext(api.context.active(), parent)
-    : api.context.active();
-  root = api.trace.getTracer("archon").startSpan(
-    `${program} ${command}`,
-    { attributes: runAttrs },
-    ctx,
-  );
-  rootCtx = api.trace.setSpan(api.context.active(), root);
-  if (typeof runAttrs["archon.engine.version"] === "string") {
-    measure("archon.engine.info", 1, {});
-  }
+  startedAt = performance.now();
+  root = open("archon.run", runAttrs, undefined);
+  if (typeof runAttrs["archon.engine.version"] === "string") measure("archon.engine.info", 1);
 }
 
-/** A child span of the run (archon.query, archon.remote): call the returned function to end it. */
-export function span(name: string, attrs: Attrs = {}): (ok?: boolean) => void {
-  if (!api || !root) return () => {};
-  const s = api.trace.getTracer("archon").startSpan(name, { attributes: clean(attrs) }, rootCtx);
-  return (ok = true) => {
-    s.setStatus({ code: ok ? api!.SpanStatusCode.OK : api!.SpanStatusCode.ERROR });
-    s.end();
-  };
+/** A child span of the run (`archon.query`, `archon.remote`): call the returned function to end it. */
+export function span(
+  name: "archon.query" | "archon.remote",
+  attrs: Attrs = {},
+): (ok?: boolean) => void {
+  const s = open(name, attrs, root?.handle.context);
+  if (s === undefined) return () => {};
+  return (good = true) => s.end(good ? ok(undefined) : err(`${name} failed`));
 }
 
-/** UI phases become child spans of the command's span. */
+/** UI phases become `archon.phase` spans, children of the run's span. */
 export const phaseListener = {
   start(name: string): void {
-    if (!api || !root) return;
-    phases.set(name, api.trace.getTracer("archon").startSpan(name, {}, rootCtx));
+    const s = open("archon.phase", { "archon.phase": name }, root?.handle.context);
+    if (s !== undefined) phases.set(name, s);
   },
   end(name: string, level: string, summary: string): void {
     const s = phases.get(name);
-    if (!api || !s) return;
-    s.setAttribute("archon.phase.result", redact(summary));
-    s.setAttribute("archon.phase.level", level);
-    const c = s.spanContext();
-    runEvents.push({
-      name: "archon.phase",
-      severity: level === "fail" ? "error" : level === "warn" ? "warn" : "info",
-      message: redact(`${name}: ${summary}`),
-      attrs: { "archon.phase": name, "archon.phase.level": level },
-      traceId: c.traceId,
-      spanId: c.spanId,
-    });
-    s.setStatus({ code: level === "fail" ? api.SpanStatusCode.ERROR : api.SpanStatusCode.OK });
-    s.end();
+    if (s === undefined) return;
+    s.handle.set({ "archon.phase.result": kotel.redactText(summary), "archon.phase.level": level });
+    s.end(level === "fail" ? err(kotel.redactText(`${name}: ${summary}`)) : ok(undefined));
     phases.delete(name);
   },
 };
 
 /** End this run's trace with its outcome. */
 export function endRun(code: number, failures: number, warnings: number): void {
-  if (!api || !root) return;
-  const outcome = code === 0 && !failures ? "ok" : "failed";
-  measure("archon.run.duration", (performance.now() - started) / 1000, {
+  if (root === undefined) return;
+  const outcome = code === 0 && failures === 0 ? "ok" : "failed";
+  measure("archon.run.duration", (performance.now() - startedAt) / 1000, {
     "archon.outcome": outcome,
   });
   count("archon.run.problems", failures, { "archon.level": "fail" });
   count("archon.run.problems", warnings, { "archon.level": "warn" });
-  for (const s of phases.values()) s.end();
-  root.setAttribute("archon.outcome", outcome);
-  root.setStatus({ code: outcome === "ok" ? api.SpanStatusCode.OK : api.SpanStatusCode.ERROR });
-  lastRoot = root.spanContext();
-  root.end();
+  for (const s of phases.values()) s.end(ok(undefined));
+  phases.clear();
+  root.handle.set({ "archon.outcome": outcome });
+  lastRoot = root;
+  root.end(outcome === "ok" ? ok(undefined) : err(`exit ${code}, ${failures} failed`));
   root = undefined;
 }
-
-let lastRoot: SpanContext | undefined;
 
 /** archon verify: how many checks passed and failed. */
 export function recordChecks(passed: number, failed: number): void {
@@ -226,54 +259,36 @@ export function recordChanges(n: number, check: boolean): void {
   count("archon.apply.changes", n, { "archon.check": check });
 }
 
+/** A problem as the run reported it (the UI's `Problem`). */
+export type ProblemRecord = {
+  readonly level: "warn" | "fail" | "pending";
+  readonly phase: string;
+  readonly message: string;
+  readonly fix?: string | undefined;
+  readonly code?: string | undefined;
+};
+
 /**
- * Spec 049: the run's problems join its events, and every event goes to the
- * collector as an OTLP log record in the run's trace (the terminal and the run
- * log print the same facts). Best effort, a few seconds at most; silent when
- * OpenTelemetry is off.
+ * Spec 049: the run's problems as `archon.problem` log records in the run's trace (the terminal
+ * and the run log print the same facts), then the pipeline flushed and shut down, within a second.
+ * Silent where nothing listens.
  */
-export async function flushEvents(
-  problems: Array<
-    {
-      level: "warn" | "fail" | "pending";
-      phase: string;
-      message: string;
-      fix?: string;
-      code?: string;
-    }
-  >,
-): Promise<void> {
-  if (!api) return;
-  const ids = root?.spanContext() ?? lastRoot;
+export async function flushEvents(problems: readonly ProblemRecord[]): Promise<void> {
+  if (started === undefined) return;
+  const run = root ?? lastRoot;
   for (const p of problems) {
-    runEvents.push({
-      name: "archon.problem",
-      // Spec 052: not set up yet is information, not a problem.
-      severity: p.level === "fail" ? "error" : p.level === "warn" ? "warn" : "info",
-      message: redact(p.message),
-      attrs: {
-        "archon.phase": p.phase,
-        "archon.level": p.level,
-        ...(p.fix ? { "archon.fix": redact(p.fix) } : {}),
-        ...(p.code ? { "archon.code": p.code } : {}),
-      },
-      ...(ids ? { traceId: ids.traceId, spanId: ids.spanId } : {}),
-    });
+    const attrs: Attrs = {
+      "archon.phase": p.phase,
+      "archon.level": p.level,
+      ...(p.fix === undefined ? {} : { "archon.fix": kotel.redactText(p.fix) }),
+      ...(p.code === undefined ? {} : { "archon.code": p.code }),
+    };
+    // Spec 052: not set up yet is information, not a problem.
+    const severity: kotel.SeverityNumber = p.level === "fail" ? 17 : p.level === "warn" ? 13 : 9;
+    // A span's handle emits into its trace even after the span ended (endRun comes first).
+    const body = kotel.redactText(p.message);
+    if (run !== undefined) run.handle.log("archon.problem", clean(attrs), body, { severity });
+    else started.telemetry.log("archon.problem", clean(attrs), body, { severity });
   }
-  const endpoint = Deno.env.get("OTEL_EXPORTER_OTLP_ENDPOINT");
-  if (!endpoint || !runEvents.length) return;
-  const resource: Record<string, string> = {
-    "service.name": Deno.env.get("OTEL_SERVICE_NAME") ?? "archon",
-  };
-  for (const kv of (Deno.env.get("OTEL_RESOURCE_ATTRIBUTES") ?? "").split(",")) {
-    const i = kv.indexOf("=");
-    if (i > 0 && kv.slice(i + 1)) resource[kv.slice(0, i).trim()] = kv.slice(i + 1).trim();
-  }
-  const body = JSON.stringify(toLogsRequest(runEvents.splice(0), resource, "archon"));
-  await fetch(`${endpoint.replace(/\/$/, "")}/v1/logs`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body,
-    signal: AbortSignal.timeout(3000),
-  }).then((r) => r.body?.cancel()).catch(() => {});
+  await started.pipeline.shutdown();
 }

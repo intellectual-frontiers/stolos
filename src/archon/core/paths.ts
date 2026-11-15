@@ -1,8 +1,9 @@
 /**
  * Well-known locations (spec 046-engine-instance). Two roots:
  *
- * - the engine: this repository, loaded from a checkout (file:) or from
- *   GitHub (https:) through the instance's `@stolos/` import;
+ * - the engine: this repository, as a checkout or as the package a fleet
+ *   repository installs (`node_modules/@intellectual-frontiers/stolos`, spec
+ *   096); its root is three folders above this module either way;
  * - the instance: the repository that holds the fleets (`fleets/<id>/`), the
  *   one hosts check out at /srv/archon. One fleet of it is active per run.
  *
@@ -37,18 +38,18 @@
  * @module
  */
 
-import { dirname, fromFileUrl, join, resolve, sep } from "./path.ts";
+import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 
-/** The engine's root as a URL (file: in a checkout, https: when imported from GitHub). */
-export const ENGINE_URL = new URL("../../../", import.meta.url);
-/** The engine's root folder, when it is a local checkout. */
-export const ENGINE_ROOT: string | undefined = ENGINE_URL.protocol === "file:"
-  ? fromFileUrl(ENGINE_URL).replace(/[\\/]$/, "")
-  : undefined;
+const { dirname, join, resolve, sep } = path;
+
+/** The engine's root folder: the checkout, or the installed package's folder. */
+export const ENGINE_ROOT: string = path
+  .fromFileUrl(new URL("../../../", import.meta.url))
+  .replace(/[\\/]$/, "");
 
 function isDir(p: string): boolean {
   try {
-    return Deno.statSync(p).isDirectory;
+    return fs.statSync(p).isDirectory;
   } catch {
     return false;
   }
@@ -56,7 +57,7 @@ function isDir(p: string): boolean {
 
 function readOr(p: string): string | undefined {
   try {
-    return Deno.readTextFileSync(p);
+    return fs.readTextFileSync(p);
   } catch {
     return undefined;
   }
@@ -64,9 +65,9 @@ function readOr(p: string): string | undefined {
 
 /** The instance repository's root (see the header). */
 export function findInstanceRoot(): string {
-  const env = Deno.env.get("ARCHON_REPO");
-  if (env) return resolve(env);
-  let d = resolve(Deno.cwd());
+  const env = proc.env.get("ARCHON_REPO");
+  if (env !== undefined && env !== "") return resolve(env);
+  let d = resolve(proc.cwd());
   for (;;) {
     if (isDir(join(d, "fleets"))) return d;
     const up = dirname(d);
@@ -74,22 +75,24 @@ export function findInstanceRoot(): string {
     d = up;
   }
   if (isDir("/srv/archon/fleets")) return "/srv/archon";
-  if (ENGINE_ROOT && isDir(join(ENGINE_ROOT, "examples", "fleets"))) {
+  if (isDir(join(ENGINE_ROOT, "examples", "fleets"))) {
     return join(ENGINE_ROOT, "examples");
   }
-  return resolve(Deno.cwd());
+  return resolve(proc.cwd());
 }
 
 /** The fleets an instance holds (folders of fleets/ with a fleet.ts). */
 export function listFleets(repo: string): string[] {
   const out: string[] = [];
   try {
-    for (const e of Deno.readDirSync(join(repo, "fleets"))) {
+    for (const e of fs.readDirSync(join(repo, "fleets"))) {
       if (e.isDirectory && readOr(join(repo, "fleets", e.name, "fleet.ts")) !== undefined) {
         out.push(e.name);
       }
     }
-  } catch { /* no fleets yet */ }
+  } catch {
+    /* no fleets yet */
+  }
   return out.sort();
 }
 
@@ -100,14 +103,14 @@ export function fleetChoiceFile(repo: string): string {
 
 /** The active fleet's id, or "" when it cannot be decided (see the header). */
 export function findFleetId(repo: string): string {
-  const env = Deno.env.get("ARCHON_FLEET");
-  if (env) return env.trim();
+  const env = proc.env.get("ARCHON_FLEET")?.trim();
+  if (env !== undefined && env !== "") return env;
   const etc = readOr("/etc/archon/fleet")?.trim();
-  if (etc) return etc;
+  if (etc !== undefined && etc !== "") return etc;
   const chosen = readOr(fleetChoiceFile(repo))?.trim();
-  if (chosen) return chosen;
+  if (chosen !== undefined && chosen !== "") return chosen;
   const all = listFleets(repo);
-  return all.length === 1 ? all[0] : "";
+  return all.length === 1 ? (all[0] ?? "") : "";
 }
 
 /** A client's id (spec 082): lowercase letters, digits, and hyphens, as a folder name. */
@@ -118,8 +121,8 @@ export const CLIENT_ID: RegExp = /^[a-z0-9][a-z0-9-]{0,62}$/;
  * sets), or "" for none. Anything but a client id is refused: it names folders.
  */
 export function clientId(): string {
-  const c = Deno.env.get("ARCHON_CLIENT")?.trim() ?? "";
-  if (c && !CLIENT_ID.test(c)) throw new Error(`ARCHON_CLIENT is not a client id: ${c}`);
+  const c = proc.env.get("ARCHON_CLIENT")?.trim() ?? "";
+  if (c !== "" && !CLIENT_ID.test(c)) throw new Error(`ARCHON_CLIENT is not a client id: ${c}`);
   return c;
 }
 
@@ -131,25 +134,25 @@ export function resetRoots(): void {
   cachedFleet = undefined;
 }
 function repoRoot(): string {
-  return cachedRepo ??= findInstanceRoot();
+  return (cachedRepo ??= findInstanceRoot());
 }
 function fleetId(): string {
-  return cachedFleet ??= findFleetId(repoRoot());
+  return (cachedFleet ??= findFleetId(repoRoot()));
 }
 function fleetDir(): string {
   return join(repoRoot(), "fleets", fleetId() || "_");
 }
 
-const home = Deno.env.get("HOME") ?? Deno.env.get("USERPROFILE") ?? ".";
-const isWindows = Deno.build.os === "windows";
+const home = proc.env.get("HOME") ?? proc.env.get("USERPROFILE") ?? ".";
+const isWindows = proc.build.os === "windows";
 /** Per-user data on the boot machine (Windows: %LOCALAPPDATA%, else XDG). */
 const userData = isWindows
-  ? Deno.env.get("LOCALAPPDATA") ?? join(home, "AppData", "Local")
-  : Deno.env.get("XDG_DATA_HOME") ?? join(home, ".local", "share");
+  ? (proc.env.get("LOCALAPPDATA") ?? join(home, "AppData", "Local"))
+  : (proc.env.get("XDG_DATA_HOME") ?? join(home, ".local", "share"));
 /** Per-user config (secrets) on the boot machine (Windows: %APPDATA%). */
 const userConfig = isWindows
-  ? Deno.env.get("APPDATA") ?? join(home, "AppData", "Roaming")
-  : Deno.env.get("XDG_CONFIG_HOME") ?? join(home, ".config");
+  ? (proc.env.get("APPDATA") ?? join(home, "AppData", "Roaming"))
+  : (proc.env.get("XDG_CONFIG_HOME") ?? join(home, ".config"));
 
 /**
  * A per-user folder for the active fleet: `<base>/stolos/<kind>/<fleet>`, or,
@@ -157,7 +160,7 @@ const userConfig = isWindows
  */
 function perFleet(base: string, kind: string): string {
   const c = clientId();
-  return c
+  return c !== ""
     ? join(base, "stolos", "clients", c, kind, fleetId() || "_")
     : join(base, "stolos", kind, fleetId() || "_");
 }
@@ -168,10 +171,15 @@ function perFleet(base: string, kind: string): string {
  * reads APPDATA and LOCALAPPDATA, Linux HOME and XDG_*: a sandbox that set only
  * one family once let tests reach the boot machine's real secrets.
  */
-const sandbox = Deno.env.get("ARCHON_SANDBOX");
-if (sandbox) {
+const sandbox = proc.env.get("ARCHON_SANDBOX");
+if (sandbox !== undefined && sandbox !== "") {
   const root = resolve(sandbox).toLowerCase();
-  for (const [what, p] of [["home", home], ["user data", userData], ["user config", userConfig]]) {
+  const roots: ReadonlyArray<readonly [string, string]> = [
+    ["home", home],
+    ["user data", userData],
+    ["user config", userConfig],
+  ];
+  for (const [what, p] of roots) {
     const r = resolve(p).toLowerCase();
     if (r !== root && !r.startsWith(root + sep)) {
       throw new Error(

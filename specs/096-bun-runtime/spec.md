@@ -31,8 +31,7 @@ flowchart LR
 2. **TypeScript 7 is the type checker.** IFC TypeScript is the shared kernel and runtime, depended
    on by its release tarball.
 3. **No Deno anywhere**: no `Deno.*`, no `deno.json`, no `deno.lock`, no `deno task`, no
-   `deno
-   doc`, no Deno OpenTelemetry. No migration and no backward compatibility.
+   `deno doc`, no Deno OpenTelemetry. No migration and no backward compatibility.
 4. **One tool binary.** Bun installs, formats, lints, tests, packs and compiles. Lint uses IFC
    TypeScript's plugin.
 5. **PAM stays in the engine on `bun:ffi`**, in its one file, behind the console's `Authenticator`.
@@ -74,6 +73,32 @@ flowchart LR
 - **Dependencies:** `fflate` is replaced by the kernel's archives. `ajv` stays (JSON Schema 2020-12
   validation of third-party documents), pinned in `package.json` with its reason.
   `@opentelemetry/api` is replaced by IFC TypeScript's signals.
+- **How a fleet imports the engine.** The package's `exports` maps `./*` to the module of that
+  path under `src/`, without its extension: `@intellectual-frontiers/stolos/archon/model/types`,
+  `@intellectual-frontiers/stolos/archon/capabilities/mod`, `@intellectual-frontiers/stolos/stolos/main`
+  (was `@stolos/archon/model/types.ts`). In this repository the name refers to the package itself
+  (`"./*": "./src/*.ts"`), so `examples/` load the sources on Bun and on Node with no build; the
+  release's `package.json` maps the same paths to `dist/*.js` and `dist/*.d.ts` (`tsc` with
+  `rootDir` `src`, so a module keeps its place three folders under the package's root).
+- **No `modules.auto.ts`.** It named every module so that `deno.lock` pinned each one; the package is
+  installed whole and `bun.lock` holds the integrity of its tarball, so it is gone, and
+  `bun run gen` writes only `assets.auto.ts`.
+- **The version** stays in `src/archon/version.ts`; `bun run version` keeps `package.json`'s
+  `version` equal to it (`bump` writes both, `check` fails where they differ).
+- **The linter** is a pinned Bun canary (`bun x bun@1.4.4-canary.20261115.1 lint`), as commons
+  runs it, until a Bun release has `bun lint`; then the pin moves to that release.
+- **Tests are `*.test.ts`**, and `tools/test.ts` feeds `ifc test`: the requirements are every
+  `- **FR-NNN**` line of every `specs/*/spec.md`, as `<spec folder> FR-NNN`; a requirement proven by
+  review is listed, with its reason, in its spec's `reviewed.tsv`; a requirement a test names that
+  no spec has stops the run before it starts. A test proves the requirements its assertions check,
+  never a whole spec by its number.
+- **The engine's own process contract stays**: `core/exec.ts`'s `run` gives exit code 127 for a
+  program that is not installed instead of throwing, and runs as another account through runuser.
+  `core/ui.ts` is the one module of `src/` that writes for a person to the terminal.
+- **Span names are kinds**: a run is one `archon.run` span (its command in `archon.command`) and each
+  phase an `archon.phase` span (its name in `archon.phase`), as IFC TypeScript's registry needs
+  names declared once.
+- The conversion of every module, call and import is in [`mapping.md`](mapping.md).
 
 ## Requirements
 

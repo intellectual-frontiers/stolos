@@ -1,0 +1,78 @@
+# The engine's tools, all from Bun (spec 096-bun-runtime FR-003): the formatter and the linter, with
+# IFC TypeScript's lint plugin from the installed package.
+
+[install]
+# bun.lock is the control (spec 096): an install that would change it fails in CI (--frozen-lockfile).
+exact = true
+
+[fmt]
+printWidth = 100
+ignorePatterns = [
+  "out/",
+  "examples/out/",
+  "src/archon/assets.auto.ts",
+  "state/",
+  ".specify/",
+  "home/",
+  "vendor/",
+  ".claude/",
+  "node_modules/",
+  "bun.lock",
+]
+
+[lint]
+typeAware = true
+plugins = ["./node_modules/@intellectual-frontiers/ifc-ts/lint/plugin.js"]
+ignorePatterns = [
+  "out/",
+  "examples/out/",
+  "src/archon/assets.auto.ts",
+  "state/",
+  ".specify/",
+  "home/",
+  "vendor/",
+  ".claude/",
+  "node_modules/",
+]
+
+[lint.rules]
+# Algebraic type safety, as commons applies it (commons 0005-typescript-runtime FR-028).
+"typescript/no-explicit-any" = "error"
+"typescript/no-non-null-assertion" = "error"
+"typescript/explicit-module-boundary-types" = "error"
+"typescript/switch-exhaustiveness-check" = "error"
+"typescript/no-floating-promises" = "error"
+"typescript/no-misused-promises" = "error"
+"typescript/consistent-type-imports" = "error"
+"typescript/only-throw-error" = "error"
+"typescript/no-unnecessary-type-assertion" = "error"
+"typescript/ban-ts-comment" = [
+  "error",
+  { "ts-expect-error" = "allow-with-description", "minimumDescriptionLength" = 10 },
+]
+"eslint/eqeqeq" = "error"
+# IFC TypeScript's plugin (commons FR-061), with the engine's own lists.
+"ifc/no-vendor-api" = [
+  "error",
+  { allow = [
+    { files = "src/archon/console/pam.ts", reason = "the PAM binding on bun:ffi, behind the console's Authenticator (spec 096 decision 5, FR-010)" },
+  ] },
+]
+"ifc/no-registry-import" = [
+  "error",
+  { prefixes = ["npm:", "jsr:", "http:", "https:", "bun:"], allow = [
+    { files = "src/archon/console/pam.ts", reason = "the one file that imports bun:ffi, for PAM (spec 096 FR-001, FR-010)" },
+  ] },
+]
+"ifc/module-doc" = "error"
+"ifc/switch-absurd" = "error"
+"ifc/terminal-writers" = [
+  "error",
+  { allow = [
+    { files = "src/archon/core/ui.ts", reason = "the calm-output UI, the one writer for a person (spec 018)" },
+    { files = "tools/**", reason = "command-line tools print their results" },
+    { files = "tests/e2e/**", reason = "the end-to-end scripts report as they go" },
+    { files = "tests/console/**", reason = "the console's test servers say where they listen" },
+    { files = "tests/integrate/**", reason = "the integration check prints what it found" },
+  ] },
+]

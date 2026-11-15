@@ -1,14 +1,14 @@
 /**
  * The guides: each is the `@module` documentation of the module beside the
- * code it explains (so `deno doc` renders it, with its Mermaid diagrams, and it
+ * code it explains (so `tools/docs.ts` renders it, with its Mermaid diagrams, and it
  * changes in the same commit as the code). The build extracts each one into
  * the engine's assets as `docs/<name>.md`, so the man pages, the welcome page,
  * both consoles, `explain`, and `stolos docs` read the same text offline.
  *
  * ```mermaid
  * flowchart LR
- *   mod["src/archon/pg/mod.ts<br/>@module JSDoc: the guide"] --> denodoc["deno doc: HTML on GitHub Pages"]
- *   mod --> gen["deno task gen: assets.auto.ts<br/>docs/pg.md"]
+ *   mod["src/archon/pg/mod.ts<br/>@module JSDoc: the guide"] --> pages["tools/docs.ts: HTML on GitHub Pages"]
+ *   mod --> gen["bun run gen: assets.auto.ts<br/>docs/pg.md"]
  *   gen --> man["man pages"] & web["welcome page and consoles"] & cli["stolos docs pg"]
  *   mod --- code["src/archon/pg/*.ts: the code it explains"]
  * ```
@@ -225,14 +225,14 @@ export const PAGES = "https://intellectual-frontiers.github.io/stolos/";
 /** A guide's page online, for this engine's version. */
 export function guideUrl(name: string, version: string = VERSION): string {
   const g = guideDef(name);
-  return g
+  return g !== undefined
     ? `${PAGES}v${version}/${g.module.replace(/^src\//, "")}/index.html`
     : `${PAGES}v${version}/`;
 }
 
 /** How a message points to a guide: the command that shows it, here and offline. */
 export function guideRef(name: string): string {
-  return `deno task stolos docs ${name}`;
+  return `bun run stolos docs ${name}`;
 }
 
 /**
@@ -241,17 +241,19 @@ export function guideRef(name: string): string {
  * written escaped in the source and restored here.
  */
 export function guideMarkdown(source: string): string {
-  const m = source.match(/\/\*\*([\s\S]*?)\*\//);
-  if (!m || !/@module\b/.test(m[1])) throw new Error("no @module documentation");
-  const lines = m[1].split("\n").map((l) => l.replace(/^\s*\* ?/, "").replace(/^\s*\*$/, ""));
+  const doc = /\/\*\*([\s\S]*?)\*\//.exec(source)?.[1];
+  if (doc === undefined || !/@module\b/.test(doc)) throw new Error("no @module documentation");
+  const lines = doc.split("\n").map((l) => l.replace(/^\s*\* ?/, "").replace(/^\s*\*$/, ""));
   const body = lines.filter((l) => !/^@(module|example)\b/.test(l.trim())).join("\n");
   return body.replace(/\*\\\//g, "*/").trim() + "\n";
 }
 
 /** A guide's Markdown as a doc comment (the reverse of {@link guideMarkdown}). */
 export function guideComment(markdown: string): string {
-  const body = markdown.trim().replace(/\*\//g, "*\\/").split("\n").map((
-    l,
-  ) => (l ? ` * ${l}` : " *"));
+  const body = markdown
+    .trim()
+    .replace(/\*\//g, "*\\/")
+    .split("\n")
+    .map((l) => (l !== "" ? ` * ${l}` : " *"));
   return `/**\n${body.join("\n")}\n *\n * @module\n */\n`;
 }
