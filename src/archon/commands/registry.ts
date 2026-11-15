@@ -3023,15 +3023,65 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "export",
-    summary: "Write the fleet, specs, provenance, and snapshots as RDF (Turtle)",
+    summary:
+      "The fleet in a standard format: OCSF, OTLP, CycloneDX attestations, in-toto, OSCAL, or RDF",
     description:
-      `Writes out/rdf/fleet.ttl using W3C PROV, Dublin Core terms, FOAF, and the archon: namespace (specs 002 and 014). RDF is an export only; TypeScript validates (Article 10).`,
+      `Spec 092. Writes one document from what this PC knows, by default to this PC's state directory (export/): ocsf-jsonl (OCSF 1.9.0 events, one per line: each person and account, machine, and other node in the estate graph, and a Compliance Finding per check and SCF control); otlp-json (the same events as an OTLP/HTTP JSON logs request; --entities adds OpenTelemetry entity events); cyclonedx-attestation (CycloneDX 1.6: the SCF controls as a standard, a claim per control with its evidence and conformance, the evidence bundle's items by SHA-256 with --bundle); intoto-statement (an in-toto Statement v1 for an evidence bundle: --bundle, or the newest one here); the four OSCAL documents (oscal-component-definition, oscal-ssp, oscal-assessment-results, oscal-poam). Without a kind, or rdf: out/rdf/fleet.ttl, using W3C PROV, Dublin Core terms, FOAF, and the archon: namespace (specs 002 and 014). Changes nothing else.`,
     tier: "repo",
-    args: [],
-    async run() {
-      const { exportRdf } = await import("../model/export.ts");
-      for (const f of await exportRdf()) console.log(f);
-      return 0;
+    args: [
+      {
+        name: "kind",
+        type: "string",
+        positional: true,
+        description:
+          "rdf (the default), ocsf-jsonl, otlp-json, cyclonedx-attestation, intoto-statement, oscal-component-definition, oscal-ssp, oscal-assessment-results, or oscal-poam.",
+        choices: [
+          "rdf",
+          "ocsf-jsonl",
+          "otlp-json",
+          "cyclonedx-attestation",
+          "intoto-statement",
+          "oscal-component-definition",
+          "oscal-ssp",
+          "oscal-assessment-results",
+          "oscal-poam",
+        ],
+      },
+      {
+        name: "out",
+        type: "string",
+        description: "The file to write (default: this PC's state directory, export/).",
+      },
+      {
+        name: "bundle",
+        type: "string",
+        description:
+          "An evidence bundle (ZIP, spec 072): the subject of intoto-statement, the evidence of cyclonedx-attestation.",
+      },
+      {
+        name: "entities",
+        type: "boolean",
+        description:
+          "otlp-json: also send inventory as OpenTelemetry entity events (Development status).",
+      },
+    ],
+    examples: [
+      {
+        cmd: "deno task stolos export ocsf-jsonl",
+        text: "The estate and every check as OCSF events, one per line.",
+      },
+      {
+        cmd: "deno task stolos export cyclonedx-attestation --bundle lab-evidence.zip",
+        text: "A CycloneDX attestation whose evidence is the bundle's items.",
+      },
+    ],
+    async run(a) {
+      const { exportCommand } = await import("../export/commands.ts");
+      return await exportCommand(a.kind as string | undefined, {
+        ...(a.out ? { out: a.out as string } : {}),
+        ...(a.bundle ? { bundle: a.bundle as string } : {}),
+        ...(a.entities ? { entities: true } : {}),
+      });
     },
   },
   {

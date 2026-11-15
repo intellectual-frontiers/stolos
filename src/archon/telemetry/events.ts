@@ -141,15 +141,51 @@ export interface ArchonEvent {
 
 const SEVERITY_NUMBER: Record<Severity, number> = { debug: 5, info: 9, warn: 13, error: 17 };
 
-type AnyValue = { stringValue: string } | { intValue: string } | { boolValue: boolean } | {
-  doubleValue: number;
-};
-const value = (v: string | number | boolean): AnyValue =>
-  typeof v === "boolean"
-    ? { boolValue: v }
-    : typeof v === "number"
-    ? (Number.isInteger(v) ? { intValue: String(v) } : { doubleValue: v })
-    : { stringValue: v };
+/**
+ * An OTLP AnyValue in the OTLP/HTTP JSON encoding: a 64-bit integer is a
+ * decimal string, a map is a list of key-values, and an empty object is a
+ * null (spec 092 adds arrays and maps, for structured log bodies).
+ */
+export type OtlpAnyValue =
+  | { stringValue: string }
+  | { intValue: string }
+  | { boolValue: boolean }
+  | { doubleValue: number }
+  | { arrayValue: { values: OtlpAnyValue[] } }
+  | { kvlistValue: { values: OtlpKeyValue[] } }
+  | Record<never, never>;
+
+/** One OTLP attribute: a key and its value. */
+export interface OtlpKeyValue {
+  /** The attribute's name. */
+  key: string;
+  /** Its value. */
+  value: OtlpAnyValue;
+}
+
+/** A JavaScript value as an OTLP AnyValue (null and undefined: the empty value). */
+export function otlpValue(v: unknown): OtlpAnyValue {
+  if (v === null || v === undefined) return {};
+  if (typeof v === "boolean") return { boolValue: v };
+  if (typeof v === "bigint") return { intValue: String(v) };
+  if (typeof v === "number") {
+    return Number.isInteger(v) ? { intValue: String(v) } : { doubleValue: v };
+  }
+  if (typeof v === "string") return { stringValue: v };
+  if (Array.isArray(v)) return { arrayValue: { values: v.map(otlpValue) } };
+  if (typeof v === "object") return { kvlistValue: { values: otlpAttributes(v) } };
+  return { stringValue: String(v) };
+}
+
+/** An object's entries as OTLP attributes (undefined entries left out). */
+export function otlpAttributes(o: object): OtlpKeyValue[] {
+  return Object.entries(o).filter(([, v]) => v !== undefined).map(([key, v]) => ({
+    key,
+    value: otlpValue(v),
+  }));
+}
+
+const value = (v: string | number | boolean): OtlpAnyValue => otlpValue(v);
 
 /** An event's severity: its own, else its kind's. */
 export const severityOf = (e: ArchonEvent): Severity => e.severity ?? EVENTS[e.name].severity;

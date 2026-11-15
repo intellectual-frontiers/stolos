@@ -375,16 +375,35 @@ export async function systemSecurityPlan(i: OscalInput): Promise<unknown> {
   };
 }
 
-/** Every piece of evidence once (one can support several SCF controls). */
-function allEvidence(view: ComplianceView): Evidence[] {
-  return [...new Set(view.controls.flatMap((c) => c.evidence))];
+const KEYS = new WeakMap<Evidence, string>();
+
+/**
+ * Every piece of evidence once (one can support several SCF controls). Two
+ * results of the same check on the same subject (rare, but possible) get
+ * distinct keys (#2, #3, in order), so their UUIDs never collide.
+ */
+export function allEvidence(view: ComplianceView): Evidence[] {
+  const ev = [...new Set(view.controls.flatMap((c) => c.evidence))];
+  const n = new Map<string, number>();
+  for (const e of ev) {
+    const base = [e.source, e.subject, e.check].join("\u0000");
+    const k = (n.get(base) ?? 0) + 1;
+    n.set(base, k);
+    KEYS.set(e, k === 1 ? base : `${base}#${k}`);
+  }
+  return ev;
 }
 
-const evidenceKey = (e: Evidence) => [e.source, e.subject, e.check].join("\u0000");
+const evidenceKey = (e: Evidence) => KEYS.get(e) ?? [e.source, e.subject, e.check].join("\u0000");
+
+/** The UUID of a piece of evidence's OSCAL observation in the assessment results made at `now`. */
+export function observationUuid(fleet: string, now: Date, e: Evidence): Promise<string> {
+  return uuidFor(fleet, "observation", iso(now), evidenceKey(e));
+}
 
 async function observation(i: OscalInput, e: Evidence) {
   return {
-    uuid: await uuidFor(i.fleet.id, "observation", iso(i.now), evidenceKey(e)),
+    uuid: await observationUuid(i.fleet.id, i.now, e),
     title: `${e.subject}: ${e.check}`,
     description: `${e.status}: ${e.detail || "(no detail)"}`,
     props: [
