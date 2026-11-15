@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/console/server.ts - Stolos v0.75.0 documentation</title>
+  <title>archon/console/server.ts - Stolos v0.76.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.75.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.76.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -142,6 +142,11 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_clientaddre
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;server.ts&#x2F;~&#x2F;consoleHandler.html" title="consoleHandler">
 			    <span>consoleHandler</span><span>(<span><span>deps<span>: <span class="td-ref">ConsoleDeps</span></span></span></span>)<span>: (<div class="ml-4"><div><span>req<span>: <span class="td-ref">Request</span></span></span>,</div><div><span>info<span class="td-op">?</span><span>: <span class="td-ref">Deno.ServeHandlerInfo</span></span></span></div></div>) =&gt; <span class="td-ref">Promise</span>&lt;<span class="td-ref">Response</span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The console's request handler.</p>
 </div></div></div>
+    </div><div id="namespace_htmlresponse" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;server.ts&#x2F;~&#x2F;htmlResponse.html" title="htmlResponse">
+			    <span>htmlResponse</span><span>(<div class="ml-4"><div><span>body<span>: <span class="td-kw">string</span></span></span>,</div><div><span>status<span class="td-op">?</span><span>: <span class="td-kw">number</span></span></span>,</div><div><span>headers<span class="td-op">?</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></span></div></div>)<span>: <span class="td-ref">Response</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>An HTML response, never cached or framed.</p>
+</div></div></div>
     </div><div id="namespace_lineclass" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;server.ts&#x2F;~&#x2F;lineClass.html" title="lineClass">
@@ -152,10 +157,20 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_clientaddre
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;server.ts&#x2F;~&#x2F;patch.html" title="patch">
 			    <span>patch</span><span>(<div class="ml-4"><div><span>elements<span>: <span><span class="td-ref">Html</span><span class="td-op"> | </span><span class="td-kw">string</span></span></span></span>,</div><div><span>o<span class="td-op">?</span><span>: { selector<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>; mode<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One server-sent event that patches the page (Datastar's datastar-patch-elements).</p>
 </div></div></div>
+    </div><div id="namespace_redirect" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;server.ts&#x2F;~&#x2F;redirect.html" title="redirect">
+			    <span>redirect</span><span>(<div class="ml-4"><div><span>to<span>: <span class="td-kw">string</span></span></span>,</div><div><span>headers<span class="td-op">?</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></span></div></div>)<span>: <span class="td-ref">Response</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A redirect after a POST (303).</p>
+</div></div></div>
     </div><div id="namespace_sameorigin" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;server.ts&#x2F;~&#x2F;sameOrigin.html" title="sameOrigin">
 			    <span>sameOrigin</span><span>(<span><span>req<span>: <span class="td-ref">Request</span></span></span></span>)<span>: <span class="td-kw">boolean</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Whether a POST comes from this site: its Origin (when the browser sends one) matches the Host.</p>
+</div></div></div>
+    </div><div id="namespace_staticfile" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;console&#x2F;server.ts&#x2F;~&#x2F;staticFile.html" title="staticFile">
+			    <span>staticFile</span><span>(<div class="ml-4"><div><span>path<span>: <span class="td-kw">string</span></span></span>,</div><div><span>cacheDir<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">Promise</span>&lt;<span><span class="td-ref">Response</span><span class="td-op"> | </span><span class="td-kw">undefined</span></span>&gt;</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The consoles' static files (stylesheet, icon, Datastar, Mermaid, fonts), or undefined.</p>
 </div></div></div>
     </div></div>
 </section>
@@ -299,7 +314,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_consoledep
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 1380 symbols</span><svg
+              <span class="leading-none">view all 1431 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -314,7 +329,7 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_consoledep
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/console/server_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_clientaddress" title="clientAddress">clientAddress</a></li><li><a href="#namespace_consolehandler" title="consoleHandler">consoleHandler</a></li><li><a href="#namespace_lineclass" title="lineClass">lineClass</a></li><li><a href="#namespace_patch" title="patch">patch</a></li><li><a href="#namespace_sameorigin" title="sameOrigin">sameOrigin</a></li></ul></li><li><a href="#archon/console/server_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_consoledeps" title="ConsoleDeps">ConsoleDeps</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/console/server_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_clientaddress" title="clientAddress">clientAddress</a></li><li><a href="#namespace_consolehandler" title="consoleHandler">consoleHandler</a></li><li><a href="#namespace_htmlresponse" title="htmlResponse">htmlResponse</a></li><li><a href="#namespace_lineclass" title="lineClass">lineClass</a></li><li><a href="#namespace_patch" title="patch">patch</a></li><li><a href="#namespace_redirect" title="redirect">redirect</a></li><li><a href="#namespace_sameorigin" title="sameOrigin">sameOrigin</a></li><li><a href="#namespace_staticfile" title="staticFile">staticFile</a></li></ul></li><li><a href="#archon/console/server_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_consoledeps" title="ConsoleDeps">ConsoleDeps</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>
