@@ -46,3 +46,41 @@ encrypted (CRY-05), the firewall is on (END-05, NET-01), security updates instal
 (VPM-05), the OS is supported (TDA-17), SSH takes keys only (IAC-10), at most three administrators
 (IAC-21), observed in the last week (AST-02, MON-01). This is a starter mapping: check it against
 the SCF catalog before an audit relies on it.
+
+## Cloud accounts
+
+Stolos can also see what the fleet keeps in its clouds, read-only: it never creates, changes, or
+deletes anything there (managing a cloud stays in that cloud's own console).
+
+```mermaid
+flowchart LR
+  vault["Vault: clouds/&lt;provider&gt;/credential.json (read-only)"] --> observe["deno task stolos cloud observe"]
+  observe -- "HTTPS GET" --> cf["Cloudflare"] & ms["Microsoft 365 and Azure"] & aws["AWS"] & hz["Hetzner"]
+  observe --> file["fleets/&lt;fleet&gt;/clouds/&lt;provider&gt;.ts (GENERATED)"]
+  file --> check["cloud check: posture policies (SCF)"]
+  file --> assets["cloud assets: one table"]
+```
+
+| Provider                | What Stolos reads                                                             | Posture policies                                                    |
+| ----------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Cloudflare              | accounts, zones, DNS records, Workers, Pages, R2 buckets, tunnels             | Full (strict) TLS, HTTPS only, TLS 1.2 or later, DNSSEC             |
+| Microsoft 365 and Azure | tenant, domains, users, licenses, Global Administrators, MFA, Azure resources | MFA enforced, every member registered for MFA, 2 to 4 Global Admins |
+| AWS                     | account, IAM users, S3 buckets, EC2 instances in every enabled region         | root MFA, no root keys, S3 blocks public access, IMDSv2             |
+| Hetzner Cloud           | servers, volumes, firewalls, primary IPs, load balancers                      | backups, a firewall on every server, deletion protection            |
+
+```bash
+deno task stolos cloud connect cloudflare
+```
+
+`connect` shows how to make a read-only credential in the provider's console, asks for it here
+(nothing you type is shown), keeps it in the vault, and observes once. Then:
+
+- `deno task stolos cloud observe` reads every connected account again (daily is plenty);
+- `deno task stolos cloud check` reports the posture (`--json` for an auditor);
+- `deno task stolos cloud assets --kind dns-record` lists every DNS record and the machine it points
+  at;
+- `git log -p fleets/<fleet>/clouds/cloudflare.ts` shows what changed, and when;
+- `deno task stolos cloud disconnect cloudflare` forgets the credential (revoke it in Cloudflare
+  too).
+
+A part the credential may not read (Workers, say) is listed as not readable, not as a failure.

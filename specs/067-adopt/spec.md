@@ -43,3 +43,20 @@ should answer for every machine, while managing only the ones it installed.
   the probe itself (facts here; refusals of anything else; one SELECT through a fake osqueryi).
 - **SC-002** Against a real sshd: adopt, observe, check, query, release; the probe key opens no
   shell, runs no other command, and forwards no port.
+
+## Clouds (visibility only)
+
+- **FR-007** `stolos cloud connect <provider>` (cloudflare, microsoft, aws, hetzner, in that order
+  of importance) shows how to make a read-only credential, reads it without echoing, keeps it in the
+  vault (`clouds/<provider>/credential.json`), and observes once.
+- **FR-008** `stolos cloud observe` writes `fleets/<fleet>/clouds/<provider>.ts` (GENERATED): the
+  account's assets and posture facts. It only reads (GET; Microsoft's token request is the one
+  POST). A part the credential may not read is a gap, not a failure. Assets named after a fleet
+  machine (a DNS record in the fleet's domain, a server, an instance) are marked as that machine's.
+- **FR-009** `stolos cloud check` reports each provider's posture policies with SCF controls;
+  `stolos cloud assets` lists every asset from Git, without the network.
+- **FR-010** AWS requests are signed (SigV4) in TypeScript; no provider CLI or SDK is installed.
+- **FR-011** Out of scope: creating, changing, or deleting anything in a cloud; costs (later).
+
+- **SC-003** `tests/cloud067_test.ts`: each provider against a fake API (inventory, gaps, posture),
+  AWS's published SigV4 example, and only GET requests (Microsoft's token POST aside).

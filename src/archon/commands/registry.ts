@@ -710,6 +710,108 @@ export const COMMANDS: Command[] = [
     },
   },
   {
+    name: "cloud connect",
+    summary: "Connect a cloud account read-only: Cloudflare, Microsoft 365 and Azure, AWS, Hetzner",
+    description:
+      `Spec 067. Shows how to make a read-only credential in the provider's console (Stolos never changes a cloud), asks for it here (secrets are not echoed), keeps it in this PC's vault (clouds/<provider>/credential.json), and takes a first observation. Providers: cloudflare, microsoft (Microsoft 365 and Azure), aws, hetzner.`,
+    tier: "repo",
+    args: [{
+      name: "provider",
+      type: "string",
+      positional: true,
+      required: true,
+      description: "cloudflare, microsoft, aws, or hetzner.",
+    }],
+    examples: [{
+      cmd: "deno task stolos cloud connect cloudflare",
+      text: "A read-only Cloudflare API token.",
+    }],
+    async run(a) {
+      const { cloudConnect } = await import("../cloud/commands.ts");
+      return await cloudConnect(a.provider as string);
+    },
+  },
+  {
+    name: "cloud observe",
+    summary: "Read every connected cloud account and record what it holds in Git",
+    description:
+      `Spec 067. Lists each connected account's assets (zones, DNS records, Workers, R2; users, licenses, Azure resources; IAM users, S3, EC2; Hetzner servers, volumes, firewalls) and posture facts into fleets/<fleet>/clouds/<provider>.ts (GENERATED); assets named after a fleet machine are marked as its. Keep it with deno task stolos apply.`,
+    tier: "repo",
+    args: [{
+      name: "provider",
+      type: "string",
+      positional: true,
+      description: "One provider (default: every connected one).",
+    }],
+    async run(a) {
+      const { cloudObserve } = await import("../cloud/commands.ts");
+      return await cloudObserve(a.provider as string | undefined);
+    },
+  },
+  {
+    name: "cloud check",
+    summary: "The cloud accounts' posture policies: pass, fail, and the fix (SCF controls)",
+    description:
+      `Spec 067. From the last observations: Cloudflare TLS (Full strict, HTTPS only, TLS 1.2), DNSSEC; Microsoft MFA enforced and registered, Global Administrators; AWS root MFA and keys, S3 public access, IMDSv2; Hetzner backups, firewalls, deletion protection. Exits 1 when any fails; --json for auditors.`,
+    tier: "read",
+    args: [{
+      name: "provider",
+      type: "string",
+      positional: true,
+      description: "One provider (default: all).",
+    }],
+    async run(a, ctx) {
+      const { cloudCheck } = await import("../cloud/commands.ts");
+      return await cloudCheck(a.provider as string | undefined, ctx.json);
+    },
+  },
+  {
+    name: "cloud assets",
+    summary: "Everything in the fleet's cloud accounts, as one table",
+    description:
+      `Spec 067. From the last observations in Git (no network): provider, kind, name, where, the fleet machine it belongs to, and a few facts. --kind narrows it (zone, dns-record, worker, r2-bucket, user, license, azure-resource, s3-bucket, ec2-instance, server, ...); --json for scripts.`,
+    tier: "read",
+    args: [
+      {
+        name: "provider",
+        type: "string",
+        positional: true,
+        description: "One provider (default: all).",
+      },
+      { name: "kind", type: "string", description: "Only this kind of asset." },
+    ],
+    examples: [{
+      cmd: "deno task stolos cloud assets --kind dns-record",
+      text: "Every DNS record, with the machine it points at.",
+    }],
+    async run(a, ctx) {
+      const { cloudAssets } = await import("../cloud/commands.ts");
+      return await cloudAssets(
+        a.provider as string | undefined,
+        a.kind as string | undefined,
+        ctx.json,
+      );
+    },
+  },
+  {
+    name: "cloud disconnect",
+    summary: "Forget a cloud account's credential (the last observation stays in Git)",
+    description:
+      `Spec 067. Removes clouds/<provider>/credential.json from this PC's vault. Revoke the credential in the provider's console too.`,
+    tier: "repo",
+    args: [{
+      name: "provider",
+      type: "string",
+      positional: true,
+      required: true,
+      description: "cloudflare, microsoft, aws, or hetzner.",
+    }],
+    async run(a) {
+      const { cloudDisconnect } = await import("../cloud/commands.ts");
+      return await cloudDisconnect(a.provider as string);
+    },
+  },
+  {
     name: "workstation add",
     summary:
       "Set up this Ubuntu on WSL (or desktop) as a workstation: tools, dotfiles, the agent layer",
@@ -2471,6 +2573,11 @@ On a server, workstations reach it as ops over SSH (spec 030): ops' authorized_k
  */
 /** Commands run with `stolos` on your PC (the rest run with `archon` on each machine). */
 const PC_COMMANDS = new Set([
+  "cloud connect",
+  "cloud observe",
+  "cloud check",
+  "cloud assets",
+  "cloud disconnect",
   "host adopt",
   "host observe",
   "host check",
@@ -2485,7 +2592,6 @@ const PC_COMMANDS = new Set([
   "where",
   "fleet upgrade",
   "fleet trust",
-  "fleet query",
   "signers",
   "signers add",
   "signers remove",

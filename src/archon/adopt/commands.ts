@@ -140,7 +140,8 @@ export async function hostAdopt(
 }
 
 /** Print policy results as a phase. */
-function report(name: string, rs: PolicyResult[]): void {
+/** Print one subject's policy results. */
+export function report(name: string, rs: PolicyResult[]): void {
   const p = ui.phase(`Policies ${name}`);
   for (const r of rs) {
     if (r.status === "fail") {

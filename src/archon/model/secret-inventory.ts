@@ -68,6 +68,17 @@ export const SECRET_INVENTORY: SecretRef[] = [
     spec: "067-adopt",
   },
   {
+    id: "cloud-credential",
+    label: "<provider> read-only credential",
+    path: "clouds/<provider>/credential.json",
+    purpose:
+      "reads one cloud account (cloudflare, microsoft, aws, hetzner) for stolos cloud observe: read-only, never changes the cloud (spec 067)",
+    holder: "boot-machine",
+    recreate:
+      "make a new read-only credential in the provider's console; deno task stolos cloud connect <provider>",
+    spec: "067-adopt",
+  },
+  {
     id: "probe-key-pub",
     label: "<host> probe key (public)",
     path: "adopted/<host>/probe_key.pub",
