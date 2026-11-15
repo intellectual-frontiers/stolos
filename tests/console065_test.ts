@@ -67,3 +67,12 @@ Deno.test("065: five failed sign-ins in a minute pause that address", () => {
   t += 60_001;
   assert(th.allowed("1.2.3.4"), "a minute later");
 });
+
+Deno.test("065: Datastar is served from the engine, exactly the pinned file", async () => {
+  const { DATASTAR, datastarSource } = await import("../src/archon/console/assets.ts");
+  const bytes = new TextEncoder().encode(datastarSource());
+  const d = await crypto.subtle.digest("SHA-256", bytes);
+  const hex = [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
+  assertEquals(hex, DATASTAR.sha256);
+  assert(datastarSource().startsWith("// Datastar v1.0.4"));
+});

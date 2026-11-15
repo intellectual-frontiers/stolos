@@ -56,6 +56,7 @@ import "./capabilities/updates.ts";
 import "./capabilities/web.ts";
 import "./capabilities/workstation.ts";
 import "./commands/registry.ts";
+import "./console/assets.ts";
 import "./console/auth.ts";
 import "./console/html.ts";
 import "./console/pam-worker.ts";
