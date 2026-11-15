@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/connect/sdk.ts - Stolos v0.114.0 documentation</title>
+  <title>archon/connect/sdk.ts - Stolos v0.115.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.114.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.115.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -201,7 +201,8 @@ Functions</h2></div><div class="namespaceSection"><div id="namespace_bearer" cla
     </div><div id="namespace_readonly" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;sdk.ts&#x2F;~&#x2F;readOnly.html" title="readOnly">
-			    <span>readOnly</span><span>(<div class="ml-4"><div><span>http<span>: <span class="td-ref">Http</span></span></span>,</div><div><span>tokenEndpoints<span class="td-op">?</span><span>: <span class="td-kw">string</span>[]</span></span></div></div>)<span>: <span class="td-ref">Http</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>HTTP that refuses anything but GET, except POSTs to the given URL prefixes.</p>
+			    <span>readOnly</span><span>(<div class="ml-4"><div><span>http<span>: <span class="td-ref">Http</span></span></span>,</div><div><span>tokenEndpoints<span class="td-op">?</span><span>: <span class="td-kw">string</span>[]</span></span>,</div><div><span>readPost<span class="td-op">?</span><span>: <span class="td-ref">ReadPost</span></span></span></div></div>)<span>: <span class="td-ref">Http</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>HTTP that refuses anything but GET, except POSTs to the given URL prefixes
+and POSTs that <code>readPost</code> says only read.</p>
 </div></div></div>
     </div><div id="namespace_recordedhttp" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
 <div class="namespaceItemContent">
@@ -280,6 +281,11 @@ Interfaces</h2></div><div class="namespaceSection"><div id="namespace_connectord
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;sdk.ts&#x2F;~&#x2F;ConnectorDef.html#method_posture_0">
                   <span>posture</span><span>(<div class="ml-4"><div><span>records<span>: <span class="td-ref">ObservedRecord</span>[]</span></span>,</div><div><span>cred<span>: <span class="td-ref">CredOf</span>&lt;<span class="td-ref">F</span>&gt;</span></span>,</div><div><span>seen<span>: <span class="td-ref">Seen</span></span></span></div></div>)<span>: <span class="td-ref">Observation</span>[<span class="td-str">"posture"</span>]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Posture facts from the records (what the policies read), knowing what could not be read and when.</p>
+</div></div></li><li>
+                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;sdk.ts&#x2F;~&#x2F;ConnectorDef.html#property_readpost">
+                  <span>readPost</span><span>: <span class="td-ref">ReadPost</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Spec 088: POSTs that only read, which the guard lets through when this
+says so (an AWS JSON API's Describe and Get actions, say). Every other
+POST is refused.</p>
 </div></div></li><li>
                 <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;sdk.ts&#x2F;~&#x2F;ConnectorDef.html#property_recipe">
                   <span>recipe</span><span>: <span class="td-ref">Connector</span>[<span class="td-str">"recipe"</span>]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The quickest way to one.</p>
@@ -449,6 +455,11 @@ Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_credof" 
 		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;sdk.ts&#x2F;~&#x2F;CredOf.html" title="CredOf">
 			    <span>CredOf</span><span><span>&lt;<span><span class="td-tp">F</span><span><span class="td-kw"> extends </span><span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-ref">FieldDef</span>&gt;</span></span>&gt;</span> = [<span><span class="td-tp">K</span><span><span class="td-kw"> in </span><span class="td-kw">keyof</span> <span class="td-ref">F</span></span></span>]<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A credential: each declared field, as text.</p>
 </div></div></div>
+    </div><div id="namespace_readpost" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
+<div class="namespaceItemContent">
+		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;connect&#x2F;sdk.ts&#x2F;~&#x2F;ReadPost.html" title="ReadPost">
+			    <span>ReadPost</span><span> = (<div class="ml-4"><div><span>url<span>: <span class="td-kw">string</span></span></span>,</div><div><span>init<span>: { headers<span class="td-op">?</span><span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span>; body<span class="td-op">?</span><span>: <span class="td-kw">string</span></span>;  }</span></span></div></div>) =&gt; <span class="td-kw">boolean</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Whether a POST only reads (spec 088): given its URL, headers, and body.</p>
+</div></div></div>
     </div></div>
 </section>
 </div>
@@ -522,7 +533,7 @@ Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_credof" 
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 2665 symbols</span><svg
+              <span class="leading-none">view all 2723 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
@@ -537,7 +548,7 @@ Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_credof" 
   />
 </svg>
 </a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/connect/sdk_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_bearer" title="bearer">bearer</a></li><li><a href="#namespace_clientcredentials" title="clientCredentials">clientCredentials</a></li><li><a href="#namespace_defineconnector" title="defineConnector">defineConnector</a></li><li><a href="#namespace_mustread" title="mustRead">mustRead</a></li><li><a href="#namespace_readonly" title="readOnly">readOnly</a></li><li><a href="#namespace_recordedhttp" title="recordedHttp">recordedHttp</a></li><li><a href="#namespace_toentities" title="toEntities">toEntities</a></li><li><a href="#namespace_withbackoff" title="withBackoff">withBackoff</a></li></ul></li><li><a href="#archon/connect/sdk_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_connectordef" title="ConnectorDef">ConnectorDef</a></li><li><a href="#namespace_ctx" title="Ctx">Ctx</a></li><li><a href="#namespace_fielddef" title="FieldDef">FieldDef</a></li><li><a href="#namespace_mapped" title="Mapped">Mapped</a></li><li><a href="#namespace_observedrecord" title="ObservedRecord">ObservedRecord</a></li><li><a href="#namespace_resourcedef" title="ResourceDef">ResourceDef</a></li><li><a href="#namespace_seen" title="Seen">Seen</a></li></ul></li><li><a href="#archon/connect/sdk_ts_type-aliases" title="Type Aliases">Type Aliases</a></li><li><ul><li><a href="#namespace_credof" title="CredOf">CredOf</a></li></ul></li></ul></nav></div>
+          <h3>Document Navigation</h3><ul><li><a href="#archon/connect/sdk_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_bearer" title="bearer">bearer</a></li><li><a href="#namespace_clientcredentials" title="clientCredentials">clientCredentials</a></li><li><a href="#namespace_defineconnector" title="defineConnector">defineConnector</a></li><li><a href="#namespace_mustread" title="mustRead">mustRead</a></li><li><a href="#namespace_readonly" title="readOnly">readOnly</a></li><li><a href="#namespace_recordedhttp" title="recordedHttp">recordedHttp</a></li><li><a href="#namespace_toentities" title="toEntities">toEntities</a></li><li><a href="#namespace_withbackoff" title="withBackoff">withBackoff</a></li></ul></li><li><a href="#archon/connect/sdk_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_connectordef" title="ConnectorDef">ConnectorDef</a></li><li><a href="#namespace_ctx" title="Ctx">Ctx</a></li><li><a href="#namespace_fielddef" title="FieldDef">FieldDef</a></li><li><a href="#namespace_mapped" title="Mapped">Mapped</a></li><li><a href="#namespace_observedrecord" title="ObservedRecord">ObservedRecord</a></li><li><a href="#namespace_resourcedef" title="ResourceDef">ResourceDef</a></li><li><a href="#namespace_seen" title="Seen">Seen</a></li></ul></li><li><a href="#archon/connect/sdk_ts_type-aliases" title="Type Aliases">Type Aliases</a></li><li><ul><li><a href="#namespace_credof" title="CredOf">CredOf</a></li><li><a href="#namespace_readpost" title="ReadPost">ReadPost</a></li></ul></li></ul></nav></div>
   </div></div>
 </div>
 </div>

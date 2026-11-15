@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/fleet/upgrade.ts - Stolos v0.114.0 documentation</title>
+  <title>archon/fleet/upgrade.ts - Stolos v0.115.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.114.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.115.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -107,7 +107,8 @@ that tag must say the same version. A typo or a branch name is refused.</li>
 <li>Only forward, unless --downgrade: going back to an older engine is a
 decision, not an accident.</li>
 <li>deno.json's @stolos/ pin is rewritten to the tag; deno.lock is built
-again through engine.ts, so it holds a hash of every engine file. Hosts
+again through engine.ts (and each fleet's connectors.ts, spec 088), so
+it holds a hash of every engine and added connector file. Hosts
 run with --frozen: any engine file that differs from the lock is
 refused. That is what makes your signature cover the engine's bytes.</li>
 <li>Every fleet in the repository is validated with the new engine before
@@ -434,7 +435,7 @@ import "@stolos/archon/modules.auto.ts";
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 2665 symbols</span><svg
+              <span class="leading-none">view all 2723 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"

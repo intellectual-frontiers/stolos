@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>archon/adopt/mod.ts - Stolos v0.114.0 documentation</title>
+  <title>archon/adopt/mod.ts - Stolos v0.115.0 documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="doc-current-file" content="">
@@ -17,7 +17,7 @@
   <div class="h-full">
     <div class="flex items-center"><ul class="breadcrumbs">
   <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.114.0</a>
+    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.115.0</a>
   </li><span class="text-black dark:text-white"><svg
   width="16"
   height="16"
@@ -766,6 +766,51 @@ deletes anything there (managing a cloud stays in that cloud's own console).</p>
 <td>members, owners and admins, two-step login, collections and who opens them</td>
 <td>two-step login required and on, 2 to 4 admins</td>
 </tr>
+<tr>
+<td>Snyk</td>
+<td>open issues: CVE, severity, project, package, first found</td>
+<td>no critical open; none past 15 days (critical) or 30 (high)</td>
+</tr>
+<tr>
+<td>Tenable VM</td>
+<td>assets' vulnerabilities (30 days), CVEs and first seen for high and critical</td>
+<td>no critical open; none past 15 days (critical) or 30 (high)</td>
+</tr>
+<tr>
+<td>GitHub (Dependabot)</td>
+<td>open Dependabot alerts: CVE, severity, repository, package</td>
+<td>no critical open; none past 15 days (critical) or 30 (high)</td>
+</tr>
+<tr>
+<td>KnowBe4</td>
+<td>training enrollments: who, which module, passed or failed, when</td>
+<td>none past due (people/training reads the completions)</td>
+</tr>
+<tr>
+<td>Checkr</td>
+<td>each candidate's reports: outcome and date only, never the findings</td>
+<td>none pending (people/screening reads the outcomes)</td>
+</tr>
+<tr>
+<td>Google Cloud</td>
+<td>assets, the project's roles and who holds them, service account keys, sinks</td>
+<td>nothing public, 2 to 4 owners, no long-lived keys, logs routed</td>
+</tr>
+<tr>
+<td>DigitalOcean</td>
+<td>the team, Droplets, cloud firewalls, volumes</td>
+<td>backups, a firewall on every Droplet</td>
+</tr>
+<tr>
+<td>AWS (deeper)</td>
+<td>CloudTrail trails, GuardDuty per region, AWS Config recorders</td>
+<td>a trail logging every region, GuardDuty and Config everywhere</td>
+</tr>
+<tr>
+<td>Azure (deeper)</td>
+<td>Defender for Cloud plans, the activity log's export, per subscription</td>
+<td>activity log exported, a Defender plan on each subscription</td>
+</tr>
 </tbody>
 </table>
 <p>A laptop the probe adopted, Intune manages, and Falcon protects is one device in the estate: the
@@ -816,6 +861,12 @@ at;</li>
 too).</li>
 </ul>
 <p>A part the credential may not read (Workers, say) is listed as not readable, not as a failure.</p>
+<p>Open vulnerabilities (Snyk, Tenable, Dependabot) are OCSF Vulnerability Findings: each open one is
+an item of the OSCAL plan of action and milestones, with its CVE, severity, and asset. Training
+completions (KnowBe4) and screening outcomes (Checkr) are the records the people controls read
+beside <code>people/training.ts</code> and <code>people/screening.ts</code>. A connector Stolos does not ship can be
+added from its own repository, pinned and locked like the engine: see
+<a href="../../../archon/connect/registry-guide.ts/index.html">the connector registry</a>.</p>
 <p>Every connector is labeled the way the industry labels it: its NIST SP 800-145 service models
 (IaaS, PaaS, SaaS) and its market categories as the analyst firms name them (Strategic Cloud
 Platform Services, Access Management, DevOps Platforms, Cloud HCM Suites, ...).</p>
@@ -1074,7 +1125,7 @@ A machine two sources see under different names is joined there too:
                   </span>
                 </a>
               </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 2665 symbols</span><svg
+              <span class="leading-none">view all 2723 symbols</span><svg
   width="16"
   height="16"
   viewBox="0 0 16 16"
