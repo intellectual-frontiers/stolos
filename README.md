@@ -682,3 +682,10 @@ deno task test
 
 Every change to this repository is a new version ([`src/archon/version.ts`](src/archon/version.ts)),
 tested (including a full install of a virtual machine), and tagged `v<version>`.
+
+## License
+
+Source-available under the [Business Source License 1.1](LICENSE): free to read, change, test,
+evaluate, and learn from; production use needs a commercial license. Each version becomes open
+source (Apache License 2.0) four years after its release. v0.89.0 and earlier stay under the Apache
+License 2.0. In plain words: [LICENSING.md](LICENSING.md).
