@@ -8,7 +8,66 @@ workstation) work through `archon` commands. These articles govern every spec,
 plan, task, and line of code of the engine. Amend them only with a commit whose
 subject starts with `constitution:`.
 
-**Version**: 5.1.0 · **Ratified**: 2026-11-13 · **Last amended**: 2026-11-16
+**Version**: 6.0.0 · **Ratified**: 2026-11-13 · **Last amended**: 2026-11-16
+
+## Article 0: The Ladder (NON-NEGOTIABLE)
+
+The repository is a ladder of eight rungs, lowest first. Each rung has a
+purpose, a home in the repository, what it may rely on, and the commands that
+prove it. The rungs are facts of the ontology (`ontology/stolos/architecture.ts`,
+spec 101-ladder), and the table below is written from them by `bun run gen`;
+`bun run gen --check` fails where it differs.
+
+<!-- ladder:begin -->
+| Rung | Purpose | Home | May rely on | Proved by |
+|---|---|---|---|---|
+| 0 Ontology | Terms, classes and code lists, stated once as TypeScript on commons' kernel RDF; Turtle and the code's unions are generated from it. | `ontology/`, `src/archon/ontology.auto.ts` | nothing | `bun run check:ontology`, `bun run check:trace` |
+| 1 Specifications | What each part must do, in Spec Kit (specify, clarify, plan, tasks, implement), using only terms the ontology defines. | `.specify/`, `specs/` | 0 | `bun run check:trace`, `bun run test` |
+| 2 Governed data | The shapes of what is kept: the fleet model's types and the site's, the estate's tables and the schema language and vocabulary they are declared in. | `src/archon/model/types.ts`, `src/archon/model/site.ts`, `src/archon/estate/schema.ts`, `src/archon/schema/`, `src/archon/ocsf/classes.ts` | 0, 1 | `bun run check`, `bun run check:layers` |
+| 3 Data operations | Work as close to the data as possible: the model loaded and validated, the state store (archon.sql), the estate graph and the vault. | `src/archon/model/`, `src/archon/state/`, `src/archon/estate/`, `src/archon/vault/` | 0 to 2 | `bun run check:layers`, `bun run test` |
+| 4 Infrastructure rules | Logic every part reuses, neutral to any one service: the core (output, paths, exec, secrets), identity and keys, install, the web front door, telemetry's names, and the use of commons. | `src/archon/core/`, `src/archon/identity/`, `src/archon/install/`, `src/archon/web/`, `src/archon/telemetry/`, `src/archon/version.ts`, `src/archon/assets.auto.ts`, `.gitattributes`, `.gitignore`, `.vscode/`, `bun.lock`, `bunfig.toml`, `package.json`, `tsconfig.json` | 0, 1, 3 | `bun run check:layers`, `bun run test` |
+| 5 Business rules | The engine's own logic: capabilities and what they render, compliance and controls, adopt and pair, access, update, proposals and the other services. | `src/archon/access/`, `src/archon/adopt/`, `src/archon/apply/`, `src/archon/audit/`, `src/archon/backup/`, `src/archon/build.ts`, `src/archon/capabilities/`, `src/archon/capabilities/mod.ts`, `src/archon/clients/`, `src/archon/compliance/`, `src/archon/connect/`, `src/archon/containers/`, `src/archon/controls/`, `src/archon/device/`, `src/archon/doctor/`, `src/archon/dotfiles/`, `src/archon/evidence/`, `src/archon/export/`, `src/archon/fedramp/`, `src/archon/fleet/`, `src/archon/guests/`, `src/archon/guide/`, `src/archon/notify/`, `src/archon/observe/`, `src/archon/ocsf/`, `src/archon/optin/`, `src/archon/otelui/`, `src/archon/people/`, `src/archon/personas/`, `src/archon/personas/mod.ts`, `src/archon/pg/`, `src/archon/proposal/`, `src/archon/prov/`, `src/archon/reconcile/`, `src/archon/render/`, `src/archon/report/`, `src/archon/risk/`, `src/archon/s3/`, `src/archon/shell/`, `src/archon/smb/`, `src/archon/tools/`, `src/archon/trust/`, `src/archon/update/`, `home/` | 0, 1, 3, 4 | `bun run check:layers`, `bun run test` |
+| 6 Application: headless hosts, then windowed hosts | Two bands: the headless hosts (the stolos and archon command lines and their registry, the MCP server, the REST API, the boot server, the bootstrap scripts and the harness's tools), which reach the operations below with no window, session or person present; then the windowed hosts (the Archon and Stolos consoles), which draw a model and call those operations. | `src/stolos/`, `src/archon/main.ts`, `src/archon/commands/`, `src/archon/mcp/`, `src/archon/api/`, `src/archon-boot/`, `bin/`, `tools/`, `.github/`, `src/archon/console/`, `vendor/` | 0, 1, 4, 5 | `bun run check:layers`, `bun run test` |
+| 7 Documentation | The guides (each module's @module documentation, src/**/mod.ts first), docs/, the manuals site (docs.config.ts), the example fleet, this repository's own documents, and the tests that prove every rung below. | `src/**/mod.ts`, `src/releasing.ts`, `src/archon/connect/registry-guide.ts`, `src/archon/install/workstation-guide.ts`, `docs/`, `docs.config.ts`, `examples/`, `tests/`, `AGENTS.md`, `LICENSE`, `LICENSING.md`, `README.md` | 0 to 6 | `bun run docs:lint`, `bun run check:layers` |
+<!-- ladder:end -->
+
+Two rules hold the ladder.
+
+- **Dependency direction.** A rung relies only on the rungs below it that it
+  names, through what they export, and never reaches around the rung under
+  it: a console never reads the model's types or the state store itself, it
+  calls a business rule; the core never imports the governed data's shapes.
+  A rung never relies on a rung above it. Rungs 0 to 5 are headless: a
+  command, a tool, or an API reaches them with no window, session, or person
+  present. Rung 6 holds the headless hosts first (the `stolos` and `archon`
+  command lines and their registry, the MCP server, the REST API, the boot
+  server) and then the windowed hosts (the Archon and Stolos consoles). Every
+  folder of `src/`, every top-level folder, and every file of the root is on
+  exactly one rung. `bun run check:layers` holds the direction of every
+  relative import.
+- **Order of work.** A change is complete only when every rung it touches is
+  updated and proved by that rung's checks, in order from the lowest rung to
+  the highest. The ontology comes before the specifications, and the two are a
+  pair: a term is defined in `ontology/stolos/` before a specification uses it,
+  the two are drafted and committed together, and then the code is written.
+
+Work is done with GitHub Spec Kit, fully: specify, clarify, plan, tasks,
+implement (`specs/NNN-short-name/spec.md`, `plan.md`, `tasks.md`). No code
+exists that is not tied to a requirement or an ontology term: every source
+file names the requirements it implements on a line
+`// Spec: NNN-short-name FR-NNN` (or `// Spec: NNN-short-name` for a whole
+spec), every test names what it proves with `proves([...])`, and every
+ontology term names the specification it comes from. `bun run check:trace`
+fails where one is missing or names something that does not exist, and
+`bun run check:ontology` where a specification names a `stolos:` term the
+ontology does not define. Each check holds a baseline of the findings that
+existed when it was first held (`tools/trace.baseline.txt`,
+`tools/layers.baseline.txt`), which may only shrink.
+
+Headless first: every action a console offers is also a command of the one
+registry (Article 6) and an MCP tool where its tier allows; a console holds no
+logic, it draws a model and calls operations; and the headless operation and
+its test are written before the console action that uses it.
 
 ## Article 1: Ubuntu Server LTS Only
 
@@ -67,7 +126,8 @@ single machine or a single fleet.
 ## Article 8: Grow by Spec
 
 Every change goes through Spec Kit (`specs/NNN-short-name/`): specify, clarify,
-plan, tasks, implement. Commit subjects start with the spec ID.
+plan, tasks, implement, in the order of Article 0. Commit subjects start with
+the spec ID.
 
 ## Article 9: Approval Means a Signed Origin Main
 
@@ -235,6 +295,7 @@ pinned host keys.
 | 3.0.0 | 2026-11-12 | Article 17 redefined: the agent is a workstation layer (no agent or AI credentials on servers; MCP over SSH as `ops`, limited by the server). Article 18: no sign-in step after power-on. Preamble, Articles 5 and 6 no longer name Claude Code. |
 | 3.1.0 | 2026-11-13 | Article 23 (ephemeral by default, durable by data): a forced choice for every source of end users' data; durable hosts guarded by `--confirm-destroy`, typed by a person. |
 | 4.0.0 | 2026-11-13 | The engine stands alone (the Stolos repositories). Article 7: many fleets per repository. Article 9: approval is a signed tip of `main`. Article 13: file-based secrets, passphrase-protected signing keys, the fleet's vault provider. Articles 20 and 21 no longer name a site. New: Article 24 (the engine holds no fleet's facts; versioned and tagged on every push), Article 25 (Git holds intent, identity, and decisions; machines keep their own state as `archon.sql`), Article 26 (generated files are named `.auto.`), Article 27 (telemetry by OpenTelemetry). |
-| 5.0.0 | 2026-11-15 | The engine on Bun and IFC TypeScript (spec 096): Article 4 names TypeScript 7, Bun with Node 26 as the backup, and the commons' kernel and runtime; Article 27 reports through IFC TypeScript's OpenTelemetry. No Deno. |
+| 5.0.0 | 2026-11-15 | The engine on Bun and IFC TypeScript (spec 096): Article 4 names TypeScript 7, Bun with Node 26 as the backup, and the commons' kernel and runtime; Article 27 reports through IFC TypeScript's OpenTelemetry. |
 | 5.0.1 | 2026-11-16 | Article 24 names the engine's package, `@intellectual-frontiers/stolos`, as a Git dependency pinned to a tag whose commit the lockfile holds; the tag is the release (spec 096, no GitHub release). |
 | 5.1.0 | 2026-11-16 | Article 28 (trusted networks, zero trust beyond them): plain HTTP on the LAN or a zero trust mesh network (Tailscale, Headscale, NetBird, ZeroTier, Nebula, WireGuard, or similar; the fleet's choice, guidance only) for short-lived, content-authenticated exchanges; never a listener on the internet (specs 097, 098). |
+| 6.0.0 | 2026-11-16 | Article 0 (the ladder, NON-NEGOTIABLE): eight rungs, from the ontology to the documentation, stated in the ontology (`ontology/stolos/architecture.ts`, TypeScript on commons' kernel RDF) and written into this table; dependency direction and order of work; the ontology and the specification drafted and committed together, then the code; Spec Kit fully; no code without a requirement or an ontology term (`// Spec:` lines, `proves()` in tests, a `spec` on every term), held by `check:trace`, `check:layers` and `check:ontology` with baselines that only shrink; headless first (spec 101-ladder, commons 0015-trace). Article 8 points to Article 0. |
