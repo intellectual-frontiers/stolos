@@ -108,7 +108,6 @@ proves(
       await fs.remove(sb.home, { recursive: true });
     }
   },
-  { timeout: 120_000 },
 );
 
 test("062: a Windows checkout (CRLF line endings) passes the fixed-form checks", async () => {

@@ -265,7 +265,7 @@ proves(
       await fs.remove(dir, { recursive: true });
     }
   },
-  { skip: !osqueryi && "osqueryi is not installed (CI installs it)", timeout: 120_000 },
+  { skip: !osqueryi && "osqueryi is not installed (CI installs it)" },
 );
 
 /** A guide's section: from its heading to the next heading of its level or higher (outside code). */

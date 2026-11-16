@@ -120,7 +120,6 @@ proves(
       await fs.remove(root, { recursive: true });
     }
   },
-  { timeout: 120_000 },
 );
 
 proves(

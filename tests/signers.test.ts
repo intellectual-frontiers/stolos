@@ -135,7 +135,6 @@ proves(
       await fs.remove(dir, { recursive: true });
     }
   },
-  { timeout: 120_000 },
 );
 
 proves(
@@ -229,5 +228,4 @@ proves(
     assertStringIncludes(text, "ssh-ed25519 AAAA");
     assertStringIncludes(text, 'b namespaces="git" ssh-ed25519 BBBB');
   },
-  { timeout: 120_000 },
 );

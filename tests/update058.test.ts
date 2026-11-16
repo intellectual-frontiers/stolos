@@ -99,7 +99,6 @@ proves(
       await fs.remove(sb.home, { recursive: true });
     }
   },
-  { timeout: 120_000 },
 );
 
 proves(

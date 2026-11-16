@@ -82,7 +82,6 @@ proves(
       await fs.remove(dir, { recursive: true });
     }
   },
-  { timeout: 120_000 },
 );
 
 proves(
@@ -100,7 +99,6 @@ proves(
       await fs.remove(dir, { recursive: true });
     }
   },
-  { timeout: 120_000 },
 );
 
 proves(["048-observe-by-query FR-005"], "048: archon query serves one allowlisted SELECT", () => {

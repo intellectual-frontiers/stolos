@@ -633,7 +633,6 @@ export const pack = defineControlPack({
     }),
   ],
   },
-  { timeout: 120_000 },
 );
 `,
       );
@@ -664,7 +663,6 @@ export const pack = defineControlPack({
       await fs.remove(sb.home, { recursive: true }).catch(() => {});
     }
   },
-  { timeout: 120_000 },
 );
 
 /** The value the test expects to be there. */

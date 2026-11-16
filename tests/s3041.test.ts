@@ -232,7 +232,6 @@ proves(
     assert(r.result.isError);
     assertStringIncludes(r.result.content[0]?.text ?? "", "typed by a person");
   },
-  { timeout: 120_000 },
 );
 
 // Spec 041 FR-K2's rotation itself (a new secret set in RustFS, the key file rewritten) needs

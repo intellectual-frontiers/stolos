@@ -501,7 +501,6 @@ proves(
       await fs.remove(dir, { recursive: true });
     }
   },
-  { timeout: 120_000 },
 );
 
 // ------------------------------------------------------------------ Article 13
@@ -831,7 +830,6 @@ proves(
       await fs.remove(dir, { recursive: true });
     }
   },
-  { timeout: 120_000 },
 );
 
 // ------------------------------------------------------------------ phase 3: on the PC
@@ -1177,7 +1175,6 @@ proves(
       await fs.remove(sb.home, { recursive: true });
     }
   },
-  { timeout: 120_000 },
 );
 
 proves(
@@ -1340,7 +1337,6 @@ proves(
       await fs.remove(dir, { recursive: true });
     }
   },
-  { timeout: 120_000 },
 );
 
 proves(
@@ -1453,7 +1449,6 @@ proves(
       await fs.remove(dir, { recursive: true });
     }
   },
-  { timeout: 120_000 },
 );
 
 proves(
@@ -1490,7 +1485,6 @@ proves(
       "await recordBirth(host.name)",
     );
   },
-  { timeout: 120_000 },
 );
 
 proves(
@@ -1574,5 +1568,4 @@ console.log("code=" + (await driftCommand(host, {})));
       await fs.remove(sb.home, { recursive: true });
     }
   },
-  { timeout: 120_000 },
 );

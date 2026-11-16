@@ -146,6 +146,23 @@ async function unknownNamed(
   return problems;
 }
 
+/**
+ * How long a test may run before Bun cancels it (Node has no limit): long enough for the slowest
+ * runner (Windows, where a test that makes real Git commits, keys and processes takes up to half a
+ * minute), against Bun's default of 5 s. A test that needs more says so with its own `timeout`.
+ */
+const TEST_TIMEOUT_MS = 120_000;
+
+/**
+ * Bun's options for its runner: the timeout, after any the caller set. `ifc test` starts `bun test`
+ * with the files alone, so the default goes through `BUN_OPTIONS`, which Bun reads as arguments
+ * (`--timeout`, a test runner's option, is ignored by any other bun a test starts).
+ */
+function bunOptions(): string {
+  const given = proc.env.get("BUN_OPTIONS") ?? "";
+  return `${given} --timeout=${TEST_TIMEOUT_MS}`.trim();
+}
+
 async function main(argv: readonly string[]): Promise<number> {
   const p = cli.parseArgs(argv, OPTIONS, PATHS);
   if (p.kind === "err") {
@@ -188,6 +205,7 @@ async function main(argv: readonly string[]): Promise<number> {
     ...(holdAll ? { requirements: requirementsFile } : {}),
     reviewed: reviewedFile,
     ...(o.ledger === undefined ? {} : { ledger: path.resolve(ROOT, o.ledger) }),
+    env: { BUN_OPTIONS: bunOptions() },
   }).then((x) => {
     if (x.kind === "err") return x;
     const c = x.value.run.counts;

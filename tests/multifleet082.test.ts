@@ -477,7 +477,6 @@ proves(
       await fs.remove(sb.home, { recursive: true });
     }
   },
-  { timeout: 120_000 },
 );
 
 /** A fake client console: the fake fleet under another title, with its own sessions. */

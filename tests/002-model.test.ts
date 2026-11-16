@@ -152,7 +152,6 @@ proves(
       await fs.remove(l.sb.home, { recursive: true });
     }
   },
-  { timeout: 120_000 },
 );
 
 proves(

@@ -180,5 +180,5 @@ sysContact ops@example.org
       await fs.remove(dir, { recursive: true });
     }
   },
-  { skip: SNMPD_SKIP, timeout: 120_000 },
+  { skip: SNMPD_SKIP },
 );

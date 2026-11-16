@@ -361,7 +361,7 @@ proves(
     assert(!edited.ok && edited.why.includes("uncommitted"));
     await fs.remove(f.dir, { recursive: true });
   },
-  { skip: !hasSsh && "ssh-keygen is not installed", timeout: 120_000 },
+  { skip: !hasSsh && "ssh-keygen is not installed" },
 );
 
 proves(
@@ -408,7 +408,7 @@ proves(
     }
     await fs.remove(f.dir, { recursive: true });
   },
-  { skip: !hasSsh && "ssh-keygen is not installed", timeout: 120_000 },
+  { skip: !hasSsh && "ssh-keygen is not installed" },
 );
 
 proves(
@@ -501,7 +501,7 @@ proves(
     assertStringIncludes(p, "is not signed");
     await fs.remove(f.dir, { recursive: true });
   },
-  { skip: !hasSsh && "ssh-keygen is not installed", timeout: 120_000 },
+  { skip: !hasSsh && "ssh-keygen is not installed" },
 );
 
 /** A request, a response, and a sample of the change population. */
@@ -638,7 +638,7 @@ proves(
     assertEquals((await op.req(`/v1/audit/${ID}/`)).status, 200);
     await fs.remove(f.dir, { recursive: true });
   },
-  { skip: !hasSsh && "ssh-keygen is not installed", timeout: 120_000 },
+  { skip: !hasSsh && "ssh-keygen is not installed" },
 );
 
 proves(
@@ -662,7 +662,7 @@ proves(
     assertStringIncludes(((await r.json()) as { error: string }).error, "closed on 2026-04-15");
     await fs.remove(f.dir, { recursive: true });
   },
-  { skip: !hasSsh && "ssh-keygen is not installed", timeout: 120_000 },
+  { skip: !hasSsh && "ssh-keygen is not installed" },
 );
 
 proves(
@@ -731,7 +731,7 @@ proves(
     );
     await fs.remove(f.dir, { recursive: true });
   },
-  { skip: !hasSsh && "ssh-keygen is not installed", timeout: 120_000 },
+  { skip: !hasSsh && "ssh-keygen is not installed" },
 );
 
 proves(

@@ -114,7 +114,7 @@ console.log(JSON.stringify({ current: r.current, pulled: r.pulled.length, blocke
       await fs.remove(sb.home, { recursive: true });
     }
   },
-  { skip: posix ? false : "git checkouts in POSIX paths", timeout: 120_000 },
+  { skip: posix ? false : "git checkouts in POSIX paths" },
 );
 
 proves(

@@ -162,7 +162,7 @@ proves(
     assert(!isObservation("fleets/lab/fleet.ts"));
     await fs.remove(f.dir, { recursive: true });
   },
-  { skip: !hasSsh && "ssh-keygen is not installed", timeout: 120_000 },
+  { skip: !hasSsh && "ssh-keygen is not installed" },
 );
 
 proves(
@@ -241,7 +241,7 @@ proves(
     assert(!(await verifyBundle(new Uint8Array([1, 2, 3]))).ok);
     await fs.remove(f.dir, { recursive: true });
   },
-  { skip: !hasSsh && "ssh-keygen is not installed", timeout: 120_000 },
+  { skip: !hasSsh && "ssh-keygen is not installed" },
 );
 
 proves(["072-evidence-bundles FR-004"], "072: allowed signers for one namespace", () => {

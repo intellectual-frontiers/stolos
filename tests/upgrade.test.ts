@@ -222,7 +222,6 @@ proves(
   },
   {
     skip: bun === undefined && "bun is not installed (fleet upgrade runs bun install)",
-    timeout: 120_000,
   },
 );
 

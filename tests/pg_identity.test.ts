@@ -391,7 +391,6 @@ proves(
     }
   },
   {
-    timeout: 120_000,
     // The hook and its stand-ins (smbpasswd, psql) are POSIX shell scripts PAM runs on a host.
     skip: proc.build.os === "windows" && "the PAM hook is a host's (Linux) shell script",
   },

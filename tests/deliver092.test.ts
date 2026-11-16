@@ -682,7 +682,7 @@ proves(
     assertEquals(r[0]?.ok, false);
     assertEquals(r[0]?.to, "c@example.com");
   },
-  { skip: !OPENSSL && "openssl makes the recipients' certificates", timeout: 120_000 },
+  { skip: !OPENSSL && "openssl makes the recipients' certificates" },
 );
 
 test("deliver: no secret in the run record, even when the relay's error echoes it", async () => {

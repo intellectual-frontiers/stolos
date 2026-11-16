@@ -137,7 +137,6 @@ console.log(JSON.stringify((await listRecords("alpha", "prov")).map((x) => x.bod
       await fs.remove(l.sb.home, { recursive: true });
     }
   },
-  { timeout: 120_000 },
 );
 
 proves(
@@ -183,7 +182,7 @@ proves(
       await fs.remove(l.sb.home, { recursive: true });
     }
   },
-  { timeout: 120_000, skip: proc.build.os === "windows" && "the stand-in ssh is a shell script" },
+  { skip: proc.build.os === "windows" && "the stand-in ssh is a shell script" },
 );
 
 proves(
@@ -227,5 +226,5 @@ proves(
       await fs.remove(l.sb.home, { recursive: true });
     }
   },
-  { timeout: 120_000, skip: proc.build.os === "windows" && "the stand-in ssh is a shell script" },
+  { skip: proc.build.os === "windows" && "the stand-in ssh is a shell script" },
 );

@@ -189,10 +189,7 @@ proves(
     assert(!(await fs.exists(`${home}/.local/bin/stolos-probe`)), "the probe is removed");
     await fs.remove(home, { recursive: true });
   },
-  // Five real runs, each reading the whole machine's facts (apt list --upgradable on a CI runner
-  // with thousands of packages): seconds each, past Bun's default of 5.
   {
-    timeout: 120_000,
     // Windows runs integrate.windows.ps1 (tests/integrate/windows-check.ps1 in CI).
     skip: proc.build.os === "windows" && "integrate.sh is for Linux and macOS",
   },

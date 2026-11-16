@@ -169,7 +169,6 @@ proves(
       await fs.remove(sb.home, { recursive: true });
     }
   },
-  { timeout: 120_000 },
 );
 
 /** The modules of the commands spec 060 FR-004 names, whose messages once said `git push`. */

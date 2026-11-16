@@ -154,7 +154,6 @@ proves(
       await fs.remove(s.home, { recursive: true });
     }
   },
-  { timeout: 120_000 },
 );
 
 proves(
@@ -295,7 +294,6 @@ proves(
       await fs.remove(s.home, { recursive: true });
     }
   },
-  { timeout: 120_000 },
 );
 
 proves(
@@ -376,7 +374,6 @@ proves(
       await fs.remove(s.home, { recursive: true });
     }
   },
-  { timeout: 120_000 },
 );
 
 proves(
@@ -631,5 +628,4 @@ proves(
       await fs.remove(s.home, { recursive: true });
     }
   },
-  { timeout: 120_000 },
 );

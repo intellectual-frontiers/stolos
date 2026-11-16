@@ -301,7 +301,6 @@ proves(
       await fs.remove(dir, { recursive: true });
     }
   },
-  { timeout: 120_000 },
 );
 
 proves(
@@ -666,7 +665,6 @@ proves(
       await fs.remove(dir, { recursive: true });
     }
   },
-  { timeout: 120_000 },
 );
 
 proves(

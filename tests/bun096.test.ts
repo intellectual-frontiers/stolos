@@ -159,6 +159,5 @@ proves(
   },
   {
     skip: BUN === undefined && "Bun is not installed (the package is packed by Bun)",
-    timeout: 120_000,
   },
 );

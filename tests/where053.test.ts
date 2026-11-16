@@ -147,7 +147,6 @@ proves(
       await fs.remove(f.sb.home, { recursive: true });
     }
   },
-  { timeout: 120_000 },
 );
 
 proves(
@@ -167,5 +166,4 @@ proves(
       await fs.remove(f.sb.home, { recursive: true });
     }
   },
-  { timeout: 120_000 },
 );
