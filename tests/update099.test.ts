@@ -424,10 +424,15 @@ proves(
       await git("add", "fleets");
       await git("commit", "-q", "--no-gpg-sign", "-m", "lab");
       const tree = await extractFleets(repo, "HEAD");
-      const gitDir = await fs.realPath(path.join(repo, ".git"));
-      assert((await fs.realPath(tree)).startsWith(gitDir), `${tree} is inside .git`);
+      // Windows: drive letters and separators may be spelled differently; Git may check out CRLF.
+      const norm = (p: string) => p.replace(/\\/g, "/").toLowerCase();
+      const gitDir = norm(await fs.realPath(path.join(repo, ".git")));
+      assert(norm(await fs.realPath(tree)).startsWith(`${gitDir}/`), `${tree} is inside .git`);
       assertEquals(
-        await fs.readTextFile(path.join(tree, "fleets", "lab", "fleet.ts")),
+        (await fs.readTextFile(path.join(tree, "fleets", "lab", "fleet.ts"))).replace(
+          /\r\n/g,
+          "\n",
+        ),
         "export const x = 1;\n",
       );
       assert(
