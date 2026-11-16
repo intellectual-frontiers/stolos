@@ -21,6 +21,8 @@
  * @module
  */
 
+import type { EngineVersions } from "../fleet/releases.ts";
+import { type Askpass, type Question, sameToken } from "./askpass.ts";
 import type { ServeInfo } from "@intellectual-frontiers/commons/ts/runtime";
 import type { Command } from "../core/registry-types.ts";
 import type { ScfCatalog } from "../compliance/catalog.ts";
@@ -146,8 +148,15 @@ export interface StolosDeps {
   sessions: Sessions;
   /** The fleet's facts. */
   facts(): Promise<PcFacts>;
+  /** Spec 099: the engine running here and a newer release, if any (absent: not shown). */
+  engine?(): Promise<EngineVersions>;
   /** Runs a stolos command. */
   runner: PcRunner;
+  /**
+   * Spec 099: passphrases asked in the browser (OpenSSH's askpass helper asks the console); the
+   * runner's commands use it. Absent: a passphrase is typed in the terminal.
+   */
+  askpass?: Askpass;
   /** The activity record. */
   activity: { add(e: ActivityEntry): Promise<void>; recent(n: number): Promise<ActivityEntry[]> };
   /** The guides offered (docs/<name>.md). */
@@ -170,6 +179,47 @@ export interface StolosDeps {
   audit?: AuditDeps;
   /** Spec 082: the provider's client these pages are for (shown in the top bar, with the way back). */
   scope?: { label: string; href: string };
+}
+
+/**
+ * Spec 099: the passphrase field for a waiting question, on the page that started the run. On
+ * plain HTTP, the warning first, with the same command for the terminal.
+ */
+export function askpassForm(q: Question, shown: string, http: boolean): Html {
+  return html`<form
+    id="askpass"
+    class="card stack"
+    style="margin-top:10px"
+    data-on:submit="@post('/askpass/answer', {contentType: 'form'})"
+  >
+    ${
+      http
+        ? html`<p class="notice warn" role="alert">
+            ⚠️ Warning, you're about to type in your passphrase on an unencrypted channel (this page
+            is HTTP). Only do this on a trusted network, or do this at the command line:
+            <code>${shown}</code>
+          </p>`
+        : ""
+    }
+    <input type="hidden" name="id" value="${q.id}" />
+    <label class="field"
+      ><span>${q.prompt}</span
+      ><input type="password" name="passphrase" autocomplete="off" autofocus required
+    /></label>
+    <div class="row">
+      <button class="btn" type="submit">Sign</button>
+      <button
+        class="btn ghost"
+        type="button"
+        data-on:click="@post('/askpass/answer?cancel=1', {contentType: 'form'})"
+      >
+        Cancel
+      </button>
+    </div>
+    <p class="sub">
+      It goes to OpenSSH on this PC for this signature only; Stolos does not keep it.
+    </p>
+  </form>`;
 }
 
 /** The fleet's OSCAL documents (spec 071), by file name; none without the SCF catalog. */
@@ -267,6 +317,14 @@ export function stolosHandler(
           product: "stolos",
           title,
           subtitle: `this PC · ${deps.person.user}`,
+          ...(deps.engine
+            ? {
+                engine: {
+                  ...(await deps.engine().catch(() => ({ running: "" }))),
+                  href: "/actions/fleet?cmd=update",
+                },
+              }
+            : {}),
           fleet: { id: facts.fleet.title, repo: facts.fleet.repo },
           user: {
             name: s.name,
@@ -333,7 +391,24 @@ export function stolosHandler(
             </div>
           `),
         );
-        state("Running ... (if it asks for a passphrase, type it in the terminal)");
+        state(
+          deps.askpass
+            ? "Running ... (if it needs your passphrase, this page asks for it)"
+            : "Running ... (if it asks for a passphrase, type it in the terminal)",
+        );
+        let asked = false;
+        if (deps.askpass) {
+          const http = new URL(req.url).protocol === "http:";
+          deps.askpass.onAsk = (q) => {
+            // A second question replaces the first form (a wrong passphrase is asked again).
+            send(
+              asked
+                ? patch(askpassForm(q, shown, http))
+                : patch(askpassForm(q, shown, http), { selector: "#output", mode: "after" }),
+            );
+            asked = true;
+          };
+        }
         let code = 1;
         try {
           code = await deps.runner(r.argv, (l) => out(l));
@@ -341,6 +416,11 @@ export function stolosHandler(
           out((e as Error).message, "bad");
         } finally {
           busy = false;
+          if (deps.askpass) {
+            deps.askpass.onAsk = undefined;
+            deps.askpass.cancelAll();
+          }
+          if (asked) send(patch("", { selector: "#askpass", mode: "remove" }));
         }
         state(code === 0 ? "Done" : `Failed (exit ${code})`);
         await deps.activity.add({
@@ -427,6 +507,16 @@ export function stolosHandler(
         status: 421,
       });
     }
+    // Spec 099: OpenSSH's askpass helper asks for a passphrase (its token, not a session).
+    if (path === "/askpass" && req.method === "POST" && deps.askpass) {
+      if (!sameToken(req.headers.get("x-stolos-askpass") ?? "", deps.askpass.token)) {
+        return new Response("refused\n", { status: 403 });
+      }
+      const answer = await deps.askpass.ask((await req.text()).slice(0, 500));
+      return answer === undefined
+        ? new Response("not answered\n", { status: 403 })
+        : new Response(answer, { headers: { "cache-control": "no-store" } });
+    }
     try {
       const st = await staticFile(path, deps.cacheDir);
       if (st) return st;
@@ -493,6 +583,35 @@ export function stolosHandler(
         }
         if (!req.headers.get("datastar-request")) return new Response("refused\n", { status: 403 });
         if (path === "/actions/run") return await run(req, s);
+        if (path === "/askpass/answer" && deps.askpass) {
+          const f = await req.formData();
+          const id = formText(f.get("id"));
+          const cancel =
+            url.searchParams.get("cancel") === "1" || formText(f.get("cancel")) === "1";
+          const ok = deps.askpass.answer(id, cancel ? undefined : formText(f.get("passphrase")));
+          await deps.activity.add({
+            at: new Date().toISOString(),
+            user: s.user,
+            from: "this PC",
+            kind: "run",
+            detail: cancel ? "passphrase: cancelled" : "passphrase: typed in the browser",
+            code: ok ? 0 : 1,
+          });
+          return new Response(
+            patch(
+              html`<div id="askpass" class="notice">
+                ${
+                  !ok
+                    ? "That question is no longer waiting."
+                    : cancel
+                      ? "Cancelled: the command is told no."
+                      : "Sent to OpenSSH (not kept anywhere)."
+                }
+              </div>`,
+            ),
+            { headers: { "content-type": "text/event-stream", "cache-control": "no-store" } },
+          );
+        }
         if (path === "/query/run") return await query(req, s);
         return new Response("not found\n", { status: 404 });
       }
@@ -504,7 +623,10 @@ export function stolosHandler(
       }
       if (path === "/boot/stream") return bootStream(deps, req.signal);
       const f = await deps.facts();
-      if (path === "/") return await frame(s, "Overview", "/", stolosOverview(f), f);
+      if (path === "/") {
+        const engine = await deps.engine?.().catch(() => undefined);
+        return await frame(s, "Overview", "/", stolosOverview(f, Date.now(), engine), f);
+      }
       if (path === "/machines") return await frame(s, "Machines", "/machines", machinesPage(f), f);
       if (path.startsWith("/machines/")) {
         let name = "";

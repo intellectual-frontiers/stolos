@@ -329,7 +329,7 @@ export async function peopleReview(o: ReviewOptions = {}): Promise<number> {
   const push = await git(["push", "-q", "-u", "origin", branch]);
   if (!push.ok) {
     await back();
-    p.fail(`git push: ${push.stderr.trim().split("\n").pop()}`, `git push -u origin ${branch}`);
+    p.fail(`git push: ${push.stderr.trim().split("\n").pop()}`, "bun run stolos apply");
     return 1;
   }
   const body = [

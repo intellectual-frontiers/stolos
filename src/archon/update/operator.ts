@@ -8,7 +8,7 @@
  * 2. **Approval**: what arrived is signed by a key the fleet trusted before it
  *    (the check servers make), so a push that servers will refuse is seen here.
  * 3. **Engine**: is the pinned Stolos release the newest? If not, `fleet
- *    upgrade` moves the pin (one signed commit; you push it). `--no-upgrade`
+ *    upgrade` moves the pin (one signed commit), and `stolos apply` sends it (spec 099). `--no-upgrade`
  *    only reports. Then `bun install --frozen-lockfile`: the engine bun.lock
  *    holds is the one installed here.
  * 4. **Keys**: the parts of `keys setup` that need no passphrase (Git's
@@ -37,26 +37,13 @@ import { P, repoRel } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";
 import { SECRETS } from "../core/secrets.ts";
 import { json, object, integer } from "@intellectual-frontiers/commons/ts/kernel";
-import {
-  compare,
-  engineRepository,
-  parseTag,
-  PIN_FILE,
-  readPin,
-  type Semver,
-} from "../fleet/upgrade.ts";
+import { compare, engineRepository, parseTag, PIN_FILE, readPin } from "../fleet/upgrade.ts";
+import { newestTag } from "../fleet/releases.ts";
 import { BUN_VERSION } from "../core/bun-pin.ts";
 import { engineCommand } from "../install/bun.ts";
 
 /** The newest release tag in a list of `git ls-remote --tags` lines, or undefined. */
-export function newestTag(lsRemote: string): string | undefined {
-  let best: Semver | undefined;
-  for (const m of lsRemote.matchAll(/refs\/tags\/(v\d+\.\d+\.\d+)$/gm)) {
-    const v = parseTag(m[1] ?? "");
-    if (v && (!best || compare(v, best) > 0)) best = v;
-  }
-  return best ? `v${best.join(".")}` : undefined;
-}
+export { newestTag } from "../fleet/releases.ts";
 
 /** Whether `have` ("2.9.6") is at least `want`. */
 export function atLeast(have: string, want: string): boolean {
@@ -151,7 +138,7 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
   }
   const remote = `origin/${branch}`;
   const behind = Number((await git(["rev-list", "--count", `HEAD..${remote}`])).stdout.trim()) || 0;
-  const ahead = Number((await git(["rev-list", "--count", `${remote}..HEAD`])).stdout.trim()) || 0;
+  let ahead = Number((await git(["rev-list", "--count", `${remote}..HEAD`])).stdout.trim()) || 0;
   const dirty = (await git(["status", "--porcelain", "--untracked-files=no"])).stdout.trim();
   let pulled: string[] = [];
   if (!behind) {
@@ -160,10 +147,30 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
         ? `up to date; ${ahead} commit(s) of yours not pushed yet (bun run stolos apply)`
         : "up to date",
     );
+  } else if (ahead && !dirty) {
+    // Spec 099: yours on top of GitHub's (never a merge); a conflict is undone and named.
+    pulled = (await git(["log", "--format=%h %s", `HEAD..${remote}`])).stdout
+      .split("\n")
+      .filter(Boolean);
+    const rb = await git(["rebase", "--quiet", remote]);
+    if (!rb.ok) {
+      await git(["rebase", "--abort"]);
+      pulled = [];
+      p.warn(
+        `your ${ahead} commit(s) and ${behind} new one(s) on GitHub change the same lines`,
+        "git pull --rebase, resolve the conflict, then bun run stolos update",
+      );
+      p.done();
+    } else {
+      for (const c of pulled.slice(0, 10)) p.note(c);
+      p.done(
+        `${pulled.length} new commit(s); your ${ahead} commit(s) on top (they need signing again)`,
+      );
+    }
   } else if (ahead) {
     p.warn(
-      `your ${ahead} commit(s) and ${behind} new one(s) on GitHub went different ways`,
-      `git pull --rebase (puts yours on top), then bun run stolos apply`,
+      `your ${ahead} commit(s) and ${behind} new one(s) on GitHub went different ways, and you have changes not committed`,
+      "bun run stolos apply (sends your changes), then bun run stolos update",
     );
     p.done();
   } else if (dirty) {
@@ -221,6 +228,19 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
         }
       }
     }
+  }
+
+  // Spec 099: your own commits not on GitHub yet go out first (stolos apply: checked, signed,
+  // pushed), so the engine can be upgraded on top of them.
+  ahead = Number((await git(["rev-list", "--count", `${remote}..HEAD`])).stdout.trim()) || 0;
+  if (ahead && !dirty && !o.noUpgrade) {
+    stdio.stdout.writeSync(`\n  Sending your ${ahead} commit(s) first (stolos apply).\n\n`);
+    const r = await stolos(["apply"]);
+    const s = ui.phase("Send");
+    if (r.code === 0) {
+      s.done(`your ${ahead} commit(s) are on GitHub`);
+      ahead = 0;
+    } else s.warn("stolos apply did not finish (its messages are above)", "bun run stolos apply");
   }
 
   // 3. The engine: the newest Stolos release, and the pin.
@@ -282,9 +302,18 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
     if (code === 0) {
       upgraded = true;
       u.done(`pinned to ${upgradeTo} (one signed commit)`);
-      ui.next.push(
-        `push it: bun run stolos apply (servers move to ${upgradeTo} within 15 minutes)`,
-      );
+      // Spec 099: publish it too (stolos apply: verified, pushed); pushing is approval.
+      stdio.stdout.writeSync(`\n  Sending the upgrade to every machine (stolos apply).\n\n`);
+      const ap = await stolos(["apply"]);
+      const pub = ui.phase("Publish");
+      if (ap.code === 0)
+        pub.done(`on GitHub: every server moves to ${upgradeTo} within 15 minutes`);
+      else {
+        pub.fail(
+          "the upgrade is committed here but not sent (stolos apply's messages are above)",
+          "bun run stolos apply",
+        );
+      }
     } else {
       u.fail(
         `fleet upgrade to ${upgradeTo} did not finish`,

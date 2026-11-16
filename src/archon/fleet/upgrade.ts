@@ -30,7 +30,7 @@
  *   U->>R: bun.lock (the commit, its integrity); the installed engine says vX.Y.Z
  *   U->>R: validate every fleet with the new engine
  *   U->>R: one signed commit
- *   P->>R: git push (the approval)
+ *   P->>R: stolos apply (the approval)
  * ```
  *
  * @module

@@ -258,6 +258,10 @@ export async function webServe(hostName: string): Promise<number> {
     throttle: new Throttle(),
     data: () => cached("welcome", 5_000, () => welcomeData(hostName)),
     repo: () => cached("repo", 15_000, () => repoFacts()),
+    engine: async () => {
+      const { engineVersions } = await import("../fleet/releases.ts");
+      return await engineVersions(paths.join(P.status, "newest-release.json"));
+    },
     activity: activityLog(),
     guideDoc: (name) => guideBody(name, GUIDES, fleet.repository.slug),
     cacheDir: `${proc.env.get("HOME") ?? "/var/cache/archon-web"}/vendor`,

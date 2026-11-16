@@ -494,7 +494,7 @@ export const COMMANDS: Command[] = [
   {
     name: "fleet upgrade",
     summary: "Move this repository to another released engine version, locked and signed",
-    description: `Run in the fleet repository, on the boot machine or a workstation. Checks that the tag is a release (the engine's own version.ts at that tag says the same version), refuses an older version unless --downgrade, rewrites the engine's release URL in package.json, runs bun install so bun.lock holds the new release's integrity (hosts install with --frozen-lockfile, so the lock is what makes your signature cover the engine's code), validates every fleet with the new engine, and makes one signed commit of package.json and bun.lock. Push it to approve it. If anything fails, nothing is committed (spec 046; the fleet-repository guide (bun run stolos docs fleet-repository)).`,
+    description: `Run in the fleet repository, on the boot machine or a workstation. Checks that the tag is a release (the engine's own version.ts at that tag says the same version), refuses an older version unless --downgrade, rewrites the engine's release URL in package.json, runs bun install so bun.lock holds the new release's integrity (hosts install with --frozen-lockfile, so the lock is what makes your signature cover the engine's code), validates every fleet with the new engine, and makes one signed commit of package.json and bun.lock. Send it with stolos apply to approve it (stolos update does all of this, and the apply, by itself: spec 099). If anything fails, nothing is committed (spec 046; the fleet-repository guide (bun run stolos docs fleet-repository)).`,
     tier: "repo",
     noMcp: true,
     operation: true,
@@ -4507,7 +4507,7 @@ export const COMMANDS: Command[] = [
   {
     name: "update",
     summary: "Bring this PC's checkout up to date (use it instead of git pull), then the doctor",
-    description: `Instead of git pull (spec 058): fetches and fast-forwards a clean checkout (never a merge); checks that what arrived is signed by a key the fleet trusted (as servers will); upgrades the pinned engine when a newer Stolos release is out (fleet upgrade: one signed commit you push; --no-upgrade only reports); repairs Git's allowed signers and the pre-push check; then runs boot doctor (on a boot machine) or stolos keys. Every step is safe to run again.`,
+    description: `Instead of git pull (spec 058): fetches and fast-forwards a clean checkout (never a merge); checks that what arrived is signed by a key the fleet trusted (as servers will); sends your own commits first (stolos apply), upgrades the pinned engine when a newer Stolos release is out (fleet upgrade: one signed commit) and sends that too (stolos apply), so every server follows within 15 minutes; --no-upgrade only reports; a pull that diverged from yours is rebased (yours on top), and a conflict is undone and named; repairs Git's allowed signers and the pre-push check; then runs boot doctor (on a boot machine) or stolos keys. Every step is safe to run again.`,
     tier: "repo",
     place: "pc",
     operation: true,

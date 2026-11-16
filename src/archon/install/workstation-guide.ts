@@ -65,7 +65,7 @@
  * groups, the tools, Claude Code, your dotfiles, and `archon verify`. Commit the new file:
  *
  * ```sh
- * git add -A; git commit -m "020-workstation: add workstation pc"; git push
+ * bun run stolos apply -m "020-workstation: add workstation pc"
  * ```
  *
  * **5. Open a new Ubuntu tab.** You are in fish with the Archon prompt, which starts with the

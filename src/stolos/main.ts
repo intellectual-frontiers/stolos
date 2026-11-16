@@ -7,7 +7,7 @@
  *
  * ```mermaid
  * flowchart LR
- *   pc["your PC<br/>bun run stolos ..."] -->|"git push (signed)"| gh["GitHub"]
+ *   pc["your PC<br/>bun run stolos ..."] -->|"stolos apply (signed)"| gh["GitHub"]
  *   pc -->|"stolos boot serve:<br/>network installs"| m["each machine<br/>archon ..."]
  *   gh -->|"every 15 minutes"| m
  * ```

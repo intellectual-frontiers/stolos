@@ -9,6 +9,7 @@
  * @module
  */
 
+import type { EngineVersions } from "../fleet/releases.ts";
 import type { Command } from "../core/registry-types.ts";
 import type { GuideItem } from "../guide/guide.ts";
 import { CATEGORIES } from "../guide/guide.ts";
@@ -192,8 +193,49 @@ export function attentionCard(v: NonNullable<WelcomeData["verify"]>): Html {
   </div>`;
 }
 
+/** Spec 099: the engine running here, a newer release, and how the fleet moves to it. */
+export function engineCard(
+  r: Pick<RepoFacts, "engine">,
+  lastRunAt: string | undefined,
+  s: Pick<Session, "role">,
+  engine?: EngineVersions,
+): Html {
+  const d = { lastRun: lastRunAt ? { at: lastRunAt } : undefined };
+  return html`<div class="card" id="engine">
+    <div class="k">Engine</div>
+    <div class="v">Stolos ${r.engine ?? engine?.running ?? "?"}</div>
+    <div class="sub">Last update ${ago(d.lastRun?.at)}; the next is within 15 minutes.</div>
+    ${
+      engine?.newer
+        ? html`<div style="margin-top:8px">
+            <span class="pill warn">${engine.newer} is out</span>
+            <div class="sub" style="margin-top:6px">
+              The fleet moves to it when its operator runs Update in the Stolos Console (or
+              <code>bun run stolos update</code>): that signs the change and sends it, and this
+              server follows within 15 minutes. Once it is sent, Update now here follows at once.
+            </div>
+            ${
+              s.role === "operator"
+                ? html`<a class="btn ghost" style="margin-top:8px" href="/actions/server?cmd=update"
+                    >Update now</a
+                  >`
+                : ""
+            }
+          </div>`
+        : engine
+          ? html`<div class="sub" style="margin-top:6px">The newest release.</div>`
+          : ""
+    }
+  </div>`;
+}
+
 /** Overview: health first, then how this server stays as described. */
-export function overviewPage(d: WelcomeData, r: RepoFacts, s: Session): Html {
+export function overviewPage(
+  d: WelcomeData,
+  r: RepoFacts,
+  s: Session,
+  engine?: EngineVersions,
+): Html {
   const v = d.verify;
   const pct = v && v.total ? Math.round((v.passed / v.total) * 100) : 0;
   const healthy = !!v && v.passed === v.total;
@@ -243,11 +285,7 @@ export function overviewPage(d: WelcomeData, r: RepoFacts, s: Session): Html {
           }
         </div>
       </div>
-      <div class="card">
-        <div class="k">Engine</div>
-        <div class="v">Stolos ${r.engine ?? "?"}</div>
-        <div class="sub">Last update ${ago(d.lastRun?.at)}; the next is within 15 minutes.</div>
-      </div>
+      ${engineCard(r, d.lastRun?.at, s, engine)}
     </div>
     ${v && !healthy ? attentionCard(v) : ""}
     <div class="grid cols-2" style="margin-top:14px">
@@ -416,7 +454,7 @@ export function howPage(d: WelcomeData, r: RepoFacts): Html {
   pc["Your PC: stolos<br/>edit, build, sign, push"]
   srv["${m(d.host)}: archon<br/>pull, check signature, apply, verify"]
   fleet -->|"package.json pins the engine;<br/>bun.lock holds its integrity"| engine
-  pc -->|"git push (signed)"| fleet
+  pc -->|"stolos apply (signed)"| fleet
   srv -->|"git pull (read-only deploy key)"| fleet
   srv -->|"runs the pinned engine"| engine`,
         "Two repositories: the engine (how) and your fleet (what). The fleet pins an exact engine release, so every server runs the same, checked code.",

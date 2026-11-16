@@ -13,6 +13,7 @@
  * @module
  */
 
+import type { EngineVersions } from "../fleet/releases.ts";
 import { errors, type ServeInfo } from "@intellectual-frontiers/commons/ts/runtime";
 import type { Command } from "../core/registry-types.ts";
 import type { WelcomeData } from "../web/welcome.ts";
@@ -78,6 +79,8 @@ export interface ConsoleDeps {
   throttle: Throttle;
   /** What the welcome page gathered (health, apps, guide). */
   data(): Promise<WelcomeData>;
+  /** Spec 099: the engine running here and a newer release, if any (absent: not shown). */
+  engine?(): Promise<EngineVersions>;
   /** The fleet repository's checkout: commit, signer, engine, signers. */
   repo(): Promise<RepoFacts>;
   /** The activity record: append, and the newest entries. */
@@ -262,6 +265,14 @@ export function consoleHandler(
           product: "archon",
           title,
           subtitle: `${deps.host} · ${d.os}`,
+          ...(deps.engine
+            ? {
+                engine: {
+                  ...(await deps.engine().catch(() => ({ running: "" }))),
+                  href: "/#engine",
+                },
+              }
+            : {}),
           fleet: { id: d.title, repo: d.repo.slug },
           user: {
             name: s.name,
@@ -370,7 +381,17 @@ export function consoleHandler(
       }
       if (req.method === "GET") {
         if (path === "/") {
-          return frame(s, "Overview", "/", overviewPage(await deps.data(), await deps.repo(), s));
+          return frame(
+            s,
+            "Overview",
+            "/",
+            overviewPage(
+              await deps.data(),
+              await deps.repo(),
+              s,
+              await deps.engine?.().catch(() => undefined),
+            ),
+          );
         }
         if (path === "/how") {
           return frame(s, "How it works", "/how", howPage(await deps.data(), await deps.repo()));

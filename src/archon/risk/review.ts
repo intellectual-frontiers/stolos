@@ -281,7 +281,7 @@ export async function openReview(
     }
     steps.push("one signed commit");
     const push = await git(["push", "-q", "-u", "origin", `HEAD:${c.branch}`]);
-    if (!push.ok) return fail(`git push: ${push.stderr.trim()}`, `git push -u origin ${c.branch}`);
+    if (!push.ok) return fail(`git push: ${push.stderr.trim()}`, "bun run stolos apply");
     steps.push(`pushed ${c.branch}`);
     const pr = await r.run([
       "gh",

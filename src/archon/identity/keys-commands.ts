@@ -914,7 +914,7 @@ export async function keysCheckPush(input?: string): Promise<number> {
         stdio.stderr.writeSync(
           `${
             t.code === "unsigned"
-              ? "  sign your last commit: git commit --amend --no-edit -S   (then push again)"
+              ? "  sign your last commit: git commit --amend --no-edit -S   (then bun run stolos apply)"
               : t.code === "untrusted"
                 ? "  it was signed by a key signers.ts does not list: bun run stolos keys"
                 : "  pull first: git pull --rebase"

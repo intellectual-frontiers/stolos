@@ -39,6 +39,23 @@ export interface Frame {
   current: string;
   /** Spec 082: the provider's client this page is for, and where the list of clients is. */
   scope?: { label: string; href: string };
+  /**
+   * Spec 099: the engine running here, and a newer release when there is one, with where to
+   * update it (the Stolos Console runs stolos update; the Archon Console explains it).
+   */
+  engine?: { running: string; newer?: string; href: string };
+}
+
+/** The engine's version in the header, and a newer release as a link to update. */
+function engineMark(e: Frame["engine"]): Html | string {
+  if (!e) return "";
+  return html` · <span title="The Stolos engine running here">${e.running}</span>${
+      e.newer
+        ? html` <a class="pill warn" href="${e.href}" title="A newer Stolos release is out"
+            >${e.newer} is out · Update</a
+          >`
+        : ""
+    }`;
 }
 
 /** Initials for the avatar. */
@@ -123,7 +140,7 @@ export function page(f: Frame, body: Html): string {
                             `
                           : ""
                       }fleet
-                      ${f.fleet.id} · ${f.fleet.repo}</span
+                      ${f.fleet.id} · ${f.fleet.repo}${engineMark(f.engine)}</span
                     >
                   </div>
                 `
@@ -132,7 +149,8 @@ export function page(f: Frame, body: Html): string {
                     >${ARCHON_LOGO}<b>Archon</b><small>${f.subtitle}</small></a
                   >
                   <div class="fleetmark">
-                    ${STOLOS_LOGO}<b>Stolos</b><span>fleet ${f.fleet.id} · ${f.fleet.repo}</span>
+                    ${STOLOS_LOGO}<b>Stolos</b
+                    ><span>fleet ${f.fleet.id} · ${f.fleet.repo}${engineMark(f.engine)}</span>
                   </div>
                 `
           }

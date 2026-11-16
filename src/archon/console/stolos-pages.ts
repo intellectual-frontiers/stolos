@@ -9,6 +9,7 @@
  * @module
  */
 
+import type { EngineVersions } from "../fleet/releases.ts";
 import type { Attention } from "../state/verify.ts";
 import type { Command } from "../core/registry-types.ts";
 import type { PolicyResult } from "../adopt/policy.ts";
@@ -375,7 +376,7 @@ function attentionList(a: readonly Attention[]): Html {
 }
 
 /** The fleet at a glance. */
-export function stolosOverview(f: PcFacts, now = Date.now()): Html {
+export function stolosOverview(f: PcFacts, now = Date.now(), engine?: EngineVersions): Html {
   const by = (k: PcMachine["kind"]) => f.machines.filter((x) => x.kind === k).length;
   const failing = f.machines.filter((x) => x.failing.length || x.attention?.length);
   const notAsked = f.machines.filter((x) => x.notAsked);
@@ -494,7 +495,24 @@ export function stolosOverview(f: PcFacts, now = Date.now()): Html {
       </div>
       <div class="card">
         <h2>The repository</h2>
-        <div class="sub">${f.fleet.repo} · engine ${f.fleet.engine ?? "?"}</div>
+        <div class="sub">${f.fleet.repo} · engine ${f.fleet.engine ?? engine?.running ?? "?"}</div>
+        ${
+          engine?.newer
+            ? html`<div class="row spread" style="margin-top:8px">
+                <span
+                  ><span class="pill warn">Stolos ${engine.newer} is out</span>
+                  <span class="sub"
+                    >Update moves the fleet to it: one signed commit, sent to every server (they
+                    follow within 15 minutes). Your passphrase is asked in the terminal.</span
+                  ></span
+                ><a class="btn" href="/actions/fleet?cmd=update">Update to ${engine.newer}</a>
+              </div>`
+            : engine
+              ? html`<div class="sub" style="margin-top:4px">
+                  Stolos ${engine.running}, the newest release.
+                </div>`
+              : ""
+        }
         <div style="margin-top:8px">
           ${
             f.git.dirty.length

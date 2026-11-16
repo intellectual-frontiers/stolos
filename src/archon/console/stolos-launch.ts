@@ -183,13 +183,26 @@ export async function stolosConsole(o: {
       return 1;
     }
   }
+  // Spec 099: a passphrase a command needs is asked on the page that ran it (OpenSSH's askpass).
+  const { Askpass, askpassEnv } = await import("./askpass.ts");
+  const askpass = new Askpass();
+  const askEnv = await askpassEnv(
+    await fs.makeTempDir({ prefix: "stolos-askpass-" }),
+    `http://127.0.0.1:${port}`,
+    askpass,
+  );
   const handler = stolosHandler({
     port,
+    askpass,
     person: { user, name, ...(github ? { github } : {}) },
     launch,
     sessions: new Sessions(),
     facts: () => pcFacts(),
-    runner: pcRunner(),
+    engine: async () => {
+      const { engineVersions } = await import("../fleet/releases.ts");
+      return await engineVersions(path.join(P.bootCache, "..", "newest-release.json"));
+    },
+    runner: pcRunner(P.repo, askEnv),
     activity: activityLog(path.join(P.state, "console-activity.jsonl")),
     guides: PC_GUIDES,
     guideDoc: pcGuideDoc,
@@ -225,7 +238,9 @@ export async function stolosConsole(o: {
       `The link is for the auditor: it opens engagement ${o.audit} only, read-only, for at most four hours.`,
     );
   }
-  ui.say("Passphrases and tokens a command asks for are typed here, in this terminal.");
+  ui.say(
+    "A passphrase a command needs is asked on its page (on HTTP, with a warning); tokens are typed here, in this terminal.",
+  );
   ui.say("Ctrl+C stops the console.");
   if (o.open !== false) openBrowser(url);
   await server.finished;

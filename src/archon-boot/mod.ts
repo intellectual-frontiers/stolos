@@ -101,7 +101,7 @@
  *
  * ```powershell
  * bun run stolos fleet init
- * git add -A; git commit -m "003-identity: fleet init"; git push
+ * bun run stolos apply -m "003-identity: fleet init"
  * ```
  *
  * `fleet init` reads your GitHub identity with `gh` (login, ID, name, noreply commit address, public
@@ -266,7 +266,7 @@
  *
  * Until a changed secret is backed up, Archon says so: a panel at the end of the command that changed
  * it and at the start of `boot serve` and `boot status`, a warning in `boot doctor`, a reminder before
- * each `git push`, `🔐 backup` in the prompt, and an email after a day (then weekly). If this PC is
+ * each push (`stolos apply`), `🔐 backup` in the prompt, and an email after a day (then weekly). If this PC is
  * lost, see [disaster recovery](../archon/vault/mod.ts).
  *
  * To show `🔐 backup` in PowerShell with oh-my-posh and this theme, add to your profile:

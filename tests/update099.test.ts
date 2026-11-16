@@ -1,0 +1,286 @@
+/**
+ * Spec 099: updating the engine is one command or one button; both consoles show the engine; a
+ * passphrase is asked on the page that ran the command (with a warning on HTTP).
+ *
+ * @module
+ */
+import { fs, path, proc, serve } from "@intellectual-frontiers/commons/ts/runtime";
+import {
+  assert,
+  assertEquals,
+  assertStringIncludes,
+  proves,
+} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { isNewer, newestRelease, newestTag } from "../src/archon/fleet/releases.ts";
+import { page } from "../src/archon/console/layout.ts";
+import { html } from "../src/archon/console/html.ts";
+import { stolosOverview } from "../src/archon/console/stolos-pages.ts";
+import { Askpass, askpassEnv } from "../src/archon/console/askpass.ts";
+import { askpassForm } from "../src/archon/console/stolos-server.ts";
+import { FACTS, fakeConsole } from "./console/serve-stolos.ts";
+import { linkEngine, sandbox } from "./sandbox.ts";
+
+proves(
+  ["099-engine-update FR-002"],
+  "099: the newest release, newer or not, and the cache (no network when fresh)",
+  async () => {
+    assertEquals(
+      newestTag("a\trefs/tags/v0.9.0\nb\trefs/tags/v0.126.0\nc\trefs/tags/v0.99.1"),
+      "v0.126.0",
+    );
+    assert(isNewer("v0.126.0", "v0.124.0") && isNewer("v0.126.0", "0.124.0"));
+    assert(!isNewer("v0.124.0", "v0.124.0") && !isNewer(undefined, "v1.0.0"));
+    const dir = await fs.makeTempDir();
+    const cacheFile = path.join(dir, "newest.json");
+    const now = 1_000_000;
+    await fs.writeTextFile(
+      cacheFile,
+      JSON.stringify({ repo: "example/none", tag: "v9.9.9", at: now }),
+    );
+    // Fresh: from the cache (example/none does not exist, so a lookup would find nothing).
+    assertEquals(await newestRelease("example/none", { cacheFile, now: now + 1000 }), "v9.9.9");
+    await fs.remove(dir, { recursive: true });
+  },
+);
+
+const frame = (engine?: { running: string; newer?: string; href: string }) =>
+  page(
+    {
+      product: "stolos",
+      title: "Overview",
+      subtitle: "this PC · alice",
+      fleet: { id: "lab", repo: "example/fleet" },
+      user: { name: "Alice", user: "alice", role: "fleet operator" },
+      nav: [],
+      current: "/",
+      ...(engine ? { engine } : {}),
+    },
+    html`<p>body</p>`,
+  );
+
+proves(
+  ["099-engine-update FR-002", "099-engine-update FR-003"],
+  "099: the header shows the engine; a newer release is a link to update; Overview offers it",
+  () => {
+    const now = frame({ running: "v0.126.0", href: "/actions/fleet?cmd=update" });
+    assertStringIncludes(now, "v0.126.0");
+    assert(!now.includes("is out"), "no newer release: no link");
+    const old = frame({
+      running: "v0.124.0",
+      newer: "v0.126.0",
+      href: "/actions/fleet?cmd=update",
+    });
+    assertStringIncludes(old, 'href="/actions/fleet?cmd=update"');
+    assertStringIncludes(old, "v0.126.0 is out · Update");
+    const o = String(
+      stolosOverview(structuredClone(FACTS), Date.now(), {
+        running: "v0.124.0",
+        newer: "v0.126.0",
+      }),
+    );
+    assertStringIncludes(o, "Update to v0.126.0");
+    assertStringIncludes(o, "Your passphrase is asked");
+    assert(!String(stolosOverview(structuredClone(FACTS))).includes("is out"));
+  },
+);
+
+proves(
+  ["099-engine-update FR-003"],
+  "099: the Archon Console's Engine card explains the update and offers Update now to an operator",
+  async () => {
+    const { engineCard } = await import("../src/archon/console/pages.ts");
+    const e = { running: "v0.124.0", newer: "v0.126.0" };
+    const a = String(engineCard({ engine: "v0.124.0" }, undefined, { role: "operator" }, e));
+    assertStringIncludes(a, 'id="engine"');
+    assertStringIncludes(a, "v0.126.0 is out");
+    assertStringIncludes(a, "bun run stolos update");
+    assertStringIncludes(a, 'href="/actions/server?cmd=update"');
+    const v = String(engineCard({ engine: "v0.124.0" }, undefined, { role: "viewer" }, e));
+    assert(!v.includes("cmd=update"), "only an operator");
+  },
+);
+
+proves(
+  ["099-engine-update FR-005"],
+  "099: on HTTP the passphrase field warns first, with the command for the terminal",
+  () => {
+    const q = { id: "abc", prompt: "Enter passphrase for /home/alice/.ssh/fleet-signing:" };
+    const http = String(askpassForm(q, "bun run stolos update", true));
+    assertStringIncludes(
+      http,
+      "⚠️ Warning, you're about to type in your passphrase on an unencrypted channel",
+    );
+    assertStringIncludes(http, "Only do this on a trusted network, or do this at the command line");
+    assertStringIncludes(http, "<code>bun run stolos update</code>");
+    assertStringIncludes(http, 'type="password"');
+    assert(!String(askpassForm(q, "bun run stolos update", false)).includes("Warning"));
+  },
+);
+
+proves(
+  ["099-engine-update FR-005"],
+  "099: OpenSSH's askpass asks the console; the browser's answer signs; a wrong token is refused",
+  async () => {
+    const port = 18000 + Math.floor(Math.random() * 1000);
+    const B = `http://127.0.0.1:${port}`;
+    const askpass = new Askpass();
+    const { handler, launch } = await fakeConsole(port, { askpass });
+    const server = await serve({ hostname: "127.0.0.1", port }, handler);
+    const dir = await fs.makeTempDir();
+    try {
+      // Refused without the console's token.
+      const bad = await fetch(`${B}/askpass`, {
+        method: "POST",
+        headers: { "x-stolos-askpass": "0".repeat(64) },
+        body: "Enter passphrase:",
+      });
+      assertEquals(bad.status, 403);
+      await bad.text();
+
+      // A key with a passphrase, signed through the helper; the browser answers.
+      const key = path.join(dir, "k");
+      const kg = await proc.run([
+        "ssh-keygen",
+        "-q",
+        "-t",
+        "ed25519",
+        "-N",
+        "pass phrase",
+        "-f",
+        key,
+      ]);
+      assert(kg.code === 0, kg.stderr);
+      const msg = path.join(dir, "msg");
+      await fs.writeTextFile(msg, "hello\n");
+      const env = await askpassEnv(path.join(dir, "helper"), B, askpass);
+      const r0 = await handler(
+        new Request(`${B}/launch?t=${launch.issue()}`, { headers: { host: `127.0.0.1:${port}` } }),
+      );
+      const cookie = (r0.headers.get("set-cookie") ?? "").split(";")[0] ?? "";
+      const seen: string[] = [];
+      askpass.onAsk = (q) => {
+        seen.push(q.prompt);
+        void handler(
+          new Request(`${B}/askpass/answer`, {
+            method: "POST",
+            headers: { host: `127.0.0.1:${port}`, cookie, origin: B, "datastar-request": "true" },
+            body: new URLSearchParams({ id: q.id, passphrase: "pass phrase" }),
+          }),
+        ).then((r) => r.text());
+      };
+      const sign = await proc.run(["ssh-keygen", "-Y", "sign", "-f", key, "-n", "git", msg], {
+        env: { ...env },
+        input: "",
+      });
+      assertEquals(sign.code, 0, sign.stderr);
+      assert(await fs.exists(`${msg}.sig`), "signed");
+      assert(seen.length === 1 && /passphrase/i.test(seen[0] ?? ""), seen.join("; "));
+      // Cancelled: OpenSSH is told no, and nothing is signed.
+      await fs.remove(`${msg}.sig`);
+      askpass.onAsk = (q) => void askpass.answer(q.id, undefined);
+      const no = await proc.run(["ssh-keygen", "-Y", "sign", "-f", key, "-n", "git", msg], {
+        env: { ...env },
+        input: "",
+      });
+      assert(no.code !== 0 && !(await fs.exists(`${msg}.sig`)), "cancelled: not signed");
+    } finally {
+      askpass.onAsk = undefined;
+      await server.shutdown();
+      await fs.remove(dir, { recursive: true });
+    }
+  },
+  {
+    skip:
+      proc.build.os === "windows" && "the Windows askpass helper is exercised by CI's console job",
+  },
+);
+
+proves(
+  ["099-engine-update FR-001"],
+  "099: update puts your commit on top of GitHub's; a conflict is undone and named",
+  async () => {
+    const sb = await sandbox("archon-update099-");
+    try {
+      const gitconfig = path.join(sb.home, "gitconfig");
+      await fs.writeTextFile(gitconfig, "[user]\n\tname = t\n\temail = t@example.invalid\n");
+      const env = { GIT_CONFIG_GLOBAL: gitconfig, GIT_CONFIG_NOSYSTEM: "1", HOME: sb.home };
+      const sh = async (cwd: string, ...a: string[]): Promise<string> => {
+        const r = await proc.output(a, { cwd, env: { ...proc.env.toObject(), ...env } });
+        if (!r.success) throw new Error(`${a.join(" ")}: ${new TextDecoder().decode(r.stderr)}`);
+        return new TextDecoder().decode(r.stdout).trim();
+      };
+      const origin = path.join(sb.home, "origin.git");
+      const mine = path.join(sb.home, "fleet");
+      const theirs = path.join(sb.home, "theirs");
+      await sh(sb.home, "git", "init", "-q", "--bare", "-b", "main", origin);
+      await sh(sb.home, "git", "clone", "-q", origin, theirs);
+      await fs.mkdir(path.join(theirs, "fleets"), { recursive: true });
+      await sh(".", "cp", "-r", "examples/fleets/lab", path.join(theirs, "fleets", "lab"));
+      await fs.writeTextFile(path.join(theirs, ".gitignore"), "node_modules/\n");
+      await sh(theirs, "git", "add", "-A");
+      await sh(theirs, "git", "commit", "-q", "--no-gpg-sign", "-m", "lab: the fleet");
+      await sh(theirs, "git", "push", "-q", "origin", "main");
+      await sh(sb.home, "git", "clone", "-q", origin, mine);
+      await linkEngine(mine);
+      const stolos = (args: string[]): ReturnType<typeof sb.run> =>
+        sb.run("src/stolos/main.ts", args, "", { ...env, ARCHON_REPO: mine, ARCHON_FLEET: "lab" });
+
+      // Theirs and mine, on different files: mine goes on top.
+      await fs.writeTextFile(path.join(theirs, "theirs.txt"), "t\n");
+      await sh(theirs, "git", "add", "-A");
+      await sh(theirs, "git", "commit", "-q", "--no-gpg-sign", "-m", "theirs");
+      await sh(theirs, "git", "push", "-q", "origin", "main");
+      await fs.writeTextFile(path.join(mine, "mine.txt"), "m\n");
+      await sh(mine, "git", "add", "mine.txt");
+      await sh(mine, "git", "commit", "-q", "--no-gpg-sign", "-m", "mine");
+      let r = await stolos(["update", "--no-upgrade", "--no-doctor"]);
+      assertStringIncludes(r.out, "your 1 commit(s) on top");
+      assertEquals(await sh(mine, "git", "log", "-2", "--format=%s"), "mine\ntheirs");
+
+      // The same file, two ways: undone, named, nothing lost.
+      await fs.writeTextFile(path.join(theirs, "mine.txt"), "theirs\n");
+      await sh(theirs, "git", "pull", "-q", "--no-rebase", "--no-edit");
+      await sh(theirs, "git", "add", "-A");
+      await sh(theirs, "git", "commit", "-q", "--no-gpg-sign", "-m", "theirs again");
+      await sh(theirs, "git", "push", "-q", "origin", "main");
+      const before = await sh(mine, "git", "rev-parse", "HEAD");
+      r = await stolos(["update", "--no-upgrade", "--no-doctor"]);
+      assertStringIncludes(r.out, "change the same lines");
+      assertEquals(await sh(mine, "git", "rev-parse", "HEAD"), before);
+      assertEquals(await fs.readTextFile(path.join(mine, "mine.txt")), "m\n");
+    } finally {
+      await fs.remove(sb.home, { recursive: true });
+    }
+  },
+  { skip: proc.build.os === "windows" && "cp -r and the shell fixtures are POSIX" },
+);
+
+proves(
+  ["099-engine-update FR-001", "099-engine-update FR-004"],
+  "099: update sends the upgrade itself; no message tells anyone to run git push",
+  async () => {
+    const root = path.fromFileUrl(new URL("../src/", import.meta.url));
+    const op = await fs.readTextFile(path.join(root, "archon/update/operator.ts"));
+    const upgrade = op.indexOf('stolos(["fleet", "upgrade", upgradeTo])');
+    const apply = op.indexOf('stolos(["apply"])', upgrade);
+    assert(upgrade > 0 && apply > upgrade, "fleet upgrade, then stolos apply");
+    // Every fix and next step the engine prints says stolos apply, never git push.
+    const offenders: string[] = [];
+    const walk = async (dir: string): Promise<void> => {
+      for await (const e of fs.readDir(dir)) {
+        const f = path.join(dir, e.name);
+        if (e.isDirectory) await walk(f);
+        else if (f.endsWith(".ts") && !f.endsWith(".auto.ts")) {
+          for (const l of (await fs.readTextFile(f)).split("\n")) {
+            // Advice starts with the command; an error's label ("git push: ...") does not count.
+            if (/["`']\s*(then |push it: |and )?git push\b(?!:| failed| --no-verify)/.test(l)) {
+              offenders.push(`${f}: ${l.trim()}`);
+            }
+          }
+        }
+      }
+    };
+    await walk(root);
+    assertEquals(offenders, []);
+  },
+);
