@@ -55,6 +55,11 @@ update`: follow GitHub at once instead of within 15 minutes).
   upgrade waiting for them, and secrets newer than the last backup (a warning only once a week
   overdue, or host keys never backed up). The consoles' live output shows ⚡ lines in their own
   colour.
+- **FR-008** The compliance impact of a change (spec 074) reads the previous commit's fleet files
+  from a scratch copy inside the repository's own Git folder (`.git/stolos-impact-*`, never
+  tracked), so Bun and Node find the checkout's `node_modules` the way they always do, by looking
+  in each folder above. No link is made: making one on Windows needs administrator rights or
+  Developer Mode, and failed there with EPERM.
 
 ## Success criteria
 

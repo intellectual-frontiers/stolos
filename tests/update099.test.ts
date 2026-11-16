@@ -398,3 +398,44 @@ proves(
     assertEquals(lineClass("   [you] not sent yet"), "act");
   },
 );
+
+proves(
+  ["099-engine-update FR-008"],
+  "099: the impact's scratch copy is inside .git, and no link is made: node_modules is found above",
+  async () => {
+    const { extractFleets } = await import("../src/archon/compliance/impact.ts");
+    const repo = await fs.makeTempDir({ prefix: "stolos-impact-test-" });
+    try {
+      const git = (...a: string[]) =>
+        proc.run([
+          "git",
+          "-C",
+          repo,
+          "-c",
+          "user.name=t",
+          "-c",
+          "user.email=t@example.invalid",
+          ...a,
+        ]);
+      await git("init", "-q", "-b", "main");
+      await fs.mkdir(path.join(repo, "fleets", "lab"), { recursive: true });
+      await fs.writeTextFile(path.join(repo, "fleets", "lab", "fleet.ts"), "export const x = 1;\n");
+      await fs.mkdir(path.join(repo, "node_modules", "pkg"), { recursive: true });
+      await git("add", "fleets");
+      await git("commit", "-q", "--no-gpg-sign", "-m", "lab");
+      const tree = await extractFleets(repo, "HEAD");
+      const gitDir = await fs.realPath(path.join(repo, ".git"));
+      assert((await fs.realPath(tree)).startsWith(gitDir), `${tree} is inside .git`);
+      assertEquals(
+        await fs.readTextFile(path.join(tree, "fleets", "lab", "fleet.ts")),
+        "export const x = 1;\n",
+      );
+      assert(
+        !(await fs.exists(path.join(tree, "node_modules"))),
+        "no link: Bun and Node look above",
+      );
+    } finally {
+      await fs.remove(repo, { recursive: true });
+    }
+  },
+);

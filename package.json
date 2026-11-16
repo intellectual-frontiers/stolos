@@ -1,6 +1,6 @@
 {
   "name": "@intellectual-frontiers/stolos",
-  "version": "0.128.0",
+  "version": "0.129.0",
   "description": "Stolos, the fleet engine: the archon command, the boot server, and everything general about turning bare metal into a converged, verified Ubuntu host (spec 096-bun-runtime).",
   "license": "BUSL-1.1",
   "type": "module",
@@ -31,7 +31,7 @@
     "fedramp": "bun tools/fedramp-gen.ts"
   },
   "dependencies": {
-    "@intellectual-frontiers/commons": "github:intellectual-frontiers/.github#6d02f50a32ec0531472cfdc4412d62ad75274f2c",
+    "@intellectual-frontiers/commons": "github:intellectual-frontiers/.github#ddcda4a8e86284107c4de55f6a6ea036d190be2f",
     "ajv": "8.17.1"
   },
   "devDependencies": {

@@ -854,12 +854,19 @@ export function impactMarkdown(i: Impact): string {
 
 /**
  * Copy a commit's `fleets/` folder into a new temporary folder, without
- * touching the checkout, its index, or its worktrees, beside a link to the
- * checkout's `node_modules` (the engine the fleet depends on). The caller
- * removes it.
+ * touching the checkout, its index, or its worktrees. The folder is inside the
+ * repository's own Git folder (`.git/stolos-impact-*`, never tracked), so the
+ * commit's fleet files resolve the engine they import as the checkout's do:
+ * Bun and Node look for `node_modules` in each folder above, and find the
+ * checkout's. No link is made (spec 099 FR-008). The caller removes it.
  */
 export async function extractFleets(repo: string, rev: string): Promise<string> {
-  const dir = await fs.makeTempDir({ prefix: "stolos-impact-" });
+  const gitDir = (await run(["git", "-C", repo, "rev-parse", "--absolute-git-dir"])).stdout.trim();
+  // A worktree's Git folder is inside the main checkout's (.git/worktrees/<name>): still under it.
+  const dir = await fs.makeTempDir({
+    ...(gitDir ? { dir: gitDir } : {}),
+    prefix: "stolos-impact-",
+  });
   const index = path.join(dir, ".index");
   const env = { GIT_INDEX_FILE: index };
   // Only fleets/: a commit's package.json (another engine's pin) must not be beside its files.
@@ -876,10 +883,6 @@ export async function extractFleets(repo: string, rev: string): Promise<string> 
     await removeTemp(dir);
     throw new Error(`git checkout-index: ${co.stderr.trim()}`);
   }
-  // The commit's fleet files import the engine by its package name: they resolve it from the
-  // checkout's own node_modules, as they do in the checkout.
-  const modules = path.join(repo, "node_modules");
-  if (await fs.exists(modules)) await fs.symlink(modules, path.join(dir, "tree", "node_modules"));
   return path.join(dir, "tree");
 }
 
