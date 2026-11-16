@@ -61,7 +61,6 @@ proves(
     }
     const profile = ufwProfile(plan);
     assertEquals(profile.split("\n").filter((l) => l.startsWith("[")).length, 1, profile);
-    assert(!profile.includes("Archon-LAN"), profile);
   },
 );
 

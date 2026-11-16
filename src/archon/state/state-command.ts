@@ -41,7 +41,7 @@ export interface HostState {
 
 /** The checkout's HEAD and the last pull's record, when there are any. */
 async function applied(): Promise<Pick<HostState, "applied" | "sync">> {
-  const { P } = await import("../core/paths.ts");
+  const { onHost, P } = await import("../core/paths.ts");
   const { run } = await import("../core/exec.ts");
   const { SYNC_STATUS, syncStatusDecoder } = await import("../reconcile/reconcile.ts");
   const g = await run([
@@ -56,7 +56,7 @@ async function applied(): Promise<Pick<HostState, "applied" | "sync">> {
   ]);
   const [commit, subject = "", at = ""] = g.ok ? g.stdout.trim().split("\t") : [];
   // A missing or half-written file: the next pull writes it again.
-  const text = await fs.readTextOr(SYNC_STATUS);
+  const text = await fs.readTextOr(onHost(SYNC_STATUS));
   const decoded = text === undefined ? undefined : json(text, syncStatusDecoder);
   const sync = decoded?.kind === "ok" ? decoded.value : undefined;
   return { ...(commit ? { applied: { commit, subject, at } } : {}), ...(sync ? { sync } : {}) };

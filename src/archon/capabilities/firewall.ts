@@ -35,13 +35,6 @@ export function ufwProfile(plan: HostPlan): string {
   );
 }
 
-/**
- * Remove every rule an earlier engine added for the Archon-LAN profile (ports
- * once open to the local networks only), by number, until none is left.
- */
-export const DROP_LAN_RULES =
-  'while n=$(ufw status numbered | grep -m1 "Archon-LAN" | sed -E "s/^\\[ *([0-9]+)\\].*/\\1/"); [ -n "$n" ]; do ufw --force delete "$n" >/dev/null; done';
-
 /** ufw: incoming traffic denied except the ports the plan opens (spec 008). */
 export const firewall = (): Capability => () => ({
   spec: SPEC,
@@ -63,8 +56,6 @@ export const firewall = (): Capability => () => ({
       owner: "root",
       spec: SPEC,
       onChange: [
-        // No per-network rules on the machine: an earlier engine's Archon-LAN rules go first.
-        { kind: "run", argv: ["sh", "-c", DROP_LAN_RULES] },
         { kind: "run", argv: ["ufw", "app", "update", "Archon"] },
         { kind: "run", argv: ["ufw", "default", "deny", "incoming"] },
         { kind: "run", argv: ["ufw", "default", "allow", "outgoing"] },

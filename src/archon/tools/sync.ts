@@ -229,7 +229,10 @@ async function activate(t: ToolDef, version: string, binDir: string): Promise<vo
     await fs.symlink(path.join(binDir, bin), tmp);
     await fs.rename(tmp, link);
   }
-  const smoke = await run(argvOf(t.verify), {
+  // The smoke test runs the linked command (`/usr/local/bin/<bin>`) where it is linked: P.bin.
+  const [cmd, ...rest] = argvOf(t.verify);
+  const linked = cmd?.startsWith("/usr/local/bin/") ? path.join(P.bin, cmd.slice(15)) : cmd;
+  const smoke = await run(linked === undefined ? [] : [linked, ...rest], {
     ...(t.unprivileged && asRoot() ? { asUser: "nobody" } : {}),
     cwd: "/", // nobody's home does not exist
   });

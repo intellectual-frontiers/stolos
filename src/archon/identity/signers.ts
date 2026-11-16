@@ -29,7 +29,7 @@
  */
 
 import { fs, path } from "@intellectual-frontiers/ifc-ts/runtime";
-import { P } from "../core/paths.ts";
+import { onHost, P } from "../core/paths.ts";
 import { run, type RunResult } from "../core/exec.ts";
 import type { SignerDef } from "../model/types.ts";
 
@@ -147,7 +147,7 @@ export async function checkTip(
   repo: string,
   tip: string,
   current: string,
-  allowedFile = ALLOWED_SIGNERS,
+  allowedFile = onHost(ALLOWED_SIGNERS),
   asUser?: string,
 ): Promise<TipCheck> {
   const git = (args: string[]): Promise<RunResult> =>
@@ -199,7 +199,7 @@ export async function checkTip(
 
 /** Whether this machine checks approvals (a host installed by Archon has the file). */
 export function enforcing(): Promise<boolean> {
-  return fs.exists(ALLOWED_SIGNERS);
+  return fs.exists(onHost(ALLOWED_SIGNERS));
 }
 
 /**

@@ -10,7 +10,7 @@
  */
 
 import { fs, path as paths, proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
-import { asRoot, P } from "../core/paths.ts";
+import { asRoot, onHost, P } from "../core/paths.ts";
 import { currentUser, homeOf, run } from "../core/exec.ts";
 import { journal } from "../core/log.ts";
 import { loadFleet, loadHosts } from "../model/load.ts";
@@ -460,13 +460,17 @@ async function pipe(from: proc.Child, to: proc.Child): Promise<void> {
   await from.stdout.pipeTo(to.stdin);
 }
 
-/** Dump an instance (pg_dumpall, zstd) into /var/backups/archon/pg/<name>/; keep the last 7. */
+/**
+ * Dump an instance (pg_dumpall, zstd) into /var/backups/archon/pg/<name>/; keep the last 7. Gives
+ * the dump's path as the host names it.
+ */
 export async function dumpInstance(i: Instance & { record: PgRecord }): Promise<string> {
-  const dir = paths.join(PG.dumps, i.name);
+  const dir = onHost(paths.join(PG.dumps, i.name));
   await fs.ensureDir(dir);
   await fs.chmod(dir, 0o700);
   const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 23);
-  const file = paths.join(dir, `${i.name}-pg${i.record.version}-${stamp}.sql.zst`);
+  const base = `${i.name}-pg${i.record.version}-${stamp}.sql.zst`;
+  const file = paths.join(dir, base);
   const dump = proc.spawn(
     [
       "runuser",
@@ -502,7 +506,7 @@ export async function dumpInstance(i: Instance & { record: PgRecord }): Promise<
   for (const old of all.sort().slice(0, -PG.keepDumps)) {
     await fs.remove(paths.join(dir, old)).catch(() => {});
   }
-  return file;
+  return paths.join(PG.dumps, i.name, base);
 }
 
 /** `archon pg backup NAME` (or every instance Archon created): dump each with {@link dumpInstance}. */
@@ -550,12 +554,14 @@ export function pgRestore(
     const i = need(fleet, host, name);
     owned(i);
     await guardDestructive("restore", name, confirm);
+    // --from is the operator's own path; the newest dump is on the host (through onHost).
     let file = from;
+    let at = from;
     if (!file) {
       const dir = paths.join(PG.dumps, name);
       const all: string[] = [];
-      if (await fs.exists(dir)) {
-        for await (const e of fs.readDir(dir)) {
+      if (await fs.exists(onHost(dir))) {
+        for await (const e of fs.readDir(onHost(dir))) {
           if (e.name.endsWith(".sql.zst")) all.push(e.name);
         }
       }
@@ -563,11 +569,12 @@ export function pgRestore(
         throw new PgError(`There is no dump of ${name} in ${dir}: give one with --from.`);
       }
       file = paths.join(dir, all.sort().at(-1) ?? "");
+      at = onHost(file);
     }
-    if (!(await fs.exists(file))) throw new PgError(`${file} does not exist.`);
+    if (at === undefined || !(await fs.exists(at))) throw new PgError(`${file} does not exist.`);
     // What is there now is dumped first, so a restore can itself be undone.
     const before = await dumpInstance(i);
-    const unz = proc.spawn(["zstd", "-dc", file], { stdout: "piped" });
+    const unz = proc.spawn(["zstd", "-dc", at], { stdout: "piped" });
     const load = proc.spawn(
       [
         "runuser",
@@ -588,7 +595,9 @@ export function pgRestore(
     const l = await load.output();
     await unz.status;
     // The dump carries the roles' old verifiers: Archon's passwords are set again.
-    for (const r of i.roles) await fs.remove(secretPath(name, r.name) + ".set").catch(() => {});
+    for (const r of i.roles) {
+      await fs.remove(onHost(secretPath(name, r.name)) + ".set").catch(() => {});
+    }
     await convergeInstance(fleet, host, i, collector(), caller());
     await journal("archon-pg", `restore ${name} from ${file} by ${caller()} (before: ${before})`);
     stdio.stdout.writeSync(
@@ -703,7 +712,7 @@ export function pgRemove(
       });
     } else {
       await writeRecord(host.name, name, undefined);
-      await fs.remove(paths.join(PG.secrets, name), { recursive: true }).catch(() => {});
+      await fs.remove(onHost(paths.join(PG.secrets, name)), { recursive: true }).catch(() => {});
     }
     await journal("archon-pg", `remove ${v}/${name} by ${caller()}`);
     await notifyOwner(
@@ -881,7 +890,7 @@ export function pgConnect(
     let pw: string | undefined;
     if (remote && role.kind === "service") {
       try {
-        pw = (await fs.readTextFile(secretPath(name, me))).trim();
+        pw = (await fs.readTextFile(onHost(secretPath(name, me)))).trim();
       } catch {
         throw new PgError(
           `${me}'s password for ${name} is not there yet: an operator runs archon apply.`,

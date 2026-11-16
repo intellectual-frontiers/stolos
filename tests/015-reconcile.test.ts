@@ -4,7 +4,8 @@
  *
  * @module
  */
-import { fs, lock, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { sha256 } from "@intellectual-frontiers/ifc-ts/kernel";
+import { fs, lock, path, proc, serve } from "@intellectual-frontiers/ifc-ts/runtime";
 import {
   assert,
   assertEquals,
@@ -15,6 +16,7 @@ import {
 import { hostLock, LOCK_HELD_ENV, LOCK_PATH } from "../src/archon/core/lock.ts";
 import { resolvePlan } from "../src/archon/model/resolve.ts";
 import { fleet, host } from "./fixtures.ts";
+import { HOST_ROOT_SKIP, hostRoot } from "./host.ts";
 import { ENGINE_ROOT, linkEngine, sandbox } from "./sandbox.ts";
 
 const posix = proc.build.os !== "windows";
@@ -157,4 +159,226 @@ proves(
       await fs.remove(dir, { recursive: true });
     }
   },
+);
+
+proves(
+  ["015-reconcile FR-002", "032-web FR-001"],
+  "015: archon update pulls, validates (an invalid model stops it), applies, syncs tools (Traefik restarted after its upgrade), applies dotfiles again when a tool changed, and verifies",
+  async () => {
+    const h = await hostRoot();
+    // The tools' releases (spec 010): every upstream tool is current but chezmoi (a binary) and
+    // Traefik (its release archive), each newer release with its published SHA-256.
+    // The new chezmoi records what it is asked (the dotfiles step); its verify finds a difference.
+    const chezmoi = `#!/bin/sh\nprintf '%s\\n' "chezmoi $*" >> '${path.join(path.dirname(h.root), "calls.log")}'\n[ "$1" = verify ] && exit 1\necho 'chezmoi version v2.70.0'\n`;
+    const traefikTgz = "traefik_v3.6.0_linux_amd64.tar.gz";
+    const assets: Record<string, Uint8Array> = {
+      "chezmoi-linux-amd64": new TextEncoder().encode(chezmoi),
+    };
+    const newer: Record<string, { tag: string; asset: string }> = {
+      "twpayne/chezmoi": { tag: "v2.70.0", asset: "chezmoi-linux-amd64" },
+      "traefik/traefik": { tag: "v3.6.0", asset: traefikTgz },
+    };
+    const server = await serve({ port: 0, hostname: "127.0.0.1" }, async (req) => {
+      const url = new URL(req.url);
+      const base = `http://127.0.0.1:${server.addr.port}`;
+      const file = assets[url.pathname.replace(/^\/dl\//, "")];
+      if (url.pathname.startsWith("/dl/") && file !== undefined)
+        return new Response(new Uint8Array(file));
+      const m = /^\/repos\/([^/]+\/[^/]+)\/releases\/latest$/.exec(url.pathname);
+      if (m === null) return new Response("", { status: 404 });
+      const n = newer[m[1] ?? ""];
+      const bytes = n === undefined ? undefined : assets[n.asset];
+      return Response.json({
+        tag_name: n?.tag ?? "v9.9.9",
+        prerelease: false,
+        assets:
+          n === undefined || bytes === undefined
+            ? []
+            : [
+                {
+                  name: n.asset,
+                  browser_download_url: `${base}/dl/${n.asset}`,
+                  digest: `sha256:${await sha256(bytes)}`,
+                },
+              ],
+      });
+    });
+    try {
+      const git = async (dir: string, ...args: string[]) => {
+        const r = await proc.run(["git", "-C", dir, ...ID, ...args]);
+        assertEquals(r.code, 0, `git ${args.join(" ")}: ${r.stderr}`);
+        return r.stdout.trim();
+      };
+      // The fleet's repository (a local bare remote), a PC's clone that pushes, and the host's
+      // checkout at /srv/archon.
+      const work = path.dirname(h.root);
+      const origin = path.join(work, "origin.git");
+      const seed = path.join(work, "seed");
+      await fs.mkdir(path.join(seed, "fleets"), { recursive: true });
+      await fs.copy(
+        path.join(ENGINE_ROOT, "examples", "fleets", "lab"),
+        path.join(seed, "fleets", "lab"),
+      );
+      await git(work, "init", "-q", "--bare", "-b", "main", origin);
+      await git(seed, "init", "-q", "-b", "main");
+      await git(seed, "add", "fleets");
+      await git(seed, "commit", "-q", "-m", "lab");
+      await git(seed, "remote", "add", "origin", origin);
+      await git(seed, "push", "-q", "origin", "main");
+      const checkout = h.at("/srv/archon");
+      await git(work, "clone", "-q", origin, checkout);
+      await linkEngine(checkout);
+      const alphaTs = path.join(seed, "fleets", "lab", "hosts", "alpha", "host.ts");
+      const good = await fs.readTextFile(alphaTs);
+      const push = async (text: string, msg: string) => {
+        await fs.writeTextFile(alphaTs, text);
+        await git(seed, "commit", "-q", "-am", msg);
+        await git(seed, "push", "-q", "origin", "main");
+      };
+
+      // The host's programs: git as the checkout's owner, packages installed, each upstream
+      // tool's version (chezmoi older than its release, the others current).
+      await h.standIn("runuser", `while [ "$1" != "--" ]; do shift; done; shift; exec "$@"`);
+      await h.standIn("dpkg-query", `printf 'ii '`);
+      await h.standIn("curl", `printf 200`);
+      // alice has an account (her files are written as hers); her home here is the root.
+      await h.standIn(
+        "getent",
+        `case "$1 $2" in "passwd alice"|"group alice") echo "alice:x:1000:1000::${h.root}:/bin/bash";; *) exit 2;; esac`,
+      );
+      await h.standIn("gh", "exit 1");
+      for (const p of ["postfix", "testparm", "sshd", "mandb", "add-apt-repository"]) {
+        await h.standIn(p);
+      }
+      const { TOOLS } = await import("../src/archon/tools/catalog.ts");
+      const { BUN_VERSION } = await import("../src/archon/core/bun-pin.ts");
+      for (const t of TOOLS.filter((x) => x.source === "upstream-binary")) {
+        const cmd = t.versionCommand.split(" ")[0] ?? t.id;
+        const v =
+          t.id === "bun"
+            ? BUN_VERSION
+            : t.id === "chezmoi"
+              ? "2.60.0"
+              : t.id === "traefik"
+                ? "3.5.0"
+                : "9.9.9";
+        await h.standIn(cmd, `echo '${t.id} version v${v}'`);
+      }
+      // Traefik's release archive: the binary in a tar.gz; its unit is enabled on this server.
+      const pack = path.join(work, "traefik-release");
+      await fs.ensureDir(pack);
+      await fs.writeTextFile(path.join(pack, "traefik"), "#!/bin/sh\necho 'Version: 3.6.0'\n");
+      await fs.chmod(path.join(pack, "traefik"), 0o755);
+      const tar = await proc.run([
+        "tar",
+        "-czf",
+        path.join(work, traefikTgz),
+        "-C",
+        pack,
+        "traefik",
+      ]);
+      assertEquals(tar.code, 0, tar.stderr);
+      assets[traefikTgz] = await fs.readFile(path.join(work, traefikTgz));
+      const self = path.join(h.bin, "archon-self");
+      await fs.writeTextFile(
+        self,
+        `#!/bin/sh\nexec '${proc.execPath()}' '${path.join(ENGINE_ROOT, "src", "archon", "main.ts")}' "$@"\n`,
+      );
+      await fs.chmod(self, 0o755);
+      const update = async () => {
+        const r = await proc.run([self, "update", "--host", "alpha"], {
+          env: {
+            ARCHON_REPO: checkout,
+            ARCHON_FLEET: "lab",
+            ARCHON_SELF: self,
+            ARCHON_GITHUB_API: `http://127.0.0.1:${server.addr.port}`,
+            GITHUB_TOKEN: "",
+            GH_TOKEN: "",
+            NO_COLOR: "1",
+            ARCHON_PLAIN: "1",
+          },
+        });
+        return { code: r.code, out: r.stdout + r.stderr };
+      };
+      /** The phases a run went through, in order, as its screen names them. */
+      const phases = (out: string): string[] =>
+        out
+          .split("\n")
+          .map((l) => /^\[(?:ok|FAIL|warn|skip|changed?)\]\s+(\S.*?)\s{2,}/i.exec(l)?.[1])
+          .filter((p): p is string => p !== undefined);
+
+      // An invalid model arrives: pulled, validated, and nothing applied.
+      await push(
+        good.replace(
+          `name: "alpha",`,
+          `name: "alpha",\n  pg: { instances: [{ name: "Bad_Name" }] },`,
+        ),
+        "a bad instance name",
+      );
+      let r = await update();
+      assert(r.code !== 0, r.out);
+      assertEquals(
+        await git(checkout, "rev-parse", "HEAD"),
+        await git(origin, "rev-parse", "main"),
+      );
+      let seen = phases(r.out);
+      assert(seen.includes("Pull") && seen.includes("Model"), r.out);
+      for (const later of ["Packages", "Tools", "Dotfiles", "Verify"]) {
+        assert(!seen.includes(later), `${later} after an invalid model:\n${r.out}`);
+      }
+
+      // A valid model arrives: pull, validate, apply, tools (chezmoi upgraded), dotfiles again,
+      // verify, in that order.
+      await push(good, "the model fixed");
+      r = await update();
+      assertEquals(
+        await git(checkout, "rev-parse", "HEAD"),
+        await git(origin, "rev-parse", "main"),
+      );
+      seen = phases(r.out);
+      const at = (p: string, from = 0): number => seen.indexOf(p, from);
+      const pull = at("Pull");
+      const model = at("Model");
+      const apply = at("Packages");
+      const dotfiles1 = at("Dotfiles", apply);
+      const tools = at("Tools");
+      const dotfiles2 = at("Dotfiles", tools);
+      const verify = at("Verify");
+      assert(
+        pull >= 0 &&
+          pull < model &&
+          model < apply &&
+          apply < dotfiles1 &&
+          dotfiles1 < tools &&
+          tools < dotfiles2 &&
+          dotfiles2 < verify,
+        `${seen.join(" > ")}\n${r.out}`,
+      );
+      assertStringIncludes(r.out, "chezmoi 2.70.0 (new)");
+      assertStringIncludes(r.out, "traefik 3.6.0 (new)");
+      assertEquals(
+        await fs.readLink(h.at("/usr/local/bin/traefik")),
+        h.at("/opt/tools/traefik/3.6.0/bin/traefik"),
+      );
+      // The dotfiles step after the tools ran the new chezmoi for each person.
+      const calls = await h.calls();
+      const synced = calls.findIndex((c) => c.startsWith("logger -t archon-tools"));
+      const applied = calls.findIndex((c) => c === "chezmoi apply --force --no-tty");
+      assert(synced >= 0 && synced < applied, `${calls.join("\n")}\n${r.out}`);
+      const verified = calls.lastIndexOf("chezmoi verify --no-tty");
+      assert(verified >= 0 && verified < applied, "verify finds the difference, then apply");
+      // Spec 032: the tools sync restarts Traefik after its upgrade (its unit is enabled).
+      const enabled = calls.indexOf("systemctl is-enabled --quiet traefik.service");
+      assert(enabled >= 0 && enabled + 1 < synced, calls.join("\n"));
+      assertEquals(calls[enabled + 1], "systemctl restart traefik.service");
+      assertEquals(
+        await fs.readLink(h.at("/usr/local/bin/chezmoi")),
+        h.at("/opt/tools/chezmoi/2.70.0/bin/chezmoi"),
+      );
+    } finally {
+      await server.shutdown();
+      await h.restore();
+    }
+  },
+  { skip: HOST_ROOT_SKIP, timeout: 300_000 },
 );

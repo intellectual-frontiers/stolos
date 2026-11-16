@@ -13,8 +13,6 @@ smb.conf, and `pg publish --local-only`. Two places to decide the same thing dis
 
 - **FR-001** Every port a host opens is open to every network: one ufw application profile
   (`Archon`), no per-network rules. A port's model (`PortDef`) has no `from`.
-- **FR-002** An earlier engine's `Archon-LAN` ufw rules are deleted, by number, before the profile
-  is applied, so a running server loses them on its next update.
 - **FR-003** Traefik applies no IP allow list (revises spec 032 FR-002); smb.conf has no
   `hosts allow`/`hosts deny` (revises 037 FR-006); Cockpit's 9090 (revises 022 FR-003) and the
   OpenTelemetry intake's 4318 (revises 050) are open to every network.
@@ -29,8 +27,5 @@ smb.conf, and `pg publish --local-only`. Two places to decide the same thing dis
 
 ## Success criteria
 
-- **SC-001** `tests/install.test.ts`: one profile with every port, no `Archon-LAN`, the cleanup
-  first; the cleanup, run against a fake ufw, deletes every `Archon-LAN` rule (IPv4 and IPv6) and
-  nothing else.
 - **SC-002** `tests/web.test.ts`, `smb.test.ts`, `pg.test.ts`, `otelui.test.ts`: no allow list in
   Traefik or smb.conf; 445, 9090, 4318 and a published 5432 open; no `--local-only`.

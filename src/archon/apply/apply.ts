@@ -920,7 +920,7 @@ export { splitArgs };
  * idempotent.
  */
 async function dotfiles(host: string, u: UserDef, r: Runner): Promise<boolean> {
-  const chezmoi = "/usr/local/bin/chezmoi";
+  const chezmoi = paths.join(P.bin, "chezmoi"); // /usr/local/bin/chezmoi (spec 010)
   const cfg = `${homeOf(u)}/.config/chezmoi/chezmoi.json`;
   r.p.status(u.name);
   // A check without sudo can only look at the caller's own dotfiles (the others'
@@ -947,7 +947,7 @@ async function dotfiles(host: string, u: UserDef, r: Runner): Promise<boolean> {
     r.dotfilesWaiting = true;
     return false;
   }
-  if (!(await fs.exists(cfg))) {
+  if (!(await fs.exists(onHost(cfg)))) {
     r.skip(`dotfiles for ${u.name}: no chezmoi data yet`);
     return false;
   }

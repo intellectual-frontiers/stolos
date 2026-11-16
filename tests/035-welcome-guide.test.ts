@@ -5,12 +5,14 @@
  * @module
  */
 
-import { assert, assertEquals, proves, test } from "@intellectual-frontiers/ifc-ts/runtime/test";
+import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { assert, assertEquals, proves } from "@intellectual-frontiers/ifc-ts/runtime/test";
+import { resetRoots } from "../src/archon/core/paths.ts";
 import { workstation } from "../src/archon/capabilities/mod.ts";
 import { agentSetup, agentSteps, CATEGORIES, guideFor } from "../src/archon/guide/guide.ts";
 import { resolvePlan } from "../src/archon/model/resolve.ts";
-import { mcpServers } from "../src/archon/render/agent.ts";
-import { fleet, host } from "./fixtures.ts";
+import { mcpServers, renderMcpJson } from "../src/archon/render/agent.ts";
+import { at, fleet, host } from "./fixtures.ts";
 
 const full = () =>
   fleet({
@@ -78,18 +80,56 @@ proves(
   },
 );
 
-// Spec 035 FR-002 also says AGENTS.md at the repository's root points any agent at CLAUDE.md;
-// that does not hold (AGENTS.md is the entry point itself). The agent steps are checked here.
-test("035: agentSetup and agentSteps use .mcp.json's server name and SSH target", () => {
-  const h = host({ dnsName: "alpha.lab.example.net" });
-  const plan = resolvePlan(h, full());
-  const a = agentSetup(plan);
-  const [entry] = mcpServers([h], plan.fleet.id);
-  assertEquals([a.server, a.target], [entry?.name, entry?.target]);
-  assertEquals(a.server, "archon-lab-alpha");
-  assertEquals(a.target, "ops@alpha.lab.example.net");
-  const steps = agentSteps(a);
-  assert(steps.some((s) => s.cmds.includes(`ssh -T ${a.target}`)));
-  assert(steps.some((s) => s.text.includes(a.server)));
-  assert(steps.some((s) => s.cmds.includes("git clone https://github.com/example/fleet.git")));
-});
+proves(
+  ["035-welcome-guide FR-002"],
+  "035: agentSetup and agentSteps use .mcp.json's server name and SSH target; AGENTS.md at the repository's root gives the operating rules",
+  async () => {
+    const h = host({ dnsName: "alpha.lab.example.net" });
+    const plan = resolvePlan(h, full());
+    const a = agentSetup(plan);
+    const [entry] = mcpServers([h], plan.fleet.id);
+    assertEquals([a.server, a.target], [entry?.name, entry?.target]);
+    assertEquals(a.server, "archon-lab-alpha");
+    assertEquals(a.target, "ops@alpha.lab.example.net");
+    const steps = agentSteps(a);
+    assert(steps.some((s) => s.cmds.includes(`ssh -T ${a.target}`)));
+    assert(steps.some((s) => s.text.includes(a.server)));
+    assert(steps.some((s) => s.cmds.includes("git clone https://github.com/example/fleet.git")));
+    // .mcp.json, as stolos build renders it, has that server, reached with those arguments.
+    const rendered: unknown = JSON.parse(renderMcpJson(mcpServers([h], plan.fleet.id)));
+    assertEquals(at(rendered, "mcpServers", a.server), { command: "ssh", args: a.args });
+    // AGENTS.md at the repository's root: the steps point there, and every server serves it to
+    // the agent as the operating rules.
+    assert(steps.some((s) => s.text.includes("AGENTS.md there gives the operating rules")));
+    const repo = await fs.makeTempDir({ prefix: "archon-agents-" });
+    const saved = proc.env.get("ARCHON_REPO");
+    try {
+      await fs.writeTextFile(
+        path.join(repo, "AGENTS.md"),
+        "# AGENTS.md\n\n## Rules\n\n- Spec first.\n",
+      );
+      proc.env.set("ARCHON_REPO", repo);
+      resetRoots();
+      const { handle } = await import("../src/archon/mcp/server.ts");
+      const listed = JSON.stringify(
+        await handle({ jsonrpc: "2.0", id: 1, method: "resources/list" }),
+      );
+      assert(listed.includes("Operating rules (AGENTS.md of the fleet's repository)"), listed);
+      const read = await handle({
+        jsonrpc: "2.0",
+        id: 2,
+        method: "resources/read",
+        params: { uri: "archon://operating-rules" },
+      });
+      assertEquals(
+        at(read, "result", "contents", 0, "text"),
+        "# AGENTS.md\n\n## Rules\n\n- Spec first.\n",
+      );
+    } finally {
+      if (saved === undefined) proc.env.delete("ARCHON_REPO");
+      else proc.env.set("ARCHON_REPO", saved);
+      resetRoots();
+      await fs.remove(repo, { recursive: true });
+    }
+  },
+);

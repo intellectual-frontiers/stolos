@@ -642,3 +642,66 @@ test("065: verify checks the Archon Console's sign-in page, not an open page", (
   assertStringIncludes(c.command, "https://127.0.0.1/signin");
   assertStringIncludes(c.command, "Sign in to");
 });
+
+proves(
+  ["032-web FR-001"],
+  "032: Traefik is the official release binary for servers, run as its own account traefik with only CAP_NET_BIND_SERVICE, state in /var/lib/traefik",
+  async () => {
+    const { TOOLS } = await import("../src/archon/tools/catalog.ts");
+    const { workstation } = await import("../src/archon/capabilities/mod.ts");
+    // The tools catalog: Traefik's own GitHub release, checksum-verified like every upstream
+    // binary (spec 010), restarted by the tools sync after an upgrade, servers only.
+    const t = must(TOOLS.find((x) => x.id === "traefik"));
+    assertEquals(
+      [t.source, t.github?.repo, t.serverOnly],
+      ["upstream-binary", "traefik/traefik", true],
+    );
+    assertEquals(t.restarts, [WEB.unit]);
+    assert(t.github?.asset("amd64", "3.6.0").test("traefik_v3.6.0_linux_amd64.tar.gz"));
+    const server = resolvePlan(host(), webFleet());
+    assert(server.tools.some((x) => x.id === "traefik"));
+    const pc = resolvePlan(
+      host({
+        name: "pc",
+        kind: "workstation",
+        user: "alice",
+        mac: undefined,
+        disk: undefined,
+        capabilities: workstation(),
+        spec: "020-workstation",
+      }),
+      webFleet(),
+    );
+    assert(!pc.tools.some((x) => x.id === "traefik"), "no Traefik on a workstation");
+    // traefik.service: its own account, only the capability to bind 80 and 443, its state.
+    const unit = must(must(server.units.find((u) => u.unitName === WEB.unit)).content);
+    for (const line of [
+      "ExecStart=/usr/local/bin/traefik --configFile=/etc/traefik/traefik.yml",
+      "User=traefik",
+      "Group=traefik",
+      `SupplementaryGroups=${WEB.group}`,
+      "AmbientCapabilities=CAP_NET_BIND_SERVICE",
+      "CapabilityBoundingSet=CAP_NET_BIND_SERVICE",
+      "NoNewPrivileges=yes",
+      "StateDirectory=traefik",
+    ]) {
+      assert(unit.split("\n").includes(line), `${line} in\n${unit}`);
+    }
+    assertEquals(
+      unit.match(/^(Ambient|CapabilityBounding).*$/gm)?.length,
+      2,
+      "no other capability",
+    );
+    // The account, declared in sysusers.d, in the group that may read Podman's socket.
+    const sysusers = must(
+      must(server.files.find((f) => f.path === "/etc/sysusers.d/archon-web.conf")).content,
+    ).split("\n");
+    assert(sysusers.includes(`u traefik - "Archon Traefik" /var/lib/traefik /usr/sbin/nologin`));
+    assert(sysusers.includes(`m traefik ${WEB.group}`));
+    const socket = must(
+      server.files.find((f) => f.path === "/etc/systemd/system/podman.socket.d/50-archon.conf"),
+    );
+    assertStringIncludes(must(socket.content), `SocketGroup=${WEB.group}`);
+    assertEquals(WEB.acmeStorage, "/var/lib/traefik/acme.json");
+  },
+);

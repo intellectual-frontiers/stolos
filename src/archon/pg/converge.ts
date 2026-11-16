@@ -55,13 +55,13 @@ export interface Sink {
 }
 
 /**
- * A file's text, undefined when missing, or null when a read-only check runs
- * as someone who may not read it (pg_hba.conf is postgres-only, as Ubuntu makes
- * it; Traefik's store and private keys too): then it is not compared.
+ * A host file's text (`path` as the host names it, read through `onHost`), undefined when
+ * missing, or null when a read-only check runs as someone who may not read it (pg_hba.conf is
+ * postgres-only, as Ubuntu makes it; Traefik's store and private keys too): then it is not compared.
  */
 async function readFor(s: Sink, path: string): Promise<string | undefined | null> {
   try {
-    return await fs.readTextOr(path);
+    return await fs.readTextOr(onHost(path));
   } catch (e) {
     if (e instanceof errors.PermissionDenied && s.check) {
       s.unreadable?.(path);
@@ -78,7 +78,7 @@ export async function clusters(): Promise<Cluster[]> {
 }
 
 const confDir = (v: number, n: string) => `/etc/postgresql/${v}/${n}`;
-/** Where a role's password for an instance is kept, under {@link PG}.secrets. */
+/** Where a role's password for an instance is kept, under {@link PG}.secrets (as the host names it: read and write it through `onHost`). */
 export const secretPath = (inst: string, role: string): string =>
   paths.join(PG.secrets, inst, role);
 
@@ -143,13 +143,13 @@ export async function ensureVersion(
   s.change(`install postgresql-${v}${v === PG.ubuntuVersion ? "" : " (PGDG)"}`);
   if (s.check) return true;
   // Never a `main` cluster Archon does not own (Ubuntu's package makes one on install).
-  await fs.ensureDir(paths.dirname(PG.createclusterConf));
+  await fs.ensureDir(paths.dirname(onHost(PG.createclusterConf)));
   await fs.writeTextFile(
-    PG.createclusterConf,
+    onHost(PG.createclusterConf),
     "# Rendered by archon from spec 038-pg. Do not edit.\ncreate_main_cluster = false\n",
   );
   if (v !== PG.ubuntuVersion) {
-    if (!(await fs.exists(PG.pgdgKey))) {
+    if (!(await fs.exists(onHost(PG.pgdgKey)))) {
       s.fail(
         `PostgreSQL ${v} comes from PGDG, whose key Ubuntu's postgresql-common provides, and it is not installed.`,
         "sudo archon apply",
@@ -157,7 +157,9 @@ export async function ensureVersion(
       return false;
     }
     const src = pgdgSource(fleet.ubuntu.codename, host.arch);
-    if ((await fs.readTextOr(PG.pgdgSource)) !== src) await fs.writeTextFile(PG.pgdgSource, src);
+    if ((await fs.readTextOr(onHost(PG.pgdgSource))) !== src) {
+      await fs.writeTextFile(onHost(PG.pgdgSource), src);
+    }
     const u = await run(["apt-get", "update", "-o", "Acquire::Retries=3"]);
     if (!u.ok) {
       s.fail(
@@ -218,11 +220,13 @@ export function wildcardFrom(
   return undefined;
 }
 
+/** Write a host file (`path` as the host names it, written through `onHost`), with its mode and owner. */
 async function writeOwned(path: string, content: string, mode: number, owner = "postgres") {
-  await fs.ensureDir(paths.dirname(path));
-  await fs.writeTextFile(path, content, { mode });
-  await fs.chmod(path, mode);
-  await run(["chown", `${owner}:${owner === "root" ? "root" : "postgres"}`, path]);
+  const at = onHost(path);
+  await fs.ensureDir(paths.dirname(at));
+  await fs.writeTextFile(at, content, { mode });
+  await fs.chmod(at, mode);
+  await run(["chown", `${owner}:${owner === "root" ? "root" : "postgres"}`, at]);
 }
 
 // ------------------------------------------------------------- converge
@@ -502,16 +506,16 @@ export async function convergeIdentities(v: number, inst: Instance, s: Sink): Pr
       );
     }
   }
-  const dir = onHost(paths.join(PG.secrets, n));
+  const dir = paths.join(PG.secrets, n);
   for (const role of inst.roles.filter((r) => r.kind === "service")) {
     if (!(await servicePassword(v, n, role.name, s))) return false;
   }
-  if (await fs.exists(dir)) {
-    for await (const e of fs.readDir(dir)) {
+  if (await fs.exists(onHost(dir))) {
+    for await (const e of fs.readDir(onHost(dir))) {
       const base = e.name.replace(/\.set$/, "");
       if (inst.roles.some((r) => r.kind === "service" && r.name === base)) continue;
       s.change(`remove ${paths.join(dir, e.name)} (only services have generated passwords)`);
-      await fs.remove(paths.join(dir, e.name));
+      await fs.remove(onHost(paths.join(dir, e.name)));
     }
   }
 
@@ -567,7 +571,8 @@ const quote = (s: string) => `"${s.replace(/"/g, '""')}"`;
  */
 async function servicePassword(v: number, n: string, role: string, s: Sink): Promise<boolean> {
   const path = secretPath(n, role);
-  let pw = (await fs.readTextOr(path))?.trim();
+  const at = onHost(path);
+  let pw = (await fs.readTextOr(at))?.trim();
   const has =
     (
       await psql(
@@ -579,13 +584,13 @@ async function servicePassword(v: number, n: string, role: string, s: Sink): Pro
   const owner = (await accountExists(role)) ? role : "root";
   if (!pw) {
     pw = newPassword();
-    await fs.ensureDir(paths.dirname(path));
-    await fs.chmod(PG.secrets, 0o711).catch(() => {});
-    await fs.chmod(paths.dirname(path), 0o711).catch(() => {});
+    await fs.ensureDir(paths.dirname(at));
+    await fs.chmod(onHost(PG.secrets), 0o711).catch(() => {});
+    await fs.chmod(paths.dirname(at), 0o711).catch(() => {});
     await writeOwned(path, pw + "\n", 0o400, owner);
     s.change(`password for ${role} in ${n} (readable by ${role} only, in ${path})`);
   }
-  if (!has || !(await fs.exists(path + ".set"))) {
+  if (!has || !(await fs.exists(at + ".set"))) {
     if (
       !(await exec(
         v,
@@ -597,9 +602,9 @@ async function servicePassword(v: number, n: string, role: string, s: Sink): Pro
     ) {
       return false;
     }
-    await fs.writeTextFile(path + ".set", new Date().toISOString() + "\n", { mode: 0o600 });
+    await fs.writeTextFile(at + ".set", new Date().toISOString() + "\n", { mode: 0o600 });
   }
-  await run(["chown", `${owner}:root`, path]);
+  await run(["chown", `${owner}:root`, at]);
   return true;
 }
 
@@ -616,7 +621,7 @@ export async function writeSystemServices(host: string, s: Sink): Promise<void> 
   if (have === null || have === content) return;
   s.change(`${PG.systemServices} (psql service=<instance> for everyone)`);
   if (s.check) return;
-  await fs.ensureDir(paths.dirname(PG.systemServices));
-  await fs.writeTextFile(PG.systemServices, content);
-  await fs.chmod(PG.systemServices, 0o644);
+  await fs.ensureDir(paths.dirname(onHost(PG.systemServices)));
+  await fs.writeTextFile(onHost(PG.systemServices), content);
+  await fs.chmod(onHost(PG.systemServices), 0o644);
 }

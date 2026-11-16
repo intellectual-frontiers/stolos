@@ -22,7 +22,7 @@
 import { boolean, type Decoder, object, string } from "@intellectual-frontiers/ifc-ts/kernel";
 import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { count } from "../core/telemetry.ts";
-import { asRoot, P } from "../core/paths.ts";
+import { asRoot, onHost, P } from "../core/paths.ts";
 import { currentUser, run } from "../core/exec.ts";
 import { journal, log } from "../core/log.ts";
 import type { HostDef } from "../model/types.ts";
@@ -90,7 +90,7 @@ export async function syncCheckout(opts: { check?: boolean } = {}): Promise<Sync
       ...(r.blocked ? { blocked: r.blocked } : {}),
     };
     await fs
-      .writeTextFile(SYNC_STATUS, JSON.stringify(s) + "\n")
+      .writeTextFile(onHost(SYNC_STATUS), JSON.stringify(s) + "\n")
       .catch((e: unknown) =>
         log.warn(`${SYNC_STATUS} not written: ${e instanceof Error ? e.message : String(e)}`),
       );

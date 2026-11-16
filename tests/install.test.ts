@@ -213,55 +213,10 @@ proves(["008-firewall FR-001"], "the ufw profile lists every modeled port", asyn
     f.content ?? "",
     "[Archon]\ntitle=Archon host\ndescription=Ports in this host's Archon model, open to every network (the router filters)\nports=22,80,443,445,9090/tcp|443,51820/udp\n",
   );
-  // No per-network rules on the machine (the router decides who reaches it): one profile,
-  // and an earlier engine's Archon-LAN rules are removed first.
-  assert(!f.content?.includes("Archon-LAN"), f.content);
-  const first = f.onChange?.[0];
-  assert(first?.kind === "run" && first.argv[0] === "sh" && first.argv[2]?.includes("Archon-LAN"));
+  // No per-network rules on the machine (the router decides who reaches it): one profile.
+  assertEquals(f.content?.split("\n").filter((l) => l.startsWith("[")).length, 1, f.content);
   assert(!f.onChange?.some((x) => x.kind === "run" && x.argv.includes("from")));
 });
-
-proves(
-  ["064-router-filters FR-002"],
-  "an earlier engine's Archon-LAN ufw rules are all deleted, by number",
-  async () => {
-    const { DROP_LAN_RULES } = await import("../src/archon/capabilities/firewall.ts");
-    const dir = await fs.makeTempDir();
-    // A fake ufw: `status numbered` prints the rules file numbered; `--force delete N` drops line N.
-    const rules = `${dir}/rules`;
-    await fs.writeTextFile(
-      rules,
-      [
-        "Archon                     ALLOW IN    Anywhere",
-        "Archon-LAN                 ALLOW IN    10.0.0.0/8",
-        "Archon-LAN                 ALLOW IN    192.168.0.0/16",
-        "Archon (v6)                ALLOW IN    Anywhere (v6)",
-        "Archon-LAN (v6)            ALLOW IN    fc00::/7",
-      ].join("\n") + "\n",
-    );
-    await fs.writeTextFile(
-      `${dir}/ufw`,
-      `#!/bin/sh
-if [ "$1 $2" = "status numbered" ]; then awk '{ printf "[%2d] %s\\n", NR, $0 }' ${rules}; exit 0; fi
-if [ "$1 $2" = "--force delete" ]; then sed -i "$3d" ${rules}; exit 0; fi
-exit 1
-`,
-    );
-    await fs.chmod(`${dir}/ufw`, 0o755);
-    const r = await proc.output(["sh", "-c", DROP_LAN_RULES], {
-      env: { PATH: `${dir}:${proc.env.get("PATH")}` },
-    });
-    assert(r.success, new TextDecoder().decode(r.stderr));
-    assertEquals(
-      (await fs.readTextFile(rules))
-        .trim()
-        .split("\n")
-        .map((l) => l.split(/\s{2,}/)[0]),
-      ["Archon", "Archon (v6)"],
-    );
-    await fs.remove(dir, { recursive: true });
-  },
-);
 
 proves(
   ["004-install FR-013"],
