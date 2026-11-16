@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/export/otlp.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/export/otlp.ts</h1>
+<p>Spec 092: OCSF events as OpenTelemetry logs, in the OTLP/HTTP JSON encoding: the body of an <code>ExportLogsServiceRequest</code> that any OTLP receiver (a Collector, an observability backend) accepts at <code>/v1/logs</code>. Only the request body is built here; sending it is delivery&#39;s job.</p>
+<p>Each OCSF event is one LogRecord (the OpenTelemetry logs data model):</p>
+<ul><li><code>body</code>: the event itself, as a structured value (a map);</li><li><code>eventName</code>: <code>ocsf.&lt;class&gt;</code> (for example <code>ocsf.compliance_finding</code>), so it is an Event in OpenTelemetry&#39;s sense;</li><li>attributes <code>ocsf.class_uid</code> and <code>ocsf.category_uid</code>;</li><li><code>timeUnixNano</code>: the event&#39;s <code>time</code>; severity: INFO, WARN for a finding that is not a pass.</li></ul>
+<p>The resource says who produced it: <code>service.name</code> stolos, its version, and the fleet (<code>service.namespace</code>).</p>
+<p>With <code>entities</code>, inventory also becomes OpenTelemetry entity events (<code>entity.state</code>, a Development-status part of the specification), one per machine (<code>host</code>) and per other node: off by default, since receivers may not understand them yet. People and accounts are never entity events. The entity&#39;s type is the attribute <code>entity.type</code>; its identity and description (maps) are the record&#39;s body, <code>entity.id</code> and <code>entity.description</code>, since IFC TypeScript&#39;s attributes hold no maps.</p>
+<p>The request is encoded by IFC TypeScript&#39;s kernel (<code>otlp.encodeLogs</code>).</p>
+<pre class="mermaid">flowchart LR
+  ocsf[&quot;OCSF events&quot;] --&gt; rec[&quot;LogRecord: body = event, eventName = ocsf.&amp;lt;class&amp;gt;&quot;]
+  rec --&gt; req[&quot;ExportLogsServiceRequest (OTLP/HTTP JSON)&quot;]
+  inv[&quot;fixed assets, nodes&quot;] -. &quot;entities: true&quot; .-&gt; ent[&quot;entity.state events&quot;] -.-&gt; req
+  req --&gt; delivery[&quot;delivery: POST /v1/logs&quot;]</pre>
+<h2>Exports</h2>
+<section class="symbol" id="OtlpOptions">
+<h3><span class="kind">interface</span><a href="#OtlpOptions">OtlpOptions</a></h3>
+<pre><code class="language-ts">export interface OtlpOptions {
+  /** The fleet's id (service.namespace). */
+  fleet: string;
+  /** Also send inventory as OpenTelemetry entity events (Development status; default off). */
+  entities?: boolean;
+  /** The time entity events carry (default: each event's own time). */
+  now?: Date;
+}</code></pre>
+<p>Options for the request.</p>
+
+</section>
+<section class="symbol" id="ocsfLogRecord">
+<h3><span class="kind">function</span><a href="#ocsfLogRecord">ocsfLogRecord</a></h3>
+<pre><code class="language-ts">export function ocsfLogRecord(e: OcsfEvent): otel.LogRecord</code></pre>
+<p>One OCSF event as an OpenTelemetry log record: the event is its body.</p>
+
+</section>
+<section class="symbol" id="entityRecord">
+<h3><span class="kind">function</span><a href="#entityRecord">entityRecord</a></h3>
+<pre><code class="language-ts">export function entityRecord(e: OcsfEvent, now?: Date): otel.LogRecord | undefined</code></pre>
+<p>An inventory event as an OpenTelemetry entity.state event, or undefined (people, findings).</p>
+
+</section>
+<section class="symbol" id="otlpLogsRequest">
+<h3><span class="kind">function</span><a href="#otlpLogsRequest">otlpLogsRequest</a></h3>
+<pre><code class="language-ts">export function otlpLogsRequest(events: readonly OcsfEvent[], o: OtlpOptions): JsonObject</code></pre>
+<p>The OTLP/HTTP JSON logs request (ExportLogsServiceRequest) for these events, and entity events when asked.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/export/otlp.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

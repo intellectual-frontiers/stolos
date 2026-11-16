@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/backup/backup.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/backup/backup.ts</h1>
+<p>Backups (spec 016, Article 14): zstd tar archives of the host&#39;s own state and its durable data (spec 044), kept to a retention count, with a restore test. Never restores in place: a restore extracts into a directory for you to inspect.</p>
+<h2>Exports</h2>
+<section class="symbol" id="GuestExport">
+<h3><span class="kind">interface</span><a href="#GuestExport">GuestExport</a></h3>
+<pre><code class="language-ts">export interface GuestExport {
+  /** The LXD instance's name. */
+  guest: string;
+  /** The `lxc export` file written next to the archives, when it worked. */
+  file?: string;
+  /** lxc's error output, when the export failed. */
+  error?: string;
+}</code></pre>
+<p>One durable guest&#39;s export (spec 044): its file, or why it failed.</p>
+
+</section>
+<section class="symbol" id="BackupResult">
+<h3><span class="kind">interface</span><a href="#BackupResult">BackupResult</a></h3>
+<pre><code class="language-ts">export interface BackupResult {
+  /** Path of the new archive (`&lt;target&gt;/&lt;host&gt;-&lt;timestamp&gt;.tar.zst`). */
+  archive: string;
+  /** How many archives are kept after pruning (at most the policy's `keep`). */
+  kept: number;
+  /** Each durable guest's export, in model order. */
+  guests: GuestExport[];
+}</code></pre>
+<p>What a backup run wrote.</p>
+
+</section>
+<section class="symbol" id="VerifyResult">
+<h3><span class="kind">interface</span><a href="#VerifyResult">VerifyResult</a></h3>
+<pre><code class="language-ts">export interface VerifyResult {
+  /** True when the archive lists and its host marker restores to this host's name. */
+  ok: boolean;
+  /** Why the test failed; empty when it passed. */
+  reason: string;
+  /** Path of the archive tested; empty when there is none yet. */
+  archive: string;
+  /** How many lines the archive's listing has (set only when the test passed). */
+  entries?: number;
+}</code></pre>
+<p>The outcome of a restore test of the newest archive.</p>
+
+</section>
+<section class="symbol" id="RestoreResult">
+<h3><span class="kind">interface</span><a href="#RestoreResult">RestoreResult</a></h3>
+<pre><code class="language-ts">export interface RestoreResult {
+  /** Path of the archive extracted. */
+  archive: string;
+  /** The directory it was extracted into (`&lt;to&gt;/&lt;archive name&gt;`). */
+  dir: string;
+}</code></pre>
+<p>Where a restore put an archive.</p>
+
+</section>
+<section class="symbol" id="backupRun">
+<h3><span class="kind">function</span><a href="#backupRun">backupRun</a></h3>
+<pre><code class="language-ts">export async function backupRun(host: HostDef): Promise&lt;BackupResult&gt;</code></pre>
+<p>Write a zstd tar archive of the host&#39;s backup paths (those that exist), prune old archives to the policy&#39;s <code>keep</code>, journal it, then export each durable guest (spec 044). Throws when tar fails (exit code above 1).</p>
+
+</section>
+<section class="symbol" id="backupVerify">
+<h3><span class="kind">function</span><a href="#backupVerify">backupVerify</a></h3>
+<pre><code class="language-ts">export async function backupVerify(host: HostDef): Promise&lt;VerifyResult&gt;</code></pre>
+<p>Restore-test the newest archive (Article 14): list it, then extract <code>etc/archon/host</code> into a temporary directory and check it names this host. Changes nothing on the live system.</p>
+
+</section>
+<section class="symbol" id="backupRestore">
+<h3><span class="kind">function</span><a href="#backupRestore">backupRestore</a></h3>
+<pre><code class="language-ts">export async function backupRestore(
+  host: HostDef,
+  name: string | undefined,
+  to: string,
+): Promise&lt;RestoreResult&gt;</code></pre>
+<p>Extract an archive (<code>name</code>, or the newest) into <code>&lt;to&gt;/&lt;archive name&gt;</code> to inspect. Never restores in place. Throws when there is no archive or tar fails.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/backup/backup.ts">Source</a></p>
+</main>
+
+</body>
+</html>

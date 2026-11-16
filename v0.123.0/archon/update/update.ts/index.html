@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/update/update.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/update/update.ts</h1>
+<p><code>archon update</code> (spec 015): bring everything up to date from GitHub in one command. Pull origin/main, then (in the freshly pulled code) validate, converge, refresh tools, re-converge for dotfiles, and verify.</p>
+<p>Output follows Article XXII: one phase per step. After a pull that brought new commits, the rest runs in a fresh process that continues the same screen and run log (ARCHON_UI_CONTINUE, ARCHON_LOG, ARCHON_UI_START).</p>
+<h2>Exports</h2>
+<section class="symbol" id="UpdateOptions">
+<h3><span class="kind">interface</span><a href="#UpdateOptions">UpdateOptions</a></h3>
+<pre><code class="language-ts">export interface UpdateOptions {
+  /** Only report: fetch without pulling, apply and sync tools in check mode, skip verify. */
+  check: boolean;
+  /** Refresh tools (`archon tools sync`) after the apply. */
+  tools: boolean;
+  /** Pull origin/main first (false in the process that continues after a pull). */
+  pull: boolean;
+}</code></pre>
+<p>What <code>archon update</code> does.</p>
+
+</section>
+<section class="symbol" id="UpdateStep">
+<h3><span class="kind">interface</span><a href="#UpdateStep">UpdateStep</a></h3>
+<pre><code class="language-ts">export interface UpdateStep {
+  /** The step: `&quot;pull&quot;`, `&quot;validate&quot;`, `&quot;apply&quot;`, `&quot;tools&quot;`, `&quot;apply (dotfiles)&quot;` or `&quot;verify&quot;`. */
+  step: string;
+  /** Whether it succeeded. */
+  ok: boolean;
+  /** Its one-line result. */
+  detail: string;
+}</code></pre>
+<p>One step of an update and how it went.</p>
+
+</section>
+<section class="symbol" id="update">
+<h3><span class="kind">function</span><a href="#update">update</a></h3>
+<pre><code class="language-ts">export async function update(host: HostDef, opts: UpdateOptions): Promise&lt;UpdateStep[]&gt;</code></pre>
+<p><code>archon update</code>: pull, validate the model, apply, sync tools (and apply dotfiles again if a tool changed), then verify. After a pull that brought new commits, it runs the rest in the freshly pulled code and exits with that process&#39;s code. Stops after an invalid model without applying.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/update/update.ts">Source</a></p>
+</main>
+
+</body>
+</html>

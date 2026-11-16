@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/connect/google.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/connect/google.ts</h1>
+<p>Spec 086, declared with spec 091&#39;s SDK: Google Workspace, read-only, through the Admin SDK Directory API: its users (suspended or not, administrators, enrolled in 2-Step Verification, last sign-in). It signs in as a service account with domain-wide delegation for one read-only scope, impersonating an administrator; the JWT is signed here (RS256, WebCrypto), with no SDK. Evidence for MFA, account management, and least privilege (SCF IAC-37, IAC-08, IAC-30).</p>
+<h2>Exports</h2>
+<section class="symbol" id="serviceAccountJwt">
+<h3><span class="kind">function</span><a href="#serviceAccountJwt">serviceAccountJwt</a></h3>
+<pre><code class="language-ts">export async function serviceAccountJwt(
+  key: { client_email: string; private_key: string },
+  subject: string,
+  scope: string,
+  now: Date,
+): Promise&lt;string&gt;</code></pre>
+<p>A signed JWT assertion for Google&#39;s token endpoint (RS256).</p>
+
+</section>
+<section class="symbol" id="google">
+<h3><span class="kind">const</span><a href="#google">google</a></h3>
+<pre><code class="language-ts">export const google: Connector</code></pre>
+<p>Google Workspace.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/connect/google.ts">Source</a></p>
+</main>
+
+</body>
+</html>

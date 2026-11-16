@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/model/export.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/model/export.ts</h1>
+<p><code>stolos export</code> (spec 002 FR-006, spec 014): the fleet, hosts, specs, provenance, and snapshots as RDF (Turtle) under out/rdf/. RDF is an export only (Article 10); vocabularies are reused (Article 3): W3C PROV, Dublin Core terms, FOAF, and a small archon: namespace for the rest.</p>
+<h2>Exports</h2>
+<section class="symbol" id="lit">
+<h3><span class="kind">function</span><a href="#lit">lit</a></h3>
+<pre><code class="language-ts">export function lit(s: string): string</code></pre>
+<p>A Turtle string literal.</p>
+
+</section>
+<section class="symbol" id="subject">
+<h3><span class="kind">function</span><a href="#subject">subject</a></h3>
+<pre><code class="language-ts">export function subject(s: string, pairs: Array&lt;[string, string | string[]]&gt;): string</code></pre>
+<p>One subject with predicate-object pairs.</p>
+
+</section>
+<section class="symbol" id="exportRdf">
+<h3><span class="kind">function</span><a href="#exportRdf">exportRdf</a></h3>
+<pre><code class="language-ts">export async function exportRdf(): Promise&lt;string[]&gt;</code></pre>
+<p>Write the fleet as RDF Turtle into out/rdf/: fleet.ttl (people, hosts, specs, and what was applied), plus site.ttl when the fleet has a site. Returns the paths written.</p>
+
+</section>
+<section class="symbol" id="siteTurtle">
+<h3><span class="kind">function</span><a href="#siteTurtle">siteTurtle</a></h3>
+<pre><code class="language-ts">export function siteTurtle(site: SiteDef, hosts: HostDef[]): string</code></pre>
+<p>Spec 028: the site as RDF, with SKOS labels: archon:Site, archon:Network, archon:Zone, archon:FirewallPolicy, archon:SecretRef (names only, never values). An export only (Article 10): TypeScript validates the model.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/model/export.ts">Source</a></p>
+</main>
+
+</body>
+</html>

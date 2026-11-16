@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon-boot/web.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../index.html">Stolos v0.123.0</a> · <a href="../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon-boot/web.ts</h1>
+<p>The boot machine&#39;s side of HTTPS (spec 032):</p>
+<p>bun run stolos boot web-setup          store the Cloudflare DNS token (once) bun run stolos boot web-push &lt;host&gt;    give a running server the token over SSH</p>
+<p>The token lives only in this PC&#39;s secrets folder and, on each server, root only in /etc/archon/web. It never enters the repository (Article 13).</p>
+<h2>Exports</h2>
+<section class="symbol" id="webSetup">
+<h3><span class="kind">function</span><a href="#webSetup">webSetup</a></h3>
+<pre><code class="language-ts">export async function webSetup(): Promise&lt;number&gt;</code></pre>
+<p><code>bun run stolos boot web-setup</code>: explain the one-time Cloudflare DNS token, read it without echo, check that it can see the fleet&#39;s zone, and store it in this PC&#39;s secrets. Returns the exit code (1 on a missing web setting or a bad token).</p>
+
+</section>
+<section class="symbol" id="webPush">
+<h3><span class="kind">function</span><a href="#webPush">webPush</a></h3>
+<pre><code class="language-ts">export async function webPush(name: string | undefined): Promise&lt;number&gt;</code></pre>
+<p><code>bun run stolos boot web-push &lt;host&gt;</code>: give a running server the stored DNS token over SSH (on stdin to <code>archon web credential</code>). Returns ssh&#39;s exit code, 2 for an unknown host, or 1 when no token is stored.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon-boot/web.ts">Source</a></p>
+</main>
+
+</body>
+</html>

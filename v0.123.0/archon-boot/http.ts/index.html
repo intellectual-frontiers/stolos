@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon-boot/http.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../index.html">Stolos v0.123.0</a> · <a href="../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon-boot/http.ts</h1>
+<p>A small HTTP/1.1 server for archon-boot (spec 004), on raw TCP. A web server&#39;s <code>Headers</code> keep names in lowercase, which HTTP allows, but GRUB&#39;s HTTP client compares &quot;Content-Length: &quot; case-sensitively and then reads every file as empty. This transport writes canonical header names, keeps connections alive (GRUB sends HEAD then GET on one connection), and streams bodies.</p>
+<h2>Exports</h2>
+<section class="symbol" id="Handler">
+<h3><span class="kind">type</span><a href="#Handler">Handler</a></h3>
+<pre><code class="language-ts">export type Handler = (req: Request, from: string) =&gt; Promise&lt;Response&gt;;</code></pre>
+<p>Answers one request; <code>from</code> is the client&#39;s address.</p>
+
+</section>
+<section class="symbol" id="listen">
+<h3><span class="kind">function</span><a href="#listen">listen</a></h3>
+<pre><code class="language-ts">export async function listen(
+  port: number,
+  handler: Handler,
+  hostname = &quot;0.0.0.0&quot;,
+): Promise&lt;tcp.Listener&gt;</code></pre>
+<p>Listen on <code>port</code> on <code>hostname</code> (every IPv4 address by default: the machines being installed reach this PC over the LAN) and serve each connection with <code>handler</code> in the background. Returns the listener so the caller can close it.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon-boot/http.ts">Source</a></p>
+</main>
+
+</body>
+</html>

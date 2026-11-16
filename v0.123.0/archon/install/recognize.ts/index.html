@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/install/recognize.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/install/recognize.ts</h1>
+<p>Spec 051: how a machine becomes a host when it network-boots. A person chooses, every time, exactly one of:</p>
+<p>--claim                the next unknown machine to network-boot (within 30 minutes) becomes the host; its MAC is learned from it; --mac-address &lt;mac&gt;    only that network card is the host.</p>
+<p>There is no default: a choice made without thinking is how the wrong machine gets erased. The one exception is a host that already installed: the MAC its own machine reported (registration.ts, macSource &quot;installed&quot;) is a fact, so <code>boot arm</code> may use it without either option.</p>
+<pre class="mermaid">flowchart TD
+  start[&quot;host add / boot arm&quot;] --&gt; q{&quot;--claim or&lt;br/&gt;--mac-address?&quot;}
+  q --&gt;|neither or both| refuse[&quot;refused, both commands shown&lt;br/&gt;(E051-NO-RECOGNITION)&quot;]
+  q --&gt;|--claim| claim[&quot;the next unknown machine&lt;br/&gt;in 30 minutes becomes the host&quot;]
+  q --&gt;|--mac-address| mac[&quot;only that network card&quot;]
+  q --&gt;|&quot;neither, but its machine&lt;br/&gt;reported its MAC&quot;| own[&quot;its own machine again&quot;]
+  claim --&gt; learned[&quot;MAC learned at install:&lt;br/&gt;registration.ts, macSource installed&quot;]
+  mac --&gt; learned</pre>
+<h2>Exports</h2>
+<section class="symbol" id="Recognition">
+<h3><span class="kind">type</span><a href="#Recognition">Recognition</a></h3>
+<pre><code class="language-ts">export type Recognition =
+  { kind: &quot;claim&quot; } | { kind: &quot;mac&quot;; mac: string } | { kind: &quot;installed&quot;; mac: string };</code></pre>
+<p>How a machine becomes the host: claimed, by a typed MAC, or its own installed MAC.</p>
+
+</section>
+<section class="symbol" id="CLAIM_MINUTES">
+<h3><span class="kind">const</span><a href="#CLAIM_MINUTES">CLAIM_MINUTES</a></h3>
+<pre><code class="language-ts">export const CLAIM_MINUTES</code></pre>
+<p>How long a claim waits for an unknown machine to network-boot.</p>
+
+</section>
+<section class="symbol" id="recognition">
+<h3><span class="kind">function</span><a href="#recognition">recognition</a></h3>
+<pre><code class="language-ts">export function recognition(
+  host: string,
+  o: { claim?: boolean; macAddress?: string; command: string },
+  registration?: Pick&lt;HostRegistration, &quot;mac&quot; | &quot;macSource&quot;&gt;,
+): Recognition | { refusal: string }</code></pre>
+<p>The choice, or why it is refused (with the commands that would work).</p>
+
+</section>
+<section class="symbol" id="describeRecognition">
+<h3><span class="kind">function</span><a href="#describeRecognition">describeRecognition</a></h3>
+<pre><code class="language-ts">export function describeRecognition(host: string, r: Recognition): string</code></pre>
+<p>One line on what the choice means, for the person who made it.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/install/recognize.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

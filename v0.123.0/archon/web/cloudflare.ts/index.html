@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/web/cloudflare.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/web/cloudflare.ts</h1>
+<p>032-web: the few Cloudflare API calls a server needs to keep its own DNS records (its name and wildcard, both to its private address, not proxied). The token needs Zone: Read and DNS: Edit on the zone (the same token Traefik uses for Let&#39;s Encrypt&#39;s DNS challenge).</p>
+<h2>Exports</h2>
+<section class="symbol" id="CfCredential">
+<h3><span class="kind">interface</span><a href="#CfCredential">CfCredential</a></h3>
+<pre><code class="language-ts">export interface CfCredential {
+  /** The API token. A secret: never logged or sent anywhere but Cloudflare's API. */
+  token: string;
+  /** When it was made (ISO 8601), if known. */
+  created?: string;
+}</code></pre>
+<p>The server&#39;s Cloudflare credential: an API token with Zone: Read and DNS: Edit on the zone.</p>
+
+</section>
+<section class="symbol" id="ARecord">
+<h3><span class="kind">interface</span><a href="#ARecord">ARecord</a></h3>
+<pre><code class="language-ts">export interface ARecord {
+  /** The record type: only A records are kept. */
+  type: &quot;A&quot;;
+  /** Its full name (for example `alpha.lab.example.net`, or `*.alpha.lab.example.net`). */
+  name: string;
+  /** The IPv4 address it points to. */
+  content: string;
+}</code></pre>
+<p>A DNS A record to keep (always TTL 60, not proxied).</p>
+
+</section>
+<section class="symbol" id="Fetch">
+<h3><span class="kind">type</span><a href="#Fetch">Fetch</a></h3>
+<pre><code class="language-ts">export type Fetch = typeof fetch;</code></pre>
+<p>The fetch function the calls use: the global <code>fetch</code>, or a fake in tests.</p>
+
+</section>
+<section class="symbol" id="zoneId">
+<h3><span class="kind">function</span><a href="#zoneId">zoneId</a></h3>
+<pre><code class="language-ts">export async function zoneId(token: string, zone: string, f: Fetch = fetch): Promise&lt;string&gt;</code></pre>
+<p>The zone&#39;s ID; fails clearly when the token cannot read it.</p>
+
+</section>
+<section class="symbol" id="Upserted">
+<h3><span class="kind">interface</span><a href="#Upserted">Upserted</a></h3>
+<pre><code class="language-ts">export interface Upserted {
+  /** The record's name. */
+  name: string;
+  /** Left as it was, changed in place, or added. */
+  action: &quot;unchanged&quot; | &quot;updated&quot; | &quot;created&quot;;
+}</code></pre>
+<p>What upsertRecords did for one record.</p>
+
+</section>
+<section class="symbol" id="upsertRecords">
+<h3><span class="kind">function</span><a href="#upsertRecords">upsertRecords</a></h3>
+<pre><code class="language-ts">export async function upsertRecords(
+  token: string,
+  zone: string,
+  records: ARecord[],
+  comment: string,
+  f: Fetch = fetch,
+): Promise&lt;Upserted[]&gt;</code></pre>
+<p>Make each record exist with this content (one per name and type).</p>
+
+</section>
+<section class="symbol" id="deleteRecords">
+<h3><span class="kind">function</span><a href="#deleteRecords">deleteRecords</a></h3>
+<pre><code class="language-ts">export async function deleteRecords(
+  token: string,
+  zone: string,
+  names: string[],
+  f: Fetch = fetch,
+): Promise&lt;string[]&gt;</code></pre>
+<p>Spec 045 (retire): remove each A record with this name; the names removed.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/web/cloudflare.ts">Source</a></p>
+</main>
+
+</body>
+</html>

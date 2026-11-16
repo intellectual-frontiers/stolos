@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/connect/labels.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/connect/labels.ts</h1>
+<p>Spec 091: the labels connectors fill, declared once (spec 089). Each is a term from MITRE D3FEND or OCSF, and each record a connector reads carries one: <code>user_account</code>, <code>code_repository</code>, <code>person</code> (an HR roster), and <code>hardware_device</code> become the estate&#39;s accounts, repositories, people, and devices; the others become nodes of the estate graph as they are.</p>
+<h2>Exports</h2>
+<section class="symbol" id="USER_ACCOUNT">
+<h3><span class="kind">const</span><a href="#USER_ACCOUNT">USER_ACCOUNT</a></h3>
+<pre><code class="language-ts">export const USER_ACCOUNT: LabelView</code></pre>
+<p>An account in some system (D3FEND user account).</p>
+
+</section>
+<section class="symbol" id="CODE_REPOSITORY">
+<h3><span class="kind">const</span><a href="#CODE_REPOSITORY">CODE_REPOSITORY</a></h3>
+<pre><code class="language-ts">export const CODE_REPOSITORY: LabelView</code></pre>
+<p>A code repository (D3FEND code repository).</p>
+
+</section>
+<section class="symbol" id="PERSON">
+<h3><span class="kind">const</span><a href="#PERSON">PERSON</a></h3>
+<pre><code class="language-ts">export const PERSON: LabelView</code></pre>
+<p>A person on an HR system&#39;s roster (UDM person): the source of truth for people.</p>
+
+</section>
+<section class="symbol" id="HARDWARE_DEVICE">
+<h3><span class="kind">const</span><a href="#HARDWARE_DEVICE">HARDWARE_DEVICE</a></h3>
+<pre><code class="language-ts">export const HARDWARE_DEVICE: LabelView</code></pre>
+<p>A device a connector knows (D3FEND hardware device): an MDM&#39;s or directory&#39;s machines.</p>
+
+</section>
+<section class="symbol" id="DNS_RECORD">
+<h3><span class="kind">const</span><a href="#DNS_RECORD">DNS_RECORD</a></h3>
+<pre><code class="language-ts">export const DNS_RECORD: LabelView</code></pre>
+<p>A DNS record (D3FEND DNS record).</p>
+
+</section>
+<section class="symbol" id="DOMAIN_NAME">
+<h3><span class="kind">const</span><a href="#DOMAIN_NAME">DOMAIN_NAME</a></h3>
+<pre><code class="language-ts">export const DOMAIN_NAME: LabelView</code></pre>
+<p>A DNS zone (D3FEND domain name).</p>
+
+</section>
+<section class="symbol" id="SERVER">
+<h3><span class="kind">const</span><a href="#SERVER">SERVER</a></h3>
+<pre><code class="language-ts">export const SERVER: LabelView</code></pre>
+<p>A server in a cloud (D3FEND server).</p>
+
+</section>
+<section class="symbol" id="CLOUD_STORAGE">
+<h3><span class="kind">const</span><a href="#CLOUD_STORAGE">CLOUD_STORAGE</a></h3>
+<pre><code class="language-ts">export const CLOUD_STORAGE: LabelView</code></pre>
+<p>Object storage (D3FEND cloud storage).</p>
+
+</section>
+<section class="symbol" id="VOLUME">
+<h3><span class="kind">const</span><a href="#VOLUME">VOLUME</a></h3>
+<pre><code class="language-ts">export const VOLUME: LabelView</code></pre>
+<p>A disk volume (D3FEND volume).</p>
+
+</section>
+<section class="symbol" id="FIREWALL">
+<h3><span class="kind">const</span><a href="#FIREWALL">FIREWALL</a></h3>
+<pre><code class="language-ts">export const FIREWALL: LabelView</code></pre>
+<p>A firewall (D3FEND firewall).</p>
+
+</section>
+<section class="symbol" id="LOAD_BALANCER">
+<h3><span class="kind">const</span><a href="#LOAD_BALANCER">LOAD_BALANCER</a></h3>
+<pre><code class="language-ts">export const LOAD_BALANCER: LabelView</code></pre>
+<p>A load balancer (OCSF load balancer).</p>
+
+</section>
+<section class="symbol" id="IP_ADDRESS">
+<h3><span class="kind">const</span><a href="#IP_ADDRESS">IP_ADDRESS</a></h3>
+<pre><code class="language-ts">export const IP_ADDRESS: LabelView</code></pre>
+<p>A public IP address (D3FEND IP address).</p>
+
+</section>
+<section class="symbol" id="SOFTWARE">
+<h3><span class="kind">const</span><a href="#SOFTWARE">SOFTWARE</a></h3>
+<pre><code class="language-ts">export const SOFTWARE: LabelView</code></pre>
+<p>Software a provider runs for the fleet (D3FEND software): serverless functions, sites, tunnels.</p>
+
+</section>
+<section class="symbol" id="ACCOUNT">
+<h3><span class="kind">const</span><a href="#ACCOUNT">ACCOUNT</a></h3>
+<pre><code class="language-ts">export const ACCOUNT: LabelView</code></pre>
+<p>A cloud or SaaS account itself (OCSF account): an AWS account, a Cloudflare account.</p>
+
+</section>
+<section class="symbol" id="CLOUD_USER_ACCOUNT">
+<h3><span class="kind">const</span><a href="#CLOUD_USER_ACCOUNT">CLOUD_USER_ACCOUNT</a></h3>
+<pre><code class="language-ts">export const CLOUD_USER_ACCOUNT: LabelView</code></pre>
+<p>A cloud&#39;s own identity (D3FEND cloud user account): an AWS IAM user. Kept as a record, not an estate account: it signs in to the cloud&#39;s API, not as a person on the roster.</p>
+
+</section>
+<section class="symbol" id="ORGANIZATION">
+<h3><span class="kind">const</span><a href="#ORGANIZATION">ORGANIZATION</a></h3>
+<pre><code class="language-ts">export const ORGANIZATION: LabelView</code></pre>
+<p>An organization a connector reads (OCSF organization): a tenant, a code host&#39;s organization.</p>
+
+</section>
+<section class="symbol" id="ACCESS_CONTROL_GROUP">
+<h3><span class="kind">const</span><a href="#ACCESS_CONTROL_GROUP">ACCESS_CONTROL_GROUP</a></h3>
+<pre><code class="language-ts">export const ACCESS_CONTROL_GROUP: LabelView</code></pre>
+<p>A role or group that grants access (D3FEND access control group), and who holds it.</p>
+
+</section>
+<section class="symbol" id="ASSESSMENT">
+<h3><span class="kind">const</span><a href="#ASSESSMENT">ASSESSMENT</a></h3>
+<pre><code class="language-ts">export const ASSESSMENT: LabelView</code></pre>
+<p>An assessment a source reports (OCSF assessment): who has registered a second factor.</p>
+
+</section>
+<section class="symbol" id="POLICY">
+<h3><span class="kind">const</span><a href="#POLICY">POLICY</a></h3>
+<pre><code class="language-ts">export const POLICY: LabelView</code></pre>
+<p>A security policy (OCSF policy): security defaults, a Conditional Access policy.</p>
+
+</section>
+<section class="symbol" id="PRODUCT">
+<h3><span class="kind">const</span><a href="#PRODUCT">PRODUCT</a></h3>
+<pre><code class="language-ts">export const PRODUCT: LabelView</code></pre>
+<p>A product an account holds (OCSF product): a license.</p>
+
+</section>
+<section class="symbol" id="RESOURCE">
+<h3><span class="kind">const</span><a href="#RESOURCE">RESOURCE</a></h3>
+<pre><code class="language-ts">export const RESOURCE: LabelView</code></pre>
+<p>A cloud resource (D3FEND resource): an Azure subscription or anything in one.</p>
+
+</section>
+<section class="symbol" id="TICKET">
+<h3><span class="kind">const</span><a href="#TICKET">TICKET</a></h3>
+<pre><code class="language-ts">export const TICKET: LabelView</code></pre>
+<p>A ticket in an IT service management or work-tracking system (OCSF ticket): a change, an incident, or other work, and the commits or pull requests it links (spec 087).</p>
+
+</section>
+<section class="symbol" id="PASSWORD_STORE">
+<h3><span class="kind">const</span><a href="#PASSWORD_STORE">PASSWORD_STORE</a></h3>
+<pre><code class="language-ts">export const PASSWORD_STORE: LabelView</code></pre>
+<p>A shared vault or collection in a password manager (D3FEND password store), and who can open it.</p>
+
+</section>
+<section class="symbol" id="APPLICATION">
+<h3><span class="kind">const</span><a href="#APPLICATION">APPLICATION</a></h3>
+<pre><code class="language-ts">export const APPLICATION: LabelView</code></pre>
+<p>An application people sign in to through an identity provider (OCSF application): an Okta app integration, an Entra enterprise application. Spec 080 reads them to discover the fleet&#39;s vendors.</p>
+
+</section>
+<section class="symbol" id="VULNERABILITY">
+<h3><span class="kind">const</span><a href="#VULNERABILITY">VULNERABILITY</a></h3>
+<pre><code class="language-ts">export const VULNERABILITY: LabelView</code></pre>
+<p>A vulnerability a scanner reports on one asset (OCSF vulnerability; emitted as OCSF Vulnerability Finding, 2002): spec 088. Open ones go in the OSCAL POA&amp;M with their CVE, severity, and asset.</p>
+
+</section>
+<section class="symbol" id="EVENT_LOG">
+<h3><span class="kind">const</span><a href="#EVENT_LOG">EVENT_LOG</a></h3>
+<pre><code class="language-ts">export const EVENT_LOG: LabelView</code></pre>
+<p>An audit log a cloud keeps (D3FEND event log): a CloudTrail trail, an exported activity log, a log sink.</p>
+
+</section>
+<section class="symbol" id="INTRUSION_DETECTION_SYSTEM">
+<h3><span class="kind">const</span><a href="#INTRUSION_DETECTION_SYSTEM">INTRUSION_DETECTION_SYSTEM</a></h3>
+<pre><code class="language-ts">export const INTRUSION_DETECTION_SYSTEM: LabelView</code></pre>
+<p>A cloud&#39;s threat detection (D3FEND intrusion detection system): GuardDuty, a Defender for Cloud plan.</p>
+
+</section>
+<section class="symbol" id="CONFIGURATION_MANAGEMENT_DATABASE">
+<h3><span class="kind">const</span><a href="#CONFIGURATION_MANAGEMENT_DATABASE">CONFIGURATION_MANAGEMENT_DATABASE</a></h3>
+<pre><code class="language-ts">export const CONFIGURATION_MANAGEMENT_DATABASE: LabelView</code></pre>
+<p>A cloud&#39;s record of its resources&#39; configuration history (D3FEND configuration management database): AWS Config.</p>
+
+</section>
+<section class="symbol" id="CONNECTOR_LABELS">
+<h3><span class="kind">const</span><a href="#CONNECTOR_LABELS">CONNECTOR_LABELS</a></h3>
+<pre><code class="language-ts">export const CONNECTOR_LABELS: readonly LabelView[]</code></pre>
+<p>Every connector label.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/connect/labels.ts">Source</a></p>
+</main>
+
+</body>
+</html>

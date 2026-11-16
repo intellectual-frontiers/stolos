@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/doctor/probe.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/doctor/probe.ts</h1>
+<p>archon doctor&#39;s building blocks (spec 026): one HTTP(S) probe with curl&#39;s own timings, what a curl failure means, and parsers for the output of Ubuntu&#39;s network tools. Pure where it can be, so it is tested without a network.</p>
+<h2>Exports</h2>
+<section class="symbol" id="Probe">
+<h3><span class="kind">interface</span><a href="#Probe">Probe</a></h3>
+<pre><code class="language-ts">export interface Probe {
+  /** The URL probed. */
+  url: string;
+  /** Any HTTP answer (even 404) means the path works; `ok` is false only without one. */
+  ok: boolean;
+  /** The HTTP status code; 0 without an answer. */
+  http: number;
+  /** curl's exit code (0 on success; see `explainCurl`). */
+  curlExit: number;
+  /** The address curl connected to. */
+  ip?: string | undefined;
+  /** Seconds, cumulative as curl reports them. */
+  dns?: number | undefined;
+  /** Seconds until the TCP connection was made. */
+  connect?: number | undefined;
+  /** Seconds until the TLS handshake finished. */
+  tls?: number | undefined;
+  /** Seconds for the whole request. */
+  total?: number | undefined;
+  /** The final URL, after any redirects followed. */
+  effective?: string | undefined;
+  /** curl's error message, without its `curl: (N)` prefix. */
+  error?: string | undefined;
+}</code></pre>
+<p>The result of one curl probe of a URL.</p>
+
+</section>
+<section class="symbol" id="probe">
+<h3><span class="kind">function</span><a href="#probe">probe</a></h3>
+<pre><code class="language-ts">export async function probe(
+  url: string,
+  o: {
+    ipv4?: boolean | undefined;
+    get?: boolean | undefined;
+    follow?: boolean | undefined;
+    timeout?: number | undefined;
+  } = {},
+): Promise&lt;Probe&gt;</code></pre>
+<p>Probe a URL with curl: HEAD by default, following redirects when asked.</p>
+
+</section>
+<section class="symbol" id="parseProbe">
+<h3><span class="kind">function</span><a href="#parseProbe">parseProbe</a></h3>
+<pre><code class="language-ts">export function parseProbe(url: string, code: number, stdout: string, stderr: string): Probe</code></pre>
+<p>Build a <code>Probe</code> from curl&#39;s <code>-w</code> output (status, IP, timings, final URL), exit code and stderr.</p>
+
+</section>
+<section class="symbol" id="explainCurl">
+<h3><span class="kind">function</span><a href="#explainCurl">explainCurl</a></h3>
+<pre><code class="language-ts">export function explainCurl(exit: number, error = &quot;&quot;): { what: string; look: string }</code></pre>
+<p>What a curl exit code means for this machine&#39;s network, and where to look.</p>
+
+</section>
+<section class="symbol" id="timings">
+<h3><span class="kind">function</span><a href="#timings">timings</a></h3>
+<pre><code class="language-ts">export function timings(p: Probe): string</code></pre>
+<p>One phrase of timings: &quot;dns 12 ms · connect 31 ms · tls 70 ms · 120 ms&quot;.</p>
+
+</section>
+<section class="symbol" id="aptRepos">
+<h3><span class="kind">function</span><a href="#aptRepos">aptRepos</a></h3>
+<pre><code class="language-ts">export function aptRepos(
+  files: Array&lt;{ name: string; text: string }&gt;,
+): Array&lt;{ uri: string; suite: string }&gt;</code></pre>
+<p>apt sources: every repository&#39;s base URI and suite (deb822 .sources and one-line .list).</p>
+
+</section>
+<section class="symbol" id="inReleaseUrl">
+<h3><span class="kind">function</span><a href="#inReleaseUrl">inReleaseUrl</a></h3>
+<pre><code class="language-ts">export function inReleaseUrl(r: { uri: string; suite: string }): string</code></pre>
+<p>The InRelease file apt fetches for a repository (a suite ending in / is a flat repository).</p>
+
+</section>
+<section class="symbol" id="parsePing">
+<h3><span class="kind">function</span><a href="#parsePing">parsePing</a></h3>
+<pre><code class="language-ts">export function parsePing(
+  out: string,
+): { sent: number; received: number; avgMs?: number | undefined } | undefined</code></pre>
+<p>ping&#39;s summary: loss and average round trip.</p>
+
+</section>
+<section class="symbol" id="parseResolvectlDns">
+<h3><span class="kind">function</span><a href="#parseResolvectlDns">parseResolvectlDns</a></h3>
+<pre><code class="language-ts">export function parseResolvectlDns(out: string): string[]</code></pre>
+<p><code>resolvectl dns</code>: the DNS servers per link (&quot;Link 2 (eth0): 10.0.30.1&quot;).</p>
+
+</section>
+<section class="symbol" id="parseChronyTracking">
+<h3><span class="kind">function</span><a href="#parseChronyTracking">parseChronyTracking</a></h3>
+<pre><code class="language-ts">export function parseChronyTracking(out: string): {
+  offset?: number | undefined;
+  leap?: string | undefined;
+  ref?: string | undefined;
+}</code></pre>
+<p><code>chronyc -n tracking</code>: offset in seconds (positive: fast) and leap status.</p>
+
+</section>
+<section class="symbol" id="parseSnapConnectivity">
+<h3><span class="kind">function</span><a href="#parseSnapConnectivity">parseSnapConnectivity</a></h3>
+<pre><code class="language-ts">export function parseSnapConnectivity(
+  out: string,
+): { pass: boolean; unreachable: string[] } | undefined</code></pre>
+<p><code>snap debug connectivity</code> (snapd&#39;s cmd_debug_connectivity_check.go): &quot; * PASS&quot;, or one &quot; * &lt;host&gt;: unreachable&quot; line per store host snapd could not reach.</p>
+
+</section>
+<section class="symbol" id="ufwOutgoing">
+<h3><span class="kind">function</span><a href="#ufwOutgoing">ufwOutgoing</a></h3>
+<pre><code class="language-ts">export function ufwOutgoing(out: string): string | undefined</code></pre>
+<p><code>ufw status verbose</code>: the default outgoing policy.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/doctor/probe.ts">Source</a></p>
+</main>
+
+</body>
+</html>

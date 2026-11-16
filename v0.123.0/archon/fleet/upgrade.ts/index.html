@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/fleet/upgrade.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/fleet/upgrade.ts</h1>
+<p><code>stolos fleet upgrade &lt;tag&gt;</code> (spec 046-engine-instance, Articles 9, 12, 24; spec 096 FR-006): move a fleet repository to another released version of the engine, safely.</p>
+<p>Why each step exists (the fleet-repository guide, ./mod.ts, says it at length):</p>
+<ol><li>The tag must be a version tag, and only forward unless --downgrade: going back to an older engine is a decision, not an accident.</li><li><code>package.json</code>&#39;s dependency on the engine is moved to that release&#39;s tarball (<code>https://github.com/intellectual-frontiers/stolos/releases/download/v&lt;version&gt;/intellectual-frontiers-stolos-&lt;version&gt;.tgz</code>), and <code>bun install</code> records its integrity in <code>bun.lock</code>. The installed package must say it is that version: a typo, or an asset that is not that release, is refused and everything is put back. Hosts run <code>bun install --frozen-lockfile</code>: a tarball that differs from the lock is refused. That is what makes your signature cover the engine&#39;s bytes.</li><li>Every fleet in the repository is validated with the new engine before anything is committed.</li><li>The files are committed together and signed (git commit -S): hosts apply only a signed tip of main. Pushing it is the approval.</li></ol>
+<pre class="mermaid">sequenceDiagram
+  actor P as Person
+  participant U as stolos fleet upgrade
+  participant G as GitHub (stolos release)
+  participant R as fleet repository
+  P-&gt;&gt;U: fleet upgrade vX.Y.Z
+  U-&gt;&gt;R: package.json: the release's tarball URL, the reusable workflows' tag
+  U-&gt;&gt;G: bun install: the tarball
+  U-&gt;&gt;R: bun.lock (its integrity); the installed engine says vX.Y.Z
+  U-&gt;&gt;R: validate every fleet with the new engine
+  U-&gt;&gt;R: one signed commit
+  P-&gt;&gt;R: git push (the approval)</pre>
+<h2>Exports</h2>
+<section class="symbol" id="ENGINE_PACKAGE">
+<h3><span class="kind">const</span><a href="#ENGINE_PACKAGE">ENGINE_PACKAGE</a></h3>
+<pre><code class="language-ts">export const ENGINE_PACKAGE</code></pre>
+<p>The engine&#39;s package name, as a fleet repository depends on it.</p>
+
+</section>
+<section class="symbol" id="ENGINE_RELEASES">
+<h3><span class="kind">const</span><a href="#ENGINE_RELEASES">ENGINE_RELEASES</a></h3>
+<pre><code class="language-ts">export const ENGINE_RELEASES</code></pre>
+<p>Where the engine&#39;s releases are served from: the tag and the tarball&#39;s name are appended.</p>
+
+</section>
+<section class="symbol" id="PIN_FILE">
+<h3><span class="kind">const</span><a href="#PIN_FILE">PIN_FILE</a></h3>
+<pre><code class="language-ts">export const PIN_FILE</code></pre>
+<p>The file of a fleet repository that pins the engine.</p>
+
+</section>
+<section class="symbol" id="LOCK_FILE">
+<h3><span class="kind">const</span><a href="#LOCK_FILE">LOCK_FILE</a></h3>
+<pre><code class="language-ts">export const LOCK_FILE</code></pre>
+<p>The file that holds the integrity of the pinned engine.</p>
+
+</section>
+<section class="symbol" id="Semver">
+<h3><span class="kind">type</span><a href="#Semver">Semver</a></h3>
+<pre><code class="language-ts">export type Semver = [number, number, number];</code></pre>
+<p>A version: major, minor, patch.</p>
+
+</section>
+<section class="symbol" id="parseTag">
+<h3><span class="kind">function</span><a href="#parseTag">parseTag</a></h3>
+<pre><code class="language-ts">export function parseTag(tag: string): Semver | undefined</code></pre>
+<p>A tag (&quot;v1.2.3&quot;) as a version, or undefined.</p>
+
+</section>
+<section class="symbol" id="compare">
+<h3><span class="kind">function</span><a href="#compare">compare</a></h3>
+<pre><code class="language-ts">export function compare(a: Semver, b: Semver): number</code></pre>
+<p>-1, 0, or 1.</p>
+
+</section>
+<section class="symbol" id="Pin">
+<h3><span class="kind">interface</span><a href="#Pin">Pin</a></h3>
+<pre><code class="language-ts">export interface Pin {
+  /** The URL before the tag (&quot;https://github.com/&lt;org&gt;/stolos/releases/download/&quot;). */
+  base: string;
+  /** The tag, &quot;vX.Y.Z&quot;. */
+  tag: string;
+}</code></pre>
+<p>Where the engine is pinned: the releases&#39; base URL and the tag.</p>
+
+</section>
+<section class="symbol" id="tarballUrl">
+<h3><span class="kind">function</span><a href="#tarballUrl">tarballUrl</a></h3>
+<pre><code class="language-ts">export function tarballUrl(tag: string, base: string = ENGINE_RELEASES): string</code></pre>
+<p>The URL of a release&#39;s tarball: <code>&lt;base&gt;v&lt;version&gt;/intellectual-frontiers-stolos-&lt;version&gt;.tgz</code>.</p>
+
+</section>
+<section class="symbol" id="readPin">
+<h3><span class="kind">function</span><a href="#readPin">readPin</a></h3>
+<pre><code class="language-ts">export function readPin(packageJson: string): Pin | undefined</code></pre>
+<p>The engine&#39;s pin in a package.json&#39;s text, or undefined when it is not a release&#39;s tarball.</p>
+
+</section>
+<section class="symbol" id="writePin">
+<h3><span class="kind">function</span><a href="#writePin">writePin</a></h3>
+<pre><code class="language-ts">export function writePin(packageJson: string, pin: Pin, tag: string): string</code></pre>
+<p>package.json&#39;s text with the pin moved to <code>tag</code> (only that string changes).</p>
+
+</section>
+<section class="symbol" id="engineRepository">
+<h3><span class="kind">function</span><a href="#engineRepository">engineRepository</a></h3>
+<pre><code class="language-ts">export function engineRepository(pin: Pin): string | undefined</code></pre>
+<p>The engine repository (&quot;owner/name&quot;) a pin&#39;s base points at: https://github.com/&lt;owner&gt;/&lt;name&gt;/releases/download/ (else undefined).</p>
+
+</section>
+<section class="symbol" id="rewriteWorkflowRefs">
+<h3><span class="kind">function</span><a href="#rewriteWorkflowRefs">rewriteWorkflowRefs</a></h3>
+<pre><code class="language-ts">export function rewriteWorkflowRefs(text: string, engineRepo: string, tag: string): string</code></pre>
+<p>A fleet repository&#39;s workflows call the engine&#39;s reusable workflows (fleet-e2e.yml) at a tag: the same tag as the pin, so the lab tests the engine the fleet runs. Returns the text with every such reference moved to <code>tag</code>.</p>
+
+</section>
+<section class="symbol" id="installedVersion">
+<h3><span class="kind">function</span><a href="#installedVersion">installedVersion</a></h3>
+<pre><code class="language-ts">export async function installedVersion(repo: string): Promise&lt;string | undefined&gt;</code></pre>
+<p>The version of the engine installed in a checkout (its package&#39;s own package.json), or undefined.</p>
+
+</section>
+<section class="symbol" id="UpgradeOptions">
+<h3><span class="kind">interface</span><a href="#UpgradeOptions">UpgradeOptions</a></h3>
+<pre><code class="language-ts">export interface UpgradeOptions {
+  /** The tag to move to. */
+  tag: string;
+  /** Allow an older (or the same) version. */
+  downgrade?: boolean;
+  /** Change the files only; the operator commits. */
+  noCommit?: boolean;
+  /** For tests: the repository (default: the instance). */
+  repo?: string;
+}</code></pre>
+<p>What stolos fleet upgrade is given.</p>
+
+</section>
+<section class="symbol" id="fleetUpgrade">
+<h3><span class="kind">function</span><a href="#fleetUpgrade">fleetUpgrade</a></h3>
+<pre><code class="language-ts">export async function fleetUpgrade(o: UpgradeOptions): Promise&lt;number&gt;</code></pre>
+<p>stolos fleet upgrade: move the pin, install and lock the engine, validate every fleet, and make one signed commit.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/fleet/upgrade.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

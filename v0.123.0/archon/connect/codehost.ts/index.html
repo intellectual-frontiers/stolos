@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/connect/codehost.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/connect/codehost.ts</h1>
+<p>Spec 091: what the code-host connectors declared with the SDK share: a branch-name pattern matcher, the repositories&#39; posture (private ones protected, reviewed, scanned for secrets), and the policies on it. Evidence for change management (SCF CHG-03), MFA (IAC-37), least privilege (IAC-30), and scanning (VPM-12).</p>
+<h2>Exports</h2>
+<section class="symbol" id="branchMatches">
+<h3><span class="kind">function</span><a href="#branchMatches">branchMatches</a></h3>
+<pre><code class="language-ts">export function branchMatches(pattern: string, branch: string): boolean</code></pre>
+<p>Whether a branch name matches a pattern where <code>*</code> is any run of characters (GitLab, Bitbucket).</p>
+
+</section>
+<section class="symbol" id="codeHostPosture">
+<h3><span class="kind">function</span><a href="#codeHostPosture">codeHostPosture</a></h3>
+<pre><code class="language-ts">export function codeHostPosture(records: ObservedRecord[]): Observation[&quot;posture&quot;]</code></pre>
+<p>Members&#39; and repositories&#39; posture from the records.</p>
+
+</section>
+<section class="symbol" id="CodeHostFixes">
+<h3><span class="kind">interface</span><a href="#CodeHostFixes">CodeHostFixes</a></h3>
+<pre><code class="language-ts">export interface CodeHostFixes {
+  /** Require 2FA for everyone. */
+  require2fa: string;
+  /** Members without 2FA. */
+  members2fa: string;
+  /** Fewer owners. */
+  owners: string;
+  /** Protect the default branch. */
+  protect: string;
+  /** Require an approval. */
+  review: string;
+  /** Scan for secrets. */
+  secrets: string;
+}</code></pre>
+<p>How to fix each code-host policy, in the vendor&#39;s words.</p>
+
+</section>
+<section class="symbol" id="codeHostPolicies">
+<h3><span class="kind">function</span><a href="#codeHostPolicies">codeHostPolicies</a></h3>
+<pre><code class="language-ts">export function codeHostPolicies(
+  id: string,
+  prefix: string,
+  fix: CodeHostFixes,
+): (o: Observation, now: number) =&gt; PolicyResult[]</code></pre>
+<p>A code host&#39;s policies (ids prefixed with <code>prefix</code>).</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/connect/codehost.ts">Source</a></p>
+</main>
+
+</body>
+</html>

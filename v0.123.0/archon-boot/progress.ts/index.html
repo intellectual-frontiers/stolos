@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon-boot/progress.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../index.html">Stolos v0.123.0</a> · <a href="../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon-boot/progress.ts</h1>
+<p>Install and first-boot progress in the boot server&#39;s window (spec 004). Ubuntu&#39;s installer reports every step to a webhook (autoinstall <code>reporting</code>); most are noise, so a few milestones are shown, plus anything that failed. The first boot reports each Archon phase itself.</p>
+<h2>Exports</h2>
+<section class="symbol" id="InstallerEvent">
+<h3><span class="kind">interface</span><a href="#InstallerEvent">InstallerEvent</a></h3>
+<pre><code class="language-ts">export interface InstallerEvent {
+  /** The installer's step name, for example &quot;subiquity/Install/install/curthooks&quot;. */
+  name?: string;
+  /** The installer's description of the step. */
+  description?: string;
+  /** &quot;start&quot; or &quot;finish&quot;. */
+  event_type?: string;
+  /** For a finish: &quot;SUCCESS&quot;, &quot;WARN&quot;, or &quot;FAIL&quot;. */
+  result?: string;
+  /** &quot;archon&quot; for first-boot events; absent for the installer's. */
+  origin?: string;
+  /** First-boot events (origin &quot;archon&quot;). */
+  phase?: string;
+  /** First-boot events: &quot;ok&quot;, &quot;warn&quot;, or &quot;fail&quot;. */
+  level?: string;
+  /** First-boot events: the phase's one-line result. */
+  summary?: string;
+}</code></pre>
+<p>One report posted to the boot server: from Ubuntu&#39;s installer (<code>reporting</code> webhook) or from Archon&#39;s first boot.</p>
+
+</section>
+<section class="symbol" id="ProgressEvent">
+<h3><span class="kind">type</span><a href="#ProgressEvent">ProgressEvent</a></h3>
+<pre><code class="language-ts">export type ProgressEvent = Pick&lt;ArchonEvent, &quot;name&quot; | &quot;message&quot; | &quot;severity&quot; | &quot;attrs&quot;&gt;;</code></pre>
+<p>What the window and the log record get from one progress report (spec 049).</p>
+
+</section>
+<section class="symbol" id="describe">
+<h3><span class="kind">function</span><a href="#describe">describe</a></h3>
+<pre><code class="language-ts">export function describe(e: InstallerEvent, seen: Set&lt;string&gt;): ProgressEvent | undefined</code></pre>
+<p>One event for a progress report, or undefined for one not worth recording.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon-boot/progress.ts">Source</a></p>
+</main>
+
+</body>
+</html>

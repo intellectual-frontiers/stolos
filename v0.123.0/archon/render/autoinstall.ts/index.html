@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/render/autoinstall.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/render/autoinstall.ts</h1>
+<p>Ubuntu autoinstall config for one host (spec 004) and the first-boot step inside it (spec 005). Rendered from the model; the two secrets (admin password hash, deploy key) are passed in only by archon-boot at request time and never reach out/ or git (Article 13). JSON is valid YAML, so the config is written as JSON after the #cloud-config marker.</p>
+<h2>Exports</h2>
+<section class="symbol" id="InstallSecrets">
+<h3><span class="kind">interface</span><a href="#InstallSecrets">InstallSecrets</a></h3>
+<pre><code class="language-ts">export interface InstallSecrets {
+  /** The admin password's hash. */
+  passwordHash: string;
+  /** Its read-only deploy key. */
+  deployKey?: string;
+  /** The host's SSH host keys, kept on the boot machine: its identity across re-installs. */
+  hostKeys?: Array&lt;{ type: string; private: string; public: string }&gt;;
+  /** The mail relay's credential JSON (spec 027). */
+  mailCredential?: string;
+  /** The Cloudflare DNS token (spec 032). */
+  webCredential?: string;
+  /** Traefik's ACME store carried from the previous install (spec 032). */
+  acme?: string;
+}</code></pre>
+<p>What an install hands the machine that must not be in Git.</p>
+
+</section>
+<section class="symbol" id="InstallContext">
+<h3><span class="kind">interface</span><a href="#InstallContext">InstallContext</a></h3>
+<pre><code class="language-ts">export interface InstallContext {
+  /** The fleet. */
+  fleet: FleetDef;
+  /** The host. */
+  host: HostDef;
+  /** Base URL of this host's install directory on archon-boot (ends with /). */
+  base: string;
+  /** Lab or site proxy for the installer and first boot (optional). */
+  proxy?: string;
+  /** Extra CA certificate (PEM) the site's proxy needs (optional). */
+  caPem?: string;
+  /** GitHub Enterprise or a releases mirror for tool lookups (optional, spec 010). */
+  githubApi?: string;
+  /** The MAC of the NIC the machine network-booted from, as GRUB reported it. */
+  bootMac?: string;
+  /** Spec 049: the boot server's install trace, which the first boot continues. */
+  traceparent?: string;
+}</code></pre>
+<p>Everything the install config is made from.</p>
+
+</section>
+<section class="symbol" id="firstBootTelemetry">
+<h3><span class="kind">function</span><a href="#firstBootTelemetry">firstBootTelemetry</a></h3>
+<pre><code class="language-ts">export function firstBootTelemetry(
+  c: Pick&lt;InstallContext, &quot;base&quot; | &quot;traceparent&quot; | &quot;fleet&quot; | &quot;host&quot;&gt;,
+): string</code></pre>
+<p>Spec 049: the first boot reports its spans to the boot server (the one collector sure to be there), in the install&#39;s trace: /etc/archon/first-boot.env.</p>
+
+</section>
+<section class="symbol" id="GITHUB_KNOWN_HOSTS">
+<h3><span class="kind">const</span><a href="#GITHUB_KNOWN_HOSTS">GITHUB_KNOWN_HOSTS</a></h3>
+<pre><code class="language-ts">export const GITHUB_KNOWN_HOSTS: string</code></pre>
+<p>GitHub&#39;s published SSH host keys (https://api.github.com/meta), for the first clone.</p>
+
+</section>
+<section class="symbol" id="firstBootScript">
+<h3><span class="kind">function</span><a href="#firstBootScript">firstBootScript</a></h3>
+<pre><code class="language-ts">export function firstBootScript(fleet: FleetDef, host: HostDef): string</code></pre>
+<p>The first-boot script (spec 005). Shell only because Bun is not there yet; it hands over at once.</p>
+
+</section>
+<section class="symbol" id="userData">
+<h3><span class="kind">function</span><a href="#userData">userData</a></h3>
+<pre><code class="language-ts">export function userData(c: InstallContext, s: InstallSecrets): string</code></pre>
+<p>The autoinstall user-data: Ubuntu&#39;s installer config, the blank-disk guard first, then the first boot.</p>
+
+</section>
+<section class="symbol" id="metaData">
+<h3><span class="kind">function</span><a href="#metaData">metaData</a></h3>
+<pre><code class="language-ts">export function metaData(host: HostDef): string</code></pre>
+<p>The cloud-init meta-data.</p>
+
+</section>
+<section class="symbol" id="onGitHub">
+<h3><span class="kind">function</span><a href="#onGitHub">onGitHub</a></h3>
+<pre><code class="language-ts">export function onGitHub(fleet: FleetDef): boolean</code></pre>
+<p>Whether the fleet repository is on GitHub (else it is cloned from its URL).</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/render/autoinstall.ts">Source</a></p>
+</main>
+
+</body>
+</html>

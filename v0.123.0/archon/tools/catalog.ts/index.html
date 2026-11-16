@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/tools/catalog.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/tools/catalog.ts</h1>
+<p>Tool catalog (spec 010, Article 5): the newest stable release of each tool, from its maintainers&#39; PPA or the vendor&#39;s own apt repository when there is one (apt keeps it current), else its official binary release (checksum-verified), else Ubuntu&#39;s archive (tmux). Nothing is built from source.</p>
+<h2>Exports</h2>
+<section class="symbol" id="TOOLS">
+<h3><span class="kind">const</span><a href="#TOOLS">TOOLS</a></h3>
+<pre><code class="language-ts">export const TOOLS: ToolDef[]</code></pre>
+<p>Every tool Archon installs, with where it comes from and how it is verified.</p>
+
+</section>
+<section class="symbol" id="installPathFor">
+<h3><span class="kind">function</span><a href="#installPathFor">installPathFor</a></h3>
+<pre><code class="language-ts">export function installPathFor(t: ToolDef): string | undefined</code></pre>
+<p>Where an upstream binary tool installs (/opt/tools/&lt;id&gt;); undefined for apt-installed tools.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/tools/catalog.ts">Source</a></p>
+</main>
+
+</body>
+</html>

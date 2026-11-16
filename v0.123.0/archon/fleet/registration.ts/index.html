@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/fleet/registration.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/fleet/registration.ts</h1>
+<p>Spec 047-intent-and-identity (Article 25): who a host is, in Git: fleets/&lt;id&gt;/hosts/&lt;host&gt;/registration.ts, written by <code>stolos host add</code>, in one fixed form. Its SSH host public keys are what an operator&#39;s machine trusts: archon writes known_hosts.auto from them, so the first connection to a host is checked against Git, never trusted on first use.</p>
+<h2>Exports</h2>
+<section class="symbol" id="registrationFile">
+<h3><span class="kind">function</span><a href="#registrationFile">registrationFile</a></h3>
+<pre><code class="language-ts">export function registrationFile(host: string): string</code></pre>
+<p>fleets/&lt;id&gt;/hosts/&lt;host&gt;/registration.ts.</p>
+
+</section>
+<section class="symbol" id="registrationSource">
+<h3><span class="kind">function</span><a href="#registrationSource">registrationSource</a></h3>
+<pre><code class="language-ts">export function registrationSource(r: HostRegistration): string</code></pre>
+<p>registration.ts&#39;s one form (sorted keys; checked by build), as <code>bun fmt</code> keeps it (width 100): the keys on one line where they fit, else one per line.</p>
+
+</section>
+<section class="symbol" id="loadRegistration">
+<h3><span class="kind">function</span><a href="#loadRegistration">loadRegistration</a></h3>
+<pre><code class="language-ts">export async function loadRegistration(
+  host: string,
+  file = registrationFile(host),
+): Promise&lt;HostRegistration | undefined&gt;</code></pre>
+<p>A host&#39;s registration, or undefined.</p>
+
+</section>
+<section class="symbol" id="writeRegistration">
+<h3><span class="kind">function</span><a href="#writeRegistration">writeRegistration</a></h3>
+<pre><code class="language-ts">export async function writeRegistration(host: string, r: HostRegistration): Promise&lt;string&gt;</code></pre>
+<p>Write a host&#39;s registration; returns its path in the repository.</p>
+
+</section>
+<section class="symbol" id="registrationProblems">
+<h3><span class="kind">function</span><a href="#registrationProblems">registrationProblems</a></h3>
+<pre><code class="language-ts">export async function registrationProblems(
+  hosts: string[],
+): Promise&lt;Array&lt;{ where: string; message: string }&gt;&gt;</code></pre>
+<p>Problems with the hosts&#39; registrations (build fails on them).</p>
+
+</section>
+<section class="symbol" id="parseMac">
+<h3><span class="kind">function</span><a href="#parseMac">parseMac</a></h3>
+<pre><code class="language-ts">export function parseMac(raw: string): string | undefined</code></pre>
+<p>A MAC address in any common spelling (aa:bb:cc:dd:ee:ff, AA-BB-CC-DD-EE-FF, aabbccddeeff, aabb.ccdd.eeff) as lowercase with colons; undefined when it is not one (spec 051: refused at once, before anything is written).</p>
+
+</section>
+<section class="symbol" id="hostNames">
+<h3><span class="kind">function</span><a href="#hostNames">hostNames</a></h3>
+<pre><code class="language-ts">export function hostNames(fleet: FleetDef, h: HostDef): string[]</code></pre>
+<p>The names an operator reaches a host by.</p>
+
+</section>
+<section class="symbol" id="knownHostsText">
+<h3><span class="kind">function</span><a href="#knownHostsText">knownHostsText</a></h3>
+<pre><code class="language-ts">export function knownHostsText(
+  fleet: FleetDef,
+  hosts: Array&lt;HostDef &amp; { registration?: HostRegistration }&gt;,
+): string</code></pre>
+<p>known_hosts lines for every registered host (generated; never edited).</p>
+
+</section>
+<section class="symbol" id="knownHostsAutoFile">
+<h3><span class="kind">function</span><a href="#knownHostsAutoFile">knownHostsAutoFile</a></h3>
+<pre><code class="language-ts">export function knownHostsAutoFile(): string</code></pre>
+<p>This machine&#39;s known_hosts.auto for the active fleet (in its state folder).</p>
+
+</section>
+<section class="symbol" id="writeKnownHosts">
+<h3><span class="kind">function</span><a href="#writeKnownHosts">writeKnownHosts</a></h3>
+<pre><code class="language-ts">export async function writeKnownHosts(): Promise&lt;string&gt;</code></pre>
+<p>Write known_hosts.auto from Git; return its path.</p>
+
+</section>
+<section class="symbol" id="fleetTrust">
+<h3><span class="kind">function</span><a href="#fleetTrust">fleetTrust</a></h3>
+<pre><code class="language-ts">export async function fleetTrust(): Promise&lt;number&gt;</code></pre>
+<p><code>stolos fleet trust</code>: put every registered host&#39;s keys from Git into this user&#39;s known_hosts (for plain ssh and MCP clients), replacing older lines for the same names.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/fleet/registration.ts">Source</a></p>
+</main>
+
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon-boot/stall.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../index.html">Stolos v0.123.0</a> · <a href="../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon-boot/stall.ts</h1>
+<p>Spec 051: a machine that takes the installer image and then goes quiet. Ubuntu&#39;s network installer holds the whole image in memory; with too little RAM (below about 8 GiB) it stalls before asking for its configuration, and nothing on the boot server&#39;s screen says so. This watch notices: after the image is served to an address, the installer asks for its configuration from that address within minutes, or the boot window explains.</p>
+<h2>Exports</h2>
+<section class="symbol" id="STALL_MS">
+<h3><span class="kind">const</span><a href="#STALL_MS">STALL_MS</a></h3>
+<pre><code class="language-ts">export const STALL_MS</code></pre>
+<p>How long an installer may go quiet after taking the image.</p>
+
+</section>
+<section class="symbol" id="SetTimer">
+<h3><span class="kind">type</span><a href="#SetTimer">SetTimer</a></h3>
+<pre><code class="language-ts">export type SetTimer = (f: () =&gt; void, ms: number) =&gt; unknown;</code></pre>
+<p>Starts a timer; gives what clears it.</p>
+
+</section>
+<section class="symbol" id="StallWatch">
+<h3><span class="kind">class</span><a href="#StallWatch">StallWatch</a></h3>
+<pre><code class="language-ts">export class StallWatch {
+  constructor(
+  imageServed(address: string): void
+  heard(address: string): void
+  stop(): void
+}</code></pre>
+<p>Watches installers that took the image (off by default: boot serve --stall-watch). Keyed by host when known, else by address.</p>
+
+</section>
+<section class="symbol" id="stallMessage">
+<h3><span class="kind">function</span><a href="#stallMessage">stallMessage</a></h3>
+<pre><code class="language-ts">export function stallMessage(host: string | undefined): string</code></pre>
+<p>What the boot window says about a stalled installer: the likely cause and the bootstrap path.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon-boot/stall.ts">Source</a></p>
+</main>
+
+</body>
+</html>

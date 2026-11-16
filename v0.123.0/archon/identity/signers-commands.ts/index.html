@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/identity/signers-commands.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/identity/signers-commands.ts</h1>
+<p><code>stolos signers</code> (spec 047-intent-and-identity): list, add, and remove the fleet&#39;s signers (fleets/&lt;id&gt;/signers.ts, in its fixed form), and, on a host in an emergency, trust a key a person types there.</p>
+<h2>Exports</h2>
+<section class="symbol" id="signersList">
+<h3><span class="kind">function</span><a href="#signersList">signersList</a></h3>
+<pre><code class="language-ts">export async function signersList(json: boolean): Promise&lt;number&gt;</code></pre>
+<p>stolos signers: the list, and this machine&#39;s signing setup.</p>
+
+</section>
+<section class="symbol" id="signersAdd">
+<h3><span class="kind">function</span><a href="#signersAdd">signersAdd</a></h3>
+<pre><code class="language-ts">export async function signersAdd(name: string, role: string, keyArg: string): Promise&lt;number&gt;</code></pre>
+<p>stolos signers add.</p>
+
+</section>
+<section class="symbol" id="signersRemove">
+<h3><span class="kind">function</span><a href="#signersRemove">signersRemove</a></h3>
+<pre><code class="language-ts">export async function signersRemove(name: string): Promise&lt;number&gt;</code></pre>
+<p>stolos signers remove.</p>
+
+</section>
+<section class="symbol" id="signersTrust">
+<h3><span class="kind">function</span><a href="#signersTrust">signersTrust</a></h3>
+<pre><code class="language-ts">export async function signersTrust(keyArg: string, name: string): Promise&lt;number&gt;</code></pre>
+<p>Emergency (spec 047): every signing key is lost. A person on the host itself (never an agent, never over MCP) trusts a new public key here; the next apply keeps it until the fleet&#39;s signers.ts lists it, signed by it.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/identity/signers-commands.ts">Source</a></p>
+</main>
+
+</body>
+</html>

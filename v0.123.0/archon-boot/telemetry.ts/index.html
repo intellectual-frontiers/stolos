@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon-boot/telemetry.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../index.html">Stolos v0.123.0</a> · <a href="../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon-boot/telemetry.ts</h1>
+<p>The boot server&#39;s own telemetry (spec 023, on IFC TypeScript since spec 096). The boot server&#39;s signals are IFC TypeScript&#39;s (<code>runtime/otel</code>), in-process: started once with {@link initBootTelemetry}, they are kept in a journal in the boot cache (OTLP JSON lines, OpenTelemetry&#39;s file format, rotated by size: 256 MB at most, and kept 30 days) and sent over OTLP/HTTP to otel-tui while it runs on this PC (<code>localhost:4318</code>, the pipeline&#39;s default; silent where nothing listens). Nothing else leaves the PC. There is no restart to turn telemetry on.</p>
+<p>Spec 049: the boot server is also the fleet&#39;s default collector. Servers that find no other (fleet.telemetry, or otel.localdomain) send their telemetry to http://&lt;boot PC&gt;:&lt;http port&gt;/otlp, which IFC TypeScript&#39;s OTLP receiver decodes; it is kept a week (ephemeral) in daily files.</p>
+<p>Each install is one trace, an <code>archon.boot.install</code> span (its host in <code>host.name</code>), with an <code>archon.boot.step</code> span per step (its name in <code>archon.boot.step</code>).</p>
+<pre class="mermaid">flowchart LR
+  boot[&quot;boot serve&quot;] --&gt;|&quot;spans, metrics&quot;| journal[&quot;telemetry/boot.otlp.jsonl&quot;]
+  boot --&gt;|&quot;OTLP/HTTP, while it runs&quot;| tui[&quot;otel-tui on this PC&quot;]
+  servers[&quot;the fleet's servers&quot;] --&gt;|&quot;POST /otlp/v1/...&quot;| fleet[&quot;telemetry/fleet/otlp-date.jsonl&quot;]</pre>
+<h2>Exports</h2>
+<section class="symbol" id="TELEMETRY_DIR">
+<h3><span class="kind">const</span><a href="#TELEMETRY_DIR">TELEMETRY_DIR</a></h3>
+<pre><code class="language-ts">export const TELEMETRY_DIR: string</code></pre>
+<p>Where the boot server keeps its telemetry.</p>
+
+</section>
+<section class="symbol" id="JOURNAL_FILE">
+<h3><span class="kind">const</span><a href="#JOURNAL_FILE">JOURNAL_FILE</a></h3>
+<pre><code class="language-ts">export const JOURNAL_FILE</code></pre>
+<p>The journal of the boot server&#39;s own signals, in {@link TELEMETRY_DIR}.</p>
+
+</section>
+<section class="symbol" id="JOURNAL">
+<h3><span class="kind">const</span><a href="#JOURNAL">JOURNAL</a></h3>
+<pre><code class="language-ts">export const JOURNAL</code></pre>
+<p>The journal is rotated at 64 MB, three older files kept (256 MB at most), none past 30 days.</p>
+
+</section>
+<section class="symbol" id="DAILY_KEEP">
+<h3><span class="kind">const</span><a href="#DAILY_KEEP">DAILY_KEEP</a></h3>
+<pre><code class="language-ts">export const DAILY_KEEP</code></pre>
+<p>The boot server&#39;s daily files of its console lines (<code>otlp-&lt;date&gt;.jsonl</code> in {@link TELEMETRY_DIR}, spec 023 SC-001): none past 30 days, 256 MB at most in all.</p>
+
+</section>
+<section class="symbol" id="BOOT_SIGNALS">
+<h3><span class="kind">const</span><a href="#BOOT_SIGNALS">BOOT_SIGNALS</a></h3>
+<pre><code class="language-ts">export const BOOT_SIGNALS</code></pre>
+<p>The boot server&#39;s signal registry (spec 023 FR-003): an install, its steps, and its metrics.</p>
+
+</section>
+<section class="symbol" id="initBootTelemetry">
+<h3><span class="kind">function</span><a href="#initBootTelemetry">initBootTelemetry</a></h3>
+<pre><code class="language-ts">export function initBootTelemetry(dir: string = TELEMETRY_DIR): void</code></pre>
+<p>Start the boot server&#39;s own telemetry, in this process: on the pipeline already installed, or a new one (service <code>archon-boot</code>), with the journal in <code>dir</code>. Safe to call twice; the first call wins.</p>
+
+</section>
+<section class="symbol" id="stopBootTelemetry">
+<h3><span class="kind">function</span><a href="#stopBootTelemetry">stopBootTelemetry</a></h3>
+<pre><code class="language-ts">export async function stopBootTelemetry(): Promise&lt;void&gt;</code></pre>
+<p>Flush the boot server&#39;s telemetry and shut its pipeline down (the boot server stops).</p>
+
+</section>
+<section class="symbol" id="prune">
+<h3><span class="kind">function</span><a href="#prune">prune</a></h3>
+<pre><code class="language-ts">export async function prune(dir: string, keepDays: number, keepBytes: number): Promise&lt;void&gt;</code></pre>
+<p>Remove a folder&#39;s daily files (<code>otlp-&lt;date&gt;.jsonl</code>), oldest first, while any is older than <code>keepDays</code> or they hold more than <code>keepBytes</code> in all; the newest is always kept.</p>
+
+</section>
+<section class="symbol" id="FLEET_TELEMETRY_DIR">
+<h3><span class="kind">const</span><a href="#FLEET_TELEMETRY_DIR">FLEET_TELEMETRY_DIR</a></h3>
+<pre><code class="language-ts">export const FLEET_TELEMETRY_DIR: string</code></pre>
+<p>Where the fleet&#39;s servers&#39; telemetry lands when the boot PC is their collector (spec 049).</p>
+
+</section>
+<section class="symbol" id="FLEET_KEEP">
+<h3><span class="kind">const</span><a href="#FLEET_KEEP">FLEET_KEEP</a></h3>
+<pre><code class="language-ts">export const FLEET_KEEP</code></pre>
+<p>The fleet collector is ephemeral: a week, 512 MB at most.</p>
+
+</section>
+<section class="symbol" id="FLEET_OTLP_PATH">
+<h3><span class="kind">const</span><a href="#FLEET_OTLP_PATH">FLEET_OTLP_PATH</a></h3>
+<pre><code class="language-ts">export const FLEET_OTLP_PATH</code></pre>
+<p>Under the boot server&#39;s HTTP port, which the servers already reach (spec 049).</p>
+
+</section>
+<section class="symbol" id="otlpHandler">
+<h3><span class="kind">function</span><a href="#otlpHandler">otlpHandler</a></h3>
+<pre><code class="language-ts">export function otlpHandler(
+  dir: string,
+  keep: { days: number; bytes: number },
+  prefix = &quot;&quot;,
+): (req: Request) =&gt; Promise&lt;Response&gt;</code></pre>
+<p>A handler for OTLP/HTTP with JSON bodies (gzip or not), on IFC TypeScript&#39;s OTLP receiver: each batch becomes one OTLP JSON line of a daily file in <code>dir</code>, pruned to <code>keep</code>; when otel-tui runs on this PC, the batch is also handed to it. Paths are /v1/traces, /v1/metrics, /v1/logs after <code>prefix</code>; protobuf is refused (415).</p>
+
+</section>
+<section class="symbol" id="recordEvents">
+<h3><span class="kind">function</span><a href="#recordEvents">recordEvents</a></h3>
+<pre><code class="language-ts">export async function recordEvents(
+  events: ArchonEvent[],
+  resource: Record&lt;string, string&gt;,
+  dir: string = TELEMETRY_DIR,
+): Promise&lt;void&gt;</code></pre>
+<p>Spec 049: record events as OpenTelemetry log records, the source of what the window and boot.log show: one OTLP logs request per batch of events, in a daily file of {@link TELEMETRY_DIR} (and to otel-tui when it runs).</p>
+
+</section>
+<section class="symbol" id="installStep">
+<h3><span class="kind">function</span><a href="#installStep">installStep</a></h3>
+<pre><code class="language-ts">export function installStep(
+  host: string,
+  step: string,
+  attrs: { &quot;client.address&quot;?: string } = {},
+): void</code></pre>
+<p>The install of <code>host</code> reached <code>step</code>: it ends the previous step and starts this one.</p>
+
+</section>
+<section class="symbol" id="installTraceparent">
+<h3><span class="kind">function</span><a href="#installTraceparent">installTraceparent</a></h3>
+<pre><code class="language-ts">export function installTraceparent(host: string): string | undefined</code></pre>
+<p>Spec 049: the install&#39;s trace, as a W3C traceparent, for the host&#39;s first boot to continue (undefined when no install is under way).</p>
+
+</section>
+<section class="symbol" id="installProblem">
+<h3><span class="kind">function</span><a href="#installProblem">installProblem</a></h3>
+<pre><code class="language-ts">export function installProblem(host: string, message: string): void</code></pre>
+<p>A failed step: marked on the step and the install, which goes on.</p>
+
+</section>
+<section class="symbol" id="installEnd">
+<h3><span class="kind">function</span><a href="#installEnd">installEnd</a></h3>
+<pre><code class="language-ts">export function installEnd(host: string, good: boolean, summary: string): void</code></pre>
+<p>The install ended (Ready, or done with problems).</p>
+
+</section>
+<section class="symbol" id="served">
+<h3><span class="kind">function</span><a href="#served">served</a></h3>
+<pre><code class="language-ts">export function served(file: string, bytes: number, via: string): void</code></pre>
+<p>Bytes the boot server sent, by file (TFTP and HTTP).</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon-boot/telemetry.ts">Source</a></p>
+</main>
+<script src="../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/web/serve.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/web/serve.ts</h1>
+<p><code>archon web serve</code> (specs 032, 035): the welcome page and the guides on 127.0.0.1:8090, behind Traefik. Read-only: the model, Archon&#39;s status files, the install record, the timers&#39; last runs, the update state, the listening ports, and Traefik&#39;s own list of routes (to show containers as they start). Slow facts (pending updates, the certificate, Traefik&#39;s routes) are cached.</p>
+<h2>Exports</h2>
+<section class="symbol" id="GUIDES">
+<h3><span class="kind">const</span><a href="#GUIDES">GUIDES</a></h3>
+<pre><code class="language-ts">export const GUIDES: Array&lt;{ name: string; title: string }&gt;</code></pre>
+<p>The repository&#39;s guides served here (docs/&lt;name&gt;.md), with their titles.</p>
+
+</section>
+<section class="symbol" id="listeningPorts">
+<h3><span class="kind">function</span><a href="#listeningPorts">listeningPorts</a></h3>
+<pre><code class="language-ts">export function listeningPorts(ss: string): number[]</code></pre>
+<p>TCP ports open to the network (not loopback-only), from <code>ss -Hltn</code>.</p>
+
+</section>
+<section class="symbol" id="parseLastRun">
+<h3><span class="kind">function</span><a href="#parseLastRun">parseLastRun</a></h3>
+<pre><code class="language-ts">export function parseLastRun(out: string): { at?: string; ok?: boolean }</code></pre>
+<p>systemctl show --timestamp=unix: &quot;ExecMainExitTimestamp=@1731419462&quot;, &quot;Result=success&quot;.</p>
+
+</section>
+<section class="symbol" id="routersToServices">
+<h3><span class="kind">function</span><a href="#routersToServices">routersToServices</a></h3>
+<pre><code class="language-ts">export function routersToServices(
+  routers: Array&lt;{ name?: string; rule?: string; provider?: string; status?: string }&gt;,
+): Service[]</code></pre>
+<p>Traefik&#39;s routers, as it sees them right now (containers included).</p>
+
+</section>
+<section class="symbol" id="welcomeData">
+<h3><span class="kind">function</span><a href="#welcomeData">welcomeData</a></h3>
+<pre><code class="language-ts">export async function welcomeData(hostName: string): Promise&lt;WelcomeData&gt;</code></pre>
+<p>Gather what the welcome page shows for this host: the model, status files, install record, certificate, updates, backups, routes and open ports. Throws when the host is not in the model.</p>
+
+</section>
+<section class="symbol" id="guidePage">
+<h3><span class="kind">function</span><a href="#guidePage">guidePage</a></h3>
+<pre><code class="language-ts">export async function guidePage(hostName: string, docName: string): Promise&lt;string | undefined&gt;</code></pre>
+<p>The page for one served guide (docs/&lt;name&gt;.md); undefined when it is not served or not found.</p>
+
+</section>
+<section class="symbol" id="webServe">
+<h3><span class="kind">function</span><a href="#webServe">webServe</a></h3>
+<pre><code class="language-ts">export async function webServe(hostName: string): Promise&lt;number&gt;</code></pre>
+<p>archon web serve (spec 065): the Archon Console on 127.0.0.1:8090, behind Traefik: sign-in with the server&#39;s own accounts, then Overview, Actions, Activity, How it works, and Guide (see console/server.ts). <code>/healthz</code> says ok without signing in.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/web/serve.ts">Source</a></p>
+</main>
+
+</body>
+</html>

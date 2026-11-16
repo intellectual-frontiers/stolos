@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/install/workstation.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/install/workstation.ts</h1>
+<p><code>stolos workstation add</code> (spec 020): run inside Ubuntu on WSL (or on an Ubuntu desktop), from the checkout in /srv/archon, as your own user. It writes fleets/&lt;fleet&gt;/hosts/&lt;name&gt;/host.ts (kind &quot;workstation&quot;) and then, through sudo, converges the user-level parts: tools, dotfiles, the archon command, Ubuntu&#39;s daily updates (archon update --no-pull).</p>
+<h2>Exports</h2>
+<section class="symbol" id="workstationSource">
+<h3><span class="kind">function</span><a href="#workstationSource">workstationSource</a></h3>
+<pre><code class="language-ts">export function workstationSource(o: { name: string; user: string; desktop?: boolean }): string</code></pre>
+<p>The TypeScript source of a new workstation&#39;s host.ts (kind &quot;workstation&quot;).</p>
+
+</section>
+<section class="symbol" id="workstationAdd">
+<h3><span class="kind">function</span><a href="#workstationAdd">workstationAdd</a></h3>
+<pre><code class="language-ts">export async function workstationAdd(o: {
+  name?: string;
+  user?: string;
+  force?: boolean;
+}): Promise&lt;number&gt;</code></pre>
+<p><code>stolos workstation add</code>: checks this machine (Linux, not root, the fleet&#39;s Ubuntu release, systemd, the /srv/archon checkout), writes the host model (kept unless <code>force</code>), then runs archon update through sudo. Returns the exit code: 1 when a check fails, else update&#39;s.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/install/workstation.ts">Source</a></p>
+</main>
+
+</body>
+</html>

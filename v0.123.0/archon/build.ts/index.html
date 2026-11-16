@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/build.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../index.html">Stolos v0.123.0</a> · <a href="../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/build.ts</h1>
+<p><code>stolos validate</code> and <code>stolos build</code> (spec 002): validate the fleet and every host plan (TypeScript, Article 10), then render each host&#39;s files into out/hosts/&lt;host&gt;/rootfs/. Deterministic: building twice changes nothing.</p>
+<h2>Exports</h2>
+<section class="symbol" id="Model">
+<h3><span class="kind">interface</span><a href="#Model">Model</a></h3>
+<pre><code class="language-ts">export interface Model {
+  /** The fleet (fleets/&lt;id&gt;/fleet.ts). */
+  fleet: FleetDef;
+  /** Every host. */
+  hosts: HostDef[];
+  /** Each host's resolved plan (what it should have). */
+  plans: HostPlan[];
+  /** Every problem found; empty when the model is valid. */
+  problems: Problem[];
+}</code></pre>
+<p>The fleet as loaded, resolved, and validated.</p>
+
+</section>
+<section class="symbol" id="knownSpecs">
+<h3><span class="kind">function</span><a href="#knownSpecs">knownSpecs</a></h3>
+<pre><code class="language-ts">export async function knownSpecs(): Promise&lt;Set&lt;string&gt;&gt;</code></pre>
+<p>Every spec ID the model may name: the engine&#39;s and the fleet repository&#39;s own.</p>
+
+</section>
+<section class="symbol" id="loadModel">
+<h3><span class="kind">function</span><a href="#loadModel">loadModel</a></h3>
+<pre><code class="language-ts">export async function loadModel(): Promise&lt;Model&gt;</code></pre>
+<p>Load, resolve, and validate everything. Never throws for model problems.</p>
+
+</section>
+<section class="symbol" id="dotfileProblems">
+<h3><span class="kind">function</span><a href="#dotfileProblems">dotfileProblems</a></h3>
+<pre><code class="language-ts">export async function dotfileProblems(
+  fleet: FleetDef,
+  hosts: HostDef[],
+  repo = P.repo,
+): Promise&lt;Problem[]&gt;</code></pre>
+<p>Spec 031: every dotfile layer names a host and a user in the model, and every user&#39;s composition on every host is clean (no forbidden files, no two sources for one target within a layer).</p>
+
+</section>
+<section class="symbol" id="report">
+<h3><span class="kind">function</span><a href="#report">report</a></h3>
+<pre><code class="language-ts">export function report(phase: ReturnType&lt;typeof ui.phase&gt;, m: Model): boolean</code></pre>
+<p>Report problems through the calm UI; true when the model is valid.</p>
+
+</section>
+<section class="symbol" id="planFor">
+<h3><span class="kind">function</span><a href="#planFor">planFor</a></h3>
+<pre><code class="language-ts">export async function planFor(host: HostDef): Promise&lt;HostPlan&gt;</code></pre>
+<p>One host&#39;s resolved plan.</p>
+
+</section>
+<section class="symbol" id="renderHosts">
+<h3><span class="kind">function</span><a href="#renderHosts">renderHosts</a></h3>
+<pre><code class="language-ts">export async function renderHosts(m: Model): Promise&lt;number&gt;</code></pre>
+<p>Render every host&#39;s files under out/hosts/&lt;host&gt;/rootfs/. Returns files written.</p>
+
+</section>
+<section class="symbol" id="renderRepoFiles">
+<h3><span class="kind">function</span><a href="#renderRepoFiles">renderRepoFiles</a></h3>
+<pre><code class="language-ts">export async function renderRepoFiles(m?: Model): Promise&lt;number&gt;</code></pre>
+<p>Files generated from the registry and the model (spec 012): man pages under out/&lt;fleet&gt;/man, and .mcp.json (spec 030), one MCP server per server host.</p>
+
+</section>
+<section class="symbol" id="renderSite">
+<h3><span class="kind">function</span><a href="#renderSite">renderSite</a></h3>
+<pre><code class="language-ts">export async function renderSite(m: Model): Promise&lt;number&gt;</code></pre>
+<p>Spec 028: the network reference, from the site model, under out/site/.</p>
+
+</section>
+<section class="symbol" id="build">
+<h3><span class="kind">function</span><a href="#build">build</a></h3>
+<pre><code class="language-ts">export async function build(): Promise&lt;boolean&gt;</code></pre>
+<p><code>stolos build</code>: validate the model, then render every target into out/; true when it is valid.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/build.ts">Source</a></p>
+</main>
+
+</body>
+</html>

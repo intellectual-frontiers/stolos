@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/core/net.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/core/net.ts</h1>
+<p>The boot machine&#39;s LAN addresses and the Boot URIs built from them (spec 004), from IFC TypeScript&#39;s <code>proc.networkInterfaces</code>.</p>
+<h3>Example</h3>
+<pre><code class="language-ts">import { bootUri } from &quot;./net.ts&quot;;
+bootUri(&quot;10.0.0.5&quot;, 8080, &quot;alpha&quot;); // &quot;http://10.0.0.5:8080/boot/alpha/bootx64.efi&quot;</code></pre>
+<h2>Exports</h2>
+<section class="symbol" id="BOOT_PORT">
+<h3><span class="kind">const</span><a href="#BOOT_PORT">BOOT_PORT</a></h3>
+<pre><code class="language-ts">export const BOOT_PORT</code></pre>
+<p>The boot server&#39;s default HTTP port.</p>
+
+</section>
+<section class="symbol" id="preferAddress">
+<h3><span class="kind">function</span><a href="#preferAddress">preferAddress</a></h3>
+<pre><code class="language-ts">export function preferAddress(a: string | undefined): void</code></pre>
+<p>Put <code>a</code> (from <code>boot serve --address</code>) first in every address list; undefined clears it.</p>
+
+</section>
+<section class="symbol" id="lanAddresses">
+<h3><span class="kind">function</span><a href="#lanAddresses">lanAddresses</a></h3>
+<pre><code class="language-ts">export function lanAddresses(): string[]</code></pre>
+<p>This machine&#39;s LAN IPv4 addresses (no loopback or link-local), real adapters first.</p>
+
+</section>
+<section class="symbol" id="bootUri">
+<h3><span class="kind">function</span><a href="#bootUri">bootUri</a></h3>
+<pre><code class="language-ts">export function bootUri(address: string, port = BOOT_PORT, host?: string): string</code></pre>
+<p>The Boot URI for the BIOS: a host&#39;s own (recognized without its MAC), or the generic one.</p>
+
+</section>
+<section class="symbol" id="addressFacing">
+<h3><span class="kind">function</span><a href="#addressFacing">addressFacing</a></h3>
+<pre><code class="language-ts">export function addressFacing(client: string): string | undefined</code></pre>
+<p>This machine&#39;s address on the client&#39;s subnet (what a PXE client can reach), else the first LAN address.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/core/net.ts">Source</a></p>
+</main>
+
+</body>
+</html>

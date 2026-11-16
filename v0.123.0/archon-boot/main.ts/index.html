@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon-boot/main.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../index.html">Stolos v0.123.0</a> · <a href="../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon-boot/main.ts</h1>
+<p>archon-boot (spec 004): the boot machine&#39;s side of a zero-touch install. Runs with Bun (or Node 26) on Windows or Linux:</p>
+<p>bun run stolos boot serve [--port 8080]   serve PXE (TFTP, UDP 69), UEFI HTTP Boot, and installs bun run stolos boot reinstall &lt;host&gt; [--confirm-destroy &lt;host&gt;] push its state, arm it, network-boot it once (over SSH); a durable host needs --confirm-destroy (Article 23) bun run stolos boot retire &lt;host&gt; --confirm-destroy &lt;host&gt; [--no-push] a server leaves the fleet, committed and pushed (spec 045) bun run stolos boot arm &lt;host&gt; --claim | --mac-address &lt;mac&gt; [--confirm-destroy &lt;host&gt;] allow one (re)install of a host bun run stolos boot status                hosts, Boot URIs, MACs, armed or not bun run stolos boot doctor                check this boot machine, with a fix for each problem bun run stolos boot observe               recent installs from the boot server&#39;s own telemetry bun run stolos vault &lt;sub&gt;           back up and restore this PC&#39;s secrets (spec 029) bun run stolos boot mail-setup            store the mail relay&#39;s token (Cloudflare, spec 027) bun run stolos boot mail-push &lt;host&gt;      give a running host that token over SSH bun run stolos boot web-setup             store the Cloudflare DNS token (HTTPS, spec 032) bun run stolos boot web-push &lt;host&gt;       give a running server that token over SSH bun run stolos boot notify --subject ...  email the mailbox from this PC (also: notify test | status)</p>
+<h2>Exports</h2>
+<section class="symbol" id="run">
+<h3><span class="kind">function</span><a href="#run">run</a></h3>
+<pre><code class="language-ts">export async function run(argv: readonly string[] = proc.args): Promise&lt;never&gt;</code></pre>
+<p>Run as a program and exit: from this file, or from a fleet repository&#39;s own entry file, which imports this one through <code>@stolos/</code> (spec 046-engine-instance).</p>
+
+</section>
+<section class="symbol" id="bootMain">
+<h3><span class="kind">function</span><a href="#bootMain">bootMain</a></h3>
+<pre><code class="language-ts">export async function bootMain(argv: readonly string[]): Promise&lt;number&gt;</code></pre>
+<p><code>stolos boot &lt;sub&gt;</code> (spec 059): the boot server&#39;s commands; returns the exit code.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon-boot/main.ts">Source</a></p>
+</main>
+
+</body>
+</html>

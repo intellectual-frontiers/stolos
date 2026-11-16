@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/compliance/report.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/compliance/report.ts</h1>
+<p>Spec 068: compliance as evidence. Every result Stolos already has (a managed server&#39;s verify, an adopted machine&#39;s policies, a cloud account&#39;s posture, the repository&#39;s signatures) is evidence for one or more SCF controls; each control&#39;s status is what its evidence says, and each framework requirement&#39;s status is what its controls say, through the SCF Council&#39;s own mappings (STRM) from the catalog (<code>catalog.ts</code>). Nothing here is asserted without evidence: a control with none says so; and no mapping is Stolos&#39;s own: without the catalog, the frameworks say it is not loaded.</p>
+<h2>Exports</h2>
+<section class="symbol" id="Evidence">
+<h3><span class="kind">interface</span><a href="#Evidence">Evidence</a></h3>
+<pre><code class="language-ts">export interface Evidence {
+  /** The SCF controls it supports. */
+  scf: string[];
+  /** What it is about: a machine, a cloud account, the repository. */
+  subject: string;
+  /** Where it came from. */
+  source:
+    | &quot;managed&quot;
+    | &quot;adopted&quot;
+    | &quot;device&quot;
+    | &quot;cloud&quot;
+    | &quot;estate&quot;
+    | &quot;repository&quot;
+    // Spec 078: a control from one of the fleet's own packs.
+    | &quot;control pack&quot;;
+  /** The check, in words. */
+  check: string;
+  /** Its result. */
+  status: PolicyResult[&quot;status&quot;];
+  /** What was found. */
+  detail: string;
+  /** How to make it pass. */
+  fix?: string;
+  /** Spec 073: when it was observed (ISO), when its source knows. */
+  observedAt?: string;
+  /** Spec 073: the connector it came from (cloud evidence), for its cadence. */
+  connector?: string;
+  /** Spec 073: older than its service level, so failing; `was` is what it said. */
+  stale?: { was: PolicyResult[&quot;status&quot;]; ageMs: number; staleAfter: string };
+}</code></pre>
+<p>One piece of evidence.</p>
+
+</section>
+<section class="symbol" id="Coverage">
+<h3><span class="kind">type</span><a href="#Coverage">Coverage</a></h3>
+<pre><code class="language-ts">export type Coverage = &quot;pass&quot; | &quot;fail&quot; | &quot;partial&quot; | &quot;no evidence&quot;;</code></pre>
+<p>A status for a control or a requirement.</p>
+
+</section>
+<section class="symbol" id="CatalogControl">
+<h3><span class="kind">interface</span><a href="#CatalogControl">CatalogControl</a></h3>
+<pre><code class="language-ts">export interface CatalogControl extends ScfControl {
+  /** SCF's description of it (when the catalog is loaded). */
+  description?: string;
+  /** Its requirements per framework, from SCF's STRM (empty without the catalog). */
+  maps: Record&lt;FrameworkId, string[]&gt;;
+}</code></pre>
+<p>An SCF control with what the catalog says about it.</p>
+
+</section>
+<section class="symbol" id="ControlStatus">
+<h3><span class="kind">interface</span><a href="#ControlStatus">ControlStatus</a></h3>
+<pre><code class="language-ts">export interface ControlStatus {
+  /** The control. */
+  control: CatalogControl;
+  /** Its status. */
+  status: Coverage;
+  /** Its evidence. */
+  evidence: Evidence[];
+}</code></pre>
+<p>One control, with its evidence.</p>
+
+</section>
+<section class="symbol" id="RequirementStatus">
+<h3><span class="kind">interface</span><a href="#RequirementStatus">RequirementStatus</a></h3>
+<pre><code class="language-ts">export interface RequirementStatus {
+  /** The requirement (for example 164.312(a)(2)(iv)). */
+  id: string;
+  /** Its status. */
+  status: Coverage;
+  /** The SCF controls mapped to it. */
+  controls: string[];
+}</code></pre>
+<p>One framework requirement, with the controls that map to it.</p>
+
+</section>
+<section class="symbol" id="combine">
+<h3><span class="kind">function</span><a href="#combine">combine</a></h3>
+<pre><code class="language-ts">export function combine(ss: Array&lt;PolicyResult[&quot;status&quot;] | Coverage&gt;): Coverage</code></pre>
+<p>What a set of statuses adds up to.</p>
+
+</section>
+<section class="symbol" id="controls">
+<h3><span class="kind">function</span><a href="#controls">controls</a></h3>
+<pre><code class="language-ts">export function controls(evidence: Evidence[], catalog?: ScfCatalog): ControlStatus[]</code></pre>
+<p>Each control&#39;s status from the evidence, with the catalog&#39;s name, description, and mappings.</p>
+
+</section>
+<section class="symbol" id="framework">
+<h3><span class="kind">function</span><a href="#framework">framework</a></h3>
+<pre><code class="language-ts">export function framework(id: FrameworkId, cs: ControlStatus[]): RequirementStatus[]</code></pre>
+<p>A framework&#39;s requirements, each with its status (from its controls).</p>
+
+</section>
+<section class="symbol" id="fleetEvidence">
+<h3><span class="kind">function</span><a href="#fleetEvidence">fleetEvidence</a></h3>
+<pre><code class="language-ts">export function fleetEvidence(f: PcFacts, now = Date.now()): Evidence[]</code></pre>
+<p>The fleet&#39;s evidence, from what the Stolos Console gathers.</p>
+
+</section>
+<section class="symbol" id="serverEvidence">
+<h3><span class="kind">function</span><a href="#serverEvidence">serverEvidence</a></h3>
+<pre><code class="language-ts">export function serverEvidence(
+  o: {
+    host: string;
+    verify?: { passed: number; total: number; failed: string[]; at?: string };
+    signer?: string;
+    commit?: string;
+    https: boolean;
+  },
+  now = Date.now(),
+): Evidence[]</code></pre>
+<p>One server&#39;s evidence, for its Archon Console: what it can show about itself.</p>
+
+</section>
+<section class="symbol" id="ComplianceView">
+<h3><span class="kind">interface</span><a href="#ComplianceView">ComplianceView</a></h3>
+<pre><code class="language-ts">export interface ComplianceView {
+  /** The SCF release the mappings are from, or undefined when it is not on this machine. */
+  catalog?: { version: string; url: string };
+  /** Every control, with its evidence. */
+  controls: ControlStatus[];
+  /** Each framework's requirements. */
+  frameworks: Array&lt;{
+    id: FrameworkId;
+    title: string;
+    short: string;
+    requirements: RequirementStatus[];
+  }&gt;;
+}</code></pre>
+<p>Everything a framework page shows.</p>
+
+</section>
+<section class="symbol" id="complianceView">
+<h3><span class="kind">function</span><a href="#complianceView">complianceView</a></h3>
+<pre><code class="language-ts">export function complianceView(evidence: Evidence[], catalog?: ScfCatalog): ComplianceView</code></pre>
+<p>The whole view from evidence, with the frameworks when the catalog is loaded.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/compliance/report.ts">Source</a></p>
+</main>
+
+</body>
+</html>

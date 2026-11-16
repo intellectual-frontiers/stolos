@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/adopt/policy.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/adopt/policy.ts</h1>
+<p>Spec 067: the policy pack for adopted machines. Each policy reads an observation and says pass, fail, or unknown, with the fix in plain words for that operating system, and names the Secure Controls Framework (SCF) controls it gives evidence for (specs 068 and 071 reach each framework from those through the SCF Council&#39;s own mappings). Spec 078: the pack is written on the control SDK ({@link ADOPTED_CONTROLS}), as a fleet&#39;s own controls are.</p>
+<h2>Exports</h2>
+<section class="symbol" id="PolicyResult">
+<h3><span class="kind">interface</span><a href="#PolicyResult">PolicyResult</a></h3>
+<pre><code class="language-ts">export interface PolicyResult {
+  /** The policy's id. */
+  id: string;
+  /** What it requires, for people. */
+  title: string;
+  /** The SCF controls it gives evidence for. */
+  scf: string[];
+  /** pass, fail, unknown (cannot tell), warn (not required, but worth doing), or accepted (fails, by a recorded decision). */
+  status: &quot;pass&quot; | &quot;fail&quot; | &quot;warn&quot; | &quot;unknown&quot; | &quot;accepted&quot;;
+  /** What was found. */
+  detail: string;
+  /** How to make it pass, on this machine's OS. */
+  fix?: string;
+}</code></pre>
+<p>One policy&#39;s result for one machine.</p>
+
+</section>
+<section class="symbol" id="supportedOs">
+<h3><span class="kind">function</span><a href="#supportedOs">supportedOs</a></h3>
+<pre><code class="language-ts">export function supportedOs(o: Observed): boolean | undefined</code></pre>
+<p>Whether this OS version is still supported by its maker (a starter table).</p>
+
+</section>
+<section class="symbol" id="accept">
+<h3><span class="kind">function</span><a href="#accept">accept</a></h3>
+<pre><code class="language-ts">export function accept(m: AdoptedDef, rs: PolicyResult[], now = Date.now()): PolicyResult[]</code></pre>
+<p>Failing policies the owner accepted (until a date) become &quot;accepted&quot;, with who, why, and until when.</p>
+
+</section>
+<section class="symbol" id="ADOPTED_CONTROLS">
+<h3><span class="kind">const</span><a href="#ADOPTED_CONTROLS">ADOPTED_CONTROLS</a></h3>
+<pre><code class="language-ts">export const ADOPTED_CONTROLS: ObservationControl&lt;&quot;adopted&quot;&gt;[]</code></pre>
+<p>The adopted-machine policy pack, as controls (spec 078), in the order results are shown.</p>
+
+</section>
+<section class="symbol" id="policies">
+<h3><span class="kind">function</span><a href="#policies">policies</a></h3>
+<pre><code class="language-ts">export function policies(m: AdoptedDef, o: Observed | undefined, now = Date.now()): PolicyResult[]</code></pre>
+<p>Every policy, for one machine: the controls above, then accepted risks.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/adopt/policy.ts">Source</a></p>
+</main>
+
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/core/secret-ledger.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/core/secret-ledger.ts</h1>
+<p>The secret ledger (spec 029): when each boot-machine secret last changed, by name only. It holds no secret: it is what tells <code>bun run stolos vault status</code> (and the reminders) that something is newer than the last backup. %LOCALAPPDATA%\stolos\vault\ledger.json (Linux: ~/.local/share/stolos/vault).</p>
+<h2>Exports</h2>
+<section class="symbol" id="VAULT_LOCAL">
+<h3><span class="kind">const</span><a href="#VAULT_LOCAL">VAULT_LOCAL</a></h3>
+<pre><code class="language-ts">export const VAULT_LOCAL: string</code></pre>
+<p>The vault&#39;s local folder on the boot machine (holds the ledger; no secret).</p>
+
+</section>
+<section class="symbol" id="LEDGER">
+<h3><span class="kind">const</span><a href="#LEDGER">LEDGER</a></h3>
+<pre><code class="language-ts">export const LEDGER: string</code></pre>
+<p>The ledger file: <code>ledger.json</code> in <code>VAULT_LOCAL</code>.</p>
+
+</section>
+<section class="symbol" id="ledgerFile">
+<h3><span class="kind">function</span><a href="#ledgerFile">ledgerFile</a></h3>
+<pre><code class="language-ts">export function ledgerFile(): string</code></pre>
+<p>The ledger for this run: <code>LEDGER</code>, or, for a provider&#39;s client (spec 082), <code>clients/&lt;id&gt;/ledger.json</code> beside it, so each client&#39;s backups are tracked apart.</p>
+
+</section>
+<section class="symbol" id="LedgerBackup">
+<h3><span class="kind">interface</span><a href="#LedgerBackup">LedgerBackup</a></h3>
+<pre><code class="language-ts">export interface LedgerBackup {
+  /** When it was made (ISO 8601). */
+  at: string;
+  /** The backup's file name (spec 056: a ZIP; spec 029's backups were folders). */
+  file: string;
+  /** The folder it was written to (the backup folder); older records lack it. */
+  dir?: string;
+  /** Path inside the secrets folder -&gt; SHA-256 of what was backed up. */
+  names: Record&lt;string, string&gt;;
+}</code></pre>
+<p>The record of the last backup (spec 056): its ZIP, where it was written, and what it held.</p>
+
+</section>
+<section class="symbol" id="Ledger">
+<h3><span class="kind">interface</span><a href="#Ledger">Ledger</a></h3>
+<pre><code class="language-ts">export interface Ledger {
+  /** Path inside the secrets folder (forward slashes) -&gt; when it was written or removed. */
+  changes: Record&lt;string, { changedAt: string; removed?: boolean }&gt;;
+  /** The last backup recorded; absent before the first one. */
+  lastBackup?: LedgerBackup;
+  /** The last &quot;N secrets not backed up&quot; email (spec 025). */
+  remindedAt?: string;
+}</code></pre>
+<p>The ledger&#39;s contents: secrets&#39; change times and the last backup, by name only.</p>
+
+</section>
+<section class="symbol" id="readLedger">
+<h3><span class="kind">function</span><a href="#readLedger">readLedger</a></h3>
+<pre><code class="language-ts">export async function readLedger(file = ledgerFile()): Promise&lt;Ledger&gt;</code></pre>
+<p>Read the ledger; a missing or unreadable file reads as an empty one.</p>
+
+</section>
+<section class="symbol" id="writeLedger">
+<h3><span class="kind">function</span><a href="#writeLedger">writeLedger</a></h3>
+<pre><code class="language-ts">export async function writeLedger(l: Ledger, file = ledgerFile()): Promise&lt;void&gt;</code></pre>
+<p>Write the ledger (as formatted JSON), creating the vault folder first.</p>
+
+</section>
+<section class="symbol" id="secretName">
+<h3><span class="kind">const</span><a href="#secretName">secretName</a></h3>
+<pre><code class="language-ts">export const secretName</code></pre>
+<p>The secret&#39;s name: its path inside the secrets folder, with forward slashes.</p>
+
+</section>
+<section class="symbol" id="changedThisRun">
+<h3><span class="kind">const</span><a href="#changedThisRun">changedThisRun</a></h3>
+<pre><code class="language-ts">export const changedThisRun</code></pre>
+<p>Secrets changed by this process (for the closing panel).</p>
+
+</section>
+<section class="symbol" id="recordChange">
+<h3><span class="kind">function</span><a href="#recordChange">recordChange</a></h3>
+<pre><code class="language-ts">export async function recordChange(file: string, removed = false): Promise&lt;void&gt;</code></pre>
+<p>Record that a secret was written (or removed) now, then prepare the closing panel. Never throws: the ledger is advisory.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/core/secret-ledger.ts">Source</a></p>
+</main>
+
+</body>
+</html>

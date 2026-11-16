@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/capabilities/backup.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/capabilities/backup.ts</h1>
+<p>016-backups: the host&#39;s own state is archived daily (zstd tar) into Ubuntu&#39;s /var/backups by default, kept to a retention count, and restore-tested. Spec 044 (Article 23): durable data (S3 buckets, SMB shares) joins the archive, durable guests are exported with <code>lxc export</code>, and a durable host warns until an off-host copy exists.</p>
+<h2>Exports</h2>
+<section class="symbol" id="DEFAULT_BACKUP">
+<h3><span class="kind">const</span><a href="#DEFAULT_BACKUP">DEFAULT_BACKUP</a></h3>
+<pre><code class="language-ts">export const DEFAULT_BACKUP: BackupDef</code></pre>
+<p>The default backup policy: Ubuntu&#39;s /var/backups, daily, a week kept.</p>
+
+</section>
+<section class="symbol" id="backupPolicy">
+<h3><span class="kind">function</span><a href="#backupPolicy">backupPolicy</a></h3>
+<pre><code class="language-ts">export function backupPolicy(host: HostDef): BackupDef</code></pre>
+<p>A host&#39;s backup policy: the default with the host&#39;s overrides.</p>
+
+</section>
+<section class="symbol" id="backup">
+<h3><span class="kind">const</span><a href="#backup">backup</a></h3>
+<pre><code class="language-ts">export const backup</code></pre>
+<p>Daily, restore-tested archives of the host&#39;s own state (spec 016).</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/capabilities/backup.ts">Source</a></p>
+</main>
+
+</body>
+</html>

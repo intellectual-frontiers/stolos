@@ -1,500 +1,173 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>archon/audit/engagement.ts - Stolos v0.118.0 documentation</title>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="doc-current-file" content="">
-  <link rel="stylesheet" href="..&#x2F;..&#x2F;..&#x2F;styles.css">
-  <link rel="stylesheet" href="..&#x2F;..&#x2F;..&#x2F;page.css">
-  <link id="ddocResetStylesheet" rel="stylesheet" href="..&#x2F;..&#x2F;..&#x2F;reset.css"><link href="../../../comrak.css" rel="stylesheet" /><link href="../../../prism.css" rel="stylesheet" /><script src="../../../prism.js"></script><script src="..&#x2F;..&#x2F;..&#x2F;script.js" defer></script>
-  <script src="..&#x2F;..&#x2F;..&#x2F;darkmode_toggle.js"></script><script src="..&#x2F;..&#x2F;..&#x2F;search_index.js" defer></script>
-    <script src="..&#x2F;..&#x2F;..&#x2F;fuse.js" defer></script>
-    <script src="..&#x2F;..&#x2F;..&#x2F;search.js" defer></script></head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/audit/engagement.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
 <body>
-<div class="ddoc">
-<div><nav id="topnav">
-  <div class="h-full">
-    <div class="flex items-center"><ul class="breadcrumbs">
-  <li>
-    <a href="..&#x2F;..&#x2F;..&#x2F;" class="contextLink">Stolos v0.118.0</a>
-  </li><span class="text-black dark:text-white"><svg
-  width="16"
-  height="16"
-  viewBox="0 0 16 16"
-  fill="none"
-  xmlns="http://www.w3.org/2000/svg"
->
-  <path
-    fill-rule="evenodd"
-    clip-rule="evenodd"
-    d="M5.76748 11.8159C5.5378 11.577 5.54525 11.1972 5.78411 10.9675L8.93431 8L5.78411 5.0325C5.54525 4.80282 5.5378 4.423 5.76748 4.18413C5.99715 3.94527 6.37698 3.93782 6.61584 4.1675L10.2158 7.5675C10.3335 7.68062 10.4 7.83679 10.4 8C10.4 8.16321 10.3335 8.31938 10.2158 8.4325L6.61584 11.8325C6.37698 12.0622 5.99715 12.0547 5.76748 11.8159Z"
-    fill="currentColor"
-  />
-</svg>
-</span>archon&#x2F;audit&#x2F;engagement.ts</ul>
-</div>
-
-    <div class="flex items-center gap-2">
-      <button id="theme-toggle" type="button" aria-label="Toggle dark mode" style="display: none;"><svg
-  xmlns="http://www.w3.org/2000/svg"
-  width="14"
-  height="14"
-  viewBox="0 0 24 24"
-  fill="currentColor"
->
-  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-  <path
-    d="M12 1.992a10 10 0 1 0 9.236 13.838c.341 -.82 -.476 -1.644 -1.298 -1.31a6.5 6.5 0 0 1 -6.864 -10.787l.077 -.08c.551 -.63 .113 -1.653 -.758 -1.653h-.266l-.068 -.006l-.06 -.002z"
-  />
-</svg>
-<svg
-  xmlns="http://www.w3.org/2000/svg"
-  width="14"
-  height="14"
-  viewBox="0 0 24 24"
-  fill="currentColor"
-  class="hidden"
->
-  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-  <path
-    d="M12 19a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"
-  />
-  <path
-    d="M18.313 16.91l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.218 -1.567l.102 .07z"
-  />
-  <path
-    d="M7.007 16.993a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"
-  />
-  <path
-    d="M4 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"
-  />
-  <path
-    d="M21 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"
-  />
-  <path
-    d="M6.213 4.81l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.217 -1.567l.102 .07z"
-  />
-  <path
-    d="M19.107 4.893a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"
-  />
-  <path
-    d="M12 2a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"
-  />
-  <path
-    d="M12 7a5 5 0 1 1 -4.995 5.217l-.005 -.217l.005 -.217a5 5 0 0 1 4.995 -4.783z"
-  />
-</svg>
-</button>
-
-        <input
-          type="text"
-          id="searchbar"
-          style="display: none;"
-          class="py-2 px-2.5 mx-1 rounded text-sm border border-gray-300 bg-transparent dark:bg-gray-800 dark:border-gray-700"
-          />
-    </div>
-  </div>
-</nav>
-<div id="searchResults"></div><div id="content">
-    <main><section>
-  <div class="space-y-2 flex-1"><div class="space-y-7" id="module_doc"><div class="markdown"><p>Spec 083: an audit engagement, as a file in the fleet repository:
-<code>fleets/&lt;fleet&gt;/audits/&lt;id&gt;/engagement.ts</code>. It says who audits (the firm
-and its people), the period, the frameworks and the controls in scope
-(each tested on one population), the evidence bundle the populations are
-drawn from (pinned by its SHA-256), and the day the auditor's access ends.
-<code>stolos audit open</code> writes it and <code>stolos audit close</code> closes it, each in a
-signed commit; Stolos reads it as a TypeScript literal (never runs it), so
-a past version from Git reads the same way.</p>
-<pre class="highlight"><code class="language-mermaid">stateDiagram-v2
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/audit/engagement.ts</h1>
+<p>Spec 083: an audit engagement, as a file in the fleet repository: <code>fleets/&lt;fleet&gt;/audits/&lt;id&gt;/engagement.ts</code>. It says who audits (the firm and its people), the period, the frameworks and the controls in scope (each tested on one population), the evidence bundle the populations are drawn from (pinned by its SHA-256), and the day the auditor&#39;s access ends. <code>stolos audit open</code> writes it and <code>stolos audit close</code> closes it, each in a signed commit; Stolos reads it as a TypeScript literal (never runs it), so a past version from Git reads the same way.</p>
+<pre class="mermaid">stateDiagram-v2
   [*] --&gt; open: stolos audit open (a signed commit)
   open --&gt; open: audit bundle, request, respond, sample (signed commits)
   open --&gt; expired: access.expires has passed
   open --&gt; closed: stolos audit close (a signed commit)
   expired --&gt; closed: stolos audit close
-  closed --&gt; [*]
-</code><button class="copyButton" data-copy="stateDiagram-v2
-  [*] --&gt; open: stolos audit open (a signed commit)
-  open --&gt; open: audit bundle, request, respond, sample (signed commits)
-  open --&gt; expired: access.expires has passed
-  open --&gt; closed: stolos audit close (a signed commit)
-  expired --&gt; closed: stolos audit close
-  closed --&gt; [*]
-"><svg
-  class="copy"
-  width="15"
-  height="15"
-  viewBox="0 0 15 15"
-  fill="none"
-  xmlns="http://www.w3.org/2000/svg"
->
-  <rect x="2" y="2" width="7" height="7" fill="none" />
-  <rect x="6" y="6" width="7" height="7" fill="none" />
-  <path
-    d="M1.55566 2.7C1.55566 2.03726 2.09292 1.5 2.75566 1.5H8.75566C9.41841 1.5 9.95566 2.03726 9.95566 2.7V5.1H12.3557C13.0184 5.1 13.5557 5.63726 13.5557 6.3V12.3C13.5557 12.9627 13.0184 13.5 12.3557 13.5H6.35566C5.69292 13.5 5.15566 12.9627 5.15566 12.3V9.9H2.75566C2.09292 9.9 1.55566 9.36274 1.55566 8.7V2.7ZM6.35566 9.9V12.3H12.3557V6.3H9.95566V8.7C9.95566 9.36274 9.41841 9.9 8.75566 9.9H6.35566ZM8.75566 8.7V2.7H2.75566V8.7H8.75566Z"
-    fill="currentColor"
-  />
-</svg>
-<svg
-  class="check"
-  width="15"
-  height="15"
-  viewBox="0 0 24 24"
-  stroke-width="2"
-  stroke="currentColor"
-  fill="none"
-  stroke-linecap="round"
-  stroke-linejoin="round"
-  xmlns="http://www.w3.org/2000/svg"
->
-  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-  <path d="M5 12l5 5l10 -10" />
-</svg>
-</button><code></code></pre>
-</div><section class="section"  id="archon&#x2F;audit&#x2F;engagement_ts_functions"><div>
-      <h2 class="anchorable mb-1"><a href="#archon&#x2F;audit&#x2F;engagement_ts_functions" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
-  width="16"
-  height="16"
-  viewBox="0 0 14 14"
-  fill="none"
-  xmlns="http://www.w3.org/2000/svg"
->
-  <g clip-path="url(#clip0_1081_1237)">
-    <path
-      fill-rule="evenodd"
-      clip-rule="evenodd"
-      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
-      fill="currentColor"
-    />
-  </g>
-  <defs>
-    <clipPath id="clip0_1081_1237">
-      <rect width="14" height="14" fill="white" />
-    </clipPath>
-  </defs>
-</svg>
-</a>
-Functions</h2></div><div class="namespaceSection"><div id="namespace_accessends" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<div class="namespaceItemContent">
-		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;accessEnds.html" title="accessEnds">
-			    <span>accessEnds</span><span>(<span><span>e<span>: <span class="td-ref">Pick</span>&lt;<span class="td-ref">Engagement</span><span>, </span><span class="td-str">"access"</span>&gt;</span></span></span>)<span>: <span class="td-kw">number</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The end of the access day (the first instant after it, UTC).</p>
-</div></div></div>
-    </div><div id="namespace_engagementdir" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<div class="namespaceItemContent">
-		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;engagementDir.html" title="engagementDir">
-			    <span>engagementDir</span><span>(<div class="ml-4"><div><span>fleet<span>: <span class="td-kw">string</span></span></span>,</div><div><span>id<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engagement folder, relative to the repository.</p>
-</div></div></div>
-    </div><div id="namespace_engagementpath" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<div class="namespaceItemContent">
-		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;engagementPath.html" title="engagementPath">
-			    <span>engagementPath</span><span>(<div class="ml-4"><div><span>fleet<span>: <span class="td-kw">string</span></span></span>,</div><div><span>id<span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The engagement file, relative to the repository.</p>
-</div></div></div>
-    </div><div id="namespace_engagementproblems" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<div class="namespaceItemContent">
-		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;engagementProblems.html" title="engagementProblems">
-			    <span>engagementProblems</span><span>(<span><span>e<span>: <span class="td-ref">Engagement</span></span></span></span>)<span>: <span class="td-kw">string</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What is wrong with an engagement (empty when nothing is).</p>
-</div></div></div>
-    </div><div id="namespace_engagementsource" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<div class="namespaceItemContent">
-		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;engagementSource.html" title="engagementSource">
-			    <span>engagementSource</span><span>(<span><span>e<span>: <span class="td-ref">Engagement</span></span></span></span>)<span>: <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>engagement.ts's text: a TypeScript literal, typed, that <a href="../../.././archon/audit/engagement.ts/~/parseEngagement.html">parseEngagement</a> reads back.</p>
-</div></div></div>
-    </div><div id="namespace_engagementstate" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<div class="namespaceItemContent">
-		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;engagementState.html" title="engagementState">
-			    <span>engagementState</span><span>(<div class="ml-4"><div><span>e<span>: <span class="td-ref">Pick</span>&lt;<span class="td-ref">Engagement</span><span>, </span><span><span class="td-str">"access"</span><span class="td-op"> | </span><span class="td-str">"closed"</span></span>&gt;</span></span>,</div><div><span>now<span class="td-op">?</span><span>: <span class="td-ref">Date</span></span></span></div></div>)<span>: <span class="td-ref">EngagementState</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where an engagement stands at <code>now</code>.</p>
-</div></div></div>
-    </div><div id="namespace_isday" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<div class="namespaceItemContent">
-		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;isDay.html" title="isDay">
-			    <span>isDay</span><span>(<span><span>s<span>: <span class="td-kw">unknown</span></span></span></span>)<span>: s <span class="td-kw">is</span> <span class="td-kw">string</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Whether a string is a real day (YYYY-MM-DD).</p>
-</div></div></div>
-    </div><div id="namespace_parsecontrols" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<div class="namespaceItemContent">
-		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;parseControls.html" title="parseControls">
-			    <span>parseControls</span><span>(<div class="ml-4"><div><span>spec<span>: <span class="td-kw">string</span></span></span>,</div><div><span>titles<span>: <span class="td-ref">Record</span>&lt;<span class="td-kw">string</span><span>, </span><span class="td-kw">string</span>&gt;</span></span>,</div><div><span>framework<span class="td-op">?</span><span>: <span class="td-kw">string</span></span></span></div></div>)<span>: <span class="td-ref">ScopedControl</span>[]</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>A controls option (<code>CC6.2=leavers,CC8.1=change</code>, or population ids alone) as controls in scope.</p>
-</div></div></div>
-    </div><div id="namespace_parseengagement" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<div class="namespaceItemContent">
-		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;parseEngagement.html" title="parseEngagement">
-			    <span>parseEngagement</span><span>(<span><span>text<span>: <span class="td-kw">string</span></span></span></span>)<span>: <span class="td-ref">Engagement</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>An engagement from engagement.ts's text (read, never run); throws when it is not one.</p>
-</div></div></div>
-    </div></div>
+  closed --&gt; [*]</pre>
+<h2>Exports</h2>
+<section class="symbol" id="Auditor">
+<h3><span class="kind">interface</span><a href="#Auditor">Auditor</a></h3>
+<pre><code class="language-ts">export interface Auditor {
+  /** Their name. */
+  name: string;
+  /** Their work email, when given. */
+  email?: string;
+}</code></pre>
+<p>One person at the audit firm.</p>
+
 </section>
-<section class="section"  id="archon&#x2F;audit&#x2F;engagement_ts_interfaces"><div>
-      <h2 class="anchorable mb-1"><a href="#archon&#x2F;audit&#x2F;engagement_ts_interfaces" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
-  width="16"
-  height="16"
-  viewBox="0 0 14 14"
-  fill="none"
-  xmlns="http://www.w3.org/2000/svg"
->
-  <g clip-path="url(#clip0_1081_1237)">
-    <path
-      fill-rule="evenodd"
-      clip-rule="evenodd"
-      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
-      fill="currentColor"
-    />
-  </g>
-  <defs>
-    <clipPath id="clip0_1081_1237">
-      <rect width="14" height="14" fill="white" />
-    </clipPath>
-  </defs>
-</svg>
-</a>
-Interfaces</h2></div><div class="namespaceSection"><div id="namespace_auditor" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
-<div class="namespaceItemContent">
-		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;Auditor.html" title="Auditor">
-			    <span>Auditor</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One person at the audit firm.</p>
-</div></div><ul class="namespaceItemContentSubItems"><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;Auditor.html#property_email">
-                  <span>email</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Their work email, when given.</p>
-</div></div></li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;Auditor.html#property_name">
-                  <span>name</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Their name.</p>
-</div></div></li></ul></div>
-    </div><div id="namespace_engagement" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
-<div class="namespaceItemContent">
-		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;Engagement.html" title="Engagement">
-			    <span>Engagement</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>An audit engagement: <code>fleets/&lt;fleet&gt;/audits/&lt;id&gt;/engagement.ts</code>.</p>
-</div></div><ul class="namespaceItemContentSubItems"><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;Engagement.html#property_access">
-                  <span>access</span><span>: { expires<span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The portal's time box: it refuses every request after this day (YYYY-MM-DD, UTC, the day included).</p>
-</div></div></li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;Engagement.html#property_auditors">
-                  <span>auditors</span><span>: <span class="td-ref">Auditor</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The firm's people who may see it.</p>
-</div></div></li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;Engagement.html#property_bundle">
-                  <span>bundle</span><span>: <span class="td-ref">PinnedBundle</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The evidence bundle, once pinned.</p>
-</div></div></li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;Engagement.html#property_closed">
-                  <span>closed</span><span>: { on<span>: <span class="td-kw">string</span></span>; by<span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When it was closed (YYYY-MM-DD), and by whom; the portal refuses a closed engagement.</p>
-</div></div></li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;Engagement.html#property_controls">
-                  <span>controls</span><span>: <span class="td-ref">ScopedControl</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The controls in scope.</p>
-</div></div></li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;Engagement.html#property_firm">
-                  <span>firm</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The audit firm.</p>
-</div></div></li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;Engagement.html#property_frameworks">
-                  <span>frameworks</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The frameworks in scope (soc2, iso27001, hipaa, pci, ...).</p>
-</div></div></li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;Engagement.html#property_id">
-                  <span>id</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its id: the folder's name (lowercase letters, digits, dashes).</p>
-</div></div></li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;Engagement.html#property_opened">
-                  <span>opened</span><span>: { on<span>: <span class="td-kw">string</span></span>; by<span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>When it was opened (YYYY-MM-DD), and by which fleet signer.</p>
-</div></div></li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;Engagement.html#property_period">
-                  <span>period</span><span>: { from<span>: <span class="td-kw">string</span></span>; to<span>: <span class="td-kw">string</span></span>;  }</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The period audited (YYYY-MM-DD, both days included).</p>
-</div></div></li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;Engagement.html#property_title">
-                  <span>title</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its name for people (&quot;SOC 2 Type 2, 2026&quot;).</p>
-</div></div></li></ul></div>
-    </div><div id="namespace_pinnedbundle" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
-<div class="namespaceItemContent">
-		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;PinnedBundle.html" title="PinnedBundle">
-			    <span>PinnedBundle</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The evidence bundle (spec 072) an engagement's populations are drawn from.</p>
-</div></div><ul class="namespaceItemContentSubItems"><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;PinnedBundle.html#property_file">
-                  <span>file</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its file name in this PC's evidence directory.</p>
-</div></div></li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;PinnedBundle.html#property_head">
-                  <span>head</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its manifest's head (the end of its hash chain).</p>
-</div></div></li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;PinnedBundle.html#property_sha256">
-                  <span>sha256</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Its SHA-256: a different file with that name is refused.</p>
-</div></div></li></ul></div>
-    </div><div id="namespace_scopedcontrol" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Interface bg-Interface/15 dark:text-InterfaceDark dark:bg-InterfaceDark/15" title="Interface">I</div></div>
-<div class="namespaceItemContent">
-		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;ScopedControl.html" title="ScopedControl">
-			    <span>ScopedControl</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>One control in scope, and the population it is tested on.</p>
-</div></div><ul class="namespaceItemContentSubItems"><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;ScopedControl.html#property_framework">
-                  <span>framework</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The framework it is from (soc2, iso27001, ...), when it is one framework's.</p>
-</div></div></li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;ScopedControl.html#property_id">
-                  <span>id</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The control's id as the auditor names it (a criterion such as &quot;CC6.2&quot;, or the company's own id).</p>
-</div></div></li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;ScopedControl.html#property_population">
-                  <span>population</span><span>: <span class="td-ref">PopulationId</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The population it is tested on (a typed query over the bundle's items).</p>
-</div></div></li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;ScopedControl.html#property_scf">
-                  <span>scf</span><span>: <span class="td-kw">string</span>[]</span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>The SCF controls it maps to, when known.</p>
-</div></div></li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;ScopedControl.html#property_title">
-                  <span>title</span><span>: <span class="td-kw">string</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>What it is, in words.</p>
-</div></div></li></ul></div>
-    </div></div>
+<section class="symbol" id="ScopedControl">
+<h3><span class="kind">interface</span><a href="#ScopedControl">ScopedControl</a></h3>
+<pre><code class="language-ts">export interface ScopedControl {
+  /** The control's id as the auditor names it (a criterion such as &quot;CC6.2&quot;, or the company's own id). */
+  id: string;
+  /** What it is, in words. */
+  title: string;
+  /** The framework it is from (soc2, iso27001, ...), when it is one framework's. */
+  framework?: string;
+  /** The SCF controls it maps to, when known. */
+  scf?: string[];
+  /** The population it is tested on (a typed query over the bundle's items). */
+  population: PopulationId;
+}</code></pre>
+<p>One control in scope, and the population it is tested on.</p>
+
 </section>
-<section class="section"  id="archon&#x2F;audit&#x2F;engagement_ts_type-aliases"><div>
-      <h2 class="anchorable mb-1"><a href="#archon&#x2F;audit&#x2F;engagement_ts_type-aliases" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
-  width="16"
-  height="16"
-  viewBox="0 0 14 14"
-  fill="none"
-  xmlns="http://www.w3.org/2000/svg"
->
-  <g clip-path="url(#clip0_1081_1237)">
-    <path
-      fill-rule="evenodd"
-      clip-rule="evenodd"
-      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
-      fill="currentColor"
-    />
-  </g>
-  <defs>
-    <clipPath id="clip0_1081_1237">
-      <rect width="14" height="14" fill="white" />
-    </clipPath>
-  </defs>
-</svg>
-</a>
-Type Aliases</h2></div><div class="namespaceSection"><div id="namespace_engagementstate-1" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
-<div class="namespaceItemContent">
-		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;EngagementState.html" title="EngagementState">
-			    <span>EngagementState</span><span> = <span><span class="td-str">"open"</span><span class="td-op"> | </span><span class="td-str">"expired"</span><span class="td-op"> | </span><span class="td-str">"closed"</span></span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>Where an engagement stands at a moment: open, expired (past access.expires), or closed.</p>
-</div></div></div>
-    </div></div>
+<section class="symbol" id="PinnedBundle">
+<h3><span class="kind">interface</span><a href="#PinnedBundle">PinnedBundle</a></h3>
+<pre><code class="language-ts">export interface PinnedBundle {
+  /** Its file name in this PC's evidence directory. */
+  file: string;
+  /** Its SHA-256: a different file with that name is refused. */
+  sha256: string;
+  /** Its manifest's head (the end of its hash chain). */
+  head: string;
+}</code></pre>
+<p>The evidence bundle (spec 072) an engagement&#39;s populations are drawn from.</p>
+
 </section>
-<section class="section"  id="archon&#x2F;audit&#x2F;engagement_ts_variables"><div>
-      <h2 class="anchorable mb-1"><a href="#archon&#x2F;audit&#x2F;engagement_ts_variables" class="anchor" aria-label="Anchor" tabIndex="-1"><svg
-  width="16"
-  height="16"
-  viewBox="0 0 14 14"
-  fill="none"
-  xmlns="http://www.w3.org/2000/svg"
->
-  <g clip-path="url(#clip0_1081_1237)">
-    <path
-      fill-rule="evenodd"
-      clip-rule="evenodd"
-      d="M6.80328 2.8656C6.68736 2.99 6.62425 3.15454 6.62725 3.32456C6.63025 3.49457 6.69913 3.65678 6.81936 3.77702C6.9396 3.89725 7.10181 3.96613 7.27182 3.96913C7.44184 3.97213 7.60638 3.90902 7.73078 3.7931L8.82453 2.69935C8.98712 2.53676 9.18015 2.40778 9.39259 2.31978C9.60503 2.23179 9.83272 2.1865 10.0627 2.1865C10.2926 2.1865 10.5203 2.23179 10.7327 2.31978C10.9452 2.40778 11.1382 2.53676 11.3008 2.69935C11.4634 2.86194 11.5923 3.05497 11.6803 3.2674C11.7683 3.47984 11.8136 3.70753 11.8136 3.93747C11.8136 4.16741 11.7683 4.3951 11.6803 4.60754C11.5923 4.81998 11.4634 5.013 11.3008 5.1756L9.11328 7.3631C8.95075 7.52581 8.75775 7.65488 8.5453 7.74295C8.33285 7.83102 8.10513 7.87635 7.87516 7.87635C7.64518 7.87635 7.41746 7.83102 7.20501 7.74295C6.99256 7.65488 6.79956 7.52581 6.63703 7.3631C6.51263 7.24718 6.34809 7.18407 6.17807 7.18707C6.00806 7.19007 5.84585 7.25894 5.72561 7.37918C5.60538 7.49942 5.5365 7.66163 5.5335 7.83164C5.5305 8.00165 5.59361 8.1662 5.70953 8.2906C5.99391 8.57501 6.33154 8.80062 6.70312 8.95455C7.0747 9.10847 7.47296 9.18769 7.87516 9.18769C8.27736 9.18769 8.67562 9.10847 9.0472 8.95455C9.41878 8.80062 9.7564 8.57501 10.0408 8.2906L12.2283 6.1031C12.8026 5.52874 13.1253 4.74974 13.1253 3.93747C13.1253 3.12521 12.8026 2.34621 12.2283 1.77185C11.6539 1.19749 10.8749 0.874817 10.0627 0.874817C9.25039 0.874817 8.47139 1.19749 7.89703 1.77185L6.80328 2.8656ZM2.69953 11.3006C2.53682 11.1381 2.40774 10.9451 2.31968 10.7326C2.23161 10.5202 2.18628 10.2924 2.18628 10.0625C2.18628 9.8325 2.23161 9.60477 2.31968 9.39233C2.40774 9.17988 2.53682 8.98688 2.69953 8.82435L4.88703 6.63685C5.04956 6.47414 5.24256 6.34506 5.45501 6.25699C5.66746 6.16893 5.89518 6.1236 6.12516 6.1236C6.35513 6.1236 6.58285 6.16893 6.7953 6.25699C7.00775 6.34506 7.20075 6.47414 7.36328 6.63685C7.48768 6.75277 7.65223 6.81588 7.82224 6.81288C7.99225 6.80988 8.15446 6.741 8.2747 6.62077C8.39494 6.50053 8.46381 6.33832 8.46681 6.1683C8.46981 5.99829 8.4067 5.83375 8.29078 5.70935C8.0064 5.42494 7.66878 5.19933 7.2972 5.0454C6.92562 4.89148 6.52736 4.81225 6.12516 4.81225C5.72296 4.81225 5.3247 4.89148 4.95312 5.0454C4.58154 5.19933 4.24391 5.42494 3.95953 5.70935L1.77203 7.89685C1.19767 8.47121 0.875 9.25021 0.875 10.0625C0.875 10.8747 1.19767 11.6537 1.77203 12.2281C2.34639 12.8025 3.12539 13.1251 3.93766 13.1251C4.74992 13.1251 5.52892 12.8025 6.10328 12.2281L7.19703 11.1343C7.31295 11.0099 7.37606 10.8454 7.37306 10.6754C7.37006 10.5054 7.30119 10.3432 7.18095 10.2229C7.06071 10.1027 6.8985 10.0338 6.72849 10.0308C6.55848 10.0278 6.39393 10.0909 6.26953 10.2068L5.17578 11.3006C5.01325 11.4633 4.82025 11.5924 4.6078 11.6805C4.39535 11.7685 4.16763 11.8138 3.93766 11.8138C3.70768 11.8138 3.47996 11.7685 3.26751 11.6805C3.05506 11.5924 2.86206 11.4633 2.69953 11.3006Z"
-      fill="currentColor"
-    />
-  </g>
-  <defs>
-    <clipPath id="clip0_1081_1237">
-      <rect width="14" height="14" fill="white" />
-    </clipPath>
-  </defs>
-</svg>
-</a>
-Variables</h2></div><div class="namespaceSection"><div id="namespace_engagement_id" class="namespaceItem" ><div class="docNodeKindIcon"><div class="text-Variable bg-Variable/15 dark:text-VariableDark dark:bg-VariableDark/15" title="Variable">v</div></div>
-<div class="namespaceItemContent">
-		    <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;archon&#x2F;audit&#x2F;engagement.ts&#x2F;~&#x2F;ENGAGEMENT_ID.html" title="ENGAGEMENT_ID">
-			    <span>ENGAGEMENT_ID</span><span>: <span class="td-ref">RegExp</span></span></a><div class="namespaceItemContentDoc"><div class="markdown_summary"><p>An engagement's id: a folder name.</p>
-</div></div></div>
-    </div></div>
+<section class="symbol" id="Engagement">
+<h3><span class="kind">interface</span><a href="#Engagement">Engagement</a></h3>
+<pre><code class="language-ts">export interface Engagement {
+  /** Its id: the folder's name (lowercase letters, digits, dashes). */
+  id: string;
+  /** Its name for people (&quot;SOC 2 Type 2, 2026&quot;). */
+  title: string;
+  /** The audit firm. */
+  firm: string;
+  /** The firm's people who may see it. */
+  auditors: Auditor[];
+  /** The period audited (YYYY-MM-DD, both days included). */
+  period: { from: string; to: string };
+  /** The frameworks in scope (soc2, iso27001, hipaa, pci, ...). */
+  frameworks: string[];
+  /** The controls in scope. */
+  controls: ScopedControl[];
+  /** The portal's time box: it refuses every request after this day (YYYY-MM-DD, UTC, the day included). */
+  access: { expires: string };
+  /** The evidence bundle, once pinned. */
+  bundle?: PinnedBundle;
+  /** When it was opened (YYYY-MM-DD), and by which fleet signer. */
+  opened: { on: string; by: string };
+  /** When it was closed (YYYY-MM-DD), and by whom; the portal refuses a closed engagement. */
+  closed?: { on: string; by: string };
+}</code></pre>
+<p>An audit engagement: <code>fleets/&lt;fleet&gt;/audits/&lt;id&gt;/engagement.ts</code>.</p>
+
 </section>
-</div>
-</div>
+<section class="symbol" id="ENGAGEMENT_ID">
+<h3><span class="kind">const</span><a href="#ENGAGEMENT_ID">ENGAGEMENT_ID</a></h3>
+<pre><code class="language-ts">export const ENGAGEMENT_ID</code></pre>
+<p>An engagement&#39;s id: a folder name.</p>
+
 </section>
-</main><div class="toc">
-    <div><div class="usageContent">
-    <h3>Usage</h3><div class="markdown"><pre class="highlight"><code class="language-typescript">import * as mod from &quot;archon/audit/engagement.ts&quot;;
-</code><button class="copyButton" data-copy="import * as mod from &quot;archon/audit/engagement.ts&quot;;
-"><svg
-  class="copy"
-  width="15"
-  height="15"
-  viewBox="0 0 15 15"
-  fill="none"
-  xmlns="http://www.w3.org/2000/svg"
->
-  <rect x="2" y="2" width="7" height="7" fill="none" />
-  <rect x="6" y="6" width="7" height="7" fill="none" />
-  <path
-    d="M1.55566 2.7C1.55566 2.03726 2.09292 1.5 2.75566 1.5H8.75566C9.41841 1.5 9.95566 2.03726 9.95566 2.7V5.1H12.3557C13.0184 5.1 13.5557 5.63726 13.5557 6.3V12.3C13.5557 12.9627 13.0184 13.5 12.3557 13.5H6.35566C5.69292 13.5 5.15566 12.9627 5.15566 12.3V9.9H2.75566C2.09292 9.9 1.55566 9.36274 1.55566 8.7V2.7ZM6.35566 9.9V12.3H12.3557V6.3H9.95566V8.7C9.95566 9.36274 9.41841 9.9 8.75566 9.9H6.35566ZM8.75566 8.7V2.7H2.75566V8.7H8.75566Z"
-    fill="currentColor"
-  />
-</svg>
-<svg
-  class="check"
-  width="15"
-  height="15"
-  viewBox="0 0 24 24"
-  stroke-width="2"
-  stroke="currentColor"
-  fill="none"
-  stroke-linecap="round"
-  stroke-linejoin="round"
-  xmlns="http://www.w3.org/2000/svg"
->
-  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-  <path d="M5 12l5 5l10 -10" />
-</svg>
-</button><code></code></pre>
-</div></div><nav class="topSymbols">
-          <h3>Symbols</h3>
-          <ul><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;ensureHome.html" title="ensureHome"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
-                    ensureHome
-                  </span>
-                </a>
-              </li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;localHostName.html" title="localHostName"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
-                    localHostName
-                  </span>
-                </a>
-              </li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;Surface.html" title="Surface"><div class="docNodeKindIcon"><div class="text-TypeAlias bg-TypeAlias/15 dark:text-TypeAliasDark dark:bg-TypeAliasDark/15" title="Type Alias">T</div></div>
-<span class="hover:bg-TypeAlias/15 hover:bg-TypeAliasDark/15">
-                    Surface
-                  </span>
-                </a>
-              </li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;commandName.html" title="commandName"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
-                    commandName
-                  </span>
-                </a>
-              </li><li>
-                <a href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;.&#x2F;~&#x2F;main.html" title="main"><div class="docNodeKindIcon"><div class="text-Function bg-Function/15 dark:text-FunctionDark dark:bg-FunctionDark/15" title="Function">f</div></div>
-<span class="hover:bg-Function/15 hover:bg-FunctionDark/15">
-                    main
-                  </span>
-                </a>
-              </li></ul><a class="flex items-center gap-0.5" href="..&#x2F;..&#x2F;..&#x2F;.&#x2F;all_symbols.html">
-              <span class="leading-none">view all 2920 symbols</span><svg
-  width="16"
-  height="16"
-  viewBox="0 0 16 16"
-  fill="none"
-  xmlns="http://www.w3.org/2000/svg"
->
-  <path
-    fill-rule="evenodd"
-    clip-rule="evenodd"
-    d="M5.76748 11.8159C5.5378 11.577 5.54525 11.1972 5.78411 10.9675L8.93431 8L5.78411 5.0325C5.54525 4.80282 5.5378 4.423 5.76748 4.18413C5.99715 3.94527 6.37698 3.93782 6.61584 4.1675L10.2158 7.5675C10.3335 7.68062 10.4 7.83679 10.4 8C10.4 8.16321 10.3335 8.31938 10.2158 8.4325L6.61584 11.8325C6.37698 12.0622 5.99715 12.0547 5.76748 11.8159Z"
-    fill="currentColor"
-  />
-</svg>
-</a></nav><nav class="documentNavigation">
-          <h3>Document Navigation</h3><ul><li><a href="#archon/audit/engagement_ts_functions" title="Functions">Functions</a></li><li><ul><li><a href="#namespace_accessends" title="accessEnds">accessEnds</a></li><li><a href="#namespace_engagementdir" title="engagementDir">engagementDir</a></li><li><a href="#namespace_engagementpath" title="engagementPath">engagementPath</a></li><li><a href="#namespace_engagementproblems" title="engagementProblems">engagementProblems</a></li><li><a href="#namespace_engagementsource" title="engagementSource">engagementSource</a></li><li><a href="#namespace_engagementstate" title="engagementState">engagementState</a></li><li><a href="#namespace_isday" title="isDay">isDay</a></li><li><a href="#namespace_parsecontrols" title="parseControls">parseControls</a></li><li><a href="#namespace_parseengagement" title="parseEngagement">parseEngagement</a></li></ul></li><li><a href="#archon/audit/engagement_ts_interfaces" title="Interfaces">Interfaces</a></li><li><ul><li><a href="#namespace_auditor" title="Auditor">Auditor</a></li><li><a href="#namespace_engagement" title="Engagement">Engagement</a></li><li><a href="#namespace_pinnedbundle" title="PinnedBundle">PinnedBundle</a></li><li><a href="#namespace_scopedcontrol" title="ScopedControl">ScopedControl</a></li></ul></li><li><a href="#archon/audit/engagement_ts_type-aliases" title="Type Aliases">Type Aliases</a></li><li><ul><li><a href="#namespace_engagementstate-1" title="EngagementState">EngagementState</a></li></ul></li><li><a href="#archon/audit/engagement_ts_variables" title="Variables">Variables</a></li><li><ul><li><a href="#namespace_engagement_id" title="ENGAGEMENT_ID">ENGAGEMENT_ID</a></li></ul></li></ul></nav></div>
-  </div></div>
-</div>
-</div>
+<section class="symbol" id="isDay">
+<h3><span class="kind">function</span><a href="#isDay">isDay</a></h3>
+<pre><code class="language-ts">export function isDay(s: unknown): s is string</code></pre>
+<p>Whether a string is a real day (YYYY-MM-DD).</p>
+
+</section>
+<section class="symbol" id="engagementDir">
+<h3><span class="kind">function</span><a href="#engagementDir">engagementDir</a></h3>
+<pre><code class="language-ts">export function engagementDir(fleet: string, id: string): string</code></pre>
+<p>The engagement folder, relative to the repository.</p>
+
+</section>
+<section class="symbol" id="engagementPath">
+<h3><span class="kind">function</span><a href="#engagementPath">engagementPath</a></h3>
+<pre><code class="language-ts">export function engagementPath(fleet: string, id: string): string</code></pre>
+<p>The engagement file, relative to the repository.</p>
+
+</section>
+<section class="symbol" id="engagementProblems">
+<h3><span class="kind">function</span><a href="#engagementProblems">engagementProblems</a></h3>
+<pre><code class="language-ts">export function engagementProblems(e: Engagement): string[]</code></pre>
+<p>What is wrong with an engagement (empty when nothing is).</p>
+
+</section>
+<section class="symbol" id="EngagementState">
+<h3><span class="kind">type</span><a href="#EngagementState">EngagementState</a></h3>
+<pre><code class="language-ts">export type EngagementState = &quot;open&quot; | &quot;expired&quot; | &quot;closed&quot;;</code></pre>
+<p>Where an engagement stands at a moment: open, expired (past access.expires), or closed.</p>
+
+</section>
+<section class="symbol" id="accessEnds">
+<h3><span class="kind">function</span><a href="#accessEnds">accessEnds</a></h3>
+<pre><code class="language-ts">export function accessEnds(e: Pick&lt;Engagement, &quot;access&quot;&gt;): number</code></pre>
+<p>The end of the access day (the first instant after it, UTC).</p>
+
+</section>
+<section class="symbol" id="engagementState">
+<h3><span class="kind">function</span><a href="#engagementState">engagementState</a></h3>
+<pre><code class="language-ts">export function engagementState(
+  e: Pick&lt;Engagement, &quot;access&quot; | &quot;closed&quot;&gt;,
+  now: Date = new Date(),
+): EngagementState</code></pre>
+<p>Where an engagement stands at <code>now</code>.</p>
+
+</section>
+<section class="symbol" id="engagementSource">
+<h3><span class="kind">function</span><a href="#engagementSource">engagementSource</a></h3>
+<pre><code class="language-ts">export function engagementSource(e: Engagement): string</code></pre>
+<p>engagement.ts&#39;s text: a TypeScript literal, typed, that {@link parseEngagement} reads back.</p>
+
+</section>
+<section class="symbol" id="parseEngagement">
+<h3><span class="kind">function</span><a href="#parseEngagement">parseEngagement</a></h3>
+<pre><code class="language-ts">export function parseEngagement(text: string): Engagement</code></pre>
+<p>An engagement from engagement.ts&#39;s text (read, never run); throws when it is not one.</p>
+
+</section>
+<section class="symbol" id="parseControls">
+<h3><span class="kind">function</span><a href="#parseControls">parseControls</a></h3>
+<pre><code class="language-ts">export function parseControls(
+  spec: string,
+  titles: Record&lt;string, string&gt;,
+  framework?: string,
+): ScopedControl[]</code></pre>
+<p>A controls option (<code>CC6.2=leavers,CC8.1=change</code>, or population ids alone) as controls in scope.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/audit/engagement.ts">Source</a></p>
+</main>
 <script src="../../../mermaid.min.js"></script>
 <script>
-  (() => {
-    const blocks = document.querySelectorAll("pre > code.language-mermaid");
-    if (!blocks.length || !window.mermaid) return;
-    for (const code of blocks) {
-      const div = document.createElement("div");
-      div.className = "mermaid";
-      div.textContent = code.textContent;
-      code.parentElement.replaceWith(div);
-    }
-    const dark = document.documentElement.classList.contains("dark") ||
-      matchMedia("(prefers-color-scheme: dark)").matches;
-    mermaid.initialize({ startOnLoad: false, theme: dark ? "dark" : "default", securityLevel: "strict" });
-    mermaid.run({ querySelector: ".mermaid" });
-  })();
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
 </script>
 </body>
 </html>

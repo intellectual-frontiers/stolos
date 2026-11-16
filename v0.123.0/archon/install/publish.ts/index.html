@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/install/publish.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/install/publish.ts</h1>
+<p>Specs 004 and 045: what <code>stolos host add</code> and <code>boot retire</code> change in the checkout is built, committed, and pushed by the same command (pushing to main is approval, Article 9). Only the paths the change touched are staged, with what <code>stolos build</code> renders from them (.mcp.json, the agent&#39;s permissions, the man pages); anything else in the working tree is left alone.</p>
+<h2>Exports</h2>
+<section class="symbol" id="RENDERED">
+<h3><span class="kind">const</span><a href="#RENDERED">RENDERED</a></h3>
+<pre><code class="language-ts">export const RENDERED</code></pre>
+<p>What stolos build renders that a host&#39;s arrival or departure changes.</p>
+
+</section>
+<section class="symbol" id="publishChange">
+<h3><span class="kind">function</span><a href="#publishChange">publishChange</a></h3>
+<pre><code class="language-ts">export async function publishChange(
+  paths: string[],
+  message: string,
+  o: { repo?: string; build?: boolean; identity?: { name: string; email: string } } = {},
+): Promise&lt;boolean&gt;</code></pre>
+<p>Build, then commit <code>paths</code> (and the rendered files) with <code>message</code>, and push to the checkout&#39;s upstream, retrying a push that lost a race by rebasing. Returns whether the change is on GitHub.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/install/publish.ts">Source</a></p>
+</main>
+
+</body>
+</html>

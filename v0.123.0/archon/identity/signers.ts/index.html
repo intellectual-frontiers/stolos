@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/identity/signers.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/identity/signers.ts</h1>
+<p>Spec 047-intent-and-identity (Article 9): who may approve a fleet&#39;s changes, and how a host checks an approval before it applies anything.</p>
+<ul><li>fleets/&lt;id&gt;/signers.ts lists the signers. It is written by <code>stolos signers</code> in one fixed form (a typed literal, Article 4); <code>stolos build</code> fails when it is not in that form.</li><li>Every host keeps /etc/archon/allowed_signers (Git&#39;s format), rendered from the signers of the last commit it accepted, plus any key a person trusted on the host itself in an emergency (/etc/archon/allowed_signers.local).</li><li>Before a host moves to a new tip of main, the tip must be signed by a key it already trusts, and must come after the commit it last applied. So the list of signers changes only through a commit signed by a key already on it.</li></ul>
+<pre class="mermaid">flowchart TD
+  fetch[&quot;git fetch: the new tip of main&quot;] --&gt; desc{&quot;descends from the&lt;br/&gt;commit this host runs?&quot;}
+  desc --&gt;|no| rb[&quot;refused: E047-ROLLBACK&quot;]
+  desc --&gt;|yes| any{&quot;signers.ts lists&lt;br/&gt;a daily signer?&quot;}
+  any --&gt;|no| ns[&quot;refused: E047-NO-SIGNERS&quot;]
+  any --&gt;|yes| sig{&quot;signed?&quot;}
+  sig --&gt;|no| us[&quot;refused: E047-UNSIGNED&quot;]
+  sig --&gt;|yes| trust{&quot;by a key the host trusts&lt;br/&gt;(its allowed_signers)?&quot;}
+  trust --&gt;|no| ut[&quot;refused: E047-UNTRUSTED&quot;]
+  trust --&gt;|yes| move[&quot;fast-forward, apply&quot;]</pre>
+<h2>Exports</h2>
+<section class="symbol" id="ALLOWED_SIGNERS">
+<h3><span class="kind">const</span><a href="#ALLOWED_SIGNERS">ALLOWED_SIGNERS</a></h3>
+<pre><code class="language-ts">export const ALLOWED_SIGNERS</code></pre>
+<p>The signers a host trusts (from signers.ts, at its install and every update).</p>
+
+</section>
+<section class="symbol" id="ALLOWED_SIGNERS_LOCAL">
+<h3><span class="kind">const</span><a href="#ALLOWED_SIGNERS_LOCAL">ALLOWED_SIGNERS_LOCAL</a></h3>
+<pre><code class="language-ts">export const ALLOWED_SIGNERS_LOCAL</code></pre>
+<p>Signers trusted on this host only, by a person at it (archon signers trust).</p>
+
+</section>
+<section class="symbol" id="signersFile">
+<h3><span class="kind">function</span><a href="#signersFile">signersFile</a></h3>
+<pre><code class="language-ts">export function signersFile(): string</code></pre>
+<p>fleets/&lt;id&gt;/signers.ts</p>
+
+</section>
+<section class="symbol" id="signersSource">
+<h3><span class="kind">function</span><a href="#signersSource">signersSource</a></h3>
+<pre><code class="language-ts">export function signersSource(list: SignerDef[]): string</code></pre>
+<p>The fixed form of signers.ts: what <code>stolos signers</code> writes, and what build checks.</p>
+
+</section>
+<section class="symbol" id="loadSigners">
+<h3><span class="kind">function</span><a href="#loadSigners">loadSigners</a></h3>
+<pre><code class="language-ts">export async function loadSigners(file = signersFile()): Promise&lt;SignerDef[]&gt;</code></pre>
+<p>The signers in this fleet&#39;s signers.ts ([] when there is none yet).</p>
+
+</section>
+<section class="symbol" id="signerProblems">
+<h3><span class="kind">function</span><a href="#signerProblems">signerProblems</a></h3>
+<pre><code class="language-ts">export function signerProblems(list: SignerDef[]): Array&lt;{ message: string; fix: string }&gt;</code></pre>
+<p>Problems with a list of signers (validation, Article 10).</p>
+
+</section>
+<section class="symbol" id="allowedSignersText">
+<h3><span class="kind">function</span><a href="#allowedSignersText">allowedSignersText</a></h3>
+<pre><code class="language-ts">export function allowedSignersText(list: SignerDef[], local = &quot;&quot;): string</code></pre>
+<p>Git&#39;s allowed_signers: one line per signer, for commit signatures only.</p>
+
+</section>
+<section class="symbol" id="TipCheck">
+<h3><span class="kind">interface</span><a href="#TipCheck">TipCheck</a></h3>
+<pre><code class="language-ts">export interface TipCheck {
+  /** It may. */
+  ok: boolean;
+  /** Why not, as a word (telemetry: archon.update.outcome = refused-&lt;code&gt;). */
+  code?: &quot;rollback&quot; | &quot;no-signers&quot; | &quot;unsigned&quot; | &quot;untrusted&quot;;
+  /** Who signed it (the principal), when it is good. */
+  signer?: string;
+  /** Why not, in plain words. */
+  reason?: string;
+}</code></pre>
+<p>Whether a new tip may be applied.</p>
+
+</section>
+<section class="symbol" id="checkTip">
+<h3><span class="kind">function</span><a href="#checkTip">checkTip</a></h3>
+<pre><code class="language-ts">export async function checkTip(
+  repo: string,
+  tip: string,
+  current: string,
+  allowedFile = onHost(ALLOWED_SIGNERS),
+  asUser?: string,
+): Promise&lt;TipCheck&gt;</code></pre>
+<p>May this host move from <code>current</code> to <code>tip</code>? The tip must descend from the commit applied now (no rollback) and carry a good signature by a key in <code>allowedFile</code> (the list this host already trusts).</p>
+
+</section>
+<section class="symbol" id="enforcing">
+<h3><span class="kind">function</span><a href="#enforcing">enforcing</a></h3>
+<pre><code class="language-ts">export function enforcing(): Promise&lt;boolean&gt;</code></pre>
+<p>Whether this machine checks approvals (a host installed by Archon has the file).</p>
+
+</section>
+<section class="symbol" id="signingSetup">
+<h3><span class="kind">function</span><a href="#signingSetup">signingSetup</a></h3>
+<pre><code class="language-ts">export async function signingSetup(): Promise&lt;Array&lt;{ ok: boolean; what: string; fix?: string }&gt;&gt;</code></pre>
+<p>The signing setup of the person running a command on the boot machine or a workstation: spec 057&#39;s checks (stolos keys), as a list of what is right and what is wrong with its fix.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/identity/signers.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

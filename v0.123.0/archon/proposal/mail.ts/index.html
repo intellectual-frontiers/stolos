@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/proposal/mail.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/proposal/mail.ts</h1>
+<p>Spec 095-proposals: reading a saved message (<code>.eml</code>, RFC 5322 with MIME) for its attachments, so <code>stolos proposal import</code> takes the mail as it was saved, with no mailbox access and no credential (the owner&#39;s decision 2). Multipart parts nest; attachments are base64, quoted-printable, or plain; a gzipped attachment (<code>proposal.json.gz</code>, what notify sends when it is large) is unpacked.</p>
+<h2>Exports</h2>
+<section class="symbol" id="MailFile">
+<h3><span class="kind">interface</span><a href="#MailFile">MailFile</a></h3>
+<pre><code class="language-ts">export interface MailFile {
+  /** Its file name. */
+  name: string;
+  /** Its bytes, decoded (and gunzipped when its name ends in .gz, which is then dropped). */
+  data: Uint8Array;
+}</code></pre>
+<p>A file attached to a message.</p>
+
+</section>
+<section class="symbol" id="param">
+<h3><span class="kind">function</span><a href="#param">param</a></h3>
+<pre><code class="language-ts">export function param(header: string | undefined, name: string): string | undefined</code></pre>
+<p>A header parameter (<code>boundary</code>, <code>filename</code>, <code>name</code>), quoted or not, RFC 2231 <code>*=</code> too.</p>
+
+</section>
+<section class="symbol" id="gunzip">
+<h3><span class="kind">function</span><a href="#gunzip">gunzip</a></h3>
+<pre><code class="language-ts">export async function gunzip(data: Uint8Array): Promise&lt;Uint8Array&gt;</code></pre>
+<p>Gunzip bytes.</p>
+
+</section>
+<section class="symbol" id="attachmentsOf">
+<h3><span class="kind">function</span><a href="#attachmentsOf">attachmentsOf</a></h3>
+<pre><code class="language-ts">export async function attachmentsOf(eml: string): Promise&lt;MailFile[]&gt;</code></pre>
+<p>Every attachment of a saved message, in order.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/proposal/mail.ts">Source</a></p>
+</main>
+
+</body>
+</html>

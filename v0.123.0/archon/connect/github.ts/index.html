@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/connect/github.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/connect/github.ts</h1>
+<p>Spec 086, declared with spec 091&#39;s SDK: GitHub, read-only, for one organization: its members (who are owners, who have no second factor), and its repositories (private or public, whether the default branch is protected by branch protection or a ruleset, how many approving reviews it needs, secret scanning, dependency alerts), and (spec 088) its open Dependabot alerts (<code>GET /orgs/{org}/dependabot/alerts</code>, which the token&#39;s read-only Dependabot alerts permission already allows) as <code>vulnerability</code> records, OCSF Vulnerability Findings that feed the OSCAL POA&amp;M. Evidence for change management (SCF CHG-03), MFA (IAC-37), least privilege (IAC-30), scanning (VPM-12), and remediation (VPM-06, VPM-07).</p>
+<p>Code scanning alerts need one more permission (Code scanning alerts: Read) that the token Stolos asks for does not have; they are left for later.</p>
+<h2>Exports</h2>
+<section class="symbol" id="github">
+<h3><span class="kind">const</span><a href="#github">github</a></h3>
+<pre><code class="language-ts">export const github: Connector</code></pre>
+<p>GitHub (an organization).</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/connect/github.ts">Source</a></p>
+</main>
+
+</body>
+</html>

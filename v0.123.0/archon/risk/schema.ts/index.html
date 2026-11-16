@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/risk/schema.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/risk/schema.ts</h1>
+<p>Spec 080: the tables the risk register and the vendor inventory add to the estate graph, declared once in spec 089&#39;s schema language. Every name is a cited standard&#39;s term: <code>risk</code> and <code>poam_item</code> are OSCAL&#39;s (a risk, and a plan of action item: an accepted risk is a deviation approved until a date); <code>data_classification</code> is OCSF&#39;s (what kind of data a vendor holds). Vendors themselves are the estate&#39;s own UDM parties: an <code>organization</code> with the <code>party_role</code> supplier, joined to what revealed it by an <code>edge</code> (<code>supplies</code>).</p>
+<pre class="mermaid">erDiagram
+  risk ||--o{ poam_item : &quot;accepted (json)&quot;
+  organization ||--o| data_classification : &quot;triage (vendors.ts)&quot;
+  organization ||--o{ party_role : &quot;supplier&quot;
+  organization ||--o{ edge : &quot;supplies&quot;</pre>
+<h2>Exports</h2>
+<section class="symbol" id="risk">
+<h3><span class="kind">const</span><a href="#risk">risk</a></h3>
+<pre><code class="language-ts">export const risk: AnyTable</code></pre>
+<p>One risk in the register (OSCAL risk), from fleets/&lt;fleet&gt;/risks.ts.</p>
+
+</section>
+<section class="symbol" id="poamItem">
+<h3><span class="kind">const</span><a href="#poamItem">poamItem</a></h3>
+<pre><code class="language-ts">export const poamItem: AnyTable</code></pre>
+<p>An accepted risk (OSCAL POA&amp;M item: a deviation approved until a date).</p>
+
+</section>
+<section class="symbol" id="dataClassification">
+<h3><span class="kind">const</span><a href="#dataClassification">dataClassification</a></h3>
+<pre><code class="language-ts">export const dataClassification: AnyTable</code></pre>
+<p>What a vendor holds and how critical it is (OCSF data classification), from vendors.ts.</p>
+
+</section>
+<section class="symbol" id="RISK_SCHEMA">
+<h3><span class="kind">const</span><a href="#RISK_SCHEMA">RISK_SCHEMA</a></h3>
+<pre><code class="language-ts">export const RISK_SCHEMA: readonly AnyTable[]</code></pre>
+<p>The tables spec 080 adds to the estate graph.</p>
+
+</section>
+<section class="symbol" id="riskSchemaSql">
+<h3><span class="kind">function</span><a href="#riskSchemaSql">riskSchemaSql</a></h3>
+<pre><code class="language-ts">export function riskSchemaSql(): string</code></pre>
+<p>Their canonical SQL.</p>
+
+</section>
+<section class="symbol" id="riskSchemaDoc">
+<h3><span class="kind">function</span><a href="#riskSchemaDoc">riskSchemaDoc</a></h3>
+<pre><code class="language-ts">export function riskSchemaDoc(): string</code></pre>
+<p>Their documentation, with the ER diagram.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/risk/schema.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/render/roff.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/render/roff.ts</h1>
+<p>Native roff generation (no dependencies): man(7) macros, written directly.</p>
+<h2>Exports</h2>
+<section class="symbol" id="esc">
+<h3><span class="kind">function</span><a href="#esc">esc</a></h3>
+<pre><code class="language-ts">export function esc(text: string): string</code></pre>
+<p>Escapes text for roff: backslashes, hyphens, and a leading . or &#39; on any line.</p>
+
+</section>
+<section class="symbol" id="inline">
+<h3><span class="kind">function</span><a href="#inline">inline</a></h3>
+<pre><code class="language-ts">export function inline(text: string): string</code></pre>
+<p>Inline markdown: <code>code</code> -&gt; bold, <em>em</em> and _em_ -&gt; italic, <strong>strong</strong> -&gt; bold.</p>
+
+</section>
+<section class="symbol" id="th">
+<h3><span class="kind">function</span><a href="#th">th</a></h3>
+<pre><code class="language-ts">export function th(
+  name: string,
+  section: number | string,
+  date: string,
+  source = &quot;Archon&quot;,
+  manual = &quot;Archon Manual&quot;,
+): string</code></pre>
+<p>The man page title line (.TH): name (upper-cased), section, date, source, and manual.</p>
+
+</section>
+<section class="symbol" id="markdownToRoff">
+<h3><span class="kind">function</span><a href="#markdownToRoff">markdownToRoff</a></h3>
+<pre><code class="language-ts">export function markdownToRoff(md: string): string</code></pre>
+<p>Convert a small, well-behaved subset of Markdown into man(7) roff.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/render/roff.ts">Source</a></p>
+</main>
+
+</body>
+</html>

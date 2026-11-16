@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/proposal/propose.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/proposal/propose.ts</h1>
+<p>Spec 095-proposals: <code>archon propose</code> on a server. Anyone with sudo may propose (the owner&#39;s decision 3). It collects again, picks the items (all, by intent, or by key), applies each person&#39;s choice (adopt, revert, or keep local until a day), requires a written reason, builds and signs <code>proposal.json</code> with the host key, keeps a copy in <code>/var/lib/archon/proposals/&lt;id&gt;/</code>, records it in <code>archon.sql</code>, and mails it to the fleet&#39;s mailbox with a readable summary.</p>
+<h2>Exports</h2>
+<section class="symbol" id="PROPOSALS_DIR">
+<h3><span class="kind">const</span><a href="#PROPOSALS_DIR">PROPOSALS_DIR</a></h3>
+<pre><code class="language-ts">export const PROPOSALS_DIR</code></pre>
+<p>Where a host keeps the proposals it sent.</p>
+
+</section>
+<section class="symbol" id="ProposeOptions">
+<h3><span class="kind">interface</span><a href="#ProposeOptions">ProposeOptions</a></h3>
+<pre><code class="language-ts">export interface ProposeOptions {
+  /** Every item not proposed yet. */
+  all?: boolean | undefined;
+  /** Intents by id (newline-separated when repeated). */
+  intent?: string | undefined;
+  /** Items by key (newline-separated when repeated). */
+  item?: string | undefined;
+  /** The action for every chosen item (default adopt). */
+  action?: string | undefined;
+  /** Items to revert instead (keys, newline-separated). */
+  revert?: string | undefined;
+  /** Items to keep local instead (keys, newline-separated). */
+  local?: string | undefined;
+  /** Local: until this day (default 30 days from now). */
+  until?: string | undefined;
+  /** Why (required, unless a recording gives it). */
+  reason?: string | undefined;
+  /** Print proposal.json; sign, record, and send nothing. */
+  dryRun?: boolean | undefined;
+  /** --json. */
+  json?: boolean | undefined;
+}</code></pre>
+<p>What <code>archon propose</code> was asked for.</p>
+
+</section>
+<section class="symbol" id="proposer">
+<h3><span class="kind">function</span><a href="#proposer">proposer</a></h3>
+<pre><code class="language-ts">export function proposer(): string</code></pre>
+<p>Who proposes: the person behind sudo (and the agent, when one runs it over MCP).</p>
+
+</section>
+<section class="symbol" id="choose">
+<h3><span class="kind">function</span><a href="#choose">choose</a></h3>
+<pre><code class="language-ts">export function choose(
+  items: DriftItem[],
+  intents: Array&lt;{ id: string; items: string[]; reason?: string }&gt;,
+  o: ProposeOptions,
+  now: Date = new Date(),
+): { chosen: DriftItem[]; choices: Record&lt;string, Choice&gt;; reason: string }</code></pre>
+<p>Choose items and their actions; throws a message naming what is wrong.</p>
+
+</section>
+<section class="symbol" id="hostFileEvidence">
+<h3><span class="kind">function</span><a href="#hostFileEvidence">hostFileEvidence</a></h3>
+<pre><code class="language-ts">export async function hostFileEvidence(
+  path: string,
+  birth?: Birth,
+): Promise&lt;FileEvidence | undefined&gt;</code></pre>
+<p>A file&#39;s evidence on this host: hash, mode, owner, and (when allowed) its content and its etckeeper diff.</p>
+
+</section>
+<section class="symbol" id="recordings">
+<h3><span class="kind">function</span><a href="#recordings">recordings</a></h3>
+<pre><code class="language-ts">export async function recordings(host: string, dir: string = P.state): Promise&lt;Recording[]&gt;</code></pre>
+<p>The recordings on this host (<code>archon record</code>).</p>
+
+</section>
+<section class="symbol" id="proposeCommand">
+<h3><span class="kind">function</span><a href="#proposeCommand">proposeCommand</a></h3>
+<pre><code class="language-ts">export async function proposeCommand(
+  host: HostDef,
+  o: ProposeOptions,
+  deps: {
+    sign?: Signer;
+    collectFirst?: boolean;
+    dir?: string;
+    notify?: (ev: Event, host: string) =&gt; Promise&lt;string&gt;;
+  } = {},
+): Promise&lt;number&gt;</code></pre>
+<p><code>archon propose</code>: collect, choose, build, sign, keep, record, and mail.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/proposal/propose.ts">Source</a></p>
+</main>
+
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/model/validate.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/model/validate.ts</h1>
+<p>TypeScript is the validator (Article 10, spec 002). Each rule returns problems with a message and a fix; an invalid model renders, installs, and applies nothing.</p>
+<h2>Exports</h2>
+<section class="symbol" id="Problem">
+<h3><span class="kind">interface</span><a href="#Problem">Problem</a></h3>
+<pre><code class="language-ts">export interface Problem {
+  /** Where it is: a fleet path (`fleet.admin.user`) or a host (`hosts/&lt;name&gt;`). */
+  where: string;
+  /** What is wrong. */
+  message: string;
+  /** How to fix it. */
+  fix: string;
+}</code></pre>
+<p>One thing wrong with the model.</p>
+
+</section>
+<section class="symbol" id="findSecret">
+<h3><span class="kind">function</span><a href="#findSecret">findSecret</a></h3>
+<pre><code class="language-ts">export function findSecret(text: string): string | undefined</code></pre>
+<p>What kind of secret <code>text</code> seems to contain (&quot;a private key&quot;, &quot;a GitHub token&quot;), or undefined.</p>
+
+</section>
+<section class="symbol" id="validateFleet">
+<h3><span class="kind">function</span><a href="#validateFleet">validateFleet</a></h3>
+<pre><code class="language-ts">export function validateFleet(fleet: FleetDef, hosts: HostDef[]): Problem[]</code></pre>
+<p>Check the fleet and its hosts (names, keys, settings, the site, and no secrets in the model). Empty when valid.</p>
+
+</section>
+<section class="symbol" id="validatePlan">
+<h3><span class="kind">function</span><a href="#validatePlan">validatePlan</a></h3>
+<pre><code class="language-ts">export function validatePlan(plan: HostPlan, knownSpecs: Set&lt;string&gt;): Problem[]</code></pre>
+<p>Check a host&#39;s resolved plan: every spec it uses exists in <code>knownSpecs</code>, and its files, ports, units and tools are well formed and carry no secret. Empty when valid.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/model/validate.ts">Source</a></p>
+</main>
+
+</body>
+</html>

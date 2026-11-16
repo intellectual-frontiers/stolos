@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/connect/commands.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/connect/commands.ts</h1>
+<p>Spec 067 (clouds): <code>stolos connect | observe | check | assets | disconnect</code>. Read-only visibility into the fleet&#39;s cloud accounts; managing them is out of scope.</p>
+<h2>Exports</h2>
+<section class="symbol" id="CONNECTORS">
+<h3><span class="kind">const</span><a href="#CONNECTORS">CONNECTORS</a></h3>
+<pre><code class="language-ts">export const CONNECTORS: Connector[]</code></pre>
+<p>Every provider, in the fleet&#39;s order of importance.</p>
+
+</section>
+<section class="symbol" id="allConnectors">
+<h3><span class="kind">function</span><a href="#allConnectors">allConnectors</a></h3>
+<pre><code class="language-ts">export async function allConnectors(): Promise&lt;Connector[]&gt;</code></pre>
+<p>Spec 088: the engine&#39;s connectors and the fleet&#39;s added ones (<code>fleets/&lt;fleet&gt;/connectors.ts</code>, the connector registry). One that does not load or does not suit this engine is left out, with a warning.</p>
+
+</section>
+<section class="symbol" id="liveHttp">
+<h3><span class="kind">function</span><a href="#liveHttp">liveHttp</a></h3>
+<pre><code class="language-ts">export function liveHttp(): http.Transport</code></pre>
+<p>The live transport connectors read through: it sends their credentials, as a generic client.</p>
+
+</section>
+<section class="symbol" id="loadObservations">
+<h3><span class="kind">function</span><a href="#loadObservations">loadObservations</a></h3>
+<pre><code class="language-ts">export async function loadObservations(): Promise&lt;Observation[]&gt;</code></pre>
+<p>Each provider&#39;s last observation, from the fleet repository.</p>
+
+</section>
+<section class="symbol" id="joinFleet">
+<h3><span class="kind">function</span><a href="#joinFleet">joinFleet</a></h3>
+<pre><code class="language-ts">export function joinFleet(o: Observation, machines: string[], domain?: string): Observation</code></pre>
+<p>Mark the assets that belong to a fleet machine: a DNS record or server named after it.</p>
+
+</section>
+<section class="symbol" id="connectorConnect">
+<h3><span class="kind">function</span><a href="#connectorConnect">connectorConnect</a></h3>
+<pre><code class="language-ts">export async function connectorConnect(
+  id: string,
+  t: http.Transport = liveHttp(),
+): Promise&lt;number&gt;</code></pre>
+<p><code>stolos connect &lt;provider&gt;</code>: how to make a read-only credential, then type it (hidden).</p>
+
+</section>
+<section class="symbol" id="estateObserve">
+<h3><span class="kind">function</span><a href="#estateObserve">estateObserve</a></h3>
+<pre><code class="language-ts">export async function estateObserve(id?: string, t: http.Transport = liveHttp()): Promise&lt;number&gt;</code></pre>
+<p><code>stolos estate observe [provider]</code>.</p>
+
+</section>
+<section class="symbol" id="estateCheck">
+<h3><span class="kind">function</span><a href="#estateCheck">estateCheck</a></h3>
+<pre><code class="language-ts">export async function estateCheck(id?: string, asJson = false): Promise&lt;number&gt;</code></pre>
+<p><code>stolos estate check [provider] [--json]</code>.</p>
+
+</section>
+<section class="symbol" id="estateAssets">
+<h3><span class="kind">function</span><a href="#estateAssets">estateAssets</a></h3>
+<pre><code class="language-ts">export async function estateAssets(id?: string, kind?: string, asJson = false): Promise&lt;number&gt;</code></pre>
+<p><code>stolos estate assets [provider] [--kind k] [--json]</code>: one table of everything observed.</p>
+
+</section>
+<section class="symbol" id="connectorDisconnect">
+<h3><span class="kind">function</span><a href="#connectorDisconnect">connectorDisconnect</a></h3>
+<pre><code class="language-ts">export async function connectorDisconnect(id: string): Promise&lt;number&gt;</code></pre>
+<p><code>stolos disconnect &lt;provider&gt;</code>: the credential goes from the vault; the last observation stays in Git.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/connect/commands.ts">Source</a></p>
+</main>
+
+</body>
+</html>

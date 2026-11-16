@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/risk/review.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/risk/review.ts</h1>
+<p>Spec 080: review through signed pull requests. A review changes a file in the fleet repository (a risk&#39;s next review date in risks.ts; new vendors in vendors.ts) on a branch of its own, in a commit signed with the reviewer&#39;s daily key, and opens a pull request with <code>gh</code>. The approval is the merge: a merge commit on the fleet&#39;s main branch signed by a fleet signer (<code>git merge --no-ff -S</code>, then <code>stolos apply</code>), checked like spec 072&#39;s evidence: <code>git verify-commit</code> against the fleet&#39;s signers.ts. A merge made on GitHub&#39;s website is signed by GitHub, not by a signer: it is approved by the next signed commit on main (<code>stolos apply</code> makes one), and {@link approvalOf} says which.</p>
+<pre class="mermaid">sequenceDiagram
+  participant R as Reviewer (stolos risks review)
+  participant G as Git (fleet repository)
+  participant H as GitHub
+  participant S as Signer
+  R-&gt;&gt;G: branch risks/review-&lt;id&gt;-&lt;day&gt; from origin/main
+  R-&gt;&gt;G: edit risks.ts, commit -S (daily key)
+  R-&gt;&gt;H: push, gh pr create
+  S-&gt;&gt;H: review the pull request
+  S-&gt;&gt;G: git merge --no-ff -S, stolos apply (push)
+  G--&gt;&gt;R: approvalOf(risks.ts): the merge commit, signed by a fleet signer</pre>
+<h2>Exports</h2>
+<section class="symbol" id="setNextReview">
+<h3><span class="kind">function</span><a href="#setNextReview">setNextReview</a></h3>
+<pre><code class="language-ts">export function setNextReview(source: string, id: string, next: string): string</code></pre>
+<p>A risk&#39;s <code>nextReview</code> in risks.ts&#39;s text, set to <code>next</code>; throws when the risk or its date is not found.</p>
+
+</section>
+<section class="symbol" id="vendorsFileSource">
+<h3><span class="kind">function</span><a href="#vendorsFileSource">vendorsFileSource</a></h3>
+<pre><code class="language-ts">export function vendorsFileSource(): string</code></pre>
+<p>A new vendors.ts, for a fleet that has none.</p>
+
+</section>
+<section class="symbol" id="vendorEntry">
+<h3><span class="kind">function</span><a href="#vendorEntry">vendorEntry</a></h3>
+<pre><code class="language-ts">export function vendorEntry(v: Vendor): string</code></pre>
+<p>One vendor&#39;s entry, for a person to assess (criticality &quot;unassessed&quot; until they do).</p>
+
+</section>
+<section class="symbol" id="appendVendors">
+<h3><span class="kind">function</span><a href="#appendVendors">appendVendors</a></h3>
+<pre><code class="language-ts">export function appendVendors(source: string | undefined, vendors: readonly Vendor[]): string</code></pre>
+<p>vendors.ts&#39;s text with entries for <code>vendors</code> added at the end of its list.</p>
+
+</section>
+<section class="symbol" id="Approval">
+<h3><span class="kind">interface</span><a href="#Approval">Approval</a></h3>
+<pre><code class="language-ts">export interface Approval {
+  /** The commit on the main line that last changed the file (a merge commit, for a merged pull request). */
+  commit?: string;
+  /** The fleet signer who signed it. */
+  signer?: string;
+  /** A later signed commit on the main line that approved it, when the change itself is not signed. */
+  approvedBy?: { commit: string; signer: string };
+  /** Why it is not approved. */
+  reason?: string;
+}</code></pre>
+<p>Who approved the last change to a file: the commit, and the fleet signer who signed it (or a later one).</p>
+
+</section>
+<section class="symbol" id="approvalOf">
+<h3><span class="kind">function</span><a href="#approvalOf">approvalOf</a></h3>
+<pre><code class="language-ts">export async function approvalOf(
+  repo: string,
+  path: string,
+  allowedSigners: string,
+): Promise&lt;Approval&gt;</code></pre>
+<p>The approval of the last change to <code>path</code>: the first-parent commit that changed it (the merge commit of a merged pull request), checked with <code>git verify-commit</code> against <code>allowedSigners</code> (the fleet&#39;s signers.ts as Git&#39;s allowed_signers). An unsigned one is approved by the first later signed commit on the main line, as servers do (spec 060).</p>
+
+</section>
+<section class="symbol" id="ReviewChange">
+<h3><span class="kind">interface</span><a href="#ReviewChange">ReviewChange</a></h3>
+<pre><code class="language-ts">export interface ReviewChange {
+  /** The branch to make (from the base branch on GitHub). */
+  branch: string;
+  /** The files it changes, relative to the repository, each with its new text (from the base's). */
+  edit: (read: (path: string) =&gt; Promise&lt;string | undefined&gt;) =&gt; Promise&lt;Record&lt;string, string&gt;&gt;;
+  /** The commit message (and the pull request's title: its first line). */
+  message: string;
+  /** The pull request's body. */
+  body: string;
+}</code></pre>
+<p>A review to open as a pull request.</p>
+
+</section>
+<section class="symbol" id="ReviewResult">
+<h3><span class="kind">interface</span><a href="#ReviewResult">ReviewResult</a></h3>
+<pre><code class="language-ts">export interface ReviewResult {
+  /** It worked. */
+  ok: boolean;
+  /** What happened, step by step (or what failed). */
+  steps: string[];
+  /** The pull request's URL. */
+  url?: string;
+  /** How to go on, when it failed. */
+  fix?: string;
+}</code></pre>
+<p>What opening a review did.</p>
+
+</section>
+<section class="symbol" id="ReviewRunner">
+<h3><span class="kind">interface</span><a href="#ReviewRunner">ReviewRunner</a></h3>
+<pre><code class="language-ts">export interface ReviewRunner {
+  /** Run a command; its result. */
+  run(argv: string[]): Promise&lt;{ ok: boolean; stdout: string; stderr: string }&gt;;
+  /** Run a command with the terminal (a signing key's passphrase). */
+  interactive(argv: string[]): Promise&lt;boolean&gt;;
+}</code></pre>
+<p>How to run a step: Git and gh (injectable for tests).</p>
+
+</section>
+<section class="symbol" id="realRunner">
+<h3><span class="kind">function</span><a href="#realRunner">realRunner</a></h3>
+<pre><code class="language-ts">export function realRunner(repo: string): ReviewRunner</code></pre>
+<p>The real runner: processes in the repository.</p>
+
+</section>
+<section class="symbol" id="openReview">
+<h3><span class="kind">function</span><a href="#openReview">openReview</a></h3>
+<pre><code class="language-ts">export async function openReview(
+  repo: string,
+  c: ReviewChange,
+  r: ReviewRunner = realRunner(repo),
+): Promise&lt;ReviewResult&gt;</code></pre>
+<p>Open a review: from a clean checkout, a branch from the base on GitHub, the edit, one signed commit, a push of that branch, and a pull request (<code>gh pr create</code>); then back to the branch it started on. Nothing is merged: a signer approves by merging.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/risk/review.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

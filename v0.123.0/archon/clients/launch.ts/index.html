@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/clients/launch.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/clients/launch.ts</h1>
+<p>Spec 082: each client&#39;s console inside the provider&#39;s console, built once per client, in that client&#39;s scope: its facts, estate, compliance, REST API, activity record, and caches come from its own checkout and its own folders on this PC, and its commands run in its checkout with its scope.</p>
+<h2>Exports</h2>
+<section class="symbol" id="realConsoleFor">
+<h3><span class="kind">function</span><a href="#realConsoleFor">realConsoleFor</a></h3>
+<pre><code class="language-ts">export function realConsoleFor(
+  port: number,
+  person: { user: string; name: string },
+): (c: Client) =&gt; Promise&lt;ClientConsole&gt;</code></pre>
+<p>A builder of client consoles, one per client id (cached: its sessions live as long as it does).</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/clients/launch.ts">Source</a></p>
+</main>
+
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/trust/publish.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/trust/publish.ts</h1>
+<p>Spec 081: what a Trust Center publishes next to its page, and what a public one leaves out.</p>
+<table><thead><tr><th>Shown</th><th>Public</th><th>Gated</th></tr></thead><tbody><tr><td>the company, the period, the signer, when it was signed</td><td>yes</td><td>yes</td></tr><tr><td>each framework requirement&#39;s status, and its SCF controls</td><td>yes</td><td>yes</td></tr><tr><td>each control&#39;s status, its counts of checks by result, stale counts</td><td>yes</td><td>yes</td></tr><tr><td>each control&#39;s evidence age (newest, oldest observation)</td><td>yes</td><td>yes</td></tr><tr><td>the SHA-256 of each full-bundle item behind a control, its kind and time</td><td>yes</td><td>yes</td></tr><tr><td>subjects (hostnames, accounts, the repository), check titles, what each check found</td><td>no</td><td>yes</td></tr><tr><td>item names (paths, commit ids), people&#39;s names and emails in commits</td><td>no</td><td>yes</td></tr><tr><td>the evidence itself (the full bundle)</td><td>no: a summary bundle, or on request</td><td>yes</td></tr></tbody></table>
+<p>A public build publishes a summary bundle it derives: the same format as spec 072&#39;s (<code>stolos-evidence/1</code>, each item by its SHA-256, hash-chained), signed by the same fleet signer as the full bundle through a signing callback ({@link Signer}, spec 072&#39;s <code>sshSigner</code>). Its items are one JSON document per control and one index, holding only what the public column above says, each bound to the full bundle by its manifest head and its own items&#39; SHA-256. A gated build publishes the full bundle as it is.</p>
+<pre class="mermaid">flowchart LR
+  full[&quot;full bundle (verified)&quot;] --&gt; model[&quot;Trust Center model&quot;]
+  model -- &quot;public&quot; --&gt; red[&quot;redact: no subjects, details, names&quot;] --&gt; sum[&quot;summary bundle: one item per control, signed&quot;]
+  model -- &quot;gated&quot; --&gt; pub[&quot;the full bundle, as it is&quot;]
+  sum &amp; pub --&gt; site[&quot;evidence/ next to index.html: objects/&amp;lt;sha256&amp;gt;&quot;]</pre>
+<h2>Exports</h2>
+<section class="symbol" id="SUMMARY_FORMAT">
+<h3><span class="kind">const</span><a href="#SUMMARY_FORMAT">SUMMARY_FORMAT</a></h3>
+<pre><code class="language-ts">export const SUMMARY_FORMAT</code></pre>
+<p>The summary documents&#39; format.</p>
+
+</section>
+<section class="symbol" id="PublicControl">
+<h3><span class="kind">interface</span><a href="#PublicControl">PublicControl</a></h3>
+<pre><code class="language-ts">export interface PublicControl {
+  /** SUMMARY_FORMAT. */
+  format: string;
+  /** Its SCF id. */
+  id: string;
+  /** Its SCF name. */
+  name: string;
+  /** What Stolos looks at for it, in plain words (Stolos's text, the same for every fleet). */
+  how: string;
+  /** Its status. */
+  status: TrustControl[&quot;status&quot;];
+  /** How many checks it has. */
+  checks: number;
+  /** How many have each result, and how many are stale. */
+  counts: TrustControl[&quot;counts&quot;];
+  /** When its newest and oldest evidence was observed, and how many checks have no time. */
+  observed: { newest?: string; oldest?: string; untimed: number };
+  /** The full bundle's items behind it: SHA-256, kind, and time only. */
+  backedBy: Array&lt;{ sha256: string; kind: string; at: string }&gt;;
+}</code></pre>
+<p>What a public Trust Center says about one control (and nothing else: see the table above).</p>
+
+</section>
+<section class="symbol" id="PublicIndex">
+<h3><span class="kind">interface</span><a href="#PublicIndex">PublicIndex</a></h3>
+<pre><code class="language-ts">export interface PublicIndex {
+  /** SUMMARY_FORMAT. */
+  format: string;
+  /** The company. */
+  company: string;
+  /** The period. */
+  period: { from: string; to: string };
+  /** The full bundle: its file's SHA-256, its manifest's head, its signer, when signed, how many items. */
+  source: { sha256: string; head: string; signer: string; created: string; items: number };
+  /** The SCF release the mappings are from. */
+  scf: string;
+  /** Each framework's requirements, with their status and SCF controls. */
+  frameworks: Array&lt;{
+    id: string;
+    title: string;
+    requirements: Array&lt;{ id: string; status: string; controls: string[] }&gt;;
+  }&gt;;
+}</code></pre>
+<p>The public index: the bundle it summarizes, and each framework&#39;s requirements.</p>
+
+</section>
+<section class="symbol" id="publicControl">
+<h3><span class="kind">function</span><a href="#publicControl">publicControl</a></h3>
+<pre><code class="language-ts">export function publicControl(c: TrustControl): PublicControl</code></pre>
+<p>One control, redacted for the public.</p>
+
+</section>
+<section class="symbol" id="publicIndex">
+<h3><span class="kind">function</span><a href="#publicIndex">publicIndex</a></h3>
+<pre><code class="language-ts">export function publicIndex(m: TrustModel): PublicIndex</code></pre>
+<p>The public index of a model.</p>
+
+</section>
+<section class="symbol" id="controlItemName">
+<h3><span class="kind">const</span><a href="#controlItemName">controlItemName</a></h3>
+<pre><code class="language-ts">export const controlItemName</code></pre>
+<p>The item name of a control&#39;s summary in the summary bundle.</p>
+
+</section>
+<section class="symbol" id="INDEX_ITEM">
+<h3><span class="kind">const</span><a href="#INDEX_ITEM">INDEX_ITEM</a></h3>
+<pre><code class="language-ts">export const INDEX_ITEM</code></pre>
+<p>The item name of the summary bundle&#39;s index.</p>
+
+</section>
+<section class="symbol" id="summaryItems">
+<h3><span class="kind">function</span><a href="#summaryItems">summaryItems</a></h3>
+<pre><code class="language-ts">export function summaryItems(m: TrustModel): Item[]</code></pre>
+<p>The summary bundle&#39;s items: the index, then each control with evidence.</p>
+
+</section>
+<section class="symbol" id="signerLines">
+<h3><span class="kind">function</span><a href="#signerLines">signerLines</a></h3>
+<pre><code class="language-ts">export function signerLines(allowed: string, signer: string): string</code></pre>
+<p>The full bundle&#39;s allowed signers, reduced to the one who signed it: its principal and key only (a key&#39;s comment is often an email address), for the namespace bundles are signed in.</p>
+
+</section>
+<section class="symbol" id="SummaryBundle">
+<h3><span class="kind">interface</span><a href="#SummaryBundle">SummaryBundle</a></h3>
+<pre><code class="language-ts">export interface SummaryBundle {
+  /** Its bytes (a ZIP). */
+  zip: Uint8Array;
+  /** Its manifest. */
+  manifest: Manifest;
+}</code></pre>
+<p>A summary bundle, made and checked.</p>
+
+</section>
+<section class="symbol" id="summaryBundle">
+<h3><span class="kind">function</span><a href="#summaryBundle">summaryBundle</a></h3>
+<pre><code class="language-ts">export async function summaryBundle(
+  m: TrustModel,
+  full: Uint8Array,
+  sign: Signer,
+  o: { stolos: string; now: Date },
+): Promise&lt;SummaryBundle&gt;</code></pre>
+<p>The public summary bundle: the redacted items, in a spec 072 bundle signed through <code>sign</code>. Refused unless it verifies and its signer is the full bundle&#39;s (by the full bundle&#39;s own allowed signers).</p>
+
+</section>
+<section class="symbol" id="unpacked">
+<h3><span class="kind">function</span><a href="#unpacked">unpacked</a></h3>
+<pre><code class="language-ts">export async function unpacked(zip: Uint8Array): Promise&lt;Record&lt;string, Uint8Array&gt;&gt;</code></pre>
+<p>A bundle&#39;s files, to publish unzipped beside it (so each item is a link: objects/&lt;sha256&gt;).</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/trust/publish.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

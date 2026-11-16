@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/console/boot-timeline.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/console/boot-timeline.ts</h1>
+<p>Spec 066: the boot server&#39;s installs as a timeline, from boot.log (each line <code>&lt;ISO time&gt; [address] [host:] message</code>, spec 049): for each machine, the furthest of the eleven steps of the install-timeline guide (src/archon/install/mod.ts) it reached, and whether one failed.</p>
+<h2>Exports</h2>
+<section class="symbol" id="INSTALL_STEPS">
+<h3><span class="kind">const</span><a href="#INSTALL_STEPS">INSTALL_STEPS</a></h3>
+<pre><code class="language-ts">export const INSTALL_STEPS: Array&lt;{ label: string; seen: RegExp }&gt;</code></pre>
+<p>The eleven steps of an install, and the boot.log lines that show each was reached.</p>
+
+</section>
+<section class="symbol" id="InstallProgress">
+<h3><span class="kind">interface</span><a href="#InstallProgress">InstallProgress</a></h3>
+<pre><code class="language-ts">export interface InstallProgress {
+  /** The host. */
+  host: string;
+  /** The furthest step reached (1 to 11). */
+  step: number;
+  /** A step failed. */
+  failed: boolean;
+  /** The last line, and when. */
+  last: string;
+  /** When (ISO). */
+  at: string;
+}</code></pre>
+<p>One machine&#39;s install, as the log shows it.</p>
+
+</section>
+<section class="symbol" id="parseBootLog">
+<h3><span class="kind">function</span><a href="#parseBootLog">parseBootLog</a></h3>
+<pre><code class="language-ts">export function parseBootLog(text: string): InstallProgress[]</code></pre>
+<p>Every machine&#39;s progress, newest install last.</p>
+
+</section>
+<section class="symbol" id="installCards">
+<h3><span class="kind">function</span><a href="#installCards">installCards</a></h3>
+<pre><code class="language-ts">export function installCards(ps: InstallProgress[]): Html</code></pre>
+<p>Each machine&#39;s install as a row of steps.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/console/boot-timeline.ts">Source</a></p>
+</main>
+
+</body>
+</html>

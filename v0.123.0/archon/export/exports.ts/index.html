@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/export/exports.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/export/exports.ts</h1>
+<p>Spec 092: the exports API. One function, {@link buildExports}, turns what Stolos knows into a document in a standard format, as bytes with a file name and a media type, so delivery code (OTLP sending, files, email, schedules) needs to know nothing about the formats.</p>
+<table><thead><tr><th>Kind</th><th>Format</th><th>Needs</th></tr></thead><tbody><tr><td><code>ocsf-jsonl</code></td><td>OCSF 1.9.0 events, JSON Lines</td><td>estate and/or compliance view</td></tr><tr><td><code>otlp-json</code></td><td>OTLP/HTTP JSON logs request (the OCSF events)</td><td>estate and/or compliance view</td></tr><tr><td><code>cyclonedx-attestation</code></td><td>CycloneDX 1.6 attestation (CDXA)</td><td>compliance view (bundle optional)</td></tr><tr><td><code>intoto-statement</code></td><td>in-toto Statement v1 for an evidence bundle</td><td>bundle</td></tr><tr><td><code>oscal-component-definition</code>, <code>oscal-ssp</code>, <code>oscal-assessment-results</code>, <code>oscal-poam</code></td><td>OSCAL 1.2.3 (spec 071)</td><td>compliance view with the SCF catalog</td></tr></tbody></table>
+<pre class="mermaid">flowchart LR
+  in[&quot;ExportInput: fleet, time, estate, compliance view, bundle&quot;] --&gt; build[&quot;buildExports(kind, input)&quot;]
+  build --&gt; file[&quot;ExportFile: fileName, mediaType, bytes&quot;]
+  file --&gt; cli[&quot;stolos export &amp;lt;kind&amp;gt;&quot;] &amp; delivery[&quot;delivery (OTLP, files, email)&quot;]</pre>
+<p>Every document is a function of its input: the same input gives the same bytes (the time is part of the input).</p>
+<h2>Exports</h2>
+<section class="symbol" id="EXPORT_KINDS">
+<h3><span class="kind">const</span><a href="#EXPORT_KINDS">EXPORT_KINDS</a></h3>
+<pre><code class="language-ts">export const EXPORT_KINDS</code></pre>
+<p>The kinds of export, in the order <code>stolos export</code> lists them.</p>
+
+</section>
+<section class="symbol" id="ExportKind">
+<h3><span class="kind">type</span><a href="#ExportKind">ExportKind</a></h3>
+<pre><code class="language-ts">export type ExportKind = (typeof EXPORT_KINDS)[number];</code></pre>
+<p>One kind of export.</p>
+
+</section>
+<section class="symbol" id="isExportKind">
+<h3><span class="kind">function</span><a href="#isExportKind">isExportKind</a></h3>
+<pre><code class="language-ts">export function isExportKind(s: string): s is ExportKind</code></pre>
+<p>Whether a string names a kind of export.</p>
+
+</section>
+<section class="symbol" id="ExportInput">
+<h3><span class="kind">interface</span><a href="#ExportInput">ExportInput</a></h3>
+<pre><code class="language-ts">export interface ExportInput {
+  /** The fleet. */
+  fleet: { id: string; title: string; repo: string };
+  /** The time the documents are stamped with. */
+  now: Date;
+  /** The estate graph (people, accounts, machines, other nodes). */
+  estate?: Estate;
+  /** The compliance view (every control with its evidence). */
+  view?: ComplianceView;
+  /** The SCF catalog (framework mappings in findings; needed by OSCAL). */
+  catalog?: ScfCatalog;
+  /** The fleet's machines, for the OSCAL SSP's inventory. */
+  machines?: Array&lt;{ name: string; kind: string; os?: string }&gt;;
+  /** SP 800-53 titles by OSCAL id (when NIST's catalog is on this PC). */
+  nistTitles?: Record&lt;string, string&gt;;
+  /** A spec 072 evidence bundle. */
+  bundle?: BundleInfo;
+  /** The fleet signer to name in an attestation (default: the bundle's signer). */
+  signer?: string;
+  /** OTLP: also send inventory as OpenTelemetry entity events (Development status; default off). */
+  entityEvents?: boolean;
+}</code></pre>
+<p>What an export is made from; each kind uses what it needs and says what is missing.</p>
+
+</section>
+<section class="symbol" id="ExportFile">
+<h3><span class="kind">interface</span><a href="#ExportFile">ExportFile</a></h3>
+<pre><code class="language-ts">export interface ExportFile {
+  /** Its file name (no directory). */
+  fileName: string;
+  /** Its media type. */
+  mediaType: string;
+  /** Its bytes. */
+  bytes: Uint8Array;
+}</code></pre>
+<p>One exported document.</p>
+
+</section>
+<section class="symbol" id="ocsfEvents">
+<h3><span class="kind">function</span><a href="#ocsfEvents">ocsfEvents</a></h3>
+<pre><code class="language-ts">export function ocsfEvents(i: ExportInput): OcsfEvent[]</code></pre>
+<p>Every OCSF event the input gives: the estate&#39;s inventory, then the compliance findings.</p>
+
+</section>
+<section class="symbol" id="buildExports">
+<h3><span class="kind">function</span><a href="#buildExports">buildExports</a></h3>
+<pre><code class="language-ts">export async function buildExports(kind: ExportKind, i: ExportInput): Promise&lt;ExportFile&gt;</code></pre>
+<p>Build one export. Throws, saying what is missing, when the input cannot make it.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/export/exports.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

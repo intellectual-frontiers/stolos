@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/vault/reminder.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/vault/reminder.ts</h1>
+<p>Backup reminders (spec 029, Article 22): hard to miss, calm (Article 19).</p>
+<ul><li>the panel at the end of a command that changed a secret, and at the start of <code>boot serve</code> and <code>boot status</code>, until backed up;</li><li><code>boot doctor</code> reports it as a warning whose fix is the command;</li><li>the prompt&#39;s 🔐 backup token while anything is unbacked;</li><li>email: after 24 hours unbacked, one &quot;N secrets not backed up&quot; (names only), then weekly; and, every six months, to check the recovery key (spec 057);</li><li>a non-blocking git pre-push hook that prints the panel.</li></ul>
+<h2>Exports</h2>
+<section class="symbol" id="pcName">
+<h3><span class="kind">const</span><a href="#pcName">pcName</a></h3>
+<pre><code class="language-ts">export const pcName</code></pre>
+<p>This machine&#39;s short hostname, as the panel names it.</p>
+
+</section>
+<section class="symbol" id="preparePanel">
+<h3><span class="kind">function</span><a href="#preparePanel">preparePanel</a></h3>
+<pre><code class="language-ts">export async function preparePanel(a?: Assessment): Promise&lt;Assessment&gt;</code></pre>
+<p>Compute the panel for this run (shown by ui.finish or at exit).</p>
+
+</section>
+<section class="symbol" id="showPanelNow">
+<h3><span class="kind">function</span><a href="#showPanelNow">showPanelNow</a></h3>
+<pre><code class="language-ts">export async function showPanelNow(): Promise&lt;Assessment&gt;</code></pre>
+<p>Show the panel now (boot serve and boot status start with it).</p>
+
+</section>
+<section class="symbol" id="remind">
+<h3><span class="kind">function</span><a href="#remind">remind</a></h3>
+<pre><code class="language-ts">export async function remind(now = Date.now()): Promise&lt;void&gt;</code></pre>
+<p>The email reminders, by the shared mailbox (spec 025). Called by boot serve (at start and hourly), boot status, boot doctor, and vault status.</p>
+
+</section>
+<section class="symbol" id="installPrePushHook">
+<h3><span class="kind">function</span><a href="#installPrePushHook">installPrePushHook</a></h3>
+<pre><code class="language-ts">export async function installPrePushHook(repo = P.repo): Promise&lt;boolean&gt;</code></pre>
+<p>Installs the pre-push hook in a checkout. Leaves another program&#39;s hook alone and does nothing in a sandbox. Returns whether it wrote the hook.</p>
+
+</section>
+<h2>Re-exports</h2>
+<ul>
+<li><code>PRE_PUSH</code> from <a href="../../../archon/identity/keys.ts/index.html"><code>../identity/keys.ts</code></a></li>
+</ul>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/vault/reminder.ts">Source</a></p>
+</main>
+
+</body>
+</html>

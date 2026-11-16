@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/vault/commands.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/vault/commands.ts</h1>
+<p><code>bun run stolos vault &lt;sub&gt;</code> (specs 029 and 056): the boot machine&#39;s secrets, and their backup. A backup is one ZIP file (see {@link writeBackupZip}), written into stolos&#39;s backup folder; you then move it wherever you keep important things safe. <code>vault restore &lt;zip&gt;</code> (spec 061) puts it back on a freshly cloned PC; without a ZIP it prints the steps (constitution Article 22).</p>
+<pre class="mermaid">flowchart LR
+  status[&quot;vault status&lt;br/&gt;what changed since the last backup&quot;] --&gt; backup[&quot;vault backup&lt;br/&gt;a ZIP in the backup folder&quot;]
+  backup --&gt; move[&quot;you move the ZIP&lt;br/&gt;somewhere safe&quot;]
+  move -. &quot;after a disaster&quot; .-&gt; restore[&quot;vault restore &amp;lt;zip&amp;gt;&lt;br/&gt;on the new PC&quot;]</pre>
+<h2>Exports</h2>
+<section class="symbol" id="vaultStatus">
+<h3><span class="kind">function</span><a href="#vaultStatus">vaultStatus</a></h3>
+<pre><code class="language-ts">export async function vaultStatus(o: { lost?: boolean; hook?: boolean }): Promise&lt;number&gt;</code></pre>
+<p><code>vault status</code>: every secret, when it changed, and whether the last backup holds it.</p>
+
+</section>
+<section class="symbol" id="afterBackup">
+<h3><span class="kind">function</span><a href="#afterBackup">afterBackup</a></h3>
+<pre><code class="language-ts">export function afterBackup(path: string, signingKey?: string, recovery = false): string[]</code></pre>
+<p>What to tell the person once the ZIP is written: where it is, and where to put it.</p>
+
+</section>
+<section class="symbol" id="vaultBackup">
+<h3><span class="kind">function</span><a href="#vaultBackup">vaultBackup</a></h3>
+<pre><code class="language-ts">export async function vaultBackup(): Promise&lt;number&gt;</code></pre>
+<p><code>vault backup</code>: one ZIP with every secret and both signing keys, read back and recorded.</p>
+
+</section>
+<section class="symbol" id="vaultRestore">
+<h3><span class="kind">function</span><a href="#vaultRestore">vaultRestore</a></h3>
+<pre><code class="language-ts">export async function vaultRestore(): Promise&lt;number&gt;</code></pre>
+<p><code>vault restore</code> without a ZIP: the steps (the command, and by hand); it changes nothing.</p>
+
+</section>
+<section class="symbol" id="vaultList">
+<h3><span class="kind">function</span><a href="#vaultList">vaultList</a></h3>
+<pre><code class="language-ts">export async function vaultList(): Promise&lt;number&gt;</code></pre>
+<p><code>vault list</code>: the backup ZIPs still in the backup folder (moved ones are wherever you put them).</p>
+
+</section>
+<section class="symbol" id="recoverHostKeys">
+<h3><span class="kind">function</span><a href="#recoverHostKeys">recoverHostKeys</a></h3>
+<pre><code class="language-ts">export async function recoverHostKeys(host: string): Promise&lt;number&gt;</code></pre>
+<p>Pull a running host&#39;s identities back over SSH (a boot machine lost without a backup): its SSH host keys and ops&#39; deploy key, so the rebuilt boot machine holds the same ones (nothing changes on GitHub, and clients see the same host).</p>
+
+</section>
+<h2>Re-exports</h2>
+<ul>
+<li><code>secretFor</code> from <a href="../../../archon/model/secret-inventory.ts/index.html"><code>../model/secret-inventory.ts</code></a></li>
+</ul>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/vault/commands.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/state/inventory.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/state/inventory.ts</h1>
+<p>Spec 051: what this machine is, as it reports itself: make, model, serial, CPUs, memory, disks, and network cards, from its firmware tables, /proc, and /sys. Recorded in archon.sql (the archon_inventory view) at first boot and on every verify that finds it changed, so fleet status and fleet query answer from the machine, never from what someone typed.</p>
+<h2>Exports</h2>
+<section class="symbol" id="Inventory">
+<h3><span class="kind">interface</span><a href="#Inventory">Inventory</a></h3>
+<pre><code class="language-ts">export interface Inventory {
+  /** Its maker. */
+  vendor?: string;
+  /** Its model. */
+  model?: string;
+  /** Its serial (readable by root only: absent otherwise). */
+  serial?: string;
+  /** Its CPUs. */
+  cpus: number;
+  /** Its memory, in MiB. */
+  memMiB?: number;
+  /** &quot;nvme0n1 1000 GB nvme&quot; */
+  disks: string[];
+  /** Physical network cards' MACs (not bridges, VLANs, or containers). */
+  macs: string[];
+}</code></pre>
+<p>What a machine is, as it reports itself.</p>
+
+</section>
+<section class="symbol" id="collectInventory">
+<h3><span class="kind">function</span><a href="#collectInventory">collectInventory</a></h3>
+<pre><code class="language-ts">export async function collectInventory(): Promise&lt;Inventory&gt;</code></pre>
+<p>Read the machine&#39;s inventory from /sys, /proc, and lsblk.</p>
+
+</section>
+<section class="symbol" id="describeInventory">
+<h3><span class="kind">function</span><a href="#describeInventory">describeInventory</a></h3>
+<pre><code class="language-ts">export function describeInventory(i: Inventory): string</code></pre>
+<p>One line: &quot;Intel NUC12WSHi7, serial G6WS…, 16 CPUs, 31.1 GiB RAM, nvme0n1 1000 GB nvme&quot;.</p>
+
+</section>
+<section class="symbol" id="recordInventory">
+<h3><span class="kind">function</span><a href="#recordInventory">recordInventory</a></h3>
+<pre><code class="language-ts">export async function recordInventory(host: string, root = P.state): Promise&lt;boolean&gt;</code></pre>
+<p>Record it unless the same is already there; true when written.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/state/inventory.ts">Source</a></p>
+</main>
+
+</body>
+</html>

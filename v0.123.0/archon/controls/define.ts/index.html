@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/controls/define.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/controls/define.ts</h1>
+<p>Spec 078: a control, written in TypeScript. A control is a query plus an assertion, tagged with the Secure Controls Framework (SCF) controls it gives evidence for. Its subject says what it asks:</p>
+<ul><li><code>estate</code>: SQL over the estate graph (spec 090), one SELECT per query, read-only (through <code>estateQuery</code>); one result across systems.</li><li><code>osquery</code>: one osquery SELECT on every adopted machine, through its probe (as <code>stolos fleet query</code>); one result per machine.</li><li><code>observation</code>: a typed observation Stolos already holds (an adopted machine&#39;s, a device&#39;s, a connected account&#39;s); one result per subject.</li></ul>
+<p>Its assertion turns the answer into a {@link Verdict} (pass, fail, warn, or unknown, with what was found), or <code>undefined</code> when the control does not apply. Controls are grouped into a pack ({@link defineControlPack}), which a fleet keeps in <code>fleets/&lt;fleet&gt;/controls/&lt;pack&gt;/pack.ts</code>.</p>
+<pre class="mermaid">flowchart LR
+  q[&quot;query: estate SQL, osquery SQL, or an observation&quot;] --&gt; a[&quot;assert&quot;]
+  a --&gt; v[&quot;Verdict: pass, fail, warn, unknown&quot;]
+  v --&gt; r[&quot;PolicyResult (accepted risks applied)&quot;]
+  r --&gt; c[&quot;Compliance: evidence for its SCF controls&quot;]</pre>
+<h3>Example</h3>
+<pre><code class="language-ts">import { defineControl } from &quot;./define.ts&quot;;
+
+export const adminsMfa = defineControl({
+  id: &quot;admins-mfa&quot;,
+  title: &quot;Every administrator signs in with a second factor&quot;,
+  scf: [&quot;IAC-37&quot;],
+  subject: &quot;estate&quot;,
+  query: &quot;SELECT display_name AS name FROM user_account WHERE admin = 1 AND mfa = 0&quot;,
+  assert: (rows) =&gt; ({
+    status: rows.length ? &quot;fail&quot; : &quot;pass&quot;,
+    detail: rows.length ? `${rows.length} without MFA` : &quot;every administrator has MFA&quot;,
+  }),
+  fix: &quot;require MFA for administrators&quot;,
+});</code></pre>
+<h2>Exports</h2>
+<section class="symbol" id="Row">
+<h3><span class="kind">type</span><a href="#Row">Row</a></h3>
+<pre><code class="language-ts">export type Row = Record&lt;string, unknown&gt;;</code></pre>
+<p>One row of an answer: column to value.</p>
+
+</section>
+<section class="symbol" id="CheckStatus">
+<h3><span class="kind">type</span><a href="#CheckStatus">CheckStatus</a></h3>
+<pre><code class="language-ts">export type CheckStatus = &quot;pass&quot; | &quot;fail&quot; | &quot;warn&quot; | &quot;unknown&quot;;</code></pre>
+<p>What a control&#39;s assertion can say (an accepted risk is the runner&#39;s, not the control&#39;s).</p>
+
+</section>
+<section class="symbol" id="Verdict">
+<h3><span class="kind">interface</span><a href="#Verdict">Verdict</a></h3>
+<pre><code class="language-ts">export interface Verdict {
+  /** pass, fail, warn (not required, but worth doing), or unknown (cannot tell). */
+  status: CheckStatus;
+  /** What was found, in words. */
+  detail: string;
+  /** How to make it pass, when it differs from the control's own fix. */
+  fix?: string;
+  /** The estate's node uids it is about (estate controls: written to the finding table). */
+  subjects?: string[];
+}</code></pre>
+<p>What an assertion found.</p>
+
+</section>
+<section class="symbol" id="ObservationInputs">
+<h3><span class="kind">interface</span><a href="#ObservationInputs">ObservationInputs</a></h3>
+<pre><code class="language-ts">export interface ObservationInputs {
+  /** An adopted machine (spec 067), with what its probe last reported. */
+  adopted: { machine: AdoptedDef; observed: Observed; now: number };
+  /** A device read over SNMPv3 (spec 069). */
+  device: { device: DeviceDef; observed: DeviceObserved; now: number };
+  /** A connected account (spec 084): its connector's id and its observation. */
+  connector: { connector: string; observed: Observation; now: number };
+}</code></pre>
+<p>The observations an <code>observation</code> control can read, by kind.</p>
+
+</section>
+<section class="symbol" id="ObservationKind">
+<h3><span class="kind">type</span><a href="#ObservationKind">ObservationKind</a></h3>
+<pre><code class="language-ts">export type ObservationKind = keyof ObservationInputs;</code></pre>
+<p>The kinds of observation.</p>
+
+</section>
+<section class="symbol" id="ControlBase">
+<h3><span class="kind">interface</span><a href="#ControlBase">ControlBase</a></h3>
+<pre><code class="language-ts">export interface ControlBase {
+  /** Its id: lower case, digits, and hyphens; unique in its pack. */
+  id: string;
+  /** What it requires, for people. */
+  title: string;
+  /** The SCF controls it gives evidence for (ids Stolos knows: a wrong one fails type checking). */
+  scf: readonly ScfId[];
+  /** Why it matters, or how it decides, for people (optional). */
+  description?: string;
+}</code></pre>
+<p>What every control has.</p>
+
+</section>
+<section class="symbol" id="EstateQuery">
+<h3><span class="kind">type</span><a href="#EstateQuery">EstateQuery</a></h3>
+<pre><code class="language-ts">export type EstateQuery = string | Readonly&lt;Record&lt;string, string&gt;&gt;;</code></pre>
+<p>An estate query: one SELECT, or several by name.</p>
+
+</section>
+<section class="symbol" id="EstateRows">
+<h3><span class="kind">type</span><a href="#EstateRows">EstateRows</a></h3>
+<pre><code class="language-ts">export type EstateRows&lt;Q extends EstateQuery&gt; = Q extends string
+  ? Row[]
+  : { [K in keyof Q]: Row[] };</code></pre>
+<p>The answer to an estate query: its rows, or each named query&#39;s rows.</p>
+
+</section>
+<section class="symbol" id="EstateControl">
+<h3><span class="kind">interface</span><a href="#EstateControl">EstateControl</a></h3>
+<pre><code class="language-ts">export interface EstateControl&lt;Q extends EstateQuery = EstateQuery&gt; extends ControlBase {
+  /** It asks the estate graph. */
+  subject: &quot;estate&quot;;
+  /** One SELECT (or WITH ... SELECT), or several by name; the tables are `stolos estate schema`'s. */
+  query: Q;
+  /** The verdict from the rows; undefined when the control does not apply (it then has no result). */
+  assert(rows: EstateRows&lt;Q&gt;, ctx: { now: Date }): Verdict | undefined;
+  /** How to make it pass. */
+  fix?: string;
+}</code></pre>
+<p>A control over the estate graph: SQL, read-only, one result across systems.</p>
+
+</section>
+<section class="symbol" id="OsqueryControl">
+<h3><span class="kind">interface</span><a href="#OsqueryControl">OsqueryControl</a></h3>
+<pre><code class="language-ts">export interface OsqueryControl extends ControlBase {
+  /** It asks osquery on each adopted machine. */
+  subject: &quot;osquery&quot;;
+  /** One SELECT on the tables `stolos fleet query` allows. */
+  query: string;
+  /** The verdict for one machine from its rows; undefined when it does not apply there. */
+  assert(rows: Row[], ctx: { machine: string; now: Date }): Verdict | undefined;
+  /** How to make it pass. */
+  fix?: string;
+}</code></pre>
+<p>A control that asks every adopted machine one osquery SELECT, through its probe.</p>
+
+</section>
+<section class="symbol" id="ObservationControl">
+<h3><span class="kind">interface</span><a href="#ObservationControl">ObservationControl</a></h3>
+<pre><code class="language-ts">export interface ObservationControl&lt;
+  K extends ObservationKind = ObservationKind,
+&gt; extends ControlBase {
+  /** It reads an observation. */
+  subject: &quot;observation&quot;;
+  /** Which kind of observation. */
+  of: K;
+  /** The verdict for one subject; undefined when it does not apply there. */
+  assert(input: ObservationInputs[K]): Verdict | undefined;
+  /** How to make it pass: words, or words for this subject (its operating system, its name). */
+  fix?: string | ((input: ObservationInputs[K]) =&gt; string | undefined);
+}</code></pre>
+<p>A control over an observation Stolos holds: one result per machine, device, or account.</p>
+
+</section>
+<section class="symbol" id="AnyObservationControl">
+<h3><span class="kind">type</span><a href="#AnyObservationControl">AnyObservationControl</a></h3>
+<pre><code class="language-ts">export type AnyObservationControl = {
+  [K in ObservationKind]: ObservationControl&lt;K&gt;;
+}[ObservationKind];</code></pre>
+<p>An observation control of any kind.</p>
+
+</section>
+<section class="symbol" id="Control">
+<h3><span class="kind">type</span><a href="#Control">Control</a></h3>
+<pre><code class="language-ts">export type Control = EstateControl&lt;EstateQuery&gt; | OsqueryControl | AnyObservationControl;</code></pre>
+<p>Any control.</p>
+
+</section>
+<section class="symbol" id="ControlPack">
+<h3><span class="kind">interface</span><a href="#ControlPack">ControlPack</a></h3>
+<pre><code class="language-ts">export interface ControlPack {
+  /** Its id (lower case, digits, and hyphens): result ids are `&lt;pack&gt;/&lt;control&gt;`. */
+  id: string;
+  /** Its name, for people. */
+  title: string;
+  /** Its version (for example 1.0.0). */
+  version: string;
+  /** What it is for (optional). */
+  description?: string;
+  /** Its controls, in the order results are shown. */
+  controls: readonly Control[];
+}</code></pre>
+<p>A pack: controls shared together, versioned.</p>
+
+</section>
+<section class="symbol" id="controlProblems">
+<h3><span class="kind">function</span><a href="#controlProblems">controlProblems</a></h3>
+<pre><code class="language-ts">export function controlProblems(c: Control): string[]</code></pre>
+<p>Why a control is malformed (an empty list when it is not); checked at definition too.</p>
+
+</section>
+<section class="symbol" id="defineControl">
+<h3><span class="kind">function</span><a href="#defineControl">defineControl</a></h3>
+<pre><code class="language-ts">export function defineControl&lt;const Q extends EstateQuery&gt;(c: EstateControl&lt;Q&gt;): EstateControl&lt;Q&gt;</code></pre>
+<p>Define a control over the estate graph.</p>
+
+</section>
+<section class="symbol" id="defineControlPack">
+<h3><span class="kind">function</span><a href="#defineControlPack">defineControlPack</a></h3>
+<pre><code class="language-ts">export function defineControlPack&lt;const P extends ControlPack&gt;(p: P): P</code></pre>
+<p>Define a pack: its id and version are checked, and its controls&#39; ids must be unique.</p>
+
+</section>
+<h2>Re-exports</h2>
+<ul>
+<li><code>ScfId</code> from <a href="../../../archon/compliance/scf.ts/index.html"><code>../compliance/scf.ts</code></a></li>
+</ul>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/controls/define.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

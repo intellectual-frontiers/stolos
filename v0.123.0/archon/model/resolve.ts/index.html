@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/model/resolve.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/model/resolve.ts</h1>
+<p>Resolve a host into a HostPlan: run every capability, merge contributions, then run derive hooks over the merged plan (spec 002).</p>
+<h2>Exports</h2>
+<section class="symbol" id="resolvePlan">
+<h3><span class="kind">function</span><a href="#resolvePlan">resolvePlan</a></h3>
+<pre><code class="language-ts">export function resolvePlan(host: HostDef, fleet: FleetDef): HostPlan</code></pre>
+<p>A host&#39;s plan: its users, then every capability&#39;s packages, units, files, ports, tools, apt repositories, checks, routes and notes merged, then the derived files. Throws on conflicting definitions of the same item.</p>
+
+</section>
+<section class="symbol" id="mergeBy">
+<h3><span class="kind">function</span><a href="#mergeBy">mergeBy</a></h3>
+<pre><code class="language-ts">export function mergeBy&lt;T&gt;(into: T[], items: T[] | undefined, key: (t: T) =&gt; string): void</code></pre>
+<p>Append items, keeping the first of each key; conflicting duplicates are errors.</p>
+
+</section>
+<section class="symbol" id="networkOf">
+<h3><span class="kind">function</span><a href="#networkOf">networkOf</a></h3>
+<pre><code class="language-ts">export function networkOf(
+  fleet: { network?: { ipv6?: boolean }; site?: SiteDef },
+  host: { network?: string; ipv6?: boolean },
+): { ipv6: boolean }</code></pre>
+<p>The network properties in force for a host (spec 009): host over fleet over default.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/model/resolve.ts">Source</a></p>
+</main>
+
+</body>
+</html>

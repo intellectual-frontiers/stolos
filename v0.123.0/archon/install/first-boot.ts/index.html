@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/install/first-boot.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/install/first-boot.ts</h1>
+<p><code>archon first-boot</code> (spec 005): run once by cloud-init on a freshly installed host, after the first-boot script cloned the repository with this host&#39;s deploy key. Converges the host, hands the deploy key to ops, verifies, and pushes the host&#39;s first record, which proves the key works.</p>
+<pre class="mermaid">sequenceDiagram
+  participant H as The new host
+  participant B as Boot server
+  H-&gt;&gt;H: clone the fleet repository, verify its signature
+  H-&gt;&gt;B: event: First boot
+  H-&gt;&gt;H: packages, accounts, files, units, tools, dotfiles
+  H-&gt;&gt;H: verify (ok, not set up yet, warnings, failures)
+  H-&gt;&gt;H: archon.sql: install record, inventory
+  H-&gt;&gt;B: event: Ready (or Done with problems)
+  H-&gt;&gt;H: start Ubuntu's daily upgrades</pre>
+<h2>Exports</h2>
+<section class="symbol" id="firstBoot">
+<h3><span class="kind">function</span><a href="#firstBoot">firstBoot</a></h3>
+<pre><code class="language-ts">export async function firstBoot(host: HostDef): Promise&lt;number&gt;</code></pre>
+<p>Runs first boot on a freshly installed host: converge, hand over the delivered credentials and deploy key, verify, and push the first record. Returns 1 when verification found failures, else 0.</p>
+
+</section>
+<section class="symbol" id="endFirstBoot">
+<h3><span class="kind">function</span><a href="#endFirstBoot">endFirstBoot</a></h3>
+<pre><code class="language-ts">export async function endFirstBoot(
+  host: HostDef,
+  o: {
+    /** The failed steps and checks. */
+    readonly failed: number;
+    /** The checks: passed, counted, and not set up yet. */
+    readonly tally: { readonly passed: number; readonly total: number; readonly pending: number };
+    /** The checkout's commit. */
+    readonly head: string;
+    /** The boot server events still being sent. */
+    readonly pending: Promise&lt;void&gt;[];
+  },
+): Promise&lt;void&gt;</code></pre>
+<p>How a first boot ends (specs 005, 009, 025, 026): the final <code>Ready</code> (or <code>Done with problems</code>) line to the boot server&#39;s window, then the report URL is removed (spec 005 FR-004); the doctor&#39;s email checks and the install&#39;s message; last, Ubuntu&#39;s daily apt run started in the background, so updates published since the installer image install now (spec 009 FR-004).</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/install/first-boot.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

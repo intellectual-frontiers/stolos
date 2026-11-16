@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/console/auth.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/console/auth.ts</h1>
+<p>Spec 065: who is signed in to the console, and what they may do.</p>
+<ul><li>A session is a random id in an HttpOnly, Secure, SameSite=Strict cookie, held in memory (a restart signs everyone out), ended after 8 idle hours.</li><li>The accounts are the server&#39;s own (PAM): people with a home under the normal user range. root and ops (Archon&#39;s service account) never sign in here, as Cockpit refuses root.</li><li>Roles: an operator (in <code>sudo</code> or <code>archon-ops</code>) may run commands that change the server; everyone else may look. Destroying data also needs the password again and the command&#39;s typed confirmation.</li><li>Five failed sign-ins in a minute from one address pause that address.</li></ul>
+<h2>Exports</h2>
+<section class="symbol" id="Role">
+<h3><span class="kind">type</span><a href="#Role">Role</a></h3>
+<pre><code class="language-ts">export type Role = &quot;viewer&quot; | &quot;operator&quot;;</code></pre>
+<p>What a signed-in person may do.</p>
+
+</section>
+<section class="symbol" id="Session">
+<h3><span class="kind">interface</span><a href="#Session">Session</a></h3>
+<pre><code class="language-ts">export interface Session {
+  /** The cookie's value (random, 32 bytes). */
+  id: string;
+  /** Their username. */
+  user: string;
+  /** Their full name, from the account (GECOS), else the username. */
+  name: string;
+  /** Their groups. */
+  groups: string[];
+  /** What they may do. */
+  role: Role;
+  /** When they signed in (ms). */
+  created: number;
+  /** When they last did anything (ms). */
+  seen: number;
+  /** Where they signed in from. */
+  from: string;
+}</code></pre>
+<p>One signed-in person.</p>
+
+</section>
+<section class="symbol" id="IDLE_MS">
+<h3><span class="kind">const</span><a href="#IDLE_MS">IDLE_MS</a></h3>
+<pre><code class="language-ts">export const IDLE_MS</code></pre>
+<p>How long an idle session lasts (8 hours).</p>
+
+</section>
+<section class="symbol" id="COOKIE">
+<h3><span class="kind">const</span><a href="#COOKIE">COOKIE</a></h3>
+<pre><code class="language-ts">export const COOKIE</code></pre>
+<p>The session cookie&#39;s name.</p>
+
+</section>
+<section class="symbol" id="OPERATOR_GROUPS">
+<h3><span class="kind">const</span><a href="#OPERATOR_GROUPS">OPERATOR_GROUPS</a></h3>
+<pre><code class="language-ts">export const OPERATOR_GROUPS</code></pre>
+<p>The groups whose members may change the server from the console.</p>
+
+</section>
+<section class="symbol" id="NEVER">
+<h3><span class="kind">const</span><a href="#NEVER">NEVER</a></h3>
+<pre><code class="language-ts">export const NEVER</code></pre>
+<p>Accounts that never sign in to the console.</p>
+
+</section>
+<section class="symbol" id="roleOf">
+<h3><span class="kind">function</span><a href="#roleOf">roleOf</a></h3>
+<pre><code class="language-ts">export function roleOf(groups: string[]): Role</code></pre>
+<p>An operator, from the person&#39;s groups.</p>
+
+</section>
+<section class="symbol" id="mayRun">
+<h3><span class="kind">function</span><a href="#mayRun">mayRun</a></h3>
+<pre><code class="language-ts">export function mayRun(role: Role, tier: Tier): boolean</code></pre>
+<p>Whether a role may run a command of this tier from the console.</p>
+
+</section>
+<section class="symbol" id="Account">
+<h3><span class="kind">interface</span><a href="#Account">Account</a></h3>
+<pre><code class="language-ts">export interface Account {
+  /** Their username. */
+  user: string;
+  /** Their full name (GECOS), else the username. */
+  name: string;
+  /** Their groups. */
+  groups: string[];
+}</code></pre>
+<p>A person&#39;s account: full name and groups; undefined when they may not sign in here.</p>
+
+</section>
+<section class="symbol" id="AccountLookup">
+<h3><span class="kind">type</span><a href="#AccountLookup">AccountLookup</a></h3>
+<pre><code class="language-ts">export type AccountLookup = (user: string) =&gt; Promise&lt;Account | undefined&gt;;</code></pre>
+<p>Looks up accounts: the system&#39;s on a server, a fake in tests.</p>
+
+</section>
+<section class="symbol" id="USERNAME">
+<h3><span class="kind">const</span><a href="#USERNAME">USERNAME</a></h3>
+<pre><code class="language-ts">export const USERNAME</code></pre>
+<p>A username that can be one (letters, digits, <code>.</code>, <code>_</code>, <code>-</code>; not starting with <code>-</code>).</p>
+
+</section>
+<section class="symbol" id="systemAccounts">
+<h3><span class="kind">const</span><a href="#systemAccounts">systemAccounts</a></h3>
+<pre><code class="language-ts">export const systemAccounts: AccountLookup</code></pre>
+<p>The system&#39;s accounts: <code>getent passwd</code> and <code>id -nG</code>; people only (uid 1000 to 59999).</p>
+
+</section>
+<section class="symbol" id="Sessions">
+<h3><span class="kind">class</span><a href="#Sessions">Sessions</a></h3>
+<pre><code class="language-ts">export class Sessions {
+  constructor(now: () =&gt; number = Date.now)
+  create(a: Account, from: string): Session
+  get(id: string | undefined): Session | undefined
+  end(id: string | undefined): void
+}</code></pre>
+<p>The signed-in people, in memory.</p>
+
+</section>
+<section class="symbol" id="Throttle">
+<h3><span class="kind">class</span><a href="#Throttle">Throttle</a></h3>
+<pre><code class="language-ts">export class Throttle {
+  constructor(now: () =&gt; number = Date.now, limit = 5, windowMs = 60_000)
+  allowed(from: string): boolean
+  failed(from: string): void
+  succeeded(from: string): void
+}</code></pre>
+<p>Five failed sign-ins in a minute from one address pause that address.</p>
+
+</section>
+<section class="symbol" id="cookieOf">
+<h3><span class="kind">function</span><a href="#cookieOf">cookieOf</a></h3>
+<pre><code class="language-ts">export function cookieOf(header: string | null, name: string): string | undefined</code></pre>
+<p>The value of one cookie in a Cookie header.</p>
+
+</section>
+<section class="symbol" id="sessionCookie">
+<h3><span class="kind">function</span><a href="#sessionCookie">sessionCookie</a></h3>
+<pre><code class="language-ts">export function sessionCookie(s: Session | undefined): string</code></pre>
+<p>The Set-Cookie value for a session (or for signing out, with no session).</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/console/auth.ts">Source</a></p>
+</main>
+
+</body>
+</html>

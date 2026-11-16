@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/capabilities/mail.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/capabilities/mail.ts</h1>
+<p>027-mail: every server can send mail, the way programs expect to (/usr/sbin/sendmail, or SMTP on localhost:25). Postfix, Ubuntu&#39;s default mail server, runs as a send-only &quot;null client&quot; (Postfix&#39;s STANDARD_CONFIGURATION_README): it receives nothing from the network, delivers nothing locally, and relays everything to Cloudflare Email Service over implicit TLS on port 465 with the fleet&#39;s API token (SASL). Cloudflare signs with DKIM for the sending domain. Mail for local accounts (root, ops, cron&#39;s MAILTO) goes to the fleet&#39;s mailbox; every sender becomes &lt;user&gt;+&lt;host&gt;.&lt;tag&gt;@&lt;domain&gt; (root+alpha.lab@example.net): one onboarded domain for the fleet, the machine in the subaddress (RFC 5233).</p>
+<h2>Exports</h2>
+<section class="symbol" id="MAIL">
+<h3><span class="kind">const</span><a href="#MAIL">MAIL</a></h3>
+<pre><code class="language-ts">export const MAIL</code></pre>
+<p>Where Postfix&#39;s files are.</p>
+
+</section>
+<section class="symbol" id="mainCf">
+<h3><span class="kind">function</span><a href="#mainCf">mainCf</a></h3>
+<pre><code class="language-ts">export function mainCf(fleet: FleetDef, host: HostDef): string</code></pre>
+<p>Postfix&#39;s main.cf for this host.</p>
+
+</section>
+<section class="symbol" id="hostMailName">
+<h3><span class="kind">const</span><a href="#hostMailName">hostMailName</a></h3>
+<pre><code class="language-ts">export const hostMailName</code></pre>
+<p>This host&#39;s internal mail name (myhostname, myorigin): alpha.lab.example.net. Never a sender.</p>
+
+</section>
+<section class="symbol" id="senderMap">
+<h3><span class="kind">function</span><a href="#senderMap">senderMap</a></h3>
+<pre><code class="language-ts">export function senderMap(fleet: FleetDef, host: HostDef): string</code></pre>
+<p>Any sender keeps its user, drops any subaddress it had, and gets the host as its subaddress at the onboarded domain: www-data@localhost -&gt; www-data+alpha.lab@example.net. Applying it twice changes nothing.</p>
+
+</section>
+<section class="symbol" id="recipientMap">
+<h3><span class="kind">function</span><a href="#recipientMap">recipientMap</a></h3>
+<pre><code class="language-ts">export function recipientMap(fleet: FleetDef, host: HostDef): string</code></pre>
+<p>Mail for local accounts (root, ops, a cron MAILTO=user) goes to the fleet&#39;s mailbox: addresses on this host&#39;s own names only. Real addresses at the sending domain (it may be an organization&#39;s own, like example.net) are relayed as written.</p>
+
+</section>
+<section class="symbol" id="mail">
+<h3><span class="kind">const</span><a href="#mail">mail</a></h3>
+<pre><code class="language-ts">export const mail</code></pre>
+<p>Every server can send mail through Cloudflare Email Service (spec 027).</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/capabilities/mail.ts">Source</a></p>
+</main>
+
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/core/clock.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/core/clock.ts</h1>
+<p>Clock preflight (spec 016): apt rejects signatures that are &quot;not live until&quot; a future time when the host clock is behind, which silently skips trixie-security. Compare with an HTTPS Date header before touching apt.</p>
+<h2>Exports</h2>
+<section class="symbol" id="ClockCheck">
+<h3><span class="kind">interface</span><a href="#ClockCheck">ClockCheck</a></h3>
+<pre><code class="language-ts">export interface ClockCheck {
+  /** Seconds the local clock is ahead (positive) or behind (negative). */
+  skew: number;
+  /** The URL whose Date header was compared. */
+  source: string;
+}</code></pre>
+<p>The local clock compared with a web server&#39;s Date header.</p>
+
+</section>
+<section class="symbol" id="checkClock">
+<h3><span class="kind">function</span><a href="#checkClock">checkClock</a></h3>
+<pre><code class="language-ts">export async function checkClock(
+  source = &quot;https://deb.debian.org/debian/&quot;,
+): Promise&lt;ClockCheck | undefined&gt;</code></pre>
+<p>Compare the local clock with <code>source</code>&#39;s HTTP Date header (one HEAD request, 5 second timeout). Undefined when the server cannot be reached or sends no Date.</p>
+
+</section>
+<section class="symbol" id="describeSkew">
+<h3><span class="kind">function</span><a href="#describeSkew">describeSkew</a></h3>
+<pre><code class="language-ts">export function describeSkew(skew: number): string</code></pre>
+<p>A skew in seconds for people, rounded: &quot;3m behind&quot;, &quot;2h ahead&quot;, &quot;0s ahead&quot;.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/core/clock.ts">Source</a></p>
+</main>
+
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/render/agent.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/render/agent.ts</h1>
+<p>The agent layer&#39;s project configuration (spec 030, Articles 4, 6, 17), rendered from the model for a workstation&#39;s checkout: .mcp.json with one MCP server per server host (archon-&lt;fleet&gt;-&lt;host&gt;, reached as ops over SSH; spec 046: one repository can hold several fleets, and two may name a host alike). It names no particular agent: any MCP client reads it. Each server enforces its tier itself (archon mcp --max-tier), so no agent-specific permission file is needed.</p>
+<h2>Exports</h2>
+<section class="symbol" id="McpServer">
+<h3><span class="kind">interface</span><a href="#McpServer">McpServer</a></h3>
+<pre><code class="language-ts">export interface McpServer {
+  /** The MCP server's name in .mcp.json: archon-&lt;fleet&gt;-&lt;host&gt;. */
+  name: string;
+  /** user@address for ssh. */
+  target: string;
+}</code></pre>
+<p>A server as the workstation&#39;s agent reaches it.</p>
+
+</section>
+<section class="symbol" id="mcpServerName">
+<h3><span class="kind">const</span><a href="#mcpServerName">mcpServerName</a></h3>
+<pre><code class="language-ts">export const mcpServerName</code></pre>
+<p>The MCP server&#39;s name for a host of a fleet.</p>
+
+</section>
+<section class="symbol" id="mcpServers">
+<h3><span class="kind">function</span><a href="#mcpServers">mcpServers</a></h3>
+<pre><code class="language-ts">export function mcpServers(hosts: HostDef[], fleet: string): McpServer[]</code></pre>
+<p>The fleet&#39;s server hosts (workstations excluded) as MCP servers, reached as ops@ their DNS name, IP, or name.</p>
+
+</section>
+<section class="symbol" id="renderMcpJson">
+<h3><span class="kind">function</span><a href="#renderMcpJson">renderMcpJson</a></h3>
+<pre><code class="language-ts">export function renderMcpJson(
+  servers: McpServer[] = [],
+  keep: { existing?: string; fleet?: string; fleets?: string[] } = {},
+): string</code></pre>
+<p>.mcp.json: each server over SSH. The server forces <code>archon mcp</code> for ops&#39; keys, so no command is sent. The workstation&#39;s own commands are run from the shell (archon on Ubuntu, bun run stolos on Windows), not over MCP, so the same file works on both.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/render/agent.ts">Source</a></p>
+</main>
+
+</body>
+</html>

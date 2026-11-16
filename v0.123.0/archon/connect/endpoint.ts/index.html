@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/connect/endpoint.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/connect/endpoint.ts</h1>
+<p>Spec 087 (part A): what endpoint management (MDM) and endpoint detection and response (EDR) connectors share. Each reads its devices as <code>hardware_device</code> records (serial number, hostname, operating system, owner, disk encryption, last check-in, and an EDR&#39;s sensor health); the estate graph merges them with Stolos&#39;s own probe by serial number, then hostname, so each device is counted once. This module turns those records into posture facts and the policies every such connector checks:</p>
+<ul><li>every device encrypts its disk (SCF CRY-07);</li><li>every device checked in within {@link CHECK_IN_DAYS} days (AST-04, MON-02);</li><li>every EDR sensor is present and healthy (END-04, MON-02);</li><li>every device meets its MDM&#39;s compliance policy (CFG-04), where the MDM reports it.</li></ul>
+<pre class="mermaid">flowchart LR
+  mdm[&quot;MDM: Intune, Jamf Pro, Kandji&quot;] &amp; edr[&quot;EDR: Defender, Falcon, SentinelOne&quot;] --&gt; rec[&quot;hardware_device records&quot;]
+  rec --&gt; posture[&quot;devicePosture: counts&quot;] --&gt; pol[&quot;devicePolicies (SCF)&quot;]
+  rec --&gt; graph[&quot;estate graph: one fixed_asset per device&quot;]
+  probe[&quot;Stolos's probe (adopted)&quot;] --&gt; graph</pre>
+<h2>Exports</h2>
+<section class="symbol" id="CHECK_IN_DAYS">
+<h3><span class="kind">const</span><a href="#CHECK_IN_DAYS">CHECK_IN_DAYS</a></h3>
+<pre><code class="language-ts">export const CHECK_IN_DAYS</code></pre>
+<p>A device that has not checked in for this many days is stale.</p>
+
+</section>
+<section class="symbol" id="devicePosture">
+<h3><span class="kind">function</span><a href="#devicePosture">devicePosture</a></h3>
+<pre><code class="language-ts">export function devicePosture(records: ObservedRecord[], now: Date): Record&lt;string, number&gt;</code></pre>
+<p>The posture facts of a connector&#39;s devices: how many, and how many are unencrypted, stale, have an unhealthy sensor, or are not compliant. A fact is left out when no device reports it (the policy is then unknown, not passing).</p>
+
+</section>
+<section class="symbol" id="DeviceFixes">
+<h3><span class="kind">interface</span><a href="#DeviceFixes">DeviceFixes</a></h3>
+<pre><code class="language-ts">export interface DeviceFixes {
+  /** Turn on disk encryption. */
+  encryption?: string;
+  /** Bring stale devices back (or retire them). */
+  checkIn: string;
+  /** Repair or install the EDR sensor. */
+  sensor?: string;
+  /** Bring devices into compliance. */
+  compliance?: string;
+}</code></pre>
+<p>How to fix each failing device policy, in the vendor&#39;s console.</p>
+
+</section>
+<section class="symbol" id="devicePolicies">
+<h3><span class="kind">function</span><a href="#devicePolicies">devicePolicies</a></h3>
+<pre><code class="language-ts">export function devicePolicies(o: Observation, id: string, fixes: DeviceFixes): PolicyResult[]</code></pre>
+<p>The device policies a connector checks, from {@link devicePosture}&#39;s facts (one per fix given).</p>
+
+</section>
+<section class="symbol" id="osName">
+<h3><span class="kind">const</span><a href="#osName">osName</a></h3>
+<pre><code class="language-ts">export const osName</code></pre>
+<p>An operating system&#39;s name and version, as one name (&quot;macOS 15.1&quot;).</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/connect/endpoint.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

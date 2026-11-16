@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/apply/ppa.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/apply/ppa.ts</h1>
+<p>Maintainers&#39; PPAs (spec 010, Article 5). Ubuntu&#39;s own tool adds them: add-apt-repository fetches the PPA&#39;s signing key from Launchpad over HTTPS and writes a deb822 source with the key inline. Archon first checks that the PPA has builds for this release, so a PPA can never break apt.</p>
+<h2>Exports</h2>
+<section class="symbol" id="ppaSourcePath">
+<h3><span class="kind">function</span><a href="#ppaSourcePath">ppaSourcePath</a></h3>
+<pre><code class="language-ts">export function ppaSourcePath(ppa: string, codename: string): string</code></pre>
+<p>&quot;git-core/ppa&quot; -&gt; the source file add-apt-repository writes.</p>
+
+</section>
+<section class="symbol" id="ppaOrigin">
+<h3><span class="kind">function</span><a href="#ppaOrigin">ppaOrigin</a></h3>
+<pre><code class="language-ts">export function ppaOrigin(ppa: string): string</code></pre>
+<p>The Origin a PPA&#39;s Release file carries (for unattended-upgrades): LP-PPA-&lt;owner&gt;[-&lt;name&gt;].</p>
+
+</section>
+<section class="symbol" id="ppaReleaseUrl">
+<h3><span class="kind">function</span><a href="#ppaReleaseUrl">ppaReleaseUrl</a></h3>
+<pre><code class="language-ts">export function ppaReleaseUrl(ppa: string, codename: string): string</code></pre>
+<p>The URL of a PPA&#39;s signed Release file (InRelease) for a codename on Launchpad&#39;s content host.</p>
+
+</section>
+<section class="symbol" id="ppaHasRelease">
+<h3><span class="kind">function</span><a href="#ppaHasRelease">ppaHasRelease</a></h3>
+<pre><code class="language-ts">export async function ppaHasRelease(
+  ppa: string,
+  codename: string,
+  o: { ipv4Only?: boolean; retries?: boolean } = {},
+): Promise&lt;{ answer: &quot;yes&quot; | &quot;no&quot; | &quot;unreachable&quot;; reason?: string }&gt;</code></pre>
+<p>Has the PPA published builds for this Ubuntu release? Asked with curl (IPv4 only on an IPv4-only network, spec 009), retried with the same backoff as apt (about 10 s, 30 s, 60 s). &quot;unreachable&quot;, with curl&#39;s reason, after that.</p>
+
+</section>
+<section class="symbol" id="ppaPresent">
+<h3><span class="kind">function</span><a href="#ppaPresent">ppaPresent</a></h3>
+<pre><code class="language-ts">export async function ppaPresent(ppa: string, _codename?: string): Promise&lt;boolean&gt;</code></pre>
+<p>Is the PPA already a source? Found by its URL, whatever the file is called.</p>
+
+</section>
+<section class="symbol" id="addPpa">
+<h3><span class="kind">function</span><a href="#addPpa">addPpa</a></h3>
+<pre><code class="language-ts">export async function addPpa(ppa: string): Promise&lt;{ ok: boolean; output: string }&gt;</code></pre>
+<p>Adds a PPA with add-apt-repository (non-interactive, without running apt update). Returns whether it succeeded and the tool&#39;s trimmed output.</p>
+
+</section>
+<section class="symbol" id="aptVersions">
+<h3><span class="kind">function</span><a href="#aptVersions">aptVersions</a></h3>
+<pre><code class="language-ts">export async function aptVersions(
+  pkg: string,
+): Promise&lt;{ installed?: string; candidate?: string }&gt;</code></pre>
+<p>Installed and candidate versions of an apt package.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/apply/ppa.ts">Source</a></p>
+</main>
+
+</body>
+</html>

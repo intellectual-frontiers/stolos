@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/connect/microsoft-endpoint.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/connect/microsoft-endpoint.ts</h1>
+<p>Spec 087 (part A): Microsoft&#39;s endpoint connectors, read-only, each with one Entra ID app registration&#39;s client credentials (a client secret):</p>
+<ul><li><strong>Microsoft Intune</strong>, through Microsoft Graph (<code>GET /v1.0/deviceManagement/managedDevices</code>, application permission <code>DeviceManagementManagedDevices.Read.All</code>): every managed device&#39;s name, serial number, operating system, primary user, BitLocker or FileVault, last sync, and compliance state.</li><li><strong>Microsoft Defender for Endpoint</strong>, through its own API (<code>GET https://api.security.microsoft.com/api/machines</code>, application permission <code>Machine.Read.All</code> of WindowsDefenderATP): every machine&#39;s name, operating system, last seen, onboarding, and sensor health. Defender reports no serial number, so its machines join the estate by hostname.</li></ul>
+<p>The same app registration may hold both permissions; each connector asks for a token for its own API only.</p>
+<h2>Exports</h2>
+<section class="symbol" id="intune">
+<h3><span class="kind">const</span><a href="#intune">intune</a></h3>
+<pre><code class="language-ts">export const intune: Connector</code></pre>
+<p>Microsoft Intune.</p>
+
+</section>
+<section class="symbol" id="defender">
+<h3><span class="kind">const</span><a href="#defender">defender</a></h3>
+<pre><code class="language-ts">export const defender: Connector</code></pre>
+<p>Microsoft Defender for Endpoint.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/connect/microsoft-endpoint.ts">Source</a></p>
+</main>
+
+</body>
+</html>

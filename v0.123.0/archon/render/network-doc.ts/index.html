@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/render/network-doc.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/render/network-doc.ts</h1>
+<p>The network reference (spec 028), rendered from the site model by <code>stolos build</code> into out/site/network-reference.html: the document the owner sends with each network change log (bun run stolos boot notify --subject &quot;Lab Network Runbook Change Log &lt;dates&gt;&quot; --attach out/site/network-reference.html). Generated: edit fleets/&lt;fleet&gt;/site.ts, never this output. Names only, no secrets.</p>
+<h2>Exports</h2>
+<section class="symbol" id="renderNetworkDoc">
+<h3><span class="kind">function</span><a href="#renderNetworkDoc">renderNetworkDoc</a></h3>
+<pre><code class="language-ts">export function renderNetworkDoc(
+  site: SiteDef,
+  hosts: HostDef[],
+  o: { commit?: string; problems?: string[] } = {},
+): string</code></pre>
+<p>The network reference as one HTML page, from the site model and its hosts. <code>commit</code> names the commit it was built at; <code>problems</code> are listed in their own section.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/render/network-doc.ts">Source</a></p>
+</main>
+
+</body>
+</html>

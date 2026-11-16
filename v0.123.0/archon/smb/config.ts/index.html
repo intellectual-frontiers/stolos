@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/smb/config.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/smb/config.ts</h1>
+<p>037-smb: Samba&#39;s configuration, as data. One share for everyone with an account (<code>shared</code>), and each account&#39;s own home folder; SMB3 only, encryption desired, no guests, no NetBIOS; no network restriction (the router decides who reaches it).</p>
+<h2>Exports</h2>
+<section class="symbol" id="SMB">
+<h3><span class="kind">const</span><a href="#SMB">SMB</a></h3>
+<pre><code class="language-ts">export const SMB</code></pre>
+<p>Samba&#39;s paths, group, and unit as Archon uses them (spec 037).</p>
+
+</section>
+<section class="symbol" id="smbUsers">
+<h3><span class="kind">function</span><a href="#smbUsers">smbUsers</a></h3>
+<pre><code class="language-ts">export function smbUsers(users: UserDef[]): string[]</code></pre>
+<p>The accounts that may use SMB: everyone in the model but ops (a service account).</p>
+
+</section>
+<section class="symbol" id="smbName">
+<h3><span class="kind">function</span><a href="#smbName">smbName</a></h3>
+<pre><code class="language-ts">export function smbName(fleet: FleetDef, host: HostDef): string</code></pre>
+<p>&quot;smb.alpha.lab.example.net&quot; (the server&#39;s wildcard record covers it), else the host name.</p>
+
+</section>
+<section class="symbol" id="smbConf">
+<h3><span class="kind">function</span><a href="#smbConf">smbConf</a></h3>
+<pre><code class="language-ts">export function smbConf(_fleet: FleetDef, host: HostDef, users: UserDef[]): string</code></pre>
+<p>The rendered smb.conf: SMB3 only, no guests, no NetBIOS, the shared folder and homes (the router decides who reaches it).</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/smb/config.ts">Source</a></p>
+</main>
+
+</body>
+</html>

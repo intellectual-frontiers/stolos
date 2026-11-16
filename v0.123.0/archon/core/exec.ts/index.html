@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/core/exec.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/core/exec.ts</h1>
+<p>The engine&#39;s way of running a program (spec 096-bun-runtime), on IFC TypeScript&#39;s <code>proc</code>. Archon calls Ubuntu&#39;s own binaries (apt-get, systemctl, nft, useradd, ...) directly, by their argument vector, never through a shell. Two things here are the engine&#39;s own, beyond <code>proc.run</code>:</p>
+<ul><li>a program that is not installed is an outcome, exit code 127 with &quot;command not found&quot;, never an exception, so a check on a machine that lacks a tool reads like any other failure;</li><li><code>asUser</code> runs it as another account through runuser(1), from that account&#39;s home folder (spec 009: never root&#39;s working directory, which the account usually cannot read).</li></ul>
+<p><code>stream</code> gives a program&#39;s output line by line as it comes (apt&#39;s progress), splitting on carriage returns as well as line feeds. Everything else (<code>which</code>, <code>isRoot</code>, <code>must</code>, <code>splitArgs</code>) is IFC TypeScript&#39;s: <code>proc.which</code>, <code>proc.isRoot</code>, <code>proc.must</code>, and the kernel&#39;s <code>splitArgs</code>.</p>
+<h3>Example</h3>
+<pre><code class="language-ts">import { run } from &quot;./exec.ts&quot;;
+const r = await run([&quot;systemctl&quot;, &quot;is-active&quot;, &quot;ssh&quot;]);
+if (r.code === 127) console.log(&quot;no systemd here&quot;);</code></pre>
+<h2>Exports</h2>
+<section class="symbol" id="RunResult">
+<h3><span class="kind">type</span><a href="#RunResult">RunResult</a></h3>
+<pre><code class="language-ts">export type RunResult = {
+  /** The exit code (127 where the program is not installed). */
+  readonly code: number;
+  /** What it printed (empty with `inherit`). */
+  readonly stdout: string;
+  /** What it printed as errors (empty with `inherit`). */
+  readonly stderr: string;
+  /** Whether the exit code was 0. */
+  readonly ok: boolean;
+};</code></pre>
+<p>What a program did.</p>
+
+</section>
+<section class="symbol" id="RunOptions">
+<h3><span class="kind">type</span><a href="#RunOptions">RunOptions</a></h3>
+<pre><code class="language-ts">export type RunOptions = {
+  /** Its working folder. */
+  readonly cwd?: string;
+  /** Variables added to its environment. */
+  readonly env?: Readonly&lt;Record&lt;string, string&gt;&gt;;
+  /** Text for its standard input. */
+  readonly stdin?: string;
+  /** Run it as this account through runuser(1) (needs root). */
+  readonly asUser?: string;
+  /** Its output goes to this process's terminal instead of being kept. */
+  readonly inherit?: boolean;
+};</code></pre>
+<p>How to run a program.</p>
+
+</section>
+<section class="symbol" id="homeOf">
+<h3><span class="kind">function</span><a href="#homeOf">homeOf</a></h3>
+<pre><code class="language-ts">export async function homeOf(user: string): Promise&lt;string&gt;</code></pre>
+<p>An account&#39;s home folder from the account database (getent), or <code>/</code>.</p>
+
+</section>
+<section class="symbol" id="currentUser">
+<h3><span class="kind">function</span><a href="#currentUser">currentUser</a></h3>
+<pre><code class="language-ts">export function currentUser(): string</code></pre>
+<p>This process&#39;s account name (<code>USER</code>, else <code>LOGNAME</code>), or &quot;&quot; where neither is set.</p>
+
+</section>
+<section class="symbol" id="run">
+<h3><span class="kind">function</span><a href="#run">run</a></h3>
+<pre><code class="language-ts">export async function run(argv: readonly string[], opts: RunOptions = {}): Promise&lt;RunResult&gt;</code></pre>
+<p>Run a program, by its argument vector, to its end. Never throws for a program that is not installed (127).</p>
+
+</section>
+<section class="symbol" id="stream">
+<h3><span class="kind">function</span><a href="#stream">stream</a></h3>
+<pre><code class="language-ts">export async function stream(
+  argv: readonly string[],
+  opts: {
+    readonly env?: Readonly&lt;Record&lt;string, string&gt;&gt;;
+    readonly cwd?: string;
+    readonly onLine: (line: string, from: &quot;stdout&quot; | &quot;stderr&quot;) =&gt; void;
+  },
+): Promise&lt;number&gt;</code></pre>
+<p>Run a program and receive its output line by line as it comes (for progress bars); nothing reaches the terminal. Gives the exit code (127 where the program is not installed).</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/core/exec.ts">Source</a></p>
+</main>
+
+</body>
+</html>

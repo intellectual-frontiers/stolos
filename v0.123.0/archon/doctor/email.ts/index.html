@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/doctor/email.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/doctor/email.ts</h1>
+<p>archon doctor&#39;s email checks (spec 026, for specs 025 and 027), shared by servers and the boot machine: the sending domain&#39;s records in DNS, the relay&#39;s credential, a login to the relay that sends nothing, and on servers Postfix itself. The records are the ones Cloudflare&#39;s Email Sending onboarding creates (developers.cloudflare.com/email-service/configuration/domains/). With <code>send</code> (archon doctor --send, and by itself after mail-setup, an install, or a new token), it also mails what it found to the shared mailbox through each path: archon&#39;s own sender, and on servers Postfix.</p>
+<h2>Exports</h2>
+<section class="symbol" id="missingRecords">
+<h3><span class="kind">function</span><a href="#missingRecords">missingRecords</a></h3>
+<pre><code class="language-ts">export function missingRecords(
+  domain: string,
+  r: { spf: string[]; dkim: string[]; dmarc: string[]; mx: string[] },
+): string[]</code></pre>
+<p>Which of Cloudflare Email Sending&#39;s records a domain lacks, from its TXT and MX answers.</p>
+
+</section>
+<section class="symbol" id="domainRecords">
+<h3><span class="kind">function</span><a href="#domainRecords">domainRecords</a></h3>
+<pre><code class="language-ts">export async function domainRecords(domain: string): Promise&lt;string[]&gt;</code></pre>
+<p>Looks up a sending domain&#39;s SPF, DKIM, DMARC, and bounce MX in DNS and returns the ones missing.</p>
+
+</section>
+<section class="symbol" id="emailChecks">
+<h3><span class="kind">function</span><a href="#emailChecks">emailChecks</a></h3>
+<pre><code class="language-ts">export async function emailChecks(
+  site: Site | undefined,
+  phase: Phase,
+  fixCredential: string,
+  o: { send?: string | undefined } = {},
+): Promise&lt;void&gt;</code></pre>
+<p>The Email phase of archon doctor: the sending domain&#39;s records, a login to the relay with its credential (<code>fixCredential</code> is the fix shown when it is missing or refused), and on servers Postfix. With <code>send</code>, also mails the findings. Reports into <code>phase</code>; does nothing when the site has no mail.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/doctor/email.ts">Source</a></p>
+</main>
+
+</body>
+</html>

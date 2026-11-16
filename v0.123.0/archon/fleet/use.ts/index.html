@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/fleet/use.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/fleet/use.ts</h1>
+<p><code>stolos fleet use &lt;id&gt;</code>: which fleet of this repository every <code>archon</code> command in this checkout is for, remembered in <code>.git/stolos/fleet</code> (never committed, so each checkout chooses its own). It takes effect at once, in every terminal, on every system: no environment variable to set and no new window to open. <code>--fleet &lt;id&gt;</code> (or ARCHON_FLEET) still wins for one command.</p>
+<h2>Exports</h2>
+<section class="symbol" id="chooseFleet">
+<h3><span class="kind">function</span><a href="#chooseFleet">chooseFleet</a></h3>
+<pre><code class="language-ts">export async function chooseFleet(
+  id: string,
+  repo = P.repo,
+): Promise&lt;&quot;chosen&quot; | &quot;same&quot; | &quot;no-git&quot;&gt;</code></pre>
+<p>Remember <code>id</code> as this checkout&#39;s fleet; &quot;same&quot; when it already was.</p>
+
+</section>
+<section class="symbol" id="fleetUse">
+<h3><span class="kind">function</span><a href="#fleetUse">fleetUse</a></h3>
+<pre><code class="language-ts">export async function fleetUse(id: string): Promise&lt;number&gt;</code></pre>
+<p><code>stolos fleet use &lt;id&gt;</code>: check the fleet exists here, then remember it.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/fleet/use.ts">Source</a></p>
+</main>
+
+</body>
+</html>

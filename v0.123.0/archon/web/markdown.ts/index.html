@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/web/markdown.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/web/markdown.ts</h1>
+<p>035-welcome-guide: the engine&#39;s guides (each module&#39;s @module JSDoc, src/archon/core/guides.ts) as HTML on the welcome page, so one text serves the repository, the man pages, and the server. Handles what those guides use: headings, paragraphs, lists, tables, code blocks, blockquotes, inline code, bold, italics, and links. Everything is escaped first; links to other guides stay on the page, the rest go to GitHub.</p>
+<h2>Exports</h2>
+<section class="symbol" id="LinkContext">
+<h3><span class="kind">interface</span><a href="#LinkContext">LinkContext</a></h3>
+<pre><code class="language-ts">export interface LinkContext {
+  /** Guides served here: docs/&lt;name&gt;.md -&gt; /guide/&lt;name&gt;. */
+  served: string[];
+  /** https://github.com/&lt;owner&gt;/&lt;repo&gt;/blob/main/ for everything else in the repository. */
+  repoBlob: string;
+}</code></pre>
+<p>Where a guide&#39;s relative links go: guides served here, or the repository on GitHub.</p>
+
+</section>
+<section class="symbol" id="inline">
+<h3><span class="kind">function</span><a href="#inline">inline</a></h3>
+<pre><code class="language-ts">export function inline(text: string, ctx: LinkContext): string</code></pre>
+<p>Inline markup on already-escaped text.</p>
+
+</section>
+<section class="symbol" id="markdownToHtml">
+<h3><span class="kind">function</span><a href="#markdownToHtml">markdownToHtml</a></h3>
+<pre><code class="language-ts">export function markdownToHtml(md: string, ctx: LinkContext): string</code></pre>
+<p>A guide&#39;s Markdown as HTML (the subset described above); headings get ids for <code>#</code> links.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/web/markdown.ts">Source</a></p>
+</main>
+
+</body>
+</html>

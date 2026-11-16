@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/core/explain.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/core/explain.ts</h1>
+<p>Spec 052: every problem archon knows how to explain, by a stable code. A problem shown with a code says &quot;explain: archon explain &lt;code&gt;&quot;; the code stays the same across versions, so it can be searched for and written down. Raw errors from other tools (ssh, apt, git, Bun) that people meet often are recognized here too, and given their plain cause and fix.</p>
+<p>Codes: E&lt;spec&gt;-&lt;WORD&gt; for a problem, P&lt;spec&gt;-&lt;WORD&gt; for something not set up yet (pending).</p>
+<pre class="mermaid">flowchart LR
+  raw[&quot;a problem, or a raw tool error&lt;br/&gt;(ssh, apt, dpkg, Bun)&quot;] --&gt; tr{&quot;known?&quot;}
+  tr --&gt;|yes| code[&quot;its code and fix&quot;]
+  tr --&gt;|no| plain[&quot;shown as it is&quot;]
+  code --&gt; show[&quot;fix: ...&lt;br/&gt;explain: archon explain CODE&quot;]</pre>
+<h2>Exports</h2>
+<section class="symbol" id="Explanation">
+<h3><span class="kind">interface</span><a href="#Explanation">Explanation</a></h3>
+<pre><code class="language-ts">export interface Explanation {
+  /** Its title, in one line. */
+  title: string;
+  /** What happened, in plain words. */
+  what: string;
+  /** The likely cause. */
+  why: string;
+  /** The fix: what to do, with the exact command where there is one. */
+  fix: string;
+  /** The guide that explains more (its name: bun run stolos docs &lt;name&gt;). */
+  doc: string;
+}</code></pre>
+<p>One problem&#39;s explanation: what, why, the fix, and the guide.</p>
+
+</section>
+<section class="symbol" id="EXPLAIN">
+<h3><span class="kind">const</span><a href="#EXPLAIN">EXPLAIN</a></h3>
+<pre><code class="language-ts">export const EXPLAIN: Record&lt;string, Explanation&gt;</code></pre>
+<p>Every explanation, by code.</p>
+
+</section>
+<section class="symbol" id="translate">
+<h3><span class="kind">function</span><a href="#translate">translate</a></h3>
+<pre><code class="language-ts">export function translate(message: string): { code: string; fix: string } | undefined</code></pre>
+<p>A known raw error&#39;s code and fix, or undefined.</p>
+
+</section>
+<section class="symbol" id="explainText">
+<h3><span class="kind">function</span><a href="#explainText">explainText</a></h3>
+<pre><code class="language-ts">export function explainText(code?: string): string</code></pre>
+<p><code>archon explain [code]</code>: one explanation, or the list.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/core/explain.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

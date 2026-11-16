@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/ocsf/finding.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/ocsf/finding.ts</h1>
+<p>Spec 089: every check&#39;s result as an OCSF 1.9.0 Compliance Finding (class 2003), written by IFC TypeScript&#39;s kernel (<code>ocsf.complianceFinding</code>) from the evidence&#39;s GRC findings (<code>compliance/findings.ts</code>): one per piece of evidence and SCF control. The compliance object names the standard (SCF, by release), the control, and, when the SCF catalog is on this PC, the framework requirements SCF maps it to (<code>&lt;framework&gt;:&lt;requirement&gt;</code>). Typed by the kernel&#39;s OCSF types, so a missing required field does not compile.</p>
+<table><thead><tr><th>Stolos result</th><th>compliance.status_id</th><th>finding status_id</th></tr></thead><tbody><tr><td>pass</td><td>1 Pass</td><td>4 Resolved</td></tr><tr><td>warn</td><td>2 Warning</td><td>1 New</td></tr><tr><td>fail</td><td>3 Fail</td><td>1 New</td></tr><tr><td>accepted</td><td>3 Fail</td><td>3 Suppressed (a risk accepted until its date)</td></tr><tr><td>unknown</td><td>0 Unknown</td><td>1 New</td></tr></tbody></table>
+<p>Severity is 0 (Unknown): Stolos does not rate severity on its own.</p>
+<h2>Exports</h2>
+<section class="symbol" id="OCSF_PRODUCT">
+<h3><span class="kind">const</span><a href="#OCSF_PRODUCT">OCSF_PRODUCT</a></h3>
+<pre><code class="language-ts">export const OCSF_PRODUCT: ocsf.OcsfProduct</code></pre>
+<p>Who writes Stolos&#39;s OCSF events.</p>
+
+</section>
+<section class="symbol" id="complianceFindings">
+<h3><span class="kind">function</span><a href="#complianceFindings">complianceFindings</a></h3>
+<pre><code class="language-ts">export function complianceFindings(
+  e: Evidence,
+  o: { now: Date; fleet: string; catalog?: ScfCatalog },
+): ocsf.ComplianceFindingEvent[]</code></pre>
+<p>The OCSF Compliance Findings for one piece of evidence (one per SCF control it supports).</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/ocsf/finding.ts">Source</a></p>
+</main>
+
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/risk/controls.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/risk/controls.ts</h1>
+<p>Spec 080: the register and the vendors in the estate graph, and the controls over them, written on the control SDK (spec 078) like any other pack. {@link addRiskData} loads the register (<code>risk</code>), the accepted risks (<code>poam_item</code>), and the vendors (<code>organization</code> parties with the <code>party_role</code> supplier, their <code>edge</code>s, and their <code>data_classification</code>) into an estate; {@link RISK_PACK}&#39;s controls then ask it with SQL:</p>
+<table><thead><tr><th>control</th><th>fails or warns when</th><th>SCF</th></tr></thead><tbody><tr><td><code>review-due</code></td><td>an open risk is past its next review (fails)</td><td>RSK-14, RSK-13.2</td></tr><tr><td><code>owner-on-roster</code></td><td>a risk&#39;s owner is not an active person on the roster (warns)</td><td>RSK-11</td></tr><tr><td><code>accepted-current</code></td><td>an accepted risk is past its date (fails); one is unregistered</td><td>RSK-16.1</td></tr><tr><td><code>vendors-triaged</code></td><td>a discovered vendor is not triaged in vendors.ts (warns)</td><td>TPM-08, TPM-09</td></tr></tbody></table>
+<pre class="mermaid">flowchart LR
+  risks[&quot;risks.ts&quot;] &amp; accepted[&quot;controls/accepted.ts, adopted machines&quot;] &amp; vendors[&quot;discoverVendors + vendors.ts&quot;] --&gt; add[&quot;addRiskData&quot;]
+  add --&gt; estate[(&quot;estate graph: risk, poam_item, organization, data_classification&quot;)]
+  estate --&gt; pack[&quot;RISK_PACK (estate controls)&quot;]
+  pack --&gt; comp[&quot;stolos compliance, stolos risks check&quot;]</pre>
+<h2>Exports</h2>
+<section class="symbol" id="vendorUid">
+<h3><span class="kind">const</span><a href="#vendorUid">vendorUid</a></h3>
+<pre><code class="language-ts">export const vendorUid</code></pre>
+<p>A vendor&#39;s party uid in the estate.</p>
+
+</section>
+<section class="symbol" id="ScopedAcceptance">
+<h3><span class="kind">interface</span><a href="#ScopedAcceptance">ScopedAcceptance</a></h3>
+<pre><code class="language-ts">export interface ScopedAcceptance extends Acceptance {
+  /** &quot;fleet&quot; (controls/accepted.ts), or the adopted machine it belongs to. */
+  scope: string;
+}</code></pre>
+<p>One accepted risk, with where it applies.</p>
+
+</section>
+<section class="symbol" id="allAcceptances">
+<h3><span class="kind">function</span><a href="#allAcceptances">allAcceptances</a></h3>
+<pre><code class="language-ts">export function allAcceptances(
+  accepted: readonly Acceptance[] = [],
+  adopted: ReadonlyArray&lt;{ machine: AdoptedDef }&gt; = [],
+): ScopedAcceptance[]</code></pre>
+<p>Every accepted risk: the fleet&#39;s (controls/accepted.ts) and each adopted machine&#39;s.</p>
+
+</section>
+<section class="symbol" id="acceptanceUid">
+<h3><span class="kind">const</span><a href="#acceptanceUid">acceptanceUid</a></h3>
+<pre><code class="language-ts">export const acceptanceUid</code></pre>
+<p>An accepted risk&#39;s uid: <code>&lt;pack&gt;/&lt;control&gt;</code> for the fleet&#39;s, <code>&lt;machine&gt;:&lt;policy&gt;</code> for a machine&#39;s.</p>
+
+</section>
+<section class="symbol" id="RiskData">
+<h3><span class="kind">interface</span><a href="#RiskData">RiskData</a></h3>
+<pre><code class="language-ts">export interface RiskData {
+  /** The register (undefined: there is no risks.ts). */
+  risks?: readonly Risk[];
+  /** Every accepted risk. */
+  acceptances?: readonly ScopedAcceptance[];
+  /** The vendors, discovered and triaged. */
+  vendors?: readonly Vendor[];
+  /** Now. */
+  now?: Date;
+}</code></pre>
+<p>What {@link addRiskData} loads.</p>
+
+</section>
+<section class="symbol" id="addRiskData">
+<h3><span class="kind">function</span><a href="#addRiskData">addRiskData</a></h3>
+<pre><code class="language-ts">export function addRiskData(e: Estate, d: RiskData): void</code></pre>
+<p>Load the register, the accepted risks, and the vendors into an estate (idempotent).</p>
+
+</section>
+<section class="symbol" id="reviewDue">
+<h3><span class="kind">const</span><a href="#reviewDue">reviewDue</a></h3>
+<pre><code class="language-ts">export const reviewDue: EstateControl</code></pre>
+<p>Every open risk is reviewed by its next review date.</p>
+
+</section>
+<section class="symbol" id="ownerOnRoster">
+<h3><span class="kind">const</span><a href="#ownerOnRoster">ownerOnRoster</a></h3>
+<pre><code class="language-ts">export const ownerOnRoster: EstateControl</code></pre>
+<p>Every open risk&#39;s owner is an active person on the roster.</p>
+
+</section>
+<section class="symbol" id="acceptedCurrent">
+<h3><span class="kind">const</span><a href="#acceptedCurrent">acceptedCurrent</a></h3>
+<pre><code class="language-ts">export const acceptedCurrent: EstateControl</code></pre>
+<p>Accepted risks are current, and each is in the register.</p>
+
+</section>
+<section class="symbol" id="vendorsTriaged">
+<h3><span class="kind">const</span><a href="#vendorsTriaged">vendorsTriaged</a></h3>
+<pre><code class="language-ts">export const vendorsTriaged: EstateControl</code></pre>
+<p>Every discovered vendor is triaged.</p>
+
+</section>
+<section class="symbol" id="RISK_PACK">
+<h3><span class="kind">const</span><a href="#RISK_PACK">RISK_PACK</a></h3>
+<pre><code class="language-ts">export const RISK_PACK: ControlPack</code></pre>
+<p>The risk register and vendor inventory&#39;s controls, as a pack (results <code>risk-register/&lt;control&gt;</code>).</p>
+
+</section>
+<section class="symbol" id="RiskRunInputs">
+<h3><span class="kind">interface</span><a href="#RiskRunInputs">RiskRunInputs</a></h3>
+<pre><code class="language-ts">export interface RiskRunInputs extends RiskData {
+  /** The estate graph (augmented in place). */
+  estate: Estate;
+  /** The fleet's accepted risks (controls/accepted.ts), applied to these results too. */
+  accepted?: readonly Acceptance[];
+  /** Adopted machines (their accepted risks). */
+  adopted?: ReadonlyArray&lt;{ machine: AdoptedDef }&gt;;
+  /** Why the register or the triage file did not load (each becomes a failing result). */
+  problems?: readonly string[];
+}</code></pre>
+<p>What {@link runRiskPack} needs.</p>
+
+</section>
+<section class="symbol" id="runRiskPack">
+<h3><span class="kind">function</span><a href="#runRiskPack">runRiskPack</a></h3>
+<pre><code class="language-ts">export async function runRiskPack(i: RiskRunInputs): Promise&lt;PackRun&gt;</code></pre>
+<p>Load the data into the estate and run the pack; a file that did not load is a failing result.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/risk/controls.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

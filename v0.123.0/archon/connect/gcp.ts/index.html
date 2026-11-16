@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/connect/gcp.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/connect/gcp.ts</h1>
+<p>Spec 088: Google Cloud, read-only, for one project: its resources (Cloud Asset Inventory, <code>assets.list</code>), who holds which role on the project (Cloud Asset Inventory&#39;s <code>searchAllIamPolicies</code>, a GET), its service accounts and their user-managed keys (IAM), and where its logs are routed (Cloud Logging&#39;s sinks). Evidence for least privilege (SCF IAC-30), public access (DCH-02), long-lived keys (IAC-10), and audit logging (MON-03).</p>
+<p>Credential: a service account&#39;s JSON key, with the read-only roles Cloud Asset Viewer (<code>roles/cloudasset.viewer</code>), Security Reviewer (<code>roles/iam.securityReviewer</code>), and Logs Viewer (<code>roles/logging.viewer</code>) on the project; it signs in with the scope <code>cloud-platform.read-only</code> (the JWT is signed here, RS256, as for Google Workspace). Docs: https://cloud.google.com/asset-inventory/docs/reference/rest, https://cloud.google.com/iam/docs/reference/rest, and https://cloud.google.com/logging/docs/reference/v2/rest.</p>
+<h2>Exports</h2>
+<section class="symbol" id="gcp">
+<h3><span class="kind">const</span><a href="#gcp">gcp</a></h3>
+<pre><code class="language-ts">export const gcp: Connector</code></pre>
+<p>Google Cloud (one project).</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/connect/gcp.ts">Source</a></p>
+</main>
+
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/connect/onepassword.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/connect/onepassword.ts</h1>
+<p>Spec 087: 1Password (Business or Enterprise Password Manager), read-only, for one account: its people (active, suspended, or not yet joined), read with the 1Password Users API and an OAuth application that holds only the <code>users.view</code> scope. The estate graph joins them to the roster: every active person has a 1Password account (coverage), and nobody who left still has an active one. Evidence for account management (SCF IAC-08).</p>
+<p>1Password&#39;s limits: the Users API shows neither who is an owner or administrator, nor two-factor status, nor vaults and who can open them (1Password keeps those in its admin console, its command line tool, and its SDKs, which act with a person&#39;s or a service account&#39;s own access, never read-only). It is in public preview, works with Business and Enterprise accounts only, and not alongside automated provisioning (SCIM).</p>
+<h2>Exports</h2>
+<section class="symbol" id="onePasswordApi">
+<h3><span class="kind">function</span><a href="#onePasswordApi">onePasswordApi</a></h3>
+<pre><code class="language-ts">export function onePasswordApi(region: string): string</code></pre>
+<p>The Users API base for where the account is: 1password.com, 1password.ca, 1password.eu, or ent.1password.com (a sign-in address such as example.1password.eu works too).</p>
+
+</section>
+<section class="symbol" id="onepassword">
+<h3><span class="kind">const</span><a href="#onepassword">onepassword</a></h3>
+<pre><code class="language-ts">export const onepassword: Connector</code></pre>
+<p>1Password (an account).</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/connect/onepassword.ts">Source</a></p>
+</main>
+
+</body>
+</html>

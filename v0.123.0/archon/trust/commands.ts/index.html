@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/trust/commands.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/trust/commands.ts</h1>
+<p>Spec 081: <code>stolos trust build --bundle &lt;zip&gt;</code>: verify an evidence bundle, then write a Trust Center from it: <code>index.html</code>, and under <code>evidence/</code> the bundle it links to (the full one when gated; a signed public summary when public), unpacked so that each claim&#39;s link is the item itself.</p>
+<pre class="mermaid">flowchart LR
+  zip[&quot;--bundle&quot;] --&gt; v{&quot;verifyBundle&quot;}
+  v -- &quot;a problem&quot; --&gt; refuse[&quot;refused, with each reason&quot;]
+  v -- &quot;ok&quot; --&gt; model[&quot;trustModel&quot;] --&gt; page[&quot;index.html&quot;]
+  model -- &quot;--public&quot; --&gt; sum[&quot;summary bundle, signed (--key)&quot;] --&gt; ev[&quot;evidence/&quot;]
+  model -- &quot;--gated&quot; --&gt; ev</pre>
+<h2>Exports</h2>
+<section class="symbol" id="MARKER">
+<h3><span class="kind">const</span><a href="#MARKER">MARKER</a></h3>
+<pre><code class="language-ts">export const MARKER</code></pre>
+<p>The file a Trust Center&#39;s output folder holds, so a rebuild may replace it (and nothing else).</p>
+
+</section>
+<section class="symbol" id="TrustOptions">
+<h3><span class="kind">interface</span><a href="#TrustOptions">TrustOptions</a></h3>
+<pre><code class="language-ts">export interface TrustOptions {
+  /** Public (the default: redacted, a summary bundle) or gated (everything, the full bundle). */
+  mode?: &quot;public&quot; | &quot;gated&quot;;
+  /** Public: sign the summary bundle (as the full bundle's signer). Absent: the evidence is on request. */
+  sign?: Signer;
+  /** An allowed_signers text to verify the bundle with instead of its own. */
+  allowedSigners?: string;
+  /** The SCF catalog (only the release the bundle names is used). */
+  catalog?: ScfCatalog;
+  /** The frameworks to show (default: every one the mappings reach). */
+  frameworks?: FrameworkId[];
+  /** The company's link for questions and access requests (https: or mailto:). */
+  contact?: string;
+  /** When the page is built. */
+  now?: Date;
+  /** The Stolos version building it. */
+  stolos?: string;
+}</code></pre>
+<p>How to build a Trust Center.</p>
+
+</section>
+<section class="symbol" id="TrustSite">
+<h3><span class="kind">type</span><a href="#TrustSite">TrustSite</a></h3>
+<pre><code class="language-ts">export type TrustSite =
+  | { ok: false; problems: string[] }</code></pre>
+<p>A Trust Center, built, or why not.</p>
+
+</section>
+<section class="symbol" id="isContact">
+<h3><span class="kind">function</span><a href="#isContact">isContact</a></h3>
+<pre><code class="language-ts">export function isContact(s: string): boolean</code></pre>
+<p>Whether a link is one the company may put on its page: https: or mailto:.</p>
+
+</section>
+<section class="symbol" id="parseFrameworks">
+<h3><span class="kind">function</span><a href="#parseFrameworks">parseFrameworks</a></h3>
+<pre><code class="language-ts">export function parseFrameworks(s: string | undefined): FrameworkId[] | undefined</code></pre>
+<p>Parse --frameworks (soc2,hipaa), or throw naming the unknown one.</p>
+
+</section>
+<section class="symbol" id="buildTrustSite">
+<h3><span class="kind">function</span><a href="#buildTrustSite">buildTrustSite</a></h3>
+<pre><code class="language-ts">export async function buildTrustSite(
+  zip: Uint8Array,
+  fileName: string,
+  o: TrustOptions = {},
+): Promise&lt;TrustSite&gt;</code></pre>
+<p>Verify the bundle, then build its Trust Center&#39;s files (index.html and evidence/...).</p>
+
+</section>
+<section class="symbol" id="trustBuild">
+<h3><span class="kind">function</span><a href="#trustBuild">trustBuild</a></h3>
+<pre><code class="language-ts">export async function trustBuild(o: {
+  bundle: string;
+  out?: string;
+  frameworks?: string;
+  public?: boolean;
+  gated?: boolean;
+  onRequest?: boolean;
+  key?: string;
+  signers?: string;
+  contact?: string;
+  catalog?: ScfCatalog | null;
+  sign?: Signer;
+  now?: Date;
+}): Promise&lt;number&gt;</code></pre>
+<p><code>stolos trust build</code>: verify, build, and write the Trust Center; exit 1 with the reason when refused.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/trust/commands.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

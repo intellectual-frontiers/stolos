@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/observe/discover.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/observe/discover.ts</h1>
+<p><code>archon observe discover</code> (spec 024): find a central OpenTelemetry collector and forward this machine&#39;s telemetry to it. By unicast DNS only (Article 20: never mDNS or DNS-SD): the fleet model&#39;s address, else the name &quot;otel.localdomain&quot; (fleet.telemetry.name, a UniFi Local DNS record). A candidate counts only if it accepts OTLP. What is found goes into a second Collector config file, merged with the base one: journald, PCP (through pmproxy), and Archon&#39;s own OTLP are then forwarded, with a bounded queue on disk. Until a collector answers, the file is empty and everything stays local.</p>
+<h2>Exports</h2>
+<section class="symbol" id="CENTRAL">
+<h3><span class="kind">const</span><a href="#CENTRAL">CENTRAL</a></h3>
+<pre><code class="language-ts">export const CENTRAL</code></pre>
+<p>Where discovery writes its result.</p>
+
+</section>
+<section class="symbol" id="DEFAULT_COLLECTOR_NAME">
+<h3><span class="kind">const</span><a href="#DEFAULT_COLLECTOR_NAME">DEFAULT_COLLECTOR_NAME</a></h3>
+<pre><code class="language-ts">export const DEFAULT_COLLECTOR_NAME</code></pre>
+<p>The collector&#39;s conventional name: a UniFi Local DNS record (Article 20).</p>
+
+</section>
+<section class="symbol" id="Found">
+<h3><span class="kind">interface</span><a href="#Found">Found</a></h3>
+<pre><code class="language-ts">export interface Found {
+  /** Its OTLP/HTTP base URL (for example `http://otel.localdomain:4318`). */
+  endpoint: string;
+  /**
+   * How it was found: the telemetry web UI on this server (spec 050), the
+   * fleet model's address, the DNS name, or the boot PC's boot server (spec 049).
+   */
+  source: &quot;local-ui&quot; | &quot;model&quot; | &quot;dns&quot; | &quot;boot&quot;;
+}</code></pre>
+<p>A collector candidate: where it is and how it was found.</p>
+
+</section>
+<section class="symbol" id="acceptsOtlp">
+<h3><span class="kind">function</span><a href="#acceptsOtlp">acceptsOtlp</a></h3>
+<pre><code class="language-ts">export async function acceptsOtlp(endpoint: string): Promise&lt;boolean&gt;</code></pre>
+<p>Does this URL accept OTLP/HTTP? (An empty export is a valid request.)</p>
+
+</section>
+<section class="symbol" id="candidates">
+<h3><span class="kind">function</span><a href="#candidates">candidates</a></h3>
+<pre><code class="language-ts">export async function candidates(fleet: FleetDef, host: HostDef): Promise&lt;Found[]&gt;</code></pre>
+<p>The collectors to try, in order: the web UI on this server when opted in, the model&#39;s collector, the DNS name when it resolves, then the boot server.</p>
+
+</section>
+<section class="symbol" id="centralConfig">
+<h3><span class="kind">function</span><a href="#centralConfig">centralConfig</a></h3>
+<pre><code class="language-ts">export function centralConfig(
+  endpoint: string,
+  pcpNames: string[],
+  source: Found[&quot;source&quot;] = &quot;model&quot;,
+): string</code></pre>
+<p>The Collector config that forwards everything to <code>endpoint</code> (JSON is valid YAML).</p>
+
+</section>
+<section class="symbol" id="discover">
+<h3><span class="kind">function</span><a href="#discover">discover</a></h3>
+<pre><code class="language-ts">export async function discover(host: HostDef, check = false): Promise&lt;number&gt;</code></pre>
+<p><code>archon observe discover</code>: try each candidate, write the forwarding config for the first that answers (or <code>{}</code> for none) and restart the Collector when it changed, then record the result. With <code>check</code>, only report what would change. Returns 0.</p>
+
+</section>
+<section class="symbol" id="lastDiscovery">
+<h3><span class="kind">function</span><a href="#lastDiscovery">lastDiscovery</a></h3>
+<pre><code class="language-ts">export async function lastDiscovery(): Promise&lt;
+  { endpoint: string | null; source: string | null } | undefined
+&gt;</code></pre>
+<p>What discovery last found (for archon observe).</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/observe/discover.ts">Source</a></p>
+</main>
+
+</body>
+</html>

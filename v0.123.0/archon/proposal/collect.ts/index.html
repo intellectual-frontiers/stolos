@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/proposal/collect.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/proposal/collect.ts</h1>
+<p>Spec 095-proposals: the collectors. Each reads one of Ubuntu&#39;s own records (journald&#39;s sudo entries, apt&#39;s history.log and dpkg.log, etckeeper&#39;s git log, osquery, <code>systemctl list-unit-files</code>, snapd, podman, <code>dpkg -S</code> on /usr/local and /opt, <code>debsums -c</code> or <code>dpkg --verify</code>) and writes observations (what, who, when, source) into the host&#39;s own <code>archon.sql</code>, with the latest state and, once, the birth snapshot. Nothing here changes the host. A modified package binary is a security alert, mailed at once and never proposed.</p>
+<pre class="mermaid">flowchart LR
+  j[&quot;journald: sudo&quot;] &amp; a[&quot;apt history.log, dpkg.log&quot;] &amp; e[&quot;etckeeper: git log /etc&quot;] &amp; o[&quot;osquery snapshots&quot;] &amp; u[&quot;systemctl list-unit-files&quot;] &amp; s[&quot;snap, podman&quot;] &amp; d[&quot;dpkg -S, dpkg --verify&quot;] --&gt; c[&quot;collect&quot;]
+  c --&gt; obs[&quot;archon.sql: observation&quot;]
+  c --&gt; st[&quot;archon.sql: snapshot (state, osquery)&quot;]
+  c --&gt; b[&quot;archon.sql: birth (once)&quot;]
+  d --&gt;|&quot;a package file modified&quot;| al[&quot;SECURITY ALERT mail&lt;br/&gt;(never a proposal)&quot;]</pre>
+<h2>Exports</h2>
+<section class="symbol" id="planView">
+<h3><span class="kind">function</span><a href="#planView">planView</a></h3>
+<pre><code class="language-ts">export function planView(plan: HostPlan): PlanView</code></pre>
+<p>What the plan says, for drift: package and unit names, file paths, ports, accounts, Archon&#39;s own paths.</p>
+
+</section>
+<section class="symbol" id="RawSources">
+<h3><span class="kind">interface</span><a href="#RawSources">RawSources</a></h3>
+<pre><code class="language-ts">export interface RawSources {
+  /** When it was read (ISO). */
+  at: string;
+  /** `journalctl -o json SYSLOG_IDENTIFIER=sudo`. */
+  sudoJournal: string;
+  /** `/var/log/apt/history.log` (and its previous rotation). */
+  aptHistory: string;
+  /** `/var/log/dpkg.log` (and its previous rotation). */
+  dpkgLog: string;
+  /** etckeeper's log since birth (see {@link parseEtckeeperLog}). */
+  etcLog: string;
+  /** `git -C /etc status --porcelain`: changes not committed yet. */
+  etcStatus: string;
+  /** /etc paths no package owns, among the changed ones (`dpkg -S`). */
+  etcUnowned: string[];
+  /** `apt-mark showmanual`. */
+  manual: string;
+  /** `snap list`. */
+  snapList: string;
+  /** `snap changes`. */
+  snapChanges: string;
+  /** `systemctl list-unit-files --no-legend --plain`. */
+  unitFiles: string;
+  /** `ss -Hlntu`. */
+  listening: string;
+  /** `getent passwd`. */
+  passwd: string;
+  /** `podman ps -a --format {{.Names}}`. */
+  containers: string;
+  /** Files under /usr/local and /opt that no package owns (`dpkg -S` errors). */
+  unowned: string[];
+  /** `debsums -c`, or `dpkg --verify`. */
+  modified: string;
+  /** Files the plan writes whose content differs now. */
+  managedFiles: string[];
+  /** osquery's snapshot, when osquery answered. */
+  osquery?: OsquerySnapshot;
+  /** Collectors that failed, with why. */
+  failed: Record&lt;string, string&gt;;
+}</code></pre>
+<p>Raw output of every source, read from the host (tests pass fixtures).</p>
+
+</section>
+<section class="symbol" id="parseListening">
+<h3><span class="kind">function</span><a href="#parseListening">parseListening</a></h3>
+<pre><code class="language-ts">export function parseListening(text: string): string[]</code></pre>
+<p>Listening sockets (<code>ss -Hlntu</code>) as &quot;tcp/443&quot;, without loopback and DHCP clients.</p>
+
+</section>
+<section class="symbol" id="parseLoginUsers">
+<h3><span class="kind">function</span><a href="#parseLoginUsers">parseLoginUsers</a></h3>
+<pre><code class="language-ts">export function parseLoginUsers(text: string): string[]</code></pre>
+<p>Accounts with a login (UID 1000 to 59999) from <code>getent passwd</code>.</p>
+
+</section>
+<section class="symbol" id="stateFrom">
+<h3><span class="kind">function</span><a href="#stateFrom">stateFrom</a></h3>
+<pre><code class="language-ts">export function stateFrom(raw: RawSources, plan: PlanView): HostState</code></pre>
+<p>The host&#39;s state from its raw sources, against the plan and the birth snapshot: /etc files a person changed since birth (a package&#39;s own unchanged file is not drift; a modified one is), units, packages, ports, accounts.</p>
+
+</section>
+<section class="symbol" id="observationsFrom">
+<h3><span class="kind">function</span><a href="#observationsFrom">observationsFrom</a></h3>
+<pre><code class="language-ts">export async function observationsFrom(
+  raw: RawSources,
+  prevOsquery?: OsquerySnapshot,
+): Promise&lt;Observation[]&gt;</code></pre>
+<p>Every observation in the raw sources (osquery&#39;s against the previous snapshot).</p>
+
+</section>
+<section class="symbol" id="readSources">
+<h3><span class="kind">function</span><a href="#readSources">readSources</a></h3>
+<pre><code class="language-ts">export async function readSources(
+  plan: HostPlan,
+  view: PlanView,
+  birth: Birth,
+  since: string,
+): Promise&lt;RawSources&gt;</code></pre>
+<p>Read every source from this host (root: journald, /etc&#39;s history, and root-only files).</p>
+
+</section>
+<section class="symbol" id="birthFrom">
+<h3><span class="kind">function</span><a href="#birthFrom">birthFrom</a></h3>
+<pre><code class="language-ts">export async function birthFrom(
+  raw: Pick&lt;RawSources, &quot;at&quot; | &quot;manual&quot; | &quot;snapList&quot; | &quot;unitFiles&quot; | &quot;passwd&quot; | &quot;listening&quot;&gt;,
+  etcCommit: string,
+  late?: Observation[],
+): Promise&lt;Birth&gt;</code></pre>
+<p>The birth snapshot from this host now. At install it is what Ubuntu (and the first apply) put there. Taken later (<code>late</code>), packages a person installed with apt and units a person enabled under sudo, as the logs show, are left out of it, so they still count as drift.</p>
+
+</section>
+<section class="symbol" id="recordBirth">
+<h3><span class="kind">function</span><a href="#recordBirth">recordBirth</a></h3>
+<pre><code class="language-ts">export async function recordBirth(hostName: string, dir: string = P.state): Promise&lt;Birth&gt;</code></pre>
+<p>Take the birth snapshot at install (first boot), once: what Ubuntu put on the host. Never replaced.</p>
+
+</section>
+<section class="symbol" id="Collected">
+<h3><span class="kind">interface</span><a href="#Collected">Collected</a></h3>
+<pre><code class="language-ts">export interface Collected {
+  /** Observations written (new or seen again). */
+  observations: number;
+  /** Security alerts seen for the first time. */
+  newAlerts: Alert[];
+  /** Collectors that failed, with why. */
+  failed: Record&lt;string, string&gt;;
+  /** The birth snapshot was taken late, now. */
+  birthTakenLate: boolean;
+}</code></pre>
+<p>What one collection did.</p>
+
+</section>
+<section class="symbol" id="storeCollection">
+<h3><span class="kind">function</span><a href="#storeCollection">storeCollection</a></h3>
+<pre><code class="language-ts">export async function storeCollection(
+  hostName: string,
+  raw: RawSources,
+  view: PlanView,
+  dir: string = P.state,
+): Promise&lt;Omit&lt;Collected, &quot;birthTakenLate&quot;&gt;&gt;</code></pre>
+<p>Store one collection: the observations, the state, the osquery snapshot, and the alerts (new ones are returned, to be mailed). Pure storage over raw sources, so tests run it on fixtures.</p>
+
+</section>
+<section class="symbol" id="collect">
+<h3><span class="kind">function</span><a href="#collect">collect</a></h3>
+<pre><code class="language-ts">export async function collect(host: HostDef, dir: string = P.state): Promise&lt;Collected&gt;</code></pre>
+<p>Collect on this host (as root): read every source, store what it saw, take the birth snapshot if it is missing (late, on a host installed before spec 095), and mail a SECURITY ALERT for a newly modified package file.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/proposal/collect.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

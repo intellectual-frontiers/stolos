@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon-boot/assets.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../index.html">Stolos v0.123.0</a> · <a href="../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon-boot/assets.ts</h1>
+<p>Download Ubuntu&#39;s boot files and installer image once, verify each against its pinned SHA-256 (Article 12), and cache them on the boot machine.</p>
+<h2>Exports</h2>
+<section class="symbol" id="cacheDir">
+<h3><span class="kind">const</span><a href="#cacheDir">cacheDir</a></h3>
+<pre><code class="language-ts">export const cacheDir</code></pre>
+<p>The folder that caches this Ubuntu point release&#39;s boot files and image.</p>
+
+</section>
+<section class="symbol" id="sha256File">
+<h3><span class="kind">function</span><a href="#sha256File">sha256File</a></h3>
+<pre><code class="language-ts">export async function sha256File(path: string): Promise&lt;string&gt;</code></pre>
+<p>A file&#39;s SHA-256, in hex, read in chunks (installer images are several GB).</p>
+
+</section>
+<section class="symbol" id="Assets">
+<h3><span class="kind">interface</span><a href="#Assets">Assets</a></h3>
+<pre><code class="language-ts">export interface Assets {
+  /** Netboot file name (for example &quot;grubx64.efi&quot;, &quot;linux&quot;) to its path in the cache. */
+  files: Record&lt;string, string&gt;;
+  /** The installer image's path in the cache. */
+  iso: string;
+}</code></pre>
+<p>The verified files the boot server serves.</p>
+
+</section>
+<section class="symbol" id="ensureAssets">
+<h3><span class="kind">function</span><a href="#ensureAssets">ensureAssets</a></h3>
+<pre><code class="language-ts">export async function ensureAssets(p: Phase): Promise&lt;Assets&gt;</code></pre>
+<p>Download (once) and verify every boot file and the installer image against their pinned SHA-256.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon-boot/assets.ts">Source</a></p>
+</main>
+
+</body>
+</html>

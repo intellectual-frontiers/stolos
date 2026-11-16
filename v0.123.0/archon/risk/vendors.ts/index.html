@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/risk/vendors.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/risk/vendors.ts</h1>
+<p>Spec 080: the vendor inventory. Vendors are discovered, not typed in:</p>
+<ul><li><strong>SSO applications</strong>: the apps people sign in to through the identity provider (Okta&#39;s app integrations, Entra&#39;s enterprise applications), as <code>application</code> nodes in the estate;</li><li><strong>DNS</strong>: CNAME and MX records whose target is a third party&#39;s (a mail provider, a help desk, a hosting platform), as <code>dns_record</code> nodes;</li><li><strong>connected accounts</strong>: each tenant a connector reads is itself a vendor;</li><li><strong>billing</strong>: a hook ({@link BillingSource}) for a future billing connector.</li></ul>
+<p>A small typed table ({@link WELL_KNOWN_VENDORS}) maps catalog names and service domains to the organization behind them; anything else is an unknown vendor, named by its domain or app, for triage. The fleet&#39;s <code>vendors.ts</code> records each vendor&#39;s criticality (FIPS 199: low, moderate, high) and the data it holds (OCSF&#39;s data classification categories). A vendor discovered but not in vendors.ts waits for triage.</p>
+<pre class="mermaid">flowchart LR
+  sso[&quot;application nodes (Okta, Entra)&quot;] --&gt; d[&quot;discoverVendors&quot;]
+  dns[&quot;dns_record nodes: CNAME, MX&quot;] --&gt; d
+  tenants[&quot;tenants: each connector&quot;] --&gt; d
+  billing[&quot;BillingSource (future)&quot;] --&gt; d
+  table[&quot;WELL_KNOWN_VENDORS + vendors.ts domains&quot;] --&gt; d
+  d --&gt; v[&quot;vendors: organization parties, party_role supplier, edges&quot;]
+  triage[&quot;fleets/&amp;lt;fleet&amp;gt;/vendors.ts: criticality, data&quot;] --&gt; v
+  v --&gt; t[&quot;not triaged: stolos vendors triage&quot;]</pre>
+<h3>Example</h3>
+<pre><code class="language-ts">import { defineVendors } from &quot;./vendors.ts&quot;;
+
+export const vendors = defineVendors([
+  { id: &quot;okta&quot;, name: &quot;Okta&quot;, criticality: &quot;high&quot;, data: [&quot;Personal&quot;, &quot;Security&quot;] },
+  { id: &quot;mailhost&quot;, name: &quot;Mailhost&quot;, criticality: &quot;moderate&quot;, data: [&quot;Business&quot;], domains: [&quot;mailhost.example&quot;] },
+]);</code></pre>
+<h2>Exports</h2>
+<section class="symbol" id="CRITICALITIES">
+<h3><span class="kind">const</span><a href="#CRITICALITIES">CRITICALITIES</a></h3>
+<pre><code class="language-ts">export const CRITICALITIES</code></pre>
+<p>FIPS 199&#39;s potential impact levels, as a vendor&#39;s criticality; &quot;unassessed&quot; until a person decides.</p>
+
+</section>
+<section class="symbol" id="Criticality">
+<h3><span class="kind">type</span><a href="#Criticality">Criticality</a></h3>
+<pre><code class="language-ts">export type Criticality = (typeof CRITICALITIES)[number];</code></pre>
+<p>A vendor&#39;s criticality.</p>
+
+</section>
+<section class="symbol" id="DATA_CATEGORIES">
+<h3><span class="kind">const</span><a href="#DATA_CATEGORIES">DATA_CATEGORIES</a></h3>
+<pre><code class="language-ts">export const DATA_CATEGORIES</code></pre>
+<p>OCSF 1.9.0 data_classification categories (its category_id captions).</p>
+
+</section>
+<section class="symbol" id="DataCategory">
+<h3><span class="kind">type</span><a href="#DataCategory">DataCategory</a></h3>
+<pre><code class="language-ts">export type DataCategory = (typeof DATA_CATEGORIES)[number];</code></pre>
+<p>An OCSF data classification category.</p>
+
+</section>
+<section class="symbol" id="VendorDef">
+<h3><span class="kind">interface</span><a href="#VendorDef">VendorDef</a></h3>
+<pre><code class="language-ts">export interface VendorDef {
+  /** Its id (lower case, digits, hyphens): the well-known table's, or the one triage proposed. */
+  id: string;
+  /** Its name for people. */
+  name: string;
+  /** How critical it is (FIPS 199 potential impact), or unassessed. */
+  criticality: Criticality;
+  /** The kinds of data it holds (OCSF categories; empty: none of ours). */
+  data: readonly DataCategory[];
+  /** Service domains that are this vendor's (a CNAME or MX target ending in one, or an app's home page). */
+  domains?: readonly string[];
+  /** SSO applications that are this vendor's, by name (case and punctuation ignored). */
+  apps?: readonly string[];
+  /** Who looks after the relationship (a work email). */
+  owner?: string;
+  /** Anything a reviewer should know (a contract, a review date, an exit plan). */
+  notes?: string;
+}</code></pre>
+<p>One vendor, triaged, in fleets/&lt;fleet&gt;/vendors.ts.</p>
+
+</section>
+<section class="symbol" id="vendorProblems">
+<h3><span class="kind">function</span><a href="#vendorProblems">vendorProblems</a></h3>
+<pre><code class="language-ts">export function vendorProblems(list: readonly VendorDef[]): string[]</code></pre>
+<p>Why a triage file is malformed (none: it is fine).</p>
+
+</section>
+<section class="symbol" id="defineVendors">
+<h3><span class="kind">function</span><a href="#defineVendors">defineVendors</a></h3>
+<pre><code class="language-ts">export function defineVendors&lt;const V extends readonly VendorDef[]&gt;(list: V): V</code></pre>
+<p>Define the triage file: checked now, returned unchanged.</p>
+
+</section>
+<section class="symbol" id="vendorsFile">
+<h3><span class="kind">function</span><a href="#vendorsFile">vendorsFile</a></h3>
+<pre><code class="language-ts">export function vendorsFile(dir: string = P.fleetDir): string</code></pre>
+<p>Where the fleet&#39;s triage file is.</p>
+
+</section>
+<section class="symbol" id="loadVendors">
+<h3><span class="kind">function</span><a href="#loadVendors">loadVendors</a></h3>
+<pre><code class="language-ts">export async function loadVendors(file: string = vendorsFile()): Promise&lt;VendorDef[]&gt;</code></pre>
+<p>The fleet&#39;s triage file (fleets/&lt;fleet&gt;/vendors.ts, exporting <code>vendors</code>), or [] when there is none.</p>
+
+</section>
+<section class="symbol" id="KnownVendor">
+<h3><span class="kind">interface</span><a href="#KnownVendor">KnownVendor</a></h3>
+<pre><code class="language-ts">export interface KnownVendor {
+  /** Its id. */
+  id: string;
+  /** Its name. */
+  name: string;
+  /** Its service domains (a CNAME or MX target ending in one is this vendor's). */
+  domains: readonly string[];
+  /** Its SSO catalog names and app names (normalized: lower case letters and digits). */
+  apps?: readonly string[];
+  /** The Stolos connectors whose tenants are this vendor's. */
+  connectors?: readonly string[];
+}</code></pre>
+<p>A well-known vendor: the organization, and how to recognize it.</p>
+
+</section>
+<section class="symbol" id="WELL_KNOWN_VENDORS">
+<h3><span class="kind">const</span><a href="#WELL_KNOWN_VENDORS">WELL_KNOWN_VENDORS</a></h3>
+<pre><code class="language-ts">export const WELL_KNOWN_VENDORS: readonly KnownVendor[]</code></pre>
+<p>Well-known vendors: data, not an endorsement. A starter table; a fleet adds its own through vendors.ts (<code>domains</code>, <code>apps</code>).</p>
+
+</section>
+<section class="symbol" id="VendorEvidence">
+<h3><span class="kind">type</span><a href="#VendorEvidence">VendorEvidence</a></h3>
+<pre><code class="language-ts">export type VendorEvidence = &quot;sso&quot; | &quot;dns&quot; | &quot;tenant&quot; | &quot;billing&quot;;</code></pre>
+<p>How a vendor was found.</p>
+
+</section>
+<section class="symbol" id="VendorSighting">
+<h3><span class="kind">interface</span><a href="#VendorSighting">VendorSighting</a></h3>
+<pre><code class="language-ts">export interface VendorSighting {
+  /** How. */
+  kind: VendorEvidence;
+  /** The estate uid that revealed it (a node, a tenant), or the billing source's. */
+  uid: string;
+  /** The connector or source. */
+  source: string;
+  /** What it was, in words (an app's name, a record and its target, a tenant). */
+  detail: string;
+}</code></pre>
+<p>One thing that revealed a vendor.</p>
+
+</section>
+<section class="symbol" id="Vendor">
+<h3><span class="kind">interface</span><a href="#Vendor">Vendor</a></h3>
+<pre><code class="language-ts">export interface Vendor {
+  /** Its id. */
+  id: string;
+  /** Its name. */
+  name: string;
+  /** In the well-known table or vendors.ts (false: an unknown vendor, named by its domain or app). */
+  known: boolean;
+  /** Its triage, from vendors.ts. */
+  triage?: VendorDef;
+  /** What revealed it. */
+  seen: VendorSighting[];
+}</code></pre>
+<p>A vendor, discovered (and, when in vendors.ts, triaged).</p>
+
+</section>
+<section class="symbol" id="BilledVendor">
+<h3><span class="kind">interface</span><a href="#BilledVendor">BilledVendor</a></h3>
+<pre><code class="language-ts">export interface BilledVendor {
+  /** The payee's name. */
+  name: string;
+  /** Its domain, when the source knows it. */
+  domain?: string;
+  /** The billing account or ledger it is in. */
+  account: string;
+}</code></pre>
+<p>One vendor a billing source reports (a future billing connector).</p>
+
+</section>
+<section class="symbol" id="BillingSource">
+<h3><span class="kind">interface</span><a href="#BillingSource">BillingSource</a></h3>
+<pre><code class="language-ts">export interface BillingSource {
+  /** Its id (a connector id). */
+  id: string;
+  /** Its name for people. */
+  title: string;
+  /** The vendors it reports. */
+  vendors(now: Date): Promise&lt;BilledVendor[]&gt;;
+}</code></pre>
+<p>A billing source (spec 080&#39;s hook): a future connector that reads who the company pays (an expense or accounts payable system). None ships yet.</p>
+
+</section>
+<section class="symbol" id="BILLING_SOURCES">
+<h3><span class="kind">const</span><a href="#BILLING_SOURCES">BILLING_SOURCES</a></h3>
+<pre><code class="language-ts">export const BILLING_SOURCES: readonly BillingSource[]</code></pre>
+<p>The billing sources Stolos knows (none yet).</p>
+
+</section>
+<section class="symbol" id="norm">
+<h3><span class="kind">const</span><a href="#norm">norm</a></h3>
+<pre><code class="language-ts">export const norm</code></pre>
+<p>A name or app, normalized: lower case letters and digits.</p>
+
+</section>
+<section class="symbol" id="registrable">
+<h3><span class="kind">function</span><a href="#registrable">registrable</a></h3>
+<pre><code class="language-ts">export function registrable(h: string): string</code></pre>
+<p>A hostname&#39;s registrable domain, approximately: its last two labels, or three under a two-letter country code&#39;s second level (example.co.uk).</p>
+
+</section>
+<section class="symbol" id="slug">
+<h3><span class="kind">const</span><a href="#slug">slug</a></h3>
+<pre><code class="language-ts">export const slug</code></pre>
+<p>An id from a domain or a name: lower case letters, digits, hyphens.</p>
+
+</section>
+<section class="symbol" id="DiscoverOptions">
+<h3><span class="kind">interface</span><a href="#DiscoverOptions">DiscoverOptions</a></h3>
+<pre><code class="language-ts">export interface DiscoverOptions {
+  /** The fleet's triage file. */
+  triage?: readonly VendorDef[];
+  /** What billing sources report. */
+  billed?: ReadonlyArray&lt;BilledVendor &amp; { source: string }&gt;;
+  /** The vendor table (default: WELL_KNOWN_VENDORS). */
+  known?: readonly KnownVendor[];
+}</code></pre>
+<p>What discovery reads besides the estate.</p>
+
+</section>
+<section class="symbol" id="discoverVendors">
+<h3><span class="kind">function</span><a href="#discoverVendors">discoverVendors</a></h3>
+<pre><code class="language-ts">export function discoverVendors(e: Estate, o: DiscoverOptions = {}): Vendor[]</code></pre>
+<p>Discover the vendors the estate reveals: its SSO applications, its DNS records pointing at third parties, its connected accounts, and what billing reports. A record pointing inside the fleet&#39;s own zones is not a vendor. Vendors in vendors.ts that nothing revealed are listed too (seen through triage).</p>
+
+</section>
+<section class="symbol" id="needsTriage">
+<h3><span class="kind">const</span><a href="#needsTriage">needsTriage</a></h3>
+<pre><code class="language-ts">export const needsTriage</code></pre>
+<p>Whether a vendor still waits for triage: not in vendors.ts, or its criticality unassessed.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/risk/vendors.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

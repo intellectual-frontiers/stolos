@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/capabilities/web.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/capabilities/web.ts</h1>
+<p>032-web: every server is HTTPS-ready from its first boot. Traefik (the official release binary, installed by the tools sync) on 80 and 443, open to everyone at the server&#39;s firewall, and no network allowlist behind it: who reaches the server is the router&#39;s decision (the firewall at the edge, outside the machine). The Archon Console (archon web serve, loopback only, spec 065) answers https://&lt;host&gt;.&lt;domain&gt; and any name or address nothing else claims. Podman (Ubuntu&#39;s package) is the container runtime: containers that carry traefik.enable=true get &lt;container&gt;.&lt;host&gt;.&lt;domain&gt;.</p>
+<p>Overrides of Ubuntu defaults: Traefik is not Ubuntu&#39;s (Ubuntu&#39;s nginx and Apache cannot obtain certificates by themselves; Traefik&#39;s official binary does Let&#39;s Encrypt&#39;s DNS challenge with Cloudflare built in, and reads container labels). The Podman socket is group archon-web, mode 0660.</p>
+<h2>Exports</h2>
+<section class="symbol" id="web">
+<h3><span class="kind">const</span><a href="#web">web</a></h3>
+<pre><code class="language-ts">export const web</code></pre>
+<p>HTTPS from the first boot: Traefik, the Archon Console, and Cloudflare DNS (spec 032).</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/capabilities/web.ts">Source</a></p>
+</main>
+
+</body>
+</html>

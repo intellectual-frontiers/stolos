@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/connect/ticketing.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/connect/ticketing.ts</h1>
+<p>Spec 087: what the ticketing connectors (Jira, Linear) share: how a ticket is classed (change, incident, or other), how commit SHAs and pull request URLs are found in the links a ticket carries, the tickets&#39; posture, and the policies on it. Evidence for change control (SCF CHG-03): a change that shipped links the commit or pull request it shipped in.</p>
+<h2>Exports</h2>
+<section class="symbol" id="TICKET_DAYS">
+<h3><span class="kind">const</span><a href="#TICKET_DAYS">TICKET_DAYS</a></h3>
+<pre><code class="language-ts">export const TICKET_DAYS</code></pre>
+<p>How far back tickets are read (days).</p>
+
+</section>
+<section class="symbol" id="TICKET_MAX">
+<h3><span class="kind">const</span><a href="#TICKET_MAX">TICKET_MAX</a></h3>
+<pre><code class="language-ts">export const TICKET_MAX</code></pre>
+<p>At most this many tickets are read per observation.</p>
+
+</section>
+<section class="symbol" id="ticketType">
+<h3><span class="kind">function</span><a href="#ticketType">ticketType</a></h3>
+<pre><code class="language-ts">export function ticketType(...words: Array&lt;string | undefined&gt;): &quot;change&quot; | &quot;incident&quot; | &quot;other&quot;</code></pre>
+<p>A ticket&#39;s type from its issue type, project, or labels (the source&#39;s own words).</p>
+
+</section>
+<section class="symbol" id="devLinks">
+<h3><span class="kind">function</span><a href="#devLinks">devLinks</a></h3>
+<pre><code class="language-ts">export function devLinks(urls: Array&lt;string | undefined&gt;): string[]</code></pre>
+<p>The commit SHAs and pull (or merge) request URLs among a ticket&#39;s links, deduplicated, in order.</p>
+
+</section>
+<section class="symbol" id="ticketPosture">
+<h3><span class="kind">function</span><a href="#ticketPosture">ticketPosture</a></h3>
+<pre><code class="language-ts">export function ticketPosture(records: ObservedRecord[]): Observation[&quot;posture&quot;]</code></pre>
+<p>The tickets&#39; posture: changes, how many link their development work, incidents.</p>
+
+</section>
+<section class="symbol" id="ticketPolicies">
+<h3><span class="kind">function</span><a href="#ticketPolicies">ticketPolicies</a></h3>
+<pre><code class="language-ts">export function ticketPolicies(
+  o: Observation,
+  prefix: string,
+  fix: { changes: string; link: string; admins: string },
+): PolicyResult[]</code></pre>
+<p>The ticketing policies, in the vendor&#39;s words (ids prefixed with <code>prefix</code>).</p>
+
+</section>
+<section class="symbol" id="daysBefore">
+<h3><span class="kind">function</span><a href="#daysBefore">daysBefore</a></h3>
+<pre><code class="language-ts">export function daysBefore(now: Date, days: number): string</code></pre>
+<p>An ISO time <code>days</code> before <code>now</code>.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/connect/ticketing.ts">Source</a></p>
+</main>
+
+</body>
+</html>

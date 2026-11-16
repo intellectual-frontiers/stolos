@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/mcp/server.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/mcp/server.ts</h1>
+<p><code>archon mcp</code>: a Model Context Protocol server over stdio (JSON-RPC 2.0, newline-delimited), implemented natively without an SDK (Article II). Every registry command within the tier limit is a tool; docs, specs, runbooks, and reports are resources. Workstations reach it on a server as ops over SSH, forced to <code>archon mcp --max-tier &lt;tier&gt;</code> (spec 030): the limit is enforced here, on the server, whatever the client is configured to do.</p>
+<h2>Exports</h2>
+<section class="symbol" id="mcpToolName">
+<h3><span class="kind">function</span><a href="#mcpToolName">mcpToolName</a></h3>
+<pre><code class="language-ts">export function mcpToolName(c: Command): string</code></pre>
+<p>The MCP tool name of a command: <code>archon_</code> and its words joined by underscores (<code>archon_backup_run</code>).</p>
+
+</section>
+<section class="symbol" id="parseTier">
+<h3><span class="kind">function</span><a href="#parseTier">parseTier</a></h3>
+<pre><code class="language-ts">export function parseTier(s: string | undefined): McpTier</code></pre>
+<p>A --max-tier value; anything else (or nothing) is mutate, never destructive.</p>
+
+</section>
+<section class="symbol" id="listed">
+<h3><span class="kind">function</span><a href="#listed">listed</a></h3>
+<pre><code class="language-ts">export function listed(c: Command, limit: McpTier): boolean</code></pre>
+<p>Listed: within the limit, or reducible to read with its read-only flag.</p>
+
+</section>
+<section class="symbol" id="allowed">
+<h3><span class="kind">function</span><a href="#allowed">allowed</a></h3>
+<pre><code class="language-ts">export function allowed(c: Command, args: Record&lt;string, unknown&gt;, limit: McpTier): boolean</code></pre>
+<p>Allowed for these arguments (apply with check: read; apply without: mutate).</p>
+
+</section>
+<section class="symbol" id="McpTool">
+<h3><span class="kind">interface</span><a href="#McpTool">McpTool</a></h3>
+<pre><code class="language-ts">export interface McpTool {
+  /** The tool's name (see mcpToolName). */
+  name: string;
+  /** A human title: `archon &lt;command&gt;`. */
+  title: string;
+  /** The summary, the description's first paragraph, the tier and the man page. */
+  description: string;
+  /** JSON Schema for the arguments: the command's own and `host`, without person-only ones. */
+  inputSchema: {
+    /** Always &quot;object&quot;. */
+    type: &quot;object&quot;;
+    /** One JSON Schema per argument (type, description, default). */
+    properties: Record&lt;string, unknown&gt;;
+    /** Names of the required arguments. */
+    required: string[];
+  };
+  /** MCP hints for clients. */
+  annotations: {
+    /** True for read-tier commands. */
+    readOnlyHint: boolean;
+    /** True for destructive-tier commands (never served). */
+    destructiveHint: boolean;
+    /** True for read-tier commands and apply. */
+    idempotentHint: boolean;
+  };
+}</code></pre>
+<p>An MCP tool definition, as <code>tools/list</code> returns it.</p>
+
+</section>
+<section class="symbol" id="toolFor">
+<h3><span class="kind">function</span><a href="#toolFor">toolFor</a></h3>
+<pre><code class="language-ts">export function toolFor(c: Command): McpTool</code></pre>
+<p>The MCP tool definition for a registry command. Arguments only a person types (Article 23) are left out.</p>
+
+</section>
+<section class="symbol" id="argvFor">
+<h3><span class="kind">function</span><a href="#argvFor">argvFor</a></h3>
+<pre><code class="language-ts">export function argvFor(c: Command, args: Record&lt;string, unknown&gt;): string[]</code></pre>
+<p>Build an argv for the CLI from MCP tool arguments.</p>
+
+</section>
+<section class="symbol" id="Msg">
+<h3><span class="kind">type</span><a href="#Msg">Msg</a></h3>
+<pre><code class="language-ts">export type Msg = {
+  /** Always &quot;2.0&quot;. */
+  jsonrpc: &quot;2.0&quot;;
+  /** The request ID to answer with; absent on notifications. */
+  id?: number | string;
+  /** The method, such as &quot;tools/call&quot;. */
+  method?: string;
+  /** The method's parameters. */
+  params?: Record&lt;string, unknown&gt;;
+};</code></pre>
+<p>One JSON-RPC 2.0 message from the client: a request (with <code>id</code>) or a notification.</p>
+
+</section>
+<section class="symbol" id="handle">
+<h3><span class="kind">function</span><a href="#handle">handle</a></h3>
+<pre><code class="language-ts">export async function handle(msg: Msg, limit: McpTier = &quot;mutate&quot;): Promise&lt;unknown&gt;</code></pre>
+<p>Answer one JSON-RPC message, serving tools up to <code>limit</code>: the JSON-RPC response, or undefined for notifications (nothing to send).</p>
+
+</section>
+<section class="symbol" id="serveMcp">
+<h3><span class="kind">function</span><a href="#serveMcp">serveMcp</a></h3>
+<pre><code class="language-ts">export async function serveMcp(maxTier?: string): Promise&lt;void&gt;</code></pre>
+<p><code>archon mcp</code>: read newline-delimited JSON-RPC from stdin and write each response to stdout until stdin closes. <code>maxTier</code> is the --max-tier value (default mutate); an invalid one throws.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/mcp/server.ts">Source</a></p>
+</main>
+
+</body>
+</html>

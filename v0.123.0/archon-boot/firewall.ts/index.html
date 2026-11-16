@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon-boot/firewall.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../index.html">Stolos v0.123.0</a> · <a href="../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon-boot/firewall.ts</h1>
+<p>Firewall check for <code>boot serve</code> (spec 004): warn, with the exact command, when this machine&#39;s firewall would block servers from reaching TFTP (UDP) or HTTP (TCP). Read-only: it never changes a firewall rule. Windows Defender Firewall, ufw, and firewalld; anything else is not checked.</p>
+<h2>Exports</h2>
+<section class="symbol" id="Need">
+<h3><span class="kind">interface</span><a href="#Need">Need</a></h3>
+<pre><code class="language-ts">export interface Need {
+  /** TCP (HTTP) or UDP (TFTP). */
+  protocol: &quot;TCP&quot; | &quot;UDP&quot;;
+  /** The port number. */
+  port: number;
+  /** What it is for, in words (&quot;HTTP&quot;, &quot;TFTP&quot;). */
+  what: string;
+}</code></pre>
+<p>A port the boot server needs reachable from the network.</p>
+
+</section>
+<section class="symbol" id="WinRule">
+<h3><span class="kind">interface</span><a href="#WinRule">WinRule</a></h3>
+<pre><code class="language-ts">export interface WinRule {
+  /** The rule's display name. */
+  name: string;
+  /** Allow or Block. */
+  action: &quot;Allow&quot; | &quot;Block&quot;;
+  /** &quot;Any&quot;, or a comma list of Domain, Private, Public. */
+  profile: string;
+  /** &quot;Any&quot;, TCP, UDP. */
+  protocol: string;
+  /** Local ports: &quot;Any&quot;, or a list such as [&quot;8080&quot;] or [&quot;1000-2000&quot;]. */
+  ports: string[];
+  /** Program path for an application rule, else &quot;Any&quot;. */
+  program: string;
+  /** Remote addresses: &quot;Any&quot;, &quot;LocalSubnet&quot;, or addresses and ranges. */
+  remote?: string[];
+  /** Limited to a Windows user, service, app package, or interface: not the boot server's. */
+  scoped?: boolean;
+}</code></pre>
+<p>One Windows inbound rule, as the PowerShell probe reports it.</p>
+
+</section>
+<section class="symbol" id="WinState">
+<h3><span class="kind">interface</span><a href="#WinState">WinState</a></h3>
+<pre><code class="language-ts">export interface WinState {
+  /** Firewall profiles that are on, e.g. [&quot;Domain&quot;, &quot;Private&quot;, &quot;Public&quot;]. */
+  enabled: string[];
+  /** Categories of the connected networks, e.g. [&quot;Public&quot;]. */
+  active: string[];
+  /** The enabled inbound rules. */
+  rules: WinRule[];
+}</code></pre>
+<p>Windows Defender Firewall&#39;s state, as the PowerShell probe reports it.</p>
+
+</section>
+<section class="symbol" id="evaluateWindows">
+<h3><span class="kind">function</span><a href="#evaluateWindows">evaluateWindows</a></h3>
+<pre><code class="language-ts">export function evaluateWindows(
+  s: WinState,
+  needs: Need[],
+): Array&lt;Need &amp; { reason: string; rule?: WinRule }&gt;</code></pre>
+<p>Which needs Windows would block, and why. Block rules win over allow rules.</p>
+
+</section>
+<section class="symbol" id="normalizeWinState">
+<h3><span class="kind">function</span><a href="#normalizeWinState">normalizeWinState</a></h3>
+<pre><code class="language-ts">export function normalizeWinState(raw: WinState): WinState</code></pre>
+<p>PowerShell&#39;s JSON as Archon reads it: single values made lists, empty remote entries dropped.</p>
+
+</section>
+<section class="symbol" id="evaluateUfw">
+<h3><span class="kind">function</span><a href="#evaluateUfw">evaluateUfw</a></h3>
+<pre><code class="language-ts">export function evaluateUfw(status: string, needs: Need[]): Need[]</code></pre>
+<p>ufw status output: which needs it does not allow.</p>
+
+</section>
+<section class="symbol" id="firewallWarnings">
+<h3><span class="kind">function</span><a href="#firewallWarnings">firewallWarnings</a></h3>
+<pre><code class="language-ts">export async function firewallWarnings(needs: Need[]): Promise&lt;string[]&gt;</code></pre>
+<p>Warnings for this machine&#39;s firewall; empty when it is fine or cannot be read.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon-boot/firewall.ts">Source</a></p>
+</main>
+
+</body>
+</html>

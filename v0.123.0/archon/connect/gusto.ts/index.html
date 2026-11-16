@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/connect/gusto.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/connect/gusto.ts</h1>
+<p>Spec 091: Gusto (payroll and HR), read-only, the roster only: each employee&#39;s work email, name, whether they have left (and when), hire date, manager, and employment status. Never compensation, SSNs, addresses, birth dates, or bank details: Gusto&#39;s employee record has them, and they are dropped as it is read. Evidence for account management (SCF IAC-08) and provisioning (IAC-04), through the estate graph.</p>
+<p>Gusto&#39;s API is OAuth 2.0 for registered apps (dev.gusto.com): a company&#39;s access token, scope <code>employees:read</code>, lasts two hours, and its refresh token is single-use. There is no self-serve, long-lived read-only token.</p>
+<h2>Exports</h2>
+<section class="symbol" id="GUSTO_API">
+<h3><span class="kind">const</span><a href="#GUSTO_API">GUSTO_API</a></h3>
+<pre><code class="language-ts">export const GUSTO_API</code></pre>
+<p>Gusto&#39;s production API.</p>
+
+</section>
+<section class="symbol" id="gusto">
+<h3><span class="kind">const</span><a href="#gusto">gusto</a></h3>
+<pre><code class="language-ts">export const gusto: Connector</code></pre>
+<p>Gusto.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/connect/gusto.ts">Source</a></p>
+</main>
+
+</body>
+</html>

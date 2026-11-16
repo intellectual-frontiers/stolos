@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/model/secret-inventory.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/model/secret-inventory.ts</h1>
+<p>The secret inventory (spec 028, constitution Article 13): every secret the fleet depends on, by name, where it lives, and how to make it again. Values never. The boot machine&#39;s secrets are what <code>bun run stolos vault</code> backs up and restores (spec 029); the owner&#39;s are listed so a lost one is not a surprise. A test checks that every path the code writes is listed here.</p>
+<h2>Exports</h2>
+<section class="symbol" id="SecretRef">
+<h3><span class="kind">interface</span><a href="#SecretRef">SecretRef</a></h3>
+<pre><code class="language-ts">export interface SecretRef {
+  /** Stable identifier (&quot;deploy-key&quot;). */
+  id: string;
+  /** Short name for tables and the backup panel; &lt;host&gt; and &lt;type&gt; are filled in. */
+  label: string;
+  /**
+   * Boot machine: the path inside its secrets folder (%APPDATA%\stolos\secrets),
+   * with &lt;host&gt;, &lt;type&gt;, and &lt;name&gt; placeholders. Owner: where it is kept.
+   */
+  path: string;
+  /** What it is for, in a sentence. */
+  purpose: string;
+  /** Who keeps it: the boot machine (backed up by the vault) or the owner. */
+  holder: &quot;boot-machine&quot; | &quot;owner&quot;;
+  /** How to make it again when it is lost (vault status --lost prints this). */
+  recreate: string;
+  /** Short-lived; never backed up (install tokens). */
+  ephemeral?: true;
+  /** Identity that cannot be re-made the same: losing it changes what others trust. */
+  identity?: true;
+  /** The spec that introduced it (`NNN-short-name`). */
+  spec: string;
+}</code></pre>
+<p>One secret the fleet depends on: where it lives and how to make it again (never its value).</p>
+
+</section>
+<section class="symbol" id="SECRET_INVENTORY">
+<h3><span class="kind">const</span><a href="#SECRET_INVENTORY">SECRET_INVENTORY</a></h3>
+<pre><code class="language-ts">export const SECRET_INVENTORY: SecretRef[]</code></pre>
+<p>Every secret the fleet depends on: the boot machine&#39;s first, then the owner&#39;s.</p>
+
+</section>
+<section class="symbol" id="patternOf">
+<h3><span class="kind">function</span><a href="#patternOf">patternOf</a></h3>
+<pre><code class="language-ts">export function patternOf(path: string): RegExp</code></pre>
+<p>A path pattern (&quot;hosts/&lt;host&gt;/deploy_key&quot;) as a regular expression.</p>
+
+</section>
+<section class="symbol" id="labelFor">
+<h3><span class="kind">function</span><a href="#labelFor">labelFor</a></h3>
+<pre><code class="language-ts">export function labelFor(ref: SecretRef, rel: string): string</code></pre>
+<p>The entry&#39;s label for one file: &quot;hermes deploy key&quot;.</p>
+
+</section>
+<section class="symbol" id="secretFor">
+<h3><span class="kind">function</span><a href="#secretFor">secretFor</a></h3>
+<pre><code class="language-ts">export function secretFor(rel: string): SecretRef | undefined</code></pre>
+<p>The inventory entry for a path relative to the secrets folder (forward slashes).</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/model/secret-inventory.ts">Source</a></p>
+</main>
+
+</body>
+</html>

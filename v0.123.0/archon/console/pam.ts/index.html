@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/console/pam.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/console/pam.ts</h1>
+<p>Spec 065: checks a username and password with Linux itself (PAM). The console calls it in a worker thread ({@link pamAuthenticator}): pam_unix waits about two seconds after a wrong password, and the web server must not stop answering meanwhile. The service is <code>archon-console</code> (/etc/pam.d/archon-console: common-auth and common-account, as Ubuntu&#39;s own services use them); the console&#39;s account is in the shadow group, so pam_unix can read the password hashes.</p>
+<p>libpam and libc are called through Bun&#39;s FFI (<code>bun:ffi</code>, spec 096 FR-010): this is the one file of the engine that names it, and it loads it only on Bun. On Node the password sign-in is refused as not supported ({@link PAM_UNSUPPORTED}). The PAM conversation answers the username prompt and the password prompt, and nothing else.</p>
+<h2>Exports</h2>
+<section class="symbol" id="PAM_UNSUPPORTED">
+<h3><span class="kind">const</span><a href="#PAM_UNSUPPORTED">PAM_UNSUPPORTED</a></h3>
+<pre><code class="language-ts">export const PAM_UNSUPPORTED</code></pre>
+<p>Why the password sign-in is refused where the engine runs on Node (spec 096 FR-010).</p>
+
+</section>
+<section class="symbol" id="pamSupported">
+<h3><span class="kind">function</span><a href="#pamSupported">pamSupported</a></h3>
+<pre><code class="language-ts">export function pamSupported(runtime: string = proc.runtimeName()): boolean</code></pre>
+<p>Whether this runtime can check a password with PAM: Bun only (spec 096 FR-010).</p>
+
+</section>
+<section class="symbol" id="cstr">
+<h3><span class="kind">function</span><a href="#cstr">cstr</a></h3>
+<pre><code class="language-ts">export function cstr(s: string): Uint8Array</code></pre>
+<p>A C string: the text&#39;s UTF-8 bytes and a terminating NUL.</p>
+
+</section>
+<section class="symbol" id="answerFor">
+<h3><span class="kind">function</span><a href="#answerFor">answerFor</a></h3>
+<pre><code class="language-ts">export function answerFor(style: number, user: string, password: string): string | undefined</code></pre>
+<p>The answer to one PAM conversation message, by its style: the password to a hidden prompt, the username to a visible one, nothing to anything else (error and information messages).</p>
+
+</section>
+<section class="symbol" id="pointerBytes">
+<h3><span class="kind">function</span><a href="#pointerBytes">pointerBytes</a></h3>
+<pre><code class="language-ts">export function pointerBytes(pointer: number): BigUint64Array</code></pre>
+<p>A 64-bit pointer&#39;s bytes, as libc&#39;s memcpy copies it into a <code>struct</code> (little-endian hosts).</p>
+
+</section>
+<section class="symbol" id="PamCheck">
+<h3><span class="kind">type</span><a href="#PamCheck">PamCheck</a></h3>
+<pre><code class="language-ts">export type PamCheck = (
+  service: string,
+  user: string,
+  password: string,
+  confdir?: string,
+) =&gt; boolean;</code></pre>
+<p>Checks one username and password through a PAM service (and, in tests, a PAM configuration folder).</p>
+
+</section>
+<section class="symbol" id="loadPam">
+<h3><span class="kind">function</span><a href="#loadPam">loadPam</a></h3>
+<pre><code class="language-ts">export async function loadPam(): Promise&lt;PamCheck&gt;</code></pre>
+<p>libpam and libc opened through bun:ffi, as a synchronous check (it blocks: call it in a worker). Throws <code>NotSupported</code> on any runtime but Bun, before anything is loaded.</p>
+
+</section>
+<section class="symbol" id="PamRequest">
+<h3><span class="kind">type</span><a href="#PamRequest">PamRequest</a></h3>
+<pre><code class="language-ts">export type PamRequest = {
+  /** The request's number, given back with the answer. */
+  readonly id: number;
+  /** The PAM service (/etc/pam.d/&lt;service&gt;). */
+  readonly service: string;
+  /** The account's name. */
+  readonly user: string;
+  /** The password typed. */
+  readonly password: string;
+  /** A PAM configuration folder instead of /etc/pam.d (tests). */
+  readonly confdir?: string;
+};</code></pre>
+<p>What the console asks the worker (pam-worker.ts).</p>
+
+</section>
+<section class="symbol" id="PamReply">
+<h3><span class="kind">type</span><a href="#PamReply">PamReply</a></h3>
+<pre><code class="language-ts">export type PamReply = {
+  /** The request's number. */
+  readonly id: number;
+  /** Whether the account signs in with that password. */
+  readonly ok: boolean;
+};</code></pre>
+<p>What the worker answers.</p>
+
+</section>
+<section class="symbol" id="pamRequest">
+<h3><span class="kind">function</span><a href="#pamRequest">pamRequest</a></h3>
+<pre><code class="language-ts">export function pamRequest(m: unknown): PamRequest | undefined</code></pre>
+<p>A message as a request to the worker, or undefined where it is not one.</p>
+
+</section>
+<section class="symbol" id="pamReply">
+<h3><span class="kind">function</span><a href="#pamReply">pamReply</a></h3>
+<pre><code class="language-ts">export function pamReply(m: unknown): PamReply | undefined</code></pre>
+<p>A message as the worker&#39;s answer, or undefined where it is not one.</p>
+
+</section>
+<section class="symbol" id="Authenticator">
+<h3><span class="kind">interface</span><a href="#Authenticator">Authenticator</a></h3>
+<pre><code class="language-ts">export interface Authenticator {
+  /** Whether `user` signs in with `password`; rejects with `NotSupported` where the runtime cannot check. */
+  check(user: string, password: string): Promise&lt;boolean&gt;;
+}</code></pre>
+<p>Checks a username and password: PAM on a server, a fake in tests.</p>
+
+</section>
+<section class="symbol" id="pamWorkerUrl">
+<h3><span class="kind">function</span><a href="#pamWorkerUrl">pamWorkerUrl</a></h3>
+<pre><code class="language-ts">export function pamWorkerUrl(self: string = import.meta.url): URL</code></pre>
+<p>The worker&#39;s module, beside this one with this module&#39;s own extension: <code>pam-worker.ts</code> from the repository, <code>pam-worker.js</code> from the release package (spec 096 FR-005, compiled to JavaScript).</p>
+
+</section>
+<section class="symbol" id="pamAuthenticator">
+<h3><span class="kind">function</span><a href="#pamAuthenticator">pamAuthenticator</a></h3>
+<pre><code class="language-ts">export function pamAuthenticator(
+  service = &quot;archon-console&quot;,
+  o: { confdir?: string } = {},
+): Authenticator &amp; { close(): Promise&lt;void&gt; }</code></pre>
+<p>PAM in a worker thread, through the service <code>service</code> (/etc/pam.d/&lt;service&gt;, or <code>confdir</code>&#39;s). On Node every check rejects with <code>NotSupported</code> ({@link PAM_UNSUPPORTED}) and no worker starts.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/console/pam.ts">Source</a></p>
+</main>
+
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/people/mod.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/people/mod.ts</h1>
+<h2 id="people-controls">People controls</h2>
+<p>Joiners and leavers, quarterly access reviews, policies, training, and screening, kept the Git way and checked on the estate graph (spec 077). The HR system says who works here, who reports to whom, and who left; every connected system says which accounts exist. Stolos compares them, and what a person must sign (an access review, a policy) is a signed commit in the fleet repository.</p>
+<pre class="mermaid">flowchart LR
+  hr[&quot;HR system: people, managers, end dates&quot;] --&gt; estate[(&quot;estate graph&quot;)]
+  sys[&quot;identity, code, cloud, SaaS: accounts&quot;] --&gt; estate
+  files[&quot;fleets/&amp;lt;fleet&amp;gt;/people/ and policies/&quot;] --&gt; controls[&quot;people controls&quot;]
+  estate --&gt; controls
+  git[&quot;Git: signed commits, observation history&quot;] --&gt; controls
+  controls --&gt; status[&quot;stolos people status&quot;] &amp; compliance[&quot;stolos compliance: the People pack&quot;]
+  estate --&gt; review[&quot;stolos people review: one file per manager, a pull request&quot;]
+  review --&gt; git</pre>
+<h3 id="joiners-and-leavers">Joiners and leavers</h3>
+<ul><li><strong>Leavers</strong>: a person the HR system marks as terminated with an account that can still sign in fails the estate&#39;s own check, <code>leavers</code> (SCF IAC-04).</li><li><strong>Joiners</strong>: <code>fleets/&lt;fleet&gt;/people/roles.ts</code> names the connected systems each role needs (the HR system&#39;s role, such as employee or contractor, or <code>&quot;*&quot;</code> for everyone). An active person without one of them is named (IAC-04, HRS-08). A system that is not connected is not asked for.</li><li><strong>On leave</strong>: the active accounts of people on leave are named (IAC-08, HRS-08); record a decision to keep them open in <code>controls/accepted.ts</code> as <code>people/on-leave</code>.</li><li><strong>Time to deprovision</strong>: for each leaver&#39;s account, how many days it stayed active after the end date, from the history of the observations in Git (the last observation in which it could sign in). More than a day is a warning (HRS-12).</li></ul>
+<pre><code>// fleets/&lt;fleet&gt;/people/roles.ts
+export const roles = {
+  &quot;*&quot;: [&quot;google&quot;, &quot;onepassword&quot;],
+  employee: [&quot;github&quot;],
+};</code></pre>
+<h3 id="access-reviews">Access reviews</h3>
+<pre><code>bun run stolos people review --quarter 2026-Q4</code></pre>
+<p>Writes <code>people/reviews/&lt;quarter&gt;/&lt;manager&gt;.md</code> for each manager (from the HR system&#39;s reporting lines): each report&#39;s active accounts, and which are administrators, one unticked line each. It commits them, signed, on the branch <code>people/review-&lt;quarter&gt;</code>, pushes it, and opens a pull request with <code>gh</code>. <code>--check</code> shows what it would write; <code>--local</code> commits without pushing.</p>
+<p>The manager ticks each line they confirm (<code>- [x]</code>), removes in the system itself any access they do not, and commits the file signed with their own key, or asks a fleet signer to. That commit is the approval; a later signed commit with the trailer <code>Access-Review: &lt;quarter&gt;/&lt;manager&gt;</code> approves a file as it stands. Merge the pull request so the commits are kept (a merge commit or a fast-forward, never a squash or a rebase), then <code>bun run stolos apply</code> as usual.</p>
+<p>The check <code>people/access-reviews</code> (IAC-12) passes when every manager has an approved review for the last quarter that ended. Each review&#39;s file and its signed commit are evidence by themselves: <code>bun run stolos evidence export</code> puts both in the bundle for the quarters of its period.</p>
+<p>A manager&#39;s own key is in <code>fleets/&lt;fleet&gt;/people/keys.ts</code>, by work email (the email is the principal Git verifies the signature against):</p>
+<pre><code>// fleets/&lt;fleet&gt;/people/keys.ts
+export const keys = {
+  &quot;bob@example.org&quot;: &quot;ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExampleExampleExampleExampleExample&quot;,
+};</code></pre>
+<p>Adding a key is a change like any other: a commit a fleet signer signs.</p>
+<h3 id="policies">Policies</h3>
+<p>Each policy is Markdown in <code>fleets/&lt;fleet&gt;/policies/&lt;policy&gt;.md</code>, with front matter:</p>
+<pre><code>---
+title: Acceptable use
+version: 1.2
+owner: alice@example.org
+review: 2027-06-30
+---</code></pre>
+<p><code>review</code> is the date by which it must next be reviewed; after it, <code>people/policy-reviews</code> fails (GOV-04.1). Everyone acknowledges each current version:</p>
+<pre><code>bun run stolos people ack acceptable-use</code></pre>
+<p>adds you to <code>policies/acks/acceptable-use.ts</code> and commits it, signed with your own key (the one in <code>people/keys.ts</code>), with the trailer <code>Acknowledges: acceptable-use@1.2</code>. The signed commit is the e-signature: a line in the acks file without one does not count. <code>people/policy-acks</code> (HRS-08.2) fails while an active person owes an acknowledgement of a current version.</p>
+<h3 id="training-and-screening">Training and screening</h3>
+<p>The records, with no more than a control needs (never a screening&#39;s details):</p>
+<pre><code>// fleets/&lt;fleet&gt;/people/training.ts
+export const training = [
+  { email: &quot;alice@example.org&quot;, course: &quot;security awareness&quot;, date: &quot;2026-03-02&quot;, result: &quot;passed&quot; },
+];</code></pre>
+<pre><code>// fleets/&lt;fleet&gt;/people/screening.ts
+export const screening = [
+  { email: &quot;alice@example.org&quot;, check: &quot;background&quot;, date: &quot;2025-01-10&quot;, result: &quot;clear&quot; },
+];</code></pre>
+<p><code>people/training</code> (SAT-04, SAT-10) fails for an active person with no passed training in the last 12 months; <code>people/screening</code> (HRS-05) for one with no screening on file, or none clear. A connector that reads a learning system or a screening provider supplies records labeled <code>person_record</code> (with <code>kind</code>: training or screening) and the checks read them too.</p>
+<h3 id="commands">Commands</h3>
+<pre><code>bun run stolos people status
+bun run stolos people review --quarter 2026-Q4
+bun run stolos people ack acceptable-use</code></pre>
+<p><code>people status</code> runs every check now and lists each leaver account&#39;s time to deprovision; with people files kept, the same checks show in <code>bun run stolos compliance</code> as the People pack.</p>
+<h2>Re-exports</h2>
+<ul>
+<li><code>Policy</code> from <a href="../../../archon/people/records.ts/index.html"><code>./records.ts</code></a></li>
+<li><code>PolicyAck</code> from <a href="../../../archon/people/records.ts/index.html"><code>./records.ts</code></a></li>
+<li><code>RoleMap</code> from <a href="../../../archon/people/records.ts/index.html"><code>./records.ts</code></a></li>
+<li><code>ScreeningRecord</code> from <a href="../../../archon/people/records.ts/index.html"><code>./records.ts</code></a></li>
+<li><code>TrainingRecord</code> from <a href="../../../archon/people/records.ts/index.html"><code>./records.ts</code></a></li>
+<li><code>peopleControls</code> from <a href="../../../archon/people/controls.ts/index.html"><code>./controls.ts</code></a></li>
+<li><code>PeopleFacts</code> from <a href="../../../archon/people/controls.ts/index.html"><code>./controls.ts</code></a></li>
+<li><code>peoplePack</code> from <a href="../../../archon/people/controls.ts/index.html"><code>./controls.ts</code></a></li>
+</ul>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/people/mod.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

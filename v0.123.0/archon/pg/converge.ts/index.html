@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/pg/converge.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/pg/converge.ts</h1>
+<p>038-pg, 039-pg-identity: make each instance what the model and the host&#39;s record say. Run by every apply (its Databases phase, so the reconcile timer keeps instances) and by archon pg ensure. Archon touches only clusters it created (FR-003).</p>
+<h2>Exports</h2>
+<section class="symbol" id="Sink">
+<h3><span class="kind">interface</span><a href="#Sink">Sink</a></h3>
+<pre><code class="language-ts">export interface Sink {
+  /** A read-only check: report what would change, change nothing. */
+  check: boolean;
+  /** Report a change made (or, in a check, one that would be made). */
+  change(msg: string): void;
+  /** Report a problem that does not stop converge, with an optional fix to suggest. */
+  warn(msg: string, fix?: string): void;
+  /** Report a failure, with an optional fix to suggest. */
+  fail(msg: string, fix?: string): void;
+  /** A read-only check could not read this file as the calling user. */
+  unreadable?(path: string): void;
+}</code></pre>
+<p>Where converge reports (apply&#39;s Runner, or a command&#39;s phase).</p>
+
+</section>
+<section class="symbol" id="clusters">
+<h3><span class="kind">function</span><a href="#clusters">clusters</a></h3>
+<pre><code class="language-ts">export async function clusters(): Promise&lt;Cluster[]&gt;</code></pre>
+<p>The host&#39;s PostgreSQL clusters, from pg_lsclusters (empty when it fails).</p>
+
+</section>
+<section class="symbol" id="secretPath">
+<h3><span class="kind">const</span><a href="#secretPath">secretPath</a></h3>
+<pre><code class="language-ts">export const secretPath</code></pre>
+<p>Where a role&#39;s password for an instance is kept, under {@link PG}.secrets (as the host names it: read and write it through <code>onHost</code>).</p>
+
+</section>
+<section class="symbol" id="psql">
+<h3><span class="kind">function</span><a href="#psql">psql</a></h3>
+<pre><code class="language-ts">export function psql(v: number, n: string, sql: string, db = &quot;postgres&quot;): Promise&lt;RunResult&gt;</code></pre>
+<p>psql as postgres against one cluster (Debian&#39;s wrapper picks it by --cluster).</p>
+
+</section>
+<section class="symbol" id="readState">
+<h3><span class="kind">function</span><a href="#readState">readState</a></h3>
+<pre><code class="language-ts">export async function readState(host: string, root = P.state): Promise&lt;PgState&gt;</code></pre>
+<p>Read the host&#39;s pg record (the switch and the instances); no instances when there is none.</p>
+
+</section>
+<section class="symbol" id="writeState">
+<h3><span class="kind">function</span><a href="#writeState">writeState</a></h3>
+<pre><code class="language-ts">export async function writeState(host: string, st: PgState, root = P.state): Promise&lt;void&gt;</code></pre>
+<p>Write the whole record (the switch and the instances), sorted.</p>
+
+</section>
+<section class="symbol" id="writeRecord">
+<h3><span class="kind">function</span><a href="#writeRecord">writeRecord</a></h3>
+<pre><code class="language-ts">export async function writeRecord(
+  host: string,
+  name: string,
+  rec: PgRecord | undefined,
+  root = P.state,
+): Promise&lt;void&gt;</code></pre>
+<p>Set one instance&#39;s record, or remove it when <code>rec</code> is undefined.</p>
+
+</section>
+<section class="symbol" id="ensureVersion">
+<h3><span class="kind">function</span><a href="#ensureVersion">ensureVersion</a></h3>
+<pre><code class="language-ts">export async function ensureVersion(
+  fleet: FleetDef,
+  host: HostDef,
+  v: number,
+  s: Sink,
+): Promise&lt;boolean&gt;</code></pre>
+<p>postgresql-&lt;v&gt;: Ubuntu&#39;s for 18, PGDG&#39;s (Ubuntu&#39;s own key) for the others.</p>
+
+</section>
+<section class="symbol" id="wildcardFrom">
+<h3><span class="kind">function</span><a href="#wildcardFrom">wildcardFrom</a></h3>
+<pre><code class="language-ts">export function wildcardFrom(
+  acme: string,
+  fqdn: string,
+): { cert: string; key: string } | undefined</code></pre>
+<p>The server&#39;s wildcard certificate from Traefik&#39;s store (spec 032), for a published instance: libpq clients verify pg-&lt;name&gt;.&lt;host&gt;.&lt;domain&gt; with sslrootcert=system. Undefined when there is none yet.</p>
+
+</section>
+<section class="symbol" id="convergeInstance">
+<h3><span class="kind">function</span><a href="#convergeInstance">convergeInstance</a></h3>
+<pre><code class="language-ts">export async function convergeInstance(
+  fleet: FleetDef,
+  host: HostDef,
+  inst: Instance,
+  s: Sink,
+  by: string,
+): Promise&lt;boolean&gt;</code></pre>
+<p>Make one instance right. Returns false on a failure (reported to the sink). by: who asked (recorded when the cluster is created).</p>
+
+</section>
+<section class="symbol" id="accountExists">
+<h3><span class="kind">function</span><a href="#accountExists">accountExists</a></h3>
+<pre><code class="language-ts">export async function accountExists(name: string): Promise&lt;boolean&gt;</code></pre>
+<p>A Linux account&#39;s existence (every login role must be one).</p>
+
+</section>
+<section class="symbol" id="groupMembers">
+<h3><span class="kind">function</span><a href="#groupMembers">groupMembers</a></h3>
+<pre><code class="language-ts">export async function groupMembers(group: string): Promise&lt;string[]&gt;</code></pre>
+<p>A Linux group&#39;s members: listed members and those whose primary group it is.</p>
+
+</section>
+<section class="symbol" id="convergeIdentities">
+<h3><span class="kind">function</span><a href="#convergeIdentities">convergeIdentities</a></h3>
+<pre><code class="language-ts">export async function convergeIdentities(v: number, inst: Instance, s: Sink): Promise&lt;boolean&gt;</code></pre>
+<p>An instance&#39;s identities (spec 039): every login role it wants (a superuser among them made <code>NOSUPERUSER</code>); a login role that is Archon&#39;s but not wanted, or has no Linux account of its name, made <code>NOLOGIN</code> (never dropped); passwords only for services; then each database&#39;s roles, members, rights, and extensions. False when a step failed.</p>
+
+</section>
+<section class="symbol" id="writeSystemServices">
+<h3><span class="kind">function</span><a href="#writeSystemServices">writeSystemServices</a></h3>
+<pre><code class="language-ts">export async function writeSystemServices(host: string, s: Sink): Promise&lt;void&gt;</code></pre>
+<p>libpq&#39;s system-wide service file (spec 039), written after the instances exist: a new one&#39;s port is known only once it is created.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/pg/converge.ts">Source</a></p>
+</main>
+
+</body>
+</html>

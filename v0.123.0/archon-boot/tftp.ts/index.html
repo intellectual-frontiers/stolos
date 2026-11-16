@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon-boot/tftp.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../index.html">Stolos v0.123.0</a> · <a href="../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon-boot/tftp.ts</h1>
+<p>A read-only TFTP server for PXE (spec 004): UEFI PXE firmware fetches shim over TFTP, shim fetches GRUB, and GRUB its menu, kernel, and initrd, all from the same server. Each read is answered by the same handler as HTTP, so PXE and HTTP Boot serve identical files and menus. RFC 1350 with the blksize (2348), tsize (2349), timeout (2349), and windowsize (7440) options; block numbers roll over past 65535 (Ubuntu&#39;s initrd is ~100 MB).</p>
+<h2>Exports</h2>
+<section class="symbol" id="TftpOptions">
+<h3><span class="kind">interface</span><a href="#TftpOptions">TftpOptions</a></h3>
+<pre><code class="language-ts">export interface TftpOptions {
+  /** The UDP port to listen on (69 is TFTP's standard port). */
+  port: number;
+  /** Read a file for a client: bytes, or undefined when there is none. */
+  read: (path: string, from: string) =&gt; Promise&lt;Uint8Array | undefined&gt;;
+  /** Spec 049: structured events; the window and boot.log render them. */
+  emit: (e: ArchonEvent) =&gt; void;
+}</code></pre>
+<p>Options for the TFTP server.</p>
+
+</section>
+<section class="symbol" id="parseRequest">
+<h3><span class="kind">function</span><a href="#parseRequest">parseRequest</a></h3>
+<pre><code class="language-ts">export function parseRequest(
+  msg: Uint8Array,
+): { file: string; mode: string; opts: Record&lt;string, string&gt; } | undefined</code></pre>
+<p>Parse a TFTP read request (RRQ): the file, the transfer mode (lowercased) and the options (names lowercased). Undefined for anything else.</p>
+
+</section>
+<section class="symbol" id="negotiate">
+<h3><span class="kind">function</span><a href="#negotiate">negotiate</a></h3>
+<pre><code class="language-ts">export function negotiate(
+  opts: Record&lt;string, string&gt;,
+  size: number,
+): {
+  /** The accepted options, to send back in the OACK (empty when none were asked). */
+  out: Record&lt;string, string&gt;;
+  /** Bytes per DATA block: 512 unless asked, clamped to 8..1468. */
+  blksize: number;
+  /** Retransmit timeout in seconds: 1 unless asked, clamped to 1..255. */
+  timeout: number;
+  /** Blocks sent before waiting for an ACK: 1 unless asked, clamped to 1..64. */
+  window: number;
+}</code></pre>
+<p>Negotiate options: what we accept, as sent back in the OACK.</p>
+
+</section>
+<section class="symbol" id="serveTftp">
+<h3><span class="kind">function</span><a href="#serveTftp">serveTftp</a></h3>
+<pre><code class="language-ts">export function serveTftp(o: TftpOptions): Promise&lt;{ close: () =&gt; void }&gt;</code></pre>
+<p>Serve TFTP reads on <code>o.port</code> (all IPv4 addresses). Resolves once bound, with a <code>close</code> to stop it; rejects with a plain explanation when the port is in use or needs privileges.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon-boot/tftp.ts">Source</a></p>
+</main>
+
+</body>
+</html>

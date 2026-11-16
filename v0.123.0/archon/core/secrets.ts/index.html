@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/core/secrets.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/core/secrets.ts</h1>
+<p>The boot machine&#39;s secret store (spec 003, Article 13): a per-user folder outside the repository (%APPDATA%\stolos\secrets on Windows, ~/.config/stolos/secrets elsewhere). Holds the admin password hash, each host&#39;s deploy key, and install tokens. Nothing here is ever committed.</p>
+<h2>Exports</h2>
+<section class="symbol" id="SECRETS">
+<h3><span class="kind">const</span><a href="#SECRETS">SECRETS</a></h3>
+<pre><code class="language-ts">export const SECRETS</code></pre>
+<p>Where each secret lives on the boot machine (per fleet; never in Git).</p>
+
+</section>
+<section class="symbol" id="writeSecret">
+<h3><span class="kind">function</span><a href="#writeSecret">writeSecret</a></h3>
+<pre><code class="language-ts">export async function writeSecret(path: string, content: string): Promise&lt;void&gt;</code></pre>
+<p>Write a secret readable only by this user (POSIX 0600; Windows: inheritance removed and full control for this user only, icacls). Every secret write in Archon goes through here (spec 029): it records the change in the ledger, so the vault knows what is newer than the last backup. Unchanged content is not rewritten (and is not a change).</p>
+
+</section>
+<section class="symbol" id="removeSecret">
+<h3><span class="kind">function</span><a href="#removeSecret">removeSecret</a></h3>
+<pre><code class="language-ts">export async function removeSecret(path: string): Promise&lt;void&gt;</code></pre>
+<p>Remove a secret (and record it, so the vault knows).</p>
+
+</section>
+<section class="symbol" id="ownerOnly">
+<h3><span class="kind">function</span><a href="#ownerOnly">ownerOnly</a></h3>
+<pre><code class="language-ts">export async function ownerOnly(path: string): Promise&lt;void&gt;</code></pre>
+<p>Windows: this user only (no inherited access), the equivalent of 0600.</p>
+
+</section>
+<section class="symbol" id="readSecret">
+<h3><span class="kind">function</span><a href="#readSecret">readSecret</a></h3>
+<pre><code class="language-ts">export async function readSecret(path: string): Promise&lt;string | undefined&gt;</code></pre>
+<p>A secret&#39;s content, or undefined.</p>
+
+</section>
+<section class="symbol" id="InstallToken">
+<h3><span class="kind">interface</span><a href="#InstallToken">InstallToken</a></h3>
+<pre><code class="language-ts">export interface InstallToken {
+  /** The host. */
+  host: string;
+  /** The random token in its install URLs. */
+  token: string;
+  /** When the token was issued (ISO time). */
+  armed: string;
+  /** First time the host fetched its install config; the token then lives 2 hours. */
+  firstUse?: string;
+  /** The MAC the host network-booted from, as GRUB reported it. */
+  mac?: string;
+  /** Addresses the host was installed from (its old SSH host keys are forgotten for each). */
+  addresses?: string[];
+  /** `boot arm --claim`: until then, the next unknown machine to network-boot becomes this host. */
+  claimUntil?: string;
+  /** The installer reported completion; the token is spent. */
+  done?: string;
+  /**
+   * Spec 051: a person repeated the host's name with --confirm-destroy: this one
+   * install may erase disks that are not blank (otherwise the installer stops).
+   */
+  confirmDestroy?: true;
+  /**
+   * boot reinstall reached this host over SSH (its registered keys) and rebooted
+   * it into this install: a machine with this MAC holds this host already.
+   */
+  reinstall?: true;
+}</code></pre>
+<p>One armed install (the boot machine&#39;s own record).</p>
+
+</section>
+<section class="symbol" id="loadTokens">
+<h3><span class="kind">function</span><a href="#loadTokens">loadTokens</a></h3>
+<pre><code class="language-ts">export async function loadTokens(): Promise&lt;InstallToken[]&gt;</code></pre>
+<p>Every armed install.</p>
+
+</section>
+<section class="symbol" id="saveTokens">
+<h3><span class="kind">function</span><a href="#saveTokens">saveTokens</a></h3>
+<pre><code class="language-ts">export async function saveTokens(tokens: InstallToken[]): Promise&lt;void&gt;</code></pre>
+<p>Write them back.</p>
+
+</section>
+<section class="symbol" id="armHost">
+<h3><span class="kind">function</span><a href="#armHost">armHost</a></h3>
+<pre><code class="language-ts">export async function armHost(
+  host: string,
+  claimMinutes = 0,
+  knownMac?: string,
+  o: { confirmDestroy?: boolean; reinstall?: boolean } = {},
+): Promise&lt;InstallToken&gt;</code></pre>
+<p>Arm a host for one install: any previous token for it is replaced.</p>
+
+</section>
+<section class="symbol" id="liveToken">
+<h3><span class="kind">function</span><a href="#liveToken">liveToken</a></h3>
+<pre><code class="language-ts">export function liveToken(
+  tokens: InstallToken[],
+  host: string,
+  now = Date.now(),
+): InstallToken | undefined</code></pre>
+<p>The live token for a host: armed, not done, and not expired.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/core/secrets.ts">Source</a></p>
+</main>
+
+</body>
+</html>

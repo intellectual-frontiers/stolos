@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/console/stolos-server.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/console/stolos-server.ts</h1>
+<p>Spec 066: the Stolos Console&#39;s web server, on this PC only.</p>
+<ul><li>It listens on 127.0.0.1 and answers only requests whose Host is 127.0.0.1 or localhost on its port (a web page elsewhere cannot reach it through DNS rebinding).</li><li>Sign-in is a one-time launch link the terminal prints (<code>/launch?t=...</code>): it works once, for two minutes, and becomes a session cookie (HttpOnly, SameSite=Strict). No password and no new key: whoever can read your terminal is you.</li><li>POSTs come from this page only (Origin, and Datastar&#39;s own header).</li><li>Commands run as <code>bun run stolos ...</code> in the fleet repository, one at a time, with this terminal as their input: a passphrase or token is typed there, never in the browser.</li><li>Under <code>/v1/</code>, a read-only REST API for the estate (spec 094, <code>../api/handler.ts</code>): GET and HEAD only, for the same signed-in session.</li><li>Under <code>/audit/&lt;id&gt;/</code> and <code>/v1/audit/&lt;id&gt;/</code>, the auditor portal (spec 083, <code>../audit/portal.ts</code>), behind its own one-time link (<code>/audit/launch</code>): an audit-scoped session sees that engagement&#39;s routes only.</li></ul>
+<h2>Exports</h2>
+<section class="symbol" id="STOLOS_COOKIE">
+<h3><span class="kind">const</span><a href="#STOLOS_COOKIE">STOLOS_COOKIE</a></h3>
+<pre><code class="language-ts">export const STOLOS_COOKIE</code></pre>
+<p>The Stolos Console&#39;s cookie.</p>
+
+</section>
+<section class="symbol" id="LAUNCH_MS">
+<h3><span class="kind">const</span><a href="#LAUNCH_MS">LAUNCH_MS</a></h3>
+<pre><code class="language-ts">export const LAUNCH_MS</code></pre>
+<p>How long a launch link works.</p>
+
+</section>
+<section class="symbol" id="PERSON_ONLY">
+<h3><span class="kind">const</span><a href="#PERSON_ONLY">PERSON_ONLY</a></h3>
+<pre><code class="language-ts">export const PERSON_ONLY: Set&lt;string&gt;</code></pre>
+<p>Commands the PC console offers although agents may not (a person is at this PC).</p>
+
+</section>
+<section class="symbol" id="TERMINAL_ONLY">
+<h3><span class="kind">const</span><a href="#TERMINAL_ONLY">TERMINAL_ONLY</a></h3>
+<pre><code class="language-ts">export const TERMINAL_ONLY: Set&lt;string&gt;</code></pre>
+<p>Changes to who the fleet trusts, and the console itself: in the terminal only.</p>
+
+</section>
+<section class="symbol" id="stolosCommands">
+<h3><span class="kind">function</span><a href="#stolosCommands">stolosCommands</a></h3>
+<pre><code class="language-ts">export function stolosCommands(): Command[]</code></pre>
+<p>The commands the Stolos Console offers. Keys that change, restores, and the console itself stay in the terminal.</p>
+
+</section>
+<section class="symbol" id="Launch">
+<h3><span class="kind">class</span><a href="#Launch">Launch</a></h3>
+<pre><code class="language-ts">export class Launch {
+  constructor(now: () =&gt; number = Date.now)
+  issue(): string
+  redeem(t: string | null): boolean
+}</code></pre>
+<p>One-time launch links.</p>
+
+</section>
+<section class="symbol" id="stolosCookie">
+<h3><span class="kind">function</span><a href="#stolosCookie">stolosCookie</a></h3>
+<pre><code class="language-ts">export function stolosCookie(s: Session | undefined): string</code></pre>
+<p>A session cookie for the PC (no Secure: it is plain HTTP on the loopback, which browsers treat as secure).</p>
+
+</section>
+<section class="symbol" id="PcRunner">
+<h3><span class="kind">type</span><a href="#PcRunner">PcRunner</a></h3>
+<pre><code class="language-ts">export type PcRunner = (argv: string[], each: (line: string) =&gt; void) =&gt; Promise&lt;number&gt;;</code></pre>
+<p>Runs <code>bun run stolos &lt;argv&gt;</code>: each output line, then the exit code.</p>
+
+</section>
+<section class="symbol" id="StolosDeps">
+<h3><span class="kind">interface</span><a href="#StolosDeps">StolosDeps</a></h3>
+<pre><code class="language-ts">export interface StolosDeps {
+  /** The port it listens on (for the Host check). */
+  port: number;
+  /** The person at this PC. */
+  person: { user: string; name: string; github?: string };
+  /** The launch links. */
+  launch: Launch;
+  /** The sessions. */
+  sessions: Sessions;
+  /** The fleet's facts. */
+  facts(): Promise&lt;PcFacts&gt;;
+  /** Runs a stolos command. */
+  runner: PcRunner;
+  /** The activity record. */
+  activity: { add(e: ActivityEntry): Promise&lt;void&gt;; recent(n: number): Promise&lt;ActivityEntry[]&gt; };
+  /** The guides offered (docs/&lt;name&gt;.md). */
+  guides: Array&lt;{ name: string; title: string; why: string }&gt;;
+  /** A guide's page. */
+  guideDoc(name: string): Promise&lt;string | undefined&gt;;
+  /** The lines to run on a machine for an integration (and its probe key, made now), spec 069. */
+  integrate(name: string, as: string[]): Promise&lt;{ posix: string; windows?: string }&gt;;
+  /** The boot server's log (boot.log), or &quot;&quot; when it has none. */
+  bootLog(): Promise&lt;string&gt;;
+  /** Where Mermaid and the fonts are cached. */
+  cacheDir: string;
+  /** The estate graph with its findings, for the REST API (spec 094). */
+  estate(): Promise&lt;Estate&gt;;
+  /** The directory with this PC's evidence bundles (spec 072), for the REST API. */
+  evidenceDir: string;
+  /** The SCF catalog, when it is on this PC (default: the cached one). */
+  catalog?(): Promise&lt;ScfCatalog | undefined&gt;;
+  /** Spec 083: the auditor portal's engagements and links (none: no portal). */
+  audit?: AuditDeps;
+  /** Spec 082: the provider's client these pages are for (shown in the top bar, with the way back). */
+  scope?: { label: string; href: string };
+}</code></pre>
+<p>What the Stolos Console needs: real on the PC, fakes in tests.</p>
+
+</section>
+<section class="symbol" id="stolosHandler">
+<h3><span class="kind">function</span><a href="#stolosHandler">stolosHandler</a></h3>
+<pre><code class="language-ts">export function stolosHandler(
+  deps: StolosDeps,
+): (req: Request, info?: ServeInfo) =&gt; Promise&lt;Response&gt;</code></pre>
+<p>The Stolos Console&#39;s request handler.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/console/stolos-server.ts">Source</a></p>
+</main>
+
+</body>
+</html>

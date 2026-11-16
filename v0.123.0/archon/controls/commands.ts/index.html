@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/controls/commands.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/controls/commands.ts</h1>
+<p>Spec 078: <code>stolos controls list | run | test</code>, on the controller PC: the fleet&#39;s control packs, listed, run now, or tested with the runtime&#39;s own test runner (<code>bun test</code>, or <code>node --test</code>).</p>
+<h2>Exports</h2>
+<section class="symbol" id="fleetPackInputs">
+<h3><span class="kind">function</span><a href="#fleetPackInputs">fleetPackInputs</a></h3>
+<pre><code class="language-ts">export async function fleetPackInputs(): Promise&lt;Omit&lt;FleetInputs, &quot;live&quot; | &quot;only&quot;&gt;&gt;</code></pre>
+<p>What the fleet&#39;s packs read: the estate graph, and the observations in Git (each part on its own).</p>
+
+</section>
+<section class="symbol" id="controlsList">
+<h3><span class="kind">function</span><a href="#controlsList">controlsList</a></h3>
+<pre><code class="language-ts">export async function controlsList(json = false): Promise&lt;number&gt;</code></pre>
+<p><code>stolos controls list</code>: each pack and its controls.</p>
+
+</section>
+<section class="symbol" id="controlsRun">
+<h3><span class="kind">function</span><a href="#controlsRun">controlsRun</a></h3>
+<pre><code class="language-ts">export async function controlsRun(only?: string, json = false): Promise&lt;number&gt;</code></pre>
+<p><code>stolos controls run [pack]</code>: run every pack now (osquery controls ask the adopted machines).</p>
+
+</section>
+<section class="symbol" id="controlsTest">
+<h3><span class="kind">function</span><a href="#controlsTest">controlsTest</a></h3>
+<pre><code class="language-ts">export async function controlsTest(): Promise&lt;number&gt;</code></pre>
+<p><code>stolos controls test</code>: run the packs&#39; tests (<code>*.test.ts</code>) in the fleet repository, with this runtime&#39;s test runner.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/controls/commands.ts">Source</a></p>
+</main>
+
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/install/report.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/install/report.ts</h1>
+<p>First-boot progress to the boot server&#39;s window (spec 004): the install left the URL in /etc/archon/boot-events. Best effort: a boot server that is gone changes nothing.</p>
+<h2>Exports</h2>
+<section class="symbol" id="BOOT_EVENTS">
+<h3><span class="kind">const</span><a href="#BOOT_EVENTS">BOOT_EVENTS</a></h3>
+<pre><code class="language-ts">export const BOOT_EVENTS: string</code></pre>
+<p>The file holding the boot server&#39;s event URL, left by the install.</p>
+
+</section>
+<section class="symbol" id="bootEvent">
+<h3><span class="kind">function</span><a href="#bootEvent">bootEvent</a></h3>
+<pre><code class="language-ts">export async function bootEvent(e: {
+  phase: string;
+  level?: string;
+  summary?: string;
+}): Promise&lt;void&gt;</code></pre>
+<p>Posts a first-boot event (a phase, its level and summary) to the boot server; best effort, 5 s timeout.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/install/report.ts">Source</a></p>
+</main>
+
+</body>
+</html>

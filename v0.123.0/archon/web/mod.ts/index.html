@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/web/mod.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/web/mod.ts</h1>
+<h2 id="https-on-every-server">HTTPS on every server</h2>
+<p>Every server answers HTTPS from its first boot (spec 032). Traefik listens on 80 and 443; 80 only redirects. Traefik restricts no network: <strong>who reaches the server is the router&#39;s decision</strong> (the firewall at the edge, outside the machine). Forward nothing to it from the internet unless you mean to publish it. Traefik&#39;s dashboard has no password of its own.</p>
+<table><thead><tr><th>URL</th><th>What</th></tr></thead><tbody><tr><td><code>https://alpha.lab.example.net</code></td><td>the Archon Console: sign in, then health, actions, logs, guides</td></tr><tr><td><code>https://cockpit.alpha.lab.example.net</code></td><td>Cockpit</td></tr><tr><td><code>https://traefik.alpha.lab.example.net</code></td><td>Traefik&#39;s dashboard: routers, services, certificates</td></tr><tr><td><code>https://&lt;app&gt;.alpha.lab.example.net</code></td><td>anything you publish (below)</td></tr></tbody></table>
+<p>Before the certificate arrives, or without a Cloudflare token, Traefik answers with its own self-signed certificate, and <code>https://&lt;address&gt;</code> shows the Archon Console too.</p>
+<h3 id="the-archon-console">The Archon Console</h3>
+<p><code>https://&lt;host&gt;.&lt;domain&gt;</code> is the server in a browser (spec 065). Sign in with your account on the server: the same username and password as SSH (Linux checks them, through PAM). Nothing is shown before you sign in.</p>
+<table><thead><tr><th>Page</th><th>What it is for</th></tr></thead><tbody><tr><td>Overview</td><td>health, the commit applied and who signed it, a diagram of how the server stays current</td></tr><tr><td>Services</td><td>optional services (PostgreSQL, S3, file sharing, telemetry) and every unit&#39;s state</td></tr><tr><td>Apps, Data</td><td>every HTTPS address; whether the server holds data that exists nowhere else</td></tr><tr><td>Logs</td><td>the journal, live, for one service or everything</td></tr><tr><td>Actions (6 pages)</td><td>every <code>archon</code> command as a form, grouped, each with a diagram; output streams live</td></tr><tr><td>Activity</td><td>every sign-in and every command run from the console: who, from where, the result</td></tr><tr><td>How it works</td><td>the repositories, signing, and the path of a change, as diagrams</td></tr></tbody></table>
+<p>Everyone with an account can look. Operators (members of <code>sudo</code> or <code>archon-ops</code>) can also run commands that change the server; destroying data also needs the password again and the typed confirmation (<code>--confirm-destroy</code>). A command runs as you: <code>archon console exec</code> checks again, as root, that you may run it, then systemd runs it with your name, so every record names you, and a change is mailed to the fleet&#39;s mailbox. Five wrong passwords in a minute pause sign-ins from that address. Only a signed-in browser session is accepted (no HTTP Basic); wrong passwords are throttled by address and by account.</p>
+<h3 id="once-the-cloudflare-token">Once: the Cloudflare token</h3>
+<p>In Cloudflare: My Profile &gt; API Tokens &gt; Create Token &gt; &quot;Edit zone DNS&quot; template, named <code>archon web</code>, with <strong>Zone &gt; DNS &gt; Edit</strong> and <strong>Zone &gt; Zone &gt; Read</strong>, for the zone <code>example.net</code>. Then on the boot machine:</p>
+<pre><code>bun run stolos boot web-setup          # paste it (hidden); checked against the zone; stored on this PC only
+bun run stolos boot web-push alpha    # a running server; new installs get it by themselves</code></pre>
+<p>Each server then keeps two records in Cloudflare, <code>alpha.lab.example.net</code> and <code>*.alpha.lab.example.net</code>, to its private address (not proxied, TTL 60), and Traefik gets one Let&#39;s Encrypt certificate for both through Cloudflare&#39;s DNS challenge. No reserved IP is needed: the records follow the address the server has now (its default route&#39;s source). <code>archon web dns-check</code> compares it 30 seconds after boot and every 5 minutes, and only a new address (a new DHCP lease) reaches Cloudflare, journaled (<code>journalctl -t archon-web</code>) and mailed. Back the token up with the other secrets: <code>bun run stolos vault backup</code>.</p>
+<h3 id="reinstalls-keep-the-certificate">Reinstalls keep the certificate</h3>
+<p><code>bun run stolos boot reinstall &lt;host&gt;</code> copies the server&#39;s Let&#39;s Encrypt store (Traefik&#39;s <code>/var/lib/traefik/acme.json</code>) to the boot machine before erasing it, and the new install puts it back before Traefik first starts: the same trusted certificate from the first minute, and no new request to Let&#39;s Encrypt, which allows only 5 identical certificates a week. The reinstall&#39;s output, the boot server window, and the reinstall email each say whether it was carried. Renewals stay on the server. The copy is a cache (<code>hosts/&lt;host&gt;/acme.json</code> in the secrets folder), never backed up: losing it only means one new certificate. A brand-new server, or one that could not be reached, asks Let&#39;s Encrypt as usual.</p>
+<h3 id="publishing-a-service">Publishing a service</h3>
+<ul><li><strong>Something on the server itself</strong>: in its host model (<code>fleets/&lt;fleet&gt;/hosts/alpha/host.ts</code>):</li></ul>
+<pre><code>web: { routes: [{ name: &quot;grafana&quot;, port: 3000, description: &quot;dashboards&quot; }] },</code></pre>
+<p><code>https://grafana.alpha.lab.example.net</code> reaches <code>127.0.0.1:3000</code>. Add <code>https: true</code> for a backend that speaks TLS itself, or <code>address</code> for another backend address.</p>
+<ul><li><strong>An LXD guest</strong>: <code>guests: [{ name: &quot;db&quot;, kind: &quot;container&quot;, image: &quot;ubuntu:26.04&quot;, web: { port: 8080 } }]</code> publishes <code>https://db.alpha.lab.example.net</code>.</li><li><strong>A container (Podman)</strong>: no model change. Run it as root with the label:</li></ul>
+<pre><code>sudo podman run -d --name whoami --label traefik.enable=true docker.io/traefik/whoami</code></pre>
+<p><code>https://whoami.alpha.lab.example.net</code> answers. For a port other than the image&#39;s first exposed one, add <code>--label traefik.http.services.whoami.loadbalancer.server.port=8080</code>.</p>
+<p>Then <code>bun run stolos build</code>, commit, push, and <code>archon update</code> on the server (or wait for the reconcile timer). The welcome page lists ports that listen but are not published, with the line that would publish each.</p>
+<h3 id="checking">Checking</h3>
+<pre><code>archon web status     # Traefik, the welcome page, the certificate, DNS, every route
+archon verify         # includes HTTPS, the certificate, and DNS
+journalctl -u traefik -f</code></pre>
+<h3 id="files">Files</h3>
+<table><thead><tr><th>Path</th><th>What</th></tr></thead><tbody><tr><td><code>/etc/traefik/traefik.yml</code></td><td>Traefik&#39;s static configuration (rendered from the model)</td></tr><tr><td><code>/etc/traefik/dynamic/archon.yml</code></td><td>routes, the LAN-only middleware (rendered; Traefik watches it)</td></tr><tr><td><code>/var/lib/traefik/acme.json</code></td><td>the Let&#39;s Encrypt account and certificates (Traefik only)</td></tr><tr><td><code>/etc/archon/web/</code></td><td>the Cloudflare token, root only</td></tr></tbody></table>
+<h3 id="etc-history-spec-033">/etc history (spec 033)</h3>
+<p>Every server keeps a local git history of <code>/etc</code> with etckeeper: a commit around each apt run, one a day, and one per <code>archon apply</code> with its specs. It holds secrets, so it is root-only and never pushed.</p>
+<pre><code>sudo etckeeper vcs log --stat -5
+sudo etckeeper vcs diff</code></pre>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/web/mod.ts">Source</a></p>
+</main>
+
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/web/acme.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/web/acme.ts</h1>
+<p>032-web: a server&#39;s Let&#39;s Encrypt certificates survive its re-install. Before <code>bun run stolos boot reinstall</code> reboots a server, it copies Traefik&#39;s ACME store (the Let&#39;s Encrypt account, the certificates, and their keys) to the boot machine; the install hands it back, and the first boot puts it in place before Traefik first starts. Traefik then serves the trusted certificate from its first minute and asks Let&#39;s Encrypt only to renew (Let&#39;s Encrypt allows 5 identical certificates a week). Renewals stay on the server: the boot machine only carries the store across the re-install, and an expired copy is never delivered.</p>
+<h2>Exports</h2>
+<section class="symbol" id="ACME_STORE">
+<h3><span class="kind">const</span><a href="#ACME_STORE">ACME_STORE</a></h3>
+<pre><code class="language-ts">export const ACME_STORE</code></pre>
+<p>Traefik&#39;s ACME store (spec 032: Traefik&#39;s state directory).</p>
+
+</section>
+<section class="symbol" id="ACME_DELIVERED">
+<h3><span class="kind">const</span><a href="#ACME_DELIVERED">ACME_DELIVERED</a></h3>
+<pre><code class="language-ts">export const ACME_DELIVERED</code></pre>
+<p>Where an install delivers the carried store (first boot moves it, then deletes this).</p>
+
+</section>
+<section class="symbol" id="CarriedCertificate">
+<h3><span class="kind">interface</span><a href="#CarriedCertificate">CarriedCertificate</a></h3>
+<pre><code class="language-ts">export interface CarriedCertificate {
+  /** Its main name (for example `alpha.lab.example.net`). */
+  main: string;
+  /** Its other names (for example `*.alpha.lab.example.net`). */
+  sans: string[];
+  /** ISO time the certificate expires. */
+  notAfter: string;
+}</code></pre>
+<p>One certificate in a carried store: its names and when it expires.</p>
+
+</section>
+<section class="symbol" id="AcmeCarry">
+<h3><span class="kind">interface</span><a href="#AcmeCarry">AcmeCarry</a></h3>
+<pre><code class="language-ts">export interface AcmeCarry {
+  /** The server it was exported from. */
+  host: string;
+  /** When it was exported (ISO 8601). */
+  exported: string;
+  /** The certificates in the store with a readable expiry; none when the store had none. */
+  certificates: CarriedCertificate[];
+  /** Traefik's acme.json as it was on the server. */
+  acme: string;
+}</code></pre>
+<p>What <code>archon web acme-export</code> prints and the boot machine keeps (hosts/&lt;host&gt;/acme.json).</p>
+
+</section>
+<section class="symbol" id="storeCertificates">
+<h3><span class="kind">function</span><a href="#storeCertificates">storeCertificates</a></h3>
+<pre><code class="language-ts">export function storeCertificates(
+  acme: string,
+): Array&lt;{ main: string; sans: string[]; pem: string }&gt;</code></pre>
+<p>The certificates in a Traefik ACME store: names and base64 PEM.</p>
+
+</section>
+<section class="symbol" id="validUntil">
+<h3><span class="kind">function</span><a href="#validUntil">validUntil</a></h3>
+<pre><code class="language-ts">export function validUntil(c: Pick&lt;AcmeCarry, &quot;certificates&quot;&gt;): Date | undefined</code></pre>
+<p>The soonest expiry among the carried certificates, or undefined when there are none.</p>
+
+</section>
+<section class="symbol" id="deliverable">
+<h3><span class="kind">function</span><a href="#deliverable">deliverable</a></h3>
+<pre><code class="language-ts">export function deliverable(c: AcmeCarry, now = Date.now()): boolean</code></pre>
+<p>Worth delivering: it has certificates and none expires within a day.</p>
+
+</section>
+<section class="symbol" id="describeCarry">
+<h3><span class="kind">function</span><a href="#describeCarry">describeCarry</a></h3>
+<pre><code class="language-ts">export function describeCarry(c: AcmeCarry): string</code></pre>
+<p>&quot;alpha.lab.example.net and *.alpha.lab.example.net, valid until 2027-02-09&quot;</p>
+
+</section>
+<section class="symbol" id="exportAcme">
+<h3><span class="kind">function</span><a href="#exportAcme">exportAcme</a></h3>
+<pre><code class="language-ts">export async function exportAcme(hostName: string): Promise&lt;number&gt;</code></pre>
+<p><code>archon web acme-export</code> (root): the store and each certificate&#39;s expiry, as JSON.</p>
+
+</section>
+<section class="symbol" id="importAcme">
+<h3><span class="kind">function</span><a href="#importAcme">importAcme</a></h3>
+<pre><code class="language-ts">export async function importAcme(): Promise&lt;string | undefined&gt;</code></pre>
+<p>First boot: put the carried store in place for Traefik (owner traefik, 0600), unless Traefik already has one. Returns what happened, for the log.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/web/acme.ts">Source</a></p>
+</main>
+
+</body>
+</html>

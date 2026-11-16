@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/evidence/mod.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/evidence/mod.ts</h1>
+<h2 id="evidence-bundles">Evidence bundles</h2>
+<p>An auditor wants evidence they can check again themselves, not screenshots (spec 072). One command gathers a period&#39;s evidence into a ZIP, and your daily key signs it:</p>
+<pre><code>bun run stolos evidence export --from 2026-01-01 --to 2026-06-30
+bun run stolos evidence verify fcr-evidence-2026-01-01-to-2026-06-30.zip</code></pre>
+<p>In it: every commit in the period (raw, with its SSH signature), each observation Stolos recorded (adopted machines, devices, the SaaS and cloud estate), the verify and install results this PC recorded, <code>signers.ts</code>, the OSCAL assessment results (see <a href="../../../archon/compliance/mod.ts/index.html">Compliance</a>), and the access reviews of the period&#39;s quarters, each with the signed commit that approved it (see <a href="../../../archon/people/mod.ts/index.html">People controls</a>).</p>
+<pre class="mermaid">flowchart LR
+  git[&quot;The fleet repository: commits and observations&quot;] --&gt; bundle[&quot;bundle: objects by SHA-256, a chained manifest&quot;]
+  pc[&quot;This PC: verify results, OSCAL&quot;] --&gt; bundle
+  bundle --&gt; sign[&quot;signed by a fleet signer (ssh-keygen)&quot;] --&gt; auditor[&quot;the auditor: evidence verify, offline&quot;]</pre>
+<p><code>evidence verify</code> names each problem: an item changed, missing, or added; the chain broken; the manifest&#39;s signature wrong or by someone who is not a signer; a commit without a valid signature. It needs only the bundle and OpenSSH. The bundle&#39;s README says how to check it by hand with <code>sha256sum</code> and <code>ssh-keygen</code>.</p>
+<p>The signers inside a bundle vouch for themselves. An auditor who has the fleet&#39;s signers from elsewhere (its repository, or the fleet&#39;s <code>allowed_signers</code>) passes them with <code>--signers</code>.</p>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/evidence/mod.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

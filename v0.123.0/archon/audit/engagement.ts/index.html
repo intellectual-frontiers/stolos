@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/audit/engagement.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/audit/engagement.ts</h1>
+<p>Spec 083: an audit engagement, as a file in the fleet repository: <code>fleets/&lt;fleet&gt;/audits/&lt;id&gt;/engagement.ts</code>. It says who audits (the firm and its people), the period, the frameworks and the controls in scope (each tested on one population), the evidence bundle the populations are drawn from (pinned by its SHA-256), and the day the auditor&#39;s access ends. <code>stolos audit open</code> writes it and <code>stolos audit close</code> closes it, each in a signed commit; Stolos reads it as a TypeScript literal (never runs it), so a past version from Git reads the same way.</p>
+<pre class="mermaid">stateDiagram-v2
+  [*] --&gt; open: stolos audit open (a signed commit)
+  open --&gt; open: audit bundle, request, respond, sample (signed commits)
+  open --&gt; expired: access.expires has passed
+  open --&gt; closed: stolos audit close (a signed commit)
+  expired --&gt; closed: stolos audit close
+  closed --&gt; [*]</pre>
+<h2>Exports</h2>
+<section class="symbol" id="Auditor">
+<h3><span class="kind">interface</span><a href="#Auditor">Auditor</a></h3>
+<pre><code class="language-ts">export interface Auditor {
+  /** Their name. */
+  name: string;
+  /** Their work email, when given. */
+  email?: string;
+}</code></pre>
+<p>One person at the audit firm.</p>
+
+</section>
+<section class="symbol" id="ScopedControl">
+<h3><span class="kind">interface</span><a href="#ScopedControl">ScopedControl</a></h3>
+<pre><code class="language-ts">export interface ScopedControl {
+  /** The control's id as the auditor names it (a criterion such as &quot;CC6.2&quot;, or the company's own id). */
+  id: string;
+  /** What it is, in words. */
+  title: string;
+  /** The framework it is from (soc2, iso27001, ...), when it is one framework's. */
+  framework?: string;
+  /** The SCF controls it maps to, when known. */
+  scf?: string[];
+  /** The population it is tested on (a typed query over the bundle's items). */
+  population: PopulationId;
+}</code></pre>
+<p>One control in scope, and the population it is tested on.</p>
+
+</section>
+<section class="symbol" id="PinnedBundle">
+<h3><span class="kind">interface</span><a href="#PinnedBundle">PinnedBundle</a></h3>
+<pre><code class="language-ts">export interface PinnedBundle {
+  /** Its file name in this PC's evidence directory. */
+  file: string;
+  /** Its SHA-256: a different file with that name is refused. */
+  sha256: string;
+  /** Its manifest's head (the end of its hash chain). */
+  head: string;
+}</code></pre>
+<p>The evidence bundle (spec 072) an engagement&#39;s populations are drawn from.</p>
+
+</section>
+<section class="symbol" id="Engagement">
+<h3><span class="kind">interface</span><a href="#Engagement">Engagement</a></h3>
+<pre><code class="language-ts">export interface Engagement {
+  /** Its id: the folder's name (lowercase letters, digits, dashes). */
+  id: string;
+  /** Its name for people (&quot;SOC 2 Type 2, 2026&quot;). */
+  title: string;
+  /** The audit firm. */
+  firm: string;
+  /** The firm's people who may see it. */
+  auditors: Auditor[];
+  /** The period audited (YYYY-MM-DD, both days included). */
+  period: { from: string; to: string };
+  /** The frameworks in scope (soc2, iso27001, hipaa, pci, ...). */
+  frameworks: string[];
+  /** The controls in scope. */
+  controls: ScopedControl[];
+  /** The portal's time box: it refuses every request after this day (YYYY-MM-DD, UTC, the day included). */
+  access: { expires: string };
+  /** The evidence bundle, once pinned. */
+  bundle?: PinnedBundle;
+  /** When it was opened (YYYY-MM-DD), and by which fleet signer. */
+  opened: { on: string; by: string };
+  /** When it was closed (YYYY-MM-DD), and by whom; the portal refuses a closed engagement. */
+  closed?: { on: string; by: string };
+}</code></pre>
+<p>An audit engagement: <code>fleets/&lt;fleet&gt;/audits/&lt;id&gt;/engagement.ts</code>.</p>
+
+</section>
+<section class="symbol" id="ENGAGEMENT_ID">
+<h3><span class="kind">const</span><a href="#ENGAGEMENT_ID">ENGAGEMENT_ID</a></h3>
+<pre><code class="language-ts">export const ENGAGEMENT_ID</code></pre>
+<p>An engagement&#39;s id: a folder name.</p>
+
+</section>
+<section class="symbol" id="isDay">
+<h3><span class="kind">function</span><a href="#isDay">isDay</a></h3>
+<pre><code class="language-ts">export function isDay(s: unknown): s is string</code></pre>
+<p>Whether a string is a real day (YYYY-MM-DD).</p>
+
+</section>
+<section class="symbol" id="engagementDir">
+<h3><span class="kind">function</span><a href="#engagementDir">engagementDir</a></h3>
+<pre><code class="language-ts">export function engagementDir(fleet: string, id: string): string</code></pre>
+<p>The engagement folder, relative to the repository.</p>
+
+</section>
+<section class="symbol" id="engagementPath">
+<h3><span class="kind">function</span><a href="#engagementPath">engagementPath</a></h3>
+<pre><code class="language-ts">export function engagementPath(fleet: string, id: string): string</code></pre>
+<p>The engagement file, relative to the repository.</p>
+
+</section>
+<section class="symbol" id="engagementProblems">
+<h3><span class="kind">function</span><a href="#engagementProblems">engagementProblems</a></h3>
+<pre><code class="language-ts">export function engagementProblems(e: Engagement): string[]</code></pre>
+<p>What is wrong with an engagement (empty when nothing is).</p>
+
+</section>
+<section class="symbol" id="EngagementState">
+<h3><span class="kind">type</span><a href="#EngagementState">EngagementState</a></h3>
+<pre><code class="language-ts">export type EngagementState = &quot;open&quot; | &quot;expired&quot; | &quot;closed&quot;;</code></pre>
+<p>Where an engagement stands at a moment: open, expired (past access.expires), or closed.</p>
+
+</section>
+<section class="symbol" id="accessEnds">
+<h3><span class="kind">function</span><a href="#accessEnds">accessEnds</a></h3>
+<pre><code class="language-ts">export function accessEnds(e: Pick&lt;Engagement, &quot;access&quot;&gt;): number</code></pre>
+<p>The end of the access day (the first instant after it, UTC).</p>
+
+</section>
+<section class="symbol" id="engagementState">
+<h3><span class="kind">function</span><a href="#engagementState">engagementState</a></h3>
+<pre><code class="language-ts">export function engagementState(
+  e: Pick&lt;Engagement, &quot;access&quot; | &quot;closed&quot;&gt;,
+  now: Date = new Date(),
+): EngagementState</code></pre>
+<p>Where an engagement stands at <code>now</code>.</p>
+
+</section>
+<section class="symbol" id="engagementSource">
+<h3><span class="kind">function</span><a href="#engagementSource">engagementSource</a></h3>
+<pre><code class="language-ts">export function engagementSource(e: Engagement): string</code></pre>
+<p>engagement.ts&#39;s text: a TypeScript literal, typed, that {@link parseEngagement} reads back.</p>
+
+</section>
+<section class="symbol" id="parseEngagement">
+<h3><span class="kind">function</span><a href="#parseEngagement">parseEngagement</a></h3>
+<pre><code class="language-ts">export function parseEngagement(text: string): Engagement</code></pre>
+<p>An engagement from engagement.ts&#39;s text (read, never run); throws when it is not one.</p>
+
+</section>
+<section class="symbol" id="parseControls">
+<h3><span class="kind">function</span><a href="#parseControls">parseControls</a></h3>
+<pre><code class="language-ts">export function parseControls(
+  spec: string,
+  titles: Record&lt;string, string&gt;,
+  framework?: string,
+): ScopedControl[]</code></pre>
+<p>A controls option (<code>CC6.2=leavers,CC8.1=change</code>, or population ids alone) as controls in scope.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/audit/engagement.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

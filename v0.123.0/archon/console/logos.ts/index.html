@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/console/logos.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/console/logos.ts</h1>
+<p>Spec 065: product logos for the consoles, from Simple Icons 16.36.0 (https://simpleicons.org, CC0 1.0; each mark remains its owner&#39;s trademark, shown only to name the product it stands for). GENERATED from the package&#39;s SVGs: the path data and brand color of each.</p>
+<h2>Exports</h2>
+<section class="symbol" id="Logo">
+<h3><span class="kind">interface</span><a href="#Logo">Logo</a></h3>
+<pre><code class="language-ts">export interface Logo {
+  /** The product. */
+  title: string;
+  /** Its brand color (hex, no #). */
+  hex: string;
+  /** The SVG path data. */
+  path: string;
+}</code></pre>
+<p>A logo: its name, brand color, and SVG path (24 by 24).</p>
+
+</section>
+<section class="symbol" id="LOGOS">
+<h3><span class="kind">const</span><a href="#LOGOS">LOGOS</a></h3>
+<pre><code class="language-ts">export const LOGOS: Record&lt;string, Logo&gt;</code></pre>
+<p>The logos, by Simple Icons slug.</p>
+
+</section>
+<section class="symbol" id="logo">
+<h3><span class="kind">function</span><a href="#logo">logo</a></h3>
+<pre><code class="language-ts">export function logo(slug: string | undefined, size = 18): Html</code></pre>
+<p>A logo as inline SVG (size in pixels), in its brand color; nothing for an unknown slug.</p>
+
+</section>
+<section class="symbol" id="logoFor">
+<h3><span class="kind">function</span><a href="#logoFor">logoFor</a></h3>
+<pre><code class="language-ts">export function logoFor(name: string): string | undefined</code></pre>
+<p>The logo for something a console names (a service, a route, a group), by its words.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/console/logos.ts">Source</a></p>
+</main>
+
+</body>
+</html>

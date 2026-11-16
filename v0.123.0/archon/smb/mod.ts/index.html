@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/smb/mod.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/smb/mod.ts</h1>
+<h2 id="file-shares-smb">File shares (SMB)</h2>
+<p>Every server can share files with Windows, macOS, and Linux over SMB (Samba). It is an <strong>opt-in service</strong>: <strong>off</strong> until an operator turns it on, and then on, across reboots and reinstalls, until an operator turns it off (specs 037, 040). <code>archon opt-in</code> lists every opt-in service and container.</p>
+<h3 id="turn-it-on-an-operator-once-per-server">Turn it on (an operator, once per server)</h3>
+<pre><code>archon fs smb on --durable  # or --ephemeral: there is no default</code></pre>
+<p><code>--durable</code> or <code>--ephemeral</code> is required, with no default (constitution Article 23, spec 044): <strong>durable</strong> when what is in the shares (<code>/srv/smb</code>) exists nowhere else (it is archived nightly, and nothing reinstalls or wipes this server without <code>--confirm-destroy</code>, typed by a person); <strong>ephemeral</strong> when losing it is harmless. <code>archon data</code> shows the server&#39;s class and why; <code>archon data set</code> changes a choice later.</p>
+<p>The switch is in this machine&#39;s own <code>archon.sql</code> (spec 048); a reinstall starts with it off. <code>archon fs smb off</code> turns it off the same way. <code>archon fs smb status</code> shows whether it is on, who turned it on and when, and who has an SMB password.</p>
+<h3 id="your-username-and-password">Your username and password</h3>
+<p>The same as on the server itself: your Linux username and password. An account that is not on the server gets no access.</p>
+<p>SMB clients (Windows, macOS) prove a password with a different kind of hash than Linux keeps, so Samba keeps its own copy of it. Archon keeps that copy in step for you: whenever your password is typed on the server (signing in to Cockpit, <code>sudo</code>, a password login, or changing it with <code>passwd</code>), the same password goes to Samba for your account. So if you have only ever logged in with an SSH key, sign in to Cockpit once (or run <code>sudo -v</code>) before your first connection. <code>archon fs smb status</code> shows whose password Samba already knows.</p>
+<h3 id="connect">Connect</h3>
+<p>The address is <code>smb.&lt;server&gt;.&lt;domain&gt;</code>, for alpha <code>smb.alpha.lab.example.net</code>, from the local networks (or WireGuard) only.</p>
+<table><thead><tr><th>On</th><th>Do</th></tr></thead><tbody><tr><td>Windows</td><td>File Explorer, This PC, Map network drive, Folder: <code>\\smb.alpha.lab.example.net\shared</code></td></tr><tr><td>macOS</td><td>Finder, Go, Connect to Server: <code>smb://smb.alpha.lab.example.net/shared</code></td></tr><tr><td>Linux</td><td>your file manager&#39;s address bar: <code>smb://smb.alpha.lab.example.net/shared</code></td></tr></tbody></table>
+<p>Sign in with your Linux username and password. Two shares:</p>
+<ul><li><code>shared</code>: one folder for everyone with an account on the server (<code>/srv/smb/shared</code>).</li><li>your username: your own home folder, which only you can open (<code>\\smb.alpha.lab.example.net\&lt;username&gt;</code>).</li></ul>
+<p>The server does not appear under &quot;Network&quot; in Windows or macOS: that discovery uses multicast, which does not cross from your network to the servers&#39; network. Connect by name as above.</p>
+<h3 id="good-to-know">Good to know</h3>
+<ul><li>Only SMB3 or newer, with encryption whenever the client supports it (all current Windows, macOS, and Linux do). No guest access.</li><li>Samba&#39;s copy of each password is in the server&#39;s nightly backups (root only); the files in <code>shared</code> are not (they can be large). After a reinstall, Samba learns each password again the first time it is typed on the server.</li><li>Logs: <code>journalctl -u smbd</code>.</li></ul>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/smb/mod.ts">Source</a></p>
+</main>
+
+</body>
+</html>

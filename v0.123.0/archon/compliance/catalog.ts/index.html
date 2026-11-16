@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/compliance/catalog.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/compliance/catalog.ts</h1>
+<p>Spec 071: the official catalogs, never Stolos&#39;s own. The Secure Controls Framework (SCF) workbook, as the SCF Council publishes it, gives each control&#39;s name and its mappings (STRM) to SOC 2, HIPAA, PCI DSS, CMMC, NIST SP 800-53 and 800-171, and FedRAMP. Stolos does not redistribute it: each PC downloads the pinned release from the SCF&#39;s own repository, checks its SHA-256, reads the workbook here, and keeps what it needs in its cache. NIST&#39;s OSCAL catalogs (SP 800-53 Rev 5, SP 800-171 Rev 3) come the same way from NIST&#39;s repository, for control titles in OSCAL exports.</p>
+<pre class="mermaid">flowchart LR
+  scf[&quot;SCF Council: the workbook (pinned commit, SHA-256)&quot;] --&gt; read[&quot;read here (XLSX)&quot;] --&gt; cache[&quot;this PC's cache: catalog JSON&quot;]
+  nist[&quot;NIST: OSCAL catalogs (pinned commit, SHA-256)&quot;] --&gt; cache
+  cache --&gt; view[&quot;Compliance: names and framework mappings&quot;] &amp; oscal[&quot;OSCAL exports&quot;]</pre>
+<h2>Exports</h2>
+<section class="symbol" id="PinnedSource">
+<h3><span class="kind">interface</span><a href="#PinnedSource">PinnedSource</a></h3>
+<pre><code class="language-ts">export interface PinnedSource {
+  /** Its name for people. */
+  title: string;
+  /** Its version. */
+  version: string;
+  /** Where it is, at a pinned commit. */
+  url: string;
+  /** Its SHA-256. */
+  sha256: string;
+  /** Who publishes it, and on what terms. */
+  publisher: string;
+}</code></pre>
+<p>A downloadable source, pinned.</p>
+
+</section>
+<section class="symbol" id="SCF_SOURCE">
+<h3><span class="kind">const</span><a href="#SCF_SOURCE">SCF_SOURCE</a></h3>
+<pre><code class="language-ts">export const SCF_SOURCE: PinnedSource</code></pre>
+<p>The SCF release Stolos reads.</p>
+
+</section>
+<section class="symbol" id="NIST_SOURCES">
+<h3><span class="kind">const</span><a href="#NIST_SOURCES">NIST_SOURCES</a></h3>
+<pre><code class="language-ts">export const NIST_SOURCES: Record&lt;&quot;nist80053&quot; | &quot;nist800171&quot;, PinnedSource&gt;</code></pre>
+<p>NIST&#39;s OSCAL catalogs, at a pinned commit of usnistgov/oscal-content.</p>
+
+</section>
+<section class="symbol" id="NIST_MODERATE_PROFILE">
+<h3><span class="kind">const</span><a href="#NIST_MODERATE_PROFILE">NIST_MODERATE_PROFILE</a></h3>
+<pre><code class="language-ts">export const NIST_MODERATE_PROFILE</code></pre>
+<p>NIST&#39;s SP 800-53 Rev 5 moderate baseline (an OSCAL profile), which an SSP imports.</p>
+
+</section>
+<section class="symbol" id="OSCAL_VERSION">
+<h3><span class="kind">const</span><a href="#OSCAL_VERSION">OSCAL_VERSION</a></h3>
+<pre><code class="language-ts">export const OSCAL_VERSION</code></pre>
+<p>The OSCAL version the exports are written to (the one NIST&#39;s catalogs above are in).</p>
+
+</section>
+<section class="symbol" id="SCF_COLUMNS">
+<h3><span class="kind">const</span><a href="#SCF_COLUMNS">SCF_COLUMNS</a></h3>
+<pre><code class="language-ts">export const SCF_COLUMNS: Record&lt;FrameworkId, RegExp[]&gt;</code></pre>
+<p>The workbook column(s) each framework is in, by header. HIPAA is the union of the Security Rule (NIST SP 800-66 R2) and the Administrative Simplification (2013) columns: SCF fills each for different controls.</p>
+
+</section>
+<section class="symbol" id="CATALOG_FORMAT">
+<h3><span class="kind">const</span><a href="#CATALOG_FORMAT">CATALOG_FORMAT</a></h3>
+<pre><code class="language-ts">export const CATALOG_FORMAT</code></pre>
+<p>The cached catalog&#39;s format: a cache in another is read again from the workbook.</p>
+
+</section>
+<section class="symbol" id="ScfEntry">
+<h3><span class="kind">interface</span><a href="#ScfEntry">ScfEntry</a></h3>
+<pre><code class="language-ts">export interface ScfEntry {
+  /** Its domain. */
+  domain: string;
+  /** Its name. */
+  name: string;
+  /** Its description. */
+  description: string;
+  /** Requirement ids it maps to, per framework (SCF's STRM). */
+  maps: Record&lt;FrameworkId, string[]&gt;;
+}</code></pre>
+<p>One SCF control, as the workbook has it.</p>
+
+</section>
+<section class="symbol" id="ScfCatalog">
+<h3><span class="kind">interface</span><a href="#ScfCatalog">ScfCatalog</a></h3>
+<pre><code class="language-ts">export interface ScfCatalog {
+  /** The format of this cache (CATALOG_FORMAT). */
+  format: number;
+  /** The SCF version. */
+  version: string;
+  /** Every control, by its SCF id. */
+  controls: Record&lt;string, ScfEntry&gt;;
+}</code></pre>
+<p>The catalog: SCF&#39;s controls, by id.</p>
+
+</section>
+<section class="symbol" id="readSheet">
+<h3><span class="kind">function</span><a href="#readSheet">readSheet</a></h3>
+<pre><code class="language-ts">export async function readSheet(
+  xlsx: Uint8Array,
+  name: string,
+): Promise&lt;Array&lt;Record&lt;string, string&gt;&gt;&gt;</code></pre>
+<p>One worksheet of an XLSX (kernel <code>unzip</code> and <code>readXml</code>), by its name, as rows of cells keyed by column letter.</p>
+
+</section>
+<section class="symbol" id="tidyRequirement">
+<h3><span class="kind">function</span><a href="#tidyRequirement">tidyRequirement</a></h3>
+<pre><code class="language-ts">export function tidyRequirement(x: string): string</code></pre>
+<p>A requirement id as the framework writes it: without SCF&#39;s leading &quot;§&quot; (HIPAA), and with CMMC&#39;s practice ids in CMMC&#39;s own form (the workbook has &quot;IAL2.-3.5.3&quot; for CMMC&#39;s &quot;IA.L2-3.5.3&quot;).</p>
+
+</section>
+<section class="symbol" id="parseScf">
+<h3><span class="kind">function</span><a href="#parseScf">parseScf</a></h3>
+<pre><code class="language-ts">export async function parseScf(
+  xlsx: Uint8Array,
+  version = SCF_SOURCE.version,
+): Promise&lt;ScfCatalog&gt;</code></pre>
+<p>The SCF catalog from the workbook.</p>
+
+</section>
+<section class="symbol" id="fetchPinned">
+<h3><span class="kind">function</span><a href="#fetchPinned">fetchPinned</a></h3>
+<pre><code class="language-ts">export async function fetchPinned(
+  s: PinnedSource,
+  get: (url: string) =&gt; Promise&lt;Uint8Array&gt; = async (u: string) =&gt; {
+    const r = await fetch(u, { signal: AbortSignal.timeout(120_000) });
+    if (!r.ok) throw new Error(`${u}: HTTP ${r.status}`);
+    return new Uint8Array(await r.arrayBuffer());
+  },
+): Promise&lt;Uint8Array&gt;</code></pre>
+<p>Download a pinned source, refusing it unless its SHA-256 matches.</p>
+
+</section>
+<section class="symbol" id="catalogCache">
+<h3><span class="kind">function</span><a href="#catalogCache">catalogCache</a></h3>
+<pre><code class="language-ts">export function catalogCache(): string</code></pre>
+<p>Where the catalogs are cached on this PC.</p>
+
+</section>
+<section class="symbol" id="loadScf">
+<h3><span class="kind">function</span><a href="#loadScf">loadScf</a></h3>
+<pre><code class="language-ts">export async function loadScf(
+  o: { cacheDir?: string; download?: boolean; get?: (url: string) =&gt; Promise&lt;Uint8Array&gt; } = {},
+): Promise&lt;ScfCatalog | undefined&gt;</code></pre>
+<p>The SCF catalog: from the cache, or downloaded, checked, read, and cached once.</p>
+
+</section>
+<section class="symbol" id="NistCatalog">
+<h3><span class="kind">interface</span><a href="#NistCatalog">NistCatalog</a></h3>
+<pre><code class="language-ts">export interface NistCatalog {
+  /** The format of this cache (CATALOG_FORMAT). */
+  format: number;
+  /** Which catalog. */
+  id: keyof typeof NIST_SOURCES;
+  /** Its pinned URL (an OSCAL export's source). */
+  url: string;
+  /** Each control's title, by its OSCAL id. */
+  titles: Record&lt;string, string&gt;;
+}</code></pre>
+<p>A NIST catalog&#39;s control titles, by OSCAL control id (ac-2.1, SP_800_171_03.05.03).</p>
+
+</section>
+<section class="symbol" id="parseOscalCatalog">
+<h3><span class="kind">function</span><a href="#parseOscalCatalog">parseOscalCatalog</a></h3>
+<pre><code class="language-ts">export function parseOscalCatalog(json: unknown, id: keyof typeof NIST_SOURCES): NistCatalog</code></pre>
+<p>Control titles from an OSCAL catalog (JSON).</p>
+
+</section>
+<section class="symbol" id="loadNist">
+<h3><span class="kind">function</span><a href="#loadNist">loadNist</a></h3>
+<pre><code class="language-ts">export async function loadNist(
+  id: keyof typeof NIST_SOURCES,
+  o: { cacheDir?: string; download?: boolean; get?: (url: string) =&gt; Promise&lt;Uint8Array&gt; } = {},
+): Promise&lt;NistCatalog | undefined&gt;</code></pre>
+<p>A NIST catalog: from the cache, or downloaded, checked, read, and cached once.</p>
+
+</section>
+<section class="symbol" id="criteriaOnly">
+<h3><span class="kind">function</span><a href="#criteriaOnly">criteriaOnly</a></h3>
+<pre><code class="language-ts">export function criteriaOnly(ids: string[]): string[]</code></pre>
+<p>A SOC 2 mapping without its points of focus (CC6.1, not CC6.1-POF10), for summaries.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/compliance/catalog.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

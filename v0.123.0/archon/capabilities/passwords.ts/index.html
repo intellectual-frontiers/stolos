@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/capabilities/passwords.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/capabilities/passwords.ts</h1>
+<p>037-smb, 039-pg-identity: one PAM hook keeps the copies of a person&#39;s Linux password that other protocols need in step with Linux: Samba&#39;s NT hash (SMB clients cannot prove a password any other way) and PostgreSQL&#39;s SCRAM verifier (for a published instance). Run by PAM, through Ubuntu&#39;s own pam-auth-update, after a password is accepted (auth: a login with a password, sudo, Cockpit) or changed (passwd). Real accounts only (UID 1000 and up; not root or ops); service accounts have no password.</p>
+<h2>Exports</h2>
+<section class="symbol" id="PASSWORDS">
+<h3><span class="kind">const</span><a href="#PASSWORDS">PASSWORDS</a></h3>
+<pre><code class="language-ts">export const PASSWORDS</code></pre>
+<p>Where the password hook&#39;s files are.</p>
+
+</section>
+<section class="symbol" id="PASSWORD_SYNC">
+<h3><span class="kind">const</span><a href="#PASSWORD_SYNC">PASSWORD_SYNC</a></h3>
+<pre><code class="language-ts">export const PASSWORD_SYNC</code></pre>
+<p>The PAM hook: keeps Samba&#39;s and PostgreSQL&#39;s copies of a person&#39;s password in step with Linux.</p>
+
+</section>
+<section class="symbol" id="PASSWORDS_PROFILE">
+<h3><span class="kind">const</span><a href="#PASSWORDS_PROFILE">PASSWORDS_PROFILE</a></h3>
+<pre><code class="language-ts">export const PASSWORDS_PROFILE</code></pre>
+<p>seteuid: PAM runs a command as the calling program&#39;s real user, which for sudo and passwd is the person, not root; the hook needs root.</p>
+
+</section>
+<section class="symbol" id="passwords">
+<h3><span class="kind">const</span><a href="#passwords">passwords</a></h3>
+<pre><code class="language-ts">export const passwords</code></pre>
+<p>The password hook, for hosts with SMB or PostgreSQL (specs 037, 039).</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/capabilities/passwords.ts">Source</a></p>
+</main>
+
+</body>
+</html>

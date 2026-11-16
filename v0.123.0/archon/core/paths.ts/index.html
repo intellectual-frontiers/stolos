@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/core/paths.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/core/paths.ts</h1>
+<p>Well-known locations (spec 046-engine-instance). Two roots:</p>
+<ul><li>the engine: this repository, as a checkout or as the package a fleet repository installs (<code>node_modules/@intellectual-frontiers/stolos</code>, spec 096); its root is three folders above this module either way;</li><li>the instance: the repository that holds the fleets (<code>fleets/&lt;id&gt;/</code>), the one hosts check out at /srv/archon. One fleet of it is active per run.</li></ul>
+<p>The instance is ARCHON_REPO, else the nearest folder above the working directory that holds <code>fleets/</code>, else /srv/archon, else (in an engine checkout) its <code>examples/</code>. The fleet is ARCHON_FLEET (or --fleet), else /etc/archon/fleet (written at install), else this checkout&#39;s choice (<code>stolos fleet use &lt;id&gt;</code>, in .git/stolos/fleet, never committed), else the instance&#39;s only fleet.</p>
+<p>A provider&#39;s PC (spec 082) works for many clients, each in its own checkout: <code>--client &lt;id&gt;</code> (ARCHON_CLIENT) points ARCHON_REPO and ARCHON_FLEET at that client&#39;s checkout and fleet, and this PC&#39;s per-user folders (state, secrets, the key store) move under <code>stolos/clients/&lt;id&gt;/</code>, so no two clients ever share one. The catalogs (public reference data) and the boot cache stay shared.</p>
+<pre class="mermaid">flowchart TD
+  repo{&quot;ARCHON_REPO?&quot;} --&gt;|set| inst[&quot;that folder&quot;]
+  repo --&gt;|unset| up{&quot;a folder above with fleets/?&quot;}
+  up --&gt;|yes| inst
+  up --&gt;|no| srv{&quot;/srv/archon/fleets?&quot;}
+  srv --&gt;|yes| inst
+  srv --&gt;|no| ex[&quot;the engine's examples/&quot;]
+  inst --&gt; fleet{&quot;--fleet / ARCHON_FLEET?&quot;}
+  fleet --&gt;|unset| etc{&quot;/etc/archon/fleet?&quot;}
+  etc --&gt;|unset| use{&quot;stolos fleet use&lt;br/&gt;(.git/stolos/fleet)?&quot;}
+  use --&gt;|unset| only[&quot;the only fleet&quot;]</pre>
+<h2>Exports</h2>
+<section class="symbol" id="ENGINE_ROOT">
+<h3><span class="kind">const</span><a href="#ENGINE_ROOT">ENGINE_ROOT</a></h3>
+<pre><code class="language-ts">export const ENGINE_ROOT: string</code></pre>
+<p>The engine&#39;s root folder: the checkout, or the installed package&#39;s folder.</p>
+
+</section>
+<section class="symbol" id="findInstanceRoot">
+<h3><span class="kind">function</span><a href="#findInstanceRoot">findInstanceRoot</a></h3>
+<pre><code class="language-ts">export function findInstanceRoot(): string</code></pre>
+<p>The instance repository&#39;s root (see the header).</p>
+
+</section>
+<section class="symbol" id="listFleets">
+<h3><span class="kind">function</span><a href="#listFleets">listFleets</a></h3>
+<pre><code class="language-ts">export function listFleets(repo: string): string[]</code></pre>
+<p>The fleets an instance holds (folders of fleets/ with a fleet.ts).</p>
+
+</section>
+<section class="symbol" id="fleetChoiceFile">
+<h3><span class="kind">function</span><a href="#fleetChoiceFile">fleetChoiceFile</a></h3>
+<pre><code class="language-ts">export function fleetChoiceFile(repo: string): string</code></pre>
+<p>Where <code>stolos fleet use &lt;id&gt;</code> keeps this checkout&#39;s choice (inside .git: never committed).</p>
+
+</section>
+<section class="symbol" id="findFleetId">
+<h3><span class="kind">function</span><a href="#findFleetId">findFleetId</a></h3>
+<pre><code class="language-ts">export function findFleetId(repo: string): string</code></pre>
+<p>The active fleet&#39;s id, or &quot;&quot; when it cannot be decided (see the header).</p>
+
+</section>
+<section class="symbol" id="CLIENT_ID">
+<h3><span class="kind">const</span><a href="#CLIENT_ID">CLIENT_ID</a></h3>
+<pre><code class="language-ts">export const CLIENT_ID: RegExp</code></pre>
+<p>A client&#39;s id (spec 082): lowercase letters, digits, and hyphens, as a folder name.</p>
+
+</section>
+<section class="symbol" id="clientId">
+<h3><span class="kind">function</span><a href="#clientId">clientId</a></h3>
+<pre><code class="language-ts">export function clientId(): string</code></pre>
+<p>The provider&#39;s client this run is for (ARCHON_CLIENT, which <code>--client</code> sets), or &quot;&quot; for none. Anything but a client id is refused: it names folders.</p>
+
+</section>
+<section class="symbol" id="hostRoot">
+<h3><span class="kind">function</span><a href="#hostRoot">hostRoot</a></h3>
+<pre><code class="language-ts">export function hostRoot(): string</code></pre>
+<p>The host&#39;s root: ARCHON_ROOT=&lt;folder&gt; (tests, and the sandbox) stands in for the host&#39;s <code>/</code>. Every fixed path the engine reads or writes on a host (<code>/etc/archon</code>, <code>/var/lib/archon</code>, <code>/var/lib/archon-keys</code>, <code>/var/log/archon</code>, <code>/opt/tools</code>, <code>/usr/local/bin</code>, <code>/srv/archon</code>, etckeeper) resolves under it through <code>onHost</code>, and the run is root&#39;s (<code>asRoot</code>), so a test exercises root&#39;s side as an ordinary account, with stand-ins for the programs on <code>PATH</code>. Unset (production), every path is exactly the one named and <code>asRoot</code> is <code>proc.isRoot()</code>. Read on every call, so a test may set it in its own process. What a host is given to write (a rendered file&#39;s path, a unit&#39;s <code>EnvironmentFile</code>) always names the real path: only reading and writing move.</p>
+<h4>Example</h4>
+<pre><code class="language-ts">import { onHost } from &quot;./paths.ts&quot;;
+const status = onHost(&quot;/var/lib/archon/status&quot;); // &quot;/var/lib/archon/status&quot; unless ARCHON_ROOT</code></pre>
+</section>
+<section class="symbol" id="onHost">
+<h3><span class="kind">function</span><a href="#onHost">onHost</a></h3>
+<pre><code class="language-ts">export function onHost(p: string): string</code></pre>
+<p>A fixed host path, under ARCHON_ROOT when it is set (see <code>hostRoot</code>), else exactly <code>p</code>.</p>
+
+</section>
+<section class="symbol" id="asRoot">
+<h3><span class="kind">function</span><a href="#asRoot">asRoot</a></h3>
+<pre><code class="language-ts">export function asRoot(): boolean</code></pre>
+<p>Whether this run is root&#39;s: as root, or in a host root a test set up (see <code>hostRoot</code>).</p>
+
+</section>
+<section class="symbol" id="resetRoots">
+<h3><span class="kind">function</span><a href="#resetRoots">resetRoots</a></h3>
+<pre><code class="language-ts">export function resetRoots(): void</code></pre>
+<p>Forget the resolved instance and fleet (tests, and <code>fleet init</code>).</p>
+
+</section>
+<section class="symbol" id="P">
+<h3><span class="kind">const</span><a href="#P">P</a></h3>
+<pre><code class="language-ts">export const P</code></pre>
+<p>Where Archon&#39;s files live: the repository, the fleet, and this machine&#39;s caches and secrets.</p>
+
+</section>
+<section class="symbol" id="repoRel">
+<h3><span class="kind">function</span><a href="#repoRel">repoRel</a></h3>
+<pre><code class="language-ts">export function repoRel(abs: string): string</code></pre>
+<p>A path inside the instance repository, relative to it, with forward slashes (for git).</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/core/paths.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

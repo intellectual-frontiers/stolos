@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/observe/remote.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/observe/remote.ts</h1>
+<p>Spec 048-observe-by-query: ask a server through its MCP server, over SSH as ops (spec 030, Article 17), the same way an agent does. The server limits what it answers; nothing it says is pushed anywhere.</p>
+<h2>Exports</h2>
+<section class="symbol" id="RemoteResult">
+<h3><span class="kind">interface</span><a href="#RemoteResult">RemoteResult</a></h3>
+<pre><code class="language-ts">export interface RemoteResult {
+  /** True when the tool ran and did not report an error. */
+  ok: boolean;
+  /** The tool's text output, or why the call failed (ssh's error, &quot;no answer&quot;). */
+  text: string;
+}</code></pre>
+<p>A server&#39;s answer to one MCP tool call.</p>
+
+</section>
+<section class="symbol" id="sshArgs">
+<h3><span class="kind">function</span><a href="#sshArgs">sshArgs</a></h3>
+<pre><code class="language-ts">export function sshArgs(target: string, timeoutS = 8, knownHosts?: string): string[]</code></pre>
+<p>ssh arguments for a server&#39;s MCP endpoint. With <code>knownHosts</code> (known_hosts.auto, generated from the hosts&#39; registrations in Git, spec 047), the server&#39;s key is checked against Git first, then the user&#39;s own known_hosts.</p>
+
+</section>
+<section class="symbol" id="callRemoteTool">
+<h3><span class="kind">function</span><a href="#callRemoteTool">callRemoteTool</a></h3>
+<pre><code class="language-ts">export async function callRemoteTool(
+  target: string,
+  tool: string,
+  args: Record&lt;string, unknown&gt;,
+  o: { timeoutMs?: number; traceparent?: string; command?: string[]; knownHosts?: string } = {},
+): Promise&lt;RemoteResult&gt;</code></pre>
+<p>Call one tool of a server&#39;s MCP server (newline-delimited JSON-RPC over ssh&#39;s stdio).</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/observe/remote.ts">Source</a></p>
+</main>
+
+</body>
+</html>

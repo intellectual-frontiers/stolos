@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/prov/prov.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/prov/prov.ts</h1>
+<p>Provenance (spec 014, Article 16): every apply is recorded as an activity, kept in this machine&#39;s archon.sql (spec 048) and exported as W3C PROV (Turtle) by <code>stolos export</code>.</p>
+<h2>Exports</h2>
+<section class="symbol" id="Activity">
+<h3><span class="kind">interface</span><a href="#Activity">Activity</a></h3>
+<pre><code class="language-ts">export interface Activity {
+  /** The host it ran on. */
+  host: string;
+  /** When it started (ISO 8601). */
+  started: string;
+  /** When it ended (ISO 8601). */
+  ended: string;
+  /** Who ran it: `agentName()`. */
+  agent: string;
+  /** The checkout's commit at the time (`&quot;unknown&quot;` when git cannot say). */
+  commit: string;
+  /** What it changed, one line each. */
+  changes: string[];
+  /** Whether it failed. */
+  failed: boolean;
+  /** The path of the run's log, when there is one. */
+  log?: string;
+}</code></pre>
+<p>One apply, recorded as a PROV activity (spec 014).</p>
+
+</section>
+<section class="symbol" id="agentName">
+<h3><span class="kind">function</span><a href="#agentName">agentName</a></h3>
+<pre><code class="language-ts">export function agentName(): string</code></pre>
+<p>Who is acting: <code>ARCHON_AGENT</code>, else <code>SUDO_USER</code>, else <code>USER</code>, else <code>&quot;unknown&quot;</code>.</p>
+
+</section>
+<section class="symbol" id="headCommit">
+<h3><span class="kind">function</span><a href="#headCommit">headCommit</a></h3>
+<pre><code class="language-ts">export async function headCommit(): Promise&lt;string&gt;</code></pre>
+<p>The checkout&#39;s HEAD commit, or <code>&quot;unknown&quot;</code>.</p>
+
+</section>
+<section class="symbol" id="recordActivity">
+<h3><span class="kind">function</span><a href="#recordActivity">recordActivity</a></h3>
+<pre><code class="language-ts">export async function recordActivity(
+  host: string,
+  a: { started: Date; ended: Date; changes: string[]; failed: boolean; log?: string },
+): Promise&lt;string | undefined&gt;</code></pre>
+<p>Record an apply in this machine&#39;s archon.sql (spec 048) as a <code>prov</code> record keyed by its start time, which is returned. An apply that changed nothing and did not fail is not recorded (returns <code>undefined</code>).</p>
+
+</section>
+<section class="symbol" id="loadActivities">
+<h3><span class="kind">function</span><a href="#loadActivities">loadActivities</a></h3>
+<pre><code class="language-ts">export async function loadActivities(host: string, root = P.state): Promise&lt;Activity[]&gt;</code></pre>
+<p>A host&#39;s recorded activities, oldest first.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/prov/prov.ts">Source</a></p>
+</main>
+
+</body>
+</html>

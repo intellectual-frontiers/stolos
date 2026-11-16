@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/clients/console.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/clients/console.ts</h1>
+<p>Spec 082: the provider&#39;s console (<code>stolos clients console</code>): one Stolos Console for every client, on this PC only (127.0.0.1, a one-time launch link, as spec 066).</p>
+<ul><li><code>/clients</code>: the cross-client summary, numbers only, and a switch per client.</li><li>Switching (a POST to <code>/clients/switch</code>) ends the session and starts a new one, scoped to that client: every other page (the client&#39;s own console, its REST API under <code>/v1/</code>) is that client&#39;s, served by a console of its own, with its own sessions and caches, built and run in its scope.</li><li>A session sees one client at a time. Its cookie names a provider session; the provider session maps to one session in one client&#39;s console, so reaching another client&#39;s pages takes another switch (a new cookie), and the old cookie stops working.</li><li><code>/v1/clients</code>: the summary as JSON (numbers only), for any signed-in session.</li></ul>
+<pre class="mermaid">flowchart LR
+  launch[&quot;/launch (one-time link)&quot;] --&gt; list[&quot;/clients: the summary&quot;]
+  list --&gt;|&quot;switch: a new session&quot;| a[&quot;client A's console&lt;br/&gt;(its sessions, caches, scope)&quot;]
+  list --&gt;|&quot;switch: a new session&quot;| b[&quot;client B's console&quot;]
+  a --&gt;|&quot;All clients&quot;| list</pre>
+<h2>Exports</h2>
+<section class="symbol" id="ClientConsole">
+<h3><span class="kind">interface</span><a href="#ClientConsole">ClientConsole</a></h3>
+<pre><code class="language-ts">export interface ClientConsole {
+  /** The client's Stolos Console (spec 066), scoped to it. */
+  handler: (req: Request) =&gt; Promise&lt;Response&gt;;
+  /** Its own sessions (never another client's). */
+  sessions: Sessions;
+}</code></pre>
+<p>One client&#39;s console: its handler and its own sessions.</p>
+
+</section>
+<section class="symbol" id="ProviderDeps">
+<h3><span class="kind">interface</span><a href="#ProviderDeps">ProviderDeps</a></h3>
+<pre><code class="language-ts">export interface ProviderDeps {
+  /** The port (for the Host check). */
+  port: number;
+  /** The person at this PC. */
+  person: { user: string; name: string };
+  /** The launch links. */
+  launch: Launch;
+  /** The provider's sessions. */
+  sessions: Sessions;
+  /** The registered clients. */
+  clients(): Promise&lt;Client[]&gt;;
+  /** Every client's numbers, each read in its own scope. */
+  summaries(): Promise&lt;ClientSummary[]&gt;;
+  /** A client's console (built once per client, in its scope). */
+  consoleFor(c: Client): Promise&lt;ClientConsole&gt;;
+  /** Where Mermaid and the fonts are cached. */
+  cacheDir: string;
+}</code></pre>
+<p>What the provider&#39;s console needs: real on the PC, fakes in tests.</p>
+
+</section>
+<section class="symbol" id="clientsPage">
+<h3><span class="kind">function</span><a href="#clientsPage">clientsPage</a></h3>
+<pre><code class="language-ts">export function clientsPage(list: ClientSummary[], current?: string): Html</code></pre>
+<p>The cross-client summary page: one row per client, numbers only, and its switch.</p>
+
+</section>
+<section class="symbol" id="providerHandler">
+<h3><span class="kind">function</span><a href="#providerHandler">providerHandler</a></h3>
+<pre><code class="language-ts">export function providerHandler(
+  deps: ProviderDeps,
+): (req: Request, info?: ServeInfo) =&gt; Promise&lt;Response&gt;</code></pre>
+<p>The provider&#39;s console&#39;s request handler.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/clients/console.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

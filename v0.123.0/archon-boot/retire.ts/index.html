@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon-boot/retire.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../index.html">Stolos v0.123.0</a> · <a href="../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon-boot/retire.ts</h1>
+<p><code>bun run stolos boot retire &lt;host&gt; --confirm-destroy &lt;host&gt;</code> (spec 045): a server leaves the fleet, the reverse of <code>stolos host add</code>. From the boot machine, with the name repeated by a person:</p>
+<p>The machine itself is not touched: power it off, or install it as a new host. What the router holds (its local DNS record) is the owner&#39;s to change (Article 21). The vault backup keeps the old secrets until it is renewed.</p>
+<ol><li>asks the host, if it answers, whether it is durable (archon data), and says so before anything is removed;</li><li>removes its DNS records in Cloudflare (&lt;host&gt;.&lt;domain&gt;, *.&lt;host&gt;.&lt;domain&gt;);</li><li>removes its deploy key from the repository on GitHub (gh);</li><li>forgets it on this PC: its install token, its secrets (deploy key, SSH host keys, the carried Let&#39;s Encrypt store), and its known_hosts lines;</li><li>removes its model and its recorded state from this checkout, builds, commits, and pushes that (--no-push leaves it for you).</li></ol>
+<h2>Exports</h2>
+<section class="symbol" id="retireRefusal">
+<h3><span class="kind">function</span><a href="#retireRefusal">retireRefusal</a></h3>
+<pre><code class="language-ts">export function retireRefusal(
+  name: string,
+  confirm: string | undefined,
+  agent = proc.env.get(&quot;ARCHON_AGENT&quot;),
+): string | undefined</code></pre>
+<p>Why retiring NAME cannot go ahead, or undefined (the name repeated, by a person).</p>
+
+</section>
+<section class="symbol" id="publishedNames">
+<h3><span class="kind">const</span><a href="#publishedNames">publishedNames</a></h3>
+<pre><code class="language-ts">export const publishedNames</code></pre>
+<p>The DNS names a server publishes (spec 032).</p>
+
+</section>
+<section class="symbol" id="retire">
+<h3><span class="kind">function</span><a href="#retire">retire</a></h3>
+<pre><code class="language-ts">export async function retire(
+  name: string | undefined,
+  confirm: string | undefined,
+  push = true,
+): Promise&lt;number&gt;</code></pre>
+<p><code>bun run stolos boot retire &lt;host&gt; --confirm-destroy &lt;host&gt;</code>: remove a server from the fleet in the steps the module describes. <code>push</code> false leaves the commit for the owner to push (--no-push). Returns the exit code (2 for an unknown host).</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon-boot/retire.ts">Source</a></p>
+</main>
+
+</body>
+</html>

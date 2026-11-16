@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/fedramp/commands.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/fedramp/commands.ts</h1>
+<p>Spec 076: <code>stolos compliance fedramp [--class A|B] [--out &lt;file&gt;] [--overview &lt;uri&gt;]</code>: each FedRAMP 20x Key Security Indicator the class asks for, with its status from the evidence this PC already knows, or why Stolos cannot observe it; <code>--out</code> writes the Security Decision Record in FedRAMP&#39;s JSON format, and <code>--json</code> prints the whole package.</p>
+<h2>Exports</h2>
+<section class="symbol" id="fedrampCommand">
+<h3><span class="kind">function</span><a href="#fedrampCommand">fedrampCommand</a></h3>
+<pre><code class="language-ts">export async function fedrampCommand(
+  o: { cls?: string; out?: string; overview?: string; json?: boolean } = {},
+): Promise&lt;number&gt;</code></pre>
+<p>Print the package for a class; with <code>out</code>, write its Security Decision Record. Exit 1 when a KSI&#39;s checks fail.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/fedramp/commands.ts">Source</a></p>
+</main>
+
+</body>
+</html>

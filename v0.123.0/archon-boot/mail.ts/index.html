@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon-boot/mail.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../index.html">Stolos v0.123.0</a> · <a href="../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon-boot/mail.ts</h1>
+<p>The boot machine&#39;s side of outbound mail (specs 025, 027):</p>
+<p>bun run stolos boot mail-setup           store the Cloudflare API token (once) bun run stolos boot mail-push &lt;host&gt;     give a running host the token over SSH bun run stolos boot notify --subject ... email the mailbox from this PC (also: notify test | status)</p>
+<p>The token lives only in this PC&#39;s secrets folder and, on each server, in Postfix&#39;s /etc/postfix/sasl_passwd (root only). It never enters the repository (Article 13).</p>
+<h2>Exports</h2>
+<section class="symbol" id="mailSetup">
+<h3><span class="kind">function</span><a href="#mailSetup">mailSetup</a></h3>
+<pre><code class="language-ts">export async function mailSetup(): Promise&lt;number&gt;</code></pre>
+<p><code>bun run stolos boot mail-setup</code>: explain the one-time Cloudflare setup, read the API token without echo, test it with an SMTP login (nothing is sent), store it in this PC&#39;s secrets, then run the doctor&#39;s email checks. Returns the exit code (1 on a missing mail setting, a bad token, or a failed check).</p>
+
+</section>
+<section class="symbol" id="mailPush">
+<h3><span class="kind">function</span><a href="#mailPush">mailPush</a></h3>
+<pre><code class="language-ts">export async function mailPush(name: string | undefined): Promise&lt;number&gt;</code></pre>
+<p><code>bun run stolos boot mail-push &lt;host&gt;</code>: give a running host the stored mail token over SSH (on stdin to <code>archon mail credential</code>). Returns ssh&#39;s exit code, 2 for an unknown host, or 1 when no token is stored.</p>
+
+</section>
+<section class="symbol" id="bootNotify">
+<h3><span class="kind">function</span><a href="#bootNotify">bootNotify</a></h3>
+<pre><code class="language-ts">export async function bootNotify(args: string[]): Promise&lt;number&gt;</code></pre>
+<p>bun run stolos boot notify ... : the same options as archon notify send, or test / status.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon-boot/mail.ts">Source</a></p>
+</main>
+
+</body>
+</html>

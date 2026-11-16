@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/console/server.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/console/server.ts</h1>
+<p>Spec 065: the Archon Console&#39;s web server, as one request handler built from its dependencies (PAM, accounts, the runner, the data), so tests drive it with fakes and a server with the real ones.</p>
+<ul><li><code>/signin</code> (form, PAM) and <code>/signout</code>; everything else needs a session (a cookie). Wrong passwords are throttled by address and by account.</li><li>POSTs come from this site only: the Origin must match the Host, and a run must carry Datastar&#39;s own header (another site&#39;s form cannot set it).</li><li><code>/actions/run</code> streams the command&#39;s output as server-sent events (Datastar patches the page as lines arrive).</li></ul>
+<h2>Exports</h2>
+<section class="symbol" id="ConsoleDeps">
+<h3><span class="kind">interface</span><a href="#ConsoleDeps">ConsoleDeps</a></h3>
+<pre><code class="language-ts">export interface ConsoleDeps {
+  /** This machine's name in the model. */
+  host: string;
+  /** Checks passwords (PAM). */
+  auth: Authenticator;
+  /** Looks up accounts (name, groups). */
+  accounts: AccountLookup;
+  /** Runs commands as the person. */
+  runner: Runner;
+  /** The signed-in people. */
+  sessions: Sessions;
+  /** The sign-in throttle. */
+  throttle: Throttle;
+  /** What the welcome page gathered (health, apps, guide). */
+  data(): Promise&lt;WelcomeData&gt;;
+  /** The fleet repository's checkout: commit, signer, engine, signers. */
+  repo(): Promise&lt;RepoFacts&gt;;
+  /** The activity record: append, and the newest entries. */
+  activity: { add(e: ActivityEntry): Promise&lt;void&gt;; recent(n: number): Promise&lt;ActivityEntry[]&gt; };
+  /** A served guide's page (docs/&lt;name&gt;.md as HTML), or undefined. */
+  guideDoc(name: string): Promise&lt;string | undefined&gt;;
+  /** Where large vendored files are cached (Mermaid). */
+  cacheDir: string;
+  /** The optional services and units, live. */
+  services(): Promise&lt;ServicesFacts&gt;;
+  /** The journal, live, for a unit or everything, until the signal aborts. */
+  journal(
+    unit: string | undefined,
+    each: (line: string) =&gt; void,
+    signal: AbortSignal,
+  ): Promise&lt;void&gt;;
+}</code></pre>
+<p>What the console needs from the machine: real on a server, fakes in tests.</p>
+
+</section>
+<section class="symbol" id="htmlResponse">
+<h3><span class="kind">const</span><a href="#htmlResponse">htmlResponse</a></h3>
+<pre><code class="language-ts">export const htmlResponse</code></pre>
+<p>An HTML response, never cached or framed.</p>
+
+</section>
+<section class="symbol" id="redirect">
+<h3><span class="kind">const</span><a href="#redirect">redirect</a></h3>
+<pre><code class="language-ts">export const redirect</code></pre>
+<p>A redirect after a POST (303).</p>
+
+</section>
+<section class="symbol" id="clientAddress">
+<h3><span class="kind">function</span><a href="#clientAddress">clientAddress</a></h3>
+<pre><code class="language-ts">export function clientAddress(req: Request, info?: ServeInfo): string</code></pre>
+<p>The address a request came from. The console listens on 127.0.0.1 behind Traefik, which replaces any X-Forwarded-For a client sends with its own (it trusts no forwarded headers): so the header counts only on a loopback connection, and its last entry is the one Traefik added.</p>
+
+</section>
+<section class="symbol" id="passwordMatches">
+<h3><span class="kind">function</span><a href="#passwordMatches">passwordMatches</a></h3>
+<pre><code class="language-ts">export async function passwordMatches(
+  auth: Authenticator,
+  user: string,
+  password: string,
+): Promise&lt;boolean | &quot;unsupported&quot;&gt;</code></pre>
+<p>Whether <code>user</code> signs in with <code>password</code>, or &quot;unsupported&quot; where this runtime cannot check a password (Node: spec 096 FR-010).</p>
+
+</section>
+<section class="symbol" id="sameOrigin">
+<h3><span class="kind">function</span><a href="#sameOrigin">sameOrigin</a></h3>
+<pre><code class="language-ts">export function sameOrigin(req: Request): boolean</code></pre>
+<p>Whether a POST comes from this site: its Origin (when the browser sends one) matches the Host.</p>
+
+</section>
+<section class="symbol" id="patch">
+<h3><span class="kind">function</span><a href="#patch">patch</a></h3>
+<pre><code class="language-ts">export function patch(
+  elements: Html | string,
+  o: { selector?: string; mode?: string } = {},
+): string</code></pre>
+<p>One server-sent event that patches the page (Datastar&#39;s datastar-patch-elements).</p>
+
+</section>
+<section class="symbol" id="lineClass">
+<h3><span class="kind">function</span><a href="#lineClass">lineClass</a></h3>
+<pre><code class="language-ts">export function lineClass(l: string): string</code></pre>
+<p>How a line of archon&#39;s plain output is colored.</p>
+
+</section>
+<section class="symbol" id="staticFile">
+<h3><span class="kind">function</span><a href="#staticFile">staticFile</a></h3>
+<pre><code class="language-ts">export async function staticFile(path: string, cacheDir: string): Promise&lt;Response | undefined&gt;</code></pre>
+<p>The consoles&#39; static files (stylesheet, icon, Datastar, Mermaid, fonts), or undefined.</p>
+
+</section>
+<section class="symbol" id="consoleHandler">
+<h3><span class="kind">function</span><a href="#consoleHandler">consoleHandler</a></h3>
+<pre><code class="language-ts">export function consoleHandler(
+  deps: ConsoleDeps,
+): (req: Request, info?: ServeInfo) =&gt; Promise&lt;Response&gt;</code></pre>
+<p>The console&#39;s request handler.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/console/server.ts">Source</a></p>
+</main>
+
+</body>
+</html>

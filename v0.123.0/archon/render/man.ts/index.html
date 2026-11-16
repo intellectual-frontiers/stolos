@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/render/man.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/render/man.ts</h1>
+<p>Man pages and fish completions generated from the command registry and from the constitution and personas (Article 6). Installed into /usr/local/share/man and fish&#39;s vendor completions directory by spec 012.</p>
+<h2>Exports</h2>
+<section class="symbol" id="MAN_DATE">
+<h3><span class="kind">const</span><a href="#MAN_DATE">MAN_DATE</a></h3>
+<pre><code class="language-ts">export const MAN_DATE</code></pre>
+<p>A fixed date keeps rendered pages stable across builds; bump with releases.</p>
+
+</section>
+<section class="symbol" id="pageName">
+<h3><span class="kind">function</span><a href="#pageName">pageName</a></h3>
+<pre><code class="language-ts">export function pageName(cmd: Command): string</code></pre>
+<p>A command&#39;s man page name, for example archon-vault-backup.</p>
+
+</section>
+<section class="symbol" id="commandPage">
+<h3><span class="kind">function</span><a href="#commandPage">commandPage</a></h3>
+<pre><code class="language-ts">export function commandPage(cmd: Command): string</code></pre>
+<p>One command&#39;s man page, in roff, from its registry entry.</p>
+
+</section>
+<section class="symbol" id="mainPage">
+<h3><span class="kind">function</span><a href="#mainPage">mainPage</a></h3>
+<pre><code class="language-ts">export function mainPage(commands: Command[]): string</code></pre>
+<p>archon(1): what Archon is, every command, and where things live.</p>
+
+</section>
+<section class="symbol" id="constitutionPage">
+<h3><span class="kind">function</span><a href="#constitutionPage">constitutionPage</a></h3>
+<pre><code class="language-ts">export function constitutionPage(): string</code></pre>
+<p>archon-constitution(7): the constitution, as a man page.</p>
+
+</section>
+<section class="symbol" id="guidePage">
+<h3><span class="kind">function</span><a href="#guidePage">guidePage</a></h3>
+<pre><code class="language-ts">export function guidePage(): string</code></pre>
+<p>Spec 035: the newcomer&#39;s guide, from the guide module src/archon/guide/mod.ts (also on the welcome page).</p>
+
+</section>
+<section class="symbol" id="dotfilesPage">
+<h3><span class="kind">function</span><a href="#dotfilesPage">dotfilesPage</a></h3>
+<pre><code class="language-ts">export function dotfilesPage(): string</code></pre>
+<p>Spec 031: how dotfiles work, from src/archon/dotfiles/mod.ts (one source for both).</p>
+
+</section>
+<section class="symbol" id="pgPage">
+<h3><span class="kind">function</span><a href="#pgPage">pgPage</a></h3>
+<pre><code class="language-ts">export function pgPage(): string</code></pre>
+<p>Spec 038: PostgreSQL instances, from src/archon/pg/mod.ts (also served at /guide/pg).</p>
+
+</section>
+<section class="symbol" id="sqlPage">
+<h3><span class="kind">function</span><a href="#sqlPage">sqlPage</a></h3>
+<pre><code class="language-ts">export function sqlPage(): string</code></pre>
+<p>Spec 042: SQL over infrastructure, from src/archon/state/mod.ts (also served at /guide/sql).</p>
+
+</section>
+<section class="symbol" id="telemetryMarkdown">
+<h3><span class="kind">function</span><a href="#telemetryMarkdown">telemetryMarkdown</a></h3>
+<pre><code class="language-ts">export function telemetryMarkdown(): string</code></pre>
+<p>Spec 049: every signal Archon emits, from telemetry/signals.ts.</p>
+
+</section>
+<section class="symbol" id="telemetryPage">
+<h3><span class="kind">function</span><a href="#telemetryPage">telemetryPage</a></h3>
+<pre><code class="language-ts">export function telemetryPage(): string</code></pre>
+<p>archon-telemetry(7): every span, metric, event, and attribute Archon emits.</p>
+
+</section>
+<section class="symbol" id="personasPage">
+<h3><span class="kind">function</span><a href="#personasPage">personasPage</a></h3>
+<pre><code class="language-ts">export function personasPage(): string</code></pre>
+<p>archon-personas(7): who uses Archon, and what each one does.</p>
+
+</section>
+<section class="symbol" id="renderManPages">
+<h3><span class="kind">function</span><a href="#renderManPages">renderManPages</a></h3>
+<pre><code class="language-ts">export function renderManPages(): Map&lt;string, string&gt;</code></pre>
+<p>Every man page: file name to roff.</p>
+
+</section>
+<section class="symbol" id="docsFiles">
+<h3><span class="kind">function</span><a href="#docsFiles">docsFiles</a></h3>
+<pre><code class="language-ts">export function docsFiles(): FileDef[]</code></pre>
+<p>Spec 012: install man pages and completions on the host.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/render/man.ts">Source</a></p>
+</main>
+
+</body>
+</html>

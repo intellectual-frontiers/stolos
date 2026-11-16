@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/install/netboot.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/install/netboot.ts</h1>
+<p><code>archon reboot [--netboot]</code> (spec 004): for a re-install, boot from the network once (UEFI BootNext) and then reboot. The boot order itself never changes, so ordinary reboots never wait for a network boot. The install recorded the firmware entry it network-booted from; without that record (a host installed by hand) the first PXE or HTTP IPv4 entry is used.</p>
+<h2>Exports</h2>
+<section class="symbol" id="NETBOOT_ENTRY">
+<h3><span class="kind">const</span><a href="#NETBOOT_ENTRY">NETBOOT_ENTRY</a></h3>
+<pre><code class="language-ts">export const NETBOOT_ENTRY</code></pre>
+<p>Where the install recorded the firmware entry it network-booted from.</p>
+
+</section>
+<section class="symbol" id="BootEntry">
+<h3><span class="kind">interface</span><a href="#BootEntry">BootEntry</a></h3>
+<pre><code class="language-ts">export interface BootEntry {
+  /** Its id (hex). */
+  id: string;
+  /** Its label. */
+  label: string;
+}</code></pre>
+<p>One UEFI boot entry.</p>
+
+</section>
+<section class="symbol" id="parseEfibootmgr">
+<h3><span class="kind">function</span><a href="#parseEfibootmgr">parseEfibootmgr</a></h3>
+<pre><code class="language-ts">export function parseEfibootmgr(out: string): { current?: string; entries: BootEntry[] }</code></pre>
+<p>efibootmgr&#39;s output, parsed.</p>
+
+</section>
+<section class="symbol" id="pickNetbootEntry">
+<h3><span class="kind">function</span><a href="#pickNetbootEntry">pickNetbootEntry</a></h3>
+<pre><code class="language-ts">export function pickNetbootEntry(entries: BootEntry[], recorded?: string): BootEntry | undefined</code></pre>
+<p>The recorded entry if it still exists, else the best-looking network entry.</p>
+
+</section>
+<section class="symbol" id="reboot">
+<h3><span class="kind">function</span><a href="#reboot">reboot</a></h3>
+<pre><code class="language-ts">export async function reboot(opts: {
+  netboot: boolean;
+  now?: boolean;
+  poweroff?: boolean;
+}): Promise&lt;number&gt;</code></pre>
+<p>archon reboot (and poweroff): wait for apt and dpkg, then reboot (once from the network, with --netboot) or shut down.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/install/netboot.ts">Source</a></p>
+</main>
+
+</body>
+</html>

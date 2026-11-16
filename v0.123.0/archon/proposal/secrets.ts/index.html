@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/proposal/secrets.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/proposal/secrets.ts</h1>
+<p>Spec 095-proposals, Article 13: no secret ever leaves a server in a proposal. A path in the secret inventory (by its file name), a path that is secret on every host (<code>/etc/shadow</code>, SSH host keys, <code>/var/lib/archon-keys</code>), and content that looks like a key are sent as a SHA-256 hash only. A file&#39;s content is sent only when it is small, text, and not secret.</p>
+<h2>Exports</h2>
+<section class="symbol" id="MAX_CONTENT">
+<h3><span class="kind">const</span><a href="#MAX_CONTENT">MAX_CONTENT</a></h3>
+<pre><code class="language-ts">export const MAX_CONTENT</code></pre>
+<p>The largest file whose content a proposal carries.</p>
+
+</section>
+<section class="symbol" id="isSecretPath">
+<h3><span class="kind">function</span><a href="#isSecretPath">isSecretPath</a></h3>
+<pre><code class="language-ts">export function isSecretPath(path: string): boolean</code></pre>
+<p>Whether a path is secret: on every host, or by its file name in the secret inventory.</p>
+
+</section>
+<section class="symbol" id="looksSecret">
+<h3><span class="kind">function</span><a href="#looksSecret">looksSecret</a></h3>
+<pre><code class="language-ts">export function looksSecret(text: string): boolean</code></pre>
+<p>Text that looks like it holds a key, a token, or a password (redaction would change it, or a long random string).</p>
+
+</section>
+<section class="symbol" id="fileEvidence">
+<h3><span class="kind">function</span><a href="#fileEvidence">fileEvidence</a></h3>
+<pre><code class="language-ts">export async function fileEvidence(
+  path: string,
+  data: Uint8Array,
+  meta: {
+    mode?: string | undefined;
+    owner?: string | undefined;
+    group?: string | undefined;
+    diff?: string | undefined;
+  } = {},
+): Promise&lt;FileEvidence&gt;</code></pre>
+<p>A file&#39;s evidence: always its hash and size; its content (and diff) only for a small text file that is not secret by path or by content.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/proposal/secrets.ts">Source</a></p>
+</main>
+
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/export/ocsf.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/export/ocsf.ts</h1>
+<p>Spec 092: the estate and the compliance view as OCSF 1.9.0 events, one JSON object per line (JSON Lines), for a SIEM or a data lake to read without a parser of its own. Every event is written by IFC TypeScript&#39;s kernel (<code>ocsf</code>), typed by its OCSF 1.9.0 types, so a missing required attribute does not compile; the mapping from the estate&#39;s rows is Stolos&#39;s.</p>
+<table><thead><tr><th>What</th><th>OCSF class</th><th>One event per</th></tr></thead><tbody><tr><td>a person (the source of truth)</td><td>5003 User Inventory Info</td><td>person</td></tr><tr><td>an account in some system</td><td>5003 User Inventory Info</td><td>account (after its person)</td></tr><tr><td>a machine (fixed asset)</td><td>5001 Device Inventory Info</td><td>fixed asset</td></tr><tr><td>a scanner&#39;s vulnerability (spec 088)</td><td>2002 Vulnerability Finding</td><td>node</td></tr><tr><td>any other record (repositories, ...)</td><td>5023 Cloud Resources Inventory Info</td><td>node</td></tr><tr><td>a check&#39;s result</td><td>2003 Compliance Finding</td><td>evidence and SCF control (<code>finding.ts</code>)</td></tr></tbody></table>
+<pre class="mermaid">flowchart LR
+  estate[(&quot;estate graph&quot;)] --&gt; people[&quot;5003 per person, then their accounts&quot;]
+  estate --&gt; devices[&quot;5001 per fixed asset&quot;]
+  estate --&gt; nodes[&quot;5023 per other node&quot;]
+  view[&quot;compliance view&quot;] --&gt; findings[&quot;2003 per evidence and SCF control&quot;]
+  people &amp; devices &amp; nodes &amp; findings --&gt; jsonl[&quot;ocsf.jsonl&quot;]</pre>
+<p>Only what the estate already holds goes out: a person&#39;s name, work email, status, role, dates, and manager; an account&#39;s name, email, and flags; a machine&#39;s names, serial number, operating system, and owner&#39;s work email. An account is tied to its person by <code>metadata.correlation_uid</code> (the person&#39;s uid). Activity is 2 (Collect): Stolos collected it from the sources; severity is 1 (Informational) for inventory.</p>
+<h2>Exports</h2>
+<section class="symbol" id="OcsfEvent">
+<h3><span class="kind">type</span><a href="#OcsfEvent">OcsfEvent</a></h3>
+<pre><code class="language-ts">export type OcsfEvent = ocsf.OcsfEvent;</code></pre>
+<p>One OCSF event Stolos exports (the kernel&#39;s: inventories and findings).</p>
+
+</section>
+<section class="symbol" id="osTypeId">
+<h3><span class="kind">function</span><a href="#osTypeId">osTypeId</a></h3>
+<pre><code class="language-ts">export function osTypeId(name: string): ocsf.OcsfOs[&quot;type_id&quot;]</code></pre>
+<p>OCSF&#39;s operating system type, from its name (0 Unknown when Stolos cannot tell).</p>
+
+</section>
+<section class="symbol" id="OcsfOptions">
+<h3><span class="kind">interface</span><a href="#OcsfOptions">OcsfOptions</a></h3>
+<pre><code class="language-ts">export interface OcsfOptions {
+  /** The fleet's id (metadata.tenant_uid). */
+  fleet: string;
+  /** The fleet's name, for user.org. */
+  fleetTitle?: string;
+  /** The time every event is stamped with. */
+  now: Date;
+}</code></pre>
+<p>What the export needs to know besides the data.</p>
+
+</section>
+<section class="symbol" id="estateEvents">
+<h3><span class="kind">function</span><a href="#estateEvents">estateEvents</a></h3>
+<pre><code class="language-ts">export function estateEvents(e: Estate, o: OcsfOptions): OcsfEvent[]</code></pre>
+<p>The estate as OCSF inventory events, in a stable order: each person and then their accounts, the accounts of no one, the machines, then every other node.</p>
+
+</section>
+<section class="symbol" id="complianceEvents">
+<h3><span class="kind">function</span><a href="#complianceEvents">complianceEvents</a></h3>
+<pre><code class="language-ts">export function complianceEvents(
+  view: ComplianceView,
+  o: OcsfOptions &amp; { catalog?: ScfCatalog },
+): ocsf.ComplianceFindingEvent[]</code></pre>
+<p>The compliance view as OCSF Compliance Findings: one per piece of evidence and SCF control.</p>
+
+</section>
+<section class="symbol" id="toJsonl">
+<h3><span class="kind">function</span><a href="#toJsonl">toJsonl</a></h3>
+<pre><code class="language-ts">export function toJsonl(events: readonly unknown[]): string</code></pre>
+<p>Events as JSON Lines: one object per line, each line ending in a newline.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/export/ocsf.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

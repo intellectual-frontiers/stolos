@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/people/reviews.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/people/reviews.ts</h1>
+<p>Spec 077: quarterly access reviews, written from the estate graph. Each manager (the people others report to, <code>party_relationship</code> <code>reports_to</code>) gets one Markdown file per quarter, <code>people/reviews/&lt;quarter&gt;/&lt;manager&gt;.md</code>: each report&#39;s active accounts (<code>has_account</code> edges) with their admin rights, one line each, unticked. The manager ticks each line they confirm (and removes, in the system itself, any access they do not) and commits it signed: that commit is the approval.</p>
+<pre class="mermaid">flowchart LR
+  estate[(&quot;estate graph: reports_to, has_account&quot;)] --&gt; files[&quot;reviewFiles: one per manager&quot;]
+  files --&gt; branch[&quot;a branch, a pull request&quot;]
+  branch --&gt; tick[&quot;the manager ticks each line: a signed commit&quot;]
+  tick --&gt; main[&quot;merged to main, signatures kept&quot;]
+  main --&gt; control[&quot;people-access-reviews: approved?&quot;]</pre>
+<h2>Exports</h2>
+<section class="symbol" id="ReviewFile">
+<h3><span class="kind">interface</span><a href="#ReviewFile">ReviewFile</a></h3>
+<pre><code class="language-ts">export interface ReviewFile {
+  /** The manager (work email). */
+  manager: string;
+  /** Its path under the fleet: `people/reviews/&lt;quarter&gt;/&lt;manager&gt;.md`. */
+  path: string;
+  /** Its text. */
+  text: string;
+  /** How many lines there are to tick. */
+  lines: number;
+}</code></pre>
+<p>One review file to write.</p>
+
+</section>
+<section class="symbol" id="REVIEW_SQL">
+<h3><span class="kind">const</span><a href="#REVIEW_SQL">REVIEW_SQL</a></h3>
+<pre><code class="language-ts">export const REVIEW_SQL</code></pre>
+<p>The reports, and their active accounts, of every manager with someone still employed.</p>
+
+</section>
+<section class="symbol" id="emailOf">
+<h3><span class="kind">const</span><a href="#emailOf">emailOf</a></h3>
+<pre><code class="language-ts">export const emailOf</code></pre>
+<p>A party uid&#39;s work email (&quot;person:alice@example.org&quot; to &quot;alice@example.org&quot;).</p>
+
+</section>
+<section class="symbol" id="reviewFiles">
+<h3><span class="kind">function</span><a href="#reviewFiles">reviewFiles</a></h3>
+<pre><code class="language-ts">export function reviewFiles(e: Estate, quarter: Quarter, now = new Date()): ReviewFile[]</code></pre>
+<p>The review files of a quarter, one per manager, from the estate graph.</p>
+
+</section>
+<section class="symbol" id="reviewTicks">
+<h3><span class="kind">function</span><a href="#reviewTicks">reviewTicks</a></h3>
+<pre><code class="language-ts">export function reviewTicks(text: string): { ticked: number; lines: number }</code></pre>
+<p>How many lines of a review are ticked, of how many.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/people/reviews.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

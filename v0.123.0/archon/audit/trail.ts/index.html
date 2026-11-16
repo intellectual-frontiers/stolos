@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/audit/trail.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/audit/trail.ts</h1>
+<p>Spec 083: the audit trail. Every request the auditor makes, every response the company gives, and every sample drawn is one file in <code>fleets/&lt;fleet&gt;/audits/&lt;id&gt;/trail/</code>, numbered in order (<code>0001-request.md</code>, <code>0002-response.md</code>, <code>0003-sample.md</code>), added in a commit of its own signed with a fleet signer&#39;s key. The commit names the file and its SHA-256 in a trailer, so the signature covers the entry&#39;s exact text and an auditor checks it with the commit alone:</p>
+<pre><code>audit soc2-2026: request 3 (CC6.2)
+
+Audit-Entry: fleets/lab/audits/soc2-2026/trail/0003-request.md sha256:&lt;hex&gt;</code></pre>
+<p>engagement.ts carries the same trailer in each commit that writes it. An entry is a Markdown file with front matter, each value one line of JSON:</p>
+<pre><code>---
+seq: 3
+kind: &quot;request&quot;
+at: &quot;2026-11-02T15:04:05Z&quot;
+by: &quot;Dana Example (Example CPA)&quot;
+control: &quot;CC6.2&quot;
+---
+
+Please show each sampled leaver&#39;s accounts on their last day.</code></pre>
+<pre class="mermaid">sequenceDiagram
+  participant A as Auditor
+  participant C as Company (a fleet signer)
+  participant G as Fleet repository
+  A-&gt;&gt;C: a request (email, the portal's address)
+  C-&gt;&gt;G: stolos audit request: trail/000n-request.md, a signed commit
+  C-&gt;&gt;G: stolos audit respond: trail/000m-response.md, a signed commit
+  A-&gt;&gt;G: the portal or the export: each entry, its commit, its signer</pre>
+<h2>Exports</h2>
+<section class="symbol" id="EntryKind">
+<h3><span class="kind">type</span><a href="#EntryKind">EntryKind</a></h3>
+<pre><code class="language-ts">export type EntryKind = &quot;request&quot; | &quot;response&quot; | &quot;sample&quot; | &quot;note&quot;;</code></pre>
+<p>What an entry is.</p>
+
+</section>
+<section class="symbol" id="ENTRY_KINDS">
+<h3><span class="kind">const</span><a href="#ENTRY_KINDS">ENTRY_KINDS</a></h3>
+<pre><code class="language-ts">export const ENTRY_KINDS: readonly EntryKind[]</code></pre>
+<p>The kinds, in the order the command line lists them.</p>
+
+</section>
+<section class="symbol" id="TrailEntry">
+<h3><span class="kind">interface</span><a href="#TrailEntry">TrailEntry</a></h3>
+<pre><code class="language-ts">export interface TrailEntry {
+  /** Its number: entries are shown in this order. */
+  seq: number;
+  /** What it is. */
+  kind: EntryKind;
+  /** When it was recorded (ISO time). */
+  at: string;
+  /** Who made it: the auditor for a request, the company's person for a response. */
+  by: string;
+  /** The control it is about, when it is about one. */
+  control?: string;
+  /** The request a response answers (its seq). */
+  re?: number;
+  /** The sample, for a sample entry. */
+  sample?: SampleRecord;
+  /** Its text (Markdown). */
+  body: string;
+}</code></pre>
+<p>One entry of the trail.</p>
+
+</section>
+<section class="symbol" id="trailDir">
+<h3><span class="kind">function</span><a href="#trailDir">trailDir</a></h3>
+<pre><code class="language-ts">export function trailDir(fleet: string, id: string): string</code></pre>
+<p>The trail folder, relative to the repository.</p>
+
+</section>
+<section class="symbol" id="entryFile">
+<h3><span class="kind">function</span><a href="#entryFile">entryFile</a></h3>
+<pre><code class="language-ts">export function entryFile(e: Pick&lt;TrailEntry, &quot;seq&quot; | &quot;kind&quot;&gt;): string</code></pre>
+<p>An entry&#39;s file name.</p>
+
+</section>
+<section class="symbol" id="ENTRY_FILE">
+<h3><span class="kind">const</span><a href="#ENTRY_FILE">ENTRY_FILE</a></h3>
+<pre><code class="language-ts">export const ENTRY_FILE</code></pre>
+<p>An entry file&#39;s name: its number and kind.</p>
+
+</section>
+<section class="symbol" id="entrySource">
+<h3><span class="kind">function</span><a href="#entrySource">entrySource</a></h3>
+<pre><code class="language-ts">export function entrySource(e: TrailEntry): string</code></pre>
+<p>An entry&#39;s text.</p>
+
+</section>
+<section class="symbol" id="parseEntry">
+<h3><span class="kind">function</span><a href="#parseEntry">parseEntry</a></h3>
+<pre><code class="language-ts">export function parseEntry(text: string): TrailEntry</code></pre>
+<p>An entry from its text; throws when it is not one.</p>
+
+</section>
+<section class="symbol" id="TRAILER">
+<h3><span class="kind">const</span><a href="#TRAILER">TRAILER</a></h3>
+<pre><code class="language-ts">export const TRAILER</code></pre>
+<p>The trailer a commit carries for a file it records.</p>
+
+</section>
+<section class="symbol" id="trailerLine">
+<h3><span class="kind">function</span><a href="#trailerLine">trailerLine</a></h3>
+<pre><code class="language-ts">export async function trailerLine(path: string, text: string): Promise&lt;string&gt;</code></pre>
+<p>The trailer line for a file and its text.</p>
+
+</section>
+<section class="symbol" id="trailersOf">
+<h3><span class="kind">function</span><a href="#trailersOf">trailersOf</a></h3>
+<pre><code class="language-ts">export function trailersOf(message: string): Map&lt;string, string&gt;</code></pre>
+<p>Each file a commit message&#39;s trailers vouch for, and its SHA-256.</p>
+
+</section>
+<section class="symbol" id="Proof">
+<h3><span class="kind">interface</span><a href="#Proof">Proof</a></h3>
+<pre><code class="language-ts">export interface Proof {
+  /** The file (relative to the repository). */
+  path: string;
+  /** Its SHA-256. */
+  sha256: string;
+  /** The commit that recorded it. */
+  commit?: string;
+  /** The fleet signer who signed that commit. */
+  signer?: string;
+  /** What is wrong (empty: the commit is signed by a signer and vouches for this exact text). */
+  problems: string[];
+}</code></pre>
+<p>What checking a file against its commit found.</p>
+
+</section>
+<section class="symbol" id="commitId">
+<h3><span class="kind">function</span><a href="#commitId">commitId</a></h3>
+<pre><code class="language-ts">export async function commitId(raw: Uint8Array): Promise&lt;string&gt;</code></pre>
+<p>A raw commit&#39;s id (SHA-1 or SHA-256, as the repository hashes objects).</p>
+
+</section>
+<section class="symbol" id="proveEntry">
+<h3><span class="kind">function</span><a href="#proveEntry">proveEntry</a></h3>
+<pre><code class="language-ts">export async function proveEntry(
+  path: string,
+  text: string,
+  rawCommit: string,
+  allowedSigners: string,
+): Promise&lt;Proof&gt;</code></pre>
+<p>Check a file&#39;s text against the raw commit that recorded it, offline: the commit&#39;s trailer names the file with this text&#39;s SHA-256, and its Git signature verifies against the allowed signers.</p>
+
+</section>
+<section class="symbol" id="Committer">
+<h3><span class="kind">type</span><a href="#Committer">Committer</a></h3>
+<pre><code class="language-ts">export type Committer = (files: Record&lt;string, string&gt;, message: string) =&gt; Promise&lt;string&gt;;</code></pre>
+<p>Writes files and commits them, signed (Git&#39;s signing key; ssh-keygen may ask its passphrase).</p>
+
+</section>
+<section class="symbol" id="gitCommitter">
+<h3><span class="kind">function</span><a href="#gitCommitter">gitCommitter</a></h3>
+<pre><code class="language-ts">export function gitCommitter(repo: string, interactive = true): Committer</code></pre>
+<p>A Committer for the repository at <code>repo</code>: it writes each file (paths relative to the repository), adds a trailer for each, and makes one signed commit of those files only. <code>interactive</code> gives the terminal to ssh-keygen for a passphrase. Returns the new commit.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/audit/trail.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

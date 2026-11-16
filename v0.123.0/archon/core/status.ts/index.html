@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/core/status.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/core/status.ts</h1>
+<p>The prompt&#39;s Archon segment (spec 009): every archon command ends by writing one short line to /var/lib/archon/status/prompt, and the oh-my-posh theme only reads that file, so the prompt stays instant. The line says how the last run went, how many disruptive changes wait, and whether the checkout has local commits that are not on GitHub.</p>
+<h2>Exports</h2>
+<section class="symbol" id="STATUS_DIR">
+<h3><span class="kind">const</span><a href="#STATUS_DIR">STATUS_DIR</a></h3>
+<pre><code class="language-ts">export const STATUS_DIR</code></pre>
+<p>Where the status files live: <code>prompt</code>, <code>prompt-plain</code>, <code>last.json</code> and <code>verify.json</code>.</p>
+
+</section>
+<section class="symbol" id="RunStatus">
+<h3><span class="kind">interface</span><a href="#RunStatus">RunStatus</a></h3>
+<pre><code class="language-ts">export interface RunStatus {
+  /** The command that ran (`&quot;update&quot;`, `&quot;apply&quot;`). */
+  command: string;
+  /** How many steps failed. */
+  failures: number;
+  /** How many steps warned. */
+  warnings: number;
+  /** How many disruptive changes wait for approval. */
+  deferred: number;
+}</code></pre>
+<p>How an archon command&#39;s run went, as the prompt shows it.</p>
+
+</section>
+<section class="symbol" id="pushPending">
+<h3><span class="kind">function</span><a href="#pushPending">pushPending</a></h3>
+<pre><code class="language-ts">export async function pushPending(repo = P.repo): Promise&lt;boolean&gt;</code></pre>
+<p>Local commits not on GitHub yet (no network: uses the last fetch).</p>
+
+</section>
+<section class="symbol" id="promptLine">
+<h3><span class="kind">function</span><a href="#promptLine">promptLine</a></h3>
+<pre><code class="language-ts">export function promptLine(s: RunStatus, push: boolean): string</code></pre>
+<p>The prompt segment with Nerd Font glyphs: the result, deferred changes, and a push marker.</p>
+
+</section>
+<section class="symbol" id="promptLinePlain">
+<h3><span class="kind">function</span><a href="#promptLinePlain">promptLinePlain</a></h3>
+<pre><code class="language-ts">export function promptLinePlain(s: RunStatus, push: boolean): string</code></pre>
+<p>The same status in words, for the plain prompt (spec 036): &quot;update ok, push&quot;.</p>
+
+</section>
+<section class="symbol" id="LastRun">
+<h3><span class="kind">interface</span><a href="#LastRun">LastRun</a></h3>
+<pre><code class="language-ts">export interface LastRun extends RunStatus {
+  /** When it was written (ISO 8601). */
+  at: string;
+  /** Whether the checkout had local commits not on GitHub. */
+  push: boolean;
+}</code></pre>
+<p>The last run, as data (the welcome page reads it; the prompt reads the line).</p>
+
+</section>
+<section class="symbol" id="LastVerify">
+<h3><span class="kind">interface</span><a href="#LastVerify">LastVerify</a></h3>
+<pre><code class="language-ts">export interface LastVerify {
+  /** When it ran (ISO 8601). */
+  at: string;
+  /** How many checks passed. */
+  passed: number;
+  /** How many checks ran. */
+  total: number;
+  /** The resources whose checks failed. */
+  failed: string[];
+}</code></pre>
+<p>The last <code>archon verify</code> as root (spec 035): the welcome page&#39;s &quot;checks now&quot;.</p>
+
+</section>
+<section class="symbol" id="writeVerify">
+<h3><span class="kind">function</span><a href="#writeVerify">writeVerify</a></h3>
+<pre><code class="language-ts">export async function writeVerify(v: LastVerify): Promise&lt;void&gt;</code></pre>
+<p>Save the last verify for the welcome page (<code>verify.json</code>). Best effort: errors are ignored.</p>
+
+</section>
+<section class="symbol" id="writeStatus">
+<h3><span class="kind">function</span><a href="#writeStatus">writeStatus</a></h3>
+<pre><code class="language-ts">export async function writeStatus(s: RunStatus): Promise&lt;void&gt;</code></pre>
+<p>Write the run&#39;s status: <code>last.json</code>, the plain line and the prompt line. Best effort: a host without /var/lib/archon (a workstation) has no segment.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/core/status.ts">Source</a></p>
+</main>
+
+</body>
+</html>

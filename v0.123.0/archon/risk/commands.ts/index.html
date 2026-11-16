@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/risk/commands.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/risk/commands.ts</h1>
+<p>Spec 080: <code>stolos risks list | check | review</code> and <code>stolos vendors list | triage</code>, on the controller PC, over the fleet repository and the estate graph built from Git. The reading ones change nothing; <code>risks review</code> and <code>vendors triage --write</code> open a pull request (a branch, one signed commit, <code>gh pr create</code>), which a signer approves by merging it with a signed merge commit.</p>
+<h2>Exports</h2>
+<section class="symbol" id="risksList">
+<h3><span class="kind">function</span><a href="#risksList">risksList</a></h3>
+<pre><code class="language-ts">export async function risksList(json = false): Promise&lt;number&gt;</code></pre>
+<p><code>stolos risks list</code>: the register, highest level first.</p>
+
+</section>
+<section class="symbol" id="risksCheck">
+<h3><span class="kind">function</span><a href="#risksCheck">risksCheck</a></h3>
+<pre><code class="language-ts">export async function risksCheck(json = false): Promise&lt;number&gt;</code></pre>
+<p><code>stolos risks check</code>: the risk-register pack&#39;s results, and who approved the files.</p>
+
+</section>
+<section class="symbol" id="risksReview">
+<h3><span class="kind">function</span><a href="#risksReview">risksReview</a></h3>
+<pre><code class="language-ts">export async function risksReview(
+  id: string,
+  o: { next?: string; note?: string; check?: boolean } = {},
+): Promise&lt;number&gt;</code></pre>
+<p><code>stolos risks review &lt;id&gt;</code>: move a risk&#39;s next review on, in a signed pull request.</p>
+
+</section>
+<section class="symbol" id="vendorsList">
+<h3><span class="kind">function</span><a href="#vendorsList">vendorsList</a></h3>
+<pre><code class="language-ts">export async function vendorsList(json = false): Promise&lt;number&gt;</code></pre>
+<p><code>stolos vendors list</code>: every vendor, discovered or triaged, and what revealed it.</p>
+
+</section>
+<section class="symbol" id="vendorsTriage">
+<h3><span class="kind">function</span><a href="#vendorsTriage">vendorsTriage</a></h3>
+<pre><code class="language-ts">export async function vendorsTriage(o: { write?: boolean; json?: boolean } = {}): Promise&lt;number&gt;</code></pre>
+<p><code>stolos vendors triage [--write]</code>: vendors not triaged yet; with --write, a pull request adding them.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/risk/commands.ts">Source</a></p>
+</main>
+
+</body>
+</html>

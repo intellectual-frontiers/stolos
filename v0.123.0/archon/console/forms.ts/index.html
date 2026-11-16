@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/console/forms.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/console/forms.ts</h1>
+<p>Specs 065 and 066: every command a console offers is a form, generated from the command registry (the source of <code>archon help</code>, the man pages, and the MCP tools), so the web and the CLI cannot drift. A form&#39;s values become an argument list for that command alone: each value is one argument (never a shell), checked against the command&#39;s own definition.</p>
+<h2>Exports</h2>
+<section class="symbol" id="NOT_IN_CONSOLE">
+<h3><span class="kind">const</span><a href="#NOT_IN_CONSOLE">NOT_IN_CONSOLE</a></h3>
+<pre><code class="language-ts">export const NOT_IN_CONSOLE: Set&lt;string&gt;</code></pre>
+<p>Commands a console never offers, though their place matches: interactive ones (a terminal UI, psql), the services themselves, and the internals.</p>
+
+</section>
+<section class="symbol" id="consoleCommands">
+<h3><span class="kind">function</span><a href="#consoleCommands">consoleCommands</a></h3>
+<pre><code class="language-ts">export function consoleCommands(place: &quot;machine&quot; | &quot;pc&quot;): Command[]</code></pre>
+<p>The commands a console offers where <code>place</code> runs (&quot;machine&quot;: archon; &quot;pc&quot;: stolos).</p>
+
+</section>
+<section class="symbol" id="shellWords">
+<h3><span class="kind">function</span><a href="#shellWords">shellWords</a></h3>
+<pre><code class="language-ts">export function shellWords(argv: string[]): string</code></pre>
+<p>An argument list as a person would type it in a shell (quoted where needed).</p>
+
+</section>
+<section class="symbol" id="tierWords">
+<h3><span class="kind">function</span><a href="#tierWords">tierWords</a></h3>
+<pre><code class="language-ts">export function tierWords(t: Tier): string</code></pre>
+<p>A tier in plain words, for people.</p>
+
+</section>
+<section class="symbol" id="tierPill">
+<h3><span class="kind">function</span><a href="#tierPill">tierPill</a></h3>
+<pre><code class="language-ts">export function tierPill(t: Tier): Html</code></pre>
+<p>A tier as a pill.</p>
+
+</section>
+<section class="symbol" id="FormResult">
+<h3><span class="kind">type</span><a href="#FormResult">FormResult</a></h3>
+<pre><code class="language-ts">export type FormResult = { argv: string[]; args: Parsed; tier: Tier } | { error: string };</code></pre>
+<p>The result of reading a command&#39;s form: its argument list and tier, or why not.</p>
+
+</section>
+<section class="symbol" id="argvFor">
+<h3><span class="kind">function</span><a href="#argvFor">argvFor</a></h3>
+<pre><code class="language-ts">export function argvFor(cmd: Command, form: Record&lt;string, string | undefined&gt;): FormResult</code></pre>
+<p>A form&#39;s values as <code>cmd</code>&#39;s argument list. Positional arguments first, in order, then the options; a flag is present when its box is ticked. Values may not start with &quot;-&quot; (they would read as options). Required ones must be there. Unknown fields are ignored.</p>
+
+</section>
+<section class="symbol" id="FormOptions">
+<h3><span class="kind">interface</span><a href="#FormOptions">FormOptions</a></h3>
+<pre><code class="language-ts">export interface FormOptions {
+  /** Whether the person may run a tier (default: the Archon Console's roles). */
+  may?: (t: Tier) =&gt; boolean;
+  /** Ask for the password again before destroying data (default: yes). */
+  password?: boolean;
+  /** The line beside the Run button. */
+  footnote?: string;
+}</code></pre>
+<p>How a console&#39;s forms differ (the Stolos Console: the person at the PC may run everything).</p>
+
+</section>
+<section class="symbol" id="commandForm">
+<h3><span class="kind">function</span><a href="#commandForm">commandForm</a></h3>
+<pre><code class="language-ts">export function commandForm(
+  cmd: Command,
+  role: Role,
+  post: string,
+  values: Record&lt;string, string&gt; = {},
+  o: FormOptions = {},
+): Html</code></pre>
+<p>A command&#39;s form: what it does, its fields, and the run button. People who may not run it see why; destroying data asks for the password again. Datastar posts it and streams the output into #output.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/console/forms.ts">Source</a></p>
+</main>
+
+</body>
+</html>

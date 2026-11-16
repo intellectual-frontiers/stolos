@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/pg/commands.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/pg/commands.ts</h1>
+<p>038-pg: archon pg list | status | ensure | start | stop | restart | reload | upgrade | remove | backup | restore | maintain | publish | unpublish | connect.</p>
+<p>Every command names an instance (default prime). Failures exit non-zero with one plain sentence (the app contract, spec 038 FR-019); --json prints a stable document and nothing else on stdout.</p>
+<h2>Exports</h2>
+<section class="symbol" id="PgError">
+<h3><span class="kind">class</span><a href="#PgError">PgError</a></h3>
+<pre><code class="language-ts">export class PgError extends Error {}</code></pre>
+<p>A plain sentence for the person (or program) that asked.</p>
+
+</section>
+<section class="symbol" id="InstanceView">
+<h3><span class="kind">interface</span><a href="#InstanceView">InstanceView</a></h3>
+<pre><code class="language-ts">export interface InstanceView {
+  /** The instance's name. */
+  name: string;
+  /** Its major version. */
+  version: number;
+  /** The port it listens on (null until allocated). */
+  port: number | null;
+  /** pg_lsclusters' status, &quot;not created&quot;, or &quot;missing&quot; (recorded but no cluster). */
+  status: string;
+  /** Its systemd unit, postgresql@&lt;version&gt;-&lt;name&gt;.service. */
+  unit: string;
+  /** Shown in the psql prompt. */
+  environment: string;
+  /** psql turns AUTOCOMMIT off and warns. */
+  protected: boolean;
+  /** Whether the host's model names it. */
+  inModel: boolean;
+  /** Whether Archon created it (the host's record has it). */
+  owned: boolean;
+  /** The name it is published at (the host's name when the fleet has no web domain), or null when private. */
+  published: string | null;
+  /** Its data directory, when the cluster exists. */
+  data: string | null;
+}</code></pre>
+<p>One instance as <code>archon pg list</code> and <code>archon pg status</code> show it (stable JSON).</p>
+
+</section>
+<section class="symbol" id="pgList">
+<h3><span class="kind">function</span><a href="#pgList">pgList</a></h3>
+<pre><code class="language-ts">export function pgList(hostName: string, json: boolean): Promise&lt;number&gt;</code></pre>
+<p><code>archon pg list</code>: every instance on the host, and the clusters that are not Archon&#39;s.</p>
+
+</section>
+<section class="symbol" id="pgStatus">
+<h3><span class="kind">function</span><a href="#pgStatus">pgStatus</a></h3>
+<pre><code class="language-ts">export function pgStatus(hostName: string, name: string, json: boolean): Promise&lt;number&gt;</code></pre>
+<p><code>archon pg status NAME</code>: exit code 0 only when the instance is online and accepting connections.</p>
+
+</section>
+<section class="symbol" id="EnsureResult">
+<h3><span class="kind">interface</span><a href="#EnsureResult">EnsureResult</a></h3>
+<pre><code class="language-ts">export interface EnsureResult {
+  /** Always true: a failure prints `{ ok: false, error }` instead. */
+  ok: true;
+  /** The instance's name. */
+  name: string;
+  /** Its major version. */
+  version: number;
+  /** The port it listens on. */
+  port: number;
+  /** pg_lsclusters' status (&quot;online&quot; when ready), or &quot;unknown&quot;. */
+  status: string;
+  /** Its systemd unit. */
+  unit: string;
+  /** Whether this call created it. */
+  created: boolean;
+  /** What this call changed, one sentence each. */
+  changes: string[];
+}</code></pre>
+<p>The ensure document (stable; apps read it).</p>
+
+</section>
+<section class="symbol" id="pgEnsureReady">
+<h3><span class="kind">function</span><a href="#pgEnsureReady">pgEnsureReady</a></h3>
+<pre><code class="language-ts">export async function pgEnsureReady(
+  hostName: string,
+  name: string,
+  version: string | undefined,
+  json: boolean,
+): Promise&lt;number | undefined&gt;</code></pre>
+<p>Unprivileged first look (an app&#39;s path): when the instance exists, is Archon&#39;s, and is online, there is nothing to do and nothing to elevate for.</p>
+
+</section>
+<section class="symbol" id="pgEnsure">
+<h3><span class="kind">function</span><a href="#pgEnsure">pgEnsure</a></h3>
+<pre><code class="language-ts">export function pgEnsure(
+  hostName: string,
+  name: string,
+  version: string | undefined,
+  json: boolean,
+): Promise&lt;number&gt;</code></pre>
+<p><code>archon pg ensure NAME</code>: create the instance if needed and converge it to the model. PostgreSQL must be on for the host. Exit code 0 when it is online.</p>
+
+</section>
+<section class="symbol" id="pgControl">
+<h3><span class="kind">function</span><a href="#pgControl">pgControl</a></h3>
+<pre><code class="language-ts">export function pgControl(
+  hostName: string,
+  name: string,
+  action: &quot;start&quot; | &quot;stop&quot; | &quot;restart&quot; | &quot;reload&quot;,
+): Promise&lt;number&gt;</code></pre>
+<p><code>archon pg start|stop|restart|reload NAME</code>, through pg_ctlcluster; journaled.</p>
+
+</section>
+<section class="symbol" id="guardDestructive">
+<h3><span class="kind">function</span><a href="#guardDestructive">guardDestructive</a></h3>
+<pre><code class="language-ts">export async function guardDestructive(
+  op: string,
+  name: string,
+  confirm: string | undefined,
+): Promise&lt;void&gt;</code></pre>
+<p>Destructive operations: the owner&#39;s approve marker in spec 038 and --confirm-destroy NAME.</p>
+
+</section>
+<section class="symbol" id="dumpInstance">
+<h3><span class="kind">function</span><a href="#dumpInstance">dumpInstance</a></h3>
+<pre><code class="language-ts">export async function dumpInstance(i: Instance &amp; { record: PgRecord }): Promise&lt;string&gt;</code></pre>
+<p>Dump an instance (pg_dumpall, zstd) into /var/backups/archon/pg/&lt;name&gt;/; keep the last 7. Gives the dump&#39;s path as the host names it.</p>
+
+</section>
+<section class="symbol" id="pgBackup">
+<h3><span class="kind">function</span><a href="#pgBackup">pgBackup</a></h3>
+<pre><code class="language-ts">export function pgBackup(
+  hostName: string,
+  name: string,
+  allInstances: boolean,
+  json: boolean,
+): Promise&lt;number&gt;</code></pre>
+<p><code>archon pg backup NAME</code> (or every instance Archon created): dump each with {@link dumpInstance}.</p>
+
+</section>
+<section class="symbol" id="pgRestore">
+<h3><span class="kind">function</span><a href="#pgRestore">pgRestore</a></h3>
+<pre><code class="language-ts">export function pgRestore(
+  hostName: string,
+  name: string,
+  from: string | undefined,
+  confirm: string | undefined,
+): Promise&lt;number&gt;</code></pre>
+<p><code>archon pg restore NAME</code> (destructive): load a dump (the newest, or --from) after dumping what is there now, then converge again so Archon&#39;s passwords are set anew.</p>
+
+</section>
+<section class="symbol" id="pgUpgrade">
+<h3><span class="kind">function</span><a href="#pgUpgrade">pgUpgrade</a></h3>
+<pre><code class="language-ts">export function pgUpgrade(
+  hostName: string,
+  name: string,
+  to: string | undefined,
+  confirm: string | undefined,
+): Promise&lt;number&gt;</code></pre>
+<p><code>archon pg upgrade NAME --to V</code> (destructive): dump first, install the new version, run pg_upgradecluster, and keep the old cluster stopped (retired).</p>
+
+</section>
+<section class="symbol" id="pgRemove">
+<h3><span class="kind">function</span><a href="#pgRemove">pgRemove</a></h3>
+<pre><code class="language-ts">export function pgRemove(
+  hostName: string,
+  name: string,
+  version: string | undefined,
+  confirm: string | undefined,
+): Promise&lt;number&gt;</code></pre>
+<p><code>archon pg remove NAME</code> (destructive): drop the instance (dumped first) and its record and passwords, or with --version only a retired cluster. An instance still in the model is refused.</p>
+
+</section>
+<section class="symbol" id="MAINTAIN_SQL">
+<h3><span class="kind">const</span><a href="#MAINTAIN_SQL">MAINTAIN_SQL</a></h3>
+<pre><code class="language-ts">export const MAINTAIN_SQL</code></pre>
+<p>The queries <code>archon pg maintain</code> reports: connections, max_connections, database sizes, and dead rows.</p>
+
+</section>
+<section class="symbol" id="pgMaintain">
+<h3><span class="kind">function</span><a href="#pgMaintain">pgMaintain</a></h3>
+<pre><code class="language-ts">export function pgMaintain(hostName: string, name: string, json: boolean): Promise&lt;number&gt;</code></pre>
+<p><code>archon pg maintain NAME</code> (root): VACUUM ANALYZE every database, then report connections, sizes, and the tables with the most dead rows.</p>
+
+</section>
+<section class="symbol" id="pgPublish">
+<h3><span class="kind">function</span><a href="#pgPublish">pgPublish</a></h3>
+<pre><code class="language-ts">export function pgPublish(hostName: string, name: string, on: boolean): Promise&lt;number&gt;</code></pre>
+<p><code>archon pg publish|unpublish NAME</code>: record the change, then apply the files and databases phases now (firewall, listen_addresses, pg_hba.conf, TLS).</p>
+
+</section>
+<section class="symbol" id="pgConnect">
+<h3><span class="kind">function</span><a href="#pgConnect">pgConnect</a></h3>
+<pre><code class="language-ts">export function pgConnect(
+  hostName: string,
+  name: string,
+  write: boolean,
+  remote: boolean,
+  json: boolean,
+): Promise&lt;number&gt;</code></pre>
+<p>Your libpq service (spec 039): on the server, your own role over the socket, no password (peer). --remote: the published name with TLS; a person types their Linux password (libpq asks), a service gets its generated one in its own ~/.pgpass.</p>
+
+</section>
+<section class="symbol" id="RoleView">
+<h3><span class="kind">interface</span><a href="#RoleView">RoleView</a></h3>
+<pre><code class="language-ts">export interface RoleView {
+  /** The role's name. */
+  role: string;
+  /** &quot;superuser&quot; (postgres), the kind Archon's comment names (human, service, group), or &quot;unmanaged&quot;. */
+  kind: string;
+  /** Whether a Linux account of the same name exists. */
+  linuxAccount: boolean;
+  /** Whether the role may log in. */
+  login: boolean;
+  /** Whether the role is a superuser. */
+  superuser: boolean;
+  /** null when not root (only the superuser may see whether a password is set). */
+  password: boolean | null;
+  /** The roles it is a member of, sorted. */
+  memberOf: string[];
+}</code></pre>
+<p>One role as <code>archon pg who</code> shows it.</p>
+
+</section>
+<section class="symbol" id="pgWho">
+<h3><span class="kind">function</span><a href="#pgWho">pgWho</a></h3>
+<pre><code class="language-ts">export function pgWho(hostName: string, name: string, json: boolean): Promise&lt;number&gt;</code></pre>
+<p>Roles and their Linux identities; exit 1 when one breaks spec 039&#39;s rules.</p>
+
+</section>
+<section class="symbol" id="whoProblems">
+<h3><span class="kind">function</span><a href="#whoProblems">whoProblems</a></h3>
+<pre><code class="language-ts">export function whoProblems(views: RoleView[], published: boolean): string[]</code></pre>
+<p>Spec 039&#39;s rules, as sentences: every login is a Linux account; postgres is the only superuser.</p>
+
+</section>
+<section class="symbol" id="pgPasswdSync">
+<h3><span class="kind">function</span><a href="#pgPasswdSync">pgPasswdSync</a></h3>
+<pre><code class="language-ts">export async function pgPasswdSync(hostName: string, user: string): Promise&lt;number&gt;</code></pre>
+<p>Run by the PAM hook (spec 039) with a person&#39;s password on stdin, after Linux accepted or changed it: each instance where they have a role gets a SCRAM verifier of that same password, so a published instance takes their Linux password. Nothing is printed or stored but the verifier.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/pg/commands.ts">Source</a></p>
+</main>
+
+</body>
+</html>

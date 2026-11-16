@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/console/pc.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/console/pc.ts</h1>
+<p>Spec 066: what the Stolos Console shows, gathered on the PC from the fleet repository and this PC&#39;s state: every machine (managed servers and workstations, adopted machines, cloud servers), the clouds, the signers, and the repository&#39;s changes. Nothing here reaches a server: the last answers are those <code>stolos fleet status</code> and <code>host observe</code> recorded; the pages offer the commands that refresh them.</p>
+<h2>Exports</h2>
+<section class="symbol" id="PcMachine">
+<h3><span class="kind">interface</span><a href="#PcMachine">PcMachine</a></h3>
+<pre><code class="language-ts">export interface PcMachine {
+  /** Its name in the fleet (or the cloud's). */
+  name: string;
+  /** server or workstation (managed), adopted, device (SNMP), discovered (recorded, not yet adopted), or cloud. */
+  kind: &quot;server&quot; | &quot;workstation&quot; | &quot;adopted&quot; | &quot;device&quot; | &quot;discovered&quot; | &quot;cloud&quot;;
+  /** Its operating system, when known. */
+  os?: string;
+  /** Where it is: an address, a cloud and region. */
+  where?: string;
+  /** Who it belongs to (adopted machines). */
+  owner?: string;
+  /** What it is, for people (an adopted machine's title). */
+  title?: string;
+  /** Its serial number, when the probe could read it. */
+  serial?: string;
+  /** When it was last installed (managed) or observed (adopted, cloud). */
+  seen?: string;
+  /** Its checks or policies: how many pass, of how many. */
+  score?: { pass: number; total: number };
+  /** What fails, in words. */
+  failing: string[];
+  /** Its Archon Console, for a managed server with a web domain. */
+  console?: string;
+  /** A managed server's applied commit, as it last said (short hash, subject, when). */
+  applied?: { commit: string; subject: string; at: string };
+  /** A managed server's last pull: when, and why it stopped, if it did. */
+  sync?: { at: string; blocked?: string };
+  /** Whether its applied commit is the repository's newest (undefined: not known). */
+  upToDate?: boolean;
+}</code></pre>
+<p>One machine, whatever its kind.</p>
+
+</section>
+<section class="symbol" id="PcConnector">
+<h3><span class="kind">interface</span><a href="#PcConnector">PcConnector</a></h3>
+<pre><code class="language-ts">export interface PcConnector {
+  /** The provider's id. */
+  id: string;
+  /** Its name for people. */
+  title: string;
+  /** Its logo (Simple Icons slug), or &quot;&quot;. */
+  logo: string;
+  /** Connected on this PC (its credential is in the vault). */
+  connected: boolean;
+  /** The last observation, when there is one. */
+  observed?: Observation;
+  /** Its posture policies. */
+  results: PolicyResult[];
+}</code></pre>
+<p>One cloud account, observed.</p>
+
+</section>
+<section class="symbol" id="PcCommit">
+<h3><span class="kind">interface</span><a href="#PcCommit">PcCommit</a></h3>
+<pre><code class="language-ts">export interface PcCommit {
+  /** Short hash. */
+  sha: string;
+  /** Subject. */
+  subject: string;
+  /** Author. */
+  author: string;
+  /** When (ISO). */
+  at: string;
+  /** Signed by one of the fleet's signers (servers apply it), or not. */
+  approved: boolean;
+}</code></pre>
+<p>One commit of the fleet repository.</p>
+
+</section>
+<section class="symbol" id="PcFacts">
+<h3><span class="kind">interface</span><a href="#PcFacts">PcFacts</a></h3>
+<pre><code class="language-ts">export interface PcFacts {
+  /** The fleet: id, title, its repository, web domain, and engine pin. */
+  fleet: { id: string; title: string; repo: string; domain?: string; engine?: string };
+  /** Every machine. */
+  machines: PcMachine[];
+  /** Adopted machines with their observations and policies. */
+  adopted: Array&lt;{ machine: AdoptedDef; observed?: Observed; results: PolicyResult[] }&gt;;
+  /** Every cloud provider. */
+  clouds: PcConnector[];
+  /** Spec 085: the cross-system policies over the estate graph. */
+  estate?: PolicyResult[];
+  /** Spec 078: the fleet's own control packs (fleets/&lt;fleet&gt;/controls/), with their results. */
+  controls?: PackRun[];
+  /** Devices read over SNMPv3, with their policies. */
+  devices: Array&lt;{
+    device: DeviceDef;
+    observed?: DeviceObserved;
+    results: PolicyResult[];
+  }&gt;;
+  /** The signers. */
+  signers: Array&lt;{ name: string; role: string; added: string; key: string }&gt;;
+  /** The repository: uncommitted files, commits servers would refuse, recent history. */
+  git: { dirty: string[]; unapproved: string[]; log: PcCommit[]; diff?: string };
+}</code></pre>
+<p>Everything the Stolos Console shows.</p>
+
+</section>
+<section class="symbol" id="pcFacts">
+<h3><span class="kind">function</span><a href="#pcFacts">pcFacts</a></h3>
+<pre><code class="language-ts">export async function pcFacts(repo = P.repo): Promise&lt;PcFacts&gt;</code></pre>
+<p>Gather the facts (each part on its own: a broken part leaves the rest).</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/console/pc.ts">Source</a></p>
+</main>
+
+</body>
+</html>

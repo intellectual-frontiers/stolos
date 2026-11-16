@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/trust/site.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/trust/site.ts</h1>
+<p>Spec 081: the Trust Center&#39;s page. One self-contained HTML file: its stylesheet and its one small script are inline (and pinned by SHA-256 in its Content-Security-Policy, which also forbids every request to anywhere else); it uses the system&#39;s fonts; it follows the reader&#39;s light or dark setting; it reads at phone width; and every status is written in words, not only in color. The script only turns &quot;N before this page was built&quot; into &quot;N ago&quot; by the reader&#39;s clock, and shows the stale-bundle banner when the page has aged past it; the page says the same without it.</p>
+<pre class="mermaid">flowchart TB
+  head[&quot;the company, the period, the signer, the bundle's SHA-256&quot;] --&gt; warn[&quot;banners: stale bundle, failing and stale counts&quot;]
+  warn --&gt; fw[&quot;each framework: requirements, status, SCF controls&quot;]
+  fw --&gt; ctl[&quot;each SCF control: status, age, counts, the items behind it (SHA-256 links)&quot;]
+  ctl --&gt; verify[&quot;how to check it yourself: stolos evidence verify, sha256sum, ssh-keygen&quot;]</pre>
+<h2>Exports</h2>
+<section class="symbol" id="EVIDENCE_DIR">
+<h3><span class="kind">const</span><a href="#EVIDENCE_DIR">EVIDENCE_DIR</a></h3>
+<pre><code class="language-ts">export const EVIDENCE_DIR</code></pre>
+<p>Where the published evidence is, relative to the page.</p>
+
+</section>
+<section class="symbol" id="PageOptions">
+<h3><span class="kind">interface</span><a href="#PageOptions">PageOptions</a></h3>
+<pre><code class="language-ts">export interface PageOptions {
+  /** Public (no subjects, details, or item names) or gated (everything in the bundle). */
+  mode: &quot;public&quot; | &quot;gated&quot;;
+  /**
+   * The bundle published beside the page, unzipped under `evidence/`: the
+   * full bundle (gated) or the summary bundle (public). Absent: the evidence
+   * is available on request, and the page says so.
+   */
+  published?: {
+    /** The ZIP's file name under evidence/. */
+    zip: string;
+    /** Its manifest's items. */
+    items: ManifestItem[];
+    /** The signer of the published bundle. */
+    signer: string;
+  };
+  /** The company's own link for questions and access requests (https: or mailto:). */
+  contact?: string;
+  /** The Stolos version building the page. */
+  stolos: string;
+}</code></pre>
+<p>What the page links to and how much it shows.</p>
+
+</section>
+<section class="symbol" id="trustPage">
+<h3><span class="kind">function</span><a href="#trustPage">trustPage</a></h3>
+<pre><code class="language-ts">export async function trustPage(m: TrustModel, o: PageOptions): Promise&lt;string&gt;</code></pre>
+<p>The Trust Center&#39;s page for a model.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/trust/site.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

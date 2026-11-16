@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/people/records.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/people/records.ts</h1>
+<p>Spec 077: what a fleet keeps about its people, beside the estate graph, and how Stolos reads it. Every file is in <code>fleets/&lt;fleet&gt;/</code> and is read as a TypeScript literal (never run), so a past version from Git reads the same way:</p>
+<ul><li><code>people/roles.ts</code>: which connected systems each role needs (<code>roles</code>);</li><li><code>people/keys.ts</code>: each person&#39;s own SSH public key, by work email (<code>keys</code>);</li><li><code>people/training.ts</code> and <code>people/screening.ts</code>: the records (<code>training</code>, <code>screening</code>), with no more than a control needs;</li><li><code>policies/&lt;policy&gt;.md</code>: each policy, with its front matter;</li><li><code>policies/acks/&lt;policy&gt;.ts</code>: who acknowledged which version (<code>acks</code>);</li><li><code>people/reviews/&lt;quarter&gt;/&lt;manager&gt;.md</code>: the access reviews.</li></ul>
+<p>Connectors may supply training and screening records too (none does yet): a record labeled {@link PERSON_RECORD} is a node of the estate graph, and the controls read it beside the files.</p>
+<pre class="mermaid">flowchart LR
+  roles[&quot;people/roles.ts&quot;] &amp; keys[&quot;people/keys.ts&quot;] &amp; tr[&quot;people/training.ts&quot;] &amp; sc[&quot;people/screening.ts&quot;] --&gt; read[&quot;readPeopleFiles&quot;]
+  pol[&quot;policies/*.md&quot;] --&gt; parse[&quot;parsePolicy: front matter&quot;]
+  conn[&quot;a connector's person_record&quot;] --&gt; estate[(&quot;estate graph&quot;)]
+  read &amp; parse &amp; estate --&gt; controls[&quot;people controls&quot;]</pre>
+<h2>Exports</h2>
+<section class="symbol" id="RoleMap">
+<h3><span class="kind">type</span><a href="#RoleMap">RoleMap</a></h3>
+<pre><code class="language-ts">export type RoleMap = Record&lt;string, string[]&gt;;</code></pre>
+<p>Which connectors each role needs: the key is a <code>role_type</code> from the HR system (employee, contractor, ...), or <code>&quot;*&quot;</code> for everyone; the value lists connector ids (google, github, onepassword, ...).</p>
+
+</section>
+<section class="symbol" id="PeopleKeys">
+<h3><span class="kind">type</span><a href="#PeopleKeys">PeopleKeys</a></h3>
+<pre><code class="language-ts">export type PeopleKeys = Record&lt;string, string&gt;;</code></pre>
+<p>Each person&#39;s own SSH public key (<code>ssh-ed25519 AAAA...</code>), by work email.</p>
+
+</section>
+<section class="symbol" id="TrainingRecord">
+<h3><span class="kind">type</span><a href="#TrainingRecord">TrainingRecord</a></h3>
+<pre><code class="language-ts">export type TrainingRecord = {
+  /** The person's work email. */
+  email: string;
+  /** The course (for example &quot;security awareness&quot;). */
+  course: string;
+  /** When it was completed (YYYY-MM-DD). */
+  date: string;
+  /** passed or failed. */
+  result: &quot;passed&quot; | &quot;failed&quot;;
+};</code></pre>
+<p>One training record: who, which course, when, and how it went.</p>
+
+</section>
+<section class="symbol" id="ScreeningRecord">
+<h3><span class="kind">type</span><a href="#ScreeningRecord">ScreeningRecord</a></h3>
+<pre><code class="language-ts">export type ScreeningRecord = {
+  /** The person's work email. */
+  email: string;
+  /** The check (for example &quot;background&quot;, &quot;right to work&quot;). */
+  check: string;
+  /** When it was completed (YYYY-MM-DD). */
+  date: string;
+  /** clear, or not clear (a decision the record does not explain). */
+  result: &quot;clear&quot; | &quot;not clear&quot;;
+};</code></pre>
+<p>One screening record: who, which check, when, and its outcome (never the check&#39;s details).</p>
+
+</section>
+<section class="symbol" id="PolicyAck">
+<h3><span class="kind">type</span><a href="#PolicyAck">PolicyAck</a></h3>
+<pre><code class="language-ts">export type PolicyAck = {
+  /** The person's work email. */
+  email: string;
+  /** The policy version acknowledged. */
+  version: string;
+  /** When (YYYY-MM-DD). */
+  date: string;
+};</code></pre>
+<p>One acknowledgement of a policy version, as listed in <code>policies/acks/&lt;policy&gt;.ts</code>.</p>
+
+</section>
+<section class="symbol" id="Policy">
+<h3><span class="kind">interface</span><a href="#Policy">Policy</a></h3>
+<pre><code class="language-ts">export interface Policy {
+  /** Its id: the file name without `.md`. */
+  id: string;
+  /** Its title. */
+  title: string;
+  /** Its version (an acknowledgement names it). */
+  version: string;
+  /** Who owns it (a work email). */
+  owner: string;
+  /** When it must next be reviewed (YYYY-MM-DD); overdue after it. */
+  review: string;
+  /** What is wrong with its front matter (an empty list when nothing is). */
+  problems: string[];
+}</code></pre>
+<p>A policy: its id (file name) and front matter.</p>
+
+</section>
+<section class="symbol" id="PERSON_RECORD">
+<h3><span class="kind">const</span><a href="#PERSON_RECORD">PERSON_RECORD</a></h3>
+<pre><code class="language-ts">export const PERSON_RECORD: LabelView</code></pre>
+<p>A connector&#39;s training and screening records (none supplies them yet: the hook a learning system&#39;s or a screening provider&#39;s connector fills). Each record is a node of the estate graph with this label; <code>kind</code> says which.</p>
+
+</section>
+<section class="symbol" id="PeopleFiles">
+<h3><span class="kind">interface</span><a href="#PeopleFiles">PeopleFiles</a></h3>
+<pre><code class="language-ts">export interface PeopleFiles {
+  /** people/roles.ts (undefined: none). */
+  roles?: RoleMap;
+  /** people/keys.ts. */
+  keys: PeopleKeys;
+  /** people/training.ts (undefined: no file). */
+  training?: TrainingRecord[];
+  /** people/screening.ts (undefined: no file). */
+  screening?: ScreeningRecord[];
+  /** Whether the fleet keeps people files at all (a people/ or policies/ folder). */
+  inUse: boolean;
+  /** The policies, by file name. */
+  policies: Policy[];
+  /** The acknowledgements each policy's acks file lists. */
+  acks: Record&lt;string, PolicyAck[]&gt;;
+  /** What could not be read, and why. */
+  problems: string[];
+}</code></pre>
+<p>The people files of a fleet, as read.</p>
+
+</section>
+<section class="symbol" id="FileReader">
+<h3><span class="kind">interface</span><a href="#FileReader">FileReader</a></h3>
+<pre><code class="language-ts">export interface FileReader {
+  /** A file's text, or undefined. */
+  read(path: string): Promise&lt;string | undefined&gt;;
+  /** A folder's names (empty when it does not exist). */
+  list(dir: string): Promise&lt;string[]&gt;;
+}</code></pre>
+<p>Reads a repository&#39;s files (a working tree or a commit): see <code>gitReader</code> in the estate.</p>
+
+</section>
+<section class="symbol" id="policyAcks">
+<h3><span class="kind">const</span><a href="#policyAcks">policyAcks</a></h3>
+<pre><code class="language-ts">export const policyAcks: Decoder&lt;readonly PolicyAck[]&gt;</code></pre>
+<p>policies/acks/&lt;policy&gt;.ts&#39;s <code>acks</code>.</p>
+
+</section>
+<section class="symbol" id="frontMatter">
+<h3><span class="kind">function</span><a href="#frontMatter">frontMatter</a></h3>
+<pre><code class="language-ts">export function frontMatter(text: string): { meta: Record&lt;string, string&gt;; body: string }</code></pre>
+<p>The front matter of a Markdown file (<code>---</code> lines, <code>key: value</code>), and its body.</p>
+
+</section>
+<section class="symbol" id="parsePolicy">
+<h3><span class="kind">function</span><a href="#parsePolicy">parsePolicy</a></h3>
+<pre><code class="language-ts">export function parsePolicy(file: string, text: string): Policy</code></pre>
+<p>A policy from its file name and text.</p>
+
+</section>
+<section class="symbol" id="cell">
+<h3><span class="kind">function</span><a href="#cell">cell</a></h3>
+<pre><code class="language-ts">export function cell(v: unknown): string</code></pre>
+<p>A cell of an estate query&#39;s row as text: a string as it is, a number or boolean written out, nothing as &quot;&quot;.</p>
+
+</section>
+<section class="symbol" id="POLICY_ID">
+<h3><span class="kind">const</span><a href="#POLICY_ID">POLICY_ID</a></h3>
+<pre><code class="language-ts">export const POLICY_ID: RegExp</code></pre>
+<p>A policy id is its file name: lower case letters, digits, and hyphens.</p>
+
+</section>
+<section class="symbol" id="readPeopleFiles">
+<h3><span class="kind">function</span><a href="#readPeopleFiles">readPeopleFiles</a></h3>
+<pre><code class="language-ts">export async function readPeopleFiles(r: FileReader, base: string): Promise&lt;PeopleFiles&gt;</code></pre>
+<p>Read the fleet&#39;s people files through a reader (<code>base</code> is <code>fleets/&lt;fleet&gt;</code>).</p>
+
+</section>
+<section class="symbol" id="Quarter">
+<h3><span class="kind">type</span><a href="#Quarter">Quarter</a></h3>
+<pre><code class="language-ts">export type Quarter = string;</code></pre>
+<p>A quarter, as <code>2026-Q4</code>.</p>
+
+</section>
+<section class="symbol" id="quarterOf">
+<h3><span class="kind">function</span><a href="#quarterOf">quarterOf</a></h3>
+<pre><code class="language-ts">export function quarterOf(d: Date): Quarter</code></pre>
+<p>The quarter a date falls in.</p>
+
+</section>
+<section class="symbol" id="isQuarter">
+<h3><span class="kind">function</span><a href="#isQuarter">isQuarter</a></h3>
+<pre><code class="language-ts">export function isQuarter(q: string): boolean</code></pre>
+<p>Whether a string is a quarter (<code>2026-Q4</code>).</p>
+
+</section>
+<section class="symbol" id="previousQuarter">
+<h3><span class="kind">function</span><a href="#previousQuarter">previousQuarter</a></h3>
+<pre><code class="language-ts">export function previousQuarter(q: Quarter): Quarter</code></pre>
+<p>The quarter before.</p>
+
+</section>
+<section class="symbol" id="quarterDays">
+<h3><span class="kind">function</span><a href="#quarterDays">quarterDays</a></h3>
+<pre><code class="language-ts">export function quarterDays(q: Quarter): { from: string; to: string }</code></pre>
+<p>A quarter&#39;s first and last days (YYYY-MM-DD).</p>
+
+</section>
+<section class="symbol" id="quartersIn">
+<h3><span class="kind">function</span><a href="#quartersIn">quartersIn</a></h3>
+<pre><code class="language-ts">export function quartersIn(from: string, to: string): Quarter[]</code></pre>
+<p>The quarters that overlap a period (dates, both included), oldest first.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/people/records.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

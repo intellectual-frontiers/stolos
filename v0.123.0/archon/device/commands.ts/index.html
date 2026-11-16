@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/device/commands.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/device/commands.ts</h1>
+<p>Spec 069: <code>stolos device add | observe | check | remove</code>, on the controller PC.</p>
+<h2>Exports</h2>
+<section class="symbol" id="SNMP_HELP">
+<h3><span class="kind">const</span><a href="#SNMP_HELP">SNMP_HELP</a></h3>
+<pre><code class="language-ts">export const SNMP_HELP</code></pre>
+<p>How to make a read-only SNMPv3 user on common devices.</p>
+
+</section>
+<section class="symbol" id="deviceAdd">
+<h3><span class="kind">function</span><a href="#deviceAdd">deviceAdd</a></h3>
+<pre><code class="language-ts">export async function deviceAdd(o: {
+  name: string;
+  address: string;
+  kind: string;
+  user: string;
+  auth?: string;
+  port?: string;
+  title?: string;
+  owner?: string;
+  location?: string;
+}): Promise&lt;number&gt;</code></pre>
+<p><code>stolos device add &lt;name&gt; --address &lt;a&gt; --kind &lt;k&gt; --user &lt;u&gt;</code>: the passphrases are typed here, then it is read once.</p>
+
+</section>
+<section class="symbol" id="deviceObserve">
+<h3><span class="kind">function</span><a href="#deviceObserve">deviceObserve</a></h3>
+<pre><code class="language-ts">export async function deviceObserve(name?: string): Promise&lt;number&gt;</code></pre>
+<p><code>stolos device observe [name]</code>.</p>
+
+</section>
+<section class="symbol" id="deviceCheck">
+<h3><span class="kind">function</span><a href="#deviceCheck">deviceCheck</a></h3>
+<pre><code class="language-ts">export async function deviceCheck(name?: string, asJson = false): Promise&lt;number&gt;</code></pre>
+<p><code>stolos device check [name] [--json]</code>.</p>
+
+</section>
+<section class="symbol" id="deviceRemove">
+<h3><span class="kind">function</span><a href="#deviceRemove">deviceRemove</a></h3>
+<pre><code class="language-ts">export async function deviceRemove(name: string): Promise&lt;number&gt;</code></pre>
+<p><code>stolos device remove &lt;name&gt;</code>: its files and its passphrases go.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/device/commands.ts">Source</a></p>
+</main>
+
+</body>
+</html>

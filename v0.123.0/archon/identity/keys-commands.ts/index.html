@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/identity/keys-commands.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/identity/keys-commands.ts</h1>
+<p>Spec 057: <code>stolos keys</code>, every step of your signing keys in one place, and idempotent: each command looks at what is already there, does only what is missing, and can be run again at any time (after a failure, it continues).</p>
+<ul><li><code>keys</code>: the checks (nothing changes).</li><li><code>keys setup</code>: tools, the daily key, Git&#39;s settings, signers.ts, the recovery key, the pre-push check, and a test signature.</li><li><code>keys check-recovery --key &lt;file&gt;</code>: proves the recovery key still works.</li><li><code>keys rotate</code>: a new daily key, approved by the old one.</li><li><code>keys lost --recovery &lt;file&gt;</code>: a new daily key, approved by the recovery key.</li><li><code>keys check-push</code>: the pre-push check (Git runs it).</li></ul>
+<p>Passphrases are typed into OpenSSH and Git themselves: archon never sees, stores, or passes one, and never loads a key into an ssh-agent. None of these commands is offered over MCP.</p>
+<pre class="mermaid">flowchart TD
+  s[&quot;keys setup&quot;] --&gt; t{&quot;OpenSSH 8.2+?&quot;}
+  t --&gt;|no| tf[&quot;stop: how to install it&quot;]
+  t --&gt;|yes| d{&quot;daily key?&quot;}
+  d --&gt;|no| dk[&quot;ssh-keygen (you type a passphrase)&quot;]
+  d --&gt;|yes| g
+  dk --&gt; g[&quot;Git: sign every commit here&quot;]
+  g --&gt; l{&quot;signers.ts lists it?&quot;}
+  l --&gt;|no| la[&quot;add it&quot;]
+  l --&gt;|yes| r
+  la --&gt; r{&quot;a recovery key listed?&quot;}
+  r --&gt;|no| rk[&quot;make it in Desktop/fleet-recovery,&lt;br/&gt;list it, tell you to move it&quot;]
+  r --&gt;|yes| h
+  rk --&gt; h[&quot;pre-push check&quot;]
+  h --&gt; ts[&quot;test signature (one passphrase)&quot;]</pre>
+<h2>Exports</h2>
+<section class="symbol" id="keysStatus">
+<h3><span class="kind">function</span><a href="#keysStatus">keysStatus</a></h3>
+<pre><code class="language-ts">export async function keysStatus(json: boolean): Promise&lt;number&gt;</code></pre>
+<p><code>stolos keys</code>: every check, with its fix; exit 1 when signing does not work.</p>
+
+</section>
+<section class="symbol" id="approvalSteps">
+<h3><span class="kind">function</span><a href="#approvalSteps">approvalSteps</a></h3>
+<pre><code class="language-ts">export function approvalSteps(
+  fleetId: string,
+  rel: string,
+  name: string,
+  pub: string,
+  wsl = onWsl(),
+): string[]</code></pre>
+<p>The exact commands that approve a new PC&#39;s daily key: run where a listed key signs (on WSL, Windows PowerShell in the fleet folder), then pull here.</p>
+
+</section>
+<section class="symbol" id="keysSetup">
+<h3><span class="kind">function</span><a href="#keysSetup">keysSetup</a></h3>
+<pre><code class="language-ts">export async function keysSetup(o: { test?: boolean } = {}): Promise&lt;number&gt;</code></pre>
+<p><code>stolos keys setup</code>: everything, idempotent.</p>
+
+</section>
+<section class="symbol" id="repairKeys">
+<h3><span class="kind">function</span><a href="#repairKeys">repairKeys</a></h3>
+<pre><code class="language-ts">export async function repairKeys(): Promise&lt;string[]&gt;</code></pre>
+<p>The parts of <code>keys setup</code> that need no passphrase and make no key (spec 058: run by <code>archon update</code> after every pull): Git&#39;s allowed signers from the current signers.ts, and the pre-push check. Returns what it changed.</p>
+
+</section>
+<section class="symbol" id="keysCheckRecovery">
+<h3><span class="kind">function</span><a href="#keysCheckRecovery">keysCheckRecovery</a></h3>
+<pre><code class="language-ts">export async function keysCheckRecovery(given?: string): Promise&lt;number&gt;</code></pre>
+<p><code>stolos keys check-recovery --key &lt;file&gt;</code>: prove the recovery key works; changes nothing else.</p>
+
+</section>
+<section class="symbol" id="keysRotate">
+<h3><span class="kind">function</span><a href="#keysRotate">keysRotate</a></h3>
+<pre><code class="language-ts">export async function keysRotate(): Promise&lt;number&gt;</code></pre>
+<p><code>stolos keys rotate</code>: a new daily key, approved by the current one; resumes a rotation in progress.</p>
+
+</section>
+<section class="symbol" id="keysLost">
+<h3><span class="kind">function</span><a href="#keysLost">keysLost</a></h3>
+<pre><code class="language-ts">export async function keysLost(given?: string, stolen = false): Promise&lt;number&gt;</code></pre>
+<p><code>stolos keys lost --recovery &lt;file&gt;</code>: replace a lost or stolen daily key, approved by the recovery key.</p>
+
+</section>
+<section class="symbol" id="keysRotateRecovery">
+<h3><span class="kind">function</span><a href="#keysRotateRecovery">keysRotateRecovery</a></h3>
+<pre><code class="language-ts">export async function keysRotateRecovery(o: {
+  old?: string | undefined;
+  oldLost?: boolean;
+}): Promise&lt;number&gt;</code></pre>
+<p><code>stolos keys rotate-recovery --recovery &lt;old file&gt;</code> (or <code>--old-lost</code>): a new recovery key in place of the old one (same signer name). The change is approved by the OLD recovery key, proving you still hold it; only when it is lost does the daily key approve (a stolen daily key could do the same, so that path says so). The new key is tested before anything changes; running it again continues an interrupted change, or does nothing.</p>
+
+</section>
+<section class="symbol" id="keysCheckPush">
+<h3><span class="kind">function</span><a href="#keysCheckPush">keysCheckPush</a></h3>
+<pre><code class="language-ts">export async function keysCheckPush(input?: string): Promise&lt;number&gt;</code></pre>
+<p><code>stolos keys check-push</code> (Git&#39;s pre-push hook): each pushed tip of the fleet&#39;s branch must be signed by a key the fleet trusts as of what the remote has now, exactly as servers will check it. Refs to push come on standard input (&quot;&lt;local ref&gt; &lt;local sha&gt; &lt;remote ref&gt; &lt;remote sha&gt;&quot;).</p>
+
+</section>
+<section class="symbol" id="keyChecksNow">
+<h3><span class="kind">function</span><a href="#keyChecksNow">keyChecksNow</a></h3>
+<pre><code class="language-ts">export async function keyChecksNow(): Promise&lt;ReturnType&lt;typeof keyChecks&gt;&gt;</code></pre>
+<p>The checks for other commands (boot doctor, where am I): the facts are gathered once.</p>
+
+</section>
+<section class="symbol" id="signingBlockers">
+<h3><span class="kind">function</span><a href="#signingBlockers">signingBlockers</a></h3>
+<pre><code class="language-ts">export async function signingBlockers(repo = P.repo): Promise&lt;ReturnType&lt;typeof keyChecks&gt;&gt;</code></pre>
+<p>What stops a signed commit (git commit -S) in <code>repo</code> right now, as checks: OpenSSH, Git set to sign with an SSH key that exists, and Git&#39;s identity. Empty: a commit can be made and signed. A fresh clone fails here until <code>vault restore</code> or <code>keys setup</code> ran in it.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/identity/keys-commands.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/main.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../index.html">Stolos v0.123.0</a> · <a href="../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/main.ts</h1>
+<p>The command line, for both commands (spec 059): <code>archon</code> on each machine (servers, workstations) and <code>stolos</code> on your PC (src/stolos/main.ts), over one registry where every command says where it runs. See archon(1).</p>
+<h2>Exports</h2>
+<section class="symbol" id="ensureHome">
+<h3><span class="kind">function</span><a href="#ensureHome">ensureHome</a></h3>
+<pre><code class="language-ts">export async function ensureHome(): Promise&lt;void&gt;</code></pre>
+<p>cloud-init (the first boot) and some service managers start archon without $HOME. Tools assume it (chezmoi refuses to run, so its smoke test failed and it was rolled back on alpha&#39; first boot): take it from the account database.</p>
+
+</section>
+<section class="symbol" id="localHostName">
+<h3><span class="kind">function</span><a href="#localHostName">localHostName</a></h3>
+<pre><code class="language-ts">export async function localHostName(): Promise&lt;string&gt;</code></pre>
+<p>This host&#39;s name in the model: /etc/archon/host, else the short hostname.</p>
+
+</section>
+<section class="symbol" id="Surface">
+<h3><span class="kind">type</span><a href="#Surface">Surface</a></h3>
+<pre><code class="language-ts">export type Surface = &quot;pc&quot; | &quot;machine&quot;;</code></pre>
+<p>Which command this is: <code>stolos</code> on your PC, <code>archon</code> on a machine.</p>
+
+</section>
+<section class="symbol" id="commandName">
+<h3><span class="kind">const</span><a href="#commandName">commandName</a></h3>
+<pre><code class="language-ts">export const commandName</code></pre>
+<p>The command&#39;s name for a surface.</p>
+
+</section>
+<section class="symbol" id="main">
+<h3><span class="kind">function</span><a href="#main">main</a></h3>
+<pre><code class="language-ts">export async function main(
+  argvIn: readonly string[],
+  surface: Surface = &quot;machine&quot;,
+): Promise&lt;number&gt;</code></pre>
+<p>The CLI: parses global options, finds the command offered here, and runs it. Returns the exit code.</p>
+
+</section>
+<section class="symbol" id="run">
+<h3><span class="kind">function</span><a href="#run">run</a></h3>
+<pre><code class="language-ts">export async function run(
+  argv: readonly string[] = proc.args,
+  surface: Surface = &quot;machine&quot;,
+): Promise&lt;never&gt;</code></pre>
+<p>Run as a program and exit: from this file, or from a fleet repository&#39;s own entry file, which imports this one by the package&#39;s name (spec 096).</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/main.ts">Source</a></p>
+</main>
+
+</body>
+</html>

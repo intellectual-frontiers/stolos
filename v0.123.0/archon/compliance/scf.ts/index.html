@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/compliance/scf.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/compliance/scf.ts</h1>
+<p>Spec 071: the Secure Controls Framework (SCF) controls Stolos gives evidence for, and what it looks at for each. That is all Stolos writes itself: each control&#39;s official name, description, and its mappings to SOC 2, HIPAA, PCI DSS, CMMC, NIST SP 800-53 and 800-171, and FedRAMP are the SCF Council&#39;s own (its Set Theory Relationship Mapping, STRM), read from the pinned SCF release by <code>catalog.ts</code>. The names here are SCF&#39;s, kept for when the catalog is not on this PC yet; a test checks them against the workbook.</p>
+<h2>Exports</h2>
+<section class="symbol" id="FRAMEWORKS">
+<h3><span class="kind">const</span><a href="#FRAMEWORKS">FRAMEWORKS</a></h3>
+<pre><code class="language-ts">export const FRAMEWORKS</code></pre>
+<p>The frameworks, in the order the consoles show them; each maps through SCF&#39;s STRM.</p>
+
+</section>
+<section class="symbol" id="FrameworkId">
+<h3><span class="kind">type</span><a href="#FrameworkId">FrameworkId</a></h3>
+<pre><code class="language-ts">export type FrameworkId = (typeof FRAMEWORKS)[number][&quot;id&quot;];</code></pre>
+<p>A framework&#39;s id.</p>
+
+</section>
+<section class="symbol" id="ScfControl">
+<h3><span class="kind">interface</span><a href="#ScfControl">ScfControl</a></h3>
+<pre><code class="language-ts">export interface ScfControl {
+  /** The SCF identifier (for example CRY-07). */
+  id: string;
+  /** The SCF control's name, as SCF has it. */
+  name: string;
+  /** What Stolos looks at, in plain words. */
+  how: string;
+}</code></pre>
+<p>One SCF control Stolos gives evidence for.</p>
+
+</section>
+<section class="symbol" id="SCF_CONTROLS">
+<h3><span class="kind">const</span><a href="#SCF_CONTROLS">SCF_CONTROLS</a></h3>
+<pre><code class="language-ts">export const SCF_CONTROLS</code></pre>
+<p>The controls, as constants: their ids are the type {@link ScfId} (spec 078). Read {@link SCF} instead.</p>
+
+</section>
+<section class="symbol" id="ScfId">
+<h3><span class="kind">type</span><a href="#ScfId">ScfId</a></h3>
+<pre><code class="language-ts">export type ScfId = (typeof SCF_CONTROLS)[number][&quot;id&quot;];</code></pre>
+<p>The id of an SCF control Stolos gives evidence for. A control (spec 078) names its controls with this type, so a wrong id fails type checking.</p>
+
+</section>
+<section class="symbol" id="SCF">
+<h3><span class="kind">const</span><a href="#SCF">SCF</a></h3>
+<pre><code class="language-ts">export const SCF: ScfControl[]</code></pre>
+<p>The controls, by SCF id.</p>
+
+</section>
+<section class="symbol" id="isScfId">
+<h3><span class="kind">function</span><a href="#isScfId">isScfId</a></h3>
+<pre><code class="language-ts">export function isScfId(id: string): id is ScfId</code></pre>
+<p>Whether a string is the id of an SCF control Stolos gives evidence for.</p>
+
+</section>
+<section class="symbol" id="scf">
+<h3><span class="kind">function</span><a href="#scf">scf</a></h3>
+<pre><code class="language-ts">export function scf(id: string): ScfControl | undefined</code></pre>
+<p>A control by id.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/compliance/scf.ts">Source</a></p>
+</main>
+
+</body>
+</html>

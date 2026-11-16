@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon-boot/pretty.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../index.html">Stolos v0.123.0</a> · <a href="../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon-boot/pretty.ts</h1>
+<p>The boot server&#39;s window (spec 004, Article 19; spec 049): a rendering of structured events, never their source. Each event (telemetry/events.ts) is one line: an icon and tone chosen by its name (and, for boot files, which file), the time and address dimmed, the host&#39;s name highlighted, success green and problems red. Debug events (GRUB&#39;s harmless probing) are kept out unless verbose; the same event within a few seconds is shown once. boot.log and the OTLP log records hold every event.</p>
+<h2>Exports</h2>
+<section class="symbol" id="render">
+<h3><span class="kind">function</span><a href="#render">render</a></h3>
+<pre><code class="language-ts">export function render(e: ArchonEvent, verbose = ui.verbose): string | undefined</code></pre>
+<p>One event&#39;s line for the window, or undefined to keep it out (it is still recorded).</p>
+
+</section>
+<section class="symbol" id="resetPretty">
+<h3><span class="kind">function</span><a href="#resetPretty">resetPretty</a></h3>
+<pre><code class="language-ts">export function resetPretty(): void</code></pre>
+<p>For tests.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon-boot/pretty.ts">Source</a></p>
+</main>
+
+</body>
+</html>

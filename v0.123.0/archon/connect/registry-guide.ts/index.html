@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/connect/registry-guide.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/connect/registry-guide.ts</h1>
+<h2 id="the-connector-registry">The connector registry</h2>
+<p>Stolos ships its own connectors (<code>bun run stolos connect &lt;id&gt;</code>). A fleet can add others, from the community or written for itself: a TypeScript module published at a pinned URL (a version tag or a commit, never a branch), copied into the fleet repository with a lock entry that holds its SHA-256, and approved by the signed commit you push (spec 088). There is no central server: a connector lives in its author&#39;s Git repository, and an index is a JSON file anyone can host.</p>
+<pre class="mermaid">flowchart LR
+  repo[&quot;github.com/owner/stolos-connector-x (tag v1.2.0)&quot;] --&gt; add[&quot;stolos connector add …@v1.2.0&quot;]
+  add --&gt; probe[&quot;probe: its own process, with none of your secrets&quot;]
+  probe --&gt; checks[&quot;id, labels, SCF ids, read-only credential, engine range, fixtures&quot;]
+  checks --&gt; copy[&quot;fleets/&amp;lt;fleet&amp;gt;/connectors/&amp;lt;id&amp;gt;.ts: the module, as checked&quot;]
+  checks --&gt; file[&quot;fleets/&amp;lt;fleet&amp;gt;/connectors.ts: import + Stolos's lock entry (SHA-256)&quot;]
+  copy &amp; file --&gt; commit[&quot;a signed commit, pushed: the approval&quot;]
+  commit --&gt; engine[&quot;the engine loads it beside its own connectors&quot;]</pre>
+<h3 id="adding-a-connector">Adding a connector</h3>
+<pre><code>bun run stolos connector add https://github.com/example/stolos-connector-example@v1.0.0
+bun run stolos connector list
+bun run stolos connect example-scanner</code></pre>
+<p>The source is <code>https://github.com/&lt;owner&gt;/&lt;repo&gt;[/&lt;path&gt;]</code> (the path defaults to <code>mod.ts</code>), read from <code>raw.githubusercontent.com/&lt;owner&gt;/&lt;repo&gt;/&lt;ref&gt;/&lt;path&gt;</code> as the engine is. The ref is a version tag (<code>v1.0.0</code>) or a full commit SHA: a branch moves under you, so it is refused.</p>
+<p><code>connector add</code> downloads the module and runs the probe on it, in a process of its own that is given none of your environment (only the variables the engine reads for its paths), so none of your secrets. Bun and Node give a process no permission sandbox, so the probe does not stop the module&#39;s own code from reaching the network or files: read the module before you add it. The probe reads what the connector declares and runs its recorded-fixture tests; the engine then refuses it, changing nothing, when:</p>
+<ul><li>its default export is not made with <code>defineConnector</code>;</li><li>its id is one of the engine&#39;s connectors, or another added one;</li><li>a label it fills breaks the naming rules (a D3FEND, OCSF, or UDM term, singular, lower_snake_case, never an SQL keyword), or redeclares a built-in label differently;</li><li>a policy cites an SCF id the engine does not know;</li><li>its credential has no secret field, or its connect steps do not say how to make a read-only credential;</li><li>it declares no engine range, or this engine is not in it;</li><li>it has no fixture tests, or one fails.</li></ul>
+<p>Otherwise it copies the module, byte for byte as it checked it, to <code>fleets/&lt;fleet&gt;/connectors/&lt;id&gt;.ts</code>, and writes <code>fleets/&lt;fleet&gt;/connectors.ts</code>: an import of that copy, and Stolos&#39;s own lock entry (where it came from, the module&#39;s SHA-256, its engine range, the engine that checked it, and how many fixtures passed). Review the change and commit it, signed; pushing is the approval. The engine loads an added connector only while its copy still hashes as its entry says: a file that differs from its lock is left out, with a warning.</p>
+<p><code>bun run stolos fleet upgrade</code> checks the added connectors against the new engine, and refuses an engine version an added connector does not support: move that connector to a newer tag first (<code>connector add</code> with the new tag replaces the old pin), or remove it.</p>
+<pre><code>bun run stolos connector test                 # every added one, at its pin, on this engine
+bun run stolos connector remove example-scanner</code></pre>
+<p>An added connector runs in Stolos&#39;s own process when it observes, with the credential you give it, like the engine&#39;s own: the read-only guard refuses anything but GET (and its declared token endpoints), but the code is trusted as the engine is. Read it before you add it, as you would read a change to the engine; the pin, the copy in Git and its hash make sure the code you read is the code that runs.</p>
+<h3 id="writing-a-connector">Writing a connector</h3>
+<p>Start from the template in the engine&#39;s repository, <code>examples/connector-template/</code>: one module, <code>mod.ts</code>, and its test. A connector module:</p>
+<ul><li>default-exports a <code>defineConnector</code> result (<code>@intellectual-frontiers/stolos/archon/connect/sdk</code>): its id, title, credential fields, connect steps for a read-only credential, the resources it reads (each an async generator over the vendor&#39;s public API, mapped to a label and an OCSF class), its posture facts, and its policies, each citing SCF ids;</li><li>exports <code>engine</code>, the range of engine versions it supports (<code>&quot;&gt;=0.112.0 &lt;1.0.0&quot;</code>; comparators <code>&gt;=</code>, <code>&gt;</code>, <code>&lt;=</code>, <code>&lt;</code>, <code>=</code>, and <code>^</code>, all of which must hold);</li><li>exports <code>fixtures</code>, its recorded-fixture tests (<code>ConnectorFixture</code> in <code>@intellectual-frontiers/stolos/archon/connect/registry-contract</code>): a made-up credential, the vendor&#39;s recorded answers by URL, and what the observation must say (its account, records per label, gaps, posture facts, and policy results). Record at least one denied call (403) as a gap.</li></ul>
+<p>It is one file that imports only the engine (<code>@intellectual-frontiers/stolos/archon/...</code>, the package the fleet repository installs): no other dependency, and no file of its own beside it, since the module alone is copied. Use the engine&#39;s labels where one fits (<code>@intellectual-frontiers/stolos/archon/connect/labels</code>: <code>vulnerability</code>, <code>user_account</code>, <code>person_record</code>, ...); a new one is declared with <code>defineLabel</code> and named from D3FEND, OCSF, or UDM.</p>
+<p>In the connector&#39;s own repository, a <code>package.json</code> depends on the engine&#39;s release, as a fleet repository does, for its tests:</p>
+<pre><code>{
+  &quot;dependencies&quot;: {
+    &quot;@intellectual-frontiers/stolos&quot;: &quot;https://github.com/intellectual-frontiers/stolos/releases/download/v0.118.0/intellectual-frontiers-stolos-0.118.0.tgz&quot;
+  }
+}</code></pre>
+<p><code>bun test</code> runs its fixtures with the engine&#39;s own runner (<code>runFixtures</code>), and <code>bun run stolos connector test ./mod.ts</code>, run in a fleet repository, checks it exactly as <code>connector add</code> will. Then tag a release (<code>git tag v1.0.0 &amp;&amp; git push --tags</code>) and publish the source and tag.</p>
+<h3 id="an-index">An index</h3>
+<p>An index lists connectors and their tags, as a JSON file at any URL; Stolos runs no server of its own. <code>connector add &lt;id&gt;@&lt;tag&gt; --index &lt;url&gt;</code> finds the source in it (the tag must be one the index lists; without a tag, its last one).</p>
+<pre><code>{
+  &quot;format&quot;: &quot;stolos-connector-index/1&quot;,
+  &quot;connectors&quot;: [{
+    &quot;id&quot;: &quot;example-scanner&quot;,
+    &quot;title&quot;: &quot;Example Scanner&quot;,
+    &quot;source&quot;: &quot;https://github.com/example/stolos-connector-example&quot;,
+    &quot;path&quot;: &quot;mod.ts&quot;,
+    &quot;tags&quot;: [&quot;v1.0.0&quot;],
+    &quot;engine&quot;: &quot;&gt;=0.112.0 &lt;1.0.0&quot;,
+    &quot;markets&quot;: [&quot;vulnerability-assessment&quot;],
+    &quot;description&quot;: &quot;Open findings as OCSF vulnerabilities.&quot;
+  }]
+}</code></pre>
+<p>The index only says where to look: <code>connector add</code> checks the module itself, whoever lists it.</p>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/connect/registry-guide.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

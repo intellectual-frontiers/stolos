@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/core/telemetry.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/core/telemetry.ts</h1>
+<p>Archon&#39;s own telemetry (specs 021, 049, 096; Article 27), through IFC TypeScript&#39;s signals (<code>runtime/otel</code>, commons 0006-signals): every command is a trace, an <code>archon.run</code> span with one <code>archon.phase</code> span per phase, its results are metrics, and its phases and problems are <code>archon.phase</code> and <code>archon.problem</code> log records in that trace. Every name comes from <code>telemetry/signals.ts</code> and <code>telemetry/events.ts</code>, and the registry below is made from them, so a name that is not declared does not compile.</p>
+<p>The pipeline is configured by OpenTelemetry&#39;s own variables (<code>OTEL_EXPORTER_OTLP_ENDPOINT</code>, <code>OTEL_SERVICE_NAME</code>, <code>OTEL_RESOURCE_ATTRIBUTES</code>, ...), which the launcher sets to the local Collector with the fleet, host, engine version and commit as resource attributes; without an endpoint it looks for a Collector on <code>localhost:4318</code> and is silent where none listens. A run continues a trace begun elsewhere when <code>TRACEPARENT</code> is set (an MCP call&#39;s <code>_meta.traceparent</code>, an SSH command from the boot machine), and every program it runs through <code>proc</code> is given its <code>TRACEPARENT</code> in turn.</p>
+<pre class="mermaid">flowchart LR
+  run[&quot;an archon run&quot;] --&gt; trace[&quot;a trace: archon.run, its phases as archon.phase&quot;]
+  run --&gt; events[&quot;its problems as archon.problem log records&quot;]
+  trace --&gt; col{&quot;collector&quot;}
+  events --&gt; col
+  col --&gt;|on the host| local[&quot;the local OpenTelemetry Collector&quot;]
+  col --&gt;|first boot| boot[&quot;the boot server (/otlp)&quot;]
+  local --&gt;|opt-in| ui[&quot;OpenObserve&quot;]</pre>
+<h3>Example</h3>
+<pre><code class="language-ts">import { endRun, flushEvents, initTelemetry, span, startRun } from &quot;./telemetry.ts&quot;;
+initTelemetry(&quot;archon&quot;, &quot;0.1.0&quot;);
+startRun(&quot;verify&quot;, { &quot;archon.fleet&quot;: &quot;lab&quot; });
+const end = span(&quot;archon.query&quot;, { &quot;archon.table&quot;: &quot;archon_verify&quot; });
+end(true);
+endRun(0, 0, 0);
+await flushEvents([]);</code></pre>
+<h2>Exports</h2>
+<section class="symbol" id="Attrs">
+<h3><span class="kind">type</span><a href="#Attrs">Attrs</a></h3>
+<pre><code class="language-ts">export type Attrs = Record&lt;string, string | number | boolean&gt;;</code></pre>
+<p>Span, metric and log attributes: OpenTelemetry&#39;s flat key to value map.</p>
+
+</section>
+<section class="symbol" id="ARCHON_SIGNALS">
+<h3><span class="kind">const</span><a href="#ARCHON_SIGNALS">ARCHON_SIGNALS</a></h3>
+<pre><code class="language-ts">export const ARCHON_SIGNALS: signals.Registry&lt;Declarations&gt;</code></pre>
+<p>Archon&#39;s signal registry (commons 0006-signals FR-009), made from <code>telemetry/signals.ts</code>.</p>
+
+</section>
+<section class="symbol" id="clean">
+<h3><span class="kind">function</span><a href="#clean">clean</a></h3>
+<pre><code class="language-ts">export function clean(a: Attrs): Attrs</code></pre>
+<p>Attribute values never carry a secret (Article 13): IFC TypeScript&#39;s redaction of text.</p>
+
+</section>
+<section class="symbol" id="initTelemetry">
+<h3><span class="kind">function</span><a href="#initTelemetry">initTelemetry</a></h3>
+<pre><code class="language-ts">export function initTelemetry(service = &quot;archon&quot;, version?: string): void</code></pre>
+<p>Start this process&#39;s telemetry, as <code>service</code> (<code>archon</code>, <code>stolos</code>, <code>archon-boot</code>) unless <code>OTEL_SERVICE_NAME</code> says otherwise. Safe to call twice; the first call wins.</p>
+
+</section>
+<section class="symbol" id="currentTraceparent">
+<h3><span class="kind">function</span><a href="#currentTraceparent">currentTraceparent</a></h3>
+<pre><code class="language-ts">export function currentTraceparent(): string | undefined</code></pre>
+<p>This run&#39;s traceparent, to hand to the next process (MCP, SSH), or undefined.</p>
+
+</section>
+<section class="symbol" id="count">
+<h3><span class="kind">function</span><a href="#count">count</a></h3>
+<pre><code class="language-ts">export function count(name: MetricName, n = 1, attrs: Attrs = {}): void</code></pre>
+<p>Add to a counter declared in signals.ts.</p>
+
+</section>
+<section class="symbol" id="measure">
+<h3><span class="kind">function</span><a href="#measure">measure</a></h3>
+<pre><code class="language-ts">export function measure(name: MetricName, v: number, attrs: Attrs = {}): void</code></pre>
+<p>Record a histogram or gauge value declared in signals.ts.</p>
+
+</section>
+<section class="symbol" id="startRun">
+<h3><span class="kind">function</span><a href="#startRun">startRun</a></h3>
+<pre><code class="language-ts">export function startRun(command: string, attrs: Attrs = {}): void</code></pre>
+<p>Start this run&#39;s trace (continuing <code>TRACEPARENT</code> when given): one <code>archon.run</code> span.</p>
+
+</section>
+<section class="symbol" id="span">
+<h3><span class="kind">function</span><a href="#span">span</a></h3>
+<pre><code class="language-ts">export function span(
+  name: &quot;archon.query&quot; | &quot;archon.remote&quot;,
+  attrs: Attrs = {},
+): (ok?: boolean) =&gt; void</code></pre>
+<p>A child span of the run (<code>archon.query</code>, <code>archon.remote</code>): call the returned function to end it.</p>
+
+</section>
+<section class="symbol" id="phaseListener">
+<h3><span class="kind">const</span><a href="#phaseListener">phaseListener</a></h3>
+<pre><code class="language-ts">export const phaseListener</code></pre>
+<p>UI phases become <code>archon.phase</code> spans, children of the run&#39;s span, and <code>archon.phase</code> events.</p>
+
+</section>
+<section class="symbol" id="endRun">
+<h3><span class="kind">function</span><a href="#endRun">endRun</a></h3>
+<pre><code class="language-ts">export function endRun(code: number, failures: number, warnings: number): void</code></pre>
+<p>End this run&#39;s trace with its outcome.</p>
+
+</section>
+<section class="symbol" id="recordChecks">
+<h3><span class="kind">function</span><a href="#recordChecks">recordChecks</a></h3>
+<pre><code class="language-ts">export function recordChecks(passed: number, failed: number): void</code></pre>
+<p>archon verify: how many checks passed and failed.</p>
+
+</section>
+<section class="symbol" id="recordChanges">
+<h3><span class="kind">function</span><a href="#recordChanges">recordChanges</a></h3>
+<pre><code class="language-ts">export function recordChanges(n: number, check: boolean): void</code></pre>
+<p>archon apply: how many changes it made (or would make, with --check).</p>
+
+</section>
+<section class="symbol" id="ProblemRecord">
+<h3><span class="kind">type</span><a href="#ProblemRecord">ProblemRecord</a></h3>
+<pre><code class="language-ts">export type ProblemRecord = {
+  readonly level: &quot;warn&quot; | &quot;fail&quot; | &quot;pending&quot;;
+  readonly phase: string;
+  readonly message: string;
+  readonly fix?: string | undefined;
+  readonly code?: string | undefined;
+};</code></pre>
+<p>A problem as the run reported it (the UI&#39;s <code>Problem</code>).</p>
+
+</section>
+<section class="symbol" id="flushEvents">
+<h3><span class="kind">function</span><a href="#flushEvents">flushEvents</a></h3>
+<pre><code class="language-ts">export async function flushEvents(problems: readonly ProblemRecord[]): Promise&lt;void&gt;</code></pre>
+<p>Spec 049: the run&#39;s problems as <code>archon.problem</code> log records in the run&#39;s trace (the terminal and the run log print the same facts), then the pipeline flushed and shut down, within 3 seconds. Silent where nothing listens.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/core/telemetry.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

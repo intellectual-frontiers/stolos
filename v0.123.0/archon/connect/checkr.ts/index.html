@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/connect/checkr.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/connect/checkr.ts</h1>
+<p>Spec 088: Checkr background screening, read through its API with GET only: each candidate&#39;s work email and, for each of their reports, only its outcome and date (never what the check found). A completed report is a <code>person_record</code> of kind screening, the hook spec 077&#39;s <code>people/screening</code> control reads beside <code>people/screening.ts</code>: <code>clear</code> when Checkr&#39;s result is clear (or its assessment eligible), <code>not clear</code> otherwise. Pending reports are counted, not recorded. Evidence for personnel screening (SCF HRS-05).</p>
+<p>Credential: a Checkr secret API key, sent as HTTP Basic&#39;s user name. Checkr&#39;s keys are not scoped: one can make any call. Stolos&#39;s guard sends only GET with it; make a key for Stolos alone, so it can be revoked on its own. Docs: https://docs.checkr.com/ (Authentication; Candidates; Reports).</p>
+<h2>Exports</h2>
+<section class="symbol" id="checkr">
+<h3><span class="kind">const</span><a href="#checkr">checkr</a></h3>
+<pre><code class="language-ts">export const checkr: Connector</code></pre>
+<p>Checkr.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/connect/checkr.ts">Source</a></p>
+</main>
+
+</body>
+</html>

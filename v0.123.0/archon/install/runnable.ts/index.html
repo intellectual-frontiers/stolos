@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/install/runnable.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/install/runnable.ts</h1>
+<p>Spec 063: before a machine is armed, check that what it will run is there. A new server clones the fleet&#39;s branch from GitHub at its first boot and runs it only when the tip is signed by one of the fleet&#39;s signers (spec 047), and it needs its own model (<code>fleets/&lt;fleet&gt;/hosts/&lt;host&gt;/host.ts</code>) in that commit. Either one missing used to surface only after a full install, as &quot;the repository tip is not signed by a fleet signer: nothing was run&quot;. <code>boot arm</code> refuses, and <code>boot serve</code> warns, before anything boots, each with the fix (<code>bun run stolos apply</code>).</p>
+<pre class="mermaid">flowchart LR
+  fetch[&quot;git fetch origin &amp;lt;branch&amp;gt;&quot;] --&gt; sig{&quot;tip signed by&lt;br/&gt;a fleet signer?&quot;}
+  sig -- no --&gt; fix1[&quot;stolos apply&lt;br/&gt;(a signed commit on top)&quot;]
+  sig -- yes --&gt; model{&quot;host.ts in&lt;br/&gt;that commit?&quot;}
+  model -- no --&gt; fix2[&quot;stolos apply -m '004-install: add host'&quot;]
+  model -- yes --&gt; ok[&quot;arm&quot;]</pre>
+<h2>Exports</h2>
+<section class="symbol" id="RunnableProblem">
+<h3><span class="kind">interface</span><a href="#RunnableProblem">RunnableProblem</a></h3>
+<pre><code class="language-ts">export interface RunnableProblem {
+  /** What is wrong, in plain words. */
+  what: string;
+  /** The command that fixes it. */
+  fix: string;
+  /** For `stolos explain`. */
+  code: &quot;E063-TIP-UNSIGNED&quot; | &quot;E063-HOST-NOT-PUSHED&quot;;
+}</code></pre>
+<p>One reason a new server could not run the fleet&#39;s branch, with its fix.</p>
+
+</section>
+<section class="symbol" id="Runnable">
+<h3><span class="kind">interface</span><a href="#Runnable">Runnable</a></h3>
+<pre><code class="language-ts">export interface Runnable {
+  /** The branch's tip, as checked (absent when it could not be read at all). */
+  tip?: string;
+  /** Who signed it, when a fleet signer did. */
+  signer?: string;
+  /** Why GitHub could not be asked (the last known tip was checked instead, if any). */
+  unreachable?: string;
+  /** Empty: a server installed now would run it. */
+  problems: RunnableProblem[];
+}</code></pre>
+<p>What a new server would find on the fleet&#39;s branch.</p>
+
+</section>
+<section class="symbol" id="checkRunnable">
+<h3><span class="kind">function</span><a href="#checkRunnable">checkRunnable</a></h3>
+<pre><code class="language-ts">export async function checkRunnable(hosts: string[], repo = P.repo): Promise&lt;Runnable&gt;</code></pre>
+<p>Check the fleet&#39;s branch as a server would see it for <code>hosts</code>. Asks GitHub (<code>git fetch</code>); offline, it checks the last fetched tip, and says so. A fleet not on GitHub (the end-to-end lab) is not checked.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/install/runnable.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

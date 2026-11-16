@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon-boot/server.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../index.html">Stolos v0.123.0</a> · <a href="../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon-boot/server.ts</h1>
+<p>archon-boot&#39;s HTTP server (spec 004): UEFI HTTP Boot files, GRUB menus per host (by Boot URI, or by MAC when the model has one), the verified installer image, and each host&#39;s install config with its secrets filled in at request time (Article 13).</p>
+<pre class="mermaid">flowchart LR
+  pxe[&quot;PXE / HTTP Boot&quot;] --&gt; menu[&quot;GRUB menu&lt;br/&gt;(by MAC, claim, or Boot URI)&quot;]
+  menu --&gt; cfg[&quot;user-data: autoinstall&lt;br/&gt;(the guard runs first)&quot;]
+  cfg --&gt; facts[&quot;facts: the guard's answer&quot;]
+  facts --&gt; events[&quot;events: installer, first boot&quot;]
+  events --&gt; done[&quot;done: MAC recorded&quot;]
+  otlp[&quot;/otlp: the fleet's telemetry&quot;] --&gt; files[&quot;telemetry files&quot;]</pre>
+<h2>Exports</h2>
+<section class="symbol" id="ServeOptions">
+<h3><span class="kind">interface</span><a href="#ServeOptions">ServeOptions</a></h3>
+<pre><code class="language-ts">export interface ServeOptions {
+  /** The HTTP port the boot server listens on (GRUB, the installer and the servers reach it). */
+  port: number;
+  /** Proxy the installer and first boot should use (sites behind one; optional). */
+  proxy?: string | undefined;
+  /** PEM of a CA that proxy needs trusted (optional). */
+  caPem?: string | undefined;
+  /** GitHub Enterprise or a releases mirror (optional). */
+  githubApi?: string | undefined;
+  /** The address to listen on (every IPv4 address by default). */
+  hostname?: string | undefined;
+  /** Spec 049: every event, structured; the window and boot.log render it. */
+  emit: (e: ArchonEvent) =&gt; void;
+  /**
+   * Spec 051, off by default (boot serve --stall-watch): name a machine whose
+   * installer took the image and went quiet. It guesses which machine from DHCP
+   * leases, which installers change mid-install; it is a hint, not a guarantee.
+   */
+  stallWatch?: boolean;
+}</code></pre>
+<p>Options for the boot server (<code>bun run stolos boot serve</code>).</p>
+
+</section>
+<section class="symbol" id="serve">
+<h3><span class="kind">function</span><a href="#serve">serve</a></h3>
+<pre><code class="language-ts">export function serve(o: ServeOptions, h: Handler): Promise&lt;tcp.Listener&gt;</code></pre>
+<p>Serve HTTP with the given handler: the same one TFTP uses, so they share what they saw.</p>
+
+</section>
+<section class="symbol" id="handler">
+<h3><span class="kind">function</span><a href="#handler">handler</a></h3>
+<pre><code class="language-ts">export function handler(assets: Assets, o: ServeOptions): Handler</code></pre>
+<p>The request handler, shared by HTTP and TFTP (PXE).</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon-boot/server.ts">Source</a></p>
+</main>
+<script src="../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

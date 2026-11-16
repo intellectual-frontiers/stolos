@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/model/site.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/model/site.ts</h1>
+<p>The site (spec 028, constitution Article 21): the UniFi network as typed data. Archon checks hosts against it and renders the network reference from it, but never changes the router: the owner (or the network assistant) changes the router, then this model is updated to match. The data is fleets/&lt;fleet&gt;/site.ts; this file is the ontology and its rules.</p>
+<p>Addresses, prefixes, VLANs, and ports are branded types: a plain string or number does not type-check where an IPv4 is expected, and the constructors (ipv4(), cidr(), vlan(), port()) reject a malformed literal when the model loads, before anything is rendered (Article 10).</p>
+<h2>Exports</h2>
+<section class="symbol" id="BRAND">
+<h3><span class="kind">const</span><a href="#BRAND">BRAND</a></h3>
+<pre><code class="language-ts">export declare const BRAND: unique symbol;</code></pre>
+<p>The brand&#39;s key (type-level only: no such value exists at run time).</p>
+
+</section>
+<section class="symbol" id="Brand">
+<h3><span class="kind">type</span><a href="#Brand">Brand</a></h3>
+<pre><code class="language-ts">export type Brand&lt;T, B extends string&gt; = T &amp; { readonly [BRAND]: B };</code></pre>
+<p>A value checked once, at the model&#39;s load, and marked so: a plain string or number is not accepted where a branded one is expected.</p>
+
+</section>
+<section class="symbol" id="IPv4">
+<h3><span class="kind">type</span><a href="#IPv4">IPv4</a></h3>
+<pre><code class="language-ts">export type IPv4 = Brand&lt;string, &quot;IPv4&quot;&gt;;</code></pre>
+<p>An IPv4 address, checked: made with {@link ipv4}.</p>
+
+</section>
+<section class="symbol" id="Cidr">
+<h3><span class="kind">type</span><a href="#Cidr">Cidr</a></h3>
+<pre><code class="language-ts">export type Cidr = Brand&lt;string, &quot;Cidr&quot;&gt;;</code></pre>
+<p>An IPv4 prefix (a.b.c.d/n), checked: made with {@link cidr}.</p>
+
+</section>
+<section class="symbol" id="VlanId">
+<h3><span class="kind">type</span><a href="#VlanId">VlanId</a></h3>
+<pre><code class="language-ts">export type VlanId = Brand&lt;number, &quot;VlanId&quot;&gt;;</code></pre>
+<p>A VLAN id (1 to 4094), checked: made with {@link vlan}.</p>
+
+</section>
+<section class="symbol" id="Port">
+<h3><span class="kind">type</span><a href="#Port">Port</a></h3>
+<pre><code class="language-ts">export type Port = Brand&lt;number, &quot;Port&quot;&gt;;</code></pre>
+<p>A TCP or UDP port (1 to 65535), checked: made with {@link port}.</p>
+
+</section>
+<section class="symbol" id="ipv4">
+<h3><span class="kind">function</span><a href="#ipv4">ipv4</a></h3>
+<pre><code class="language-ts">export function ipv4(s: string): IPv4</code></pre>
+<p>An IPv4 address, or an error naming the malformed literal.</p>
+
+</section>
+<section class="symbol" id="cidr">
+<h3><span class="kind">function</span><a href="#cidr">cidr</a></h3>
+<pre><code class="language-ts">export function cidr(s: string): Cidr</code></pre>
+<p>An IPv4 prefix (a.b.c.d/n), or an error naming the malformed literal.</p>
+
+</section>
+<section class="symbol" id="vlan">
+<h3><span class="kind">function</span><a href="#vlan">vlan</a></h3>
+<pre><code class="language-ts">export function vlan(n: number): VlanId</code></pre>
+<p>A VLAN id, or an error when it is not 1 to 4094.</p>
+
+</section>
+<section class="symbol" id="port">
+<h3><span class="kind">function</span><a href="#port">port</a></h3>
+<pre><code class="language-ts">export function port(n: number): Port</code></pre>
+<p>A port, or an error when it is not 1 to 65535.</p>
+
+</section>
+<section class="symbol" id="inCidr">
+<h3><span class="kind">function</span><a href="#inCidr">inCidr</a></h3>
+<pre><code class="language-ts">export function inCidr(ip: IPv4 | string, c: Cidr | string): boolean</code></pre>
+<p>Is the address inside the prefix?</p>
+
+</section>
+<section class="symbol" id="Zone">
+<h3><span class="kind">type</span><a href="#Zone">Zone</a></h3>
+<pre><code class="language-ts">export type Zone =
+  &quot;Internal&quot; | &quot;IoT&quot; | &quot;Servers&quot; | &quot;DMZ&quot; | &quot;Hotspot&quot; | &quot;VPN&quot; | &quot;External&quot; | &quot;Gateway&quot;;</code></pre>
+<p>UniFi&#39;s firewall zones as this site uses them (a closed set; Gateway is UniFi&#39;s own).</p>
+
+</section>
+<section class="symbol" id="SiteNetwork">
+<h3><span class="kind">interface</span><a href="#SiteNetwork">SiteNetwork</a></h3>
+<pre><code class="language-ts">export interface SiteNetwork {
+  /** Its name, as UniFi shows it (for example &quot;Servers&quot;). */
+  name: string;
+  /** Its VLAN; absent for a VPN, which has no VLAN. */
+  vlan?: VlanId;
+  /** Its IPv4 prefix. */
+  cidr: Cidr;
+  /** A VPN's IPv6 prefix (ULA), when it has one. */
+  cidr6?: string;
+  /** The gateway's address on it. */
+  gateway: IPv4;
+  /** Its firewall zone. */
+  zone: Zone;
+  /** Who hands out addresses: a DHCP range, UniFi's own management, or a fixed address per client. */
+  dhcp: { from: IPv4; to: IPv4; leaseSeconds?: number } | &quot;unifi-managed&quot; | &quot;static-per-client&quot;;
+  /** UniFi's Network Boot (DHCP next-server and file). */
+  netboot?: { server: IPv4; file: string };
+  /** In the gateway's mDNS proxy (reflector) scope. Never for Servers or DMZ (Article 20). */
+  mdnsReflect: boolean;
+  /** Does this network route IPv6 to hosts? (spec 009: apt and Postfix use IPv4 only when not.) */
+  ipv6: boolean;
+  /** Anything a person should know about it. */
+  notes?: string;
+}</code></pre>
+<p>A network of the site: its VLAN, prefix, gateway, firewall zone, DHCP, and what it routes.</p>
+
+</section>
+<section class="symbol" id="FirewallPolicy">
+<h3><span class="kind">interface</span><a href="#FirewallPolicy">FirewallPolicy</a></h3>
+<pre><code class="language-ts">export interface FirewallPolicy {
+  /** UniFi's policy number, as listed in the network reference. */
+  id: number;
+  /** Its name in UniFi. */
+  name: string;
+  /** Where traffic comes from: a zone, optionally one network or prefix of it. */
+  from: { zone: Zone; network?: string; cidr?: Cidr };
+  /** Where it goes: a zone, optionally one address. */
+  to: { zone: Zone; address?: IPv4 };
+  /** The protocol it matches. */
+  protocol: &quot;tcp&quot; | &quot;udp&quot; | &quot;tcp/udp&quot; | &quot;any&quot;;
+  /** Ports matched, or matched by exception (&quot;all ports except&quot;). */
+  ports?: Port[];
+  /** Every port except these. */
+  exceptPorts?: Port[];
+  /** IPv4 only, or both IPv4 and IPv6. */
+  ipVersion?: &quot;ipv4&quot; | &quot;both&quot;;
+  /** Allow, allow return traffic only, or block. */
+  action: &quot;allow&quot; | &quot;allow-return&quot; | &quot;block&quot;;
+  /** Why it exists, in one line. */
+  purpose: string;
+}</code></pre>
+<p>A firewall policy of the gateway, as UniFi lists it.</p>
+
+</section>
+<section class="symbol" id="LocalDnsRecord">
+<h3><span class="kind">interface</span><a href="#LocalDnsRecord">LocalDnsRecord</a></h3>
+<pre><code class="language-ts">export interface LocalDnsRecord {
+  /** The name, for example &quot;alpha.localdomain&quot;. */
+  name: string;
+  /** The address it resolves to. */
+  address: IPv4;
+}</code></pre>
+<p>A UniFi Local DNS record: a name that resolves to an address on the site.</p>
+
+</section>
+<section class="symbol" id="WifiNetwork">
+<h3><span class="kind">interface</span><a href="#WifiNetwork">WifiNetwork</a></h3>
+<pre><code class="language-ts">export interface WifiNetwork {
+  /** Its SSID. */
+  ssid: string;
+  /** The site network its clients join, by name. */
+  network: string;
+  /** The bands it broadcasts on (GHz). */
+  bands: Array&lt;&quot;2.4&quot; | &quot;5&quot; | &quot;6&quot;&gt;;
+  /** Its security. */
+  security: &quot;wpa2&quot; | &quot;wpa2/wpa3&quot; | &quot;wpa3&quot;;
+  /** Protected Management Frames. */
+  pmf: &quot;disabled&quot; | &quot;optional&quot; | &quot;required&quot;;
+  /** Hotspot (captive portal) SSIDs: guests. */
+  guest?: boolean;
+  /** Anything a person should know about it. */
+  notes?: string;
+}</code></pre>
+<p>A Wi-Fi network (SSID) and the network it puts clients on.</p>
+
+</section>
+<section class="symbol" id="Device">
+<h3><span class="kind">interface</span><a href="#Device">Device</a></h3>
+<pre><code class="language-ts">export interface Device {
+  /** Its name. */
+  name: string;
+  /** Its model. */
+  model?: string;
+  /** Its address. */
+  address: IPv4;
+  /** Its network, by name. */
+  network: string;
+  /** How the address is kept. */
+  how: &quot;gateway&quot; | &quot;unifi-managed&quot; | &quot;fixed&quot; | &quot;dhcp&quot;;
+}</code></pre>
+<p>A device on the site with a known address (the gateway, switches, access points, printers).</p>
+
+</section>
+<section class="symbol" id="SiteDef">
+<h3><span class="kind">interface</span><a href="#SiteDef">SiteDef</a></h3>
+<pre><code class="language-ts">export interface SiteDef {
+  /** The site's name. */
+  name: string;
+  /** The gateway: its model, its name, and the network it lives on. */
+  gateway: { model: string; name: string; network: string };
+  /** The firewall zones in use. */
+  zones: Zone[];
+  /** Every network. */
+  networks: SiteNetwork[];
+  /** Every firewall policy, in UniFi's order. */
+  policies: FirewallPolicy[];
+  /** DNS: the gateway's upstream resolvers, and the Local DNS records. */
+  dns: {
+    /** The gateway's upstream resolvers (Auto DNS Server off). */
+    upstream: IPv4[];
+    autoDns: boolean;
+    localRecords: LocalDnsRecord[];
+  };
+  /** The gateway's mDNS proxy (reflector): which networks, which services. */
+  mdnsProxy: {
+    /** Networks in the proxy's scope, by name. */
+    networks: string[];
+    /** The services UniFi repeats (Service Scope: Specific), by UniFi's names. */
+    services: string[];
+  };
+  /** Every Wi-Fi network. */
+  wifi: WifiNetwork[];
+  /** Names and endpoints only: keys stay in UniFi and on the clients. */
+  wireguard?: {
+    name: string;
+    listen: Port;
+    endpoint: string;
+    network: string;
+    clients: Array&lt;{ name: string; address: IPv4 }&gt;;
+    reach: Zone[];
+  };
+  /** Names only: the token stays in UniFi. */
+  ddns?: { provider: &quot;cloudflare&quot;; record: string; type: &quot;A&quot;; proxied: boolean; zone: string };
+  /** The boot machine: where network installs come from (TFTP and HTTP ports). */
+  bootServer: { host: string; address: IPv4; network: string; tftp: Port; http: Port };
+  /** Devices with known addresses. */
+  devices: Device[];
+  /** Security settings: IPS, UPnP, port forwards, and inbound traffic, as configured. */
+  security: { ips: string; upnp: boolean; portForwards: number; inbound: string };
+}</code></pre>
+<p>The site&#39;s network as data (spec 028, Article 21): fleets/&lt;fleet&gt;/site.ts. Archon checks hosts against it and renders the network reference from it; it never changes the router.</p>
+
+</section>
+<section class="symbol" id="SiteProblem">
+<h3><span class="kind">interface</span><a href="#SiteProblem">SiteProblem</a></h3>
+<pre><code class="language-ts">export interface SiteProblem {
+  /** Where: the network, policy, or host. */
+  where: string;
+  /** What is wrong. */
+  message: string;
+  /** How to fix it. */
+  fix: string;
+}</code></pre>
+<p>A problem with the site&#39;s model (or with the router, to fix there first).</p>
+
+</section>
+<section class="symbol" id="SiteHost">
+<h3><span class="kind">interface</span><a href="#SiteHost">SiteHost</a></h3>
+<pre><code class="language-ts">export interface SiteHost {
+  /** The host's name. */
+  name: string;
+  /** Its site network, by name. */
+  network?: string;
+  /** Its fixed address. */
+  ip?: string;
+  /** Its Local DNS name. */
+  dnsName?: string;
+}</code></pre>
+<p>What a host contributes to the site checks.</p>
+
+</section>
+<section class="symbol" id="validateSite">
+<h3><span class="kind">function</span><a href="#validateSite">validateSite</a></h3>
+<pre><code class="language-ts">export function validateSite(
+  site: SiteDef,
+  hosts: SiteHost[],
+  o: { collector?: string } = {},
+): SiteProblem[]</code></pre>
+<p>The site&#39;s rules (spec 028). Each problem names what to change, in the model or (Article 21) in UniFi by the owner, then in the model to match.</p>
+
+</section>
+<section class="symbol" id="siteNetwork">
+<h3><span class="kind">function</span><a href="#siteNetwork">siteNetwork</a></h3>
+<pre><code class="language-ts">export function siteNetwork(
+  site: SiteDef | undefined,
+  name: string | undefined,
+): SiteNetwork | undefined</code></pre>
+<p>Hosts&#39; network, in the site (for networkOf, spec 009).</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/model/site.ts">Source</a></p>
+</main>
+
+</body>
+</html>

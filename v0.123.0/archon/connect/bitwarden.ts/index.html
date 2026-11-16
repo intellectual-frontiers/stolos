@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/connect/bitwarden.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/connect/bitwarden.ts</h1>
+<p>Spec 087: Bitwarden (Password Manager, Teams or Enterprise), read-only, for one organization: its members (confirmed, invited, revoked; owner or admin; whether two-step login is on), whether the organization requires two-step login, and its collections (the shared vaults) with who can open each, directly or through a group. Evidence for MFA (SCF IAC-37), least privilege (IAC-30), and account management (IAC-08); the estate graph checks that every active person has an account (coverage).</p>
+<p>Bitwarden&#39;s organization API key is not read-only (Bitwarden documents it as full access to the organization&#39;s management API): Stolos sends it only to the token endpoint and makes GET calls alone. Item names and contents are end-to-end encrypted and never readable through this API.</p>
+<h2>Exports</h2>
+<section class="symbol" id="bitwardenUrls">
+<h3><span class="kind">function</span><a href="#bitwardenUrls">bitwardenUrls</a></h3>
+<pre><code class="language-ts">export function bitwardenUrls(server: string): { api: string; token: string }</code></pre>
+<p>The API and token endpoint for a server (us, eu, or a self-hosted URL).</p>
+
+</section>
+<section class="symbol" id="bitwarden">
+<h3><span class="kind">const</span><a href="#bitwarden">bitwarden</a></h3>
+<pre><code class="language-ts">export const bitwarden: Connector</code></pre>
+<p>Bitwarden (an organization).</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/connect/bitwarden.ts">Source</a></p>
+</main>
+
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/guide/where.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/guide/where.ts</h1>
+<p>Spec 053: &quot;where am I&quot;. <code>bun run stolos</code> with no arguments shows, for the fleet of this repository, every step from a new repository to running hosts, each done or not as the real state says (Git, this machine&#39;s secret store, the boot server&#39;s tokens, what hosts reported), and the one command to run next. Nothing is stored about progress: it is computed every time.</p>
+<pre class="mermaid">stateDiagram-v2
+  direction LR
+  [*] --&gt; todo
+  todo --&gt; next: the first step not done
+  next --&gt; done: its command run
+  [*] --&gt; pending: waits for a token
+  pending --&gt; done: the token delivered
+  done --&gt; [*]</pre>
+<h2>Exports</h2>
+<section class="symbol" id="WhereFacts">
+<h3><span class="kind">interface</span><a href="#WhereFacts">WhereFacts</a></h3>
+<pre><code class="language-ts">export interface WhereFacts {
+  /** The fleets of this repository. */
+  fleets: string[];
+  /** The active fleet, when one is chosen and exists. */
+  fleetId?: string;
+  /** package.json's engine tag, when pinned. */
+  pinned?: string;
+  /** bun.lock exists. */
+  locked: boolean;
+  /** How many signers of each role signers.ts lists. */
+  signers: { daily: number; recovery: number };
+  /** This machine's signing problems (spec 057's checks, failures first): what is wrong, with its fix. */
+  signingProblems: Array&lt;{ what: string; fix?: string }&gt;;
+  /** The admin password's hash is in this machine's secret store. */
+  adminHash: boolean;
+  /** The fleet sends mail: is the relay token on this machine? */
+  mail?: { token: boolean };
+  /** The fleet has HTTPS names: is the Cloudflare token on this machine? */
+  web?: { token: boolean };
+  /** Each host: a workstation or a server, installed, armed, armed by claim. */
+  hosts: Array&lt;{
+    name: string;
+    workstation: boolean;
+    installed: boolean;
+    armed: boolean;
+    claim: boolean;
+  }&gt;;
+  /** Uncommitted changes in the fleet repository, and commits not pushed. */
+  dirty: boolean;
+  /** Commits not pushed. */
+  unpushed: number;
+}</code></pre>
+<p>What <code>stolos</code> (no arguments) found about where you are: the facts its next step is chosen from.</p>
+
+</section>
+<section class="symbol" id="StepState">
+<h3><span class="kind">type</span><a href="#StepState">StepState</a></h3>
+<pre><code class="language-ts">export type StepState = &quot;done&quot; | &quot;next&quot; | &quot;todo&quot; | &quot;pending&quot;;</code></pre>
+<p>A step&#39;s state: done, the one to do next, to do after it, or waiting for something to be set up.</p>
+
+</section>
+<section class="symbol" id="Step">
+<h3><span class="kind">interface</span><a href="#Step">Step</a></h3>
+<pre><code class="language-ts">export interface Step {
+  /** Its state. */
+  state: StepState;
+  /** What it is, in a few words. */
+  text: string;
+  /** The command that does it (for next, todo, and pending). */
+  command?: string;
+}</code></pre>
+<p>One step of the checklist.</p>
+
+</section>
+<section class="symbol" id="whereSteps">
+<h3><span class="kind">function</span><a href="#whereSteps">whereSteps</a></h3>
+<pre><code class="language-ts">export function whereSteps(f: WhereFacts): Step[]</code></pre>
+<p>The steps, in order; the first one not done (and not merely pending) is &quot;next&quot;.</p>
+
+</section>
+<section class="symbol" id="nextCommand">
+<h3><span class="kind">function</span><a href="#nextCommand">nextCommand</a></h3>
+<pre><code class="language-ts">export function nextCommand(steps: Step[]): string</code></pre>
+<p>The one command to run next (or what to do when everything is done).</p>
+
+</section>
+<section class="symbol" id="collectWhere">
+<h3><span class="kind">function</span><a href="#collectWhere">collectWhere</a></h3>
+<pre><code class="language-ts">export async function collectWhere(): Promise&lt;WhereFacts&gt;</code></pre>
+<p>The facts, from the real state (see the header).</p>
+
+</section>
+<section class="symbol" id="whereCommand">
+<h3><span class="kind">function</span><a href="#whereCommand">whereCommand</a></h3>
+<pre><code class="language-ts">export async function whereCommand(json: boolean): Promise&lt;number&gt;</code></pre>
+<p><code>archon</code> (no arguments) and <code>stolos where</code>.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/guide/where.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

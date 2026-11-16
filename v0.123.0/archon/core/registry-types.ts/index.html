@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/core/registry-types.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/core/registry-types.ts</h1>
+<p>Types for the command registry (Article VI). One definition per capability generates the CLI, MCP tools, man pages, fish completions, and the agent&#39;s permission rules.</p>
+<h2>Exports</h2>
+<section class="symbol" id="Tier">
+<h3><span class="kind">type</span><a href="#Tier">Tier</a></h3>
+<pre><code class="language-ts">export type Tier = &quot;read&quot; | &quot;repo&quot; | &quot;mutate&quot; | &quot;destructive&quot;;</code></pre>
+<p>What a command may do, from least to most: read, change the repository, change a machine, or destroy something (the agent&#39;s permission rules follow it).</p>
+
+</section>
+<section class="symbol" id="ArgSpec">
+<h3><span class="kind">interface</span><a href="#ArgSpec">ArgSpec</a></h3>
+<pre><code class="language-ts">export interface ArgSpec {
+  /** Its name (the option is --name). */
+  name: string;
+  /** A value, or a flag. */
+  type: &quot;string&quot; | &quot;boolean&quot;;
+  /** What it does, in one line (help, man page, MCP). */
+  description: string;
+  /** Given without --name, in order. */
+  positional?: boolean;
+  /** A one-letter form (-m for --message). */
+  short?: string;
+  /** The command refuses to run without it. */
+  required?: boolean;
+  /** Its value when it is not given. */
+  default?: string | boolean;
+  /** May be given more than once; the values are joined with newlines. */
+  repeatable?: boolean;
+  /**
+   * Only a person types it (--confirm-destroy, Article 23; --show for a secret): never offered over
+   * MCP, and refused when an agent runs the command (ARCHON_AGENT is set).
+   */
+  human?: boolean;
+  /** The only values it takes (a console shows a choice). */
+  choices?: string[];
+}</code></pre>
+<p>One argument of a command: an option (--name) or a positional value.</p>
+
+</section>
+<section class="symbol" id="Parsed">
+<h3><span class="kind">type</span><a href="#Parsed">Parsed</a></h3>
+<pre><code class="language-ts">export type Parsed = Record&lt;string, string | boolean | undefined&gt;;</code></pre>
+<p>A command&#39;s arguments, parsed: name to value.</p>
+
+</section>
+<section class="symbol" id="RunContext">
+<h3><span class="kind">interface</span><a href="#RunContext">RunContext</a></h3>
+<pre><code class="language-ts">export interface RunContext {
+  /** The host this invocation operates on. */
+  hostName: string;
+  /** --json: machine-readable output, nothing drawn. */
+  json: boolean;
+  /** -v: every item, as it happens. */
+  verbose?: boolean;
+}</code></pre>
+<p>What every command is given besides its arguments.</p>
+
+</section>
+<section class="symbol" id="Command">
+<h3><span class="kind">interface</span><a href="#Command">Command</a></h3>
+<pre><code class="language-ts">export interface Command {
+  /** Space-separated words, for example &quot;tools sync&quot;. */
+  name: string;
+  /** One line, for archon help. */
+  summary: string;
+  /** Paragraphs separated by blank lines. */
+  description: string;
+  /** What it may do: read, write the repository, change the host, or destroy (spec 030: MCP serves up to the fleet's tier). */
+  tier: Tier;
+  /** Tier when this flag is set (for example apply --check is read-only). */
+  readOnlyWith?: string;
+  /**
+   * The reverse: read-only, except with this flag, which changes the host
+   * (fs s3 key --rotate). It then elevates, and counts as mutate over MCP.
+   */
+  mutateWith?: string;
+  /**
+   * Always runs elevated, even when read-only, because it works through the
+   * checkout's owner (ops and the host's deploy key): push. Operators and the
+   * admin are in archon-ops, so sudo does not prompt (spec 006).
+   */
+  asOwner?: boolean;
+  /** Its arguments. */
+  args: ArgSpec[];
+  /** Examples, for its man page. */
+  examples?: Array&lt;{ cmd: string; text: string }&gt;;
+  /** Related man pages. */
+  seeAlso?: string[];
+  /** Hide from MCP (for example `mcp` itself). */
+  noMcp?: boolean;
+  /**
+   * An operation (Article XXII): runs in phases with a header, a run log, and
+   * a closing summary instead of printing a result.
+   */
+  operation?: boolean;
+  /**
+   * Touches only its own files (archon notify's spool): no host lock, so it
+   * never waits for or blocks an apply, and it leaves the prompt's last-run
+   * segment alone.
+   */
+  unlocked?: boolean;
+  /**
+   * A look before elevating (spec 038): when it returns a code, the command is
+   * already satisfied and finishes unprivileged, so an idempotent mutate
+   * command (archon pg ensure) works unattended for a normal user once its
+   * work is done.
+   */
+  precheck?: (args: Parsed, ctx: RunContext) =&gt; Promise&lt;number | undefined&gt;;
+  /**
+   * Where it runs: &quot;pc&quot; (`stolos`, in the fleet repository on your PC), &quot;machine&quot;
+   * (`archon`, on each server or workstation), or &quot;both&quot;.
+   */
+  place?: Place;
+  /** Other names for it (spec 060: stolos push is stolos apply). */
+  aliases?: string[];
+  /** Runs it; returns the exit code. */
+  run: (args: Parsed, ctx: RunContext) =&gt; Promise&lt;number&gt;;
+}</code></pre>
+<p>One archon command: its name, help, tier, arguments, and what it runs. The man pages, the MCP tools, and <code>archon help</code> all come from these.</p>
+
+</section>
+<section class="symbol" id="Place">
+<h3><span class="kind">type</span><a href="#Place">Place</a></h3>
+<pre><code class="language-ts">export type Place = &quot;pc&quot; | &quot;machine&quot; | &quot;both&quot;;</code></pre>
+<p>Where a command runs: your PC (stolos), each machine (archon), or both.</p>
+
+</section>
+<section class="symbol" id="effectiveTier">
+<h3><span class="kind">function</span><a href="#effectiveTier">effectiveTier</a></h3>
+<pre><code class="language-ts">export function effectiveTier(cmd: Command, args: Parsed): Tier</code></pre>
+<p>The tier this run needs (a command&#39;s tier can depend on its arguments, for example --check).</p>
+
+</section>
+<section class="symbol" id="parseArgs">
+<h3><span class="kind">function</span><a href="#parseArgs">parseArgs</a></h3>
+<pre><code class="language-ts">export function parseArgs(cmd: Command, argv: string[]): Parsed</code></pre>
+<p>Parse argv for this command, or throw a message naming the problem (a person-only option from an agent is refused).</p>
+
+</section>
+<section class="symbol" id="GLOBAL_ARGS">
+<h3><span class="kind">const</span><a href="#GLOBAL_ARGS">GLOBAL_ARGS</a></h3>
+<pre><code class="language-ts">export const GLOBAL_ARGS: ArgSpec[]</code></pre>
+<p>Arguments shared by every command.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/core/registry-types.ts">Source</a></p>
+</main>
+
+</body>
+</html>

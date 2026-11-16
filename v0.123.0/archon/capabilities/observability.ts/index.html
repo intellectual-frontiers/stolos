@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/capabilities/observability.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/capabilities/observability.ts</h1>
+<p>021-observability: every server and workstation observes itself with Ubuntu&#39;s own components, and OpenTelemetry (OTLP) is the only protocol anything speaks when data leaves where it was made.</p>
+<p>metrics  PCP (pmcd, pmlogger) records; pmproxy serves them as OpenMetrics on localhost, which an OpenTelemetry Collector reads as OTLP logs     journald stores; the Collector&#39;s journald receiver reads it Archon   speaks OTLP itself (IFC TypeScript); the local Collector writes it to files</p>
+<p>Every local store is ephemeral: age and size limits, pruned first when the disk runs low, never backed up (/var/log/pcp, /var/log/journal, and /var/cache/archon-otel are outside spec 016&#39;s paths), and cheap to run (the Collector is niced, idle I/O, memory-capped).</p>
+<h2>Exports</h2>
+<section class="symbol" id="DEFAULT_OBSERVABILITY">
+<h3><span class="kind">const</span><a href="#DEFAULT_OBSERVABILITY">DEFAULT_OBSERVABILITY</a></h3>
+<pre><code class="language-ts">export const DEFAULT_OBSERVABILITY: ObservabilityDef</code></pre>
+<p>The default observability limits.</p>
+
+</section>
+<section class="symbol" id="observabilityPolicy">
+<h3><span class="kind">function</span><a href="#observabilityPolicy">observabilityPolicy</a></h3>
+<pre><code class="language-ts">export function observabilityPolicy(fleet: FleetDef, host: HostDef): ObservabilityDef</code></pre>
+<p>A host&#39;s observability limits: the defaults, the fleet&#39;s, then the host&#39;s.</p>
+
+</section>
+<section class="symbol" id="OBSERVE">
+<h3><span class="kind">const</span><a href="#OBSERVE">OBSERVE</a></h3>
+<pre><code class="language-ts">export const OBSERVE</code></pre>
+<p>Where things are; shared with <code>archon observe</code>.</p>
+
+</section>
+<section class="symbol" id="CORE_PCP_METRICS">
+<h3><span class="kind">const</span><a href="#CORE_PCP_METRICS">CORE_PCP_METRICS</a></h3>
+<pre><code class="language-ts">export const CORE_PCP_METRICS</code></pre>
+<p>The PCP metrics behind OpenTelemetry&#39;s system semantic conventions (CPU, memory, disk, filesystem, network, load, processes), the set a viewer or a collector asks pmproxy for (<code>/metrics?names=...</code>).</p>
+
+</section>
+<section class="symbol" id="collectsForFleet">
+<h3><span class="kind">const</span><a href="#collectsForFleet">collectsForFleet</a></h3>
+<pre><code class="language-ts">export const collectsForFleet</code></pre>
+<p>Spec 050: with the telemetry web UI on, this server collects for the fleet.</p>
+
+</section>
+<section class="symbol" id="collectorConfig">
+<h3><span class="kind">function</span><a href="#collectorConfig">collectorConfig</a></h3>
+<pre><code class="language-ts">export function collectorConfig(host: HostDef, fleet: FleetDef, o: ObservabilityDef): string</code></pre>
+<p>The local Collector&#39;s configuration for this host: Archon&#39;s OTLP in, OTLP JSON files out (JSON is valid YAML).</p>
+
+</section>
+<section class="symbol" id="observability">
+<h3><span class="kind">const</span><a href="#observability">observability</a></h3>
+<pre><code class="language-ts">export const observability</code></pre>
+<p>journald, PCP, and the OpenTelemetry Collector, within limits (spec 021).</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/capabilities/observability.ts">Source</a></p>
+</main>
+
+</body>
+</html>

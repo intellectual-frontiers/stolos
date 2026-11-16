@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/install/workstation-guide.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/install/workstation-guide.ts</h1>
+<h2 id="your-pc39s-ubuntu-wsl-as-a-workstation">Your PC&#39;s Ubuntu (WSL) as a workstation</h2>
+<p>Ubuntu on WSL (Windows Subsystem for Linux) can be an Archon <strong>workstation</strong>: it gets what makes the hosts pleasant to work on, managed the same way, and nothing that belongs to a server.</p>
+<table><thead><tr><th>A workstation gets</th><th>A workstation does not get</th></tr></thead><tbody><tr><td>the tools at their newest releases (git and fish from their PPAs, gh from GitHub&#39;s repository, Bun, chezmoi, oh-my-posh, tmux)</td><td>an installer, netplan, or anything about booting</td></tr><tr><td>your dotfiles: fish with the Archon prompt, tmux, git with your GitHub identity</td><td>the firewall or SSH server hardening</td></tr><tr><td>Claude Code, for your own account: the agent layer, which reaches the servers over MCP (<a href="../../../archon/mcp/mod.ts/index.html">agent.md</a>)</td><td>the <code>ops</code> account</td></tr><tr><td>the <code>archon</code> command, its man pages and completions</td><td>the converge, capture, and backup timers</td></tr><tr><td>Ubuntu&#39;s daily security and stable updates, and the weekly tools sync</td><td>a deploy key or pushes of recorded state</td></tr><tr><td>local observability: journald, PCP, btop, the OpenTelemetry Collector, <code>archon observe</code></td><td></td></tr></tbody></table>
+<p>The workstation is described in the repository like a host (<code>fleets/&lt;fleet&gt;/hosts/&lt;name&gt;/host.ts</code>, with <code>kind: &quot;workstation&quot;</code>), so the same spec loop applies; the boot machine never installs it.</p>
+<h3 id="set-it-up-once">Set it up (once)</h3>
+<p><strong>1. Install Ubuntu 26.04 LTS</strong> from the Microsoft Store, or in PowerShell (<code>wsl --list --online</code> shows the exact name):</p>
+<pre><code>wsl --install -d Ubuntu-26.04</code></pre>
+<p>Open it from the Start menu (or a Windows Terminal tab) and create your account when asked. Use the same name as <code>user</code> in <code>fleets/&lt;fleet&gt;/fleet.ts</code> if you like; any name works.</p>
+<p><strong>2. Make sure systemd runs.</strong> Ubuntu&#39;s WSL images turn it on. To check, in Ubuntu: <code>ls /run/systemd/system</code>. If that fails:</p>
+<pre><code>printf &#39;[boot]\nsystemd=true\n&#39; | sudo tee /etc/wsl.conf</code></pre>
+<p>then in PowerShell <code>wsl --shutdown</code>, and open Ubuntu again.</p>
+<p><strong>3. Get the repository and Bun</strong>, in Ubuntu:</p>
+<pre><code>sudo apt update &amp;&amp; sudo apt install -y git gh unzip
+gh auth login --web --git-protocol https
+gh auth setup-git
+sudo mkdir -p /srv/archon &amp;&amp; sudo chown &quot;$USER&quot;: /srv/archon
+git clone https://github.com/example/fleet.git /srv/archon
+curl -fsSL https://bun.sh/install | bash -s &quot;bun-v1.4.4&quot;
+exec bash</code></pre>
+<p>The checkout must be <code>/srv/archon</code> (the <code>archon</code> command runs from there) and belongs to you. The Bun installed here only starts things off: Archon installs the pinned Bun in <code>/usr/local/bin</code>.</p>
+<p><strong>4. Set it up as a workstation:</strong></p>
+<pre><code>cd /srv/archon
+bun run stolos workstation add</code></pre>
+<p>It checks that this is Ubuntu 26.04 with systemd and the checkout in <code>/srv/archon</code>, writes <code>fleets/&lt;fleet&gt;/hosts/&lt;name&gt;/host.ts</code> (the name defaults to the PC&#39;s hostname; pass one to choose: <code>workstation add pc</code>), then asks for your password once and applies: packages and PPAs, Archon&#39;s groups, the tools, Claude Code, your dotfiles, and <code>archon verify</code>. Commit the new file:</p>
+<pre><code>git add -A; git commit -m &quot;020-workstation: add workstation pc&quot;; git push</code></pre>
+<p><strong>5. Open a new Ubuntu tab.</strong> You are in fish with the Archon prompt, which starts with the machine&#39;s name; the tab&#39;s title reads <code>fish in &lt;you&gt;@&lt;machine&gt;</code>. Sign Claude Code in once with <code>claude</code>; in <code>/srv/archon</code> it reaches every server through MCP (<a href="../../../archon/mcp/mod.ts/index.html">agent.md</a>).</p>
+<p>Windows Terminal needs a Nerd Font for the prompt&#39;s icons (the same one you use for the hosts).</p>
+<h3 id="afterwards">Afterwards</h3>
+<pre><code>sudo archon update        # pull from GitHub, apply, tools, dotfiles, verify
+archon verify             # every check, with a fix for anything failing
+sudo archon tools sync    # upgrade the release-binary tools now</code></pre>
+<p>Ubuntu&#39;s own updates and the PPA tools (git, fish, gh) update daily while WSL runs; WSL stops when idle, so <code>sudo archon update</code> now and then picks up anything missed. Edit the dotfiles in <code>home/</code>, or the workstation&#39;s file in <code>fleets/&lt;fleet&gt;/hosts/</code>, then <code>sudo archon update</code>, as on a host.</p>
+<h3 id="troubleshooting">Troubleshooting</h3>
+<table><thead><tr><th>Symptom</th><th>Fix</th></tr></thead><tbody><tr><td><code>this is Ubuntu 24.04, the fleet is Ubuntu 26.04</code></td><td>install Ubuntu 26.04 LTS from the Microsoft Store (WSL keeps several side by side)</td></tr><tr><td><code>systemd is not running here</code></td><td>step 2</td></tr><tr><td><code>the checkout is /home/...; the archon command runs from /srv/archon</code></td><td>clone to <code>/srv/archon</code> (step 3)</td></tr><tr><td><code>sudo archon update</code> cannot pull</td><td><code>gh auth status</code>, then <code>gh auth setup-git</code></td></tr><tr><td>The prompt shows boxes instead of icons</td><td>set a Nerd Font in Windows Terminal (Settings, the Ubuntu profile, Appearance, Font face)</td></tr></tbody></table>
+<h3 id="the-prompt39s-font-and-vs-code">The prompt&#39;s font, and VS Code</h3>
+<p>The colorful prompt draws its icons with a Nerd Font. On WSL the font belongs to Windows: in PowerShell, <code>winget install JanDeDobbeleer.OhMyPosh</code>, then <code>oh-my-posh font install meslo</code>, then in Windows Terminal choose Settings, Ubuntu, Appearance, Font face: MesloLGM Nerd Font. On an Ubuntu desktop workstation, <code>oh-my-posh font install meslo</code> installs it for your account; choose it in your terminal&#39;s preferences. Without the font, use the plain prompt: <code>set -Ux ARCHON_PROMPT plain</code> (fish).</p>
+<p>VS Code is installed only on a workstation with a graphical desktop (<code>desktop: true</code> in its host model, set by <code>stolos workstation add</code>), from Microsoft&#39;s apt repository. On WSL, use VS Code on Windows with its WSL extension (<code>code .</code> here opens it); for servers, VS Code&#39;s Remote - SSH extension.</p>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/install/workstation-guide.ts">Source</a></p>
+</main>
+
+</body>
+</html>

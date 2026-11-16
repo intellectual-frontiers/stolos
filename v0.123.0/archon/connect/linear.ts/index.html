@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/connect/linear.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/connect/linear.ts</h1>
+<p>Spec 087: Linear, read-only: the workspace (whether sign-in goes through SAML), its people (active, admin, guest, last seen), and the last 90 days of issues: each one&#39;s identifier, type (change, incident, or other, from its labels and team), status, created and completed times, and the commits and pull requests attached to it (Linear&#39;s GitHub, GitLab, and Bitbucket integrations attach them). Evidence for change control (SCF CHG-03), least privilege (IAC-30), and MFA through the identity provider (IAC-37).</p>
+<p>Linear&#39;s API is GraphQL only, and GraphQL is sent by POST: the read-only guard lets POST reach the GraphQL endpoint alone, and this connector sends it queries only (a mutation is refused before it leaves). The key itself is made with Linear&#39;s Read permission only.</p>
+<h2>Exports</h2>
+<section class="symbol" id="LINEAR_GRAPHQL">
+<h3><span class="kind">const</span><a href="#LINEAR_GRAPHQL">LINEAR_GRAPHQL</a></h3>
+<pre><code class="language-ts">export const LINEAR_GRAPHQL</code></pre>
+<p>Linear&#39;s GraphQL endpoint.</p>
+
+</section>
+<section class="symbol" id="linearQuery">
+<h3><span class="kind">function</span><a href="#linearQuery">linearQuery</a></h3>
+<pre><code class="language-ts">export async function linearQuery&lt;T&gt;(
+  ctx: { http: http.Transport; headers: Record&lt;string, string&gt; },
+  query: string,
+  variables: Record&lt;string, unknown&gt; = {},
+): Promise&lt;T&gt;</code></pre>
+<p>One GraphQL query (never a mutation); a denial is AccessDenied.</p>
+
+</section>
+<section class="symbol" id="linear">
+<h3><span class="kind">const</span><a href="#linear">linear</a></h3>
+<pre><code class="language-ts">export const linear: Connector</code></pre>
+<p>Linear.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/connect/linear.ts">Source</a></p>
+</main>
+
+</body>
+</html>

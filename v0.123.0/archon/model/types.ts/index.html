@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/model/types.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/model/types.ts</h1>
+<p>The Archon model (spec 002): a fleet with one shared identity and one file per host. Capabilities contribute packages, files, units, and the rest to a host&#39;s plan. TypeScript types plus validate.ts are the whole validation story (Article 10); RDF is only an export.</p>
+<h2>Exports</h2>
+<section class="symbol" id="SpecId">
+<h3><span class="kind">type</span><a href="#SpecId">SpecId</a></h3>
+<pre><code class="language-ts">export type SpecId = `${number}-${string}`;</code></pre>
+<p>A spec&#39;s folder name, <code>NNN-short-name</code> (for example <code>&quot;051-machine-identity&quot;</code>): why something exists.</p>
+
+</section>
+<section class="symbol" id="McpTier">
+<h3><span class="kind">type</span><a href="#McpTier">McpTier</a></h3>
+<pre><code class="language-ts">export type McpTier = &quot;read&quot; | &quot;repo&quot; | &quot;mutate&quot;;</code></pre>
+<p>Tiers an agent may be given over MCP (spec 030); never destructive.</p>
+
+</section>
+<section class="symbol" id="PersonaId">
+<h3><span class="kind">type</span><a href="#PersonaId">PersonaId</a></h3>
+<pre><code class="language-ts">export type PersonaId = &quot;standard&quot; | &quot;developer&quot; | &quot;operator&quot;;</code></pre>
+<p>What a person does on a host (spec 012): &quot;standard&quot; (uses it), &quot;developer&quot; (builds on it), &quot;operator&quot; (runs it). A user&#39;s personas decide their groups and tools.</p>
+
+</section>
+<section class="symbol" id="Persona">
+<h3><span class="kind">interface</span><a href="#Persona">Persona</a></h3>
+<pre><code class="language-ts">export interface Persona {
+  /** Its id. */
+  id: PersonaId;
+  /** Its name, for people. */
+  label: string;
+  /** What it means, in one sentence. */
+  definition: string;
+  /** Personas it includes (an operator is also a developer). */
+  implies: PersonaId[];
+  /** Linux groups it adds. */
+  groups: string[];
+  /** What it turns on. */
+  features: {
+    /** fish as the login shell. */
+    fish: boolean;
+    /** tmux, configured. */
+    tmux: boolean;
+    /** The developer tools. */
+    devTools: boolean;
+  };
+}</code></pre>
+<p>A persona&#39;s definition: what it means and what it brings (spec 012).</p>
+
+</section>
+<section class="symbol" id="GitHubIdentity">
+<h3><span class="kind">interface</span><a href="#GitHubIdentity">GitHubIdentity</a></h3>
+<pre><code class="language-ts">export interface GitHubIdentity {
+  /** The GitHub login. */
+  login: string;
+  /** GitHub's numeric account id (it never changes, unlike the login). */
+  id: number;
+  /** Profile name, or the login when the profile has none. */
+  name: string;
+  /** GitHub's anonymized commit address: `&lt;id&gt;+&lt;login&gt;@users.noreply.github.com`. */
+  email: string;
+  /** Public SSH keys from `https://github.com/&lt;login&gt;.keys`. */
+  sshKeys: string[];
+}</code></pre>
+<p>A GitHub account as <code>gh</code> reports it (spec 003). Public data only.</p>
+
+</section>
+<section class="symbol" id="UserDef">
+<h3><span class="kind">interface</span><a href="#UserDef">UserDef</a></h3>
+<pre><code class="language-ts">export interface UserDef {
+  /** The Unix account name. */
+  name: string;
+  /** A fixed UID, the same on every host (default: assigned by Ubuntu). */
+  uid?: number;
+  /** The person's name (GECOS). */
+  fullName: string;
+  /** Their address, for git and notifications. */
+  email?: string;
+  /** What they do here: their groups and tools follow. */
+  personas: PersonaId[];
+  /** In the sudo group. */
+  admin: boolean;
+  /** The public SSH keys that may log in as them. */
+  sshKeys: string[];
+  /** The spec that brought them. */
+  spec: SpecId;
+}</code></pre>
+<p>A person&#39;s account on a host (spec 012): the fleet admin, or one of a host&#39;s extra users.</p>
+
+</section>
+<section class="symbol" id="SignerDef">
+<h3><span class="kind">interface</span><a href="#SignerDef">SignerDef</a></h3>
+<pre><code class="language-ts">export interface SignerDef {
+  /** A short name, the principal in allowed_signers (&quot;alice-daily&quot;). */
+  name: string;
+  /** daily: approves changes; recovery: kept offline, replaces a lost or stolen daily key. */
+  role: &quot;daily&quot; | &quot;recovery&quot;;
+  /** The public key: &quot;ssh-ed25519 AAAA...&quot; (or sk-ssh-ed25519@openssh.com). */
+  key: string;
+  /** When it was added (ISO date). */
+  added: string;
+}</code></pre>
+<p>Who may approve changes to a fleet (spec 047, Article 9): a host applies only a tip of main signed by one of these keys. Kept in fleets/&lt;id&gt;/signers.ts, written by <code>stolos signers</code>.</p>
+
+</section>
+<section class="symbol" id="ProvidersDef">
+<h3><span class="kind">interface</span><a href="#ProvidersDef">ProvidersDef</a></h3>
+<pre><code class="language-ts">export interface ProvidersDef {
+  /** DNS: each server's records and the ACME DNS challenge (spec 032). */
+  dns: &quot;cloudflare&quot;;
+  /** Outbound mail: the SMTP relay (Cloudflare Email Service, spec 027). */
+  mail: &quot;cloudflare&quot;;
+  /**
+   * Certificates (spec 032). &quot;letsencrypt-staging&quot; gives untrusted certificates
+   * with generous rate limits: for synthetic and test fleets.
+   */
+  acme: &quot;letsencrypt&quot; | &quot;letsencrypt-staging&quot;;
+}</code></pre>
+<p>The fleet&#39;s outside providers (spec 046), each a closed set the engine implements. Defaults: Cloudflare for DNS and mail, Let&#39;s Encrypt for ACME.</p>
+
+</section>
+<section class="symbol" id="FleetDef">
+<h3><span class="kind">interface</span><a href="#FleetDef">FleetDef</a></h3>
+<pre><code class="language-ts">export interface FleetDef {
+  /** The fleet's id: its folder, fleets/&lt;id&gt;/, and a DNS label (lowercase, digits, hyphens). */
+  id: string;
+  /** Its name, for people. */
+  title: string;
+  /** The GitHub repository hosts converge to; `branch` defaults to main (tests use their own). */
+  repository: { slug: string; url: string; branch?: string };
+  /** The Ubuntu release every host runs (point: a point release's image, when pinned). */
+  ubuntu: { release: &quot;26.04&quot;; codename: &quot;resolute&quot;; point?: string };
+  /** An IANA time zone, for example &quot;America/New_York&quot;. */
+  timezone: string;
+  /** For example &quot;en_US.UTF-8&quot;. */
+  locale: string;
+  /** The console's keyboard layout, for example &quot;us&quot;. */
+  keyboard: string;
+  /** DNS, mail, and ACME providers (spec 046); see ProvidersDef for the defaults. */
+  providers?: Partial&lt;ProvidersDef&gt;;
+  /** Who may approve changes (spec 047): loaded from fleets/&lt;id&gt;/signers.ts. */
+  signers?: SignerDef[];
+  /** The fleet's admin: one person, one account on every host (spec 003). */
+  admin: { user: string; uid: number; github: GitHubIdentity };
+  /**
+   * The agent layer (spec 030, Article 17): workstations reach each server as
+   * ops over SSH, forced to `archon mcp --max-tier &lt;maxTier&gt;`. Default: tier
+   * mutate, the admin's GitHub SSH keys. The destructive tier is never served.
+   */
+  mcp?: { maxTier?: McpTier; keys?: string[] };
+  /**
+   * SSH (spec 007): networks (CIDR) from which passwords are accepted as well as
+   * keys. Default: the private ranges (your LAN and VLANs). [] means keys only.
+   */
+  ssh?: { passwordFrom?: string[] };
+  /**
+   * The estate graph (spec 090). `personSources`: the connectors that may
+   * create people, in order; the first one connected is the source of truth
+   * and the others only link to its people. Default: bamboohr, rippling,
+   * gusto, deel, justworks, okta, jumpcloud, microsoft, google (HR systems,
+   * then identity providers).
+   *
+   * `exports` (spec 092): export jobs, each for some of the estate's tenants,
+   * delivered to the fleet's OpenTelemetry collector, else to a file on this
+   * PC, and emailed (send-only, S/MIME) to its own recipients, on its own
+   * schedule. See ExportJobDef.
+   */
+  estate?: { personSources?: string[]; exports?: ExportJobDef[] };
+  /**
+   * Compliance (spec 073). `cadence`: how often each source of evidence is
+   * observed and how late it may be before it is stale (a failing check,
+   * SCF MON-02). Default: managed servers every 15 minutes, everything else
+   * daily, each stale after twice its cadence, never more than 7 days.
+   *
+   * `gate` (spec 074): whether a change that weakens a control may be
+   * committed (`stolos apply`) or merged (the pull request's check):
+   * `{ block: &quot;weakens&quot; }` refuses one unless `allow` names it, an accepted
+   * risk (`impact/&lt;key&gt;` in controls/accepted.ts) covers it, or a commit
+   * signed by a fleet signer approves it (`Compliance-Approved: &lt;key&gt;`).
+   * Default: never block, only show.
+   */
+  compliance?: { cadence?: CadenceOverrides; gate?: ComplianceGate };
+  /** Local observability limits for every host and workstation (spec 021). */
+  observability?: Partial&lt;ObservabilityDef&gt;;
+  /**
+   * Outbound mail (spec 027) and notifications (spec 025). Every server relays
+   * its mail (Postfix) through Cloudflare Email Service, from
+   * &lt;user&gt;+&lt;host&gt;.&lt;tag&gt;@&lt;domain&gt; (only &lt;domain&gt; onboarded for Email Sending in Cloudflare); mail
+   * for local accounts (root, ops) and archon's own messages go to `to`.
+   * Without it, no mail leaves and archon notify is not configured.
+   */
+  mail?: {
+    /** The shared mailbox. */
+    to: string;
+    /** The sending domain, onboarded for Email Sending in Cloudflare. */
+    domain: string;
+    /**
+     * The fleet's tag after the host in each sender's subaddress (RFC 5233):
+     * &quot;lab&quot; gives root+alpha.lab@example.net. Default: none
+     * (root+alpha@example.net).
+     */
+  // ...
+}</code></pre>
+<p>The fleet: one identity shared by every host (spec 003), in <code>fleets/&lt;id&gt;/fleet.ts</code> of a fleet repository. <code>stolos fleet init &lt;id&gt;</code> writes the first one from your GitHub account; edit it freely after, then <code>stolos build</code>.</p>
+<pre class="mermaid">classDiagram
+  FleetDef &quot;1&quot; --&gt; &quot;*&quot; HostDef : fleets/id/hosts/
+  FleetDef --&gt; ProvidersDef : providers
+  FleetDef --&gt; SignerDef : signers.ts
+  HostDef --&gt; HostRegistration : registration.ts
+  HostDef --&gt; HostDecisions : decisions.ts
+  HostDef --&gt; Capability : capabilities</pre>
+<h4>Example</h4>
+<pre><code class="language-ts">import type { FleetDef } from &quot;@intellectual-frontiers/stolos/archon/model/types&quot;;
+
+export const fleet: FleetDef = {
+  id: &quot;lab&quot;,
+  title: &quot;Example lab fleet&quot;,
+  repository: { slug: &quot;example/fleet&quot;, url: &quot;https://github.com/example/fleet&quot; },
+  ubuntu: { release: &quot;26.04&quot;, codename: &quot;resolute&quot; },
+  timezone: &quot;America/New_York&quot;,
+  locale: &quot;en_US.UTF-8&quot;,
+  keyboard: &quot;us&quot;,
+  providers: { dns: &quot;cloudflare&quot;, mail: &quot;cloudflare&quot;, acme: &quot;letsencrypt&quot; },
+  mail: { to: &quot;fleet@example.net&quot;, domain: &quot;example.net&quot;, tag: &quot;lab&quot; },
+  web: { domain: &quot;lab.example.net&quot; },
+  admin: {
+    user: &quot;alice&quot;,
+    uid: 1000,
+    github: {
+      login: &quot;alice&quot;,
+      id: 1000001,
+      name: &quot;Alice Example&quot;,
+      email: &quot;1000001+alice@users.noreply.github.com&quot;,
+      sshKeys: [&quot;ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGV4YW1wbGUtbGFiLWtleS1ub3QtYS1yZWFsLWtleS0wMQ&quot;],
+    },
+  },
+};</code></pre>
+</section>
+<section class="symbol" id="ExportKind">
+<h3><span class="kind">type</span><a href="#ExportKind">ExportKind</a></h3>
+<pre><code class="language-ts">export type ExportKind = &quot;oscal&quot; | &quot;ocsf&quot; | &quot;otlp&quot; | &quot;cyclonedx&quot; | &quot;in-toto&quot;;</code></pre>
+<p>The kinds of export document (spec 092).</p>
+
+</section>
+<section class="symbol" id="ExportJobDef">
+<h3><span class="kind">interface</span><a href="#ExportJobDef">ExportJobDef</a></h3>
+<pre><code class="language-ts">export interface ExportJobDef {
+  /** Its id, a DNS label: names the scheduled job and its folder (`stolos export run &lt;id&gt;`). */
+  id: string;
+  /** What it is for, in one line. */
+  title?: string;
+  /** The documents to export. */
+  kinds: ExportKind[];
+  /**
+   * The tenants it covers, by uid (`&lt;connector&gt;:&lt;account&gt;`, as in the estate
+   * graph: `fleet:&lt;fleet&gt;`, `aws:123456789012`); a trailing `*` matches a
+   * prefix (`aws:*`). Default: every tenant.
+   */
+  tenants?: string[];
+  /** Send to the fleet's OpenTelemetry collector when one is configured (default true). */
+  otlp?: boolean;
+  /** Also email the files (send-only, each copy encrypted to its recipient). */
+  email?: ExportEmailDef;
+  /** When it runs by itself (`stolos export schedule &lt;id&gt;` creates the OS's own job). */
+  schedule?: ExportScheduleDef;
+}</code></pre>
+<p>One export job (spec 092): which documents, for which tenants, to whom, and when. Delivery: to the fleet&#39;s OpenTelemetry collector (OTLP/HTTP, <code>telemetry.collector</code>) when one is configured, otherwise to a file in this PC&#39;s state directory; with <code>email</code>, the files are also mailed, encrypted to each recipient&#39;s certificate. Nothing secret is in a job: the sending credential stays in this PC&#39;s secrets folder.</p>
+<h4>Example</h4>
+<pre><code class="language-ts">import type { ExportJobDef } from &quot;@intellectual-frontiers/stolos/archon/model/types&quot;;
+
+export const exports: ExportJobDef[] = [
+  {
+    id: &quot;auditor&quot;,
+    kinds: [&quot;oscal&quot;],
+    tenants: [&quot;fleet:lab&quot;],
+    email: {
+      to: [{ address: &quot;auditor@example.com&quot;, certificate: &quot;certs/auditor.pem&quot; }],
+    },
+    schedule: { every: &quot;monthly&quot;, at: &quot;06:10&quot;, dayOfMonth: 1 },
+  },
+  { id: &quot;aws-inventory&quot;, kinds: [&quot;cyclonedx&quot;], tenants: [&quot;aws:*&quot;], schedule: { every: &quot;daily&quot; } },
+];</code></pre>
+</section>
+<section class="symbol" id="ExportEmailDef">
+<h3><span class="kind">interface</span><a href="#ExportEmailDef">ExportEmailDef</a></h3>
+<pre><code class="language-ts">export interface ExportEmailDef {
+  /** The recipients; each gets their own copy, encrypted to their certificate only. */
+  to: ExportRecipientDef[];
+  /**
+   * The sender: a whole address, or a local part on `fleet.mail.domain`.
+   * Default: `exports+&lt;pc&gt;.&lt;tag&gt;@&lt;fleet.mail.domain&gt;`.
+   */
+  from?: string;
+  /** host:port of the SMTP relay (default `fleet.mail.relay`, else Cloudflare's, port 465). */
+  relay?: string;
+  /**
+   * A separate send-only credential on this PC, by name (`stolos export
+   * credential &lt;name&gt;`), for a tenant that sends through its own account.
+   * Default: the fleet's (`stolos boot mail-setup`).
+   */
+  credential?: string;
+  /** The subject (it is not encrypted, so keep it plain). Default: &quot;[Stolos] &lt;fleet&gt; export &lt;id&gt;&quot;. */
+  subject?: string;
+}</code></pre>
+<p>Where a job&#39;s files are emailed, and how they are sent (spec 092).</p>
+
+</section>
+<section class="symbol" id="ExportRecipientDef">
+<h3><span class="kind">interface</span><a href="#ExportRecipientDef">ExportRecipientDef</a></h3>
+<pre><code class="language-ts">export interface ExportRecipientDef {
+  /** Their email address. */
+  address: string;
+  /**
+   * Their S/MIME certificate (X.509, RSA, PEM): a path relative to the fleet's
+   * folder (`fleets/&lt;id&gt;/certs/auditor.pem`), or the PEM text itself. It is
+   * public; the private key never leaves the recipient.
+   */
+  certificate: string;
+}</code></pre>
+<p>One recipient of emailed exports and their public certificate (spec 092).</p>
+
+</section>
+<section class="symbol" id="ExportScheduleDef">
+<h3><span class="kind">interface</span><a href="#ExportScheduleDef">ExportScheduleDef</a></h3>
+<pre><code class="language-ts">export interface ExportScheduleDef {
+  /** How often. */
+  every: &quot;hourly&quot; | &quot;daily&quot; | &quot;weekly&quot; | &quot;monthly&quot;;
+  /** HH:MM, 24-hour, local time (hourly uses only the minute). Default &quot;02:17&quot;. */
+  at?: string;
+  /** For weekly: the day (default &quot;mon&quot;). */
+  weekday?: &quot;mon&quot; | &quot;tue&quot; | &quot;wed&quot; | &quot;thu&quot; | &quot;fri&quot; | &quot;sat&quot; | &quot;sun&quot;;
+  /** For monthly: the day of the month, 1 to 28 (default 1). */
+  dayOfMonth?: number;
+}</code></pre>
+<p>When an export job runs (spec 092), in the PC&#39;s local time.</p>
+
+</section>
+<section class="symbol" id="ServiceDef">
+<h3><span class="kind">interface</span><a href="#ServiceDef">ServiceDef</a></h3>
+<pre><code class="language-ts">export interface ServiceDef {
+  /** s-&lt;app&gt;: lowercase letters, digits, and dashes. */
+  name: string;
+  /** Fixed, so the account is the same on every server: 800 to 899. */
+  uid: number;
+  /** Its purpose, in one line. */
+  description: string;
+}</code></pre>
+<p>An app&#39;s own Linux account (spec 039).</p>
+
+</section>
+<section class="symbol" id="WebFleetDef">
+<h3><span class="kind">interface</span><a href="#WebFleetDef">WebFleetDef</a></h3>
+<pre><code class="language-ts">export interface WebFleetDef {
+  /** The DNS zone suffix servers live under, for example &quot;lab.example.net&quot;. */
+  domain: string;
+  /** The Cloudflare zone that holds it (default: the last two labels, &quot;example.net&quot;). */
+  zone?: string;
+  /** Let's Encrypt account address (default: fleet.mail.to). */
+  acmeEmail?: string;
+}</code></pre>
+<p>HTTPS for every server (spec 032): names under one domain, certificates from Let&#39;s Encrypt.</p>
+
+</section>
+<section class="symbol" id="WebRoute">
+<h3><span class="kind">interface</span><a href="#WebRoute">WebRoute</a></h3>
+<pre><code class="language-ts">export interface WebRoute {
+  /** A DNS label: the app's subdomain. */
+  name: string;
+  /** The backend's port. */
+  port: number;
+  /** The backend's address (default 127.0.0.1). */
+  address?: string;
+  /** The backend speaks HTTPS (certificate not checked; loopback or guests only). */
+  https?: boolean;
+  /** What it is, in one line (shown on the server's welcome page). */
+  description?: string;
+  /** The spec that publishes it. */
+  spec: SpecId;
+}</code></pre>
+<p>A service published through the server&#39;s proxy (spec 032) as &lt;name&gt;.&lt;host&gt;.&lt;domain&gt; (who reaches it is the router&#39;s decision).</p>
+
+</section>
+<section class="symbol" id="DiskDef">
+<h3><span class="kind">interface</span><a href="#DiskDef">DiskDef</a></h3>
+<pre><code class="language-ts">export interface DiskDef {
+  /** Device path, or &quot;largest&quot; for the largest disk. */
+  match: &quot;largest&quot; | `/dev/${string}`;
+  /** Ubuntu's guided layouts; lvm is Ubuntu's default. */
+  layout: &quot;lvm&quot; | &quot;direct&quot;;
+}</code></pre>
+<p>Disk layout handed to Ubuntu&#39;s installer (spec 004): Ubuntu&#39;s own guided layouts.</p>
+
+</section>
+<section class="symbol" id="BackupDef">
+<h3><span class="kind">interface</span><a href="#BackupDef">BackupDef</a></h3>
+<pre><code class="language-ts">export interface BackupDef {
+  /** Directory the archives go to (default /var/backups/archon, Ubuntu's backup location). */
+  target: string;
+  /** Directories to archive. */
+  paths: string[];
+  /** How many archives to keep (the oldest go first). */
+  keep: number;
+  /** When to run (systemd OnCalendar syntax, for example &quot;daily&quot;). */
+  onCalendar: string;
+}</code></pre>
+<p>Backups (spec 016, Article 14): what to archive, where, and how many to keep.</p>
+
+</section>
+<section class="symbol" id="ObservabilityDef">
+<h3><span class="kind">interface</span><a href="#ObservabilityDef">ObservabilityDef</a></h3>
+<pre><code class="language-ts">export interface ObservabilityDef {
+  /** PCP metric archives: kept up to this many days... */
+  metricsDays: number;
+  /** ...and pruned, oldest first, beyond this size (for example &quot;2G&quot;). */
+  metricsMaxSize: string;
+  /** journald: kept up to this long (journald syntax, for example &quot;3month&quot;)... */
+  logsRetention: string;
+  /** ...in at most this much space (journald also keeps 15% of the disk free). */
+  logsMaxSize: string;
+  /** Archon's own traces, metrics, and logs (OTLP files): kept up to this many days, 64 MB at most. */
+  tracesDays: number;
+  /** Below this much free disk (percent), metric archives are pruned regardless of age. */
+  minFreePercent: number;
+}</code></pre>
+<p>Local observability (spec 021). Every store is ephemeral: each has an age and a size limit, and gives way first when the disk runs low. The limits are upper bounds, not promises.</p>
+
+</section>
+<section class="symbol" id="GuestDef">
+<h3><span class="kind">interface</span><a href="#GuestDef">GuestDef</a></h3>
+<pre><code class="language-ts">export interface GuestDef {
+  /** The guest's name (an LXD instance name). */
+  name: string;
+  /** A system container, or a virtual machine. */
+  kind: &quot;container&quot; | &quot;vm&quot;;
+  /** LXD image, for example &quot;ubuntu:26.04&quot;. */
+  image: string;
+  /** CPU cores (default: LXD's). */
+  cpus?: number;
+  /** For example &quot;4GiB&quot;. */
+  memory?: string;
+  /**
+   * Required (Article 23, spec 044): &quot;durable&quot; when the guest can hold data
+   * that exists nowhere else (backed up with `lxc export` and guarded), or
+   * &quot;ephemeral&quot; when losing it is harmless. There is no default.
+   */
+  data: DataClass;
+  /** Publish the guest's web port as &lt;guest&gt;.&lt;host&gt;.&lt;domain&gt; (spec 032). */
+  web?: { port: number; https?: boolean };
+}</code></pre>
+<p>An LXD instance on a host (spec 017).</p>
+
+</section>
+<section class="symbol" id="HostDef">
+<h3><span class="kind">interface</span><a href="#HostDef">HostDef</a></h3>
+<pre><code class="language-ts">export interface HostDef {
+  /** Its name: a DNS label, unique in the fleet. */
+  name: string;
+  /**
+   * &quot;server&quot; (default): an Ubuntu Server host Archon installs and converges.
+   * &quot;workstation&quot; (spec 020): Ubuntu on WSL (or a desktop) where Archon applies
+   * only the user-level parts: tools, dotfiles, the archon command.
+   */
+  kind?: &quot;server&quot; | &quot;workstation&quot;;
+  /** Workstations: the existing account Archon sets up (default: the fleet admin's name). */
+  user?: string;
+  /**
+   * Workstations (spec 036): a graphical desktop, not WSL or a headless machine.
+   * VS Code is installed only here; set by `stolos workstation add`.
+   */
+  desktop?: boolean;
+  /**
+   * Optional, and no longer written by archon: the NIC the host network-boots
+   * from (lowercase, colon-separated). Since spec 051 the MAC lives in
+   * registration.ts, given with --mac-address or reported by the machine; a
+   * mac here is still read. Without either, the host is recognized by a
+   * claim or its own Boot URI (/boot/&lt;name&gt;/bootx64.efi).
+   */
+  mac?: string;
+  /** The CPU architecture (amd64 only, for now). */
+  arch: &quot;amd64&quot;;
+  /** Servers: the install disk (default: Ubuntu's LVM layout on the largest disk). */
+  disk?: DiskDef;
+  /** Extra accounts beyond the fleet admin and ops. */
+  users?: UserDef[];
+  /** What it gets: `foundation()` for a server, `workstation()` for a workstation, plus any more. */
+  capabilities: Capability[];
+  /** LXD containers and VMs (spec 017). */
+  guests?: GuestDef[];
+  /** Overrides of the default backup policy (spec 016). */
+  backup?: Partial&lt;BackupDef&gt;;
+  /** Overrides of the fleet's local observability limits (spec 021). */
+  observability?: Partial&lt;ObservabilityDef&gt;;
+  /** The site network it lives on (spec 028), by name: &quot;Servers&quot;. Its IPv6 follows that network. */
+  network?: string;
+  /** Per-host override of the network's IPv6 (spec 009). */
+  ipv6?: boolean;
+  /** Its fixed address (a UniFi Fixed IP), inside its network (spec 028). */
+  ip?: string;
+  /** Its unicast DNS name, a UniFi Local DNS record (Article 20): &quot;alpha.localdomain&quot;. */
+  dnsName?: string;
+  /** The switch port it is cabled to: &quot;flex-2.5g/3&quot;. */
+  switchPort?: string;
+  /** Services this server publishes through its proxy (spec 032). */
+  web?: { routes?: Array&lt;Omit&lt;WebRoute, &quot;spec&quot;&gt;&gt; };
+  /** Out-of-band management (Intel AMT): its address and notes, for the person at the console. */
+  outOfBand?: { amt?: { address?: string; notes?: string } };
+  /** PostgreSQL instances this server keeps (spec 038). */
+  pg?: { instances?: PgInstanceDef[] };
+  /**
+   * What operators recorded on this host (the host's own archon.sql (opt-in pg), spec 038):
+   * the clusters Archon created and which are published. Read by loadHosts;
+   * never written in a host file.
+   */
+  pgState?: PgState;
+  /**
+   * Opt-in services and containers an operator turned on or off (spec 040):
+   * this machine's archon.sql&lt;name&gt;.json {enabled, by, at}. Read by loadHosts; never
+   * written in a host file. Absent means off.
+   */
+  optIn?: Record&lt;string, OptInRecord&gt;;
+  /** The spec that brought it (for a host, usually &quot;004-install&quot;). */
+  spec: SpecId;
+  /** Who it is, from fleets/&lt;id&gt;/hosts/&lt;host&gt;/registration.ts (spec 047): read by loadHosts. */
+  registration?: HostRegistration;
+}</code></pre>
+<p>A host: one machine of the fleet, in <code>fleets/&lt;id&gt;/hosts/&lt;name&gt;/host.ts</code>. <code>stolos host add &lt;name&gt; --claim</code> (or <code>--mac-address</code>) writes a server&#39;s; <code>stolos workstation add</code> a workstation&#39;s. What it gets comes from its capabilities; what it is (its MAC, its SSH host keys) is in its registration.ts, from the machine itself (spec 051).</p>
+<h4>Example</h4>
+<pre><code class="language-ts">import type { HostDef } from &quot;@intellectual-frontiers/stolos/archon/model/types&quot;;
+import { foundation } from &quot;@intellectual-frontiers/stolos/archon/capabilities/mod&quot;;
+
+export const host: HostDef = {
+  name: &quot;alpha&quot;,
+  arch: &quot;amd64&quot;,
+  disk: { match: &quot;largest&quot;, layout: &quot;lvm&quot; },
+  capabilities: foundation(),
+  spec: &quot;004-install&quot;,
+};</code></pre>
+</section>
+<section class="symbol" id="PgDatabaseDef">
+<h3><span class="kind">interface</span><a href="#PgDatabaseDef">PgDatabaseDef</a></h3>
+<pre><code class="language-ts">export interface PgDatabaseDef {
+  /** The database's name. */
+  name: string;
+  /** Owns the database and its public schema (creates tables). */
+  owner: string;
+  /** Read and write every table (not create). */
+  write?: string[];
+  /** Read every table. */
+  read?: string[];
+  /** Extensions Archon creates (as the superuser, for untrusted ones). */
+  extensions?: string[];
+}</code></pre>
+<p>A database in an instance and who may use it (spec 039). Every name is a Linux account (a person in the model, or a service account s-&lt;app&gt;) or</p>
+
+</section>
+<section class="symbol" id="PgInstanceDef">
+<h3><span class="kind">interface</span><a href="#PgInstanceDef">PgInstanceDef</a></h3>
+<pre><code class="language-ts">export interface PgInstanceDef {
+  /** The instance's name (a Debian cluster name): &quot;prime&quot; is the default one. */
+  name: string;
+  /** Major version (default 18, Ubuntu's). */
+  version?: number;
+  /** Fixed port (default: the first free from 5432, then kept). */
+  port?: number;
+  /** Shown in the psql prompt: production, staging, development... (default production). */
+  environment?: string;
+  /** psql turns AUTOCOMMIT off and warns in red (default true for production). */
+  protected?: boolean;
+  /** The databases in it, and who may use each. */
+  databases?: PgDatabaseDef[];
+}</code></pre>
+<p>A named PostgreSQL instance: one Debian cluster, &lt;version&gt;/&lt;name&gt; (spec 038).</p>
+
+</section>
+<section class="symbol" id="PgRecord">
+<h3><span class="kind">interface</span><a href="#PgRecord">PgRecord</a></h3>
+<pre><code class="language-ts">export interface PgRecord {
+  /** Its major version. */
+  version: number;
+  /** The port it listens on. */
+  port: number;
+  /** ISO time and who: Archon owns only clusters it created (FR-003). */
+  created: string;
+  /** Who created it. */
+  by: string;
+  /** Shown in the psql prompt. */
+  environment?: string;
+  /** psql turns AUTOCOMMIT off and warns in red. */
+  protected?: boolean;
+  /**
+   * Published: reachable on the server's address over TLS (scram-sha-256). From
+   * anywhere the router lets through (the machine restricts no network).
+   */
+  published?: { at: string; by: string };
+  /** Older clusters kept, stopped, after an upgrade (removed with archon pg remove --version). */
+  retired?: number[];
+}</code></pre>
+<p>One instance as recorded on the host (the host&#39;s own archon.sql (opt-in pg)).</p>
+
+</section>
+<section class="symbol" id="DataClass">
+<h3><span class="kind">type</span><a href="#DataClass">DataClass</a></h3>
+<pre><code class="language-ts">export type DataClass = &quot;durable&quot; | &quot;ephemeral&quot;;</code></pre>
+<p>Article 23 (spec 044): data that can come from end users is either durable (it exists nowhere else) or ephemeral (losing it is harmless).</p>
+
+</section>
+<section class="symbol" id="OptInRecord">
+<h3><span class="kind">interface</span><a href="#OptInRecord">OptInRecord</a></h3>
+<pre><code class="language-ts">export interface OptInRecord {
+  /** On or off. */
+  enabled: boolean;
+  /** Who decided (a Unix account). */
+  by: string;
+  /** When (ISO time). */
+  at: string;
+  /** For an opt-in that holds end users' data: the operator's choice (spec 044). */
+  data?: DataClass;
+}</code></pre>
+<p>An operator&#39;s decision about an opt-in service or container (spec 040).</p>
+
+</section>
+<section class="symbol" id="HostRegistration">
+<h3><span class="kind">interface</span><a href="#HostRegistration">HostRegistration</a></h3>
+<pre><code class="language-ts">export interface HostRegistration {
+  /** &quot;ssh-ed25519 AAAA...&quot;, &quot;ecdsa-sha2-nistp256 AAAA...&quot;, &quot;ssh-rsa AAAA...&quot; (no comments). */
+  sshHostKeys: string[];
+  /** The network card it is recognized by when it network-boots (spec 051). */
+  mac?: string;
+  /**
+   * Where that MAC came from (spec 051): &quot;operator&quot;, given with
+   * --mac-address; &quot;installed&quot;, reported by the machine itself when it
+   * installed (or was bootstrapped). Only a machine that installed as this
+   * host is reinstalled without the blank-disk guard.
+   */
+  macSource?: &quot;operator&quot; | &quot;installed&quot;;
+  /** SHA256:... of its deploy key, when it has one. */
+  deployKey?: string;
+  /** When it was registered (ISO date). */
+  added: string;
+}</code></pre>
+<p>Who a host is, in Git (spec 047): fleets/&lt;id&gt;/hosts/&lt;host&gt;/registration.ts, written by <code>stolos host add</code>. Public facts only: its SSH host public keys (operators&#39; known_hosts is generated from them), its network card, and the fingerprint of its read-only deploy key.</p>
+
+</section>
+<section class="symbol" id="HostDecisions">
+<h3><span class="kind">interface</span><a href="#HostDecisions">HostDecisions</a></h3>
+<pre><code class="language-ts">export interface HostDecisions {
+  /** What operators decided in Git (decisions.ts): opt-in name to its record. */
+  optIns?: Record&lt;string, OptInRecord&gt;;
+}</code></pre>
+<p>What operators decided for a host, in Git (spec 047): fleets/&lt;id&gt;/hosts/&lt;host&gt;/decisions.ts, written by <code>stolos decide</code>. A decision here wins over the host&#39;s own record.</p>
+
+</section>
+<section class="symbol" id="PgState">
+<h3><span class="kind">interface</span><a href="#PgState">PgState</a></h3>
+<pre><code class="language-ts">export interface PgState extends Partial&lt;OptInRecord&gt; {
+  /** Each instance Archon created, by name. */
+  instances: Record&lt;string, PgRecord&gt;;
+}</code></pre>
+<p>the host&#39;s own archon.sql (opt-in pg): the opt-in switch (spec 040) and the instances Archon made.</p>
+
+</section>
+<section class="symbol" id="Action">
+<h3><span class="kind">type</span><a href="#Action">Action</a></h3>
+<pre><code class="language-ts">export type Action =
+  | { kind: &quot;daemon-reload&quot; }</code></pre>
+<p>What to do when a file changed: reload systemd, restart or reload a unit, or run a command.</p>
+
+</section>
+<section class="symbol" id="FileDef">
+<h3><span class="kind">interface</span><a href="#FileDef">FileDef</a></h3>
+<pre><code class="language-ts">export interface FileDef {
+  /** Its absolute path on the host. */
+  path: string;
+  /** Its content (absent for a symlink). */
+  content?: string;
+  /** Make it a symlink to this target instead. */
+  symlink?: string;
+  /** Its mode, for example &quot;0644&quot;. */
+  mode: string;
+  /** Its owner (a Unix account). */
+  owner: string;
+  /** Its group (default: the owner's). */
+  group?: string;
+  /** The spec that writes it. */
+  spec: SpecId;
+  /** A command that checks the new content before it is put in place (the file's path appended). */
+  validate?: string[];
+  /** A command that checks it after it is in place (rolled back when it fails). */
+  postValidate?: string[];
+  /** What to do when it changed: reload, restart, run. */
+  onChange?: Action[];
+}</code></pre>
+<p>A file Archon keeps on a host: its content, owner, and mode, checked before and after it is put in place.</p>
+
+</section>
+<section class="symbol" id="UnitDef">
+<h3><span class="kind">interface</span><a href="#UnitDef">UnitDef</a></h3>
+<pre><code class="language-ts">export interface UnitDef {
+  /** The systemd unit's name, for example &quot;archon-web.service&quot;. */
+  unitName: string;
+  /** Archon writes the unit file (true) or only enables, starts, or masks Ubuntu's own (false). */
+  managed: boolean;
+  /** The unit file's content, when Archon writes it. */
+  content?: string;
+  /** masked: stopped and masked, the package kept (spec 001: avahi-daemon). */
+  state: &quot;enabled&quot; | &quot;disabled&quot; | &quot;masked&quot; | &quot;ignore&quot;;
+  /**
+   * An operator's switch (spec 037): the name of a record in
+   * this machine's archon.sql&lt;switch&gt;.json. When it says {&quot;enabled&quot;: true} the unit is
+   * enabled and started; otherwise `state` applies (masked, for SMB).
+   */
+  switch?: string;
+  /**
+   * Made by a systemd generator (a Podman Quadlet container, spec 040): it
+   * cannot be enabled; its [Install] section starts it at boot unless masked.
+   * Turning it on is unmask and start.
+   */
+  generated?: boolean;
+  /** Start it now, not only at the next boot. */
+  start?: boolean;
+  /** The command that checks it (exit 0: fine). */
+  verify: string;
+  /** The spec that brings it. */
+  spec: SpecId;
+  /** For a timer: when it fires (systemd OnCalendar syntax). */
+  onCalendar?: string;
+}</code></pre>
+<p>A systemd unit Archon manages: its file (when Archon writes it), and whether it is enabled, started, or masked.</p>
+
+</section>
+<section class="symbol" id="PackageDef">
+<h3><span class="kind">interface</span><a href="#PackageDef">PackageDef</a></h3>
+<pre><code class="language-ts">export interface PackageDef {
+  /** The package's name. */
+  name: string;
+  /** apt (default) or snap: both are native on Ubuntu (Article 2). */
+  source?: &quot;apt&quot; | &quot;snap&quot;;
+  /**
+   * The upstream maintainers' Launchpad PPA (&quot;owner/name&quot;) that carries newer
+   * builds (Article 5). Added with add-apt-repository, kept current by
+   * unattended-upgrades; without builds for this release, Ubuntu's package stays.
+   */
+  ppa?: string;
+  /** A vendor's own apt repository (AptRepoDef.id) that carries this package. */
+  repo?: string;
+  /**
+   * Answers to the package's own install questions, as debconf-set-selections
+   * lines (&quot;postfix postfix/main_mailer_type select No configuration&quot;), set
+   * before it is installed: Ubuntu's way to install a package unattended.
+   */
+  debconf?: string[];
+  /** The spec that installs it. */
+  spec: SpecId;
+}</code></pre>
+<p>A package to install, from Ubuntu&#39;s apt (default), a PPA, a vendor repository, or a snap.</p>
+
+</section>
+<section class="symbol" id="AptRepoDef">
+<h3><span class="kind">interface</span><a href="#AptRepoDef">AptRepoDef</a></h3>
+<pre><code class="language-ts">export interface AptRepoDef {
+  /** Its id: names the source file and the key (for example &quot;vscode&quot;). */
+  id: string;
+  /** The repository's URL. */
+  uri: string;
+  /** Its suites, for example &quot;stable&quot;. */
+  suites: string;
+  /** Its components, for example &quot;main&quot;. */
+  components: string;
+  /** ASCII-armored public key, pinned (Article 12). */
+  key: string;
+  /** The repository's host, for unattended-upgrades' Origins-Pattern (site=...). */
+  site: string;
+  /** The spec that adds it. */
+  spec: SpecId;
+}</code></pre>
+<p>A vendor&#39;s official apt repository (spec 010): its signing key is pinned in this repository and the source is written in deb822 form. Kept current by unattended-upgrades through <code>site</code>.</p>
+
+</section>
+<section class="symbol" id="PortDef">
+<h3><span class="kind">interface</span><a href="#PortDef">PortDef</a></h3>
+<pre><code class="language-ts">export interface PortDef {
+  /** The port number. */
+  port: number;
+  /** tcp or udp. */
+  protocol: &quot;tcp&quot; | &quot;udp&quot;;
+  /** The spec that opens it. */
+  spec: SpecId;
+}</code></pre>
+<p>A port opened in the host&#39;s firewall (ufw).</p>
+
+</section>
+<section class="symbol" id="GitHubSource">
+<h3><span class="kind">interface</span><a href="#GitHubSource">GitHubSource</a></h3>
+<pre><code class="language-ts">export interface GitHubSource {
+  /** The GitHub repository, &quot;owner/name&quot;. */
+  repo: string;
+  /** The release asset's file name, for this architecture and version. */
+  asset: (arch: &quot;amd64&quot;, version: string) =&gt; RegExp;
+  /** What precedes the version in its tags (for example &quot;v&quot;). */
+  tagPrefix?: string;
+  /**
+   * A pinned release instead of the newest (the engine's Bun, spec 096): its version, and the
+   * asset for this machine with the SHA-256 the engine pins for it.
+   */
+  pinned?: {
+    /** The pinned version. */
+    version: string;
+    /** The asset for this machine: its file name, URL and pinned SHA-256. */
+    asset: () =&gt; Promise&lt;{ name: string; url: string; sha256: string }&gt;;
+  };
+}</code></pre>
+<p>Where an upstream tool&#39;s releases come from (GitHub releases, each asset checked against GitHub&#39;s SHA-256).</p>
+
+</section>
+<section class="symbol" id="ToolDef">
+<h3><span class="kind">interface</span><a href="#ToolDef">ToolDef</a></h3>
+<pre><code class="language-ts">export interface ToolDef {
+  /** Its id (also its folder under /opt/tools). */
+  id: string;
+  /** Its name, for people. */
+  name: string;
+  /** Where it comes from: Ubuntu's apt, a snap, an upstream release binary, or its own installer (which then updates itself). */
+  source: &quot;apt&quot; | &quot;snap&quot; | &quot;upstream-binary&quot; | &quot;self-updating&quot;;
+  /** The commands it provides, linked into /usr/local/bin. */
+  bins: string[];
+  /** The command that prints its version. */
+  versionCommand: string;
+  /** The command that checks it works (its smoke test after an install, and a verify check). */
+  verify: string;
+  /** The spec that brings it. */
+  spec: SpecId;
+  /** Where upstream releases come from (upstream-binary tools). */
+  github?: GitHubSource;
+  /** The apt package, when it is not the id. */
+  package?: string;
+  /** apt tools: the maintainers' PPA with newer builds (PackageDef.ppa). */
+  ppa?: string;
+  /** apt tools: the vendor's own apt repository (PackageDef.repo). */
+  repo?: AptRepoDef;
+  /** Services restarted after this tool is installed or upgraded (for example its own daemon). */
+  restarts?: string[];
+  /** Only for users with this persona. */
+  forPersona?: PersonaId;
+  /** Installed on workstations only (the agent layer, spec 030), never on servers. */
+  workstationOnly?: true;
+  /** Installed on servers only (the HTTPS front door, spec 032). */
+  serverOnly?: true;
+  /**
+   * The tool refuses to run as root (Steampipe): its smoke test and its verify
+   * check run as nobody when archon runs as root.
+   */
+  unprivileged?: true;
+  /** The URL of its own installer script (self-updating tools). */
+  installer?: string;
+}</code></pre>
+<p>A tool installed at its newest release (spec 010): from apt, a snap, an upstream binary (checked, smoke-tested, rolled back on failure), or its own installer.</p>
+
+</section>
+<section class="symbol" id="CheckDef">
+<h3><span class="kind">interface</span><a href="#CheckDef">CheckDef</a></h3>
+<pre><code class="language-ts">export interface CheckDef {
+  /** The check's name, shown in verify (for example &quot;mail:credential&quot;). */
+  name: string;
+  /** Run without a shell (splitArgs); use `sh -c '...'` for pipes. Exit 0 means pass. */
+  command: string;
+  /** &quot;fail&quot;: a failure fails verify; &quot;warn&quot;: reported with its fix, never a failure. */
+  level: &quot;fail&quot; | &quot;warn&quot;;
+  /** How to fix it, in one line (shown under the problem). */
+  fix?: string;
+  /** Spec 052: archon explain &lt;code&gt;. Exit 3 from the command means &quot;not set up yet&quot;. */
+  code?: string;
+  /** The spec that declares it. */
+  spec: SpecId;
+}</code></pre>
+<p>A verification the model declares (Article 15). &quot;warn&quot; checks report a warning with their fix and never count as a failure (installed.json stays ok).</p>
+
+</section>
+<section class="symbol" id="NetworkDef">
+<h3><span class="kind">interface</span><a href="#NetworkDef">NetworkDef</a></h3>
+<pre><code class="language-ts">export interface NetworkDef {
+  /**
+   * Does this network route IPv6? false (an IPv4-only LAN): apt resolves and
+   * connects over IPv4 only, and retries transient failures.
+   */
+  ipv6: boolean;
+}</code></pre>
+<p>The network a host lives on (spec 009).</p>
+
+</section>
+<section class="symbol" id="Contribution">
+<h3><span class="kind">interface</span><a href="#Contribution">Contribution</a></h3>
+<pre><code class="language-ts">export interface Contribution {
+  /** The spec it comes from. */
+  spec: SpecId;
+  /** Packages to install. */
+  packages?: PackageDef[];
+  /** Checks verify runs. */
+  checks?: CheckDef[];
+  /** systemd units to write, enable, start, or mask. */
+  units?: UnitDef[];
+  /** Files to write. */
+  files?: FileDef[];
+  /** Ports to open in the firewall. */
+  ports?: PortDef[];
+  /** Tools to install at their newest releases. */
+  tools?: ToolDef[];
+  /** Vendor apt repositories to add. */
+  aptRepos?: AptRepoDef[];
+  /** Services published through the proxy (spec 032). */
+  routes?: WebRoute[];
+  /** Notes for people (shown by archon guide). */
+  notes?: string[];
+  /** Files computed from the whole plan (for example the firewall from all ports). */
+  derive?: (plan: HostPlan) =&gt; FileDef[];
+}</code></pre>
+<p>What one capability adds to a host&#39;s plan.</p>
+
+</section>
+<section class="symbol" id="CapabilityContext">
+<h3><span class="kind">interface</span><a href="#CapabilityContext">CapabilityContext</a></h3>
+<pre><code class="language-ts">export interface CapabilityContext {
+  /** The host being planned. */
+  host: HostDef;
+  /** Its fleet. */
+  fleet: FleetDef;
+  /** Every account on it (the admin, ops, and the host's users). */
+  users: UserDef[];
+}</code></pre>
+<p>What a capability is given: the host, its fleet, and the people with accounts on it.</p>
+
+</section>
+<section class="symbol" id="Capability">
+<h3><span class="kind">type</span><a href="#Capability">Capability</a></h3>
+<pre><code class="language-ts">export type Capability = (ctx: CapabilityContext) =&gt; Contribution;</code></pre>
+<p>Something a host gets (spec 002): a function from the host, its fleet, and its users to what it contributes to the host&#39;s plan (packages, files, units, ports, checks, tools). <code>foundation()</code> is every server&#39;s set; a host lists more in its <code>capabilities</code>.</p>
+
+</section>
+<section class="symbol" id="HostPlan">
+<h3><span class="kind">interface</span><a href="#HostPlan">HostPlan</a></h3>
+<pre><code class="language-ts">export interface HostPlan {
+  /** The host. */
+  host: HostDef;
+  /** Its fleet. */
+  fleet: FleetDef;
+  /** Every account on it. */
+  users: UserDef[];
+  /** Every package, from every capability. */
+  packages: PackageDef[];
+  /** Every unit. */
+  units: UnitDef[];
+  /** Every file. */
+  files: FileDef[];
+  /** Every open port. */
+  ports: PortDef[];
+  /** Every tool. */
+  tools: ToolDef[];
+  /** Every vendor apt repository. */
+  aptRepos: AptRepoDef[];
+  /** Every check. */
+  checks: CheckDef[];
+  /** Every service published through the proxy. */
+  routes: WebRoute[];
+  /** Notes, by spec. */
+  notes: Record&lt;string, string[]&gt;;
+  /** The specs its capabilities come from. */
+  specsUsed: SpecId[];
+}</code></pre>
+<p>Everything a host gets: every capability&#39;s contribution, merged, for apply and verify.</p>
+
+</section>
+<h2>Re-exports</h2>
+<ul>
+<li><code>BRAND</code> from <a href="../../../archon/model/site.ts/index.html"><code>./site.ts</code></a></li>
+<li><code>Brand</code> from <a href="../../../archon/model/site.ts/index.html"><code>./site.ts</code></a></li>
+<li><code>Cidr</code> from <a href="../../../archon/model/site.ts/index.html"><code>./site.ts</code></a></li>
+<li><code>Device</code> from <a href="../../../archon/model/site.ts/index.html"><code>./site.ts</code></a></li>
+<li><code>FirewallPolicy</code> from <a href="../../../archon/model/site.ts/index.html"><code>./site.ts</code></a></li>
+<li><code>IPv4</code> from <a href="../../../archon/model/site.ts/index.html"><code>./site.ts</code></a></li>
+<li><code>LocalDnsRecord</code> from <a href="../../../archon/model/site.ts/index.html"><code>./site.ts</code></a></li>
+<li><code>Port</code> from <a href="../../../archon/model/site.ts/index.html"><code>./site.ts</code></a></li>
+<li><code>SiteDef</code> from <a href="../../../archon/model/site.ts/index.html"><code>./site.ts</code></a></li>
+<li><code>SiteNetwork</code> from <a href="../../../archon/model/site.ts/index.html"><code>./site.ts</code></a></li>
+<li><code>VlanId</code> from <a href="../../../archon/model/site.ts/index.html"><code>./site.ts</code></a></li>
+<li><code>WifiNetwork</code> from <a href="../../../archon/model/site.ts/index.html"><code>./site.ts</code></a></li>
+<li><code>Zone</code> from <a href="../../../archon/model/site.ts/index.html"><code>./site.ts</code></a></li>
+</ul>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/model/types.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/install/host-keys.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/install/host-keys.ts</h1>
+<p>Each host&#39;s SSH identity (spec 004): its host keys are made once on the boot machine (ssh-keygen, as for the deploy key), kept in the secret store, and installed by cloud-init at every install. A re-installed host keeps its identity, and the boot machine&#39;s known_hosts holds the right keys from the start: no &quot;trust this host?&quot; prompt, no &quot;REMOTE HOST IDENTIFICATION HAS CHANGED&quot; after a re-install.</p>
+<h2>Exports</h2>
+<section class="symbol" id="HOST_KEY_TYPES">
+<h3><span class="kind">const</span><a href="#HOST_KEY_TYPES">HOST_KEY_TYPES</a></h3>
+<pre><code class="language-ts">export const HOST_KEY_TYPES</code></pre>
+<p>Ubuntu&#39;s own host key types.</p>
+
+</section>
+<section class="symbol" id="HostKeyType">
+<h3><span class="kind">type</span><a href="#HostKeyType">HostKeyType</a></h3>
+<pre><code class="language-ts">export type HostKeyType = (typeof HOST_KEY_TYPES)[number];</code></pre>
+<p>An SSH host key type.</p>
+
+</section>
+<section class="symbol" id="HostKey">
+<h3><span class="kind">interface</span><a href="#HostKey">HostKey</a></h3>
+<pre><code class="language-ts">export interface HostKey {
+  /** Its type. */
+  type: HostKeyType;
+  /** The private half (kept on the boot machine only). */
+  private: string;
+  /** &quot;ssh-ed25519 AAAA...&quot; without a comment. */
+  public: string;
+}</code></pre>
+<p>One SSH host key pair.</p>
+
+</section>
+<section class="symbol" id="ensureHostKeys">
+<h3><span class="kind">function</span><a href="#ensureHostKeys">ensureHostKeys</a></h3>
+<pre><code class="language-ts">export async function ensureHostKeys(host: string): Promise&lt;HostKey[]&gt;</code></pre>
+<p>Create (once) and read the host&#39;s SSH host keys.</p>
+
+</section>
+<section class="symbol" id="knownHostsFile">
+<h3><span class="kind">function</span><a href="#knownHostsFile">knownHostsFile</a></h3>
+<pre><code class="language-ts">export function knownHostsFile(): string</code></pre>
+<p>The known_hosts OpenSSH uses for this user (Windows: %USERPROFILE%\.ssh).</p>
+
+</section>
+<section class="symbol" id="forgetHostKeys">
+<h3><span class="kind">function</span><a href="#forgetHostKeys">forgetHostKeys</a></h3>
+<pre><code class="language-ts">export async function forgetHostKeys(names: string[], file = knownHostsFile()): Promise&lt;string[]&gt;</code></pre>
+<p>Remove a host&#39;s entries from known_hosts; returns the names that were found.</p>
+
+</section>
+<section class="symbol" id="trustHost">
+<h3><span class="kind">function</span><a href="#trustHost">trustHost</a></h3>
+<pre><code class="language-ts">export async function trustHost(
+  host: string,
+  names: string[],
+  file = knownHostsFile(),
+  keys?: Array&lt;Pick&lt;HostKey, &quot;public&quot;&gt;&gt;,
+): Promise&lt;string[]&gt;</code></pre>
+<p>Replace a host&#39;s entries with its real keys, for its name and every address it used.</p>
+
+</section>
+<section class="symbol" id="HostExport">
+<h3><span class="kind">interface</span><a href="#HostExport">HostExport</a></h3>
+<pre><code class="language-ts">export interface HostExport {
+  /** The host's SSH host keys. */
+  hostKeys: HostKey[];
+  /** ops' GitHub deploy key (the one registered on the repository), when present. */
+  deployKey?: { private: string; public: string };
+}</code></pre>
+<p>What <code>archon host-keys export</code> prints: the host&#39;s identities the boot machine keeps.</p>
+
+</section>
+<section class="symbol" id="parseHostExport">
+<h3><span class="kind">function</span><a href="#parseHostExport">parseHostExport</a></h3>
+<pre><code class="language-ts">export function parseHostExport(text: string): HostExport</code></pre>
+<p>The export, in the current form or the first one (a bare list of host keys).</p>
+
+</section>
+<section class="symbol" id="exportHostKeys">
+<h3><span class="kind">function</span><a href="#exportHostKeys">exportHostKeys</a></h3>
+<pre><code class="language-ts">export async function exportHostKeys(): Promise&lt;number&gt;</code></pre>
+<p><code>archon host-keys export</code> (spec 029): this host&#39;s SSH host keys and ops&#39; deploy key as JSON, for <code>bun run stolos vault recover-host-keys &lt;host&gt;</code> when the boot machine lost its copies without a backup: the rebuilt boot machine then holds the same identities, so nothing changes on GitHub or for SSH clients. Root only (it elevates); never offered over MCP.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/install/host-keys.ts">Source</a></p>
+</main>
+
+</body>
+</html>

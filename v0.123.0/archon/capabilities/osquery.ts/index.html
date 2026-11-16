@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/capabilities/osquery.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/capabilities/osquery.ts</h1>
+<p>042-sql: osquery&#39;s daemon on every host, as infrastructure: always installed and running. It listens on no port (its only socket is a local one for extensions), so the firewall opens nothing. It runs Archon&#39;s scheduled queries and writes what changed to /var/log/osquery (rotated), where anyone with root can read the machine&#39;s history: ports, logins, users, sudoers, SSH keys, packages, kernel modules. osqueryi, the interactive shell, needs no daemon.</p>
+<h2>Exports</h2>
+<section class="symbol" id="OSQUERY">
+<h3><span class="kind">const</span><a href="#OSQUERY">OSQUERY</a></h3>
+<pre><code class="language-ts">export const OSQUERY</code></pre>
+<p>Where osquery&#39;s files are.</p>
+
+</section>
+<section class="symbol" id="OSQUERY_FLAGS">
+<h3><span class="kind">const</span><a href="#OSQUERY_FLAGS">OSQUERY_FLAGS</a></h3>
+<pre><code class="language-ts">export const OSQUERY_FLAGS: string</code></pre>
+<p>Flags for osqueryd (one per line, as osquery&#39;s flagfile reads them). The package&#39;s unit passes the config path and the pidfile (/etc/default/osqueryd).</p>
+
+</section>
+<section class="symbol" id="OSQUERY_SCHEDULE">
+<h3><span class="kind">const</span><a href="#OSQUERY_SCHEDULE">OSQUERY_SCHEDULE</a></h3>
+<pre><code class="language-ts">export const OSQUERY_SCHEDULE: Record&lt;
+  string,
+  { query: string; interval: number; description: string }
+&gt;</code></pre>
+<p>Archon&#39;s scheduled queries: what changed is logged (differential results).</p>
+
+</section>
+<section class="symbol" id="archonTables">
+<h3><span class="kind">function</span><a href="#archonTables">archonTables</a></h3>
+<pre><code class="language-ts">export function archonTables(
+  dir = &quot;/var/lib/archon&quot;,
+): Record&lt;string, { query: string; path: string; columns: string[]; platform: string }&gt;</code></pre>
+<p>Spec 048: Archon&#39;s own records as osquery tables (automatic table construction), read from archon.auto.sqlite.db, which archon builds from this machine&#39;s archon.sql.</p>
+
+</section>
+<section class="symbol" id="osqueryConf">
+<h3><span class="kind">function</span><a href="#osqueryConf">osqueryConf</a></h3>
+<pre><code class="language-ts">export function osqueryConf(): string</code></pre>
+<p>osquery&#39;s configuration.</p>
+
+</section>
+<section class="symbol" id="osquery">
+<h3><span class="kind">const</span><a href="#osquery">osquery</a></h3>
+<pre><code class="language-ts">export const osquery</code></pre>
+<p>osquery&#39;s daemon on every host (spec 042).</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/capabilities/osquery.ts">Source</a></p>
+</main>
+
+</body>
+</html>

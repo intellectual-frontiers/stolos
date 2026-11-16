@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/capabilities/platform.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/capabilities/platform.ts</h1>
+<p>001-platform: Ubuntu Server 26.04&#39;s own components, verified, never replaced (Article 2). This capability installs nothing: it checks that the defaults Archon relies on are present, names the host, and creates Archon&#39;s state directories.</p>
+<h2>Exports</h2>
+<section class="symbol" id="RELIED_ON">
+<h3><span class="kind">const</span><a href="#RELIED_ON">RELIED_ON</a></h3>
+<pre><code class="language-ts">export const RELIED_ON</code></pre>
+<p>Packages Ubuntu installs that Archon relies on (spec 001 table).</p>
+
+</section>
+<section class="symbol" id="NO_MULTICAST_NAMES">
+<h3><span class="kind">const</span><a href="#NO_MULTICAST_NAMES">NO_MULTICAST_NAMES</a></h3>
+<pre><code class="language-ts">export const NO_MULTICAST_NAMES</code></pre>
+<p>Article 20 (spec 001 FR-006): no multicast name resolution. resolved keeps mDNS and LLMNR off explicitly; avahi, if any package pulled it in, is masked (its package kept, so dependents stay installed).</p>
+
+</section>
+<section class="symbol" id="platform">
+<h3><span class="kind">const</span><a href="#platform">platform</a></h3>
+<pre><code class="language-ts">export const platform</code></pre>
+<p>Ubuntu Server&#39;s own components, verified, and archon&#39;s own files on the host (spec 001).</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/capabilities/platform.ts">Source</a></p>
+</main>
+
+</body>
+</html>

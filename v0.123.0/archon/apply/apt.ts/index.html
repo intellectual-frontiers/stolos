@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/apply/apt.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/apply/apt.ts</h1>
+<p>apt with real progress (spec 018): APT::Status-Fd=2 makes apt report &quot;pmstatus:&lt;pkg&gt;:&lt;percent&gt;:&lt;text&gt;&quot; and &quot;dlstatus:...&quot; lines on stderr, which drive the progress bar; everything else goes to the run log. apt&#39;s warnings are translated into problems with a fix instead of being pasted raw.</p>
+<h2>Exports</h2>
+<section class="symbol" id="aptDeps">
+<h3><span class="kind">const</span><a href="#aptDeps">aptDeps</a></h3>
+<pre><code class="language-ts">export const aptDeps</code></pre>
+<p>apt&#39;s runner and the pause between retries, replaceable in tests (spec 009).</p>
+
+</section>
+<section class="symbol" id="NETWORK">
+<h3><span class="kind">const</span><a href="#NETWORK">NETWORK</a></h3>
+<pre><code class="language-ts">export const NETWORK</code></pre>
+<p>A network-shaped apt failure (spec 009): DNS, unreachable, timed out. On an IPv4-only network with a flaky upstream resolver these come and go; they are retried, then reported as a warning that the next reconcile clears.</p>
+
+</section>
+<section class="symbol" id="NETWORK_BACKOFF_MS">
+<h3><span class="kind">const</span><a href="#NETWORK_BACKOFF_MS">NETWORK_BACKOFF_MS</a></h3>
+<pre><code class="language-ts">export const NETWORK_BACKOFF_MS</code></pre>
+<p>Backoff before each retry of a network-shaped failure (about 10 s, 30 s, 60 s).</p>
+
+</section>
+<section class="symbol" id="ARCHIVE_UNREACHABLE">
+<h3><span class="kind">const</span><a href="#ARCHIVE_UNREACHABLE">ARCHIVE_UNREACHABLE</a></h3>
+<pre><code class="language-ts">export const ARCHIVE_UNREACHABLE</code></pre>
+<p>The warning shown when apt could not reach the Ubuntu archive for network reasons.</p>
+
+</section>
+<section class="symbol" id="AptIssue">
+<h3><span class="kind">interface</span><a href="#AptIssue">AptIssue</a></h3>
+<pre><code class="language-ts">export interface AptIssue {
+  /** A warning (apt's `W:`) or a failure (`E:`, `Err:`). */
+  level: &quot;warn&quot; | &quot;fail&quot;;
+  /** What went wrong. */
+  message: string;
+  /** What to run or check to fix it. */
+  fix?: string;
+  /** DNS, unreachable, or timed out: retried, then a warning (spec 009). */
+  network?: boolean;
+}</code></pre>
+<p>One problem found in apt&#39;s output, worded for people, with a fix when there is one.</p>
+
+</section>
+<section class="symbol" id="classifyAptLine">
+<h3><span class="kind">function</span><a href="#classifyAptLine">classifyAptLine</a></h3>
+<pre><code class="language-ts">export function classifyAptLine(line: string): AptIssue | undefined</code></pre>
+<p>Turn apt&#39;s W:/E: lines into one actionable issue per cause.</p>
+
+</section>
+<section class="symbol" id="DpkgFailure">
+<h3><span class="kind">interface</span><a href="#DpkgFailure">DpkgFailure</a></h3>
+<pre><code class="language-ts">export interface DpkgFailure {
+  /** The package's name (without architecture). */
+  pkg: string;
+  /** dpkg's reason, from the line after its error. */
+  reason: string;
+  /** The script's last output before dpkg gave up: usually the real cause. */
+  cause?: string;
+}</code></pre>
+<p>A package dpkg failed to install or configure.</p>
+
+</section>
+<section class="symbol" id="dpkgFailureParser">
+<h3><span class="kind">function</span><a href="#dpkgFailureParser">dpkgFailureParser</a></h3>
+<pre><code class="language-ts">export function dpkgFailureParser(): {
+  feed(line: string): void;
+  error(pkg: string, reason: string): void;
+  failures: DpkgFailure[];
+}</code></pre>
+<p>Collect &quot;dpkg: error processing package X (--configure):&quot; and the reason on the following line, so a failure names the package instead of apt&#39;s &quot;Sub-process /usr/bin/dpkg returned an error code (1)&quot;.</p>
+
+</section>
+<section class="symbol" id="LOCKED">
+<h3><span class="kind">const</span><a href="#LOCKED">LOCKED</a></h3>
+<pre><code class="language-ts">export const LOCKED</code></pre>
+<p>Another apt or dpkg (Ubuntu&#39;s daily apt run, unattended-upgrades) holds a lock.</p>
+
+</section>
+<section class="symbol" id="AptResult">
+<h3><span class="kind">interface</span><a href="#AptResult">AptResult</a></h3>
+<pre><code class="language-ts">export interface AptResult {
+  /** Whether it succeeded (a network-only failure is not ok, but is only warned). */
+  ok: boolean;
+  /** It failed for network reasons only (warned, not failed). */
+  network: boolean;
+}</code></pre>
+<p>How an apt run ended.</p>
+
+</section>
+<section class="symbol" id="aptUpdate">
+<h3><span class="kind">function</span><a href="#aptUpdate">aptUpdate</a></h3>
+<pre><code class="language-ts">export async function aptUpdate(p: Phase): Promise&lt;AptResult&gt;</code></pre>
+<p><code>apt-get update</code>: waits for another apt holding a lock, and retries network-shaped failures with backoff (spec 009). A failure that stays network-shaped is a warning; anything else is a failure.</p>
+
+</section>
+<section class="symbol" id="aptInstall">
+<h3><span class="kind">function</span><a href="#aptInstall">aptInstall</a></h3>
+<pre><code class="language-ts">export async function aptInstall(p: Phase, pkgs: string[]): Promise&lt;AptResult&gt;</code></pre>
+<p>Install packages. When a maintainer script fails (often a transient problem during a large first install, such as an initramfs rebuild triggered mid-run), finish pending setup with <code>dpkg --configure -a</code> and try once more; only a second failure is reported as one.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/apply/apt.ts">Source</a></p>
+</main>
+
+</body>
+</html>

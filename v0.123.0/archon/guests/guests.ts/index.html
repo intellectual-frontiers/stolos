@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/guests/guests.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/guests/guests.ts</h1>
+<p><code>archon guest sync|list</code> (spec 017): create missing LXD instances from the model and start stopped ones, mailing the ones created (spec 025). Never deletes (Article 11).</p>
+<h2>Exports</h2>
+<section class="symbol" id="Instance">
+<h3><span class="kind">interface</span><a href="#Instance">Instance</a></h3>
+<pre><code class="language-ts">export interface Instance {
+  /** The instance name. */
+  name: string;
+  /** LXD's status, such as &quot;Running&quot; or &quot;Stopped&quot;. */
+  status: string;
+  /** &quot;container&quot; or &quot;virtual-machine&quot;. */
+  type: string;
+}</code></pre>
+<p>An LXD instance, as <code>lxc list</code> reports it.</p>
+
+</section>
+<section class="symbol" id="instances">
+<h3><span class="kind">function</span><a href="#instances">instances</a></h3>
+<pre><code class="language-ts">export async function instances(): Promise&lt;Instance[]&gt;</code></pre>
+<p>The LXD instances on this host (lxc list); throws when lxc fails.</p>
+
+</section>
+<section class="symbol" id="launchArgs">
+<h3><span class="kind">function</span><a href="#launchArgs">launchArgs</a></h3>
+<pre><code class="language-ts">export function launchArgs(g: GuestDef): string[]</code></pre>
+<p>The <code>lxc launch</code> command line for a guest, with its kind and CPU and memory limits.</p>
+
+</section>
+<section class="symbol" id="guestSync">
+<h3><span class="kind">function</span><a href="#guestSync">guestSync</a></h3>
+<pre><code class="language-ts">export async function guestSync(host: HostDef): Promise&lt;boolean&gt;</code></pre>
+<p>Launches the host&#39;s missing guests and starts stopped ones; never deletes. Returns false when any launch or start failed.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/guests/guests.ts">Source</a></p>
+</main>
+
+</body>
+</html>

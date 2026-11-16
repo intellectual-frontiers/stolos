@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/connect/tenable.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/connect/tenable.ts</h1>
+<p>Spec 088: Tenable Vulnerability Management (cloud.tenable.com), read-only, through its workbench API: every asset with vulnerabilities in the last 30 days (<code>GET /workbenches/assets/vulnerabilities</code>), each asset&#39;s vulnerabilities by plugin (<code>GET /workbenches/assets/{id}/vulnerabilities</code>), and, for the critical and high ones, the plugin&#39;s CVEs and when it was first seen on that asset (<code>GET /workbenches/assets/{id}/vulnerabilities/{plugin}/info</code>). Each is a <code>vulnerability</code> record (OCSF Vulnerability Finding, 2002); open ones go in the OSCAL POA&amp;M. Evidence for SCF VPM-06 and VPM-07.</p>
+<p>Credential: the API keys of a user made for Stolos with the Basic role (view only), given Can View on the assets&#39; access groups. Docs: https://developer.tenable.com/reference/workbenches-assets-vulnerabilities and https://developer.tenable.com/docs/authorization.</p>
+<p>Limits: medium and low findings carry no CVE (one more call each would); at most 2,000 detail calls per observation; info-level findings are left out.</p>
+<h2>Exports</h2>
+<section class="symbol" id="tenable">
+<h3><span class="kind">const</span><a href="#tenable">tenable</a></h3>
+<pre><code class="language-ts">export const tenable: Connector</code></pre>
+<p>Tenable Vulnerability Management.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/connect/tenable.ts">Source</a></p>
+</main>
+
+</body>
+</html>

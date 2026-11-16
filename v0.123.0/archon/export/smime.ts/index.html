@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/export/smime.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/export/smime.ts</h1>
+<p>S/MIME for spec 092&#39;s emailed exports (RFC 8551): the message around IFC TypeScript&#39;s CMS encryption (kernel <code>cms.authEnveloped</code>). Each message is encrypted to each recipient&#39;s PUBLIC key, taken from their X.509 certificate: there is no shared secret, and Stolos holds no private key for this. Only the recipient&#39;s mail program (or <code>openssl cms -decrypt</code>) can open it.</p>
+<p>The kernel writes CMS (RFC 5652) AuthEnvelopedData (RFC 5083): the content (a whole MIME entity: the text and the attached files) encrypted once with a fresh AES-256-GCM key, that key encrypted to each recipient with RSAES-OAEP SHA-256. This module wraps the DER as <code>application/pkcs7-mime; smime-type=authEnveloped-data</code>, base64, in a whole RFC 5322 message.</p>
+<pre class="mermaid">flowchart LR
+  mime[&quot;MIME entity&lt;br/&gt;(text + files)&quot;] --&gt;|&quot;cms.authEnveloped&quot;| aed[&quot;AuthEnvelopedData (DER)&quot;]
+  aed --&gt; p7m[&quot;application/pkcs7-mime&lt;br/&gt;smime.p7m&quot;]</pre>
+<p>Only RSA certificates are supported (by far the most common for S/MIME); an EC certificate is refused with a clear message.</p>
+<h2>Exports</h2>
+<section class="symbol" id="SmimeHeaders">
+<h3><span class="kind">interface</span><a href="#SmimeHeaders">SmimeHeaders</a></h3>
+<pre><code class="language-ts">export interface SmimeHeaders {
+  /** The sender's address, or `Name &lt;address&gt;` already formatted. */
+  from: string;
+  /** The recipient's address. */
+  to: string;
+  /** The subject, already header-encoded; it is not encrypted, so it should say little. */
+  subject: string;
+  /** Extra headers (already encoded). */
+  extra?: Record&lt;string, string&gt;;
+}</code></pre>
+<p>Headers of the outer (unencrypted) message: who, the subject, and nothing else.</p>
+
+</section>
+<section class="symbol" id="freshKeys">
+<h3><span class="kind">function</span><a href="#freshKeys">freshKeys</a></h3>
+<pre><code class="language-ts">export function freshKeys(): cms.CmsKeys</code></pre>
+<p>Fresh secrets for one message, from the platform&#39;s random source.</p>
+
+</section>
+<section class="symbol" id="describeCertificateProblem">
+<h3><span class="kind">function</span><a href="#describeCertificateProblem">describeCertificateProblem</a></h3>
+<pre><code class="language-ts">export function describeCertificateProblem(p: cms.CertificateProblem): string</code></pre>
+<p>A certificate problem in words.</p>
+
+</section>
+<section class="symbol" id="parseCertificate">
+<h3><span class="kind">function</span><a href="#parseCertificate">parseCertificate</a></h3>
+<pre><code class="language-ts">export function parseCertificate(input: string | Uint8Array): cms.Certificate</code></pre>
+<p>A PEM (or DER) certificate, read; throws saying why it is not one.</p>
+
+</section>
+<section class="symbol" id="smimeMessage">
+<h3><span class="kind">function</span><a href="#smimeMessage">smimeMessage</a></h3>
+<pre><code class="language-ts">export async function smimeMessage(
+  h: SmimeHeaders,
+  innerEntity: string,
+  recipients: readonly cms.Certificate[],
+  keys: cms.CmsKeys = freshKeys(),
+): Promise&lt;string&gt;</code></pre>
+<p>A whole RFC 5322 message (CRLF line ends) whose body is the encrypted MIME entity: <code>application/pkcs7-mime; smime-type=authEnveloped-data</code> (RFC 8551 section 3.3), base64 in 76-column lines.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/export/smime.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

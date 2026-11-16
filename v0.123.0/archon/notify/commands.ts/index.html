@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/notify/commands.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/notify/commands.ts</h1>
+<p>The archon notify commands (spec 025), on hosts, workstations, and the boot machine (bun run stolos boot notify runs the same code), and archon mail credential and mail test (spec 027).</p>
+<h2>Exports</h2>
+<section class="symbol" id="installCredential">
+<h3><span class="kind">function</span><a href="#installCredential">installCredential</a></h3>
+<pre><code class="language-ts">export async function installCredential(json: string): Promise&lt;void&gt;</code></pre>
+<p>Install the relay credential on this host (spec 027): Postfix&#39;s /etc/postfix/sasl_passwd, root only, then Postfix reloads (it reads the file once, texthash). archon&#39;s own sends read the same file.</p>
+
+</section>
+<section class="symbol" id="SendArgs">
+<h3><span class="kind">interface</span><a href="#SendArgs">SendArgs</a></h3>
+<pre><code class="language-ts">export interface SendArgs {
+  /**
+   * The subject. One that starts with `[` or `Lab ` is sent as given, with the
+   * body as the whole message; a short one becomes `[Archon] &lt;host&gt;: &lt;subject&gt;`.
+   */
+  subject: string;
+  /** The body text (with a short subject, the subject itself when empty). */
+  body?: string;
+  /** Read the body from this file instead (it wins over `body`). */
+  bodyFile?: string;
+  /** Files to attach. */
+  attach?: string[];
+  /** How serious it is; `&quot;info&quot;` by default. */
+  level?: Level;
+  /** Deduplication key: the same key within an hour is sent once. */
+  key?: string;
+}</code></pre>
+<p>The options of <code>archon notify send</code>.</p>
+
+</section>
+<section class="symbol" id="notifySend">
+<h3><span class="kind">function</span><a href="#notifySend">notifySend</a></h3>
+<pre><code class="language-ts">export async function notifySend(a: SendArgs, o: { wait: boolean }): Promise&lt;number&gt;</code></pre>
+<p>archon notify send: queue a message from this machine. With <code>wait</code>, send it now and report whether it went; otherwise start the sender and return. Exit code 0 when queued (or sent, with <code>wait</code>) or a duplicate, else 1.</p>
+
+</section>
+<section class="symbol" id="notifyTest">
+<h3><span class="kind">function</span><a href="#notifyTest">notifyTest</a></h3>
+<pre><code class="language-ts">export async function notifyTest(): Promise&lt;number&gt;</code></pre>
+<p>archon notify test: send a test message now and wait for the relay (exit code 0 when sent).</p>
+
+</section>
+<section class="symbol" id="notifyStatus">
+<h3><span class="kind">function</span><a href="#notifyStatus">notifyStatus</a></h3>
+<pre><code class="language-ts">export async function notifyStatus(o: { check: boolean }): Promise&lt;number&gt;</code></pre>
+<p>archon notify status: mailbox, sender, relay, credential, last send and queue. With <code>check</code> (archon verify), one line instead, and exit code 1 when mail is not configured, the last send failed, or a message has waited more than 6 hours.</p>
+
+</section>
+<section class="symbol" id="notifyFlush">
+<h3><span class="kind">function</span><a href="#notifyFlush">notifyFlush</a></h3>
+<pre><code class="language-ts">export async function notifyFlush(): Promise&lt;number&gt;</code></pre>
+<p>archon notify flush (the flush service): send what is due. Prints counts only when something was tried. Always exit code 0.</p>
+
+</section>
+<section class="symbol" id="mailCredential">
+<h3><span class="kind">function</span><a href="#mailCredential">mailCredential</a></h3>
+<pre><code class="language-ts">export async function mailCredential(): Promise&lt;number&gt;</code></pre>
+<p>archon mail credential: the credential JSON on stdin (bun run stolos boot mail-push). Then the doctor&#39;s email checks, mailed to the shared mailbox through archon and Postfix, so the new token is proven where it matters.</p>
+
+</section>
+<section class="symbol" id="mailTest">
+<h3><span class="kind">function</span><a href="#mailTest">mailTest</a></h3>
+<pre><code class="language-ts">export async function mailTest(hostName: string): Promise&lt;number&gt;</code></pre>
+<p>archon mail test: one message through Postfix (/usr/sbin/sendmail), the path every app and cron job uses; addressed to root, which this host&#39;s Postfix sends on to the fleet&#39;s mailbox.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/notify/commands.ts">Source</a></p>
+</main>
+
+</body>
+</html>

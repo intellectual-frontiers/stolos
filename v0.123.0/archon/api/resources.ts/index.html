@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/api/resources.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/api/resources.ts</h1>
+<p>Spec 094: the estate&#39;s tables and views as REST resources. Each resource, its columns, and their types come from the declarations in <code>../estate/schema.ts</code> (spec 090), the same ones the SQL is generated from. A request&#39;s filters and paging become a SELECT whose names are only declared ones and whose values are bound parameters: nothing a request sends is ever written into the SQL.</p>
+<table><thead><tr><th>Column type</th><th>In JSON</th></tr></thead><tbody><tr><td>text</td><td>string</td></tr><tr><td>integer</td><td>integer</td></tr><tr><td>real</td><td>number</td></tr><tr><td>boolean</td><td>true or false (stored as 1 and 0)</td></tr><tr><td>json</td><td>object (stored as text)</td></tr></tbody></table>
+<h2>Exports</h2>
+<section class="symbol" id="DEFAULT_LIMIT">
+<h3><span class="kind">const</span><a href="#DEFAULT_LIMIT">DEFAULT_LIMIT</a></h3>
+<pre><code class="language-ts">export const DEFAULT_LIMIT</code></pre>
+<p>Rows a page holds when the request does not say.</p>
+
+</section>
+<section class="symbol" id="MAX_LIMIT">
+<h3><span class="kind">const</span><a href="#MAX_LIMIT">MAX_LIMIT</a></h3>
+<pre><code class="language-ts">export const MAX_LIMIT</code></pre>
+<p>The most rows one page holds.</p>
+
+</section>
+<section class="symbol" id="Resource">
+<h3><span class="kind">interface</span><a href="#Resource">Resource</a></h3>
+<pre><code class="language-ts">export interface Resource {
+  /** Its name: the path is `/v1/&lt;name&gt;`. */
+  name: string;
+  /** A table or a view. */
+  kind: &quot;table&quot; | &quot;view&quot;;
+  /** What it holds. */
+  doc: string;
+  /** Its columns, typed. */
+  columns: TypedColumn[];
+  /** Its order: a table's key, or a view's columns in order (stable pages). */
+  order: string[];
+}</code></pre>
+<p>One estate table or view, as the API serves it.</p>
+
+</section>
+<section class="symbol" id="resourceOf">
+<h3><span class="kind">function</span><a href="#resourceOf">resourceOf</a></h3>
+<pre><code class="language-ts">export function resourceOf(d: AnyTable | ViewDef): Resource</code></pre>
+<p>A resource from its declaration.</p>
+
+</section>
+<section class="symbol" id="RESOURCES">
+<h3><span class="kind">const</span><a href="#RESOURCES">RESOURCES</a></h3>
+<pre><code class="language-ts">export const RESOURCES: readonly Resource[]</code></pre>
+<p>Every estate table and view, in declaration order.</p>
+
+</section>
+<section class="symbol" id="resourceNamed">
+<h3><span class="kind">function</span><a href="#resourceNamed">resourceNamed</a></h3>
+<pre><code class="language-ts">export function resourceNamed(name: string): Resource | undefined</code></pre>
+<p>A resource by name, or undefined.</p>
+
+</section>
+<section class="symbol" id="Page">
+<h3><span class="kind">interface</span><a href="#Page">Page</a></h3>
+<pre><code class="language-ts">export interface Page&lt;T = Record&lt;string, unknown&gt;&gt; {
+  /** The rows. */
+  items: T[];
+  /** The page size asked for. */
+  limit: number;
+  /** Rows skipped before this page. */
+  offset: number;
+  /** Rows that match, across every page. */
+  total: number;
+}</code></pre>
+<p>A page of rows, and how many rows match in all.</p>
+
+</section>
+<section class="symbol" id="ListQuery">
+<h3><span class="kind">interface</span><a href="#ListQuery">ListQuery</a></h3>
+<pre><code class="language-ts">export interface ListQuery {
+  /** The page size. */
+  limit: number;
+  /** Rows skipped. */
+  offset: number;
+  /** Each filtered column and its value, as SQLite stores it. */
+  filters: Array&lt;{ column: string; value: string | number }&gt;;
+}</code></pre>
+<p>A list request, checked: its paging and its filters (bound values, by declared column).</p>
+
+</section>
+<section class="symbol" id="filterValue">
+<h3><span class="kind">function</span><a href="#filterValue">filterValue</a></h3>
+<pre><code class="language-ts">export function filterValue(
+  c: TypedColumn,
+  raw: string,
+):
+  | { value: string | number }
+  | {
+      error: string;
+    }</code></pre>
+<p>A filter value as SQLite stores the column&#39;s type, or why it cannot be one.</p>
+
+</section>
+<section class="symbol" id="listQuery">
+<h3><span class="kind">function</span><a href="#listQuery">listQuery</a></h3>
+<pre><code class="language-ts">export function listQuery(r: Resource, params: URLSearchParams): ListQuery | { error: string }</code></pre>
+<p>A list request&#39;s query string, checked against the resource&#39;s declared columns.</p>
+
+</section>
+<section class="symbol" id="jsonRow">
+<h3><span class="kind">function</span><a href="#jsonRow">jsonRow</a></h3>
+<pre><code class="language-ts">export function jsonRow(r: Resource, row: Record&lt;string, unknown&gt;): Record&lt;string, unknown&gt;</code></pre>
+<p>A row as JSON: booleans as true and false, JSON columns parsed, integers as numbers.</p>
+
+</section>
+<section class="symbol" id="listRows">
+<h3><span class="kind">function</span><a href="#listRows">listRows</a></h3>
+<pre><code class="language-ts">export function listRows(e: Estate, r: Resource, q: ListQuery): Page</code></pre>
+<p>One page of a resource&#39;s rows: names from the declaration, values bound.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/api/resources.ts">Source</a></p>
+</main>
+
+</body>
+</html>

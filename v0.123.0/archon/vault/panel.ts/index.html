@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/vault/panel.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/vault/panel.ts</h1>
+<p>The backup panel (spec 029, Article 19 and 22): one framed panel, amber, red when anything has been unbacked for more than 7 days or host identity keys were never backed up. Shown at the end of any command that changed a secret, and at the start of <code>boot serve</code> and <code>boot status</code>, until the secrets are backed up. Names only.</p>
+<h2>Exports</h2>
+<section class="symbol" id="width">
+<h3><span class="kind">function</span><a href="#width">width</a></h3>
+<pre><code class="language-ts">export function width(s: string): number</code></pre>
+<p>Visible width: emoji and other wide characters take two columns.</p>
+
+</section>
+<section class="symbol" id="panelLines">
+<h3><span class="kind">function</span><a href="#panelLines">panelLines</a></h3>
+<pre><code class="language-ts">export function panelLines(a: Assessment, pc: string, now = Date.now()): string[] | undefined</code></pre>
+<p>The panel&#39;s lines (without color), or undefined when everything is backed up.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/vault/panel.ts">Source</a></p>
+</main>
+
+</body>
+</html>

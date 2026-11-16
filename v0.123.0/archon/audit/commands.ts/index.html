@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/audit/commands.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/audit/commands.ts</h1>
+<p>Spec 083: <code>stolos audit ...</code>. The writing commands (open, bundle, access, request, respond, sample, close) each make one commit, signed with Git&#39;s signing key (your daily key: ssh-keygen asks its passphrase in this terminal), of the engagement&#39;s files only; nothing is pushed. The reading ones (list, show, export, verify, portal) change nothing.</p>
+<p>The work is in functions that take an {@link AuditCtx} (the repository, the fleet, a committer), so the tests drive them with a real repository and a real key; the commands build the context from this PC.</p>
+<h2>Exports</h2>
+<section class="symbol" id="AuditCtx">
+<h3><span class="kind">interface</span><a href="#AuditCtx">AuditCtx</a></h3>
+<pre><code class="language-ts">export interface AuditCtx {
+  /** The fleet repository. */
+  repo: string;
+  /** The fleet's id. */
+  fleet: string;
+  /** This PC's evidence directory (bundles). */
+  evidenceDir: string;
+  /** The fleet's signers, as allowed_signers text. */
+  allowedSigners(): Promise&lt;string&gt;;
+  /** Who is recording (a fleet signer's name, else Git's user.name). */
+  who(): Promise&lt;string&gt;;
+  /** Makes the signed commit. */
+  commit: Committer;
+  /** Now. */
+  now(): Date;
+}</code></pre>
+<p>What the audit functions work with.</p>
+
+</section>
+<section class="symbol" id="Done">
+<h3><span class="kind">type</span><a href="#Done">Done</a></h3>
+<pre><code class="language-ts">export type Done =
+  | { ok: true; detail: string; commit?: string }</code></pre>
+<p>A result: what was done, or why not.</p>
+
+</section>
+<section class="symbol" id="OpenInput">
+<h3><span class="kind">interface</span><a href="#OpenInput">OpenInput</a></h3>
+<pre><code class="language-ts">export interface OpenInput {
+  /** The engagement's id. */
+  id: string;
+  /** Its title (default: from the frameworks and the period). */
+  title?: string;
+  /** The audit firm. */
+  firm: string;
+  /** The firm's people, by name (&quot;Name &lt;email&gt;&quot; or &quot;Name&quot;). */
+  auditors: string[];
+  /** The period. */
+  from: string;
+  /** The period's last day. */
+  to: string;
+  /** The frameworks. */
+  frameworks: string[];
+  /** The controls: &quot;id=population,...&quot; (default: every population, each its own control). */
+  controls?: string;
+  /** The last day of access. */
+  expires: string;
+}</code></pre>
+<p>What <code>audit open</code> is given.</p>
+
+</section>
+<section class="symbol" id="auditOpen">
+<h3><span class="kind">function</span><a href="#auditOpen">auditOpen</a></h3>
+<pre><code class="language-ts">export async function auditOpen(ctx: AuditCtx, i: OpenInput): Promise&lt;Done&gt;</code></pre>
+<p>Open an engagement: engagement.ts, in a signed commit.</p>
+
+</section>
+<section class="symbol" id="auditBundle">
+<h3><span class="kind">function</span><a href="#auditBundle">auditBundle</a></h3>
+<pre><code class="language-ts">export async function auditBundle(ctx: AuditCtx, id: string, file: string): Promise&lt;Done&gt;</code></pre>
+<p>Pin an evidence bundle to an engagement (copied into the evidence directory).</p>
+
+</section>
+<section class="symbol" id="auditAccess">
+<h3><span class="kind">function</span><a href="#auditAccess">auditAccess</a></h3>
+<pre><code class="language-ts">export async function auditAccess(ctx: AuditCtx, id: string, expires: string): Promise&lt;Done&gt;</code></pre>
+<p>Change the day the auditor&#39;s access ends.</p>
+
+</section>
+<section class="symbol" id="auditClose">
+<h3><span class="kind">function</span><a href="#auditClose">auditClose</a></h3>
+<pre><code class="language-ts">export async function auditClose(ctx: AuditCtx, id: string): Promise&lt;Done&gt;</code></pre>
+<p>Close an engagement: the portal refuses it from now on.</p>
+
+</section>
+<section class="symbol" id="auditEntry">
+<h3><span class="kind">function</span><a href="#auditEntry">auditEntry</a></h3>
+<pre><code class="language-ts">export async function auditEntry(
+  ctx: AuditCtx,
+  id: string,
+  e: Omit&lt;TrailEntry, &quot;seq&quot; | &quot;at&quot;&gt; &amp; { at?: string },
+): Promise&lt;Done &amp; { seq?: number }&gt;</code></pre>
+<p>Record a trail entry in a signed commit.</p>
+
+</section>
+<section class="symbol" id="auditSample">
+<h3><span class="kind">function</span><a href="#auditSample">auditSample</a></h3>
+<pre><code class="language-ts">export async function auditSample(
+  ctx: AuditCtx,
+  id: string,
+  o: { control: string; seed: string; size: number; by?: string; note?: string },
+): Promise&lt;Done &amp; { seq?: number; units?: string[] }&gt;</code></pre>
+<p>Draw a sample from the auditor&#39;s seed and record it.</p>
+
+</section>
+<section class="symbol" id="loadCase">
+<h3><span class="kind">function</span><a href="#loadCase">loadCase</a></h3>
+<pre><code class="language-ts">export async function loadCase(ctx: AuditCtx, id: string): Promise&lt;AuditCase | undefined&gt;</code></pre>
+<p>An engagement from this repository, checked.</p>
+
+</section>
+<section class="symbol" id="auditExportZip">
+<h3><span class="kind">function</span><a href="#auditExportZip">auditExportZip</a></h3>
+<pre><code class="language-ts">export async function auditExportZip(ctx: AuditCtx, id: string): Promise&lt;Uint8Array | undefined&gt;</code></pre>
+<p>The export package of an engagement.</p>
+
+</section>
+<section class="symbol" id="pcAuditCtx">
+<h3><span class="kind">function</span><a href="#pcAuditCtx">pcAuditCtx</a></h3>
+<pre><code class="language-ts">export async function pcAuditCtx(): Promise&lt;AuditCtx&gt;</code></pre>
+<p>The context on this PC: the fleet repository, its signers, your signing key.</p>
+
+</section>
+<section class="symbol" id="AUDIT_TTL_MS">
+<h3><span class="kind">const</span><a href="#AUDIT_TTL_MS">AUDIT_TTL_MS</a></h3>
+<pre><code class="language-ts">export const AUDIT_TTL_MS</code></pre>
+<p>How long the portal reuses an engagement it read and checked.</p>
+
+</section>
+<section class="symbol" id="auditDeps">
+<h3><span class="kind">function</span><a href="#auditDeps">auditDeps</a></h3>
+<pre><code class="language-ts">export async function auditDeps(ctx?: AuditCtx): Promise&lt;AuditDeps&gt;</code></pre>
+<p>The portal&#39;s deps on this PC: engagements from the fleet repository, read at most once a minute each.</p>
+
+</section>
+<section class="symbol" id="auditOpenCmd">
+<h3><span class="kind">function</span><a href="#auditOpenCmd">auditOpenCmd</a></h3>
+<pre><code class="language-ts">export async function auditOpenCmd(a: Record&lt;string, unknown&gt;): Promise&lt;number&gt;</code></pre>
+<p><code>stolos audit open</code>.</p>
+
+</section>
+<section class="symbol" id="auditChangeCmd">
+<h3><span class="kind">function</span><a href="#auditChangeCmd">auditChangeCmd</a></h3>
+<pre><code class="language-ts">export async function auditChangeCmd(
+  what: &quot;bundle&quot; | &quot;access&quot; | &quot;close&quot;,
+  a: Record&lt;string, unknown&gt;,
+): Promise&lt;number&gt;</code></pre>
+<p><code>stolos audit bundle</code>, <code>access</code>, <code>close</code>.</p>
+
+</section>
+<section class="symbol" id="auditEntryCmd">
+<h3><span class="kind">function</span><a href="#auditEntryCmd">auditEntryCmd</a></h3>
+<pre><code class="language-ts">export async function auditEntryCmd(
+  kind: &quot;request&quot; | &quot;response&quot; | &quot;note&quot;,
+  a: Record&lt;string, unknown&gt;,
+): Promise&lt;number&gt;</code></pre>
+<p><code>stolos audit request</code> and <code>stolos audit respond</code>.</p>
+
+</section>
+<section class="symbol" id="auditSampleCmd">
+<h3><span class="kind">function</span><a href="#auditSampleCmd">auditSampleCmd</a></h3>
+<pre><code class="language-ts">export async function auditSampleCmd(a: Record&lt;string, unknown&gt;): Promise&lt;number&gt;</code></pre>
+<p><code>stolos audit sample</code>.</p>
+
+</section>
+<section class="symbol" id="auditListCmd">
+<h3><span class="kind">function</span><a href="#auditListCmd">auditListCmd</a></h3>
+<pre><code class="language-ts">export async function auditListCmd(json: boolean): Promise&lt;number&gt;</code></pre>
+<p><code>stolos audit list</code>.</p>
+
+</section>
+<section class="symbol" id="auditShowCmd">
+<h3><span class="kind">function</span><a href="#auditShowCmd">auditShowCmd</a></h3>
+<pre><code class="language-ts">export async function auditShowCmd(id: string, json: boolean): Promise&lt;number&gt;</code></pre>
+<p><code>stolos audit show</code>.</p>
+
+</section>
+<section class="symbol" id="auditExportCmd">
+<h3><span class="kind">function</span><a href="#auditExportCmd">auditExportCmd</a></h3>
+<pre><code class="language-ts">export async function auditExportCmd(id: string, out?: string): Promise&lt;number&gt;</code></pre>
+<p><code>stolos audit export</code>.</p>
+
+</section>
+<section class="symbol" id="auditVerifyCmd">
+<h3><span class="kind">function</span><a href="#auditVerifyCmd">auditVerifyCmd</a></h3>
+<pre><code class="language-ts">export async function auditVerifyCmd(
+  file: string,
+  signers?: string,
+  json = false,
+): Promise&lt;number&gt;</code></pre>
+<p><code>stolos audit verify</code>.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/audit/commands.ts">Source</a></p>
+</main>
+
+</body>
+</html>

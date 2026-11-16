@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/proposal/pc.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/proposal/pc.ts</h1>
+<p>Spec 095-proposals: <code>stolos proposal ...</code> on your PC, in the fleet repository. <code>import</code> reads a saved message (<code>.eml</code>) or the attachments, checks that the host is in the fleet and that the signature is its own host key from <code>registration.ts</code>, and keeps the proposal in your state folder (outside Git). <code>list</code> and <code>show</code> say what each would change; <code>accept</code> edits the host&#39;s TypeScript, writes a draft spec, records the decision in Git, and builds; <code>reject</code> records the rejection. You review and run <code>stolos apply</code>, and the server converges.</p>
+<pre class="mermaid">flowchart LR
+  mail[&quot;saved mail (.eml)&lt;br/&gt;or proposal.json + .sig&quot;] --&gt; imp[&quot;stolos proposal import&lt;br/&gt;verify against registration.ts&quot;]
+  imp --&gt; store[&quot;your state folder&lt;br/&gt;(not committed)&quot;]
+  store --&gt; show[&quot;list / show:&lt;br/&gt;the model diff, conflicts&quot;]
+  show --&gt; acc[&quot;accept: host.ts adopted({...}),&lt;br/&gt;specs/NNN-.../spec.md, proposals.ts, build&quot;]
+  show --&gt; rej[&quot;reject: proposals.ts&quot;]
+  acc &amp; rej --&gt; apply[&quot;stolos apply (signed commit)&quot;] --&gt; host[&quot;the host pulls:&lt;br/&gt;converges, holds end&quot;]</pre>
+<h2>Exports</h2>
+<section class="symbol" id="proposalStore">
+<h3><span class="kind">function</span><a href="#proposalStore">proposalStore</a></h3>
+<pre><code class="language-ts">export function proposalStore(): string</code></pre>
+<p>Where imported proposals are kept on this PC (per fleet; never committed).</p>
+
+</section>
+<section class="symbol" id="fleetHostKeys">
+<h3><span class="kind">function</span><a href="#fleetHostKeys">fleetHostKeys</a></h3>
+<pre><code class="language-ts">export async function fleetHostKeys(): Promise&lt;(host: string) =&gt; string[] | undefined&gt;</code></pre>
+<p>Each host&#39;s SSH host keys from Git (registration.ts); undefined for a host not in the fleet.</p>
+
+</section>
+<section class="symbol" id="Candidate">
+<h3><span class="kind">interface</span><a href="#Candidate">Candidate</a></h3>
+<pre><code class="language-ts">export interface Candidate {
+  /** Where it came from (a file, or a file inside a message). */
+  from: string;
+  /** proposal.json's text. */
+  text: string;
+  /** Its signature, when found. */
+  sig?: string;
+}</code></pre>
+<p>One proposal found in what was given to import.</p>
+
+</section>
+<section class="symbol" id="candidates">
+<h3><span class="kind">function</span><a href="#candidates">candidates</a></h3>
+<pre><code class="language-ts">export async function candidates(path: string): Promise&lt;Candidate[]&gt;</code></pre>
+<p>The proposals in a file (.eml, .json, .json.gz) or a folder of them.</p>
+
+</section>
+<section class="symbol" id="Imported">
+<h3><span class="kind">interface</span><a href="#Imported">Imported</a></h3>
+<pre><code class="language-ts">export interface Imported {
+  /** The proposal. */
+  proposal: Proposal;
+  /** proposal.json as signed. */
+  text: string;
+  /** proposal.json.sig. */
+  sig: string;
+}</code></pre>
+<p>An imported proposal: its text, signature, and parsed content.</p>
+
+</section>
+<section class="symbol" id="imported">
+<h3><span class="kind">function</span><a href="#imported">imported</a></h3>
+<pre><code class="language-ts">export async function imported(): Promise&lt;Imported[]&gt;</code></pre>
+<p>Every imported proposal, newest first.</p>
+
+</section>
+<section class="symbol" id="findImported">
+<h3><span class="kind">function</span><a href="#findImported">findImported</a></h3>
+<pre><code class="language-ts">export async function findImported(id: string): Promise&lt;Imported&gt;</code></pre>
+<p>One imported proposal by id (or a unique start of it).</p>
+
+</section>
+<section class="symbol" id="importCommand">
+<h3><span class="kind">function</span><a href="#importCommand">importCommand</a></h3>
+<pre><code class="language-ts">export async function importCommand(path: string): Promise&lt;number&gt;</code></pre>
+<p><code>stolos proposal import &lt;file|folder&gt;</code>: verify each and keep the good ones.</p>
+
+</section>
+<section class="symbol" id="listCommand">
+<h3><span class="kind">function</span><a href="#listCommand">listCommand</a></h3>
+<pre><code class="language-ts">export async function listCommand(json: boolean): Promise&lt;number&gt;</code></pre>
+<p><code>stolos proposal list</code>.</p>
+
+</section>
+<section class="symbol" id="plan">
+<h3><span class="kind">function</span><a href="#plan">plan</a></h3>
+<pre><code class="language-ts">export async function plan(
+  i: Imported,
+  skip: string[] = [],
+): Promise&lt;{
+  checks: EditCheck[];
+  conflicts: EditCheck[];
+  before?: string;
+  after?: string;
+  problem?: string;
+  moved: string;
+  spec: ReturnType&lt;typeof specId&gt;;
+}&gt;</code></pre>
+<p>What accepting would do: the checks, the new host.ts (or why not), and how far the model moved since.</p>
+
+</section>
+<section class="symbol" id="showCommand">
+<h3><span class="kind">function</span><a href="#showCommand">showCommand</a></h3>
+<pre><code class="language-ts">export async function showCommand(id: string, json: boolean): Promise&lt;number&gt;</code></pre>
+<p><code>stolos proposal show &lt;id&gt;</code>: the summary, each item, and the model diff accepting makes.</p>
+
+</section>
+<section class="symbol" id="acceptCommand">
+<h3><span class="kind">function</span><a href="#acceptCommand">acceptCommand</a></h3>
+<pre><code class="language-ts">export async function acceptCommand(id: string, skipArg?: string): Promise&lt;number&gt;</code></pre>
+<p><code>stolos proposal accept &lt;id&gt; [--skip &lt;key&gt;]</code>: the model change, a draft spec, the decision, and a build.</p>
+
+</section>
+<section class="symbol" id="rejectCommand">
+<h3><span class="kind">function</span><a href="#rejectCommand">rejectCommand</a></h3>
+<pre><code class="language-ts">export async function rejectCommand(id: string, reason?: string): Promise&lt;number&gt;</code></pre>
+<p><code>stolos proposal reject &lt;id&gt; [--reason]</code>: recorded in Git; after the push the host ends its holds.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/proposal/pc.ts">Source</a></p>
+</main>
+<script src="../../../mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict",
+    theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

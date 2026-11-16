@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/dotfiles/report.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/dotfiles/report.ts</h1>
+<p><code>archon dotfiles [path] [--user &lt;u&gt;]</code> (spec 031): which layer provides each of a user&#39;s dotfiles on this host. Read-only; reads only the repository.</p>
+<h2>Exports</h2>
+<section class="symbol" id="dotfilesReport">
+<h3><span class="kind">function</span><a href="#dotfilesReport">dotfilesReport</a></h3>
+<pre><code class="language-ts">export async function dotfilesReport(
+  host: string,
+  user = currentUser(),
+  path?: string,
+): Promise&lt;number&gt;</code></pre>
+<p>Prints which layer provides each of a user&#39;s dotfiles on a host, or with <code>path</code>, where that one file comes from. Returns 1 when the composition has problems, else 0.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/dotfiles/report.ts">Source</a></p>
+</main>
+
+</body>
+</html>

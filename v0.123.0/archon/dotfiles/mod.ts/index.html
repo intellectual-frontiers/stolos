@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/dotfiles/mod.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/dotfiles/mod.ts</h1>
+<h2 id="dotfiles-how-they-work-and-how-to-change-them">Dotfiles: how they work and how to change them</h2>
+<p>Every account&#39;s dotfiles (bash, fish, the prompt, tmux, and git; no agent&#39;s settings, spec 030) are managed by chezmoi from the fleet repository. Nothing in your home directory is edited by hand on purpose: archon applies the repository&#39;s version at every converge.</p>
+<h3 id="shell-features-one-line">Shell features: one line</h3>
+<p>Archon&#39;s shell features (the modern <code>ls</code>, <code>ll</code>, <code>la</code>, and <code>tree</code> from eza; <code>cat</code> from bat; <code>fd</code>; fzf&#39;s keys: Ctrl+R history, Ctrl+T files, Alt+C folders; zoxide&#39;s <code>z</code>; delta for git diffs; the terminal title; and the prompt) come from one line in your shell&#39;s startup file:</p>
+<table><thead><tr><th>Shell</th><th>Line</th><th>In</th></tr></thead><tbody><tr><td>bash</td><td><code>eval &quot;$(archon shell emit bash)&quot;</code></td><td><code>~/.bashrc</code></td></tr><tr><td>zsh</td><td><code>eval &quot;$(archon shell emit zsh)&quot;</code></td><td><code>~/.zshrc</code></td></tr><tr><td>fish</td><td><code>archon shell emit fish | source</code></td><td><code>~/.config/fish/config.fish</code></td></tr></tbody></table>
+<p>The fleet&#39;s dotfiles include the line for bash and fish, for everyone. A layer of your own that leaves it out gets none of these features: the shell keeps its own defaults. <code>archon shell status</code> says which of your shells have it. The originals are always one step away: <code>command ls</code>, <code>command cat</code> (bash also takes <code>\ls</code>).</p>
+<p>The prompt is plain, without icons, on a console terminal (the server&#39;s own screen or a serial line), and colorful everywhere else. The colorful prompt needs a Nerd Font on the computer you connect from; if you see boxes, install one there, or choose the plain prompt with <code>set -Ux ARCHON_PROMPT plain</code> (fish) or <code>export ARCHON_PROMPT=plain</code> in <code>~/.bashrc.local</code> (bash). <code>ARCHON_PROMPT=pretty</code> asks for the colorful one even on a console.</p>
+<h3 id="layers">Layers</h3>
+<p>Your chezmoi source is composed from up to five layers, most general first. A later layer replaces a file with the same target in your home directory. The first comes with the engine (its <code>home/</code> folder, carried inside the engine); the others are folders of your fleet repository, under the fleet&#39;s own folder.</p>
+<table><thead><tr><th>Layer</th><th>Applies to</th></tr></thead><tbody><tr><td>the engine&#39;s <code>home/</code></td><td>everyone in every fleet (the engine&#39;s base)</td></tr><tr><td><code>fleets/&lt;id&gt;/home/</code></td><td>everyone on every host of this fleet</td></tr><tr><td><code>fleets/&lt;id&gt;/hosts/&lt;host&gt;/home/</code></td><td>everyone on one host</td></tr><tr><td><code>fleets/&lt;id&gt;/users/&lt;user&gt;/home/</code></td><td>one user on every host</td></tr><tr><td><code>fleets/&lt;id&gt;/hosts/&lt;host&gt;/users/&lt;user&gt;/home/</code></td><td>one user on one host</td></tr></tbody></table>
+<p>To change a file the engine provides, do not change the engine: copy it into <code>fleets/&lt;id&gt;/home/</code> (everyone in your fleet) or a more specific layer, and edit the copy.</p>
+<p>Each layer is an ordinary chezmoi source directory: <code>dot_bashrc</code> is <code>~/.bashrc</code>, <code>dot_config/fish/config.fish.tmpl</code> is a template for <code>~/.config/fish/config.fish</code>, and <code>private_</code>, <code>executable_</code>, and the other chezmoi attributes work as usual. <code>dot_bashrc</code> and <code>dot_bashrc.tmpl</code> have the same target, so either one in a more specific layer replaces the other. The <code>.chezmoiignore</code> and <code>.chezmoiremove</code> of every layer are combined, in layer order.</p>
+<p>Templates get the same data everywhere: <code>.archon.host</code>, <code>.archon.user</code>, <code>.archon.fullName</code>, <code>.archon.email</code>, <code>.archon.personas</code>, <code>.archon.features</code> (fish, ohMyPosh, tmux, devTools, archonCompletions), and <code>.archon.workstation</code>.</p>
+<h3 id="how-it-is-applied">How it is applied</h3>
+<ol><li><code>archon apply</code> (and so <code>archon update</code> and the reconcile timer) composes your layers into <code>/var/lib/archon-dotfiles/&lt;you&gt;</code>, owned by root and readable by you.</li><li><code>~/.config/chezmoi/chezmoi.json</code> points chezmoi at that directory and holds your template data.</li><li><code>chezmoi verify</code> decides whether anything differs; if so, <code>chezmoi apply --force</code> brings your home directory to the composed state.</li></ol>
+<h3 id="day-to-day">Day to day</h3>
+<pre><code>archon dotfiles                    # every managed file and the layer it comes from
+archon dotfiles ~/.bashrc          # the one repository file that provides ~/.bashrc
+chezmoi diff                       # what the next converge would change in your home
+chezmoi apply                      # apply the composed source now, without waiting</code></pre>
+<h3 id="changing-a-dotfile">Changing a dotfile</h3>
+<ol><li>Run <code>archon dotfiles &lt;file&gt;</code> to find the repository file that provides it.</li><li>To change it for everyone, edit it there. To change it for one host or one person, copy it into the more specific layer (for example <code>fleets/&lt;id&gt;/users/&lt;you&gt;/home/dot_config/fish/config.fish.tmpl</code>) and edit the copy.</li><li>Commit with the spec ID (for example <code>031-dotfile-layers: fish abbreviations for &lt;you&gt;</code>) and push to <code>main</code>.</li><li><code>archon update</code> on the host, or wait for the reconcile timer (15 minutes).</li></ol>
+<p>Run <code>bun run stolos build</code> before pushing: it checks every layer.</p>
+<h3 id="this-machine-only">This machine only</h3>
+<p>Tweaks that belong to one machine and no repository go in files archon never manages: <code>~/.bashrc.local</code> (read by bash) and <code>~/.config/fish/local.fish</code> (read by fish). Any other file chezmoi does not manage is yours too; <code>archon dotfiles &lt;file&gt;</code> says so.</p>
+<h3 id="what-not-to-do">What not to do</h3>
+<ul><li><code>chezmoi add</code>, <code>chezmoi edit</code>, <code>chezmoi re-add</code>, <code>chezmoi forget</code>: they write to the source, which is composed by archon (and not writable by you). Change the repository instead.</li><li><code>chezmoi init</code> or <code>chezmoi update</code>: they would point chezmoi at another source or pull a different repository.</li><li>Editing a managed file in place: the next converge puts the repository&#39;s version back.</li></ul>
+<h3 id="what-a-layer-may-not-contain">What a layer may not contain</h3>
+<p><code>stolos build</code> rejects these:</p>
+<ul><li>scripts (<code>run_</code> files, <code>.chezmoiscripts/</code>): anything that must run belongs in the model</li><li>secrets (<code>encrypted_</code> files, <code>.age</code> or <code>.asc</code> files): secrets never go in the repository (Article 13)</li><li>externals (<code>.chezmoiexternal.*</code>): downloads without a pinned checksum (Article 12)</li><li><code>.chezmoiroot</code></li><li>two files with the same target in one layer</li><li>a layer for a host or user that is not in the model</li></ul>
+<h3 id="files">Files</h3>
+<table><thead><tr><th>Path</th><th>What</th></tr></thead><tbody><tr><td><code>/srv/archon/home/</code></td><td>the fleet layer</td></tr><tr><td><code>/srv/archon/dotfiles/</code></td><td>host, user, and host-user layers</td></tr><tr><td><code>/var/lib/archon-dotfiles/&lt;user&gt;/</code></td><td>your composed chezmoi source (written by archon apply)</td></tr><tr><td><code>~/.config/chezmoi/chezmoi.json</code></td><td>chezmoi&#39;s configuration and your template data (written by archon apply)</td></tr></tbody></table>
+<p>See also archon(1), archon-dotfiles(1), archon-personas(7), chezmoi(1).</p>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/dotfiles/mod.ts">Source</a></p>
+</main>
+
+</body>
+</html>

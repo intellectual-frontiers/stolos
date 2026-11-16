@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/capabilities/guests.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/capabilities/guests.ts</h1>
+<p>017-guests: LXD (Ubuntu&#39;s native container and VM manager, a snap) with its default bridge (lxdbr0) and a directory storage pool, initialized once from a rendered preseed. Instances come from the host model.</p>
+<h2>Exports</h2>
+<section class="symbol" id="LXD_PRESEED">
+<h3><span class="kind">const</span><a href="#LXD_PRESEED">LXD_PRESEED</a></h3>
+<pre><code class="language-ts">export const LXD_PRESEED</code></pre>
+<p>LXD&#39;s preseed: its bridge and storage pool, used once by lxd init.</p>
+
+</section>
+<section class="symbol" id="guestsManifest">
+<h3><span class="kind">function</span><a href="#guestsManifest">guestsManifest</a></h3>
+<pre><code class="language-ts">export function guestsManifest(guests: GuestDef[]): string</code></pre>
+<p>One line per guest, so a change to any guest triggers a sync.</p>
+
+</section>
+<section class="symbol" id="LXD_DNS_UNIT">
+<h3><span class="kind">const</span><a href="#LXD_DNS_UNIT">LXD_DNS_UNIT</a></h3>
+<pre><code class="language-ts">export const LXD_DNS_UNIT</code></pre>
+<p>Spec 032: &lt;guest&gt;.lxd resolves on the host through systemd-resolved, from LXD&#39;s own DNS on lxdbr0 (LXD&#39;s documented integration), so the proxy can reach guests by name.</p>
+
+</section>
+<section class="symbol" id="guests">
+<h3><span class="kind">const</span><a href="#guests">guests</a></h3>
+<pre><code class="language-ts">export const guests</code></pre>
+<p>LXD and the host&#39;s guests (spec 017).</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/capabilities/guests.ts">Source</a></p>
+</main>
+
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archon/notify/mime.ts: Stolos v0.123.0</title>
+<link rel="stylesheet" href="../../../style.css">
+</head>
+<body>
+<header class="top"><a href="../../../index.html">Stolos v0.123.0</a> · <a href="../../../all_symbols.html">all symbols</a></header>
+<main>
+<h1>archon/notify/mime.ts</h1>
+<p>Mail messages for archon notify (spec 025): RFC 5322 with MIME, a plain-text part and a simple HTML part, and small attachments. Built here (TypeScript, Article 4) so the boot machine on Windows and the hosts send the same thing.</p>
+<h2>Exports</h2>
+<section class="symbol" id="Attachment">
+<h3><span class="kind">interface</span><a href="#Attachment">Attachment</a></h3>
+<pre><code class="language-ts">export interface Attachment {
+  /** The file name the recipient sees (for example `apply.log`). */
+  name: string;
+  /** Its MIME type (for example `text/plain` or `application/gzip`). */
+  type: string;
+  /** Its contents, raw bytes (base64-encoded when the message is built). */
+  data: Uint8Array;
+}</code></pre>
+<p>A file attached to a message.</p>
+
+</section>
+<section class="symbol" id="Mail">
+<h3><span class="kind">interface</span><a href="#Mail">Mail</a></h3>
+<pre><code class="language-ts">export interface Mail {
+  /** The sender's address (for example `root+alpha.lab@example.com`). */
+  from: string;
+  /** Display name for From (&quot;alpha (Archon)&quot;). */
+  fromName?: string;
+  /** The recipient's address. */
+  to: string;
+  /** The subject line, any text (RFC 2047-encoded when not plain ASCII). */
+  subject: string;
+  /** The plain-text part. */
+  text: string;
+  /** The HTML part (the same content, simply styled). */
+  html: string;
+  /** Files to attach; none by default. */
+  attachments?: Attachment[];
+  /** Extra headers (for example `Reply-To`), values encoded like the subject. */
+  headers?: Record&lt;string, string&gt;;
+}</code></pre>
+<p>One mail message, before it is encoded (buildMime).</p>
+
+</section>
+<section class="symbol" id="headerValue">
+<h3><span class="kind">function</span><a href="#headerValue">headerValue</a></h3>
+<pre><code class="language-ts">export function headerValue(s: string): string</code></pre>
+<p>A header value, RFC 2047-encoded when it is not plain ASCII.</p>
+
+</section>
+<section class="symbol" id="displayName">
+<h3><span class="kind">function</span><a href="#displayName">displayName</a></h3>
+<pre><code class="language-ts">export function displayName(s: string): string</code></pre>
+<p>A display name: quoted when plain ASCII (RFC 5322), RFC 2047-encoded otherwise.</p>
+
+</section>
+<section class="symbol" id="escapeHtml">
+<h3><span class="kind">function</span><a href="#escapeHtml">escapeHtml</a></h3>
+<pre><code class="language-ts">export function escapeHtml(s: string): string</code></pre>
+<p>Escape <code>&amp;</code>, <code>&lt;</code> and <code>&gt;</code> for HTML text (not for attribute values: quotes are kept).</p>
+
+</section>
+<section class="symbol" id="mimeEntity">
+<h3><span class="kind">function</span><a href="#mimeEntity">mimeEntity</a></h3>
+<pre><code class="language-ts">export function mimeEntity(
+  m: Pick&lt;Mail, &quot;text&quot; | &quot;html&quot; | &quot;attachments&quot;&gt;,
+  boundarySeed: string = crypto.randomUUID(),
+): string</code></pre>
+<p>The body as one MIME entity (CRLF line ends): its Content-Type header, a blank line, then a multipart/mixed body (plain text and HTML as multipart/alternative, base64), then each attachment. buildMime puts the message headers in front; spec 092 encrypts it whole (S/MIME).</p>
+
+</section>
+<section class="symbol" id="buildMime">
+<h3><span class="kind">function</span><a href="#buildMime">buildMime</a></h3>
+<pre><code class="language-ts">export function buildMime(m: Mail, boundarySeed = crypto.randomUUID()): string</code></pre>
+<p>The whole message as RFC 5322 text with CRLF line ends: headers, a multipart/alternative body (plain text and HTML, base64), then each attachment. <code>boundarySeed</code> names the MIME boundaries (random by default; fixed in tests). Date and Message-ID are set here.</p>
+
+</section>
+<p class="muted"><a href="https://github.com/intellectual-frontiers/stolos/blob/v0.123.0/src/archon/notify/mime.ts">Source</a></p>
+</main>
+
+</body>
+</html>
