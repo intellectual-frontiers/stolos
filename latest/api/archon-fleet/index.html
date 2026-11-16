@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The fleet repository · Stolos</title>
-<meta name="description" content="# The fleet repository: pin, lock, upgrade This guide is for whoever looks after a fleet repository (for example `shah/fleet`): the private repository that holds your fleets and that every host checks out at `/srv/archon`.">
+<meta name="description" content="# The fleet repository: pin, lock, upgrade This guide is for whoever looks after a fleet repository (for example `example-org/fleet`): the private repository that holds your fleets and that every host checks out at `/srv/archon`.">
 <link rel="stylesheet" href="../../assets/site.css">
 <script src="../../assets/site.js" defer></script>
 </head>
@@ -22,7 +22,7 @@
 <main id="content" class="content">
 <article>
 <header class="page-head"><h1>The fleet repository</h1></header>
-<h2 id="the-fleet-repository-pin-lock-upgrade"><a class="anchor" href="#the-fleet-repository-pin-lock-upgrade" aria-hidden="true">#</a>The fleet repository: pin, lock, upgrade</h2><p>This guide is for whoever looks after a fleet repository (for example <code>shah/fleet</code>): the private repository that holds your fleets and that every host checks out at <code>/srv/archon</code>. Read it once before your first engine upgrade; keep it at hand for the troubleshooting table at the end.</p><h2 id="what-is-in-a-fleet-repository"><a class="anchor" href="#what-is-in-a-fleet-repository" aria-hidden="true">#</a>What is in a fleet repository</h2><figure class="code"><pre class="lang-text"><code>package.json  the pin: which engine version this repository uses (the engine by Git at its tag),
+<h2 id="the-fleet-repository-pin-lock-upgrade"><a class="anchor" href="#the-fleet-repository-pin-lock-upgrade" aria-hidden="true">#</a>The fleet repository: pin, lock, upgrade</h2><p>This guide is for whoever looks after a fleet repository (for example <code>example-org/fleet</code>): the private repository that holds your fleets and that every host checks out at <code>/srv/archon</code>. Read it once before your first engine upgrade; keep it at hand for the troubleshooting table at the end.</p><h2 id="what-is-in-a-fleet-repository"><a class="anchor" href="#what-is-in-a-fleet-repository" aria-hidden="true">#</a>What is in a fleet repository</h2><figure class="code"><pre class="lang-text"><code>package.json  the pin: which engine version this repository uses (the engine by Git at its tag),
               and the commands `bun run stolos` and `bun run archon`
 bun.lock      the commit that tag names, and the integrity (SHA-512) of that commit's archive
 stolos.ts     stolos, the fleet's command on your PC (bun run stolos; two lines: the pinned engine)
