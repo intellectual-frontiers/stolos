@@ -8,6 +8,8 @@
  *
  * @module
  */
+// Spec: 066-stolos-console
+// Spec: 101-ladder FR-006
 
 import type { Attention, RecordedVerify } from "../state/verify.ts";
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
@@ -19,13 +21,18 @@ import type { AdoptedDef, Observed } from "../adopt/adopt.ts";
 import type { Observation } from "../connect/connector.ts";
 import type { PackRun } from "../controls/run.ts";
 import type { DeviceDef, DeviceObserved } from "../device/device.ts";
+import type { MachineKind } from "../ontology.auto.ts";
 
 /** One machine, whatever its kind. */
 export interface PcMachine {
   /** Its name in the fleet (or the cloud's). */
   name: string;
-  /** server or workstation (managed), adopted, device (SNMP), discovered (recorded, not yet adopted), or cloud. */
-  kind: "server" | "workstation" | "adopted" | "device" | "discovered" | "cloud";
+  /**
+   * server or workstation (managed), adopted, device (SNMP), discovered (recorded, not yet adopted),
+   * or cloud: the ontology's machine kinds (spec 101-ladder FR-006), but the controller, which the
+   * console lists as an adopted machine.
+   */
+  kind: Exclude<MachineKind, "controller">;
   /** Its operating system, when known. */
   os?: string;
   /** Where it is: an address, a cloud and region. */

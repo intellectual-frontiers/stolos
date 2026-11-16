@@ -8,6 +8,7 @@
  *
  * @module
  */
+// Spec: 010-tools
 
 import { BUN_VERSION } from "../core/bun-pin.ts";
 import { bunAssetHere } from "../install/bun.ts";

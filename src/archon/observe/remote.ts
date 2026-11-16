@@ -5,6 +5,7 @@
  *
  * @module
  */
+// Spec: 048-observe-by-query
 
 import { proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { currentTraceparent, span } from "../core/telemetry.ts";

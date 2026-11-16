@@ -18,6 +18,7 @@
  *
  * @module
  */
+// Spec: 052-self-describing
 
 import { guideRef, guideUrl } from "./guides.ts";
 

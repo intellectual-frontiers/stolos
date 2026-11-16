@@ -17,6 +17,7 @@
  *
  * @module
  */
+// Spec: 077-people-controls
 
 import {
   type ControlPack,

@@ -5,6 +5,8 @@
  *
  * @module
  */
+// Spec: 097-controller FR-001
+// Spec: 098-pair FR-001, FR-005, FR-006, FR-007, FR-008
 
 import { proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { compact, toBase64 } from "@intellectual-frontiers/commons/ts/kernel";

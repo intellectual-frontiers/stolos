@@ -7,6 +7,7 @@
  *
  * @module
  */
+// Spec: 004-install
 
 import { fs } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";

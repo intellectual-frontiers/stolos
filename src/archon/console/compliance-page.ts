@@ -8,6 +8,7 @@
  *
  * @module
  */
+// Spec: 073-freshness
 
 import type { ComplianceView, ControlStatus, Coverage } from "../compliance/report.ts";
 import { criteriaOnly } from "../compliance/catalog.ts";

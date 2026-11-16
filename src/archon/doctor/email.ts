@@ -10,6 +10,9 @@
  *
  * @module
  */
+// Spec: 025-notify
+// Spec: 026-doctor
+// Spec: 027-mail
 
 import { dns, fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import type { Phase } from "../core/ui.ts";

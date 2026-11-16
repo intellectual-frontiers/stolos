@@ -5,6 +5,7 @@
  *
  * @module
  */
+// Spec: 011-shell
 
 import type { Capability, UserDef } from "../model/types.ts";
 import { expandPersonas, featuresFor } from "../personas/mod.ts";

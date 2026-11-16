@@ -12,6 +12,8 @@
  *
  * @module
  */
+// Spec: 040-opt-in
+// Spec: 044-durable
 
 import { proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { getRecord, putRecord } from "../state/store.ts";

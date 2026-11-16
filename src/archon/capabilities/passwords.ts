@@ -9,6 +9,8 @@
  *
  * @module
  */
+// Spec: 037-smb
+// Spec: 039-pg-identity
 
 import type { Capability } from "../model/types.ts";
 

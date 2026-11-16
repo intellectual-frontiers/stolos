@@ -8,6 +8,7 @@
  *
  * @module
  */
+// Spec: 004-install
 
 import type { ArchonEvent } from "../archon/telemetry/events.ts";
 import dgram from "node:dgram";

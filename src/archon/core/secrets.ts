@@ -6,6 +6,8 @@
  *
  * @module
  */
+// Spec: 003-identity
+// Spec: 100-remote-access FR-002
 
 import { P } from "./paths.ts";
 import { fs, path as paths, proc } from "@intellectual-frontiers/commons/ts/runtime";

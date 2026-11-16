@@ -11,6 +11,7 @@
  *
  * @module
  */
+// Spec: 083-auditor-portal
 
 import { sha256 as sha256Hex } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs, path as paths, stdio, toError } from "@intellectual-frontiers/commons/ts/runtime";

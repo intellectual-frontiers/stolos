@@ -13,6 +13,7 @@
  *
  * @module
  */
+// Spec: 050-telemetry-ui
 
 import { fs, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";

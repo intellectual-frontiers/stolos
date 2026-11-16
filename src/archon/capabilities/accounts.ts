@@ -8,6 +8,7 @@
  *
  * @module
  */
+// Spec: 006-accounts
 
 import type { Capability } from "../model/types.ts";
 import { ARCHON_GROUPS } from "../personas/mod.ts";

@@ -4,6 +4,7 @@
  *
  * @module
  */
+// Spec: 067-adopt
 
 import { json, record, string } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs, http, path, stdio } from "@intellectual-frontiers/commons/ts/runtime";

@@ -6,6 +6,7 @@
  *
  * @module
  */
+// Spec: 040-opt-in
 
 import type { Capability, FileDef, UnitDef, WebRoute } from "../model/types.ts";
 import { header } from "../render/systemd.ts";

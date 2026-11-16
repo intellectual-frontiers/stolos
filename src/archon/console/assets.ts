@@ -6,6 +6,7 @@
  *
  * @module
  */
+// Spec: 066-stolos-console
 
 import { sha256 } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs } from "@intellectual-frontiers/commons/ts/runtime";

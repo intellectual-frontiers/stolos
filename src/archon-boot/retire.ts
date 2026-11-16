@@ -16,6 +16,7 @@
  *
  * @module
  */
+// Spec: 045-retire
 
 import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { ui } from "../archon/core/ui.ts";

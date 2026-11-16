@@ -6,6 +6,7 @@
  *
  * @module
  */
+// Spec: 035-welcome-guide
 
 import type { HostPlan } from "../model/types.ts";
 import { fqdn } from "../web/config.ts";

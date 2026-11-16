@@ -11,6 +11,7 @@
  *
  * @module
  */
+// Spec: 091-connectors
 
 import { check, type Connector, fresh } from "./connector.ts";
 import { HARDWARE_DEVICE, USER_ACCOUNT } from "./labels.ts";

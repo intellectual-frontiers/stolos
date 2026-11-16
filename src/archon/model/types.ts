@@ -6,8 +6,11 @@
  *
  * @module
  */
+// Spec: 100-remote-access FR-001, FR-004
+// Spec: 101-ladder FR-006
 
 import type { SiteDef } from "./site.ts";
+import type { DataClass as DataClassCode, MachineKind, SignerRole } from "../ontology.auto.ts";
 import type { CadenceOverrides } from "../compliance/freshness.ts";
 import type { ComplianceGate } from "../compliance/impact.ts";
 
@@ -106,8 +109,8 @@ export interface UserDef {
 export interface SignerDef {
   /** A short name, the principal in allowed_signers ("alice-daily"). */
   name: string;
-  /** daily: approves changes; recovery: kept offline, replaces a lost or stolen daily key. */
-  role: "daily" | "recovery";
+  /** daily: approves changes; recovery: kept offline, replaces a lost or stolen daily key (`stolos:SignerRole`). */
+  role: SignerRole;
   /** The public key: "ssh-ed25519 AAAA..." (or sk-ssh-ed25519@openssh.com). */
   key: string;
   /** When it was added (ISO date). */
@@ -564,7 +567,7 @@ export interface HostDef {
    * "workstation" (spec 020): Ubuntu on WSL (or a desktop) where Archon applies
    * only the user-level parts: tools, dotfiles, the archon command.
    */
-  kind?: "server" | "workstation";
+  kind?: Extract<MachineKind, "server" | "workstation">;
   /** Workstations: the existing account Archon sets up (default: the fleet admin's name). */
   user?: string;
   /**
@@ -687,9 +690,10 @@ export interface PgRecord {
 
 /**
  * Article 23 (spec 044): data that can come from end users is either durable
- * (it exists nowhere else) or ephemeral (losing it is harmless).
+ * (it exists nowhere else) or ephemeral (losing it is harmless). The ontology's
+ * code list `stolos:DataClass` (spec 101-ladder FR-006).
  */
-export type DataClass = "durable" | "ephemeral";
+export type DataClass = DataClassCode;
 
 /** An operator's decision about an opt-in service or container (spec 040). */
 export interface OptInRecord {

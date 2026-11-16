@@ -15,6 +15,7 @@
  *
  * @module
  */
+// Spec: 004-install
 
 import { fs, type tcp } from "@intellectual-frontiers/commons/ts/runtime";
 import { explainHint } from "../archon/core/ui.ts";

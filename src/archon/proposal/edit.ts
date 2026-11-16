@@ -18,6 +18,7 @@
  *
  * @module
  */
+// Spec: 095-proposals
 
 import { tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
 import type { AdoptedDef } from "../capabilities/adopted.ts";

@@ -66,7 +66,6 @@ import type { AdoptedDef, Observed } from "../src/archon/adopt/adopt.ts";
 import { askpassHelper, linkEngine, sandbox } from "./sandbox.ts";
 import { fakeConsole } from "./console/serve-stolos.ts";
 
-const FR = (n: number): string => `100-remote-access FR-${String(n).padStart(3, "0")}`;
 const FLEET = { web: { domain: "lab.example.net" } };
 const PC = "alpha-pc";
 const NAMES: ConsoleNames = ((): ConsoleNames => {
@@ -265,7 +264,7 @@ const DEVICE: ConsoleDevice = {
 // ------------------------------------------------------------------ FR-001
 
 proves(
-  [FR(1)],
+  ["100-remote-access FR-001"],
   "100: the names under the web domain, validated, and written into fleet.ts",
   async () => {
     assertEquals(NAMES.own, "alpha-pc.stolos.lab.example.net");
@@ -338,7 +337,7 @@ proves(
 // ------------------------------------------------------------------ FR-002
 
 proves(
-  [FR(2)],
+  ["100-remote-access FR-002"],
   "100: the A records and the heartbeat in Cloudflare; another controller seen",
   async () => {
     const cf = fakeCloudflare();
@@ -404,7 +403,7 @@ proves(
 );
 
 proves(
-  [FR(2)],
+  ["100-remote-access FR-002"],
   "100: the certificate from ACME, kept in the vault, reused, renewed at 30 days",
   async () => {
     let calls: Array<{ domains: string[]; accountKey?: unknown }> = [];
@@ -466,34 +465,38 @@ proves(
 
 // ------------------------------------------------------------------ FR-003
 
-proves([FR(3)], "100: only a LAN or mesh address is bound (Article 28)", () => {
-  for (const a of [
-    "10.0.0.5",
-    "172.16.3.4",
-    "172.31.255.1",
-    "192.168.1.9",
-    "100.64.0.1",
-    "100.127.9.9",
-  ]) {
-    assert(trustedAddress(a), a);
-  }
-  for (const a of [
-    "8.8.8.8",
-    "172.32.0.1",
-    "100.128.0.1",
-    "203.0.113.5",
-    "127.0.0.1",
-    "fe80::1",
-    "",
-  ]) {
-    assert(!trustedAddress(a), a);
-  }
-  assertEquals(listenAddress(["203.0.113.5", "192.168.1.9"]), "192.168.1.9");
-  assertEquals(listenAddress(["203.0.113.5"]), undefined, "a public address only: refused");
-});
+proves(
+  ["100-remote-access FR-003"],
+  "100: only a LAN or mesh address is bound (Article 28)",
+  () => {
+    for (const a of [
+      "10.0.0.5",
+      "172.16.3.4",
+      "172.31.255.1",
+      "192.168.1.9",
+      "100.64.0.1",
+      "100.127.9.9",
+    ]) {
+      assert(trustedAddress(a), a);
+    }
+    for (const a of [
+      "8.8.8.8",
+      "172.32.0.1",
+      "100.128.0.1",
+      "203.0.113.5",
+      "127.0.0.1",
+      "fe80::1",
+      "",
+    ]) {
+      assert(!trustedAddress(a), a);
+    }
+    assertEquals(listenAddress(["203.0.113.5", "192.168.1.9"]), "192.168.1.9");
+    assertEquals(listenAddress(["203.0.113.5"]), undefined, "a public address only: refused");
+  },
+);
 
 proves(
-  [FR(3)],
+  ["100-remote-access FR-003"],
   "100: HTTPS with the console's certificate, renewed in place; the Host check takes the names",
   async () => {
     const dir = await fs.makeTempDir();
@@ -674,7 +677,14 @@ const INFO = { remoteAddr: { hostname: "10.0.0.23", port: 50000 } };
 // ------------------------------------------------------------------ FR-004 .. FR-008, end to end
 
 proves(
-  [FR(4), FR(5), FR(6), FR(7), FR(8), FR(11)],
+  [
+    "100-remote-access FR-004",
+    "100-remote-access FR-005",
+    "100-remote-access FR-006",
+    "100-remote-access FR-007",
+    "100-remote-access FR-008",
+    "100-remote-access FR-011",
+  ],
   "100: a passkey registered, approved with a signed commit by devices approve, honoured from the signed tip, signed in; an unsigned tip refused; revoked",
   async () => {
     const sb = await sandbox("archon-access-");
@@ -992,7 +1002,7 @@ proves(
 // ------------------------------------------------------------------ FR-004, FR-007 with fakes
 
 proves(
-  [FR(4), FR(7), FR(11)],
+  ["100-remote-access FR-004", "100-remote-access FR-007", "100-remote-access FR-011"],
   "100: codes expire, deny drops one, five failures pause an address and mail",
   async () => {
     let t = NOW;
@@ -1103,7 +1113,7 @@ proves(
 // ------------------------------------------------------------------ FR-009
 
 proves(
-  [FR(9)],
+  ["100-remote-access FR-009"],
   "100: a signer whose key is here runs anything; another looks only and is told where to run it",
   async () => {
     const rec = recorder();
@@ -1174,7 +1184,7 @@ proves(
 // ------------------------------------------------------------------ FR-010
 
 proves(
-  [FR(10)],
+  ["100-remote-access FR-010"],
   "100: the Remote Access page: every section, the 90-day review, the CSV, the overview",
   async () => {
     const view: AccessView = {
@@ -1275,7 +1285,7 @@ proves(
 // ------------------------------------------------------------------ FR-011
 
 proves(
-  [FR(11)],
+  ["100-remote-access FR-011"],
   "100: the daily digest of remote use, once a day across restarts; no secret",
   async () => {
     let t = NOW;
@@ -1335,7 +1345,7 @@ proves(
 // ------------------------------------------------------------------ FR-012
 
 proves(
-  [FR(12)],
+  ["100-remote-access FR-012"],
   "100: the doctor's lines (⚡ for the certificate, unused devices, the firewall) and the controller policy",
   () => {
     const now = NOW;
@@ -1443,7 +1453,7 @@ proves(
 // ------------------------------------------------------------------ FR-013, and access.ts
 
 proves(
-  [FR(13), FR(5)],
+  ["100-remote-access FR-013", "100-remote-access FR-005"],
   "100: SCF labels already in the catalog; access.ts is a decision, read back without running it",
   async () => {
     const text = await fs.readTextFile("src/archon/compliance/scf.ts");

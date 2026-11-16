@@ -16,6 +16,7 @@
  *
  * @module
  */
+// Spec: 094-rest-api
 
 import type { ScfCatalog } from "../compliance/catalog.ts";
 import type { Evidence } from "../compliance/report.ts";

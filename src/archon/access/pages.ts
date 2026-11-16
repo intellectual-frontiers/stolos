@@ -10,6 +10,7 @@
  *
  * @module
  */
+// Spec: 100-remote-access FR-004, FR-007, FR-010
 
 import type { ConsoleDevice } from "../model/types.ts";
 import type { ActivityEntry } from "../console/pages.ts";

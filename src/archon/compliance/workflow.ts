@@ -33,6 +33,7 @@
  *
  * @module
  */
+// Spec: 074-change-impact
 import { BUN_VERSION } from "../core/bun-pin.ts";
 
 /** Where the workflow lives in a fleet repository. */

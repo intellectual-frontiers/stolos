@@ -16,6 +16,7 @@
  *
  * @module
  */
+// Spec: 088-wave3-registry
 
 import type { PolicyResult } from "../adopt/policy.ts";
 import type { Connector, Observation } from "./connector.ts";

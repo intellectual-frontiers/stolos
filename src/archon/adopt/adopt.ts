@@ -23,6 +23,8 @@
  *
  * @module
  */
+// Spec: 067-adopt
+// Spec: 097-controller FR-002
 
 import { errors, fs, path, proc, stdio, toError } from "@intellectual-frontiers/commons/ts/runtime";
 import { compact, tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";

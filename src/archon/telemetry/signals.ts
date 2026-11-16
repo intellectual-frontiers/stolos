@@ -6,6 +6,7 @@
  *
  * @module
  */
+// Spec: 049-telemetry
 
 /** What a metric is about: the machine's health, its security, or its state. */
 export type Group = "health" | "security" | "state";

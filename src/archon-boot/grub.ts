@@ -7,6 +7,7 @@
  *
  * @module
  */
+// Spec: 004-install
 
 import type { HostDef } from "../archon/model/types.ts";
 import { UBUNTU } from "./pins.ts";

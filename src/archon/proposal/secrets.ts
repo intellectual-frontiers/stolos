@@ -7,6 +7,7 @@
  *
  * @module
  */
+// Spec: 095-proposals
 
 import { otel, sha256 } from "@intellectual-frontiers/commons/ts/kernel";
 import { patternOf, SECRET_INVENTORY } from "../model/secret-inventory.ts";

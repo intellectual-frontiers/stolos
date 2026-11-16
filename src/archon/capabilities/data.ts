@@ -6,6 +6,7 @@
  *
  * @module
  */
+// Spec: 044-durable
 
 import type { Capability } from "../model/types.ts";
 import { hostData, SPEC } from "../model/durable.ts";

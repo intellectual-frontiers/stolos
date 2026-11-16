@@ -6,6 +6,7 @@
  *
  * @module
  */
+// Spec: 025-notify
 
 import type { Capability } from "../model/types.ts";
 import { HOST_NOTIFY } from "../notify/notify.ts";

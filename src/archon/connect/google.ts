@@ -9,6 +9,7 @@
  *
  * @module
  */
+// Spec: 086-wave1-connectors
 
 import { http } from "@intellectual-frontiers/commons/ts/runtime";
 import { check, type Connector, fresh } from "./connector.ts";

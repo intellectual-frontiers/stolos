@@ -7,6 +7,8 @@
  *
  * @module
  */
+// Spec: 016-backups
+// Spec: 044-durable
 
 import type { BackupDef, Capability, HostDef } from "../model/types.ts";
 import { describeData, durableGuests, durablePaths, hostData } from "../model/durable.ts";

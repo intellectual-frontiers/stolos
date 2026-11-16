@@ -13,6 +13,7 @@
  *
  * @module
  */
+// Spec: 100-remote-access FR-004, FR-005, FR-010, FR-012
 
 import { exportedLiteral, tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";

@@ -32,6 +32,7 @@
  *
  * @module
  */
+// Spec: 093-osquery
 
 import { path } from "@intellectual-frontiers/commons/ts/runtime";
 import type { AnyTable, ViewDef } from "../schema/define.ts";

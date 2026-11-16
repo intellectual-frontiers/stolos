@@ -11,6 +11,7 @@
  *
  * @module
  */
+// Spec: 100-remote-access FR-005, FR-008
 
 import { fs, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";

@@ -10,6 +10,14 @@ about it first. Until now it was not a fleet machine at all: adopted machines ar
 and adopting the controller that way would turn on an SSH server on the one machine that must not
 have one.
 
+## Ontology
+
+The terms this spec uses, defined in `ontology/stolos/` with this spec as their source where it is
+theirs: `stolos:Controller` (a subclass of `stolos:AdoptedMachine`), the machine kind
+`stolos:kind-controller` of `stolos:MachineKind`, `stolos:Fleet`, `stolos:Signer` and its role
+`stolos:SignerRole` (`stolos:signer-daily`, `stolos:signer-recovery`), `stolos:Check` and
+`stolos:Finding`.
+
 ## Requirements
 
 - **FR-001** The PC records itself as an adopted machine with `role: "controller"`

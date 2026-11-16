@@ -13,7 +13,10 @@
  *
  * @module
  */
+// Spec: 099-engine-update FR-007
+// Spec: 101-ladder FR-006
 import { palette } from "@intellectual-frontiers/commons/ts/kernel";
+import type { OutcomeLevel } from "../ontology.auto.ts";
 import { fs, proc, stdio, tty } from "@intellectual-frontiers/commons/ts/runtime";
 import { translate } from "./explain.ts";
 import { asRoot, P } from "./paths.ts";
@@ -30,9 +33,11 @@ export type Level = "ok" | "warn" | "fail" | "defer" | "skip";
  * token not pushed, a certificate not issued yet): shown with its next step,
  * never a failure, never counted as a warning. Spec 099: "action" (⚡) is a
  * step that is the operator's to take (send a change, back up, approve):
- * nothing is wrong, so it is neither a warning nor an error.
+ * nothing is wrong, so it is neither a warning nor an error. Spec 101-ladder FR-006: "pending"
+ * and "action" are the ontology's outcome levels (`stolos:OutcomeLevel`); "warn" and "fail" are
+ * the words a run's log and JSON carry for the levels "warning" and "failed".
  */
-export type ProblemLevel = "warn" | "fail" | "pending" | "action";
+export type ProblemLevel = "warn" | "fail" | Extract<OutcomeLevel, "pending" | "action">;
 
 /** A problem a run found, shown again under "Needs attention" (or "Not set up yet") when it ends. */
 export interface Problem {

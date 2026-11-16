@@ -4,7 +4,7 @@
   sources, ping, resolvectl, chronyc, snap, ufw).
 - `src/archon/doctor/doctor.ts`: the phases; endpoints from apt sources, the git remote, the tools
   catalog, and the model.
-- `src/archon/doctor/email.ts`: the Email phase, also used by `deno task boot doctor`.
+- `src/archon/doctor/email.ts`: the Email phase, also used by `bun run stolos boot doctor`.
 - `src/archon/capabilities/doctor.ts`: declares the tools (all already in Ubuntu Server).
 - `sendSmtp` takes an optional message: without one it stops after AUTH (the SMTP check).
 

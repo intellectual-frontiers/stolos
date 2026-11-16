@@ -18,6 +18,7 @@
  *
  * @module
  */
+// Spec: 080-risks-vendors
 
 import { type AnyTable, defineTable, schemaDoc, schemaSql } from "../schema/define.ts";
 import { LEVELS, TREATMENTS } from "./register.ts";

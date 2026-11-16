@@ -8,6 +8,7 @@
  *
  * @module
  */
+// Spec: 095-proposals
 
 import { json, otel, record, unknownValue } from "@intellectual-frontiers/commons/ts/kernel";
 import type { Alert, Observation, SubjectKind } from "./types.ts";

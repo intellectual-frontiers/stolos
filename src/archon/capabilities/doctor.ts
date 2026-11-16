@@ -5,6 +5,7 @@
  *
  * @module
  */
+// Spec: 026-doctor
 
 import type { Capability } from "../model/types.ts";
 

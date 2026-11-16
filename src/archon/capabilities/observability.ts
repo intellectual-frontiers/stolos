@@ -15,6 +15,7 @@
  *
  * @module
  */
+// Spec: 021-observability
 
 import type { Capability, FleetDef, HostDef, ObservabilityDef } from "../model/types.ts";
 import { header, ini } from "../render/systemd.ts";

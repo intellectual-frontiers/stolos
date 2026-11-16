@@ -7,6 +7,7 @@
  *
  * @module
  */
+// Spec: 010-tools
 
 /** The pinned key's fingerprint. */
 export const GITHUB_CLI_KEY_FINGERPRINT = "7F38BBB59D064DBCB3D84D725612B36462313325";

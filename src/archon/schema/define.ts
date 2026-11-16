@@ -18,6 +18,7 @@
  *
  * @module
  */
+// Spec: 089-ocsf-schema-language
 
 import { nameProblems, type TermRef } from "./vocabulary.ts";
 

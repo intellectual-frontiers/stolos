@@ -7,6 +7,7 @@
  *
  * @module
  */
+// Spec: 029-vault
 
 import { labelFor } from "../model/secret-inventory.ts";
 import type { Assessment } from "./state.ts";

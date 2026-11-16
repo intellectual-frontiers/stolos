@@ -3,6 +3,7 @@
  *
  * @module
  */
+// Spec: 012-cli-mcp
 
 import { fs } from "@intellectual-frontiers/commons/ts/runtime";
 import { ALLOWED_SIGNERS, ALLOWED_SIGNERS_LOCAL, allowedSignersText } from "../identity/signers.ts";

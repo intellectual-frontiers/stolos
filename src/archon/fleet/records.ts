@@ -7,6 +7,11 @@
  *
  * @module
  */
+// Spec: 099-engine-update FR-006
+// Spec: 100-remote-access FR-006
+// Spec: 101-ladder FR-006
+
+import type { FileKind } from "../ontology.auto.ts";
 
 /** What a record is, for people ("olympia's registration, from its install"). */
 const RECORDS: Array<{ re: RegExp; what: (m: RegExpMatchArray) => string }> = [
@@ -59,6 +64,15 @@ const DECISIONS: Array<{ re: RegExp; what: string }> = [
 export function decisionOf(file: string): string | undefined {
   const f = file.replace(/\\/g, "/");
   return DECISIONS.find((d) => d.re.test(f))?.what;
+}
+
+/**
+ * Spec 101-ladder FR-006: whether a file Stolos writes is a record or a decision, as the ontology's
+ * code list `stolos:FileKind` names them; undefined for a person's own file.
+ */
+export function fileKindOf(file: string): FileKind | undefined {
+  if (recordOf(file) !== undefined) return "record";
+  return decisionOf(file) !== undefined ? "decision" : undefined;
 }
 
 /** A person's changed file for people: a decision's name, else its path. */

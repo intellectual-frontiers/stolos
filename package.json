@@ -1,6 +1,6 @@
 {
   "name": "@intellectual-frontiers/stolos",
-  "version": "0.131.0",
+  "version": "0.132.0",
   "description": "Stolos, the fleet engine: the archon command, the boot server, and everything general about turning bare metal into a converged, verified Ubuntu host (spec 096-bun-runtime).",
   "license": "BUSL-1.1",
   "type": "module",
@@ -16,22 +16,25 @@
     "stolos": "bun src/stolos/main.ts",
     "archon": "bun src/archon/main.ts",
     "check": "tsc -p tsconfig.json",
-    "lint": "bun x bun@1.4.4-canary.20261115.1 lint --no-script --type-aware --max-warnings 0 src tools tests examples docs.config.ts",
+    "lint": "bun x bun@1.4.4-canary.20261115.1 lint --no-script --type-aware --max-warnings 0 ontology src tools tests examples docs.config.ts",
     "fmt": "bun fmt",
     "fmt:check": "bun fmt --check",
     "test": "bun tools/test.ts",
     "test:ci": "bun tools/test.ts --runtime bun,node --report tap,junit,ctrf,sarif,md,html,oscal --ledger test-results/ledger.jsonl",
     "gen": "bun tools/gen-assets.ts",
+    "check:ontology": "bun tools/ontology.ts --check",
+    "check:trace": "bun tools/trace.ts",
+    "check:layers": "bun tools/layers.ts",
     "version": "bun tools/version.ts",
     "docs": "ifc-docs build",
     "docs:lint": "ifc-docs check && bun tools/doc-examples.ts",
     "smoke": "bun tools/smoke.ts",
-    "ci": "bun tools/gen-assets.ts --check && bun run check && bun run lint && bun fmt --check && bun run docs:lint && bun run test:ci && bun tools/version.ts check origin/main",
+    "ci": "bun tools/gen-assets.ts --check && bun run check && bun run lint && bun fmt --check && bun run docs:lint && bun run check:ontology && bun run check:trace && bun run check:layers && bun run test:ci && bun tools/version.ts check origin/main",
     "ocsf": "bun tools/ocsf-gen.ts",
     "fedramp": "bun tools/fedramp-gen.ts"
   },
   "dependencies": {
-    "@intellectual-frontiers/commons": "github:intellectual-frontiers/.github#f4c5d0117e57deb19eb467d118c17eb2ca0231da",
+    "@intellectual-frontiers/commons": "github:intellectual-frontiers/.github#8e94d0d77cc899f20f2bdfd61357119c07d10cb0",
     "ajv": "8.17.1"
   },
   "devDependencies": {

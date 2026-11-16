@@ -5,6 +5,9 @@
  *
  * @module
  */
+// Spec: 098-pair FR-001, FR-010
+// Spec: 099-engine-update FR-001
+// Spec: 100-remote-access FR-003, FR-005, FR-008
 
 import { fs, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { CHOICE_ARGS, chooseData, CONFIRM_DESTROY_ARG } from "../model/durable.ts";

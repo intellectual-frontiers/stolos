@@ -5,6 +5,7 @@
  *
  * @module
  */
+// Spec: 037-smb
 
 import type { FleetDef, HostDef, UserDef } from "../model/types.ts";
 import { fqdn } from "../web/config.ts";

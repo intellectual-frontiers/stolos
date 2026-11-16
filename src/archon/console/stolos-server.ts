@@ -25,6 +25,9 @@
  *
  * @module
  */
+// Spec: 066-stolos-console
+// Spec: 099-engine-update FR-002, FR-005
+// Spec: 100-remote-access FR-003, FR-007, FR-009
 
 import type { EngineVersions } from "../fleet/releases.ts";
 import { type Askpass, type Question, sameToken } from "./askpass.ts";

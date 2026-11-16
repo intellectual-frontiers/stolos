@@ -5,6 +5,7 @@
  *
  * @module
  */
+// Spec: 009-updates
 
 import type { Capability } from "../model/types.ts";
 import { networkOf } from "../model/resolve.ts";

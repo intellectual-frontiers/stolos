@@ -24,6 +24,7 @@
  *
  * @module
  */
+// Spec: 095-proposals
 
 import type { Capability, SpecId, UnitDef } from "../model/types.ts";
 

@@ -15,6 +15,8 @@
  *
  * @module
  */
+// Spec: 086-wave1-connectors
+// Spec: 088-wave3-registry
 
 import { AccessDenied, check, type Connector, fresh } from "./connector.ts";
 import { defineConnector } from "./sdk.ts";

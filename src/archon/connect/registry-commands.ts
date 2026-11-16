@@ -7,6 +7,7 @@
  *
  * @module
  */
+// Spec: 088-wave3-registry
 
 import { sha256 } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs, http, path, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";

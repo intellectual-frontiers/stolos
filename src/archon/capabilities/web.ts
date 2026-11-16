@@ -15,6 +15,7 @@
  *
  * @module
  */
+// Spec: 032-web
 
 import type { Capability, UnitDef } from "../model/types.ts";
 import { header, ini } from "../render/systemd.ts";

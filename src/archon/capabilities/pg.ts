@@ -12,6 +12,9 @@
  *
  * @module
  */
+// Spec: 038-pg
+// Spec: 039-pg-identity
+// Spec: 040-opt-in
 
 import type { Capability, UnitDef } from "../model/types.ts";
 import { header } from "../render/systemd.ts";

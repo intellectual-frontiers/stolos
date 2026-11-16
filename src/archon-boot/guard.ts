@@ -24,6 +24,7 @@
  *
  * @module
  */
+// Spec: 051-machine-identity
 
 import type { InstallToken } from "../archon/core/secrets.ts";
 import type { HostRegistration } from "../archon/model/types.ts";

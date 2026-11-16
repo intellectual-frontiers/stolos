@@ -35,6 +35,8 @@
  *
  * @module
  */
+// Spec: 046-engine-instance
+// Spec: 096-bun-runtime
 
 import { object, record, string } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";

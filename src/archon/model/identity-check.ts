@@ -3,6 +3,7 @@
  *
  * @module
  */
+// Spec: 051-machine-identity
 
 import type { CheckDef } from "./types.ts";
 

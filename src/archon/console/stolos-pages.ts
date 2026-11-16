@@ -8,6 +8,9 @@
  *
  * @module
  */
+// Spec: 066-stolos-console
+// Spec: 099-engine-update FR-002, FR-003
+// Spec: 100-remote-access FR-008, FR-010
 
 import type { EngineVersions } from "../fleet/releases.ts";
 import type { Attention } from "../state/verify.ts";

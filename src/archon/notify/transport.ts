@@ -13,6 +13,8 @@
  *
  * @module
  */
+// Spec: 025-notify
+// Spec: 027-mail
 
 import { fs } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";

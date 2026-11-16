@@ -16,6 +16,8 @@
  *
  * @module
  */
+// Spec: 097-controller FR-001, FR-002, FR-003, FR-006
+// Spec: 100-remote-access FR-012
 
 import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";

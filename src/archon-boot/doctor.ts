@@ -6,6 +6,8 @@
  *
  * @module
  */
+// Spec: 099-engine-update FR-006, FR-007
+// Spec: 100-remote-access FR-012
 
 import { fs, path, tcp } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../archon/core/exec.ts";

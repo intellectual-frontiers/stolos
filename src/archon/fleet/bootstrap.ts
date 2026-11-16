@@ -16,6 +16,7 @@
  *
  * @module
  */
+// Spec: 062-bootstrap
 
 import { ASSETS } from "../assets.auto.ts";
 import { run } from "../core/exec.ts";

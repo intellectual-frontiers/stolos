@@ -49,7 +49,7 @@ async function engineFiles(): Promise<string[]> {
 
 proves(
   ["096-bun-runtime FR-001", "096-bun-runtime FR-008"],
-  "096: no file of the engine names the old runtime or imports npm:, jsr: or a URL",
+  "096: no file of the engine or its documentation names the old runtime, or imports npm:, jsr: or a URL",
   async () => {
     // A word of its own, or a part of a name (`OTEL_` and the old name, spec 096 FR-008).
     const named = new RegExp(`(?<![a-z])${OLD}(?![a-z])`, "i");
@@ -65,12 +65,35 @@ proves(
         }
       });
     }
+    // FR-001: the documentation says what is true now, so it names no other runtime either.
+    for (const f of await docFiles()) {
+      const text = await fs.readTextFile(path.join(ROOT, f));
+      text.split("\n").forEach((line, i) => {
+        if (named.test(line)) bad.push(`${f}:${i + 1} names ${OLD}`);
+      });
+    }
     for (const f of [`${OLD}.json`, `${OLD}.jsonc`, `${OLD}.lock`]) {
       if (await fs.exists(path.join(ROOT, f))) bad.push(`${f} configures the engine`);
     }
     assertEquals(bad, []);
   },
 );
+
+/** The engine's documentation: the specs, the constitution, AGENTS.md, README.md and docs/ (not vendor/). */
+async function docFiles(): Promise<string[]> {
+  const out: string[] = [];
+  for (const top of ["specs", "docs", ".specify/memory"]) {
+    if (!(await fs.exists(path.join(ROOT, top)))) continue;
+    for (const rel of await fs.walkFiles(path.join(ROOT, top))) {
+      const f = `${top}/${rel.replace(/\\/g, "/")}`;
+      if (/\.(md|tsv)$/.test(f)) out.push(f);
+    }
+  }
+  for (const f of ["AGENTS.md", "README.md", "LICENSING.md"]) {
+    if (await fs.exists(path.join(ROOT, f))) out.push(f);
+  }
+  return out.sort();
+}
 
 /** A JSON object's field as a map of strings ({} where it is not one). */
 function strings(o: unknown, key: string): Record<string, string> {

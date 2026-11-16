@@ -14,6 +14,7 @@
  *
  * @module
  */
+// Spec: 100-remote-access FR-004, FR-006, FR-007, FR-009, FR-010, FR-011
 
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import { run, type RunResult } from "../core/exec.ts";

@@ -12,6 +12,7 @@
  *
  * @module
  */
+// Spec: 028-site-network
 
 /** The brand's key (type-level only: no such value exists at run time). */
 export declare const BRAND: unique symbol;

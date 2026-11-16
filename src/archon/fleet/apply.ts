@@ -17,6 +17,7 @@
  *
  * @module
  */
+// Spec: 060-stolos-apply
 
 import { fs, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";

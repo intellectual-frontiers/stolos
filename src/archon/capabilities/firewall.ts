@@ -4,6 +4,7 @@
  *
  * @module
  */
+// Spec: 008-firewall
 
 import type { Capability, HostPlan } from "../model/types.ts";
 

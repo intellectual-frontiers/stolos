@@ -8,6 +8,7 @@
  *
  * @module
  */
+// Spec: 100-remote-access FR-001, FR-002, FR-003
 
 import { acme, path, type ServeHandler } from "@intellectual-frontiers/commons/ts/runtime";
 import { P } from "../core/paths.ts";

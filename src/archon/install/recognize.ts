@@ -24,6 +24,7 @@
  *
  * @module
  */
+// Spec: 051-machine-identity
 
 import { absurd } from "@intellectual-frontiers/commons/ts/kernel";
 import { parseMac } from "../fleet/registration.ts";

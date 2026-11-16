@@ -8,6 +8,7 @@
  *
  * @module
  */
+// Spec: 095-proposals
 
 /** A file attached to a message. */
 export interface MailFile {

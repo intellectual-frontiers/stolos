@@ -23,6 +23,7 @@
  *
  * @module
  */
+// Spec: 048-observe-by-query
 
 import { formatDecodeError, object, string } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";

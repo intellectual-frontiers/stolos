@@ -7,6 +7,9 @@
  *
  * @module
  */
+// Spec: 028-site-network
+// Spec: 029-vault
+// Spec: 100-remote-access FR-002
 
 /** One secret the fleet depends on: where it lives and how to make it again (never its value). */
 export interface SecretRef {

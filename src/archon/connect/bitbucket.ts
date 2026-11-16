@@ -15,6 +15,7 @@
  *
  * @module
  */
+// Spec: 091-connectors
 
 import { AccessDenied, type Connector } from "./connector.ts";
 import { CODE_REPOSITORY, USER_ACCOUNT } from "./labels.ts";

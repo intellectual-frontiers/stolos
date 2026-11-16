@@ -7,6 +7,8 @@
  *
  * @module
  */
+// Spec: 032-web
+// Spec: 035-welcome-guide
 
 import { fs, path as paths, proc, serve } from "@intellectual-frontiers/commons/ts/runtime";
 import { getRecord } from "../state/store.ts";

@@ -6,6 +6,7 @@
  *
  * @module
  */
+// Spec: 001-platform
 
 import { registeredCardCheck } from "../model/identity-check.ts";
 import type { Capability, UnitDef } from "../model/types.ts";

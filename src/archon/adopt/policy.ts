@@ -9,6 +9,11 @@
  *
  * @module
  */
+// Spec: 067-adopt
+// Spec: 068-compliance
+// Spec: 078-control-sdk
+// Spec: 097-controller FR-004
+// Spec: 100-remote-access FR-012, FR-013
 
 import type { AdoptedDef, Observed } from "./adopt.ts";
 import {

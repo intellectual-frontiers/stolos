@@ -8,6 +8,7 @@
  *
  * @module
  */
+// Spec: 089-ocsf-schema-language
 
 import { OCSF_CLASSES, OCSF_OBJECT_NAMES } from "../ocsf/classes.ts";
 import { D3FEND_ARTIFACTS } from "./d3fend.auto.ts";

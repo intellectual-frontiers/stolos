@@ -5,6 +5,7 @@
  *
  * @module
  */
+// Spec: 029-vault
 
 import { sha256 } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs, path as paths } from "@intellectual-frontiers/commons/ts/runtime";

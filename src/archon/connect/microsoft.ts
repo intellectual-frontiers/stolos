@@ -15,6 +15,9 @@
  *
  * @module
  */
+// Spec: 067-adopt
+// Spec: 080-risks-vendors
+// Spec: 088-wave3-registry
 
 import type { http } from "@intellectual-frontiers/commons/ts/runtime";
 import { AccessDenied, check, type Connector, fresh } from "./connector.ts";

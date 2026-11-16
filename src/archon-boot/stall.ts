@@ -8,6 +8,7 @@
  *
  * @module
  */
+// Spec: 051-machine-identity
 
 import { proc } from "@intellectual-frontiers/commons/ts/runtime";
 

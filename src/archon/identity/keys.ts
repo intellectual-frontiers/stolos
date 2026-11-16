@@ -22,6 +22,8 @@
  *
  * @module
  */
+// Spec: 047-intent-and-identity
+// Spec: 057-keys
 
 import { fs, path as ifcPath, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";

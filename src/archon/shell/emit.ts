@@ -20,6 +20,7 @@
  *
  * @module
  */
+// Spec: 036-cli-comforts
 
 import { fs, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 

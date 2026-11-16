@@ -23,6 +23,7 @@
  *
  * @module
  */
+// Spec: 080-risks-vendors
 
 import type { Acceptance, AdoptedDef } from "../adopt/adopt.ts";
 import type { Estate } from "../estate/graph.ts";

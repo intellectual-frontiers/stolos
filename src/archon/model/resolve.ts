@@ -4,6 +4,7 @@
  *
  * @module
  */
+// Spec: 002-model
 
 import type { FileDef, FleetDef, HostDef, HostPlan } from "./types.ts";
 import { type SiteDef, siteNetwork } from "./site.ts";

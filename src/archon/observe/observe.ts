@@ -6,6 +6,7 @@
  *
  * @module
  */
+// Spec: 021-observability
 
 import { fs, path as paths, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";

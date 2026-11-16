@@ -9,6 +9,8 @@
  *
  * @module
  */
+// Spec: 032-web
+// Spec: 035-welcome-guide
 
 import type { LastVerify } from "../core/status.ts";
 import {

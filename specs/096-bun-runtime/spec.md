@@ -4,17 +4,12 @@ Issue intellectual-frontiers/stolos#32; tracking issue intellectual-frontiers/.g
 
 ## Why
 
-Deno is going away. The engine was written for Deno: its runtime calls (`Deno.*`), its task runner,
-its lockfile as the security control of a fleet, its built-in telemetry, its test runner, its
-documentation tool, and the way a fleet loaded the engine (raw GitHub URLs pinned in `deno.json`).
-Intellectual Frontiers Commons now gives the same ground in one place: IFC TypeScript (commons specs
-0005 to 0008, in commons' package `@intellectual-frontiers/commons`), a pure kernel and a host
-runtime on web standards and `node:` builtins. The runtime keeps the names of the Deno calls it replaces, and
-the code runs unchanged on Bun, on Node 26 and on Deno. It is OpenTelemetry-native, it holds the
-primitives of GRC engineering, and it records every test run as compliance evidence.
-
-This spec moves the engine onto it as fresh code. Nothing is migrated, and no old form is kept for
-an old caller: the engine, its fleets and its hosts start over on the new ground.
+The engine runs on Bun, the default TypeScript 7 runtime of Intellectual Frontiers, with Node 26 as
+the backup. Its ground is IFC TypeScript (commons specs 0005 to 0008, in commons' package
+`@intellectual-frontiers/commons`): a pure kernel and a host runtime on web standards and `node:`
+builtins, so the same code runs on Bun and on Node 26. It is OpenTelemetry-native, it holds the
+primitives of GRC engineering, and it records every test run as compliance evidence. A fleet loads
+the engine as a Git dependency pinned by `bun.lock`, and Bun installs, formats, lints and tests.
 
 ```mermaid
 flowchart LR
@@ -30,8 +25,8 @@ flowchart LR
    **Node 26 is the backup**: the same code runs on it, so the engine is never stuck on one runtime.
 2. **TypeScript 7 is the type checker.** IFC TypeScript is the shared kernel and runtime, depended
    on as commons' package by Git, pinned by a full commit.
-3. **No Deno anywhere**: no `Deno.*`, no `deno.json`, no `deno.lock`, no `deno task`, no
-   `deno doc`, no Deno OpenTelemetry. No migration and no backward compatibility.
+3. **Bun and Node 26 only**: no other runtime's API, configuration file, lockfile, task runner,
+   documentation tool or telemetry is used anywhere (the guard in `tests/bun096.test.ts` holds it).
 4. **One tool binary.** Bun installs, formats, lints, tests and compiles. Lint uses IFC
    TypeScript's plugin.
 5. **PAM stays in the engine on `bun:ffi`**, in its one file, behind the console's `Authenticator`.
@@ -100,9 +95,8 @@ flowchart LR
   (was `@stolos/archon/model/types.ts`). In this repository the name refers to the package itself
   (`"./*": "./src/*.ts"`), so `examples/` load the sources on Bun and on Node with no build, and a
   fleet's `node_modules` holds the same sources, from the same `package.json`.
-- **No `modules.auto.ts`.** It named every module so that `deno.lock` pinned each one; the package is
-  installed whole and `bun.lock` pins its commit and that commit's integrity, so it is gone, and
-  `bun run gen` writes only `assets.auto.ts`.
+- **The package is installed whole:** `bun.lock` pins its commit and that commit's integrity, and
+  `bun run gen` writes only the generated files (`assets.auto.ts`, the ontology's).
 - **The version** stays in `src/archon/version.ts`; `bun run version` keeps `package.json`'s
   `version` equal to it (`bump` writes both, `check` fails where they differ).
 - **The linter** is a pinned Bun canary (`bun x bun@1.4.4-canary.20261115.1 lint`), as commons
@@ -118,12 +112,13 @@ flowchart LR
 - **Span names are kinds**: a run is one `archon.run` span (its command in `archon.command`) and each
   phase an `archon.phase` span (its name in `archon.phase`), as IFC TypeScript's registry needs
   names declared once.
-- The conversion of every module, call and import is in [`mapping.md`](mapping.md).
 
 ## Requirements
 
-- **FR-001** No file of the engine (`src/`, `tools/`, `tests/`, `examples/`) names `Deno`, imports
-  `npm:`, `jsr:` or a URL, or is configured by `deno.json` or `deno.lock`. The one file that names a
+- **FR-001** No file of the engine (`src/`, `tools/`, `tests/`, `examples/`) and none of its
+  documentation (the specs, the constitution, AGENTS.md, README.md, `docs/`) names a TypeScript
+  runtime other than Bun and Node, imports `npm:`, `jsr:` or a URL, or is configured by another
+  runtime's file; vendored third-party files keep their publishers' text. The one file that names a
   runtime's API is the PAM binding, which imports `bun:ffi`, as the lint plugin's allow list says.
 - **FR-002** `package.json` pins the development dependencies exactly (TypeScript 7, `@types/node`)
   and the run-time ones (commons by `github:intellectual-frontiers/.github#<full commit>`, `ajv`),
@@ -152,11 +147,11 @@ flowchart LR
   `--import @intellectual-frontiers/commons/ts/node` (the hook's file, where the working folder is
   not the fleet repository).
 - **FR-008** Telemetry is IFC TypeScript's (`runtime/otel`, commons 0006-signals): every command is
-  a trace, and nothing reads `OTEL_DENO`. The boot server records each event as an OpenTelemetry log
+  a trace, and nothing reads another runtime's telemetry switch. The boot server records each event as an OpenTelemetry log
   record; its terminal window and `boot.log` are renderings of the same event, and the Stolos
   Console's Installs page reads `boot.log` (not the OTLP journal).
 - **FR-009** `ifc-docs` (commons 0011-documentation), configured by `docs.config.ts`, renders the
-  engine's documentation from its TSDoc and its spec kit to `out/docs/` with no Deno (`bun run docs`),
+  engine's documentation from its TSDoc and its spec kit to `out/docs/` (`bun run docs`),
   and `bun run docs:lint` runs `ifc-docs check` (every export of every area documented, every
   citation, link and anchor known) and `tools/doc-examples.ts` (every `@example` compiles).
 - **FR-010** The console's PAM sign-in runs on Bun through `bun:ffi`. On Node it is refused as not
@@ -165,7 +160,7 @@ flowchart LR
 ## Tests
 
 - `tests/bun096.test.ts`:
-  - no `Deno`, `npm:`, `jsr:` or URL import in the engine;
+  - no other runtime named, and no `npm:`, `jsr:` or URL import, in the engine or its documentation;
   - `package.json` pinned exactly (commons by `github:` at a full commit) and matching `bun.lock`;
   - this checkout, committed in a throwaway clone, installs as a Git dependency (`git+file:`) into
     an empty project and runs `archon --version` and `stolos --version` on Bun and on Node 26 with

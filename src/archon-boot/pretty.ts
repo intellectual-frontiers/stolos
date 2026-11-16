@@ -9,6 +9,7 @@
  *
  * @module
  */
+// Spec: 049-telemetry
 
 import { ui } from "../archon/core/ui.ts";
 import { type ArchonEvent, type EventName, severityOf } from "../archon/telemetry/events.ts";

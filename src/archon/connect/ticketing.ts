@@ -7,6 +7,7 @@
  *
  * @module
  */
+// Spec: 087-wave2-connectors
 
 import { check, type Observation } from "./connector.ts";
 import type { ObservedRecord } from "./sdk.ts";

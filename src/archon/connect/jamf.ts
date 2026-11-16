@@ -12,6 +12,7 @@
  *
  * @module
  */
+// Spec: 087-wave2-connectors
 
 import { type Connector, fresh } from "./connector.ts";
 import { CHECK_IN_DAYS, devicePolicies, devicePosture, osName } from "./endpoint.ts";

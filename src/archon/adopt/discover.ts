@@ -7,6 +7,7 @@
  *
  * @module
  */
+// Spec: 067-adopt
 
 import { proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";

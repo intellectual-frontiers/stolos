@@ -12,6 +12,7 @@
  *
  * @module
  */
+// Spec: 033-etckeeper
 
 import type { Capability } from "../model/types.ts";
 

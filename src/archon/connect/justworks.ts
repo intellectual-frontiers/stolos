@@ -15,6 +15,7 @@
  *
  * @module
  */
+// Spec: 091-connectors
 
 import { http } from "@intellectual-frontiers/commons/ts/runtime";
 import { AccessDenied, type Connector } from "./connector.ts";

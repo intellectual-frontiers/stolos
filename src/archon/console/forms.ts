@@ -7,6 +7,7 @@
  *
  * @module
  */
+// Spec: 066-stolos-console
 
 import { COMMANDS, offeredOn } from "../commands/registry.ts";
 import {

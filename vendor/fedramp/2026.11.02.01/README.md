@@ -35,7 +35,7 @@ United States (17 U.S.C. 105): in the public domain there.
 
 ## Use
 
-`deno task fedramp` (`tools/fedramp-gen.ts`) checks the rules file's SHA-256 and writes
+`bun run fedramp` (`tools/fedramp-gen.ts`) checks the rules file's SHA-256 and writes
 `src/archon/fedramp/rules.auto.ts` from it (the KSIs, the Class A list, the cadences); the tests
 check every KSI against this file and validate Stolos's Security Decision Record against the
 schemas with Ajv. These files are not shipped in the engine: the generated module carries what it

@@ -28,6 +28,8 @@
  *
  * @module
  */
+// Spec: 071-catalogs-oscal
+// Spec: 088-wave3-registry
 
 import { oscal, uuid } from "@intellectual-frontiers/commons/ts/kernel";
 import { NIST_MODERATE_PROFILE, NIST_SOURCES, SCF_SOURCE } from "./catalog.ts";

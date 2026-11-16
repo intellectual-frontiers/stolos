@@ -1,0 +1,2 @@
+# Requirements proven by review, not by a test: the requirement, a tab, how it is verified.
+101-ladder FR-011	Headless first is a rule of review: a console action without its command and test is refused when the change is reviewed (Article 0, Article 6); the registry generating CLI and MCP is proved by 012-cli-mcp and 088-wave3-registry.

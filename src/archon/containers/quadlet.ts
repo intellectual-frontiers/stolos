@@ -5,6 +5,7 @@
  *
  * @module
  */
+// Spec: 040-opt-in
 
 import type { ContainerDef } from "./catalog.ts";
 

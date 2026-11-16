@@ -5,6 +5,7 @@
  *
  * @module
  */
+// Spec: 100-remote-access FR-012
 
 import { EXPIRY_WARN_DAYS, daysLeft, HEARTBEAT_STALE_MS } from "./tls.ts";
 import { UNUSED_DAYS } from "./devices.ts";

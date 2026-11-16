@@ -11,6 +11,7 @@
  *
  * @module
  */
+// Spec: 044-durable
 
 import type { DataClass, HostDef } from "./types.ts";
 

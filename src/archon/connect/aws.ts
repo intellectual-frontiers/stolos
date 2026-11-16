@@ -17,6 +17,8 @@
  *
  * @module
  */
+// Spec: 067-adopt
+// Spec: 088-wave3-registry
 
 import { sigv4 } from "@intellectual-frontiers/commons/ts/kernel";
 import type { http } from "@intellectual-frontiers/commons/ts/runtime";

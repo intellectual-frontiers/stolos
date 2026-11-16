@@ -21,6 +21,7 @@
  *
  * @module
  */
+// Spec: 096-bun-runtime
 import { errors, proc } from "@intellectual-frontiers/commons/ts/runtime";
 
 /** What a program did. */

@@ -8,6 +8,7 @@
  *
  * @module
  */
+// Spec: 048-observe-by-query
 
 import { count, span } from "../core/telemetry.ts";
 import { run } from "../core/exec.ts";

@@ -15,6 +15,7 @@
  *
  * @module
  */
+// Spec: 054-safe-power
 
 import { run } from "../core/exec.ts";
 

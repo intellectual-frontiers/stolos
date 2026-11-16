@@ -24,6 +24,8 @@
  *
  * @module
  */
+// Spec: 025-notify
+// Spec: 027-mail
 
 import { absurd } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs, path as paths, proc } from "@intellectual-frontiers/commons/ts/runtime";

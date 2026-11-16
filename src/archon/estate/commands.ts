@@ -35,6 +35,8 @@
  *
  * @module
  */
+// Spec: 090-estate-graph
+// Spec: 093-osquery
 
 import { errors, fs, path, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { ui } from "../core/ui.ts";

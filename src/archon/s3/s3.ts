@@ -9,6 +9,8 @@
  *
  * @module
  */
+// Spec: 040-opt-in
+// Spec: 041-s3
 
 import { errors, fs, path, proc, stdio, tty } from "@intellectual-frontiers/commons/ts/runtime";
 import { currentUser, homeOf, run, type RunResult } from "../core/exec.ts";

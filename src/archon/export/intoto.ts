@@ -44,6 +44,7 @@
  *
  * @module
  */
+// Spec: 092-exporters
 
 import { dsse, sha256, unzip } from "@intellectual-frontiers/commons/ts/kernel";
 import { type Manifest, manifestText, NAMESPACE, parseManifest } from "../evidence/bundle.ts";

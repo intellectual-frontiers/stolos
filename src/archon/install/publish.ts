@@ -7,6 +7,7 @@
  *
  * @module
  */
+// Spec: 045-retire
 
 import { fs, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { ui } from "../core/ui.ts";

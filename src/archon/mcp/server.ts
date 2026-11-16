@@ -8,6 +8,7 @@
  *
  * @module
  */
+// Spec: 030-agent-layer
 
 import { otel } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs, path as paths, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";

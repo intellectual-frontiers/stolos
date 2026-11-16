@@ -5,6 +5,7 @@
  *
  * @module
  */
+// Spec: 023-boot-telemetry
 
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import { ui } from "../archon/core/ui.ts";

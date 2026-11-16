@@ -5,6 +5,7 @@
  *
  * @module
  */
+// Spec: 047-intent-and-identity
 
 import { fs, path, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { count } from "../core/telemetry.ts";

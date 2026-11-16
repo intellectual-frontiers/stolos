@@ -6,6 +6,7 @@
  *
  * @module
  */
+// Spec: 040-opt-in
 
 import type { SpecId } from "../model/types.ts";
 

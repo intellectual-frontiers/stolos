@@ -23,6 +23,7 @@
  *
  * @module
  */
+// Spec: 078-control-sdk
 
 import type { Acceptance, AdoptedDef, Observed } from "../adopt/adopt.ts";
 import type { PolicyResult } from "../adopt/policy.ts";

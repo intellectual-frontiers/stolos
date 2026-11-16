@@ -10,6 +10,7 @@
  *
  * @module
  */
+// Spec: 068-compliance
 
 import type { PolicyResult } from "../adopt/policy.ts";
 import type { PcFacts } from "../console/pc.ts";

@@ -30,6 +30,8 @@
  *
  * @module
  */
+// Spec: 058-operator-update
+// Spec: 099-engine-update FR-001, FR-004, FR-006
 
 import { fs, path, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";

@@ -5,7 +5,7 @@ In progress (v0.5.0) **Input**: Constitution Article 27. Use IFC TypeScript's Op
 (`runtime/otel`) extensively: one list of signal names, resource attributes that say which fleet,
 host, engine, and commit, traces carried across machines, security events as metrics, nothing
 secret. Where the network has no other collector, the boot PC's boot server is the fleet's default,
-ephemeral collector. Research: [research.md](research.md).
+ephemeral collector.
 
 ## User Scenarios & Testing _(mandatory)_
 

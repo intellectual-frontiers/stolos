@@ -22,6 +22,7 @@
  *
  * @module
  */
+// Spec: 088-wave3-registry
 
 import {
   array,

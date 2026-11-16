@@ -6,6 +6,8 @@
  *
  * @module
  */
+// Spec: 032-web
+// Spec: 100-remote-access FR-002
 
 const API = "https://api.cloudflare.com/client/v4";
 

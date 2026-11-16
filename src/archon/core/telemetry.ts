@@ -38,6 +38,8 @@
  *
  * @module
  */
+// Spec: 049-telemetry
+// Spec: 096-bun-runtime
 import {
   err,
   ok,

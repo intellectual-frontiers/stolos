@@ -3,6 +3,7 @@
  *
  * @module
  */
+// Spec: 010-tools
 
 import type { Capability } from "../model/types.ts";
 import { TOOLS } from "../tools/catalog.ts";

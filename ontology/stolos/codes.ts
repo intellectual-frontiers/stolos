@@ -1,0 +1,240 @@
+/**
+ * The code lists of Stolos (spec 101-ladder FR-004, FR-006): each a list of individuals of one class, keyed by the word the engine
+ * branches on, each citing the specification it comes from. `bun run gen` writes their keys as the unions and arrays of
+ * `src/archon/ontology.auto.ts`, which the code imports instead of writing the words again.
+ *
+ * @module
+ */
+// Spec: 101-ladder FR-004, FR-006
+import { palette, rdf } from "@intellectual-frontiers/commons/ts/kernel";
+import {
+  CommandTierSchema,
+  codeList,
+  DataClassSchema,
+  FileKindSchema,
+  IntegrationKindSchema,
+  MachineKindSchema,
+  OutcomeLevelSchema,
+  SignerRoleSchema,
+} from "./vocabulary.ts";
+
+const { en } = rdf;
+
+/** The marks of an outcome level, from commons' palette (commons 0006-signals FR-022, FR-027): the same in every command line. */
+function marks(kind: palette.MarkKind): { readonly emoji: string; readonly ascii: string } {
+  return { emoji: palette.MARKS[kind].emoji, ascii: palette.MARKS[kind].ascii };
+}
+
+/** How a step ended, as every command line and console shows it (spec 019-output, 052-self-describing, 099-engine-update FR-007). */
+export const outcomeLevels = codeList(OutcomeLevelSchema, "outcome", {
+  done: {
+    label: en("done"),
+    definition: en("The step did what it was asked."),
+    spec: ["019-output"],
+    ...marks("done"),
+  },
+  failed: {
+    label: en("failed"),
+    definition: en("The step failed: a problem with its fix."),
+    spec: ["019-output"],
+    ...marks("failed"),
+  },
+  warning: {
+    label: en("warning"),
+    definition: en("The step finished, with something to look at."),
+    spec: ["019-output"],
+    ...marks("warning"),
+  },
+  pending: {
+    label: en("pending"),
+    definition: en(
+      "Not set up yet, expected until someone does it: shown with its next step, never a failure.",
+    ),
+    spec: ["052-self-describing"],
+    ...marks("pending"),
+  },
+  action: {
+    label: en("action"),
+    definition: en(
+      "A step that is the operator's to take (send a change, back up, approve): nothing is wrong.",
+    ),
+    spec: ["099-engine-update FR-007"],
+    ...marks("action"),
+  },
+});
+
+/** What a machine of a fleet is to Stolos (spec 066-stolos-console FR-003, 097-controller FR-001). */
+export const machineKinds = codeList(MachineKindSchema, "kind", {
+  server: {
+    label: en("server"),
+    definition: en("A managed server, installed and converged by archon."),
+    spec: ["002-model"],
+  },
+  workstation: {
+    label: en("workstation"),
+    definition: en("A managed workstation (Ubuntu, or Ubuntu on WSL)."),
+    spec: ["020-workstation"],
+  },
+  adopted: {
+    label: en("adopted"),
+    definition: en("A machine Stolos did not install, observed by its probe."),
+    spec: ["067-adopt"],
+  },
+  device: {
+    label: en("device"),
+    definition: en("An appliance read over SNMP."),
+    spec: ["069-integrate FR-005"],
+  },
+  discovered: {
+    label: en("discovered"),
+    definition: en("A machine found on the network and recorded, not adopted yet."),
+    spec: ["067-adopt"],
+  },
+  cloud: {
+    label: en("cloud"),
+    definition: en("A machine a connected cloud account reports."),
+    spec: ["066-stolos-console FR-003"],
+  },
+  controller: {
+    label: en("controller"),
+    definition: en("The PC that runs stolos, an adopted machine observed locally."),
+    spec: ["097-controller FR-001"],
+  },
+});
+
+/** A signer's role (spec 047-intent-and-identity FR-001). */
+export const signerRoles = codeList(SignerRoleSchema, "signer", {
+  daily: {
+    label: en("daily"),
+    definition: en("Approves changes."),
+    spec: ["047-intent-and-identity FR-001"],
+  },
+  recovery: {
+    label: en("recovery"),
+    definition: en("Kept offline, in the vault: replaces a lost or stolen daily key."),
+    spec: ["047-intent-and-identity FR-001", "057-keys"],
+  },
+});
+
+/** What a command may do (spec 030-agent-layer FR-003, FR-004). */
+export const commandTiers = codeList(CommandTierSchema, "tier", {
+  read: {
+    label: en("read"),
+    definition: en("Reads, and changes nothing."),
+    spec: ["030-agent-layer FR-003"],
+  },
+  repo: {
+    label: en("repo"),
+    definition: en("Writes the fleet repository."),
+    spec: ["030-agent-layer FR-003"],
+  },
+  mutate: {
+    label: en("mutate"),
+    definition: en("Changes the host."),
+    spec: ["030-agent-layer FR-003"],
+  },
+  destructive: {
+    label: en("destructive"),
+    definition: en(
+      "Removes users, packages, data or guests: never served to an agent (Article 17).",
+    ),
+    spec: ["030-agent-layer FR-004"],
+  },
+});
+
+/** Whether data from end users is durable or ephemeral (Article 23, spec 044-durable FR-001). */
+export const dataClasses = codeList(DataClassSchema, "data", {
+  durable: {
+    label: en("durable"),
+    definition: en("It exists nowhere else."),
+    spec: ["044-durable FR-001"],
+  },
+  ephemeral: {
+    label: en("ephemeral"),
+    definition: en("Losing it is harmless."),
+    spec: ["044-durable FR-001"],
+  },
+});
+
+/** What a machine integrates as, in this order (spec 069-integrate). */
+export const integrationKinds = codeList(IntegrationKindSchema, "integration", {
+  discover: {
+    label: en("discover"),
+    definition: en("Recorded as discovered."),
+    spec: ["069-integrate"],
+  },
+  adopt: {
+    label: en("adopt"),
+    definition: en("Adopted: observed by its probe over SSH."),
+    spec: ["069-integrate"],
+  },
+  osquery: {
+    label: en("osquery"),
+    definition: en("Adopted, with osquery installed."),
+    spec: ["069-integrate", "093-osquery"],
+  },
+  server: {
+    label: en("server"),
+    definition: en("Made a managed server."),
+    spec: ["069-integrate"],
+  },
+  workstation: {
+    label: en("workstation"),
+    definition: en("Made a managed workstation."),
+    spec: ["069-integrate"],
+  },
+});
+
+/** Whether a file Stolos writes in a fleet repository is a record or a decision (spec 099-engine-update FR-006, 100-remote-access). */
+export const fileKinds = codeList(FileKindSchema, "file", {
+  record: {
+    label: en("record"),
+    definition: en(
+      "What happened (a registration, an observation): sent by stolos update, expected, never alarming.",
+    ),
+    spec: ["099-engine-update FR-006"],
+  },
+  decision: {
+    label: en("decision"),
+    definition: en(
+      "What a person decided: sent by the command that decided, signed by whoever decided.",
+    ),
+    spec: ["100-remote-access"],
+  },
+});
+
+/** Every code list, by the name of the type the generator writes for it, with the name of its array and what it is. */
+export const CODE_LISTS = {
+  OutcomeLevel: {
+    array: "OUTCOME_LEVELS",
+    list: outcomeLevels,
+    what: "How a step ended, with its mark",
+  },
+  MachineKind: {
+    array: "MACHINE_KINDS",
+    list: machineKinds,
+    what: "What a machine of a fleet is to Stolos",
+  },
+  SignerRole: { array: "SIGNER_ROLES", list: signerRoles, what: "A signer's role" },
+  CommandTier: { array: "COMMAND_TIERS", list: commandTiers, what: "What a command may do" },
+  DataClass: {
+    array: "DATA_CLASSES",
+    list: dataClasses,
+    what: "Whether data from end users is durable or ephemeral",
+  },
+  IntegrationKind: {
+    array: "INTEGRATION_KINDS",
+    list: integrationKinds,
+    what: "What a machine integrates as",
+  },
+  FileKind: {
+    array: "FILE_KINDS",
+    list: fileKinds,
+    what: "Whether a file Stolos writes is a record or a decision",
+  },
+} as const;
+
+/** Every individual of the code lists, in order. */
+export const individuals: readonly rdf.AnyIndividual[] = Object.values(CODE_LISTS).flatMap((c) =>
+  Object.values<rdf.AnyIndividual>(c.list),
+);

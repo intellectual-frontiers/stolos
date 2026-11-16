@@ -11,6 +11,7 @@
  *
  * @module
  */
+// Spec: 077-people-controls
 
 import { fs, path as paths, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";

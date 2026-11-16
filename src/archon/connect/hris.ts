@@ -9,6 +9,7 @@
  *
  * @module
  */
+// Spec: 086-wave1-connectors
 
 import { type Connector, fresh } from "./connector.ts";
 import { emailKey, type Person } from "./entities.ts";

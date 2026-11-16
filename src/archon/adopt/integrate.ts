@@ -8,6 +8,8 @@
  *
  * @module
  */
+// Spec: 069-integrate
+// Spec: 101-ladder FR-006
 
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import { tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
@@ -15,12 +17,13 @@ import { P } from "../core/paths.ts";
 import { VERSION } from "../version.ts";
 import { PROBE_SCRIPT, PROBE_SCRIPT_WINDOWS } from "./probe.ts";
 import type { CheckIn } from "./checkin.ts";
+import { INTEGRATION_KINDS, type IntegrationKind } from "../ontology.auto.ts";
 
-/** What a machine can be prepared for. */
-export const INTEGRATIONS = ["discover", "adopt", "osquery", "server", "workstation"] as const;
+/** What a machine can be prepared for: the ontology's integration kinds, in order (spec 101-ladder FR-006). */
+export const INTEGRATIONS: readonly IntegrationKind[] = INTEGRATION_KINDS;
 
-/** One integration. */
-export type Integration = (typeof INTEGRATIONS)[number];
+/** One integration (`stolos:IntegrationKind`). */
+export type Integration = IntegrationKind;
 
 /** Where the engine's release files are. */
 export const RAW = "https://raw.githubusercontent.com/intellectual-frontiers/stolos/";

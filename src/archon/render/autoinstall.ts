@@ -7,6 +7,8 @@
  *
  * @module
  */
+// Spec: 004-install
+// Spec: 005-first-boot
 
 import { allowedSignersText } from "../identity/signers.ts";
 import type { DiskDef, FleetDef, HostDef } from "../model/types.ts";

@@ -42,6 +42,7 @@
  *
  * @module
  */
+// Spec: 096-bun-runtime
 
 import type { proc } from "@intellectual-frontiers/commons/ts/runtime";
 

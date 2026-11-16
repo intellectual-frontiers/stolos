@@ -5,6 +5,8 @@
  *
  * @module
  */
+// Spec: 014-state
+// Spec: 015-reconcile
 
 import type { Capability } from "../model/types.ts";
 import { timedJob } from "./ops.ts";

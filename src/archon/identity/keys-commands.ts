@@ -35,6 +35,8 @@
  *
  * @module
  */
+// Spec: 057-keys
+// Spec: 097-controller FR-001
 
 import { fs, path as ifcPath, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";

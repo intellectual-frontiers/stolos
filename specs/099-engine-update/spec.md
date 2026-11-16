@@ -9,6 +9,14 @@ which engine runs, or that a newer one is out. The owner asked: Stolos does all 
 version in both web consoles, and updates from there too. Nothing tells the owner to run `git push`:
 `stolos apply` is how a change leaves the PC (spec 060).
 
+## Ontology
+
+The terms this spec uses, defined in `ontology/stolos/` with this spec as their source where it is
+theirs: `stolos:EngineRelease`, `stolos:Record` and `stolos:Decision` (the code list
+`stolos:FileKind`: `stolos:file-record`, `stolos:file-decision`), and the outcome levels of
+`stolos:OutcomeLevel`, `stolos:outcome-action` among them, with their marks
+(`stolos:emoji`, `stolos:ascii`).
+
 ## Requirements
 
 - **FR-001** `bun run stolos update` does every step itself, stopping only where a person must

@@ -7,6 +7,8 @@
  *
  * @module
  */
+// Spec: 099-engine-update FR-005
+// Spec: 100-remote-access FR-003
 
 import { fs, path, proc, type Server, serve } from "@intellectual-frontiers/commons/ts/runtime";
 import { engineFileOr } from "../core/assets.ts";

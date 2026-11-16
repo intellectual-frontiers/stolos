@@ -5,6 +5,8 @@
  *
  * @module
  */
+// Spec: 002-model
+// Spec: 100-remote-access FR-001
 
 import type { FleetDef, HostDef, HostPlan } from "./types.ts";
 import { validateSite } from "./site.ts";

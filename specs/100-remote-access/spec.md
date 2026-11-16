@@ -30,6 +30,12 @@ sequenceDiagram
   D->>C: WebAuthn assertion, verified against access.ts
 ```
 
+## Ontology
+
+The terms this spec uses, defined in `ontology/stolos/` with this spec as their source where it is
+theirs: `stolos:ConsoleName`, `stolos:ConsoleDevice`, `stolos:Signer` and `stolos:SignerRole`,
+`stolos:Controller`, `stolos:Decision` (`stolos:file-decision`) and `stolos:TrustedNetwork`.
+
 ## Requirements
 
 - **FR-001** Names. `fleet.ts` may carry `stolos: { console: { name?, primary?, lan? } }` (typed

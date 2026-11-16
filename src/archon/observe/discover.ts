@@ -10,6 +10,7 @@
  *
  * @module
  */
+// Spec: 024-discovery
 
 import { LOCAL_UI_ENDPOINT } from "../otelui/otelui.ts";
 import { OTEL_UI } from "../containers/catalog.ts";

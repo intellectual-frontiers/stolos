@@ -9,6 +9,7 @@
  *
  * @module
  */
+// Spec: 042-sql
 
 import { STATE_DB, VIEWS } from "../state/store.ts";
 import type { Capability } from "../model/types.ts";

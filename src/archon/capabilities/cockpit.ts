@@ -9,6 +9,7 @@
  *
  * @module
  */
+// Spec: 022-cockpit
 
 import type { Capability } from "../model/types.ts";
 import { localNetworks } from "./ssh.ts";

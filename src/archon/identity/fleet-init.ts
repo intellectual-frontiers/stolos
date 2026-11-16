@@ -6,6 +6,9 @@
  *
  * @module
  */
+// Spec: 003-identity
+// Spec: 097-controller FR-001
+// Spec: 100-remote-access FR-001
 
 import { fs, path as paths, proc, stdio, tty } from "@intellectual-frontiers/commons/ts/runtime";
 import { cryptSalt, sha512Crypt, tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";

@@ -7,6 +7,7 @@
  *
  * @module
  */
+// Spec: 035-welcome-guide
 
 import { guideDef, GUIDES, guideUrl } from "../core/guides.ts";
 

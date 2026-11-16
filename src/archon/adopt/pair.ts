@@ -45,6 +45,7 @@
  *
  * @module
  */
+// Spec: 098-pair FR-002, FR-003, FR-004, FR-005, FR-006, FR-008
 
 import { PROBE_SCRIPT, PROBE_SCRIPT_WINDOWS } from "./probe.ts";
 import { engineFile } from "../core/assets.ts";

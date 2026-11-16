@@ -15,6 +15,7 @@
  *
  * @module
  */
+// Spec: 100-remote-access FR-001
 
 import type { FleetDef, StolosFleetDef } from "../model/types.ts";
 

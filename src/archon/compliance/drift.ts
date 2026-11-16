@@ -26,6 +26,7 @@
  *
  * @module
  */
+// Spec: 073-freshness
 
 import { assess, exportedLiteral, type Json } from "@intellectual-frontiers/commons/ts/kernel";
 import { stdio } from "@intellectual-frontiers/commons/ts/runtime";

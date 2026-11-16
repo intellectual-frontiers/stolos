@@ -11,6 +11,7 @@
  *
  * @module
  */
+// Spec: 088-wave3-registry
 
 import { http } from "@intellectual-frontiers/commons/ts/runtime";
 import { check, type Connector, fresh, type Observation } from "./connector.ts";

@@ -36,6 +36,7 @@
  *
  * @module
  */
+// Spec: 092-exporters
 
 import { type JsonObject, type otel, otlp } from "@intellectual-frontiers/commons/ts/kernel";
 import { grc } from "@intellectual-frontiers/commons/ts/runtime";

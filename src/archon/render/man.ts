@@ -5,6 +5,7 @@
  *
  * @module
  */
+// Spec: 012-cli-mcp
 
 import { EVENTS } from "../telemetry/events.ts";
 import { ATTRIBUTES, METRICS, RESOURCE, SPANS } from "../telemetry/signals.ts";

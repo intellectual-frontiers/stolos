@@ -6,6 +6,7 @@
  *
  * @module
  */
+// Spec: 066-stolos-console
 
 import { type Html, html } from "./html.ts";
 

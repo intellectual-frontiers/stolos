@@ -12,6 +12,7 @@
  *
  * @module
  */
+// Spec: 100-remote-access FR-004, FR-005, FR-006, FR-007
 
 import type { ConsoleDevice, SignerDef } from "../model/types.ts";
 import { defaultDeviceName } from "./devices.ts";

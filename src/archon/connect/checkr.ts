@@ -14,6 +14,7 @@
  *
  * @module
  */
+// Spec: 088-wave3-registry
 
 import { check, type Connector, fresh } from "./connector.ts";
 import { defineConnector } from "./sdk.ts";

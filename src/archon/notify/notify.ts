@@ -22,6 +22,8 @@
  *
  * @module
  */
+// Spec: 025-notify
+// Spec: 027-mail
 
 import { fromBase64, otel, toBase64 } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";

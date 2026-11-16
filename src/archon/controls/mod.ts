@@ -123,6 +123,7 @@
  *
  * @module
  */
+// Spec: 078-control-sdk
 
 export {
   type CheckStatus,

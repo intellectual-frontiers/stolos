@@ -5,6 +5,7 @@
  *
  * @module
  */
+// Spec: 017-guests
 
 import type { Capability, GuestDef } from "../model/types.ts";
 

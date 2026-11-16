@@ -28,6 +28,7 @@
  *
  * @module
  */
+// Spec: 073-freshness
 
 import { absurd, assess, grc } from "@intellectual-frontiers/commons/ts/kernel";
 import type { PcFacts } from "../console/pc.ts";

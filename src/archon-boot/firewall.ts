@@ -6,6 +6,7 @@
  *
  * @module
  */
+// Spec: 004-install
 
 import { proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../archon/core/exec.ts";

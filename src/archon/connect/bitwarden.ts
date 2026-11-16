@@ -14,6 +14,7 @@
  *
  * @module
  */
+// Spec: 087-wave2-connectors
 
 import { check, type Connector, fresh } from "./connector.ts";
 import { clientCredentials, type Ctx, defineConnector } from "./sdk.ts";

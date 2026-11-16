@@ -15,6 +15,7 @@
  *
  * @module
  */
+// Spec: 094-rest-api
 
 import { VERSION } from "../version.ts";
 import type { ColumnType, TypedColumn } from "../schema/define.ts";

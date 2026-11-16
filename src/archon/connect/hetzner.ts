@@ -5,6 +5,7 @@
  *
  * @module
  */
+// Spec: 067-adopt
 
 import { check, type Connector, fresh, type Observation } from "./connector.ts";
 import { type Ctx, defineConnector, type FieldDef, mustRead } from "./sdk.ts";

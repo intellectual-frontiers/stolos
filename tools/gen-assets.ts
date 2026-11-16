@@ -9,11 +9,19 @@
  * Spec 096: the package is installed whole and `bun.lock` holds the integrity of its tarball, so
  * there is no longer a `modules.auto.ts` naming every module for a lockfile to pin.
  *
+ * Spec 101-ladder FR-005: the ontology's generator (`tools/ontology.ts`) runs first, with the same
+ * `--check`, since it writes the constitution's ladder table that this module carries.
+ *
  * @module
  */
+// Spec: 046-engine-instance; 096-bun-runtime; 101-ladder FR-005
 import { lf } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { guideMarkdown, GUIDES } from "../src/archon/core/guides.ts";
+import { generate } from "./ontology.ts";
+
+const ontology = await generate(proc.args.includes("--check"));
+if (ontology !== 0) proc.exit(ontology);
 
 const ROOT = path.resolve(path.dirname(path.fromFileUrl(import.meta.url)), "..");
 const OUT = path.join(ROOT, "src/archon/assets.auto.ts");

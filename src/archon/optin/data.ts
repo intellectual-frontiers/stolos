@@ -6,6 +6,7 @@
  *
  * @module
  */
+// Spec: 044-durable
 
 import { errors, fs, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { P } from "../core/paths.ts";

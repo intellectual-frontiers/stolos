@@ -36,6 +36,8 @@ jobs:
         run: bun run fmt:check
       - name: Documentation (ifc-docs check, every @example compiles; specs 055, 096 FR-009)
         run: bun run docs:lint
+      - name: The ontology, the trace and the layers (spec 101-ladder)
+        run: bun run check:ontology && bun run check:trace && bun run check:layers
       - name: snmpd, for the SNMPv3 test against a real agent (spec 069)
         run: sudo apt-get install -y --no-install-recommends snmpd >/dev/null && sudo systemctl stop snmpd || true
       - name: osquery 5.24.1, the official .deb at a pinned SHA-256, for the ATC test (spec 093)

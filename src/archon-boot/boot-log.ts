@@ -12,6 +12,7 @@
  *
  * @module
  */
+// Spec: 004-install
 import { fs, path as paths } from "@intellectual-frontiers/commons/ts/runtime";
 import { P } from "../archon/core/paths.ts";
 

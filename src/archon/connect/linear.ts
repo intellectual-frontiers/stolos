@@ -14,6 +14,7 @@
  *
  * @module
  */
+// Spec: 087-wave2-connectors
 
 import type { http } from "@intellectual-frontiers/commons/ts/runtime";
 import { AccessDenied, check, type Connector, fresh } from "./connector.ts";

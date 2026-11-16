@@ -32,6 +32,8 @@
  *
  * @module
  */
+// Spec: 088-wave3-registry
+// Spec: 092-exporters
 
 import { grc, ocsf } from "@intellectual-frontiers/commons/ts/kernel";
 import type { ScfCatalog } from "../compliance/catalog.ts";

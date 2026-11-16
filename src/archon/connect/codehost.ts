@@ -7,6 +7,7 @@
  *
  * @module
  */
+// Spec: 091-connectors
 
 import { check, fresh, type Observation } from "./connector.ts";
 import type { ObservedRecord } from "./sdk.ts";

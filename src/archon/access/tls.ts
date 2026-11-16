@@ -12,6 +12,7 @@
  *
  * @module
  */
+// Spec: 100-remote-access FR-002, FR-003
 
 import {
   type ARecord,

@@ -5,6 +5,7 @@
  *
  * @module
  */
+// Spec: 004-install
 
 import { fs } from "@intellectual-frontiers/commons/ts/runtime";
 import { onHost } from "../core/paths.ts";

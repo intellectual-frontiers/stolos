@@ -6,6 +6,7 @@
  *
  * @module
  */
+// Spec: 007-ssh
 
 import type { Capability } from "../model/types.ts";
 import { header } from "../render/systemd.ts";

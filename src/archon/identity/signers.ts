@@ -27,6 +27,7 @@
  *
  * @module
  */
+// Spec: 047-intent-and-identity
 
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import { onHost, P } from "../core/paths.ts";

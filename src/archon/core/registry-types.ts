@@ -5,13 +5,16 @@
  *
  * @module
  */
+// Spec: 101-ladder FR-006
 import { proc } from "@intellectual-frontiers/commons/ts/runtime";
+import type { CommandTier } from "../ontology.auto.ts";
 
 /**
  * What a command may do, from least to most: read, change the repository, change a machine, or
- * destroy something (the agent's permission rules follow it).
+ * destroy something (the agent's permission rules follow it): the ontology's command tiers
+ * (`stolos:CommandTier`, spec 101-ladder FR-006).
  */
-export type Tier = "read" | "repo" | "mutate" | "destructive";
+export type Tier = CommandTier;
 
 /** One argument of a command: an option (--name) or a positional value. */
 export interface ArgSpec {

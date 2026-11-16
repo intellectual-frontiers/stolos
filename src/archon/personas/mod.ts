@@ -4,6 +4,7 @@
  *
  * @module
  */
+// Spec: 006-accounts
 
 import type { Persona, PersonaId } from "../model/types.ts";
 

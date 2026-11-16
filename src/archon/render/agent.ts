@@ -8,6 +8,7 @@
  *
  * @module
  */
+// Spec: 030-agent-layer
 
 import type { HostDef } from "../model/types.ts";
 

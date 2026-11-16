@@ -4,6 +4,8 @@
  *
  * @module
  */
+// Spec: 097-controller FR-001, FR-006
+// Spec: 098-pair FR-009
 
 import {
   array,

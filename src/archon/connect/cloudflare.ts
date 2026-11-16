@@ -6,6 +6,7 @@
  *
  * @module
  */
+// Spec: 067-adopt
 
 import { check, type Connector, fresh, type Observation } from "./connector.ts";
 import type { PolicyResult } from "../adopt/policy.ts";

@@ -10,5 +10,5 @@
 - [x] T006 Backups: durable paths, lxc export of durable guests, the off-host warning
 - [x] T007 Where it shows: /etc/archon/data, prompt, banner, welcome page, opt-in, fleet status
 - [x] T008 Docs and tests
-- [ ] T009 On fresh servers: archon pg on --durable; archon data; deno task boot reinstall refuses
+- [ ] T009 On fresh servers: archon pg on --durable; archon data; bun run stolos boot reinstall refuses
 - [ ] T010 A later spec: the off-host destination (NAS) and its maximum age

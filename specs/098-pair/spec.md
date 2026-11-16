@@ -24,6 +24,13 @@ sequenceDiagram
   PC->>M: ok: adopted
 ```
 
+## Ontology
+
+The terms this spec uses, defined in `ontology/stolos/` with this spec as their source where it is
+theirs: `stolos:PairingCode`, `stolos:TrustedNetwork`, `stolos:AdoptedMachine`,
+`stolos:Controller`, `stolos:Fleet`, and the integration kinds of `stolos:IntegrationKind`
+(`stolos:integration-adopt`, `stolos:integration-osquery`).
+
 ## Requirements
 
 - **FR-001** `stolos pair [--name] [--address] [--port 7457] [--title] [--owner]` listens on the
