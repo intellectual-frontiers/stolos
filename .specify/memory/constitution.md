@@ -8,7 +8,7 @@ workstation) work through `archon` commands. These articles govern every spec,
 plan, task, and line of code of the engine. Amend them only with a commit whose
 subject starts with `constitution:`.
 
-**Version**: 5.0.1 · **Ratified**: 2026-11-13 · **Last amended**: 2026-11-16
+**Version**: 5.1.0 · **Ratified**: 2026-11-13 · **Last amended**: 2026-11-16
 
 ## Article 1: Ubuntu Server LTS Only
 
@@ -210,6 +210,21 @@ Every run reports through OpenTelemetry, by IFC TypeScript's signals: traces,
 metrics, and logs, under names declared once in the engine, with the trace carried across
 SSH, MCP, and installs. It is silent and harmless when no collector listens.
 
+## Article 28: Trusted Networks, Zero Trust Beyond Them
+
+The fleet's own exchanges (PXE and HTTP Boot, pairing, the consoles) run on a
+network the fleet trusts: the site's LAN, or a zero trust mesh network (an
+overlay such as Tailscale, Headscale, NetBird, ZeroTier, Nebula, or plain
+WireGuard: encrypted end to end, each device known by its identity, access by
+policy) for any device outside it. This is guidance, not a dependency: Archon
+and Stolos install and configure no network product, and the fleet chooses
+its own (`stolos mesh` explains the choice). On such a network, plain HTTP is acceptable for an
+exchange that is short-lived and authenticated by its content (a signed commit,
+a pinned checksum, a code-signed message). Archon and Stolos never open a
+listener to the internet, and never ask an operator to; a device that is
+neither on the LAN nor on the mesh network is reached only over SSH with
+pinned host keys.
+
 ## Amendments
 
 | Version | Date | Change |
@@ -222,3 +237,4 @@ SSH, MCP, and installs. It is silent and harmless when no collector listens.
 | 4.0.0 | 2026-11-13 | The engine stands alone (the Stolos repositories). Article 7: many fleets per repository. Article 9: approval is a signed tip of `main`. Article 13: file-based secrets, passphrase-protected signing keys, the fleet's vault provider. Articles 20 and 21 no longer name a site. New: Article 24 (the engine holds no fleet's facts; versioned and tagged on every push), Article 25 (Git holds intent, identity, and decisions; machines keep their own state as `archon.sql`), Article 26 (generated files are named `.auto.`), Article 27 (telemetry by OpenTelemetry). |
 | 5.0.0 | 2026-11-15 | The engine on Bun and IFC TypeScript (spec 096): Article 4 names TypeScript 7, Bun with Node 26 as the backup, and the commons' kernel and runtime; Article 27 reports through IFC TypeScript's OpenTelemetry. No Deno. |
 | 5.0.1 | 2026-11-16 | Article 24 names the engine's package, `@intellectual-frontiers/stolos`, as a Git dependency pinned to a tag whose commit the lockfile holds; the tag is the release (spec 096, no GitHub release). |
+| 5.1.0 | 2026-11-16 | Article 28 (trusted networks, zero trust beyond them): plain HTTP on the LAN or a zero trust mesh network (Tailscale, Headscale, NetBird, ZeroTier, Nebula, WireGuard, or similar; the fleet's choice, guidance only) for short-lived, content-authenticated exchanges; never a listener on the internet (specs 097, 098). |

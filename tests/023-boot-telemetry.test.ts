@@ -16,12 +16,13 @@ import {
 } from "@intellectual-frontiers/commons/ts/runtime/test";
 import { P } from "../src/archon/core/paths.ts";
 import { JOURNAL, JOURNAL_FILE, TELEMETRY_DIR } from "../src/archon-boot/telemetry.ts";
+import { installTrace } from "./e2e/trace.ts";
 import { at } from "./fixtures.ts";
 import { sandbox } from "./sandbox.ts";
 
 /** A boot server's telemetry in a child: started twice (the first wins), one install, one line. */
 const CHILD = (src: string, serve: string): string => `
-import { initBootTelemetry, installEnd, installStep, recordEvents, stopBootTelemetry } from ${JSON.stringify(src)};
+import { initBootTelemetry, installEnd, installStep, installTraceparent, recordEvents, stopBootTelemetry } from ${JSON.stringify(src)};
 import { serve } from ${JSON.stringify(serve)};
 const dir = process.argv[2];
 // otel-tui's address on this PC: listen there when it is free, to see what is handed to it.
@@ -39,12 +40,13 @@ try {
 initBootTelemetry(dir);
 initBootTelemetry(dir);
 installStep("alpha", "network boot");
+const traceparent = installTraceparent("alpha");
 installEnd("alpha", true, "Ready");
 await recordEvents([{ name: "boot.menu", severity: "info", message: "served the menu to alpha", attrs: {} }], { "service.name": "archon-boot" }, dir);
 await stopBootTelemetry();
 await new Promise((r) => setTimeout(r, 300));
 await tui?.shutdown();
-console.log(JSON.stringify({ tui: tui === undefined ? null : got }));
+console.log(JSON.stringify({ tui: tui === undefined ? null : got, traceparent }));
 `;
 
 proves(
@@ -99,6 +101,56 @@ proves(
         assert(tui.includes("/v1/logs"), JSON.stringify(tui));
         assert(tui.includes("/v1/traces"), JSON.stringify(tui));
       }
+    } finally {
+      await fs.remove(sb.home, { recursive: true });
+    }
+  },
+);
+
+proves(
+  ["049-telemetry FR-009"],
+  "049: the e2e lab's trace check finds the boot server's install span and the host's spans in its trace",
+  async () => {
+    const sb = await sandbox("archon-049-");
+    try {
+      const script = path.join(sb.home, "boot.ts");
+      const dir = path.join(sb.home, "telemetry");
+      await fs.writeTextFile(
+        script,
+        CHILD(
+          new URL("../src/archon-boot/telemetry.ts", import.meta.url).href,
+          import.meta.resolve("@intellectual-frontiers/commons/ts/runtime"),
+        ),
+      );
+      const r = await sb.run(script, [dir], "", { HTTP_PROXY: "", HTTPS_PROXY: "", NO_PROXY: "*" });
+      assertEquals(r.code, 0, r.out);
+      const result: unknown = JSON.parse(r.out.trim().split("\n").pop() ?? "{}");
+      // The traceparent handed to the host's first boot (/etc/archon/first-boot.env).
+      const traceparent = String(at(result, "traceparent"));
+      const traceId = traceparent.split("-")[1] ?? "";
+      assertEquals(traceId.length, 32, traceparent);
+
+      // What the host sent the fleet collector: one span continuing the install, one not.
+      const span = (t: string, name: string): string =>
+        JSON.stringify({
+          resourceSpans: [{ scopeSpans: [{ spans: [{ traceId: t, spanId: "1", name }] }] }],
+        });
+      await fs.mkdir(path.join(dir, "fleet"), { recursive: true });
+      await fs.writeTextFile(
+        path.join(dir, "fleet", "otlp-day.jsonl"),
+        `${span(traceId, "archon.run")}\n${span("0".repeat(31) + "1", "archon.phase")}\n`,
+      );
+
+      // The check reads the journal as the boot server wrote it: its install span for alpha.
+      const found = installTrace(dir, "alpha");
+      assert(!("missing" in found), JSON.stringify(found));
+      assertEquals(found.traceId, traceId);
+      assertEquals(
+        found.fromHost.map((s) => s.name),
+        ["archon.run"],
+      );
+      // Another host's install is not there.
+      assert("missing" in installTrace(dir, "beta"));
     } finally {
       await fs.remove(sb.home, { recursive: true });
     }
