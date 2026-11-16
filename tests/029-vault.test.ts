@@ -5,13 +5,13 @@
  * @module
  */
 
-import { fs, path } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { COMMANDS, findCommand } from "../src/archon/commands/registry.ts";
 import { GUIDES } from "../src/archon/core/guides.ts";
 import { listed } from "../src/archon/mcp/server.ts";

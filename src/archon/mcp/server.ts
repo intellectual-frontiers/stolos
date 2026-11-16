@@ -9,8 +9,8 @@
  * @module
  */
 
-import { otel } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, path as paths, proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
+import { otel } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, path as paths, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { count } from "../core/telemetry.ts";
 import { COMMANDS } from "../commands/registry.ts";
 import type { Command, Parsed, Tier } from "../core/registry-types.ts";

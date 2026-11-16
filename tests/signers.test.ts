@@ -4,14 +4,14 @@
  *
  * @module
  */
-import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { ENGINE_ROOT, linkEngine, sandbox } from "./sandbox.ts";
 import {
   assert,
   assertEquals,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import {
   allowedSignersText,
   checkTip,

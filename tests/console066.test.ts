@@ -11,7 +11,7 @@ import {
   assertStringIncludes,
   test,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import {
   Launch,
   LAUNCH_MS,

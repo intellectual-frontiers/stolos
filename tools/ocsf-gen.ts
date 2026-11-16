@@ -20,8 +20,8 @@
  *
  * @module
  */
-import { sha256 } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, path, proc, stdio, toError } from "@intellectual-frontiers/ifc-ts/runtime";
+import { sha256 } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, path, proc, stdio, toError } from "@intellectual-frontiers/commons/ts/runtime";
 
 const ROOT = path.resolve(path.dirname(path.fromFileUrl(import.meta.url)), "..");
 const VERSION = "1.9.0";

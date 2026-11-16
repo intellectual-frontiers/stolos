@@ -312,8 +312,9 @@ if [ "$runtime" = node ]; then
     install_node
   fi
 fi
-# How the fleet's commands run: its package.json's script with Bun, its stolos.ts with Node.
-if [ "$runtime" = bun ]; then stolos_cmd="bun run stolos"; else stolos_cmd="node stolos.ts"; fi
+# How the fleet's commands run: its package.json's script with Bun, its stolos.ts with Node and
+# commons' hook (Node strips no types under node_modules; spec 096 FR-007).
+if [ "$runtime" = bun ]; then stolos_cmd="bun run stolos"; else stolos_cmd="node --import @intellectual-frontiers/commons/ts/node stolos.ts"; fi
 
 # A new terminal finds the runtime installed here.
 for f in "$HOME/.bashrc" "$HOME/.zshrc"; do

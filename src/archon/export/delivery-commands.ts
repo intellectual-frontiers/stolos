@@ -47,8 +47,8 @@ import {
   object,
   otel,
   string,
-} from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, jobs, path, proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
+} from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, jobs, path, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { ui } from "../core/ui.ts";
 import type { ExportJobDef, FleetDef } from "../model/types.ts";
 import type { Credential } from "../notify/transport.ts";

@@ -11,8 +11,8 @@ import {
   assertEquals,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
-import { fs, path, proc, serve } from "@intellectual-frontiers/ifc-ts/runtime";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { fs, path, proc, serve } from "@intellectual-frontiers/commons/ts/runtime";
 import { engineFile } from "../src/archon/core/assets.ts";
 import { fleet, host } from "./fixtures.ts";
 import { ENGINE_ROOT, linkEngine, sandbox } from "./sandbox.ts";

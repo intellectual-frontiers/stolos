@@ -11,7 +11,7 @@
  * @module
  */
 
-import { http } from "@intellectual-frontiers/ifc-ts/runtime";
+import { http } from "@intellectual-frontiers/commons/ts/runtime";
 import { type Connector, fresh } from "./connector.ts";
 import { devicePolicies, devicePosture, osName } from "./endpoint.ts";
 import { emailKey } from "./entities.ts";

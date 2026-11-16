@@ -5,8 +5,8 @@
  * @module
  */
 
-import { proc } from "@intellectual-frontiers/ifc-ts/runtime";
-import { assert, assertEquals, proves } from "@intellectual-frontiers/ifc-ts/runtime/test";
+import { proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { assert, assertEquals, proves } from "@intellectual-frontiers/commons/ts/runtime/test";
 import { CORE_PCP_METRICS } from "../src/archon/capabilities/observability.ts";
 import {
   candidates,

@@ -10,9 +10,9 @@ import {
   assertEquals,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
-import type { Result } from "@intellectual-frontiers/ifc-ts/kernel";
-import type { http } from "@intellectual-frontiers/ifc-ts/runtime";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
+import type { Result } from "@intellectual-frontiers/commons/ts/kernel";
+import type { http } from "@intellectual-frontiers/commons/ts/runtime";
 import { github } from "../src/archon/connect/github.ts";
 import { okta } from "../src/archon/connect/okta.ts";
 import { google, serviceAccountJwt } from "../src/archon/connect/google.ts";

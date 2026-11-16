@@ -7,7 +7,7 @@
  * @module
  */
 
-import { proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { getRecord } from "../state/store.ts";
 
 import { P } from "../core/paths.ts";

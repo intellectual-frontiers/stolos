@@ -3,8 +3,8 @@
  *
  * @module
  */
-import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
-import { assertEquals, proves } from "@intellectual-frontiers/ifc-ts/runtime/test";
+import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { assertEquals, proves } from "@intellectual-frontiers/commons/ts/runtime/test";
 import { ENGINE_ROOT, linkEngine, sandbox } from "./sandbox.ts";
 
 const posix = proc.build.os !== "windows";

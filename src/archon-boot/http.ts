@@ -8,7 +8,7 @@
  * @module
  */
 
-import { tcp } from "@intellectual-frontiers/ifc-ts/runtime";
+import { tcp } from "@intellectual-frontiers/commons/ts/runtime";
 
 /** Answers one request; `from` is the client's address. */
 export type Handler = (req: Request, from: string) => Promise<Response>;

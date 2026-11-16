@@ -10,7 +10,7 @@
  * @module
  */
 
-import { errors, fs, path, stdio, toError } from "@intellectual-frontiers/ifc-ts/runtime";
+import { errors, fs, path, stdio, toError } from "@intellectual-frontiers/commons/ts/runtime";
 import type { OscalDocuments } from "./oscal.ts";
 import { ui } from "../core/ui.ts";
 import { catalogCache, loadNist, loadScf, NIST_SOURCES, SCF_SOURCE } from "./catalog.ts";

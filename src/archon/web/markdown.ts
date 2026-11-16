@@ -8,7 +8,7 @@
  * @module
  */
 
-import { guideDef, guideUrl } from "../core/guides.ts";
+import { guideDef, GUIDES, guideUrl } from "../core/guides.ts";
 
 const ENTITIES: Readonly<Record<string, string>> = {
   "&": "&amp;",
@@ -28,14 +28,28 @@ export interface LinkContext {
   repoBlob: string;
 }
 
+/**
+ * The guide a link names: `name.md` (the guides' own form), or the relative path of its module, as
+ * the guides write a link to another so that IFC Docs links it too (`../mcp/mod.ts`, spec 070
+ * FR-002), matched by the end of its path where one guide's module ends so.
+ */
+function guideNamed(path: string): string | undefined {
+  const doc = path.match(/^(?:\.\.\/docs\/|docs\/|\.\/)?([a-z0-9-]+)\.md$/)?.[1];
+  if (doc !== undefined) return doc;
+  if (!path.endsWith(".ts")) return undefined;
+  const rest = path.replace(/^(?:\.\.?\/)+/, "");
+  const found = GUIDES.filter((g) => g.module === `src/${rest}` || g.module.endsWith(`/${rest}`));
+  return found.length === 1 ? found[0]?.name : undefined;
+}
+
 function href(target: string, ctx: LinkContext): string {
   if (/^(https?:|mailto:|#)/.test(target)) return target;
   const [path = "", hash] = target.split("#");
-  const doc = path.match(/^(?:\.\.\/docs\/|docs\/|\.\/)?([a-z0-9-]+)\.md$/)?.[1];
+  const doc = guideNamed(path);
   if (doc && ctx.served.includes(doc)) return `/guide/${doc}${hash ? `#${hash}` : ""}`;
   // Another guide, not served here: its page online, at this engine's version.
   if (doc && guideDef(doc)) return `${guideUrl(doc)}${hash ? `#${hash}` : ""}`;
-  const rel = path.replace(/^\.\.\//, "").replace(/^\.\//, "");
+  const rel = path.replace(/^(?:\.\.?\/)+/, "");
   return `${ctx.repoBlob}${rel}${hash ? `#${hash}` : ""}`;
 }
 

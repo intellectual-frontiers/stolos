@@ -9,7 +9,7 @@ import {
   assertEquals,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { hostNames, knownHostsText, registrationSource } from "../src/archon/fleet/registration.ts";
 import { sshArgs } from "../src/archon/observe/remote.ts";
 import { fleet, host } from "./fixtures.ts";

@@ -29,7 +29,7 @@
  * @module
  */
 
-import { absurd, assess, grc } from "@intellectual-frontiers/ifc-ts/kernel";
+import { absurd, assess, grc } from "@intellectual-frontiers/commons/ts/kernel";
 import type { PcFacts } from "../console/pc.ts";
 import type { ScfCatalog } from "./catalog.ts";
 import {

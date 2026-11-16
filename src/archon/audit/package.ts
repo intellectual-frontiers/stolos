@@ -30,8 +30,8 @@
  * @module
  */
 
-import { sha256 as sha256Hex, unzip, zipDeflated } from "@intellectual-frontiers/ifc-ts/kernel";
-import { toError } from "@intellectual-frontiers/ifc-ts/runtime";
+import { sha256 as sha256Hex, unzip, zipDeflated } from "@intellectual-frontiers/commons/ts/kernel";
+import { toError } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assemble,
   type AuditCase,

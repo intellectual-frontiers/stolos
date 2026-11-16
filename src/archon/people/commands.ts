@@ -12,8 +12,8 @@
  * @module
  */
 
-import { fs, path as paths, proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
-import { tsLiteral } from "@intellectual-frontiers/ifc-ts/kernel";
+import { fs, path as paths, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
 import { ui } from "../core/ui.ts";
 import { run } from "../core/exec.ts";
 import { P, repoRel } from "../core/paths.ts";

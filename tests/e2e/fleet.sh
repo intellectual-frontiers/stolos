@@ -32,7 +32,7 @@ cd "$F"
 git init -q -b main
 git config user.name "e2e"
 git config user.email "e2e@example.invalid"
-# The pinned engine, exactly as hosts get it: its tarball checked against bun.lock.
+# The pinned engine, exactly as hosts get it: its commit and integrity checked against bun.lock.
 bun install --frozen-lockfile >/dev/null ||
   { log "the engine does not match bun.lock"; exit 1; }
 FT="fleets/$FLEET/fleet.ts"

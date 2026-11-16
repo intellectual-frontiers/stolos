@@ -18,7 +18,7 @@
  * @module
  */
 
-import { http } from "@intellectual-frontiers/ifc-ts/runtime";
+import { http } from "@intellectual-frontiers/commons/ts/runtime";
 import { check, type Connector, fresh } from "./connector.ts";
 import { type Ctx, defineConnector, type ObservedRecord, sendJson } from "./sdk.ts";
 import { serviceAccountJwt } from "./google.ts";

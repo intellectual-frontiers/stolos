@@ -65,7 +65,7 @@ encrypted email, and OS scheduling. It calls the API and knows nothing about the
 
 ## Part B: delivery
 
-- **FR-B01** Export jobs live in `fleet.ts` (`estate.exports`). Each job has:
+- **FR-007** Export jobs live in `fleet.ts` (`estate.exports`). Each job has:
   - an id;
   - kinds (`oscal`, `ocsf`, `otlp`, `cyclonedx`, `in-toto`);
   - tenants (`<connector>:<account>`, with `*`), which limit what the estate formats carry (other
@@ -74,11 +74,11 @@ encrypted email, and OS scheduling. It calls the API and knows nothing about the
   - email recipients, each with their S/MIME certificate;
   - a sender, relay, and credential;
   - a schedule.
-- **FR-B02** Delivery follows the owner's order:
+- **FR-008** Delivery follows the owner's order:
   1. to the fleet's OpenTelemetry collector (OTLP/HTTP) when one is configured;
   2. otherwise, or when the collector fails, a file in the PC's state directory;
   3. email when the job has recipients.
-- **FR-B03** Email is send-only (SMTP submission with TLS only, never reading a mailbox), through
+- **FR-009** Email is send-only (SMTP submission with TLS only, never reading a mailbox), through
   the fleet's mail setup or a per-tenant credential (`stolos export credential <name>`). Every
   message is S/MIME encrypted to its recipient's certificate:
   - CMS AuthEnvelopedData with AES-256-GCM and RSA-OAEP SHA-256, by IFC TypeScript's kernel
@@ -86,7 +86,7 @@ encrypted email, and OS scheduling. It calls the API and knows nothing about the
   - `openssl cms -decrypt` reads it;
   - one message per recipient;
   - nothing is ever sent unencrypted.
-- **FR-B04** `stolos export schedule <job>` creates the operating system's own scheduled job:
+- **FR-010** `stolos export schedule <job>` creates the operating system's own scheduled job:
   - Windows Task Scheduler;
   - a macOS LaunchAgent;
   - a Linux systemd user timer.

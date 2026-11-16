@@ -7,13 +7,13 @@
  * @module
  */
 
-import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { resolvePlan } from "../src/archon/model/resolve.ts";
 import { userData } from "../src/archon/render/autoinstall.ts";
 import { classify } from "../src/archon/notify/watch.ts";

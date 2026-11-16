@@ -10,7 +10,7 @@
  * @module
  */
 
-import { proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { resetRoots } from "../core/paths.ts";
 import type { Client } from "./registry.ts";
 

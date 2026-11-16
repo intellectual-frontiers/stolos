@@ -7,9 +7,9 @@ Issue intellectual-frontiers/stolos#32; tracking issue intellectual-frontiers/.g
 Deno is going away. The engine was written for Deno: its runtime calls (`Deno.*`), its task runner,
 its lockfile as the security control of a fleet, its built-in telemetry, its test runner, its
 documentation tool, and the way a fleet loaded the engine (raw GitHub URLs pinned in `deno.json`).
-Intellectual Frontiers Commons now gives the same ground in one place: IFC TypeScript
-(`@intellectual-frontiers/ifc-ts`, commons specs 0005 to 0008), a pure kernel and a host runtime on
-web standards and `node:` builtins. The runtime keeps the names of the Deno calls it replaces, and
+Intellectual Frontiers Commons now gives the same ground in one place: IFC TypeScript (commons specs
+0005 to 0008, in commons' package `@intellectual-frontiers/commons`), a pure kernel and a host
+runtime on web standards and `node:` builtins. The runtime keeps the names of the Deno calls it replaces, and
 the code runs unchanged on Bun, on Node 26 and on Deno. It is OpenTelemetry-native, it holds the
 primitives of GRC engineering, and it records every test run as compliance evidence.
 
@@ -18,8 +18,8 @@ an old caller: the engine, its fleets and its hosts start over on the new ground
 
 ```mermaid
 flowchart LR
-  ifc["IFC TypeScript<br/>(release tarball, SHA-256)"] --> eng["the engine<br/>TypeScript 7, Bun"]
-  eng -->|"release v&lt;version&gt;:<br/>JavaScript + types, SHA-256"| fleet["a fleet repository<br/>package.json + bun.lock"]
+  ifc["commons<br/>(github: at a full commit)"] --> eng["the engine<br/>TypeScript 7, Bun"]
+  eng -->|"tag v&lt;version&gt;:<br/>github: at the tag"| fleet["a fleet repository<br/>package.json + bun.lock<br/>(the commit, its integrity)"]
   fleet -->|"git clone + bun install --frozen-lockfile"| host["each host<br/>pinned Bun, archon"]
   fleet -->|"bun run stolos ..."| pc["the operator's PC"]
 ```
@@ -29,42 +29,63 @@ flowchart LR
 1. **Bun is the runtime** of record, everywhere: the operator's PC, the boot server and every host.
    **Node 26 is the backup**: the same code runs on it, so the engine is never stuck on one runtime.
 2. **TypeScript 7 is the type checker.** IFC TypeScript is the shared kernel and runtime, depended
-   on by its release tarball.
+   on as commons' package by Git, pinned by a full commit.
 3. **No Deno anywhere**: no `Deno.*`, no `deno.json`, no `deno.lock`, no `deno task`, no
    `deno doc`, no Deno OpenTelemetry. No migration and no backward compatibility.
-4. **One tool binary.** Bun installs, formats, lints, tests, packs and compiles. Lint uses IFC
+4. **One tool binary.** Bun installs, formats, lints, tests and compiles. Lint uses IFC
    TypeScript's plugin.
 5. **PAM stays in the engine on `bun:ffi`**, in its one file, behind the console's `Authenticator`.
    On Node, the console's password sign-in is refused as not supported, and signing in with a key
    still works.
+6. **No release artifacts.** "If bun supports modules directly from GitHub in package.json then
+   releases should not be required ... so we're not creating and polluting GitHub releases for no
+   reason." Bun installs a package from GitHub by a commit or a tag, and `bun.lock` pins the
+   commit, so there is no GitHub release, no tarball and no build: of the engine, or of commons.
 
 ## Decisions made in this spec (for review)
 
-- **The engine is a package.** Each release `v<version>` (raised on every push to `main`, as before)
-  is built by `tsc` into JavaScript with declarations, packed by Bun, and attached to the GitHub
-  release with its SHA-256: `intellectual-frontiers-stolos-<version>.tgz`. A fleet repository
-  depends on that URL in `package.json`, and `bun.lock` holds its integrity. JavaScript, not
-  TypeScript, because Node does not strip types under `node_modules`.
-- **The lock is still the control.** `bun install --frozen-lockfile` replaces `--frozen`: an
-  integrity error stops the run. The engine's text assets (constitution, specs, guides, dotfiles)
-  travel inside the package, as before through `assets.auto.ts`.
-- **A fleet repository holds** `package.json` (the engine's tarball URL, the scripts `stolos` and
-  `archon`), `bun.lock`, `stolos.ts`, `archon.ts`, `.gitignore` and `fleets/`. `engine.ts` is gone:
-  the package is installed whole. `stolos fleet upgrade <tag>` rewrites the URL and runs
-  `bun install`.
+- **The engine is a Git dependency.** A release of the engine is its tag `v<version>` alone (the
+  version raised on every push to `main`, as before; CI tags the commit once every job passed). There
+  is no GitHub release, no tarball, no SHA-256 asset, no `tsc` build and no `dist/`. A fleet
+  repository depends on `"@intellectual-frontiers/stolos": "github:intellectual-frontiers/stolos#v<version>"`
+  in `package.json`, and `bun.lock` pins the commit the tag named and the integrity (SHA-512) of
+  that commit's archive. The package's entry points are its `.ts` sources. Bun runs them from
+  `node_modules`; Node 26 refuses to strip types under `node_modules`, so on Node every entry runs
+  with commons' hook first: `node --import @intellectual-frontiers/commons/ts/node archon.ts`
+  (commons 0005-typescript-runtime FR-070).
+- **The engine depends on commons the same way**, by Git at a full commit:
+  `"@intellectual-frontiers/commons": "github:intellectual-frontiers/.github#<full commit>"`
+  (commons 0005-typescript-runtime FR-029), imported as `@intellectual-frontiers/commons/ts/kernel`, `.../ts/runtime`, `.../ts/runtime/test`
+  and `.../ts/runtime/test-run`; the lint plugin is `commons/ts/lint/plugin.ts` of the installed
+  package. A fleet repository gets commons through the engine, installed beside it.
+- **The lock is still the control.** `bun install --frozen-lockfile` replaces `--frozen`: a commit
+  or integrity that differs from the lock stops the run. The engine's text assets (constitution,
+  specs, guides, dotfiles) travel inside the package, as before through `assets.auto.ts`.
+- **A fleet repository holds** `package.json` (the engine's `github:` dependency at a tag, the
+  scripts `stolos` and `archon`), `bun.lock`, `stolos.ts`, `archon.ts`, `.gitignore` and `fleets/`.
+  `engine.ts` is gone: the package is installed whole. `stolos fleet upgrade <tag>` rewrites the tag
+  and runs `bun install`.
 - **Hosts run Bun.** The bootstrap installs the pinned Bun (its version and SHA-256 per platform,
   kept in the engine), clones the fleet repository, runs `bun install --frozen-lockfile`, and the
-  launcher runs `bun archon.ts`. Where Bun cannot run, `node archon.ts` does the same with Node 26.
+  launcher runs `bun archon.ts`. Where Bun cannot run, Node 26 does the same with commons' hook
+  (`node --import <hook> archon.ts`; the host launcher names the hook's file in `/srv/archon`, since
+  Node resolves `--import` from the working folder).
 - **Telemetry is IFC TypeScript's**: `runtime/otel`, configured from OpenTelemetry's own variables,
   in-process. The boot server no longer starts again to turn telemetry on.
 - **Tests run through `ifc test`.** Each test is a `proves([...])` naming the requirements it proves
   (`096-bun-runtime FR-001`). The record and its TAP, JUnit, CTRF, SARIF, OSCAL and completion
   reports are CI artifacts, every run goes into the evidence ledger, and every requirement of every
   spec is proven or declared reviewed.
-- **The documentation is ours.** `tools/docs.ts` reads each module's `@module` block and every
-  export's JSDoc itself (the code is formatted, so a declaration starts its line), renders the same
-  HTML pages with their Mermaid diagrams, and compiles every `@example` with `tsc`. The lint ratchet
-  becomes a hard rule: every export has JSDoc.
+- **The documentation is commons'.** IFC Docs (commons 0011-documentation, the command `ifc-docs`
+  of commons' package) renders the engine's site from its TypeScript and its spec kit, configured by
+  `docs.config.ts` (a `DocsConfig`: the engine has no `about.ts`, so its areas are given there, one
+  for each folder of `src/` and one for each guide, so that every guide is an area's overview).
+  `ifc-docs check` fails on an export of an area with no TSDoc, a citation of an unknown
+  specification or requirement, an unknown `{@link}`, and a link or anchor that leads nowhere. IFC
+  Docs does not compile examples, so `tools/doc-examples.ts` keeps that one check: every
+  `@example` compiles with `tsc`. Every module's `@module` block is the lint rule
+  `ifc/module-doc`. Every requirement is `FR-NNN` (a letter after the number where one was
+  inserted), which is what IFC Docs anchors.
 - **The engine keeps no copy** of what IFC TypeScript gives: `Result`, decoders, files, processes,
   locks, the terminal, downloads, the server, OpenTelemetry, OCSF, OSCAL, in-toto and DSSE, CMS, the
   evidence ledger, waivers, risk, archives, YAML, TOML, JSON5, CSV and XML. What it lacks is added
@@ -77,11 +98,10 @@ flowchart LR
   path under `src/`, without its extension: `@intellectual-frontiers/stolos/archon/model/types`,
   `@intellectual-frontiers/stolos/archon/capabilities/mod`, `@intellectual-frontiers/stolos/stolos/main`
   (was `@stolos/archon/model/types.ts`). In this repository the name refers to the package itself
-  (`"./*": "./src/*.ts"`), so `examples/` load the sources on Bun and on Node with no build; the
-  release's `package.json` maps the same paths to `dist/*.js` and `dist/*.d.ts` (`tsc` with
-  `rootDir` `src`, so a module keeps its place three folders under the package's root).
+  (`"./*": "./src/*.ts"`), so `examples/` load the sources on Bun and on Node with no build, and a
+  fleet's `node_modules` holds the same sources, from the same `package.json`.
 - **No `modules.auto.ts`.** It named every module so that `deno.lock` pinned each one; the package is
-  installed whole and `bun.lock` holds the integrity of its tarball, so it is gone, and
+  installed whole and `bun.lock` pins its commit and that commit's integrity, so it is gone, and
   `bun run gen` writes only `assets.auto.ts`.
 - **The version** stays in `src/archon/version.ts`; `bun run version` keeps `package.json`'s
   `version` equal to it (`bump` writes both, `check` fails where they differ).
@@ -106,7 +126,8 @@ flowchart LR
   `npm:`, `jsr:` or a URL, or is configured by `deno.json` or `deno.lock`. The one file that names a
   runtime's API is the PAM binding, which imports `bun:ffi`, as the lint plugin's allow list says.
 - **FR-002** `package.json` pins the development dependencies exactly (TypeScript 7, `@types/node`)
-  and the run-time ones (IFC TypeScript by its release URL, `ajv`), with `bun.lock` beside it;
+  and the run-time ones (commons by `github:intellectual-frontiers/.github#<full commit>`, `ajv`),
+  with `bun.lock` beside it, which pins commons' commit and its integrity;
   `bun install --frozen-lockfile` installs them.
 - **FR-003** `tsc` 7 type-checks every file with IFC TypeScript's strict configuration.
   `bun fmt --check` and `bun lint --type-aware --max-warnings 0` (with IFC TypeScript's plugin)
@@ -114,21 +135,30 @@ flowchart LR
 - **FR-004** The suite runs through `ifc test` on Bun and on Node 26, on Linux, and the parts that
   apply on macOS and Windows. Every requirement of every spec is proven by a test or declared
   reviewed with its reason, and CI keeps the record, its reports and the ledger.
-- **FR-005** Every push to `main` raises `src/archon/version.ts`. CI tags the commit `v<version>`,
-  builds the package with `tsc`, packs it, installs it into an empty project and runs it on Bun and
-  on Node, then attaches the tarball and its SHA-256 to the GitHub release of that tag.
-- **FR-006** `stolos fleet init` writes a fleet repository of `package.json`, `bun.lock`,
-  `stolos.ts`, `archon.ts` and `.gitignore`. `stolos fleet upgrade <tag>` moves it to another
-  release, and `bun run stolos ...` and `bun run archon ...` are its commands.
+- **FR-005** Every push to `main` raises `src/archon/version.ts`. Once every job passed, CI installs
+  the commit it checked as a Git dependency (a `git+file:` URL of the checkout, at the commit) into
+  an empty project and runs `archon --version` and `stolos --version` there on Bun and on Node 26
+  with commons' hook (`bun tools/smoke.ts`), then tags the commit `v<version>`. The tag is the
+  release: no GitHub release, no tarball, no SHA-256 asset, no build.
+- **FR-006** `stolos fleet init` writes a fleet repository of `package.json` (with
+  `"@intellectual-frontiers/stolos": "github:intellectual-frontiers/stolos#v<version>"`), `bun.lock`
+  (pinning the commit and its integrity), `stolos.ts`, `archon.ts` and `.gitignore`.
+  `stolos fleet upgrade <tag>` rewrites that dependency to the tag and runs `bun install`, and
+  `bun run stolos ...` and `bun run archon ...` are its commands.
 - **FR-007** The bootstraps (`bin/bootstrap.sh`, `bin/bootstrap.windows.ps1`) and the host install
   fetch the pinned Bun, check its SHA-256 before unpacking, and run the engine with it. The launcher
-  runs `archon.ts` with Bun, and with Node 26 where Bun is not installed.
+  runs `archon.ts` with Bun, and with Node 26 where Bun is not installed; on Node the launcher, the
+  bootstraps and the engine's own child processes run the fleet's entry files with
+  `--import @intellectual-frontiers/commons/ts/node` (the hook's file, where the working folder is
+  not the fleet repository).
 - **FR-008** Telemetry is IFC TypeScript's (`runtime/otel`, commons 0006-signals): every command is
   a trace, and nothing reads `OTEL_DENO`. The boot server records each event as an OpenTelemetry log
   record; its terminal window and `boot.log` are renderings of the same event, and the Stolos
   Console's Installs page reads `boot.log` (not the OTLP journal).
-- **FR-009** `tools/docs.ts` renders the engine's documentation from its JSDoc to `out/docs/` with
-  no Deno, checks that every module and every export is documented, and compiles every `@example`.
+- **FR-009** `ifc-docs` (commons 0011-documentation), configured by `docs.config.ts`, renders the
+  engine's documentation from its TSDoc and its spec kit to `out/docs/` with no Deno (`bun run docs`),
+  and `bun run docs:lint` runs `ifc-docs check` (every export of every area documented, every
+  citation, link and anchor known) and `tools/doc-examples.ts` (every `@example` compiles).
 - **FR-010** The console's PAM sign-in runs on Bun through `bun:ffi`. On Node it is refused as not
   supported.
 
@@ -136,10 +166,14 @@ flowchart LR
 
 - `tests/bun096.test.ts`:
   - no `Deno`, `npm:`, `jsr:` or URL import in the engine;
-  - `package.json` pinned exactly and matching `bun.lock`;
-  - the packed package installs into an empty project and runs `archon --version` on Bun and on
-    Node;
-  - `fleet init` writes the new layout;
-  - the Bun pin has a checksum for each platform;
-  - the docs tool finds an undocumented export and a broken example.
+  - `package.json` pinned exactly (commons by `github:` at a full commit) and matching `bun.lock`;
+  - this checkout, committed in a throwaway clone, installs as a Git dependency (`git+file:`) into
+    an empty project and runs `archon --version` and `stolos --version` on Bun and on Node 26 with
+    commons' hook (`tools/smoke.ts`);
+  - the Bun pin has a checksum for each platform.
+- `tests/scaffold.test.ts` and `tests/upgrade.test.ts`: `fleet init` writes the `github:`
+  dependency at the tag; `fleet upgrade` rewrites it, installs it from a local Git repository and
+  locks its commit.
+- `tests/docs055.test.ts`: `docs.config.ts` gives an area to every guide, `ifc-docs check` passes on
+  the engine, and `tools/doc-examples.ts` finds a broken example.
 - The suite itself, under `ifc test`, on both runtimes.

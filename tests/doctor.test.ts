@@ -3,7 +3,7 @@
  *
  * @module
  */
-import { assert, assertEquals, proves, the } from "@intellectual-frontiers/ifc-ts/runtime/test";
+import { assert, assertEquals, proves, the } from "@intellectual-frontiers/commons/ts/runtime/test";
 import {
   aptRepos,
   explainCurl,

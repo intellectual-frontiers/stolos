@@ -41,8 +41,8 @@ import {
   otel,
   string,
   unknownValue,
-} from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, path as paths, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+} from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, path as paths, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   type Action,
   type DriftItem,

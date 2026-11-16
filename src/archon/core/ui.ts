@@ -13,7 +13,7 @@
  *
  * @module
  */
-import { fs, proc, stdio, tty } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, proc, stdio, tty } from "@intellectual-frontiers/commons/ts/runtime";
 import { translate } from "./explain.ts";
 import { asRoot, P } from "./paths.ts";
 

@@ -6,8 +6,8 @@
  * @module
  */
 
-import { sha256 } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, path as paths } from "@intellectual-frontiers/ifc-ts/runtime";
+import { sha256 } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, path as paths } from "@intellectual-frontiers/commons/ts/runtime";
 import { P } from "../core/paths.ts";
 import { type Ledger, readLedger, VAULT_LOCAL, writeLedger } from "../core/secret-ledger.ts";
 import { secretFor, type SecretRef } from "../model/secret-inventory.ts";

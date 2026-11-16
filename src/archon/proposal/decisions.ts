@@ -20,8 +20,8 @@ import {
   record,
   string,
   tsLiteral,
-} from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, path } from "@intellectual-frontiers/ifc-ts/runtime";
+} from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import { P } from "../core/paths.ts";
 import type { ProposalDecision, ProposalDecisions } from "./types.ts";
 

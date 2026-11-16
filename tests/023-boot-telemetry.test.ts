@@ -7,13 +7,13 @@
  * @module
  */
 
-import { fs, path } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { P } from "../src/archon/core/paths.ts";
 import { JOURNAL, JOURNAL_FILE, TELEMETRY_DIR } from "../src/archon-boot/telemetry.ts";
 import { at } from "./fixtures.ts";
@@ -64,8 +64,7 @@ proves(
         script,
         CHILD(
           new URL("../src/archon-boot/telemetry.ts", import.meta.url).href,
-          new URL("../node_modules/@intellectual-frontiers/ifc-ts/runtime/mod.js", import.meta.url)
-            .href,
+          import.meta.resolve("@intellectual-frontiers/commons/ts/runtime"),
         ),
       );
       // Nothing set: no OTEL_* variable, no flag.

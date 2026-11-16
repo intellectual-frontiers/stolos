@@ -8,7 +8,7 @@
  * @module
  */
 
-import { fs, path, proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { asRoot, P } from "../core/paths.ts";
 import { currentUser, run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
@@ -109,7 +109,7 @@ export async function workstationAdd(o: {
 
   // The engine bun.lock holds, then converge through sudo with the same runtime (archon is not
   // installed yet).
-  const { engineRuntime, installDependencies } = await import("./bun.ts");
+  const { engineCommand, installDependencies } = await import("./bun.ts");
   const installed = await installDependencies(P.repo);
   if (!installed.ok) {
     m.fail(
@@ -125,7 +125,7 @@ export async function workstationAdd(o: {
       "sudo",
       // ARCHON_GITHUB_API: a site's mirror of GitHub's releases API (spec 010).
       "--preserve-env=ARCHON_VERBOSE,ARCHON_PLAIN,NO_COLOR,LANG,LC_ALL,TERM,ARCHON_GITHUB_API",
-      engineRuntime(),
+      ...engineCommand(),
       path.join(P.repo, "archon.ts"),
       "update",
       "--no-pull",

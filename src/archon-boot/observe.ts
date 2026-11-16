@@ -6,7 +6,7 @@
  * @module
  */
 
-import { fs, path } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import { ui } from "../archon/core/ui.ts";
 import { TELEMETRY_DIR } from "./telemetry.ts";
 

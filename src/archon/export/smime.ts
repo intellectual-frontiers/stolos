@@ -25,7 +25,7 @@
  * @module
  */
 
-import { absurd, cms, toBase64 } from "@intellectual-frontiers/ifc-ts/kernel";
+import { absurd, cms, toBase64 } from "@intellectual-frontiers/commons/ts/kernel";
 
 /** Headers of the outer (unencrypted) message: who, the subject, and nothing else. */
 export interface SmimeHeaders {

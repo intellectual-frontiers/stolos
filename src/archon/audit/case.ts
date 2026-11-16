@@ -17,9 +17,9 @@
  * @module
  */
 
-import { sha256 as sha256Hex } from "@intellectual-frontiers/ifc-ts/kernel";
+import { sha256 as sha256Hex } from "@intellectual-frontiers/commons/ts/kernel";
 import { run } from "../core/exec.ts";
-import { fs, path } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import { verifyBundle, type VerifyResult } from "../evidence/bundle.ts";
 import { type Engagement, engagementPath, parseEngagement } from "./engagement.ts";
 import { type BundleView, bundleView, type Population, population } from "./populations.ts";

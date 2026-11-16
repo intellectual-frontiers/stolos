@@ -4,15 +4,15 @@
  *
  * @module
  */
-import { width } from "@intellectual-frontiers/ifc-ts/kernel";
-import { proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { width } from "@intellectual-frontiers/commons/ts/kernel";
+import { proc } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assertExists,
   assert,
   assertEquals,
   test,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { render, resetPretty } from "../src/archon-boot/pretty.ts";
 import { describe } from "../src/archon-boot/progress.ts";
 import { emojiTerminal } from "../src/archon/core/ui.ts";

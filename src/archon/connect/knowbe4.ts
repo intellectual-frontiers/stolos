@@ -15,7 +15,7 @@
  * @module
  */
 
-import { http } from "@intellectual-frontiers/ifc-ts/runtime";
+import { http } from "@intellectual-frontiers/commons/ts/runtime";
 import { check, type Connector, fresh } from "./connector.ts";
 import { defineConnector } from "./sdk.ts";
 import { PERSON_RECORD } from "../people/records.ts";

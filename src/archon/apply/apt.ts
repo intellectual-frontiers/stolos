@@ -7,7 +7,7 @@
  * @module
  */
 
-import { proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { stream as realStream } from "../core/exec.ts";
 import type { Phase } from "../core/ui.ts";
 

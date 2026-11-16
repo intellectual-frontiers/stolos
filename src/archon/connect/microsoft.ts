@@ -16,7 +16,7 @@
  * @module
  */
 
-import type { http } from "@intellectual-frontiers/ifc-ts/runtime";
+import type { http } from "@intellectual-frontiers/commons/ts/runtime";
 import { AccessDenied, check, type Connector, fresh } from "./connector.ts";
 import { type Ctx, defineConnector, type FieldDef, sendJson } from "./sdk.ts";
 import {

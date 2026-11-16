@@ -6,16 +6,16 @@
  *
  * @module
  */
-import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,
   assertExists,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { Ajv, type AnySchema } from "ajv";
-import type { http } from "@intellectual-frontiers/ifc-ts/runtime";
+import type { http } from "@intellectual-frontiers/commons/ts/runtime";
 import type { Observation } from "../src/archon/connect/connector.ts";
 import { okta } from "../src/archon/connect/okta.ts";
 import { microsoft } from "../src/archon/connect/microsoft.ts";

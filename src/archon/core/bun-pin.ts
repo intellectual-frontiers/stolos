@@ -27,7 +27,7 @@
  *   check -->|yes| unpack["unpack: bun"]
  *   check -->|no| stop["stop: nothing kept"]
  *   unpack --> run["bun archon.ts"]
- *   node["NODE_VERSION + SHA-256<br/>(the backup)"] -.->|Bun cannot run| run2["node archon.ts"]
+ *   node["NODE_VERSION + SHA-256<br/>(the backup)"] -.->|Bun cannot run| run2["node --import (commons hook)<br/>archon.ts"]
  * ```
  *
  * @example
@@ -43,7 +43,7 @@
  * @module
  */
 
-import type { proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import type { proc } from "@intellectual-frontiers/commons/ts/runtime";
 
 /** The Bun every machine runs (commons `pmid:pin-bun`). */
 export const BUN_VERSION = "1.4.4";

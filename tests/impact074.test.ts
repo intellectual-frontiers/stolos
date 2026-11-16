@@ -4,14 +4,14 @@
  *
  * @module
  */
-import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,
   assertExists,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { askpassHelper, sandbox } from "./sandbox.ts";
 import { fleet as lab } from "../examples/fleets/lab/fleet.ts";
 import { foundation } from "../src/archon/capabilities/mod.ts";
@@ -581,8 +581,8 @@ async function linkEngine(repo: string): Promise<void> {
   await fs.mkdir(scope, { recursive: true });
   await fs.symlink(ENGINE, path.join(scope, "stolos"));
   await fs.symlink(
-    path.join(ENGINE, "node_modules", "@intellectual-frontiers", "ifc-ts"),
-    path.join(scope, "ifc-ts"),
+    path.join(ENGINE, "node_modules", "@intellectual-frontiers", "commons"),
+    path.join(scope, "commons"),
   );
 }
 

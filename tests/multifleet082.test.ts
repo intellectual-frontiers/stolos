@@ -6,15 +6,15 @@
  *
  * @module
  */
-import { fs, path as paths, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path as paths, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,
   assertExists,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
-import { unzip } from "@intellectual-frontiers/ifc-ts/kernel";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { unzip } from "@intellectual-frontiers/commons/ts/kernel";
 import { P, resetRoots } from "../src/archon/core/paths.ts";
 import { Sessions } from "../src/archon/console/auth.ts";
 import { Launch } from "../src/archon/console/stolos-server.ts";

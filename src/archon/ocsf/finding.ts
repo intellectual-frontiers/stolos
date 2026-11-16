@@ -19,7 +19,7 @@
  * @module
  */
 
-import { ocsf } from "@intellectual-frontiers/ifc-ts/kernel";
+import { ocsf } from "@intellectual-frontiers/commons/ts/kernel";
 import { SCF_SOURCE, type ScfCatalog } from "../compliance/catalog.ts";
 import { evidenceFindings, instantOfDate } from "../compliance/findings.ts";
 import type { Evidence } from "../compliance/report.ts";

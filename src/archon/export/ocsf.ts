@@ -33,7 +33,7 @@
  * @module
  */
 
-import { grc, ocsf } from "@intellectual-frontiers/ifc-ts/kernel";
+import { grc, ocsf } from "@intellectual-frontiers/commons/ts/kernel";
 import type { ScfCatalog } from "../compliance/catalog.ts";
 import { instantOfDate } from "../compliance/findings.ts";
 import { allEvidence } from "../compliance/oscal.ts";

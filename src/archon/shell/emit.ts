@@ -21,7 +21,7 @@
  * @module
  */
 
-import { fs, proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 
 /** The shells Archon emits code for. */
 export const SHELLS = ["bash", "zsh", "fish"] as const;

@@ -36,7 +36,11 @@
  * @module
  */
 
-import { exportedLiteral, sha256 as sha256Hex, unzip } from "@intellectual-frontiers/ifc-ts/kernel";
+import {
+  exportedLiteral,
+  sha256 as sha256Hex,
+  unzip,
+} from "@intellectual-frontiers/commons/ts/kernel";
 import type { Observation } from "../connect/connector.ts";
 import { emailKey, type Entities } from "../connect/entities.ts";
 import type { ScfId } from "../compliance/scf.ts";

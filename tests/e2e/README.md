@@ -10,12 +10,12 @@ The lab is [`lib.sh`](lib.sh); two scripts set it up:
 
 - [`ci.sh`](ci.sh), run by `.github/workflows/e2e.yml` on every push to `main` (and by hand): a
   throwaway fleet repository (`fleets/e2e`, a fresh signer, its tip signed), served with **this
-  checkout of the engine**, built and packed as a release is (`tools/release.ts`), over HTTP on the
-  lab bridge, so the machines run the engine under test.
+  checkout of the engine**, as a Git repository a fleet depends on (`git+http:` at its commit), over
+  HTTP on the lab bridge, so the machines run the engine under test.
 - [`fleet.sh`](fleet.sh), run by the reusable `.github/workflows/fleet-e2e.yml` from a fleet
   repository: its synthetic fleet, with the engine its `package.json` pins (checked against its
   `bun.lock`). See
-  [The fleet repository](https://intellectual-frontiers.github.io/stolos/latest/archon/fleet/mod.ts/index.html),
+  [The fleet repository](https://intellectual-frontiers.github.io/stolos/latest/api/archon-fleet/index.html),
   "The synthetic fleet".
 
 Either way, a run:

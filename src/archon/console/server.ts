@@ -13,7 +13,7 @@
  * @module
  */
 
-import { errors, type ServeInfo } from "@intellectual-frontiers/ifc-ts/runtime";
+import { errors, type ServeInfo } from "@intellectual-frontiers/commons/ts/runtime";
 import type { Command } from "../core/registry-types.ts";
 import type { WelcomeData } from "../web/welcome.ts";
 import {

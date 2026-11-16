@@ -7,7 +7,7 @@
  * @module
  */
 
-import { path } from "@intellectual-frontiers/ifc-ts/runtime";
+import { path } from "@intellectual-frontiers/commons/ts/runtime";
 import { P } from "../core/paths.ts";
 import { Sessions } from "../console/auth.ts";
 import { activityLog } from "../console/machine.ts";

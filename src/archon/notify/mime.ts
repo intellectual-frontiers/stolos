@@ -6,7 +6,7 @@
  * @module
  */
 
-import { toBase64 } from "@intellectual-frontiers/ifc-ts/kernel";
+import { toBase64 } from "@intellectual-frontiers/commons/ts/kernel";
 
 /** A file attached to a message. */
 export interface Attachment {

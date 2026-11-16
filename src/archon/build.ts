@@ -6,8 +6,8 @@
  * @module
  */
 
-import { lf } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, path } from "@intellectual-frontiers/ifc-ts/runtime";
+import { lf } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import { listFleets, P } from "./core/paths.ts";
 import { engineSpecs } from "./core/assets.ts";
 import { ui } from "./core/ui.ts";

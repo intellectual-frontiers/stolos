@@ -12,7 +12,7 @@
  * @module
  */
 
-import { http } from "@intellectual-frontiers/ifc-ts/runtime";
+import { http } from "@intellectual-frontiers/commons/ts/runtime";
 import { check, type Connector, fresh, type Observation } from "./connector.ts";
 import { type Ctx, defineConnector } from "./sdk.ts";
 import { ACCOUNT, FIREWALL, SERVER, VOLUME } from "./labels.ts";

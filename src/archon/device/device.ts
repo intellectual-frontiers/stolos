@@ -9,8 +9,8 @@
  * @module
  */
 
-import { tsLiteral } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, path } from "@intellectual-frontiers/ifc-ts/runtime";
+import { tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import { P } from "../core/paths.ts";
 import type { PolicyResult } from "../adopt/policy.ts";
 import { defineControl, type ObservationControl } from "../controls/define.ts";

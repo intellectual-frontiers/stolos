@@ -1,6 +1,6 @@
 /**
  * `bun run test` (spec 096-bun-runtime FR-004): the engine's suite through IFC TypeScript's test
- * runner (`ifc test`, `runTests` of `@intellectual-frontiers/ifc-ts/runtime/test-run`), into one
+ * runner (`ifc test`, `runTests` of `@intellectual-frontiers/commons/ts/runtime/test-run`), into one
  * OTLP test record with its reports and the evidence ledger, held to every requirement of every
  * spec.
  *
@@ -24,23 +24,25 @@
  *
  * @module
  */
-import { args as cli, err, ok, type Result } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { args as cli, err, ok, type Result } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   REPORT_FORMATS,
   type ReportFormat,
   RUNTIMES,
   type Runtime,
   runTests,
-} from "@intellectual-frontiers/ifc-ts/runtime/test-run";
+} from "@intellectual-frontiers/commons/ts/runtime/test-run";
 
 const ROOT = path.resolve(path.dirname(path.fromFileUrl(import.meta.url)), "..");
 
+/** A line of a spec that opens a requirement: `- **FR-...**`. */
+const FR_LINE = /^\s*-\s*\*\*(FR-[A-Za-z0-9]+)\*\*/;
 /**
- * A requirement line of a spec: `- **FR-001** ...`, in every shape the specs use: a number with an
- * optional letter (`FR-003a`), a lettered group (`FR-K2`, `FR-B01`), or a name (`FR-IDENTITY`).
+ * A requirement's id: three digits, and a letter where one was inserted (`FR-003a`), which is what
+ * IFC Docs anchors on a specification's page (spec 096 FR-009, commons 0011-documentation FR-024).
  */
-const FR_LINE = /^\s*-\s*\*\*(FR-[A-Z0-9]+[a-z]?)\*\*/;
+const FR_ID = /^FR-\d{3}[a-z]?$/;
 /** A requirement id as a test names it: `"096-bun-runtime FR-001"`. */
 const NAMED = /["'`](\d{3}[a-z0-9-]*) (FR-[A-Z0-9]+[a-z]?)["'`]/g;
 
@@ -90,18 +92,24 @@ const PATHS: readonly cli.Operand[] = [
   { name: "PATH", help: "Test files and folders (tests and examples by default).", arity: "many" },
 ];
 
-/** Every requirement of every spec, in the order of the specs and their lines. */
-async function requirements(): Promise<string[]> {
-  const out: string[] = [];
+/**
+ * Every requirement of every spec, in the order of the specs and their lines, and a problem for each
+ * requirement whose id is not `FR-NNN`.
+ */
+async function requirements(): Promise<{ all: string[]; problems: string[] }> {
+  const all: string[] = [];
+  const problems: string[] = [];
   for (const spec of await fs.listDirs(path.join(ROOT, "specs"))) {
     const text = await fs.readTextOr(path.join(ROOT, "specs", spec, "spec.md"));
     if (text === undefined) continue;
     for (const line of text.split("\n")) {
-      const m = FR_LINE.exec(line);
-      if (m?.[1] !== undefined) out.push(`${spec} ${m[1]}`);
+      const id = FR_LINE.exec(line)?.[1];
+      if (id === undefined) continue;
+      if (FR_ID.test(id)) all.push(`${spec} ${id}`);
+      else problems.push(`specs/${spec}/spec.md: ${id} is not a requirement id (FR-NNN)`);
     }
   }
-  return out;
+  return { all, problems };
 }
 
 /** Every spec's `reviewed.tsv`, joined, with the problems of the ones that name no requirement. */
@@ -177,10 +185,10 @@ async function main(argv: readonly string[]): Promise<number> {
   }
   const o = p.value.options;
   const paths = p.value.positionals.length === 0 ? ["tests", "examples"] : p.value.positionals;
-  const all = await requirements();
+  const { all, problems: ids } = await requirements();
   const known = new Set(all);
   const review = await reviewed(known);
-  const problems = [...review.problems, ...(await unknownNamed(paths, known))];
+  const problems = [...ids, ...review.problems, ...(await unknownNamed(paths, known))];
   for (const problem of problems) console.error(`test: ${problem}`);
   if (problems.length > 0) return 1;
 

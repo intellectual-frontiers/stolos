@@ -3,7 +3,7 @@
  *
  * @module
  */
-import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,
@@ -11,7 +11,7 @@ import {
   assertStringIncludes,
   proves,
   the,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { fleet, host } from "./fixtures.ts";
 import { resolvePlan } from "../src/archon/model/resolve.ts";
 import { usersFor } from "../src/archon/model/load.ts";

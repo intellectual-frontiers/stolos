@@ -34,8 +34,8 @@ import {
   zipDeflated,
   zipEntries,
   zipRead,
-} from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, path as ifcPath, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+} from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, path as ifcPath, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { bootstrapOneLiner, repoSlug } from "../fleet/bootstrap.ts";
 import { run } from "../core/exec.ts";
 import { listFleets, P } from "../core/paths.ts";

@@ -4,8 +4,8 @@
  * @module
  */
 
-import { json, object, string } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, path, stdio, tty } from "@intellectual-frontiers/ifc-ts/runtime";
+import { json, object, string } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, path, stdio, tty } from "@intellectual-frontiers/commons/ts/runtime";
 import { ui } from "../core/ui.ts";
 import { MACHINE_NAME } from "../adopt/adopt.ts";
 import {

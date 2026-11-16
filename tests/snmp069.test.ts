@@ -9,8 +9,8 @@ import {
   assertEquals,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
-import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   aesCfb,
   decodeOid,

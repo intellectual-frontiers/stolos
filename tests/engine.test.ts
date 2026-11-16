@@ -5,10 +5,11 @@
  *
  * @module
  */
-import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
-import { assert, assertEquals, proves } from "@intellectual-frontiers/ifc-ts/runtime/test";
+import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { assert, assertEquals, proves } from "@intellectual-frontiers/commons/ts/runtime/test";
 import { VERSION } from "../src/archon/version.ts";
 import { ENGINE_ROOT } from "./sandbox.ts";
+import { runtimeCommand } from "../src/archon/install/bun.ts";
 
 /** The checkout, with a trailing slash: `git ls-files` names files relative to it with `/`. */
 const ROOT = `${ENGINE_ROOT}/`;
@@ -55,7 +56,7 @@ proves(
         if (spec === undefined) return;
         // Relative (with .ts), node: builtins, the packages package.json declares, and the PAM
         // binding's bun:ffi (spec 096); never npm:, jsr: or a URL.
-        if (!/^(\.|node:|@intellectual-frontiers\/ifc-ts(\/|$)|ajv(\/|$)|bun:ffi$)/.test(spec)) {
+        if (!/^(\.|node:|@intellectual-frontiers\/commons\/ts\/|ajv(\/|$)|bun:ffi$)/.test(spec)) {
           bad.push(`${f}:${i + 1} ${spec}`);
         }
         if (/(^|\/)(fleets|examples)\//.test(spec)) bad.push(`${f}:${i + 1} ${spec}`);
@@ -94,7 +95,7 @@ proves(
       VERSION,
       "package.json's version is src/archon/version.ts's (bun run version keeps them equal)",
     );
-    const r = await proc.run([proc.execPath(), ROOT + "tools/gen-assets.ts", "--check"]);
+    const r = await proc.run([...runtimeCommand(), ROOT + "tools/gen-assets.ts", "--check"]);
     assertEquals(r.code, 0, r.stderr);
   },
 );

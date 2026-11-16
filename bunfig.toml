@@ -22,7 +22,7 @@ ignorePatterns = [
 
 [lint]
 typeAware = true
-plugins = ["./node_modules/@intellectual-frontiers/ifc-ts/lint/plugin.js"]
+plugins = ["./node_modules/@intellectual-frontiers/commons/commons/ts/lint/plugin.ts"]
 ignorePatterns = [
   "out/",
   "examples/out/",

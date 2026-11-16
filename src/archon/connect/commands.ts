@@ -5,8 +5,8 @@
  * @module
  */
 
-import { json, record, string } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, http, path, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
+import { json, record, string } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, http, path, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";
 import { aws } from "./aws.ts";

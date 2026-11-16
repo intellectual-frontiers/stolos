@@ -92,13 +92,13 @@
  * (`@intellectual-frontiers/stolos/archon/connect/labels`: `vulnerability`, `user_account`, `person_record`, ...);
  * a new one is declared with `defineLabel` and named from D3FEND, OCSF, or UDM.
  *
- * In the connector's own repository, a `package.json` depends on the engine's release, as a fleet
+ * In the connector's own repository, a `package.json` depends on the engine by Git at a tag, as a fleet
  * repository does, for its tests:
  *
  * ```json
  * {
  *   "dependencies": {
- *     "@intellectual-frontiers/stolos": "https://github.com/intellectual-frontiers/stolos/releases/download/v0.118.0/intellectual-frontiers-stolos-0.118.0.tgz"
+ *     "@intellectual-frontiers/stolos": "github:intellectual-frontiers/stolos#v0.118.0"
  *   }
  * }
  * ```

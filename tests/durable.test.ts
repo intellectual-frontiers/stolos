@@ -4,7 +4,7 @@
  * @module
  */
 import type { Check } from "../src/archon/state/verify.ts";
-import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assertExists,
   assert,
@@ -13,7 +13,7 @@ import {
   assertThrows,
   test,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { fleet, host } from "./fixtures.ts";
 import type { DataClass, HostDef, OptInRecord } from "../src/archon/model/types.ts";
 import {
@@ -34,7 +34,8 @@ import { parseArgs } from "../src/archon/core/registry-types.ts";
 import { handle, toolFor } from "../src/archon/mcp/server.ts";
 import { renderWelcome } from "../src/archon/web/welcome.ts";
 import { ENGINE_ROOT, sandbox } from "./sandbox.ts";
-import { path } from "@intellectual-frontiers/ifc-ts/runtime";
+import { path } from "@intellectual-frontiers/commons/ts/runtime";
+import { runtimeCommand } from "../src/archon/install/bun.ts";
 
 const rec = (enabled: boolean, data?: DataClass): OptInRecord => ({
   enabled,
@@ -437,7 +438,7 @@ proves(
   "044: boot reinstall has no --force; it says to use --confirm-destroy",
   async () => {
     const r = await proc.output(
-      [proc.execPath(), "src/archon-boot/main.ts", "reinstall", "alpha", "--force"],
+      [...runtimeCommand(), "src/archon-boot/main.ts", "reinstall", "alpha", "--force"],
       { stdout: "piped", stderr: "piped", stdin: "null" },
     );
     assertEquals(r.code, 2);

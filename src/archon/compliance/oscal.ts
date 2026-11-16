@@ -29,7 +29,7 @@
  * @module
  */
 
-import { oscal, uuid } from "@intellectual-frontiers/ifc-ts/kernel";
+import { oscal, uuid } from "@intellectual-frontiers/commons/ts/kernel";
 import { NIST_MODERATE_PROFILE, NIST_SOURCES, SCF_SOURCE } from "./catalog.ts";
 import type { ComplianceView, Coverage, Evidence } from "./report.ts";
 import type { Risk } from "../risk/register.ts";

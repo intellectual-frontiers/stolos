@@ -15,7 +15,7 @@
  * @module
  */
 
-import { stdio } from "@intellectual-frontiers/ifc-ts/runtime";
+import { stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";
 import { P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";

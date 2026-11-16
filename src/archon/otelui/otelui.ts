@@ -14,7 +14,7 @@
  * @module
  */
 
-import { fs, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
 import { newPassword } from "../pg/config.ts";

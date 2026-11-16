@@ -27,8 +27,8 @@
  * @module
  */
 
-import { assess, exportedLiteral, type Json } from "@intellectual-frontiers/ifc-ts/kernel";
-import { stdio } from "@intellectual-frontiers/ifc-ts/runtime";
+import { assess, exportedLiteral, type Json } from "@intellectual-frontiers/commons/ts/kernel";
+import { stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";
 import type { RepoReader } from "../estate/snapshot.ts";
 import type { PcFacts } from "../console/pc.ts";

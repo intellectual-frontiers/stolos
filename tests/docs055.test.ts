@@ -1,49 +1,108 @@
 /**
- * Specs 055-documentation and 096-bun-runtime FR-009: the documentation lives in the TypeScript, and
- * `tools/docs.ts` reads it there by itself: every module's `@module` block, every export's JSDoc
- * (overloads, re-exports, `export { ... }`, and nothing inside a template literal), the
- * `@example` blocks it type-checks, and the HTML it renders (Mermaid drawn, guides linked).
+ * Specs 055-documentation and 096-bun-runtime FR-009: the documentation lives in the TypeScript and
+ * IFC Docs (`ifc-docs`, commons 0011-documentation) makes the site from it, configured by
+ * `docs.config.ts`: every module of `src/` starts with its `@module` block and is in one area,
+ * `ifc-docs check` holds every export to its TSDoc (and finds one that has none), every Mermaid
+ * block is one of the kinds the engine uses, drawn by the Mermaid commons' package pins, and every
+ * `@example` compiles (`tools/doc-examples.ts`, which finds one that does not).
  *
  * @module
  */
-import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
-import {
-  checkExamples,
-  exampleSource,
-  firstSentence,
-  frontPage,
-  MERMAID,
-  modulePage,
-  problemsOf,
-  readModule,
-  renderMarkdown,
-  sourceFiles,
-} from "../tools/docs.ts";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { checkExamples, exampleSource, examplesIn, sourceFiles } from "../tools/doc-examples.ts";
+import { ifcDocs } from "./ifc-docs.ts";
 
 const ROOT = path.resolve(path.dirname(path.fromFileUrl(import.meta.url)), "..");
 
 proves(
   ["055-documentation FR-001"],
-  "055: every engine module starts with its @module JSDoc",
+  "055: every engine module starts with its @module JSDoc, and is in exactly one area of the site",
   async () => {
     const missing: string[] = [];
-    for (const f of await sourceFiles(ROOT)) {
-      const m = readModule(f, await fs.readTextFile(path.join(ROOT, f)));
-      if (m.doc === undefined || m.doc === "") missing.push(f);
+    const files = await sourceFiles(ROOT);
+    for (const f of files) {
+      const first = /\/\*\*[\s\S]*?\*\//.exec(await fs.readTextFile(path.join(ROOT, f)))?.[0];
+      if (first === undefined || !/@module\b/.test(first)) missing.push(f);
     }
     assertEquals(missing, [], "add a /** ... @module */ block at the top of each");
+    const { config } = await import("../docs.config.ts");
+    const about = config.packages[0]?.about;
+    const entries = (typeof about === "object" ? (about.areas ?? []) : []).flatMap(
+      (a) => a.entryPoints,
+    );
+    assertEquals(entries.length, new Set(entries).size, "no module is in two areas");
+    // Every module but the generated assets (data, read by the engine) is documented on the site.
+    const shown = new Set(entries);
+    assertEquals(
+      files.filter((f) => !shown.has(f)),
+      [],
+      "every module of src/ is in an area of docs.config.ts",
+    );
   },
 );
 
 proves(
+  ["055-documentation FR-001", "096-bun-runtime FR-009"],
+  "096: ifc-docs check passes on the engine, and finds an export with no TSDoc",
+  async () => {
+    const r = await ifcDocs(["check"]);
+    assertEquals(r.code, 0, r.stderr);
+    assertStringIncludes(`${r.stdout}${r.stderr}`, " 0 findings");
+    // A repository of one module with an undocumented export, and a plain spec kit.
+    const dir = await fs.makeTempDir({ prefix: "stolos-docs-check-" });
+    try {
+      await fs.mkdir(path.join(dir, ".git"), { recursive: true });
+      await fs.mkdir(path.join(dir, "src"), { recursive: true });
+      await fs.mkdir(path.join(dir, "specs", "001-demo"), { recursive: true });
+      await fs.writeTextFile(
+        path.join(dir, "src", "demo.ts"),
+        "/**\n * A demo.\n *\n * @module\n */\n\n/** Documented. */\nexport const a = 1;\n\nexport const b = 2;\n",
+      );
+      await fs.writeTextFile(
+        path.join(dir, "specs", "001-demo", "spec.md"),
+        "# 001: Demo\n\n## Requirements\n\n- **FR-001** It is a demo.\n",
+      );
+      await fs.writeTextFile(
+        path.join(dir, "docs.config.ts"),
+        `export default ${JSON.stringify({
+          name: "Demo",
+          repository: "https://example.invalid/demo",
+          home: { dir: ".", about: { title: "Demo", summary: "A demo." } },
+          packages: [
+            {
+              dir: ".",
+              slug: "demo",
+              about: {
+                title: "Demo",
+                summary: "A demo.",
+                areas: [{ title: "Demo", slug: "demo", entryPoints: ["src/demo.ts"] }],
+              },
+            },
+          ],
+          specKits: [{ layout: "spec-kit", dir: "specs", constitution: false }],
+          citations: { prefix: "demo", digits: 3 },
+        })};\n`,
+      );
+      const bad = await ifcDocs(["check", "--config", path.join(dir, "docs.config.ts")]);
+      assertEquals(bad.code, 1, `${bad.stdout}${bad.stderr}`);
+      assertStringIncludes(bad.stderr, "b is exported with no TSDoc");
+      assert(!bad.stderr.includes("a is exported"), bad.stderr);
+    } finally {
+      await fs.remove(dir, { recursive: true });
+    }
+  },
+  { timeout: 120_000 },
+);
+
+proves(
   ["055-documentation FR-003"],
-  "055: every Mermaid diagram is one of the kinds we use, and closed",
+  "055: every Mermaid diagram is one of the kinds we use, and closed; commons pins the Mermaid that draws it",
   async () => {
     const kinds =
       /^(flowchart (TB|TD|LR|RL|BT)|sequenceDiagram|stateDiagram-v2|classDiagram|erDiagram)$/;
@@ -62,111 +121,21 @@ proves(
       }
     }
     assert(n >= 15, `${n} diagrams`);
-  },
-);
-
-proves(
-  ["055-documentation FR-003", "055-documentation FR-004"],
-  "055: the front page's one line per module, and Mermaid pinned",
-  () => {
-    assertEquals(
-      firstSentence(
-        "/**\n * Spec 052: every problem, by a stable code. More here.\n *\n * @module\n */",
+    // IFC Docs serves Mermaid from its package's dependency, pinned exactly; bun.lock holds its
+    // integrity.
+    const pkg: unknown = JSON.parse(
+      await fs.readTextFile(
+        path.join(ROOT, "node_modules", "@intellectual-frontiers", "commons", "package.json"),
       ),
-      "Spec 052: every problem, by a stable code.",
     );
-    assertEquals(
-      firstSentence("/**\n * One.\n *\n * ```mermaid\n * flowchart LR\n * ```\n * @module\n */"),
-      "One.",
+    const mermaid: unknown = Reflect.get(
+      Object(Reflect.get(Object(pkg), "dependencies")),
+      "mermaid",
     );
-    assert(/^https:\/\/cdn\.jsdelivr\.net\/npm\/mermaid@\d+\.\d+\.\d+\//.test(MERMAID.url));
-    assert(/^[0-9a-f]{64}$/.test(MERMAID.sha256));
-    assertStringIncludes(MERMAID.vendored, "mermaid");
-  },
-);
-
-/** A module with every form of export the reader knows, documented or not. */
-const SAMPLE = `/**
- * A sample. It has every form.
- *
- * @example
- * \`\`\`ts
- * import { one } from "./sample.ts";
- * one(1);
- * \`\`\`
- *
- * @module
- */
-import { x as imported } from "./other.ts";
-
-/** One, overloaded. */
-export function one(a: number): number;
-export function one(a: string): string;
-export function one(a: number | string): number | string {
-  return a;
-}
-
-export const undocumented = 1;
-
-/** A type. */
-export type Pair = {
-  readonly a: string;
-};
-
-const TEMPLATE = \`
-export const insideTemplate = \${1};
-\`;
-
-/** Documented where it is declared. */
-const local = /[\`"']/g;
-
-export async function* gen(): AsyncGenerator<number> {
-  yield 1;
-}
-
-/** A class. */
-export class Thing {
-  /** Its value. */
-  value = 1;
-  private hidden = 2;
-}
-
-export { local, imported, TEMPLATE };
-export { other } from "./other.ts";
-export * as all from "./all.ts";
-`;
-
-proves(
-  ["055-documentation FR-001", "096-bun-runtime FR-009"],
-  "096: the docs tool reads every export, and finds the undocumented ones",
-  () => {
-    const m = readModule("src/archon/sample.ts", SAMPLE);
-    assertStringIncludes(m.doc ?? "", "A sample.");
-    assertEquals(m.examples.length, 1);
-    const names = m.exports.map((e) => `${e.kind} ${e.name}`);
-    assertEquals(names, [
-      "function one",
-      "const undocumented",
-      "type Pair",
-      "function gen",
-      "class Thing",
-      "re-export other",
-      "re-export all",
-      "const local",
-      "re-export imported",
-      "const TEMPLATE",
-    ]);
-    const one = m.exports.find((e) => e.name === "one");
-    assertEquals(one?.signature, "export function one(a: number): number");
-    assertStringIncludes(m.exports.find((e) => e.name === "Thing")?.signature ?? "", "value = 1");
-    assert(!(m.exports.find((e) => e.name === "Thing")?.signature ?? "").includes("hidden"));
-    const problems = problemsOf(m).map((p) => `${p.line}: ${p.message}`);
-    assertEquals(problems, [
-      "21: const undocumented has no JSDoc",
-      "35: function gen has no JSDoc",
-      "28: const TEMPLATE has no JSDoc",
-    ]);
-    assertEquals(problemsOf(readModule("src/x.ts", "export const a = 1;\n")).length, 2);
+    assert(typeof mermaid === "string" && /^\d+\.\d+\.\d+$/.test(mermaid), String(mermaid));
+    const lock = await fs.readTextFile(path.join(ROOT, "bun.lock"));
+    const line = lock.split("\n").find((l) => l.includes(`"mermaid": ["mermaid@${mermaid}"`));
+    assert(line !== undefined && /"sha512-[A-Za-z0-9+/=]+"\]/.test(line), "Mermaid's integrity");
   },
 );
 
@@ -181,17 +150,20 @@ proves(
       ),
       'import { run } from "@intellectual-frontiers/stolos/archon/core/exec";\nimport "@intellectual-frontiers/stolos/archon/model/types";',
     );
-    const good = readModule(
+    // Only ts blocks of @example sections are examples; a diagram or an earlier fence is not.
+    const good = examplesIn(
       "src/archon/core/sample.ts",
-      `/**\n * Good.\n *\n * @example\n * \`\`\`ts\n * import { run } from "./exec.ts";\n * const r = await run(["true"]);\n * const code: number = r.code;\n * \`\`\`\n *\n * @module\n */\n`,
+      '/**\n * Good.\n *\n * ```ts\n * not an example\n * ```\n *\n * @example\n * ```mermaid\n * flowchart LR\n * ```\n * ```ts\n * import { run } from "./exec.ts";\n * const r = await run(["true"]);\n * const code: number = r.code;\n * ```\n *\n * @module\n */\n',
     );
-    const bad = readModule(
+    assertEquals(good.length, 1);
+    assertEquals(good[0]?.line, 13);
+    const bad = examplesIn(
       "src/archon/core/broken.ts",
-      `/**\n * Broken.\n *\n * @example\n * \`\`\`ts\n * const n: number = "not a number";\n * \`\`\`\n *\n * @module\n */\n`,
+      '/**\n * Broken.\n *\n * @example\n * ```ts\n * const n: number = "not a number";\n * ```\n *\n * @module\n */\n',
     );
     const dir = path.join(ROOT, "out", `docs-examples-test-${proc.pid}`);
     try {
-      const r = await checkExamples([good, bad], ROOT, dir);
+      const r = await checkExamples([...good, ...bad], ROOT, dir);
       assertEquals(r.total, 2);
       assertEquals(
         r.failures.map((f) => `${f.file}:${f.line}`),
@@ -201,33 +173,6 @@ proves(
     } finally {
       await fs.remove(dir, { recursive: true });
     }
-  },
-);
-
-proves(
-  ["055-documentation FR-003", "055-documentation FR-004", "096-bun-runtime FR-009"],
-  "096: the HTML: Mermaid blocks drawn, guides linked, the guides first on the front page",
-  () => {
-    const html = renderMarkdown(
-      "src/archon-boot/mod.ts",
-      "See [the agent](agent.md) and [compliance](../archon/compliance/mod.ts#scf).\n\n```mermaid\nflowchart LR\n  a --> b\n```\n",
-      2,
-    );
-    assertStringIncludes(html, 'href="../../archon/mcp/mod.ts/index.html"');
-    assertStringIncludes(html, 'href="../../archon/compliance/mod.ts/index.html#scf"');
-    assertStringIncludes(html, '<pre class="mermaid">flowchart LR\n  a --&gt; b</pre>');
-    const m = readModule("src/archon/sample.ts", SAMPLE);
-    const page = modulePage(m);
-    assertStringIncludes(page, 'id="one"');
-    assert(!page.includes("mermaid.min.js"), "no diagram, no Mermaid script");
-    const front = frontPage([m], new Map([["src/archon/sample.ts", "A sample."]]));
-    const guides = front.indexOf("<h2>Guides</h2>");
-    const folder = front.indexOf("<h2>archon/</h2>");
-    assert(guides > 0 && folder > guides, "the guides come first, then the modules by folder");
-    assertStringIncludes(
-      front,
-      '<a href="./archon/sample.ts/index.html"><code>sample.ts</code></a> A sample.',
-    );
   },
 );
 

@@ -5,7 +5,7 @@
  *
  * @module
  */
-import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,
@@ -13,7 +13,7 @@ import {
   assertStringIncludes,
   assertThrows,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 
 import {
   defineControl,
@@ -608,8 +608,8 @@ proves(
         path.join(repo, "node_modules", "@intellectual-frontiers", "stolos"),
       );
       await fs.symlink(
-        path.join(ENGINE, "node_modules", "@intellectual-frontiers", "ifc-ts"),
-        path.join(repo, "node_modules", "@intellectual-frontiers", "ifc-ts"),
+        path.join(ENGINE, "node_modules", "@intellectual-frontiers", "commons"),
+        path.join(repo, "node_modules", "@intellectual-frontiers", "commons"),
       );
       const pack = path.join(repo, "fleets", "lab", "controls", "acme");
       await fs.mkdir(pack, { recursive: true });

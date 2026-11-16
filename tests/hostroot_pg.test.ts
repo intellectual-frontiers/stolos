@@ -4,13 +4,13 @@
  *
  * @module
  */
-import { fs, path, proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { resetRoots } from "../src/archon/core/paths.ts";
 import { HOST_ROOT_SKIP, type HostRoot, hostRoot } from "./host.ts";
 import { fleet, host } from "./fixtures.ts";

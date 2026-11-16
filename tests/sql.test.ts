@@ -3,7 +3,7 @@
  *
  * @module
  */
-import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { engineFile } from "../src/archon/core/assets.ts";
 import {
   assertExists,
@@ -11,7 +11,7 @@ import {
   assertEquals,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { fleet, host, at } from "./fixtures.ts";
 import { resolvePlan } from "../src/archon/model/resolve.ts";
 import { TOOLS } from "../src/archon/tools/catalog.ts";

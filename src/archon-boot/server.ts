@@ -16,7 +16,7 @@
  * @module
  */
 
-import { fs, type tcp } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, type tcp } from "@intellectual-frontiers/commons/ts/runtime";
 import { explainHint } from "../archon/core/ui.ts";
 import type { ArchonEvent } from "../archon/telemetry/events.ts";
 import {

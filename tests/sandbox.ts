@@ -16,9 +16,10 @@
  * @module
  */
 
-import { sha256 } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
-import { assert } from "@intellectual-frontiers/ifc-ts/runtime/test";
+import { sha256 } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { assert } from "@intellectual-frontiers/commons/ts/runtime/test";
+import { runtimeCommand } from "../src/archon/install/bun.ts";
 
 const PASS = [
   "PATH",
@@ -120,7 +121,7 @@ export async function sandbox(prefix = "archon-test-"): Promise<Sandbox> {
       stop.abort();
     }, RUN_TIMEOUT_MS);
     const o = await proc
-      .run([proc.execPath(), script, ...args], {
+      .run([...runtimeCommand(), script, ...args], {
         env: { ...env, ...extra },
         clearEnv: true,
         input: stdin,

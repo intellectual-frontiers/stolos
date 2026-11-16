@@ -5,8 +5,8 @@
  *
  * @module
  */
-import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
-import { assert, assertEquals, test } from "@intellectual-frontiers/ifc-ts/runtime/test";
+import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { assert, assertEquals, test } from "@intellectual-frontiers/commons/ts/runtime/test";
 import { askpassHelper } from "./sandbox.ts";
 
 test("004: publishChange makes a signed commit with a passphrase-protected key, and pushes it", async () => {

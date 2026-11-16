@@ -2,8 +2,8 @@
 # End-to-end install in CI with THIS checkout of the engine (spec 004 SC-001,
 # specs 046 to 049): a throwaway fleet "e2e" is made here, its tip signed with
 # a fresh key that signers.ts lists, and served on the lab bridge with this
-# checkout, packed, as its engine (package.json), so the machines run the engine
-# under test (spec 096). The lab
+# checkout, as a Git repository, as its engine (package.json), so the machines run
+# the engine under test (spec 096). The lab
 # itself is lib.sh: server install to Ready, the install's trace, fleet query,
 # a reboot, and a workstation that reaches the server over MCP.
 . "$(cd "$(dirname "$0")" && pwd)/lib.sh"
@@ -18,10 +18,18 @@ lab_network
 
 log "fleet repository e2e, signed"
 mkdir -p "$F/fleets/e2e"
-# The engine under test, built and packed as a release is (tools/release.ts), served beside the
-# fleet (bun.lock holds its integrity).
-V=$(sed -n 's/^export const VERSION = "\(.*\)";$/\1/p' "$ENGINE/src/archon/version.ts")
-bun "$ENGINE/tools/release.ts" build "$W/www" >/dev/null
+# The engine under test, as a fleet depends on it (by Git, spec 096 FR-005): this checkout's files
+# at its HEAD as a one-commit repository, served beside the fleet over Git's plain HTTP (a CI
+# checkout is shallow, which that transport cannot serve); bun.lock pins its commit.
+rm -rf "$W/engine-src" "$W/www/stolos.git"
+mkdir -p "$W/engine-src"
+git -C "$ENGINE" archive HEAD | tar -x -C "$W/engine-src"
+git -C "$W/engine-src" init -q -b main
+git -C "$W/engine-src" add -A
+git -C "$W/engine-src" -c user.name=e2e -c user.email=e2e@example.invalid commit -q -m "the engine under test"
+git clone -q --bare "$W/engine-src" "$W/www/stolos.git"
+git -C "$W/www/stolos.git" update-server-info
+ENGINE_COMMIT=$(git -C "$W/engine-src" rev-parse HEAD)
 cat >"$F/package.json" <<JSON
 {
   "name": "fleet",
@@ -29,7 +37,7 @@ cat >"$F/package.json" <<JSON
   "type": "module",
   "scripts": { "stolos": "bun stolos.ts", "archon": "bun archon.ts" },
   "dependencies": {
-    "@intellectual-frontiers/stolos": "http://$BR:8000/intellectual-frontiers-stolos-$V.tgz"
+    "@intellectual-frontiers/stolos": "git+http://$BR:8000/stolos.git#$ENGINE_COMMIT"
   }
 }
 JSON

@@ -7,8 +7,8 @@
  * @module
  */
 
-import { json } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
+import { json } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { ui } from "../core/ui.ts";
 import type { SyncStatus } from "../reconcile/reconcile.ts";
 import { loadHosts } from "../model/load.ts";

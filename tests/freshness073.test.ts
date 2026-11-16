@@ -3,15 +3,15 @@
  *
  * @module
  */
-import { type Literal, tsLiteral } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { type Literal, tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,
   assertExists,
   assertThrows,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import {
   cadence,
   controlFreshness,

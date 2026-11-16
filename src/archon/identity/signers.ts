@@ -28,7 +28,7 @@
  * @module
  */
 
-import { fs, path } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import { onHost, P } from "../core/paths.ts";
 import { run, type RunResult } from "../core/exec.ts";
 import type { SignerDef } from "../model/types.ts";

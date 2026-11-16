@@ -82,7 +82,7 @@
  *
  * Without the TCP 8080 policy the network boot gets through TFTP but the installer stops at
  * `(initramfs)` with `wget: can't connect to remote host ... Connection timed out`
- * ([troubleshooting](troubleshooting.md#network-boot)).
+ * ([troubleshooting](../archon/doctor/mod.ts#network-boot)).
  *
  * **Another router:** set _next-server_ (option 66, _TFTP server_) to this PC and the _boot file name_
  * (option 67) to `bootx64.efi`.
@@ -103,19 +103,19 @@
  * ## The agent (optional)
  *
  * No agent runs on the servers (spec 030). To manage them with Claude Code, run it on this PC in the
- * checkout; it reaches each server through MCP over SSH. See [agent.md](agent.md).
+ * checkout; it reaches each server through MCP over SSH. See [agent.md](../archon/mcp/mod.ts).
  *
  * ## HTTPS certificates (once, recommended)
  *
  * Every server answers HTTPS as `<host>.lab.example.net` with a Let's Encrypt certificate, through
  * Cloudflare's DNS challenge (spec 032). Create a Cloudflare token with Zone > DNS > Edit and Zone >
  * Zone > Read on `example.net`, then `bun run stolos boot web-setup`. Servers get it at install, or
- * now with `bun run stolos boot web-push <host>`. See [web.md](web.md).
+ * now with `bun run stolos boot web-push <host>`. See [web.md](../archon/web/mod.ts).
  *
  * ## Email (once, recommended)
  *
  * Every server sends mail through Cloudflare Email Service (spec 027): archon's own notifications
- * ([what is sent](daily-use.md#notifications)) and anything a program on it sends (cron, apps,
+ * ([what is sent](../archon/commands/mod.ts#notifications)) and anything a program on it sends (cron, apps,
  * unattended-upgrades). Messages come from `<user>+<host>.lab@example.net` (for example
  * `root+alpha.lab@example.net`, or `alice+bootpc.lab@example.net` from this PC): one onboarded domain
  * for the whole fleet, the machine in the subaddress, signed with DKIM for example.net; and mail for
@@ -252,12 +252,12 @@
  * add `--destroy-existing`: it removes every fleet's secrets, the key store, and the daily key first,
  * after saving anything the backup lacks as a ZIP of its own (a different daily key is moved aside as
  * `fleet-signing.replaced-<date>`; no other `.ssh` file is touched). See
- * [disaster recovery](disaster-recovery.md).
+ * [disaster recovery](../archon/vault/mod.ts).
  *
  * Until a changed secret is backed up, Archon says so: a panel at the end of the command that changed
  * it and at the start of `boot serve` and `boot status`, a warning in `boot doctor`, a reminder before
  * each `git push`, `🔐 backup` in the prompt, and an email after a day (then weekly). If this PC is
- * lost, see [disaster recovery](disaster-recovery.md).
+ * lost, see [disaster recovery](../archon/vault/mod.ts).
  *
  * To show `🔐 backup` in PowerShell with oh-my-posh and this theme, add to your profile:
  *
@@ -304,8 +304,8 @@
  * | `bun run stolos boot status`                                                                 | hosts, armed or not, MACs learned, Boot URIs                                                                                                              |
  * | `bun run stolos fleet status`                                                                | every server and workstation: last install, and how to reach and observe it                                                                               |
  * | `bun run stolos boot arm <host> [--claim] [--confirm-destroy <host>]`                        | allow one install of a host (`--claim`: the next unknown machine becomes it; a host recorded as durable needs `--confirm-destroy`)                        |
- * | `bun run stolos boot retire <host> --confirm-destroy <host>`                                 | a server leaves the fleet: its DNS, deploy key, identity, model, and records ([hosts](hosts.md#retire-a-host))                                            |
- * | `bun run stolos boot reinstall <host> [--confirm-destroy <host>]`                            | re-install a running host, nobody at the console; a durable host, or one that cannot be reached, needs `--confirm-destroy` ([hosts](hosts.md#re-install)) |
+ * | `bun run stolos boot retire <host> --confirm-destroy <host>`                                 | a server leaves the fleet: its DNS, deploy key, identity, model, and records ([hosts](../archon/model/mod.ts#retire-a-host))                                            |
+ * | `bun run stolos boot reinstall <host> [--confirm-destroy <host>]`                            | re-install a running host, nobody at the console; a durable host, or one that cannot be reached, needs `--confirm-destroy` ([hosts](../archon/model/mod.ts#re-install)) |
  * | `bun run stolos vault status [--lost]`                                                       | every secret, and whether the last backup has it                                                                                                          |
  * | `bun run stolos vault backup` · `restore` · `list`                                           | the backup ZIP: write it; restore it on a fresh PC (`restore <zip>`); the ZIPs not yet moved                                                              |
  * | `bun run stolos boot web-setup`                                                              | store the Cloudflare DNS token for HTTPS certificates and server records (once)                                                                           |

@@ -3,13 +3,13 @@
  *
  * @module
  */
-import { fs } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assertExists,
   assert,
   assertEquals,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { ui } from "../src/archon/core/ui.ts";
 import {
   aptDeps,

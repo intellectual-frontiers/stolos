@@ -15,8 +15,8 @@
 
 import type { ExportJobDef, ExportKind, ExportScheduleDef, FleetDef } from "../model/types.ts";
 import { EMAIL } from "../notify/transport.ts";
-import { absurd, cms, jobs, ok, type Result } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs } from "@intellectual-frontiers/ifc-ts/runtime";
+import { absurd, cms, jobs, ok, type Result } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs } from "@intellectual-frontiers/commons/ts/runtime";
 import { describeCertificateProblem, parseCertificate } from "./smime.ts";
 
 /** Every kind of export document, in the order a job lists them. */

@@ -5,14 +5,14 @@
  * @module
  */
 
-import { errors, fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { errors, fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,
   assertRejects,
   proves,
   test,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import {
   answerFor,
   cstr,

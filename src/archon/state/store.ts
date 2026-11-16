@@ -24,8 +24,8 @@
  * @module
  */
 
-import { formatDecodeError, object, string } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, path } from "@intellectual-frontiers/ifc-ts/runtime";
+import { formatDecodeError, object, string } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import { count } from "../core/telemetry.ts";
 import { DatabaseSync } from "node:sqlite";
 import { P } from "../core/paths.ts";

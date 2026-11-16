@@ -8,8 +8,8 @@
  * @module
  */
 
-import { sha256 } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, http, path, proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
+import { sha256 } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, http, path, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";
 import { VERSION } from "../version.ts";
@@ -80,7 +80,8 @@ export async function runProbe(repo: string, module: string): Promise<Declaratio
     const v = proc.env.get(k);
     if (v !== undefined) env[k] = v;
   }
-  const r = await proc.run([proc.execPath(), probeFile(), module], {
+  const { runtimeCommand } = await import("../install/bun.ts");
+  const r = await proc.run([...runtimeCommand(), probeFile(), module], {
     cwd: repo,
     env,
     clearEnv: true,

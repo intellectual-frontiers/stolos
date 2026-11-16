@@ -16,7 +16,7 @@
  * A public build publishes a summary bundle it derives: the same format as
  * spec 072's (`stolos-evidence/1`, each item by its SHA-256, hash-chained),
  * signed by the same fleet signer as the full bundle through a signing
- * callback ({@link Signer}, spec 072's `sshSigner`). Its items are one JSON
+ * callback ({@link archon-evidence!Signer}, spec 072's `sshSigner`). Its items are one JSON
  * document per control and one index, holding only what the public column
  * above says, each bound to the full bundle by its manifest head and its own
  * items' SHA-256. A gated build publishes the full bundle as it is.
@@ -32,7 +32,7 @@
  * @module
  */
 
-import { unzip } from "@intellectual-frontiers/ifc-ts/kernel";
+import { unzip } from "@intellectual-frontiers/commons/ts/kernel";
 import {
   forNamespace,
   type Item,

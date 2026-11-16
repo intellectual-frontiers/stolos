@@ -7,7 +7,7 @@
  * @module
  */
 
-import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";
 import { onHost } from "../core/paths.ts";
 

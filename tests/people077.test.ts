@@ -3,8 +3,14 @@
  *
  * @module
  */
-import { array, type Decoder, json, object, string } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, path as paths, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import {
+  array,
+  type Decoder,
+  json,
+  object,
+  string,
+} from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, path as paths, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,
@@ -12,7 +18,7 @@ import {
   assertStringIncludes,
   proves,
   the,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import type { Observation } from "../src/archon/connect/connector.ts";
 import type { Account, Person } from "../src/archon/connect/entities.ts";
 import { fixtureEstate, testControl } from "../src/archon/controls/testing.ts";

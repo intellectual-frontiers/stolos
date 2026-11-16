@@ -3,7 +3,7 @@
 ## Test helpers
 
 - `tests/assert.ts` is **deleted**. Import the assertions from
-  `@intellectual-frontiers/ifc-ts/runtime/test` (`assert`, `assertEquals`, `assertStringIncludes`,
+  `@intellectual-frontiers/commons/ts/runtime/test` (`assert`, `assertEquals`, `assertStringIncludes`,
   `assertThrows`, ...). Note `assertThrows(fn, Class?, includes?)`: pass `Error` (or `undefined`)
   as the second argument where the old helper took anything.
 - `tests/fixtures.ts` keeps its names (`KEY`, `fleet`, `host`).
@@ -17,36 +17,39 @@ with the spec. When a folder is done, nothing in it names `Deno`, `npm:`, `jsr:`
 `tsc -p tsconfig.json` reports no error for it, and `bun run lint` and `bun fmt --check` pass on
 it.
 
-IFC TypeScript 0.2.0 is the ground: `@intellectual-frontiers/ifc-ts`, installed from its release
-tarball (SHA-256 `8775581c3aab18c60c451d11d6e33eb4c1bf931693fa996155ee68be37544147`). Its
-source is commons' `commons/ts` (README, `kernel/mod.ts`, `runtime/mod.ts`, `runtime/test.ts`).
+IFC TypeScript is the ground: commons' package `@intellectual-frontiers/commons`, installed by Git
+at a full commit (`github:intellectual-frontiers/.github#<commit>`; `bun.lock` pins the commit and
+its integrity), imported as `@intellectual-frontiers/commons/ts/...`. Its source is commons'
+`commons/ts` (`kernel/mod.ts`, `runtime/mod.ts`, `runtime/test.ts`). It was first installed from a
+release tarball (`@intellectual-frontiers/ifc-ts`); commons makes no release now (spec 096,
+decision 6).
 
 ## What is in place
 
-| Piece                                                      | State                                                                                                                                                 |
-| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `package.json`, `bun.lock`                                 | The package `@intellectual-frontiers/stolos`; TypeScript 7.0.2 and `@types/node` 26.6.6 exact; IFC TypeScript by its release URL; `ajv` 8.17.1 exact. |
-| `tsconfig.json`                                            | IFC TypeScript's strict options, over `src`, `tools`, `tests` and `examples`.                                                                         |
-| `bunfig.toml`                                              | `bun fmt` (width 100) and `bun lint` (type-aware, IFC TypeScript's plugin, the engine's allow lists).                                                 |
-| `deno.json`, `deno.lock`, `src/archon/modules.auto.ts`     | Deleted.                                                                                                                                              |
-| `src/archon/core/`                                         | Rewritten on IFC TypeScript (below). `tsc`, lint and format are clean there.                                                                          |
-| `tools/version.ts`, `tools/gen-assets.ts`, `tools/test.ts` | On IFC TypeScript; run with `bun tools/<name>.ts` (and with `node`).                                                                                  |
+| Piece                                                      | State                                                                                                                                                |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `package.json`, `bun.lock`                                 | The package `@intellectual-frontiers/stolos`; TypeScript 7.0.2 and `@types/node` 26.6.6 exact; commons by `github:` at a commit; `ajv` 8.17.1 exact. |
+| `tsconfig.json`                                            | IFC TypeScript's strict options, over `src`, `tools`, `tests` and `examples`.                                                                        |
+| `bunfig.toml`                                              | `bun fmt` (width 100) and `bun lint` (type-aware, IFC TypeScript's plugin, the engine's allow lists).                                                |
+| `deno.json`, `deno.lock`, `src/archon/modules.auto.ts`     | Deleted.                                                                                                                                             |
+| `src/archon/core/`                                         | Rewritten on IFC TypeScript (below). `tsc`, lint and format are clean there.                                                                         |
+| `tools/version.ts`, `tools/gen-assets.ts`, `tools/test.ts` | On IFC TypeScript; run with `bun tools/<name>.ts` (and with `node`).                                                                                 |
 
 ## Commands
 
-| Was                                   | Now                                                                                        |
-| ------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `deno task stolos ...`                | `bun run stolos ...` (the fleet repository too)                                            |
-| `deno task archon ...`                | `bun run archon ...`                                                                       |
-| `deno task check`                     | `bun run check` (`tsc -p tsconfig.json`)                                                   |
-| `deno lint`                           | `bun run lint` (a pinned Bun canary until a Bun release has `bun lint`, as commons does)   |
-| `deno fmt`, `deno fmt --check`        | `bun fmt`, `bun fmt --check`                                                               |
-| `deno task test`                      | `bun run test` (Bun), `bun run test:ci` (Bun and Node, every report, the ledger)           |
-| `deno task gen`, `gen --check`        | `bun run gen`, `bun tools/gen-assets.ts --check`                                           |
-| `deno task version bump/check/show`   | `bun run version bump/check/show/sync` (also keeps `package.json`'s `version`)             |
-| `deno task docs`, `docs:lint`         | `bun run docs`, `bun run docs:lint` (until `tools/docs.ts` is rewritten, these still fail) |
-| `deno task ocsf`, `deno task fedramp` | `bun run ocsf`, `bun run fedramp` (the generators still need converting)                   |
-| `deno task ci`                        | `bun run ci`                                                                               |
+| Was                                   | Now                                                                                             |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `deno task stolos ...`                | `bun run stolos ...` (the fleet repository too)                                                 |
+| `deno task archon ...`                | `bun run archon ...`                                                                            |
+| `deno task check`                     | `bun run check` (`tsc -p tsconfig.json`)                                                        |
+| `deno lint`                           | `bun run lint` (a pinned Bun canary until a Bun release has `bun lint`, as commons does)        |
+| `deno fmt`, `deno fmt --check`        | `bun fmt`, `bun fmt --check`                                                                    |
+| `deno task test`                      | `bun run test` (Bun), `bun run test:ci` (Bun and Node, every report, the ledger)                |
+| `deno task gen`, `gen --check`        | `bun run gen`, `bun tools/gen-assets.ts --check`                                                |
+| `deno task version bump/check/show`   | `bun run version bump/check/show/sync` (also keeps `package.json`'s `version`)                  |
+| `deno task docs`, `docs:lint`         | `bun run docs`, `bun run docs:lint` (`ifc-docs` with `docs.config.ts`; `tools/doc-examples.ts`) |
+| `deno task ocsf`, `deno task fedramp` | `bun run ocsf`, `bun run fedramp` (the generators still need converting)                        |
+| `deno task ci`                        | `bun run ci`                                                                                    |
 
 Text a person reads (fixes, hints, guides) says `bun run stolos <command>` where it said
 `deno task stolos <command>`.
@@ -54,17 +57,17 @@ Text a person reads (fixes, hints, guides) says `bun run stolos <command>` where
 ## Imports
 
 - **IFC TypeScript** has four entry points; nothing deeper is exported:
-  - `@intellectual-frontiers/ifc-ts/kernel`: pure code, named exports and namespaces
+  - `@intellectual-frontiers/commons/ts/kernel`: pure code, named exports and namespaces
     (`args`, `assess`, `attest`, `cms`, `der`, `dsse`, `evidence`, `glob`, `grc`, `jobs`, `md5`,
     `ocsf`, `oscal`, `otel`, `otlp`, `palette`, `png`, `render`, `signals`, `testRecord`,
     `testReport`, `uuid`, `vt`, `width`);
-  - `@intellectual-frontiers/ifc-ts/runtime`: the namespaces `compile`, `dns`, `fs`, `git`, `grc`,
+  - `@intellectual-frontiers/commons/ts/runtime`: the namespaces `compile`, `dns`, `fs`, `git`, `grc`,
     `http`, `jobs`, `lock`, `net`, `otel`, `path`, `proc`, `sign`, `stdio`, `tcp`, `terminal`,
     `tty`, `watch`, and `errors`, `serve`, `mapError`, `toError`;
-  - `@intellectual-frontiers/ifc-ts/runtime/test`: `test`, `proves`, `reviewed` and the
+  - `@intellectual-frontiers/commons/ts/runtime/test`: `test`, `proves`, `reviewed` and the
     assertions (tests only);
-  - `@intellectual-frontiers/ifc-ts/runtime/test-run`: `runTests` (`tools/test.ts` only).
-    Write `import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";`, and refer to
+  - `@intellectual-frontiers/commons/ts/runtime/test-run`: `runTests` (`tools/test.ts` only).
+    Write `import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";`, and refer to
     `fs.readTextFile`, `proc.env.get`. Where a module has its own variable named `path`, alias the
     namespace (`path as paths`).
 - **Inside `src/`**: relative imports with the `.ts` extension, as before
@@ -153,7 +156,7 @@ With IFC TypeScript 0.4.0, also:
 ## `Deno.*` to IFC TypeScript
 
 `fs`, `path`, `proc`, `tty`, `stdio`, `tcp`, `dns`, `watch`, `errors` are namespaces of
-`@intellectual-frontiers/ifc-ts/runtime`.
+`@intellectual-frontiers/commons/ts/runtime`.
 
 | Deno                                                                                                                                  | IFC TypeScript                                                                                                                                                       | Note                                                                                                                                                         |
 | ------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -186,18 +189,18 @@ With IFC TypeScript 0.4.0, also:
 | `Deno.networkInterfaces()`                                                                                                            | `proc.networkInterfaces()`                                                                                                                                           |                                                                                                                                                              |
 | `Deno.watchFs`                                                                                                                        | `watch.watchFs`                                                                                                                                                      |                                                                                                                                                              |
 | `Deno.dlopen`, `Deno.UnsafePointer`, `UnsafeCallback`                                                                                 | `bun:ffi` in `console/pam.ts` only                                                                                                                                   |                                                                                                                                                              |
-| `Deno.test`                                                                                                                           | `proves` or `test` from `@intellectual-frontiers/ifc-ts/runtime/test`                                                                                                | See "Tests".                                                                                                                                                 |
+| `Deno.test`                                                                                                                           | `proves` or `test` from `@intellectual-frontiers/commons/ts/runtime/test`                                                                                            | See "Tests".                                                                                                                                                 |
 | `deno compile`                                                                                                                        | runtime `compile.compile` (Bun's `--compile`, pinned Bun)                                                                                                            |                                                                                                                                                              |
 | OpenTelemetry (`OTEL_DENO`, `npm:@opentelemetry/api`)                                                                                 | core `telemetry`; runtime `otel`                                                                                                                                     |                                                                                                                                                              |
 
 ## `npm:` and `jsr:` imports
 
-| Was                                                          | Now                                                                                                                                                                                                                                                                                                                            |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `npm:fflate@0.8.2`                                           | Kernel `zip`, `unzip`, `zipEntries`, `gzip`, `gunzip`, `tar`, `untar`, `untarStream`, `crc32`.                                                                                                                                                                                                                                 |
-| `npm:@opentelemetry/api@1.9.0`                               | Core `telemetry` (kernel `signals`, runtime `otel`).                                                                                                                                                                                                                                                                           |
-| `npm:ajv@8.17.1`, `npm:ajv@8.17.1/dist/2020.js`              | `ajv` from `package.json`: `import { Ajv } from "ajv";`, `import { Ajv2020 } from "ajv/dist/2020.js";`.                                                                                                                                                                                                                        |
-| `tests/assert.ts` (Node's assert, under `@std/assert` names) | `@intellectual-frontiers/ifc-ts/runtime/test`: `assert`, `assertEquals`, `assertNotEquals`, `assertStrictEquals`, `assertExists`, `assertInstanceOf`, `assertStringIncludes`, `assertMatch`, `assertNotMatch`, `assertArrayIncludes`, `assertThrows`, `assertRejects`, `assertAlmostEquals`, `fail`. Delete `tests/assert.ts`. |
+| Was                                                          | Now                                                                                                                                                                                                                                                                                                                                |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm:fflate@0.8.2`                                           | Kernel `zip`, `unzip`, `zipEntries`, `gzip`, `gunzip`, `tar`, `untar`, `untarStream`, `crc32`.                                                                                                                                                                                                                                     |
+| `npm:@opentelemetry/api@1.9.0`                               | Core `telemetry` (kernel `signals`, runtime `otel`).                                                                                                                                                                                                                                                                               |
+| `npm:ajv@8.17.1`, `npm:ajv@8.17.1/dist/2020.js`              | `ajv` from `package.json`: `import { Ajv } from "ajv";`, `import { Ajv2020 } from "ajv/dist/2020.js";`.                                                                                                                                                                                                                            |
+| `tests/assert.ts` (Node's assert, under `@std/assert` names) | `@intellectual-frontiers/commons/ts/runtime/test`: `assert`, `assertEquals`, `assertNotEquals`, `assertStrictEquals`, `assertExists`, `assertInstanceOf`, `assertStringIncludes`, `assertMatch`, `assertNotMatch`, `assertArrayIncludes`, `assertThrows`, `assertRejects`, `assertAlmostEquals`, `fail`. Delete `tests/assert.ts`. |
 
 ## The strict configuration
 
@@ -234,7 +237,7 @@ The conversion of each test file:
 1. Rename `tests/<name>_test.ts` to `tests/<name>.test.ts` (and `examples/**/*_test.ts` the same way):
    `ifc test` runs `*.test.ts`.
 2. Start the file with its `/** ... @module */` block (what it tests, and which spec).
-3. Import from `@intellectual-frontiers/ifc-ts/runtime/test`, never `tests/assert.ts`; the engine
+3. Import from `@intellectual-frontiers/commons/ts/runtime/test`, never `tests/assert.ts`; the engine
    relatively (`../src/archon/...`), or by its name where the test plays a fleet.
 4. Each `Deno.test("NNN: title", fn)` becomes
    `proves(["NNN-slug FR-MMM", ...], "NNN: title", fn)`, naming the requirements of spec `NNN`
@@ -365,14 +368,14 @@ other deleted names, which each folder's conversion replaces as the tables above
 ## Left for the folder that owns it
 
 - `src/releasing.ts`, `src/archon/fleet/upgrade.ts`, `tests/e2e/ci.sh` name `modules.auto.ts`, which
-  is gone (the package is installed whole; `bun.lock` holds its tarball's integrity).
+  is gone (the package is installed whole; `bun.lock` pins its commit and integrity).
 - `src/archon/main.ts` and `src/stolos/main.ts`: `initTelemetry("archon" or "stolos", VERSION)`,
   then `startRun(command, attrs)` with two arguments; `hostLock`'s `onWait` describes the holder
   with runtime `lock.describeHolder`.
 - `src/archon/telemetry/events.ts`: TS4111 in `fromLogRecord`; `telemetry/signals.ts`'s `SPANS` now
   names the span kinds (`archon.run`, `archon.phase`), which `man 7 archon-telemetry` and the
   telemetry tests read.
-- `tools/docs.ts` (the docs agent), `tools/ocsf-gen.ts`, `tools/fedramp-gen.ts`, `tools/doc-baseline.ts`
+- `tools/docs.ts` (the docs agent, since replaced by IFC Docs), `tools/ocsf-gen.ts`, `tools/fedramp-gen.ts`, `tools/doc-baseline.ts`
   (the docs lint ratchet is a hard rule under spec 096, so the baseline goes).
 - `.vscode/` recommends the Deno extension; `.github/workflows/` run Deno; `bin/` bootstraps install
   Deno (FR-007). The CI, bootstrap and fleet-layout work.

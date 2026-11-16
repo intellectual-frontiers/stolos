@@ -14,7 +14,7 @@
  * @module
  */
 
-import { fs, path as paths, proc, stdio, tty } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path as paths, proc, stdio, tty } from "@intellectual-frontiers/commons/ts/runtime";
 import { currentUser, homeOf, run } from "../core/exec.ts";
 import { loadFleet, loadHosts, usersFor } from "../model/load.ts";
 import { defaultDatabase, instancesOf, parseClusters, PG, publishedName } from "./config.ts";

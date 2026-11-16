@@ -39,8 +39,8 @@ export interface Explanation {
 export const EXPLAIN: Record<string, Explanation> = {
   "E046-LOCK-INTEGRITY": {
     title: "The engine's package does not match bun.lock",
-    what: "bun install --frozen-lockfile refused the engine: its package, as downloaded, is not the tarball whose integrity bun.lock holds.",
-    why: "The release asset of that tag changed after the lock was made (releases are immutable, so this should not happen), or something between you and GitHub altered it.",
+    what: "bun install --frozen-lockfile refused the engine: what it downloaded is not the commit, with the integrity, that bun.lock holds.",
+    why: "The engine's commit at that tag is no longer what it was when the lock was made (tags are immutable, so this should not happen), or something between you and GitHub altered it.",
     fix: "Stop. Do not regenerate bun.lock. Report it; the lock is what makes your signature cover the engine's code.",
     doc: "fleet-repository",
   },

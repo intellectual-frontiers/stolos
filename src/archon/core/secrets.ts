@@ -8,7 +8,7 @@
  */
 
 import { P } from "./paths.ts";
-import { fs, path as paths, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path as paths, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "./exec.ts";
 import { recordChange } from "./secret-ledger.ts";
 

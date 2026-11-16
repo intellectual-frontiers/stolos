@@ -3,7 +3,7 @@
  *
  * @module
  */
-import { test } from "@intellectual-frontiers/ifc-ts/runtime/test";
+import { test } from "@intellectual-frontiers/commons/ts/runtime/test";
 
 import { fixtureEstate, testControl } from "@intellectual-frontiers/stolos/archon/controls/mod";
 import { fewAdmins, noTelnet, pack } from "./pack.ts";

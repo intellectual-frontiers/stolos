@@ -7,7 +7,7 @@
  * @module
  */
 
-import { errors, fs, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
+import { errors, fs, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";
 import { journal } from "../core/log.ts";

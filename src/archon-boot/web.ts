@@ -10,7 +10,7 @@
  * @module
  */
 
-import { proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { readHidden } from "../archon/identity/fleet-init.ts";
 import { ui } from "../archon/core/ui.ts";
 import { readSecret, SECRETS, writeSecret } from "../archon/core/secrets.ts";

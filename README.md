@@ -175,7 +175,7 @@ winget install --id GitHub.cli
 
 Open a new PowerShell window, then check: `bun --version` (1.4.4) and `gh auth login`.
 Windows is the usual **boot machine** (the PC that installs new servers); see
-[The boot machine](https://intellectual-frontiers.github.io/stolos/latest/archon-boot/mod.ts/index.html)
+[The boot machine](https://intellectual-frontiers.github.io/stolos/latest/api/archon-boot/index.html)
 for its firewall and network settings.
 
 </details>
@@ -332,12 +332,13 @@ exactly the engine package you approved (`bun install --frozen-lockfile`), or st
 
 1. Create an empty private repository on GitHub, then bootstrap this PC with it (above:
    `--repo <owner>/<new-repo>`). It clones the empty repository into `$HOME/fleet`; `cd` into it.
-2. Start the fleet with the engine's latest version (it writes `package.json`, `bun.lock`,
-   `stolos.ts`, `archon.ts`, `.gitignore`, and `fleets/<id>/fleet.ts` from your GitHub account):
+2. Start the fleet with the engine's latest version tag (it writes `package.json`, `bun.lock`,
+   `stolos.ts`, `archon.ts`, `.gitignore`, and `fleets/<id>/fleet.ts` from your GitHub account).
+   The engine is a Git dependency at its tag; `bun.lock` pins the commit and its integrity:
 
    ```sh
-   bun add https://github.com/intellectual-frontiers/stolos/releases/download/v<version>/intellectual-frontiers-stolos-<version>.tgz
-   bun node_modules/@intellectual-frontiers/stolos/dist/stolos/main.js fleet init <id>
+   bun add github:intellectual-frontiers/stolos#v<version>
+   bun node_modules/@intellectual-frontiers/stolos/src/stolos/main.ts fleet init <id>
    ```
 
 3. Set up your signing keys. One command does it all, and is safe to run again at any time: it makes
@@ -367,9 +368,9 @@ exactly the engine package you approved (`bun install --frozen-lockfile`), or st
    move it somewhere safe and encrypted.
 
 The full walk-through:
-[The fleet repository](https://intellectual-frontiers.github.io/stolos/latest/archon/fleet/mod.ts/index.html)
+[The fleet repository](https://intellectual-frontiers.github.io/stolos/latest/api/archon-fleet/index.html)
 and
-[The boot machine](https://intellectual-frontiers.github.io/stolos/latest/archon-boot/mod.ts/index.html).
+[The boot machine](https://intellectual-frontiers.github.io/stolos/latest/api/archon-boot/index.html).
 
 ## How a machine becomes a server
 
@@ -494,7 +495,7 @@ bun run stolos apply -m "my-fleet: add workstation"
 ```
 
 Open a new Ubuntu tab: the fleet's tools, prompt, and Claude Code are ready. Details:
-[Your PC's Ubuntu (WSL) as a workstation](https://intellectual-frontiers.github.io/stolos/latest/archon/install/workstation-guide.ts/index.html).
+[Your PC's Ubuntu (WSL) as a workstation](https://intellectual-frontiers.github.io/stolos/latest/api/archon-install-workstation-guide/index.html).
 
 </details>
 
@@ -626,53 +627,54 @@ pick it up within 15 minutes. To choose a version yourself:
 Most messages end with `explain: archon explain <code>`: run it for what it means and how to fix it.
 `bun run stolos boot doctor` checks the boot machine; `archon doctor` checks a server.
 
-| You see                                               | What to do                                                                                                                                                                              |
-| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `no fleet chosen in ...`                              | the repository holds several fleets: `bun run stolos fleet use my-fleet` (once per checkout; remembered)                                                                                |
-| `push refused here: ... is not signed`                | `git commit --amend --no-edit -S`, then `bun run stolos apply` again. `bun run stolos keys` shows what is missing                                                                       |
-| a server does not pick up your change                 | `bun run stolos fleet status`; on the server, `journalctl -t archon-approval` says why it refused (usually `E047-UNSIGNED`)                                                             |
-| the boot window shows nothing when the machine boots  | `bun run stolos boot doctor` (the firewall, and the router's network boot setting); is the machine booting from the network (F7/F12)?                                                   |
-| `disk is not blank` in the boot window                | it protected the disk. If it may be erased: `bun run stolos boot arm server-hostname --claim --confirm-destroy server-hostname`                                                         |
-| the install stops after `installer image`             | the machine has less than 8 GB of RAM: install from USB, then `host bootstrap` (above)                                                                                                  |
-| `ssh server-hostname` warns that the host key changed | stop: do not accept it. `bun run stolos boot doctor`, then `archon explain E047-HOST-KEY`                                                                                               |
-| you forgot your daily key's passphrase                | it cannot be recovered: `bun run stolos keys lost`                                                                                                                                      |
-| `integrity check failed` or `lockfile is out of date` | stop: never regenerate `bun.lock` to make it go away. See [The fleet repository](https://intellectual-frontiers.github.io/stolos/latest/archon/fleet/mod.ts/index.html#troubleshooting) |
-| `the repository has uncommitted changes`              | commit (or `git stash`) your other change first                                                                                                                                         |
+| You see                                               | What to do                                                                                                                                                                           |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `no fleet chosen in ...`                              | the repository holds several fleets: `bun run stolos fleet use my-fleet` (once per checkout; remembered)                                                                             |
+| `push refused here: ... is not signed`                | `git commit --amend --no-edit -S`, then `bun run stolos apply` again. `bun run stolos keys` shows what is missing                                                                    |
+| a server does not pick up your change                 | `bun run stolos fleet status`; on the server, `journalctl -t archon-approval` says why it refused (usually `E047-UNSIGNED`)                                                          |
+| the boot window shows nothing when the machine boots  | `bun run stolos boot doctor` (the firewall, and the router's network boot setting); is the machine booting from the network (F7/F12)?                                                |
+| `disk is not blank` in the boot window                | it protected the disk. If it may be erased: `bun run stolos boot arm server-hostname --claim --confirm-destroy server-hostname`                                                      |
+| the install stops after `installer image`             | the machine has less than 8 GB of RAM: install from USB, then `host bootstrap` (above)                                                                                               |
+| `ssh server-hostname` warns that the host key changed | stop: do not accept it. `bun run stolos boot doctor`, then `archon explain E047-HOST-KEY`                                                                                            |
+| you forgot your daily key's passphrase                | it cannot be recovered: `bun run stolos keys lost`                                                                                                                                   |
+| `integrity check failed` or `lockfile is out of date` | stop: never regenerate `bun.lock` to make it go away. See [The fleet repository](https://intellectual-frontiers.github.io/stolos/latest/api/archon-fleet/index.html#troubleshooting) |
+| `the repository has uncommitted changes`              | commit (or `git stash`) your other change first                                                                                                                                      |
 
 ## Documentation
 
 Everything is documented in the code, so it changes with the code: each guide is the documentation
-of the module beside the code it explains, rendered with its diagrams by `tools/docs.ts`
-(<https://intellectual-frontiers.github.io/stolos/latest/>, or `bun run docs` here), and read
+of the module beside the code it explains, rendered with its diagrams by IFC Docs (`ifc-docs`,
+from commons, configured by `docs.config.ts`:
+<https://intellectual-frontiers.github.io/stolos/latest/>, or `bun run docs` here), and read
 offline, at your engine's version, with `bun run stolos docs <name>` (or `archon docs <name>` on a
 server). Tests keep every command a guide names, and every link between guides, real.
 
-| Guide                                                                                                                                            | For                                                                   | Offline                         |
-| ------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- | ------------------------------- |
-| [Your Archon server: a guide for newcomers](https://intellectual-frontiers.github.io/stolos/latest/archon/guide/mod.ts/index.html)               | What is on a server, and how to use it.                               | `stolos docs guide`             |
-| [The fleet repository](https://intellectual-frontiers.github.io/stolos/latest/archon/fleet/mod.ts/index.html)                                    | Versions, upgrading, signing, troubleshooting.                        | `stolos docs fleet-repository`  |
-| [The boot machine](https://intellectual-frontiers.github.io/stolos/latest/archon-boot/mod.ts/index.html)                                         | Tools, firewall, router, mail, the secrets vault.                     | `stolos docs boot-machine`      |
-| [Hosts](https://intellectual-frontiers.github.io/stolos/latest/archon/model/mod.ts/index.html)                                                   | Adding, installing, re-installing, and retiring machines.             | `stolos docs hosts`             |
-| [What happens during an install](https://intellectual-frontiers.github.io/stolos/latest/archon/install/mod.ts/index.html)                        | The eleven steps, and where to look when one fails.                   | `stolos docs install-timeline`  |
-| [Working on a host](https://intellectual-frontiers.github.io/stolos/latest/archon/commands/mod.ts/index.html)                                    | Commands, observing, updates.                                         | `stolos docs daily-use`         |
-| [Your PC's Ubuntu (WSL) as a workstation](https://intellectual-frontiers.github.io/stolos/latest/archon/install/workstation-guide.ts/index.html) | A managed workstation beside Windows.                                 | `stolos docs workstation`       |
-| [The Stolos Console](https://intellectual-frontiers.github.io/stolos/latest/archon/console/mod.ts/index.html)                                    | The fleet in your browser, on your PC.                                | `stolos docs console`           |
-| [Adopted machines, devices, and clouds](https://intellectual-frontiers.github.io/stolos/latest/archon/adopt/mod.ts/index.html)                   | Laptops, printers, and cloud accounts: observed, never changed.       | `stolos docs adopted`           |
-| [Compliance](https://intellectual-frontiers.github.io/stolos/latest/archon/compliance/mod.ts/index.html)                                         | SCF controls, and what they mean for HIPAA, PCI DSS, CMMC, and SOC 2. | `stolos docs compliance`        |
-| [HTTPS on every server](https://intellectual-frontiers.github.io/stolos/latest/archon/web/mod.ts/index.html)                                     | Publishing services, certificates, the Archon Console.                | `stolos docs web`               |
-| [Telemetry](https://intellectual-frontiers.github.io/stolos/latest/archon/telemetry/mod.ts/index.html)                                           | Where logs, metrics, and traces go.                                   | `stolos docs telemetry`         |
-| [The agent layer](https://intellectual-frontiers.github.io/stolos/latest/archon/mcp/mod.ts/index.html)                                           | AI agents and other MCP clients, limited by each server.              | `stolos docs agent`             |
-| [PostgreSQL databases](https://intellectual-frontiers.github.io/stolos/latest/archon/pg/mod.ts/index.html)                                       | Instances, connections, backups.                                      | `stolos docs pg`                |
-| [S3 object storage](https://intellectual-frontiers.github.io/stolos/latest/archon/s3/mod.ts/index.html)                                          | Buckets on a server.                                                  | `stolos docs s3`                |
-| [File shares (SMB)](https://intellectual-frontiers.github.io/stolos/latest/archon/smb/mod.ts/index.html)                                         | Windows, macOS, and Linux file sharing.                               | `stolos docs smb`               |
-| [SQL over your infrastructure](https://intellectual-frontiers.github.io/stolos/latest/archon/state/mod.ts/index.html)                            | osquery and DuckDB, on one machine or every one.                      | `stolos docs sql`               |
-| [Dotfiles](https://intellectual-frontiers.github.io/stolos/latest/archon/dotfiles/mod.ts/index.html)                                             | How they work, and how to change them.                                | `stolos docs dotfiles`          |
-| [Disaster recovery](https://intellectual-frontiers.github.io/stolos/latest/archon/vault/mod.ts/index.html)                                       | Losing the boot machine, a key, a server.                             | `stolos docs disaster-recovery` |
-| [Troubleshooting](https://intellectual-frontiers.github.io/stolos/latest/archon/doctor/mod.ts/index.html)                                        | Symptoms, causes, and fixes.                                          | `stolos docs troubleshooting`   |
-| [Changing and releasing the engine](https://intellectual-frontiers.github.io/stolos/latest/releasing.ts/index.html)                              | For the engine's own developers.                                      | `stolos docs releasing`         |
+| Guide                                                                                                                                             | For                                                                   | Offline                         |
+| ------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | ------------------------------- |
+| [Your Archon server: a guide for newcomers](https://intellectual-frontiers.github.io/stolos/latest/api/archon-guide/index.html)                   | What is on a server, and how to use it.                               | `stolos docs guide`             |
+| [The fleet repository](https://intellectual-frontiers.github.io/stolos/latest/api/archon-fleet/index.html)                                        | Versions, upgrading, signing, troubleshooting.                        | `stolos docs fleet-repository`  |
+| [The boot machine](https://intellectual-frontiers.github.io/stolos/latest/api/archon-boot/index.html)                                             | Tools, firewall, router, mail, the secrets vault.                     | `stolos docs boot-machine`      |
+| [Hosts](https://intellectual-frontiers.github.io/stolos/latest/api/archon-model/index.html)                                                       | Adding, installing, re-installing, and retiring machines.             | `stolos docs hosts`             |
+| [What happens during an install](https://intellectual-frontiers.github.io/stolos/latest/api/archon-install/index.html)                            | The eleven steps, and where to look when one fails.                   | `stolos docs install-timeline`  |
+| [Working on a host](https://intellectual-frontiers.github.io/stolos/latest/api/archon-commands/index.html)                                        | Commands, observing, updates.                                         | `stolos docs daily-use`         |
+| [Your PC's Ubuntu (WSL) as a workstation](https://intellectual-frontiers.github.io/stolos/latest/api/archon-install-workstation-guide/index.html) | A managed workstation beside Windows.                                 | `stolos docs workstation`       |
+| [The Stolos Console](https://intellectual-frontiers.github.io/stolos/latest/api/archon-console/index.html)                                        | The fleet in your browser, on your PC.                                | `stolos docs console`           |
+| [Adopted machines, devices, and clouds](https://intellectual-frontiers.github.io/stolos/latest/api/archon-adopt/index.html)                       | Laptops, printers, and cloud accounts: observed, never changed.       | `stolos docs adopted`           |
+| [Compliance](https://intellectual-frontiers.github.io/stolos/latest/api/archon-compliance/index.html)                                             | SCF controls, and what they mean for HIPAA, PCI DSS, CMMC, and SOC 2. | `stolos docs compliance`        |
+| [HTTPS on every server](https://intellectual-frontiers.github.io/stolos/latest/api/archon-web/index.html)                                         | Publishing services, certificates, the Archon Console.                | `stolos docs web`               |
+| [Telemetry](https://intellectual-frontiers.github.io/stolos/latest/api/archon-telemetry/index.html)                                               | Where logs, metrics, and traces go.                                   | `stolos docs telemetry`         |
+| [The agent layer](https://intellectual-frontiers.github.io/stolos/latest/api/archon-mcp/index.html)                                               | AI agents and other MCP clients, limited by each server.              | `stolos docs agent`             |
+| [PostgreSQL databases](https://intellectual-frontiers.github.io/stolos/latest/api/archon-pg/index.html)                                           | Instances, connections, backups.                                      | `stolos docs pg`                |
+| [S3 object storage](https://intellectual-frontiers.github.io/stolos/latest/api/archon-s3/index.html)                                              | Buckets on a server.                                                  | `stolos docs s3`                |
+| [File shares (SMB)](https://intellectual-frontiers.github.io/stolos/latest/api/archon-smb/index.html)                                             | Windows, macOS, and Linux file sharing.                               | `stolos docs smb`               |
+| [SQL over your infrastructure](https://intellectual-frontiers.github.io/stolos/latest/api/archon-state/index.html)                                | osquery and DuckDB, on one machine or every one.                      | `stolos docs sql`               |
+| [Dotfiles](https://intellectual-frontiers.github.io/stolos/latest/api/archon-dotfiles/index.html)                                                 | How they work, and how to change them.                                | `stolos docs dotfiles`          |
+| [Disaster recovery](https://intellectual-frontiers.github.io/stolos/latest/api/archon-vault/index.html)                                           | Losing the boot machine, a key, a server.                             | `stolos docs disaster-recovery` |
+| [Troubleshooting](https://intellectual-frontiers.github.io/stolos/latest/api/archon-doctor/index.html)                                            | Symptoms, causes, and fixes.                                          | `stolos docs troubleshooting`   |
+| [Changing and releasing the engine](https://intellectual-frontiers.github.io/stolos/latest/api/releasing/index.html)                              | For the engine's own developers.                                      | `stolos docs releasing`         |
 
 Changing the engine itself:
-[Changing and releasing the engine](https://intellectual-frontiers.github.io/stolos/latest/releasing.ts/index.html)
+[Changing and releasing the engine](https://intellectual-frontiers.github.io/stolos/latest/api/releasing/index.html)
 and [AGENTS.md](AGENTS.md).
 
 ## Try it

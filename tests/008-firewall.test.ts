@@ -8,7 +8,7 @@ import {
   assertEquals,
   assertExists,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { resolvePlan } from "../src/archon/model/resolve.ts";
 import { userData } from "../src/archon/render/autoinstall.ts";
 import { fleet, host } from "./fixtures.ts";

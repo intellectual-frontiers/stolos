@@ -1,9 +1,12 @@
 /**
  * # Changing and releasing the engine
  *
- * This guide is for people who change the engine (this repository). Fleets adopt a release with
- * `stolos fleet upgrade` (see [fleet-repository.md](fleet-repository.md)); a release is simply a
- * version tag that CI made.
+ * This guide is for people who change the engine (this repository). Fleets adopt a version with
+ * `stolos fleet upgrade` (see [the fleet repository](./archon/fleet/mod.ts)); a release is simply a
+ * version tag that CI made: there is no GitHub release, no package to download and nothing to
+ * build. A fleet depends on the engine by Git at that tag
+ * (`"@intellectual-frontiers/stolos": "github:intellectual-frontiers/stolos#v<version>"`), and its
+ * `bun.lock` pins the commit and its integrity (spec 096-bun-runtime).
  *
  * ## Every change
  *
@@ -26,21 +29,21 @@
  *    git push
  *    ```
  *
- * 5. **Watch CI.** The `ci` workflow checks again and, when it passes, tags the commit `v<version>`,
- *    builds the package (`tsc` into JavaScript with its types), packs it, installs it into an empty
- *    project and runs it on Bun and on Node, then attaches
- *    `intellectual-frontiers-stolos-<version>.tgz` and its SHA-256 to the release of that tag.
+ * 5. **Watch CI.** The `ci` workflow checks again and, when it passes, installs the commit into an
+ *    empty project as a fleet does (by Git, `bun tools/smoke.ts`), runs `archon --version` and
+ *    `stolos --version` there on Bun and on Node 26 (with commons' hook), then tags the commit
+ *    `v<version>` and publishes this version's documentation.
  *    The `e2e` workflow installs a blank Secure Boot VM from network boot to `Ready` with this
  *    commit's engine; it takes a while. Tell fleet owners to prefer versions whose `e2e` run passed.
  *
  * ## Why tags must never move
  *
- * A fleet's `bun.lock` holds the integrity of the engine's tarball at a tag. If a tag's release
- * asset changed, every host of every fleet pinned to it would refuse to install it (by design: that
- * is the alarm). So:
+ * A fleet's `bun.lock` holds the commit a tag named when the fleet adopted it, and that commit's
+ * integrity. A moved tag would not change what those fleets install, but every fleet that adopts it
+ * afterwards would get other code under the same version (and a deleted commit would leave the
+ * hosts of the earlier fleets unable to install at all). So:
  *
- * - never delete or re-create a `v*` tag or its release asset, and never push a tag by hand: CI
- *   makes them;
+ * - never delete or re-create a `v*` tag, and never push a tag by hand: CI makes them;
  * - a broken release is fixed by a newer version, never by moving its tag.
  *
  * ### Protecting the tags on GitHub (an owner of `intellectual-frontiers` does this once)
@@ -58,11 +61,12 @@
  *
  * ## What a version promises
  *
- * - Every file of the engine at `v<version>` stays exactly as it is (the tag never moves), and so
- *   does its package, `intellectual-frontiers-stolos-<version>.tgz`, on the release.
- * - `src/archon/version.ts` at that tag, and the package's `package.json`, say `<version>`.
- * - The package is the whole engine (its text assets inside, through `assets.auto.ts`): `bun.lock`
- *   holds one integrity for all of it.
+ * - Every file of the engine at `v<version>` stays exactly as it is (the tag never moves).
+ * - `src/archon/version.ts` at that tag, and `package.json`, say `<version>`.
+ * - The package is the whole engine at that commit, as its TypeScript sources (its text assets
+ *   inside, through `assets.auto.ts`): `bun.lock` holds one commit and one integrity for all of it.
+ *   Bun runs it from `node_modules`; Node 26 runs it with commons' hook
+ *   (`node --import @intellectual-frontiers/commons/ts/node archon.ts`).
  *
  * @module
  */

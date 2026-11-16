@@ -10,16 +10,16 @@
  * @module
  */
 
-import { fs, path, proc, tcp } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path, proc, tcp } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,
   assertStringIncludes,
   proves,
   test,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { fleet } from "./fixtures.ts";
-import { cms, type jobs } from "@intellectual-frontiers/ifc-ts/kernel";
+import { cms, type jobs } from "@intellectual-frontiers/commons/ts/kernel";
 import {
   describeCertificateProblem,
   parseCertificate,
@@ -129,7 +129,7 @@ async function recipient(
 }
 
 proves(
-  ["092-exporters FR-B03"],
+  ["092-exporters FR-009"],
   "smime: AuthEnvelopedData opens with each recipient's key, and only theirs",
   async () => {
     const dir = await fs.makeTempDir({ prefix: "stolos-smime-" });
@@ -171,7 +171,7 @@ proves(
 );
 
 proves(
-  ["092-exporters FR-B03"],
+  ["092-exporters FR-009"],
   "smime: openssl cms -decrypt opens our message (interoperability)",
   async () => {
     const dir = await fs.makeTempDir({ prefix: "stolos-smime-" });
@@ -230,7 +230,7 @@ proves(
 );
 
 proves(
-  ["092-exporters FR-B03"],
+  ["092-exporters FR-009"],
   "smime: certificates that cannot be used are refused with a reason",
   async () => {
     let threw = "";
@@ -285,7 +285,7 @@ proves(
 const LAB_MAIL = { to: "fleet@example.net", domain: "example.net", tag: "lab" };
 
 proves(
-  ["092-exporters FR-B01"],
+  ["092-exporters FR-007"],
   "jobs: per-tenant jobs are checked, matched, and send from their own address",
   () => {
     const f = fleet({
@@ -444,7 +444,7 @@ async function deps(f: FleetDef, over: Partial<RunDeps> = {}): Promise<RunDeps> 
 }
 
 proves(
-  ["092-exporters FR-B02"],
+  ["092-exporters FR-008"],
   "deliver: the collector when configured, otherwise a file; a file too when emailed",
   () => {
     const job: ExportJobDef = { id: "j", kinds: ["otlp"] };
@@ -469,7 +469,7 @@ proves(
 );
 
 proves(
-  ["092-exporters FR-B02"],
+  ["092-exporters FR-008"],
   "deliver: OTLP documents go to their signal, the rest as log records",
   async () => {
     assertEquals(otlpSignal(OTLP_DOC), "/v1/traces");
@@ -512,7 +512,7 @@ proves(
 );
 
 proves(
-  ["092-exporters FR-B02"],
+  ["092-exporters FR-008"],
   "deliver: no collector, or one that refuses: files in the state directory",
   async () => {
     const d = await deps(fleet());
@@ -551,7 +551,7 @@ proves(
 );
 
 proves(
-  ["092-exporters FR-B02", "092-exporters FR-B03"],
+  ["092-exporters FR-008", "092-exporters FR-009"],
   "deliver: each job emails its own recipients through its own credential",
   async () => {
     const f = fleet({ mail: LAB_MAIL });
@@ -721,7 +721,7 @@ test("deliver: no secret in the run record, even when the relay's error echoes i
 // ------------------------------------------------------------------- schedule
 
 proves(
-  ["092-exporters FR-B04"],
+  ["092-exporters FR-010"],
   "schedule: a job's schedule, in IFC TypeScript's terms, and the command it runs",
   () => {
     const job = (sch: ExportJobDef["schedule"]): ExportJobDef => ({
@@ -757,7 +757,7 @@ proves(
   },
 );
 
-proves(["092-exporters FR-B04"], "schedule: no secret in any job definition", () => {
+proves(["092-exporters FR-010"], "schedule: no secret in any job definition", () => {
   proc.env.set("STOLOS_TEST_SECRET", SECRET.token);
   try {
     const spec = exportJobSpec(
@@ -868,7 +868,7 @@ function fakeSmtp(listener: tcp.Listener): {
 }
 
 proves(
-  ["092-exporters FR-B03"],
+  ["092-exporters FR-009"],
   "smtp: the dialogue over implicit TLS with a fake relay: AUTH PLAIN, MAIL, RCPT, DATA",
   async () => {
     const dir = await fs.makeTempDir({ prefix: "stolos-smtp-" });
@@ -933,7 +933,7 @@ proves(
 );
 
 proves(
-  ["092-exporters FR-B03"],
+  ["092-exporters FR-009"],
   "smtp: refuses to log in or send without TLS (no STARTTLS offered, or no TLS at all)",
   async () => {
     for (const tls of ["starttls", "implicit"] as const) {
@@ -993,7 +993,7 @@ test("commands: export run, schedule, list, credential are PC-only and never ove
 });
 
 proves(
-  ["092-exporters FR-B01"],
+  ["092-exporters FR-007"],
   "092: a job's tenants limit what the estate formats carry",
   async () => {
     const { buildGraph } = await import("../src/archon/estate/graph.ts");

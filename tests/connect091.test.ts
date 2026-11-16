@@ -11,7 +11,7 @@ import {
   assertEquals,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { recordedHttp } from "../src/archon/connect/sdk.ts";
 import { MARKET_CATEGORIES, type Observation } from "../src/archon/connect/connector.ts";
 import { CONNECTORS } from "../src/archon/connect/commands.ts";

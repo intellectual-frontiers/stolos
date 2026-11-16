@@ -5,14 +5,14 @@
  * @module
  */
 
-import { errors, fs } from "@intellectual-frontiers/ifc-ts/runtime";
+import { errors, fs } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,
   assertStringIncludes,
   test,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { Ajv } from "ajv";
 import { Ajv2020 } from "ajv/dist/2020.js";
 import { ESTATE_SCHEMA } from "../src/archon/estate/schema.ts";

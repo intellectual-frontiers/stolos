@@ -6,18 +6,20 @@
  * @module
  */
 
-import { fs, path as paths, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path as paths, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import type { RunResult } from "../core/exec.ts";
 import { bootstrapFiles, repoSlug } from "./bootstrap.ts";
-import { ENGINE_PACKAGE, ENGINE_RELEASES, tarballUrl } from "./upgrade.ts";
+import { ENGINE_PACKAGE, ENGINE_SOURCE, engineDependency } from "./upgrade.ts";
 import { installDependencies } from "../install/bun.ts";
 import { IMPACT_WORKFLOW_PATH, IMPACT_WORKFLOW_TEXT } from "../compliance/workflow.ts";
 
 /**
- * A fleet repository's package.json (spec 096 FR-006): the engine pinned by its release's tarball
- * (bun.lock holds its integrity), and the commands `bun run stolos ...` and `bun run archon ...`.
+ * A fleet repository's package.json (spec 096 FR-006): the engine by Git at its tag
+ * (`github:intellectual-frontiers/stolos#v<version>`; bun.lock pins the tag's commit and its
+ * integrity), and the commands `bun run stolos ...` and `bun run archon ...`. On Node 26 the same
+ * files run as `node --import @intellectual-frontiers/commons/ts/node stolos.ts`.
  */
-export function packageJsonText(tag: string, base: string = ENGINE_RELEASES): string {
+export function packageJsonText(tag: string, source: string = ENGINE_SOURCE): string {
   return (
     JSON.stringify(
       {
@@ -25,7 +27,7 @@ export function packageJsonText(tag: string, base: string = ENGINE_RELEASES): st
         private: true,
         type: "module",
         scripts: { stolos: "bun stolos.ts", archon: "bun archon.ts" },
-        dependencies: { [ENGINE_PACKAGE]: tarballUrl(tag, base) },
+        dependencies: { [ENGINE_PACKAGE]: engineDependency(tag, source) },
       },
       null,
       2,
@@ -36,7 +38,8 @@ export function packageJsonText(tag: string, base: string = ENGINE_RELEASES): st
 /** A fleet repository's archon.ts: each machine's archon, from the pinned engine. */
 export const ARCHON_ENTRY_TEXT = `// Each machine's \`archon\` command: the engine package.json pins, as bun.lock holds it.
 // Servers and workstations run this file from /srv/archon through /usr/local/bin/archon
-// (Bun, or Node where Bun is not installed). On your PC, use \`bun run stolos\`.
+// (Bun, or Node 26 with commons' hook where Bun is not installed). On your PC, use
+// \`bun run stolos\`.
 import { run } from "${ENGINE_PACKAGE}/archon/main";
 
 await run();
@@ -96,13 +99,13 @@ export const GITATTRIBUTES_TEXT = `# Written by stolos (spec 062): every text fi
  */
 export function scaffoldFiles(
   tag: string,
-  base: string = ENGINE_RELEASES,
+  source: string = ENGINE_SOURCE,
   slug = "",
 ): Record<string, string> {
   return {
     ...bootstrapFiles(slug),
     ".gitattributes": GITATTRIBUTES_TEXT,
-    "package.json": packageJsonText(tag, base),
+    "package.json": packageJsonText(tag, source),
     "archon.ts": ARCHON_ENTRY_TEXT,
     "stolos.ts": STOLOS_ENTRY_TEXT,
     ".gitignore": GITIGNORE_TEXT,
@@ -117,11 +120,11 @@ export function scaffoldFiles(
 export async function scaffoldRepository(
   repo: string,
   tag: string,
-  base: string = ENGINE_RELEASES,
+  source: string = ENGINE_SOURCE,
 ): Promise<string[]> {
   const written: string[] = [];
   const slug = await repoSlug(repo);
-  for (const [rel, text] of Object.entries(scaffoldFiles(tag, base, slug))) {
+  for (const [rel, text] of Object.entries(scaffoldFiles(tag, source, slug))) {
     const p = paths.join(repo, rel);
     if (await fs.exists(p)) continue;
     await fs.mkdir(paths.join(p, ".."), { recursive: true });

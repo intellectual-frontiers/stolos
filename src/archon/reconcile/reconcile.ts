@@ -19,8 +19,8 @@
  * @module
  */
 
-import { boolean, type Decoder, object, string } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { boolean, type Decoder, object, string } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { count } from "../core/telemetry.ts";
 import { asRoot, onHost, P } from "../core/paths.ts";
 import { currentUser, run } from "../core/exec.ts";

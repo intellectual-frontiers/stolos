@@ -21,7 +21,7 @@
  *
  * @module
  */
-import { errors, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { errors, proc } from "@intellectual-frontiers/commons/ts/runtime";
 
 /** What a program did. */
 export type RunResult = {

@@ -12,7 +12,7 @@
  *
  * @module
  */
-import { fs, path as paths } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path as paths } from "@intellectual-frontiers/commons/ts/runtime";
 import { P } from "../archon/core/paths.ts";
 
 /** Past this size, `boot.log` becomes `boot.log.1` when the server starts. */

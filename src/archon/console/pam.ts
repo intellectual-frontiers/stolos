@@ -15,7 +15,7 @@
  * @module
  */
 
-import { errors, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { errors, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { Worker } from "node:worker_threads";
 
 const PAM_PROMPT_ECHO_OFF = 1;

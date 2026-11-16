@@ -7,11 +7,15 @@
  *   `stolos host bootstrap`) downloads the archive for its machine, checks its SHA-256 before
  *   unpacking it, and links `/usr/local/bin/bun`. Raising the pin is a change to that file,
  *   reviewed like any other.
- * - **The engine in a checkout**: a fleet repository depends on the engine's release tarball by
- *   its URL (`package.json`), and `bun.lock` holds its integrity. `bun install --frozen-lockfile`
- *   installs exactly that, or stops (E046-LOCK-INTEGRITY): the lock is the control.
+ * - **The engine in a checkout**: a fleet repository depends on the engine by Git at a tag
+ *   (`package.json`: `github:intellectual-frontiers/stolos#v<version>`), and `bun.lock` pins the
+ *   tag's commit and its integrity. `bun install --frozen-lockfile` installs exactly that, or stops
+ *   (E046-LOCK-INTEGRITY): the lock is the control.
  * - **The launcher** (`/usr/local/bin/archon`, `capabilities/cli.ts`) runs the checkout's
- *   `archon.ts` with Bun, and with Node 26 where Bun is not installed.
+ *   `archon.ts` with Bun, and with Node 26 where Bun is not installed. The engine's modules are
+ *   TypeScript under `node_modules`, whose types Node 26 does not strip, so Node runs them with
+ *   commons' hook first ({@link NODE_HOOK}; the launcher names its file, {@link nodeHookFile},
+ *   since Node resolves `--import` from the working folder).
  *
  * ```mermaid
  * flowchart LR
@@ -25,7 +29,7 @@
  * @module
  */
 
-import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { BUN_SHA256, BUN_VERSION, type BunTarget, bunDownload } from "../core/bun-pin.ts";
 import { run, type RunResult } from "../core/exec.ts";
 
@@ -88,12 +92,47 @@ export function bunExecutable(): string {
 }
 
 /**
- * The program that runs a fleet checkout's `stolos.ts` or `archon.ts`: Bun, or Node 26 where Bun
- * is not installed (spec 096 FR-007).
+ * Commons' Node hook (commons 0005-typescript-runtime FR-070): Node 26 strips no types under
+ * `node_modules`, so a fleet's entry file runs on Node as
+ * `node --import @intellectual-frontiers/commons/ts/node archon.ts` (spec 096 FR-007).
  */
-export function engineRuntime(): string {
-  if (proc.runtimeName() === "bun") return proc.execPath();
-  return proc.which("bun") ?? (proc.runtimeName() === "node" ? proc.execPath() : "node");
+export const NODE_HOOK = "@intellectual-frontiers/commons/ts/node";
+
+/**
+ * The file of commons' Node hook in a fleet checkout, for a command that runs from another folder:
+ * Node resolves `--import` from the working folder, and the package's `./ts/node` is this file.
+ */
+export function nodeHookFile(repo: string): string {
+  return `${repo}/node_modules/@intellectual-frontiers/commons/commons/ts/node/register.mjs`;
+}
+
+/**
+ * How a Node runs TypeScript that imports the engine or commons from `node_modules`: `node` and
+ * commons' hook, resolved from this engine as an absolute URL, so it holds from any folder.
+ */
+function nodeWithHook(node: string): string[] {
+  return [node, "--import", import.meta.resolve(NODE_HOOK)];
+}
+
+/**
+ * This process's runtime, as a command that runs another TypeScript file the same way (the file
+ * and its arguments follow): Bun as it is, Node with commons' hook (spec 096 FR-007), since a
+ * child of Node does not inherit the hook and Node strips no types under `node_modules`.
+ */
+export function runtimeCommand(): string[] {
+  return proc.runtimeName() === "node" ? nodeWithHook(proc.execPath()) : [proc.execPath()];
+}
+
+/**
+ * The command that runs a fleet checkout's `stolos.ts` or `archon.ts` (the file and its arguments
+ * follow): Bun, or Node 26 with commons' hook where Bun is not installed (spec 096 FR-007). The hook
+ * is resolved from this engine, as an absolute URL, so the command runs from any folder.
+ */
+export function engineCommand(): string[] {
+  if (proc.runtimeName() === "bun") return [proc.execPath()];
+  const bun = proc.which("bun");
+  if (bun !== undefined) return [bun];
+  return nodeWithHook(proc.runtimeName() === "node" ? proc.execPath() : "node");
 }
 
 /** How to install a checkout's dependencies. */

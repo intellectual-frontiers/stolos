@@ -47,8 +47,8 @@ import {
   otel,
   otlp,
   sha256 as kernelSha256,
-} from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, path } from "@intellectual-frontiers/ifc-ts/runtime";
+} from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import { type Attachment, escapeHtml, headerValue, mimeEntity } from "../notify/mime.ts";
 import {
   type Credential,

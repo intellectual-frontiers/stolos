@@ -6,7 +6,7 @@
  * @module
  */
 
-import { errors, fs, path as paths } from "@intellectual-frontiers/ifc-ts/runtime";
+import { errors, fs, path as paths } from "@intellectual-frontiers/commons/ts/runtime";
 import { getRecord, putRecord } from "../state/store.ts";
 import { onHost, P } from "../core/paths.ts";
 import { run, type RunResult } from "../core/exec.ts";

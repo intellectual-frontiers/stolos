@@ -7,7 +7,7 @@
  * @module
  */
 
-import { fs, path, tcp } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path, tcp } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../archon/core/exec.ts";
 import { P } from "../archon/core/paths.ts";
 import { ui } from "../archon/core/ui.ts";

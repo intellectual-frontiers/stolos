@@ -6,7 +6,7 @@
  * @module
  */
 
-import { fs, lock, proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, lock, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { asRoot, onHost, P, resetRoots } from "./core/paths.ts";
 import { COMMANDS, findCommand, offeredOn } from "./commands/registry.ts";
 import { effectiveTier, GLOBAL_ARGS, parseArgs, type RunContext } from "./core/registry-types.ts";

@@ -12,8 +12,8 @@
  * @module
  */
 
-import { sha256 as sha256Hex } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, path as paths, stdio, toError } from "@intellectual-frontiers/ifc-ts/runtime";
+import { sha256 as sha256Hex } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, path as paths, stdio, toError } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
 import { verifyBundle } from "../evidence/bundle.ts";

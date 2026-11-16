@@ -21,7 +21,7 @@ import type { ScfCatalog } from "../compliance/catalog.ts";
 import type { Evidence } from "../compliance/report.ts";
 import type { PolicyResult } from "../adopt/policy.ts";
 import type { Estate } from "../estate/graph.ts";
-import { errors, fs, path as paths } from "@intellectual-frontiers/ifc-ts/runtime";
+import { errors, fs, path as paths } from "@intellectual-frontiers/commons/ts/runtime";
 import { complianceFindings } from "../ocsf/finding.ts";
 import { VERSION } from "../version.ts";
 import { ui } from "../core/ui.ts";

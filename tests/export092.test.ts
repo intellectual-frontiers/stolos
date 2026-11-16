@@ -4,15 +4,15 @@
  *
  * @module
  */
-import { dsse, otlp, sha256, unzip } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, grc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { dsse, otlp, sha256, unzip } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, grc } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,
   assertExists,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { Ajv, type AnySchema, type ValidateFunction } from "ajv";
 import type { Observation } from "../src/archon/connect/connector.ts";
 import { buildGraph, estatePolicies, estateQuery } from "../src/archon/estate/graph.ts";

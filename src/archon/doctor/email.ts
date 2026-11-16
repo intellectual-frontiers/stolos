@@ -11,7 +11,7 @@
  * @module
  */
 
-import { dns, fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { dns, fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import type { Phase } from "../core/ui.ts";
 import { run } from "../core/exec.ts";
 import { enqueue, flush, loadCredential, queued, readStatus, type Site } from "../notify/notify.ts";

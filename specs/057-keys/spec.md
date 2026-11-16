@@ -35,7 +35,7 @@ remembers. A newbie should run one command, and see every problem with its one f
 - **FR-008** `boot doctor`, `archon` (where am I), `archon signers`, `fleet init`'s next steps, and
   the backup's restore steps use these checks and commands.
 
-- **FR-IDENTITY** A fresh clone (a new or restored PC) has no Git identity: `keys setup` (and so
+- **FR-009** A fresh clone (a new or restored PC) has no Git identity: `keys setup` (and so
   `vault restore`) sets `user.name` and `user.email` for the checkout from the GitHub account (gh:
   the name and the no-reply address), and `stolos keys` checks it (`E057-IDENTITY`). `fleet upgrade`
   and `update` refuse to start, changing nothing, when this checkout cannot make a signed commit

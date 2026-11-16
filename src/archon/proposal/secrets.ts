@@ -8,7 +8,7 @@
  * @module
  */
 
-import { otel, sha256 } from "@intellectual-frontiers/ifc-ts/kernel";
+import { otel, sha256 } from "@intellectual-frontiers/commons/ts/kernel";
 import { patternOf, SECRET_INVENTORY } from "../model/secret-inventory.ts";
 import type { FileEvidence } from "./types.ts";
 

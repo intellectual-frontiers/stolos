@@ -12,7 +12,7 @@
  * @module
  */
 
-import { fs, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";
 
 /** Traefik's ACME store (spec 032: Traefik's state directory). */

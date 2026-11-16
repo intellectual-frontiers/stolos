@@ -49,7 +49,7 @@
  * default, because it guesses the machine from DHCP leases and is a hint, not a guarantee. For a
  * smaller machine, install Ubuntu by hand, then bootstrap (below).
  *
- * 1. Start the boot server on the PC and leave it running ([boot machine](boot-machine.md)):
+ * 1. Start the boot server on the PC and leave it running ([boot machine](../../archon-boot/mod.ts)):
  *
  *    ```powershell
  *    bun run stolos boot serve
@@ -75,7 +75,7 @@
  * 4. Watch the boot server's window. With no further input the server installs, reboots, runs its
  *    first boot, and reports `alpha: ✓ Ready: 45/45 checks`, then `alpha: ready. Next:` with how to
  *    connect, its Cockpit address, and how to observe it (also later:
- *    `bun run stolos fleet status`). The [install timeline](install-timeline.md) lists every step.
+ *    `bun run stolos fleet status`). The [install timeline](../install/mod.ts) lists every step.
  *    Then:
  *
  *    ```powershell
@@ -83,7 +83,7 @@
  *    ```
  *
  *    The PC already trusts alpha' SSH host keys, so there is no "authenticity can't be established"
- *    question. To manage it with an agent, see [agent.md](agent.md): nothing is installed on the
+ *    question. To manage it with an agent, see [agent.md](../mcp/mod.ts): nothing is installed on the
  *    server for that.
  *
  * The first boot pushes `archon.sql alpha/installed.json` to GitHub: `"ok": true`, or the steps that

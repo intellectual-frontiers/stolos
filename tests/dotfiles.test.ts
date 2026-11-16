@@ -3,15 +3,15 @@
  *
  * @module
  */
-import { width } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { width } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assertExists,
   assert,
   assertEquals,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import {
   compose,
   forbidden,

@@ -5,7 +5,7 @@
  * @module
  */
 
-import { fs, path as paths, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path as paths, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { P } from "../core/paths.ts";
 import { currentUser } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";

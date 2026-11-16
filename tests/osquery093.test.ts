@@ -9,9 +9,9 @@ import {
   assertEquals,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { DatabaseSync } from "node:sqlite";
-import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import type { Observation } from "../src/archon/connect/connector.ts";
 import { buildGraph, estatePolicies, estateQuery } from "../src/archon/estate/graph.ts";
 import { ESTATE_SCHEMA } from "../src/archon/estate/schema.ts";

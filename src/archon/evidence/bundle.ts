@@ -45,8 +45,8 @@ import {
   string,
   unzip,
   zipDeflated,
-} from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, path, sign } from "@intellectual-frontiers/ifc-ts/runtime";
+} from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, path, sign } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";
 
 /** The bundle format. */

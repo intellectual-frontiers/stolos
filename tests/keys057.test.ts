@@ -5,8 +5,8 @@
  *
  * @module
  */
-import { zipEntries } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { zipEntries } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assertExists,
   assert,
@@ -14,7 +14,7 @@ import {
   assertStringIncludes,
   test,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import {
   keyChecks,
   type KeyFacts,
@@ -450,7 +450,7 @@ proves(
 );
 
 proves(
-  ["057-keys FR-IDENTITY"],
+  ["057-keys FR-009"],
   "057: a fresh clone has no Git identity: keys setup takes it from GitHub (gh)",
   async () => {
     const s = await keysSandbox();

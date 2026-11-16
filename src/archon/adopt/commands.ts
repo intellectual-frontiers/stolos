@@ -5,8 +5,14 @@
  * @module
  */
 
-import { array, compact, json, record, unknownValue } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, path, proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
+import {
+  array,
+  compact,
+  json,
+  record,
+  unknownValue,
+} from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, path, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import type { Discovered } from "./discover.ts";
 import { P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";

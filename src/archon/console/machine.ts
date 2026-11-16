@@ -7,7 +7,7 @@
  * @module
  */
 
-import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { engineFileOr } from "../core/assets.ts";
 import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";

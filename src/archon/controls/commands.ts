@@ -6,10 +6,11 @@
  * @module
  */
 
-import { fs, path, proc, stdio, toError } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path, proc, stdio, toError } from "@intellectual-frontiers/commons/ts/runtime";
 import { ui } from "../core/ui.ts";
 import { P } from "../core/paths.ts";
 import type { FleetInputs, PackRun } from "./run.ts";
+import { runtimeCommand } from "../install/bun.ts";
 
 const fail = (): number => (ui.problems.some((x) => x.level === "fail") ? 1 : 0);
 
@@ -146,7 +147,7 @@ export async function controlsTest(): Promise<number> {
   }
   const argv =
     proc.runtimeName() === "node"
-      ? [proc.execPath(), "--test", path.join(dir, "**", "*.test.ts")]
+      ? [...runtimeCommand(), "--test", path.join(dir, "**", "*.test.ts")]
       : [proc.execPath(), "test", dir];
   const r = await proc.output(argv, {
     cwd: P.repo,

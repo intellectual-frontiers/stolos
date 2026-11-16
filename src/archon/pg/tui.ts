@@ -11,7 +11,7 @@
  * @module
  */
 
-import { fs, path as paths, proc, stdio, tty } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path as paths, proc, stdio, tty } from "@intellectual-frontiers/commons/ts/runtime";
 import { homeOf, run } from "../core/exec.ts";
 import { entryServes, findTarget, parsePgpass, readSecret, type Target } from "./connections.ts";
 

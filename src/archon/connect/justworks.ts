@@ -16,7 +16,7 @@
  * @module
  */
 
-import { http } from "@intellectual-frontiers/ifc-ts/runtime";
+import { http } from "@intellectual-frontiers/commons/ts/runtime";
 import { AccessDenied, type Connector } from "./connector.ts";
 import { accessToken, defineConnector, exchange } from "./sdk.ts";
 import {

@@ -8,9 +8,9 @@ import {
   assertEquals,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { nextCommand, type WhereFacts, whereSteps } from "../src/archon/guide/where.ts";
-import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { ENGINE_ROOT, fingerprint, linkEngine, sandbox } from "./sandbox.ts";
 
 const ready: WhereFacts = {

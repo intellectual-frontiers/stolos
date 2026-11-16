@@ -3,15 +3,15 @@
  *
  * @module
  */
-import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
-import { unzip, zipDeflated } from "@intellectual-frontiers/ifc-ts/kernel";
+import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { unzip, zipDeflated } from "@intellectual-frontiers/commons/ts/kernel";
 import {
   assert,
   assertEquals,
   assertExists,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import {
   commitSignature,
   forNamespace,

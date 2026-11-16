@@ -21,7 +21,7 @@
  * @module
  */
 
-import type { ServeInfo } from "@intellectual-frontiers/ifc-ts/runtime";
+import type { ServeInfo } from "@intellectual-frontiers/commons/ts/runtime";
 import type { Command } from "../core/registry-types.ts";
 import type { ScfCatalog } from "../compliance/catalog.ts";
 import type { Estate } from "../estate/graph.ts";

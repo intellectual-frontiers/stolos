@@ -3,15 +3,15 @@
  *
  * @module
  */
-import { zipDeflated } from "@intellectual-frontiers/ifc-ts/kernel";
+import { zipDeflated } from "@intellectual-frontiers/commons/ts/kernel";
 import {
   assert,
   assertEquals,
   assertExists,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
-import { fs, proc, toError } from "@intellectual-frontiers/ifc-ts/runtime";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { fs, proc, toError } from "@intellectual-frontiers/commons/ts/runtime";
 import { Ajv, type AnySchema } from "ajv";
 import {
   catalogCache,

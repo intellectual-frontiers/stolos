@@ -81,11 +81,11 @@ it can. Decisions: RustFS; the image pinned; each Linux account is an S3 user of
 
 ## Keys: showing and rotating
 
-- **FR-K1** The web console signs in with Account: the username and Key: the S3 secret, never the
+- **FR-010** The web console signs in with Account: the username and Key: the S3 secret, never the
   Linux password; `archon fs s3 key`, `fs s3 status`, `fs s3 on`, the guide, and `docs/s3.md` say
   so. `archon fs s3 key --show` prints the person's own secret on their terminal (refused for JSON,
   a pipe, MCP, and agents).
-- **FR-K2** `archon fs s3 key --rotate` (mutate, through sudo, for the person behind sudo): a new
+- **FR-011** `archon fs s3 key --rotate` (mutate, through sudo, for the person behind sudo): a new
   32-byte secret set in RustFS through Podman's environment and written to the key file at once
   (0400, the account's), so the old one stops working. Only the fact is journaled (`archon-s3`). A
   command whose flag changes the host (`Command.mutateWith`) elevates with that flag, counts as

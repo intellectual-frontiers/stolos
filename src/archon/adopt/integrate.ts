@@ -9,8 +9,8 @@
  * @module
  */
 
-import { fs, path } from "@intellectual-frontiers/ifc-ts/runtime";
-import { tsLiteral } from "@intellectual-frontiers/ifc-ts/kernel";
+import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
+import { tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
 import { P } from "../core/paths.ts";
 import { VERSION } from "../version.ts";
 import { PROBE_SCRIPT, PROBE_SCRIPT_WINDOWS } from "./probe.ts";

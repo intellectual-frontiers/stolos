@@ -12,7 +12,7 @@
  * @module
  */
 
-import { ocsf } from "@intellectual-frontiers/ifc-ts/kernel";
+import { ocsf } from "@intellectual-frontiers/commons/ts/kernel";
 
 /** The OCSF version Stolos writes. */
 export const OCSF_VERSION: typeof ocsf.OCSF_VERSION = ocsf.OCSF_VERSION;

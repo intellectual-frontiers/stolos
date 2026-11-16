@@ -23,7 +23,7 @@
  * @module
  */
 
-import { fs, path as ifcPath, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path as ifcPath, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";
 import { P } from "../core/paths.ts";
 import type { SignerDef } from "../model/types.ts";

@@ -33,7 +33,7 @@
  * @module
  */
 
-import { path } from "@intellectual-frontiers/ifc-ts/runtime";
+import { path } from "@intellectual-frontiers/commons/ts/runtime";
 import type { AnyTable, ViewDef } from "../schema/define.ts";
 import { ESTATE_SCHEMA } from "./schema.ts";
 

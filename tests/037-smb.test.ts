@@ -6,9 +6,9 @@
  * @module
  */
 
-import { splitArgs } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
-import { assert, assertEquals, proves } from "@intellectual-frontiers/ifc-ts/runtime/test";
+import { splitArgs } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { assert, assertEquals, proves } from "@intellectual-frontiers/commons/ts/runtime/test";
 import { resolvePlan } from "../src/archon/model/resolve.ts";
 import { fleet, host } from "./fixtures.ts";
 

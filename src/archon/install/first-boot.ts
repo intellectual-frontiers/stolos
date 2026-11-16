@@ -20,7 +20,7 @@
  * @module
  */
 
-import { fs, path as paths } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path as paths } from "@intellectual-frontiers/commons/ts/runtime";
 import { putRecord } from "../state/store.ts";
 import { onHost, P } from "../core/paths.ts";
 import { run } from "../core/exec.ts";

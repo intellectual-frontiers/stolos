@@ -10,7 +10,7 @@
  *
  * @module
  */
-import { proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { proc } from "@intellectual-frontiers/commons/ts/runtime";
 
 /** The boot server's default HTTP port. */
 export const BOOT_PORT = 8080;

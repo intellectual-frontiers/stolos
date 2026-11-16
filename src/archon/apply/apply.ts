@@ -6,8 +6,8 @@
  * @module
  */
 
-import { errors, fs, path as paths, proc } from "@intellectual-frontiers/ifc-ts/runtime";
-import { splitArgs } from "@intellectual-frontiers/ifc-ts/kernel";
+import { errors, fs, path as paths, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { splitArgs } from "@intellectual-frontiers/commons/ts/kernel";
 import { getRecord, putRecord } from "../state/store.ts";
 import { asRoot, onHost, P } from "../core/paths.ts";
 import { currentUser, run } from "../core/exec.ts";

@@ -23,8 +23,8 @@
  * @module
  */
 
-import { fromBase64, otel, toBase64 } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fromBase64, otel, toBase64 } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";
 import { asRoot, onHost, P } from "../core/paths.ts";
 import { SECRETS } from "../core/secrets.ts";

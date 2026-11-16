@@ -8,8 +8,8 @@
  * @module
  */
 
-import { fs, path as paths, proc } from "@intellectual-frontiers/ifc-ts/runtime";
-import { lf } from "@intellectual-frontiers/ifc-ts/kernel";
+import { fs, path as paths, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { lf } from "@intellectual-frontiers/commons/ts/kernel";
 import { P, repoRel } from "../core/paths.ts";
 import type { FleetDef, HostDef, HostRegistration } from "../model/types.ts";
 

@@ -9,8 +9,8 @@
  * @module
  */
 
-import { fs, path } from "@intellectual-frontiers/ifc-ts/runtime";
-import { lf, tsKey } from "@intellectual-frontiers/ifc-ts/kernel";
+import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
+import { lf, tsKey } from "@intellectual-frontiers/commons/ts/kernel";
 import { P, repoRel } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";
 import type { DataClass, HostDecisions, OptInRecord } from "../model/types.ts";

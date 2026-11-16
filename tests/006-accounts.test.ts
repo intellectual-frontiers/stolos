@@ -10,7 +10,7 @@ import {
   assertExists,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { resolvePlan } from "../src/archon/model/resolve.ts";
 import { groupsFor } from "../src/archon/personas/mod.ts";
 import { userData } from "../src/archon/render/autoinstall.ts";

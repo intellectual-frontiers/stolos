@@ -8,7 +8,7 @@ import {
   assertEquals,
   assertExists,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { SCF } from "../src/archon/compliance/scf.ts";
 import type { ScfCatalog } from "../src/archon/compliance/catalog.ts";
 import {
@@ -180,7 +180,7 @@ proves(
   ["068-compliance FR-004"],
   "068: stolos compliance [--framework hipaa|pci|cmmc|soc2] [--json]",
   async () => {
-    const { fs, path, proc } = await import("@intellectual-frontiers/ifc-ts/runtime");
+    const { fs, path, proc } = await import("@intellectual-frontiers/commons/ts/runtime");
     const { sandbox, linkEngine } = await import("./sandbox.ts");
     const { COMMANDS } = await import("../src/archon/commands/registry.ts");
     const fw = COMMANDS.find((c) => c.name === "compliance")?.args.find(

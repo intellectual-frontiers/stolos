@@ -12,7 +12,7 @@
  * @module
  */
 
-import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { CLIENT_ID, listFleets, P } from "../core/paths.ts";
 
 /** The registry file's format. */

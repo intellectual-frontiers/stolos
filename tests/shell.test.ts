@@ -4,14 +4,14 @@
  *
  * @module
  */
-import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,
   assertExists,
   proves,
   test,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 
 /** The parts of Oh My Posh's theme these tests read. */
 type Segment = {
@@ -213,7 +213,11 @@ proves(
     assertEquals([bin?.content, bin?.mode], [LAUNCHER, "0755"]);
     if (WINDOWS === false) {
       assertEquals(await run("with-bun"), `bun /srv/archon/archon.ts verify --json`);
-      assertEquals(await run("without-bun"), `node /srv/archon/archon.ts verify --json`);
+      // Node with commons' hook, by its file (Node resolves --import from the working folder).
+      assertEquals(
+        await run("without-bun"),
+        `node --import /srv/archon/node_modules/@intellectual-frontiers/commons/commons/ts/node/register.mjs /srv/archon/archon.ts verify --json`,
+      );
     }
     // Only Bun or Node (the old runtime spelled in parts, so this file does not name it).
     assert(!new RegExp(["d", "eno"].join(""), "i").test(LAUNCHER), "the launcher runs Bun or Node");

@@ -8,7 +8,7 @@
  * | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
  * | the tools at their newest releases (git and fish from their PPAs, gh from GitHub's repository, Bun, chezmoi, oh-my-posh, tmux) | an installer, netplan, or anything about booting |
  * | your dotfiles: fish with the Archon prompt, tmux, git with your GitHub identity                                                 | the firewall or SSH server hardening             |
- * | Claude Code, for your own account: the agent layer, which reaches the servers over MCP ([agent.md](agent.md))                   | the `ops` account                                |
+ * | Claude Code, for your own account: the agent layer, which reaches the servers over MCP ([agent.md](../mcp/mod.ts))                   | the `ops` account                                |
  * | the `archon` command, its man pages and completions                                                                             | the converge, capture, and backup timers         |
  * | Ubuntu's daily security and stable updates, and the weekly tools sync                                                           | a deploy key or pushes of recorded state         |
  * | local observability: journald, PCP, btop, the OpenTelemetry Collector, `archon observe`                                         |                                                  |
@@ -70,7 +70,7 @@
  *
  * **5. Open a new Ubuntu tab.** You are in fish with the Archon prompt, which starts with the
  * machine's name; the tab's title reads `fish in <you>@<machine>`. Sign Claude Code in once with
- * `claude`; in `/srv/archon` it reaches every server through MCP ([agent.md](agent.md)).
+ * `claude`; in `/srv/archon` it reaches every server through MCP ([agent.md](../mcp/mod.ts)).
  *
  * Windows Terminal needs a Nerd Font for the prompt's icons (the same one you use for the hosts).
  *

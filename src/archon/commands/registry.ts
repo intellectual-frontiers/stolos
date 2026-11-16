@@ -6,7 +6,7 @@
  * @module
  */
 
-import { fs, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { CHOICE_ARGS, chooseData, CONFIRM_DESTROY_ARG } from "../model/durable.ts";
 import type { Command, Parsed, RunContext } from "../core/registry-types.ts";
 import type { HostDef } from "../model/types.ts";

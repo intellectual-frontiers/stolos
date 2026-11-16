@@ -6,7 +6,7 @@
  * @module
  */
 
-import { splitArgs } from "@intellectual-frontiers/ifc-ts/kernel";
+import { splitArgs } from "@intellectual-frontiers/commons/ts/kernel";
 import { getRecord, putRecord } from "./store.ts";
 import { currentUser, run } from "../core/exec.ts";
 import { homeOf } from "../model/load.ts";

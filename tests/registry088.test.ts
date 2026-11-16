@@ -16,7 +16,7 @@ import {
   assertExists,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import {
   declarationProblems,
   forgetRegistry,
@@ -43,8 +43,8 @@ import { SCF } from "../src/archon/compliance/scf.ts";
 import { CONNECTORS } from "../src/archon/connect/commands.ts";
 import { VERSION } from "../src/archon/version.ts";
 import { ui } from "../src/archon/core/ui.ts";
-import { sha256 } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, path, type Server, serve, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
+import { sha256 } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, path, type Server, serve, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 
 const ENGINE = path.resolve(path.dirname(path.fromFileUrl(import.meta.url)), "..");
 const CHECK = {

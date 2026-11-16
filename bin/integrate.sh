@@ -191,7 +191,7 @@ if [ "$ws" = 1 ]; then
   if bun --version >/dev/null 2>&1; then
     (cd "$HOME/fleet" && bun run stolos workstation add) || die "workstation add did not finish"
   else
-    (cd "$HOME/fleet" && node stolos.ts workstation add) || die "workstation add did not finish"
+    (cd "$HOME/fleet" && node --import @intellectual-frontiers/commons/ts/node stolos.ts workstation add) || die "workstation add did not finish"
   fi
 fi
 

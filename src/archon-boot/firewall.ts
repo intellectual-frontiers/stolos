@@ -7,7 +7,7 @@
  * @module
  */
 
-import { proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../archon/core/exec.ts";
 
 /** A port the boot server needs reachable from the network. */

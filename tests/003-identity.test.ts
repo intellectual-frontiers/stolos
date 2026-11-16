@@ -3,12 +3,12 @@
  *
  * @module
  */
-import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assertEquals,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { githubIdentity } from "../src/archon/identity/fleet-init.ts";
 import { KEY } from "./fixtures.ts";
 import { ENGINE_ROOT, sandbox } from "./sandbox.ts";

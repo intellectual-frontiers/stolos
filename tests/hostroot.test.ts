@@ -7,13 +7,13 @@
  *
  * @module
  */
-import { fs, path, serve } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path, serve } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { attachmentText, HOST_ROOT_SKIP, hostRoot } from "./host.ts";
 import { host } from "./fixtures.ts";
 import type { GuestDef } from "../src/archon/model/types.ts";

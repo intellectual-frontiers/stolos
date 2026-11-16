@@ -54,7 +54,7 @@
  *
  * The server answers through archon commands up to the fleet's tier, refuses anything above it, never
  * runs destructive commands, and logs every call (`journalctl -t archon-mcp`). More in the
- * [agent guide](agent.md).
+ * [agent guide](../mcp/mod.ts).
  *
  * ## Your shell
  *
@@ -148,8 +148,8 @@
  * ## Getting help
  *
  * `archon verify` tells you what's wrong and how to fix it. `man archon` lists every command;
- * `man archon-<command>` explains one. The other guides: [dotfiles](dotfiles.md),
- * [HTTPS and containers](web.md), [day-to-day work](daily-use.md), and [AI agents](agent.md).
+ * `man archon-<command>` explains one. The other guides: [dotfiles](../dotfiles/mod.ts),
+ * [HTTPS and containers](../web/mod.ts), [day-to-day work](../commands/mod.ts), and [AI agents](../mcp/mod.ts).
  *
  * @module
  */

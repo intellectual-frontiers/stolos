@@ -6,7 +6,7 @@
  * @module
  */
 
-import { proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";
 
 /** The result of one curl probe of a URL. */

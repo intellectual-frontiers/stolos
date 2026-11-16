@@ -19,7 +19,7 @@
  * @module
  */
 
-import { tsLiteral } from "@intellectual-frontiers/ifc-ts/kernel";
+import { tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
 import type { AdoptedDef } from "../capabilities/adopted.ts";
 import type { HostPlan, SpecId } from "../model/types.ts";
 import { type Edit, editText, type Proposal, type ProposalItem } from "./types.ts";

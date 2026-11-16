@@ -24,8 +24,8 @@
  * @module
  */
 
-import { errors, fs, path, proc, stdio, toError } from "@intellectual-frontiers/ifc-ts/runtime";
-import { compact, tsLiteral } from "@intellectual-frontiers/ifc-ts/kernel";
+import { errors, fs, path, proc, stdio, toError } from "@intellectual-frontiers/commons/ts/runtime";
+import { compact, tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
 import { run } from "../core/exec.ts";
 import { P } from "../core/paths.ts";
 import { ownerOnly, writeSecret } from "../core/secrets.ts";

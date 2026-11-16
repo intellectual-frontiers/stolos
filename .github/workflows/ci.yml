@@ -1,9 +1,9 @@
 # Specs 046-engine-instance and 096-bun-runtime: every push and pull request is checked on the
 # pinned Bun (and Node 26, the backup runtime); every push to main must raise the version in
-# src/archon/version.ts, and once everything passes it is tagged v<version> and released: the
-# engine built by tsc into JavaScript with declarations, packed by Bun, installed into an empty
-# project and run on Bun and on Node, then attached to the GitHub release with its SHA-256. A
-# fleet repository depends on that tarball by its URL (package.json), its integrity in bun.lock.
+# src/archon/version.ts, and once everything passes the commit is installed as a Git dependency
+# into an empty project and run on Bun and on Node, then tagged v<version>. The tag is the
+# release: no GitHub release, no tarball, no build. A fleet repository depends on it by Git
+# (package.json: "github:intellectual-frontiers/stolos#v<version>"); bun.lock pins its commit.
 name: ci
 
 on:
@@ -34,7 +34,7 @@ jobs:
         run: bun run lint
       - name: Format
         run: bun run fmt:check
-      - name: Documentation (every module and export documented, every @example compiles; specs 055, 096 FR-009)
+      - name: Documentation (ifc-docs check, every @example compiles; specs 055, 096 FR-009)
         run: bun run docs:lint
       - name: snmpd, for the SNMPv3 test against a real agent (spec 069)
         run: sudo apt-get install -y --no-install-recommends snmpd >/dev/null && sudo systemctl stop snmpd || true
@@ -175,9 +175,9 @@ jobs:
           NODE_PATH=/tmp/pw/node_modules node tests/console/stolos-browser.cjs 8098
 
   release:
-    # Spec 096 FR-005: on a push to main that passed everything, the tag v<version>, the package
-    # (tsc into dist/, packed by Bun), a smoke install run on Bun and on Node, and the GitHub
-    # release with the tarball and its SHA-256. Then this version's documentation (spec 055).
+    # Spec 096 FR-005: on a push to main that passed everything, this commit installed as a Git
+    # dependency (git+file:) into an empty project and run on Bun and on Node 26, then the tag
+    # v<version>, which is the release. Then this version's documentation (spec 055).
     needs: [check, suite, bootstrap-windows, integrate-posix, console-browser]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
@@ -192,6 +192,8 @@ jobs:
         uses: ./.github/actions/bun
       - name: Dependencies, exactly as bun.lock holds them
         run: bun install --frozen-lockfile
+      - name: This commit as a fleet installs it (git+file:), archon and stolos --version on Bun and on Node
+        run: bun tools/smoke.ts --repo "$GITHUB_WORKSPACE" --commit "$GITHUB_SHA"
       - name: Tag v<version>
         id: tag
         run: |
@@ -207,30 +209,10 @@ jobs:
             git tag "$TAG"
             git push origin "$TAG"
           fi
-      - name: The package (tsc into dist/, packed by Bun, with its SHA-256)
-        id: pack
-        run: |
-          TGZ=$(bun tools/release.ts build out/release | tail -n 1)
-          echo "tgz=$TGZ" >>"$GITHUB_OUTPUT"
-          cat "$TGZ.sha256"
-      - name: The package installs into an empty project and runs (archon --version) on Bun and on Node
-        run: bun tools/release.ts smoke "${{ steps.pack.outputs.tgz }}"
-      - name: The GitHub release, with the tarball and its SHA-256
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TAG: ${{ steps.tag.outputs.tag }}
-          TGZ: ${{ steps.pack.outputs.tgz }}
-        run: |
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" "$TGZ" "$TGZ.sha256" --clobber
-          else
-            gh release create "$TAG" "$TGZ" "$TGZ.sha256" --verify-tag --title "Stolos $TAG" \
-              --notes "The engine $TAG: \`$(basename "$TGZ")\`, SHA-256 \`$(cut -d' ' -f1 "$TGZ.sha256")\`. A fleet repository depends on it by its URL in package.json (bun run stolos fleet upgrade $TAG); bun.lock holds its integrity."
-          fi
       # Spec 055: this version's documentation, on GitHub Pages (the gh-pages
       # branch): /vX.Y.Z/ for each release, /latest/ for the newest, the last 20 kept.
-      - name: Documentation (HTML from the JSDoc, tools/docs.ts)
-        run: bun run docs out/docs
+      - name: Documentation (IFC Docs, docs.config.ts, into out/docs)
+        run: bun run docs
       - name: Publish to the gh-pages branch
         run: |
           TAG="${{ steps.tag.outputs.tag }}"

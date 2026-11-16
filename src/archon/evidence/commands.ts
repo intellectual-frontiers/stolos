@@ -7,7 +7,7 @@
  * @module
  */
 
-import { fs, path, stdio, toError } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path, stdio, toError } from "@intellectual-frontiers/commons/ts/runtime";
 import { ui } from "../core/ui.ts";
 import { run } from "../core/exec.ts";
 import { P, repoRel } from "../core/paths.ts";

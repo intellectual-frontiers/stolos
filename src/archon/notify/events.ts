@@ -6,7 +6,7 @@
  * @module
  */
 
-import { fs, path as paths, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path as paths, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { asRoot, onHost, P } from "../core/paths.ts";
 import { loadFleet, loadHosts } from "../model/load.ts";
 import { networkOf } from "../model/resolve.ts";

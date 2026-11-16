@@ -7,14 +7,14 @@
  *
  * @module
  */
-import { sha256 } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, path, proc, serve } from "@intellectual-frontiers/ifc-ts/runtime";
+import { sha256 } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, path, proc, serve } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { HOST_ROOT_SKIP, hostRoot } from "./host.ts";
 import { fleet, host } from "./fixtures.ts";
 import type { ToolDef } from "../src/archon/model/types.ts";
@@ -184,7 +184,7 @@ proves(
 );
 
 proves(
-  ["040-opt-in FR-007", "041-s3 FR-K2"],
+  ["040-opt-in FR-007", "041-s3 FR-011"],
   "040/041: each account's S3 secret is generated on the server, readable by that account only; rotate sets a new one through Podman's environment",
   async () => {
     const h = await hostRoot();
@@ -243,7 +243,7 @@ case "$*" in *"user info"*) exit 1;; esac`,
         calls.some((c) => c.includes("passwd archon alice --password-from-env ARCHON_S3_SECRET")),
       );
 
-      // FR-K2: the person behind sudo rotates their own key.
+      // FR-011: the person behind sudo rotates their own key.
       proc.env.set("SUDO_USER", "alice");
       assertEquals(await s3Rotate("alpha", { host: alpha }), 0);
       const second = (await fs.readTextFile(key)).trim();

@@ -9,7 +9,7 @@
  * @module
  */
 
-import { proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { proc } from "@intellectual-frontiers/commons/ts/runtime";
 
 /** How long an installer may go quiet after taking the image. */
 export const STALL_MS = 6 * 60_000;

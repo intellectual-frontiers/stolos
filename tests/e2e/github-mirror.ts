@@ -9,7 +9,7 @@
  *
  * @module
  */
-import { proc, serve } from "@intellectual-frontiers/ifc-ts/runtime";
+import { proc, serve } from "@intellectual-frontiers/commons/ts/runtime";
 
 const [address = "127.0.0.1", port = "8001"] = proc.args;
 const token = proc.env.get("GITHUB_TOKEN");

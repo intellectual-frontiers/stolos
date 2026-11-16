@@ -28,8 +28,8 @@
  * @module
  */
 
-import { type Result, unknownValue } from "@intellectual-frontiers/ifc-ts/kernel";
-import { http } from "@intellectual-frontiers/ifc-ts/runtime";
+import { type Result, unknownValue } from "@intellectual-frontiers/commons/ts/kernel";
+import { http } from "@intellectual-frontiers/commons/ts/runtime";
 import type { PolicyResult } from "../adopt/policy.ts";
 import { OCSF_CLASSES } from "../ocsf/classes.ts";
 import type { Column, LabelView, RowOf } from "../schema/define.ts";

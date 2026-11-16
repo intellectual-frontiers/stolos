@@ -8,7 +8,7 @@
  * @module
  */
 
-import { fs, path, proc, type Server, serve } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path, proc, type Server, serve } from "@intellectual-frontiers/commons/ts/runtime";
 import { engineFileOr } from "../core/assets.ts";
 import { run } from "../core/exec.ts";
 import { P } from "../core/paths.ts";
@@ -42,8 +42,8 @@ export async function githubCheck(
  */
 export function pcRunner(repo: string = P.repo, env: Record<string, string> = {}): PcRunner {
   return async (argv, each) => {
-    const { engineRuntime } = await import("../install/bun.ts");
-    const p = proc.spawn([engineRuntime(), "stolos.ts", ...argv], {
+    const { engineCommand } = await import("../install/bun.ts");
+    const p = proc.spawn([...engineCommand(), "stolos.ts", ...argv], {
       cwd: repo,
       env: { ...env, ARCHON_PLAIN: "1", NO_COLOR: "1", ARCHON_VIA: "console" },
       stdin: "inherit",

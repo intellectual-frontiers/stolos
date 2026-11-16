@@ -21,7 +21,7 @@
  * @module
  */
 
-import { path, proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
+import { path, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { declare } from "./registry-contract.ts";
 
 /** The line's prefix. */

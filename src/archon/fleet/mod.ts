@@ -8,9 +8,9 @@
  * ## What is in a fleet repository
  *
  * ```
- * package.json  the pin: which engine release this repository uses (its tarball's URL), and the
- *               commands `bun run stolos` and `bun run archon`
- * bun.lock      the integrity (SHA-512) of that release's tarball
+ * package.json  the pin: which engine version this repository uses (the engine by Git at its tag),
+ *               and the commands `bun run stolos` and `bun run archon`
+ * bun.lock      the commit that tag names, and the integrity (SHA-512) of that commit's archive
  * stolos.ts     stolos, the fleet's command on your PC (bun run stolos; two lines: the pinned engine)
  * archon.ts     archon, each machine's command (/usr/local/bin/archon runs it; two lines, the same way)
  * .gitignore    out/ and node_modules/ (where bun install puts the engine)
@@ -18,21 +18,23 @@
  * ```
  *
  * Nothing here is the engine itself. The engine lives in the public repository
- * `intellectual-frontiers/stolos`; each release is a package (JavaScript with its types) attached to
- * its GitHub release, and `bun install` puts it in `node_modules/`.
+ * `intellectual-frontiers/stolos`; each version is a tag of it (`v<version>`), and `bun install`
+ * puts the engine at that tag in `node_modules/`, as its TypeScript sources. There is no GitHub
+ * release and nothing to build: Bun runs the sources, and Node 26 runs them with commons' hook
+ * (`node --import @intellectual-frontiers/commons/ts/node stolos.ts`).
  *
  * ## Starting a new fleet repository
  *
  * You need Bun, git, and `gh` signed in (`gh auth login`). Create an empty private repository on
- * GitHub, clone it, and from inside the clone run the engine once from its released package
- * (replace `<version>` with the latest release of `intellectual-frontiers/stolos`):
+ * GitHub, clone it, and from inside the clone run the engine once at a version tag (replace
+ * `<version>` with the newest tag of `intellectual-frontiers/stolos`):
  *
  * ```
- * bun add https://github.com/intellectual-frontiers/stolos/releases/download/v<version>/intellectual-frontiers-stolos-<version>.tgz
- * bun node_modules/@intellectual-frontiers/stolos/dist/stolos/main.js fleet init lab
+ * bun add github:intellectual-frontiers/stolos#v<version>
+ * bun node_modules/@intellectual-frontiers/stolos/src/stolos/main.ts fleet init lab
  * ```
  *
- * `fleet init lab` writes `package.json` pinned to that same release (the commands `stolos` and
+ * `fleet init lab` writes `package.json` pinned to that same tag (the commands `stolos` and
  * `archon`), `stolos.ts`, `archon.ts` and `.gitignore`, runs `bun install` (which writes `bun.lock`),
  * then `fleets/lab/fleet.ts` from your GitHub identity. It asks for your Unix account name and an admin password; only the password's hash is
  * kept, on your machine, never in Git. From then on use the pinned engine through the tasks:
@@ -57,15 +59,16 @@
  * 1. **This repository.** A host only moves to a commit at the tip of `main` that is **signed** by one
  *    of the fleet's signers (`fleets/<id>/signers.ts`, `stolos signers`). Pushing an unsigned commit
  *    does nothing: every host refuses it and says so in its journal.
- * 2. **The engine.** It is downloaded from its release,
- *    `https://github.com/intellectual-frontiers/stolos/releases/download/<tag>/intellectual-frontiers-stolos-<version>.tgz`.
- *    Your signature does not reach that tarball by itself: it is not in this repository.
+ * 2. **The engine.** It is downloaded from GitHub, the engine's repository at its tag
+ *    (`github:intellectual-frontiers/stolos#<tag>`). Your signature does not reach the engine by
+ *    itself: it is not in this repository.
  *
  * `bun.lock` is what joins the two. It is a file in this repository, so it is covered by your
- * signature, and it holds the integrity of the engine's tarball. Hosts install the engine with
- * `bun install --frozen-lockfile`: if the tarball they download differs from it (a replaced release
- * asset, a compromised GitHub account, an altered file on the way), Bun refuses to install it. The
- * host stays on the commit it runs; it does not run unapproved code.
+ * signature, and it holds the commit the tag named and the integrity of that commit's archive.
+ * Hosts install the engine with `bun install --frozen-lockfile`: they fetch that commit, not
+ * whatever the tag names today, and if what they download differs from the lock (a moved tag, a
+ * compromised GitHub account, an altered file on the way), Bun refuses to install it. The host
+ * stays on the commit it runs; it does not run unapproved code.
  *
  * So: **never drop `--frozen-lockfile`, never hand-edit `bun.lock`, and never change the pin without
  * `stolos fleet upgrade`.** If something about the lock is in your way, the table at the end says what
@@ -78,15 +81,16 @@
  * ```json
  * {
  *   "dependencies": {
- *     "@intellectual-frontiers/stolos": "https://github.com/intellectual-frontiers/stolos/releases/download/v0.8.0/intellectual-frontiers-stolos-0.8.0.tgz"
+ *     "@intellectual-frontiers/stolos": "github:intellectual-frontiers/stolos#v0.8.0"
  *   }
  * }
  * ```
  *
  * `v0.8.0` is the engine version. Engine versions only go up (0.7.0, 0.8.0, 0.9.0, ...); each one is a
- * tag that the engine's CI made after its checks passed, with the package attached to its release.
+ * tag that the engine's CI made after its checks passed (and after installing that commit as you do,
+ * and running it on Bun and on Node). The tag is the release: there is nothing else to download.
  * The installed package's own `package.json` says the same version: that is how `fleet upgrade` knows
- * a tag is a real release.
+ * a tag is a real version.
  *
  * ## Upgrading the engine (the only supported way)
  *
@@ -114,8 +118,8 @@
  *
  *    - **Engine version**: the tag is a version, and newer than the current pin (going back needs
  *      `--downgrade`, on purpose).
- *    - **Lock**: the pin moves and `bun install` downloads the release and records its integrity in
- *      `bun.lock`; the installed package must say it is that version.
+ *    - **Lock**: the pin moves and `bun install` downloads the engine at that tag and records its
+ *      commit and integrity in `bun.lock`; the installed package must say it is that version.
  *    - **Validate**: every fleet in the repository is validated with the new engine. If one fails,
  *      nothing is committed; the message says how to see why, and how to stay on the old version.
  *    - **Commit**: one signed commit of `package.json` and `bun.lock`, with the subject
@@ -271,9 +275,9 @@
  *
  * | What you see                                                                           | What it means                                                                          | What to do                                                                                                                                                                                          |
  * | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
- * | `bun install --frozen-lockfile` fails with an integrity error (E046-LOCK-INTEGRITY)    | the engine's tarball differs from its integrity in `bun.lock`                          | Stop. Do not regenerate the lock to make it go away. Tell the engine's maintainers; compare the release with the engine's history. Only after you know why: `stolos fleet upgrade` to a known-good tag. |
- * | `Lock: the engine at vX could not be installed`                                        | the release does not exist, or is misspelled                                           | pick a tag from the engine's releases page                                                                                                                                                          |
- * | `Lock: vX's package says it is ...: not that release`                                  | the release's asset is not that version                                                | pick another tag; tell the engine's maintainers                                                                                                                                                     |
+ * | `bun install --frozen-lockfile` fails with an integrity error (E046-LOCK-INTEGRITY) | the engine fetched differs from its commit or integrity in `bun.lock` | Stop. Do not regenerate the lock to make it go away. Tell the engine's maintainers; compare the commit with the engine's history. Only after you know why: `stolos fleet upgrade` to a known-good tag. |
+ * | `Lock: the engine at vX could not be installed` | the tag does not exist, or is misspelled | pick a tag from the engine's tags page |
+ * | `Lock: vX's package says it is ...: not that version` | the tag names a commit whose package is another version | pick another tag; tell the engine's maintainers |
  * | `vX is older than the pinned vY`                                                       | going backwards                                                                        | if you mean it, add `--downgrade` (and say why in the commit)                                                                                                                                       |
  * | `the repository has uncommitted changes`                                               | the upgrade must be a commit of its own                                                | commit or stash your other change first                                                                                                                                                             |
  * | `Validate: fleet <id> does not validate with vX`                                       | the new engine expects something your model lacks                                      | run `ARCHON_FLEET=<id> bun run stolos validate`, fix the model in its own commit, then upgrade again                                                                                              |

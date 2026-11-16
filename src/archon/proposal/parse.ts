@@ -9,7 +9,7 @@
  * @module
  */
 
-import { json, otel, record, unknownValue } from "@intellectual-frontiers/ifc-ts/kernel";
+import { json, otel, record, unknownValue } from "@intellectual-frontiers/commons/ts/kernel";
 import type { Alert, Observation, SubjectKind } from "./types.ts";
 
 /** A short stable id for an observation: the same evidence collected twice is one record. */

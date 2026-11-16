@@ -5,7 +5,7 @@
  * @module
  */
 
-import { assert, assertEquals, proves } from "@intellectual-frontiers/ifc-ts/runtime/test";
+import { assert, assertEquals, proves } from "@intellectual-frontiers/commons/ts/runtime/test";
 import { negotiate, parseRequest, serveTftp } from "../src/archon-boot/tftp.ts";
 import dgram from "node:dgram";
 import { Buffer } from "node:buffer";

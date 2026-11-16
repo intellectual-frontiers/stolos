@@ -8,7 +8,7 @@
  * @module
  */
 
-import { proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";
 
 /** One machine seen but not in the fleet. */

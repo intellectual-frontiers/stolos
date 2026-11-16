@@ -25,7 +25,7 @@
  * @module
  */
 
-import { proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
+import { proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";
 import { effectiveTier, parseArgs } from "../core/registry-types.ts";
 import { type AccountLookup, mayRun, roleOf, systemAccounts, USERNAME } from "./auth.ts";

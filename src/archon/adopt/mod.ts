@@ -187,7 +187,7 @@
  * completions (KnowBe4) and screening outcomes (Checkr) are the records the people controls read
  * beside `people/training.ts` and `people/screening.ts`. A connector Stolos does not ship can be
  * added from its own repository, pinned and locked like the engine: see
- * [the connector registry](connectors.md).
+ * [the connector registry](../connect/registry-guide.ts).
  *
  * Every connector is labeled the way the industry labels it: its NIST SP 800-145 service models
  * (IaaS, PaaS, SaaS) and its market categories as the analyst firms name them (Strategic Cloud

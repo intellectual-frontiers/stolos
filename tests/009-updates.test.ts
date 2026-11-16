@@ -9,7 +9,7 @@ import {
   assertExists,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { resolvePlan } from "../src/archon/model/resolve.ts";
 import { fleet, host } from "./fixtures.ts";
 

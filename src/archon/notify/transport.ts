@@ -14,7 +14,7 @@
  * @module
  */
 
-import { fs } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";
 
 /** The SMTP relay, host:port, when the fleet names none (`fleet.mail.relay`): Cloudflare, implicit TLS. */

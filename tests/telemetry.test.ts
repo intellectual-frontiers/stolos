@@ -7,15 +7,15 @@
  * @module
  */
 
-import { otel as kotel } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, path, proc, serve } from "@intellectual-frontiers/ifc-ts/runtime";
+import { otel as kotel } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, path, proc, serve } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,
   assertStringIncludes,
   proves,
   test,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { ATTRIBUTES, METRICS, RESOURCE, SPANS } from "../src/archon/telemetry/signals.ts";
 import { clean } from "../src/archon/core/telemetry.ts";
 import { telemetryMarkdown } from "../src/archon/render/man.ts";

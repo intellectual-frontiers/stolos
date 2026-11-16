@@ -3,7 +3,11 @@
  *
  * @module
  */
-import { assert, assertStringIncludes, proves } from "@intellectual-frontiers/ifc-ts/runtime/test";
+import {
+  assert,
+  assertStringIncludes,
+  proves,
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { firstBootScript } from "../src/archon/render/autoinstall.ts";
 import { resolvePlan } from "../src/archon/model/resolve.ts";
 import { fleet, host } from "./fixtures.ts";

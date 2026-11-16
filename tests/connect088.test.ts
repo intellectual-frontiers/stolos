@@ -15,10 +15,10 @@ import {
   assertEquals,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { Ajv } from "ajv";
-import type { Result } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, type http, path } from "@intellectual-frontiers/ifc-ts/runtime";
+import type { Result } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, type http, path } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   type Connector,
   MARKET_CATEGORIES,

@@ -3,8 +3,8 @@
  *
  * @module
  */
-import { array, json, object, string } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, path, proc, serve } from "@intellectual-frontiers/ifc-ts/runtime";
+import { array, json, object, string } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, path, proc, serve } from "@intellectual-frontiers/commons/ts/runtime";
 import { at, list } from "./fixtures.ts";
 import { ENGINE_ROOT, linkEngine, sandbox } from "./sandbox.ts";
 import {
@@ -13,7 +13,7 @@ import {
   assertStringIncludes,
   proves,
   the,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { parseMac } from "../src/archon/fleet/registration.ts";
 import { recognition } from "../src/archon/install/recognize.ts";
 import {

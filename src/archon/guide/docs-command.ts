@@ -6,7 +6,7 @@
  * @module
  */
 
-import { stdio } from "@intellectual-frontiers/ifc-ts/runtime";
+import { stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { engineFileOr } from "../core/assets.ts";
 import { guideDef, GUIDES, guideUrl } from "../core/guides.ts";
 import { ui } from "../core/ui.ts";

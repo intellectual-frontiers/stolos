@@ -15,7 +15,7 @@
  * @module
  */
 
-import { proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { main } from "../archon/main.ts";
 import { setLogProgram, ui } from "../archon/core/ui.ts";
 

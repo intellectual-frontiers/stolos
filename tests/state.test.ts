@@ -5,13 +5,13 @@
  *
  * @module
  */
-import { fs } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { DatabaseSync } from "node:sqlite";
 import {
   allRecords,

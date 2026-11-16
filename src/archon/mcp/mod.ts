@@ -44,7 +44,7 @@
  * - "What would change if alpha converged now?" (`archon_apply` with `check`)
  * - "Read today's daily report for alpha and tell me what needs attention."
  * - "Why did the reconcile timer fail last night on alpha?" (`archon_observe`, the journal)
- * - "Add ripgrep to the tools" (the spec loop in [`AGENTS.md`](../AGENTS.md): a spec, the model,
+ * - "Add ripgrep to the tools" (the spec loop in [`AGENTS.md`](../../../AGENTS.md): a spec, the model,
  *   `bun run stolos build`, a commit you approve, then `archon_update` on each server, or the
  *   reconcile timer)
  *

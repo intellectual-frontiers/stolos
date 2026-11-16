@@ -5,7 +5,7 @@
  *
  * @module
  */
-import { proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { proc } from "@intellectual-frontiers/commons/ts/runtime";
 
 /**
  * What a command may do, from least to most: read, change the repository, change a machine, or

@@ -10,7 +10,7 @@
  * @module
  */
 
-import { errors, fs, path, proc, stdio, tty } from "@intellectual-frontiers/ifc-ts/runtime";
+import { errors, fs, path, proc, stdio, tty } from "@intellectual-frontiers/commons/ts/runtime";
 import { currentUser, homeOf, run, type RunResult } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
 import { journal } from "../core/log.ts";

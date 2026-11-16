@@ -28,8 +28,8 @@
  */
 
 import { run } from "../core/exec.ts";
-import { type Literal, tsLiteral } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, path as paths, proc, toError } from "@intellectual-frontiers/ifc-ts/runtime";
+import { type Literal, tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, path as paths, proc, toError } from "@intellectual-frontiers/commons/ts/runtime";
 import { log } from "../core/log.ts";
 import { isDay } from "./register.ts";
 import type { Vendor } from "./vendors.ts";

@@ -4,20 +4,21 @@
  *
  * @module
  */
-import { sha256 } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, lock, path, proc, serve } from "@intellectual-frontiers/ifc-ts/runtime";
+import { sha256 } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, lock, path, proc, serve } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,
   assertExists,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { hostLock, LOCK_HELD_ENV, LOCK_PATH } from "../src/archon/core/lock.ts";
 import { resolvePlan } from "../src/archon/model/resolve.ts";
 import { fleet, host } from "./fixtures.ts";
 import { HOST_ROOT_SKIP, hostRoot } from "./host.ts";
 import { ENGINE_ROOT, linkEngine, sandbox } from "./sandbox.ts";
+import { runtimeCommand } from "../src/archon/install/bun.ts";
 
 const posix = proc.build.os !== "windows";
 const ID = ["-c", "user.name=Alice Example", "-c", "user.email=alice@example.net"];
@@ -282,7 +283,9 @@ proves(
       const self = path.join(h.bin, "archon-self");
       await fs.writeTextFile(
         self,
-        `#!/bin/sh\nexec '${proc.execPath()}' '${path.join(ENGINE_ROOT, "src", "archon", "main.ts")}' "$@"\n`,
+        `#!/bin/sh\nexec ${runtimeCommand()
+          .map((a) => `'${a}'`)
+          .join(" ")} '${path.join(ENGINE_ROOT, "src", "archon", "main.ts")}' "$@"\n`,
       );
       await fs.chmod(self, 0o755);
       const update = async () => {

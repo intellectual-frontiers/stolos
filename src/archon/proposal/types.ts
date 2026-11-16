@@ -7,7 +7,7 @@
  * @module
  */
 
-import { absurd } from "@intellectual-frontiers/ifc-ts/kernel";
+import { absurd } from "@intellectual-frontiers/commons/ts/kernel";
 
 /** The spec that brings proposals. */
 export const PROPOSAL_SPEC = "095-proposals" as const;

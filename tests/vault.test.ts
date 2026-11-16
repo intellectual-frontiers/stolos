@@ -5,9 +5,9 @@
  * @module
  */
 import { zipManifest } from "../src/archon/vault/zip.ts";
-import { compact, json, unzip, zip as zipFiles } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, path as paths, proc } from "@intellectual-frontiers/ifc-ts/runtime";
-import { assert, assertEquals, proves, the } from "@intellectual-frontiers/ifc-ts/runtime/test";
+import { compact, json, unzip, zip as zipFiles } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, path as paths, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { assert, assertEquals, proves, the } from "@intellectual-frontiers/commons/ts/runtime/test";
 import { panelLines, width } from "../src/archon/vault/panel.ts";
 import type { Assessment } from "../src/archon/vault/state.ts";
 import { targetOf } from "../src/archon/vault/restore.ts";

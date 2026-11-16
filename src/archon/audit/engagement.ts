@@ -21,7 +21,7 @@
  * @module
  */
 
-import { exportedLiteral, tsLiteral } from "@intellectual-frontiers/ifc-ts/kernel";
+import { exportedLiteral, tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
 import { POPULATION_IDS, type PopulationId } from "./populations.ts";
 
 /** One person at the audit firm. */

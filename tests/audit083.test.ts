@@ -4,21 +4,21 @@
  *
  * @module
  */
-import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   type Literal,
   sha256,
   tsLiteral,
   unzip,
   zipDeflated,
-} from "@intellectual-frontiers/ifc-ts/kernel";
+} from "@intellectual-frontiers/commons/ts/kernel";
 import {
   assert,
   assertEquals,
   assertExists,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { Ajv2020 } from "ajv/dist/2020.js";
 import {
   type Item,

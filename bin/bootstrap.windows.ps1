@@ -294,10 +294,12 @@ if ($Runtime -eq 'node') {
   if ($have -and (At-Least $have '26.0.0')) { Ok "Node" "$have (at least 26; Bun is the runtime of record)" }
   else { Install-Node }
 }
-# How the fleet's commands run: its package.json's script with Bun, its stolos.ts with Node.
-$StolosCmd = if ($Runtime -eq 'bun') { 'bun run stolos' } else { 'node stolos.ts' }
+# How the fleet's commands run: its package.json's script with Bun, its stolos.ts with Node and
+# commons' hook (Node strips no types under node_modules; spec 096 FR-007).
+$NodeHook = '@intellectual-frontiers/commons/ts/node'
+$StolosCmd = if ($Runtime -eq 'bun') { 'bun run stolos' } else { "node --import $NodeHook stolos.ts" }
 function Invoke-Stolos([string[]]$argv) {
-  if ($Runtime -eq 'bun') { & bun run stolos @argv } else { & node stolos.ts @argv }
+  if ($Runtime -eq 'bun') { & bun run stolos @argv } else { & node --import $NodeHook stolos.ts @argv }
 }
 
 # ---------------------------------------------------------------- 2. Git

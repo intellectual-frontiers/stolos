@@ -4,8 +4,8 @@
  *
  * @module
  */
-import { otel } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { otel } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,
@@ -13,7 +13,7 @@ import {
   assertStringIncludes,
   proves,
   the,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import {
   commandTargets,
   etckeeperObservations,

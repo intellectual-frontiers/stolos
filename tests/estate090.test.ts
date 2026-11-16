@@ -12,10 +12,10 @@ import {
   assertStringIncludes,
   assertThrows,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { DatabaseSync } from "node:sqlite";
-import { parseJson5, tsLiteral } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { parseJson5, tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import type { Observation } from "../src/archon/connect/connector.ts";
 import {
   buildGraph,

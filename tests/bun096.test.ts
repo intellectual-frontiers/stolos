@@ -1,21 +1,22 @@
 /**
  * Spec 096-bun-runtime: the engine on Bun and IFC TypeScript. No old runtime, no registry or URL
- * imports; the dependencies pinned exactly and locked; the Bun pin checked for every platform; the
- * release package built, installed into an empty project and run on Bun and on Node.
+ * imports; the dependencies pinned exactly (commons by Git at a full commit) and locked; the Bun pin
+ * checked for every platform; this checkout, committed in a throwaway clone, installed as a Git
+ * dependency into an empty project and run on Bun and on Node 26 with commons' hook.
  *
- * Elsewhere: `fleet init`'s layout (`tests/scaffold.test.ts`, FR-006), the docs tool finding an
- * undocumented export and a broken example (`tests/docs055.test.ts`, FR-009), PAM
+ * Elsewhere: `fleet init`'s layout (`tests/scaffold.test.ts`, FR-006), `fleet upgrade`
+ * (`tests/upgrade.test.ts`, FR-006), the documentation (`tests/docs055.test.ts`, FR-009), PAM
  * (`tests/console065.test.ts`, FR-010), the first boot's Bun (`tests/install.test.ts`, FR-007).
  *
  * @module
  */
-import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import {
   BUN_SHA256,
   BUN_TARGETS,
@@ -87,16 +88,16 @@ proves(
     const pkg: unknown = JSON.parse(await fs.readTextFile(path.join(ROOT, "package.json")));
     const deps = strings(pkg, "dependencies");
     const dev = strings(pkg, "devDependencies");
-    assertEquals(Object.keys(deps).sort(), ["@intellectual-frontiers/ifc-ts", "ajv"]);
+    assertEquals(Object.keys(deps).sort(), ["@intellectual-frontiers/commons", "ajv"]);
     assertEquals(Object.keys(dev).sort(), ["@types/node", "typescript"]);
     assert(/^7\.\d+\.\d+$/.test(dev["typescript"] ?? ""), "TypeScript 7, exactly");
-    assertStringIncludes(
-      deps["@intellectual-frontiers/ifc-ts"] ?? "",
-      "https://github.com/intellectual-frontiers/.github/releases/download/ifc-ts-v",
-      "IFC TypeScript by its release URL",
+    const commons = deps["@intellectual-frontiers/commons"] ?? "";
+    assert(
+      /^github:intellectual-frontiers\/\.github#[0-9a-f]{40}$/.test(commons),
+      `commons by Git at a full commit, not ${commons}`,
     );
     for (const [name, spec] of Object.entries({ ...deps, ...dev })) {
-      if (spec.startsWith("https://")) continue;
+      if (spec.startsWith("github:")) continue;
       assert(/^\d+\.\d+\.\d+$/.test(spec), `${name}@${spec} is pinned exactly`);
     }
     // bun.lock (JSON with trailing commas): the root workspace asks for the same.
@@ -106,8 +107,14 @@ proves(
     assertEquals(strings(ws, "dependencies"), deps);
     assertEquals(strings(ws, "devDependencies"), dev);
     for (const [name, spec] of Object.entries({ ...deps, ...dev })) {
-      assertStringIncludes(lock, `"${name}@${spec}"`, `bun.lock resolves ${name}`);
+      // A github: dependency is locked by its short commit, with the integrity of its archive.
+      const at = spec.startsWith("github:") ? spec.slice(0, spec.indexOf("#") + 8) : spec;
+      assertStringIncludes(lock, `"${name}@${at}`, `bun.lock resolves ${name}`);
     }
+    const entry = lock
+      .split("\n")
+      .find((l) => l.includes('"@intellectual-frontiers/commons@github:'));
+    assert(entry !== undefined && /"sha512-[A-Za-z0-9+/=]+"\]/.test(entry), "commons' integrity");
   },
 );
 
@@ -133,31 +140,77 @@ proves(
   },
 );
 
+proves(
+  ["096-bun-runtime FR-007"],
+  "096: on Node, the launcher's hook is the file commons' package exports as ./ts/node",
+  async () => {
+    const { NODE_HOOK, nodeHookFile } = await import("../src/archon/install/bun.ts");
+    assertEquals(NODE_HOOK, "@intellectual-frontiers/commons/ts/node");
+    const pkg: unknown = JSON.parse(
+      await fs.readTextFile(
+        path.join(ROOT, "node_modules", "@intellectual-frontiers", "commons", "package.json"),
+      ),
+    );
+    const target = strings(pkg, "exports")["./ts/node"] ?? "";
+    assertEquals(
+      nodeHookFile("/srv/archon"),
+      `/srv/archon/node_modules/@intellectual-frontiers/commons/${target.replace(/^\.\//, "")}`,
+    );
+  },
+);
+
 const BUN = proc.runtimeName() === "bun" ? proc.execPath() : proc.which("bun");
+const NODE = proc.runtimeName() === "node" ? proc.execPath() : proc.which("node");
 
 proves(
   ["096-bun-runtime FR-005"],
-  "096: the package is built with tsc, packed, installed into an empty project, and runs on Bun and on Node",
+  "096: this checkout, committed, installs by Git into an empty project and runs on Bun and on Node 26",
   async () => {
-    assert(BUN !== undefined);
+    assert(BUN !== undefined && NODE !== undefined);
     await fs.withTempDir(
-      async (out) => {
-        const built = await proc.run([BUN, "tools/release.ts", "build", out], { cwd: ROOT });
-        assertEquals(built.code, 0, built.stderr);
-        const tgz = built.stdout.trim().split("\n").pop() ?? "";
-        assert(tgz.endsWith(".tgz") && (await fs.exists(tgz)), tgz);
-        const sum = await fs.readTextFile(`${tgz}.sha256`);
-        assert(/^[0-9a-f]{64} {2}\S+\.tgz\n$/.test(sum), sum);
-        const smoke = await proc.run([BUN, "tools/release.ts", "smoke", tgz], { cwd: ROOT });
+      async (clone) => {
+        // A throwaway clone: this checkout's files as they are now (committed or not, never what
+        // Git ignores), in one commit, as CI installs the commit it checked.
+        const listed = await proc.run(
+          ["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard"],
+          { cwd: ROOT },
+        );
+        assertEquals(listed.code, 0, listed.stderr);
+        for (const f of listed.stdout.split("\0").filter((x) => x !== "")) {
+          const from = path.join(ROOT, f);
+          if (!(await fs.exists(from))) continue; // deleted, not yet committed
+          await fs.mkdir(path.dirname(path.join(clone, f)), { recursive: true });
+          await fs.copyFile(from, path.join(clone, f));
+        }
+        const git = (...a: string[]) => proc.run(["git", "-C", clone, ...a]);
+        assertEquals((await git("init", "-q", "-b", "main")).code, 0);
+        assertEquals((await git("add", "-A")).code, 0);
+        const c = await git(
+          "-c",
+          "user.name=t",
+          "-c",
+          "user.email=t@example.invalid",
+          "commit",
+          "-q",
+          "--no-gpg-sign",
+          "-m",
+          "smoke",
+        );
+        assertEquals(c.code, 0, c.stderr);
+        const smoke = await proc.run([BUN, "tools/smoke.ts", "--repo", clone], { cwd: ROOT });
         assertEquals(smoke.code, 0, `${smoke.stdout}${smoke.stderr}`);
         const { VERSION } = await import("../src/archon/version.ts");
-        assertStringIncludes(smoke.stdout, `bun: archon ${VERSION}`);
-        assertStringIncludes(smoke.stdout, `node: archon ${VERSION}`);
+        for (const run of ["bun archon", "bun stolos", "node archon", "node stolos"]) {
+          assertStringIncludes(smoke.stdout, `${run}: ${run.split(" ")[1] ?? ""} ${VERSION}`);
+        }
       },
-      { prefix: "stolos-release-" },
+      { prefix: "stolos-git-dependency-" },
     );
   },
   {
-    skip: BUN === undefined && "Bun is not installed (the package is packed by Bun)",
+    skip:
+      (BUN === undefined || NODE === undefined) &&
+      "Bun and Node are both needed (the engine is installed by Bun and run on both)",
+    timeout: 180_000,
   },
 );

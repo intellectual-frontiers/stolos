@@ -42,8 +42,8 @@
  * @module
  */
 
-import { sha256 as sha256Hex } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { sha256 as sha256Hex } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";
 import { commitSignature, forNamespace, sshVerify } from "../evidence/bundle.ts";
 import type { SampleRecord } from "./sample.ts";

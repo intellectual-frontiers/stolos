@@ -3,7 +3,7 @@
  *
  * @module
  */
-import { assert, assertEquals, test } from "@intellectual-frontiers/ifc-ts/runtime/test";
+import { assert, assertEquals, test } from "@intellectual-frontiers/commons/ts/runtime/test";
 
 test("a tool that refuses root (Steampipe) is smoke-tested and verified as nobody", async () => {
   const { TOOLS } = await import("../src/archon/tools/catalog.ts");

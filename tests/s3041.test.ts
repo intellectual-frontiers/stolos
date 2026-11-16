@@ -12,8 +12,8 @@ import {
   assertThrows,
   proves,
   test,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
-import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { ENGINE_ROOT, sandbox } from "./sandbox.ts";
 import { engineFile } from "../src/archon/core/assets.ts";
 import { P } from "../src/archon/core/paths.ts";
@@ -165,7 +165,7 @@ proves(
 );
 
 proves(
-  ["041-s3 FR-K1"],
+  ["041-s3 FR-010"],
   "041: the console signs in with the username and the S3 secret; every place says so",
   async () => {
     const { COMMANDS } = await import("../src/archon/commands/registry.ts");
@@ -234,7 +234,7 @@ proves(
   },
 );
 
-// Spec 041 FR-K2's rotation itself (a new secret set in RustFS, the key file rewritten) needs
+// Spec 041 FR-011's rotation itself (a new secret set in RustFS, the key file rewritten) needs
 // Podman, root, and /var/lib/archon-keys: not run here.
 test("041: key --rotate changes the host: it elevates, and counts as mutate over MCP", async () => {
   const { COMMANDS } = await import("../src/archon/commands/registry.ts");

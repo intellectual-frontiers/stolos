@@ -37,7 +37,7 @@ import {
   object,
   record,
   string,
-} from "@intellectual-frontiers/ifc-ts/kernel";
+} from "@intellectual-frontiers/commons/ts/kernel";
 import { defineLabel, type LabelView } from "../schema/define.ts";
 
 /**

@@ -14,7 +14,7 @@ import {
   type Server,
   serve,
   stdio,
-} from "@intellectual-frontiers/ifc-ts/runtime";
+} from "@intellectual-frontiers/commons/ts/runtime";
 import { P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";
 import {

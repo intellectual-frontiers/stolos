@@ -3,7 +3,7 @@
  *
  * @module
  */
-import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,
@@ -11,7 +11,7 @@ import {
   assertStringIncludes,
   proves,
   the,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import {
   authorizedLine,
   parseProbe,
@@ -289,7 +289,7 @@ proves(
   "067: host release removes the probe and its key line over your own SSH, then the model and the probe key",
   async () => {
     const { sandbox, linkEngine } = await import("./sandbox.ts");
-    const { path } = await import("@intellectual-frontiers/ifc-ts/runtime");
+    const { path } = await import("@intellectual-frontiers/commons/ts/runtime");
     const sb = await sandbox("stolos-release-");
     try {
       const repo = path.join(sb.home, "fleet");

@@ -36,8 +36,8 @@ import {
   satisfies,
   string,
   tsLiteral,
-} from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, path } from "@intellectual-frontiers/ifc-ts/runtime";
+} from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import { schemaProblems, type ViewDef } from "../schema/define.ts";
 import { OCSF_CLASSES } from "../ocsf/classes.ts";
 import { type Connector, MARKET_CATEGORIES, SERVICE_MODELS } from "./connector.ts";

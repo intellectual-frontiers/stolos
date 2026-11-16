@@ -3,7 +3,7 @@
  *
  * @module
  */
-import { fs, lock, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, lock, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assertExists,
   assert,
@@ -11,7 +11,7 @@ import {
   assertStringIncludes,
   test,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { COMMANDS } from "../src/archon/commands/registry.ts";
 import {
   allowed,
@@ -25,6 +25,7 @@ import { mcpServers, renderMcpJson } from "../src/archon/render/agent.ts";
 import { renderManPages } from "../src/archon/render/man.ts";
 import { lit, subject } from "../src/archon/model/export.ts";
 import { at, list } from "./fixtures.ts";
+import { runtimeCommand } from "../src/archon/install/bun.ts";
 
 test("every machine command has a man page; fleet commands (stolos) have none", () => {
   const pages = renderManPages();
@@ -66,7 +67,7 @@ proves(
   "059: each command points at the other for the other's commands",
   async () => {
     const run = async (main: string, args: string[]): Promise<{ code: number; out: string }> => {
-      const r = await proc.output([proc.execPath(), main, ...args], {
+      const r = await proc.output([...runtimeCommand(), main, ...args], {
         stdout: "piped",
         stderr: "piped",
         stdin: "null",

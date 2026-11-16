@@ -22,7 +22,7 @@
  * @module
  */
 
-import { errors, fs } from "@intellectual-frontiers/ifc-ts/runtime";
+import { errors, fs } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   array,
   boolean,
@@ -32,7 +32,7 @@ import {
   record,
   string,
   unknownValue,
-} from "@intellectual-frontiers/ifc-ts/kernel";
+} from "@intellectual-frontiers/commons/ts/kernel";
 import { run } from "../core/exec.ts";
 import type { Item } from "../evidence/bundle.ts";
 import type { SignerDef } from "../model/types.ts";

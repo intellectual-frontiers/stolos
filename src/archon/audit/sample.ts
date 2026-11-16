@@ -30,7 +30,7 @@
  * @module
  */
 
-import { sha256 as sha256Hex } from "@intellectual-frontiers/ifc-ts/kernel";
+import { sha256 as sha256Hex } from "@intellectual-frontiers/commons/ts/kernel";
 import type { Population, PopulationId } from "./populations.ts";
 
 /** The sampling method's name, recorded with every sample. */

@@ -5,13 +5,13 @@
  *
  * @module
  */
-import { fs, path, proc, serve } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path, proc, serve } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { engineFile, engineFiles, engineSpecs } from "../src/archon/core/assets.ts";
 import { ENGINE_ROOT, linkEngine, sandbox } from "./sandbox.ts";
 import { fleet, host } from "./fixtures.ts";
@@ -166,7 +166,11 @@ proves(
     assert(exec > install, "installed, then run");
     const { LAUNCHER } = await import("../src/archon/capabilities/cli.ts");
     assertStringIncludes(LAUNCHER, 'exec /usr/local/bin/bun /srv/archon/archon.ts "$@"');
-    assertStringIncludes(LAUNCHER, 'exec node /srv/archon/archon.ts "$@"');
+    // Node runs it with commons' hook, by its file: --import resolves from the working folder.
+    assertStringIncludes(
+      LAUNCHER,
+      'exec node --import /srv/archon/node_modules/@intellectual-frontiers/commons/commons/ts/node/register.mjs /srv/archon/archon.ts "$@"',
+    );
     const ud = userData(
       { fleet: fleet(), host: host(), base: "http://10.0.1.157:8080/i/", traceparent: "" },
       { passwordHash: "x" },
@@ -197,9 +201,10 @@ proves(
     const pkg: unknown = JSON.parse(packageJsonText("v1.2.3"));
     const deps = (pkg as { dependencies: Record<string, string> }).dependencies;
     assertEquals(Object.keys(deps), [ENGINE_PACKAGE]);
-    assert(deps[ENGINE_PACKAGE]?.endsWith("/v1.2.3/intellectual-frontiers-stolos-1.2.3.tgz"));
+    assertEquals(deps[ENGINE_PACKAGE], "github:intellectual-frontiers/stolos#v1.2.3");
 
-    // A release served on 127.0.0.1; the lock records its integrity; then the tarball changes.
+    // Bun fetches a github: dependency as its commit's archive and checks it against the integrity
+    // bun.lock holds; the same check, on an archive served on 127.0.0.1 that then changes.
     const dir = await fs.makeTempDir({ prefix: "archon-lock-" });
     const tarball = async (body: string): Promise<Uint8Array> => {
       await fs.mkdir(path.join(dir, "pkg", "package"), { recursive: true });

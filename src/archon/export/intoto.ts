@@ -45,7 +45,7 @@
  * @module
  */
 
-import { dsse, sha256, unzip } from "@intellectual-frontiers/ifc-ts/kernel";
+import { dsse, sha256, unzip } from "@intellectual-frontiers/commons/ts/kernel";
 import { type Manifest, manifestText, NAMESPACE, parseManifest } from "../evidence/bundle.ts";
 
 /** Stolos's predicate type for an evidence bundle's summary. */

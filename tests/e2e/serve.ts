@@ -1,13 +1,13 @@
 /**
- * The end-to-end lab's file server (tests/e2e/ci.sh, spec 004): the engine under test, packed
- * (its release tarball, for the fleet's `package.json`), and the throwaway fleet repository (git
- * over dumb HTTP), from one folder, on the lab bridge only.
+ * The end-to-end lab's file server (tests/e2e/ci.sh, spec 004): the engine under test (a Git
+ * repository, for the fleet's `package.json`: `git+http://.../stolos.git#<commit>`), and the
+ * throwaway fleet repository, both as Git over plain HTTP, from one folder, on the lab bridge only.
  *
  * Usage: `bun tests/e2e/serve.ts <folder> <address> <port>`.
  *
  * @module
  */
-import { fs, path, proc, serve } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path, proc, serve } from "@intellectual-frontiers/commons/ts/runtime";
 
 const [root = ".", hostname = "127.0.0.1", port = "8000"] = proc.args;
 const TYPES: Readonly<Record<string, string>> = {

@@ -5,17 +5,18 @@
  *
  * @module
  */
-import { fs } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,
   assertStringIncludes,
   proves,
   test,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { guideComment, guideMarkdown, GUIDES } from "../src/archon/core/guides.ts";
 import { engineFile } from "../src/archon/core/assets.ts";
 import { COMMANDS } from "../src/archon/commands/registry.ts";
+import { ifcDocs } from "./ifc-docs.ts";
 
 const slug = (s: string): string =>
   s
@@ -51,22 +52,39 @@ test("070: a guide round-trips through a doc comment (even with */ in it)", () =
   assertEquals(guideMarkdown(guideComment(text)), text);
 });
 
+/** A relative link's target from the file it is written in: `../mcp/mod.ts` from `src/archon/guide/mod.ts`. */
+function resolveFrom(file: string, dest: string): string {
+  const parts = file.split("/").slice(0, -1);
+  for (const seg of dest.split("/")) {
+    if (seg === "..") parts.pop();
+    else if (seg !== "." && seg !== "") parts.push(seg);
+  }
+  return parts.join("/");
+}
+
 proves(
-  ["070-docs-in-code FR-005"],
-  "070: links between guides reach a guide and, with #, one of its headings",
+  ["070-docs-in-code FR-002", "070-docs-in-code FR-005"],
+  "070: links between guides name the other guide's module and reach it and, with #, one of its headings",
   () => {
+    const byModule = new Map(GUIDES.map((g) => [g.module, g.name]));
     const names = new Set(GUIDES.map((g) => g.name));
     const problems: string[] = [];
     for (const g of GUIDES) {
-      for (const [, target = "", hash] of md(g.name).matchAll(
-        /\]\(([a-z0-9-]+)\.md(?:#([^)]+))?\)/g,
-      )) {
-        if (!names.has(target)) problems.push(`${g.name}: ${target}.md is not a guide`);
-        else if (hash) {
+      for (const [, dest = "", hash] of md(g.name).matchAll(/\]\(([^)#\s]+)(?:#([^)]+))?\)/g)) {
+        if (/^[a-z][a-z0-9+.-]*:/i.test(dest)) continue;
+        const named = /^([a-z0-9-]+)\.md$/.exec(dest)?.[1];
+        if (named !== undefined && names.has(named)) {
+          problems.push(`${g.name}: ${dest}: link to the guide's module, so the site links it too`);
+          continue;
+        }
+        if (!dest.endsWith(".ts")) continue;
+        const target = byModule.get(resolveFrom(g.module, dest));
+        if (target === undefined) {
+          problems.push(`${g.name}: ${dest} is not a guide's module`);
+        } else if (hash) {
           const heads = [...md(target).matchAll(/^#+ (.+)$/gm)].map((m) => slug(m[1] ?? ""));
-          if (!heads.includes(hash)) {
-            problems.push(`${g.name}: ${target}.md#${hash} has no such heading`);
-          }
+          if (!heads.includes(hash))
+            problems.push(`${g.name}: ${dest}#${hash} has no such heading`);
         }
       }
     }
@@ -112,57 +130,65 @@ proves(
 );
 
 proves(
-  ["070-docs-in-code FR-002"],
-  "070: bun run docs renders the guides with their diagrams; the guides first; links to guides and to GitHub at this version",
+  ["070-docs-in-code FR-002", "055-documentation FR-004"],
+  "070: bun run docs renders each guide as its area's overview, with its diagrams; stolos docs links there",
   async () => {
-    const { frontPage, linkTarget, modulePage, readModule } = await import("../tools/docs.ts");
+    const { docsArea, guideUrl, PAGES } = await import("../src/archon/core/guides.ts");
     const { VERSION } = await import("../src/archon/version.ts");
     const pkg = JSON.parse(await fs.readTextFile("package.json")) as {
       scripts: Record<string, string>;
     };
-    assertEquals(pkg.scripts["docs"], "bun tools/docs.ts");
-    const modules = await Promise.all(
-      GUIDES.map(async (g) => readModule(g.module, await fs.readTextFile(g.module))),
-    );
-    // Each guide's page draws its Mermaid diagrams (and loads Mermaid only then).
-    for (const [i, g] of GUIDES.entries()) {
-      const page = modulePage(modules[i] ?? readModule(g.module, ""));
-      const diagrams = (md(g.name).match(/^```mermaid$/gm) ?? []).length;
-      assertEquals((page.match(/<pre class="mermaid">/g) ?? []).length, diagrams, g.name);
-      assertEquals(page.includes("mermaid.min.js"), diagrams > 0, g.name);
-    }
-    // The front page: the guides first, each linked to its module's page.
-    const front = frontPage(modules, new Map());
-    const guides = front.indexOf("<h2>Guides</h2>");
-    assert(guides > 0 && front.indexOf("<h2>archon/", guides) > guides, "the guides come first");
-    let last = guides;
+    assertEquals(pkg.scripts["docs"], "ifc-docs build");
+    // docs.config.ts: each guide's module opens the area docsArea names.
+    const { config } = await import("../docs.config.ts");
+    const pkgAbout = config.packages[0]?.about;
+    const areas = typeof pkgAbout === "object" ? (pkgAbout.areas ?? []) : [];
     for (const g of GUIDES) {
-      const at = front.indexOf(`href="./${g.module.replace(/^src\//, "")}/index.html">`, last);
-      assert(at > last, `${g.name}, in reading order`);
-      last = at;
+      const area = areas.find((a) => a.slug === docsArea(g.module));
+      assertEquals(area?.entryPoints[0], g.module, `${g.name}: its module opens its area`);
+      assertEquals(guideUrl(g.name), `${PAGES}v${VERSION}/api/${docsArea(g.module)}/index.html`);
     }
-    // Links: to another guide, its module's page; to a file of the repository, GitHub at this version.
-    const pg = GUIDES.find((g) => g.name === "pg")?.module ?? "src/archon/pg/mod.ts";
-    assertEquals(
-      linkTarget(pg, "compliance.md#scf"),
-      `https://stolos-docs.invalid/archon/compliance/mod.ts/index.html#scf`,
-    );
-    assertEquals(
-      linkTarget(pg, "../../../specs/038-pg/spec.md"),
-      `https://github.com/intellectual-frontiers/stolos/blob/v${VERSION}/specs/038-pg/spec.md`,
-    );
-    const page = modulePage(
-      readModule(
-        pg,
-        "/**\n * See [the specs](../../../specs/038-pg/spec.md) and [compliance](compliance.md).\n *\n * @module\n */\n",
-      ),
-    );
-    assertStringIncludes(
-      page,
-      `href="https://github.com/intellectual-frontiers/stolos/blob/v${VERSION}/specs/038-pg/spec.md"`,
-    );
-    assertStringIncludes(page, 'href="../../../archon/compliance/mod.ts/index.html"');
+    assertEquals(docsArea("src/archon/pg/mod.ts"), "archon-pg");
+    assertEquals(docsArea("src/releasing.ts"), "releasing");
+    assertEquals(docsArea("src/mod.ts"), "overview");
+    // The site, built: each guide's page holds its text and one Mermaid block per diagram.
+    const out = await fs.makeTempDir({ prefix: "stolos-docs-" });
+    try {
+      const r = await ifcDocs(["build", "--out", out]);
+      assertEquals(r.code, 0, r.stderr);
+      // Spec 055 FR-004: a home page, the overview module first, every specification (each
+      // requirement anchored) and the constitution.
+      assertStringIncludes(await fs.readTextFile(`${out}/index.html`), "Stolos");
+      const overview = await fs.readTextFile(`${out}/api/overview/index.html`);
+      assertStringIncludes(overview, "Two repositories, one approval");
+      assertStringIncludes(
+        await fs.readTextFile(`${out}/specs/096-bun-runtime.html`),
+        'id="fr-009"',
+      );
+      assertStringIncludes(await fs.readTextFile(`${out}/specs/constitution.html`), "Article 24");
+      for (const g of GUIDES) {
+        const page = await fs.readTextFile(`${out}/api/${docsArea(g.module)}/index.html`);
+        const diagrams = (md(g.name).match(/^```mermaid$/gm) ?? []).length;
+        assertEquals((page.match(/class="lang-mermaid"/g) ?? []).length, diagrams, g.name);
+      }
+      // A link to another guide goes to its page; to another file of the repository, to GitHub.
+      const guide = await fs.readTextFile(`${out}/api/archon-guide/index.html`);
+      assertStringIncludes(guide, 'href="../archon-mcp/index.html"');
+      const boot = await fs.readTextFile(`${out}/api/archon-doctor/index.html`);
+      assertStringIncludes(
+        boot,
+        'href="../archon-boot/index.html#point-network-boots-at-this-pc-unifi"',
+      );
+      const commands = await fs.readTextFile(`${out}/api/archon-commands/index.html`);
+      assertStringIncludes(
+        commands,
+        'href="https://github.com/intellectual-frontiers/stolos/blob/main/AGENTS.md"',
+      );
+    } finally {
+      await fs.remove(out, { recursive: true });
+    }
   },
+  { timeout: 120_000 },
 );
 
 proves(

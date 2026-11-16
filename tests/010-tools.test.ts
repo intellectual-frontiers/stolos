@@ -4,14 +4,14 @@
  *
  * @module
  */
-import { fs, path, proc, serve } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path, proc, serve } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,
   assertExists,
   assertStringIncludes,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { aptDeps } from "../src/archon/apply/apt.ts";
 import { addPpa, ppaHasRelease, ppaReleaseUrl } from "../src/archon/apply/ppa.ts";
 import { COMMANDS } from "../src/archon/commands/registry.ts";

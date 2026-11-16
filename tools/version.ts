@@ -17,8 +17,8 @@ import {
   formatSemVer,
   parseSemVer,
   type SemVer,
-} from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+} from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
 
 const ROOT = path.resolve(path.dirname(path.fromFileUrl(import.meta.url)), "..");
 const VERSION_FILE = path.join(ROOT, "src/archon/version.ts");

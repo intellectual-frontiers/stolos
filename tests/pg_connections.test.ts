@@ -3,15 +3,15 @@
  *
  * @module
  */
-import { json, number, object, record, string } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { json, number, object, record, string } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,
   assertStringIncludes,
   proves,
   the,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import {
   connectionsReport,
   FORMS,
@@ -24,6 +24,7 @@ import {
   splitPgpassLine,
 } from "../src/archon/pg/connections.ts";
 import { engineFile } from "../src/archon/core/assets.ts";
+import { runtimeCommand } from "../src/archon/install/bun.ts";
 
 /** The password planted in every fixture: it must appear in no output, anywhere. */
 const SECRET = "Pw-NEVER-shown-7f3a";
@@ -229,7 +230,7 @@ proves(
       ];
       const outputs: string[] = [];
       const cli = (args: string[]): Promise<proc.TextOutput> =>
-        proc.run([proc.execPath(), "src/archon/main.ts", ...args, "--host", "alpha"], { env });
+        proc.run([...runtimeCommand(), "src/archon/main.ts", ...args, "--host", "alpha"], { env });
       for (const a of runs) {
         const r = await cli(a);
         const out = r.stdout + r.stderr;
@@ -258,7 +259,9 @@ proves(
         const launcher = `${dir}/archon`;
         await fs.writeTextFile(
           launcher,
-          `#!/bin/sh\nexec "${proc.execPath()}" "${proc.cwd()}/src/archon/main.ts" "$@" --host alpha\n`,
+          `#!/bin/sh\nexec ${runtimeCommand()
+            .map((a) => `"${a}"`)
+            .join(" ")} "${proc.cwd()}/src/archon/main.ts" "$@" --host alpha\n`,
         );
         await fs.chmod(launcher, 0o755);
         const saved = Object.fromEntries(Object.keys(env).map((k) => [k, proc.env.get(k)]));
@@ -454,7 +457,7 @@ proves(
         "[far]\nhost=no-such-host.invalid\nport=5432\ndbname=app\nuser=s-app1\n",
       );
       const r = await proc.run(
-        [proc.execPath(), "src/archon/main.ts", "pg", "test", "far", "--host", "alpha"],
+        [...runtimeCommand(), "src/archon/main.ts", "pg", "test", "far", "--host", "alpha"],
         {
           env: {
             HOME: dir,

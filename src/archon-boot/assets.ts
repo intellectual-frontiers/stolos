@@ -5,7 +5,7 @@
  * @module
  */
 
-import { fs, path as paths } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path as paths } from "@intellectual-frontiers/commons/ts/runtime";
 import { createHash } from "node:crypto";
 import { P } from "../archon/core/paths.ts";
 import type { Phase } from "../archon/core/ui.ts";

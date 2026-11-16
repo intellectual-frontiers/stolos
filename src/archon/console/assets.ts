@@ -7,8 +7,8 @@
  * @module
  */
 
-import { sha256 } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs } from "@intellectual-frontiers/ifc-ts/runtime";
+import { sha256 } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs } from "@intellectual-frontiers/commons/ts/runtime";
 import { ASSETS } from "../assets.auto.ts";
 import { VERSION } from "../version.ts";
 import { type Html, raw } from "./html.ts";

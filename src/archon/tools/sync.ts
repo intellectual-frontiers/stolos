@@ -19,8 +19,8 @@ import {
   sha256Of,
   splitArgs,
   string,
-} from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, http, net, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+} from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, http, net, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { asRoot, P } from "../core/paths.ts";
 import { run } from "../core/exec.ts";
 import { journal } from "../core/log.ts";

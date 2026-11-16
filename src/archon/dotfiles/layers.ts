@@ -19,7 +19,7 @@
  * @module
  */
 
-import { path as paths } from "@intellectual-frontiers/ifc-ts/runtime";
+import { path as paths } from "@intellectual-frontiers/commons/ts/runtime";
 
 /** Where `archon apply` writes each user's composed chezmoi source (one directory per user). */
 export const COMPOSED_ROOT = "/var/lib/archon-dotfiles";

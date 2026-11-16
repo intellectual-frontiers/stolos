@@ -23,7 +23,7 @@
  * @module
  */
 
-import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { VERSION } from "../archon/version.ts";
 import { ui } from "../archon/core/ui.ts";
 import { P, resetRoots } from "../archon/core/paths.ts";

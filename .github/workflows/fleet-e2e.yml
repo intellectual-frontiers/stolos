@@ -1,7 +1,7 @@
 # A fleet repository's end-to-end lab (tests/e2e/fleet.sh, spec 046): its
 # synthetic fleet's server installs from a blank Secure Boot VM to Ready with
-# the engine its package.json pins (the release tarball, checked against its
-# bun.lock), reboots, and a workstation set up from the repository reaches it
+# the engine its package.json pins (by Git at a tag, its commit checked against
+# its bun.lock), reboots, and a workstation set up from the repository reaches it
 # over MCP. Everything runs on the Bun the engine pins (spec 096).
 #
 # Called from the fleet repository, at the same tag as its pin (archon fleet
@@ -46,13 +46,14 @@ jobs:
       - uses: actions/checkout@v5
         with:
           path: fleet
-      - name: The engine's tag, from the pin (package.json's release URL)
+      - name: The engine's tag, from the pin (package.json's github:<owner>/<name>#v<version>)
         id: pin
         run: |
-          url=$(grep -oE 'https://github\.com/[^/]+/[^/]+/releases/download/v[0-9]+\.[0-9]+\.[0-9]+/[^"]+\.tgz' fleet/package.json | head -n 1)
-          [ -n "$url" ] || { echo "::error::fleet/package.json names no engine release tarball"; exit 1; }
-          tag=$(printf '%s' "$url" | grep -oE '/v[0-9]+\.[0-9]+\.[0-9]+/' | tr -d /)
-          repo=$(printf '%s' "$url" | cut -d/ -f4,5)
+          dep=$(grep -oE '"github:[^/"#]+/[^/"#]+#v[0-9]+\.[0-9]+\.[0-9]+"' fleet/package.json | head -n 1 | tr -d '"')
+          [ -n "$dep" ] || { echo "::error::fleet/package.json names no engine by Git at a version tag"; exit 1; }
+          tag=${dep##*#}
+          repo=${dep#github:}
+          repo=${repo%%#*}
           echo "tag=$tag" >>"$GITHUB_OUTPUT"
           echo "repo=$repo" >>"$GITHUB_OUTPUT"
           echo "engine $repo at $tag"

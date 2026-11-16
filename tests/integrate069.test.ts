@@ -10,9 +10,9 @@ import {
   assertStringIncludes,
   assertThrows,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
-import { sha256, toBase64 } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, proc, tcp } from "@intellectual-frontiers/ifc-ts/runtime";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { sha256, toBase64 } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, proc, tcp } from "@intellectual-frontiers/commons/ts/runtime";
 import { nameFor, parseCheckIn } from "../src/archon/adopt/checkin.ts";
 import { fromCheckIn, integrateLines } from "../src/archon/adopt/integrate.ts";
 import { PROBE_SCRIPT, PROBE_SCRIPT_WINDOWS, PROBE_VERSION } from "../src/archon/adopt/probe.ts";

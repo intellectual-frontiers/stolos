@@ -10,9 +10,9 @@ import {
   assertStringIncludes,
   proves,
   test,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
-import type { http } from "@intellectual-frontiers/ifc-ts/runtime";
-import type { Result } from "@intellectual-frontiers/ifc-ts/kernel";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
+import type { http } from "@intellectual-frontiers/commons/ts/runtime";
+import type { Result } from "@intellectual-frontiers/commons/ts/kernel";
 import { observationSource } from "../src/archon/connect/connector.ts";
 import { cloudflare } from "../src/archon/connect/cloudflare.ts";
 import { hetzner } from "../src/archon/connect/hetzner.ts";
@@ -433,7 +433,7 @@ proves(
   ["084-connectors FR-002"],
   "084: stolos connect, disconnect, estate observe | check | assets; the console's page is Connected accounts",
   async () => {
-    const { fs, path } = await import("@intellectual-frontiers/ifc-ts/runtime");
+    const { fs, path } = await import("@intellectual-frontiers/commons/ts/runtime");
     const { sandbox, linkEngine } = await import("./sandbox.ts");
     const { COMMANDS } = await import("../src/archon/commands/registry.ts");
     for (const n of ["connect", "disconnect", "estate observe", "estate check", "estate assets"]) {

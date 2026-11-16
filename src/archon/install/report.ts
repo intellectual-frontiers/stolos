@@ -6,7 +6,7 @@
  * @module
  */
 
-import { fs } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs } from "@intellectual-frontiers/commons/ts/runtime";
 import { onHost } from "../core/paths.ts";
 
 /** The file holding the boot server's event URL, left by the install. */

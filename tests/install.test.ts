@@ -3,7 +3,7 @@
  *
  * @module
  */
-import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assertExists,
   assert,
@@ -11,8 +11,8 @@ import {
   assertStringIncludes,
   proves,
   test,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
-import { sha512Crypt } from "@intellectual-frontiers/ifc-ts/kernel";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { sha512Crypt } from "@intellectual-frontiers/commons/ts/kernel";
 import { liveToken } from "../src/archon/core/secrets.ts";
 import { chooserMenu, hostMenu, mainMenu } from "../src/archon-boot/grub.ts";
 import { firstBootScript, userData } from "../src/archon/render/autoinstall.ts";

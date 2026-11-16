@@ -18,8 +18,8 @@
  * @module
  */
 
-import { sigv4 } from "@intellectual-frontiers/ifc-ts/kernel";
-import type { http } from "@intellectual-frontiers/ifc-ts/runtime";
+import { sigv4 } from "@intellectual-frontiers/commons/ts/kernel";
+import type { http } from "@intellectual-frontiers/commons/ts/runtime";
 import { AccessDenied, check, type Connector, fresh } from "./connector.ts";
 import { type Ctx, defineConnector, exchange, type FieldDef, mustRead } from "./sdk.ts";
 import {

@@ -43,8 +43,8 @@
  * @module
  */
 
-import { assess } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, path } from "@intellectual-frontiers/ifc-ts/runtime";
+import { assess } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import type { ScfId } from "../compliance/scf.ts";
 import { isScfId } from "../compliance/scf.ts";
 import { P } from "../core/paths.ts";

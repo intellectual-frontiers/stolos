@@ -25,7 +25,7 @@
  * @module
  */
 
-import { fs } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs } from "@intellectual-frontiers/commons/ts/runtime";
 import { P } from "../core/paths.ts";
 import { run } from "../core/exec.ts";
 import { journal } from "../core/log.ts";

@@ -8,7 +8,7 @@
  */
 
 import { createRequire } from "node:module";
-import { fs, path } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import { getRecord, listRecords } from "../state/store.ts";
 import { listFleets, P } from "../core/paths.ts";
 import type { FleetDef, HostDef, McpTier, OptInRecord, PgState, UserDef } from "./types.ts";

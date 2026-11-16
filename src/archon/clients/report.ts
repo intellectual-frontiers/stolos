@@ -8,7 +8,7 @@
  * @module
  */
 
-import { fs, path } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import type { FreshView } from "../compliance/freshness.ts";
 import { type Client, overlaps } from "./registry.ts";
 import { type ClientSummary, readClient, totals } from "./summary.ts";

@@ -4,14 +4,14 @@
  * @module
  */
 
-import { fs } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs } from "@intellectual-frontiers/commons/ts/runtime";
 import { ALLOWED_SIGNERS, ALLOWED_SIGNERS_LOCAL, allowedSignersText } from "../identity/signers.ts";
 import type { Capability, FileDef } from "../model/types.ts";
 import { docsFiles } from "../render/man.ts";
 import { renderEmit, SHELL_DIR, SHELLS, THEME } from "../shell/emit.ts";
 
 import { engineFile } from "../core/assets.ts";
-import { BUN_BIN } from "../install/bun.ts";
+import { BUN_BIN, nodeHookFile } from "../install/bun.ts";
 
 /**
  * Spec 036: what `archon shell emit` prints, rendered for each shell, and the
@@ -57,14 +57,15 @@ export OTEL_EXPORTER_OTLP_ENDPOINT="\${OTEL_EXPORTER_OTLP_ENDPOINT:-http://127.0
 export OTEL_EXPORTER_OTLP_PROTOCOL="\${OTEL_EXPORTER_OTLP_PROTOCOL:-http/json}"
 # Spec 049: every signal says which fleet, host, engine, and commit it is about.
 _f=$(cat /etc/archon/fleet 2>/dev/null); _h=$(cat /etc/archon/host 2>/dev/null)
-_v=$(sed -n 's#.*/download/\\(v[0-9][0-9.]*\\)/intellectual-frontiers-stolos-.*#\\1#p' /srv/archon/package.json 2>/dev/null | head -n 1)
+_v=$(sed -n 's#.*"@intellectual-frontiers/stolos": *"[^"]*\\#\\(v[0-9][0-9.]*\\)".*#\\1#p' /srv/archon/package.json 2>/dev/null | head -n 1)
 _r=$(git -C /srv/archon rev-parse HEAD 2>/dev/null)
 export OTEL_RESOURCE_ATTRIBUTES="\${OTEL_RESOURCE_ATTRIBUTES:+$OTEL_RESOURCE_ATTRIBUTES,}service.namespace=$_f,host.name=$_h,service.version=$_v,vcs.ref.head.revision=$_r"
 # Spec 096: the fleet repository's entry file runs the engine its package.json pins,
 # installed as bun.lock holds it (bun install --frozen-lockfile, Article 12). Bun is the
-# runtime; Node 26 runs the same code where Bun is not installed.
+# runtime; Node 26 runs the same code where Bun is not installed, with commons' hook first (Node
+# strips no types under node_modules; its file, since --import resolves from the working folder).
 if [ -x ${BUN_BIN} ]; then exec ${BUN_BIN} /srv/archon/archon.ts "$@"; fi
-exec node /srv/archon/archon.ts "$@"
+exec node --import ${nodeHookFile("/srv/archon")} /srv/archon/archon.ts "$@"
 `;
 
 /** The archon command, its man pages, and its completions on every host (spec 012). */

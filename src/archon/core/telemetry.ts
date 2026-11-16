@@ -44,8 +44,8 @@ import {
   otel as kotel,
   type Result,
   signals,
-} from "@intellectual-frontiers/ifc-ts/kernel";
-import { otel } from "@intellectual-frontiers/ifc-ts/runtime";
+} from "@intellectual-frontiers/commons/ts/kernel";
+import { otel } from "@intellectual-frontiers/commons/ts/runtime";
 import { ATTRIBUTES, type MetricName, METRICS, SPANS } from "../telemetry/signals.ts";
 import { EVENTS } from "../telemetry/events.ts";
 

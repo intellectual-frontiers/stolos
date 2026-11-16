@@ -3,9 +3,14 @@
  *
  * @module
  */
-import { tsLiteral } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
-import { assert, assertEquals, proves, test } from "@intellectual-frontiers/ifc-ts/runtime/test";
+import { tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import {
+  assert,
+  assertEquals,
+  proves,
+  test,
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { scaffoldFiles, scaffoldRepository } from "../src/archon/fleet/scaffold.ts";
 import { ENGINE_PACKAGE, readPin } from "../src/archon/fleet/upgrade.ts";
 import { FLEET_ID, initRepository } from "../src/archon/identity/fleet-init.ts";
@@ -18,26 +23,20 @@ type PackageJson = {
 
 proves(
   ["059-stolos-and-archon FR-005", "096-bun-runtime FR-006"],
-  "096: the scaffolded package.json pins the engine's release tarball; stolos and archon are its commands",
+  "096: the scaffolded package.json depends on the engine by Git at its tag; stolos and archon are its commands",
   () => {
     const f = scaffoldFiles("v1.2.3");
     const text = f["package.json"] ?? "";
-    assertEquals(readPin(text), {
-      base: "https://github.com/intellectual-frontiers/stolos/releases/download/",
-      tag: "v1.2.3",
-    });
+    assertEquals(readPin(text), { source: "github:intellectual-frontiers/stolos", tag: "v1.2.3" });
     const j = JSON.parse(text) as PackageJson;
-    assertEquals(
-      j.dependencies[ENGINE_PACKAGE],
-      "https://github.com/intellectual-frontiers/stolos/releases/download/v1.2.3/intellectual-frontiers-stolos-1.2.3.tgz",
-    );
+    assertEquals(j.dependencies[ENGINE_PACKAGE], "github:intellectual-frontiers/stolos#v1.2.3");
     assertEquals(j.scripts, { stolos: "bun stolos.ts", archon: "bun archon.ts" });
     assert(
       (f["stolos.ts"] ?? "").includes(`"${ENGINE_PACKAGE}/stolos/main"`) &&
         (f["archon.ts"] ?? "").includes(`"${ENGINE_PACKAGE}/archon/main"`),
     );
     assert((f[".gitignore"] ?? "").includes("node_modules/"));
-    // These files and no others (bun.lock is bun install's to write, with the tarball's integrity).
+    // These files and no others (bun.lock is bun install's to write, with the engine's commit and integrity).
     assertEquals(Object.keys(f).sort(), [
       ".gitattributes",
       ".github/workflows/compliance-impact.yml",

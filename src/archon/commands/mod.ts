@@ -104,7 +104,7 @@
  *
  * Every server emails the fleet's shared mailbox about what matters, from `root+<host>.<tag>@<domain>`
  * (`root+alpha.lab@example.net`), subject `[Archon] <host>: <event>` (spec 025), through Cloudflare
- * Email Service. Set up once on the boot machine ([how](boot-machine.md#email-once-recommended)).
+ * Email Service. Set up once on the boot machine ([how](../../archon-boot/mod.ts#email-once-recommended)).
  *
  * | Sent when                                                                                                                                                     | Level                                                                      |
  * | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
@@ -186,7 +186,7 @@
  * | `archon-reconcile`           | every 15 minutes                                  | pulls from GitHub and converges the host                                                       |
  * | `archon-capture`             | daily 05:47                                       | records state and drift                                                                        |
  * | `archon-backup`              | daily 02:37                                       | archives the host's state into `/var/backups/archon`                                           |
- * | `archon-web-dns`             | daily                                             | keeps `<host>.<domain>` and its wildcard in Cloudflare ([web.md](web.md))                      |
+ * | `archon-web-dns`             | daily                                             | keeps `<host>.<domain>` and its wildcard in Cloudflare ([web.md](../web/mod.ts))                      |
  * | `archon-daily-report`        | daily 06:23                                       | writes `/var/lib/archon/reports/daily-<date>.md` (facts only; mailed as the daily message)     |
  * | `archon-tools-sync`          | Mondays 04:00                                     | upgrades tools that come as release binaries                                                   |
  * | `archon-observe-prune`       | daily 04:41                                       | keeps PCP's metric archives within their size and free-space limits                            |
@@ -214,15 +214,15 @@
  *
  * No agent runs on a server (spec 030). Claude Code runs on your workstation and reaches each server
  * as `ops` over SSH, where `archon mcp` serves the commands up to the fleet's tier and journals every
- * call (`journalctl -t archon-mcp`). See [agent.md](agent.md).
+ * call (`journalctl -t archon-mcp`). See [agent.md](../mcp/mod.ts).
  *
  * ## Changing a host
  *
- * Every change follows the spec loop in [`AGENTS.md`](../AGENTS.md): spec, model, `stolos build`,
+ * Every change follows the spec loop in [`AGENTS.md`](../../../AGENTS.md): spec, model, `stolos build`,
  * `archon apply --check`, commit and push, then `archon apply` (or wait for the converge timer),
  * `archon verify`. Never change a host by hand outside that loop. If a change was made by hand
  * anyway, it has a way back into the model: `archon drift`, then `sudo archon propose`, and on your
- * PC `bun run stolos proposal accept` ([proposals](proposals.md)).
+ * PC `bun run stolos proposal accept` ([proposals](../proposal/mod.ts)).
  *
  * @module
  */

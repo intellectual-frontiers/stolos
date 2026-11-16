@@ -8,7 +8,7 @@
  * @module
  */
 
-import { fs, path as paths, proc, serve } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path as paths, proc, serve } from "@intellectual-frontiers/commons/ts/runtime";
 import { getRecord } from "../state/store.ts";
 import { hostData } from "../model/durable.ts";
 

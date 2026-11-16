@@ -35,8 +35,8 @@ ephemeral collector. Research: [research.md](research.md).
   `archon mcp` passes a call's `_meta.traceparent` to the command it runs; the MCP client
   (`fleet status`, `fleet query`) sends the current one; sudo preserves it.
 - **FR-003** The host launcher sets `OTEL_RESOURCE_ATTRIBUTES` from `/etc/archon/fleet`,
-  `/etc/archon/host`, the engine's release tag in `/srv/archon/package.json` (its tarball URL), and
-  the checkout's commit.
+  `/etc/archon/host`, the engine's tag in `/srv/archon/package.json` (after `#` in its `github:`
+  dependency), and the checkout's commit.
 - **FR-004** Metrics: `archon.run.duration`, `archon.run.problems`, `archon.verify.checks`,
   `archon.apply.changes` (health); `archon.update.outcome`, `archon.query.requests`,
   `archon.mcp.calls`, `archon.signers.trusted`, `archon.confirm_destroy.used` (security);

@@ -5,14 +5,14 @@
  *
  * @module
  */
-import { fs, path } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,
   assertStringIncludes,
   test,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { decisionsSource } from "../src/archon/fleet/decisions.ts";
 import { ENGINE_ROOT as ENGINE, sandbox, linkEngine } from "./sandbox.ts";
 import { at } from "./fixtures.ts";

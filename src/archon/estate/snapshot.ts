@@ -4,14 +4,14 @@
  * connectors' observations (`estate/<id>.ts`), the links people made
  * (`estate/links.ts`), the adopted machines, the SNMP devices, and the
  * managed hosts. Every file Stolos writes is a TypeScript literal, which
- * {@link exportedLiteral} reads; the managed hosts are known by their folders.
+ * IFC TypeScript's `exportedLiteral` reads; the managed hosts are known by their folders.
  * Each source's history (`git log`) gives first-seen and last-seen times.
  *
  * @module
  */
 
-import { exportedLiteral } from "@intellectual-frontiers/ifc-ts/kernel";
-import { errors, fs } from "@intellectual-frontiers/ifc-ts/runtime";
+import { exportedLiteral } from "@intellectual-frontiers/commons/ts/kernel";
+import { errors, fs } from "@intellectual-frontiers/commons/ts/runtime";
 import { run, type RunResult } from "../core/exec.ts";
 import type { Observation } from "../connect/connector.ts";
 import type { Device } from "../connect/entities.ts";

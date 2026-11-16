@@ -3,14 +3,14 @@
  *
  * @module
  */
-import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import {
   assert,
   assertEquals,
   assertStringIncludes,
   test,
   proves,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
 import { publishedNames, retireRefusal } from "../src/archon-boot/retire.ts";
 import { deleteRecords } from "../src/archon/web/cloudflare.ts";
 import { at, list } from "./fixtures.ts";

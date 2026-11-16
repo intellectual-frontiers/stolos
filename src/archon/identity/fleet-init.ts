@@ -7,8 +7,8 @@
  * @module
  */
 
-import { fs, path as paths, proc, stdio, tty } from "@intellectual-frontiers/ifc-ts/runtime";
-import { cryptSalt, sha512Crypt, tsLiteral } from "@intellectual-frontiers/ifc-ts/kernel";
+import { fs, path as paths, proc, stdio, tty } from "@intellectual-frontiers/commons/ts/runtime";
+import { cryptSalt, sha512Crypt, tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
 import { P, resetRoots } from "../core/paths.ts";
 import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";

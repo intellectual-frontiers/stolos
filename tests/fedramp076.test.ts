@@ -11,8 +11,8 @@ import {
   assertStringIncludes,
   proves,
   test,
-} from "@intellectual-frontiers/ifc-ts/runtime/test";
-import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+} from "@intellectual-frontiers/commons/ts/runtime/test";
+import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import type { AnySchema } from "ajv";
 import { Ajv2020 } from "ajv/dist/2020.js";
 import { FACTS } from "./console/serve-stolos.ts";
@@ -41,6 +41,7 @@ import {
 } from "../src/archon/fedramp/package.ts";
 import { COMMANDS, findCommand } from "../src/archon/commands/registry.ts";
 import { STOLOS_GROUPS } from "../src/archon/console/stolos-pages.ts";
+import { runtimeCommand } from "../src/archon/install/bun.ts";
 
 const DIR = new URL(`../vendor/fedramp/${FEDRAMP_RULES.version}/`, import.meta.url);
 const read = (f: string): Uint8Array => fs.readFileSync(new URL(f, DIR));
@@ -119,7 +120,7 @@ proves(
   async () => {
     const r = await proc.output(
       [
-        proc.execPath(),
+        ...runtimeCommand(),
         path.fromFileUrl(new URL("../tools/fedramp-gen.ts", import.meta.url)),
         "--check",
       ],

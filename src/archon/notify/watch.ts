@@ -25,8 +25,8 @@
  * @module
  */
 
-import { absurd } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, path as paths, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { absurd } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, path as paths, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";
 import { loadFleet } from "../model/load.ts";
 import { localNetworks } from "../capabilities/ssh.ts";

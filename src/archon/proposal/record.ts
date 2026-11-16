@@ -20,7 +20,7 @@
  * @module
  */
 
-import { stdio } from "@intellectual-frontiers/ifc-ts/runtime";
+import { stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { asRoot, P } from "../core/paths.ts";
 import { getRecord, putRecord, removeRecords } from "../state/store.ts";
 import type { HostDef } from "../model/types.ts";

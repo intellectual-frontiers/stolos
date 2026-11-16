@@ -31,12 +31,12 @@
  * @module
  */
 
-import { fs, path, proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";
 import { P, repoRel } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";
 import { SECRETS } from "../core/secrets.ts";
-import { json, object, integer } from "@intellectual-frontiers/ifc-ts/kernel";
+import { json, object, integer } from "@intellectual-frontiers/commons/ts/kernel";
 import {
   compare,
   engineRepository,
@@ -46,7 +46,7 @@ import {
   type Semver,
 } from "../fleet/upgrade.ts";
 import { BUN_VERSION } from "../core/bun-pin.ts";
-import { engineRuntime } from "../install/bun.ts";
+import { engineCommand } from "../install/bun.ts";
 
 /** The newest release tag in a list of `git ls-remote --tags` lines, or undefined. */
 export function newestTag(lsRemote: string): string | undefined {
@@ -84,7 +84,7 @@ async function stolos(args: string[]): Promise<StepSummary> {
   const summary = await fs.makeTempFile({ prefix: "stolos-summary-" });
   ui.pause();
   try {
-    const r = await proc.output([engineRuntime(), "stolos.ts", ...args], {
+    const r = await proc.output([...engineCommand(), "stolos.ts", ...args], {
       cwd: P.repo,
       stdin: "inherit",
       stdout: "inherit",

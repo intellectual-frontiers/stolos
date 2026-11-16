@@ -1,13 +1,13 @@
 /**
  * The guides: each is the `@module` documentation of the module beside the
- * code it explains (so `tools/docs.ts` renders it, with its Mermaid diagrams, and it
+ * code it explains (so IFC Docs renders it, with its Mermaid diagrams, and it
  * changes in the same commit as the code). The build extracts each one into
  * the engine's assets as `docs/<name>.md`, so the man pages, the welcome page,
  * both consoles, `explain`, and `stolos docs` read the same text offline.
  *
  * ```mermaid
  * flowchart LR
- *   mod["src/archon/pg/mod.ts<br/>@module JSDoc: the guide"] --> pages["tools/docs.ts: HTML on GitHub Pages"]
+ *   mod["src/archon/pg/mod.ts<br/>@module JSDoc: the guide"] --> pages["ifc-docs: the area's overview<br/>on GitHub Pages"]
  *   mod --> gen["bun run gen: assets.auto.ts<br/>docs/pg.md"]
  *   gen --> man["man pages"] & web["welcome page and consoles"] & cli["stolos docs pg"]
  *   mod --- code["src/archon/pg/*.ts: the code it explains"]
@@ -222,11 +222,33 @@ export function guideDef(name: string): GuideDef | undefined {
 /** The engine's documentation online (GitHub Pages, spec 055). */
 export const PAGES = "https://intellectual-frontiers.github.io/stolos/";
 
-/** A guide's page online, for this engine's version. */
+/**
+ * The area of the documentation site a module opens (spec 070 FR-002): `docs.config.ts` makes each
+ * guide's module the first entry point of the area of this name, so IFC Docs shows the guide as that
+ * area's overview, at `api/<area>/index.html`. The name is the module's path under `src/` with `/`
+ * as `-` and without `/mod.ts` or `.ts`; the overview module (`src/mod.ts`) opens `overview`.
+ *
+ * @example
+ * ```ts
+ * import { docsArea } from "./guides.ts";
+ * const pg: string = docsArea("src/archon/pg/mod.ts"); // "archon-pg"
+ * const boot: string = docsArea("src/archon-boot/mod.ts"); // "archon-boot"
+ * const ws: string = docsArea("src/archon/install/workstation-guide.ts"); // "archon-install-workstation-guide"
+ * ```
+ */
+export function docsArea(module: string): string {
+  const rest = module
+    .replace(/^src\//, "")
+    .replace(/(^|\/)mod\.ts$/, "")
+    .replace(/\.ts$/, "");
+  return rest === "" ? "overview" : rest.replace(/\//g, "-");
+}
+
+/** A guide's page online, for this engine's version: its area's overview. */
 export function guideUrl(name: string, version: string = VERSION): string {
   const g = guideDef(name);
   return g !== undefined
-    ? `${PAGES}v${version}/${g.module.replace(/^src\//, "")}/index.html`
+    ? `${PAGES}v${version}/api/${docsArea(g.module)}/index.html`
     : `${PAGES}v${version}/`;
 }
 

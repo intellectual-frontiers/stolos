@@ -30,8 +30,8 @@
  * @module
  */
 
-import { formatDecodeError, json, sha256, unzip } from "@intellectual-frontiers/ifc-ts/kernel";
-import { errors, fs, path as paths, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { formatDecodeError, json, sha256, unzip } from "@intellectual-frontiers/commons/ts/kernel";
+import { errors, fs, path as paths, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";
 import { listFleets, P } from "../core/paths.ts";
 import { ownerOnly } from "../core/secrets.ts";

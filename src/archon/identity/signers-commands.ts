@@ -6,7 +6,7 @@
  * @module
  */
 
-import { fs, path, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { count } from "../core/telemetry.ts";
 import { P, repoRel } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";

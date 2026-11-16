@@ -1,16 +1,18 @@
 /**
  * `stolos fleet upgrade <tag>` (spec 046-engine-instance, Articles 9, 12, 24; spec 096 FR-006):
- * move a fleet repository to another released version of the engine, safely.
+ * move a fleet repository to another version of the engine, safely. A version of the engine is its
+ * tag `v<version>`: there is no GitHub release, and a fleet depends on the engine by Git.
  *
  * Why each step exists (the fleet-repository guide, ./mod.ts, says it at length):
  *   1. The tag must be a version tag, and only forward unless --downgrade: going back to an older
  *      engine is a decision, not an accident.
- *   2. `package.json`'s dependency on the engine is moved to that release's tarball
- *      (`https://github.com/intellectual-frontiers/stolos/releases/download/v<version>/intellectual-frontiers-stolos-<version>.tgz`),
- *      and `bun install` records its integrity in `bun.lock`. The installed package must say it is
- *      that version: a typo, or an asset that is not that release, is refused and everything is
- *      put back. Hosts run `bun install --frozen-lockfile`: a tarball that differs from the lock is
- *      refused. That is what makes your signature cover the engine's bytes.
+ *   2. `package.json`'s dependency on the engine is moved to that tag
+ *      (`"@intellectual-frontiers/stolos": "github:intellectual-frontiers/stolos#v<version>"`),
+ *      and `bun install` pins the commit the tag names, and its integrity, in `bun.lock`. The
+ *      installed package must say it is that version: a typo, or a tag that is not that version, is
+ *      refused and everything is put back. Hosts run `bun install --frozen-lockfile`: an engine
+ *      that differs from the lock is refused, and a tag moved later changes nothing, since the lock
+ *      holds the commit. That is what makes your signature cover the engine's bytes.
  *   3. Every fleet in the repository is validated with the new engine before anything is
  *      committed.
  *   4. The files are committed together and signed (git commit -S): hosts apply only a signed
@@ -20,12 +22,12 @@
  * sequenceDiagram
  *   actor P as Person
  *   participant U as stolos fleet upgrade
- *   participant G as GitHub (stolos release)
+ *   participant G as GitHub (the engine's tag)
  *   participant R as fleet repository
  *   P->>U: fleet upgrade vX.Y.Z
- *   U->>R: package.json: the release's tarball URL, the reusable workflows' tag
- *   U->>G: bun install: the tarball
- *   U->>R: bun.lock (its integrity); the installed engine says vX.Y.Z
+ *   U->>R: package.json: github:...#vX.Y.Z, the reusable workflows' tag
+ *   U->>G: bun install: the tag's commit
+ *   U->>R: bun.lock (the commit, its integrity); the installed engine says vX.Y.Z
  *   U->>R: validate every fleet with the new engine
  *   U->>R: one signed commit
  *   P->>R: git push (the approval)
@@ -34,29 +36,31 @@
  * @module
  */
 
-import { object, record, string } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { object, record, string } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { listFleets, P } from "../core/paths.ts";
 import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
-import { engineRuntime, installDependencies } from "../install/bun.ts";
+import { engineCommand, installDependencies } from "../install/bun.ts";
 
 /** The engine's package name, as a fleet repository depends on it. */
 export const ENGINE_PACKAGE = "@intellectual-frontiers/stolos";
 
-/** Where the engine's releases are served from: the tag and the tarball's name are appended. */
-export const ENGINE_RELEASES =
-  "https://github.com/intellectual-frontiers/stolos/releases/download/";
+/** Where the engine is fetched from: its repository on GitHub, as a `github:` dependency names it. */
+export const ENGINE_SOURCE = "github:intellectual-frontiers/stolos";
 
 /** The file of a fleet repository that pins the engine. */
 export const PIN_FILE = "package.json";
 
-/** The file that holds the integrity of the pinned engine. */
+/** The file that holds the commit and the integrity of the pinned engine. */
 export const LOCK_FILE = "bun.lock";
 
 const TAG = /^v(\d+)\.(\d+)\.(\d+)$/;
-/** "https://github.com/<org>/stolos/releases/download/v0.7.0/intellectual-frontiers-stolos-0.7.0.tgz" */
-const PIN = /^(.*\/)v(\d+\.\d+\.\d+)\/intellectual-frontiers-stolos-(\d+\.\d+\.\d+)\.tgz$/;
+/**
+ * A Git dependency at a version tag: `github:<owner>/<name>#v0.7.0`, or any `git+` URL (a mirror,
+ * or a local copy of the engine in a test) at such a tag.
+ */
+const PIN = /^((?:github:[^#\s]+)|(?:git\+[^#\s]+))#(v\d+\.\d+\.\d+)$/;
 
 /** A version: major, minor, patch. */
 export type Semver = [number, number, number];
@@ -73,24 +77,23 @@ export function compare(a: Semver, b: Semver): number {
   return 0;
 }
 
-/** Where the engine is pinned: the releases' base URL and the tag. */
+/** Where the engine is pinned: the Git source and the tag. */
 export interface Pin {
-  /** The URL before the tag ("https://github.com/<org>/stolos/releases/download/"). */
-  base: string;
+  /** The dependency before `#`: `github:intellectual-frontiers/stolos`, or a `git+` URL. */
+  source: string;
   /** The tag, "vX.Y.Z". */
   tag: string;
 }
 
-/** The URL of a release's tarball: `<base>v<version>/intellectual-frontiers-stolos-<version>.tgz`. */
-export function tarballUrl(tag: string, base: string = ENGINE_RELEASES): string {
-  const version = tag.replace(/^v/, "");
-  return `${base}v${version}/intellectual-frontiers-stolos-${version}.tgz`;
+/** The dependency on the engine at a tag: `github:intellectual-frontiers/stolos#v<version>`. */
+export function engineDependency(tag: string, source: string = ENGINE_SOURCE): string {
+  return `${source}#v${tag.replace(/^v/, "")}`;
 }
 
 /** The parts of a package.json the pin is read from. */
 const PACKAGE_JSON = object({}, { dependencies: record(string) });
 
-/** The engine's pin in a package.json's text, or undefined when it is not a release's tarball. */
+/** The engine's pin in a package.json's text, or undefined when it is not a Git dependency at a version tag. */
 export function readPin(packageJson: string): Pin | undefined {
   let parsed: unknown;
   try {
@@ -99,29 +102,26 @@ export function readPin(packageJson: string): Pin | undefined {
     return undefined;
   }
   const d = PACKAGE_JSON(parsed);
-  const url = d.kind === "ok" ? d.value.dependencies?.[ENGINE_PACKAGE] : undefined;
-  const m = url?.match(PIN);
-  if (!m || m[2] !== m[3]) return undefined;
-  const [, base = "", version = ""] = m;
-  return { base, tag: `v${version}` };
+  const dep = d.kind === "ok" ? d.value.dependencies?.[ENGINE_PACKAGE] : undefined;
+  const m = dep?.match(PIN);
+  if (!m) return undefined;
+  const [, source = "", tag = ""] = m;
+  return { source, tag };
 }
 
 /** package.json's text with the pin moved to `tag` (only that string changes). */
 export function writePin(packageJson: string, pin: Pin, tag: string): string {
-  const from = JSON.stringify(tarballUrl(pin.tag, pin.base));
-  const to = JSON.stringify(tarballUrl(tag, pin.base));
+  const from = JSON.stringify(engineDependency(pin.tag, pin.source));
+  const to = JSON.stringify(engineDependency(tag, pin.source));
   if (!packageJson.includes(from)) {
     throw new Error(`package.json's ${ENGINE_PACKAGE} pin is not where expected`);
   }
   return packageJson.replace(from, to);
 }
 
-/**
- * The engine repository ("owner/name") a pin's base points at:
- * https://github.com/<owner>/<name>/releases/download/ (else undefined).
- */
+/** The engine repository ("owner/name") a pin's `github:` source names (else undefined). */
 export function engineRepository(pin: Pin): string | undefined {
-  return pin.base.match(/^https:\/\/github\.com\/([^/]+\/[^/]+)\/releases\/download\/$/)?.[1];
+  return pin.source.match(/^github:([^/]+\/[^/]+)$/)?.[1];
 }
 
 /**
@@ -200,14 +200,14 @@ export async function fleetUpgrade(o: UpgradeOptions): Promise<number> {
   const have = pin ? parseTag(pin.tag) : undefined;
   if (!text || !pin || !have) {
     p.fail(
-      `${pinPath} does not depend on ${ENGINE_PACKAGE} by a release's tarball (…/releases/download/vX.Y.Z/intellectual-frontiers-stolos-X.Y.Z.tgz)`,
+      `${pinPath} does not depend on ${ENGINE_PACKAGE} by Git at a version tag ("${engineDependency("vX.Y.Z")}")`,
       "see bun run stolos docs fleet-repository, section 'The pin'",
     );
     return ui.finish();
   }
   const want = parseTag(o.tag);
   if (!want) {
-    p.fail(`'${o.tag}' is not a version tag`, "use the form v1.2.3 (see the engine's releases)");
+    p.fail(`'${o.tag}' is not a version tag`, "use the form v1.2.3 (the engine's version tags)");
     return ui.finish();
   }
   const order = compare(want, have);
@@ -281,7 +281,7 @@ export async function fleetUpgrade(o: UpgradeOptions): Promise<number> {
     await restore();
     l.fail(
       `the engine at ${o.tag} could not be installed: ${install.stderr.trim().split("\n").pop() ?? `exit ${install.code}`}`,
-      "check the tag (a release CI made) and the network, then run it again; nothing was changed",
+      "check the tag (a version tag CI made) and the network, then run it again; nothing was changed",
     );
     return ui.finish();
   }
@@ -289,19 +289,19 @@ export async function fleetUpgrade(o: UpgradeOptions): Promise<number> {
   if (installed !== version) {
     await restore();
     l.fail(
-      `${o.tag}'s package says it is ${installed ?? "no version"}: not that release`,
-      "pick a tag CI made (the engine's releases), and check its spelling; nothing was changed",
+      `${o.tag}'s package says it is ${installed ?? "no version"}: not that version`,
+      "pick a tag CI made (the engine's version tags), and check its spelling; nothing was changed",
     );
     return ui.finish();
   }
-  l.done(`${LOCK_FILE} holds the integrity of the engine ${o.tag}`);
+  l.done(`${LOCK_FILE} pins the engine's commit at ${o.tag}`);
 
   // 3. Every fleet, validated with the new engine (in its own process).
   const v = ui.phase("Validate");
   const fleets = listFleets(repo);
   for (const id of fleets) {
     v.status(`fleet ${id}`);
-    const r = await run([engineRuntime(), "stolos.ts", "validate"], {
+    const r = await run([...engineCommand(), "stolos.ts", "validate"], {
       cwd: repo,
       env: { ...proc.env.toObject(), ARCHON_REPO: repo, ARCHON_FLEET: id },
     });
@@ -363,7 +363,7 @@ export async function fleetUpgrade(o: UpgradeOptions): Promise<number> {
       "-m",
       `stolos ${o.tag}: adopt the engine ${o.tag}`,
       "-m",
-      `From ${pin.tag}. ${LOCK_FILE} holds the integrity of the engine's release ${o.tag}; validated: ${
+      `From ${pin.tag}. ${LOCK_FILE} pins the engine's commit at ${o.tag} and its integrity; validated: ${
         fleets.join(", ") || "no fleets"
       }.`,
     ],

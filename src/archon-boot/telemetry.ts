@@ -24,9 +24,9 @@
  * @module
  */
 
-import { err, ok, otlp, type Result, signals } from "@intellectual-frontiers/ifc-ts/kernel";
-import type { otel as kotel } from "@intellectual-frontiers/ifc-ts/kernel";
-import { fs, otel, path as paths, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { err, ok, otlp, type Result, signals } from "@intellectual-frontiers/commons/ts/kernel";
+import type { otel as kotel } from "@intellectual-frontiers/commons/ts/kernel";
+import { fs, otel, path as paths, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { type ArchonEvent, toLogsRequest } from "../archon/telemetry/events.ts";
 import { P } from "../archon/core/paths.ts";
 import { VERSION } from "../archon/version.ts";

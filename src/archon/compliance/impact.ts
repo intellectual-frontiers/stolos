@@ -43,8 +43,8 @@
  * @module
  */
 
-import { parseTsLiteral } from "@intellectual-frontiers/ifc-ts/kernel";
-import { errors, fs, path, proc, stdio, toError } from "@intellectual-frontiers/ifc-ts/runtime";
+import { parseTsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
+import { errors, fs, path, proc, stdio, toError } from "@intellectual-frontiers/commons/ts/runtime";
 import { log } from "../core/log.ts";
 import { run } from "../core/exec.ts";
 import type { Connector } from "../connect/connector.ts";
