@@ -17,6 +17,11 @@
  * - Under `/audit/<id>/` and `/v1/audit/<id>/`, the auditor portal (spec 083,
  *   `../audit/portal.ts`), behind its own one-time link (`/audit/launch`): an
  *   audit-scoped session sees that engagement's routes only.
+ * - Spec 100: with `stolos console --lan`, the same pages over HTTPS on the LAN
+ *   (`stolos.<domain>`, `<pc>.stolos.<domain>`): a device signs in with a passkey a fleet
+ *   signer approved in a signed commit (`../access/`), never with the launch link. A signer
+ *   whose key is not on this PC looks only: a command that changes the repository is refused
+ *   with the line to run on their own PC. The Remote Access page is `/access`.
  *
  * @module
  */
@@ -28,6 +33,8 @@ import type { Command } from "../core/registry-types.ts";
 import type { ScfCatalog } from "../compliance/catalog.ts";
 import type { Estate } from "../estate/graph.ts";
 import type { AuditDeps } from "../audit/portal.ts";
+import type { SignerDef } from "../model/types.ts";
+import type { RemoteAccess } from "../access/service.ts";
 import { COMMANDS, offeredOn } from "../commands/registry.ts";
 import { cookieOf, IDLE_MS, type Session, type Sessions } from "./auth.ts";
 import { argvFor, NOT_IN_CONSOLE, shellWords } from "./forms.ts";
@@ -86,6 +93,8 @@ export const PERSON_ONLY: Set<string> = new Set([
   "keys",
   "keys check-recovery",
   "compliance fedramp",
+  "devices approve",
+  "devices revoke",
 ]);
 
 /** Changes to who the fleet trusts, and the console itself: in the terminal only. */
@@ -126,11 +135,38 @@ export class Launch {
   }
 }
 
-/** A session cookie for the PC (no Secure: it is plain HTTP on the loopback, which browsers treat as secure). */
-export function stolosCookie(s: Session | undefined): string {
+/**
+ * A session cookie for the PC: no Secure on plain HTTP on the loopback (which browsers treat as
+ * secure); Secure over HTTPS (spec 100 FR-007).
+ */
+export function stolosCookie(s: Session | undefined, secure = false): string {
+  const flags = `Path=/; HttpOnly;${secure ? " Secure;" : ""} SameSite=Strict`;
   return s
-    ? `${STOLOS_COOKIE}=${s.id}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${IDLE_MS / 1000}`
-    : `${STOLOS_COOKIE}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0`;
+    ? `${STOLOS_COOKIE}=${s.id}; ${flags}; Max-Age=${IDLE_MS / 1000}`
+    : `${STOLOS_COOKIE}=; ${flags}; Max-Age=0`;
+}
+
+/** Spec 100: what the console needs for remote access (absent: 127.0.0.1 only). */
+export interface ConsoleRemote {
+  /** Remote access: devices, codes, sessions, the signed tip. */
+  access: RemoteAccess;
+  /** The Host values the HTTPS listener answers (its names, with the port unless 443); filled once it listens. */
+  hosts: string[];
+  /** The fleet's signers (signers.ts). */
+  signers(): Promise<SignerDef[]>;
+  /** The listener, certificate and another controller's heartbeat, as they are now. */
+  view(): {
+    listener?: { address: string; port: number };
+    tls?: { names: string[]; notAfter: string; directory: string };
+    other?: { pc: string; at: string };
+  };
+  /** This controller's HTTPS address, for `devices approve --controller`. */
+  controller: string;
+}
+
+/** Spec 100 FR-009: the refusal a signer whose key is not on this PC gets for a signing command. */
+export function signedElsewhere(owner: string, argv: readonly string[]): string {
+  return `This would be signed by ${owner}'s key: run it from your PC: bun run stolos ${shellWords([...argv])}`;
 }
 
 /** Runs `bun run stolos <argv>`: each output line, then the exit code. */
@@ -179,6 +215,8 @@ export interface StolosDeps {
   audit?: AuditDeps;
   /** Spec 082: the provider's client these pages are for (shown in the top bar, with the way back). */
   scope?: { label: string; href: string };
+  /** Spec 100: remote access over HTTPS on the LAN (absent: this PC only). */
+  remote?: ConsoleRemote;
 }
 
 /**
@@ -290,8 +328,15 @@ export function stolosHandler(
 ): (req: Request, info?: ServeInfo) => Promise<Response> {
   const offered = stolosCommands();
   const byName = new Map(offered.map((c) => [c.name, c]));
-  const hosts = new Set([`127.0.0.1:${deps.port}`, `localhost:${deps.port}`]);
+  const local = new Set([`127.0.0.1:${deps.port}`, `localhost:${deps.port}`]);
   let busy = false;
+  // Spec 100: who a session is: this PC's owner (the launch link) or a signer on a device.
+  const remoteOf = (s: Session) => deps.remote?.access.session(s.id);
+  const mayChange = (s: Session) => {
+    const r = remoteOf(s);
+    return !r || deps.remote?.access.maySign(r.signer) === true;
+  };
+  const owner = () => deps.remote?.access.localSigners()[0] ?? deps.person.name;
   const catalog = async () =>
     deps.catalog
       ? await deps.catalog()
@@ -326,11 +371,17 @@ export function stolosHandler(
               }
             : {}),
           fleet: { id: facts.fleet.title, repo: facts.fleet.repo },
-          user: {
-            name: s.name,
-            user: deps.person.github ? `${s.user} · GitHub ${deps.person.github}` : s.user,
-            role: "fleet operator",
-          },
+          user: remoteOf(s)
+            ? {
+                name: s.name,
+                user: `${s.user} · ${remoteOf(s)?.device.name ?? ""}`,
+                role: mayChange(s) ? "fleet operator" : "looks only",
+              }
+            : {
+                name: s.name,
+                user: deps.person.github ? `${s.user} · GitHub ${deps.person.github}` : s.user,
+                role: "fleet operator",
+              },
           // Spec 082: a provider's client's pages lead back to the list of clients (also on a phone).
           nav: deps.scope
             ? [...STOLOS_NAV, { group: "Provider", label: "All clients", href: deps.scope.href }]
@@ -379,6 +430,18 @@ export function stolosHandler(
         if (!cmd) return refuse("That command is not offered here (run it in the terminal).");
         const r = argvFor(cmd, form);
         if ("error" in r) return refuse(r.error);
+        // Spec 100 FR-009: a signer whose key is not on this PC looks only.
+        if (r.tier !== "read" && !mayChange(s)) {
+          const why = signedElsewhere(owner(), r.argv);
+          await deps.activity.add({
+            at: new Date().toISOString(),
+            user: s.user,
+            from: s.from,
+            kind: "refused",
+            detail: `${cmd.name}: not signed here`,
+          });
+          return refuse(why);
+        }
         if (busy) {
           return refuse("Another command is running: it may be waiting for you in the terminal.");
         }
@@ -426,7 +489,7 @@ export function stolosHandler(
         await deps.activity.add({
           at: new Date().toISOString(),
           user: s.user,
-          from: "this PC",
+          from: s.from,
           kind: "run",
           detail: shown,
           code,
@@ -486,7 +549,7 @@ export function stolosHandler(
         await deps.activity.add({
           at: new Date().toISOString(),
           user: s.user,
-          from: "this PC",
+          from: s.from,
           kind: "run",
           detail: `fleet query ${sql}`,
           code,
@@ -499,12 +562,25 @@ export function stolosHandler(
     });
   };
 
-  return async (req) => {
+  return async (req, info) => {
     const url = new URL(req.url);
     const path = url.pathname;
-    if (!hosts.has(req.headers.get("host") ?? "")) {
-      return new Response("This console answers only on 127.0.0.1 and localhost.\n", {
-        status: 421,
+    const host = req.headers.get("host") ?? "";
+    if (!local.has(host) && !deps.remote?.hosts.includes(host)) {
+      return new Response(
+        deps.remote
+          ? `This console answers only on 127.0.0.1, localhost and ${deps.remote.access.names.served.join(", ")}.\n`
+          : "This console answers only on 127.0.0.1 and localhost.\n",
+        { status: 421 },
+      );
+    }
+    // Spec 100: on an HTTPS name, a device; on 127.0.0.1, this PC.
+    const lan = !local.has(host);
+    const from = lan ? (info?.remoteAddr.hostname ?? "?") : "this PC";
+    const secure = url.protocol === "https:";
+    if (lan && (path === "/launch" || path === "/audit/launch" || path === "/askpass")) {
+      return new Response("not here: this PC's own links work on 127.0.0.1 only\n", {
+        status: 404,
       });
     }
     // Spec 099: OpenSSH's askpass helper asks for a passphrase (its token, not a session).
@@ -556,7 +632,41 @@ export function stolosHandler(
         });
         return redirect(`/audit/${id}/`, { "set-cookie": stolosCookie(a) });
       }
-      const s = deps.sessions.get(cookieOf(req.headers.get("cookie"), STOLOS_COOKIE));
+      // Spec 100: pending codes, the waiting page's status, registration and sign-in (no session).
+      // A passkey is made and used on the HTTPS names only (its origin); on 127.0.0.1, a signer's
+      // devices approve reads a code's public fields.
+      if (
+        deps.remote &&
+        path.startsWith("/access/") &&
+        path !== "/access/deny" &&
+        (lan || req.method === "GET")
+      ) {
+        const { accessRoute } = await import("../access/routes.ts");
+        const remote = deps.remote;
+        const r = await accessRoute(req, from, {
+          access: remote.access,
+          signers: () => remote.signers(),
+          startSession: (device, at) => {
+            const n = deps.sessions.create(
+              { user: device.signer, name: `${device.signer} (${device.name})`, groups: [] },
+              at,
+            );
+            remote.access.bind(n.id, device, at);
+            return stolosCookie(n, secure);
+          },
+        });
+        if (r) return r;
+      }
+      let s = deps.sessions.get(cookieOf(req.headers.get("cookie"), STOLOS_COOKIE));
+      // A revoked device's session ends once the signed revoke is read; a launch-link session
+      // never reaches the LAN names, nor a device's the loopback.
+      if (s && deps.remote && (!deps.remote.access.live(s.id) || !!remoteOf(s) !== lan)) {
+        if (!deps.remote.access.live(s.id)) {
+          deps.sessions.end(s.id);
+          deps.remote.access.endSession(s.id);
+        }
+        s = undefined;
+      }
       if (s) {
         const { auditScope, isAuditPath, serveAudit } = await import("../audit/portal.ts");
         if (auditScope(s) !== undefined) {
@@ -574,12 +684,40 @@ export function stolosHandler(
       if (path === "/v1" || path.startsWith("/v1/")) {
         return s ? await api(req) : (await import("../api/handler.ts")).apiUnauthorized();
       }
+      if (!s && lan && deps.remote) {
+        const { deviceWelcome } = await import("../access/pages.ts");
+        const { defaultDeviceName } = await import("../access/devices.ts");
+        const f = await deps.facts();
+        return htmlResponse(
+          bare(
+            "Stolos Console",
+            deviceWelcome({
+              fleetTitle: f.fleet.title,
+              names: deps.remote.access.names,
+              signers: await deps.remote.signers(),
+              defaultName: defaultDeviceName(req.headers.get("user-agent") ?? ""),
+            }),
+          ),
+          401,
+        );
+      }
       if (!s) return htmlResponse(bare("Stolos Console", launchPage()), 401);
       if (req.method === "POST") {
         if (!sameOrigin(req)) return new Response("cross-site request refused\n", { status: 403 });
         if (path === "/signout") {
           deps.sessions.end(s.id);
-          return redirect("/launch", { "set-cookie": stolosCookie(undefined) });
+          deps.remote?.access.endSession(s.id);
+          return redirect(lan ? "/" : "/launch", { "set-cookie": stolosCookie(undefined, secure) });
+        }
+        // Spec 100 FR-005: deny a code (a form on the Remote Access page; nothing is signed).
+        if (path === "/access/deny" && deps.remote) {
+          if (!mayChange(s)) return new Response("refused: you look only here\n", { status: 403 });
+          await deps.remote.access.deny(
+            formText((await req.formData()).get("code")),
+            s.user,
+            s.from,
+          );
+          return redirect("/access");
         }
         if (!req.headers.get("datastar-request")) return new Response("refused\n", { status: 403 });
         if (path === "/actions/run") return await run(req, s);
@@ -617,15 +755,60 @@ export function stolosHandler(
       }
       if (path === "/signout") {
         deps.sessions.end(s.id);
+        deps.remote?.access.endSession(s.id);
         return htmlResponse(bare("Signed out", launchPage()), 200, {
-          "set-cookie": stolosCookie(undefined),
+          "set-cookie": stolosCookie(undefined, secure),
         });
       }
       if (path === "/boot/stream") return bootStream(deps, req.signal);
       const f = await deps.facts();
       if (path === "/") {
         const engine = await deps.engine?.().catch(() => undefined);
-        return await frame(s, "Overview", "/", stolosOverview(f, Date.now(), engine), f);
+        const access = deps.remote
+          ? {
+              pending: deps.remote.access.pending.list().length,
+              unused: deps.remote.access.unused().length,
+            }
+          : undefined;
+        return await frame(s, "Overview", "/", stolosOverview(f, Date.now(), engine, access), f);
+      }
+      // Spec 100 FR-010: the Remote Access page, and its record as CSV.
+      if (path === "/access" || path === "/export/access.csv") {
+        const { accessEvents, accessPage } = await import("../access/pages.ts");
+        const events = accessEvents(await deps.activity.recent(100_000));
+        if (path.startsWith("/export/")) {
+          return new Response(activityCsv(events), {
+            headers: {
+              "content-type": "text/csv; charset=utf-8",
+              "content-disposition": 'attachment; filename="stolos-access.csv"',
+              "cache-control": "no-store",
+            },
+          });
+        }
+        const r = deps.remote;
+        const v = r?.view() ?? {};
+        return await frame(
+          s,
+          "Remote Access",
+          "/access",
+          accessPage({
+            fleet: { id: f.fleet.id, title: f.fleet.title },
+            ...(r ? { names: r.access.names } : {}),
+            ...v,
+            signers: r ? await r.signers() : f.signers,
+            localSigners: r?.access.localSigners() ?? [],
+            devices: r?.access.devices() ?? [],
+            use: r?.access.use() ?? {},
+            pending: r?.access.pending.list() ?? [],
+            events,
+            may: mayChange(s),
+            controller: `http://127.0.0.1:${deps.port}`,
+            ...(r ? { publicController: r.controller } : {}),
+            ...(r?.access.lastRead().refused ? { refused: r.access.lastRead().refused } : {}),
+            now: Date.now(),
+          }),
+          f,
+        );
       }
       if (path === "/machines") return await frame(s, "Machines", "/machines", machinesPage(f), f);
       if (path.startsWith("/machines/")) {

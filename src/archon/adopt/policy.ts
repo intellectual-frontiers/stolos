@@ -326,6 +326,32 @@ export const ADOPTED_CONTROLS: ObservationControl<"adopted">[] = [
           ? "System Settings > General > Sharing > Remote Login: off"
           : "sudo systemctl disable --now ssh (or sshd)",
   }),
+  // Spec 100: the console on the LAN: HTTPS with a valid certificate, devices reviewed.
+  defineControl({
+    id: "controller-remote-access",
+    title:
+      "Remote access to the console: HTTPS with a valid certificate, devices reviewed within 90 days",
+    scf: ["CRY-05", "IAC-14", "IAC-12"],
+    subject: "observation",
+    of: "adopted",
+    assert: ({ observed: o, now }) => {
+      const r = o.controller?.remoteAccess;
+      if (!r) return undefined;
+      const valid = r.certificate !== undefined && Date.parse(r.certificate) > now;
+      return {
+        status: valid && !r.unused ? "pass" : "fail",
+        detail: `${
+          r.certificate
+            ? `certificate ${valid ? "valid until" : "expired"} ${r.certificate.slice(0, 10)}`
+            : "no certificate"
+        }; ${r.devices} device(s)${r.unused ? `, ${r.unused} unused for 90 days` : ""}`,
+      };
+    },
+    fix: ({ observed: o }) =>
+      o.controller?.remoteAccess?.unused
+        ? "review the devices on the console's Remote Access page; revoke what is not used (bun run stolos devices revoke <id>)"
+        : "bun run stolos console --lan (it renews the certificate)",
+  }),
   defineControl({
     id: "adoption-current",
     title: "Adoption has not ended",

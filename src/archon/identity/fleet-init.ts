@@ -379,6 +379,7 @@ export async function fleetInit(o: FleetInitOptions): Promise<void> {
       "a rebuilt boot machine: bun run stolos vault recover-host-keys <host> for each host (bun run stolos docs disaster-recovery)",
     );
     await (await import("../adopt/controller.ts")).recordController();
+    await proposeConsoleNames();
     return;
   }
   w.done(
@@ -391,6 +392,24 @@ export async function fleetInit(o: FleetInitOptions): Promise<void> {
   );
   // Spec 097: this PC is a fleet machine too.
   await (await import("../adopt/controller.ts")).recordController();
+  await proposeConsoleNames();
+}
+
+/**
+ * Spec 100 FR-001: with a web domain, propose the Stolos Console's names under it (asked; the
+ * defaults when there is no terminal). Never fails fleet init.
+ */
+async function proposeConsoleNames(): Promise<void> {
+  try {
+    const { loadFleet } = await import("../model/load.ts");
+    const fleet = await loadFleet();
+    if (!fleet.web || fleet.stolos?.console) return;
+    const { controllerName } = await import("../adopt/controller.ts");
+    const { consoleNamesSetup } = await import("../access/commands.ts");
+    await consoleNamesSetup(await controllerName());
+  } catch {
+    /* the names can be set later: bun run stolos console --lan */
+  }
 }
 
 /** One line from a piped stdin (bytes up to the first newline; the rest is left for the next call). */

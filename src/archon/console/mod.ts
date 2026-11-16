@@ -28,7 +28,9 @@
  *
  * There is no password and no new key. The terminal prints a launch link that works once, for two
  * minutes; whoever can read your terminal is you. The console answers only on 127.0.0.1 and localhost
- * (another web page cannot reach it), and only forms from its own pages may run commands.
+ * (another web page cannot reach it), and only forms from its own pages may run commands. With
+ * `--lan` it also answers over HTTPS on the LAN, to devices a fleet signer approved with a passkey
+ * (spec 100: `bun run stolos docs remote-access`).
  *
  * Before it starts, it asks GitHub (with `gh`) whether your account may push to the fleet repository:
  * the console is for the fleet's operators. Offline, `--no-github` skips that check.

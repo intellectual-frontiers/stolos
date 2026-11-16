@@ -51,7 +51,7 @@ export async function doctor(o: {
   }
   if (dirty.length) {
     // Spec 099: records Stolos wrote (an install's registration, ...) are expected, not a mistake.
-    const { porcelainPath, splitChanges } = await import("../archon/fleet/records.ts");
+    const { porcelainPath, splitChanges, yoursNamed } = await import("../archon/fleet/records.ts");
     const { records, yours } = splitChanges(dirty.map(porcelainPath));
     if (records.length) {
       g.action(
@@ -61,7 +61,7 @@ export async function doctor(o: {
     }
     if (yours.length) {
       g.action(
-        `${yours.length} change(s) of yours not sent yet (${yours.slice(0, 3).join(", ")}${
+        `${yours.length} change(s) of yours not sent yet (${yours.slice(0, 3).map(yoursNamed).join(", ")}${
           yours.length > 3 ? ", ..." : ""
         }): servers see them once they are sent`,
         "bun run stolos apply (or bun run stolos update, which offers to send them)",
@@ -213,6 +213,28 @@ export async function doctor(o: {
   ]);
   for (const w of warnings) f.warn(w);
   f.done(warnings.length ? "see the warnings" : "allows TFTP and HTTP (or no firewall to check)");
+
+  // ------------------------------------------------------- remote access
+  // Spec 100: the Stolos Console on the LAN: listener, certificate, devices, firewall.
+  const ra = ui.phase("Remote access");
+  try {
+    const { accessFacts } = await import("../archon/access/commands.ts");
+    const { accessDoctor } = await import("../archon/access/doctor.ts");
+    const { proc } = await import("@intellectual-frontiers/commons/ts/runtime");
+    const facts = await accessFacts();
+    const port = facts.listening?.port ?? 443;
+    const fw = facts.configured
+      ? await firewallWarnings([{ protocol: "TCP", port, what: "Stolos Console (HTTPS)" }])
+      : [];
+    for (const l of accessDoctor(facts, Date.now(), fw, proc.build.os)) {
+      if (l.level === "action") ra.action(l.msg, l.fix ?? "");
+      else if (l.level === "pending") ra.pending(l.msg, l.fix ?? "");
+      else ra.note(l.msg);
+    }
+    ra.done(facts.configured ? `${facts.devices} device(s) approved` : "this PC only");
+  } catch (e) {
+    ra.done(`not checked (${(e as Error).message})`);
+  }
 
   // --------------------------------------------------------------- hosts
   const h = ui.phase("Hosts");

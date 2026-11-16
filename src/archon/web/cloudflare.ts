@@ -27,6 +27,16 @@ export interface ARecord {
   content: string;
 }
 
+/** Spec 100: a DNS TXT record to keep (TTL 60): the Stolos Console's heartbeat. */
+export interface TxtRecord {
+  /** The record type. */
+  type: "TXT";
+  /** Its full name (for example `_stolos-console.stolos.lab.example.net`). */
+  name: string;
+  /** Its text, unquoted. */
+  content: string;
+}
+
 /** The fetch function the calls use: the global `fetch`, or a fake in tests. */
 export type Fetch = typeof fetch;
 
@@ -76,11 +86,11 @@ export interface Upserted {
   action: "unchanged" | "updated" | "created";
 }
 
-/** Make each record exist with this content (one per name and type). */
+/** Make each record exist with this content (one per name and type); A and, spec 100, TXT. */
 export async function upsertRecords(
   token: string,
   zone: string,
-  records: ARecord[],
+  records: Array<ARecord | TxtRecord>,
   comment: string,
   f: Fetch = fetch,
 ): Promise<Upserted[]> {
@@ -92,8 +102,13 @@ export async function upsertRecords(
       token,
       `/zones/${id}/dns_records?type=${rec.type}&name=${encodeURIComponent(rec.name)}`,
     );
-    const body = JSON.stringify({ ...rec, ttl: 60, proxied: false, comment });
-    if (found[0] && found[0].content === rec.content && !found[0].proxied && found[0].ttl === 60) {
+    const body = JSON.stringify(
+      rec.type === "A"
+        ? { ...rec, ttl: 60, proxied: false, comment }
+        : { ...rec, ttl: 60, comment },
+    );
+    const same = (c: string) => c.replace(/^"(.*)"$/, "$1") === rec.content;
+    if (found[0] && same(found[0].content) && !found[0].proxied && found[0].ttl === 60) {
       out.push({ name: rec.name, action: "unchanged" });
     } else if (found[0]) {
       await call(f, token, `/zones/${id}/dns_records/${found[0].id}`, { method: "PUT", body });
@@ -104,6 +119,23 @@ export async function upsertRecords(
     }
   }
   return out;
+}
+
+/** Spec 100: the contents of the records of one type and name (TXT unquoted); [] when none. */
+export async function readRecords(
+  token: string,
+  zone: string,
+  type: "A" | "TXT",
+  name: string,
+  f: Fetch = fetch,
+): Promise<string[]> {
+  const id = await zoneId(token, zone, f);
+  const found = await call<Array<{ content: string }>>(
+    f,
+    token,
+    `/zones/${id}/dns_records?type=${type}&name=${encodeURIComponent(name)}`,
+  );
+  return found.map((r) => r.content.replace(/^"(.*)"$/, "$1"));
 }
 
 /** Spec 045 (retire): remove each A record with this name; the names removed. */

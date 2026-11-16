@@ -455,12 +455,14 @@ proves(
       SECRETS.acme("alpha"),
       SECRETS.tokens,
       SECRETS.exportMail("acme"),
+      SECRETS.consoleTls,
     ];
     // Every SECRETS entry is among them (a new one must be added here and to the inventory).
     const keys = Object.keys(SECRETS).filter((k) => k !== "dir");
     assertEquals(keys.sort(), [
       "acme",
       "adminPasswordHash",
+      "consoleTls",
       "deployKey",
       "deployKeyPub",
       "exportMail",

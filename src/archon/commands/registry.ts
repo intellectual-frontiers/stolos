@@ -2118,8 +2118,20 @@ export const COMMANDS: Command[] = [
       { name: "port", type: "string", description: "The port on 127.0.0.1 (default 8091)." },
       { name: "no-open", type: "boolean", description: "Print the link; do not open a browser." },
       { name: "no-github", type: "boolean", description: "Skip the GitHub check (offline)." },
+      {
+        name: "lan",
+        type: "boolean",
+        description:
+          "Spec 100: also serve HTTPS on this PC's LAN address as stolos.<web domain> and <pc>.stolos.<web domain> (a Let's Encrypt certificate, DNS in Cloudflare), for devices a fleet signer approved.",
+      },
     ],
-    examples: [{ cmd: "bun run stolos console", text: "Open the console in your browser." }],
+    examples: [
+      { cmd: "bun run stolos console", text: "Open the console in your browser." },
+      {
+        cmd: "bun run stolos console --lan",
+        text: "Also open it to approved devices on the site's network, over HTTPS.",
+      },
+    ],
     async run(a: Parsed): Promise<number> {
       const port = a["port"] ? Number(a["port"]) : undefined;
       if (port !== undefined && !(Number.isInteger(port) && port > 1023 && port < 65536)) {
@@ -2130,7 +2142,87 @@ export const COMMANDS: Command[] = [
         ...(port === undefined ? {} : { port }),
         open: !a["no-open"],
         github: !a["no-github"],
+        lan: !!a["lan"],
       });
+    },
+  },
+  // Spec 100: the devices that may sign in to the Stolos Console.
+  {
+    name: "devices",
+    summary: "The devices that may sign in to the Stolos Console, and when each last did",
+    description: `Spec 100. Lists fleets/<fleet>/access.ts: each device's id, signer, name, passkey (synced or bound to the device), when and from where it registered, who approved it, and its last sign-in on this PC. Read-only.`,
+    tier: "read",
+    args: [],
+    async run(_a: Parsed, ctx: RunContext): Promise<number> {
+      const { devicesList } = await import("../access/commands.ts");
+      return await devicesList(ctx.json);
+    },
+  },
+  {
+    name: "devices approve",
+    summary: "Approve a device's code: it may sign in to the Stolos Console (one signed commit)",
+    description: `Spec 100. Asks the controller (--controller, default https://stolos.<web domain>) for the registration waiting under the code (public fields only), shows it, asks, writes the device into fleets/<fleet>/access.ts with you as its approver, and sends it with stolos apply (your key signs). The controller honours it once it reads that signed commit from GitHub. Refuses while other changes are uncommitted.`,
+    tier: "repo",
+    noMcp: true,
+    operation: true,
+    args: [
+      {
+        name: "code",
+        type: "string",
+        positional: true,
+        required: true,
+        description: "The code the device shows (WDJB-MJHT).",
+      },
+      {
+        name: "controller",
+        type: "string",
+        description: "The controller's address (default https://stolos.<web domain>).",
+      },
+      {
+        name: "yes",
+        type: "boolean",
+        description: "Approve without asking (the console's button).",
+      },
+    ],
+    examples: [
+      {
+        cmd: "bun run stolos devices approve WDJB-MJHT",
+        text: "Approve the device showing this code.",
+      },
+    ],
+    async run(a: Parsed): Promise<number> {
+      const { devicesApprove } = await import("../access/commands.ts");
+      return await devicesApprove({
+        code: a["code"] as string,
+        ...(a["controller"] ? { controller: a["controller"] as string } : {}),
+        yes: !!a["yes"],
+      });
+    },
+  },
+  {
+    name: "devices revoke",
+    summary: "Revoke a device: it may no longer sign in to the Stolos Console (one signed commit)",
+    description: `Spec 100. Removes the device from fleets/<fleet>/access.ts and sends it with stolos apply (your key signs). The controller refuses the device once it reads that commit.`,
+    tier: "repo",
+    noMcp: true,
+    operation: true,
+    args: [
+      {
+        name: "id",
+        type: "string",
+        positional: true,
+        required: true,
+        description: "The device's id (bun run stolos devices).",
+      },
+      {
+        name: "yes",
+        type: "boolean",
+        description: "Revoke without asking (the console's button).",
+      },
+    ],
+    async run(a: Parsed): Promise<number> {
+      const { devicesRevoke } = await import("../access/commands.ts");
+      return await devicesRevoke({ id: a["id"] as string, yes: !!a["yes"] });
     },
   },
   {
@@ -4828,6 +4920,9 @@ const PC_COMMANDS = new Set([
   "people review",
   "people ack",
   "console",
+  "devices",
+  "devices approve",
+  "devices revoke",
   "discover",
   "connect",
   "estate observe",

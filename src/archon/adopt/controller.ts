@@ -39,6 +39,11 @@ export interface ControllerFacts {
   recoveryInVault: boolean;
   /** When the recovery key was last proven to work on this PC (ISO). */
   recoveryCheckedAt?: string;
+  /**
+   * Spec 100: remote access to the Stolos Console, when the fleet sets it up: the certificate's
+   * expiry and the devices with no sign-in for 90 days.
+   */
+  remoteAccess?: { certificate?: string; devices: number; unused: number };
 }
 
 /** This PC's name in the fleet: its hostname as a DNS label. */
@@ -85,7 +90,18 @@ export async function controllerFacts(): Promise<ControllerFacts> {
   const { assess } = await import("../vault/state.ts");
   const k = await collectKeyFacts();
   const a = await assess();
+  const { accessFacts } = await import("../access/commands.ts");
+  const r = await accessFacts().catch(() => undefined);
   return {
+    ...(r?.configured
+      ? {
+          remoteAccess: {
+            ...(r.notAfter ? { certificate: r.notAfter } : {}),
+            devices: r.devices,
+            unused: r.unused,
+          },
+        }
+      : {}),
     signingKey: !k.daily.exists ? "missing" : k.daily.passphrase === false ? "unlocked" : "locked",
     ...(k.daily.inAgent !== undefined ? { inAgent: k.daily.inAgent } : {}),
     backup: !a.lastBackup ? "never" : a.unbacked.length || a.removed.length ? "behind" : "current",

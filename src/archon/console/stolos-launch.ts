@@ -21,6 +21,7 @@ import { pcFacts } from "./pc.ts";
 import { PC_GUIDES } from "./stolos-pages.ts";
 import { Launch, type PcRunner, stolosHandler } from "./stolos-server.ts";
 import type { Estate } from "../estate/graph.ts";
+import type { PreparedRemote } from "../access/launch.ts";
 
 /** Your GitHub login, and whether it may push to the fleet repository; or why it cannot tell. */
 export async function githubCheck(
@@ -142,12 +143,17 @@ export function openBrowser(url: string): void {
   }
 }
 
-/** `stolos console [--port n] [--no-open] [--no-github]`; with `audit`, the auditor portal's link instead (spec 083). */
+/**
+ * `stolos console [--port n] [--no-open] [--no-github] [--lan]`; with `audit`, the auditor portal's
+ * link instead (spec 083). With `lan` (spec 100), also HTTPS on this PC's LAN address, for devices
+ * a fleet signer approved.
+ */
 export async function stolosConsole(o: {
   port?: number;
   open?: boolean;
   github?: boolean;
   audit?: string;
+  lan?: boolean;
 }): Promise<number> {
   const c = ui.phase("Console");
   const facts = await pcFacts();
@@ -191,6 +197,36 @@ export async function stolosConsole(o: {
     `http://127.0.0.1:${port}`,
     askpass,
   );
+  const activity = activityLog(path.join(P.state, "console-activity.jsonl"));
+  // Spec 100: remote access (names, certificate, DNS, the signed tip) before anything listens.
+  let prepared: PreparedRemote | undefined;
+  // fleet.ts's stolos.console.lan: true serves on the LAN without --lan (not for an audit link).
+  const lanByFleet = (await (await import("../model/load.ts")).loadFleet().catch(() => undefined))
+    ?.stolos?.console?.lan;
+  if (o.lan || (lanByFleet === true && !o.audit)) {
+    const { controllerName } = await import("../adopt/controller.ts");
+    const { consoleNamesSetup } = await import("../access/commands.ts");
+    const pc = await controllerName();
+    const named = await consoleNamesSetup(pc);
+    if ("why" in named) {
+      c.fail(`remote access: ${named.why}`, "bun run stolos console (this PC only) still works");
+      return 1;
+    }
+    const { lanAddresses } = await import("../core/net.ts");
+    const { prepareRemote } = await import("../access/launch.ts");
+    const p = await prepareRemote({
+      phase: c,
+      fleet: named.fleet,
+      pc,
+      addresses: lanAddresses(),
+      activity,
+    }).catch((e: unknown) => ({ why: (e as Error).message, fix: "run it again" }));
+    if ("why" in p) {
+      c.fail(`remote access: ${p.why}`, p.fix);
+      return 1;
+    }
+    prepared = p;
+  }
   const handler = stolosHandler({
     port,
     askpass,
@@ -203,7 +239,7 @@ export async function stolosConsole(o: {
       return await engineVersions(path.join(P.bootCache, "..", "newest-release.json"));
     },
     runner: pcRunner(P.repo, askEnv),
-    activity: activityLog(path.join(P.state, "console-activity.jsonl")),
+    activity,
     guides: PC_GUIDES,
     guideDoc: pcGuideDoc,
     integrate: (name, as) => pcIntegrate(name, as, facts.fleet.repo),
@@ -212,6 +248,7 @@ export async function stolosConsole(o: {
     estate: estateFor(),
     evidenceDir: path.join(P.state, "evidence"),
     audit,
+    ...(prepared ? { remote: prepared.remote } : {}),
   });
   let server: Server;
   try {
@@ -226,6 +263,24 @@ export async function stolosConsole(o: {
   const url = o.audit
     ? `http://127.0.0.1:${port}/audit/launch?t=${audit.launch.issue(o.audit)}`
     : `http://127.0.0.1:${port}/launch?t=${launch.issue()}`;
+  if (prepared) {
+    const l = await prepared.start(handler);
+    if ("why" in l) {
+      await server.shutdown();
+      c.fail(
+        `remote access: cannot listen on 443 or 8443 (${l.why})`,
+        "free one of the ports (or allow Bun to bind 443), then run this again",
+      );
+      return 1;
+    }
+    ui.say(
+      `Remote access: ${prepared.remote.access.names.served
+        .map((n) => `https://${n}${l.port === 443 ? "" : `:${l.port}`}`)
+        .join(
+          ", ",
+        )} (on ${l.address}, LAN or mesh only). Devices sign in with a passkey a signer approved; see /access.`,
+    );
+  }
   c.done(
     `${facts.fleet.title} on http://127.0.0.1:${port}${
       github ? ` (GitHub ${github} may push to ${facts.fleet.repo})` : ""
@@ -244,5 +299,6 @@ export async function stolosConsole(o: {
   ui.say("Ctrl+C stops the console.");
   if (o.open !== false) openBrowser(url);
   await server.finished;
+  await prepared?.stop();
   return 0;
 }

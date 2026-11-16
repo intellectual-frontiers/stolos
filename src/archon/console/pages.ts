@@ -62,7 +62,7 @@ export interface ActivityEntry {
   /** Where from (an address). */
   from: string;
   /** What kind of thing happened. */
-  kind: "sign-in" | "sign-in failed" | "sign-out" | "run" | "refused";
+  kind: "sign-in" | "sign-in failed" | "sign-out" | "run" | "refused" | "access";
   /** The command, or the reason. */
   detail: string;
   /** A run's exit code. */

@@ -42,6 +42,7 @@ export const STOLOS_NAV: NavItem[] = [
   { group: "Fleet", label: "Installs", href: "/boot" },
   { group: "Fleet", label: "Changes", href: "/changes" },
   { group: "Fleet", label: "Trust", href: "/trust" },
+  { group: "Fleet", label: "Remote Access", href: "/access" },
   { group: "Fleet", label: "Compliance", href: "/compliance" },
   { group: "Fleet", label: "Activity", href: "/activity" },
   { group: "Actions", label: "The fleet", href: "/actions/fleet" },
@@ -49,6 +50,7 @@ export const STOLOS_NAV: NavItem[] = [
   { group: "Actions", label: "Adopted and devices", href: "/actions/adopted" },
   { group: "Actions", label: "Connected accounts", href: "/actions/clouds" },
   { group: "Actions", label: "Signers and keys", href: "/actions/trust" },
+  { group: "Actions", label: "Remote access", href: "/actions/access" },
   { group: "Actions", label: "Vault and backups", href: "/actions/vault" },
   { group: "Learn", label: "How it works", href: "/how" },
   { group: "Learn", label: "Guide", href: "/guide" },
@@ -276,6 +278,21 @@ ${
       "The daily key signs every change; the recovery key, kept offline, replaces a lost one.",
   },
   {
+    id: "access",
+    label: "Remote access",
+    intro:
+      "The console from other devices on the site's network (spec 100): each device has a passkey, and a fleet signer approves it in a signed commit (fleets/<fleet>/access.ts). Approve or revoke one here, or on any signer's PC with bun run stolos devices approve.",
+    names: ["devices", "devices approve", "devices revoke"],
+    first: "devices",
+    diagram: (f) =>
+      `flowchart LR
+  dev["a device: passkey + code"] --> pc["this PC: stolos console --lan"]
+  signer["a signer: devices approve (code)"] -- "access.ts, signed" --> git["${m(f.fleet.repo)}"]
+  git -- "fetched; signed by a signer?" --> pc
+  pc -- "sign in with the passkey" --> dev`,
+    caption: "A device is trusted only once a signer's signed commit lists it.",
+  },
+  {
     id: "vault",
     label: "Vault and backups",
     intro:
@@ -376,7 +393,12 @@ function attentionList(a: readonly Attention[]): Html {
 }
 
 /** The fleet at a glance. */
-export function stolosOverview(f: PcFacts, now = Date.now(), engine?: EngineVersions): Html {
+export function stolosOverview(
+  f: PcFacts,
+  now = Date.now(),
+  engine?: EngineVersions,
+  access?: { pending: number; unused: number },
+): Html {
   const by = (k: PcMachine["kind"]) => f.machines.filter((x) => x.kind === k).length;
   const failing = f.machines.filter((x) => x.failing.length || x.attention?.length);
   const notAsked = f.machines.filter((x) => x.notAsked);
@@ -426,8 +448,25 @@ export function stolosOverview(f: PcFacts, now = Date.now(), engine?: EngineVers
           cloudFails.length ||
           f.git.unapproved.length ||
           stuck.length ||
-          notAsked.length
+          notAsked.length ||
+          access?.pending ||
+          access?.unused
             ? html`${
+                // Spec 100 FR-010: a code waiting for a signer, or devices due for review.
+                access?.pending || access?.unused
+                  ? html`<div class="row spread" style="padding:6px 0">
+                      <span
+                        >Remote access:
+                        ${[
+                          access.pending ? `${access.pending} device(s) waiting for a signer` : "",
+                          access.unused ? `${access.unused} device(s) unused for 90 days` : "",
+                        ]
+                          .filter(Boolean)
+                          .join("; ")}</span
+                      ><a class="btn ghost" href="/access">Review</a>
+                    </div>`
+                  : ""
+              }${
                 notAsked.length
                   ? html`<div class="row spread" style="padding:6px 0">
                       <span

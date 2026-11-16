@@ -46,6 +46,26 @@ export function recordOf(file: string): string | undefined {
   return undefined;
 }
 
+/**
+ * Spec 100: files Stolos writes that are decisions, not records: sent by the command that made the
+ * decision (signed by whoever decided), never by `stolos update` on its own. Left uncommitted, they
+ * are a person's change (update asks), named for what they are.
+ */
+const DECISIONS: Array<{ re: RegExp; what: string }> = [
+  { re: /^fleets\/[^/]+\/access\.ts$/, what: "who may sign in to the console (access.ts)" },
+];
+
+/** What a changed decision file is ("who may sign in to the console"); undefined otherwise. */
+export function decisionOf(file: string): string | undefined {
+  const f = file.replace(/\\/g, "/");
+  return DECISIONS.find((d) => d.re.test(f))?.what;
+}
+
+/** A person's changed file for people: a decision's name, else its path. */
+export function yoursNamed(file: string): string {
+  return decisionOf(file) ?? file;
+}
+
 /** Changed files, split: records Stolos wrote (with what each is), and a person's own. */
 export function splitChanges(files: readonly string[]): {
   records: Array<{ file: string; what: string }>;

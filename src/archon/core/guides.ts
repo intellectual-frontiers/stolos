@@ -81,6 +81,12 @@ export const GUIDES: GuideDef[] = [
     module: "src/archon/console/mod.ts",
   },
   {
+    name: "remote-access",
+    title: "Remote access to the Stolos Console",
+    why: "The console from your phone or laptop on the LAN: passkeys a signer approves.",
+    module: "src/archon/access/mod.ts",
+  },
+  {
     name: "adopted",
     title: "Adopted machines, devices, and clouds",
     why: "Laptops, printers, and cloud accounts: observed, never changed.",

@@ -39,6 +39,10 @@ export const SECRETS = {
   get web(): string {
     return paths.join(P.secrets, "web.json");
   },
+  /** Spec 100: the Stolos Console's certificate, its key and its ACME account (console/tls.json). */
+  get consoleTls(): string {
+    return paths.join(P.secrets, "console", "tls.json");
+  },
   get tokens(): string {
     return paths.join(P.secrets, "install-tokens.json");
   },

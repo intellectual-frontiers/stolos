@@ -9,6 +9,7 @@
 import type { FleetDef, HostDef, HostPlan } from "./types.ts";
 import { validateSite } from "./site.ts";
 import { validateExportJobs } from "../export/jobs.ts";
+import { stolosProblems } from "../access/names.ts";
 
 /** One thing wrong with the model. */
 export interface Problem {
@@ -191,6 +192,8 @@ export function validateFleet(fleet: FleetDef, hosts: HostDef[]): Problem[] {
       );
     }
   }
+  // Spec 100: the Stolos Console's names under the web domain.
+  for (const p of stolosProblems(fleet)) add(p.where, p.message, p.fix);
   const seenName = new Map<string, string>();
   const seenMac = new Map<string, string>();
   for (const h of hosts) {

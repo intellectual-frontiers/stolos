@@ -172,6 +172,16 @@ export const SECRET_INVENTORY: SecretRef[] = [
     spec: "032-web",
   },
   {
+    id: "console-tls",
+    label: "Stolos Console certificate",
+    path: "console/tls.json",
+    purpose:
+      "the Stolos Console's Let's Encrypt certificate, its private key and the ACME account key, for HTTPS on the LAN",
+    holder: "boot-machine",
+    recreate: "bun run stolos console --lan (it asks Let's Encrypt for a new one)",
+    spec: "100-remote-access",
+  },
+  {
     id: "install-tokens",
     label: "install tokens",
     path: "install-tokens.json",

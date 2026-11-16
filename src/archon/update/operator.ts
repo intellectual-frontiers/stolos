@@ -234,7 +234,7 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
   // pushed), so the engine can be upgraded on top of it. Records Stolos wrote (an install's
   // registration, an adoption) are sent without asking; your own edits only when you say so.
   if (!o.noUpgrade) {
-    const { porcelainPath, splitChanges } = await import("../fleet/records.ts");
+    const { porcelainPath, splitChanges, yoursNamed } = await import("../fleet/records.ts");
     const changed = (await git(["status", "--porcelain", "--untracked-files=all"])).stdout
       .split("\n")
       .filter(Boolean)
@@ -244,7 +244,9 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
     let send = changed.length > 0 || ahead > 0;
     const s = ui.phase("Send");
     if (yours.length) {
-      s.note(`your changes: ${yours.slice(0, 5).join(", ")}${yours.length > 5 ? ", ..." : ""}`);
+      s.note(
+        `your changes: ${yours.slice(0, 5).map(yoursNamed).join(", ")}${yours.length > 5 ? ", ..." : ""}`,
+      );
       send = await ui.confirm(
         `  Send your ${yours.length} change(s) now, with the update (one signed commit)?`,
       );

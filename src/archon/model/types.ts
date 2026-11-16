@@ -115,6 +115,53 @@ export interface SignerDef {
 }
 
 /**
+ * Spec 100: the Stolos Console on the site's network. With `web.domain`, `<name>.<domain>` (default
+ * `stolos.<domain>`) names the primary controller and `<pc>.<name>.<domain>` each controller.
+ *
+ * @example
+ * ```ts
+ * import type { StolosFleetDef } from "@intellectual-frontiers/stolos/archon/model/types";
+ * export const stolos: StolosFleetDef = { console: { name: "stolos", primary: "alice-pc", lan: true } };
+ * ```
+ */
+export interface StolosFleetDef {
+  /** The console's names and listener. */
+  console?: {
+    /** The label under `web.domain` (a DNS label); default "stolos". */
+    name?: string;
+    /** The controller that answers as `<name>.<domain>` (its controllerName()). */
+    primary?: string;
+    /** Serve HTTPS on the LAN whenever the console runs on a controller (as `stolos console --lan`). */
+    lan?: boolean;
+  };
+}
+
+/**
+ * Spec 100: one device that may sign in to the Stolos Console with its passkey, as
+ * `fleets/<id>/access.ts` lists it (written by `stolos devices approve`, public keys only).
+ */
+export interface ConsoleDevice {
+  /** Its id (the credential's id, shortened): what `stolos devices revoke` takes. */
+  id: string;
+  /** The signer it signs in as (a name in signers.ts). */
+  signer: string;
+  /** What the person called it ("Alice's phone"). */
+  name: string;
+  /** The passkey's public half (WebAuthn): its id, COSE public key (base64url), algorithm. */
+  credential: { id: string; publicKey: string; alg: number; transports?: string[] };
+  /** A synced passkey (it may be on the person's other devices), not bound to one device. */
+  backedUp: boolean;
+  /** When it was registered (ISO time). */
+  registered: string;
+  /** The signer who approved it (their key signed the commit). */
+  approvedBy: string;
+  /** The address it registered from. */
+  registeredFrom: string;
+  /** Its browser's User-Agent when it registered. */
+  userAgent: string;
+}
+
+/**
  * The fleet's outside providers (spec 046), each a closed set the engine
  * implements. Defaults: Cloudflare for DNS and mail, Let's Encrypt for ACME.
  */
@@ -279,6 +326,11 @@ export interface FleetDef {
    * Without it, servers still answer HTTPS with a self-signed certificate.
    */
   web?: WebFleetDef;
+  /**
+   * The Stolos Console from other devices on the site's network (spec 100): its names under
+   * `web.domain` and whether `stolos console --lan` serves them. See StolosFleetDef.
+   */
+  stolos?: StolosFleetDef;
   /**
    * Service accounts for apps, the same on every server (spec 039): Linux
    * system accounts named s-<app>, with fixed UIDs, no password, no shell. An
