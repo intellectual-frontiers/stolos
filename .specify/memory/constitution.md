@@ -8,7 +8,7 @@ workstation) work through `archon` commands. These articles govern every spec,
 plan, task, and line of code of the engine. Amend them only with a commit whose
 subject starts with `constitution:`.
 
-**Version**: 5.0.0 · **Ratified**: 2026-11-13 · **Last amended**: 2026-11-15
+**Version**: 5.0.1 · **Ratified**: 2026-11-13 · **Last amended**: 2026-11-16
 
 ## Article 1: Ubuntu Server LTS Only
 
@@ -183,11 +183,11 @@ and hosts, not a transaction.
 
 The engine is general: it names no fleet, host, domain, address, or person, and
 its tests and examples use neutral data (`examples/fleets/lab/`). A fleet
-repository imports the engine as modules through `@stolos/`, pinned to a tag
-and checked by its lockfile. Every push to the engine's `main` raises its
-version, kept in TypeScript (`src/archon/version.ts`), and is tagged
-`v<version>`. A fleet adopts a new engine by changing its pin in a signed
-commit.
+repository imports the engine as modules through `@intellectual-frontiers/stolos`,
+a Git dependency pinned to a tag and checked by its lockfile, which holds the
+tag's commit. Every push to the engine's `main` raises its version, kept in
+TypeScript (`src/archon/version.ts`), and is tagged `v<version>`; the tag is the
+release. A fleet adopts a new engine by changing its pin in a signed commit.
 
 ## Article 25: Git Holds Intent, Identity, and Decisions
 
@@ -221,3 +221,4 @@ SSH, MCP, and installs. It is silent and harmless when no collector listens.
 | 3.1.0 | 2026-11-13 | Article 23 (ephemeral by default, durable by data): a forced choice for every source of end users' data; durable hosts guarded by `--confirm-destroy`, typed by a person. |
 | 4.0.0 | 2026-11-13 | The engine stands alone (the Stolos repositories). Article 7: many fleets per repository. Article 9: approval is a signed tip of `main`. Article 13: file-based secrets, passphrase-protected signing keys, the fleet's vault provider. Articles 20 and 21 no longer name a site. New: Article 24 (the engine holds no fleet's facts; versioned and tagged on every push), Article 25 (Git holds intent, identity, and decisions; machines keep their own state as `archon.sql`), Article 26 (generated files are named `.auto.`), Article 27 (telemetry by OpenTelemetry). |
 | 5.0.0 | 2026-11-15 | The engine on Bun and IFC TypeScript (spec 096): Article 4 names TypeScript 7, Bun with Node 26 as the backup, and the commons' kernel and runtime; Article 27 reports through IFC TypeScript's OpenTelemetry. No Deno. |
+| 5.0.1 | 2026-11-16 | Article 24 names the engine's package, `@intellectual-frontiers/stolos`, as a Git dependency pinned to a tag whose commit the lockfile holds; the tag is the release (spec 096, no GitHub release). |
