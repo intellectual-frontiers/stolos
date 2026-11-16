@@ -10,7 +10,7 @@
  */
 
 import { fs, path as paths, proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
-import { P } from "../core/paths.ts";
+import { asRoot, P } from "../core/paths.ts";
 import { currentUser, homeOf, run } from "../core/exec.ts";
 import { journal } from "../core/log.ts";
 import { loadFleet, loadHosts } from "../model/load.ts";
@@ -732,8 +732,7 @@ export const MAINTAIN_SQL = {
  */
 export function pgMaintain(hostName: string, name: string, json: boolean): Promise<number> {
   return guarded(json, async () => {
-    if (!proc.isRoot())
-      throw new PgError("archon pg maintain runs as root (sudo archon pg maintain).");
+    if (!asRoot()) throw new PgError("archon pg maintain runs as root (sudo archon pg maintain).");
     const { fleet, host } = await server(hostName);
     const i = need(fleet, host, name);
     owned(i);
@@ -955,7 +954,7 @@ export function pgWho(hostName: string, name: string, json: boolean): Promise<nu
     const { fleet, host } = await server(hostName);
     const i = need(fleet, host, name);
     owned(i);
-    const root = proc.isRoot();
+    const root = asRoot();
     const sql = `SELECT r.rolname, coalesce(shobj_description(r.oid, 'pg_authid'), ''), r.rolcanlogin, r.rolsuper,
         ${root ? "(SELECT rolpassword IS NOT NULL FROM pg_authid a WHERE a.oid = r.oid)" : "NULL"},
         coalesce((SELECT string_agg(g.rolname, ',' ORDER BY g.rolname) FROM pg_auth_members m
@@ -1051,7 +1050,7 @@ export function whoProblems(views: RoleView[], published: boolean): string[] {
 export async function pgPasswdSync(hostName: string, user: string): Promise<number> {
   // Every outcome is journaled (journalctl -t archon-pg), never the password.
   const say = (m: string) => journal("archon-pg", `password sync for ${user}: ${m}`);
-  if (!proc.isRoot()) {
+  if (!asRoot()) {
     await say(`not run as root (uid ${proc.uid()}), so nothing was synced`);
     return 1;
   }

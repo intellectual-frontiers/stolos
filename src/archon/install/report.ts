@@ -7,6 +7,7 @@
  */
 
 import { fs } from "@intellectual-frontiers/ifc-ts/runtime";
+import { onHost } from "../core/paths.ts";
 
 /** The file holding the boot server's event URL, left by the install. */
 export const BOOT_EVENTS: string = "/etc/archon/boot-events";
@@ -17,7 +18,7 @@ export async function bootEvent(e: {
   level?: string;
   summary?: string;
 }): Promise<void> {
-  const url = (await fs.readTextOr(BOOT_EVENTS))?.trim();
+  const url = (await fs.readTextOr(onHost(BOOT_EVENTS)))?.trim();
   if (!url) return;
   try {
     await fetch(url, {

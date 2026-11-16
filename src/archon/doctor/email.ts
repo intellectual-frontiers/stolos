@@ -17,6 +17,7 @@ import { run } from "../core/exec.ts";
 import { enqueue, flush, loadCredential, queued, readStatus, type Site } from "../notify/notify.ts";
 import { probeSmtp, relayParts } from "../notify/transport.ts";
 import { isReservedDomain } from "../model/providers.ts";
+import { onHost } from "../core/paths.ts";
 
 /** A Postfix tool with a time limit and the C locale (spec 026 FR-011; servers only). */
 const t = (argv: string[]) => run(["timeout", "10", ...argv], { env: { LC_ALL: "C" } });
@@ -236,7 +237,7 @@ async function sendTests(
       }; it is retried with backoff`,
     );
   }
-  if (site.role === "boot" || !(await fs.exists("/usr/sbin/sendmail"))) return;
+  if (site.role === "boot" || !(await fs.exists(onHost("/usr/sbin/sendmail")))) return;
   const msg = [
     "To: root",
     `Subject: [Archon] ${site.name}: mail test via Postfix (${reason})`,
@@ -246,7 +247,7 @@ async function sendTests(
     report,
     "",
   ].join("\n");
-  const s = await run(["timeout", "30", "/usr/sbin/sendmail", "-t", "-oi"], {
+  const s = await run(["timeout", "30", onHost("/usr/sbin/sendmail"), "-t", "-oi"], {
     stdin: msg,
     env: { LC_ALL: "C" },
   });

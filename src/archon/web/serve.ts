@@ -15,7 +15,7 @@ import { hostData } from "../model/durable.ts";
 import { engineFileOr } from "../core/assets.ts";
 import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
-import { STATUS_DIR } from "../core/status.ts";
+import { P } from "../core/paths.ts";
 import type { LastRun, LastVerify } from "../core/status.ts";
 import { loadFleet, loadHosts } from "../model/load.ts";
 import { resolvePlan } from "../model/resolve.ts";
@@ -188,8 +188,8 @@ export async function welcomeData(hostName: string): Promise<WelcomeData> {
     os: await osName(),
     address: await serverAddress(host),
     repo: { slug: fleet.repository.slug, url: `https://github.com/${fleet.repository.slug}` },
-    lastRun: await json<LastRun>(paths.join(STATUS_DIR, "last.json")),
-    verify: await json<LastVerify>(paths.join(STATUS_DIR, "verify.json")),
+    lastRun: await json<LastRun>(paths.join(P.status, "last.json")),
+    verify: await json<LastVerify>(paths.join(P.status, "verify.json")),
     installed: installed?.installed
       ? { at: installed.installed, ok: installed.ok, checks: installed.checks }
       : undefined,

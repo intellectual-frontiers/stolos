@@ -9,7 +9,7 @@
  */
 
 import { fs, path, proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
-import { P } from "../core/paths.ts";
+import { asRoot, P } from "../core/paths.ts";
 import { currentUser, run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
 import { hostFile, loadFleet } from "../model/load.ts";
@@ -54,7 +54,7 @@ export async function workstationAdd(o: {
     );
     return 1;
   }
-  if (proc.isRoot()) {
+  if (asRoot()) {
     c.fail("run this as your own user (it uses sudo itself)", "exit the root shell first");
     return 1;
   }

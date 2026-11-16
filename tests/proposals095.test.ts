@@ -1498,10 +1498,7 @@ proves(
     assertEquals(drift.mutateWith, "collect");
     assert(listed(drift, "read"), "an MCP tool at the read tier");
     assertEquals(drift.args.map((a) => a.name).sort(), ["all", "collect"]);
-    // The daily report collects (as root), then includes the same text (report/daily.ts).
-    const daily = await fs.readTextFile("src/archon/report/daily.ts");
-    assertStringIncludes(daily, "if (proc.isRoot()) await collect(host);");
-    assertStringIncludes(daily, "driftText(host.name, v.items, v.alerts,");
+    // The daily report collects (as root) and includes the same text: tests/hostroot.test.ts.
     const dir = await fs.makeTempDir();
     try {
       const host = the((await loadHosts()).find((h) => h.name === "alpha"));

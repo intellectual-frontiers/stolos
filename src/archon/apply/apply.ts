@@ -9,7 +9,7 @@
 import { errors, fs, path as paths, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { splitArgs } from "@intellectual-frontiers/ifc-ts/kernel";
 import { getRecord, putRecord } from "../state/store.ts";
-import { P } from "../core/paths.ts";
+import { asRoot, onHost, P } from "../core/paths.ts";
 import { currentUser, run } from "../core/exec.ts";
 import { type Phase, ui } from "../core/ui.ts";
 import { aptInstall, aptUpdate } from "./apt.ts";
@@ -83,7 +83,7 @@ class Runner {
     return !!this.opts.root;
   }
   path(p: string) {
-    return this.opts.root ? paths.join(this.opts.root, p) : p;
+    return this.opts.root ? paths.join(this.opts.root, p) : onHost(p);
   }
   change(msg: string) {
     this.changes.push(msg);
@@ -107,7 +107,7 @@ class Runner {
     try {
       return await f();
     } catch (e) {
-      if (e instanceof errors.PermissionDenied && this.opts.check && !proc.isRoot()) {
+      if (e instanceof errors.PermissionDenied && this.opts.check && !asRoot()) {
         this.unreadable.push(label);
         return undefined;
       }
@@ -129,7 +129,7 @@ class Runner {
  * 009), and, for a full apply, reports a change of state (spec 025).
  */
 export async function apply(host: HostDef, opts: ApplyOptions): Promise<ApplyResult> {
-  if (!opts.check && !opts.root && !proc.isRoot()) {
+  if (!opts.check && !opts.root && !asRoot()) {
     throw new Error("archon apply must run as root (it elevates through sudo automatically)");
   }
   const started = new Date();
@@ -194,7 +194,7 @@ export function archonDaemons(units: UnitDef[]): string[] {
 export async function restartArchonDaemons(plan: HostPlan): Promise<string[]> {
   const head = (await run(["git", "-C", P.repo, "rev-parse", "HEAD"])).stdout.trim();
   if (!head) return [];
-  const mark = "/var/lib/archon/status/daemons-head";
+  const mark = paths.join(P.status, "daemons-head");
   if ((await fs.readTextOr(mark))?.trim() === head) return [];
   const daemons = archonDaemons(plan.units);
   if (daemons.length) await run(["systemctl", "try-restart", ...daemons]);
@@ -207,7 +207,7 @@ export async function restartArchonDaemons(plan: HostPlan): Promise<string[]> {
  * archon apply from apt, unattended-upgrades, and a person.
  */
 export async function etckeeperCommit(changes: string[]): Promise<boolean> {
-  if (!(await fs.exists("/usr/bin/etckeeper"))) return false;
+  if (!(await fs.exists(onHost("/usr/bin/etckeeper")))) return false;
   if ((await run(["etckeeper", "unclean"])).code !== 0) return false; // nothing to commit
   const specs = [
     ...new Set(changes.flatMap((c) => c.match(/\(([0-9]{3}-[a-z0-9-]+)\)/)?.[1] ?? [])),
@@ -268,10 +268,9 @@ async function applyPlan(host: HostDef, opts: ApplyOptions, _started: Date): Pro
     if (r.sandbox || plan.host.kind === "workstation") return held;
     try {
       const h = await import("../proposal/hold.ts");
-      held =
-        opts.check || !proc.isRoot() ? await h.activeHolds(host.name) : await h.refreshHolds(plan);
+      held = opts.check || !asRoot() ? await h.activeHolds(host.name) : await h.refreshHolds(plan);
     } catch (e) {
-      if (e instanceof errors.PermissionDenied && !proc.isRoot()) r.unreadable.push("holds");
+      if (e instanceof errors.PermissionDenied && !asRoot()) r.unreadable.push("holds");
       else {
         r.p.warn(
           `holds not read: ${(e as Error).message}`,
@@ -306,7 +305,7 @@ async function applyPlan(host: HostDef, opts: ApplyOptions, _started: Date): Pro
     // modes every run (idempotent, quiet).
     if (!r.sandbox && !opts.check) {
       for (const f of plan.files.filter((x) => x.path.startsWith("/etc/tmpfiles.d/"))) {
-        if (await fs.exists(f.path)) await run(["systemd-tmpfiles", "--create", f.path]);
+        if (await fs.exists(r.path(f.path))) await run(["systemd-tmpfiles", "--create", f.path]);
       }
     }
     // Opt-in containers turned on (spec 040): their generated secrets exist before they start.
@@ -494,13 +493,14 @@ async function vendorRepos(plan: HostPlan, r: Runner): Promise<void> {
       ],
     ];
     for (const [path, content] of files) {
-      if ((await fs.readTextOr(path)) === content) continue;
+      const target = r.path(path);
+      if ((await fs.readTextOr(target)) === content) continue;
       r.change(`write ${path} (${repo.spec})`);
       changed = true;
       if (r.opts.check) continue;
-      await fs.ensureDir(paths.dirname(path));
-      await fs.writeTextFile(path, content);
-      await fs.chmod(path, 0o644);
+      await fs.ensureDir(paths.dirname(target));
+      await fs.writeTextFile(target, content);
+      await fs.chmod(target, 0o644);
     }
   }
   if (changed && !r.opts.check) await aptUpdate(r.p);
@@ -678,7 +678,7 @@ async function file(f: FileDef, r: Runner, extra: { dirMode?: number } = {}) {
   } catch (e) {
     // A read-only check runs as the person who asked (no sudo): files only root or
     // their owner may read (ops' authorized_keys, secrets) cannot be compared.
-    if (e instanceof errors.PermissionDenied && r.opts.check && !proc.isRoot()) {
+    if (e instanceof errors.PermissionDenied && r.opts.check && !asRoot()) {
       r.unreadable.push(f.path);
       return;
     }
@@ -690,7 +690,7 @@ async function file(f: FileDef, r: Runner, extra: { dirMode?: number } = {}) {
   if (!contentDiffers) {
     const st = await fs.stat(target);
     metaDiffers = ((st.mode ?? 0) & 0o7777) !== mode;
-    if (!r.sandbox && proc.isRoot()) {
+    if (!r.sandbox && asRoot()) {
       const uid = await idOf("passwd", f.owner);
       const gid = await idOf("group", f.group ?? (f.owner === "root" ? "root" : f.owner));
       if ((uid !== undefined && st.uid !== uid) || (gid !== undefined && st.gid !== gid)) {
@@ -925,7 +925,7 @@ async function dotfiles(host: string, u: UserDef, r: Runner): Promise<boolean> {
   r.p.status(u.name);
   // A check without sudo can only look at the caller's own dotfiles (the others'
   // composed sources and homes are theirs): the rest is noted, not compared.
-  if (r.opts.check && !proc.isRoot() && u.name !== currentUser()) {
+  if (r.opts.check && !asRoot() && u.name !== currentUser()) {
     r.unreadable.push(`dotfiles of ${u.name}`);
     return false;
   }

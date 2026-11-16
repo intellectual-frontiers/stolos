@@ -8,16 +8,15 @@
  * @module
  */
 
-import { P } from "./paths.ts";
+import { asRoot, P } from "./paths.ts";
 import { currentUser, run } from "./exec.ts";
-import { proc } from "@intellectual-frontiers/ifc-ts/runtime";
 
 /** Give back to the checkout's owner and group whatever this run created. */
 export async function shareCheckout(repo = P.repo): Promise<void> {
   const st = await run(["stat", "-c", "%U:%G", repo]);
   if (!st.ok) return;
   const [owner = "", group = ""] = st.stdout.trim().split(":");
-  const me = proc.isRoot() ? "root" : currentUser();
+  const me = asRoot() ? "root" : currentUser();
   if (me === "" || (me !== "root" && me !== owner && !(await inGroup(group)))) return;
   if (me === "root" && owner !== "root") {
     await run([

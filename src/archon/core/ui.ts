@@ -15,6 +15,7 @@
  */
 import { fs, proc, stdio, tty } from "@intellectual-frontiers/ifc-ts/runtime";
 import { translate } from "./explain.ts";
+import { asRoot, P } from "./paths.ts";
 
 // ARCHON_VERBOSE=1 (or -v): every item is shown, dimmed, as it happens.
 // --json: nothing on screen; the log file still records everything.
@@ -716,15 +717,48 @@ export function explainHint(code: string): string {
   return logProgram === "stolos" ? `bun run stolos explain ${code}` : `archon explain ${code}`;
 }
 
+/** How long run logs are kept (spec 019 FR-002). */
+export const RUN_LOG_DAYS = 30;
+
+/**
+ * Remove the run logs (`*.log`) in `dir` older than `days` (spec 019: kept 30 days), by their
+ * modification time. Root's folder is also pruned by tmpfiles.d (`30d`); a user's, and the Stolos
+ * PC's, only here. Best effort: a file that cannot be removed stays. Returns the names removed.
+ */
+export function pruneRunLogs(dir: string, now = Date.now(), days = RUN_LOG_DAYS): string[] {
+  const gone: string[] = [];
+  let entries: fs.DirEntry[];
+  try {
+    entries = fs.readDirSync(dir);
+  } catch {
+    return gone;
+  }
+  for (const e of entries) {
+    if (!e.isFile || !e.name.endsWith(".log")) continue;
+    const file = `${dir}/${e.name}`;
+    try {
+      const at = fs.statSync(file).mtime?.getTime();
+      if (at !== undefined && now - at > days * 86_400_000) {
+        fs.removeSync(file);
+        gone.push(e.name);
+      }
+    } catch {
+      /* best effort */
+    }
+  }
+  return gone;
+}
+
 /**
  * Where this run's log goes: /var/log/archon as root; else the program's folder
- * (Windows: %LOCALAPPDATA%\\stolos\\log; Linux: ~/.local/state/<program>/log).
+ * (Windows: %LOCALAPPDATA%\\stolos\\log; Linux: ~/.local/state/<program>/log). Logs older than
+ * 30 days in that folder are removed first (spec 019).
  */
 export function defaultLogPath(): string | null {
   const inherited = env("ARCHON_LOG");
   if (inherited !== undefined) return inherited;
   const stamp = new Date().toISOString().replace(/[:.]/g, "").slice(0, 15);
-  const root = proc.isRoot();
+  const root = asRoot();
   // Windows: %LOCALAPPDATA%\stolos\log (beside boot.log), with Windows separators.
   const win = proc.build.os === "windows";
   const sep = win ? "\\" : "/";
@@ -733,10 +767,11 @@ export function defaultLogPath(): string | null {
         env("LOCALAPPDATA") ?? `${env("USERPROFILE") ?? "C:"}\\AppData\\Local`
       }\\${logProgram}\\log`
     : root
-      ? "/var/log/archon"
+      ? P.log
       : `${env("HOME") ?? "/tmp"}/.local/state/${logProgram}/log`;
   try {
     fs.mkdirSync(dir, { recursive: true });
+    pruneRunLogs(dir);
     return `${dir}${sep}${stamp}-${proc.pid}.log`;
   } catch {
     return null;

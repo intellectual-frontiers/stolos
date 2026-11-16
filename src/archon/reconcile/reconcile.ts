@@ -22,7 +22,7 @@
 import { boolean, type Decoder, object, string } from "@intellectual-frontiers/ifc-ts/kernel";
 import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { count } from "../core/telemetry.ts";
-import { P } from "../core/paths.ts";
+import { asRoot, P } from "../core/paths.ts";
 import { currentUser, run } from "../core/exec.ts";
 import { journal, log } from "../core/log.ts";
 import type { HostDef } from "../model/types.ts";
@@ -81,7 +81,7 @@ export const SYNC_STATUS = "/var/lib/archon/status/sync.json";
  */
 export async function syncCheckout(opts: { check?: boolean } = {}): Promise<SyncResult> {
   const r = await syncOnce(opts);
-  if (!opts.check && proc.isRoot()) {
+  if (!opts.check && asRoot()) {
     const s: SyncStatus = {
       at: new Date().toISOString(),
       head: r.head,
@@ -105,7 +105,7 @@ async function syncOnce(opts: { check?: boolean }): Promise<SyncResult> {
   // (operators share the checkout through the archon-ops group).
   const git = (args: string[]): ReturnType<typeof run> =>
     run(["git", "-C", repo, ...args], {
-      ...(proc.isRoot() ? { asUser: owner } : {}),
+      ...(asRoot() ? { asUser: owner } : {}),
       // Never wait at a hidden username prompt: fail and say how to fix it.
       env: { GIT_TERMINAL_PROMPT: "0" },
     });
@@ -126,7 +126,7 @@ async function syncOnce(opts: { check?: boolean }): Promise<SyncResult> {
       incoming: [],
       head: head0,
       remote: "",
-      blocked: `fetch failed as ${proc.isRoot() ? owner : currentUser()}: ${fetch.stderr
+      blocked: `fetch failed as ${asRoot() ? owner : currentUser()}: ${fetch.stderr
         .trim()
         .split("\n")
         .pop()}`,
@@ -159,7 +159,7 @@ async function syncOnce(opts: { check?: boolean }): Promise<SyncResult> {
   // Spec 047 (Article 9): move only to a tip signed by a signer this host trusts.
   const { checkTip, enforcing } = await import("../identity/signers.ts");
   if (await enforcing()) {
-    const t = await checkTip(repo, remote, head0, undefined, proc.isRoot() ? owner : undefined);
+    const t = await checkTip(repo, remote, head0, undefined, asRoot() ? owner : undefined);
     if (!t.ok) {
       count("archon.update.outcome", 1, { "archon.outcome": `refused-${t.code}` });
       await journal(
@@ -204,10 +204,10 @@ async function syncOnce(opts: { check?: boolean }): Promise<SyncResult> {
   ]);
   if (!changed.ok || changed.stdout.trim() !== "") {
     const { installDependencies } = await import("../install/bun.ts");
-    const install = await installDependencies(repo, proc.isRoot() ? { asUser: owner } : {});
+    const install = await installDependencies(repo, asRoot() ? { asUser: owner } : {});
     if (!install.ok) {
       await git(["reset", "--keep", head0]);
-      await installDependencies(repo, proc.isRoot() ? { asUser: owner } : {});
+      await installDependencies(repo, asRoot() ? { asUser: owner } : {});
       count("archon.update.outcome", 1, { "archon.outcome": "refused-lock" });
       return {
         current: false,

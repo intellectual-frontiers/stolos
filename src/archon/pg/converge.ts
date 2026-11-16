@@ -8,7 +8,7 @@
 
 import { errors, fs, path as paths } from "@intellectual-frontiers/ifc-ts/runtime";
 import { getRecord, putRecord } from "../state/store.ts";
-import { P } from "../core/paths.ts";
+import { onHost, P } from "../core/paths.ts";
 import { run, type RunResult } from "../core/exec.ts";
 import type { FleetDef, HostDef, PgRecord, PgState } from "../model/types.ts";
 import {
@@ -438,7 +438,13 @@ async function exec(v: number, n: string, sql: string, s: Sink, what: string, db
   return r.ok;
 }
 
-async function convergeIdentities(v: number, inst: Instance, s: Sink): Promise<boolean> {
+/**
+ * An instance's identities (spec 039): every login role it wants (a superuser among them made
+ * `NOSUPERUSER`); a login role that is Archon's but not wanted, or has no Linux account of its
+ * name, made `NOLOGIN` (never dropped); passwords only for services; then each database's roles,
+ * members, rights, and extensions. False when a step failed.
+ */
+export async function convergeIdentities(v: number, inst: Instance, s: Sink): Promise<boolean> {
   const n = inst.name;
   const before: Array<[string, boolean, boolean, string | null]> = (
     await rows(
@@ -496,7 +502,7 @@ async function convergeIdentities(v: number, inst: Instance, s: Sink): Promise<b
       );
     }
   }
-  const dir = paths.join(PG.secrets, n);
+  const dir = onHost(paths.join(PG.secrets, n));
   for (const role of inst.roles.filter((r) => r.kind === "service")) {
     if (!(await servicePassword(v, n, role.name, s))) return false;
   }

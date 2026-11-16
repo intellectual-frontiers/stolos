@@ -7,7 +7,7 @@
  */
 
 import { fs, path as paths, proc } from "@intellectual-frontiers/ifc-ts/runtime";
-import { P } from "../core/paths.ts";
+import { asRoot, onHost, P } from "../core/paths.ts";
 import { loadFleet, loadHosts } from "../model/load.ts";
 import { networkOf } from "../model/resolve.ts";
 import { bootSite, enqueue, type Event, hostSite, kick, type Site } from "./notify.ts";
@@ -16,9 +16,10 @@ import { bootSite, enqueue, type Event, hostSite, kick, type Site } from "./noti
 export async function localSite(hostName?: string): Promise<Site | undefined> {
   try {
     const fleet = await loadFleet();
-    const name = hostName ?? ((await fs.readTextOr("/etc/archon/host"))?.trim() || undefined);
+    const name =
+      hostName ?? ((await fs.readTextOr(onHost("/etc/archon/host")))?.trim() || undefined);
     const host = name ? (await loadHosts()).find((h) => h.name === name) : undefined;
-    if (host && proc.build.os === "linux" && (await fs.readTextOr("/etc/archon/host"))) {
+    if (host && proc.build.os === "linux" && (await fs.readTextOr(onHost("/etc/archon/host")))) {
       return hostSite(
         fleet,
         host.name,
@@ -38,7 +39,7 @@ export async function notify(ev: Event, hostName?: string): Promise<string> {
     const site = await localSite(hostName);
     if (!site) return "not configured";
     // Hosts: only root may write the spool; others go through `archon notify send`.
-    if (site.role !== "boot" && !proc.isRoot()) return "skipped (not root)";
+    if (site.role !== "boot" && !asRoot()) return "skipped (not root)";
     const r = await enqueue(site, ev);
     if (r === "queued") await kick(site);
     return r;
@@ -68,7 +69,7 @@ export interface Health {
 }
 
 /** Read HEALTH (or another path, in tests); empty when missing or not JSON. */
-async function readHealth(path = HEALTH): Promise<Health> {
+async function readHealth(path = onHost(HEALTH)): Promise<Health> {
   try {
     return JSON.parse((await fs.readTextOr(path)) ?? "{}") as Health;
   } catch {
@@ -76,7 +77,7 @@ async function readHealth(path = HEALTH): Promise<Health> {
   }
 }
 
-async function writeHealth(h: Health, path = HEALTH) {
+async function writeHealth(h: Health, path = onHost(HEALTH)) {
   await fs.writeTextFile(path, JSON.stringify(h, null, 2) + "\n").catch(() => {});
 }
 
@@ -121,7 +122,7 @@ export async function applyOutcome(
   log: string | null,
   timezone: string,
 ): Promise<void> {
-  if (!proc.isRoot()) return;
+  if (!asRoot()) return;
   const h = await readHealth();
   const { next, send } = applyTransition(h.apply, ok);
   const prevSince = h.apply?.since;
@@ -163,7 +164,7 @@ export async function applyOutcome(
 
 /** Updates that need a reboot: one message per boot. */
 export async function rebootCheck(hostName: string): Promise<void> {
-  if (!proc.isRoot()) return;
+  if (!asRoot()) return;
   const flag = await fs.readTextOr("/run/reboot-required");
   if (flag === undefined) return;
   const bootId = (await fs.readTextOr("/proc/sys/kernel/random/boot_id"))?.trim() ?? "";
@@ -193,7 +194,7 @@ export async function verifyOutcome(
   hostName: string,
   checks: Array<{ resource: string; ok: boolean; output: string; level?: string }>,
 ): Promise<void> {
-  if (!proc.isRoot()) return;
+  if (!asRoot()) return;
   const h = await readHealth();
   const failingNow = checks.filter((c) => !c.ok && c.level !== "warn").map((c) => c.resource);
   const before = new Set(h.verifyFailing ?? []);
@@ -224,7 +225,7 @@ export async function backupOutcome(
   detail: string,
   log: string | null,
 ): Promise<void> {
-  if (!proc.isRoot()) return;
+  if (!asRoot()) return;
   if (!ok) {
     await notify(
       {

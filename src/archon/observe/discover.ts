@@ -15,6 +15,7 @@ import { LOCAL_UI_ENDPOINT } from "../otelui/otelui.ts";
 import { OTEL_UI } from "../containers/catalog.ts";
 import { fs } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "../core/exec.ts";
+import { onHost } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";
 import { loadFleet } from "../model/load.ts";
 import type { FleetDef, HostDef } from "../model/types.ts";
@@ -207,19 +208,19 @@ export async function discover(host: HostDef, check = false): Promise<number> {
     );
   }
   const want = found ? centralConfig(found.endpoint, CORE_PCP_METRICS, found.source) : "{}\n";
-  if ((await fs.readTextOr(CENTRAL.config)) !== want) {
+  if ((await fs.readTextOr(onHost(CENTRAL.config))) !== want) {
     p.change(
       found ? `forward to ${found.endpoint} (${found.source})` : "forward nothing: local only",
     );
     if (!check) {
-      await fs.writeTextFile(CENTRAL.config, want, { mode: 0o644 });
+      await fs.writeTextFile(onHost(CENTRAL.config), want, { mode: 0o644 });
       await run(["systemctl", "try-restart", OBSERVE.collectorUnit]);
     }
   }
   if (!check) {
     await fs
       .writeTextFile(
-        CENTRAL.status,
+        onHost(CENTRAL.status),
         JSON.stringify({
           endpoint: found?.endpoint ?? null,
           source: found?.source ?? null,
@@ -237,7 +238,7 @@ export async function lastDiscovery(): Promise<
   { endpoint: string | null; source: string | null } | undefined
 > {
   try {
-    return JSON.parse(await fs.readTextOr(CENTRAL.status, "")) as {
+    return JSON.parse(await fs.readTextOr(onHost(CENTRAL.status), "")) as {
       endpoint: string | null;
       source: string | null;
     };

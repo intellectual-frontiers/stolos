@@ -20,10 +20,19 @@ import { fqdn } from "../web/config.ts";
 import { newPassword, upsertSection } from "../pg/config.ts";
 import { S3 } from "../containers/catalog.ts";
 import type { Sink } from "../pg/converge.ts";
+import { asRoot, onHost } from "../core/paths.ts";
 
 /** What a program reads (`--json`, the secret for a terminal), on standard output. */
 const print = (text: string): void => {
   stdio.stdout.writeSync(`${text}\n`);
+};
+
+/** Where this run reads and writes S3's files on the host (`onHost`: under ARCHON_ROOT in tests). */
+const at = {
+  secrets: (): string => onHost(S3.secrets),
+  dir: (): string => onHost(S3_PATHS.dir),
+  rcEnv: (): string => onHost(S3_PATHS.rcEnv),
+  keys: (): string => onHost(S3_PATHS.keys),
 };
 
 /** Why a command refused, for the person: a problem, shown now. */
@@ -78,19 +87,19 @@ export const s3Name = (fleet: FleetDef, host: HostDef): { api: string; console: 
 
 /** Before the container first starts: its admin credentials, root only (never in /etc). */
 export async function prepareS3(s: Sink): Promise<void> {
-  if (await fs.exists(S3.secrets)) return;
+  if (await fs.exists(at.secrets())) return;
   s.change(`${S3.secrets} (S3 admin credentials, root only)`);
   if (s.check) return;
   const secret = newPassword();
-  await fs.ensureDir(S3_PATHS.dir);
-  await fs.chmod(S3_PATHS.dir, 0o700);
+  await fs.ensureDir(at.dir());
+  await fs.chmod(at.dir(), 0o700);
   await fs.writeTextFile(
-    S3.secrets,
+    at.secrets(),
     `RUSTFS_ACCESS_KEY=${S3_PATHS.admin}\nRUSTFS_SECRET_KEY=${secret}\n`,
     { mode: 0o600 },
   );
   await fs.writeTextFile(
-    S3_PATHS.rcEnv,
+    at.rcEnv(),
     `RC_HOST_${S3_PATHS.alias}=http://${S3_PATHS.admin}:${secret}@127.0.0.1:9000\n`,
     { mode: 0o600 },
   );
@@ -108,7 +117,7 @@ function rc(args: string[], o: { stdin?: string; secret?: string } = {}): Promis
       "exec",
       "-i",
       "--env-file",
-      S3_PATHS.rcEnv,
+      at.rcEnv(),
       ...(o.secret ? ["-e", "ARCHON_S3_SECRET"] : []),
       `archon-${S3.name}`,
       "rc",
@@ -129,7 +138,7 @@ async function ready(timeoutMs = 120_000): Promise<boolean> {
   return false;
 }
 
-const keyPath = (name: string): string => path.join(S3_PATHS.keys, name);
+const keyPath = (name: string): string => path.join(at.keys(), name);
 
 /** Give an S3 user this secret (through Podman's environment, never argv); an error, or undefined. */
 async function setSecret(name: string, secret: string): Promise<string | undefined> {
@@ -143,8 +152,8 @@ async function setSecret(name: string, secret: string): Promise<string | undefin
 /** The account's key file: 0400, owned by the account (root for a name without one). */
 async function writeKey(name: string, secret: string): Promise<void> {
   const file = keyPath(name);
-  await fs.ensureDir(S3_PATHS.keys);
-  await fs.chmod(S3_PATHS.keys, 0o711);
+  await fs.ensureDir(at.keys());
+  await fs.chmod(at.keys(), 0o711);
   const owner = (await run(["getent", "passwd", name])).ok ? name : "root";
   const tmp = `${file}.archon-${proc.pid}`;
   await fs.writeTextFile(tmp, secret + "\n", { mode: 0o400 });
@@ -165,8 +174,8 @@ export async function convergeS3(
 ): Promise<boolean> {
   const want = s3Identities(plan.users, plan.fleet);
   const have: string[] = [];
-  if (await fs.exists(S3_PATHS.keys)) {
-    for await (const e of fs.readDir(S3_PATHS.keys)) {
+  if (await fs.exists(at.keys())) {
+    for await (const e of fs.readDir(at.keys())) {
       if (e.isFile && !e.name.includes(".")) have.push(e.name);
     }
   }
@@ -180,8 +189,8 @@ export async function convergeS3(
     s.fail("S3 (RustFS) did not become ready in 2 minutes", "journalctl -u archon-s3 -n 50");
     return false;
   }
-  await fs.ensureDir(S3_PATHS.keys);
-  await fs.chmod(S3_PATHS.keys, 0o711);
+  await fs.ensureDir(at.keys());
+  await fs.chmod(at.keys(), 0o711);
   for (const name of todo) {
     const file = keyPath(name);
     let secret = (await fs.readTextOr(file))?.trim();
@@ -250,8 +259,8 @@ export async function s3Status(hostName: string, json: boolean): Promise<number>
     active === "active" &&
     (await run(["curl", "-fsS", "-o", "/dev/null", "--max-time", "3", S3.health])).ok;
   const users: string[] = [];
-  if (proc.isRoot() && (await fs.exists(S3_PATHS.keys))) {
-    for await (const e of fs.readDir(S3_PATHS.keys)) {
+  if (asRoot() && (await fs.exists(at.keys()))) {
+    for await (const e of fs.readDir(at.keys())) {
       if (!e.name.includes(".")) users.push(e.name);
     }
   }
@@ -264,7 +273,7 @@ export async function s3Status(hostName: string, json: boolean): Promise<number>
     healthy,
     api: `https://${names.api}`,
     console: `https://${names.console}`,
-    users: proc.isRoot() ? users.sort() : null,
+    users: asRoot() ? users.sort() : null,
   };
   if (json) print(JSON.stringify(out, null, 2));
   else {
@@ -402,8 +411,11 @@ export async function s3Key(
  * Runs as root (sudo); the account is the person behind sudo. The secret is
  * never printed, logged, or journaled; only that it changed.
  */
-export async function s3Rotate(hostName: string): Promise<number> {
-  const { host } = await server(hostName);
+export async function s3Rotate(
+  hostName: string,
+  o: { readonly host?: HostDef } = {},
+): Promise<number> {
+  const host = o.host ?? (await server(hostName)).host;
   const who = proc.env.get("SUDO_USER") || currentUser();
   if (!who || who === "root") {
     refuse("Rotate as the account whose key it is: archon fs s3 key --rotate (it asks sudo).");
@@ -413,7 +425,7 @@ export async function s3Rotate(hostName: string): Promise<number> {
     refuse(`S3 is off on ${host.name}: an operator turns it on with archon fs s3 on.`);
     return 1;
   }
-  if (!proc.isRoot()) {
+  if (!asRoot()) {
     refuse("Rotating a key needs root (archon elevates through sudo).");
     return 1;
   }

@@ -26,7 +26,7 @@
 import { fromBase64, otel, toBase64 } from "@intellectual-frontiers/ifc-ts/kernel";
 import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "../core/exec.ts";
-import { P } from "../core/paths.ts";
+import { asRoot, onHost, P } from "../core/paths.ts";
 import { SECRETS } from "../core/secrets.ts";
 import type { FleetDef } from "../model/types.ts";
 import { buildMime, escapeHtml } from "./mime.ts";
@@ -93,9 +93,9 @@ export function hostSite(
   return {
     role: kind,
     name,
-    credential: HOST_NOTIFY.credential,
-    spool: HOST_NOTIFY.spool,
-    status: HOST_NOTIFY.status,
+    credential: onHost(HOST_NOTIFY.credential),
+    spool: onHost(HOST_NOTIFY.spool),
+    status: onHost(HOST_NOTIFY.status),
     to: fleet.mail?.to,
     // archon's own messages come from root+<host>.<tag>@<domain> (spec 027).
     from: fleet.mail ? senderAddress(fleet.mail, name, "root") : undefined,
@@ -355,7 +355,7 @@ export async function enqueue(
   try {
     if (!site.to || !(await fs.exists(site.credential))) return "not configured";
     await fs.ensureDir(site.spool);
-    if (proc.build.os !== "windows" && proc.isRoot()) {
+    if (proc.build.os !== "windows" && asRoot()) {
       await fs.chmod(site.spool, 0o700).catch(() => undefined);
     }
     const keysPath = path.join(site.spool, "keys.json");

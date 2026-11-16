@@ -23,13 +23,14 @@
  * @module
  */
 
-import { fs, path as paths, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { VERSION } from "../archon/version.ts";
 import { ui } from "../archon/core/ui.ts";
 import { P, resetRoots } from "../archon/core/paths.ts";
 import { armHost, liveToken, loadTokens } from "../archon/core/secrets.ts";
 import { loadFleet, loadServers } from "../archon/model/load.ts";
 import { ensureAssets } from "./assets.ts";
+import { openBootLog } from "./boot-log.ts";
 import { handler, serve } from "./server.ts";
 import { serveTftp } from "./tftp.ts";
 import { trustHost } from "../archon/install/host-keys.ts";
@@ -49,30 +50,6 @@ function opt(args: readonly string[], name: string): string | undefined {
     ?.split("=")
     .slice(1)
     .join("=");
-}
-
-/** The boot server's log (spec 004): %LOCALAPPDATA%\\stolos\\boot\\boot.log, one previous copy kept. */
-async function openBootLog(): Promise<{ path: string; write: (line: string) => void }> {
-  const path = paths.join(P.bootCache, "boot.log");
-  await fs.ensureDir(P.bootCache);
-  const size = await fs
-    .stat(path)
-    .then((s) => s.size)
-    .catch(() => 0);
-  if (size > 5_000_000) await fs.rename(path, `${path}.1`).catch(() => {});
-  const f = await fs.open(path, { create: true, append: true });
-  const enc = new TextEncoder();
-  f.writeSync(enc.encode(`${new Date().toISOString()} == boot serve started\n`));
-  return {
-    path,
-    write: (line) => {
-      try {
-        f.writeSync(enc.encode(line + "\n"));
-      } catch {
-        /* the log is best effort */
-      }
-    },
-  };
 }
 
 async function main(args: readonly string[]): Promise<number> {
@@ -122,7 +99,7 @@ async function main(args: readonly string[]): Promise<number> {
     if (how.kind === "mac" && reg && reg.mac !== how.mac) {
       // A person named the network card: that is the host's registered MAC from now on.
       const file = await writeRegistration(name, { ...reg, mac: how.mac, macSource: "operator" });
-      ui.say(`${file}: mac ${how.mac} (commit and push it, signed, to keep it)`);
+      ui.say(`${file}: mac ${how.mac} (to keep it: bun run stolos apply)`);
     }
     // Spec 063: what its first boot will run must be on GitHub, signed by a fleet signer.
     {

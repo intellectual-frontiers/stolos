@@ -11,7 +11,7 @@
  */
 
 import { fs, path as paths, proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
-import { P } from "../core/paths.ts";
+import { asRoot, P } from "../core/paths.ts";
 import { currentUser, run } from "../core/exec.ts";
 import { putRecord } from "../state/store.ts";
 import { VERSION } from "../version.ts";
@@ -192,10 +192,10 @@ export async function proposeCommand(
   } = {},
 ): Promise<number> {
   const dir = deps.dir ?? P.state;
-  if (!o.dryRun && !proc.isRoot() && !deps.sign) {
+  if (!o.dryRun && !asRoot() && !deps.sign) {
     throw new Error("archon propose signs with the host key, as root (it elevates through sudo)");
   }
-  if (deps.collectFirst ?? (!o.dryRun && proc.isRoot())) {
+  if (deps.collectFirst ?? (!o.dryRun && asRoot())) {
     const { collect } = await import("./collect.ts");
     await collect(host, dir);
   }

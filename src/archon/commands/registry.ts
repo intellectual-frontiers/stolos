@@ -2228,7 +2228,7 @@ export const COMMANDS: Command[] = [
   {
     name: "connector add",
     summary: "Add a connector from a pinned URL (a tag or a commit), checked, with a lock entry",
-    description: `Spec 088. Adds a connector Stolos does not ship, the way the fleet takes the engine: <source>@<ref>, where the source is https://github.com/<owner>/<repo>[/<path>] (read from raw.githubusercontent.com; the path defaults to mod.ts) and the ref a version tag or a full commit SHA (a branch is refused). It loads the module in its own process with no network, files, or secrets (imports from its host only), and checks it: a connector made with defineConnector, an id no other connector has, labels that follow the naming rules (D3FEND, OCSF, UDM), only SCF ids Stolos knows, a read-only credential, an engine range this engine is in, and its own recorded-fixture tests, which must pass. Then it writes the import and Stolos's lock entry to fleets/<fleet>/connectors.ts and the hash of every file it loads to the fleet's lock. Commit and push to approve. --index <url> finds <id>@<tag> in an index anyone can host (bun run stolos docs connectors).`,
+    description: `Spec 088. Adds a connector Stolos does not ship, the way the fleet takes the engine: <source>@<ref>, where the source is https://github.com/<owner>/<repo>[/<path>] (read from raw.githubusercontent.com; the path defaults to mod.ts) and the ref a version tag or a full commit SHA (a branch is refused). It loads the module in its own process with no network, files, or secrets (imports from its host only), and checks it: a connector made with defineConnector, an id no other connector has, labels that follow the naming rules (D3FEND, OCSF, UDM), only SCF ids Stolos knows, a read-only credential, an engine range this engine is in, and its own recorded-fixture tests, which must pass. Then it writes the import and Stolos's lock entry to fleets/<fleet>/connectors.ts and the hash of every file it loads to the fleet's lock. Approve it with bun run stolos apply (spec 060). --index <url> finds <id>@<tag> in an index anyone can host (bun run stolos docs connectors).`,
     tier: "repo",
     noMcp: true,
     args: [
@@ -2271,7 +2271,7 @@ export const COMMANDS: Command[] = [
     name: "connector remove",
     summary:
       "Remove an added connector: its import and lock entry (its last observation stays in Git)",
-    description: `Spec 088. Removes the connector's import and entry from fleets/<fleet>/connectors.ts. Its credential stays in the vault until stolos disconnect <id>; its last observation stays in Git. Commit and push to approve.`,
+    description: `Spec 088. Removes the connector's import and entry from fleets/<fleet>/connectors.ts. Its credential stays in the vault until stolos disconnect <id>; its last observation stays in Git. Approve it with bun run stolos apply (spec 060).`,
     tier: "repo",
     noMcp: true,
     args: [
@@ -4558,13 +4558,15 @@ export const COMMANDS: Command[] = [
       // Spec 025: the daily report is the daily message.
       const { notify } = await import("../notify/events.ts");
       const text = await fs.readTextFile(r.path).catch(() => "");
+      const date = new Date().toISOString().slice(0, 10);
       await notify({
-        event: `daily report${r.failedUnits ? ` · ${r.failedUnits} failed unit(s)` : ""}`,
+        // Spec 013: "[Archon] <host>: daily report <date>", once per day (the key).
+        event: `daily report ${date}${r.failedUnits ? ` · ${r.failedUnits} failed unit(s)` : ""}`,
         level: r.failedUnits ? "warn" : "info",
         what:
           text.length > 6000 ? text.slice(0, 6000) + "\n[...the full report is attached]" : text,
         attach: [r.path],
-        key: `daily:${new Date().toISOString().slice(0, 10)}`,
+        key: `daily:${date}`,
       });
       return 0;
     },

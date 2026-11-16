@@ -119,22 +119,28 @@ export async function loadEstate(rev?: string): Promise<Estate> {
   });
 }
 
-/** `stolos estate query "<sql>"`. */
+/**
+ * `stolos estate query "<sql>"`. With `--json`, a failure is also an object on standard output
+ * (`{"error": ..., "fix": ...}`), so a program reading it never gets nothing.
+ */
 export async function estateQueryCommand(sql: string, asJson = false): Promise<number> {
+  const refuse = (error: string, fix: string): number => {
+    ui.phase("Query").fail(error, fix);
+    if (asJson) print(JSON.stringify({ error, fix }, null, 2));
+    return 1;
+  };
   const why = estateRefusal(sql);
   if (why) {
-    ui.phase("Query").fail(
+    return refuse(
       `refused: ${why}`,
       `for example: bun run stolos estate query "select connector, display_name from user_account where admin = 1 and mfa = 0"`,
     );
-    return 1;
   }
   let rows: Array<Record<string, unknown>>;
   try {
     rows = estateQuery(await loadEstate(), sql);
   } catch (e) {
-    ui.phase("Query").fail(messageOf(e), `tables and views: ${ESTATE_NAMES}`);
-    return 1;
+    return refuse(messageOf(e), `tables and views: ${ESTATE_NAMES}`);
   }
   if (asJson) print(JSON.stringify(rows, null, 2));
   else {

@@ -21,7 +21,7 @@ import {
   string,
 } from "@intellectual-frontiers/ifc-ts/kernel";
 import { fs, http, net, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
-import { P } from "../core/paths.ts";
+import { asRoot, P } from "../core/paths.ts";
 import { run } from "../core/exec.ts";
 import { journal } from "../core/log.ts";
 import { ui } from "../core/ui.ts";
@@ -129,7 +129,7 @@ export async function githubToken(): Promise<string | undefined> {
     const owner = (await run(["stat", "-c", "%U", P.repo])).stdout.trim();
     for (const user of [owner, proc.env.get("SUDO_USER"), undefined]) {
       const r = await run(["gh", "auth", "token", "--hostname", "github.com"], {
-        ...(user && proc.isRoot() ? { asUser: user } : {}),
+        ...(user && asRoot() ? { asUser: user } : {}),
       });
       if (r.ok && r.stdout.trim()) {
         cachedToken = r.stdout.trim();
@@ -230,7 +230,7 @@ async function activate(t: ToolDef, version: string, binDir: string): Promise<vo
     await fs.rename(tmp, link);
   }
   const smoke = await run(argvOf(t.verify), {
-    ...(t.unprivileged && proc.isRoot() ? { asUser: "nobody" } : {}),
+    ...(t.unprivileged && asRoot() ? { asUser: "nobody" } : {}),
     cwd: "/", // nobody's home does not exist
   });
   if (!smoke.ok) {
@@ -262,7 +262,11 @@ async function prune(t: ToolDef, keep = 2): Promise<void> {
   const active = new Set<string>();
   for (const bin of t.bins) {
     try {
-      const v = (await fs.readLink(path.join(P.bin, bin))).split("/")[4];
+      // <toolsRoot>/<tool>/<version>/bin/<bin>: the version is the folder under the tool's.
+      const target = await fs.readLink(path.join(P.bin, bin));
+      const v = target.startsWith(`${root}/`)
+        ? target.slice(root.length + 1).split("/")[0]
+        : undefined;
       if (v !== undefined) active.add(v);
     } catch {
       /* none */
@@ -273,7 +277,12 @@ async function prune(t: ToolDef, keep = 2): Promise<void> {
   }
 }
 
-async function installUpstream(t: ToolDef, rel: Release, arch: "amd64"): Promise<void> {
+/**
+ * Spec 010 FR-001: download a release's asset, refused unless it matches the release's published
+ * SHA-256; unpack it into `/opt/tools/<tool>/<version>`, link its commands into `/usr/local/bin`,
+ * smoke-test it, and roll the links back to the previous version when the test fails.
+ */
+export async function installUpstream(t: ToolDef, rel: Release, arch: "amd64"): Promise<void> {
   if (!t.github) throw new Error(`${t.id}: not a GitHub release`);
   const re = t.github.asset(arch, rel.version);
   const asset = rel.assets.find((a) => re.test(a.name));
@@ -450,7 +459,7 @@ export async function syncTools(
   host: HostDef,
   opts: { reportOnly: boolean },
 ): Promise<{ rows: ToolStatus[]; report: string; failed: boolean }> {
-  if (!opts.reportOnly && !proc.isRoot()) throw new Error("tools sync must run as root");
+  if (!opts.reportOnly && !asRoot()) throw new Error("tools sync must run as root");
   const plan = await planFor(host);
   const rows: ToolStatus[] = [];
   const phase = ui.phase("Tools");
@@ -482,7 +491,7 @@ export async function syncTools(
     ),
     "",
   ].join("\n");
-  if (proc.isRoot()) {
+  if (asRoot()) {
     await fs.ensureDir(path.join(P.varLib, "reports"));
     await fs.writeTextFile(path.join(P.varLib, "reports", `tools-${week}.md`), report);
     await journal(

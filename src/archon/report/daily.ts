@@ -5,8 +5,8 @@
  * @module
  */
 
-import { fs, path as paths, proc, toError } from "@intellectual-frontiers/ifc-ts/runtime";
-import { P } from "../core/paths.ts";
+import { fs, path as paths, toError } from "@intellectual-frontiers/ifc-ts/runtime";
+import { asRoot, P } from "../core/paths.ts";
 import { run } from "../core/exec.ts";
 import { journal } from "../core/log.ts";
 import { capture } from "../state/capture.ts";
@@ -92,7 +92,7 @@ export async function dailyReport(
   ].join("\n");
 
   const text = facts + "\n";
-  const dir = proc.isRoot() ? paths.join(P.varLib, "reports") : paths.join(P.state, "reports");
+  const dir = asRoot() ? paths.join(P.varLib, "reports") : paths.join(P.state, "reports");
   await fs.ensureDir(dir);
   const path = paths.join(dir, `daily-${date}.md`);
   await fs.writeTextFile(path, text);
@@ -115,12 +115,12 @@ async function outsideStolos(host: HostDef): Promise<string> {
     const { loadDrift } = await import("../proposal/server.ts");
     const { driftText } = await import("../proposal/drift.ts");
     const { remind, waiting, waitingLine } = await import("../proposal/record.ts");
-    if (proc.isRoot()) await collect(host);
+    if (asRoot()) await collect(host);
     const v = await loadDrift(host);
     if (!v.state) return "nothing collected yet (sudo archon drift --collect)";
     // Spec 095: what waits on a person; a reminder after 3 days (at most every 3 days).
     const w = waiting(v);
-    const reminded = proc.isRoot() ? await remind(host, w) : false;
+    const reminded = asRoot() ? await remind(host, w) : false;
     return [
       waitingLine(w) + (reminded ? " (reminder mailed)" : ""),
       "",

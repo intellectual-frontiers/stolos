@@ -11,7 +11,7 @@ import {
   assertStringIncludes,
   proves,
 } from "@intellectual-frontiers/ifc-ts/runtime/test";
-import { fs, toError } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, proc, toError } from "@intellectual-frontiers/ifc-ts/runtime";
 import { Ajv, type AnySchema } from "ajv";
 import {
   catalogCache,
@@ -241,6 +241,9 @@ proves(
 
 /** An optional check against the real workbook, when this PC has it cached. */
 const real = await loadScf().catch(() => undefined);
+if (!real && proc.env.get("STOLOS_REQUIRE_SCF")) {
+  throw new Error("071: STOLOS_REQUIRE_SCF is set (CI) but the SCF catalog is not cached");
+}
 proves(
   ["071-catalogs-oscal FR-001"],
   "071: every SCF id Stolos cites is in the SCF release, with SCF's name",

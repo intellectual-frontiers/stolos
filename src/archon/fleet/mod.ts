@@ -121,10 +121,10 @@
  *    - **Commit**: one signed commit of `package.json` and `bun.lock`, with the subject
  *      `stolos v0.8.0: adopt the engine v0.8.0`. Git asks for your key's passphrase here.
  *
- * 4. **Approve it by pushing:**
+ * 4. **Approve it by pushing** (spec 060: the signed commit is checked and pushed):
  *
  *    ```sh
- *    git push
+ *    bun run stolos apply
  *    ```
  *
  * 5. **Watch the hosts move** (each one within 15 minutes, or at once with `archon update` on it):
@@ -214,7 +214,7 @@
  *
  * ```sh
  * bun run stolos decide pg on --durable --host olympia     # or --ephemeral; off to turn it off
- * git commit -S -m "fcr decide: pg on on olympia" && git push
+ * bun run stolos apply -m "fcr decide: pg on on olympia"     # one signed commit, verified, pushed
  * ```
  *
  * It writes `fleets/<id>/hosts/<host>/decisions.ts`; the host applies it within 15 minutes. A decision
@@ -254,17 +254,17 @@
  * | When                                                 | Run                                                                              |
  * | ---------------------------------------------------- | -------------------------------------------------------------------------------- |
  * | a new PC, or anything is wrong                       | `bun run stolos keys setup`                                                    |
- * | a planned change of key (yearly, or a new PC)        | `bun run stolos keys rotate` (approved by the current key), then `git push`    |
- * | the daily key is lost                                | `bun run stolos keys lost` (approved by the recovery key), push                |
+ * | a planned change of key (yearly, or a new PC)        | `bun run stolos keys rotate` (approved by the current key), then `bun run stolos apply` |
+ * | the daily key is lost                                | `bun run stolos keys lost` (approved by the recovery key), `bun run stolos apply` |
  * | the daily key may have been copied (a stolen laptop) | the same, with `--stolen`                                                        |
- * | a new recovery key (yearly)                          | `bun run stolos keys rotate-recovery` (approved by the old recovery key), push |
+ * | a new recovery key (yearly)                          | `bun run stolos keys rotate-recovery` (approved by the old recovery key), `bun run stolos apply` |
  *
  * Each of them continues where it stopped if interrupted. A new person becomes a signer when someone
  * already listed adds them and signs that commit:
  *
  * ```sh
  * bun run stolos signers add <name> --role daily --key <their .pub file>
- * git commit -m "<fleet> signers: add <name>" && git push
+ * bun run stolos apply -m "<fleet> signers: add <name>"
  * ```
  *
  * ## Troubleshooting
@@ -278,7 +278,7 @@
  * | `the repository has uncommitted changes`                                               | the upgrade must be a commit of its own                                                | commit or stash your other change first                                                                                                                                                             |
  * | `Validate: fleet <id> does not validate with vX`                                       | the new engine expects something your model lacks                                      | run `ARCHON_FLEET=<id> bun run stolos validate`, fix the model in its own commit, then upgrade again                                                                                              |
  * | `Commit: the commit was not made`                                                      | signing failed or was cancelled                                                        | `bun run stolos keys` shows what is missing in your setup                                                                                                                                         |
- * | a host's journal says `refused ...: not signed` (`journalctl -t archon-approval`)      | someone pushed an unsigned tip                                                         | push a signed commit on top (`git commit -S --allow-empty -m "approve"` only if the unsigned work is right)                                                                                         |
+ * | a host's journal says `refused ...: not signed` (`journalctl -t archon-approval`)      | someone pushed an unsigned tip                                                         | approve it with a signed commit on top (`git commit -S --allow-empty -m "approve"`, then `bun run stolos apply`, only if the unsigned work is right)                                                                                         |
  *
  * @module
  */

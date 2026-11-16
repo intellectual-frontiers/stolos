@@ -1,8 +1,8 @@
 /**
  * # Dotfiles: how they work and how to change them
  *
- * Every account's dotfiles (bash, fish, the prompt, tmux, git, and on workstations Claude Code's
- * settings) are managed by chezmoi from the fleet repository. Nothing in your home directory is edited
+ * Every account's dotfiles (bash, fish, the prompt, tmux, and git; no agent's settings, spec 030)
+ * are managed by chezmoi from the fleet repository. Nothing in your home directory is edited
  * by hand on purpose: archon applies the repository's version at every converge.
  *
  * ## Shell features: one line

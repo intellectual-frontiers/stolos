@@ -6,7 +6,7 @@
  * @module
  */
 
-import { fs, proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
 import {
@@ -23,6 +23,7 @@ import { localSite } from "./events.ts";
 import { type Credential, saslPasswd } from "./transport.ts";
 import { loadFleet } from "../model/load.ts";
 import { DEFAULT_RELAY } from "./transport.ts";
+import { asRoot } from "../core/paths.ts";
 
 /**
  * Install the relay credential on this host (spec 027): Postfix's
@@ -144,8 +145,8 @@ export async function notifyStatus(o: { check: boolean }): Promise<number> {
   const s = await site();
   const st = await readStatus(s);
   const cred = await loadCredential(s).catch(() => undefined);
-  const configured = s.role === "boot" || proc.isRoot() ? !!cred : st.configured;
-  const q = proc.isRoot() || s.role === "boot" ? (await queued(s)).length : st.queue;
+  const configured = s.role === "boot" || asRoot() ? !!cred : st.configured;
+  const q = asRoot() || s.role === "boot" ? (await queued(s)).length : st.queue;
   const lines = [
     `mailbox    ${s.to ?? "(none: mail in fleets/<fleet>/fleet.ts)"}`,
     `from       ${s.from ?? "-"}`,

@@ -7,7 +7,7 @@
  */
 
 import { fs, lock, proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
-import { P, resetRoots } from "./core/paths.ts";
+import { asRoot, onHost, P, resetRoots } from "./core/paths.ts";
 import { COMMANDS, findCommand, offeredOn } from "./commands/registry.ts";
 import { effectiveTier, GLOBAL_ARGS, parseArgs, type RunContext } from "./core/registry-types.ts";
 import { defaultLogPath, ui } from "./core/ui.ts";
@@ -33,13 +33,13 @@ import { VERSION } from "./version.ts";
 export async function ensureHome(): Promise<void> {
   if (proc.env.get("HOME")) return;
   const home = await homeOf(currentUser());
-  proc.env.set("HOME", home && home !== "/" ? home : proc.isRoot() ? "/root" : "/");
+  proc.env.set("HOME", home && home !== "/" ? home : asRoot() ? "/root" : "/");
 }
 
 /** This host's name in the model: /etc/archon/host, else the short hostname. */
 export async function localHostName(): Promise<string> {
   try {
-    return (await fs.readTextFile("/etc/archon/host")).trim();
+    return (await fs.readTextFile(onHost("/etc/archon/host"))).trim();
   } catch {
     return proc.hostname().split(".")[0] ?? "";
   }
@@ -222,7 +222,7 @@ export async function main(
   try {
     const args = parseArgs(cmd, found.rest);
     const tier = effectiveTier(cmd, args);
-    if (cmd.precheck && !proc.isRoot()) {
+    if (cmd.precheck && !asRoot()) {
       const done = await cmd.precheck(args, {
         hostName: g.host ?? (await localHostName()),
         json: g.json === true,
@@ -235,7 +235,7 @@ export async function main(
     // Windows boot machine, where nothing host-mutating runs.
     if (
       (tier === "mutate" || tier === "destructive" || cmd.asOwner) &&
-      !proc.isRoot() &&
+      !asRoot() &&
       !args["root"] &&
       proc.build.os !== "windows"
     ) {
@@ -269,7 +269,7 @@ export async function main(
     if (ctx.verbose) ui.verbose = true;
     if (ctx.json) ui.quiet = true;
     // One host-changing run at a time; the lock is released when this process exits.
-    if ((tier === "mutate" || tier === "destructive") && proc.isRoot() && !cmd.unlocked) {
+    if ((tier === "mutate" || tier === "destructive") && asRoot() && !cmd.unlocked) {
       const held = await hostLock({
         wait: cmd.name !== "reconcile",
         onWait: (holder) => {

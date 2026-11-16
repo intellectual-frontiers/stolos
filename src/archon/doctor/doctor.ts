@@ -19,7 +19,7 @@ import {
 } from "@intellectual-frontiers/ifc-ts/kernel";
 import { fs, proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "../core/exec.ts";
-import { P } from "../core/paths.ts";
+import { asRoot, P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";
 import type { FleetDef, HostDef } from "../model/types.ts";
 import { loadFleet } from "../model/load.ts";
@@ -437,7 +437,7 @@ export async function doctor(
     }
   }
   // snapd's own connectivity check against the Snap Store.
-  if (proc.isRoot() && (await t(5, ["sh", "-c", "command -v snap"])).ok) {
+  if (asRoot() && (await t(5, ["sh", "-c", "command -v snap"])).ok) {
     const sc = await t(30, ["snap", "debug", "connectivity"]);
     const st = parseSnapConnectivity(sc.stdout);
     if (st?.pass) e.ok("Snap Store reachable (snap debug connectivity)");

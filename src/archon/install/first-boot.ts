@@ -22,7 +22,7 @@
 
 import { fs, path as paths } from "@intellectual-frontiers/ifc-ts/runtime";
 import { putRecord } from "../state/store.ts";
-import { P } from "../core/paths.ts";
+import { onHost, P } from "../core/paths.ts";
 import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
 import { apply } from "../apply/apply.ts";
@@ -177,6 +177,30 @@ export async function firstBoot(host: HostDef): Promise<number> {
     ),
   );
   const failed = ui.problems.filter((p) => p.level === "fail").length + failedChecks(checks).length;
+  await endFirstBoot(host, { failed, tally, head, pending });
+  return failed ? 1 : 0;
+}
+
+/**
+ * How a first boot ends (specs 005, 009, 025, 026): the final `Ready` (or `Done with problems`) line
+ * to the boot server's window, then the report URL is removed (spec 005 FR-004); the doctor's email
+ * checks and the install's message; last, Ubuntu's daily apt run started in the background, so
+ * updates published since the installer image install now (spec 009 FR-004).
+ */
+export async function endFirstBoot(
+  host: HostDef,
+  o: {
+    /** The failed steps and checks. */
+    readonly failed: number;
+    /** The checks: passed, counted, and not set up yet. */
+    readonly tally: { readonly passed: number; readonly total: number; readonly pending: number };
+    /** The checkout's commit. */
+    readonly head: string;
+    /** The boot server events still being sent. */
+    readonly pending: Promise<void>[];
+  },
+): Promise<void> {
+  const { failed, tally, head, pending } = o;
   pending.push(
     bootEvent({
       phase: failed ? "Done with problems" : "Ready",
@@ -189,7 +213,7 @@ export async function firstBoot(host: HostDef): Promise<number> {
     }),
   );
   await Promise.all(pending);
-  await fs.remove(BOOT_EVENTS).catch(() => {});
+  await fs.remove(onHost(BOOT_EVENTS)).catch(() => {});
   // Spec 026: the doctor's email checks, their findings mailed through archon
   // and Postfix, so every new server proves its mail on its first boot.
   const { emailChecks } = await import("../doctor/email.ts");
@@ -219,5 +243,4 @@ export async function firstBoot(host: HostDef): Promise<number> {
   // Ubuntu's updates published since the installer image (spec 009): start the
   // daily run now, in the background, instead of waiting up to a day.
   await run(["systemctl", "start", "--no-block", "apt-daily.service", "apt-daily-upgrade.service"]);
-  return failed ? 1 : 0;
 }

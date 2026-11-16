@@ -2,15 +2,15 @@
  * # The agent layer: managing servers from your workstation
  *
  * No AI agent runs on a server, and no server holds an AI credential (constitution Article 17, spec
- * 030). An agent (Claude Code by default) runs on your workstation, in this repository's checkout, and
- * reaches each server through **MCP over SSH**:
+ * 030). An agent (the MCP client you choose) runs on your workstation, in this repository's checkout,
+ * and reaches each server through **MCP over SSH**:
  *
  * ```
  * your workstation (BOOTPC, or Ubuntu on WSL)             a server (e.g. alpha)
  * ────────────────────────────────────────────             ──────────────────────
- * C:\archon (or /srv/archon)   claude                      sshd
+ * C:\archon (or /srv/archon)   your MCP client             sshd
  *   .mcp.json  archon-alpha: ssh ops@alpha.localdomain ─▶  ops' authorized_keys:
- *   .claude/settings.json  per-tool permissions              restrict,command="... archon mcp --max-tier mutate"
+ *                                                            restrict,command="... archon mcp --max-tier mutate"
  *                                                            │
  *                                                            ▼
  *                                                          archon mcp: only tools up to the tier;
@@ -21,8 +21,8 @@
  *   `restrict` (no shell, no forwarding, no other command). The tier is `fleet.mcp.maxTier` in
  *   `fleets/<fleet>/fleet.ts`: `read`, `repo`, or `mutate` (the default). Destructive commands are
  *   never served. A tool above the tier is not listed, and a call to it is refused.
- * - **The client asks first.** `stolos build` renders `.claude/settings.json`: read tools run freely,
- *   repo and mutating tools ask you, anything the server would refuse is denied.
+ * - **Your client decides what it asks first.** The engine renders no agent's settings: whatever
+ *   your client allows, the server refuses anything above its tier.
  * - **Everything is recorded.** Each call is in the server's journal (`journalctl -t archon-mcp`),
  *   with your workstation's address, and in its provenance (agent `mcp`). Each new SSH session as ops
  *   also arrives as a login email (spec 025), at most once an hour per address.
@@ -32,18 +32,9 @@
  * 1. **Your key.** ops accepts the keys in `fleet.admin.github.sshKeys` (or, to use separate keys for
  *    the agent, `fleet.mcp.keys`). The workstation's SSH key must be one of them; check with
  *    `ssh -o BatchMode=yes ops@alpha.localdomain` (it waits for MCP input: press Ctrl+C).
- * 2. **Claude Code.** On Windows: `irm https://claude.ai/install.ps1 | iex`. On a WSL workstation,
- *    `workstation add` installs it (spec 020). Sign in once with `claude`.
- * 3. **Run it in the checkout.**
- *
- *    ```powershell
- *    cd C:\archon
- *    git pull
- *    claude
- *    ```
- *
- *    Claude Code asks once to trust the project's MCP servers (`archon-<fleet>-<host>` for each
- *    server); `/mcp` shows them connected.
+ * 2. **Your MCP client.** Install and sign in to the one you choose; the engine installs none.
+ * 3. **Run it in the checkout.** `bun run stolos build` writes `.mcp.json` there, one server per
+ *    host (`archon-<fleet>-<host>`); the client finds them in the project's `.mcp.json`.
  *
  * ## Use it
  *
@@ -69,8 +60,8 @@
  * | `repo`              | also change the repository (signers, hosts)                   |
  * | `mutate` (default)  | also converge, restart, update, back up (each asks you first) |
  *
- * Change it in `fleets/<fleet>/fleet.ts`, then `bun run stolos build`, commit, and push; every
- * server rewrites ops' keys at its next converge.
+ * Change it in `fleets/<fleet>/fleet.ts`, then `bun run stolos apply` (build, a signed commit, the
+ * push); every server rewrites ops' keys at its next converge.
  *
  * ## Another agent, or a local model
  *

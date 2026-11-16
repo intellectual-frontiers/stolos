@@ -105,7 +105,7 @@ export function fleetChoiceFile(repo: string): string {
 export function findFleetId(repo: string): string {
   const env = proc.env.get("ARCHON_FLEET")?.trim();
   if (env !== undefined && env !== "") return env;
-  const etc = readOr("/etc/archon/fleet")?.trim();
+  const etc = readOr(onHost("/etc/archon/fleet"))?.trim();
   if (etc !== undefined && etc !== "") return etc;
   const chosen = readOr(fleetChoiceFile(repo))?.trim();
   if (chosen !== undefined && chosen !== "") return chosen;
@@ -124,6 +124,38 @@ export function clientId(): string {
   const c = proc.env.get("ARCHON_CLIENT")?.trim() ?? "";
   if (c !== "" && !CLIENT_ID.test(c)) throw new Error(`ARCHON_CLIENT is not a client id: ${c}`);
   return c;
+}
+
+/**
+ * The host's root: ARCHON_ROOT=<folder> (tests, and the sandbox) stands in for the host's `/`.
+ * Every fixed path the engine reads or writes on a host (`/etc/archon`, `/var/lib/archon`,
+ * `/var/lib/archon-keys`, `/var/log/archon`, `/opt/tools`, `/usr/local/bin`, `/srv/archon`,
+ * etckeeper) resolves under it through `onHost`, and the run is root's (`asRoot`), so a test
+ * exercises root's side as an ordinary account, with stand-ins for the programs on `PATH`. Unset
+ * (production), every path is exactly the one named and `asRoot` is `proc.isRoot()`. Read on every
+ * call, so a test may set it in its own process. What a host is given to write (a rendered file's
+ * path, a unit's `EnvironmentFile`) always names the real path: only reading and writing move.
+ *
+ * @example
+ * ```ts
+ * import { onHost } from "./paths.ts";
+ * const status = onHost("/var/lib/archon/status"); // "/var/lib/archon/status" unless ARCHON_ROOT
+ * ```
+ */
+export function hostRoot(): string {
+  const r = proc.env.get("ARCHON_ROOT") ?? "";
+  return r === "" ? "" : resolve(r);
+}
+
+/** A fixed host path, under ARCHON_ROOT when it is set (see `hostRoot`), else exactly `p`. */
+export function onHost(p: string): string {
+  const r = hostRoot();
+  return r === "" ? p : join(r, p);
+}
+
+/** Whether this run is root's: as root, or in a host root a test set up (see `hostRoot`). */
+export function asRoot(): boolean {
+  return hostRoot() !== "" || proc.isRoot();
 }
 
 let cachedRepo: string | undefined;
@@ -179,7 +211,10 @@ if (sandbox !== undefined && sandbox !== "") {
     ["user data", userData],
     ["user config", userConfig],
   ];
-  for (const [what, p] of roots) {
+  const hr = proc.env.get("ARCHON_ROOT");
+  const all: ReadonlyArray<readonly [string, string]> =
+    hr !== undefined && hr !== "" ? [...roots, ["the host root (ARCHON_ROOT)", hr]] : roots;
+  for (const [what, p] of all) {
     const r = resolve(p).toLowerCase();
     if (r !== root && !r.startsWith(root + sep)) {
       throw new Error(
@@ -226,8 +261,8 @@ export const P = {
    * workstation per fleet in their user data. Never in the repository.
    */
   get state(): string {
-    return readOr("/etc/archon/host") !== undefined
-      ? "/var/lib/archon"
+    return readOr(onHost("/etc/archon/host")) !== undefined
+      ? onHost("/var/lib/archon")
       : perFleet(userData, "state");
   },
   /**
@@ -242,8 +277,8 @@ export const P = {
    * this machine; a server keeps them in /var/lib/archon/catalogs.
    */
   get catalogs(): string {
-    return readOr("/etc/archon/host") !== undefined
-      ? "/var/lib/archon/catalogs"
+    return readOr(onHost("/etc/archon/host")) !== undefined
+      ? onHost("/var/lib/archon/catalogs")
       : join(userData, "stolos", "catalogs");
   },
   /** Rendered by stolos build; never committed. */
@@ -263,18 +298,46 @@ export const P = {
     return perFleet(userConfig, "secrets");
   },
   /** Host: runtime state written by timers, outside Git. */
-  varLib: "/var/lib/archon",
+  get varLib(): string {
+    return onHost("/var/lib/archon");
+  },
+  /** Host: what Archon writes in /var/lib/archon/status (the prompt's line, health, discovery). */
+  get status(): string {
+    return onHost("/var/lib/archon/status");
+  },
+  /** Host: the reports (daily, tools), /var/lib/archon/reports. */
+  get reports(): string {
+    return onHost("/var/lib/archon/reports");
+  },
+  /** Host: Archon's own configuration, /etc/archon (the host's name, its fleet, credentials). */
+  get etc(): string {
+    return onHost("/etc/archon");
+  },
+  /** Host: root's run logs, /var/log/archon (spec 019). */
+  get log(): string {
+    return onHost("/var/log/archon");
+  },
   /**
    * Generated secrets that belong to one account (an S3 secret, a service's
    * PostgreSQL password): 0711, so each account reaches its own file (0400,
    * its owner) without listing anyone else's. Not under /var/lib/archon,
    * which only archon-ops may enter.
    */
-  keys: "/var/lib/archon-keys",
+  get keys(): string {
+    return onHost("/var/lib/archon-keys");
+  },
   /** Host: where the repository is checked out. */
-  installedRepo: "/srv/archon",
-  toolsRoot: "/opt/tools",
-  bin: "/usr/local/bin",
+  get installedRepo(): string {
+    return onHost("/srv/archon");
+  },
+  /** Host: upstream tools, one folder per tool and version (spec 010). */
+  get toolsRoot(): string {
+    return onHost("/opt/tools");
+  },
+  /** Host: where the tools' commands are linked (spec 010). */
+  get bin(): string {
+    return onHost("/usr/local/bin");
+  },
 };
 
 /** A path inside the instance repository, relative to it, with forward slashes (for git). */

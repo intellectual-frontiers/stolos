@@ -1,6 +1,6 @@
 /**
  * `archon guest sync|list` (spec 017): create missing LXD instances from the
- * model and start stopped ones. Never deletes (Article 11).
+ * model and start stopped ones, mailing the ones created (spec 025). Never deletes (Article 11).
  *
  * @module
  */
@@ -54,14 +54,17 @@ export async function guestSync(host: HostDef): Promise<boolean> {
   const want = host.guests ?? [];
   const have = await instances();
   let ok = true;
+  const created: string[] = [];
   for (const [i, g] of want.entries()) {
     p.step(i + 1, want.length, g.name);
     const cur = have.find((x) => x.name === g.name);
     if (!cur) {
       p.status(`launching ${g.name} (${g.image}${g.kind === "vm" ? ", VM" : ""})`);
       const r = await run(launchArgs(g));
-      if (r.ok) p.change(`launched ${g.name}`);
-      else {
+      if (r.ok) {
+        p.change(`launched ${g.name}`);
+        created.push(`${g.name} (${g.image}${g.kind === "vm" ? ", VM" : ""})`);
+      } else {
         ok = false;
         p.fail(`lxc launch ${g.name}: ${r.stderr.trim()}`, `lxc launch ${g.image} ${g.name}`);
       }
@@ -80,5 +83,18 @@ export async function guestSync(host: HostDef): Promise<boolean> {
       extra.length ? ` · not in the model (kept): ${extra.join(", ")}` : ""
     }`,
   );
+  // Spec 017 FR-005 (spec 025): guests created are mailed. Sync never deletes one.
+  if (created.length) {
+    const { notify } = await import("../notify/events.ts");
+    await notify(
+      {
+        event: `guests created: ${created.length}`,
+        what: `archon guest sync created ${created.join(", ")} on ${host.name}.`,
+        todo: `lxc list on ${host.name} shows them.`,
+        key: `guests:created:${created.join(",")}`,
+      },
+      host.name,
+    );
+  }
   return ok;
 }

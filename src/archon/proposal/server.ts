@@ -8,8 +8,8 @@
  * @module
  */
 
-import { proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
-import { P } from "../core/paths.ts";
+import { stdio } from "@intellectual-frontiers/ifc-ts/runtime";
+import { asRoot, P } from "../core/paths.ts";
 import { getRecord, listRecords } from "../state/store.ts";
 import type { HostDef } from "../model/types.ts";
 import {
@@ -94,7 +94,7 @@ export async function driftCommand(
   opts: { all?: boolean; collect?: boolean; json?: boolean },
 ): Promise<number> {
   if (opts.collect) {
-    if (!proc.isRoot()) {
+    if (!asRoot()) {
       throw new Error("archon drift --collect runs as root (it elevates through sudo)");
     }
     const { collect } = await import("./collect.ts");

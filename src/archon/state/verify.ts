@@ -6,7 +6,6 @@
  * @module
  */
 
-import { proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { splitArgs } from "@intellectual-frontiers/ifc-ts/kernel";
 import { getRecord, putRecord } from "./store.ts";
 import { currentUser, run } from "../core/exec.ts";
@@ -17,7 +16,7 @@ import { recordChecks } from "../core/telemetry.ts";
 import { planFor } from "../build.ts";
 import type { HostDef } from "../model/types.ts";
 
-import { P } from "../core/paths.ts";
+import { asRoot, P } from "../core/paths.ts";
 
 /** One check's result. */
 export interface Check {
@@ -128,7 +127,7 @@ export async function verify(host: HostDef): Promise<Check[]> {
             resource: `tool:${t.id}`,
             command: t.verify,
             expect: undefined,
-            asUser: t.unprivileged && proc.isRoot() ? "nobody" : undefined,
+            asUser: t.unprivileged && asRoot() ? "nobody" : undefined,
           },
         ];
       }
@@ -139,12 +138,12 @@ export async function verify(host: HostDef): Promise<Check[]> {
       const me = currentUser();
       return plan.users
         .filter((u) => t.forPersona && expandPersonas(u.personas).includes(t.forPersona))
-        .filter((u) => proc.isRoot() || u.name === me)
+        .filter((u) => asRoot() || u.name === me)
         .map((u) => ({
           resource: `tool:${t.id}:${u.name}`,
           command: `${homeOf(u)}/.local/bin/${t.bins[0]} --version`,
           expect: undefined,
-          asUser: proc.isRoot() ? u.name : undefined,
+          asUser: asRoot() ? u.name : undefined,
         }));
     }),
     // Checks the model declares (specs 001, 009, 025), each with its level and fix.
@@ -225,7 +224,7 @@ export async function verify(host: HostDef): Promise<Check[]> {
   const warned = checks.length - passed - failed - pendingCount;
   recordChecks(passed, failed);
   // Spec 035: the welcome page shows the checks as they are now, not at install.
-  if (proc.isRoot()) {
+  if (asRoot()) {
     const { writeVerify } = await import("../core/status.ts");
     await writeVerify({
       at: new Date().toISOString(),

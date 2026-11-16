@@ -19,6 +19,7 @@
  * @module
  */
 import { fs, path, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
+import { onHost } from "../core/paths.ts";
 
 /** What `stolos` (no arguments) found about where you are: the facts its next step is chosen from. */
 export interface WhereFacts {
@@ -266,9 +267,9 @@ export async function whereCommand(json: boolean): Promise<number> {
   const { ui } = await import("../core/ui.ts");
   // On a host: what it is and how it is (archon state).
   try {
-    fs.statSync("/etc/archon/host");
+    fs.statSync(onHost("/etc/archon/host"));
     const { stateCommand } = await import("../state/state-command.ts");
-    const host = fs.readTextFileSync("/etc/archon/host").trim();
+    const host = fs.readTextFileSync(onHost("/etc/archon/host")).trim();
     const code = await stateCommand(host, json);
     if (!json) stdio.stdout.writeSync("\nEvery command: archon help\n");
     return code;

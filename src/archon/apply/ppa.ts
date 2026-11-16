@@ -9,6 +9,7 @@
 
 import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "../core/exec.ts";
+import { onHost } from "../core/paths.ts";
 
 /** "git-core/ppa" -> the source file add-apt-repository writes. */
 export function ppaSourcePath(ppa: string, codename: string): string {
@@ -74,9 +75,10 @@ export async function ppaHasRelease(
 export async function ppaPresent(ppa: string, _codename?: string): Promise<boolean> {
   const url = `ppa.launchpadcontent.net/${ppa}/ubuntu`;
   try {
-    for await (const e of fs.readDir("/etc/apt/sources.list.d")) {
+    const dir = onHost("/etc/apt/sources.list.d");
+    for await (const e of fs.readDir(dir)) {
       if (!e.isFile || !/\.(sources|list)$/.test(e.name)) continue;
-      const text = await fs.readTextFile(`/etc/apt/sources.list.d/${e.name}`).catch(() => "");
+      const text = await fs.readTextFile(`${dir}/${e.name}`).catch(() => "");
       if (text.split("\n").some((l) => l.includes(url) && !/^\s*#/.test(l))) return true;
     }
   } catch {

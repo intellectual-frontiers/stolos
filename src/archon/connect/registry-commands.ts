@@ -257,7 +257,7 @@ export async function connectorAdd(
   );
   const rel = (f: string): string => (f.startsWith(repo) ? f.slice(repo.length + 1) : f);
   ui.next.push(
-    `review and approve: git add ${rel(file)} ${rel(copy)} && git commit -S -m "088-connectors: add ${d.id} ${pinned.ref}" && git push`,
+    `review ${rel(file)} and ${rel(copy)}, then approve: bun run stolos apply -m "088-connectors: add ${d.id} ${pinned.ref}"`,
   );
   ui.next.push(`then: bun run stolos connect ${d.id}`);
   return fail();
@@ -308,8 +308,8 @@ export async function connectorRemove(id: string, o: RegistryOptions = {}): Prom
   await fs.remove(path.join(fleetDir, copyPath(id))).catch(() => undefined);
   forgetRegistry();
   p.done(`${id} removed from ${file.replace(P.repo + "/", "")}`);
-  ui.next.push(`forget its credential too: bun run stolos disconnect ${id} (before you commit)`);
-  ui.next.push(`review and approve: git commit -S -am "088-connectors: remove ${id}" && git push`);
+  ui.next.push(`forget its credential too: bun run stolos disconnect ${id} (before you apply)`);
+  ui.next.push(`approve: bun run stolos apply -m "088-connectors: remove ${id}"`);
   return fail();
 }
 

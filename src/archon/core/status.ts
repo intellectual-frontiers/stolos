@@ -15,6 +15,9 @@ import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 /** Where the status files live: `prompt`, `prompt-plain`, `last.json` and `verify.json`. */
 export const STATUS_DIR = "/var/lib/archon/status";
 
+/** STATUS_DIR as this run reads and writes it (under ARCHON_ROOT in tests, `P.status`). */
+const statusDir = (): string => P.status;
+
 // Nerd Font glyphs (the theme already needs a Nerd Font).
 const G = {
   ok: "\u{f00c}",
@@ -85,17 +88,17 @@ export interface LastVerify {
 }
 
 async function writeText(name: string, text: string): Promise<void> {
-  const tmp = `${STATUS_DIR}/.${name}.${proc.pid}`;
+  const tmp = `${statusDir()}/.${name}.${proc.pid}`;
   await fs.writeTextFile(tmp, text, { mode: 0o664 });
   await fs.chmod(tmp, 0o664);
-  await fs.rename(tmp, `${STATUS_DIR}/${name}`);
+  await fs.rename(tmp, `${statusDir()}/${name}`);
 }
 
 async function writeJson(name: string, data: unknown): Promise<void> {
-  const tmp = `${STATUS_DIR}/.${name}.${proc.pid}`;
+  const tmp = `${statusDir()}/.${name}.${proc.pid}`;
   await fs.writeTextFile(tmp, JSON.stringify(data) + "\n", { mode: 0o664 });
   await fs.chmod(tmp, 0o664);
-  await fs.rename(tmp, `${STATUS_DIR}/${name}`);
+  await fs.rename(tmp, `${statusDir()}/${name}`);
 }
 
 /** Save the last verify for the welcome page (`verify.json`). Best effort: errors are ignored. */
@@ -121,10 +124,10 @@ export async function writeStatus(s: RunStatus): Promise<void> {
     } satisfies LastRun).catch(() => {});
     await writeText("prompt-plain", promptLinePlain(s, push) + "\n").catch(() => {});
     const line = promptLine(s, push);
-    const tmp = `${STATUS_DIR}/.prompt.${proc.pid}`;
+    const tmp = `${statusDir()}/.prompt.${proc.pid}`;
     await fs.writeTextFile(tmp, line + "\n", { mode: 0o664 });
     await fs.chmod(tmp, 0o664);
-    await fs.rename(tmp, `${STATUS_DIR}/prompt`);
+    await fs.rename(tmp, `${statusDir()}/prompt`);
   } catch {
     /* no status directory, or not writable */
   }

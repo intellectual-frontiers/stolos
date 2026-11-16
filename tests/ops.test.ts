@@ -13,7 +13,14 @@ import {
   proves,
 } from "@intellectual-frontiers/ifc-ts/runtime/test";
 import { COMMANDS } from "../src/archon/commands/registry.ts";
-import { allowed, argvFor, handle, listed, parseTier } from "../src/archon/mcp/server.ts";
+import {
+  allowed,
+  argvFor,
+  handle,
+  listed,
+  mcpToolName,
+  parseTier,
+} from "../src/archon/mcp/server.ts";
 import { mcpServers, renderMcpJson } from "../src/archon/render/agent.ts";
 import { renderManPages } from "../src/archon/render/man.ts";
 import { lit, subject } from "../src/archon/model/export.ts";
@@ -101,6 +108,35 @@ proves(
     assertEquals(alpha("command"), "ssh");
     assertEquals(list(alpha("args")).at(-1), "ops@alpha.localdomain");
     assert(list(alpha("args")).includes("BatchMode=yes"));
+  },
+);
+
+proves(
+  ["030-agent-layer FR-007"],
+  "030: .mcp.json names no particular agent, and the server's limit holds whatever the client asks",
+  async () => {
+    const text = renderMcpJson([{ name: "archon-lab-alpha", target: "ops@alpha.localdomain" }]);
+    const mcp: unknown = JSON.parse(text);
+    // The plain MCP shape every client reads: servers, each a command and its arguments.
+    assertEquals(Object.keys(mcp ?? {}), ["mcpServers"]);
+    const entry = at(mcp, "mcpServers", "archon-lab-alpha");
+    assertEquals(Object.keys(entry ?? {}).sort(), ["args", "command"]);
+    assert(!/claude|cursor|copilot|codex|gemini|windsurf/i.test(text), text);
+    // A client that calls a tool the tier does not list is refused by the server itself.
+    const above = COMMANDS.find((c) => c.tier === "mutate" && !c.noMcp && !c.readOnlyWith);
+    assert(above !== undefined);
+    const tools = JSON.stringify(
+      await handle({ jsonrpc: "2.0", id: 1, method: "tools/list" }, "read"),
+    );
+    const name = mcpToolName(above);
+    assert(!tools.includes(`"${name}"`), `${name} is not listed at the read tier`);
+    const refused = JSON.stringify(
+      await handle(
+        { jsonrpc: "2.0", id: 2, method: "tools/call", params: { name, arguments: {} } },
+        "read",
+      ),
+    );
+    assert(/not allowed|refused|unknown|not served|isError/i.test(refused), refused);
   },
 );
 

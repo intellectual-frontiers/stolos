@@ -43,10 +43,13 @@ jobs:
           curl -fsSL -o /tmp/osquery.deb https://pkg.osquery.io/deb/pool/deb/main/o/osquery/osquery_5.24.1-1.linux_amd64.deb
           echo "c6a37aec1156712cce0fafeb01a3697a2b73a1863a2b39fc3473b07600aea68d  /tmp/osquery.deb" | sha256sum -c -
           sudo dpkg -i /tmp/osquery.deb >/dev/null && osqueryi --version
+      - name: The SCF 2026.3 workbook and NIST's catalogs, each at its pinned SHA-256, into this PC's catalog cache (spec 071 FR-001)
+        run: bun run stolos compliance catalog && test -s "$HOME/.local/share/stolos/catalogs/scf-2026.3.json"
       - name: Tests (ifc test, on Bun and on Node; every report and the evidence ledger)
         run: bun run test:ci
         env:
           STOLOS_REQUIRE_OSQUERY: "1"
+          STOLOS_REQUIRE_SCF: "1"
       - name: The test record, its reports and the ledger
         if: always()
         uses: actions/upload-artifact@v4

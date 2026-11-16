@@ -20,8 +20,8 @@
  * @module
  */
 
-import { proc, stdio } from "@intellectual-frontiers/ifc-ts/runtime";
-import { P } from "../core/paths.ts";
+import { stdio } from "@intellectual-frontiers/ifc-ts/runtime";
+import { asRoot, P } from "../core/paths.ts";
 import { getRecord, putRecord, removeRecords } from "../state/store.ts";
 import type { HostDef } from "../model/types.ts";
 import type { Event } from "../notify/notify.ts";
@@ -98,7 +98,7 @@ export async function recordCommand(
   if (arg === "done") {
     const r = await endRecording(host.name);
     stdio.stdout.writeSync(`recording ${r.id} ended: "${r.reason}"\n`);
-    if (proc.isRoot()) {
+    if (asRoot()) {
       const { collect } = await import("./collect.ts");
       await collect(host);
     }

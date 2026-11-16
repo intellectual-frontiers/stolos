@@ -212,6 +212,16 @@ proves(
         assertEquals(r.code, 1, `${bad}: ${r.out}`);
         assertStringIncludes(r.out, "refused");
       }
+      // With --json, a failure is an object a program can read, never nothing.
+      for (const bad of ["delete from user_account", "select * from no_such_table"]) {
+        r = await q(bad, "--json");
+        assertEquals(r.code, 1, `${bad}: ${r.out}`);
+        const o: unknown = JSON.parse(r.out.slice(r.out.indexOf("{"), r.out.lastIndexOf("}") + 1));
+        assert(
+          typeof o === "object" && o !== null && "error" in o && "fix" in o,
+          `${bad}: ${r.out}`,
+        );
+      }
       assertEquals(await fingerprint([repo]), before, "nothing written");
     } finally {
       await fs.remove(sb.home, { recursive: true });

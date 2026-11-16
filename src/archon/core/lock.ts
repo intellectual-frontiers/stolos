@@ -17,6 +17,7 @@
  * @module
  */
 import { lock, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { onHost } from "./paths.ts";
 
 /** The host lock file. */
 export const LOCK_PATH = "/run/archon.lock";
@@ -60,7 +61,7 @@ export function holderCommand(
  */
 export async function hostLock(
   opts: { readonly wait: boolean; readonly onWait?: (holder: lock.Holder | undefined) => void },
-  path: string = LOCK_PATH,
+  path: string = onHost(LOCK_PATH),
 ): Promise<lock.Held | undefined> {
   const options: lock.LockOptions = {
     wait: opts.wait,

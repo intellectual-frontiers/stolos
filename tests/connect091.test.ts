@@ -44,7 +44,7 @@ function result(
 const DENIED = { status: 403, body: { message: "403 Forbidden" } };
 
 proves(
-  ["091-connectors FR-003", "086-wave1-connectors FR-003"],
+  ["091-connectors FR-003"],
   "091: the six are registered, labeled, and offered by every connector command",
   () => {
     const ids = ["jumpcloud", "gitlab", "bitbucket", "gusto", "deel", "justworks"];
