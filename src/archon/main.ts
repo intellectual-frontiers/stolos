@@ -31,7 +31,9 @@ import { VERSION } from "./version.ts";
  * it was rolled back on alpha' first boot): take it from the account database.
  */
 export async function ensureHome(): Promise<void> {
-  if (proc.env.get("HOME")) return;
+  // Windows keeps the home in USERPROFILE and sets no HOME: one set here ("/") would send Git for
+  // Windows to //.config/git/config, which it cannot read.
+  if (proc.build.os === "windows" || proc.env.get("HOME")) return;
   const home = await homeOf(currentUser());
   proc.env.set("HOME", home && home !== "/" ? home : asRoot() ? "/root" : "/");
 }

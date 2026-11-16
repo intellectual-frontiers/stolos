@@ -322,9 +322,12 @@ test("archon runs with $HOME set even when started without it (cloud-init)", asy
   proc.env.delete("HOME");
   try {
     await ensureHome();
-    assert(!!proc.env.get("HOME"));
+    // Windows has no HOME of its own (USERPROFILE), and none is made up there.
+    assertEquals(!!proc.env.get("HOME"), proc.build.os !== "windows");
   } finally {
-    if (saved) proc.env.set("HOME", saved);
+    // Put back exactly what was there: every test file shares this process on Bun.
+    if (saved === undefined) proc.env.delete("HOME");
+    else proc.env.set("HOME", saved);
   }
 });
 
