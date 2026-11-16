@@ -72,7 +72,7 @@ proves(["069-integrate FR-003"], "069: what is not a check-in code says so plain
 });
 
 proves(
-  ["069-integrate FR-004"],
+  ["069-integrate FR-004", "098-pair FR-009"],
   "069: the one-liners carry the fleet, the key, the engine, and the probe's checksum",
   async () => {
     const l = await integrateLines({

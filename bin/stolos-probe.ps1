@@ -30,7 +30,12 @@ function Get-Facts {
   $bl = Get-BitLockerVolume -MountPoint $env:SystemDrive
   if ($null -eq $bl) {
     $enc = Get-CimInstance -Namespace root\cimv2\Security\MicrosoftVolumeEncryption -ClassName Win32_EncryptableVolume -Filter "DriveLetter='$($env:SystemDrive)'"
-    if ($null -eq $enc) { kv disk_encryption 'unknown' } elseif ($enc.ProtectionStatus -eq 1) { kv disk_encryption 'on' } else { kv disk_encryption 'off' }
+    if ($null -eq $enc) {
+      # Without administrator rights (the controller PC observing itself, spec 097): the Shell's
+      # BitLocker property, which any user may read (1 on, 3 encrypting, 2 off).
+      $bp = $null; try { $bp = (New-Object -ComObject Shell.Application).NameSpace("$($env:SystemDrive)\").Self.ExtendedProperty('System.Volume.BitLockerProtection') } catch {}
+      if ($bp -eq 1 -or $bp -eq 3) { kv disk_encryption 'on' } elseif ($bp -eq 2) { kv disk_encryption 'off' } else { kv disk_encryption 'unknown' }
+    } elseif ($enc.ProtectionStatus -eq 1) { kv disk_encryption 'on' } else { kv disk_encryption 'off' }
   } elseif ("$($bl.ProtectionStatus)" -eq 'On') { kv disk_encryption 'on' } else { kv disk_encryption 'off' }
   $fw = Get-NetFirewallProfile
   if ($null -eq $fw) { kv firewall 'unknown' } elseif (@($fw | Where-Object { -not $_.Enabled }).Count -eq 0) { kv firewall 'on' } else { kv firewall 'off' }

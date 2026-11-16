@@ -9,6 +9,7 @@
  * @module
  */
 
+import type { Attention, RecordedVerify } from "../state/verify.ts";
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
@@ -41,6 +42,13 @@ export interface PcMachine {
   score?: { pass: number; total: number };
   /** What fails, in words. */
   failing: string[];
+  /**
+   * A managed machine's checks that did not pass at its last verify (failed, warned, or not set up
+   * yet), each with its fix, as it reported them (stolos fleet status).
+   */
+  attention?: Attention[];
+  /** A managed machine's results were never asked for from this PC (stolos fleet status). */
+  notAsked?: boolean;
   /** Its Archon Console, for a managed server with a web domain. */
   console?: string;
   /** A managed server's applied commit, as it last said (short hash, subject, when). */
@@ -114,6 +122,24 @@ const warn =
     return undefined;
   };
 
+/** A verify record's checks that did not pass; an older record has only names (and no fixes). */
+export function attentionFrom(v: RecordedVerify): Attention[] {
+  if (v.attention?.length) return v.attention;
+  const word =
+    (level: Attention["level"]) =>
+    (resource: string): Attention => ({
+      resource,
+      level,
+      output: "",
+      fix: "",
+    });
+  return [
+    ...v.failed.map(word("fail")),
+    ...(v.warned ?? []).map(word("warn")),
+    ...(v.pending ?? []).map(word("pending")),
+  ];
+}
+
 /** Gather the facts (each part on its own: a broken part leaves the rest). */
 export async function pcFacts(repo = P.repo): Promise<PcFacts> {
   const { loadFleet, loadHosts } = await import("../model/load.ts");
@@ -134,17 +160,19 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
       "install",
       P.state,
     ).catch(warn(`${h.name} install record`));
-    const v = await getRecord<{ passed: number; total: number; failed: string[]; since: string }>(
-      h.name,
-      "verify",
-      "latest",
-      P.state,
-    ).catch(warn(`${h.name} verify record`));
+    const v = await getRecord<RecordedVerify>(h.name, "verify", "latest", P.state).catch(
+      warn(`${h.name} verify record`),
+    );
     const latest = v?.body && (!inst?.at || v.body.since >= inst.at) ? v.body : undefined;
     const checks =
       latest ??
       (inst?.body.checks
-        ? { passed: inst.body.checks.passed, total: inst.body.checks.total, failed: [] }
+        ? {
+            passed: inst.body.checks.passed,
+            total: inst.body.checks.total,
+            failed: [] as string[],
+            warned: [] as string[],
+          }
         : undefined);
     const server = h.kind !== "workstation";
     const applied = await getRecord<{ commit: string; subject: string; at: string }>(
@@ -167,6 +195,8 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
       ...(inst?.at ? { seen: inst.at } : {}),
       ...(checks ? { score: { pass: checks.passed, total: checks.total } } : {}),
       failing: latest?.failed ?? [],
+      ...(latest ? { attention: attentionFrom(latest) } : {}),
+      ...(!v && !inst ? { notAsked: true } : {}),
       ...(applied?.body ? { applied: applied.body } : {}),
       ...(sync?.body
         ? {

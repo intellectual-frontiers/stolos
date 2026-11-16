@@ -47,4 +47,26 @@ Write-Host 'over SSH: the probe key runs the probe, and nothing else'
 
 & powershell -NoProfile -ExecutionPolicy Bypass -File bin/integrate.windows.ps1 --undo --fleet ci --yes
 if ((Get-Content 'C:\ProgramData\ssh\administrators_authorized_keys' -ErrorAction SilentlyContinue) -match 'stolos-probe@ci') { throw '--undo left the key' }
+
+# Spec 098: pairing with a code, against the PC's pairing server (a wrong code first, then the right one).
+$job = Start-Job -ScriptBlock { param($d, $k) Set-Location $d; bun tests/integrate/pair-server.ts 'WDJB-MJHT' $k 'pair-checkin.txt' } -ArgumentList (Get-Location).Path, $pub
+$url = $null; foreach ($i in 1..60) { $url = Receive-Job $job -Keep | Select-Object -First 1; if ($url) { break }; Start-Sleep 1 }
+if (-not $url) { Receive-Job $job; throw 'the pairing server did not start' }
+$loader = (Invoke-WebRequest -UseBasicParsing "$url/w").Content
+if ($loader -notmatch '--pair') { throw "the loader has no --pair: $loader" }
+$env:STOLOS_RAW = ''
+$env:STOLOS_PAIR_CODE = 'ZZZZ-ZZZZ'
+& powershell -NoProfile -ExecutionPolicy Bypass -File bin/integrate.windows.ps1 --adopt --pair $url --fleet ci --yes *> pair-bad.txt
+if (-not (Select-String -Path pair-bad.txt -Pattern 'that code is wrong' -Quiet)) { Get-Content pair-bad.txt; throw 'a wrong code was not refused' }
+$env:STOLOS_PAIR_CODE = 'wdjb mjht'
+& powershell -NoProfile -ExecutionPolicy Bypass -File bin/integrate.windows.ps1 --adopt --pair $url --fleet ci --yes *> pair.txt
+if (-not (Select-String -Path pair.txt -Pattern 'is adopted by the fleet ci' -Quiet)) { Get-Content pair.txt; Receive-Job $job; throw 'pairing did not finish' }
+Wait-Job $job -Timeout 30 | Out-Null
+if (-not (Test-Path pair-checkin.txt)) { throw 'the PC received no check-in' }
+if (-not ((Get-Content 'C:\ProgramData\ssh\administrators_authorized_keys') -match 'stolos-probe@ci')) { throw 'pairing did not authorize the key' }
+$env:STOLOS_PAIR_CODE = ''
+$env:STOLOS_RAW = (Get-Location).Path
+& powershell -NoProfile -ExecutionPolicy Bypass -File bin/integrate.windows.ps1 --undo --fleet ci --yes
+Write-Host 'pairing on Windows: a wrong code refused, the right one adopted'
+
 Write-Host 'integrate on Windows: every check passed'

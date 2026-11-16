@@ -85,6 +85,14 @@ export interface LastVerify {
   total: number;
   /** The resources whose checks failed. */
   failed: string[];
+  /** Every check that did not pass (failed, warned, or not set up yet), with its fix. */
+  attention?: Array<{
+    resource: string;
+    level: "fail" | "warn" | "pending";
+    output: string;
+    fix: string;
+    code?: string;
+  }>;
 }
 
 async function writeText(name: string, text: string): Promise<void> {

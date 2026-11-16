@@ -1080,15 +1080,19 @@ proves(
         'import { adopted, foundation } from "@intellectual-frontiers/stolos/archon/capabilities/mod";',
       );
       assertStringIncludes(hostTs, `proposal: "${one.proposal.id}",`);
-      assertStringIncludes(hostTs, 'spec: "097-alpha-nginx-for-the-app",');
+      // The next spec number after the engine's own (and the fleet's): it grows with the engine.
+      const { engineSpecs } = await import("../src/archon/core/assets.ts");
+      const { nextSpecNumber } = await import("../src/archon/proposal/edit.ts");
+      const n = String(nextSpecNumber(engineSpecs())).padStart(3, "0");
+      assertStringIncludes(hostTs, `spec: "${n}-alpha-nginx-for-the-app",`);
       assertStringIncludes(hostTs, 'packages: [\n        "nginx",\n      ],');
       assertStringIncludes(hostTs, 'enable: [\n        "nginx-extra.service",\n      ],');
       assertStringIncludes(hostTs, 'path: "/etc/nginx/sites-available/app",');
       assert(!hostTs.includes("ports:"), "443 is already open in the model");
       const spec = await fs.readTextFile(
-        `${repo}/fleets/lab/specs/097-alpha-nginx-for-the-app/spec.md`,
+        `${repo}/fleets/lab/specs/${n}-alpha-nginx-for-the-app/spec.md`,
       );
-      assertStringIncludes(spec, "# 097: nginx for the app (alpha)");
+      assertStringIncludes(spec, `# ${n}: nginx for the app (alpha)`);
       assertStringIncludes(spec, '`packages.add("nginx")`');
       assertStringIncludes(spec, "file:/etc/default/grub, until 2026-12-31");
       const decisions = await fs.readTextFile(`${repo}/fleets/lab/hosts/alpha/proposals.ts`);
@@ -1148,7 +1152,9 @@ proves(
         '"htop"',
       );
       assertStringIncludes(
-        await fs.readTextFile(`${repo}/fleets/lab/specs/098-alpha-htop-and-avahi/spec.md`),
+        await fs.readTextFile(
+          `${repo}/fleets/lab/specs/${String(Number(n) + 1).padStart(3, "0")}-alpha-htop-and-avahi/spec.md`,
+        ),
         "skipped at acceptance",
       );
 

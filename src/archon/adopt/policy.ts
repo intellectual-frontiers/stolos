@@ -240,6 +240,92 @@ export const ADOPTED_CONTROLS: ObservationControl<"adopted">[] = [
             ? "osquery is in the AUR: yay -S osquery-bin"
             : "install osquery from osquery.io's apt or yum repository",
   }),
+  // Spec 097: the controller PC's own policies (only an observation with controller facts has them).
+  defineControl({
+    id: "controller-signing-key",
+    title: "The controller's signing key is locked by a passphrase, and not in an ssh-agent",
+    scf: ["IAC-10"],
+    subject: "observation",
+    of: "adopted",
+    assert: ({ observed: o }) =>
+      !o.controller
+        ? undefined
+        : {
+            status:
+              o.controller.signingKey === "locked" && !o.controller.inAgent
+                ? "pass"
+                : o.controller.signingKey === "missing"
+                  ? "warn"
+                  : "fail",
+            detail: `daily key: ${o.controller.signingKey}${o.controller.inAgent ? ", held by an ssh-agent" : ""}`,
+          },
+    fix: ({ observed: o }) =>
+      o.controller?.inAgent
+        ? "remove it from the agent (ssh-add -d), and do not add it again: Stolos asks for the passphrase each time"
+        : "bun run stolos keys setup (or keys rotate): a daily key with a passphrase",
+  }),
+  defineControl({
+    id: "controller-backup",
+    title: "The latest vault backup holds every secret",
+    scf: ["BCD-24"],
+    subject: "observation",
+    of: "adopted",
+    assert: ({ observed: o }) =>
+      !o.controller
+        ? undefined
+        : {
+            status: o.controller.backup === "current" ? "pass" : "fail",
+            detail:
+              o.controller.backup === "never"
+                ? "no backup recorded"
+                : `last backup ${o.controller.backupAt?.slice(0, 10) ?? "?"}${
+                    o.controller.unbacked ? `; ${o.controller.unbacked} secret(s) not in it` : ""
+                  }`,
+          },
+    fix: "bun run stolos vault backup, then move the ZIP somewhere safe and encrypted",
+  }),
+  defineControl({
+    id: "controller-recovery-key",
+    title: "The recovery key is in the vault and was checked in the last 6 months",
+    scf: ["BCD-24", "IAC-10"],
+    subject: "observation",
+    of: "adopted",
+    assert: ({ observed: o, now }) => {
+      if (!o.controller) return undefined;
+      const checked = o.controller.recoveryCheckedAt;
+      const fresh = checked !== undefined && (now - Date.parse(checked)) / 86_400_000 <= 183;
+      return {
+        status: o.controller.recoveryInVault && fresh ? "pass" : "fail",
+        detail: `${o.controller.recoveryInVault ? "in the vault" : "not in the vault"}; ${
+          checked ? `checked ${checked.slice(0, 10)}` : "never checked here"
+        }`,
+      };
+    },
+    fix: ({ observed: o }) =>
+      o.controller?.recoveryInVault
+        ? "bun run stolos keys check-recovery"
+        : "restore it from your latest backup ZIP (signing/recovery/), or bun run stolos keys rotate-recovery --old-lost",
+  }),
+  defineControl({
+    id: "controller-no-ssh-server",
+    title: "No SSH server listens on the controller",
+    scf: ["CFG-04", "NET-02"],
+    subject: "observation",
+    of: "adopted",
+    assert: ({ observed: o }) =>
+      !o.controller
+        ? undefined
+        : {
+            status: o.listening.includes(22) ? "fail" : "pass",
+            detail: o.listening.includes(22) ? "port 22 is listening" : "nothing on port 22",
+          },
+    fix: (i) =>
+      win(os(i))
+        ? "Stop-Service sshd; Set-Service sshd -StartupType Disabled (PowerShell as administrator)"
+        : mac(os(i))
+          ? "System Settings > General > Sharing > Remote Login: off"
+          : "sudo systemctl disable --now ssh (or sshd)",
+  }),
   defineControl({
     id: "adoption-current",
     title: "Adoption has not ended",

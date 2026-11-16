@@ -9,6 +9,7 @@
  * @module
  */
 
+import type { Attention } from "../state/verify.ts";
 import type { Command } from "../core/registry-types.ts";
 import type { PolicyResult } from "../adopt/policy.ts";
 import type { Observed } from "../adopt/adopt.ts";
@@ -155,6 +156,8 @@ export const STOLOS_GROUPS: StolosGroup[] = [
       "controls list",
       "controls run",
       "evidence verify",
+      "pair",
+      "mesh",
       "host integrate",
       "discover",
       "host adopt",
@@ -168,7 +171,7 @@ export const STOLOS_GROUPS: StolosGroup[] = [
       "device remove",
       "fleet query",
     ],
-    first: "host integrate",
+    first: "pair",
     diagram: (f) =>
       `flowchart LR
   pc["This PC"] -- "probe key (vault)" --> sshd["sshd on ${f.adopted.length} adopted machine(s)"]
@@ -311,10 +314,71 @@ const score = (x?: { pass: number; total: number }) =>
     ? html`<span class="pill off">not checked</span>`
     : html`<span class="pill ${x.pass === x.total ? "ok" : "warn"}">${x.pass} of ${x.total}</span>`;
 
+/** The Checks cell: the score, linked to what needs attention; or a way to ask the server. */
+const checksCell = (x: PcMachine) =>
+  x.notAsked
+    ? html`<a href="/actions/fleet?cmd=fleet%20status" title="This PC has not asked it yet"
+        ><span class="pill off">not asked yet</span> <span class="sub">ask now</span></a
+      >`
+    : x.attention?.length
+      ? html`<a href="/machines/${encodeURIComponent(x.name)}#attention"
+          >${score(x.score)} <span class="sub">${attentionSummary(x.attention)}</span></a
+        >`
+      : score(x.score);
+
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+/** "1 warning", "2 failing, 1 warning": what a machine's attention items are. */
+function attentionSummary(a: readonly Attention[]): string {
+  const n = (l: Attention["level"]) => a.filter((x) => x.level === l).length;
+  return [
+    n("fail") ? `${n("fail")} failing` : "",
+    n("warn") ? plural(n("warn"), "warning", "warnings") : "",
+    n("pending") ? `${n("pending")} not set up yet` : "",
+  ]
+    .filter(Boolean)
+    .join(", ");
+}
+
+const LEVEL_PILL: Record<Attention["level"], [string, string]> = {
+  fail: ["bad", "failing"],
+  warn: ["warn", "warning"],
+  pending: ["off", "not set up yet"],
+};
+
+/** A machine's checks that did not pass, each with what it found and how to fix it. */
+function attentionList(a: readonly Attention[]): Html {
+  return html`<div id="attention">
+    ${a.map(
+      (x) => html`
+        <div style="padding:8px 0;border-bottom:1px solid var(--line)">
+          <span class="pill ${LEVEL_PILL[x.level][0]}">${LEVEL_PILL[x.level][1]}</span>
+          <b class="mono">${x.resource}</b>
+          ${x.output ? html`<div class="sub" style="margin-top:4px">${x.output}</div>` : ""}
+          ${
+            x.fix
+              ? html`<div style="margin-top:4px">
+                  How to fix (on the server): <code>${x.fix}</code>${
+                    x.code
+                      ? html` <span class="sub">(<code>archon explain ${x.code}</code>)</span>`
+                      : ""
+                  }
+                </div>`
+              : html`<div class="sub" style="margin-top:4px">
+                  Its engine recorded no fix: its Archon Console, or archon verify on it, shows one.
+                </div>`
+          }
+        </div>
+      `,
+    )}
+  </div>`;
+}
+
 /** The fleet at a glance. */
 export function stolosOverview(f: PcFacts, now = Date.now()): Html {
   const by = (k: PcMachine["kind"]) => f.machines.filter((x) => x.kind === k).length;
-  const failing = f.machines.filter((x) => x.failing.length);
+  const failing = f.machines.filter((x) => x.failing.length || x.attention?.length);
+  const notAsked = f.machines.filter((x) => x.notAsked);
   const stuck = f.machines.filter((x) => x.sync?.blocked);
   const cloudFails = f.clouds.flatMap((c) =>
     c.results.filter((r) => r.status === "fail").map((r) => ({ c, r })),
@@ -357,8 +421,21 @@ export function stolosOverview(f: PcFacts, now = Date.now()): Html {
       <div class="card">
         <h2>Needs attention</h2>
         ${
-          failing.length || cloudFails.length || f.git.unapproved.length || stuck.length
-            ? html`${stuck.map(
+          failing.length ||
+          cloudFails.length ||
+          f.git.unapproved.length ||
+          stuck.length ||
+          notAsked.length
+            ? html`${
+                notAsked.length
+                  ? html`<div class="row spread" style="padding:6px 0">
+                      <span
+                        >This PC has not asked ${notAsked.map((x) => x.name).join(", ")} for its
+                        checks yet</span
+                      ><a class="btn ghost" href="/actions/fleet?cmd=fleet%20status">Ask now</a>
+                    </div>`
+                  : ""
+              }${stuck.map(
                 (x) => html`
                   <div class="row spread" style="padding:6px 0">
                     <span
@@ -385,8 +462,19 @@ export function stolosOverview(f: PcFacts, now = Date.now()): Html {
                   <div class="row spread" style="padding:6px 0;border-top:1px solid var(--line)">
                     <span
                       ><b>${x.name}</b> ${kindPill(x.kind)}
-                      <span class="sub">not met: ${x.failing.slice(0, 3).join("; ")}</span></span
-                    ><a class="btn ghost" href="/machines/${encodeURIComponent(x.name)}">Open</a>
+                      <span class="sub"
+                        >${
+                          x.attention?.length
+                            ? `${attentionSummary(x.attention)}: ${x.attention
+                                .slice(0, 3)
+                                .map((a) => a.resource)
+                                .join("; ")}`
+                            : `not met: ${x.failing.slice(0, 3).join("; ")}`
+                        }</span
+                      ></span
+                    ><a class="btn ghost" href="/machines/${encodeURIComponent(x.name)}#attention"
+                      >How to fix</a
+                    >
                   </div>
                 `,
               )}${cloudFails.map(
@@ -587,7 +675,7 @@ export function machinesPage(f: PcFacts, now = Date.now()): Html {
                 <td>${x.os ? html`${logo(osLogo(x.os), 14)} ${x.os}` : ""}</td>
                 <td class="mono">${x.where ?? ""}</td>
                 <td>${x.owner ?? ""}</td>
-                <td>${x.kind === "cloud" ? "" : score(x.score)}</td>
+                <td>${x.kind === "cloud" ? "" : checksCell(x)}</td>
                 <td>${applies(x)}</td>
                 <td class="sub">${ago(x.seen, now)}</td>
                 <td>
@@ -847,17 +935,19 @@ export function machinePage(f: PcFacts, name: string, now = Date.now()): Html | 
                 <div class="grid cols-2" style="margin-top:14px">
                   <div class="card">
                     <h2>Checks</h2>
-                    <div class="v">${score(x.score)}</div>
+                    <div class="v">${x.notAsked ? checksCell(x) : score(x.score)}</div>
                     ${
-                      x.failing.length
-                        ? html`<ul>
-                            ${x.failing.map((y) => html`<li class="mono">${y}</li>`)}
-                          </ul>`
-                        : x.score
-                          ? html`<p class="sub">Nothing failing at its last verify.</p>`
-                          : html`<p class="sub">
-                              Not verified yet: this PC has no record of a verify from it.
-                            </p>`
+                      x.attention?.length
+                        ? attentionList(x.attention)
+                        : x.failing.length
+                          ? html`<ul>
+                              ${x.failing.map((y) => html`<li class="mono">${y}</li>`)}
+                            </ul>`
+                          : x.score
+                            ? html`<p class="sub">Nothing failing at its last verify.</p>`
+                            : html`<p class="sub">
+                                Not verified yet: this PC has no record of a verify from it.
+                              </p>`
                     }
                     <a class="btn ghost" href="/actions/fleet?cmd=fleet%20status"
                       >Ask every server now</a

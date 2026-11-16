@@ -46,6 +46,16 @@
  * `boot serve` and `boot doctor` check all of this and print the exact command when something would
  * block a server.
  *
+ * Plain HTTP and TFTP are deliberate (constitution Article 28): the boot server runs on a network
+ * the fleet trusts, the site's LAN, and every file it serves is checked (pinned SHA-256s, a signed
+ * commit). A machine elsewhere is reached over a zero trust mesh network (Tailscale, NetBird, ZeroTier,
+ * Nebula, WireGuard, or similar; `stolos mesh` explains the choice), never by opening these ports to the internet. `stolos pair` (TCP 7457, spec 098) follows the same
+ * rule; allow it the same way when you pair machines:
+ *
+ * ```powershell
+ * New-NetFirewallRule -DisplayName "Stolos pair" -Direction Inbound -Protocol TCP -LocalPort 7457 -Profile Private,Domain -Action Allow
+ * ```
+ *
  * ## Give this PC a fixed address (once)
  *
  * Your router points network boots at this PC, so its address must not change. In UniFi: **Client

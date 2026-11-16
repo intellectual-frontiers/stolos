@@ -425,6 +425,8 @@ test("fleet status's source: the latest verify, rewritten only when the result c
       total: 2,
       failed: [],
       warned: ["off-host"],
+      // Spec 066 FR-009: each check that did not pass, with its fix (the command, when it has none).
+      attention: [{ resource: "off-host", level: "warn", output: "", fix: "false" }],
       since: "2026-11-13T01:00:00.000Z",
     });
     assert(await recordVerify("alpha", checks.slice(0, 1), root), "a different result is written");

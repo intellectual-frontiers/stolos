@@ -10,6 +10,7 @@
  * @module
  */
 
+import type { LastVerify } from "../core/status.ts";
 import {
   type AgentSetup,
   agentSteps,
@@ -59,7 +60,15 @@ export interface WelcomeData {
       }
     | undefined;
   /** The last archon verify: when, how many checks passed of how many, and which failed. */
-  verify?: { at: string; passed: number; total: number; failed: string[] } | undefined;
+  verify?:
+    | {
+        at: string;
+        passed: number;
+        total: number;
+        failed: string[];
+        attention?: LastVerify["attention"];
+      }
+    | undefined;
   /** The install record (spec 048): when, whether it succeeded, and its checks. */
   installed?:
     | {

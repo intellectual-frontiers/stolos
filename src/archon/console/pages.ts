@@ -130,6 +130,68 @@ export function signinPage(o: {
   `;
 }
 
+const LEVEL: Record<string, { pill: string; word: string }> = {
+  fail: { pill: "bad", word: "failing" },
+  warn: { pill: "warn", word: "warning" },
+  pending: { pill: "off", word: "not set up yet" },
+};
+
+/**
+ * Every check that did not pass, each with what it found and how to fix it (a warning is never a
+ * bare number). An older engine's record has only the failed names: they are listed, and the
+ * button runs the checks again, which prints each fix.
+ */
+export function attentionCard(v: NonNullable<WelcomeData["verify"]>): Html {
+  const items: Array<{
+    resource: string;
+    level: string;
+    output: string;
+    fix: string;
+    code?: string;
+  }> = v.attention?.length
+    ? v.attention
+    : v.failed.map((resource) => ({ resource, level: "fail", output: "", fix: "" }));
+  return html`<div class="card" id="attention" style="margin-top:14px">
+    <div class="row spread">
+      <h2>Needs attention</h2>
+      <a class="btn ghost" href="/actions/server?cmd=verify">Check again</a>
+    </div>
+    ${
+      items.length
+        ? items.map(
+            (a) => html`
+              <div style="padding:10px 0;border-bottom:1px solid var(--line)">
+                <div class="row" style="gap:8px">
+                  <span class="pill ${LEVEL[a.level]?.pill ?? "warn"}"
+                    >${LEVEL[a.level]?.word ?? a.level}</span
+                  >
+                  <b class="mono">${a.resource}</b>
+                </div>
+                ${a.output ? html`<div class="sub" style="margin-top:4px">${a.output}</div>` : ""}
+                ${
+                  a.fix
+                    ? html`<div style="margin-top:6px">
+                        How to fix: <code>${a.fix}</code>${
+                          a.code
+                            ? html` <span class="sub"
+                                >(details: <code>archon explain ${a.code}</code>)</span
+                              >`
+                            : ""
+                        }
+                      </div>`
+                    : ""
+                }
+              </div>
+            `,
+          )
+        : html`<p class="sub">
+            ${v.total - v.passed} check(s) did not pass at the last verify, which recorded no
+            details. Check again: it lists each one with its fix.
+          </p>`
+    }
+  </div>`;
+}
+
 /** Overview: health first, then how this server stays as described. */
 export function overviewPage(d: WelcomeData, r: RepoFacts, s: Session): Html {
   const v = d.verify;
@@ -148,7 +210,12 @@ export function overviewPage(d: WelcomeData, r: RepoFacts, s: Session): Html {
       <a class="btn" href="/actions/server?cmd=verify">Check everything now</a>
     </div>
     <div class="grid cols-3">
-      <div class="card row" style="flex-wrap:nowrap; gap:16px">
+      <a
+        class="card row"
+        style="flex-wrap:nowrap; gap:16px; color:inherit; text-decoration:none"
+        href="${v && !healthy ? "#attention" : "/actions/server?cmd=verify"}"
+        title="${v && !healthy ? "What needs attention, and how to fix it" : "Check everything now"}"
+      >
         <div class="ring" style="${ring}"><span>${v ? v.passed : "?"}</span></div>
         <div>
           <div class="k">Health</div>
@@ -164,8 +231,9 @@ export function overviewPage(d: WelcomeData, r: RepoFacts, s: Session): Html {
           <div class="sub">
             ${v ? `${v.passed} of ${v.total} · checked ${ago(v.at)}` : "run archon verify"}
           </div>
+          ${v && !healthy ? html`<div class="sub"><u>See what, and how to fix it</u></div>` : ""}
         </div>
-      </div>
+      </a>
       <div class="card">
         <div class="k">Applied now</div>
         <div class="v mono" style="font-size:16px">${r.commit?.sha ?? "unknown"}</div>
@@ -181,23 +249,7 @@ export function overviewPage(d: WelcomeData, r: RepoFacts, s: Session): Html {
         <div class="sub">Last update ${ago(d.lastRun?.at)}; the next is within 15 minutes.</div>
       </div>
     </div>
-    ${
-      v && v.failed.length
-        ? html`<div class="card" style="margin-top:14px">
-            <h2>Needs attention</h2>
-            ${v.failed.map(
-              (f) => html`
-                <div class="row spread" style="padding:8px 0;border-bottom:1px solid var(--line)">
-                  <span class="mono">${f}</span
-                  ><a class="btn ghost" href="/actions/server?cmd=verify"
-                    >Check again (prints the fix)</a
-                  >
-                </div>
-              `,
-            )}
-          </div>`
-        : ""
-    }
+    ${v && !healthy ? attentionCard(v) : ""}
     <div class="grid cols-2" style="margin-top:14px">
       ${diagram(
         convergenceDiagram(d, r),

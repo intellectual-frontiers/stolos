@@ -17,6 +17,10 @@
 #
 #   --fleet <id> --key '<probe public key>' --engine <tag> --probe-sha256 <hash>
 #                  Filled in for you by: bun run stolos host integrate.
+#   --pair <url>   Pair with the fleet's controller PC (spec 098): what stolos pair serves
+#                  runs this with --adopt --pair already filled in. It asks for the code the PC
+#                  shows, gets the probe key from the PC (signed with that code), and sends the
+#                  check-in back instead of printing it. Needs openssl, for the signatures.
 #   --github <login> (--server)   --repo <owner/name> (--workstation)
 #   --ssh-port <n> When this machine's SSH server listens on another port than 22.
 #   --dry-run      Say what it would do; change nothing.   --yes   Do not ask.
@@ -29,7 +33,7 @@ set -u
 LC_ALL=C; export LC_ALL
 
 discover=0; adopt=0; osq=0; server=0; ws=0; dry=0; yes=0; undo=0
-fleet=""; key=""; engine=""; probesha=""; github=""; repo=""; port=22
+fleet=""; key=""; engine=""; probesha=""; github=""; repo=""; port=22; pair=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --discover) discover=1 ;;
@@ -41,6 +45,7 @@ while [ $# -gt 0 ]; do
     --yes) yes=1 ;;
     --undo) undo=1 ;;
     --fleet) fleet=${2:-}; shift ;;
+    --pair) pair=${2:-}; shift ;;
     --key) key=${2:-}; shift ;;
     --engine) engine=${2:-}; shift ;;
     --probe-sha256) probesha=${2:-}; shift ;;
@@ -62,6 +67,8 @@ os=$(uname -s)
 me=$(id -un)
 # STOLOS_RAW: where the engine's files are (tests use a local folder).
 raw="${STOLOS_RAW:-https://raw.githubusercontent.com/intellectual-frontiers/stolos/${engine:-main}}"
+# Paired: the PC serves this engine's probe itself.
+[ -n "$pair" ] && raw="${pair%/}"
 fetch() { case "$1" in /*) cat "$1"; return ;; esac; if has curl; then curl -fsSL "$1"; elif has wget; then wget -qO- "$1"; else die "neither curl nor wget is here"; fi; }
 sha() { if has sha256sum; then sha256sum | cut -d' ' -f1; else shasum -a 256 | cut -d' ' -f1; fi; }
 asroot() { if [ "$(id -u)" = 0 ]; then "$@"; elif has sudo; then sudo "$@"; else die "this step needs an administrator (sudo is not here): $*"; fi; }
@@ -74,6 +81,49 @@ ssh_on() {
 probe_line() { printf 'command="%s/.local/bin/stolos-probe",restrict %s stolos-probe@%s' "$HOME" "$(printf '%s' "$key" | awk '{print $1" "$2}')" "$fleet"; }
 
 [ $((adopt + undo)) -gt 0 ] && [ -z "$fleet" ] && die "--fleet is needed (bun run stolos host integrate fills it in)"
+# ---------------------------------------------------------------- pairing (spec 098)
+ask() { printf '%s' "$1" >/dev/tty 2>/dev/null || printf '%s' "$1"; a=""; read -r a </dev/tty 2>/dev/null || a=""; printf '%s' "$a"; }
+hmac() { openssl dgst -sha256 -hmac "$1" | sed 's/^.*= *//'; }
+# POST a file to the PC, signed with the code; the answer's lines on standard output.
+post() {
+  m=$(hmac "$code" <"$2")
+  if has curl; then curl -fsS -H "X-Stolos-Mac: $m" --data-binary "@$2" "${pair%/}$1"
+  else wget -qO- --header="X-Stolos-Mac: $m" --post-file="$2" "${pair%/}$1"; fi
+}
+if [ -n "$pair" ] && [ "$undo" != 1 ]; then
+  has openssl || die "pairing needs openssl (for the code's signatures): install it, then run this again"
+  say ""
+  say "Stolos: join the fleet${fleet:+ $fleet} (the PC at ${pair#http://})"
+  say "  The fleet will be able to read facts about this machine. It never changes anything else."
+  ptmp=$(mktemp -d); trap 'rm -rf "$ptmp"' EXIT
+  host=$(hostname 2>/dev/null || uname -n)
+  tries=0
+  while :; do
+    tries=$((tries + 1))
+    code=$( (if [ -n "${STOLOS_PAIR_CODE:-}" ]; then printf '%s' "$STOLOS_PAIR_CODE"; else ask "Pairing code (shown on the PC): "; fi) | tr 'a-z' 'A-Z' | tr -cd 'A-Z0-9')
+    [ -n "$code" ] || die "no code was typed: nothing was changed"
+    nonce=$(od -An -N16 -tx1 /dev/urandom | tr -d ' \n')
+    printf 'nonce=%s\nhostname=%s\nos=posix\n' "$nonce" "$host" >"$ptmp/hello"
+    ans=$(post /hello "$ptmp/hello") || die "the PC did not answer at $pair (is stolos pair still running?)"
+    first=$(printf '%s\n' "$ans" | sed -n 1p)
+    case "$first" in
+      ok) break ;;
+      "no that code is wrong ("*) say "  ${first#no }"; [ "$tries" -lt 3 ] || die "too many wrong codes: nothing was changed" ;;
+      *) die "the PC said: ${first#no }" ;;
+    esac
+  done
+  key=$(printf '%s\n' "$ans" | sed -n 's/^key=//p')
+  pname=$(printf '%s\n' "$ans" | sed -n 's/^name=//p')
+  probesha=$(printf '%s\n' "$ans" | sed -n 's/^sha256=//p')
+  sig=$(printf '%s\n' "$ans" | sed -n 's/^mac=//p')
+  [ "$(printf '%s\n%s\n%s\n%s' "$nonce" "$key" "$pname" "$probesha" | hmac "$code")" = "$sig" ] ||
+    die "the PC's answer is not signed with this code (someone else answered?): nothing was changed"
+  say "  The PC knows the code; this machine will be $pname in the fleet."
+  if ! has osqueryi && [ "$yes" != 1 ]; then
+    case "$(ask "Also install osquery, so the fleet can ask SQL questions? [y/N] ")" in y|Y|yes|YES) osq=1 ;; esac
+  fi
+fi
+
 [ "$adopt" = 1 ] && [ -z "$key" ] && die "--key is needed for --adopt (bun run stolos host integrate fills it in)"
 [ "$server" = 1 ] && [ -z "$github" ] && die "--github <login> is needed for --server (whose keys may sign in)"
 [ "$ws" = 1 ] && [ -z "$repo" ] && die "--repo <owner/name> is needed for --workstation"
@@ -214,7 +264,7 @@ macs() {
 kinds=""
 [ "$discover" = 1 ] && kinds="$kinds discover"; [ "$adopt" = 1 ] && kinds="$kinds adopt"
 [ "$osq" = 1 ] && kinds="$kinds osquery"; [ "$server" = 1 ] && kinds="$kinds server"; [ "$ws" = 1 ] && kinds="$kinds workstation"
-code=$( {
+checkin_text() {
   echo "@checkin"; echo "v=1"; echo "fleet=$fleet"; echo "kinds=${kinds# }"; echo "user=$me"; echo "port=$port"
   echo "hostname=$(hostname 2>/dev/null || uname -n)"
   echo "addresses=$(addresses | tr '\n' ' ' | sed 's/ *$//')"
@@ -222,7 +272,19 @@ code=$( {
   echo "@hostkeys"
   i=0; for f in /etc/ssh/ssh_host_*_key.pub; do [ -r "$f" ] || continue; i=$((i + 1)); echo "$i=$(awk '{print $1" "$2}' "$f")"; done
   facts
-} | base64 | tr -d '\n')
+}
+if [ -n "$pair" ]; then
+  checkin_text >"$ptmp/checkin"
+  say ""
+  say "Sent to the PC. Approve it there (this waits) ..."
+  ans=$(post /checkin "$ptmp/checkin") || die "the PC did not answer at $pair"
+  first=$(printf '%s\n' "$ans" | sed -n 1p)
+  case "$first" in
+    ok*) say "Done: ${first#ok }"; exit 0 ;;
+    *) die "the PC said: ${first#no }" ;;
+  esac
+fi
+code=$(checkin_text | base64 | tr -d '\n')
 
 say ""
 say "Done. Copy this line into the Stolos Console (Add a machine), or send it to"

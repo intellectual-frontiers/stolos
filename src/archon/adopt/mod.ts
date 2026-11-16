@@ -13,7 +13,40 @@
  *   pc -- "observed.ts" --> git["Fleet repository"]
  * ```
  *
- * ## The easy way: one line on the machine
+ * ## The easy way: pair with a short code
+ *
+ * On the PC, in the fleet repository:
+ *
+ * ```bash
+ * bun run stolos pair
+ * ```
+ *
+ * It shows one short line and a code (spec 098):
+ *
+ * ```text
+ *   On the machine, run:
+ *     Linux, macOS, WSL:   curl -fsSL http://10.0.0.5:7457 | sh
+ *     Windows (admin):     irm http://10.0.0.5:7457/w | iex
+ *
+ *   Then type this code:   WDJB-MJHT      (expires in 10 minutes)
+ * ```
+ *
+ * On the machine, the line says what it will do, asks for the code, asks once about osquery, and
+ * sends its check-in back. On the PC you see its name, OS, address and SSH host key, and approve it;
+ * it is then adopted, with nothing copied by hand. The code signs every message both ways
+ * (HMAC-SHA256), so a machine without it cannot join and no one else can answer in the PC's place.
+ * One machine per code; 5 wrong codes end it. `--name` names it (default: its hostname), `--owner`
+ * says whose it is.
+ *
+ * ### Networks: the LAN, or a zero trust mesh
+ *
+ * Pairing is plain HTTP on purpose (constitution Article 28): it runs on a network the fleet trusts,
+ * like PXE and HTTP Boot. A machine that is not on the LAN joins over a zero trust mesh network
+ * (Tailscale, Headscale, NetBird, ZeroTier, Nebula, or WireGuard by hand: encrypted end to end, each
+ * device known by its identity, access by policy). Stolos installs none of them; `bun run stolos mesh`
+ * lists the choices and this PC's mesh addresses. Give the PC's mesh address, `bun run stolos pair --address 100.64.0.5`. Never open the port to the internet.
+ *
+ * ## One line on the machine, without pairing
  *
  * In the Stolos Console, **Add a machine** asks what it is (a laptop, a device, a cloud account, a
  * server to manage, a workstation) and gives you one line to run on it, or to send to its owner. The

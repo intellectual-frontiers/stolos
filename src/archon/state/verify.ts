@@ -34,6 +34,40 @@ export interface Check {
    * next step, never a failure or a warning.
    */
   level?: "fail" | "warn" | "pending";
+  /** How to make it pass, when the check says (the model's fix, or the command to run). */
+  fix?: string;
+  /** Its explain code, when it has one (archon explain <code>). */
+  code?: string;
+}
+
+/**
+ * One check that needs attention, with what to do about it: the consoles show these (the Archon
+ * Console's Overview, the Stolos Console's machine page), so a warning is never a bare number.
+ */
+export interface Attention {
+  /** What it checks. */
+  resource: string;
+  /** How serious: fail, warn, or pending (not set up yet). */
+  level: "fail" | "warn" | "pending";
+  /** What it found (the check's first line of output). */
+  output: string;
+  /** How to make it pass. */
+  fix: string;
+  /** Its explain code (archon explain <code>), when it has one. */
+  code?: string;
+}
+
+/** The checks that did not pass, each with its level and fix. */
+export function attentionOf(checks: Check[]): Attention[] {
+  return checks
+    .filter((c) => !c.ok)
+    .map((c) => ({
+      resource: c.resource,
+      level: c.level ?? "fail",
+      output: c.output,
+      fix: c.fix ?? c.command,
+      ...(c.code ? { code: c.code } : {}),
+    }));
 }
 
 /** Spec 052: a check that exits 3 says "not set up yet" (a token not delivered, ...). */
@@ -55,6 +89,8 @@ export interface RecordedVerify {
   warned: string[];
   /** Spec 052: not set up yet (a check that exited 3). */
   pending?: string[];
+  /** Every check that did not pass, with its fix (newer engines). */
+  attention?: Attention[];
   /** When this result first appeared. */
   since: string;
 }
@@ -64,8 +100,10 @@ export function verifyRecord(checks: Check[], now = new Date()): RecordedVerify 
   const failed = failedChecks(checks).map((c) => c.resource);
   const warned = checks.filter((c) => !c.ok && c.level === "warn").map((c) => c.resource);
   const pending = checks.filter((c) => !c.ok && c.level === "pending").map((c) => c.resource);
+  const attention = attentionOf(checks);
   return {
     ...(pending.length ? { pending } : {}),
+    ...(attention.length ? { attention } : {}),
     passed: checks.filter((c) => c.ok).length,
     total: checks.length,
     failed,
@@ -199,6 +237,8 @@ export async function verify(host: HostDef): Promise<Check[]> {
       ok,
       output,
       ...(level === undefined ? {} : { level }),
+      ...(extra.fix ? { fix: extra.fix } : {}),
+      ...(extra.code ? { code: extra.code } : {}),
     });
     if (ok) p.ok(`${t.resource}: ${t.command}`);
     // Spec 052: shown as what it is, and counted the same way.
@@ -231,6 +271,7 @@ export async function verify(host: HostDef): Promise<Check[]> {
       passed,
       total: checks.length,
       failed: failedChecks(checks).map((c) => c.resource),
+      attention: attentionOf(checks),
     });
     // The same result in this machine's archon.sql, for fleet status (spec 048).
     await recordVerify(plan.host.name, checks).catch(() => {});

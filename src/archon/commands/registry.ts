@@ -2134,6 +2134,59 @@ export const COMMANDS: Command[] = [
     },
   },
   {
+    name: "mesh",
+    summary: "Zero trust mesh networks: the choices, and this PC's mesh addresses (guidance only)",
+    description: `Spec 098 (constitution Article 28). The fleet's plain-HTTP exchanges (PXE, HTTP Boot, stolos pair) run on the site's LAN, or on a zero trust mesh network for a device that is not on it. Prints what that means, the common choices (Tailscale, Headscale, NetBird, ZeroTier, Nebula, WireGuard by hand) without preferring one, what to look for, and this PC's mesh addresses with the pair --address line to use. Changes nothing; Stolos installs no network product.`,
+    tier: "read",
+    args: [],
+    async run(): Promise<number> {
+      const { meshAddresses, meshGuide } = await import("../adopt/mesh.ts");
+      const { stdio } = await import("@intellectual-frontiers/commons/ts/runtime");
+      stdio.stdout.writeSync(meshGuide(meshAddresses()));
+      return 0;
+    },
+  },
+  {
+    name: "pair",
+    summary:
+      "Bring a machine into the fleet with a short code: one line to run there, approve here",
+    description: `Spec 098. Shows one short line to run on the machine (curl ... | sh, or irm ... | iex on Windows as administrator) and an 8-character code that expires in 10 minutes. The machine's script, served by this PC from this engine, asks for the code, turns on SSH, installs the read-only probe, and sends its check-in signed with the code; you approve it here, seeing its name, OS, address and SSH host key, and it is adopted (host adopt) with nothing copied by hand. One machine per code; 5 wrong codes end it. Plain HTTP on purpose: run it on a trusted LAN, or reach the machine over a zero trust mesh network (see stolos mesh), never over the internet.`,
+    tier: "repo",
+    args: [
+      {
+        name: "name",
+        type: "string",
+        description: "Its name in the fleet (default: the machine's hostname, as a DNS label).",
+      },
+      {
+        name: "address",
+        type: "string",
+        description:
+          "The address the machine reaches this PC at (default: this PC's LAN address; give the mesh network's address for a machine elsewhere).",
+      },
+      { name: "port", type: "string", description: "The port to listen on (default 7457)." },
+      { name: "title", type: "string", description: 'What it is, for people: "Alice\'s laptop".' },
+      { name: "owner", type: "string", description: "Who it belongs to." },
+    ],
+    examples: [
+      { cmd: "bun run stolos pair", text: "Pair the next machine; its name is its hostname." },
+      {
+        cmd: "bun run stolos pair --name alice-laptop --owner alice",
+        text: "Name it, and say whose it is.",
+      },
+    ],
+    async run(a: Parsed): Promise<number> {
+      const { pair } = await import("../adopt/pair-command.ts");
+      return await pair({
+        ...(a["name"] ? { name: a["name"] as string } : {}),
+        ...(a["address"] ? { address: a["address"] as string } : {}),
+        ...(a["port"] ? { port: Number(a["port"]) } : {}),
+        ...(a["title"] ? { title: a["title"] as string } : {}),
+        ...(a["owner"] ? { owner: a["owner"] as string } : {}),
+      });
+    },
+  },
+  {
     name: "discover",
     summary:
       "Machines seen on this PC's network or in the fleet's clouds, not yet managed or adopted",
@@ -4740,6 +4793,8 @@ const PC_COMMANDS = new Set([
   "device check",
   "device remove",
   "host integrate",
+  "pair",
+  "mesh",
   "host accept",
   "compliance",
   "compliance catalog",

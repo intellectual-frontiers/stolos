@@ -30,6 +30,7 @@ import { run } from "../core/exec.ts";
 import { P } from "../core/paths.ts";
 import { ownerOnly, writeSecret } from "../core/secrets.ts";
 import { authorizedLine, parseProbe, PROBE_SCRIPT, type ProbeOutput } from "./probe.ts";
+import type { ControllerFacts } from "./controller.ts";
 
 /** An adopted machine, as the fleet declares it (machine.ts). */
 export type AdoptedDef = {
@@ -47,6 +48,11 @@ export type AdoptedDef = {
   until?: string;
   /** When it was adopted (ISO time). */
   adopted: string;
+  /**
+   * `controller`: the fleet's controller PC itself (spec 097), observed locally by the probe, not
+   * over SSH (no SSH server, no probe key, no host keys).
+   */
+  role?: "controller";
   /**
    * Risks the owner accepted, each for a while: a policy that fails is shown
    * as accepted (not as passing) until the date, with who and why (for an
@@ -108,6 +114,8 @@ export type Observed = {
   };
   /** TCP ports listening. */
   listening: number[];
+  /** A controller's own facts: its signing keys, backups, recovery key (spec 097). */
+  controller?: ControllerFacts;
 };
 
 const num = (v: string | undefined): number | undefined => {
@@ -248,6 +256,15 @@ export async function probe(
   m: AdoptedDef,
   request: string,
 ): Promise<{ ok: boolean; out: string; err: string }> {
+  if (m.role === "controller") {
+    const { isThisController, localProbe } = await import("./controller.ts");
+    if (await isThisController(m)) return await localProbe(request);
+    return {
+      ok: false,
+      out: "",
+      err: `${m.name} is another controller PC: it observes itself (bun run stolos host observe, on it)`,
+    };
+  }
   const known = await knownHostsFor(m);
   try {
     const r = await run([
@@ -366,5 +383,9 @@ export async function observe(m: AdoptedDef): Promise<{ observed?: Observed; why
   if (!r.ok) return { why: r.err.split("\n").pop() || "the probe did not answer" };
   const p = parseProbe(r.out);
   if (!p["os"]) return { why: "the probe answered without facts (an old or edited stolos-probe?)" };
+  if (m.role === "controller") {
+    const { controllerFacts } = await import("./controller.ts");
+    return { observed: { ...toObserved(p), controller: await controllerFacts() } };
+  }
   return { observed: toObserved(p) };
 }

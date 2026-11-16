@@ -33,6 +33,7 @@ import {
   scanHostKeys,
 } from "./adopt.ts";
 import { policies, type PolicyResult } from "./policy.ts";
+import type { CheckIn } from "./checkin.ts";
 
 const fail = (): number => (ui.problems.some((x) => x.level === "fail") ? 1 : 0);
 
@@ -49,7 +50,7 @@ export async function hostAdopt(o: {
   if (!o.ssh) {
     ui.phase("Checks").fail(
       "--ssh user@address, or --check-in <code>",
-      `the easy way: bun run stolos host integrate ${o.name} --as adopt (prints the line to run on the machine)`,
+      `the easy way: bun run stolos pair (a short line to run on the machine, and a code)`,
     );
     return fail();
   }
@@ -180,6 +181,16 @@ export function report(name: string, rs: PolicyResult[]): void {
 
 /** `stolos host observe [name]`: observe one adopted machine, or all. */
 export async function hostObserve(name?: string): Promise<number> {
+  // Spec 097: this PC is a fleet machine too; recorded the first time.
+  {
+    const { ensureController } = await import("./controller.ts");
+    const c = await ensureController();
+    if ("added" in c && c.added) {
+      ui.phase("Controller").done(
+        `${c.name}: this PC, recorded as the fleet's controller (observed locally)`,
+      );
+    }
+  }
   const all = await loadAdopted();
   const which = name ? all.filter((a) => a.machine.name === name) : all;
   if (name && !which.length) {
@@ -206,7 +217,14 @@ export async function hostObserve(name?: string): Promise<number> {
         );
         return;
       }
-      if (!(await fs.exists(probeKeyPath(machine.name)))) {
+      if (machine.role === "controller") {
+        const { isThisController } = await import("./controller.ts");
+        if (!(await isThisController(machine))) {
+          p.done("another controller PC: it observes itself");
+          return;
+        }
+      }
+      if (machine.role !== "controller" && !(await fs.exists(probeKeyPath(machine.name)))) {
         p.fail(
           "its probe key is not in this PC's vault",
           `restore the vault, or adopt again: bun run stolos host adopt ${machine.name} --ssh ${machine.ssh.user}@${machine.ssh.address}`,
@@ -255,12 +273,16 @@ export async function hostRelease(name: string): Promise<number> {
     p.fail(`no adopted machine ${name}`, "bun run stolos host check (lists them)");
     return fail();
   }
-  stdio.stdout.writeSync(
-    `\n  Removing the probe from ${a.machine.ssh.address} (your own SSH: it may ask your password).\n\n`,
-  );
-  ui.pause();
-  const ok = await runAsYou(a.machine, releaseScript(P.fleetId));
-  ui.resume();
+  // A controller has no probe or key installed: only its model goes (spec 097).
+  let ok = true;
+  if (a.machine.role !== "controller") {
+    stdio.stdout.writeSync(
+      `\n  Removing the probe from ${a.machine.ssh.address} (your own SSH: it may ask your password).\n\n`,
+    );
+    ui.pause();
+    ok = await runAsYou(a.machine, releaseScript(P.fleetId));
+    ui.resume();
+  }
   if (!ok) {
     p.warn(
       "the machine did not answer: its probe stays until you remove it",
@@ -547,6 +569,18 @@ async function adoptFromCheckIn(o: {
     );
     return fail();
   }
+  return await adoptCheckIn(ci, o, c);
+}
+
+/**
+ * Adopt a machine from its check-in (a `stolos1:` code, or a paired machine's signed check-in):
+ * its host keys are pinned from the check-in, then it is observed over SSH with its probe key.
+ */
+export async function adoptCheckIn(
+  ci: CheckIn,
+  o: { name: string; ssh?: string; title?: string; owner?: string; until?: string; spec?: string },
+  c = ui.phase("Check-in"),
+): Promise<number> {
   const via = o.ssh?.match(/^([a-z_][a-z0-9_.-]*)@([A-Za-z0-9.:-]+?)(?::(\d+))?$/i);
   const user = via?.[1] ?? ci.user;
   const address = via?.[2] ?? ci.addresses[0] ?? ci.hostname;
@@ -585,7 +619,8 @@ async function adoptFromCheckIn(o: {
   const { saveDiscovered } = await import("./integrate.ts");
   await saveDiscovered([], [o.name]);
   if (observed) report(o.name, policies(machine, observed));
-  ui.next.push(`keep it: bun run stolos apply -m "069-integrate: adopt ${o.name}"`);
+  ui.next.push(`keep it: bun run stolos apply -m "${o.spec ?? "069-integrate"}: adopt ${o.name}"`);
+  ui.next.push("back up: bun run stolos vault backup (the probe key is new)");
   return fail();
 }
 
@@ -644,6 +679,7 @@ export async function hostIntegrate(o: {
   stdio.stdout.writeSync(
     "  It says what it will do and asks once; at the end it prints a check-in code (stolos1:...).\n\n",
   );
+  if (as.includes("adopt")) ui.next.push("easier, with a short code: bun run stolos pair");
   const next = as.includes("adopt")
     ? `then: bun run stolos host adopt ${o.name} --check-in <code>   (or paste it in the Stolos Console)`
     : as.includes("server")

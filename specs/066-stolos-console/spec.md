@@ -33,6 +33,13 @@ new password or key to keep.
   as CSV; on a server, a viewer sees only their own entries.
 - **FR-008** Text and buttons meet 4.5:1 contrast in light and dark; tables show a shadow where more
   is to the side; diagrams on a phone scroll at a readable size; every page has a skip link.
+- **FR-009** Nothing that needs attention is a bare number (issue intellectual-frontiers/stolos#34).
+  `archon verify` records every check that did not pass (failed, warning, not set up yet) with what
+  it found, its fix, and its explain code, in `verify.json` and in the verify record `fleet status`
+  brings to the PC. The Archon Console's Health card links to a Needs attention list that shows
+  each one with its fix; the Stolos Console shows the same on the machine's page, links the Checks
+  cell to it ("140 of 141 · 1 warning"), lists it on the Overview, and says when this PC has not
+  asked a server yet ("not asked yet", with Ask now) instead of "not checked".
 
 ## Success criteria
 

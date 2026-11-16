@@ -378,6 +378,7 @@ export async function fleetInit(o: FleetInitOptions): Promise<void> {
       "the admin password hash is stored again; hosts keep theirs until their next install or apply",
       "a rebuilt boot machine: bun run stolos vault recover-host-keys <host> for each host (bun run stolos docs disaster-recovery)",
     );
+    await (await import("../adopt/controller.ts")).recordController();
     return;
   }
   w.done(
@@ -388,6 +389,8 @@ export async function fleetInit(o: FleetInitOptions): Promise<void> {
     `then: bun run stolos apply -m "${P.fleetId || "<fleet>"}: the fleet and its signers"`,
     "then: bun run stolos (it shows the next step)",
   );
+  // Spec 097: this PC is a fleet machine too.
+  await (await import("../adopt/controller.ts")).recordController();
 }
 
 /** One line from a piped stdin (bytes up to the first newline; the rest is left for the next call). */

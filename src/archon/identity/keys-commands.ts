@@ -538,6 +538,8 @@ export async function keysSetup(o: { test?: boolean } = {}): Promise<number> {
       "back up: bun run stolos vault backup (one ZIP with every secret and both keys); keep the ZIP somewhere safe and encrypted",
     );
   }
+  // Spec 097: this PC is a fleet machine too.
+  await (await import("../adopt/controller.ts")).recordController();
   return end();
 }
 
