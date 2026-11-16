@@ -23,7 +23,7 @@
 <article>
 <header class="page-head"><h1>The stolos command</h1></header>
 <p><code>stolos</code> (<a href="../../specs/059-stolos-and-archon.html">spec 059</a>): the fleet's command, on your PC, in the fleet repository (<code>bun run stolos ...</code>). Everything about the fleet as a whole: creating it, keys and signers, adding and installing machines (<code>stolos boot ...</code>, the boot server), backups, and keeping this checkout up to date. Each machine has its own command, <code>archon</code>, for itself.</p><figure class="code"><pre class="lang-mermaid"><code>flowchart LR
-  pc[&quot;your PC&lt;br/&gt;bun run stolos ...&quot;] --&gt;|&quot;git push (signed)&quot;| gh[&quot;GitHub&quot;]
+  pc[&quot;your PC&lt;br/&gt;bun run stolos ...&quot;] --&gt;|&quot;stolos apply (signed)&quot;| gh[&quot;GitHub&quot;]
   pc --&gt;|&quot;stolos boot serve:&lt;br/&gt;network installs&quot;| m[&quot;each machine&lt;br/&gt;archon ...&quot;]
   gh --&gt;|&quot;every 15 minutes&quot;| m</code></pre></figure><h2 id="entry-points"><a class="anchor" href="#entry-points" aria-hidden="true">#</a>Entry points</h2><ul><li><a href="#"><code>src/stolos/main.ts</code></a></li></ul><h2 id="modules"><a class="anchor" href="#modules" aria-hidden="true">#</a>Modules</h2><div class="cards"><div class="card"><a class="card-link" href="main.html"><span class="card-title">main</span><span class="card-text"><code>stolos</code> (<em>spec 059</em>): the fleet's command, on your PC, in the fleet repository (<code>bun run stolos ...</code>).</span></a></div></div>
 </article>
