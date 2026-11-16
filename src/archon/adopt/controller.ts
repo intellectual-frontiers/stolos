@@ -79,7 +79,8 @@ export async function localProbe(
           file,
         ]
       : ["sh", file];
-    const r = await run(argv, { env: { SSH_ORIGINAL_COMMAND: request } });
+    // In its own folder: PowerShell may write a module cache to the current folder (spec 097 FR-002).
+    const r = await run(argv, { cwd: dir, env: { SSH_ORIGINAL_COMMAND: request } });
     return { ok: r.ok, out: r.stdout, err: r.stderr.trim() };
   } finally {
     await fs.remove(dir, { recursive: true });

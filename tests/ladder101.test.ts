@@ -84,7 +84,7 @@ proves(
       (f) => f.rule === "layers/unclassified" || f.rule === "layers/ambiguous",
     );
     assertEquals(placement, []);
-    const r = await proc.run(["git", "-C", ROOT, "ls-files", "-co", "--exclude-standard"]);
+    const r = await proc.run(["git", "-C", ROOT, "ls-files", "-c"]);
     const folders = [
       ...r.stdout.split("\n").filter((f) => f !== ""),
       ...(await fs.listDirs(path.join(ROOT, "src", "archon"))).map((d) => `src/archon/${d}/x.ts`),
