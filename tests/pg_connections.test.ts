@@ -252,42 +252,45 @@ proves(
         outputs.push(open.stdout + open.stderr);
         assertStringIncludes(the(outputs.at(-1)), "UNUSABLE");
       }
-      // The MCP server's own path: tools/call runs archon as a subprocess.
-      const launcher = `${dir}/archon`;
-      await fs.writeTextFile(
-        launcher,
-        `#!/bin/sh\nexec "${proc.execPath()}" "${proc.cwd()}/src/archon/main.ts" "$@" --host alpha\n`,
-      );
-      await fs.chmod(launcher, 0o755);
-      const saved = Object.fromEntries(Object.keys(env).map((k) => [k, proc.env.get(k)]));
-      for (const [k, v] of Object.entries({ ...env, ARCHON_SELF: launcher })) proc.env.set(k, v);
-      try {
-        const { handle } = await import("../src/archon/mcp/server.ts");
-        for (const [name, args] of [
-          ["archon_pg_connections", { json: true }],
-          ["archon_pg_connections", {}],
-          ["archon_pg_show", { name: "app", form: "env" }],
-          ["archon_pg_show", { name: "app", form: "bogus" }],
-        ] as Array<[string, Record<string, unknown>]>) {
-          outputs.push(
-            JSON.stringify(
-              await handle(
-                {
-                  jsonrpc: "2.0",
-                  id: 1,
-                  method: "tools/call",
-                  params: { name, arguments: args },
-                },
-                "read",
+      // The MCP server's own path: tools/call runs archon as a subprocess, through the host's
+      // launcher (a POSIX shell script): a host's, so not on Windows.
+      if (proc.build.os !== "windows") {
+        const launcher = `${dir}/archon`;
+        await fs.writeTextFile(
+          launcher,
+          `#!/bin/sh\nexec "${proc.execPath()}" "${proc.cwd()}/src/archon/main.ts" "$@" --host alpha\n`,
+        );
+        await fs.chmod(launcher, 0o755);
+        const saved = Object.fromEntries(Object.keys(env).map((k) => [k, proc.env.get(k)]));
+        for (const [k, v] of Object.entries({ ...env, ARCHON_SELF: launcher })) proc.env.set(k, v);
+        try {
+          const { handle } = await import("../src/archon/mcp/server.ts");
+          for (const [name, args] of [
+            ["archon_pg_connections", { json: true }],
+            ["archon_pg_connections", {}],
+            ["archon_pg_show", { name: "app", form: "env" }],
+            ["archon_pg_show", { name: "app", form: "bogus" }],
+          ] as Array<[string, Record<string, unknown>]>) {
+            outputs.push(
+              JSON.stringify(
+                await handle(
+                  {
+                    jsonrpc: "2.0",
+                    id: 1,
+                    method: "tools/call",
+                    params: { name, arguments: args },
+                  },
+                  "read",
+                ),
               ),
-            ),
-          );
+            );
+          }
+        } finally {
+          for (const [k, v] of Object.entries(saved)) {
+            v === undefined ? proc.env.delete(k) : proc.env.set(k, v);
+          }
+          proc.env.delete("ARCHON_SELF");
         }
-      } finally {
-        for (const [k, v] of Object.entries(saved)) {
-          v === undefined ? proc.env.delete(k) : proc.env.set(k, v);
-        }
-        proc.env.delete("ARCHON_SELF");
       }
       for (const [i, out] of outputs.entries()) {
         assert(out.length > 0, `run ${i} printed something`);

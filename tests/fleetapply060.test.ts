@@ -81,7 +81,10 @@ proves(
       await fs.writeTextFile(path.join(repo, ".gitignore"), "out/\nnode_modules/\n");
       await fs.writeTextFile(
         path.join(repo, "package.json"),
-        JSON.stringify({ scripts: { stolos: `bun ${proc.cwd()}/src/stolos/main.ts` } }) + "\n",
+        // With /: bun run's shell takes a \ for an escape (a Windows path).
+        JSON.stringify({
+          scripts: { stolos: `bun ${path.toPosix(proc.cwd())}/src/stolos/main.ts` },
+        }) + "\n",
       );
       const stolos = (args: string[]) =>
         sb.run("src/stolos/main.ts", args, "", { ...env, ARCHON_REPO: repo, ARCHON_FLEET: "lab" });

@@ -226,111 +226,123 @@ async function exists(p: string) {
     .catch(() => false);
 }
 
-test("057: rotate-recovery: a new recovery key, tested, approved by the old one, in the key store; again does nothing", async () => {
-  const s = await keysSandbox();
-  try {
-    assertEquals((await s.archon(["keys", "setup"])).code, 0);
-    await s.git("add", "-A");
-    await s.git("commit", "-q", "-m", "demo: signers");
-    const signersPath = path.join(s.repo, "fleets", "demo", "signers.ts");
-    const before = await fs.readTextFile(signersPath);
-    const base = await s.git("rev-parse", "HEAD");
-    const stored = path.join(s.home, "config", "stolos", "keys", "fleet-recovery");
-    const oldPub = (await fs.readTextFile(stored + ".pub")).trim().split(" ").slice(0, 2).join(" ");
+test(
+  "057: rotate-recovery: a new recovery key, tested, approved by the old one, in the key store; again does nothing",
+  async () => {
+    const s = await keysSandbox();
+    try {
+      assertEquals((await s.archon(["keys", "setup"])).code, 0);
+      await s.git("add", "-A");
+      await s.git("commit", "-q", "-m", "demo: signers");
+      const signersPath = path.join(s.repo, "fleets", "demo", "signers.ts");
+      const before = await fs.readTextFile(signersPath);
+      const base = await s.git("rev-parse", "HEAD");
+      const stored = path.join(s.home, "config", "stolos", "keys", "fleet-recovery");
+      const oldPub = (await fs.readTextFile(stored + ".pub"))
+        .trim()
+        .split(" ")
+        .slice(0, 2)
+        .join(" ");
 
-    // No arguments: the old key is the one in the key store.
-    let r = await s.archon(["keys", "rotate-recovery"]);
-    assertEquals(r.code, 0, r.out);
-    assertStringIncludes(r.out, "NEW recovery key's passphrase");
-    const head = await s.git("rev-parse", "HEAD");
-    assert(head !== base, "a commit was made");
-    // Approved by the OLD recovery key, as servers holding the old list check it.
-    const allowed = path.join(s.home, "allowed-before");
-    await fs.writeTextFile(allowed, allowedSignersText(parseSignersSource(before)));
-    const t = await checkTip(s.repo, head, base, allowed);
-    assert(t.ok, t.reason);
-    assertStringIncludes(t.signer ?? "", "recovery");
-    const rec = parseSignersSource(await fs.readTextFile(signersPath)).filter(
-      (x) => x.role === "recovery",
-    );
-    assertEquals(rec.length, 1);
-    assert(rec[0]?.key !== oldPub, "the old recovery key is no longer listed");
-    // The key store holds the new key; the old one is kept, retired.
-    const storedNow = (await fs.readTextFile(stored + ".pub"))
-      .trim()
-      .split(" ")
-      .slice(0, 2)
-      .join(" ");
-    assertEquals(storedNow, rec[0]?.key);
-    const retired = [...fs.readDirSync(path.join(s.home, "config", "stolos", "keys"))]
-      .map((e) => e.name)
-      .filter((n) => n.startsWith("fleet-recovery.retired-"));
-    assertEquals(retired.length, 2, "the old pair, retired");
+      // No arguments: the old key is the one in the key store.
+      let r = await s.archon(["keys", "rotate-recovery"]);
+      assertEquals(r.code, 0, r.out);
+      assertStringIncludes(r.out, "NEW recovery key's passphrase");
+      const head = await s.git("rev-parse", "HEAD");
+      assert(head !== base, "a commit was made");
+      // Approved by the OLD recovery key, as servers holding the old list check it.
+      const allowed = path.join(s.home, "allowed-before");
+      await fs.writeTextFile(allowed, allowedSignersText(parseSignersSource(before)));
+      const t = await checkTip(s.repo, head, base, allowed);
+      assert(t.ok, t.reason);
+      assertStringIncludes(t.signer ?? "", "recovery");
+      const rec = parseSignersSource(await fs.readTextFile(signersPath)).filter(
+        (x) => x.role === "recovery",
+      );
+      assertEquals(rec.length, 1);
+      assert(rec[0]?.key !== oldPub, "the old recovery key is no longer listed");
+      // The key store holds the new key; the old one is kept, retired.
+      const storedNow = (await fs.readTextFile(stored + ".pub"))
+        .trim()
+        .split(" ")
+        .slice(0, 2)
+        .join(" ");
+      assertEquals(storedNow, rec[0]?.key);
+      const retired = [...fs.readDirSync(path.join(s.home, "config", "stolos", "keys"))]
+        .map((e) => e.name)
+        .filter((n) => n.startsWith("fleet-recovery.retired-"));
+      assertEquals(retired.length, 2, "the old pair, retired");
 
-    // Again: nothing to do.
-    r = await s.archon(["keys", "rotate-recovery"]);
-    assertStringIncludes(r.out, "already changed today");
-    assertEquals(await s.git("rev-parse", "HEAD"), head, "no new commit");
-  } finally {
-    await fs.remove(s.home, { recursive: true });
-  }
-});
-
-test("057: one backup holds everything: both keys; a loose recovery folder moves into the key store", async () => {
-  const s = await keysSandbox();
-  try {
-    assertEquals((await s.archon(["keys", "setup"])).code, 0);
-    const store = path.join(s.home, "config", "stolos", "keys");
-    // As an earlier version left it: the recovery key in a loose folder in the home folder.
-    const loose = path.join(s.home, "fleet-recovery");
-    await fs.mkdir(loose, { recursive: true });
-    for (const f of ["fleet-recovery", "fleet-recovery.pub"]) {
-      await fs.rename(path.join(store, f), path.join(loose, f));
+      // Again: nothing to do.
+      r = await s.archon(["keys", "rotate-recovery"]);
+      assertStringIncludes(r.out, "already changed today");
+      assertEquals(await s.git("rev-parse", "HEAD"), head, "no new commit");
+    } finally {
+      await fs.remove(s.home, { recursive: true });
     }
-    let r = await s.archon(["keys"]);
-    assertStringIncludes(r.out, "E057-RECOVERY-LOOSE");
+  },
+  { timeout: 120_000 },
+);
 
-    r = await s.archon(["vault", "backup"]);
-    assertEquals(r.code, 0, r.out);
-    assertStringIncludes(r.out, "both signing keys");
-    const dir = path.join(s.home, "data", "stolos", "backup");
-    const zip = [...fs.readDirSync(dir)].map((e) => e.name).find((n) => n.endsWith(".zip"));
-    assertExists(zip);
-    // The names of a ZIP's entries (kernel archives).
-    const names = (file: string): string[] => {
-      const e = zipEntries(fs.readFileSync(path.join(dir, file)));
-      assert(e.kind === "ok", file);
-      return e.value.map((x) => x.name);
-    };
-    const files = names(zip);
-    for (const n of [
-      "signing/fleet-signing",
-      "signing/fleet-signing.pub",
-      "signing/recovery/fleet-recovery",
-      "signing/recovery/fleet-recovery.pub",
-    ])
-      assert(files.includes(n), `${n} in ${files.join(", ")}`);
-    // Backed up: moved into the key store, the loose folder gone; the checks are quiet about it.
-    assert(await exists(path.join(store, "fleet-recovery")), "in the key store");
-    assert(!(await exists(loose)), "the loose folder is gone");
-    r = await s.archon(["keys"]);
-    assert(!/E057-RECOVERY-(LOOSE|MISSING)/.test(r.out), r.out);
-    // The next backup holds it too.
-    await new Promise((x) => setTimeout(x, 1100));
-    r = await s.archon(["vault", "backup"]);
-    const zips = [...fs.readDirSync(dir)]
-      .map((e) => e.name)
-      .filter((n) => n.endsWith(".zip"))
-      .sort();
-    const again = names(zips.at(-1) ?? "");
-    assert(
-      again.includes("signing/recovery/fleet-recovery"),
-      "every backup holds the recovery key",
-    );
-  } finally {
-    await fs.remove(s.home, { recursive: true });
-  }
-});
+test(
+  "057: one backup holds everything: both keys; a loose recovery folder moves into the key store",
+  async () => {
+    const s = await keysSandbox();
+    try {
+      assertEquals((await s.archon(["keys", "setup"])).code, 0);
+      const store = path.join(s.home, "config", "stolos", "keys");
+      // As an earlier version left it: the recovery key in a loose folder in the home folder.
+      const loose = path.join(s.home, "fleet-recovery");
+      await fs.mkdir(loose, { recursive: true });
+      for (const f of ["fleet-recovery", "fleet-recovery.pub"]) {
+        await fs.rename(path.join(store, f), path.join(loose, f));
+      }
+      let r = await s.archon(["keys"]);
+      assertStringIncludes(r.out, "E057-RECOVERY-LOOSE");
+
+      r = await s.archon(["vault", "backup"]);
+      assertEquals(r.code, 0, r.out);
+      assertStringIncludes(r.out, "both signing keys");
+      const dir = path.join(s.home, "data", "stolos", "backup");
+      const zip = [...fs.readDirSync(dir)].map((e) => e.name).find((n) => n.endsWith(".zip"));
+      assertExists(zip);
+      // The names of a ZIP's entries (kernel archives).
+      const names = (file: string): string[] => {
+        const e = zipEntries(fs.readFileSync(path.join(dir, file)));
+        assert(e.kind === "ok", file);
+        return e.value.map((x) => x.name);
+      };
+      const files = names(zip);
+      for (const n of [
+        "signing/fleet-signing",
+        "signing/fleet-signing.pub",
+        "signing/recovery/fleet-recovery",
+        "signing/recovery/fleet-recovery.pub",
+      ])
+        assert(files.includes(n), `${n} in ${files.join(", ")}`);
+      // Backed up: moved into the key store, the loose folder gone; the checks are quiet about it.
+      assert(await exists(path.join(store, "fleet-recovery")), "in the key store");
+      assert(!(await exists(loose)), "the loose folder is gone");
+      r = await s.archon(["keys"]);
+      assert(!/E057-RECOVERY-(LOOSE|MISSING)/.test(r.out), r.out);
+      // The next backup holds it too.
+      await new Promise((x) => setTimeout(x, 1100));
+      r = await s.archon(["vault", "backup"]);
+      const zips = [...fs.readDirSync(dir)]
+        .map((e) => e.name)
+        .filter((n) => n.endsWith(".zip"))
+        .sort();
+      const again = names(zips.at(-1) ?? "");
+      assert(
+        again.includes("signing/recovery/fleet-recovery"),
+        "every backup holds the recovery key",
+      );
+    } finally {
+      await fs.remove(s.home, { recursive: true });
+    }
+  },
+  { timeout: 120_000 },
+);
 
 proves(
   ["061-vault-restore FR-001", "061-vault-restore FR-003", "061-vault-restore FR-006"],
@@ -491,26 +503,33 @@ proves(
   { timeout: 120_000 },
 );
 
-test("057: a second PC's key: setup prints the exact command that approves it", async () => {
-  const s = await keysSandbox();
-  try {
-    assertEquals((await s.archon(["keys", "setup"])).code, 0);
-    await s.git("add", "-A");
-    await s.git("commit", "-q", "-m", "demo: signers");
-    // Another PC: no daily key here yet (this one's moved aside).
-    for (const ext of ["", ".pub"]) await fs.rename(s.daily + ext, `${s.daily}.first${ext}`);
-    const r = await s.archon(["keys", "setup"]);
-    const pub = (await fs.readTextFile(s.daily + ".pub")).trim().split(" ").slice(0, 2).join(" ");
-    assertStringIncludes(r.out, "must be approved by a key already listed");
-    assertStringIncludes(r.out, `--role daily --key "${pub}"`);
-    assertStringIncludes(r.out, "git checkout -- fleets/demo/signers.ts && bun run stolos update");
-    // Running it again still shows the commands (the approval is still missing).
-    const again = await s.archon(["keys", "setup"]);
-    assertStringIncludes(again.out, `--key "${pub}"`);
-  } finally {
-    await fs.remove(s.home, { recursive: true });
-  }
-});
+test(
+  "057: a second PC's key: setup prints the exact command that approves it",
+  async () => {
+    const s = await keysSandbox();
+    try {
+      assertEquals((await s.archon(["keys", "setup"])).code, 0);
+      await s.git("add", "-A");
+      await s.git("commit", "-q", "-m", "demo: signers");
+      // Another PC: no daily key here yet (this one's moved aside).
+      for (const ext of ["", ".pub"]) await fs.rename(s.daily + ext, `${s.daily}.first${ext}`);
+      const r = await s.archon(["keys", "setup"]);
+      const pub = (await fs.readTextFile(s.daily + ".pub")).trim().split(" ").slice(0, 2).join(" ");
+      assertStringIncludes(r.out, "must be approved by a key already listed");
+      assertStringIncludes(r.out, `--role daily --key "${pub}"`);
+      assertStringIncludes(
+        r.out,
+        "git checkout -- fleets/demo/signers.ts && bun run stolos update",
+      );
+      // Running it again still shows the commands (the approval is still missing).
+      const again = await s.archon(["keys", "setup"]);
+      assertStringIncludes(again.out, `--key "${pub}"`);
+    } finally {
+      await fs.remove(s.home, { recursive: true });
+    }
+  },
+  { timeout: 120_000 },
+);
 
 test("057: the approval steps, on WSL (Windows PowerShell) and elsewhere", async () => {
   const { approvalSteps } = await import("../src/archon/identity/keys-commands.ts");

@@ -665,7 +665,7 @@ proves(
     assertStringIncludes(threw, 'no risk with id "nope"');
     // vendors.ts gains entries that still load (criticality unassessed until a person sets it).
     const v = discoverVendors(estate(), { triage: TRIAGE }).filter((x) => !x.triage);
-    const dir = await fs.makeTempDir({ dir: ".", prefix: ".risk080-" });
+    const dir = await fs.makeTempDir({ dir: proc.cwd(), prefix: ".risk080-" });
     try {
       for (const [name, base] of [
         ["a.ts", await fs.readTextFile("examples/fleets/lab/vendors.ts")],

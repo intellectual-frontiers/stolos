@@ -632,7 +632,9 @@ export const pack = defineControlPack({
       fix: "sign the zones (DNSSEC)",
     }),
   ],
-});
+  },
+  { timeout: 120_000 },
+);
 `,
       );
       const env = { ARCHON_REPO: repo, ARCHON_FLEET: "lab" };

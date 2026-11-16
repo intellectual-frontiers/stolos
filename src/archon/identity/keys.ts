@@ -218,7 +218,17 @@ async function privateFilesFor(pubs: string[], dirs: string[]): Promise<string[]
  * or globally): then no commit can be made, signed or not.
  */
 export async function gitIdentity(repo = P.repo): Promise<string | undefined> {
-  const r = await run(["git", "-C", repo, "var", "GIT_AUTHOR_IDENT"]);
+  // Configured only: Git otherwise guesses one from the account and the host's name (macOS' names
+  // carry a domain, so it does there), and a guessed author is not who you are.
+  const r = await run([
+    "git",
+    "-c",
+    "user.useConfigOnly=true",
+    "-C",
+    repo,
+    "var",
+    "GIT_AUTHOR_IDENT",
+  ]);
   return r.ok ? r.stdout.trim().replace(/\s+\d+\s+[+-]\d{4}$/, "") : undefined;
 }
 

@@ -173,6 +173,23 @@ export function dump(db: DatabaseSync): string {
   ].join("\n");
 }
 
+/** Each state folder's last write: writes in one process go one after another (see `serially`). */
+const writing = new Map<string, Promise<unknown>>();
+
+/**
+ * Run a read-modify-write of a state folder after the ones before it: archon.sql is read whole and
+ * written whole, so two at once (fleet status asks every server together) would lose one.
+ */
+function serially<T>(dir: string, fn: () => Promise<T>): Promise<T> {
+  const key = path.resolve(dir);
+  const done = (writing.get(key) ?? Promise.resolve()).then(fn, fn);
+  writing.set(
+    key,
+    done.catch(() => undefined),
+  );
+  return done;
+}
+
 async function load(dir: string): Promise<DatabaseSync> {
   return open((await fs.readTextOr(path.join(dir, STATE_SQL))) ?? "");
 }
@@ -255,22 +272,24 @@ export async function putRecord(
   dir = stateDir(),
   at = new Date().toISOString(),
 ): Promise<void> {
-  const db = await load(dir);
-  db.prepare("INSERT OR REPLACE INTO archon_record VALUES (?, ?, ?, ?, ?)").run(
-    host,
-    kind,
-    name,
-    at,
-    JSON.stringify(body),
-  );
-  count("archon.state.writes", 1, { "archon.kind": kind });
-  if (kind === "prov") {
-    db.prepare(
-      `DELETE FROM archon_record WHERE host = ? AND kind = 'prov' AND name NOT IN
-        (SELECT name FROM archon_record WHERE host = ? AND kind = 'prov' ORDER BY name DESC LIMIT ?)`,
-    ).run(host, host, PROV_KEEP);
-  }
-  await save(dir, db);
+  return serially(dir, async () => {
+    const db = await load(dir);
+    db.prepare("INSERT OR REPLACE INTO archon_record VALUES (?, ?, ?, ?, ?)").run(
+      host,
+      kind,
+      name,
+      at,
+      JSON.stringify(body),
+    );
+    count("archon.state.writes", 1, { "archon.kind": kind });
+    if (kind === "prov") {
+      db.prepare(
+        `DELETE FROM archon_record WHERE host = ? AND kind = 'prov' AND name NOT IN
+          (SELECT name FROM archon_record WHERE host = ? AND kind = 'prov' ORDER BY name DESC LIMIT ?)`,
+      ).run(host, host, PROV_KEEP);
+    }
+    await save(dir, db);
+  });
 }
 
 /** How many observations a host keeps (the oldest go first, spec 095). */
@@ -287,19 +306,21 @@ export async function putRecords(
   items: Array<{ name: string; body: unknown; at?: string }>,
   dir = stateDir(),
 ): Promise<void> {
-  if (!items.length) return;
-  const db = await load(dir);
-  const ins = db.prepare("INSERT OR REPLACE INTO archon_record VALUES (?, ?, ?, ?, ?)");
-  const now = new Date().toISOString();
-  for (const i of items) ins.run(host, kind, i.name, i.at ?? now, JSON.stringify(i.body));
-  count("archon.state.writes", items.length, { "archon.kind": kind });
-  if (kind === "observation") {
-    db.prepare(
-      `DELETE FROM archon_record WHERE host = ? AND kind = 'observation' AND name NOT IN
-        (SELECT name FROM archon_record WHERE host = ? AND kind = 'observation' ORDER BY at DESC LIMIT ?)`,
-    ).run(host, host, OBSERVATION_KEEP);
-  }
-  await save(dir, db);
+  return serially(dir, async () => {
+    if (!items.length) return;
+    const db = await load(dir);
+    const ins = db.prepare("INSERT OR REPLACE INTO archon_record VALUES (?, ?, ?, ?, ?)");
+    const now = new Date().toISOString();
+    for (const i of items) ins.run(host, kind, i.name, i.at ?? now, JSON.stringify(i.body));
+    count("archon.state.writes", items.length, { "archon.kind": kind });
+    if (kind === "observation") {
+      db.prepare(
+        `DELETE FROM archon_record WHERE host = ? AND kind = 'observation' AND name NOT IN
+          (SELECT name FROM archon_record WHERE host = ? AND kind = 'observation' ORDER BY at DESC LIMIT ?)`,
+      ).run(host, host, OBSERVATION_KEEP);
+    }
+    await save(dir, db);
+  });
 }
 
 /** Remove one record, or every record of a host (retire). */
@@ -309,17 +330,19 @@ export async function removeRecords(
   name?: string,
   dir = stateDir(),
 ): Promise<void> {
-  const db = await load(dir);
-  if (kind && name) {
-    db.prepare("DELETE FROM archon_record WHERE host = ? AND kind = ? AND name = ?").run(
-      host,
-      kind,
-      name,
-    );
-  } else if (kind) {
-    db.prepare("DELETE FROM archon_record WHERE host = ? AND kind = ?").run(host, kind);
-  } else db.prepare("DELETE FROM archon_record WHERE host = ?").run(host);
-  await save(dir, db);
+  return serially(dir, async () => {
+    const db = await load(dir);
+    if (kind && name) {
+      db.prepare("DELETE FROM archon_record WHERE host = ? AND kind = ? AND name = ?").run(
+        host,
+        kind,
+        name,
+      );
+    } else if (kind) {
+      db.prepare("DELETE FROM archon_record WHERE host = ? AND kind = ?").run(host, kind);
+    } else db.prepare("DELETE FROM archon_record WHERE host = ?").run(host);
+    await save(dir, db);
+  });
 }
 
 /** For tests and `archon state`: every record. */

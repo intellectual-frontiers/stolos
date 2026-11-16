@@ -199,13 +199,17 @@ export async function smoke(tgz: string, root = ROOT): Promise<void> {
       );
       await runOrThrow([bun(), "install"], dir);
       const node = proc.runtimeName() === "node" ? proc.execPath() : (proc.which("node") ?? "node");
-      for (const runtime of [bun(), node]) {
+      for (const [name, runtime] of [
+        ["bun", bun()],
+        ["node", node],
+      ] as const) {
         const r = await proc.run([runtime, "archon.ts", "--version"], { cwd: dir });
         const said = `${r.stdout}${r.stderr}`.trim();
         if (!r.success || !said.includes(m.version)) {
           throw new Error(`${runtime} archon.ts --version: ${said || `exit ${r.code}`}`);
         }
-        console.log(`${path.basename(runtime)}: ${said.split("\n")[0] ?? ""}`);
+        // By its name: its file's is bun.exe, node.EXE on Windows.
+        console.log(`${name}: ${said.split("\n")[0] ?? ""}`);
       }
     },
     { prefix: "stolos-smoke-" },

@@ -114,39 +114,43 @@ proves(
   { timeout: 120_000 },
 );
 
-test("045/004: a boot machine without a Git identity commits as the fleet's admin", async () => {
-  const { publishChange } = await import("../src/archon/install/publish.ts");
-  const root = await fs.makeTempDir({ prefix: "archon-publish-id-" });
-  const saved = ["GIT_CONFIG_GLOBAL", "GIT_CONFIG_NOSYSTEM", "EMAIL"].map(
-    (k) => [k, proc.env.get(k)] as const,
-  );
-  proc.env.set("GIT_CONFIG_GLOBAL", `${root}/no-global`);
-  proc.env.set("GIT_CONFIG_NOSYSTEM", "1");
-  proc.env.delete("EMAIL");
-  const sh = (cwd: string, ...a: string[]) =>
-    proc.output(["git", ...a], { cwd, stdout: "piped", stderr: "null" });
-  try {
-    await sh(root, "init", "-q", "--bare", "-b", "main", "remote.git");
-    await sh(root, "clone", "-q", "remote.git", "work");
-    const work = `${root}/work`;
-    await fs.writeTextFile(`${work}/a.txt`, "a\n");
-    assert(
-      await publishChange(["a.txt"], "045-retire: test", {
-        repo: work,
-        build: false,
-        identity: { name: "Alice Example", email: "1000001+alice@users.noreply.github.com" },
-      }),
+test(
+  "045/004: a boot machine without a Git identity commits as the fleet's admin",
+  async () => {
+    const { publishChange } = await import("../src/archon/install/publish.ts");
+    const root = await fs.makeTempDir({ prefix: "archon-publish-id-" });
+    const saved = ["GIT_CONFIG_GLOBAL", "GIT_CONFIG_NOSYSTEM", "EMAIL"].map(
+      (k) => [k, proc.env.get(k)] as const,
     );
-    const log = await sh(`${root}/remote.git`, "log", "--format=%an <%ae>", "main");
-    assertEquals(
-      new TextDecoder().decode(log.stdout).trim(),
-      "Alice Example <1000001+alice@users.noreply.github.com>",
-    );
-  } finally {
-    for (const [k, v] of saved) v === undefined ? proc.env.delete(k) : proc.env.set(k, v);
-    await fs.remove(root, { recursive: true });
-  }
-});
+    proc.env.set("GIT_CONFIG_GLOBAL", `${root}/no-global`);
+    proc.env.set("GIT_CONFIG_NOSYSTEM", "1");
+    proc.env.delete("EMAIL");
+    const sh = (cwd: string, ...a: string[]) =>
+      proc.output(["git", ...a], { cwd, stdout: "piped", stderr: "null" });
+    try {
+      await sh(root, "init", "-q", "--bare", "-b", "main", "remote.git");
+      await sh(root, "clone", "-q", "remote.git", "work");
+      const work = `${root}/work`;
+      await fs.writeTextFile(`${work}/a.txt`, "a\n");
+      assert(
+        await publishChange(["a.txt"], "045-retire: test", {
+          repo: work,
+          build: false,
+          identity: { name: "Alice Example", email: "1000001+alice@users.noreply.github.com" },
+        }),
+      );
+      const log = await sh(`${root}/remote.git`, "log", "--format=%an <%ae>", "main");
+      assertEquals(
+        new TextDecoder().decode(log.stdout).trim(),
+        "Alice Example <1000001+alice@users.noreply.github.com>",
+      );
+    } finally {
+      for (const [k, v] of saved) v === undefined ? proc.env.delete(k) : proc.env.set(k, v);
+      await fs.remove(root, { recursive: true });
+    }
+  },
+  { timeout: 120_000 },
+);
 
 test("004: a new host's model has prime and is formatted as the repository is", async () => {
   const { hostSource } = await import("../src/archon/install/host-add.ts");

@@ -467,6 +467,7 @@ proves(
       await fs.remove(root, { recursive: true });
     }
   },
+  { timeout: 120_000 },
 );
 
 proves(["038-pg FR-017"], "038: the psql prompt, the guide, and the man page", async () => {

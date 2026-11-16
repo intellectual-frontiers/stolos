@@ -3,7 +3,7 @@
  *
  * @module
  */
-import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { engineFile } from "../src/archon/core/assets.ts";
 import {
   assertExists,
@@ -59,12 +59,16 @@ proves(
     if (proc.which("gpg") !== undefined) {
       // Its own home folder: a runner's (or a person's) keyring is neither needed nor touched.
       const home = await fs.makeTempDir({ prefix: "archon-gpg-" });
-      // The key on standard input, so no path of this system's is handed to gpg.
-      const r = await proc.output(["gpg", "--homedir", home, "--show-keys", "--with-colons"], {
-        input: OSQUERY_KEY,
-        stdout: "piped",
-        stderr: "piped",
-      });
+      // The key on standard input; the folder with / (Git for Windows' gpg takes C:\Users\... for a
+      // relative path, C:/Users/... for the folder it is).
+      const r = await proc.output(
+        ["gpg", "--homedir", path.toPosix(home), "--show-keys", "--with-colons"],
+        {
+          input: OSQUERY_KEY,
+          stdout: "piped",
+          stderr: "piped",
+        },
+      );
       await fs.remove(home, { recursive: true });
       assertStringIncludes(
         new TextDecoder().decode(r.stdout),

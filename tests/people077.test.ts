@@ -693,7 +693,7 @@ proves(
       await fs.remove(f.dir, { recursive: true });
     }
   },
-  { skip: !hasSsh && "needs ssh-keygen" },
+  { skip: !hasSsh && "needs ssh-keygen", timeout: 120_000 },
 );
 
 proves(

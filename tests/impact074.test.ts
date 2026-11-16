@@ -847,7 +847,10 @@ proves(
       await fs.writeTextFile(path.join(repo, ".gitignore"), "out/\nnode_modules/\n");
       await fs.writeTextFile(
         path.join(repo, "package.json"),
-        JSON.stringify({ scripts: { stolos: `bun ${proc.cwd()}/src/stolos/main.ts` } }) + "\n",
+        // With /: bun run's shell takes a \ for an escape (a Windows path).
+        JSON.stringify({
+          scripts: { stolos: `bun ${path.toPosix(proc.cwd())}/src/stolos/main.ts` },
+        }) + "\n",
       );
       const fleetTs = path.join(repo, "fleets/lab/fleet.ts");
       await fs.writeTextFile(
