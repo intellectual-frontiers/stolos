@@ -186,7 +186,7 @@
  * | `archon-reconcile`           | every 15 minutes                                  | pulls from GitHub and converges the host                                                       |
  * | `archon-capture`             | daily 05:47                                       | records state and drift                                                                        |
  * | `archon-backup`              | daily 02:37                                       | archives the host's state into `/var/backups/archon`                                           |
- * | `archon-web-dns`             | daily                                             | keeps `<host>.<domain>` and its wildcard in Cloudflare ([web.md](../web/mod.ts))                      |
+ * | `archon-web-dns`             | daily                                             | keeps `<host>.<domain>` and its wildcard in Cloudflare ([the web guide](../web/mod.ts))                      |
  * | `archon-daily-report`        | daily 06:23                                       | writes `/var/lib/archon/reports/daily-<date>.md` (facts only; mailed as the daily message)     |
  * | `archon-tools-sync`          | Mondays 04:00                                     | upgrades tools that come as release binaries                                                   |
  * | `archon-observe-prune`       | daily 04:41                                       | keeps PCP's metric archives within their size and free-space limits                            |
@@ -214,7 +214,7 @@
  *
  * No agent runs on a server (spec 030). Claude Code runs on your workstation and reaches each server
  * as `ops` over SSH, where `archon mcp` serves the commands up to the fleet's tier and journals every
- * call (`journalctl -t archon-mcp`). See [agent.md](../mcp/mod.ts).
+ * call (`journalctl -t archon-mcp`). See [the agent guide](../mcp/mod.ts).
  *
  * ## Changing a host
  *

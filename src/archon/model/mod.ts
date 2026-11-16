@@ -83,7 +83,7 @@
  *    ```
  *
  *    The PC already trusts alpha' SSH host keys, so there is no "authenticity can't be established"
- *    question. To manage it with an agent, see [agent.md](../mcp/mod.ts): nothing is installed on the
+ *    question. To manage it with an agent, see [the agent guide](../mcp/mod.ts): nothing is installed on the
  *    server for that.
  *
  * The first boot pushes `archon.sql alpha/installed.json` to GitHub: `"ok": true`, or the steps that

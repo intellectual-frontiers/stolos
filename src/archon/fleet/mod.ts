@@ -1,7 +1,7 @@
 /**
  * # The fleet repository: pin, lock, upgrade
  *
- * This guide is for whoever looks after a fleet repository (for example `shah/fleet`): the private
+ * This guide is for whoever looks after a fleet repository (for example `example-org/fleet`): the private
  * repository that holds your fleets and that every host checks out at `/srv/archon`. Read it once
  * before your first engine upgrade; keep it at hand for the troubleshooting table at the end.
  *

@@ -2,7 +2,7 @@
 
 This repository is the fleet engine: the `archon` command, the boot server, and everything general
 about turning bare metal into a converged, verified Ubuntu host. It holds no real fleet. Fleets live
-in their own repositories (for example `shah/fleet`), under `fleets/<id>/`, and depend on this
+in their own repositories (for example `example-org/fleet`), under `fleets/<id>/`, and depend on this
 engine by Git at a version tag:
 `"@intellectual-frontiers/stolos": "github:intellectual-frontiers/stolos#v<version>"`, with the
 commit and its integrity in `bun.lock`. A release is the tag alone: no GitHub release, no tarball,

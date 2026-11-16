@@ -103,14 +103,14 @@
  * ## The agent (optional)
  *
  * No agent runs on the servers (spec 030). To manage them with Claude Code, run it on this PC in the
- * checkout; it reaches each server through MCP over SSH. See [agent.md](../archon/mcp/mod.ts).
+ * checkout; it reaches each server through MCP over SSH. See [the agent guide](../archon/mcp/mod.ts).
  *
  * ## HTTPS certificates (once, recommended)
  *
  * Every server answers HTTPS as `<host>.lab.example.net` with a Let's Encrypt certificate, through
  * Cloudflare's DNS challenge (spec 032). Create a Cloudflare token with Zone > DNS > Edit and Zone >
  * Zone > Read on `example.net`, then `bun run stolos boot web-setup`. Servers get it at install, or
- * now with `bun run stolos boot web-push <host>`. See [web.md](../archon/web/mod.ts).
+ * now with `bun run stolos boot web-push <host>`. See [the web guide](../archon/web/mod.ts).
  *
  * ## Email (once, recommended)
  *

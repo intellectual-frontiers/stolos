@@ -66,7 +66,7 @@ export async function hostAdopt(o: {
   if (!m) {
     c.fail(
       `--ssh ${ssh} is not user@address`,
-      "for example --ssh shahid@macbook.local, or user@10.0.0.20:2222",
+      "for example --ssh alice@macbook.local, or user@10.0.0.20:2222",
     );
     return fail();
   }
