@@ -38,6 +38,13 @@ const DEFAULT_STANDINS = [
   "debconf-set-selections",
   "add-shell",
   "apt-cache",
+  // The machine's own package database and osquery: real ones read the test machine, not the
+  // host root (dpkg --verify checks every installed file: minutes on a CI runner).
+  "dpkg",
+  "debsums",
+  "osqueryi",
+  // Changes the real machine's PAM configuration.
+  "pam-auth-update",
 ];
 
 /** A host root in this test's process (see the module). */
@@ -58,9 +65,12 @@ export interface HostRoot {
   restore(): Promise<void>;
 }
 
-/** Whether host roots work here: the stand-ins are POSIX shell scripts. */
+/**
+ * Whether host roots work here: a host is Ubuntu, so root's side runs on Linux (a machine is a host
+ * only there, `notify/events.ts`), with GNU tools beside the stand-ins (POSIX shell scripts).
+ */
 export const HOST_ROOT_SKIP: string | false =
-  proc.build.os === "windows" ? "the stand-ins are POSIX shell scripts" : false;
+  proc.build.os === "linux" ? false : "root's side runs on the hosts, which are Linux";
 
 /** A new host root, active in this process until `restore()`. */
 export async function hostRoot(o: { host?: string; fleet?: string } = {}): Promise<HostRoot> {

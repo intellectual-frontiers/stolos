@@ -56,18 +56,20 @@ proves(
     assertEquals(OSQUERY_KEY_FINGERPRINT, "1484120AC4E9F8A1A577AEEE97A80C63C9D8B80B");
     assert(OSQUERY_KEY.startsWith("-----BEGIN PGP PUBLIC KEY BLOCK-----"));
     assertEquals(tool("osquery").repo?.key, OSQUERY_KEY);
-    const gpg = await proc.output(["sh", "-c", "command -v gpg"]);
-    if (gpg.code === 0) {
-      const f = await fs.makeTempFile({ suffix: ".asc" });
-      await fs.writeTextFile(f, OSQUERY_KEY);
-      const r = await proc.output(["gpg", "--show-keys", "--with-colons", f], {
+    if (proc.which("gpg") !== undefined) {
+      // Its own home folder: a runner's (or a person's) keyring is neither needed nor touched.
+      const home = await fs.makeTempDir({ prefix: "archon-gpg-" });
+      // The key on standard input, so no path of this system's is handed to gpg.
+      const r = await proc.output(["gpg", "--homedir", home, "--show-keys", "--with-colons"], {
+        input: OSQUERY_KEY,
         stdout: "piped",
-        stderr: "null",
+        stderr: "piped",
       });
-      await fs.remove(f);
+      await fs.remove(home, { recursive: true });
       assertStringIncludes(
         new TextDecoder().decode(r.stdout),
         `fpr:::::::::${OSQUERY_KEY_FINGERPRINT}:`,
+        new TextDecoder().decode(r.stderr),
       );
     }
   },

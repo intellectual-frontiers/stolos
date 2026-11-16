@@ -8,7 +8,7 @@
  */
 
 import { fs, path as paths } from "@intellectual-frontiers/ifc-ts/runtime";
-import { P } from "../core/paths.ts";
+import { onHost, P } from "../core/paths.ts";
 import { engineFile, engineFiles } from "../core/assets.ts";
 import { run } from "../core/exec.ts";
 import {
@@ -73,7 +73,7 @@ export async function syncComposed(
   o: { check: boolean; root?: string },
 ): Promise<SyncResult> {
   const c = await composeFrom(repo, host, user);
-  const dir = o.root ? paths.join(o.root, user) : composedDir(user);
+  const dir = o.root ? paths.join(o.root, user) : onHost(composedDir(user));
   const enc = new TextEncoder();
   const want = new Map<string, Uint8Array>();
   for (const e of composedEntries(c)) {
@@ -100,8 +100,8 @@ export async function syncComposed(
 
 /** root:<user's group>, directories 0750, files 0640; the parent is 0755. */
 async function lockDown(dir: string, user: string) {
-  await fs.ensureDir(COMPOSED_ROOT);
-  await fs.chmod(COMPOSED_ROOT, 0o755);
+  await fs.ensureDir(onHost(COMPOSED_ROOT));
+  await fs.chmod(onHost(COMPOSED_ROOT), 0o755);
   // Empty directories left by removed files.
   await run(["find", dir, "-mindepth", "1", "-type", "d", "-empty", "-delete"]);
   const group = (await run(["id", "-gn", user])).stdout.trim() || user;
@@ -112,5 +112,5 @@ async function lockDown(dir: string, user: string) {
 
 /** Whether a composed source exists yet for this user. */
 export function composedExists(user: string): Promise<boolean> {
-  return fs.exists(composedDir(user));
+  return fs.exists(onHost(composedDir(user)));
 }

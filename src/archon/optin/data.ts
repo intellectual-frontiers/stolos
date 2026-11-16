@@ -70,10 +70,11 @@ export async function dataOnDisk(dirs = DATA_DIRS): Promise<string[]> {
   }
   try {
     const st = await fs.stat(dirs.s3);
-    if (st.nlink === null || st.nlink > 2) found.push("s3");
-    else if (st.nlink === 2) {
+    if (st.nlink !== null && st.nlink > 2) found.push("s3");
+    else if (st.nlink === null || st.nlink === 2) {
+      // No link count (a system without one): what is inside decides, and unreadable counts.
       const inside = await entries(dirs.s3);
-      if (inside === undefined ? false : inside.length > 0) found.push("s3");
+      if (inside === undefined ? st.nlink === null : inside.length > 0) found.push("s3");
     }
   } catch (e) {
     if (!(e instanceof errors.NotFound)) found.push("s3");

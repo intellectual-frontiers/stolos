@@ -9,12 +9,16 @@
  *   `<out>/requirements.txt` for the runner.
  * - A requirement proven by review, not by a test, is listed in its spec's `reviewed.tsv` (the
  *   requirement, a tab, the reason); they are joined into `<out>/reviewed.tsv`.
+ * - The whole suite is held to every requirement (spec 096 FR-004, on Linux); a run of some files,
+ *   or with `--no-requirements` (macOS and Windows, where the tests that apply only on Linux are
+ *   skipped), passes when its tests pass.
  * - Before anything runs, every requirement a test file names (`"096-bun-runtime FR-001"`) and every
  *   reviewed one must be a requirement of a spec, so a mistyped id fails here and not silently.
  *
  * ```sh
  * bun run test                                   # Bun, every *.test.ts under tests/ and examples/
- * bun run test tests/proposals095.test.ts        # one file
+ * bun run test tests/proposals095.test.ts        # one file (not held to every requirement)
+ * bun run test --no-requirements                 # macOS, Windows: the parts that apply there
  * bun run test:ci                                # Bun and Node, every report, the ledger
  * ```
  *
@@ -73,6 +77,12 @@ const OPTIONS = {
   ledger: cli.value({
     help: "The evidence ledger (JSON lines) the record's digest is appended to.",
     valueName: "FILE",
+  }),
+  requirements: cli.flag({
+    help:
+      "Hold the run to every requirement of every spec (the default for the whole suite); " +
+      "--no-requirements for some files, or the parts of the suite another system runs.",
+    negatable: true,
   }),
 };
 
@@ -164,6 +174,9 @@ async function main(argv: readonly string[]): Promise<number> {
   await fs.writeTextFile(requirementsFile, `${all.join("\n")}\n`);
   await fs.writeTextFile(reviewedFile, review.text);
 
+  // Every requirement is proven by the whole suite on Linux (spec 096 FR-004); some files, or the
+  // parts that apply on macOS and Windows, prove only their own, so they are not held to them all.
+  const holdAll = o.requirements ?? p.value.positionals.length === 0;
   const runtimes: readonly Runtime[] = o.runtime;
   const reports: readonly ReportFormat[] = o.report;
   const r: Result<{ readonly code: 0 | 1 }, string> = await runTests({
@@ -172,7 +185,7 @@ async function main(argv: readonly string[]): Promise<number> {
     cwd: ROOT,
     out,
     reports,
-    requirements: requirementsFile,
+    ...(holdAll ? { requirements: requirementsFile } : {}),
     reviewed: reviewedFile,
     ...(o.ledger === undefined ? {} : { ledger: path.resolve(ROOT, o.ledger) }),
   }).then((x) => {

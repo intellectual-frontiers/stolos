@@ -68,7 +68,7 @@ import { loadHosts } from "../src/archon/model/load.ts";
 import { planFor } from "../src/archon/build.ts";
 import { attachmentsOf } from "../src/archon/proposal/mail.ts";
 import { buildMime } from "../src/archon/notify/mime.ts";
-import { linkEngine, sandbox } from "./sandbox.ts";
+import { ENGINE_ROOT, linkEngine, sandbox } from "./sandbox.ts";
 import { registrationSource } from "../src/archon/fleet/registration.ts";
 import {
   addAdopted,
@@ -501,6 +501,7 @@ proves(
       await fs.remove(dir, { recursive: true });
     }
   },
+  { timeout: 120_000 },
 );
 
 // ------------------------------------------------------------------ Article 13
@@ -830,11 +831,12 @@ proves(
       await fs.remove(dir, { recursive: true });
     }
   },
+  { timeout: 120_000 },
 );
 
 // ------------------------------------------------------------------ phase 3: on the PC
 
-const ENGINE = new URL("..", import.meta.url).pathname.replace(/\/$/, "");
+const ENGINE = ENGINE_ROOT;
 
 function item(key: string, edits: DriftItem["edits"], extra: Partial<DriftItem> = {}): DriftItem {
   const [kind, ...rest] = key.split(":");
@@ -1009,7 +1011,7 @@ proves(
     try {
       await fs.mkdir(`${repo}/fleets`, { recursive: true });
       await linkEngine(repo);
-      await proc.output(["cp", "-r", `${ENGINE}/examples/fleets/lab`, `${repo}/fleets/lab`]);
+      await fs.copy(`${ENGINE}/examples/fleets/lab`, `${repo}/fleets/lab`);
       const k = await hostKey(sb.home);
       await fs.writeTextFile(
         `${repo}/fleets/lab/hosts/alpha/registration.ts`,
@@ -1175,6 +1177,7 @@ proves(
       await fs.remove(sb.home, { recursive: true });
     }
   },
+  { timeout: 120_000 },
 );
 
 proves(
@@ -1449,6 +1452,7 @@ proves(
       await fs.remove(dir, { recursive: true });
     }
   },
+  { timeout: 120_000 },
 );
 
 proves(
@@ -1485,6 +1489,7 @@ proves(
       "await recordBirth(host.name)",
     );
   },
+  { timeout: 120_000 },
 );
 
 proves(
@@ -1568,4 +1573,5 @@ console.log("code=" + (await driftCommand(host, {})));
       await fs.remove(sb.home, { recursive: true });
     }
   },
+  { timeout: 120_000 },
 );

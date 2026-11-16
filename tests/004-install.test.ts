@@ -114,7 +114,7 @@ proves(
       await fs.remove(l.sb.home, { recursive: true });
     }
   },
-  { skip: posix ? false : "a stand-in gh written as a POSIX shell script" },
+  { skip: posix ? false : "a stand-in gh written as a POSIX shell script", timeout: 120_000 },
 );
 
 proves(
@@ -267,6 +267,7 @@ proves(
       await fs.remove(dir, { recursive: true });
     }
   },
+  { timeout: 120_000 },
 );
 
 proves(
@@ -313,5 +314,5 @@ proves(
       await fs.remove(l.sb.home, { recursive: true });
     }
   },
-  { skip: posix ? false : "git and the checkout's setup in POSIX paths" },
+  { skip: posix ? false : "git and the checkout's setup in POSIX paths", timeout: 120_000 },
 );

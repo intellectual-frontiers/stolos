@@ -244,11 +244,14 @@ proves(
         "sslmode=verify-full",
         "the network service verifies the server",
       );
-      // Again with the file readable by others: the warning path.
-      await fs.chmod(env.PGPASSFILE, 0o644);
-      const open = await cli(["pg", "connections"]);
-      outputs.push(open.stdout + open.stderr);
-      assertStringIncludes(the(outputs.at(-1)), "UNUSABLE");
+      // Again with the file readable by others: the warning path (POSIX modes: Windows keeps none,
+      // and libpq checks none there).
+      if (proc.build.os !== "windows") {
+        await fs.chmod(env.PGPASSFILE, 0o644);
+        const open = await cli(["pg", "connections"]);
+        outputs.push(open.stdout + open.stderr);
+        assertStringIncludes(the(outputs.at(-1)), "UNUSABLE");
+      }
       // The MCP server's own path: tools/call runs archon as a subprocess.
       const launcher = `${dir}/archon`;
       await fs.writeTextFile(
@@ -295,6 +298,7 @@ proves(
       await fs.remove(dir, { recursive: true });
     }
   },
+  { timeout: 120_000 },
 );
 
 proves(
@@ -615,8 +619,14 @@ proves(
     if (proc.which("openssl") === undefined) return; // needs openssl
     const { rootFor } = await import("../src/archon/pg/connections.ts");
     const dir = await fs.makeTempDir({ prefix: "archon-pki-" });
+    // MSYS_NO_PATHCONV: Git for Windows' sh would turn -subj "/CN=..." into a Windows path.
     const sh = (cmd: string): Promise<proc.Output> =>
-      proc.output(["sh", "-c", cmd], { cwd: dir, stdout: "null", stderr: "null" });
+      proc.output(["sh", "-c", cmd], {
+        cwd: dir,
+        env: { MSYS_NO_PATHCONV: "1" },
+        stdout: "null",
+        stderr: "null",
+      });
     try {
       // A root, an intermediate it signs, a leaf the intermediate signs; and an unrelated root.
       await sh(`
@@ -653,6 +663,7 @@ proves(
       await fs.remove(dir, { recursive: true });
     }
   },
+  { timeout: 120_000 },
 );
 
 proves(

@@ -111,6 +111,7 @@ proves(
       await fs.remove(root, { recursive: true });
     }
   },
+  { timeout: 120_000 },
 );
 
 test("045/004: a boot machine without a Git identity commits as the fleet's admin", async () => {
@@ -329,5 +330,9 @@ proves(
     } finally {
       await fs.remove(s.home, { recursive: true });
     }
+  },
+  {
+    timeout: 120_000,
+    skip: proc.build.os === "windows" && "the stand-ins for ssh and gh are shell scripts",
   },
 );

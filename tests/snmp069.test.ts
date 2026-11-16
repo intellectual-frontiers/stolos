@@ -83,6 +83,20 @@ proves(["069-integrate FR-005"], "069 SNMP: device policies", () => {
 });
 
 const snmpd = proc.which("snmpd") ?? proc.which("snmpd", "/usr/sbin:/sbin") ?? "";
+/** snmpd's version, [major, minor] (`snmpd -v`): SHA-256 came with net-snmp 5.8; macOS has 5.6. */
+const snmpdVersion: readonly number[] =
+  snmpd === ""
+    ? []
+    : (/version:\s*(\d+)\.(\d+)/.exec((await proc.run([snmpd, "-v"])).stdout)?.slice(1) ?? []).map(
+        Number,
+      );
+const [major = 0, minor = 0] = snmpdVersion;
+const SNMPD_SKIP: string | false =
+  snmpd === ""
+    ? "snmpd is not installed"
+    : snmpdVersion.length === 2 &&
+      (major < 5 || (major === 5 && minor < 8)) &&
+      `snmpd ${major}.${minor} has no SHA-256 (net-snmp 5.8 added it)`;
 
 proves(
   ["069-integrate FR-005"],
@@ -166,5 +180,5 @@ sysContact ops@example.org
       await fs.remove(dir, { recursive: true });
     }
   },
-  { skip: snmpd === "" && "snmpd is not installed" },
+  { skip: SNMPD_SKIP, timeout: 120_000 },
 );

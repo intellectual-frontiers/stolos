@@ -45,6 +45,8 @@ export class NoFleetError extends Error {
 
 /** The module cache (Bun keeps a file's module there, by its path). */
 const moduleCache: object = createRequire(import.meta.url).cache;
+/** Fresh reads so far: two in one millisecond still get two URLs. */
+let freshReads = 0;
 
 /**
  * A named export of one of the fleet's own TypeScript files (fleet.ts, host.ts, registration.ts,
@@ -57,8 +59,14 @@ export async function fleetExport<T>(
   name: string,
   fresh = false,
 ): Promise<T | undefined> {
-  if (fresh) Reflect.deleteProperty(moduleCache, path.resolve(file));
-  const mod: unknown = await import(path.toFileUrl(file).href + (fresh ? `?t=${Date.now()}` : ""));
+  if (fresh) {
+    // By the path as given and as the runtime resolved it (macOS: /var is /private/var).
+    const real = await fs.realPath(file).catch(() => path.resolve(file));
+    for (const key of new Set([path.resolve(file), real])) Reflect.deleteProperty(moduleCache, key);
+  }
+  const mod: unknown = await import(
+    path.toFileUrl(file).href + (fresh ? `?t=${Date.now()}.${++freshReads}` : "")
+  );
   if (typeof mod !== "object" || mod === null) return undefined;
   const value: unknown = Reflect.get(mod, name);
   return value === undefined ? undefined : (value as T);

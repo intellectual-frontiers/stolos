@@ -12,7 +12,7 @@ import {
   proves,
   test,
 } from "@intellectual-frontiers/ifc-ts/runtime/test";
-import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import type { AnySchema } from "ajv";
 import { Ajv2020 } from "ajv/dist/2020.js";
 import { FACTS } from "./console/serve-stolos.ts";
@@ -118,7 +118,11 @@ proves(
   "076: the generated module is what the generator writes from the vendored rules",
   async () => {
     const r = await proc.output(
-      [proc.execPath(), new URL("../tools/fedramp-gen.ts", import.meta.url).pathname, "--check"],
+      [
+        proc.execPath(),
+        path.fromFileUrl(new URL("../tools/fedramp-gen.ts", import.meta.url)),
+        "--check",
+      ],
       { stdin: "null" },
     );
     assert(r.code === 0, new TextDecoder().decode(r.stderr));

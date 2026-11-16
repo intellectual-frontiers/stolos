@@ -24,6 +24,11 @@ const omp = JSON.parse(await fs.readTextFile("src/archon/shell/archon.omp.json")
   blocks: Array<{ segments: Segment[] }>;
 };
 
+/** bash, fish and the launcher are a host's (Linux) and a workstation's (WSL): Windows runs none. */
+const WINDOWS: string | false =
+  proc.build.os === "windows" &&
+  "a host's shells and launcher (POSIX sh, bash) do not run on Windows";
+
 proves(
   ["011-shell FR-005", "044-durable FR-009"],
   "prompt: the host name beside the distro icon, marked on a durable host (spec 044)",
@@ -137,6 +142,7 @@ proves(
     assert(none.includes("alias ls='ls --color=auto'"), none);
     assert(!none.includes("cat="), none);
   },
+  { skip: WINDOWS },
 );
 
 proves(
@@ -153,6 +159,7 @@ proves(
     assert((await ps1({ TERM: "linux" })).includes("__archon_status_plain"));
     assert((await ps1({ ARCHON_PROMPT: "plain" })).includes("__archon_status_plain"));
   },
+  { skip: WINDOWS },
 );
 
 proves(
@@ -176,6 +183,7 @@ proves(
     assertEquals(r.code, 0);
     assertEquals(new TextDecoder().decode(r.stdout), renderEmit("fish"));
   },
+  { skip: WINDOWS },
 );
 
 proves(
@@ -203,8 +211,10 @@ proves(
     const { fleet, host } = await import("./fixtures.ts");
     const bin = resolvePlan(host(), fleet()).files.find((f) => f.path === "/usr/local/bin/archon");
     assertEquals([bin?.content, bin?.mode], [LAUNCHER, "0755"]);
-    assertEquals(await run("with-bun"), `bun /srv/archon/archon.ts verify --json`);
-    assertEquals(await run("without-bun"), `node /srv/archon/archon.ts verify --json`);
+    if (WINDOWS === false) {
+      assertEquals(await run("with-bun"), `bun /srv/archon/archon.ts verify --json`);
+      assertEquals(await run("without-bun"), `node /srv/archon/archon.ts verify --json`);
+    }
     // Only Bun or Node (the old runtime spelled in parts, so this file does not name it).
     assert(!new RegExp(["d", "eno"].join(""), "i").test(LAUNCHER), "the launcher runs Bun or Node");
   },

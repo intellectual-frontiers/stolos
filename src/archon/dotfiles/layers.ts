@@ -50,9 +50,9 @@ export function layersFor(host: string, user: string, fleet: string): Layer[] {
   ];
 }
 
-/** The composed source directory for a user, under `COMPOSED_ROOT`. */
+/** The composed source directory for a user, under `COMPOSED_ROOT`: a host's path, always `/`. */
 export function composedDir(user: string): string {
-  return paths.join(COMPOSED_ROOT, user);
+  return paths.posix.join(COMPOSED_ROOT, user);
 }
 
 /** Root files of a layer whose contents are concatenated, not replaced. */

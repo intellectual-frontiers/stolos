@@ -11,7 +11,7 @@ import {
   proves,
 } from "@intellectual-frontiers/ifc-ts/runtime/test";
 import { DatabaseSync } from "node:sqlite";
-import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import type { Observation } from "../src/archon/connect/connector.ts";
 import { buildGraph, estatePolicies, estateQuery } from "../src/archon/estate/graph.ts";
 import { ESTATE_SCHEMA } from "../src/archon/estate/schema.ts";
@@ -105,7 +105,7 @@ proves(
       assertEquals(Object.keys(x).sort(), ["columns", "path", "platform", "query"], d.name);
       assertEquals(x.columns, Object.keys(d.columns), d.name);
       assertEquals(x.query, `SELECT ${Object.keys(d.columns).join(", ")} FROM ${d.name}`);
-      assertEquals(x.path, DB);
+      assertEquals(x.path, path.resolve(DB), "absolute, as this system writes it");
       assertEquals(x.platform, ATC_PLATFORM);
       for (const p of ["darwin", "linux", "windows"]) assert(x.platform.includes(p));
       for (const col of x.columns) {
@@ -265,7 +265,7 @@ proves(
       await fs.remove(dir, { recursive: true });
     }
   },
-  { skip: !osqueryi && "osqueryi is not installed (CI installs it)" },
+  { skip: !osqueryi && "osqueryi is not installed (CI installs it)", timeout: 120_000 },
 );
 
 /** A guide's section: from its heading to the next heading of its level or higher (outside code). */

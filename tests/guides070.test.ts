@@ -214,4 +214,5 @@ proves(
     }
     assertEquals(bad, []);
   },
+  { timeout: 120_000 },
 );

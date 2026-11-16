@@ -22,7 +22,7 @@
 
 import { fs } from "@intellectual-frontiers/ifc-ts/runtime";
 import { run } from "../core/exec.ts";
-import { P } from "../core/paths.ts";
+import { onHost, P } from "../core/paths.ts";
 import { getRecord, listRecords, putRecord, putRecords } from "../state/store.ts";
 import type { HostDef, HostPlan } from "../model/types.ts";
 import {
@@ -226,8 +226,8 @@ const out = async (argv: string[]) => (await run(argv)).stdout;
 async function unownedFiles(plan: PlanView): Promise<string[]> {
   const found = await run([
     "find",
-    "/usr/local",
-    "/opt",
+    onHost("/usr/local"),
+    onHost("/opt"),
     "-xdev",
     "-maxdepth",
     "4",

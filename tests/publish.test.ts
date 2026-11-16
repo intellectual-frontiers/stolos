@@ -7,6 +7,7 @@
  */
 import { fs, path, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { assert, assertEquals, test } from "@intellectual-frontiers/ifc-ts/runtime/test";
+import { askpassHelper } from "./sandbox.ts";
 
 test("004: publishChange makes a signed commit with a passphrase-protected key, and pushes it", async () => {
   const dir = await fs.makeTempDir({ prefix: "stolos-publish-" });
@@ -35,9 +36,7 @@ test("004: publishChange makes a signed commit with a passphrase-protected key, 
       "-f",
       path.join(dir, "key"),
     );
-    const askpass = path.join(dir, "askpass.sh");
-    await fs.writeTextFile(askpass, `#!/bin/sh\necho '${pass}'\n`);
-    await fs.chmod(askpass, 0o755);
+    const askpass = await askpassHelper(dir, pass);
     set("SSH_ASKPASS", askpass);
     set("SSH_ASKPASS_REQUIRE", "force");
     set("DISPLAY", ":0");

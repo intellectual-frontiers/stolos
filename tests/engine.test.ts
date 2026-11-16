@@ -8,8 +8,10 @@
 import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { assert, assertEquals, proves } from "@intellectual-frontiers/ifc-ts/runtime/test";
 import { VERSION } from "../src/archon/version.ts";
+import { ENGINE_ROOT } from "./sandbox.ts";
 
-const ROOT = new URL("..", import.meta.url).pathname;
+/** The checkout, with a trailing slash: `git ls-files` names files relative to it with `/`. */
+const ROOT = `${ENGINE_ROOT}/`;
 
 async function tracked(): Promise<string[]> {
   const r = await proc.run(["git", "-C", ROOT, "ls-files", "-co", "--exclude-standard"]);

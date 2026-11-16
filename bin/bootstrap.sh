@@ -271,7 +271,9 @@ install_node() {
   local t sum tmp
   t="$(node_target)"
   sum="$(node_sha256 "$t")"
-  [ -n "$t" ] && [ -n "$sum" ] || fail "Node" "no Node is pinned for $(uname -s) $(uname -m)" "install Node 26 yourself, then run this again"
+  if [ -z "$t" ] || [ -z "$sum" ]; then
+    fail "Node" "no Node is pinned for $(uname -s) $(uname -m)" "install Node 26 yourself, then run this again"
+  fi
   local url="https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-$t.tar.gz"
   todo "Node" "installing $NODE_VERSION (node-v$NODE_VERSION-$t.tar.gz, its SHA-256 checked, into ~/.stolos/node)"
   if [ "$dry" = 1 ]; then

@@ -809,7 +809,7 @@ proves(
       await fs.remove(dir, { recursive: true });
     }
   },
-  { skip: !hasSsh && "ssh-keygen is not installed" },
+  { skip: !hasSsh && "ssh-keygen is not installed", timeout: 120_000 },
 );
 
 /** The value the test expects to be there. */

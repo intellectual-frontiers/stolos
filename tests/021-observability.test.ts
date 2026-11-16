@@ -340,7 +340,6 @@ proves(
     const tier = (n: string) => COMMANDS.find((c) => c.name === n)?.tier;
     assertEquals([tier("observe"), tier("observe tui")], ["read", "read"]);
   },
-  { skip: posix ? false : "a stand-in otel-tui written as a POSIX shell script" },
 );
 
 proves(
@@ -374,6 +373,7 @@ proves(
       await fs.remove(sb.home, { recursive: true });
     }
   },
+  { skip: posix ? false : "a stand-in otel-tui written as a POSIX shell script" },
 );
 
 proves(

@@ -118,8 +118,13 @@ async function bootSandbox(): Promise<{
   await git(src, "add", "-A");
   await git(src, "commit", "-q", "--no-gpg-sign", "-m", "a fleet");
   const boot = async (...args: string[]): Promise<{ code: number; out: string }> => {
-    // setsid: no controlling terminal, as in CI (a prompt must refuse, never wait).
-    const r = await proc.output(["setsid", "bash", SCRIPT, ...args], {
+    // No controlling terminal, as in CI (a prompt must refuse, never wait): setsid, or on macOS
+    // (no setsid) Perl's POSIX::setsid, which macOS has.
+    const detach =
+      proc.which("setsid") !== undefined
+        ? ["setsid"]
+        : ["perl", "-MPOSIX=setsid", "-e", "setsid(); exec(@ARGV) or die $!"];
+    const r = await proc.output([...detach, "bash", SCRIPT, ...args], {
       env,
       clearEnv: true,
       stdin: "null",

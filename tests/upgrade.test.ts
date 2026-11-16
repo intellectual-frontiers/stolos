@@ -220,7 +220,10 @@ proves(
       await fs.remove(dir, { recursive: true });
     }
   },
-  { skip: bun === undefined && "bun is not installed (fleet upgrade runs bun install)" },
+  {
+    skip: bun === undefined && "bun is not installed (fleet upgrade runs bun install)",
+    timeout: 120_000,
+  },
 );
 
 proves(

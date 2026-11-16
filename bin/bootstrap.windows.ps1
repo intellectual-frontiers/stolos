@@ -136,10 +136,23 @@ function Act([string]$what, [string]$exe, [string[]]$argv) {
   if ($LASTEXITCODE -ne 0) { Fail $what "$exe $($argv -join ' ') exited with $LASTEXITCODE" "read its output above; then run this again" }
 }
 function Has($cmd) { [bool](Get-Command $cmd -ErrorAction SilentlyContinue) }
-# Programs installed a moment ago are on the saved PATH, not yet in this window's.
+# Programs installed a moment ago are on the saved PATH, not yet in this window's. The pinned
+# runtimes' folders come first (an older Bun or Node elsewhere must not hide them), then this
+# window's own PATH (what the caller added is kept), then the saved ones; each folder once.
 function Update-Path {
-  $env:Path = [Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' +
-    [Environment]::GetEnvironmentVariable('Path', 'User') + ";$HOME\.bun\bin;$HOME\.stolos\node"
+  $dirs = @("$HOME\.bun\bin", "$HOME\.stolos\node") + @($env:Path -split ';') +
+    @([Environment]::GetEnvironmentVariable('Path', 'Machine') -split ';') +
+    @([Environment]::GetEnvironmentVariable('Path', 'User') -split ';')
+  $seen = @{}
+  $keep = @()
+  foreach ($d in $dirs) {
+    if (-not $d) { continue }
+    $key = $d.TrimEnd('\').ToLower()
+    if ($seen.ContainsKey($key)) { continue }
+    $seen[$key] = $true
+    $keep += $d
+  }
+  $env:Path = $keep -join ';'
 }
 function Winget-Install($what, $id) {
   if (-not (Has 'winget')) { Fail $what "winget is not here" "install App Installer from the Microsoft Store, then run this again" }
@@ -169,11 +182,13 @@ function At-Least($a, $b) { [version]($a -replace '[^\d.].*$', '') -ge [version]
 # ---------------------------------------------------------------- 1. The runtime: Bun (or Node 26)
 
 # The version a runtime reports, without a leading v or a suffix ("" when it is not here or cannot run).
+# All of its output first, then the first line: Select-Object -First in the pipeline would stop the
+# program early, and PowerShell 7 then reports an exit code that is not the program's.
 function Version-Of($cmd) {
   if (-not (Has $cmd)) { return "" }
-  try { $v = "$(& $cmd --version 2>$null | Select-Object -First 1)" } catch { return "" }
-  if ($LASTEXITCODE -ne 0) { return "" }
-  return ($v.Trim() -replace '^v', '') -replace '-.*$', ''
+  try { $out = @(& $cmd --version 2>$null); $code = $LASTEXITCODE } catch { return "" }
+  if ($code -ne 0 -or $out.Count -eq 0) { return "" }
+  return ("$($out[0])".Trim() -replace '^v', '') -replace '-.*$', ''
 }
 # Whether this x64 processor has AVX2 (Bun's baseline build is for one without).
 function Has-Avx2 {

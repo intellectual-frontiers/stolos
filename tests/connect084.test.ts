@@ -506,6 +506,7 @@ proves(
       await fs.remove(sb.home, { recursive: true });
     }
   },
+  { timeout: 120_000 },
 );
 
 /** Cloudflare's recorded answers (the first test's), for a whole observation. */

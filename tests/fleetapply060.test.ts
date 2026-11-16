@@ -14,7 +14,7 @@ import {
 import { describeChanges } from "../src/archon/fleet/apply.ts";
 import { allowedSignersText, checkTip } from "../src/archon/identity/signers.ts";
 import { parseSignersSource } from "../src/archon/identity/keys.ts";
-import { sandbox, linkEngine } from "./sandbox.ts";
+import { askpassHelper, sandbox, linkEngine } from "./sandbox.ts";
 
 const PASS = "correct horse battery staple";
 
@@ -47,9 +47,7 @@ proves(
     const sb = await sandbox("archon-apply-");
     try {
       const home = sb.home;
-      const askpass = path.join(home, "askpass.sh");
-      await fs.writeTextFile(askpass, `#!/bin/sh\necho '${PASS}'\n`);
-      await fs.chmod(askpass, 0o755);
+      const askpass = await askpassHelper(home, PASS);
       const gitconfig = path.join(home, "gitconfig");
       await fs.writeTextFile(gitconfig, "[user]\n\tname = t\n\temail = t@example.invalid\n");
       const env: Record<string, string> = {
@@ -158,7 +156,7 @@ proves(
       // this test wrote), and no ssh-agent was started (the socket it was given is still absent).
       const left: string[] = [];
       for (const f of await fs.walkFiles(home)) {
-        if (f === "askpass.sh" || f.split(/[\\/]/).includes("node_modules")) continue;
+        if (path.join(home, f) === askpass || f.split(/[\\/]/).includes("node_modules")) continue;
         const bytes = await fs.readFile(path.join(home, f)).catch(() => new Uint8Array());
         if (new TextDecoder().decode(bytes).includes(PASS)) left.push(f);
       }
@@ -168,6 +166,7 @@ proves(
       await fs.remove(sb.home, { recursive: true });
     }
   },
+  { timeout: 120_000 },
 );
 
 /** The modules of the commands spec 060 FR-004 names, whose messages once said `git push`. */

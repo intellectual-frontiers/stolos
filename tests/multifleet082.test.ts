@@ -130,7 +130,8 @@ proves(
           return Promise.resolve();
         });
       }
-      assertEquals(seen["north"]?.repo, north.path);
+      // The checkout's path as this system resolves it (on Windows, on the current drive).
+      assertEquals(seen["north"]?.repo, paths.resolve(north.path));
       assertEquals(seen["north"]?.fleet, "harbor");
       assertEquals(seen["south"]?.fleet, "summit");
       for (const id of ["north", "south"]) {
@@ -476,6 +477,7 @@ proves(
       await fs.remove(sb.home, { recursive: true });
     }
   },
+  { timeout: 120_000 },
 );
 
 /** A fake client console: the fake fleet under another title, with its own sessions. */

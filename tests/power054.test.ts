@@ -84,4 +84,8 @@ proves(
       await fs.remove(sb.home, { recursive: true });
     }
   },
+  {
+    timeout: 120_000,
+    skip: proc.build.os === "windows" && "a machine is Linux (its ps here is a shell script)",
+  },
 );

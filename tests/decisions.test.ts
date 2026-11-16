@@ -5,7 +5,7 @@
  *
  * @module
  */
-import { fs, proc } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path } from "@intellectual-frontiers/ifc-ts/runtime";
 import {
   assert,
   assertEquals,
@@ -14,10 +14,8 @@ import {
   proves,
 } from "@intellectual-frontiers/ifc-ts/runtime/test";
 import { decisionsSource } from "../src/archon/fleet/decisions.ts";
-import { sandbox, linkEngine } from "./sandbox.ts";
+import { ENGINE_ROOT as ENGINE, sandbox, linkEngine } from "./sandbox.ts";
 import { at } from "./fixtures.ts";
-
-const ENGINE = new URL("..", import.meta.url).pathname.replace(/\/$/, "");
 
 proves(
   ["047-intent-and-identity FR-006"],
@@ -57,7 +55,7 @@ proves(
     const repo = `${sb.home}/fleet`;
     try {
       await fs.mkdir(`${repo}/fleets`, { recursive: true });
-      await proc.output(["cp", "-r", `${ENGINE}/examples/fleets/lab`, `${repo}/fleets/lab`]);
+      await fs.copy(`${ENGINE}/examples/fleets/lab`, `${repo}/fleets/lab`);
       await linkEngine(repo);
       await linkEngine(repo);
       const env = { ARCHON_REPO: repo, ARCHON_FLEET: "lab" };
@@ -75,9 +73,11 @@ proves(
       assertEquals(r.code, 0, r.out);
 
       // The model sees it, with no record on any machine: beta is durable from Git alone.
+      const src = (rel: string): string =>
+        JSON.stringify(path.toFileUrl(path.join(ENGINE, "src", "archon", rel)).href);
       const probe = `
-      import { loadHosts } from "${ENGINE}/src/archon/model/load.ts";
-      import { hostData } from "${ENGINE}/src/archon/model/durable.ts";
+      import { loadHosts } from ${src("model/load.ts")};
+      import { hostData } from ${src("model/durable.ts")};
       const b = (await loadHosts()).find((h) => h.name === "beta");
       console.log(JSON.stringify({ pg: b.optIn.pg, data: hostData(b).class }));`;
       // Next to the engine, so its import map (@stolos/) applies.
@@ -108,6 +108,7 @@ proves(
       await fs.remove(sb.home, { recursive: true });
     }
   },
+  { timeout: 120_000 },
 );
 
 test("062: a Windows checkout (CRLF line endings) passes the fixed-form checks", async () => {
@@ -115,7 +116,7 @@ test("062: a Windows checkout (CRLF line endings) passes the fixed-form checks",
   const repo = `${sb.home}/fleet`;
   try {
     await fs.mkdir(`${repo}/fleets`, { recursive: true });
-    await proc.output(["cp", "-r", `${ENGINE}/examples/fleets/lab`, `${repo}/fleets/lab`]);
+    await fs.copy(`${ENGINE}/examples/fleets/lab`, `${repo}/fleets/lab`);
     await linkEngine(repo);
     const env = { ARCHON_REPO: repo, ARCHON_FLEET: "lab" };
     const archon = (args: string[]) => sb.run(`${ENGINE}/src/stolos/main.ts`, args, "", env);

@@ -360,11 +360,11 @@ export function connectionsReport(input: ConnectionsInput): ConnectionsReport {
 export function renderConnections(r: ConnectionsReport): string {
   const L: string[] = [];
   const pf = r.passwordFile;
-  L.push(
-    `Password file: ${pf.path} ${
-      pf.exists ? `(${pf.mode})${pf.usable ? "" : " UNUSABLE"}` : "(none)"
-    }`,
-  );
+  // Its mode where the system keeps one (not Windows, where libpq does not check it either).
+  const state = pf.exists
+    ? [pf.mode === null ? "" : `(${pf.mode})`, pf.usable ? "" : "UNUSABLE"].filter((x) => x !== "")
+    : ["(none)"];
+  L.push(`Password file: ${[pf.path, ...state].join(" ")}`);
   if (pf.problem) L.push(`  problem: ${pf.problem}`);
   for (const e of r.entries) {
     if (!e.host && !e.port && !e.database && !e.user) {

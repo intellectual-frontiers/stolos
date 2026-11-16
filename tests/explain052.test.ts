@@ -12,8 +12,12 @@ import {
   assertStringIncludes,
   proves,
 } from "@intellectual-frontiers/ifc-ts/runtime/test";
-import { Ui } from "../src/archon/core/ui.ts";
+import { setLogProgram, Ui } from "../src/archon/core/ui.ts";
 import { EXPLAIN, explainText, translate } from "../src/archon/core/explain.ts";
+
+// These are a machine's messages, so their hints name archon (the default on Windows is the PC's
+// stolos, spec 059).
+setLogProgram("archon");
 
 function quiet() {
   const out: string[] = [];

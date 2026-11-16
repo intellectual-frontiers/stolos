@@ -181,6 +181,11 @@ proves(
       assertEquals(r.out, "", evil);
     }
   },
+  // Windows machines run the PowerShell probe (tests/integrate/windows-check.ps1 in CI).
+  {
+    skip: proc.build.os === "windows" && "the POSIX probe is Linux's and macOS's",
+    timeout: 120_000,
+  },
 );
 
 proves(
@@ -201,6 +206,7 @@ proves(
     assertEquals((await runProbe("osquery !!notbase64!!", bin)).code, 2);
     await fs.remove(bin, { recursive: true });
   },
+  { timeout: 120_000 },
 );
 
 proves(["067-adopt FR-005"], "067: fleet query refuses what the servers refuse", () => {

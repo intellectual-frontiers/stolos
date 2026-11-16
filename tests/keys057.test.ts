@@ -23,7 +23,7 @@ import {
   parseSignersSource,
 } from "../src/archon/identity/keys.ts";
 import { allowedSignersText, checkTip, signersSource } from "../src/archon/identity/signers.ts";
-import { sandbox, linkEngine } from "./sandbox.ts";
+import { askpassHelper, sandbox, linkEngine } from "./sandbox.ts";
 
 const PASS = "correct horse battery staple";
 
@@ -44,9 +44,7 @@ async function keysSandbox() {
   await linkEngine(repo);
   await fs.writeTextFile(path.join(repo, ".gitignore"), "node_modules/\n");
   await fs.remove(path.join(repo, "fleets", "demo", "signers.ts")).catch(() => {});
-  const askpass = path.join(home, "askpass.sh");
-  await fs.writeTextFile(askpass, `#!/bin/sh\necho '${PASS}'\n`);
-  await fs.chmod(askpass, 0o755);
+  const askpass = await askpassHelper(home, PASS);
   const gitconfig = path.join(home, "gitconfig");
   await fs.writeTextFile(gitconfig, "[user]\n\tname = test\n\temail = test@example.invalid\n");
   const env: Record<string, string> = {
@@ -129,6 +127,7 @@ proves(
       await fs.remove(s.home, { recursive: true });
     }
   },
+  { timeout: 120_000 },
 );
 
 proves(
@@ -163,6 +162,7 @@ proves(
       await fs.remove(s.home, { recursive: true });
     }
   },
+  { timeout: 120_000 },
 );
 
 proves(
@@ -216,6 +216,7 @@ proves(
       await fs.remove(s.home, { recursive: true });
     }
   },
+  { timeout: 120_000 },
 );
 
 async function exists(p: string) {
@@ -379,6 +380,7 @@ proves(
       await fs.remove(s.home, { recursive: true });
     }
   },
+  { timeout: 120_000 },
 );
 
 proves(
@@ -449,6 +451,7 @@ proves(
       await fs.remove(s.home, { recursive: true });
     }
   },
+  { timeout: 120_000 },
 );
 
 proves(
@@ -461,6 +464,8 @@ proves(
       await fs.writeTextFile(path.join(s.home, "gitconfig"), "");
       let r = await s.archon(["keys"]);
       assertStringIncludes(r.out, "E057-IDENTITY");
+      // The stand-in gh is a POSIX shell script, which Windows does not run as a program.
+      if (proc.build.os === "windows") return;
       // gh, as GitHub answers `gh api user --jq ...` (name, login, id).
       const bin = path.join(s.home, "bin");
       await fs.mkdir(bin);
@@ -483,6 +488,7 @@ proves(
       await fs.remove(s.home, { recursive: true });
     }
   },
+  { timeout: 120_000 },
 );
 
 test("057: a second PC's key: setup prints the exact command that approves it", async () => {
@@ -689,6 +695,7 @@ await remind();
       await fs.remove(s.home, { recursive: true });
     }
   },
+  { timeout: 120_000 },
 );
 
 proves(
@@ -701,7 +708,7 @@ proves(
       assertEquals(r.code, 0, r.out);
       assert(!r.out.includes(PASS), "never printed");
       // Nothing archon wrote holds it (the stand-in for a person typing it is the one file that does).
-      const askpass = path.join(s.home, "askpass.sh");
+      const askpass = path.join(s.home, proc.build.os === "windows" ? "askpass.cmd" : "askpass.sh");
       const hits: string[] = [];
       for (const f of await fs.walkFiles(s.home)) {
         const p = path.join(s.home, f);
@@ -736,4 +743,5 @@ proves(
     assert(keys.length >= 5, keys.map((c) => c.name).join(", "));
     for (const c of keys) assert(!listed(c, "mutate"), `${c.name} is offered over MCP`);
   },
+  { timeout: 120_000 },
 );

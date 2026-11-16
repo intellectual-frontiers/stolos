@@ -5,6 +5,7 @@
  * @module
  */
 
+import { proc } from "@intellectual-frontiers/ifc-ts/runtime";
 import { assert, assertEquals, proves } from "@intellectual-frontiers/ifc-ts/runtime/test";
 import { CORE_PCP_METRICS } from "../src/archon/capabilities/observability.ts";
 import {
@@ -29,7 +30,8 @@ proves(
       assertEquals(where(bad).length, 1, bad);
     }
     assertEquals(DEFAULT_COLLECTOR_NAME, "otel.localdomain");
-    // The model's collector first, then the name when it resolves (unicast DNS: getent).
+    // The model's collector first, then the name when it resolves (unicast DNS: getent). getent is
+    // glibc's, on the hosts (Ubuntu): elsewhere no name resolves and only the model's is left.
     assertEquals(
       await candidates(
         fleet({ telemetry: { collector: "http://otel.lab.example.net:4318", name: "localhost" } }),
@@ -37,7 +39,9 @@ proves(
       ),
       [
         { endpoint: "http://otel.lab.example.net:4318", source: "model" },
-        { endpoint: "http://localhost:4318", source: "dns" },
+        ...(proc.build.os === "linux"
+          ? [{ endpoint: "http://localhost:4318", source: "dns" } as const]
+          : []),
       ],
     );
     // A name that does not resolve is not a candidate.

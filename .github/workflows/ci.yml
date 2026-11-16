@@ -85,7 +85,9 @@ jobs:
       - name: Dependencies, exactly as bun.lock holds them
         run: bun install --frozen-lockfile
       - name: Tests (ifc test, on Bun)
-        run: bun run test
+        # The requirements are held to the whole suite on Linux (the check job): tests that apply
+        # only there are skipped here, each with its reason.
+        run: bun run test --no-requirements
       - name: The test record and its reports
         if: always()
         uses: actions/upload-artifact@v4

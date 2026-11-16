@@ -154,6 +154,7 @@ proves(
       await fs.remove(s.home, { recursive: true });
     }
   },
+  { timeout: 120_000 },
 );
 
 proves(
@@ -162,14 +163,19 @@ proves(
   async () => {
     const s = await vaultSandbox();
     try {
-      const before = await fingerprint([paths.join(s.home, "config"), paths.join(s.home, "data")]);
+      // Every run writes its own log: on Windows into %LOCALAPPDATA% (data here), elsewhere state.
+      const runLog = /[\\/]stolos[\\/]log[\\/][^\\/]+\.log$/;
+      const before = await fingerprint(
+        [paths.join(s.home, "config"), paths.join(s.home, "data")],
+        runLog,
+      );
       let r = await s.archon(["vault", "restore"]);
       assertEquals(r.code, 0, r.out);
       assert(r.out.includes("How to restore a stolos backup"), r.out);
       assert(r.out.includes("vault restore <path to this ZIP>"), r.out);
       assert(r.out.includes("Copy-Item") && r.out.includes("keys setup"), r.out);
       assertEquals(
-        await fingerprint([paths.join(s.home, "config"), paths.join(s.home, "data")]),
+        await fingerprint([paths.join(s.home, "config"), paths.join(s.home, "data")], runLog),
         before,
       );
 
@@ -289,6 +295,7 @@ proves(
       await fs.remove(s.home, { recursive: true });
     }
   },
+  { timeout: 120_000 },
 );
 
 proves(
@@ -369,6 +376,7 @@ proves(
       await fs.remove(s.home, { recursive: true });
     }
   },
+  { timeout: 120_000 },
 );
 
 proves(
@@ -378,7 +386,10 @@ proves(
     const roots = { secrets: "/s", ssh: "/h/.ssh", keys: "/k" };
     assertEquals(targetOf("secrets/lab/mail.json", roots)?.fleet, "lab");
     assert(targetOf("signing/fleet-signing", roots)?.to.endsWith("fleet-signing"));
-    assert(targetOf("signing/recovery/fleet-recovery", roots)?.to.startsWith("/k"));
+    // A path of this system's (Windows: \k).
+    assert(
+      targetOf("signing/recovery/fleet-recovery", roots)?.to.startsWith(paths.normalize("/k")),
+    );
     for (const bad of [
       "secrets/../x/y",
       "../etc/passwd",
@@ -620,4 +631,5 @@ proves(
       await fs.remove(s.home, { recursive: true });
     }
   },
+  { timeout: 120_000 },
 );

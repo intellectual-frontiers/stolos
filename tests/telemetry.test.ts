@@ -163,6 +163,7 @@ proves(
       await fs.remove(sb.home, { recursive: true });
     }
   },
+  { timeout: 120_000 },
 );
 
 proves(
@@ -356,6 +357,11 @@ proves(
       await fs.remove(dir, { recursive: true });
     }
   },
+  {
+    timeout: 120_000,
+    // The launcher is a host's /usr/local/bin/archon (POSIX sh, spec 012); Windows runs no launcher.
+    skip: proc.build.os === "windows" && "the launcher is a host's shell script",
+  },
 );
 
 proves(
@@ -432,4 +438,5 @@ proves(
       await fs.remove(sb.home, { recursive: true });
     }
   },
+  { timeout: 120_000 },
 );

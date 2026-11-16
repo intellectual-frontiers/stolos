@@ -74,7 +74,9 @@ const RUN_TIMEOUT_MS = 90_000;
 
 /** A new sandbox, probed: it fails unless every path archon would touch resolves inside it. */
 export async function sandbox(prefix = "archon-test-"): Promise<Sandbox> {
-  const home = await fs.makeTempDir({ prefix });
+  // Its real path: macOS's temporary folder is reached through /var -> /private/var, Windows' as
+  // a short name (RUNNER~1); a child that resolves its working directory sees the real one.
+  const home = await fs.realPath(await fs.makeTempDir({ prefix }));
   const config = path.join(home, "config");
   const data = path.join(home, "data");
   const tmp = path.join(home, "tmp");
@@ -177,8 +179,8 @@ console.log(JSON.stringify([P.secrets, P.bootCache, LEDGER, VAULT_LOCAL, PROMPT_
  */
 const OWNED_BY_A_RUNNING_SERVER = /[\\/](boot\.log(\.1)?|telemetry[\\/].*)$/;
 
-/** Every file under the folders, with its size and SHA-256, one per line (see above). */
-export async function fingerprint(dirs: readonly string[]): Promise<string> {
+/** Every file under the folders, with its size and SHA-256, one per line (see above); `leaveOut` too. */
+export async function fingerprint(dirs: readonly string[], leaveOut?: RegExp): Promise<string> {
   const out: string[] = [];
   const walk = async (d: string): Promise<void> => {
     const entries: fs.DirEntry[] = [];
@@ -189,7 +191,7 @@ export async function fingerprint(dirs: readonly string[]): Promise<string> {
     }
     for (const e of entries.sort((a, b) => a.name.localeCompare(b.name))) {
       const p = path.join(d, e.name);
-      if (OWNED_BY_A_RUNNING_SERVER.test(p)) continue;
+      if (OWNED_BY_A_RUNNING_SERVER.test(p) || leaveOut?.test(p) === true) continue;
       if (e.isDirectory) await walk(p);
       else if (e.isFile) {
         const data = await fs.readFile(p).catch(() => new Uint8Array());
@@ -199,6 +201,23 @@ export async function fingerprint(dirs: readonly string[]): Promise<string> {
   };
   for (const d of dirs) await walk(d);
   return out.join("\n");
+}
+
+/**
+ * The helper OpenSSH runs for a passphrase (`SSH_ASKPASS`; tests stand in for a person typing it):
+ * a shell script, or on Windows a `.cmd`, which OpenSSH for Windows can start (CreateProcess runs a
+ * batch file, not a script: error 193). Its path.
+ */
+export async function askpassHelper(dir: string, passphrase: string): Promise<string> {
+  if (proc.build.os === "windows") {
+    const file = path.join(dir, "askpass.cmd");
+    await fs.writeTextFile(file, `@echo ${passphrase}\r\n`);
+    return file;
+  }
+  const file = path.join(dir, "askpass.sh");
+  await fs.writeTextFile(file, `#!/bin/sh\necho '${passphrase}'\n`);
+  await fs.chmod(file, 0o755);
+  return file;
 }
 
 /** The engine checkout the tests run. */

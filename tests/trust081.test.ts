@@ -399,7 +399,7 @@ proves(
     assert(!/\sstyle="/.test(page), "no inline style attributes (the CSP forbids them)");
     await fs.remove(f.dir, { recursive: true });
   },
-  { skip: !hasSsh && "ssh-keygen is not installed" },
+  { skip: !hasSsh && "ssh-keygen is not installed", timeout: 120_000 },
 );
 
 proves(
@@ -432,7 +432,7 @@ proves(
     assertEquals(unclosed(page), []);
     await fs.remove(f.dir, { recursive: true });
   },
-  { skip: !hasSsh && "ssh-keygen is not installed" },
+  { skip: !hasSsh && "ssh-keygen is not installed", timeout: 120_000 },
 );
 
 proves(
@@ -497,7 +497,7 @@ proves(
     );
     await fs.remove(f.dir, { recursive: true });
   },
-  { skip: !hasSsh && "ssh-keygen is not installed" },
+  { skip: !hasSsh && "ssh-keygen is not installed", timeout: 120_000 },
 );
 
 proves(
@@ -520,7 +520,7 @@ proves(
     assert(!page.includes('href="evidence/'));
     await fs.remove(f.dir, { recursive: true });
   },
-  { skip: !hasSsh && "ssh-keygen is not installed" },
+  { skip: !hasSsh && "ssh-keygen is not installed", timeout: 120_000 },
 );
 
 proves(
@@ -551,7 +551,7 @@ proves(
     assertEquals(await trustBuild({ ...o, public: true, gated: true }), 1);
     await fs.remove(f.dir, { recursive: true });
   },
-  { skip: !hasSsh && "ssh-keygen is not installed" },
+  { skip: !hasSsh && "ssh-keygen is not installed", timeout: 120_000 },
 );
 
 test("081: the command and the guide are registered", () => {

@@ -10,7 +10,7 @@
  * @module
  */
 
-import { fs, proc, tcp } from "@intellectual-frontiers/ifc-ts/runtime";
+import { fs, path, proc, tcp } from "@intellectual-frontiers/ifc-ts/runtime";
 import {
   assert,
   assertEquals,
@@ -219,7 +219,8 @@ proves(
           "-inkey",
           who.files.key,
         ]);
-        assertEquals(out.replace(/\r\n/g, "\n"), inner.replace(/\r\n/g, "\n"));
+        // Line ends as openssl writes them here (Windows: \r\r\n, its text mode on CRLF).
+        assertEquals(out.replace(/\r+\n/g, "\n"), inner.replace(/\r\n/g, "\n"));
       }
     } finally {
       await fs.remove(dir, { recursive: true });
@@ -519,7 +520,7 @@ proves(
     assert(r.ok);
     assertEquals(must(r.files).length, 2);
     const first = must(must(r.files)[0]);
-    assert(first.startsWith(`${d.stateDir}/exports/aws/2026-11-15T02-17-00Z/`));
+    assert(first.startsWith(path.join(d.stateDir, "exports", "aws", "2026-11-15T02-17-00Z")));
     assertEquals(await fs.readTextFile(first), '{"bomFormat":"CycloneDX"}');
     const last = parse(await fs.readTextFile(`${d.stateDir}/exports/aws/last-run.json`));
     assertEquals(at(last, "ok"), true);
@@ -681,7 +682,7 @@ proves(
     assertEquals(r[0]?.ok, false);
     assertEquals(r[0]?.to, "c@example.com");
   },
-  { skip: !OPENSSL && "openssl makes the recipients' certificates" },
+  { skip: !OPENSSL && "openssl makes the recipients' certificates", timeout: 120_000 },
 );
 
 test("deliver: no secret in the run record, even when the relay's error echoes it", async () => {

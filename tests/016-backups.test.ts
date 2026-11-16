@@ -19,6 +19,8 @@ import { ENGINE_ROOT, linkEngine, sandbox } from "./sandbox.ts";
 
 const posix = proc.build.os !== "windows";
 const zstd = proc.which("zstd") !== undefined;
+/** GNU tar, as the hosts have it (macOS's bsdtar has no --warning=, --acls means another thing). */
+const gnuTar = proc.build.os === "linux";
 
 proves(
   ["016-backups FR-001"],
@@ -65,8 +67,9 @@ proves(
     );
     assertStringIncludes(t2?.content ?? "", "OnCalendar=*-*-* 01:00:00");
 
-    if (!zstd || !posix) return;
-    // backup run, for real: zstd tar archives in the target, the oldest pruned past `keep`.
+    // backup run, for real, as on a host (Ubuntu, GNU tar's options): zstd tar archives in the
+    // target, the oldest pruned past `keep`.
+    if (!zstd || !gnuTar) return;
     const sb = await sandbox("archon-backup-test-");
     try {
       const repo = path.join(sb.home, "fleet");

@@ -69,7 +69,12 @@ async function doctorWith(
   const repo = path.join(sb.home, "fleet");
   const bin = path.join(sb.home, "bin");
   const dir = path.join(sb.home, "fake");
-  for (const d of [path.join(repo, "fleets"), bin, dir]) await fs.mkdir(d, { recursive: true });
+  // The doctor runs as the checkout's owner, elevated (asOwner): a host root (ARCHON_ROOT) makes
+  // this run root's on a fresh host, whoever runs the test, so it never reaches for sudo.
+  const root = path.join(sb.home, "root");
+  for (const d of [path.join(repo, "fleets"), bin, dir, root]) {
+    await fs.mkdir(d, { recursive: true });
+  }
   if (!(await fs.exists(path.join(repo, "fleets", "lab")))) {
     await proc.output([
       "cp",
@@ -93,7 +98,7 @@ async function doctorWith(
     path.join(ENGINE_ROOT, "src/archon/main.ts"),
     ["doctor", "--host", "alpha"],
     "",
-    { ARCHON_REPO: repo, ARCHON_FLEET: "lab", FAKE_DIR: dir, PATH: bin },
+    { ARCHON_REPO: repo, ARCHON_FLEET: "lab", ARCHON_ROOT: root, FAKE_DIR: dir, PATH: bin },
   );
   const log = ((await fs.readTextOr(path.join(dir, "log"))) ?? "").split("\n").filter(Boolean);
   return { out: r.out, log };

@@ -41,9 +41,9 @@ const refuse = (message: string): void => ui.problem("fail", "S3", message);
 /** Where S3's credentials live, and the names Archon uses with it. */
 export const S3_PATHS = {
   /** The directory holding the admin credentials (0700). */
-  dir: path.dirname(S3.secrets),
-  /** The admin alias for rc inside the container (root only). */
-  rcEnv: path.join(path.dirname(S3.secrets), "rc.env"),
+  dir: path.posix.dirname(S3.secrets),
+  /** The admin alias for rc inside the container (root only). A host's path: always `/`. */
+  rcEnv: path.posix.join(path.posix.dirname(S3.secrets), "rc.env"),
   /** Each account's own secret, 0400 (P.keys: anyone may pass, nobody may list). */
   keys: "/var/lib/archon-keys/s3",
   /** The admin's access key (user name). */

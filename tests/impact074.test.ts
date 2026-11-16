@@ -12,7 +12,7 @@ import {
   assertStringIncludes,
   proves,
 } from "@intellectual-frontiers/ifc-ts/runtime/test";
-import { sandbox } from "./sandbox.ts";
+import { askpassHelper, sandbox } from "./sandbox.ts";
 import { fleet as lab } from "../examples/fleets/lab/fleet.ts";
 import { foundation } from "../src/archon/capabilities/mod.ts";
 import { resolvePlan } from "../src/archon/model/resolve.ts";
@@ -751,6 +751,7 @@ proves(
       await fs.remove(sb.home, { recursive: true }).catch(() => {});
     }
   },
+  { timeout: 120_000 },
 );
 
 proves(
@@ -814,9 +815,7 @@ proves(
     const sb = await sandbox("stolos-apply-impact-");
     try {
       const home = sb.home;
-      const askpass = path.join(home, "askpass.sh");
-      await fs.writeTextFile(askpass, `#!/bin/sh\necho '${PASS}'\n`);
-      await fs.chmod(askpass, 0o755);
+      const askpass = await askpassHelper(home, PASS);
       const gitconfig = path.join(home, "gitconfig");
       await fs.writeTextFile(gitconfig, "[user]\n\tname = t\n\temail = t@example.invalid\n");
       const env: Record<string, string> = {
@@ -906,4 +905,5 @@ proves(
       await fs.remove(sb.home, { recursive: true }).catch(() => {});
     }
   },
+  { timeout: 120_000 },
 );

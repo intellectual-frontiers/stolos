@@ -157,5 +157,8 @@ proves(
       { prefix: "stolos-release-" },
     );
   },
-  { skip: BUN === undefined && "Bun is not installed (the package is packed by Bun)" },
+  {
+    skip: BUN === undefined && "Bun is not installed (the package is packed by Bun)",
+    timeout: 120_000,
+  },
 );

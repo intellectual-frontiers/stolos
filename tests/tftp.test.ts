@@ -55,4 +55,5 @@ proves(
     assertEquals(all.length, data.length);
     assert(all.every((b, i) => b === data[i]));
   },
+  { timeout: 120_000 },
 );

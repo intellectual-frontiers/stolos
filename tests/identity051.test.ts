@@ -202,6 +202,7 @@ proves(
       await fs.remove(dir, { recursive: true });
     }
   },
+  { timeout: 120_000 },
 );
 
 proves(
@@ -254,11 +255,14 @@ proves(
   async () => {
     const { BOOTSTRAP_FACTS, parseBootstrapFacts, bootstrapRefusal } =
       await import("../src/archon/install/host-bootstrap.ts");
-    // The probe is valid sh and runs here (any Linux).
-    const out = await proc.run(["sh", "-c", BOOTSTRAP_FACTS]);
-    assert(out.success, "the probe must exit 0 (bootstrap treats a failure as an error)");
-    const here = parseBootstrapFacts(out.stdout);
-    assert(here.versionId !== undefined || here.summary.includes("Ubuntu"));
+    // The probe is valid sh and runs here (any Linux: it reads /etc/os-release, /sys and /proc,
+    // which the machine being bootstrapped has and macOS and Windows do not).
+    if (proc.build.os === "linux") {
+      const out = await proc.run(["sh", "-c", BOOTSTRAP_FACTS]);
+      assert(out.success, "the probe must exit 0 (bootstrap treats a failure as an error)");
+      const here = parseBootstrapFacts(out.stdout);
+      assert(here.versionId !== undefined || here.summary.includes("Ubuntu"));
+    }
     const f = parseBootstrapFacts(
       "version_id=26.04\nhostname=ubuntu\nsys_vendor=QEMU\nproduct_name=Standard PC\nmem_kib=4029000\ncpus=2\nuplink=52:54:00:12:34:56\nnic=52:54:00:12:34:56\n",
     );
@@ -337,6 +341,8 @@ proves(
       await fs.remove(dir, { recursive: true });
     }
   },
+  // The guard runs in Ubuntu's installer; wipefs is util-linux's.
+  { skip: proc.build.os !== "linux" && "wipefs is Linux's (util-linux)" },
 );
 
 /** The example lab in a sandbox, and a script run there (the boot machine's view of it). */

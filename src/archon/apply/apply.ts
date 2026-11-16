@@ -689,7 +689,8 @@ async function file(f: FileDef, r: Runner, extra: { dirMode?: number } = {}) {
   let metaDiffers = false;
   if (!contentDiffers) {
     const st = await fs.stat(target);
-    metaDiffers = ((st.mode ?? 0) & 0o7777) !== mode;
+    // Windows keeps no POSIX mode (a render into a folder there, the sandbox): nothing to compare.
+    metaDiffers = proc.build.os !== "windows" && ((st.mode ?? 0) & 0o7777) !== mode;
     if (!r.sandbox && asRoot()) {
       const uid = await idOf("passwd", f.owner);
       const gid = await idOf("group", f.group ?? (f.owner === "root" ? "root" : f.owner));
@@ -758,10 +759,16 @@ async function idOf(db: "passwd" | "group", name: string): Promise<number | unde
   return Number(res.stdout.split(":")[2]);
 }
 
+/**
+ * Give `path` to `owner` (and `group` where it exists) with the `chown` program, as everything else
+ * root runs: under a host root (`ARCHON_ROOT`) a test runs root's side as an ordinary account, and
+ * the program's stand-in records the change the account itself could not make.
+ */
 async function chown(path: string, owner: string, group: string) {
-  const uid = await idOf("passwd", owner);
-  const gid = await idOf("group", group);
-  if (uid !== undefined) await fs.chown(path, uid, gid ?? null);
+  if ((await idOf("passwd", owner)) === undefined) return;
+  const to = (await idOf("group", group)) === undefined ? owner : `${owner}:${group}`;
+  const r = await run(["chown", to, path]);
+  if (!r.ok) throw new Error(`chown ${to} ${path}: ${(r.stderr || r.stdout).trim()}`);
 }
 
 // ------------------------------------------------------------------- actions
