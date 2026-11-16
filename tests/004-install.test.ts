@@ -296,9 +296,9 @@ proves(
       for (const phase of ["Checkout", "Model", "Secrets", "Ubuntu files", "Network", "Firewall"]) {
         assertStringIncludes(r.out, phase);
       }
-      // Uncommitted host changes: hosts would not see them, and the fix.
-      assertStringIncludes(r.out, "not committed");
-      assertStringIncludes(r.out, 'bun run stolos apply -m "<what changed>"');
+      // Uncommitted host changes of yours: not sent yet (a warning, spec 099), and the fix.
+      assertStringIncludes(r.out, "change(s) of yours not sent yet");
+      assertStringIncludes(r.out, "bun run stolos apply (or bun run stolos update");
       // No admin password hash, and how to make one.
       assertStringIncludes(r.out, "no admin password hash");
       assertStringIncludes(r.out, "bun run stolos fleet init");

@@ -291,7 +291,7 @@ export function recordChanges(n: number, check: boolean): void {
 
 /** A problem as the run reported it (the UI's `Problem`). */
 export type ProblemRecord = {
-  readonly level: "warn" | "fail" | "pending";
+  readonly level: "warn" | "fail" | "pending" | "action";
   readonly phase: string;
   readonly message: string;
   readonly fix?: string | undefined;

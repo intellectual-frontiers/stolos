@@ -5,7 +5,7 @@
     "": {
       "name": "@intellectual-frontiers/stolos",
       "dependencies": {
-        "@intellectual-frontiers/commons": "github:intellectual-frontiers/.github#1731fee52b5534f02661af2f8d1c80e78de64da8",
+        "@intellectual-frontiers/commons": "github:intellectual-frontiers/.github#6d02f50a32ec0531472cfdc4412d62ad75274f2c",
         "ajv": "8.17.1",
       },
       "devDependencies": {
@@ -25,7 +25,7 @@
 
     "@iconify/utils": ["@iconify/utils@3.1.7", "", { "dependencies": { "@antfu/install-pkg": "^2.0.1", "@iconify/types": "^2.0.0", "import-meta-resolve": "^4.2.0" } }, "sha512-JZHlwdID+dy+lTgbYC8NEC4zeugqeYsc6jewvzb4c58kHauJn+X7rNwQjxz5p2qSjqaEeQoLkCIQ9v/H4PK0/w=="],
 
-    "@intellectual-frontiers/commons": ["@intellectual-frontiers/commons@github:intellectual-frontiers/.github#1731fee", { "dependencies": { "mermaid": "11.17.2", "typescript": "7.1.0-beta" }, "bin": { "ifc": "./commons/ts/node/ifc.mjs", "ifc-docs": "./commons/docs/ifc-docs.mjs" } }, "intellectual-frontiers-.github-1731fee", "sha512-eCv3NgvJj3CLDCgXKdVNt9Viiusri2pA31MZv+dMD4PQiuUThKmOQ904mwf60+qWPjCprAf19+ynTHO0EQwcbQ=="],
+    "@intellectual-frontiers/commons": ["@intellectual-frontiers/commons@github:intellectual-frontiers/.github#6d02f50", { "dependencies": { "mermaid": "11.17.2", "typescript": "7.1.0-beta" }, "bin": { "ifc": "./commons/ts/node/ifc.mjs", "ifc-docs": "./commons/docs/ifc-docs.mjs" } }, "intellectual-frontiers-.github-6d02f50", "sha512-uLw33vpMyH+1rOUkLtL5F87Q2MvUCzhjShQAf0JrikKR2Xb/C5F2rBc00+gHXtE4UP2Tt/Sn3AQj6yBghI8W1A=="],
 
     "@mermaid-js/parser": ["@mermaid-js/parser@1.2.1", "", { "dependencies": { "@chevrotain/types": "~11.1.2" } }, "sha512-n12NohV3mrUyUL2o93IgG/ifeW9FTyeJn3zDxkhwa8MJ9Fxg3HQMlA3RiGmD/3UnJvheztkjjQAjA2T4LmUcpw=="],
 

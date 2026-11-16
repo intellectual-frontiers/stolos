@@ -38,6 +38,23 @@ update`: follow GitHub at once instead of within 15 minutes).
   you're about to type in your passphrase on an unencrypted channel. Only do this on a trusted
   network, or do this at the command line:" with the same command. Unanswered in five minutes,
   or cancelled, OpenSSH is told no and nothing is signed.
+- **FR-006** Expected is not alarming. Files Stolos writes itself as records (an install's
+  `registration.ts`, an adopted machine's `machine.ts` and `observed.ts`, `discovered.ts`, devices'
+  and connected accounts' observations) are named for what they are ("olympia's registration (from
+  its install)"): the doctor lists them as "not sent yet" (no warning, no failure), and
+  `stolos update` sends them itself (one signed commit). A person's own edits are a warning, never
+  a failure, and `stolos update` asks before sending them. An engine upgrade waiting for them is
+  "next", not a warning; what the doctor finds after an update is reported as warnings with their
+  fixes, not as the update failing.
+- **FR-007** A step that is the operator's to take is ⚡ (action), with the command: neither a
+  warning (⚠️) nor an error (❌), never counted as one, never failing a run; a run's close lists
+  them under "Your move", between "Needs attention" and "Not set up yet" (⏳). The marks, their
+  ASCII fallbacks (`[you]`, `[todo]`) and the order are commons' (0006-signals FR-022 and FR-027),
+  so every command line of Intellectual Frontiers says it the same way; Stolos takes them from
+  commons' palette. Uses: changes not sent yet (records and your own), commits not sent, an engine
+  upgrade waiting for them, and secrets newer than the last backup (a warning only once a week
+  overdue, or host keys never backed up). The consoles' live output shows ⚡ lines in their own
+  colour.
 
 ## Success criteria
 
@@ -45,4 +62,6 @@ update`: follow GitHub at once instead of within 15 minutes).
   consoles' header and overview with and without a newer release; update rebases the owner's
   commit on top of GitHub's and undoes a conflict; update runs apply after an upgrade; no
   user-facing `git push` advice in the engine's sources; the HTTP warning; a real `ssh-keygen -Y
-sign` through the helper and the console (answered, refused without the token, cancelled).
+sign` through the helper and the console (answered, refused without the token, cancelled);
+  records told from a person's edits, and update sending a record by itself; the ⚡ level (its mark
+  from commons, its section, not a warning, exit 0).

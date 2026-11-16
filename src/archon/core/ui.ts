@@ -13,6 +13,7 @@
  *
  * @module
  */
+import { palette } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs, proc, stdio, tty } from "@intellectual-frontiers/commons/ts/runtime";
 import { translate } from "./explain.ts";
 import { asRoot, P } from "./paths.ts";
@@ -24,12 +25,14 @@ import { asRoot, P } from "./paths.ts";
 export type Level = "ok" | "warn" | "fail" | "defer" | "skip";
 
 /**
- * Spec 052: four states, the same everywhere. "fail" and "warn" are problems;
+ * Spec 052: the states, the same everywhere. "fail" and "warn" are problems;
  * "pending" is something not set up yet, expected until someone does it (a
  * token not pushed, a certificate not issued yet): shown with its next step,
- * never a failure, never counted as a warning.
+ * never a failure, never counted as a warning. Spec 099: "action" (⚡) is a
+ * step that is the operator's to take (send a change, back up, approve):
+ * nothing is wrong, so it is neither a warning nor an error.
  */
-export type ProblemLevel = "warn" | "fail" | "pending";
+export type ProblemLevel = "warn" | "fail" | "pending" | "action";
 
 /** A problem a run found, shown again under "Needs attention" (or "Not set up yet") when it ends. */
 export interface Problem {
@@ -102,7 +105,9 @@ const MARKS = {
     ok: "✅",
     warn: "⚠️ ",
     fail: "❌",
-    pending: "⏳",
+    // Commons 0006-signals FR-022 and FR-027: the same marks in every command line.
+    pending: palette.MARKS.pending.emoji,
+    action: palette.MARKS.action.emoji,
     defer: "🔒",
     skip: "⏭️ ",
     start: "🛰️ ",
@@ -113,7 +118,8 @@ const MARKS = {
     ok: "[ok]",
     warn: "[warn]",
     fail: "[FAIL]",
-    pending: "[todo]",
+    pending: palette.MARKS.pending.ascii,
+    action: palette.MARKS.action.ascii,
     defer: "[defer]",
     skip: "[skip]",
     start: "==>",
@@ -146,6 +152,8 @@ export class Phase {
   fails = 0;
   /** How many items are not set up yet. */
   pendings = 0;
+  /** Spec 099: steps that are the operator's to take. */
+  actions = 0;
   /** How many disruptive changes it left for later. */
   deferred = 0;
   /** How many items it skipped. */
@@ -212,6 +220,11 @@ export class Phase {
     this.pendings++;
     this.ui.problem("pending", this.name, msg, next, code);
   }
+  /** Spec 099: a step that is the operator's to take (⚡): what, and the command; never a problem. */
+  action(msg: string, next: string, code?: string): void {
+    this.actions++;
+    this.ui.problem("action", this.name, msg, next, code);
+  }
   /** Detail for the log only (shown dimmed with --verbose). */
   note(msg: string): void {
     this.ui.item("note", msg);
@@ -235,6 +248,7 @@ export class Phase {
     if (this.fails) parts.push(`${this.fails} failed`);
     if (this.warns) parts.push(`${this.warns} warning${this.warns > 1 ? "s" : ""}`);
     if (this.pendings) parts.push(`${this.pendings} not set up yet`);
+    if (this.actions) parts.push(`${this.actions} for you to do`);
     if (this.deferred) parts.push(`${this.deferred} deferred`);
     return parts.join(" · ") || "up to date";
   }
@@ -438,8 +452,8 @@ export class Ui {
       }
     }
     const logLine = this.log(
-      `   ${level === "pending" ? "TODO" : level.toUpperCase()} ${message}${
-        fix ? ` (${level === "pending" ? "next" : "fix"}: ${fix})` : ""
+      `   ${level === "pending" ? "TODO" : level === "action" ? "YOU" : level.toUpperCase()} ${message}${
+        fix ? ` (${level === "pending" || level === "action" ? "next" : "fix"}: ${fix})` : ""
       }${code ? ` [${code}]` : ""}`,
     );
     if (this.problems.some((p) => p.level === level && p.message === message)) return;
@@ -596,6 +610,7 @@ export class Ui {
             fails: fails.length,
             warns: this.problems.filter((p) => p.level === "warn").length,
             pending: this.problems.filter((p) => p.level === "pending").length,
+            actions: this.problems.filter((p) => p.level === "action").length,
           }),
         );
       } catch (e) {
@@ -623,20 +638,28 @@ export class Ui {
       this.out(`${this.m[p.level]} ${this.bold(p.phase.toLowerCase().padEnd(14))} ${msg}`);
       if (p.fix) {
         this.out(
-          `   ${" ".repeat(14)} ${this.dim(`${p.level === "pending" ? "next" : "fix"}: ${p.fix}`)}`,
+          `   ${" ".repeat(14)} ${this.dim(
+            `${p.level === "pending" ? "next" : p.level === "action" ? "run" : "fix"}: ${p.fix}`,
+          )}`,
         );
       }
       if (p.code) this.out(`   ${" ".repeat(14)} ${this.dim(`explain: ${explainHint(p.code)}`)}`);
-      if (this.logPath && p.logLine && p.level !== "pending") {
+      if (this.logPath && p.logLine && p.level !== "pending" && p.level !== "action") {
         this.out(`   ${" ".repeat(14)} ${this.dim(`log: ${this.logPath}:${p.logLine}`)}`);
       }
     };
-    const real = this.problems.filter((p) => p.level !== "pending");
+    const real = this.problems.filter((p) => p.level === "fail" || p.level === "warn");
     const pending = this.problems.filter((p) => p.level === "pending");
+    const actions = this.problems.filter((p) => p.level === "action");
     if (real.length) {
       this.out("");
       this.out(rule("Needs attention"));
       real.forEach(show);
+    }
+    if (actions.length) {
+      this.out("");
+      this.out(rule("Your move"));
+      actions.forEach(show);
     }
     if (pending.length) {
       this.out("");
@@ -660,7 +683,9 @@ export class Ui {
     this.log(
       `== finished: ${fails.length} failure(s), ${
         this.problems.filter((p) => p.level === "warn").length
-      } warning(s), ${pending.length} not set up yet, ${this.deferred.length} deferred`,
+      } warning(s), ${pending.length} not set up yet, ${actions.length} for you to do, ${
+        this.deferred.length
+      } deferred`,
     );
     try {
       this.logFile?.close();

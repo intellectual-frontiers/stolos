@@ -50,23 +50,38 @@ export async function doctor(o: {
     g.warn("could not reach GitHub to compare", "check this PC's network and gh auth status");
   }
   if (dirty.length) {
-    g.fail(
-      `${dirty.length} change(s) not committed (${dirty
-        .map((l) => l.slice(3))
-        .slice(0, 3)
-        .join(
-          ", ",
-        )}${dirty.length > 3 ? ", ..." : ""}): hosts install from GitHub and would not see them`,
-      'bun run stolos apply -m "<what changed>"',
-    );
+    // Spec 099: records Stolos wrote (an install's registration, ...) are expected, not a mistake.
+    const { porcelainPath, splitChanges } = await import("../archon/fleet/records.ts");
+    const { records, yours } = splitChanges(dirty.map(porcelainPath));
+    if (records.length) {
+      g.action(
+        `not sent yet: ${records.map((r) => r.what).join("; ")}`,
+        "bun run stolos update (it sends them with one signed commit)",
+      );
+    }
+    if (yours.length) {
+      g.action(
+        `${yours.length} change(s) of yours not sent yet (${yours.slice(0, 3).join(", ")}${
+          yours.length > 3 ? ", ..." : ""
+        }): servers see them once they are sent`,
+        "bun run stolos apply (or bun run stolos update, which offers to send them)",
+      );
+    }
   }
   if (ahead) {
-    g.fail(`${ahead} commit(s) not pushed: hosts would not see them`, "bun run stolos apply");
+    g.action(
+      `${ahead} commit(s) not sent yet: servers see them once they are`,
+      "bun run stolos apply",
+    );
   }
   if (behind) {
     g.warn(`${behind} new commit(s) on GitHub`, "bun run stolos update, then restart boot serve");
   }
-  g.done(dirty.length || ahead || behind ? "needs attention" : `${branch}, in step with GitHub`);
+  g.done(
+    dirty.length || ahead || behind
+      ? `${branch}: changes to send or receive (above)`
+      : `${branch}, in step with GitHub`,
+  );
 
   // --------------------------------------------------------------- model
   const m = ui.phase("Model");
@@ -120,7 +135,8 @@ export async function doctor(o: {
   const va = await assess();
   if (va.unbacked.length) {
     const names = va.unbacked.map((x) => x.name);
-    (va.severity === "red" ? s.fail.bind(s) : s.warn.bind(s))(
+    // Spec 099: a backup to make is your move (⚡); a week overdue, or keys never backed up, a warning.
+    (va.severity === "red" ? s.warn.bind(s) : s.action.bind(s))(
       `${names.length} secret(s) ${
         va.lastBackup ? "newer than the last backup" : "never backed up"
       }: ${names.slice(0, 4).join(", ")}${names.length > 4 ? ", ..." : ""}`,

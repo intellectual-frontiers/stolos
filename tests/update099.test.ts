@@ -284,3 +284,117 @@ proves(
     assertEquals(offenders, []);
   },
 );
+
+proves(
+  ["099-engine-update FR-006"],
+  "099: records Stolos wrote are told from your own edits, and named for what they are",
+  async () => {
+    const { porcelainPath, recordOf, splitChanges } =
+      await import("../src/archon/fleet/records.ts");
+    assertEquals(
+      porcelainPath(" M fleets/lab/hosts/alpha/registration.ts"),
+      "fleets/lab/hosts/alpha/registration.ts",
+    );
+    assertEquals(porcelainPath("R  a.ts -> fleets/lab/discovered.ts"), "fleets/lab/discovered.ts");
+    assertEquals(
+      recordOf("fleets/lab/hosts/alpha/registration.ts"),
+      "alpha's registration (from its install)",
+    );
+    assertEquals(
+      recordOf("fleets/lab/adopted/bob-desk/observed.ts"),
+      "bob-desk, adopted (what it reported)",
+    );
+    assertEquals(recordOf("fleets/lab/hosts/alpha/host.ts"), undefined, "a host's model is yours");
+    const s = splitChanges(["fleets/lab/hosts/alpha/registration.ts", "fleets/lab/fleet.ts"]);
+    assertEquals([s.records.length, s.yours], [1, ["fleets/lab/fleet.ts"]]);
+  },
+);
+
+proves(
+  ["099-engine-update FR-006"],
+  "099: update sends an install's registration by itself; the doctor calls it not sent yet",
+  async () => {
+    const sb = await sandbox("archon-update099-rec-");
+    try {
+      const gitconfig = path.join(sb.home, "gitconfig");
+      await fs.writeTextFile(gitconfig, "[user]\n\tname = t\n\temail = t@example.invalid\n");
+      const env = { GIT_CONFIG_GLOBAL: gitconfig, GIT_CONFIG_NOSYSTEM: "1", HOME: sb.home };
+      const sh = async (cwd: string, ...a: string[]): Promise<string> => {
+        const r = await proc.output(a, { cwd, env: { ...proc.env.toObject(), ...env } });
+        if (!r.success) throw new Error(`${a.join(" ")}: ${new TextDecoder().decode(r.stderr)}`);
+        return new TextDecoder().decode(r.stdout).trim();
+      };
+      const origin = path.join(sb.home, "origin.git");
+      const mine = path.join(sb.home, "fleet");
+      await sh(sb.home, "git", "init", "-q", "--bare", "-b", "main", origin);
+      await sh(sb.home, "git", "clone", "-q", origin, mine);
+      await fs.mkdir(path.join(mine, "fleets"), { recursive: true });
+      await sh(".", "cp", "-r", "examples/fleets/lab", path.join(mine, "fleets", "lab"));
+      await fs.writeTextFile(path.join(mine, ".gitignore"), "node_modules/\n");
+      await sh(mine, "git", "add", "-A");
+      await sh(mine, "git", "commit", "-q", "--no-gpg-sign", "-m", "lab");
+      await sh(mine, "git", "push", "-q", "origin", "main");
+      await linkEngine(mine);
+      const reg = path.join(mine, "fleets", "lab", "hosts", "alpha", "registration.ts");
+      await fs.writeTextFile(reg, `${(await fs.readTextOr(reg)) ?? ""}// learned at install\n`);
+      const r = await sb.run("src/stolos/main.ts", ["update", "--no-doctor"], "", {
+        ...env,
+        ARCHON_REPO: mine,
+        ARCHON_FLEET: "lab",
+      });
+      assertStringIncludes(r.out, "Sending alpha's registration (from its install) (stolos apply)");
+      assert(!/push or commit your own changes/.test(r.out), r.out);
+      const d = await sb.run("src/stolos/main.ts", ["boot", "doctor"], "", {
+        ...env,
+        ARCHON_REPO: mine,
+        ARCHON_FLEET: "lab",
+      });
+      if ((await sh(mine, "git", "status", "--porcelain")).includes("registration.ts")) {
+        assertStringIncludes(d.out, "not sent yet: alpha's registration (from its install)");
+      }
+      assert(!/change\(s\) not committed/.test(d.out), d.out);
+    } finally {
+      await fs.remove(sb.home, { recursive: true });
+    }
+  },
+  { skip: proc.build.os === "windows" && "cp -r and the shell fixtures are POSIX" },
+);
+
+proves(
+  ["099-engine-update FR-007"],
+  "099: ⚡ is your move: commons' mark, its own section, never a warning, and the run still succeeds",
+  async () => {
+    const { Ui } = await import("../src/archon/core/ui.ts");
+    const { palette } = await import("@intellectual-frontiers/commons/ts/kernel");
+    const run = (emoji: boolean) => {
+      let text = "";
+      const ui = new Ui({
+        tty: false,
+        color: false,
+        emoji,
+        now: () => 0,
+        write: (s) => (text += s),
+      });
+      const p = ui.phase("Checkout");
+      p.action("not sent yet: olympia's registration (from its install)", "bun run stolos update");
+      p.pending("a certificate is not issued yet", "it is issued at the next apply");
+      p.done();
+      const code = ui.finish();
+      return { text, code };
+    };
+    const e = run(true);
+    assertEquals(e.code, 0, "an action is not a failure");
+    assertStringIncludes(e.text, `${palette.MARKS.action.emoji} not sent yet`);
+    assertStringIncludes(e.text, "━━ Your move");
+    assertStringIncludes(e.text, "run: bun run stolos update");
+    assert(!e.text.includes("Needs attention"), "nothing is wrong");
+    assert(
+      e.text.indexOf("Your move") < e.text.indexOf("Not set up yet"),
+      "Your move comes before Not set up yet",
+    );
+    const a = run(false);
+    assertStringIncludes(a.text, `${palette.MARKS.action.ascii} not sent yet`);
+    const { lineClass } = await import("../src/archon/console/server.ts");
+    assertEquals(lineClass("   [you] not sent yet"), "act");
+  },
+);

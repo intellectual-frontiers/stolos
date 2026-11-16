@@ -189,13 +189,15 @@ export function patch(
 export function lineClass(l: string): string {
   return /^\s*\[ok\]/.test(l)
     ? "ok"
-    : /^\s*\[FAIL\]|^error|failed|refus/i.test(l)
-      ? "bad"
-      : /^\s*\[(!!|!|warn|\.\.)\]|warning/i.test(l)
-        ? "w"
-        : /^==>|^\s+(fix|log|explain):/.test(l)
-          ? "dim"
-          : "";
+    : /^\s*(\[you\]|\u26a1)/.test(l)
+      ? "act"
+      : /^\s*\[FAIL\]|^error|failed|refus/i.test(l)
+        ? "bad"
+        : /^\s*\[(!!|!|warn|\.\.)\]|warning/i.test(l)
+          ? "w"
+          : /^==>|^\s+(fix|log|explain):/.test(l)
+            ? "dim"
+            : "";
 }
 
 /** The consoles' static files (stylesheet, icon, Datastar, Mermaid, fonts), or undefined. */

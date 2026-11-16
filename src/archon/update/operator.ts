@@ -139,7 +139,7 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
   const remote = `origin/${branch}`;
   const behind = Number((await git(["rev-list", "--count", `HEAD..${remote}`])).stdout.trim()) || 0;
   let ahead = Number((await git(["rev-list", "--count", `${remote}..HEAD`])).stdout.trim()) || 0;
-  const dirty = (await git(["status", "--porcelain", "--untracked-files=no"])).stdout.trim();
+  let dirty = (await git(["status", "--porcelain", "--untracked-files=no"])).stdout.trim();
   let pulled: string[] = [];
   if (!behind) {
     p.done(
@@ -230,17 +230,54 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
     }
   }
 
-  // Spec 099: your own commits not on GitHub yet go out first (stolos apply: checked, signed,
-  // pushed), so the engine can be upgraded on top of them.
-  ahead = Number((await git(["rev-list", "--count", `${remote}..HEAD`])).stdout.trim()) || 0;
-  if (ahead && !dirty && !o.noUpgrade) {
-    stdio.stdout.writeSync(`\n  Sending your ${ahead} commit(s) first (stolos apply).\n\n`);
-    const r = await stolos(["apply"]);
+  // Spec 099: what is here and not on GitHub goes out first (stolos apply: checked, signed,
+  // pushed), so the engine can be upgraded on top of it. Records Stolos wrote (an install's
+  // registration, an adoption) are sent without asking; your own edits only when you say so.
+  if (!o.noUpgrade) {
+    const { porcelainPath, splitChanges } = await import("../fleet/records.ts");
+    const changed = (await git(["status", "--porcelain", "--untracked-files=all"])).stdout
+      .split("\n")
+      .filter(Boolean)
+      .map(porcelainPath);
+    const { records, yours } = splitChanges(changed);
+    ahead = Number((await git(["rev-list", "--count", `${remote}..HEAD`])).stdout.trim()) || 0;
+    let send = changed.length > 0 || ahead > 0;
     const s = ui.phase("Send");
-    if (r.code === 0) {
-      s.done(`your ${ahead} commit(s) are on GitHub`);
-      ahead = 0;
-    } else s.warn("stolos apply did not finish (its messages are above)", "bun run stolos apply");
+    if (yours.length) {
+      s.note(`your changes: ${yours.slice(0, 5).join(", ")}${yours.length > 5 ? ", ..." : ""}`);
+      send = await ui.confirm(
+        `  Send your ${yours.length} change(s) now, with the update (one signed commit)?`,
+      );
+    }
+    if (!send) {
+      if (yours.length) {
+        s.action(
+          "your changes stay here, not sent; the engine upgrade waits for them",
+          "bun run stolos apply, then bun run stolos update",
+        );
+      }
+      s.done(changed.length || ahead ? "nothing sent" : "nothing to send");
+    } else {
+      const what = [
+        ...records.map((r) => r.what),
+        ...(yours.length ? [`${yours.length} change(s) of yours`] : []),
+        ...(ahead ? [`${ahead} commit(s)`] : []),
+      ].join("; ");
+      stdio.stdout.writeSync(`\n  Sending ${what} (stolos apply).\n\n`);
+      const args = ["apply"];
+      if (records.length && !yours.length) {
+        args.push("-m", `${P.fleetId}: ${records.map((r) => r.what).join("; ")}`);
+      }
+      const r = await stolos(args);
+      if (r.code === 0) {
+        s.done(`sent: ${what}`);
+        ahead = 0;
+        dirty = (await git(["status", "--porcelain", "--untracked-files=no"])).stdout.trim();
+      } else {
+        s.action("not sent (stolos apply's messages are above)", "bun run stolos apply");
+        s.done();
+      }
+    }
   }
 
   // 3. The engine: the newest Stolos release, and the pin.
@@ -265,11 +302,11 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
     } else if (compare(parseTag(newest) ?? [0, 0, 0], parseTag(pin.tag) ?? [0, 0, 0]) <= 0) {
       e.done(`${pin.tag}, the newest release`);
     } else if (o.noUpgrade || dirty || ahead) {
-      e.warn(
-        `${newest} is out (pinned: ${pin.tag})`,
+      e.action(
+        `${newest} is out (pinned: ${pin.tag}): next, once your changes are sent`,
         dirty || ahead
-          ? `push or commit your own changes first, then: bun run stolos update`
-          : `bun run stolos fleet upgrade ${newest}, then bun run stolos apply`,
+          ? "bun run stolos apply, then bun run stolos update"
+          : "bun run stolos update (without --no-upgrade)",
       );
       e.done();
     } else {
@@ -360,9 +397,10 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
     const what = boot ? "boot doctor" : "stolos keys";
     const again = boot ? "bun run stolos boot doctor" : "bun run stolos keys";
     const notYet = r.pending ? `; ${r.pending} thing(s) not set up yet` : "";
+    // The update itself is done: what the doctor found is shown above, each with its fix.
     if (r.code !== 0 || r.fails) {
-      dr.fail(
-        `${what}: ${r.fails || "some"} problem(s), each with its fix (above)${notYet}`,
+      dr.warn(
+        `${what}: ${r.fails || "some"} thing(s) to fix, each with its fix (above)${notYet}`,
         again,
       );
     } else if (r.warns) {
