@@ -8,7 +8,7 @@ workstation) work through `archon` commands. These articles govern every spec,
 plan, task, and line of code of the engine. Amend them only with a commit whose
 subject starts with `constitution:`.
 
-**Version**: 6.0.0 · **Ratified**: 2026-11-13 · **Last amended**: 2026-11-16
+**Version**: 6.1.0 · **Ratified**: 2026-11-13 · **Last amended**: 2026-11-17
 
 ## Article 0: The Ladder (NON-NEGOTIABLE)
 
@@ -285,6 +285,19 @@ listener to the internet, and never ask an operator to; a device that is
 neither on the LAN nor on the mesh network is reached only over SSH with
 pinned host keys.
 
+## Article 29: The Controller Opens Three Ports
+
+The controller PC opens inbound only UDP 69 and TCP 8080 (the boot server, because
+firmware speaks only plain TFTP and HTTP) and TCP 443 (the console, over TLS). Every
+other exchange (pairing, the REST API, the passphrase helper, and whatever comes next)
+is a route on one of these three, or is loopback-only. Nothing is opened to the
+internet (Article 28). A port other than these three is an explicit `--port` choice,
+and the command that opens it prints its own firewall rule and says it is outside the
+standard ports. The three ports are facts of the ontology (`stolos:Listener`), and the
+engine takes its defaults from there. TFTP data transfers use a per-transfer ephemeral
+UDP port, as TFTP requires, and the firewall tracks the replies: that is not a port to
+open.
+
 ## Amendments
 
 | Version | Date | Change |
@@ -299,3 +312,4 @@ pinned host keys.
 | 5.0.1 | 2026-11-16 | Article 24 names the engine's package, `@intellectual-frontiers/stolos`, as a Git dependency pinned to a tag whose commit the lockfile holds; the tag is the release (spec 096, no GitHub release). |
 | 5.1.0 | 2026-11-16 | Article 28 (trusted networks, zero trust beyond them): plain HTTP on the LAN or a zero trust mesh network (Tailscale, Headscale, NetBird, ZeroTier, Nebula, WireGuard, or similar; the fleet's choice, guidance only) for short-lived, content-authenticated exchanges; never a listener on the internet (specs 097, 098). |
 | 6.0.0 | 2026-11-16 | Article 0 (the ladder, NON-NEGOTIABLE): eight rungs, from the ontology to the documentation, stated in the ontology (`ontology/stolos/architecture.ts`, TypeScript on commons' kernel RDF) and written into this table; dependency direction and order of work; the ontology and the specification drafted and committed together, then the code; Spec Kit fully; no code without a requirement or an ontology term (`// Spec:` lines, `proves()` in tests, a `spec` on every term), held by `check:trace`, `check:layers` and `check:ontology` with baselines that only shrink; headless first (spec 101-ladder, commons 0015-trace). Article 8 points to Article 0. |
+| 6.1.0 | 2026-11-17 | Article 29 (the controller opens three ports): UDP 69 and TCP 8080 for the boot server, TCP 443 for the console over TLS; everything else is a route on one of them or loopback-only; any other port is an explicit choice that prints its own firewall rule (spec 103-three-ports). |
