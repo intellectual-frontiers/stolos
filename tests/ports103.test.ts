@@ -1,7 +1,7 @@
 /**
- * Spec 103-three-ports: the controller opens three ports (UDP 69, TCP 8080, TCP 443). The ports are the ontology's; pairing is
+ * Specs 103-three-ports and 107-pairing-and-query: the controller opens three ports (UDP 69, TCP 8080, TCP 443). The ports are the ontology's; pairing is
  * `/device/pair`, answered by two doors (the boot server's HTTP, the console's TLS handler) from one handler over one short-lived
- * file; the console has no 8443 fallback; a scan of `src/` fails on a socket opened anywhere not on the allow-list.
+ * file that holds a session of many machines (no expiry, wrong codes per client address, closed by Ctrl+C); the console has no 8443 fallback; a scan of `src/` fails on a socket opened anywhere not on the allow-list.
  *
  * @module
  */
@@ -36,7 +36,6 @@ import { SECRETS } from "../src/archon/core/secrets.ts";
 import { secretFor } from "../src/archon/model/secret-inventory.ts";
 import { mac, MAX_TRIES, PairSession } from "../src/archon/adopt/pair.ts";
 import {
-  CODE_TTL_MS,
   FilePairStore,
   MemoryPairStore,
   newPairRecord,
@@ -45,8 +44,10 @@ import {
 import { devicePairHandler, pairNameFor } from "../src/archon/adopt/pair-service.ts";
 import {
   findDoors,
+  liveView,
   pairInstructions,
   runPairing,
+  sessionStatus,
   SCRIPT_START,
   startPairOnly,
 } from "../src/archon/adopt/pair-command.ts";
@@ -368,7 +369,14 @@ proves(
 const hostLine = (hostname: string): string =>
   `nonce=0123456789abcdef0123456789abcdef\nhostname=${hostname}\nos=posix\n`;
 
-const post = async (s: PairSession, base: string, where: string, body: string, code = CODE) =>
+const post = async (
+  s: PairSession,
+  base: string,
+  where: string,
+  body: string,
+  code = CODE,
+  from = "10.0.0.7",
+) =>
   await (
     await s.handle(
       new Request(`${base}${DEVICE_PAIR_PATH}${where}`, {
@@ -376,23 +384,22 @@ const post = async (s: PairSession, base: string, where: string, body: string, c
         body,
         headers: { "x-stolos-mac": await mac(code, body) },
       }),
+      from,
     )
   ).text();
 
-const session = (store: FilePairStore | MemoryPairStore, o: { now?: () => number } = {}) =>
+const session = (store: FilePairStore | MemoryPairStore) =>
   new PairSession({
     store,
     pollMs: 10,
-    ...(o.now ? { now: o.now } : {}),
     nameFor: (h) => Promise.resolve({ name: h.split(".")[0] ?? h, key: KEY }),
   });
 
-const fresh = (o: { now?: number; code?: string; name?: string } = {}): PairRecord =>
+const fresh = (o: { code?: string; name?: string } = {}): PairRecord =>
   newPairRecord({
     code: o.code ?? CODE,
     fleet: "lab",
     engine: "v1.2.3",
-    ...(o.now === undefined ? {} : { now: o.now }),
     ...(o.name ? { name: o.name } : {}),
   });
 
@@ -409,46 +416,72 @@ async function inTemp<T>(f: (file: string, dir: string) => Promise<T>): Promise<
 // ------------------------------------------------------------------------------ FR-006, FR-007: the shared state
 
 proves(
-  ["103-three-ports FR-006", "103-three-ports FR-007"],
-  "103: two sessions over one file count wrong tries together, and one machine per code",
+  [
+    "103-three-ports FR-006",
+    "103-three-ports FR-007",
+    "107-pairing-and-query FR-004",
+    "107-pairing-and-query FR-005",
+  ],
+  "103: two sessions over one file count wrong tries together per address, and keep every machine that says hello, over either door",
   async () => {
     await inTemp(async (file) => {
       const a = session(new FilePairStore(file));
       const b = session(new FilePairStore(file));
       await new FilePairStore(file).create(fresh());
-      // Three wrong through one door, two through the other: the fifth ends it, for both.
-      const wrong = (s: PairSession) =>
-        post(s, "http://10.0.0.5:8080", "/hello", hostLine("m"), "AAAA-AAAA");
+      // Three wrong through one door, two through the other: the fifth refuses that address, for both doors.
+      const wrong = (s: PairSession, from = "10.0.0.9") =>
+        post(s, "http://10.0.0.5:8080", "/hello", hostLine("m"), "AAAA-AAAA", from);
       for (const s of [a, a, a]) assertStringIncludes(await wrong(s), "that code is wrong");
       assertStringIncludes(await wrong(b), "(1 try left)");
-      assertStringIncludes(await wrong(b), "the pairing has ended");
-      assertEquals((await new FilePairStore(file).read())?.tries, MAX_TRIES);
-      assertEquals(await a.ended(), "tries");
+      assertStringIncludes(await wrong(b), "this address is refused for the rest of the session");
+      assertEquals((await new FilePairStore(file).read())?.tries, { "10.0.0.9": MAX_TRIES });
       assertStringIncludes(
-        await post(a, "https://stolos.lab.example.net", "/hello", hostLine("m")),
-        "this pairing has ended",
+        await post(a, "https://stolos.lab.example.net", "/hello", hostLine("m"), CODE, "10.0.0.9"),
+        "this address is refused",
       );
-      // Concurrently, from both: never more than the limit is counted.
+      // The session is not over, and another address is not affected.
+      assertEquals(await a.ended(), undefined);
+      assert(
+        (
+          await post(a, "https://stolos.lab.example.net", "/hello", hostLine("m"), CODE, "10.0.0.8")
+        ).startsWith("ok\n"),
+      );
+      // Concurrently, from both doors and one address: never more than the limit is counted.
       await new FilePairStore(file).create(fresh());
       await Promise.all([a, b, a, b, a, b, a, b].map((s) => wrong(s)));
-      const rec = await new FilePairStore(file).read();
-      assertEquals([rec?.tries, rec?.ended], [MAX_TRIES, "tries"]);
-      // One machine per code, over either door, even when two say hello at once.
+      assertEquals((await new FilePairStore(file).read())?.tries, { "10.0.0.9": MAX_TRIES });
+      // Many machines, over either door, even when they say hello at once: every one is kept, with its own address.
       await new FilePairStore(file).create(fresh());
       const both = await Promise.all([
-        post(a, "http://10.0.0.5:8080", "/hello", hostLine("alice-laptop")),
-        post(b, "https://stolos.lab.example.net", "/hello", hostLine("bob-desk")),
+        post(a, "http://10.0.0.5:8080", "/hello", hostLine("alice-laptop"), CODE, "10.0.0.7"),
+        post(b, "https://stolos.lab.example.net", "/hello", hostLine("bob-desk"), CODE, "10.0.0.8"),
+        post(b, "http://10.0.0.5:8080", "/hello", hostLine("front-pc"), CODE, "10.0.0.6"),
       ]);
-      assertEquals(both.filter((x) => x.startsWith("ok\n")).length, 1, both.join("|"));
       assertEquals(
-        both.filter((x) => x.includes("is already in use by")).length,
-        1,
+        both.map((x) => x.split("\n")[0]),
+        ["ok", "ok", "ok"],
         both.join("|"),
       );
-      // The machine that won may say hello again, from the other door.
-      const winner = both[0]?.startsWith("ok\n") ? "alice-laptop" : "bob-desk";
+      const rec = await new FilePairStore(file).read();
+      assertEquals(
+        Object.values(rec?.machines ?? {})
+          .map((m) => `${m.name}@${m.address}:${m.stage}`)
+          .sort(),
+        ["alice-laptop@10.0.0.7:hello", "bob-desk@10.0.0.8:hello", "front-pc@10.0.0.6:hello"],
+      );
+      assertEquals(rec?.v, 2);
+      // A machine may say hello again, from the other door.
       assert(
-        (await post(b, "http://10.0.0.5:8080", "/hello", hostLine(winner))).startsWith("ok\n"),
+        (
+          await post(
+            b,
+            "http://10.0.0.5:8080",
+            "/hello",
+            hostLine("alice-laptop"),
+            CODE,
+            "10.0.0.7",
+          )
+        ).startsWith("ok\n"),
       );
     });
   },
@@ -461,14 +494,14 @@ proves(
     const empty = new MemoryPairStore();
     assertEquals(await empty.read(), undefined);
     assertEquals(await empty.update(() => 1), undefined);
-    const store = new MemoryPairStore(fresh({ now: 1_000 }));
-    const got = await store.update((r) => ++r.tries);
+    const store = new MemoryPairStore(fresh());
+    const got = await store.update((r) => (r.tries["10.0.0.7"] = 1));
     assertEquals(got?.result, 1);
     const copy = await store.read();
     assert(copy);
-    copy.tries = 99;
-    assertEquals((await store.read())?.tries, 1, "a read is a copy");
-    assertEquals(copy.expiresAt - copy.startedAt, CODE_TTL_MS);
+    copy.tries = { "10.0.0.7": 99 };
+    assertEquals((await store.read())?.tries, { "10.0.0.7": 1 }, "a read is a copy");
+    assert(!("expiresAt" in copy), "a session has no expiry");
     await store.remove();
     assertEquals(await store.read(), undefined);
   },
@@ -476,7 +509,7 @@ proves(
 
 proves(
   ["103-three-ports FR-006"],
-  "103: the pairing's file is owner only, is the secrets folder's ephemeral file, and holds what the doors and the terminal share",
+  "103: the pairing's file is owner only, is the secrets folder's ephemeral file, and holds what the doors and the terminal share, with no expiry",
   async () => {
     // The inventory lists the file and its lock and temporary siblings as ephemeral: the vault never backs them up.
     const rel = (p: string) =>
@@ -503,57 +536,131 @@ proves(
       const door = session(new FilePairStore(file));
       await post(door, "http://10.0.0.5:8080", "/hello", hostLine("alice-laptop"));
       const rec = await store.read();
+      const m = rec?.machines["alice-laptop"];
       assertEquals(
-        [rec?.code, rec?.fleet, rec?.name, rec?.tries, rec?.hello?.name, rec?.hello?.key],
-        [CODE, "lab", "alice-laptop", 0, "alice-laptop", KEY],
+        [rec?.code, rec?.fleet, rec?.name, rec?.tries, m?.name, m?.key, m?.address, m?.stage],
+        [CODE, "lab", "alice-laptop", {}, "alice-laptop", KEY, "10.0.0.7", "hello"],
       );
-      assertEquals((rec?.expiresAt ?? 0) - (rec?.startedAt ?? 0), 10 * 60_000);
+      assert(!("expiresAt" in (rec ?? {})), "the record has no expiry");
       assert(!(await fs.exists(`${file}-lock`)), "no lock is left behind");
       assert(!(await fs.exists(`${file}-tmp`)), "no temporary file is left behind");
       // Changes under the lock are never lost: many at once, each counted.
       await Promise.all(
-        Array.from({ length: 12 }, () => new FilePairStore(file).update((r) => ++r.tries)),
+        Array.from({ length: 12 }, () =>
+          new FilePairStore(file).update(
+            (r) => (r.tries["10.0.0.9"] = (r.tries["10.0.0.9"] ?? 0) + 1),
+          ),
+        ),
       );
-      assertEquals((await store.read())?.tries, 12);
+      assertEquals((await store.read())?.tries, { "10.0.0.9": 12 });
     });
   },
 );
 
+/** Start a session and wait until its record is in the file; the interrupt that closes it. */
+async function open(
+  store: FilePairStore,
+  r: Partial<Parameters<typeof runPairing>[0]> & Pick<Parameters<typeof runPairing>[0], "approve">,
+) {
+  let interrupt: () => void = () => undefined;
+  const run = runPairing({
+    store,
+    record: fresh(),
+    pollMs: 10,
+    graceMs: 500,
+    doors: () => Promise.resolve(true),
+    close: () => Promise.resolve(),
+    onInterrupt: (cb) => {
+      interrupt = cb;
+      return () => undefined;
+    },
+    ...r,
+  });
+  for (let i = 0; i < 200 && !(await store.read()); i++) await proc.sleep(10);
+  return { run, close: () => interrupt() };
+}
+
 proves(
-  ["103-three-ports FR-006", "103-three-ports FR-008"],
-  "103: stolos pair's run holds the record, asks the person, tells the machine, and removes the file in finally",
+  [
+    "103-three-ports FR-006",
+    "103-three-ports FR-008",
+    "107-pairing-and-query FR-001",
+    "107-pairing-and-query FR-002",
+    "107-pairing-and-query FR-003",
+  ],
+  "103: stolos pair's session holds the record for many machines, asks the person one machine at a time in the order they came, tells each machine its own answer, and removes the file on Ctrl+C",
   async () => {
     await inTemp(async (file) => {
       const store = new FilePairStore(file);
       const door = session(new FilePairStore(file));
-      const seen: string[] = [];
-      const run = runPairing({
-        store,
+      const asked: string[] = [];
+      let busy = 0;
+      let overlap = false;
+      const states: string[][] = [];
+      const s = await open(store, {
         record: fresh({ name: "alice-laptop" }),
-        pollMs: 10,
-        doors: () => Promise.resolve(true),
-        approve: (text, hello) => {
-          seen.push(`${hello.name}: ${text.trim()}`);
-          return Promise.resolve({
-            ok: true,
-            message: `${hello.name} is adopted by the fleet lab`,
-          });
+        approve: async (text, hello) => {
+          if (++busy > 1) overlap = true;
+          asked.push(`${hello.name}: ${text.trim().split("\n").at(-1)}`);
+          await proc.sleep(60);
+          busy--;
+          return hello.name === "front-pc"
+            ? { ok: false, message: "the person at the PC did not approve it; nothing was kept" }
+            : { ok: true, message: `${hello.name} is adopted by the fleet lab` };
         },
-        close: () => Promise.resolve(),
+        onState: (rec) =>
+          states.push(Object.values(rec.machines).map((m) => `${m.name}:${m.stage}`)),
       });
-      // The machine, through a door that is another store over the same file.
-      for (let i = 0; i < 200 && !(await store.read()); i++) await proc.sleep(10);
-      assertStringIncludes(
-        await post(door, "http://10.0.0.5:8080", "/hello", hostLine("alice-laptop")),
-        "ok\n",
+      // Three machines, through a door that is another store over the same file; they check in together.
+      const base = "http://10.0.0.5:8080";
+      for (const [h, ip] of [
+        ["alice-laptop", "10.0.0.7"],
+        ["bob-desk", "10.0.0.8"],
+        ["front-pc", "10.0.0.6"],
+      ] as const) {
+        assertStringIncludes(await post(door, base, "/hello", hostLine(h), CODE, ip), "ok\n");
+        await proc.sleep(15);
+      }
+      const answers = await Promise.all(
+        (
+          [
+            ["alice-laptop", "10.0.0.7"],
+            ["bob-desk", "10.0.0.8"],
+            ["front-pc", "10.0.0.6"],
+          ] as const
+        ).map(([h, ip]) =>
+          post(door, base, "/checkin", `@checkin\nv=1\nhostname=${h}\n`, CODE, ip),
+        ),
       );
-      const said = await post(door, "http://10.0.0.5:8080", "/checkin", "@checkin\nv=1\n");
-      assertEquals(said, "ok alice-laptop is adopted by the fleet lab\n");
-      assertEquals(await run, "paired");
-      assertEquals(seen, ["alice-laptop: @checkin\nv=1"]);
+      assertEquals(answers, [
+        "ok alice-laptop is adopted by the fleet lab\n",
+        "ok bob-desk is adopted by the fleet lab\n",
+        "no the person at the PC did not approve it; nothing was kept\n",
+      ]);
+      assert(!overlap, "one prompt at a time");
+      assertEquals(asked.length, 3);
+      assertEquals(asked.map((x) => x.split(":")[0]).sort(), [
+        "alice-laptop",
+        "bob-desk",
+        "front-pc",
+      ]);
+      // The session is still open: it does not end by itself, whatever was decided.
+      assert(await fs.exists(file), "the session stays open");
+      assertEquals((await store.read())?.ended, undefined);
+      assert(states.some((x) => x.includes("front-pc:hello") || x.includes("front-pc:waiting")));
+      // Ctrl+C closes it: the file is gone, and the summary says what came of it.
+      s.close();
+      const sum = await s.run;
+      assertEquals(sum.end, "closed");
+      assertEquals(sum.adopted.map((m) => m.name).sort(), ["alice-laptop", "bob-desk"]);
+      assertEquals(
+        sum.refused.map((m) => m.name),
+        ["front-pc"],
+      );
+      assertEquals(sum.waiting, []);
       assert(!(await fs.exists(file)), "the file is gone");
       assert(!(await fs.exists(`${file}-lock`)));
-      // With no pairing waiting, the door answers 404 (and a late POST has nothing to ask).
+      // With no session open, the door answers 404 (and a late POST has nothing to ask).
       assertEquals(
         (await door.handle(new Request(`http://10.0.0.5:8080${DEVICE_PAIR_PATH}`))).status,
         404,
@@ -563,77 +670,109 @@ proves(
 );
 
 proves(
-  ["103-three-ports FR-006", "103-three-ports FR-008"],
-  "103: the file goes on a refusal, on expiry, on Ctrl+C, and where no door is up",
+  ["103-three-ports FR-006", "103-three-ports FR-008", "107-pairing-and-query FR-003"],
+  "103: the file goes on Ctrl+C (telling a machine still waiting), where no door is up, and where another stolos pair replaced it; the person's refusal does not end the session",
   async () => {
     await inTemp(async (file) => {
       const store = new FilePairStore(file);
-      const base = {
-        store,
-        pollMs: 10,
-        graceMs: 500,
-        close: () => Promise.resolve(),
-        approve: () => Promise.resolve({ ok: false, message: "the person did not approve it" }),
-      };
-      // Refused: the machine is told, and the file goes.
       const door = session(new FilePairStore(file));
-      const refused = runPairing({ ...base, record: fresh(), doors: () => Promise.resolve(true) });
-      for (let i = 0; i < 200 && !(await store.read()); i++) await proc.sleep(10);
-      await post(door, "http://10.0.0.5:8080", "/hello", hostLine("m"));
+      const base = "http://10.0.0.5:8080";
+      // A refusal: the machine is told, and the session goes on.
+      const refused = await open(store, {
+        approve: () => Promise.resolve({ ok: false, message: "the person did not approve it" }),
+      });
+      await post(door, base, "/hello", hostLine("m"));
       assertEquals(
-        await post(door, "http://10.0.0.5:8080", "/checkin", "@checkin\n"),
+        await post(door, base, "/checkin", "@checkin\nhostname=m\n"),
         "no the person did not approve it\n",
       );
-      assertEquals(await refused, "refused");
+      assert(await fs.exists(file), "still open after a refusal");
+      refused.close();
+      assertEquals((await refused.run).refused.length, 1);
       assert(!(await fs.exists(file)));
-      // Expired: the clock passes the code's life.
-      let t = 5_000;
-      const expired = runPairing({
-        ...base,
-        record: fresh({ now: t }),
-        now: () => t,
-        doors: () => Promise.resolve(true),
+      // Ctrl+C with a machine waiting for the person: it is told the session ended (nothing was written for it).
+      let release: () => void = () => undefined;
+      const waiting = await open(store, {
+        approve: () => new Promise((ok) => (release = () => ok({ ok: true, message: "never" }))),
       });
-      for (let i = 0; i < 200 && !(await store.read()); i++) await proc.sleep(10);
-      assert(await fs.exists(file), "waiting");
-      t += CODE_TTL_MS + 1;
-      assertEquals(await expired, "expired");
-      assert(!(await fs.exists(file)));
-      // Too many wrong tries.
-      const tries = runPairing({ ...base, record: fresh(), doors: () => Promise.resolve(true) });
-      for (let i = 0; i < 200 && !(await store.read()); i++) await proc.sleep(10);
-      for (let i = 0; i < MAX_TRIES; i++) {
-        await post(door, "http://10.0.0.5:8080", "/hello", hostLine("m"), "AAAA-AAAA");
+      await post(door, base, "/hello", hostLine("m"));
+      const held = post(door, base, "/checkin", "@checkin\nhostname=m\n");
+      for (let i = 0; i < 200 && (await store.read())?.machines["m"]?.stage !== "waiting"; i++) {
+        await proc.sleep(10);
       }
-      assertEquals(await tries, "tries");
-      assert(!(await fs.exists(file)));
-      // Ctrl+C.
-      let interrupt: () => void = () => undefined;
-      const stopped = runPairing({
-        ...base,
-        record: fresh(),
-        doors: () => Promise.resolve(true),
-        onInterrupt: (cb) => {
-          interrupt = cb;
-          return () => undefined;
-        },
-      });
-      for (let i = 0; i < 200 && !(await store.read()); i++) await proc.sleep(10);
-      interrupt();
-      assertEquals(await stopped, "refused");
+      waiting.close();
+      const sum = await waiting.run;
+      assertEquals(
+        sum.waiting.map((m) => m.name),
+        ["m"],
+      );
+      assertEquals(sum.adopted, []);
+      assertStringIncludes(await held, "no this session has ended");
+      release();
       assert(!(await fs.exists(file)));
       // No door is up: nothing could pair, and nothing is left.
       assertEquals(
-        await runPairing({ ...base, record: fresh(), doors: () => Promise.resolve(false) }),
+        (
+          await runPairing({
+            store,
+            record: fresh(),
+            pollMs: 10,
+            graceMs: 50,
+            doors: () => Promise.resolve(false),
+            close: () => Promise.resolve(),
+            approve: () => Promise.resolve({ ok: false, message: "" }),
+          })
+        ).end,
         "no-door",
       );
       assert(!(await fs.exists(file)));
       // Another stolos pair replaced the record: this one gives way and does not remove the other's.
-      const replaced = runPairing({ ...base, record: fresh(), doors: () => Promise.resolve(true) });
-      for (let i = 0; i < 200 && !(await store.read()); i++) await proc.sleep(10);
+      const replaced = await open(store, {
+        approve: () => Promise.resolve({ ok: false, message: "" }),
+      });
       await new FilePairStore(file).create(fresh({ code: "ZZZZ-ZZZZ" }));
-      assertEquals(await replaced, "refused");
+      assertEquals((await replaced.run).end, "closed");
     });
+  },
+);
+
+proves(
+  ["107-pairing-and-query FR-003", "107-pairing-and-query FR-004"],
+  "107: the terminal shows each machine's stage as it changes and an address that was refused, and says the session is open",
+  () => {
+    const lines: string[] = [];
+    const view = liveView((l) => lines.push(l));
+    const rec = fresh();
+    const m = (stage: "hello" | "installing" | "waiting" | "adopted" | "refused") => ({
+      hostname: "alice-laptop",
+      name: "alice-laptop",
+      key: KEY,
+      address: "10.0.0.7",
+      stage,
+      seq: 1,
+      helloAt: 0,
+    });
+    rec.machines["alice-laptop"] = m("hello");
+    view(rec);
+    view(rec);
+    rec.machines["alice-laptop"] = m("installing");
+    view(rec);
+    rec.machines["alice-laptop"] = m("waiting");
+    view(rec);
+    rec.machines["alice-laptop"] = m("adopted");
+    rec.machines["bob-desk"] = { ...m("refused"), hostname: "bob-desk", name: "bob-desk", seq: 2 };
+    rec.tries["10.0.0.9"] = MAX_TRIES;
+    view(rec);
+    assertEquals(lines, [
+      "  alice-laptop (10.0.0.7) said hello",
+      "  alice-laptop (10.0.0.7) is installing",
+      "  alice-laptop (10.0.0.7) is waiting for you",
+      "  alice-laptop (10.0.0.7) is adopted",
+      "  bob-desk (10.0.0.7) was refused",
+      "  10.0.0.9 sent 5 wrong codes: it is refused for the rest of this session",
+    ]);
+    assertEquals(sessionStatus(rec), "Session is open: Ctrl+C closes it · 1 adopted · 1 refused");
+    assertEquals(sessionStatus(fresh()), "Session is open: Ctrl+C closes it · no machine yet");
   },
 );
 
@@ -641,7 +780,7 @@ proves(
 
 proves(
   ["103-three-ports FR-005"],
-  "103: every /device/pair route answers 404 while no pairing is waiting, on any door",
+  "103: every /device/pair route answers 404 while no pairing session is open, on any door",
   async () => {
     const none = session(new MemoryPairStore());
     const origin = "http://10.0.0.5:8080";
@@ -666,8 +805,8 @@ proves(
     const handle = devicePairHandler(new MemoryPairStore());
     assertEquals(await handle(new Request(`${origin}/boot/grub/grub.cfg`)), undefined);
     assertEquals((await handle(new Request(`${origin}${DEVICE_PAIR_PATH}`)))?.status, 404);
-    // Once the pairing has ended, the scripts are gone too.
-    const ended = session(new MemoryPairStore({ ...fresh(), ended: "paired" }));
+    // Once the session has ended, the scripts are gone too.
+    const ended = session(new MemoryPairStore({ ...fresh(), ended: "closed" }));
     assertEquals((await ended.handle(new Request(`${origin}${DEVICE_PAIR_PATH}`))).status, 404);
   },
 );
@@ -694,7 +833,7 @@ proves(
 // ------------------------------------------------------------------------------ FR-004: the doors
 
 /** A temporary boot handler (door A) with the pairing mounted, listening on a free port. */
-async function doorA(devicePair: (req: Request) => Promise<Response | undefined>) {
+async function doorA(devicePair: (req: Request, from?: string) => Promise<Response | undefined>) {
   const events: string[] = [];
   const opts = {
     port: 0,
@@ -711,7 +850,7 @@ async function doorA(devicePair: (req: Request) => Promise<Response | undefined>
 }
 
 /** A console handler (door B) in lan mode: 127.0.0.1:<port> is one of its LAN names; 127.0.0.1:1 is its loopback listener. */
-async function doorB(devicePair: (req: Request) => Promise<Response | undefined>) {
+async function doorB(devicePair: (req: Request, from?: string) => Promise<Response | undefined>) {
   const box: { handler?: Awaited<ReturnType<typeof fakeConsole>>["handler"] } = {};
   const server = await serve({ hostname: "127.0.0.1", port: 0 }, (req, info) =>
     box.handler ? box.handler(req, info) : new Response("not yet", { status: 503 }),
@@ -815,8 +954,10 @@ proves(
     "103-three-ports FR-004",
     "103-three-ports FR-006",
     "103-three-ports FR-007",
+    "107-pairing-and-query FR-001",
+    "107-pairing-and-query FR-004",
   ],
-  "103: both doors, over one file, complete a full pairing with the real integrate.sh against /device/pair; the tries are shared",
+  "103: both doors, over one file, complete full pairings with the real integrate.sh against /device/pair, in one session; the tries are shared per address",
   async () => {
     await inTemp(async (file) => {
       const home = await fs.makeTempDir({ prefix: "ports103-home-" });
@@ -827,42 +968,12 @@ proves(
         Promise.resolve({ name: h.toLowerCase().split(".")[0] ?? "m", key: KEY });
       const a = await doorA(devicePairHandler(new FilePairStore(file), { nameFor, pollMs: 10 }));
       const b = await doorB(devicePairHandler(new FilePairStore(file), { nameFor, pollMs: 10 }));
-      const pair = (code: string) =>
-        runPairing({
-          store: terminal,
-          record: fresh({ code }),
-          pollMs: 10,
-          doors: () => Promise.resolve(true),
+      try {
+        const s = await open(terminal, {
           approve: (_t, hello) =>
             Promise.resolve({ ok: true, message: `${hello.name} is adopted by the fleet lab` }),
-          close: () => Promise.resolve(),
         });
-      try {
-        // The limit of 5 wrong tries is one limit for both doors: the script asks three times at door A, then door B takes the rest.
-        let run = pair(CODE);
-        for (let i = 0; i < 200 && !(await terminal.read()); i++) await proc.sleep(10);
-        const viaA = await integrate(
-          `${a.url}${DEVICE_PAIR_PATH}`,
-          "ZZZZ-ZZZZ",
-          home,
-          ssh.addr.port,
-        );
-        assert(viaA.code !== 0, viaA.out);
-        assertStringIncludes(viaA.out, "that code is wrong");
-        assertEquals((await terminal.read())?.tries, 3);
-        const viaB = await integrate(
-          `${b.url}${DEVICE_PAIR_PATH}`,
-          "ZZZZ-ZZZZ",
-          home,
-          ssh.addr.port,
-        );
-        assert(viaB.code !== 0, viaB.out);
-        assertStringIncludes(viaB.out, "the pairing has ended");
-        assertEquals(await run, "tries");
-        assertEquals(fs.readDirSync(home).length, 0, "nothing was written on the machine");
         // Door A (the boot server's HTTP): a whole pairing.
-        run = pair(CODE);
-        for (let i = 0; i < 200 && !(await terminal.read()); i++) await proc.sleep(10);
         const okA = await integrate(
           `${a.url}${DEVICE_PAIR_PATH}`,
           "wdjb mjht",
@@ -876,26 +987,56 @@ proves(
           `restrict ${KEY} stolos-probe@lab`,
         );
         assertEquals(await fs.readTextFile(`${home}/.local/bin/stolos-probe`), PROBE_SCRIPT);
-        assertEquals(await run, "paired");
-        assert(!(await fs.exists(file)));
-        // Door B (the console's handler): another whole pairing, another code.
+        // The session is still open: door B (the console's handler) pairs another, with the same code.
+        assert(await fs.exists(file), "the session stays open");
         await fs.remove(`${home}/.ssh`, { recursive: true });
-        run = pair("KKKK-MMMM");
-        for (let i = 0; i < 200 && !(await terminal.read()); i++) await proc.sleep(10);
-        const okB = await integrate(
-          `${b.url}${DEVICE_PAIR_PATH}`,
-          "kkkk-mmmm",
-          home,
-          ssh.addr.port,
-        );
+        const okB = await integrate(`${b.url}${DEVICE_PAIR_PATH}`, "wdjbmjht", home, ssh.addr.port);
         assertEquals(okB.code, 0, okB.out);
         assertStringIncludes(okB.out, "is adopted by the fleet lab");
         assertStringIncludes(
           await fs.readTextFile(`${home}/.ssh/authorized_keys`),
           "stolos-probe@lab",
         );
-        assertEquals(await run, "paired");
-        // The pairing is over: both doors answer 404.
+        // The limit of 5 wrong tries is one limit for both doors: the script asks three times at door A, then door B takes the rest.
+        await fs.remove(`${home}/.ssh`, { recursive: true });
+        await fs.remove(`${home}/.local`, { recursive: true });
+        const viaA = await integrate(
+          `${a.url}${DEVICE_PAIR_PATH}`,
+          "ZZZZ-ZZZZ",
+          home,
+          ssh.addr.port,
+        );
+        assert(viaA.code !== 0, viaA.out);
+        assertStringIncludes(viaA.out, "that code is wrong");
+        assertEquals((await terminal.read())?.tries, { "127.0.0.1": 3 });
+        const viaB = await integrate(
+          `${b.url}${DEVICE_PAIR_PATH}`,
+          "ZZZZ-ZZZZ",
+          home,
+          ssh.addr.port,
+        );
+        assert(viaB.code !== 0, viaB.out);
+        assertStringIncludes(viaB.out, "this address is refused for the rest of the session");
+        assertEquals((await terminal.read())?.tries, { "127.0.0.1": MAX_TRIES });
+        // That address is refused now, even with the right code; nothing was written on the machine by the wrong ones.
+        const late = await integrate(
+          `${a.url}${DEVICE_PAIR_PATH}`,
+          "wdjb mjht",
+          home,
+          ssh.addr.port,
+        );
+        assertStringIncludes(late.out, "403");
+        assertEquals(
+          (await fs.exists(`${home}/.ssh`)) ? "written" : "untouched",
+          "untouched",
+          "nothing was written",
+        );
+        s.close();
+        const sum = await s.run;
+        assertEquals(sum.adopted.length, 1, "the same machine paired twice is one machine");
+        assertEquals(sum.blocked, ["127.0.0.1"]);
+        assert(!(await fs.exists(file)));
+        // The session is over: both doors answer 404.
         assertEquals((await fetch(`${a.url}${DEVICE_PAIR_PATH}`)).status, 404);
         assertEquals((await fetch(`${b.url}${DEVICE_PAIR_PATH}`)).status, 404);
       } finally {
@@ -987,7 +1128,11 @@ proves(
     assert(first > 0 && second > first, "HTTPS first");
     assertStringIncludes(text, "irm https://stolos.lab.example.net/device/pair/w | iex");
     assertStringIncludes(text, "irm http://10.0.0.5:8080/device/pair/w | iex");
-    assertStringIncludes(text, "WDJB-MJHT      (expires in 10 minutes)");
+    assertStringIncludes(text, "WDJB-MJHT      (the same for every machine)");
+    assertStringIncludes(text, "Session is open: Ctrl+C closes it.");
+    assertStringIncludes(text, "An open session is less safe than a short one");
+    assertStringIncludes(text, "Nothing is adopted without your yes");
+    assert(!text.includes("expires"), "nothing expires");
     assert(!text.includes("7457"));
     // The primary's name resolves elsewhere, this controller's own does here: its own is the door.
     const own = await findDoors({

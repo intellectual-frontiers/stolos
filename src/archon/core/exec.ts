@@ -22,6 +22,7 @@
  * @module
  */
 // Spec: 096-bun-runtime
+// Spec: 107-pairing-and-query FR-010
 import { errors, proc } from "@intellectual-frontiers/commons/ts/runtime";
 
 /** What a program did. */
@@ -48,6 +49,8 @@ export type RunOptions = {
   readonly asUser?: string;
   /** Its output goes to this process's terminal instead of being kept. */
   readonly inherit?: boolean;
+  /** Stops it (SIGTERM, then SIGKILL) when the signal aborts: a time limit's way. */
+  readonly signal?: AbortSignal;
 };
 
 /** The result of a program that is not installed. */
@@ -79,6 +82,7 @@ export async function run(argv: readonly string[], opts: RunOptions = {}): Promi
       ...(cwd === undefined ? {} : { cwd }),
       ...(opts.env === undefined ? {} : { env: opts.env }),
       ...(opts.stdin === undefined ? {} : { input: opts.stdin }),
+      ...(opts.signal === undefined ? {} : { signal: opts.signal, killAfterMs: 2000 }),
       stdout: opts.inherit === true ? "inherit" : "piped",
       stderr: opts.inherit === true ? "inherit" : "piped",
     });

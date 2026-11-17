@@ -9,13 +9,13 @@ HTTPS (TCP 443, or 8443 when 443 was busy, spec 100), and the pairing's own TCP 
 rule to write, a thing to explain, and a listener to defend. The owner's rule is now Article 29: **UDP 69 and TCP 8080** (the
 boot server, because firmware speaks only plain TFTP and HTTP) and **TCP 443** (the console over TLS), and nothing else; every
 other exchange is a route on one of them or is loopback-only. Pairing moves to `/device/pair` and is reachable by two doors that
-serve one handler over one short-lived record; the console's automatic fallback to a second port goes.
+serve one handler over one short-lived record (spec 107-pairing-and-query: a session of many machines); the console's automatic fallback to a second port goes.
 
 ```mermaid
 flowchart LR
   M["The machine<br/>curl | sh, irm | iex"] -->|"HTTP, TCP 8080<br/>/device/pair (door A)"| B["Boot server<br/>or the pair-only server of stolos pair"]
   M -->|"TLS, TCP 443<br/>/device/pair (door B)"| C["Console --lan<br/>its LAN names only"]
-  B --> F[("pairing file<br/>owner only, ten minutes")]
+  B --> F[("pairing file<br/>owner only, until Ctrl+C")]
   C --> F
   T["stolos pair<br/>the terminal"] <--> F
   T -->|"the person approves"| R["fleet repository"]
@@ -54,21 +54,22 @@ and, from earlier specs, `stolos:Controller`, `stolos:PairingCode`, `stolos:Trus
   LAN names only (`stolos.<web domain>` on the primary, `<pc>.stolos.<web domain>`), never on the 127.0.0.1 listener, and
   with the console's Host check intact. Both mount the same handler over the same record; the routes need no session and are
   exempt from the console's session and passkey machinery.
-- **FR-005** While no pairing is waiting (no record, or it ended), every pairing route answers 404 on every door; a late
-  `POST` to an ended or expired pairing answers `no` with why.
+- **FR-005** While no pairing session is open (no record), every pairing route answers 404 on every door; a late
+  `POST` to a session that has ended answers `no` with why.
 - **FR-006** The hand-off is a short-lived file in the secrets folder (the pattern of armed installs: the command writes, the
   servers read per request, no new port): owner only, ephemeral (never backed up, listed in the secret inventory), holding the
-  code, fleet, expiry (10 minutes), the name, owner and title hints, the count of wrong tries, the machine's hello (hostname,
-  name, probe key), the signed check-in waiting for the person, and the decision. It is changed under a lock file, read fresh
-  inside it, and written atomically (a temporary file renamed over it), so two processes cannot lose each other's tries. Wrong
-  tries are counted in the file (the limit of 5 is shared by both doors and every process), one machine is allowed per code, the
-  probe key is made at hello, and `/checkin` stores the check-in and holds the request until the person decides or the code
-  expires. `stolos pair` removes the file in a `finally`, whatever ended the pairing.
+  code, fleet, the name, owner and title hints, the wrong tries by client address, and, for every machine of the session (spec
+  107-pairing-and-query FR-005), its hello (hostname, name, probe key, address), the signed check-in waiting for the person, and the
+  decision. It has no expiry. It is changed under a lock file, read fresh inside it, and written atomically (a temporary file
+  renamed over it), so two processes cannot lose each other's tries or machines. Wrong tries are counted in the file per address
+  (the limit of 5 is shared by both doors and every process), the probe key is made at hello, and `/checkin` stores the check-in
+  and holds that machine's request until the person decides on it or the session ends. `stolos pair` removes the file in a
+  `finally`, whatever ended the pairing.
 - **FR-007** The protocol's state is pluggable: `PairSession` (the code, HMAC signatures, nonce and signed answers, script
   generation, byte for byte what the shell and PowerShell scripts compute) works over a `PairStore`, in memory (tests, one
   process) or in the file (FR-006).
 - **FR-008** `stolos pair` shows one line per door that is up, HTTPS first (`curl -fsSL <base> | sh`; Windows as administrator
-  `irm <base>/w | iex`), then the code and its 10-minute expiry. Door A is its own pair-only server when it binds TCP 8080,
+  `irm <base>/w | iex`), then the code (the same for every machine) and what an open session means (107 FR-003). Door A is its own pair-only server when it binds TCP 8080,
   else the boot server that holds the port (it says so, after checking that it serves `/device/pair`). Door B is shown only when
   the console's name resolves to one of this PC's LAN addresses and the console answers there; otherwise one plain line says how
   to get it. The person approves in the terminal (who asked: name, OS, account, address, MAC, SSH fingerprint, osquery). The
@@ -91,8 +92,8 @@ and, from earlier specs, `stolos:Controller`, `stolos:PairingCode`, `stolos:Trus
 ## Success criteria
 
 - **SC-001** `tests/ports103.test.ts`: the ports come from the ontology; the guard fails on a fake new listener; two
-  `PairSession`s over one file count tries together and allow one machine; the file is owner only, expires and is removed by
-  `stolos pair`; every route answers 404 with no pairing; the handler mounted on the boot server's handler and on the console's
+  `PairSession`s over one file count tries together per address and keep many machines; the file is owner only, has no expiry and is
+  removed by `stolos pair`; every route answers 404 with no pairing; the handler mounted on the boot server's handler and on the console's
   completes a full pairing with the real `bin/integrate.sh` against `/device/pair`; no boot route collides; the pair-only
   server binds the ontology's port; the console does not fall back and names the holder; `stolos pair`'s door lines.
 - **SC-002** `bun run check:ontology`, `check:trace` and `check:layers` pass with baselines no larger than before.

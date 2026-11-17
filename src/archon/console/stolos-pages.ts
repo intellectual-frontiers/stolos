@@ -11,6 +11,7 @@
 // Spec: 066-stolos-console
 // Spec: 099-engine-update FR-002, FR-003
 // Spec: 100-remote-access FR-008, FR-010
+// Spec: 107-pairing-and-query FR-008, FR-012
 
 import type { EngineVersions } from "../fleet/releases.ts";
 import type { Attention } from "../state/verify.ts";
@@ -19,6 +20,13 @@ import type { PolicyResult } from "../adopt/policy.ts";
 import type { Observed } from "../adopt/adopt.ts";
 import { type Html, html, text } from "./html.ts";
 import { diagram, type NavItem } from "./layout.ts";
+import { tableMarkup, tableScript } from "./table.ts";
+import {
+  CONTROLLER_BADGE,
+  CONTROLLER_NOTE,
+  JOINED_LABEL,
+  WAYS_OF_JOINING,
+} from "../adopt/joining.ts";
 import { logo, logoFor } from "./logos.ts";
 import { GUIDES } from "../core/guides.ts";
 
@@ -330,6 +338,17 @@ const kindPill = (k: PcMachine["kind"]) =>
     }"
     >${k}</span
   >`;
+
+/** How a machine joined, as a pill; the controller's says so in full. */
+const joinedPill = (x: Pick<PcMachine, "joined" | "controller">) =>
+  x.joined === undefined
+    ? html`<span class="sub">not joined yet</span>`
+    : x.controller
+      ? html`<span class="pill tier">${CONTROLLER_BADGE}</span>`
+      : html`<span
+          class="pill ${x.joined === "managed" ? "ok" : x.joined === "cloud" ? "off" : "tier"}"
+          >${JOINED_LABEL[x.joined]}</span
+        >`;
 
 const score = (x?: { pass: number; total: number }) =>
   !x
@@ -678,8 +697,45 @@ function changeCard(x: PcMachine, f: PcFacts, now: number): Html {
   </div>`;
 }
 
-/** Every machine, one table. */
+/** One machine's row of the machines table. */
+function machineRow(x: PcMachine, now: number): Html {
+  const text = `${x.name} ${x.title ?? ""} ${x.kind} ${x.os ?? ""} ${x.owner ?? ""} ${
+    x.where ?? ""
+  } ${x.joined ? JOINED_LABEL[x.joined] : ""} ${x.controller ? "controller" : ""} ${x.failing.join(" ")}`
+    .toLowerCase()
+    .replace(/[^a-z0-9 .:-]/g, " ");
+  const show = `'${text}'.includes($q.trim().toLowerCase()) && ($joined === '' || $joined === '${x.joined ?? "none"}')`;
+  return html`
+    <tr data-row data-show="${show}">
+      <td>
+        <a href="/machines/${encodeURIComponent(x.name)}"><b>${x.name}</b></a>
+      </td>
+      <td data-joined="${x.joined ?? "none"}">${joinedPill(x)}</td>
+      <td>${kindPill(x.kind)}</td>
+      <td>${x.os ? html`${logo(osLogo(x.os), 14)} ${x.os}` : ""}</td>
+      <td class="mono">${x.where ?? ""}</td>
+      <td>${x.owner ?? ""}</td>
+      <td>${x.kind === "cloud" ? "" : checksCell(x)}</td>
+      <td>${applies(x)}</td>
+      <td class="sub">${ago(x.seen, now)}</td>
+      <td>
+        ${
+          x.console
+            ? html`<a class="btn ghost" href="${x.console}" target="_blank" rel="noopener"
+                >Archon Console</a
+              >`
+            : ""
+        }
+      </td>
+    </tr>
+  `;
+}
+
+/** Every machine, one table: this PC (the controller) first, in a group of its own, then the others, with how each joined. */
 export function machinesPage(f: PcFacts, now = Date.now()): Html {
+  const mine = f.machines.filter((x) => x.thisPc);
+  const rest = f.machines.filter((x) => !x.thisPc);
+  const cols = 10;
   return html`
     <div class="pagehead">
       <div>
@@ -697,19 +753,29 @@ export function machinesPage(f: PcFacts, now = Date.now()): Html {
         ><a class="btn" href="/add">Add a machine</a>
       </div>
     </div>
-    <div class="card scroll" data-signals="{q: ''}">
-      <input
-        type="search"
-        data-bind:q
-        placeholder="Filter by name, kind, OS, owner"
-        aria-label="Filter machines"
-        autocomplete="off"
-        style="margin-bottom:10px"
-      />
+    <div class="card scroll" data-signals="{q: '', joined: ''}">
+      <div class="row" style="margin-bottom:10px;align-items:flex-end">
+        <label class="field" style="flex:1 1 260px"
+          ><span>Filter</span
+          ><input
+            type="search"
+            data-bind:q
+            placeholder="Filter by name, kind, OS, owner"
+            autocomplete="off"
+        /></label>
+        <label class="field" style="flex:0 1 220px"
+          ><span>How it joined</span>
+          <select data-bind:joined>
+            <option value="">Any way</option>
+            ${WAYS_OF_JOINING.map((w) => html`<option value="${w}">${JOINED_LABEL[w]}</option>`)}
+          </select>
+        </label>
+      </div>
       <table>
         <thead>
           <tr>
             <th>Name</th>
+            <th>How it joined</th>
             <th>Kind</th>
             <th>OS</th>
             <th>Where</th>
@@ -720,37 +786,25 @@ export function machinesPage(f: PcFacts, now = Date.now()): Html {
             <th></th>
           </tr>
         </thead>
+        ${
+          mine.length
+            ? html`<tbody id="this-pc">
+                <tr class="grp">
+                  <th colspan="${cols}" scope="rowgroup">This PC</th>
+                </tr>
+                ${mine.map((x) => machineRow(x, now))}
+              </tbody>`
+            : ""
+        }
         <tbody>
-          ${f.machines.map((x) => {
-            const text = `${x.name} ${x.title ?? ""} ${x.kind} ${x.os ?? ""} ${x.owner ?? ""} ${
-              x.where ?? ""
-            } ${x.failing.join(" ")}`
-              .toLowerCase()
-              .replace(/[^a-z0-9 .:-]/g, " ");
-            return html`
-              <tr data-show="'${text}'.includes($q.trim().toLowerCase())">
-                <td>
-                  <a href="/machines/${encodeURIComponent(x.name)}"><b>${x.name}</b></a>
-                </td>
-                <td>${kindPill(x.kind)}</td>
-                <td>${x.os ? html`${logo(osLogo(x.os), 14)} ${x.os}` : ""}</td>
-                <td class="mono">${x.where ?? ""}</td>
-                <td>${x.owner ?? ""}</td>
-                <td>${x.kind === "cloud" ? "" : checksCell(x)}</td>
-                <td>${applies(x)}</td>
-                <td class="sub">${ago(x.seen, now)}</td>
-                <td>
-                  ${
-                    x.console
-                      ? html`<a class="btn ghost" href="${x.console}" target="_blank" rel="noopener"
-                          >Archon Console</a
-                        >`
-                      : ""
-                  }
-                </td>
-              </tr>
-            `;
-          })}
+          ${
+            mine.length && rest.length
+              ? html`<tr class="grp">
+                  <th colspan="${cols}" scope="rowgroup">Other machines</th>
+                </tr>`
+              : ""
+          }
+          ${rest.map((x) => machineRow(x, now))}
         </tbody>
       </table>
       ${
@@ -920,28 +974,53 @@ export function machinePage(f: PcFacts, name: string, now = Date.now()): Html | 
         <h1>${x.name} ${kindPill(x.kind)}</h1>
         <p>
           ${
-            x.kind === "adopted"
-              ? `Adopted${
-                  a?.machine.owner ? ` (${a.machine.owner}'s)` : ""
-                }: Stolos observes and checks it, and never changes it. Observed ${ago(x.seen, now)}.`
-              : x.kind === "cloud"
-                ? `Seen in ${x.where}; not managed or adopted.`
-                : x.kind === "device"
-                  ? `A device Stolos reads over encrypted SNMPv3 (read only). Observed ${ago(x.seen, now)}.`
-                  : x.kind === "discovered"
-                    ? `Discovered ${ago(x.seen, now)}: recorded, not yet adopted or managed.`
-                    : `Managed by Stolos: its description is fleets/${f.fleet.id}/hosts/${x.name}.ts. Installed ${ago(
-                        x.seen,
-                        now,
-                      )}.`
+            x.controller
+              ? `${x.thisPc ? "This PC is" : "This is"} the fleet's controller: auto-adopted, so it needs no pairing, and observed by the local probe (nothing listens on it and nothing was installed). Observed ${ago(x.seen, now)}.`
+              : x.kind === "adopted"
+                ? `Adopted${
+                    a?.machine.owner ? ` (${a.machine.owner}'s)` : ""
+                  }: Stolos observes and checks it, and never changes it. Observed ${ago(x.seen, now)}.`
+                : x.kind === "cloud"
+                  ? `Seen in ${x.where}; not managed or adopted.`
+                  : x.kind === "device"
+                    ? `A device Stolos reads over encrypted SNMPv3 (read only). Observed ${ago(x.seen, now)}.`
+                    : x.kind === "discovered"
+                      ? `Discovered ${ago(x.seen, now)}: recorded, not yet adopted or managed.`
+                      : `Managed by Stolos: its description is fleets/${f.fleet.id}/hosts/${x.name}.ts. Installed ${ago(
+                          x.seen,
+                          now,
+                        )}.`
           }
         </p>
       </div>
       ${
         x.kind === "adopted"
-          ? html`<a class="btn" href="/actions/adopted?cmd=host%20observe&name=${q}"
-              >Observe now</a
-            >`
+          ? html`<div class="row">
+              <a class="btn" href="/actions/adopted?cmd=host%20observe&name=${q}">Observe now</a>
+              ${
+                x.controller
+                  ? html`<button
+                        class="btn ghost"
+                        type="button"
+                        disabled
+                        aria-disabled="true"
+                        title="${CONTROLLER_NOTE}"
+                      >
+                        Release</button
+                      ><button
+                        class="btn ghost"
+                        type="button"
+                        disabled
+                        aria-disabled="true"
+                        title="${CONTROLLER_NOTE}"
+                      >
+                        Remove
+                      </button>`
+                  : html`<a class="btn ghost" href="/actions/adopted?cmd=host%20release&name=${q}"
+                      >Release</a
+                    >`
+              }
+            </div>`
           : x.kind === "device"
             ? html`<a class="btn" href="/actions/adopted?cmd=device%20observe&name=${q}"
                 >Observe now</a
@@ -958,6 +1037,17 @@ export function machinePage(f: PcFacts, name: string, now = Date.now()): Html | 
     ${
       a
         ? html`
+            ${
+              x.controller
+                ? html`<div class="help" id="controller-note" style="margin-bottom:14px">
+                    <h3>${CONTROLLER_BADGE}</h3>
+                    <p>
+                      It needs no pairing: nothing is run on it and no line is typed. The local
+                      probe observes it from this PC. ${CONTROLLER_NOTE}
+                    </p>
+                  </div>`
+                : ""
+            }
             <div class="grid cols-2">
               <div class="card scroll">
                 <h2>Policies</h2>
@@ -1134,7 +1224,7 @@ export function connectorsPage(f: PcFacts, now = Date.now()): Html {
   `;
 }
 
-/** One question to every machine. */
+/** One question to every machine, answered in one merged table that fills in as the machines answer (spec 107-pairing-and-query). */
 export function queryPage(sql: string): Html {
   const examples: Array<[string, string]> = [
     ["Which OS is every machine on?", "select name, version from os_version"],
@@ -1150,8 +1240,10 @@ export function queryPage(sql: string): Html {
         <h1>Ask every machine</h1>
         <p>
           One SQL question (osquery) to every managed server, over its MCP server, and every adopted
-          machine with osquery, through its probe. Read-only: only one SELECT on the allowed tables,
-          and each server checks again.
+          machine with osquery, through its probe, this PC's included. All are asked at once (8 at a
+          time, each with 15 seconds); the table fills in as they answer, and a machine that fails
+          or does not answer in time has a row that says why. Read-only: only one SELECT on the
+          allowed tables, and each server checks again.
         </p>
       </div>
     </div>
@@ -1175,63 +1267,15 @@ export function queryPage(sql: string): Html {
         )}
       </div>
     </form>
-    <div class="card scroll" style="margin-top:14px" id="answer">
-      <p class="sub">The answer appears here, one row per machine and result.</p>
+    <div id="answer" style="margin-top:14px"></div>
+    <div class="card" style="margin-top:14px">
+      <p class="sub" id="summary" role="status">
+        The answers appear here, a row per machine and result.
+      </p>
+      ${tableScript()}
+      ${tableMarkup({ id: "answers", label: "Answers of every machine", csvName: "fleet-query" })}
     </div>
   `;
-}
-
-/** The answer to a fleet query, as a table. */
-export function answerTable(
-  answers: Array<{
-    machine: string;
-    kind: string;
-    rows?: Array<Record<string, unknown>>;
-    error?: string;
-  }>,
-): Html {
-  const rows = answers.flatMap((a) => (a.rows ?? []).map((r) => ({ machine: a.machine, ...r })));
-  const cols = [...new Set(rows.flatMap((r) => Object.keys(r)))];
-  const errors = answers.filter((a) => a.error);
-  return html`<div class="card scroll" id="answer">
-    ${
-      rows.length
-        ? html`
-            <table>
-              <thead>
-                <tr>
-                  ${cols.map((c) => html`<th>${c}</th>`)}
-                </tr>
-              </thead>
-              <tbody>
-                ${rows.map(
-                  (r) =>
-                    html`<tr>
-                      ${cols.map(
-                        (c) =>
-                          html`<td class="mono">${text((r as Record<string, unknown>)[c])}</td>`,
-                      )}
-                    </tr>`,
-                )}
-              </tbody>
-            </table>
-          `
-        : html`<p class="sub">No rows.</p>`
-    }
-    ${
-      errors.length
-        ? html`<div style="margin-top:10px">
-            ${errors.map(
-              (e) => html`<div class="notice warn"><b>${e.machine}</b>: ${e.error}</div>`,
-            )}
-          </div>`
-        : ""
-    }
-    <p class="sub">
-      ${rows.length} row(s) from ${answers.filter((a) => a.rows).length} of ${answers.length}
-      machine(s).
-    </p>
-  </div>`;
 }
 
 /** The changes waiting, and the history. */
@@ -1455,6 +1499,7 @@ export function machinesCsv(f: PcFacts): string {
     "name",
     "title",
     "kind",
+    "how_it_joined",
     "os",
     "where",
     "owner",
@@ -1469,6 +1514,7 @@ export function machinesCsv(f: PcFacts): string {
       x.name,
       x.title,
       x.kind,
+      x.joined,
       x.os,
       x.where,
       x.owner,

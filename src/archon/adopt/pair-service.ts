@@ -10,6 +10,7 @@
  */
 // Spec: 098-pair FR-007
 // Spec: 103-three-ports FR-003, FR-004, FR-005, FR-006
+// Spec: 107-pairing-and-query FR-005, FR-006
 
 import { SECRETS } from "../core/secrets.ts";
 import { P } from "../core/paths.ts";
@@ -26,15 +27,16 @@ export function pairingStore(): PairStore {
 
 /**
  * The name for a machine and its probe key (made now, kept in the secrets folder), or why it cannot have one: the record's `--name`
- * wins over the hostname; a managed server's name and anything that is not a DNS label are refused with what to type on the PC.
+ * wins over the hostname for the first machine; a managed server's name and anything that is not a DNS label are refused with what to type on the PC.
  */
 export async function pairNameFor(
   hostname: string,
-  record: Pick<PairRecord, "name" | "fleet">,
+  record: Pick<PairRecord, "name" | "nameUsed" | "fleet">,
   managed: () => Promise<ReadonlySet<string>>,
   keyFor: (name: string, fleet: string) => Promise<string> = ensureProbeKey,
 ): Promise<{ name: string; key: string } | { refuse: string }> {
-  const name = record.name ?? hostnameToName(hostname);
+  // `--name` is for the first machine of the session; the rest are named by their hostnames (spec 107 FR-006).
+  const name = (record.nameUsed ? undefined : record.name) ?? hostnameToName(hostname);
   if ((await managed()).has(name)) {
     return {
       refuse: `${name} is a managed server in this fleet: on the PC, pair again with --name <another>`,
@@ -59,15 +61,15 @@ async function managedNames(): Promise<ReadonlySet<string>> {
 export function devicePairHandler(
   store: PairStore = pairingStore(),
   o: { nameFor?: PairOptions["nameFor"]; pollMs?: number; now?: () => number } = {},
-): (req: Request) => Promise<Response | undefined> {
+): (req: Request, from?: string) => Promise<Response | undefined> {
   const session = new PairSession({
     store,
     nameFor: o.nameFor ?? ((hostname, record) => pairNameFor(hostname, record, managedNames)),
     ...(o.pollMs ? { pollMs: o.pollMs } : {}),
     ...(o.now ? { now: o.now } : {}),
   });
-  return (req) =>
-    isPairPath(new URL(req.url).pathname) ? session.handle(req) : Promise.resolve(undefined);
+  return (req, from) =>
+    isPairPath(new URL(req.url).pathname) ? session.handle(req, from) : Promise.resolve(undefined);
 }
 
 /** The engine tag the pairing's scripts say (`v1.2.3`). */

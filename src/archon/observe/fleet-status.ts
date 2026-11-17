@@ -7,6 +7,7 @@
  *
  * @module
  */
+// Spec: 107-pairing-and-query FR-009
 
 import { getRecord, putRecord } from "../state/store.ts";
 import { callRemoteTool } from "./remote.ts";
@@ -15,6 +16,7 @@ import type { HostState } from "../state/state-command.ts";
 import { P } from "../core/paths.ts";
 
 import { ui } from "../core/ui.ts";
+import { joinedMark, wayOfJoining } from "../adopt/joining.ts";
 import { liveToken, loadTokens } from "../core/secrets.ts";
 import { loadFleet, loadHosts } from "../model/load.ts";
 import { nextSteps } from "./next.ts";
@@ -30,6 +32,27 @@ interface Installed {
 }
 
 /**
+ * Spec 107-pairing-and-query FR-009: the controller PC first, marked as auto-adopted: it needs no pairing and is observed by the
+ * local probe (nothing is asked of it over the network).
+ */
+async function showController(): Promise<void> {
+  try {
+    const { loadAdopted } = await import("../adopt/adopt.ts");
+    const { controllerName } = await import("../adopt/controller.ts");
+    const me = await controllerName();
+    for (const a of (await loadAdopted()).filter((x) => x.machine.role === "controller")) {
+      ui.phase(a.machine.name).done(
+        `${a.machine.name === me ? "this PC" : "controller PC"} · ${joinedMark(wayOfJoining({ kind: "adopted", role: "controller" }))}${
+          a.observed ? ` · observed ${a.observed.at.slice(0, 16).replace("T", " ")}` : ""
+        }`,
+      );
+    }
+  } catch {
+    // The controller's line is a courtesy: a fleet that cannot list its adopted machines still shows its hosts.
+  }
+}
+
+/**
  * `stolos fleet status`: print each host's last install and verify (asked
  * live, or from the cache), its data class, and its next steps. Returns 0.
  */
@@ -37,6 +60,7 @@ export async function fleetStatus(): Promise<number> {
   const fleet = await loadFleet();
   const hosts = await loadHosts();
   const tokens = await loadTokens().catch(() => []);
+  await showController();
   if (!hosts.length) {
     ui.next.push("no hosts yet: bun run stolos host add <name> (or workstation add, in WSL)");
     return 0;
@@ -100,7 +124,7 @@ export async function fleetStatus(): Promise<number> {
     // The latest verify, when it is newer than the install, is what the host is now.
     if (latest && rec.installed && latest.since < rec.installed) latest = undefined;
     const t = tokens.find((x) => x.host === h.name);
-    const kind = h.kind === "workstation" ? "workstation" : "server";
+    const kind = `${h.kind === "workstation" ? "workstation" : "server"} · ${joinedMark("managed")}`;
     // Spec 051: the machine, as it reports itself.
     const inv = (await getRecord<Inventory>(h.name, "inventory", "latest", P.state))?.body;
     if (inv) p.note(`machine: ${describeInventory(inv)}`);

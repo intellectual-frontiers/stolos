@@ -215,7 +215,7 @@ export const SECRET_INVENTORY: SecretRef[] = [
     id: id ?? "",
     label: label ?? "",
     path: `pair/${id}`,
-    purpose: `${purpose}: written by stolos pair, read by the doors (the boot server's HTTP, the console's TLS), gone in ten minutes`,
+    purpose: `${purpose}: written by stolos pair, read by the doors (the boot server's HTTP, the console's TLS), gone when the pairing session is closed (Ctrl+C)`,
     holder: "boot-machine",
     ephemeral: true,
     recreate: "bun run stolos pair makes a new one",

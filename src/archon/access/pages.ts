@@ -12,6 +12,7 @@
  */
 // Spec: 100-remote-access FR-004, FR-007, FR-010
 // Spec: 103-three-ports FR-009
+// Spec: 107-pairing-and-query FR-009
 
 import type { ConsoleDevice } from "../model/types.ts";
 import type { ActivityEntry } from "../console/pages.ts";
@@ -238,7 +239,8 @@ export function accessPage(v: AccessView): Html {
           This console from other devices on the site's network: HTTPS with a real certificate, a
           passkey per device, and every device approved by a fleet signer in a signed commit
           (fleets/${v.fleet.id}/access.ts). Signers whose key is on this PC may run every command;
-          everyone else looks.
+          everyone else looks. This PC, the controller, is auto-adopted: it needs no pairing and is
+          observed by the local probe; a device here is a browser, not a machine of the fleet.
         </p>
       </div>
       <a class="btn ghost" href="/export/access.csv">Download CSV</a>

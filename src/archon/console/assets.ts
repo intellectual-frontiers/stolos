@@ -2,11 +2,12 @@
  * Specs 065 and 066: what both consoles serve besides their pages: one
  * stylesheet (color tokens, light and dark), the Archon and Stolos logos, and
  * Datastar (vendored, pinned by its SHA-256, served from the machine itself:
- * no CDN, no build step).
+ * no CDN, no build step), and AG Grid Community for the tables (spec 107).
  *
  * @module
  */
 // Spec: 066-stolos-console
+// Spec: 107-pairing-and-query FR-012
 
 import { sha256 } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs } from "@intellectual-frontiers/commons/ts/runtime";
@@ -175,6 +176,24 @@ export const MERMAID = {
   sha256: "a8a6a6f805b074a8261a2825c86f99c8054acb3b35f50bb7e24a4f9f2c3c3b9f",
   /** Where the consoles serve it. */
   url: "/static/mermaid-12.2.0.min.js",
+} as const;
+
+/**
+ * AG Grid Community (MIT), the table of "Ask every machine" (spec 107-pairing-and-query FR-012): the published `dist` build, vendored
+ * and pinned by its SHA-256 like Mermaid, served by the console itself (never from a CDN), with its licence file beside it.
+ */
+export const AG_GRID = {
+  version: "36.3.0",
+  path: "vendor/ag-grid/ag-grid-community-36.3.0.min.js",
+  sha256: "5fc8736cc0726dcd2e2901681180462fe4d1a519b31a2b4ab7268a97a52a3532",
+  /** Where the consoles serve it. */
+  url: "/static/ag-grid-community-36.3.0.min.js",
+  /** Its licence (MIT), served beside it. */
+  license: {
+    path: "vendor/ag-grid/LICENSE.txt",
+    sha256: "31636f0472dda16bba11a7b78204e1f677b77452092e185a65cddd45b6c9fb29",
+    url: "/static/ag-grid-community-LICENSE.txt",
+  },
 } as const;
 
 /** JetBrainsMono Nerd Font (Nerd Fonts v3.5.0, OFL), for the consoles' terminals: fetched and checked like Mermaid. */

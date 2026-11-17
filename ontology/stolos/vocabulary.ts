@@ -62,6 +62,9 @@ export const stolos = vocabulary(STOLOS, {
   PassphraseSession: "owl:Class",
   ProbeCache: "owl:Class",
   PhaseTiming: "owl:Class",
+  PairingSession: "owl:Class",
+  AddressBlock: "owl:Class",
+  MachineTable: "owl:Class",
   // The architecture.
   Rung: "owl:Class",
   // The code lists' classes.
@@ -79,6 +82,9 @@ export const stolos = vocabulary(STOLOS, {
   Listener: "owl:Class",
   Door: "owl:Class",
   DevicePath: "owl:Class",
+  WayOfJoining: "owl:Class",
+  PairingStage: "owl:Class",
+  AnswerState: "owl:Class",
   // Properties.
   spec: "owl:DatatypeProperty",
   rungNumber: "owl:DatatypeProperty",
@@ -171,6 +177,13 @@ export const DevicePathSchema = classSchema(stolos.DevicePath, {
   ...CODE,
   pathPrefix: one(stolos.pathPrefix, range.string),
 });
+
+/** The schema of a way of joining (spec 107-pairing-and-query): how a machine came to be in the fleet. */
+export const WayOfJoiningSchema = classSchema(stolos.WayOfJoining, CODE);
+/** The schema of a pairing stage (spec 107-pairing-and-query): where one machine is in a pairing session. */
+export const PairingStageSchema = classSchema(stolos.PairingStage, CODE);
+/** The schema of an answer state (spec 107-pairing-and-query): where one machine is in a question to every machine. */
+export const AnswerStateSchema = classSchema(stolos.AnswerState, CODE);
 
 /** The schema of a rung of the ladder (Article 0): its number, name, purpose, homes, the rungs it may rely on and what proves it. */
 export const RungSchema = classSchema(stolos.Rung, {
@@ -445,6 +458,48 @@ export const classes = [
       "A URL path prefix under `/device/`, the namespace reserved for device-specific endpoints on the controller's listeners; pairing is the first.",
     ),
     spec: ["103-three-ports FR-003"],
+  }),
+  StolosClass.make(stolos.PairingSession, {
+    label: en("Pairing session"),
+    definition: en(
+      "What one `stolos pair` keeps while it runs: a code every machine may use, the machines that said hello and where each one is, and the client addresses refused. It stays open until the person who started it stops it; nothing is adopted without that person's yes, machine by machine.",
+    ),
+    spec: ["107-pairing-and-query FR-001, FR-002, FR-003"],
+  }),
+  StolosClass.make(stolos.AddressBlock, {
+    label: en("Address block"),
+    definition: en(
+      "A client address that is refused for the rest of a pairing session after five wrong signatures from it; other addresses are not affected.",
+    ),
+    spec: ["107-pairing-and-query FR-004"],
+  }),
+  StolosClass.make(stolos.MachineTable, {
+    label: en("Machine table"),
+    definition: en(
+      "The one merged table of a question asked to every machine: a row per answer, and a row for each machine that failed or timed out with its reason, drawn by the console's vendored grid.",
+    ),
+    spec: ["107-pairing-and-query FR-012, FR-013"],
+  }),
+  StolosClass.make(stolos.WayOfJoining, {
+    label: en("Way of joining"),
+    definition: en(
+      "How a machine came to be in the fleet: auto-adopted (the controller), paired, integrated, managed, or cloud.",
+    ),
+    spec: ["107-pairing-and-query FR-007"],
+  }),
+  StolosClass.make(stolos.PairingStage, {
+    label: en("Pairing stage"),
+    definition: en(
+      "Where one machine is in a pairing session: said hello, installing, waiting for the person, adopted, or refused.",
+    ),
+    spec: ["107-pairing-and-query FR-002, FR-003"],
+  }),
+  StolosClass.make(stolos.AnswerState, {
+    label: en("Answer state"),
+    definition: en(
+      "Where one machine is in a question to every machine: asking, answered, failed, or timed out.",
+    ),
+    spec: ["107-pairing-and-query FR-010, FR-011"],
   }),
   StolosClass.make(stolos.FileKind, {
     label: en("File kind"),

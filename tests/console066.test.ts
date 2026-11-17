@@ -147,14 +147,14 @@ proves(
 );
 
 proves(
-  ["066-stolos-console FR-003"],
-  "066: a fleet query answers as a table; a refused one says why",
+  ["066-stolos-console FR-003", "107-pairing-and-query FR-011"],
+  "066: a fleet query streams its answers into the table, each machine's row with its reason; a refused one says why",
   async () => {
     const { post } = await signedIn();
     const t = await (
       await post("/query/run", { sql: "select name, version from os_version" })
     ).text();
-    assertStringIncludes(t, "<table>");
+    assertStringIncludes(t, "selector #answers-feed");
     assertStringIncludes(t, "alice-mbp");
     assertStringIncludes(t, "osquery is not installed here");
     const r = await (await post("/query/run", { sql: "select * from shadow" })).text();
@@ -231,10 +231,10 @@ proves(
     }
     assertEquals((await get("/machines/nobody")).status, 404);
     const csv = await (await get("/export/machines.csv")).text();
-    assertStringIncludes(csv.split("\r\n")[0] ?? "", "name,title,kind,os");
+    assertStringIncludes(csv.split("\r\n")[0] ?? "", "name,title,kind,how_it_joined,os");
     assertEquals(csv.trim().split("\r\n").length, FACTS.machines.length + 1);
     const ev = parse(await (await get("/export/evidence.json")).text());
-    assertEquals(list(ev, "adopted").length, 2);
+    assertEquals(list(ev, "adopted").length, 3, "two adopted machines and the controller");
     assert(list(ev, "adopted", 0, "results").every((r) => list(r, "scf").length > 0));
   },
 );

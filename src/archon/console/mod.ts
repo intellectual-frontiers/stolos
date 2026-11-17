@@ -46,11 +46,22 @@
  * | Page              | What it is for                                                                   |
  * | ----------------- | -------------------------------------------------------------------------------- |
  * | Overview          | What needs you: failing checks, failing policies, commits servers will refuse    |
- * | Machines          | Every machine, filterable; download it as CSV, and every result with SCF as JSON |
+ * | Machines          | Every machine, filterable by how it joined; this PC (the controller) first; CSV |
  * | Clouds            | Each cloud account's assets and posture                                          |
- * | Ask every machine | One osquery SELECT to every machine, as one table                                |
+ * | Ask every machine | One osquery SELECT to every machine at once, one table that fills in as they answer |
  * | Changes, Trust    | What is waiting for approval, the history, and who may approve                   |
  * | Actions           | The `stolos` commands, grouped, each as a form with its output live              |
+ *
+ * **Ask every machine** (spec 107-pairing-and-query) asks all machines at the same time (8 at a time, 15
+ * seconds each): the table, AG Grid Community vendored in this repository (`vendor/ag-grid/`, pinned by
+ * its SHA-256 and served by the console itself, never from a CDN), fills in as each machine answers; a
+ * machine that fails or times out has a row with its reason, and a line says "N of M answered". The
+ * table pages, sorts, filters, resizes and pins columns, works from the keyboard, and exports CSV.
+ *
+ * The **Machines** page puts this PC first, in a **This PC** group: the controller is auto-adopted (it
+ * needs no pairing and is observed by the local probe), with an "Auto-adopted, controller" badge and its
+ * Release and Remove off. Every machine has a **How it joined** column and filter: auto-adopted, paired,
+ * integrated, managed, or cloud.
  *
  * Commands that change keys (`keys setup`, `keys rotate`, `keys lost`) and `vault restore` stay in the
  * terminal: they are rare, and each deserves your full attention.
@@ -83,5 +94,6 @@
  * @module
  */
 // Spec: 100-remote-access
+// Spec: 107-pairing-and-query FR-008, FR-011, FR-012
 
 export {};

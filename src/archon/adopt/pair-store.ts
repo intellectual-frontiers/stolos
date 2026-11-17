@@ -1,34 +1,47 @@
 /**
- * Spec 103-three-ports: where a pairing's state lives. A pairing (spec 098) has one record: the code, the fleet, when it expires, the
- * wrong tries so far, the machine that said hello, the check-in waiting for the person, and the person's decision. `stolos pair` (the
- * terminal, where the person approves) and every server that answers the machine (the boot server, the console, or the pair-only
- * server `stolos pair` runs itself) are different processes, so the record is a store they share:
+ * Specs 103-three-ports and 107-pairing-and-query: where a pairing session's state lives. A session (spec 098) has one record: the
+ * code, the fleet, the wrong signatures counted per client address, and every machine that said hello, with its check-in waiting for
+ * the person and the person's decision for it. `stolos pair` (the terminal, where the person approves) and every server that answers
+ * a machine (the boot server, the console, or the pair-only server `stolos pair` runs itself) are different processes, so the record
+ * is a store they share:
  *
  * - {@link MemoryPairStore}: one process (the tests, and a session with no other process);
  * - {@link FilePairStore}: a short-lived file in the secrets folder, owner only and ephemeral (never backed up), the same pattern as
  *   an armed install: the command writes, the servers read per request, and there is no new port. Every change is made under a lock
  *   file (`<file>-lock`, taken with `O_EXCL` by commons' `lock`), read fresh inside it, and written atomically (a temporary file
- *   renamed over the record), so two processes cannot lose each other's tries.
+ *   renamed over the record), so two processes cannot lose each other's tries or machines.
+ *
+ * The record has no expiry: a session lasts until the person who started it stops it (spec 107-pairing-and-query FR-001). It is
+ * bounded instead: at most {@link MAX_ADDRESSES} client addresses are counted and at most {@link MAX_MACHINES} machines are kept, so
+ * a flood cannot grow the file without limit (FR-004).
  *
  * @example
  * ```ts
  * import { MemoryPairStore, newPairRecord } from "./pair-store.ts";
  * const store = new MemoryPairStore(newPairRecord({ code: "WDJB-MJHT", fleet: "lab", engine: "v1.0.0" }));
- * const r = await store.update((rec) => ++rec.tries);
+ * const r = await store.update((rec) => (rec.tries["10.0.0.9"] = 1));
  * r?.result; // 1
  * ```
  *
  * @module
  */
 // Spec: 103-three-ports FR-006, FR-007
+// Spec: 107-pairing-and-query FR-001, FR-004, FR-005
 
 import { fs, lock, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { ownerOnly } from "../core/secrets.ts";
+import type { PairingStage } from "../ontology.auto.ts";
 
-/** How long a code is good for. */
-export const CODE_TTL_MS = 10 * 60_000;
+/** How many wrong signatures one client address may send before it is refused for the rest of the session. */
+export const MAX_TRIES = 5;
 
-/** The machine that said hello: its hostname, and the name and probe key the PC gave it. */
+/** How many client addresses a session counts wrong signatures for (past it, a new address's wrong signature is refused uncounted). */
+export const MAX_ADDRESSES = 256;
+
+/** How many machines one session keeps (a hello from another is refused). */
+export const MAX_MACHINES = 64;
+
+/** The machine that said hello: its hostname, its name and probe key from the PC, and the address it came from. */
 export interface Hello {
   /** Its hostname, as it said. */
   hostname: string;
@@ -36,48 +49,60 @@ export interface Hello {
   name: string;
   /** The probe key's public half the PC sent it. */
   key: string;
+  /** The client address its hello came from. */
+  address: string;
 }
 
-/** Why a pairing ended. */
-export type PairEnd = "paired" | "refused" | "expired" | "tries";
+/** Why a session ended: the person who started it closed it. */
+export type PairEnd = "closed";
 
-/** What a pairing keeps, in one record (the file's content, as JSON). */
+/** One machine of a session: what it said, where it is, and what the person decided. */
+export interface PairMachine extends Hello {
+  /** Where it is (`stolos:PairingStage`). */
+  stage: PairingStage;
+  /** Its place in the queue of machines (the order they said hello). */
+  seq: number;
+  /** When it said hello (milliseconds). */
+  helloAt: number;
+  /** The signed check-in text, waiting for the person's decision. */
+  checkIn?: { text: string; at: number };
+  /** The person's decision on the check-in. */
+  decision?: { ok: boolean; message: string };
+  /** The machine was told the decision. */
+  delivered?: boolean;
+}
+
+/** What a pairing session keeps, in one record (the file's content, as JSON). */
 export interface PairRecord {
   /** The record's format. */
-  v: 1;
-  /** The code, as shown (WDJB-MJHT). A secret while the pairing lasts. */
+  v: 2;
+  /** The code, as shown (WDJB-MJHT). A secret while the session lasts; every machine uses it. */
   code: string;
   /** The fleet's id. */
   fleet: string;
   /** The engine's tag (v1.2.3), for the scripts' messages. */
   engine: string;
-  /** When the pairing began (milliseconds). */
+  /** When the session began (milliseconds). */
   startedAt: number;
-  /** When the code expires (milliseconds). */
-  expiresAt: number;
-  /** The name `--name` gave (else the machine's hostname decides). */
+  /** The name `--name` gave to the first machine (else each machine's hostname decides). */
   name?: string;
-  /** Who the machine belongs to (`--owner`). */
+  /** `--name` was given to a machine already. */
+  nameUsed?: boolean;
+  /** Who the machines belong to (`--owner`). */
   owner?: string;
-  /** What the machine is, for people (`--title`). */
+  /** What the machines are, for people (`--title`). */
   title?: string;
-  /** Wrong signatures so far, over every door and every process. */
-  tries: number;
-  /** A hostname that has said hello and is being named (so that a second machine cannot take the code meanwhile). */
-  claimed?: string;
-  /** The one machine this code is for, once it said hello. */
-  hello?: Hello;
-  /** The signed check-in text, waiting for the person's decision. */
-  checkIn?: { text: string; at: number };
-  /** The person's decision on the check-in. */
-  decision?: { ok: boolean; message: string };
-  /** The machine was told the decision (the terminal may remove the record). */
-  delivered?: boolean;
-  /** Set once the pairing is over. */
+  /** Wrong signatures by client address, over every door and every process. */
+  tries: Record<string, number>;
+  /** The machines, by lowercase hostname. */
+  machines: Record<string, PairMachine>;
+  /** The next machine's place in the queue. */
+  next: number;
+  /** Set once the session is over. */
   ended?: PairEnd;
 }
 
-/** A new record for a code, expiring in {@link CODE_TTL_MS}. */
+/** A new record for a session. */
 export function newPairRecord(o: {
   code: string;
   fleet: string;
@@ -87,19 +112,31 @@ export function newPairRecord(o: {
   owner?: string;
   title?: string;
 }): PairRecord {
-  const at = o.now ?? Date.now();
   return {
-    v: 1,
+    v: 2,
     code: o.code,
     fleet: o.fleet,
     engine: o.engine,
-    startedAt: at,
-    expiresAt: at + CODE_TTL_MS,
+    startedAt: o.now ?? Date.now(),
     ...(o.name ? { name: o.name } : {}),
     ...(o.owner ? { owner: o.owner } : {}),
     ...(o.title ? { title: o.title } : {}),
-    tries: 0,
+    tries: {},
+    machines: {},
+    next: 1,
   };
+}
+
+/** The client addresses refused for the rest of the session (five wrong signatures). */
+export function blockedAddresses(r: Pick<PairRecord, "tries">): string[] {
+  return Object.entries(r.tries)
+    .filter(([, n]) => n >= MAX_TRIES)
+    .map(([a]) => a);
+}
+
+/** The machines in the order they said hello. */
+export function machinesOf(r: Pick<PairRecord, "machines">): PairMachine[] {
+  return Object.values(r.machines).sort((a, b) => a.seq - b.seq);
 }
 
 /** What one change gave back: its own result, and the record as it is now. */
@@ -112,16 +149,16 @@ export interface Changed<T> {
 
 /** Where a pairing's record is kept: read it, change it atomically, replace it, remove it. */
 export interface PairStore {
-  /** The record, or undefined where no pairing is waiting. */
+  /** The record, or undefined where no session is open. */
   read(): Promise<PairRecord | undefined>;
   /**
    * Change the record, atomically: `change` is given the record as it is now (read fresh) and edits it in place. Undefined where no
-   * pairing is waiting.
+   * session is open.
    */
   update<T>(change: (record: PairRecord) => T): Promise<Changed<T> | undefined>;
-  /** Start a pairing: the record replaces any other. */
+  /** Start a session: the record replaces any other. */
   create(record: PairRecord): Promise<void>;
-  /** End the pairing's record. */
+  /** End the session's record. */
   remove(): Promise<void>;
 }
 
@@ -167,11 +204,13 @@ function isRecord(v: unknown): v is PairRecord {
   if (typeof v !== "object" || v === null) return false;
   const r = v as Partial<PairRecord>;
   return (
-    r.v === 1 &&
+    r.v === 2 &&
     typeof r.code === "string" &&
     typeof r.fleet === "string" &&
-    typeof r.expiresAt === "number" &&
-    typeof r.tries === "number"
+    typeof r.tries === "object" &&
+    r.tries !== null &&
+    typeof r.machines === "object" &&
+    r.machines !== null
   );
 }
 

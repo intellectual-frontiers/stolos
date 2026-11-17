@@ -17,6 +17,7 @@
  * @module
  */
 // Spec: 097-controller FR-001, FR-002, FR-003, FR-006
+// Spec: 107-pairing-and-query FR-010
 // Spec: 100-remote-access FR-012
 
 import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
@@ -62,6 +63,7 @@ export async function isThisController(m: AdoptedDef): Promise<boolean> {
 /** Run the probe on this PC, as the probe key would on an adopted machine. */
 export async function localProbe(
   request: string,
+  o: { signal?: AbortSignal } = {},
 ): Promise<{ ok: boolean; out: string; err: string }> {
   const windows = proc.build.os === "windows";
   const dir = await fs.makeTempDir({ prefix: "stolos-controller-probe-" });
@@ -80,7 +82,11 @@ export async function localProbe(
         ]
       : ["sh", file];
     // In its own folder: PowerShell may write a module cache to the current folder (spec 097 FR-002).
-    const r = await run(argv, { cwd: dir, env: { SSH_ORIGINAL_COMMAND: request } });
+    const r = await run(argv, {
+      cwd: dir,
+      env: { SSH_ORIGINAL_COMMAND: request },
+      ...(o.signal ? { signal: o.signal } : {}),
+    });
     return { ok: r.ok, out: r.stdout, err: r.stderr.trim() };
   } finally {
     await fs.remove(dir, { recursive: true });

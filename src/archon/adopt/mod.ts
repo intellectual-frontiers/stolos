@@ -13,6 +13,16 @@
  *   pc -- "observed.ts" --> git["Fleet repository"]
  * ```
  *
+ * ## How a machine joined
+ *
+ * Every machine of the fleet has a way of joining (spec 107-pairing-and-query), shown in the Stolos Console's
+ * **How it joined** column and filter, and by `fleet status` and `discover`: **auto-adopted** (the
+ * controller, this PC), **paired** (through `stolos pair`), **integrated** (by hand: a check-in code,
+ * `host adopt`, or a device read over SNMP), **managed** (a server or workstation Stolos installs), or
+ * **cloud**. The controller is auto-adopted: the fleet adopts it by itself (spec 097), it needs no pairing,
+ * and it is observed by the local probe. The console pins it first, in a **This PC** group, with an
+ * "Auto-adopted, controller" badge; its Release and Remove are off there.
+ *
  * ## The easy way: pair with a short code
  *
  * On the PC, in the fleet repository:
@@ -21,7 +31,8 @@
  * bun run stolos pair
  * ```
  *
- * It shows one short line per door that is up, HTTPS first, and a code (specs 098 and 103-three-ports):
+ * It opens a **session** and shows one short line per door that is up, HTTPS first, and a code (specs 098,
+ * 103-three-ports and 107-pairing-and-query):
  *
  * ```text
  *   On the machine, run (over HTTPS, the console's TLS door, when `stolos console --lan` serves):
@@ -31,15 +42,26 @@
  *     Linux, macOS, WSL:   curl -fsSL http://10.0.0.5:8080/device/pair | sh
  *     Windows (admin):     irm http://10.0.0.5:8080/device/pair/w | iex
  *
- *   Then type this code:   WDJB-MJHT      (expires in 10 minutes)
+ *   Then type this code:   WDJB-MJHT      (the same for every machine)
+ *
+ *   Session is open: Ctrl+C closes it. ...
  * ```
  *
- * On the machine, the line says what it will do, asks for the code, asks once about osquery, and
- * sends its check-in back. On the PC you see its name, OS, address and SSH host key, and approve it;
- * it is then adopted, with nothing copied by hand. The code signs every message both ways
- * (HMAC-SHA256), so a machine without it cannot join and no one else can answer in the PC's place.
- * One machine per code; 5 wrong codes end it (counted over both doors together). `--name` names it
- * (default: its hostname), `--owner` says whose it is.
+ * On each machine, the line says what it will do, asks for the code, asks once about osquery, and
+ * sends its check-in back. On the PC you see each machine's name, OS, address, SSH host key and osquery,
+ * and answer each one in turn; a machine is adopted when you say yes to it, with nothing copied by hand.
+ * The code signs every message both ways (HMAC-SHA256), so a machine without it cannot join and no one
+ * else can answer in the PC's place.
+ *
+ * One session pairs **many machines**, at the same time or one after another, with the one code, and it
+ * stays open until you stop it (Ctrl+C): it has no expiry and no join window. The terminal shows each
+ * machine's state as it goes (said hello, installing, waiting for you, adopted, refused) and says plainly
+ * that the session is open. An open session is less safe than a short one: anyone on the network who has
+ * the code can ask to join, so close it when the machines you expect have joined. Nothing is adopted
+ * without your yes, machine by machine. Wrong codes are counted for each client address: after 5 that
+ * address is refused for the rest of the session (and the screen says so); other addresses are not
+ * affected. `--name` names the first machine (the others are named by their hostnames), `--owner` and
+ * `--title` say whose they are and what they are. Ctrl+C closes the doors and removes the session's file.
  *
  * ### Three ports, two doors, `/device/pair`
  *
@@ -48,8 +70,9 @@
  * TCP 8080 (the boot server's, when `boot serve` runs; otherwise `stolos pair` serves just those routes
  * there itself, no TFTP and no Ubuntu downloads), and **door B**, the console's TLS on TCP 443, only on
  * its LAN names and only while `stolos console --lan` serves. Both answer from one short-lived,
- * owner-only file `stolos pair` writes in this PC's secrets folder, so the five tries are shared and
- * the person still approves in the terminal. Without a pairing waiting, `/device/pair` answers 404.
+ * owner-only file `stolos pair` writes in this PC's secrets folder (every machine's hello, check-in and
+ * decision, and the wrong codes per address), so the tries are shared and the person still approves in the
+ * terminal. Without a session open, `/device/pair` answers 404.
  * `--port <n>` is an explicit choice of another port: the command says it is outside the three and
  * prints its firewall rule.
  *
@@ -132,7 +155,9 @@
  * | Stop observing it            | `bun run stolos host release alice-mbp`                                    |
  *
  * `fleet query` needs osquery on the machine (`brew install --cask osquery` on a Mac); the policies do
- * not.
+ * not. It asks every machine at once (at most 8 at a time), each with a time limit of its own (15 seconds;
+ * `--timeout <seconds>` changes it); a machine that fails or does not answer in time is named with its
+ * reason, and the last line says "N of M answered" (spec 107-pairing-and-query).
  *
  * ## When a policy cannot pass
  *
@@ -299,5 +324,6 @@
 // Spec: 097-controller
 // Spec: 098-pair
 // Spec: 103-three-ports FR-012
+// Spec: 107-pairing-and-query FR-001, FR-003, FR-007, FR-015
 
 export {};

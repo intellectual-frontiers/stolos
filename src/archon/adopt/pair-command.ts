@@ -1,7 +1,8 @@
 /**
- * Spec 098: `stolos pair`, on the controller PC. Shows the short line to run on a machine for each door that is up and a code, keeps
- * the pairing's record in a short-lived file (spec 103-three-ports), and asks the person to approve the machine before anything is
- * written to the fleet repository. The doors answer the machine from that file: the boot server's HTTP on TCP 8080 (when `boot serve`
+ * Specs 098 and 107-pairing-and-query: `stolos pair`, on the controller PC. Shows the short line to run on a machine for each door
+ * that is up and a code the same for every machine, keeps the session's record in a short-lived file (spec 103-three-ports), and asks
+ * the person to approve each machine, one after another, before anything is written to the fleet repository. The session stays open
+ * until the person stops it (Ctrl+C). The doors answer the machines from that file: the boot server's HTTP on TCP 8080 (when `boot serve`
  * runs; otherwise this command serves just the `/device/pair` routes there, no TFTP and no downloads), and the console's TLS on TCP 443
  * (when `stolos console --lan` serves and its name resolves to this PC). The person still approves here, in the terminal.
  *
@@ -11,6 +12,7 @@
 // Spec: 098-pair FR-001, FR-005, FR-006, FR-007, FR-008
 // Spec: 103-three-ports FR-004, FR-005, FR-006, FR-008, FR-011
 // Spec: 106-one-passphrase-speed FR-006
+// Spec: 107-pairing-and-query FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007
 
 import { dns, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { compact, toBase64 } from "@intellectual-frontiers/commons/ts/kernel";
@@ -20,7 +22,15 @@ import { choosePort, firewallRule, outsideStandardNote, standardPort } from "../
 import { DEVICE_PAIR_PATH, type PairingDoor } from "../ontology.auto.ts";
 import { loadAdopted, MACHINE_NAME } from "./adopt.ts";
 import { type Hello, newCode } from "./pair.ts";
-import { type PairEnd, type PairRecord, type PairStore, newPairRecord } from "./pair-store.ts";
+import {
+  blockedAddresses,
+  machinesOf,
+  type PairMachine,
+  type PairRecord,
+  type PairStore,
+  newPairRecord,
+} from "./pair-store.ts";
+import type { PairingStage } from "../ontology.auto.ts";
 import { devicePairHandler, pairEngine, pairingStore } from "./pair-service.ts";
 
 const fail = (): number => (ui.problems.some((x) => x.level === "fail") ? 1 : 0);
@@ -92,13 +102,22 @@ export async function findDoors(q: DoorQuery): Promise<{ doors: DoorUp[]; notes:
   return { doors, notes };
 }
 
-/** What `stolos pair` shows for the doors that are up: one line per door, HTTPS first, then the code and its expiry. */
+/** What the terminal says for each stage a machine passes through (`stolos:PairingStage`). */
+export const STAGE_WORDS: Record<PairingStage, string> = {
+  hello: "said hello",
+  installing: "is installing",
+  waiting: "is waiting for you",
+  adopted: "is adopted",
+  refused: "was refused",
+};
+
+/** What `stolos pair` shows for the doors that are up: one line per door, HTTPS first, then the code and what the open session means. */
 export function pairInstructions(doors: readonly DoorUp[], code: string): string {
   const out: string[] = [""];
   doors.forEach((d, i) => {
     out.push(
       i === 0
-        ? `  On the machine, run (${d.door === "tls" ? "HTTPS" : "plain HTTP"}: ${d.via}):`
+        ? `  On each machine, run (${d.door === "tls" ? "HTTPS" : "plain HTTP"}: ${d.via}):`
         : `  or (${d.door === "tls" ? "HTTPS" : "plain HTTP"}: ${d.via}):`,
       `    Linux, macOS, WSL:   curl -fsSL ${d.base} | sh`,
       `    Windows (admin):     irm ${d.base}/w | iex`,
@@ -106,7 +125,11 @@ export function pairInstructions(doors: readonly DoorUp[], code: string): string
   });
   out.push(
     "",
-    `  Then type this code:   ${code}      (expires in 10 minutes)`,
+    `  Then type this code:   ${code}      (the same for every machine)`,
+    "",
+    "  Session is open: Ctrl+C closes it. Any machine on this network that has the code can ask to",
+    "  join, and you answer each one here, one after another. Nothing is adopted without your yes.",
+    "  An open session is less safe than a short one: close it when the machines you expect have joined.",
     "",
     ...(doors.some((d) => d.door === "lan-http")
       ? [
@@ -124,14 +147,14 @@ export function pairInstructions(doors: readonly DoorUp[], code: string): string
  * (TCP 8080 unless `explicit` says another: no TFTP, no Ubuntu downloads, nothing else). Rejects where the port is taken.
  */
 export async function startPairOnly(
-  handle: (req: Request) => Promise<Response | undefined>,
+  handle: (req: Request, from?: string) => Promise<Response | undefined>,
   explicit?: number,
 ): Promise<{ port: number; explicit: boolean; close(): void }> {
   const { listen } = await import("../../archon-boot/http.ts");
   const choice = choosePort("boot-http", explicit);
   const l = await listen(
     choice.port,
-    async (req) => (await handle(req)) ?? new Response("not found\n", { status: 404 }),
+    async (req, from) => (await handle(req, from)) ?? new Response("not found\n", { status: 404 }),
   );
   return {
     port: (l.addr as { port: number }).port,
@@ -140,34 +163,51 @@ export async function startPairOnly(
   };
 }
 
-/** What a pairing run needs from outside (the real ones in `pair`; fakes in tests). */
+/** What a pairing session needs from outside (the real ones in `pair`; fakes in tests). */
 export interface PairRun {
-  /** The pairing's record's home. */
+  /** The session's record's home. */
   store: PairStore;
   /** The record to write (its code, fleet and hints). */
   record: PairRecord;
   /** Brings the doors up and shows them; false where no door is up (nothing can be paired). */
   doors: () => Promise<boolean>;
-  /** The person's decision on a machine's check-in (shows who asked, asks, adopts). */
+  /** The person's decision on one machine's check-in (shows who asked, asks, adopts). Called for one machine at a time. */
   approve: (checkIn: string, hello: Hello) => Promise<{ ok: boolean; message: string }>;
   /** Stops what `doors` started (the pair-only server). */
   close: () => Promise<void>;
   /** Calls back when the person interrupts (Ctrl+C); returns what stops listening. */
   onInterrupt?: (cb: () => void) => () => void;
-  /** Now, in milliseconds. */
-  now?: () => number;
+  /** Called with the record each time it is looked at (the terminal shows what changed in it). */
+  onState?: (record: PairRecord) => void;
   /** How often the record is looked at (500 ms by default). */
   pollMs?: number;
-  /** How long to wait for the door to tell the machine the decision before the record goes (3 s by default). */
+  /** How long to wait for the doors to tell the machines their decisions before the record goes (3 s by default). */
   graceMs?: number;
+  /** Now, in milliseconds. */
+  now?: () => number;
+}
+
+/** What a session came to when it closed. */
+export interface PairSummary {
+  /** Why it ended: the person closed it (or the record was replaced), or no door was up. */
+  end: "closed" | "no-door";
+  /** The machines adopted, refused, and still waiting when it closed. */
+  adopted: PairMachine[];
+  /** The machines the person refused. */
+  refused: PairMachine[];
+  /** The machines that had said hello and were not decided. */
+  waiting: PairMachine[];
+  /** The client addresses refused for sending 5 wrong codes. */
+  blocked: string[];
 }
 
 /**
- * The terminal's part of a pairing: write the record, bring the doors up, then watch the record: when a machine's check-in is
- * waiting, ask the person (`approve`) and write the decision; end on a decision, on too many wrong tries, on expiry, on a record
- * another `stolos pair` replaced, or on Ctrl+C. Whatever ends it, the record is removed in `finally`.
+ * The terminal's part of a pairing session: write the record, bring the doors up, then watch the record: whenever a machine's check-in
+ * is waiting, ask the person about it (`approve`, one machine at a time, in the order they came) and write the decision. The session
+ * has no end of its own: it lasts until the person interrupts (Ctrl+C) or another `stolos pair` replaces the record. Whatever ends it,
+ * the doors are closed and the record is removed in `finally`.
  */
-export async function runPairing(r: PairRun): Promise<PairEnd | "no-door"> {
+export async function runPairing(r: PairRun): Promise<PairSummary> {
   const now = r.now ?? Date.now;
   const poll = r.pollMs ?? 500;
   await r.store.create(r.record);
@@ -175,60 +215,127 @@ export async function runPairing(r: PairRun): Promise<PairEnd | "no-door"> {
   const off = r.onInterrupt?.(() => {
     interrupted = true;
   });
-  let end: PairEnd | "no-door";
-  let decided = false;
+  let last: PairRecord = r.record;
+  let up = false;
   try {
-    if (!(await r.doors())) return "no-door";
-    let approving: Promise<void> | undefined;
-    for (;;) {
-      const cur = await r.store.read();
-      if (!cur || cur.code !== r.record.code || interrupted) {
-        end = "refused";
-        break;
-      }
-      if (cur.ended) {
-        end = cur.ended;
-        break;
-      }
-      if (now() > cur.expiresAt) {
-        end = "expired";
-        break;
-      }
-      if (cur.checkIn && cur.hello && !cur.decision && !approving) {
-        const hello = cur.hello;
-        const text = cur.checkIn.text;
-        approving = r
-          .approve(text, hello)
-          .catch((e: unknown) => ({ ok: false, message: `the PC could not decide: ${String(e)}` }))
-          .then(async (d) => {
-            await r.store.update((x) => {
-              if (x.ended || x.decision) return;
-              x.decision = d;
-              x.ended = d.ok ? "paired" : "refused";
+    if (await r.doors()) {
+      up = true;
+      let approving: Promise<void> | undefined;
+      for (;;) {
+        const cur = await r.store.read();
+        if (!cur || cur.code !== r.record.code || interrupted || cur.ended) break;
+        last = cur;
+        r.onState?.(cur);
+        const next = approving
+          ? undefined
+          : machinesOf(cur).find((m) => m.stage === "waiting" && m.checkIn && !m.decision);
+        if (next?.checkIn) {
+          const id = next.hostname.toLowerCase();
+          const hello: Hello = {
+            hostname: next.hostname,
+            name: next.name,
+            key: next.key,
+            address: next.address,
+          };
+          approving = r
+            .approve(next.checkIn.text, hello)
+            .catch((e: unknown) => ({
+              ok: false,
+              message: `the PC could not decide: ${String(e)}`,
+            }))
+            .then(async (d) => {
+              await r.store.update((x) => {
+                const m = x.machines[id];
+                if (!m || m.decision) return;
+                m.decision = d;
+                m.stage = d.ok ? "adopted" : "refused";
+              });
+            })
+            .finally(() => {
+              approving = undefined;
             });
-            decided = true;
-          });
+        }
+        await proc.sleep(poll);
       }
-      await proc.sleep(poll);
     }
-    return end;
   } finally {
     off?.();
-    // Let the machine read the last answer before the door closes and the record goes.
-    if (decided) {
+    if (up) {
+      // Let the machines read their last answers before the doors close and the record goes.
       const until = now() + (r.graceMs ?? 3000);
       while (now() < until) {
         const cur = await r.store.read().catch(() => undefined);
-        if (!cur || cur.delivered) break;
+        if (!cur) break;
+        last = cur;
+        const undelivered = machinesOf(cur).some((m) => m.decision && !m.delivered);
+        if (!undelivered) break;
         await proc.sleep(Math.min(poll, 50));
       }
+      await r.store
+        .update((x) => {
+          x.ended = "closed";
+        })
+        .catch(() => undefined);
+      // The machines still holding a request see that the session ended before the doors close.
+      await proc.sleep(Math.min(poll, 100));
     }
     await r.close().catch(() => undefined);
     await r.store.remove().catch(() => undefined);
   }
+  return up
+    ? summary(last, "closed")
+    : { end: "no-door", adopted: [], refused: [], waiting: [], blocked: [] };
 }
 
-/** `stolos pair [--name n] [--port 8080] [--address a]`: pair one machine with a short code. */
+/** What a record comes to, as a session summary. */
+function summary(r: PairRecord, end: "closed"): PairSummary {
+  const ms = machinesOf(r);
+  return {
+    end,
+    adopted: ms.filter((m) => m.stage === "adopted"),
+    refused: ms.filter((m) => m.stage === "refused"),
+    waiting: ms.filter((m) => m.stage !== "adopted" && m.stage !== "refused"),
+    blocked: blockedAddresses(r),
+  };
+}
+
+/**
+ * What the terminal shows as a session goes on: a line for each machine's stage as it changes, and one for an address that sent
+ * too many wrong codes. `print` writes lines (it holds them while a prompt is on the screen).
+ */
+export function liveView(print: (line: string) => void): (record: PairRecord) => void {
+  const seen = new Map<string, string>();
+  const refusedSeen = new Set<string>();
+  return (rec) => {
+    for (const m of machinesOf(rec)) {
+      const id = m.hostname.toLowerCase();
+      const key = `${m.stage}|${m.name}|${m.seq}`;
+      if (seen.get(id) === key || !m.name) continue;
+      seen.set(id, key);
+      print(`  ${m.name} (${m.address}) ${STAGE_WORDS[m.stage]}`);
+    }
+    for (const a of blockedAddresses(rec)) {
+      if (refusedSeen.has(a)) continue;
+      refusedSeen.add(a);
+      print(`  ${a} sent 5 wrong codes: it is refused for the rest of this session`);
+    }
+  };
+}
+
+/** The status line of a session: it is open, and how many machines are where. */
+export function sessionStatus(rec: PairRecord): string {
+  const ms = machinesOf(rec);
+  const count = (...st: PairingStage[]) => ms.filter((m) => st.includes(m.stage)).length;
+  const parts = [
+    count("hello", "installing") ? `${count("hello", "installing")} joining` : "",
+    count("waiting") ? `${count("waiting")} waiting for you` : "",
+    count("adopted") ? `${count("adopted")} adopted` : "",
+    count("refused") ? `${count("refused")} refused` : "",
+  ].filter(Boolean);
+  return `Session is open: Ctrl+C closes it${parts.length ? ` · ${parts.join(" · ")}` : " · no machine yet"}`;
+}
+
+/** `stolos pair [--name n] [--port 8080] [--address a]`: pair machines with a short code, until you close the session. */
 export async function pair(o: {
   name?: string;
   port?: number;
@@ -266,6 +373,22 @@ export async function pair(o: {
   });
   let listener: { close(): void } | undefined;
   let port = choice.port;
+  let w: ReturnType<typeof ui.phase> | undefined;
+  let tick: { clear(): void } | undefined;
+  let latest: PairRecord | undefined;
+  // While the person is answering a prompt, lines about other machines wait for it to finish.
+  let prompting = false;
+  const held: string[] = [];
+  const show = (text: string): void => {
+    ui.pause();
+    stdio.stdout.writeSync(text);
+    ui.resume();
+  };
+  const print = (line: string): void => {
+    if (prompting) held.push(line);
+    else show(`${line}\n`);
+  };
+  const view = liveView(print);
 
   const doors = async (): Promise<boolean> => {
     // Door A: this command's own pair-only server on the boot server's port, else the boot server that holds it.
@@ -314,7 +437,7 @@ export async function pair(o: {
       return false;
     }
     c.done(
-      `${found.doors.map((d) => d.base).join(" · ")} · fleet ${P.fleetId} · one machine, for 10 minutes`,
+      `${found.doors.map((d) => d.base).join(" · ")} · fleet ${P.fleetId} · many machines, until you close it`,
     );
     for (const line of found.notes) c.note(line);
     // Read-only firewall checks, as actions (the exact command is in each line).
@@ -330,7 +453,7 @@ export async function pair(o: {
         : { protocol: "TCP" as const, port: choice.port, what: "Stolos pair (HTTP)" },
     );
     for (const w of await firewallWarnings(needs, { fresh: true })) {
-      fw.action(w, "allow it, or the machine cannot reach this PC");
+      fw.action(w, "allow it, or the machines cannot reach this PC");
     }
     if (choice.explicit && found.doors.some((d) => d.door === "lan-http")) {
       fw.action(
@@ -340,29 +463,32 @@ export async function pair(o: {
     }
     // The checks are done: close the phase before the instructions, so nothing spins under them.
     fw.done(fw.actions ? "see above" : "allows the pairing (or no firewall to check)");
-    ui.pause();
-    stdio.stdout.writeSync(pairInstructions(found.doors, code));
-    ui.resume();
-    // Now the command waits for the machine, and says so.
-    const until = Date.now() + 10 * 60_000;
+    show(pairInstructions(found.doors, code));
+    // Now the command waits for the machines, and says so, until the person closes it.
     w = ui.phase("Waiting");
-    const say = (): void =>
-      w?.status(
-        `Waiting for a machine to run the line above (code expires in ${Math.max(1, Math.ceil((until - Date.now()) / 60_000))} minutes)`,
-      );
+    const say = (): void => w?.status(latest ? sessionStatus(latest) : sessionStatus(record));
     say();
     tick = proc.unrefTimer(say, 15_000);
     return true;
   };
 
-  let w: ReturnType<typeof ui.phase> | undefined;
-  let tick: { clear(): void } | undefined;
-  let decision: { ok: boolean; message: string } | undefined;
-  const end = await runPairing({
+  const sum = await runPairing({
     store,
     record,
     doors,
-    approve: async (text, hello) => (decision = await approve(text, hello, o)),
+    approve: async (text, hello) => {
+      prompting = true;
+      try {
+        return await approve(text, hello, o);
+      } finally {
+        prompting = false;
+        for (const l of held.splice(0)) print(l);
+      }
+    },
+    onState: (rec) => {
+      latest = rec;
+      view(rec);
+    },
     close: () => {
       listener?.close();
       return Promise.resolve();
@@ -373,29 +499,33 @@ export async function pair(o: {
     },
   });
   tick?.clear();
-  if (end === "no-door") return fail();
-  endPairing(w ?? ui.phase("Waiting"), end, decision);
+  if (sum.end === "no-door") return fail();
+  endPairing(w ?? ui.phase("Waiting"), sum);
   return fail();
 }
 
 /**
- * How a pairing ends (spec 106-one-passphrase-speed FR-006): a pairing says what happened, in a line
- * that is always shown ("intrepid is adopted by the fleet lab"); a refusal, an expiry and too many
- * wrong codes are the failures they were.
+ * How a pairing session ends (spec 106-one-passphrase-speed FR-006, spec 107-pairing-and-query FR-003): the person closed it, and it says
+ * what came of it. Each adopted machine has had its own outcome line ("intrepid is adopted by the fleet lab"); a session where nobody
+ * was adopted ends with a plain note, not a failure.
  */
 export function endPairing(
   wait: ReturnType<typeof ui.phase>,
-  end: string,
-  decision?: { ok: boolean; message: string },
+  sum: Pick<PairSummary, "adopted" | "refused" | "waiting">,
 ): void {
-  if (end === "paired") {
-    wait.done("paired");
-    ui.outcome(decision?.message ?? "the machine is adopted by the fleet");
-  } else if (end === "expired") {
-    wait.fail("the code expired; nothing was written", "bun run stolos pair");
-  } else if (end === "tries") {
-    wait.fail("5 wrong codes: the pairing ended; nothing was written", "bun run stolos pair");
-  } else wait.warn("not approved; nothing was written", "bun run stolos pair");
+  const n = (k: number, what: string) => (k ? `${k} ${what}` : "");
+  const left = [
+    n(sum.adopted.length, "adopted"),
+    n(sum.refused.length, "refused"),
+    n(sum.waiting.length, "not decided (nothing was written for them)"),
+  ].filter(Boolean);
+  wait.done(`session closed${left.length ? `: ${left.join(", ")}` : ": no machine joined"}`);
+  for (const m of sum.adopted) ui.outcome(`${m.name} is adopted by the fleet ${P.fleetId}`);
+  if (sum.waiting.length) {
+    wait.note(
+      `not decided: ${sum.waiting.map((m) => m.name || m.hostname).join(", ")}; pair them again`,
+    );
+  }
 }
 
 /** A URL's text with the certificate checked, or undefined where it cannot be reached or does not answer 200. */
@@ -414,7 +544,7 @@ async function resolveA(name: string): Promise<readonly string[]> {
   return r.kind === "ok" ? r.value : [];
 }
 
-/** Show who asked, ask the person, and adopt the machine when they say yes. */
+/** Show who asked, ask the person, and adopt the machine when they say yes (spec 107-pairing-and-query FR-002). */
 async function approve(
   text: string,
   hello: Hello,
@@ -451,7 +581,7 @@ async function approve(
     return { ok: false, message: "the person at the PC did not approve it; nothing was kept" };
   }
   const { adoptCheckIn } = await import("./commands.ts");
-  await adoptCheckIn(ci, { name: hello.name, spec: "098-pair", ...compact(o) });
+  await adoptCheckIn(ci, { name: hello.name, spec: "098-pair", joined: "paired", ...compact(o) });
   const failed = ui.problems.some((x) => x.level === "fail");
   return failed
     ? { ok: true, message: `${hello.name} is adopted, but the PC could not read its facts yet` }

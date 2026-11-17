@@ -7,10 +7,20 @@
 @prefix stolos: <https://intellectual-frontiers.github.io/stolos/ontology#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
+stolos:AddressBlock a owl:Class ;
+    rdfs:label "Address block"@en ;
+    skos:definition "A client address that is refused for the rest of a pairing session after five wrong signatures from it; other addresses are not affected."@en ;
+    stolos:spec "107-pairing-and-query FR-004" .
+
 stolos:AdoptedMachine a owl:Class ;
     rdfs:label "Adopted machine"@en ;
     skos:definition "A machine Stolos did not install: recorded, observed by a probe and held to policies, never converged."@en ;
     stolos:spec "067-adopt" .
+
+stolos:AnswerState a owl:Class ;
+    rdfs:label "Answer state"@en ;
+    skos:definition "Where one machine is in a question to every machine: asking, answered, failed, or timed out."@en ;
+    stolos:spec "107-pairing-and-query FR-010, FR-011" .
 
 stolos:Capability a owl:Class ;
     rdfs:label "Capability"@en ;
@@ -116,6 +126,11 @@ stolos:MachineKind a owl:Class ;
     skos:definition "What a machine of a fleet is to Stolos: managed, adopted, a device, a cloud's, discovered, or the controller."@en ;
     stolos:spec "066-stolos-console FR-003" .
 
+stolos:MachineTable a owl:Class ;
+    rdfs:label "Machine table"@en ;
+    skos:definition "The one merged table of a question asked to every machine: a row per answer, and a row for each machine that failed or timed out with its reason, drawn by the console's vendored grid."@en ;
+    stolos:spec "107-pairing-and-query FR-012, FR-013" .
+
 stolos:OutcomeLevel a owl:Class ;
     rdfs:label "Outcome level"@en ;
     skos:definition "How a step ended, as every command line and console shows it, with its mark."@en ;
@@ -130,6 +145,16 @@ stolos:PairingCode a owl:Class ;
     rdfs:label "Pairing code"@en ;
     skos:definition "Eight characters with no look-alikes that a person types on a machine to pair it with the controller; every message after the script is signed with it."@en ;
     stolos:spec "098-pair FR-002, FR-004" .
+
+stolos:PairingSession a owl:Class ;
+    rdfs:label "Pairing session"@en ;
+    skos:definition "What one `stolos pair` keeps while it runs: a code every machine may use, the machines that said hello and where each one is, and the client addresses refused. It stays open until the person who started it stops it; nothing is adopted without that person's yes, machine by machine."@en ;
+    stolos:spec "107-pairing-and-query FR-001, FR-002, FR-003" .
+
+stolos:PairingStage a owl:Class ;
+    rdfs:label "Pairing stage"@en ;
+    skos:definition "Where one machine is in a pairing session: said hello, installing, waiting for the person, adopted, or refused."@en ;
+    stolos:spec "107-pairing-and-query FR-002, FR-003" .
 
 stolos:PassphraseSession a owl:Class ;
     rdfs:label "Passphrase session"@en ;
@@ -180,6 +205,35 @@ stolos:Verbosity a owl:Class ;
     rdfs:label "Verbosity"@en ;
     skos:definition "How much of a run reaches the screen: nothing but a verdict line, only what needs a person, every line, or JSON."@en ;
     stolos:spec "105-calm-output FR-002" .
+
+stolos:WayOfJoining a owl:Class ;
+    rdfs:label "Way of joining"@en ;
+    skos:definition "How a machine came to be in the fleet: auto-adopted (the controller), paired, integrated, managed, or cloud."@en ;
+    stolos:spec "107-pairing-and-query FR-007" .
+
+stolos:answer-answered a stolos:AnswerState ;
+    rdfs:label "answered"@en ;
+    skos:definition "The machine answered, with rows or none."@en ;
+    skos:notation "answered" ;
+    stolos:spec "107-pairing-and-query FR-011" .
+
+stolos:answer-asking a stolos:AnswerState ;
+    rdfs:label "asking"@en ;
+    skos:definition "The machine is being asked: its answer has not come yet."@en ;
+    skos:notation "asking" ;
+    stolos:spec "107-pairing-and-query FR-010" .
+
+stolos:answer-failed a stolos:AnswerState ;
+    rdfs:label "failed"@en ;
+    skos:definition "The machine could not be asked, or refused, with its reason."@en ;
+    skos:notation "failed" ;
+    stolos:spec "107-pairing-and-query FR-011" .
+
+stolos:answer-timed-out a stolos:AnswerState ;
+    rdfs:label "timed out"@en ;
+    skos:definition "The machine did not answer within the time limit of each machine."@en ;
+    skos:notation "timed-out" ;
+    stolos:spec "107-pairing-and-query FR-010" .
 
 stolos:ascii a owl:DatatypeProperty ;
     rdfs:domain stolos:OutcomeLevel ;
@@ -277,6 +331,41 @@ stolos:integration-workstation a stolos:IntegrationKind ;
     skos:definition "Made a managed workstation."@en ;
     skos:notation "workstation" ;
     stolos:spec "069-integrate" .
+
+stolos:joined-auto-adopted a stolos:WayOfJoining ;
+    rdfs:label "auto-adopted"@en ;
+    skos:definition "The controller PC, which the fleet adopts by itself (spec 097): it needs no pairing and is observed by the local probe."@en ;
+    skos:notation "auto-adopted" ;
+    stolos:spec "097-controller FR-001",
+        "107-pairing-and-query FR-007" .
+
+stolos:joined-cloud a stolos:WayOfJoining ;
+    rdfs:label "cloud"@en ;
+    skos:definition "A machine a connected cloud account reports."@en ;
+    skos:notation "cloud" ;
+    stolos:spec "066-stolos-console FR-003",
+        "107-pairing-and-query FR-007" .
+
+stolos:joined-integrated a stolos:WayOfJoining ;
+    rdfs:label "integrated"@en ;
+    skos:definition "Adopted by hand: `host adopt`, a check-in code from `host integrate`, or a device read over SNMP."@en ;
+    skos:notation "integrated" ;
+    stolos:spec "069-integrate",
+        "107-pairing-and-query FR-007" .
+
+stolos:joined-managed a stolos:WayOfJoining ;
+    rdfs:label "managed"@en ;
+    skos:definition "A server or workstation Stolos installs and converges."@en ;
+    skos:notation "managed" ;
+    stolos:spec "002-model",
+        "107-pairing-and-query FR-007" .
+
+stolos:joined-paired a stolos:WayOfJoining ;
+    rdfs:label "paired"@en ;
+    skos:definition "Adopted through `stolos pair`, after the person said yes to its prompt."@en ;
+    skos:notation "paired" ;
+    stolos:spec "098-pair FR-006",
+        "107-pairing-and-query FR-007" .
 
 stolos:kind-adopted a stolos:MachineKind ;
     rdfs:label "adopted"@en ;
@@ -703,6 +792,36 @@ stolos:spec a owl:DatatypeProperty ;
     skos:definition "The specification (`NNN-slug`) or requirement (`NNN-slug FR-NNN`) a term comes from; `bun run check:trace` holds it."@en ;
     stolos:spec "101-ladder FR-004",
         "101-ladder FR-007" .
+
+stolos:stage-adopted a stolos:PairingStage ;
+    rdfs:label "adopted"@en ;
+    skos:definition "The person said yes and the machine was adopted."@en ;
+    skos:notation "adopted" ;
+    stolos:spec "107-pairing-and-query FR-003" .
+
+stolos:stage-hello a stolos:PairingStage ;
+    rdfs:label "said hello"@en ;
+    skos:definition "The machine ran the line and its signed hello was answered."@en ;
+    skos:notation "hello" ;
+    stolos:spec "107-pairing-and-query FR-002" .
+
+stolos:stage-installing a stolos:PairingStage ;
+    rdfs:label "installing"@en ;
+    skos:definition "The machine fetched the probe: it is turning on SSH and installing it."@en ;
+    skos:notation "installing" ;
+    stolos:spec "107-pairing-and-query FR-002" .
+
+stolos:stage-refused a stolos:PairingStage ;
+    rdfs:label "refused"@en ;
+    skos:definition "The person said no, or the machine could not be adopted."@en ;
+    skos:notation "refused" ;
+    stolos:spec "107-pairing-and-query FR-003" .
+
+stolos:stage-waiting a stolos:PairingStage ;
+    rdfs:label "waiting for you"@en ;
+    skos:definition "The machine's signed check-in is queued for the person's yes or no."@en ;
+    skos:notation "waiting" ;
+    stolos:spec "107-pairing-and-query FR-003" .
 
 stolos:tier-destructive a stolos:CommandTier ;
     rdfs:label "destructive"@en ;

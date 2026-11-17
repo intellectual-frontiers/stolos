@@ -63,6 +63,36 @@ export const MACHINE_KINDS: readonly MachineKind[] = [
   "controller",
 ];
 
+/** How a machine came to be in the fleet (`stolos:WayOfJoining`; 107-pairing-and-query FR-007, 097-controller FR-001, 098-pair FR-006, 069-integrate, 002-model, 066-stolos-console FR-003). */
+export type WayOfJoining = "auto-adopted" | "paired" | "integrated" | "managed" | "cloud";
+
+/** Every {@link WayOfJoining}, in the ontology's order. */
+export const WAYS_OF_JOINING: readonly WayOfJoining[] = [
+  "auto-adopted",
+  "paired",
+  "integrated",
+  "managed",
+  "cloud",
+];
+
+/** Where one machine is in a pairing session (`stolos:PairingStage`; 107-pairing-and-query FR-002, 107-pairing-and-query FR-003). */
+export type PairingStage = "hello" | "installing" | "waiting" | "adopted" | "refused";
+
+/** Every {@link PairingStage}, in the ontology's order. */
+export const PAIRING_STAGES: readonly PairingStage[] = [
+  "hello",
+  "installing",
+  "waiting",
+  "adopted",
+  "refused",
+];
+
+/** Where one machine is in a question to every machine (`stolos:AnswerState`; 107-pairing-and-query FR-010, 107-pairing-and-query FR-011). */
+export type AnswerState = "asking" | "answered" | "failed" | "timed-out";
+
+/** Every {@link AnswerState}, in the ontology's order. */
+export const ANSWER_STATES: readonly AnswerState[] = ["asking", "answered", "failed", "timed-out"];
+
 /** A signer's role (`stolos:SignerRole`; 047-intent-and-identity FR-001, 057-keys). */
 export type SignerRole = "daily" | "recovery";
 

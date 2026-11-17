@@ -6,6 +6,7 @@
  */
 // Spec: 097-controller FR-001, FR-006
 // Spec: 098-pair FR-009
+// Spec: 107-pairing-and-query FR-007, FR-010, FR-011
 
 import {
   array,
@@ -36,6 +37,16 @@ import {
 } from "./adopt.ts";
 import { policies, type PolicyResult } from "./policy.ts";
 import type { CheckIn } from "./checkin.ts";
+import { joinedMark } from "./joining.ts";
+import {
+  answeredLine,
+  askAll,
+  type AskOptions,
+  type AskTarget,
+  QUERY_CAP,
+  type QueryAnswer,
+  QUERY_TIMEOUT_S,
+} from "./query.ts";
 
 const fail = (): number => (ui.problems.some((x) => x.level === "fail") ? 1 : 0);
 
@@ -308,18 +319,6 @@ function rowsOf(text: string): Array<Record<string, unknown>> {
   return d.value.map((r) => ({ ...r }));
 }
 
-/** One machine's answer to a fleet query. */
-export interface QueryAnswer {
-  /** The machine. */
-  machine: string;
-  /** managed or adopted. */
-  kind: "managed" | "adopted";
-  /** Its rows, or why there are none. */
-  rows?: Array<Record<string, unknown>>;
-  /** Why it did not answer. */
-  error?: string;
-}
-
 /**
  * One osquery SELECT on each adopted machine, through its probe (the caller
  * checks the SQL first, with queryRefusal). Spec 078's osquery controls ask
@@ -337,19 +336,86 @@ export async function queryAdopted(
       try {
         answers.push(
           r.ok
-            ? { machine: machine.name, kind: "adopted", rows: rowsOf(r.out) }
-            : { machine: machine.name, kind: "adopted", error: r.err || "no answer" },
+            ? { machine: machine.name, kind: "adopted", state: "answered", rows: rowsOf(r.out) }
+            : {
+                machine: machine.name,
+                kind: "adopted",
+                state: "failed",
+                error: r.err || "no answer",
+              },
         );
       } catch {
-        answers.push({ machine: machine.name, kind: "adopted", error: "unreadable answer" });
+        answers.push({
+          machine: machine.name,
+          kind: "adopted",
+          state: "failed",
+          error: "unreadable answer",
+        });
       }
     }),
   );
   return answers.sort((a, b) => a.machine.localeCompare(b.machine));
 }
 
-/** `stolos fleet query "<sql>"`: one osquery SELECT on every machine; one table. */
-export async function fleetQuery(sql: string, json = false): Promise<number> {
+/**
+ * Every machine to ask a question: the managed servers (over their MCP servers) and the adopted machines (through their probes, the
+ * controller PC's own among them), each as a target {@link askAll} can ask within a time limit.
+ */
+export async function queryTargets(sql: string): Promise<AskTarget[]> {
+  const b64 = btoa(String.fromCharCode(...new TextEncoder().encode(sql)));
+  const targets: AskTarget[] = (await loadAdopted()).map(({ machine }) => ({
+    machine: machine.name,
+    kind: "adopted" as const,
+    ask: async (signal) => {
+      const r = await probe(machine, `osquery ${b64}`, { signal });
+      if (!r.ok) throw new Error(r.err || "no answer");
+      try {
+        return rowsOf(r.out);
+      } catch {
+        throw new Error("unreadable answer");
+      }
+    },
+  }));
+  const { loadHosts } = await import("../model/load.ts");
+  const { mcpServers } = await import("../render/agent.ts");
+  const { callRemoteTool } = await import("../observe/remote.ts");
+  const { writeKnownHosts } = await import("../fleet/registration.ts");
+  const knownHosts = await writeKnownHosts().catch(() => undefined);
+  for (const h of (await loadHosts()).filter((x) => x.kind !== "workstation")) {
+    const target = mcpServers([h], P.fleetId)[0]?.target;
+    targets.push({
+      machine: h.name,
+      kind: "managed",
+      ask: async (_signal, limitMs) => {
+        if (!target) throw new Error("no way to reach it is known yet");
+        const r = await callRemoteTool(
+          target,
+          "archon_query",
+          { sql, json: true },
+          { timeoutMs: limitMs, ...(knownHosts === undefined ? {} : { knownHosts }) },
+        );
+        if (!r.ok) throw new Error(r.text.split("\n").pop() || "no answer");
+        try {
+          return rowsOf(r.text);
+        } catch {
+          throw new Error("unreadable answer");
+        }
+      },
+    });
+  }
+  return targets;
+}
+
+/**
+ * Ask every machine one SELECT (spec 107-pairing-and-query FR-010): all at once, at most `cap` at a time, each within `timeoutMs`;
+ * `onStart` and `onAnswer` let a page draw the table as the answers come. The caller has checked the SQL (`queryRefusal`).
+ */
+export async function askFleet(sql: string, o: AskOptions = {}): Promise<QueryAnswer[]> {
+  return await askAll(await queryTargets(sql), o);
+}
+
+/** `stolos fleet query "<sql>" [--timeout s]`: one osquery SELECT on every machine at once; one merged table. */
+export async function fleetQuery(sql: string, json = false, timeoutS?: number): Promise<number> {
   const { queryRefusal, table } = await import("../state/query.ts");
   const why = queryRefusal(sql);
   if (why) {
@@ -359,38 +425,18 @@ export async function fleetQuery(sql: string, json = false): Promise<number> {
     );
     return fail();
   }
-  const answers: QueryAnswer[] = await queryAdopted(sql, await loadAdopted());
-  const { loadHosts } = await import("../model/load.ts");
-  const { mcpServers } = await import("../render/agent.ts");
-  const { callRemoteTool } = await import("../observe/remote.ts");
-  const { writeKnownHosts } = await import("../fleet/registration.ts");
-  const knownHosts = await writeKnownHosts().catch(() => undefined);
-  const hosts = (await loadHosts()).filter((h) => h.kind !== "workstation");
-  await Promise.all(
-    hosts.map(async (h) => {
-      const target = mcpServers([h], P.fleetId)[0]?.target;
-      if (!target) return;
-      const r = await callRemoteTool(
-        target,
-        "archon_query",
-        { sql, json: true },
-        {
-          timeoutMs: 20_000,
-          ...(knownHosts === undefined ? {} : { knownHosts }),
-        },
-      );
-      try {
-        answers.push(
-          r.ok
-            ? { machine: h.name, kind: "managed", rows: rowsOf(r.text) }
-            : { machine: h.name, kind: "managed", error: r.text.split("\n").pop() ?? "" },
-        );
-      } catch {
-        answers.push({ machine: h.name, kind: "managed", error: "unreadable answer" });
-      }
-    }),
-  );
-  answers.sort((a, b) => a.machine.localeCompare(b.machine));
+  const p = ui.phase("Query");
+  let asked = 0;
+  let got = 0;
+  const answers = await askFleet(sql, {
+    timeoutMs: (timeoutS ?? QUERY_TIMEOUT_S) * 1000,
+    onStart: (ms) => {
+      asked = ms.length;
+      p.status(`Asking ${asked} machine(s), ${Math.min(QUERY_CAP, asked)} at a time`);
+    },
+    onAnswer: () => p.status(`${++got} of ${asked} answered or failed`),
+  });
+  p.done(answeredLine(answers));
   if (json) {
     stdio.stdout.writeSync(`${JSON.stringify(answers, null, 2)}\n`);
     return 0;
@@ -399,14 +445,13 @@ export async function fleetQuery(sql: string, json = false): Promise<number> {
     (a.rows ?? []).map((r) => ({ machine: a.machine, ...r })),
   );
   if (rows.length) stdio.stdout.writeSync(`${table(rows)}\n`);
-  for (const a of answers.filter((x) => x.error))
-    stdio.stderr.writeSync(`${a.machine}: ${a.error}\n`);
-  stdio.stdout.writeSync(
-    `\n${rows.length} row(s) from ${
-      answers.filter((a) => a.rows).length
-    } of ${answers.length} machine(s)\n`,
-  );
-  return answers.some((a) => a.error) ? 1 : 0;
+  for (const a of answers.filter((x) => x.state !== "answered")) {
+    stdio.stderr.writeSync(
+      `${a.machine}: ${a.state === "timed-out" ? "timed out: " : ""}${a.error}\n`,
+    );
+  }
+  stdio.stdout.writeSync(`\n${answeredLine(answers)} · ${rows.length} row(s)\n`);
+  return answers.some((a) => a.state !== "answered") ? 1 : 0;
 }
 
 /** `stolos discover`: machines seen on this PC's network or in the clouds, not yet in the fleet. */
@@ -450,6 +495,12 @@ export async function discover(json = false): Promise<number> {
       `${table(
         found.map((d) => ({ source: d.source, address: d.address, id: d.id, name: d.name ?? "" })),
       )}\n`,
+    );
+  }
+  const me = adopted.find((a) => a.machine.role === "controller");
+  if (me) {
+    ui.phase(me.machine.name).done(
+      `this PC is in the fleet already · ${joinedMark("auto-adopted")}`,
     );
   }
   ui.phase("Discover").done(
@@ -581,7 +632,16 @@ async function adoptFromCheckIn(o: {
  */
 export async function adoptCheckIn(
   ci: CheckIn,
-  o: { name: string; ssh?: string; title?: string; owner?: string; until?: string; spec?: string },
+  o: {
+    name: string;
+    ssh?: string;
+    title?: string;
+    owner?: string;
+    until?: string;
+    spec?: string;
+    /** How it joined, recorded in machine.ts (spec 107-pairing-and-query FR-007): `paired` by `stolos pair`. */
+    joined?: "paired" | "integrated";
+  },
   c = ui.phase("Check-in"),
 ): Promise<number> {
   const via = o.ssh?.match(/^([a-z_][a-z0-9_.-]*)@([A-Za-z0-9.:-]+?)(?::(\d+))?$/i);
@@ -602,6 +662,7 @@ export async function adoptCheckIn(
     hostKeys: ci.hostKeys,
     ...compact({ until: (o.until ?? existing?.until) || undefined }),
     adopted: existing?.adopted ?? new Date().toISOString(),
+    ...((j) => (j ? { joined: j } : {}))(o.joined ?? existing?.joined),
     ...(existing?.accepted ? { accepted: existing.accepted } : {}),
   };
   await fs.mkdir(adoptedDir(o.name), { recursive: true });

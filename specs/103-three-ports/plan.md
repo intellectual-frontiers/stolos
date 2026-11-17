@@ -38,9 +38,9 @@ holds 443; a test scans `src/` so that a new listener elsewhere fails.
 
 ## Design
 
-**The record** (`adopt/pair-store.ts`): JSON, one object (`PairRecord`). **Writes**: under `<file>-lock` (commons' `acquireLock`,
+**The record** (`adopt/pair-store.ts`): JSON, one object (`PairRecord`, format 2: many machines). **Writes**: under `<file>-lock` (commons' `acquireLock`,
 `O_EXCL`, a dead holder's lock is taken over), read fresh, change, write `<file>-tmp` (0600), rename over `<file>`. **Reads**
-need no lock (the rename is atomic). **Expiry** is `expiresAt` in the record, checked by every request; a late `POST` says so.
+need no lock (the rename is atomic). **No expiry** (spec 107-pairing-and-query): the session lasts until the person closes it; a late `POST` to an ended one says so.
 
 **Why not a port or a socket between processes**: Article 29; the armed-install pattern already exists.
 

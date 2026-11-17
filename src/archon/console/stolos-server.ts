@@ -29,6 +29,7 @@
 // Spec: 099-engine-update FR-002, FR-005
 // Spec: 100-remote-access FR-003, FR-007, FR-009
 // Spec: 103-three-ports FR-003, FR-004, FR-005
+// Spec: 107-pairing-and-query FR-008, FR-011, FR-012
 
 import type { EngineVersions } from "../fleet/releases.ts";
 import { type Askpass, type Question, sameToken } from "./askpass.ts";
@@ -56,10 +57,12 @@ import {
 import type { PcFacts } from "./pc.ts";
 import { installCards, parseBootLog } from "./boot-timeline.ts";
 import { htmlResponse, lineClass, patch, redirect, sameOrigin, staticFile } from "./server.ts";
+import { tableItem } from "./table.ts";
+import { CONTROLLER_NOTE } from "../adopt/joining.ts";
+import type { AskOptions, QueryAnswer } from "../adopt/query.ts";
 import {
   addPage,
   addStep,
-  answerTable,
   bootPage,
   changesPage,
   connectorsPage,
@@ -194,6 +197,11 @@ export interface StolosDeps {
   /** Runs a stolos command. */
   runner: PcRunner;
   /**
+   * Spec 107-pairing-and-query FR-010: asks every machine one SQL question, at once, handing each answer on as it arrives (default:
+   * the real one, `askFleet`, in this process).
+   */
+  ask?: (sql: string, o: AskOptions) => Promise<QueryAnswer[]>;
+  /**
    * Spec 099: passphrases asked in the browser (OpenSSH's askpass helper asks the console); the
    * runner's commands use it. Absent: a passphrase is typed in the terminal.
    */
@@ -226,7 +234,7 @@ export interface StolosDeps {
    * Spec 103: pairing's routes (`/device/pair`), answered on the HTTPS names only, before any session or passkey, never on 127.0.0.1
    * (the handler answers `undefined` for a path that is not pairing's; with no pairing waiting it answers 404).
    */
-  devicePair?: (req: Request) => Promise<Response | undefined>;
+  devicePair?: (req: Request, from?: string) => Promise<Response | undefined>;
 }
 
 /**
@@ -440,6 +448,13 @@ export function stolosHandler(
         if (!cmd) return refuse("That command is not offered here (run it in the terminal).");
         const r = argvFor(cmd, form);
         if ("error" in r) return refuse(r.error);
+        // Spec 107 FR-008: the controller is auto-adopted; the console does not release or remove it.
+        if (r.argv[0] === "host" && r.argv[1] === "release") {
+          const target = r.argv[2];
+          if ((await deps.facts()).machines.some((m) => m.controller && m.name === target)) {
+            return refuse(CONTROLLER_NOTE);
+          }
+        }
         // Spec 100 FR-009: a signer whose key is not on this PC looks only.
         if (r.tier !== "read" && !mayChange(s)) {
           const why = signedElsewhere(owner(), r.argv);
@@ -519,50 +534,76 @@ export function stolosHandler(
       async start(ctl) {
         const send = (x: string) => ctl.enqueue(enc.encode(x));
         const state = (t: string) => send(patch(html`<span class="sub" id="runstate">${t}</span>`));
-        if (/[\0\r\n]/.test(sql) || sql.startsWith("-") || !sql) {
-          state("Not asked: one line, one SELECT");
-          return ctl.close();
-        }
-        if (busy) {
-          state("Another command is running");
-          return ctl.close();
-        }
-        busy = true;
-        state("Asking every machine ...");
-        const lines: string[] = [];
-        let code: number;
-        try {
-          code = await deps.runner(["fleet", "query", sql, "--json"], (l) => lines.push(l));
-        } finally {
-          busy = false;
-        }
-        const text = lines.join("\n");
-        const start = text.indexOf("[");
-        try {
-          const answers = JSON.parse(text.slice(start, text.lastIndexOf("]") + 1)) as Parameters<
-            typeof answerTable
-          >[0];
-          send(patch(answerTable(answers)));
-          state(code === 0 ? "Answered" : "Answered, with machines that did not answer");
-        } catch {
+        const summary = (t: string) =>
+          send(patch(html`<p class="sub" id="summary" role="status">${t}</p>`));
+        const refuse = (why: string) => {
           send(
             patch(html`
-              <div class="card" id="answer">
-                <div class="term">
-                  ${lines.map((l) => html`<div class="${lineClass(l)}">${l}</div>`)}
-                </div>
+              <div class="card" id="answer" style="margin-top:14px">
+                <div class="term"><div class="bad">refused: ${why}</div></div>
               </div>
             `),
           );
           state("Refused or failed");
+          ctl.close();
+        };
+        if (/[\0\r\n]/.test(sql) || sql.startsWith("-") || !sql) {
+          state("Not asked: one line, one SELECT");
+          return ctl.close();
         }
+        const { answeredLine, queryRefusal, tableRows } = await import("../adopt/query.ts");
+        const why = queryRefusal(sql);
+        if (why) return refuse(why);
+        const ask = deps.ask ?? (await import("../adopt/commands.ts")).askFleet;
+        // The grid fills in as the machines answer (spec 107-pairing-and-query FR-011): a row for each machine at once, asking.
+        const feed = (change: Parameters<typeof tableItem>[0]) =>
+          send(patch(tableItem(change), { selector: "#answers-feed", mode: "append" }));
+        send(patch(html`<div id="answer" style="margin-top:14px"></div>`));
+        feed({ op: "reset" });
+        state("Asking every machine ...");
+        const got: Array<Awaited<ReturnType<typeof ask>>[number]> = [];
+        let total = 0;
+        const answers = await ask(sql, {
+          onStart: (ms) => {
+            total = ms.length;
+            feed({
+              op: "add",
+              rows: ms.map((m) => ({
+                __id: `ask:${m.machine}`,
+                machine: m.machine,
+                answer: "asking",
+                reason: "",
+              })),
+              remove: [],
+            });
+            summary(`0 of ${total} answered`);
+            if (!total) state("There is no machine to ask yet");
+          },
+          onAnswer: (a) => {
+            got.push(a);
+            feed({
+              op: "add",
+              rows: tableRows([a]).map((r, i) => ({ ...r, __id: `${a.machine}#${i}` })),
+              remove: [`ask:${a.machine}`],
+            });
+            summary(
+              `${answeredLine(got, total)}${got.length < total ? `, ${total - got.length} still asking` : ""}`,
+            );
+            state(`Asking every machine ... (${got.length} of ${total} came back)`);
+          },
+        });
+        const failed = answers.filter((a) => a.state !== "answered").length;
+        summary(
+          `${answeredLine(answers)}${failed ? `: ${failed} failed or did not answer in time, each with its reason in its row` : ""}`,
+        );
+        state(failed ? "Answered, with machines that did not answer" : "Answered");
         await deps.activity.add({
           at: new Date().toISOString(),
           user: s.user,
           from: s.from,
           kind: "run",
           detail: `fleet query ${sql}`,
-          code,
+          code: failed ? 1 : 0,
         });
         ctl.close();
       },
@@ -590,7 +631,8 @@ export function stolosHandler(
     const secure = url.protocol === "https:";
     // Spec 103: pairing is a route of the console's TLS door, for its LAN names (the Host check above held), with no session.
     if (path === DEVICE_PAIR_PATH || path.startsWith(`${DEVICE_PAIR_PATH}/`)) {
-      const answer = lan && deps.devicePair ? await deps.devicePair(req) : undefined;
+      const answer =
+        lan && deps.devicePair ? await deps.devicePair(req, info?.remoteAddr.hostname) : undefined;
       return answer ?? new Response("not found\n", { status: 404 });
     }
     if (lan && (path === "/launch" || path === "/audit/launch" || path === "/askpass")) {

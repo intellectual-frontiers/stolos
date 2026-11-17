@@ -1,5 +1,5 @@
 /**
- * Spec 066: the Stolos Console with a fake fleet and a fake runner, for the browser test
+ * Specs 066 and 107-pairing-and-query: the Stolos Console with a fake fleet and a fake runner, for the browser test
  * (tests/console/stolos-browser.cjs, CI's console-browser job) and the server tests.
  * Usage: bun tests/console/serve-stolos.ts <port>
  *
@@ -38,6 +38,19 @@ const desk = toObserved(
     `@probe\nversion=1\nat=${now}\n@os\nkernel=Linux\nfamily=arch\nname=Arch Linux\nversion=rolling\narch=x86_64\nhostname=bob-desk\nflavor=omarchy\n@hardware\ncpus=16\nmemory_mb=65536\n@security\ndisk_encryption=off\nfirewall=off\nauto_updates=manual\nadmins=bob\n@software\nmanager=pacman\npackages=1400\npending_updates=48\n@listening\nports=22 631\n`,
   ),
 );
+const pcObserved = toObserved(
+  parseProbe(
+    `@probe\nversion=1\nat=${now}\n@os\nkernel=Linux\nfamily=ubuntu\nname=Ubuntu\nversion=26.04\narch=x86_64\nhostname=lab-pc\n@hardware\ncpus=8\nmemory_mb=32768\n@security\ndisk_encryption=on\nfirewall=on\nauto_updates=on\nadmins=alice\n@software\nmanager=apt\npackages=900\n@listening\nports=443\n`,
+  ),
+);
+const controllerDef = {
+  name: "lab-pc",
+  title: "The fleet's controller PC (lab-pc)",
+  role: "controller" as const,
+  ssh: { user: "alice", address: "lab-pc" },
+  hostKeys: [],
+  adopted: "2026-10-01",
+};
 const machines = [
   {
     name: "alice-mbp",
@@ -46,6 +59,7 @@ const machines = [
     adopted: "2026-11-01",
     owner: "alice",
     title: "Alice's MacBook",
+    joined: "paired" as const,
   },
   {
     name: "bob-desk",
@@ -53,6 +67,7 @@ const machines = [
     hostKeys: [],
     adopted: "2026-11-02",
     owner: "bob",
+    joined: "integrated" as const,
     accepted: [
       {
         policy: "firewall",
@@ -97,6 +112,7 @@ export const FACTS: PcFacts = {
     {
       name: "alpha",
       kind: "server",
+      joined: "managed",
       os: "Ubuntu",
       where: "10.0.30.59",
       seen: now,
@@ -113,19 +129,33 @@ export const FACTS: PcFacts = {
     {
       name: "beta",
       kind: "server",
+      joined: "managed",
       os: "Ubuntu",
       seen: now,
       score: { pass: 142, total: 142 },
       failing: [],
       console: "https://beta.lab.example.org/",
     },
-    { name: "wsl-alice", kind: "workstation", os: "Ubuntu", failing: [] },
+    { name: "wsl-alice", kind: "workstation", joined: "managed", os: "Ubuntu", failing: [] },
+    {
+      name: "lab-pc",
+      kind: "adopted",
+      joined: "auto-adopted",
+      controller: true,
+      thisPc: true,
+      os: "Ubuntu 26.04",
+      where: "lab-pc",
+      seen: now,
+      score: { pass: 9, total: 9 },
+      failing: [],
+    },
     ...machines.map((m, i) => {
       const o = must([mac, desk][i]);
       const rs = policies(m, o, t);
       return {
         name: m.name,
         kind: "adopted" as const,
+        joined: m.joined,
         os: `${o.os.name} ${o.os.version}`,
         where: m.ssh.address,
         owner: m.owner,
@@ -134,10 +164,18 @@ export const FACTS: PcFacts = {
         failing: rs.filter((r) => r.status === "fail").map((r) => r.title),
       };
     }),
-    { name: "scratch", kind: "cloud", where: "Hetzner Cloud, fsn1-dc14", seen: now, failing: [] },
+    {
+      name: "scratch",
+      kind: "cloud",
+      joined: "cloud",
+      where: "Hetzner Cloud, fsn1-dc14",
+      seen: now,
+      failing: [],
+    },
     {
       name: "front-printer",
       kind: "device",
+      joined: "integrated",
       os: "LaserJet Example",
       where: "10.0.30.40",
       owner: "office",
@@ -155,11 +193,18 @@ export const FACTS: PcFacts = {
       failing: [],
     },
   ],
-  adopted: machines.map((m, i) => ({
-    machine: m,
-    observed: must([mac, desk][i]),
-    results: policies(m, [mac, desk][i], t),
-  })),
+  adopted: [
+    ...machines.map((m, i) => ({
+      machine: m,
+      observed: must([mac, desk][i]),
+      results: policies(m, [mac, desk][i], t),
+    })),
+    {
+      machine: controllerDef,
+      observed: pcObserved,
+      results: policies(controllerDef, pcObserved, t),
+    },
+  ],
   devices: [
     {
       device: {
@@ -245,22 +290,8 @@ export const BOOT_LOG =
     "2026-11-15T11:01:50Z 10.0.30.60 beta: installer image (whole)",
   ].join("\n") + "\n";
 
-/** A fake runner: lines, and fleet query answers as JSON. */
+/** A fake runner: lines. */
 export const fakeRunner: StolosDeps["runner"] = async (argv, each) => {
-  if (argv[0] === "fleet" && argv[1] === "query") {
-    if (/shadow/.test(argv[2] ?? "")) {
-      each("   [FAIL] refused: the table shadow is never served (secrets or reaching out)");
-      return 1;
-    }
-    each(
-      JSON.stringify([
-        { machine: "alpha", kind: "managed", rows: [{ name: "Ubuntu", version: "26.04" }] },
-        { machine: "alice-mbp", kind: "adopted", rows: [{ name: "macOS", version: "15.1" }] },
-        { machine: "bob-desk", kind: "adopted", error: "osquery is not installed here" },
-      ]),
-    );
-    return 1;
-  }
   for (let i = 0; i < 20; i++) {
     each(
       i === 5 ? "   [warn] The firewall is on: firewall: off [END-07, NET-02]" : `[ok] step ${i}`,
@@ -269,6 +300,72 @@ export const fakeRunner: StolosDeps["runner"] = async (argv, each) => {
   }
   each(`[ok] ${argv.join(" ")} done`);
   return 0;
+};
+
+/** How long the fake machines take (milliseconds), so that answers arrive one by one. */
+const sleep = (ms: number, signal: AbortSignal): Promise<void> =>
+  new Promise((ok) => {
+    const t = setTimeout(ok, ms);
+    signal.addEventListener("abort", () => (clearTimeout(t), ok()), { once: true });
+  });
+
+/**
+ * A fake "ask every machine": the real pool (`askAll`, its cap and its limit) over fake machines that answer at different times:
+ * a managed server with 60 rows, the controller, a Mac, a machine that fails, and one that never answers (timed out after
+ * `limitMs`).
+ */
+export const fakeAsk: NonNullable<StolosDeps["ask"]> = async (sql, o) => {
+  const { askAll } = await import("../../src/archon/adopt/query.ts");
+  const ports = /listening_ports/.test(sql);
+  return await askAll(
+    [
+      {
+        machine: "alpha",
+        kind: "managed",
+        ask: async (signal) => {
+          await sleep(250, signal);
+          return ports
+            ? Array.from({ length: 60 }, (_x, i) => ({ port: 1000 + i, address: "0.0.0.0" }))
+            : [{ name: "Ubuntu", version: "26.04" }];
+        },
+      },
+      {
+        machine: "lab-pc",
+        kind: "adopted",
+        ask: async (signal) => {
+          await sleep(100, signal);
+          return ports
+            ? [{ port: 443, address: "0.0.0.0" }]
+            : [{ name: "Ubuntu", version: "26.04" }];
+        },
+      },
+      {
+        machine: "alice-mbp",
+        kind: "adopted",
+        ask: async (signal) => {
+          await sleep(500, signal);
+          return ports ? [{ port: 22, address: "0.0.0.0" }] : [{ name: "macOS", version: "15.1" }];
+        },
+      },
+      {
+        machine: "bob-desk",
+        kind: "adopted",
+        ask: async (signal) => {
+          await sleep(50, signal);
+          throw new Error("osquery is not installed here");
+        },
+      },
+      {
+        machine: "front-pc",
+        kind: "adopted",
+        ask: async (signal) => {
+          await sleep(60_000, signal);
+          return [];
+        },
+      },
+    ],
+    { ...o, timeoutMs: 1500 },
+  );
 };
 
 const estateObs = (provider: string, account: string, entities: Observation["entities"]) => ({
@@ -389,6 +486,7 @@ export async function fakeConsole(
     sessions: new Sessions(),
     facts: () => Promise.resolve(structuredClone(FACTS)),
     runner: fakeRunner,
+    ask: fakeAsk,
     activity: {
       add: (e) => (log.push(e), Promise.resolve()),
       recent: (n) => Promise.resolve(log.slice(-n).reverse()),

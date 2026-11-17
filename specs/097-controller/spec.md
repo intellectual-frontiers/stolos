@@ -43,7 +43,11 @@ theirs: `stolos:Controller` (a subclass of `stolos:AdoptedMachine`), the machine
   disk encryption is known when Stolos runs as the person, as it does.
 - **FR-006** A fleet may have several controllers (each signer's PC). Each observes only itself;
   `host observe` on one passes over the others, saying so. `host release` of a controller removes
-  only its model (nothing was installed on it).
+  only its model (nothing was installed on it). The Stolos Console does not offer Release or Remove for a controller (spec
+  107-pairing-and-query FR-008).
+- **FR-007** The controller is **auto-adopted** (spec 107-pairing-and-query FR-007): the fleet adopts it by itself, it needs no
+  pairing, and it is observed by the local probe; the consoles and `fleet status` and `discover` say so, and the Stolos Console
+  pins it first, in a This PC group.
 
 ## Success criteria
 

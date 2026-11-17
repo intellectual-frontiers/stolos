@@ -10,6 +10,7 @@
  */
 // Spec: 066-stolos-console
 // Spec: 101-ladder FR-006
+// Spec: 107-pairing-and-query FR-007, FR-008
 
 import type { Attention, RecordedVerify } from "../state/verify.ts";
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
@@ -21,7 +22,8 @@ import type { AdoptedDef, Observed } from "../adopt/adopt.ts";
 import type { Observation } from "../connect/connector.ts";
 import type { PackRun } from "../controls/run.ts";
 import type { DeviceDef, DeviceObserved } from "../device/device.ts";
-import type { MachineKind } from "../ontology.auto.ts";
+import type { MachineKind, WayOfJoining } from "../ontology.auto.ts";
+import { wayOfJoining } from "../adopt/joining.ts";
 
 /** One machine, whatever its kind. */
 export interface PcMachine {
@@ -33,6 +35,12 @@ export interface PcMachine {
    * console lists as an adopted machine.
    */
   kind: Exclude<MachineKind, "controller">;
+  /** How it joined the fleet (spec 107-pairing-and-query FR-007); undefined for a machine only discovered. */
+  joined?: WayOfJoining;
+  /** The fleet's controller PC (an adopted machine with the role `controller`, spec 097). */
+  controller?: boolean;
+  /** The controller that is this PC (the console runs on it): pinned first in the This PC group. */
+  thisPc?: boolean;
   /** Its operating system, when known. */
   os?: string;
   /** Where it is: an address, a cloud and region. */
@@ -197,6 +205,7 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
     machines.push({
       name: h.name,
       kind: server ? "server" : "workstation",
+      joined: "managed",
       os: "Ubuntu",
       ...(h.ip ? { where: h.ip } : {}),
       ...(inst?.at ? { seen: inst.at } : {}),
@@ -221,11 +230,22 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
     ...a,
     results: policies(a.machine, a.observed, now),
   }));
+  const { controllerName } = await import("../adopt/controller.ts");
+  const me = await controllerName().catch(() => "");
   for (const a of adopted) {
     const pass = a.results.filter((r) => r.status === "pass").length;
+    const way = wayOfJoining({
+      kind: "adopted",
+      ...(a.machine.role ? { role: a.machine.role } : {}),
+      ...(a.machine.joined ? { joined: a.machine.joined } : {}),
+    });
     machines.push({
       name: a.machine.name,
       kind: "adopted",
+      ...(way ? { joined: way } : {}),
+      ...(a.machine.role === "controller"
+        ? { controller: true, ...(a.machine.name === me ? { thisPc: true } : {}) }
+        : {}),
       ...(a.observed ? { os: `${a.observed.os.name} ${a.observed.os.version}`.trim() } : {}),
       where: a.machine.ssh.address,
       ...(a.machine.owner ? { owner: a.machine.owner } : {}),
@@ -245,6 +265,7 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
     machines.push({
       name: d.device.name,
       kind: "device",
+      joined: "integrated",
       os: d.observed?.model ?? d.device.kind,
       where: d.device.address,
       ...(d.device.owner ? { owner: d.device.owner } : {}),
@@ -286,6 +307,7 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
       machines.push({
         name: a.name,
         kind: "cloud",
+        joined: "cloud",
         where: `${c.title}${a.where ? `, ${a.where}` : ""}`,
         seen: o.at,
         failing: [],

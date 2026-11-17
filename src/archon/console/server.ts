@@ -25,6 +25,7 @@ import {
   datastarSource,
   FAVICON,
   FONTS,
+  AG_GRID,
   MERMAID,
   vendored,
 } from "./assets.ts";
@@ -114,9 +115,10 @@ export const htmlResponse = (
       "x-frame-options": "DENY",
       "referrer-policy": "same-origin",
       "x-content-type-options": "nosniff",
-      // Datastar evaluates its attribute expressions, and the pages carry one inline script.
+      // Datastar evaluates its attribute expressions, and the pages carry one inline script. AG Grid (spec 107) carries its icon
+      // font inside its own script as a data: URI (font-src data:); scripts, styles and connections are still this server's only.
       "content-security-policy":
-        "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
+        "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
       ...headers,
     },
   });
@@ -234,6 +236,23 @@ export async function staticFile(path: string, cacheDir: string): Promise<Respon
           },
         })
       : new Response("// Mermaid is not available on this server yet\n", {
+          status: 503,
+          headers: { "content-type": "text/javascript" },
+        });
+  }
+  // Spec 107: AG Grid Community, vendored and pinned, with its licence (never a CDN).
+  if (path === AG_GRID.url || path === AG_GRID.license.url) {
+    const file = path === AG_GRID.url ? AG_GRID : AG_GRID.license;
+    const b = await vendored(file, cacheDir);
+    return b
+      ? new Response(b, {
+          headers: {
+            "content-type":
+              path === AG_GRID.url ? "text/javascript; charset=utf-8" : "text/plain; charset=utf-8",
+            "cache-control": "max-age=31536000, immutable",
+          },
+        })
+      : new Response("// AG Grid is not available on this server yet\n", {
           status: 503,
           headers: { "content-type": "text/javascript" },
         });

@@ -63,7 +63,6 @@ trace/no-spec-line src/archon/mcp/mod.ts
 trace/no-spec-line src/archon/model/export.ts
 trace/no-spec-line src/archon/model/load.ts
 trace/no-spec-line src/archon/model/providers.ts
-trace/no-spec-line src/archon/observe/fleet-status.ts
 trace/no-spec-line src/archon/observe/next.ts
 trace/no-spec-line src/archon/people/mod.ts
 trace/no-spec-line src/archon/pg/tui.ts

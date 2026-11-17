@@ -1,18 +1,20 @@
 /**
- * Specs 098 and 103-three-ports (tests): a pairing server for one machine with a fixed code and a fixed key, serving
- * `/device/pair` as the boot server's door does, that approves the first signed check-in and writes it to a file. `tests/pair098.test.ts` runs it in
- * process; `tests/integrate/windows-check.ps1` runs it as a program on Windows CI:
+ * Specs 098, 103-three-ports and 107-pairing-and-query (tests): a pairing session with a fixed code and a fixed key, serving
+ * `/device/pair` as the boot server's door does, that approves every signed check-in (as many machines as come) and writes the first
+ * to a file. The session never ends by itself. `tests/pair098.test.ts` runs it in process; `tests/integrate/windows-check.ps1` runs
+ * it as a program on Windows CI:
  *
  * ```sh
  * bun tests/integrate/pair-server.ts <code> <public key> <check-in file>
  * ```
  *
- * It prints the pairing's base URL (`http://127.0.0.1:<port>/device/pair`, what `--pair` takes) on the first line, and exits 0 once a check-in was approved.
+ * It prints the pairing's base URL (`http://127.0.0.1:<port>/device/pair`, what `--pair` takes) on the first line, and exits 0 once the first check-in was approved (a session is otherwise open until stopped).
  *
  * @module
  */
 // Spec: 098-pair FR-001, FR-006
 // Spec: 103-three-ports FR-003
+// Spec: 107-pairing-and-query FR-001, FR-002
 
 import { fs, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { listen } from "../../src/archon-boot/http.ts";
@@ -28,21 +30,40 @@ export async function servePair(o: {
   name?: string;
   onCheckIn?: (text: string) => Promise<void> | void;
   pollMs?: number;
-}): Promise<{ url: string; origin: string; session: PairSession; close: () => void }> {
+}): Promise<{
+  url: string;
+  origin: string;
+  session: PairSession;
+  store: MemoryPairStore;
+  /** Resolves with the machine's name when the first check-in was approved. */
+  approved: Promise<string>;
+  close: () => void;
+}> {
   const fleet = o.fleet ?? "lab";
+  let approve: (name: string) => void = () => undefined;
+  const approved = new Promise<string>((ok) => (approve = ok));
+  const store = new MemoryPairStore(newPairRecord({ code: o.code, fleet, engine: "v0.0.0" }));
   const session = new PairSession({
-    store: new MemoryPairStore(newPairRecord({ code: o.code, fleet, engine: "v0.0.0" })),
+    store,
     ...(o.pollMs ? { pollMs: o.pollMs } : {}),
     nameFor: (hostname) =>
       Promise.resolve({ name: o.name ?? hostname.toLowerCase().split(".")[0] ?? "m", key: o.key }),
     approve: async (text, hello) => {
       await o.onCheckIn?.(text);
+      approve(hello.name);
       return { ok: true, message: `${hello.name} is adopted by the fleet ${fleet}` };
     },
   });
-  const listener = await listen(0, (req) => session.handle(req), "127.0.0.1");
+  const listener = await listen(0, (req, from) => session.handle(req, from), "127.0.0.1");
   const origin = `http://127.0.0.1:${(listener.addr as { port: number }).port}`;
-  return { url: `${origin}${DEVICE_PAIR_PATH}`, origin, session, close: () => listener.close() };
+  return {
+    url: `${origin}${DEVICE_PAIR_PATH}`,
+    origin,
+    session,
+    store,
+    approved,
+    close: () => listener.close(),
+  };
 }
 
 if (import.meta.main) {
@@ -54,8 +75,8 @@ if (import.meta.main) {
     onCheckIn: (t) => fs.writeTextFile(out, t),
   });
   stdio.stdout.writeSync(`${s.url}\n`);
-  const end = await s.session.done();
+  await s.approved;
   await new Promise((r) => setTimeout(r, 500));
   s.close();
-  proc.exit(end === "paired" ? 0 : 1);
+  proc.exit(0);
 }

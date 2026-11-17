@@ -23,6 +23,9 @@ import {
   SignerRoleSchema,
   SigningOutcomeSchema,
   VerbositySchema,
+  WayOfJoiningSchema,
+  PairingStageSchema,
+  AnswerStateSchema,
 } from "./vocabulary.ts";
 
 const { en } = rdf;
@@ -380,6 +383,92 @@ export const devicePaths = codeList(DevicePathSchema, "devicepath", {
   },
 });
 
+/** How a machine came to be in the fleet (spec 107-pairing-and-query FR-007). */
+export const waysOfJoining = codeList(WayOfJoiningSchema, "joined", {
+  "auto-adopted": {
+    label: en("auto-adopted"),
+    definition: en(
+      "The controller PC, which the fleet adopts by itself (spec 097): it needs no pairing and is observed by the local probe.",
+    ),
+    spec: ["107-pairing-and-query FR-007", "097-controller FR-001"],
+  },
+  paired: {
+    label: en("paired"),
+    definition: en("Adopted through `stolos pair`, after the person said yes to its prompt."),
+    spec: ["107-pairing-and-query FR-007", "098-pair FR-006"],
+  },
+  integrated: {
+    label: en("integrated"),
+    definition: en(
+      "Adopted by hand: `host adopt`, a check-in code from `host integrate`, or a device read over SNMP.",
+    ),
+    spec: ["107-pairing-and-query FR-007", "069-integrate"],
+  },
+  managed: {
+    label: en("managed"),
+    definition: en("A server or workstation Stolos installs and converges."),
+    spec: ["107-pairing-and-query FR-007", "002-model"],
+  },
+  cloud: {
+    label: en("cloud"),
+    definition: en("A machine a connected cloud account reports."),
+    spec: ["107-pairing-and-query FR-007", "066-stolos-console FR-003"],
+  },
+});
+
+/** Where one machine is in a pairing session (spec 107-pairing-and-query FR-002, FR-003). */
+export const pairingStages = codeList(PairingStageSchema, "stage", {
+  hello: {
+    label: en("said hello"),
+    definition: en("The machine ran the line and its signed hello was answered."),
+    spec: ["107-pairing-and-query FR-002"],
+  },
+  installing: {
+    label: en("installing"),
+    definition: en("The machine fetched the probe: it is turning on SSH and installing it."),
+    spec: ["107-pairing-and-query FR-002"],
+  },
+  waiting: {
+    label: en("waiting for you"),
+    definition: en("The machine's signed check-in is queued for the person's yes or no."),
+    spec: ["107-pairing-and-query FR-003"],
+  },
+  adopted: {
+    label: en("adopted"),
+    definition: en("The person said yes and the machine was adopted."),
+    spec: ["107-pairing-and-query FR-003"],
+  },
+  refused: {
+    label: en("refused"),
+    definition: en("The person said no, or the machine could not be adopted."),
+    spec: ["107-pairing-and-query FR-003"],
+  },
+});
+
+/** Where one machine is in a question to every machine (spec 107-pairing-and-query FR-010, FR-011). */
+export const answerStates = codeList(AnswerStateSchema, "answer", {
+  asking: {
+    label: en("asking"),
+    definition: en("The machine is being asked: its answer has not come yet."),
+    spec: ["107-pairing-and-query FR-010"],
+  },
+  answered: {
+    label: en("answered"),
+    definition: en("The machine answered, with rows or none."),
+    spec: ["107-pairing-and-query FR-011"],
+  },
+  failed: {
+    label: en("failed"),
+    definition: en("The machine could not be asked, or refused, with its reason."),
+    spec: ["107-pairing-and-query FR-011"],
+  },
+  "timed-out": {
+    label: en("timed out"),
+    definition: en("The machine did not answer within the time limit of each machine."),
+    spec: ["107-pairing-and-query FR-010"],
+  },
+});
+
 /** Every code list, by the name of the type the generator writes for it, with the name of its array and what it is. */
 export const CODE_LISTS = {
   OutcomeLevel: {
@@ -411,6 +500,21 @@ export const CODE_LISTS = {
     array: "MACHINE_KINDS",
     list: machineKinds,
     what: "What a machine of a fleet is to Stolos",
+  },
+  WayOfJoining: {
+    array: "WAYS_OF_JOINING",
+    list: waysOfJoining,
+    what: "How a machine came to be in the fleet",
+  },
+  PairingStage: {
+    array: "PAIRING_STAGES",
+    list: pairingStages,
+    what: "Where one machine is in a pairing session",
+  },
+  AnswerState: {
+    array: "ANSWER_STATES",
+    list: answerStates,
+    what: "Where one machine is in a question to every machine",
   },
   SignerRole: { array: "SIGNER_ROLES", list: signerRoles, what: "A signer's role" },
   CommandTier: { array: "COMMAND_TIERS", list: commandTiers, what: "What a command may do" },

@@ -25,6 +25,7 @@
  */
 // Spec: 067-adopt
 // Spec: 097-controller FR-002
+// Spec: 107-pairing-and-query FR-007
 
 import { errors, fs, path, proc, stdio, toError } from "@intellectual-frontiers/commons/ts/runtime";
 import { compact, tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
@@ -33,6 +34,7 @@ import { P } from "../core/paths.ts";
 import { ownerOnly, writeSecret } from "../core/secrets.ts";
 import { authorizedLine, parseProbe, PROBE_SCRIPT, type ProbeOutput } from "./probe.ts";
 import type { ControllerFacts } from "./controller.ts";
+import type { WayOfJoining } from "../ontology.auto.ts";
 
 /** An adopted machine, as the fleet declares it (machine.ts). */
 export type AdoptedDef = {
@@ -55,6 +57,12 @@ export type AdoptedDef = {
    * over SSH (no SSH server, no probe key, no host keys).
    */
   role?: "controller";
+  /**
+   * How it joined (spec 107-pairing-and-query FR-007): `paired` through `stolos pair`, `integrated` by hand
+   * (a check-in code, `host adopt`). Absent in an older declaration: shown as integrated. The controller
+   * is auto-adopted by its role.
+   */
+  joined?: Extract<WayOfJoining, "paired" | "integrated">;
   /**
    * Risks the owner accepted, each for a while: a policy that fails is shown
    * as accepted (not as passing) until the date, with who and why (for an
@@ -257,10 +265,11 @@ function sshOpts(m: AdoptedDef, known: string, batch: boolean): string[] {
 export async function probe(
   m: AdoptedDef,
   request: string,
+  o: { signal?: AbortSignal } = {},
 ): Promise<{ ok: boolean; out: string; err: string }> {
   if (m.role === "controller") {
     const { isThisController, localProbe } = await import("./controller.ts");
-    if (await isThisController(m)) return await localProbe(request);
+    if (await isThisController(m)) return await localProbe(request, o);
     return {
       ok: false,
       out: "",
@@ -269,16 +278,19 @@ export async function probe(
   }
   const known = await knownHostsFor(m);
   try {
-    const r = await run([
-      "ssh",
-      ...sshOpts(m, known, true),
-      "-o",
-      "IdentitiesOnly=yes",
-      "-i",
-      probeKeyPath(m.name),
-      `${m.ssh.user}@${m.ssh.address}`,
-      request,
-    ]);
+    const r = await run(
+      [
+        "ssh",
+        ...sshOpts(m, known, true),
+        "-o",
+        "IdentitiesOnly=yes",
+        "-i",
+        probeKeyPath(m.name),
+        `${m.ssh.user}@${m.ssh.address}`,
+        request,
+      ],
+      o.signal ? { signal: o.signal } : {},
+    );
     return { ok: r.ok, out: r.stdout, err: r.stderr.trim() };
   } finally {
     await fs.remove(known).catch((e: unknown) => {

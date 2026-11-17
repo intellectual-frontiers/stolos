@@ -1,0 +1,8 @@
+AG Grid Community 36.3.0 (https://www.ag-grid.com), MIT licence: LICENSE.txt.
+
+ag-grid-community-36.3.0.min.js is dist/ag-grid-community.min.js of the published npm package ag-grid-community@36.3.0,
+unchanged (a built file, never built here). The package's integrity, as the registry states it:
+sha512-0JRaIwE82TuOcx+upA3OnTyhDAIUDqrMxLoBib6yVON0SyfICdpOnwD4QdiT0A1lgrC8SkzLBFRst73bTREF6Q==
+The file's SHA-256 is pinned in src/archon/console/assets.ts (AG_GRID) and checked by tests/query107.test.ts. The Stolos
+Console serves it from this machine; it is never loaded from a CDN. To change the version: fetch the new package, check
+its integrity, replace the file, and change the pin in the same commit.

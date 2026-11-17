@@ -216,7 +216,7 @@ proves(
       r = await l.stolos("fleet", "query", "select ok, passed, total from archon_install");
       assertEquals(r.code, 1, r.out);
       assertStringIncludes(r.out, "beta: ssh: connect to host beta port 22: No route to host");
-      assertStringIncludes(r.out, "1 row(s) from 1 of 2 machine(s)");
+      assertStringIncludes(r.out, "1 of 2 answered · 1 row(s)");
       // Not an MCP tool: it runs on the PC.
       const { COMMANDS } = await import("../src/archon/commands/registry.ts");
       const { listed } = await import("../src/archon/mcp/server.ts");

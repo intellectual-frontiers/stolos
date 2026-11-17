@@ -14,7 +14,7 @@
 
 - [x] T004 `src/archon/core/listeners.ts`: `standardPort`, `choosePort`, `firewallRule` (FR-002, FR-011)
 - [x] T005 `PairStore`, the memory and file stores, the lock and the atomic write (FR-006, FR-007) in `src/archon/adopt/pair-store.ts`; the secret inventory and `SECRETS.pairing`
-- [x] T006 `PairSession` over a store, under `/device/pair`, 404 with no pairing, one machine per code, tries in the store, `/checkin` held (FR-003, FR-005, FR-006) in `src/archon/adopt/pair.ts`, `pair-service.ts`
+- [x] T006 `PairSession` over a store, under `/device/pair`, 404 with no pairing, many machines per session (spec 107-pairing-and-query), tries in the store, `/checkin` held (FR-003, FR-005, FR-006) in `src/archon/adopt/pair.ts`, `pair-service.ts`
 - [x] T007 `stolos pair`: the record, the doors, the lines, the firewall checks, the approval, the `finally` (FR-008) in `src/archon/adopt/pair-command.ts`
 - [x] T008 Door A in the boot server; `--port` and `--tftp-port` as explicit choices (FR-004, FR-010) in `src/archon-boot/`
 - [x] T009 Door B in the console's handler, LAN names only (FR-004) in `src/archon/console/stolos-server.ts`, `stolos-launch.ts`

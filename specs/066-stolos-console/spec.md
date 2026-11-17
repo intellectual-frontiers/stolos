@@ -15,8 +15,9 @@ new password or key to keep.
   cookie (HttpOnly, SameSite=Strict, 8 idle hours, gone when the console stops).
 - **FR-002** It answers only requests whose Host is 127.0.0.1 or localhost on its port (421
   otherwise); POSTs need the console's own Origin and Datastar's request header.
-- **FR-003** Pages: Overview, Machines (managed, adopted, cloud; filter; CSV and evidence JSON
-  downloads), one page per machine, Clouds, Ask every machine (fleet query as a table), Changes,
+- **FR-003** Pages: Overview, Machines (managed, adopted, cloud; the controller first in a This PC group; filter, and by how each joined; CSV and evidence JSON
+  downloads), one page per machine, Clouds, Ask every machine (fleet query, all machines at once, as one table that fills in as they answer:
+  spec 107-pairing-and-query), Changes,
   Trust, Activity, Actions (six groups, each with its diagram), How it works, Guide.
 - **FR-004** Commands run as `bun run stolos ...` in the fleet repository, one at a time, with the
   console's terminal as their input: secrets are typed there, never in the browser. Commands that

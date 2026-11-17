@@ -6,7 +6,7 @@
 
 ## Summary
 
-`stolos pair` brings a machine into the fleet with one short fixed command and a code that expires, as device login does: the PC serves this engine's scripts on the trusted network, every message after the script is signed with the code, and the person approves on the PC, which already holds the fleet's trust.
+`stolos pair` brings machines into the fleet with one short fixed command and a code (one session, many machines, open until the person closes it: spec 107-pairing-and-query), as device login does: the PC serves this engine's scripts on the trusted network, every message after the script is signed with the code, and the person approves on the PC, which already holds the fleet's trust.
 
 ## Technical Context
 

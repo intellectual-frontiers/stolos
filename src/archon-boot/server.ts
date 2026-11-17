@@ -67,7 +67,7 @@ export interface ServeOptions {
    * Spec 103: pairing's routes (`/device/pair`), door A of the pairing: plain HTTP on this port, the same trust as PXE (Article 28).
    * The handler answers `undefined` for a path that is not pairing's, and 404 while no pairing waits.
    */
-  devicePair?: (req: Request) => Promise<Response | undefined>;
+  devicePair?: (req: Request, from?: string) => Promise<Response | undefined>;
 }
 
 /** How long a machine's address stays tied to the host named in its Boot URI. */
@@ -215,7 +215,7 @@ export function handler(assets: Assets, o: ServeOptions): Handler {
     try {
       // Spec 103: the pairing (/device/pair) is a route of this port, answered before anything of the boot's.
       if (o.devicePair && (path === DEVICE_PAIR_PATH || path.startsWith(`${DEVICE_PAIR_PATH}/`))) {
-        const answered = await o.devicePair(req);
+        const answered = await o.devicePair(req, from);
         if (answered) return answered;
       }
       // UEFI HTTP Boot: shim, then GRUB, kernel, initrd (Ubuntu's signed files).

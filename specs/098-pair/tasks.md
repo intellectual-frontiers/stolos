@@ -12,7 +12,7 @@
 ## Phase 2: Headless operations, then the consoles (rungs 2 to 6)
 
 - [x] T003 `stolos pair`: listen on the trusted network, show the command and the code (FR-001) in `src/archon/adopt/pair-command.ts`, `src/archon/commands/registry.ts`
-- [x] T004 The code: 8 characters from an alphabet without look-alikes, expiring (FR-002) in `src/archon/adopt/pair.ts`
+- [x] T004 The code: 8 characters from an alphabet without look-alikes (FR-002; expiry and one machine per code replaced by spec 107-pairing-and-query) in `src/archon/adopt/pair.ts`
 - [x] T005 Serve this engine's scripts and probes; sign every message with HMAC-SHA256 under the code (FR-003, FR-004) in `src/archon/adopt/pair.ts`
 - [x] T006 Ask once about osquery; show who asked; approve on the PC; refuse a bad name first (FR-005, FR-006, FR-007) in `src/archon/adopt/pair.ts`, `src/archon/adopt/pair-command.ts`
 - [x] T007 Say why plain HTTP is deliberate (Article 28) (FR-008) in `src/archon/adopt/pair.ts`, `src/archon/adopt/pair-command.ts`

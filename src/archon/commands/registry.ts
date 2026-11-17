@@ -1195,7 +1195,7 @@ export const COMMANDS: Command[] = [
     name: "fleet query",
     output: "report",
     summary: "Ask every machine one SQL question (osquery): managed and adopted, one table",
-    description: `Spec 067. Runs one osquery SELECT on every machine: managed servers through their MCP server (archon query, over SSH as ops) and adopted machines through their probe (where osquery is installed). Prints one table with a machine column; --json for scripts. Read-only: one SELECT on the allowlisted tables (as archon query), anything else is refused; each server also limits what it answers (spec 048). Examples: "select name, version from os_version"; "select name, bundle_short_version from apps where name like 'Google Chrome%'"; "select port, address from listening_ports".`,
+    description: `Specs 067 and 107. Runs one osquery SELECT on every machine at once (at most 8 at a time): managed servers through their MCP server (archon query, over SSH as ops) and adopted machines through their probe (where osquery is installed), this PC's included. Each machine has a time limit (15 seconds; --timeout changes it); one that fails or does not answer in time is named with its reason, and the last line says "N of M answered". Prints one table with a machine column; --json for scripts (each answer carries its state, and how long it took). Read-only: one SELECT on the allowlisted tables (as archon query), anything else is refused; each server also limits what it answers (spec 048). Examples: "select name, version from os_version"; "select name, bundle_short_version from apps where name like 'Google Chrome%'"; "select port, address from listening_ports".`,
     tier: "read",
     args: [
       {
@@ -1205,10 +1205,19 @@ export const COMMANDS: Command[] = [
         required: true,
         description: "One osquery SELECT.",
       },
+      {
+        name: "timeout",
+        type: "string",
+        description: "Seconds each machine has to answer (15 by default).",
+      },
     ],
     async run(a: Parsed, ctx: RunContext): Promise<number> {
       const { fleetQuery } = await import("../adopt/commands.ts");
-      return await fleetQuery(a["sql"] as string, ctx.json);
+      const t = a["timeout"] === undefined ? undefined : Number(a["timeout"]);
+      if (t !== undefined && !(Number.isFinite(t) && t >= 1 && t <= 600)) {
+        throw new Error(`--timeout ${a["timeout"]}: seconds, from 1 to 600`);
+      }
+      return await fleetQuery(a["sql"] as string, ctx.json, t);
     },
   },
   {
@@ -2380,14 +2389,15 @@ export const COMMANDS: Command[] = [
     name: "pair",
     output: "action",
     summary:
-      "Bring a machine into the fleet with a short code: one line to run there, approve here",
-    description: `Specs 098 and 103. Shows one short line per door that is up (curl ... | sh, or irm ... | iex on Windows as administrator), HTTPS first, and an 8-character code that expires in 10 minutes. Pairing is /device/pair on two of the three ports this PC opens (Article 29): TCP 443, the console's TLS, when stolos console --lan serves and its name is this PC's; and TCP 8080, plain HTTP, the boot server's (this command serves just those routes there when boot serve is not running). The machine's script, served by this PC from this engine, asks for the code, turns on SSH, installs the read-only probe, and sends its check-in signed with the code; you approve it here, seeing its name, OS, address and SSH host key, and it is adopted (host adopt) with nothing copied by hand. One machine per code; 5 wrong codes end it. Plain HTTP on the boot server's port on purpose: run it on a trusted LAN, or reach the machine over a zero trust mesh network (see stolos mesh), never over the internet.`,
+      "Bring machines into the fleet with a short code: one line to run on each, approve each here",
+    description: `Specs 098, 103 and 107. Opens a pairing session: one short line per door that is up (curl ... | sh, or irm ... | iex on Windows as administrator), HTTPS first, and an 8-character code, the same for every machine. Many machines can pair, at the same time or one after another; each is shown here as it says hello, installs and waits, and you answer each one in turn, seeing its name, OS, address, SSH host key and osquery. Nothing is adopted without your yes. The session stays open until you stop it (Ctrl+C): it has no expiry, so an open session is less safe than a short one, and you should close it when the machines you expect have joined. Pairing is /device/pair on two of the three ports this PC opens (Article 29): TCP 443, the console's TLS, when stolos console --lan serves and its name is this PC's; and TCP 8080, plain HTTP, the boot server's (this command serves just those routes there when boot serve is not running). The machine's script, served by this PC from this engine, asks for the code, turns on SSH, installs the read-only probe, and sends its check-in signed with the code. Wrong codes are counted for each client address: after 5 that address is refused for the rest of the session. Plain HTTP on the boot server's port on purpose: run it on a trusted LAN, or reach the machine over a zero trust mesh network (see stolos mesh), never over the internet.`,
     tier: "repo",
     args: [
       {
         name: "name",
         type: "string",
-        description: "Its name in the fleet (default: the machine's hostname, as a DNS label).",
+        description:
+          "The first machine's name in the fleet (the others, and the first without it, are named by their hostnames as DNS labels).",
       },
       {
         name: "address",
@@ -2401,11 +2411,18 @@ export const COMMANDS: Command[] = [
         description:
           "Spec 103: an explicit port for the plain HTTP door instead of the boot server's TCP 8080 (it is outside the three standard ports: this prints its own firewall rule).",
       },
-      { name: "title", type: "string", description: 'What it is, for people: "Alice\'s laptop".' },
-      { name: "owner", type: "string", description: "Who it belongs to." },
+      {
+        name: "title",
+        type: "string",
+        description: 'What the machines are, for people: "Alice\'s laptop".',
+      },
+      { name: "owner", type: "string", description: "Who the machines belong to." },
     ],
     examples: [
-      { cmd: "bun run stolos pair", text: "Pair the next machine; its name is its hostname." },
+      {
+        cmd: "bun run stolos pair",
+        text: "Open a session and pair as many machines as come; each is named by its hostname.",
+      },
       {
         cmd: "bun run stolos pair --name alice-laptop --owner alice",
         text: "Name it, and say whose it is.",

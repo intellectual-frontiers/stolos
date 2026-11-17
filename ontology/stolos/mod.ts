@@ -32,6 +32,9 @@ import {
   stolosOntology,
   SigningOutcomeSchema,
   VerbositySchema,
+  WayOfJoiningSchema,
+  PairingStageSchema,
+  AnswerStateSchema,
 } from "./vocabulary.ts";
 
 export { CODE_LISTS } from "./codes.ts";
@@ -79,6 +82,9 @@ export const citingSchemas = [
   ListenerSchema,
   DoorSchema,
   DevicePathSchema,
+  WayOfJoiningSchema,
+  PairingStageSchema,
+  AnswerStateSchema,
   RungSchema,
 ] as const;
 
