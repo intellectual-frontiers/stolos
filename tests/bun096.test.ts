@@ -222,9 +222,9 @@ proves(
         assertEquals(c.code, 0, c.stderr);
         const smoke = await proc.run([BUN, "tools/smoke.ts", "--repo", clone], { cwd: ROOT });
         assertEquals(smoke.code, 0, `${smoke.stdout}${smoke.stderr}`);
-        const { VERSION } = await import("../src/archon/version.ts");
+        const { versionLine } = await import("../src/archon/version.ts");
         for (const run of ["bun archon", "bun stolos", "node archon", "node stolos"]) {
-          assertStringIncludes(smoke.stdout, `${run}: ${run.split(" ")[1] ?? ""} ${VERSION}`);
+          assertStringIncludes(smoke.stdout, `${run}: ${versionLine()}`);
         }
       },
       { prefix: "stolos-git-dependency-" },

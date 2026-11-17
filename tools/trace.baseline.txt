@@ -34,7 +34,6 @@ trace/no-spec-line src/archon/controls/core.ts
 trace/no-spec-line src/archon/controls/define.ts
 trace/no-spec-line src/archon/controls/testing.ts
 trace/no-spec-line src/archon/core/clock.ts
-trace/no-spec-line src/archon/core/guides.ts
 trace/no-spec-line src/archon/core/lock.ts
 trace/no-spec-line src/archon/core/log.ts
 trace/no-spec-line src/archon/core/secret-ledger.ts

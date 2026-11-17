@@ -16,7 +16,6 @@ mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#
 mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#DevicePath
 mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#Door
 mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#EmailSender
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#EngineRelease
 mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#FileKind
 mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#Finding
 mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#Fleet

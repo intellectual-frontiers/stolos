@@ -386,7 +386,7 @@ export class Ui {
    * (spec 106-one-passphrase-speed FR-006).
    */
   nested: Verbosity | undefined;
-  /** The word that opens the closing verdict ("Up to date", "Updated to v0.136.0"). */
+  /** The word that opens the closing verdict ("Up to date", "Updated to stolos-v0.136.0"). */
   verdictTitle: string | undefined;
   /** Optional features that are off, found by this run. */
   readonly hints: Hint[] = [];

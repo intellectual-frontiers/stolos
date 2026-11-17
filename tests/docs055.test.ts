@@ -181,7 +181,7 @@ proves(
   "055: a fleet repository's documentation stays local: nothing it is given publishes it",
   async () => {
     const { scaffoldFiles } = await import("../src/archon/fleet/scaffold.ts");
-    const files = scaffoldFiles("v1.2.3");
+    const files = scaffoldFiles("stolos-v1.2.3");
     for (const [name, text] of Object.entries(files)) {
       assert(
         !/gh-pages|pages: write|deploy-pages|upload-pages-artifact/.test(text),

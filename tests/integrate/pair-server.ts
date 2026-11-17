@@ -42,7 +42,9 @@ export async function servePair(o: {
   const fleet = o.fleet ?? "lab";
   let approve: (name: string) => void = () => undefined;
   const approved = new Promise<string>((ok) => (approve = ok));
-  const store = new MemoryPairStore(newPairRecord({ code: o.code, fleet, engine: "v0.0.0" }));
+  const store = new MemoryPairStore(
+    newPairRecord({ code: o.code, fleet, engine: "stolos-v0.0.0" }),
+  );
   const session = new PairSession({
     store,
     ...(o.pollMs ? { pollMs: o.pollMs } : {}),

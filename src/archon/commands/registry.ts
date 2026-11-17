@@ -588,7 +588,7 @@ export const COMMANDS: Command[] = [
         type: "string",
         positional: true,
         required: true,
-        description: "The version tag, for example v0.8.0.",
+        description: "The version tag, for example stolos-v0.8.0.",
       },
       { name: "downgrade", type: "boolean", description: "Allow an older (or the same) version." },
       {
@@ -599,8 +599,8 @@ export const COMMANDS: Command[] = [
     ],
     examples: [
       {
-        cmd: "bun run stolos fleet upgrade v0.8.0",
-        text: "Adopt the engine v0.8.0, then bun run stolos apply to approve it.",
+        cmd: "bun run stolos fleet upgrade stolos-v0.8.0",
+        text: "Adopt the engine stolos-v0.8.0, then bun run stolos apply to approve it.",
       },
     ],
     async run(a: Parsed): Promise<number> {

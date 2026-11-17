@@ -399,7 +399,7 @@ const fresh = (o: { code?: string; name?: string } = {}): PairRecord =>
   newPairRecord({
     code: o.code ?? CODE,
     fleet: "lab",
-    engine: "v1.2.3",
+    engine: "stolos-v1.2.3",
     ...(o.name ? { name: o.name } : {}),
   });
 

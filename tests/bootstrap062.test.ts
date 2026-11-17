@@ -48,7 +48,7 @@ proves(
     assertStringIncludes(f["bin/bootstrap.sh"] ?? "", 'DEFAULT_REPO="example/fleet"');
     assertStringIncludes(f["bin/bootstrap.windows.ps1"] ?? "", '$DefaultRepo = "example/fleet"');
     assertStringIncludes(bootstrapFiles()["bin/bootstrap.sh"] ?? "", 'DEFAULT_REPO=""');
-    const s = scaffoldFiles("v1.0.0", undefined, "example/fleet");
+    const s = scaffoldFiles("stolos-v1.0.0", undefined, "example/fleet");
     assertEquals(s["bin/bootstrap.sh"], f["bin/bootstrap.sh"]);
     assertStringIncludes(s[".gitattributes"] ?? "", "* text=auto eol=lf");
     for (const [url, slug] of [

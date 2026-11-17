@@ -79,7 +79,7 @@ const session = (o: { name?: string; decide?: boolean } = {}) => {
     newPairRecord({
       code: CODE,
       fleet: "lab",
-      engine: "v1.2.3",
+      engine: "stolos-v1.2.3",
       ...(o.name ? { name: o.name } : {}),
     }),
   );
@@ -135,12 +135,12 @@ proves(
     const sh = await (await s.handle(new Request(BASE))).text();
     assertStringIncludes(
       sh,
-      `set -- --adopt --pair '${BASE}' --fleet 'lab' --engine 'v1.2.3' "$@"`,
+      `set -- --adopt --pair '${BASE}' --fleet 'lab' --engine 'stolos-v1.2.3' "$@"`,
     );
     assertStringIncludes(sh, "--pair <url>");
-    assertEquals(sh, posixScript({ url: BASE, fleet: "lab", engine: "v1.2.3" }));
+    assertEquals(sh, posixScript({ url: BASE, fleet: "lab", engine: "stolos-v1.2.3" }));
     const w = await (await s.handle(new Request(`${BASE}/w`))).text();
-    assertEquals(w, windowsLoader({ url: BASE, fleet: "lab", engine: "v1.2.3" }));
+    assertEquals(w, windowsLoader({ url: BASE, fleet: "lab", engine: "stolos-v1.2.3" }));
     assertStringIncludes(w, `'${BASE}/w.ps1'`);
     assertStringIncludes(
       w,

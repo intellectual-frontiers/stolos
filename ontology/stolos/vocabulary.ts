@@ -251,7 +251,7 @@ export const stolosOntology = OwlOntology.make(ontologyOf(STOLOS), {
   description: en(
     "The terms of Stolos, the fleet engine: the machines of a fleet, its signers and decisions, its checks and findings, the code lists the engine branches on, and the ladder its repository is built on.",
   ),
-  versionInfo: "1.0.0",
+  versionInfo: "1.0.1",
 });
 
 const LADDER = "101-ladder FR-004";
@@ -358,9 +358,9 @@ export const classes = [
   StolosClass.make(stolos.EngineRelease, {
     label: en("Engine release"),
     definition: en(
-      "A version of Stolos, a tag v<version> on the engine's main, that a fleet pins and stolos update adopts.",
+      "A version of Stolos, an ifr:Release of the one work `stolos`: the annotated Git tag `stolos-v<version>` on the engine's main, that a fleet pins and stolos update adopts.",
     ),
-    spec: ["099-engine-update FR-001, FR-002"],
+    spec: ["099-engine-update FR-001, FR-002", "114-release-record FR-004, FR-005"],
   }),
   StolosClass.make(stolos.ConsoleName, {
     label: en("Console name"),

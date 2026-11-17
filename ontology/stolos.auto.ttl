@@ -122,8 +122,9 @@ stolos:EmailSender a owl:Class ;
 
 stolos:EngineRelease a owl:Class ;
     rdfs:label "Engine release"@en ;
-    skos:definition "A version of Stolos, a tag v<version> on the engine's main, that a fleet pins and stolos update adopts."@en ;
-    stolos:spec "099-engine-update FR-001, FR-002" .
+    skos:definition "A version of Stolos, an ifr:Release of the one work `stolos`: the annotated Git tag `stolos-v<version>` on the engine's main, that a fleet pins and stolos update adopts."@en ;
+    stolos:spec "099-engine-update FR-001, FR-002",
+        "114-release-record FR-004, FR-005" .
 
 stolos:FileKind a owl:Class ;
     rdfs:label "File kind"@en ;
@@ -927,6 +928,7 @@ stolos:rung-4 a mz:Rung ;
         "bun.lock",
         "bunfig.toml",
         "package.json",
+        "release.ts",
         "src/archon/assets.auto.ts",
         "src/archon/core/",
         "src/archon/identity/",
@@ -1172,4 +1174,4 @@ stolos:verbosity-verbose a stolos:Verbosity ;
 <https://intellectual-frontiers.github.io/stolos/ontology> a owl:Ontology ;
     dcterms:description "The terms of Stolos, the fleet engine: the machines of a fleet, its signers and decisions, its checks and findings, the code lists the engine branches on, and the ladder its repository is built on."@en ;
     rdfs:label "Stolos"@en ;
-    owl:versionInfo "1.0.0" .
+    owl:versionInfo "1.0.1" .

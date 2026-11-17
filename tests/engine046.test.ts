@@ -198,10 +198,10 @@ proves(
   async () => {
     const { packageJsonText, installEngine } = await import("../src/archon/fleet/scaffold.ts");
     const { ENGINE_PACKAGE } = await import("../src/archon/fleet/upgrade.ts");
-    const pkg: unknown = JSON.parse(packageJsonText("v1.2.3"));
+    const pkg: unknown = JSON.parse(packageJsonText("stolos-v1.2.3"));
     const deps = (pkg as { dependencies: Record<string, string> }).dependencies;
     assertEquals(Object.keys(deps), [ENGINE_PACKAGE]);
-    assertEquals(deps[ENGINE_PACKAGE], "github:intellectual-frontiers/stolos#v1.2.3");
+    assertEquals(deps[ENGINE_PACKAGE], "github:intellectual-frontiers/stolos#stolos-v1.2.3");
 
     // Bun fetches a github: dependency as its commit's archive and checks it against the integrity
     // bun.lock holds; the same check, on an archive served on 127.0.0.1 that then changes.

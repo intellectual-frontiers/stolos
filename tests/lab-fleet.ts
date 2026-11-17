@@ -130,5 +130,5 @@ export async function engineRepo(
     "-m",
     "engine",
   );
-  await sh(dir, "git", "tag", `v${VERSION}`);
+  await sh(dir, "git", "tag", `stolos-v${VERSION}`);
 }

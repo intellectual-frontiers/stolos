@@ -138,7 +138,7 @@ export const ATTRIBUTES = {
 export const RESOURCE = {
   "service.name": "archon, or archon-boot.",
   "service.namespace": "The fleet's id (/etc/archon/fleet).",
-  "service.version": "The engine's tag pinned by the fleet repository (v0.5.0, ...).",
+  "service.version": "The engine's tag pinned by the fleet repository (stolos-v0.5.0, ...).",
   "host.name": "The host (/etc/archon/host).",
   "vcs.ref.head.revision": "The fleet repository's commit the host is at.",
 } as const;

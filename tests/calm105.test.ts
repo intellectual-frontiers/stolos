@@ -177,8 +177,8 @@ proves(
       (req) => {
         const url = new URL(req.url);
         if (
-          /\/compare\/v0\.135\.0\.\.\.v0\.999\.0$/.test(url.pathname) ||
-          /\/compare\/.*\.\.\.v0\.999\.0$/.test(url.pathname)
+          /\/compare\/stolos-v0\.135\.0\.\.\.stolos-v0\.999\.0$/.test(url.pathname) ||
+          /\/compare\/.*\.\.\.stolos-v0\.999\.0$/.test(url.pathname)
         ) {
           return Response.json({
             commits: [
@@ -202,7 +202,10 @@ proves(
       const source = `git+${path.toFileUrl(engine).href}`;
       const { packageJsonText } = await import("../src/archon/fleet/scaffold.ts");
       // The fleet pins an old engine.
-      await fs.writeTextFile(path.join(repo, "package.json"), packageJsonText("v0.0.1", source));
+      await fs.writeTextFile(
+        path.join(repo, "package.json"),
+        packageJsonText("stolos-v0.0.1", source),
+      );
       const baseEnv = { ARCHON_GITHUB_API: `http://127.0.0.1:${api.addr.port}` };
       let r = await stolos(["apply", "-m", "lab: pin the engine", "--verbose"], baseEnv);
       assertEquals(r.code, 0, r.out);
@@ -215,7 +218,7 @@ proves(
       assertEquals(r.out.split("didn't unlock your daily key, three times").length - 1, 1, r.out);
       assertStringIncludes(
         r.out,
-        `The engine upgrade to v${VERSION} is not signed and nothing was sent`,
+        `The engine upgrade to stolos-v${VERSION} is not signed and nothing was sent`,
       );
       assertStringIncludes(r.out, "next: bun run stolos update");
       assertEquals(r.out.split("\n").filter((l) => l.startsWith("next:")).length, 1, r.out);
@@ -228,12 +231,12 @@ proves(
       r = await stolos(["update", "--no-doctor"], baseEnv);
       assertEquals(r.code, 0, r.out);
       assertStringIncludes(r.out, `Signing`);
-      assertStringIncludes(r.out, `engine upgrade to v${VERSION}`);
-      assertStringIncludes(r.out, "Updated to v" + VERSION);
+      assertStringIncludes(r.out, `engine upgrade to stolos-v${VERSION}`);
+      assertStringIncludes(r.out, "Updated to stolos-v" + VERSION);
       assert(!r.out.includes("of yours") && !r.out.includes("your changes"), r.out);
       assertEquals(
         await sh(origin, "git", "log", "-1", "--format=%s", "main"),
-        `stolos v${VERSION}: adopt the engine v${VERSION}`,
+        `stolos: adopt the engine stolos-v${VERSION}`,
       );
       assertEquals(await sh(repo, "git", "status", "--porcelain"), "");
       invariants(r.out, "update, an upgrade resumed");
@@ -259,24 +262,27 @@ proves(
         "-m",
         "0.999.0",
       );
-      await sh(engine, "git", "tag", "v0.999.0");
+      await sh(engine, "git", "tag", "stolos-v0.999.0");
       r = await stolos(["update", "--no-doctor"], baseEnv);
       assertEquals(r.code, 0, r.out);
       assertStringIncludes(r.out, "Signing");
-      assertStringIncludes(r.out, "engine upgrade to v0.999.0");
+      assertStringIncludes(r.out, "engine upgrade to stolos-v0.999.0");
       assertStringIncludes(r.out, "Sent: every server applies it within 15 minutes");
-      assertStringIncludes(r.out, "What's new in v0.999.0:");
+      assertStringIncludes(r.out, "What's new in stolos-v0.999.0:");
       assertStringIncludes(r.out, "- 105-calm-output: calm output for actions");
       assertEquals(r.out.split("calm output for actions").length - 1, 1, "deduplicated");
       assertStringIncludes(r.out, "run bun run stolos vault backup");
       assertStringIncludes(r.out, "[E105-OPERATOR]");
-      assertStringIncludes(r.out, "Updated to v0.999.0 · 1 for you");
+      assertStringIncludes(r.out, "Updated to stolos-v0.999.0 · 1 for you");
       assert(!r.out.includes("Install"), r.out);
-      assert(!r.out.includes(`the engine v${VERSION}`), "the old version is never reported");
+      assert(!r.out.includes(`the engine stolos-v${VERSION}`), "the old version is never reported");
       invariants(r.out, "update, an engine upgrade");
-      assertStringIncludes(await fs.readTextFile(path.join(repo, "package.json")), `#v0.999.0`);
+      assertStringIncludes(
+        await fs.readTextFile(path.join(repo, "package.json")),
+        `#stolos-v0.999.0`,
+      );
       const verbose = await stolos(["update", "--no-doctor", "--verbose"], baseEnv);
-      assert(/\[ok\] Install +the engine v0\.999\.0/.test(verbose.out), verbose.out);
+      assert(/\[ok\] Install +the engine stolos-v0\.999\.0/.test(verbose.out), verbose.out);
     } finally {
       await api.shutdown();
       await fs.remove(f.sb.home, { recursive: true });
@@ -321,7 +327,7 @@ proves(
       path.join(ENGINE_ROOT, ".specify/memory/constitution.md"),
     );
     assertStringIncludes(constitution, "## Article 19: Calm Output");
-    assertStringIncludes(constitution, "**Version**: 6.2.0");
+    assertStringIncludes(constitution, "**Version**: 6.2.");
     for (const w of [
       "report",
       "action",

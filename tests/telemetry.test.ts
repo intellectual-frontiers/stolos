@@ -317,7 +317,7 @@ proves(
       await fs.writeTextFile(path.join(etc, "fleet"), "lab\n");
       await fs.writeTextFile(path.join(etc, "host"), "alpha\n");
       const { packageJsonText } = await import("../src/archon/fleet/scaffold.ts");
-      await fs.writeTextFile(path.join(srv, "package.json"), packageJsonText("v1.2.3"));
+      await fs.writeTextFile(path.join(srv, "package.json"), packageJsonText("stolos-v1.2.3"));
       const git = (...a: string[]) =>
         proc.output(["git", "-C", srv, ...a], { stdout: "piped", stderr: "null" });
       await git("init", "-q", "-b", "main");
@@ -350,7 +350,7 @@ proves(
       });
       assertEquals(
         new TextDecoder().decode(r.stdout).trim(),
-        `service.namespace=lab,host.name=alpha,service.version=v1.2.3,vcs.ref.head.revision=${head}`,
+        `service.namespace=lab,host.name=alpha,service.version=stolos-v1.2.3,vcs.ref.head.revision=${head}`,
       );
     } finally {
       await fs.remove(dir, { recursive: true });

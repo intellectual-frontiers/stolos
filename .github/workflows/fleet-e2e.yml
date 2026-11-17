@@ -9,7 +9,7 @@
 #
 #   jobs:
 #     e2e:
-#       uses: intellectual-frontiers/stolos/.github/workflows/fleet-e2e.yml@v0.14.0
+#       uses: intellectual-frontiers/stolos/.github/workflows/fleet-e2e.yml@stolos-v0.150.0
 #       with: { fleet: synthetic-uat, server: e2e-server-uat, workstation: e2e-workstation-uat }
 #
 # Nothing secret is needed: every key and password of a run is made by it and
@@ -46,10 +46,10 @@ jobs:
       - uses: actions/checkout@v5
         with:
           path: fleet
-      - name: The engine's tag, from the pin (package.json's github:<owner>/<name>#v<version>)
+      - name: The engine's tag, from the pin (package.json's github:<owner>/<name>#stolos-v<version>)
         id: pin
         run: |
-          dep=$(grep -oE '"github:[^/"#]+/[^/"#]+#v[0-9]+\.[0-9]+\.[0-9]+"' fleet/package.json | head -n 1 | tr -d '"')
+          dep=$(grep -oE '"github:[^/"#]+/[^/"#]+#stolos-v[0-9]+\.[0-9]+\.[0-9]+"' fleet/package.json | head -n 1 | tr -d '"')
           [ -n "$dep" ] || { echo "::error::fleet/package.json names no engine by Git at a version tag"; exit 1; }
           tag=${dep##*#}
           repo=${dep#github:}

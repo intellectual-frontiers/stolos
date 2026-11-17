@@ -107,10 +107,10 @@ pinned Bun (its SHA-256 checked before it is unpacked), Git and `gh`, signs you 
 **`$HOME/fleet`** (on Windows, `C:\Users\<you>\fleet`), and adds the `stolos` shortcut. Replace
 `<owner>/<fleet-repo>` with your fleet repository:
 
-| System                                  | Run                                                                                                                                                              |
-| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Windows (PowerShell, not Administrator) | `& ([scriptblock]::Create((irm https://raw.githubusercontent.com/intellectual-frontiers/stolos/v0.59.0/bin/bootstrap.windows.ps1))) --repo <owner>/<fleet-repo>` |
-| macOS or Linux (Terminal)               | `bash <(curl -fsSL https://raw.githubusercontent.com/intellectual-frontiers/stolos/v0.59.0/bin/bootstrap.sh) --repo <owner>/<fleet-repo>`                        |
+| System                                  | Run                                                                                                                                                                      |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Windows (PowerShell, not Administrator) | `& ([scriptblock]::Create((irm https://raw.githubusercontent.com/intellectual-frontiers/stolos/stolos-v0.150.0/bin/bootstrap.windows.ps1))) --repo <owner>/<fleet-repo>` |
+| macOS or Linux (Terminal)               | `bash <(curl -fsSL https://raw.githubusercontent.com/intellectual-frontiers/stolos/stolos-v0.150.0/bin/bootstrap.sh) --repo <owner>/<fleet-repo>`                        |
 
 ```mermaid
 ---
@@ -270,10 +270,10 @@ flowchart LR
     E["the engine: stolos, archon, the boot server,<br/>guides, an example fleet<br/><i>every change: a new version, tested, tagged</i>"]:::gh
   end
   subgraph fleet["your fleet: private"]
-    F["package.json: use engine vX.Y.Z<br/>bun.lock: the integrity of the engine's package<br/>stolos.ts, archon.ts<br/>fleets/‹id›/fleet.ts, hosts/...<br/>fleets/‹id›/signers.ts: who approves"]:::you
+    F["package.json: use engine stolos-vX.Y.Z<br/>bun.lock: the integrity of the engine's package<br/>stolos.ts, archon.ts<br/>fleets/‹id›/fleet.ts, hosts/...<br/>fleets/‹id›/signers.ts: who approves"]:::you
   end
   S["your servers"]:::ok
-  E -- "tag vX.Y.Z" --> F
+  E -- "tag stolos-vX.Y.Z" --> F
   F -- "each server pulls it (read only)" --> S
   classDef you fill:#EEF2FF,stroke:#6366F1,stroke-width:2px,color:#1E1B4B
   classDef gh fill:#F1F5F9,stroke:#475569,stroke-width:2px,color:#0F172A
@@ -337,7 +337,7 @@ exactly the engine package you approved (`bun install --frozen-lockfile`), or st
    The engine is a Git dependency at its tag; `bun.lock` pins the commit and its integrity:
 
    ```sh
-   bun add github:intellectual-frontiers/stolos#v<version>
+   bun add github:intellectual-frontiers/stolos#stolos-v<version>
    bun node_modules/@intellectual-frontiers/stolos/src/stolos/main.ts fleet init <id>
    ```
 
@@ -618,7 +618,7 @@ bun run stolos vault restore <path to the ZIP>
 `bun run stolos update` does it when a newer release is out: it checks the new version against
 your fleet, makes one signed commit, and tells you to run `bun run stolos apply`; your servers
 pick it up within 15 minutes. To choose a version yourself:
-`bun run stolos fleet upgrade v<version>`, then `bun run stolos apply`.
+`bun run stolos fleet upgrade stolos-v<version>`, then `bun run stolos apply`.
 
 </details>
 
@@ -686,7 +686,7 @@ bun run test
 ```
 
 Every change to this repository is a new version ([`src/archon/version.ts`](src/archon/version.ts)),
-tested (including a full install of a virtual machine), and tagged `v<version>`.
+tested (including a full install of a virtual machine), and tagged `stolos-v<version>`.
 
 ## License
 

@@ -289,7 +289,10 @@ proves(
       await engineRepo(sh, engine);
       const source = `git+${path.toFileUrl(engine).href}`;
       const { packageJsonText } = await import("../src/archon/fleet/scaffold.ts");
-      await fs.writeTextFile(path.join(repo, "package.json"), packageJsonText("v0.0.1", source));
+      await fs.writeTextFile(
+        path.join(repo, "package.json"),
+        packageJsonText("stolos-v0.0.1", source),
+      );
       let r = await stolos(["apply", "-m", "lab: pin the engine"]);
       assertEquals(r.code, 0, r.out);
 
@@ -317,11 +320,11 @@ proves(
       assertEquals(r.code, 0, r.out);
       assertStringIncludes(r.out, "Signing 1 file: machines discovered");
       assertEquals((r.out.match(/Signing \d+ files?:/g) ?? []).length, 2, `two signings\n${r.out}`);
-      assertStringIncludes(r.out, "engine upgrade to v" + VERSION);
+      assertStringIncludes(r.out, "engine upgrade to stolos-v" + VERSION);
       assertEquals((await fs.readTextFile(count)).trim(), "1", "the askpass was asked once");
       // Both are on GitHub, signed (the servers would accept them).
       const subjects = (await sh(origin, "git", "log", "-3", "--format=%s", "main")).split("\n");
-      assertStringIncludes(subjects.join("|"), `adopt the engine v${VERSION}`);
+      assertStringIncludes(subjects.join("|"), `adopt the engine stolos-v${VERSION}`);
       assertStringIncludes(subjects.join("|"), "machines discovered");
       assertEquals(await sh(repo, "git", "log", "-2", "--format=%G?"), "G\nG");
 
@@ -353,7 +356,7 @@ proves(
         "-m",
         "0.999.0",
       );
-      await sh(engine, "git", "tag", "v0.999.0");
+      await sh(engine, "git", "tag", "stolos-v0.999.0");
       await fs.writeTextFile(
         path.join(repo, "fleets/lab/discovered.ts"),
         record.replace("gamma", "delta"),
@@ -364,7 +367,7 @@ proves(
       assertEquals(r.code, 0, r.out);
       assertEquals(r.out.split("didn't unlock").length - 1, 1, r.out);
       assertStringIncludes(r.out, "(2 left)");
-      assertStringIncludes(r.out, "Updated to v0.999.0");
+      assertStringIncludes(r.out, "Updated to stolos-v0.999.0");
       assertEquals(
         (await fs.readTextFile(count)).trim(),
         "2",

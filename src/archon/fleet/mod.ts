@@ -18,7 +18,7 @@
  * ```
  *
  * Nothing here is the engine itself. The engine lives in the public repository
- * `intellectual-frontiers/stolos`; each version is a tag of it (`v<version>`), and `bun install`
+ * `intellectual-frontiers/stolos`; each version is a tag of it (`stolos-v<version>`), and `bun install`
  * puts the engine at that tag in `node_modules/`, as its TypeScript sources. There is no GitHub
  * release and nothing to build: Bun runs the sources, and Node 26 runs them with commons' hook
  * (`node --import @intellectual-frontiers/commons/ts/node stolos.ts`).
@@ -30,7 +30,7 @@
  * `<version>` with the newest tag of `intellectual-frontiers/stolos`):
  *
  * ```
- * bun add github:intellectual-frontiers/stolos#v<version>
+ * bun add github:intellectual-frontiers/stolos#stolos-v<version>
  * bun node_modules/@intellectual-frontiers/stolos/src/stolos/main.ts fleet init lab
  * ```
  *
@@ -81,12 +81,12 @@
  * ```json
  * {
  *   "dependencies": {
- *     "@intellectual-frontiers/stolos": "github:intellectual-frontiers/stolos#v0.8.0"
+ *     "@intellectual-frontiers/stolos": "github:intellectual-frontiers/stolos#stolos-v0.8.0"
  *   }
  * }
  * ```
  *
- * `v0.8.0` is the engine version. Engine versions only go up (0.7.0, 0.8.0, 0.9.0, ...); each one is a
+ * `stolos-v0.8.0` is the engine's tag (`0.8.0` is its version). Engine versions only go up (0.7.0, 0.8.0, 0.9.0, ...); each one is a
  * tag that the engine's CI made after its checks passed (and after installing that commit as you do,
  * and running it on Bun and on Node). The tag is the release: there is nothing else to download.
  * The installed package's own `package.json` says the same version: that is how `fleet upgrade` knows
@@ -111,7 +111,7 @@
  * 3. **Upgrade:**
  *
  *    ```sh
- *    bun run stolos fleet upgrade v0.8.0
+ *    bun run stolos fleet upgrade stolos-v0.8.0
  *    ```
  *
  *    It prints one line per step:
@@ -123,7 +123,7 @@
  *    - **Validate**: every fleet in the repository is validated with the new engine. If one fails,
  *      nothing is committed; the message says how to see why, and how to stay on the old version.
  *    - **Commit**: one signed commit of `package.json` and `bun.lock`, with the subject
- *      `stolos v0.8.0: adopt the engine v0.8.0`. Git asks for your key's passphrase here.
+ *      `stolos: adopt the engine stolos-v0.8.0`. Git asks for your key's passphrase here.
  *
  * 4. **Approve it by pushing** (spec 060: the signed commit is checked and pushed):
  *
@@ -175,7 +175,7 @@
  * on: { workflow_dispatch: {} } # by hand: a private repository's runs cost Actions minutes
  * jobs:
  *   e2e:
- *     uses: intellectual-frontiers/stolos/.github/workflows/fleet-e2e.yml@v0.14.0
+ *     uses: intellectual-frontiers/stolos/.github/workflows/fleet-e2e.yml@stolos-v0.14.0
  *     with: { fleet: synthetic-uat, server: e2e-server-uat, workstation: e2e-workstation-uat }
  * ```
  *

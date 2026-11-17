@@ -1,6 +1,6 @@
 {
   "name": "@intellectual-frontiers/stolos",
-  "version": "0.145.0",
+  "version": "0.150.0",
   "description": "Stolos, the fleet engine: the archon command, the boot server, and everything general about turning bare metal into a converged, verified Ubuntu host (spec 096-bun-runtime).",
   "license": "BUSL-1.1",
   "type": "module",
@@ -29,11 +29,12 @@
     "docs": "ifc-docs build",
     "docs:lint": "ifc-docs check && bun tools/doc-examples.ts",
     "smoke": "bun tools/smoke.ts",
-    "ci": "bun tools/gen-assets.ts --check && bun run check && bun run lint && bun fmt --check && bun run docs:lint && bun run check:ontology && bun run check:trace && bun run check:layers && bun run check:mizan && bun run test:ci && bun tools/version.ts check origin/main",
+    "ci": "bun tools/gen-assets.ts --check && bun run check && bun run lint && bun fmt --check && bun run docs:lint && bun run check:ontology && bun run check:trace && bun run check:layers && bun run check:mizan && bun run test:ci && bun tools/version.ts check origin/main && bun run versions:check",
     "ocsf": "bun tools/ocsf-gen.ts",
     "fedramp": "bun tools/fedramp-gen.ts",
     "unifi-api": "bun tools/unifi-api-gen.ts",
-    "check:mizan": "bun tools/mizan.ts"
+    "check:mizan": "bun tools/mizan.ts",
+    "versions:check": "bun node_modules/@intellectual-frontiers/commons/commons/ts/mizan/versions.ts check --base origin/main"
   },
   "dependencies": {
     "@intellectual-frontiers/commons": "github:intellectual-frontiers/.github#7bd74c3ef4276737a4a0dda2a842feb315c46d0d",

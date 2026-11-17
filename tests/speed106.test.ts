@@ -61,7 +61,10 @@ proves(
       await engineRepo(sh, engine);
       const source = `git+${path.toFileUrl(engine).href}`;
       const { packageJsonText } = await import("../src/archon/fleet/scaffold.ts");
-      await fs.writeTextFile(path.join(repo, "package.json"), packageJsonText("v0.0.1", source));
+      await fs.writeTextFile(
+        path.join(repo, "package.json"),
+        packageJsonText("stolos-v0.0.1", source),
+      );
       let r = await stolos(["apply", "-m", "lab: pin the engine"]);
       assertEquals(r.code, 0, r.out);
       // The first update adopts the engine (a child run, the pin moved); the rest are no-ops.

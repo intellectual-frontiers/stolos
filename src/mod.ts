@@ -17,10 +17,10 @@
  * ```mermaid
  * flowchart TB
  *   subgraph engine["intellectual-frontiers/stolos (public)"]
- *     src["src/: the engine"] --> tag["tag vX.Y.Z<br/>(immutable): the release"]
+ *     src["src/: the engine"] --> tag["tag stolos-vX.Y.Z<br/>(immutable): the release"]
  *   end
  *   subgraph fleet["fleet repository (private)"]
- *     pin["package.json: github:...<br/>stolos#vX.Y.Z"] --- lock["bun.lock: the tag's<br/>commit, its integrity"]
+ *     pin["package.json: github:...<br/>stolos#stolos-vX.Y.Z"] --- lock["bun.lock: the tag's<br/>commit, its integrity"]
  *     model["fleets/&lt;id&gt;/: fleet.ts, hosts/, signers.ts,<br/>registration.ts, decisions.ts"]
  *     tip["main: its tip signed by<br/>a key in signers.ts"]
  *   end

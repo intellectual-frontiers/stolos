@@ -109,8 +109,8 @@ with code 1` cannot be removed from inside the engine; the `stolos` shortcut avo
   of FR-007. The passphrase is never stored.
 - **FR-014** (L) A resumable engine upgrade: `fleet upgrade` that fails at signing leaves `package.json`, `bun.lock` and the
   workflow file changed. `stolos update` and `stolos apply` recognize "an engine upgrade waiting for its signature" (the pin differs
-  from HEAD's and only those files changed), say so, and finish it with the automatic message `stolos vX.Y.Z: adopt the engine
-vX.Y.Z`, then send it. It is never called "your changes", in the doctor either.
+  from HEAD's and only those files changed), say so, and finish it with the automatic message `stolos: adopt the engine
+stolos-vX.Y.Z`, then send it. It is never called "your changes", in the doctor either.
 - **FR-015** (M) After the engine changes during `update`, the remaining steps run on the new engine (a fresh nested process), so what
   is reported is what runs; the Install line never reports the old version.
 - **FR-016** (N) After an engine upgrade, "What's new": up to 5 bullets from the engine repository's commit subjects between the old

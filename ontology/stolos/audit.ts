@@ -11,6 +11,7 @@
  * @module
  */
 // Spec: 104-mizan FR-003
+// Spec: 114-release-record FR-004
 import { bases, MZ, MZID, OntologyTerm } from "@intellectual-frontiers/commons/ontology/mizan";
 import { rdf } from "@intellectual-frontiers/commons/ts/kernel";
 import { STOLOS, stolos } from "./vocabulary.ts";
@@ -96,6 +97,8 @@ const MAPPED: Readonly<Record<string, string>> = {
   DnsRecord: "http://d3fend.mitre.org/ontologies/d3fend.owl#DNSRecord",
   EmailDomain: "http://d3fend.mitre.org/ontologies/d3fend.owl#DomainName",
   EmailRoute: "http://d3fend.mitre.org/ontologies/d3fend.owl#EmailRule",
+  // Spec 114-release-record: an engine release is the release of one work of commons' IFR (0026-works-versioning), the annotated tag `stolos-v<version>`; it is narrower, because it is the release of the one work `stolos`.
+  EngineRelease: "https://www.intellectualfrontiers.com/ontology/ifr#Release",
 };
 
 /** How a mapped term relates to the standard's term, where it is not `closeMatch`: the narrower terms and the broader standard term. */
@@ -105,6 +108,7 @@ const RELATION: Readonly<Record<string, "narrowMatch" | "broadMatch">> = {
   Vlan: "narrowMatch",
   SwitchPort: "narrowMatch",
   EmailDomain: "broadMatch",
+  EngineRelease: "narrowMatch",
 };
 
 function record(local: string) {

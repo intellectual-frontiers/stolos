@@ -16,7 +16,7 @@ import { ENGINE_ROOT, fingerprint, linkEngine, sandbox } from "./sandbox.ts";
 const ready: WhereFacts = {
   fleets: ["fcr"],
   fleetId: "fcr",
-  pinned: "v0.20.0",
+  pinned: "stolos-v0.20.0",
   locked: true,
   signers: { daily: 1, recovery: 1 },
   signingProblems: [],

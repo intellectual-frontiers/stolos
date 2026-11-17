@@ -15,8 +15,9 @@
  *
  * @module
  */
+// Spec: 114-release-record FR-005
 
-import { VERSION } from "../version.ts";
+import { tagOf, VERSION } from "../version.ts";
 
 /** One guide: its name, its title, who reads it, and the module whose documentation it is. */
 export interface GuideDef {
@@ -260,8 +261,8 @@ export function docsArea(module: string): string {
 export function guideUrl(name: string, version: string = VERSION): string {
   const g = guideDef(name);
   return g !== undefined
-    ? `${PAGES}v${version}/api/${docsArea(g.module)}/index.html`
-    : `${PAGES}v${version}/`;
+    ? `${PAGES}${tagOf(version)}/api/${docsArea(g.module)}/index.html`
+    : `${PAGES}${tagOf(version)}/`;
 }
 
 /** How a message points to a guide: the command that shows it, here and offline. */

@@ -42,7 +42,7 @@ flowchart TD
 - **Signing.** `commitSigned` runs `git commit` with the terminal for stdin and pipes stderr; a message that says the passphrase was
   wrong gets "(N left)" and another try (3 in all); the raw text goes to the log. Nothing reads or stores the passphrase.
 - **Resumable upgrade.** `waitingUpgrade` is true when `package.json` pins another tag than HEAD and every changed file is one of an
-  upgrade's (pin, lock, workflows, bootstrap scripts, `.gitattributes`). `apply` names its commit `stolos vX: adopt the engine vX`;
+  upgrade's (pin, lock, workflows, bootstrap scripts, `.gitattributes`). `apply` names its commit `stolos: adopt the engine stolos-vX`;
   `update` sends it through `apply` and the doctor does not count it as "yours".
 - **New engine.** After an upgrade, `update` starts `stolos update --no-upgrade` as a nested run so Install, Keys and Doctor run on the
   engine that was just adopted. The engine's releases are listed from the pin's own source (`github:` or a `git+` mirror).

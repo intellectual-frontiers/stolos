@@ -9,6 +9,7 @@
  */
 // Spec: 105-calm-output FR-012, FR-013, FR-014
 // Spec: 106-one-passphrase-speed FR-001 to FR-004
+// Spec: 114-release-record FR-007
 
 import { proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";
@@ -23,7 +24,7 @@ export const PASSPHRASE_TRIES = 3;
 const WRONG_PASSPHRASE = /incorrect passphrase|bad passphrase|passphrase.*incorrect/i;
 
 /** The message of the commit that adopts an engine version (written by `fleet upgrade`, and by update and apply when they finish one). */
-export const adoptMessage = (tag: string): string => `stolos ${tag}: adopt the engine ${tag}`;
+export const adoptMessage = (tag: string): string => `stolos: adopt the engine ${tag}`;
 
 /** What `git commit` came to. */
 export interface SignedCommit {
@@ -92,6 +93,6 @@ export function describeSigning(files: readonly string[], upgrade?: { to: string
 
 /** A commit's subject for people: an engine upgrade by what it is, else the subject as written. */
 export function describeCommit(subject: string): string {
-  const m = subject.match(/^stolos (v\d+\.\d+\.\d+): adopt the engine/);
+  const m = subject.match(/^stolos: adopt the engine (stolos-v\d+\.\d+\.\d+)/);
   return m ? `engine upgrade to ${m[1]}` : subject;
 }

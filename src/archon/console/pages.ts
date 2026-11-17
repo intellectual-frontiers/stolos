@@ -48,7 +48,7 @@ export interface RepoFacts {
   commit?: { sha: string; subject: string; author: string; at: string } | undefined;
   /** Who signed it (a name from signers.ts), when the signature is good. */
   signer?: string;
-  /** The engine release the fleet is pinned to ("v0.66.0"). */
+  /** The engine release the fleet is pinned to ("stolos-v0.66.0"). */
   engine?: string;
   /** The fleet's signers: name and role. */
   signers: Array<{ name: string; role: string }>;
@@ -450,7 +450,7 @@ export function howPage(d: WelcomeData, r: RepoFacts): Html {
     <div class="grid cols-2">
       ${diagram(
         `flowchart TB
-  engine["Engine: intellectual-frontiers/stolos<br/>release ${m(r.engine ?? "vX.Y.Z")} (public)"]
+  engine["Engine: intellectual-frontiers/stolos<br/>release ${m(r.engine ?? "stolos-vX.Y.Z")} (public)"]
   fleet["Fleet: ${m(d.repo.slug)}<br/>fleet.ts, hosts/${m(d.host)}/host.ts (private)"]
   pc["Your PC: stolos<br/>edit, build, sign, push"]
   srv["${m(d.host)}: archon<br/>pull, check signature, apply, verify"]

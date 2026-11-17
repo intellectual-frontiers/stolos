@@ -26,9 +26,10 @@
 // Spec: 004-install
 // Spec: 103-three-ports FR-001, FR-004, FR-010, FR-011
 // Spec: 106-one-passphrase-speed FR-006, FR-008
+// Spec: 114-release-record FR-005
 
 import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
-import { VERSION } from "../archon/version.ts";
+import { TAG } from "../archon/version.ts";
 import { muteOutput, ui } from "../archon/core/ui.ts";
 import { setFresh } from "../archon/core/probe-cache.ts";
 import { P, resetRoots } from "../archon/core/paths.ts";
@@ -304,7 +305,7 @@ async function main(args: readonly string[]): Promise<number> {
   const resource = {
     "service.name": "archon-boot",
     "service.namespace": P.fleetId,
-    "service.version": `v${VERSION}`,
+    "service.version": TAG,
   };
   const serveOpts = {
     port,

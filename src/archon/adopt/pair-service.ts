@@ -11,10 +11,11 @@
 // Spec: 098-pair FR-007
 // Spec: 103-three-ports FR-003, FR-004, FR-005, FR-006
 // Spec: 107-pairing-and-query FR-005, FR-006
+// Spec: 114-release-record FR-005
 
 import { SECRETS } from "../core/secrets.ts";
 import { P } from "../core/paths.ts";
-import { VERSION } from "../version.ts";
+import { TAG } from "../version.ts";
 import { ensureProbeKey, MACHINE_NAME } from "./adopt.ts";
 import { nameFor as hostnameToName } from "./checkin.ts";
 import { isPairPath, type PairOptions, PairSession } from "./pair.ts";
@@ -72,8 +73,8 @@ export function devicePairHandler(
     isPairPath(new URL(req.url).pathname) ? session.handle(req, from) : Promise.resolve(undefined);
 }
 
-/** The engine tag the pairing's scripts say (`v1.2.3`). */
-export const pairEngine = (): string => `v${VERSION}`;
+/** The engine tag the pairing's scripts say (`stolos-v1.2.3`). */
+export const pairEngine = (): string => TAG;
 
 /** The active fleet's id (the pairing's record names it). */
 export const pairFleet = (): string => P.fleetId;

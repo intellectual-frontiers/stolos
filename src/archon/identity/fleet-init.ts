@@ -10,6 +10,7 @@
 // Spec: 097-controller FR-001
 // Spec: 100-remote-access FR-001
 // Spec: 108-tags FR-003
+// Spec: 114-release-record FR-005
 
 import { fs, path as paths, proc, stdio, tty } from "@intellectual-frontiers/commons/ts/runtime";
 import { cryptSalt, sha512Crypt, tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
@@ -282,8 +283,8 @@ async function prepareRepository(id: string): Promise<void> {
   const r = ui.phase("Repository");
   await fs.mkdir(paths.join(repo, "fleets", id), { recursive: true });
   const { scaffoldRepository } = await import("../fleet/scaffold.ts");
-  const { VERSION } = await import("../version.ts");
-  const tag = `v${VERSION}`;
+  const { TAG } = await import("../version.ts");
+  const tag = TAG;
   const written = await scaffoldRepository(repo, tag);
   // The lock is what makes the pin safe (bun run stolos docs fleet-repository): bun install
   // records the engine's integrity in bun.lock, and puts its files where VS Code finds its types.

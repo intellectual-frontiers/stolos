@@ -6,6 +6,7 @@
  * @module
  */
 // Spec: 046-engine-instance
+// Spec: 114-release-record FR-005
 
 import { fs, path as paths, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import type { RunResult } from "../core/exec.ts";
@@ -16,7 +17,7 @@ import { IMPACT_WORKFLOW_PATH, IMPACT_WORKFLOW_TEXT } from "../compliance/workfl
 
 /**
  * A fleet repository's package.json (spec 096 FR-006): the engine by Git at its tag
- * (`github:intellectual-frontiers/stolos#v<version>`; bun.lock pins the tag's commit and its
+ * (`github:intellectual-frontiers/stolos#stolos-v<version>`; bun.lock pins the tag's commit and its
  * integrity), and the commands `bun run stolos ...` and `bun run archon ...`. On Node 26 the same
  * files run as `node --import @intellectual-frontiers/commons/ts/node stolos.ts`.
  */

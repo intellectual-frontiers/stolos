@@ -8,6 +8,7 @@
 // Spec: 059-stolos-and-archon
 // Spec: 105-calm-output FR-001 to FR-003, FR-005, FR-006
 // Spec: 106-one-passphrase-speed FR-002, FR-006, FR-008
+// Spec: 114-release-record FR-014
 
 import { fs, lock, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { asRoot, onHost, P, resetRoots } from "./core/paths.ts";
@@ -29,7 +30,7 @@ import {
 import { wipePassphrases } from "./core/passphrase.ts";
 import { setFresh } from "./core/probe-cache.ts";
 import { resetRunMemo } from "./core/run-memo.ts";
-import { VERSION } from "./version.ts";
+import { VERSION, versionLine } from "./version.ts";
 
 /**
  * cloud-init (the first boot) and some service managers start archon without
@@ -192,7 +193,7 @@ async function mainRun(argvIn: readonly string[], surface: Surface): Promise<num
     return 0;
   }
   if (argv[0] === "--version" || argv[0] === "version") {
-    print(`${commandName(surface)} ${VERSION}`);
+    print(versionLine());
     return 0;
   }
   const { rest, g } = globals(argv);

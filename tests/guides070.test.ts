@@ -134,7 +134,7 @@ proves(
   "070: bun run docs renders each guide as its area's overview, with its diagrams; stolos docs links there",
   async () => {
     const { docsArea, guideUrl, PAGES } = await import("../src/archon/core/guides.ts");
-    const { VERSION } = await import("../src/archon/version.ts");
+    const { TAG } = await import("../src/archon/version.ts");
     const pkg = JSON.parse(await fs.readTextFile("package.json")) as {
       scripts: Record<string, string>;
     };
@@ -146,7 +146,7 @@ proves(
     for (const g of GUIDES) {
       const area = areas.find((a) => a.slug === docsArea(g.module));
       assertEquals(area?.entryPoints[0], g.module, `${g.name}: its module opens its area`);
-      assertEquals(guideUrl(g.name), `${PAGES}v${VERSION}/api/${docsArea(g.module)}/index.html`);
+      assertEquals(guideUrl(g.name), `${PAGES}${TAG}/api/${docsArea(g.module)}/index.html`);
     }
     assertEquals(docsArea("src/archon/pg/mod.ts"), "archon-pg");
     assertEquals(docsArea("src/releasing.ts"), "releasing");

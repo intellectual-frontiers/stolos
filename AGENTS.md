@@ -4,7 +4,7 @@ This repository is the fleet engine: the `archon` command, the boot server, and 
 about turning bare metal into a converged, verified Ubuntu host. It holds no real fleet. Fleets live
 in their own repositories (for example `example-org/fleet`), under `fleets/<id>/`, and depend on this
 engine by Git at a version tag:
-`"@intellectual-frontiers/stolos": "github:intellectual-frontiers/stolos#v<version>"`, with the
+`"@intellectual-frontiers/stolos": "github:intellectual-frontiers/stolos#stolos-v<version>"`, with the
 commit and its integrity in `bun.lock`. A release is the tag alone: no GitHub release, no tarball,
 no build. This file is the entry point for any agent; the constitution,
 [`.specify/memory/constitution.md`](.specify/memory/constitution.md), governs everything here.
@@ -63,9 +63,12 @@ no build. This file is the entry point for any agent; the constitution,
   full commit; on Node 26 an entry file runs with
   `node --import @intellectual-frontiers/commons/ts/node <file>`. `examples/` import the engine by its package
   name (`@intellectual-frontiers/stolos/archon/...`), as a fleet does.
-- **Every push to `main` raises the version.** Run `bun run version bump` (0.1.0, 0.2.0, ...) in
-  the same push; CI fails otherwise and tags the commit `v<version>` when it passes. The version
-  lives in `src/archon/version.ts`; `package.json`'s follows it (`bun run version` writes both).
+- **Every push to `main` raises the version.** Run `bun run version bump` (0.150.0, 0.151.0, ...) in
+  the same push; CI fails otherwise and tags the commit `stolos-v<version>` (an annotated tag) when it
+  passes. Stolos is one work (spec `114-release-record`, commons' 0026-works-versioning): the version
+  lives in `src/archon/version.ts`; `package.json` and the work's record `release.ts` follow it
+  (`bun run version` writes all three: `bump`, `set <version>`, `sync`), and `bun run version check`
+  and `bun run versions:check` (commons' check) must both pass. The old tag `v<version>` is no longer read.
 - **Tell the operator in the commit** (spec 105-calm-output FR-016). When a change you release needs
   the operator to do something (run a command, move a file, decide), add a line to the commit's body
   that begins `Operator action:` and says it in one sentence (`Operator action: run bun run stolos
@@ -109,7 +112,7 @@ glob, a glob naming files beats a folder, and among the rest the longer wins.
 - **1 Specifications** (relies on 0): `.specify/`, `specs/`. What each part must do, in Spec Kit (specify, clarify, plan, tasks, implement), using only terms the ontology defines.
 - **2 Governed data** (relies on 0, 1): `src/archon/model/types.ts`, `src/archon/model/site.ts`, `src/archon/estate/schema.ts`, `src/archon/schema/`, `src/archon/ocsf/classes.ts`. The shapes of what is kept: the fleet model's types and the site's, the estate's tables and the schema language and vocabulary they are declared in.
 - **3 Data operations** (relies on 0 to 2): `src/archon/model/`, `src/archon/state/`, `src/archon/estate/`, `src/archon/vault/`. Work as close to the data as possible: the model loaded and validated, the state store (archon.sql), the estate graph and the vault.
-- **4 Infrastructure rules** (relies on 0, 1, 3): `src/archon/core/`, `src/archon/identity/`, `src/archon/install/`, `src/archon/web/`, `src/archon/telemetry/`, `src/archon/version.ts`, `src/archon/assets.auto.ts`, `.gitattributes`, `.gitignore`, `.vscode/`, `bun.lock`, `bunfig.toml`, `package.json`, `tsconfig.json`. Logic every part reuses, neutral to any one service: the core (output, paths, exec, secrets), identity and keys, install, the web front door, telemetry's names, and the use of commons.
+- **4 Infrastructure rules** (relies on 0, 1, 3): `src/archon/core/`, `src/archon/identity/`, `src/archon/install/`, `src/archon/web/`, `src/archon/telemetry/`, `src/archon/version.ts`, `src/archon/assets.auto.ts`, `.gitattributes`, `.gitignore`, `.vscode/`, `bun.lock`, `bunfig.toml`, `package.json`, `release.ts`, `tsconfig.json`. Logic every part reuses, neutral to any one service: the core (output, paths, exec, secrets), identity and keys, install, the web front door, telemetry's names, and the use of commons.
 - **5 Business rules** (relies on 0, 1, 3, 4): `src/archon/access/`, `src/archon/adopt/`, `src/archon/apply/`, `src/archon/audit/`, `src/archon/backup/`, `src/archon/build.ts`, `src/archon/capabilities/`, `src/archon/capabilities/mod.ts`, `src/archon/clients/`, `src/archon/compliance/`, `src/archon/connect/`, `src/archon/containers/`, `src/archon/controls/`, `src/archon/device/`, `src/archon/doctor/`, `src/archon/dotfiles/`, `src/archon/evidence/`, `src/archon/export/`, `src/archon/fedramp/`, `src/archon/fleet/`, `src/archon/guests/`, `src/archon/guide/`, `src/archon/notify/`, `src/archon/observe/`, `src/archon/ocsf/`, `src/archon/optin/`, `src/archon/otelui/`, `src/archon/people/`, `src/archon/personas/`, `src/archon/personas/mod.ts`, `src/archon/pg/`, `src/archon/proposal/`, `src/archon/prov/`, `src/archon/reconcile/`, `src/archon/render/`, `src/archon/report/`, `src/archon/risk/`, `src/archon/s3/`, `src/archon/shell/`, `src/archon/smb/`, `src/archon/tools/`, `src/archon/trust/`, `src/archon/update/`, `home/`. The engine's own logic: capabilities and what they render, compliance and controls, adopt and pair, access, update, proposals and the other services.
 - **6 Application: headless hosts, then windowed hosts** (relies on 0, 1, 4, 5): `src/stolos/`, `src/archon/main.ts`, `src/archon/commands/`, `src/archon/mcp/`, `src/archon/api/`, `src/archon-boot/`, `bin/`, `tools/`, `.github/`, `src/archon/console/`, `vendor/`. Two bands: the headless hosts (the stolos and archon command lines and their registry, the MCP server, the REST API, the boot server, the bootstrap scripts and the harness's tools), which reach the operations below with no window, session or person present; then the windowed hosts (the Archon and Stolos consoles), which draw a model and call those operations.
 - **7 Documentation** (relies on 0 to 6): `src/**/mod.ts`, `src/releasing.ts`, `src/archon/connect/registry-guide.ts`, `src/archon/install/workstation-guide.ts`, `docs/`, `docs.config.ts`, `examples/`, `tests/`, `AGENTS.md`, `LICENSE`, `LICENSING.md`, `README.md`. The guides (each module's @module documentation, src/**/mod.ts first), docs/, the manuals site (docs.config.ts), the example fleet, this repository's own documents, and the tests that prove every rung below.

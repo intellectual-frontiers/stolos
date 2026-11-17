@@ -1,12 +1,12 @@
 /**
  * `bun tools/smoke.ts [--repo DIR] [--commit SHA]` (spec 096-bun-runtime FR-005): the engine
  * installed as a fleet repository installs it, by Git at a commit, and run on Bun and on Node 26.
- * CI runs it on the commit it checked before it tags that commit `v<version>`: the tag is the
+ * CI runs it on the commit it checked before it tags that commit `stolos-v<version>`: the tag is the
  * release, so this is what a fleet repository gets from it.
  *
  * In an empty project, `package.json` depends on `@intellectual-frontiers/stolos` by a `git+file:`
  * URL of the repository at the commit (by default, this checkout at its `HEAD`), as a fleet's
- * depends on `github:intellectual-frontiers/stolos#v<version>`; `bun install` installs it and its
+ * depends on `github:intellectual-frontiers/stolos#stolos-v<version>`; `bun install` installs it and its
  * own dependencies (commons by Git, `ajv`); then the fleet's entry files, `archon.ts` and
  * `stolos.ts`, run `--version` on Bun, and on Node 26 with commons' hook
  * (`node --import @intellectual-frontiers/commons/ts/node archon.ts`), since Node strips no types
@@ -23,7 +23,9 @@
  * @module
  */
 // Spec: 096-bun-runtime
+// Spec: 114-release-record FR-014
 import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
+import { versionLine } from "../src/archon/version.ts";
 
 const ROOT = path.resolve(path.dirname(path.fromFileUrl(import.meta.url)), "..");
 
@@ -115,7 +117,7 @@ export async function smoke(o: SmokeOptions): Promise<SmokeRun[]> {
       ] as const) {
         const r = await proc.run([...argv, "--version"], { cwd: dir });
         const said = `${r.stdout}${r.stderr}`.trim();
-        if (!r.success || !said.includes(version)) {
+        if (!r.success || !said.includes(versionLine(version))) {
           throw new Error(`${name} --version: ${said || `exit ${r.code}`}`);
         }
         runs.push({ name, said: said.split("\n")[0] ?? "" });

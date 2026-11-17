@@ -15,7 +15,7 @@
  * 1. **Tools and the repository, in one line** (spec 062). In PowerShell, not as Administrator:
  *
  *    ```powershell
- *    & ([scriptblock]::Create((irm https://raw.githubusercontent.com/intellectual-frontiers/stolos/v0.59.0/bin/bootstrap.windows.ps1))) --repo example/fleet
+ *    & ([scriptblock]::Create((irm https://raw.githubusercontent.com/intellectual-frontiers/stolos/stolos-v0.150.0/bin/bootstrap.windows.ps1))) --repo example/fleet
  *    ```
  *
  *    It installs Bun, Git and gh, signs you in to GitHub in the browser, clones the fleet into

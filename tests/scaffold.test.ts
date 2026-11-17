@@ -25,11 +25,17 @@ proves(
   ["059-stolos-and-archon FR-005", "096-bun-runtime FR-006"],
   "096: the scaffolded package.json depends on the engine by Git at its tag; stolos and archon are its commands",
   () => {
-    const f = scaffoldFiles("v1.2.3");
+    const f = scaffoldFiles("stolos-v1.2.3");
     const text = f["package.json"] ?? "";
-    assertEquals(readPin(text), { source: "github:intellectual-frontiers/stolos", tag: "v1.2.3" });
+    assertEquals(readPin(text), {
+      source: "github:intellectual-frontiers/stolos",
+      tag: "stolos-v1.2.3",
+    });
     const j = JSON.parse(text) as PackageJson;
-    assertEquals(j.dependencies[ENGINE_PACKAGE], "github:intellectual-frontiers/stolos#v1.2.3");
+    assertEquals(
+      j.dependencies[ENGINE_PACKAGE],
+      "github:intellectual-frontiers/stolos#stolos-v1.2.3",
+    );
     assertEquals(j.scripts, { stolos: "bun stolos.ts", archon: "bun archon.ts" });
     assert(
       (f["stolos.ts"] ?? "").includes(`"${ENGINE_PACKAGE}/stolos/main"`) &&
@@ -59,7 +65,7 @@ proves(
     const dir = await fs.makeTempDir();
     try {
       await fs.writeTextFile(path.join(dir, "package.json"), "{}\n");
-      const written = await scaffoldRepository(dir, "v1.0.0");
+      const written = await scaffoldRepository(dir, "stolos-v1.0.0");
       assert(!written.includes("package.json"));
       assertEquals(await fs.readTextFile(path.join(dir, "package.json")), "{}\n");
       assert(
@@ -67,7 +73,7 @@ proves(
           written.includes("stolos.ts") &&
           written.includes(".gitignore"),
       );
-      assertEquals(await scaffoldRepository(dir, "v1.0.0"), []);
+      assertEquals(await scaffoldRepository(dir, "stolos-v1.0.0"), []);
     } finally {
       await fs.remove(dir, { recursive: true });
     }

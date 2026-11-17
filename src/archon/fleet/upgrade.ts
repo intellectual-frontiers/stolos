@@ -1,13 +1,14 @@
 /**
  * `stolos fleet upgrade <tag>` (spec 046-engine-instance, Articles 9, 12, 24; spec 096 FR-006):
  * move a fleet repository to another version of the engine, safely. A version of the engine is its
- * tag `v<version>`: there is no GitHub release, and a fleet depends on the engine by Git.
+ * annotated tag `stolos-v<version>` (spec 114-release-record): there is no GitHub release, and a
+ * fleet depends on the engine by Git.
  *
  * Why each step exists (the fleet-repository guide, ./mod.ts, says it at length):
  *   1. The tag must be a version tag, and only forward unless --downgrade: going back to an older
  *      engine is a decision, not an accident.
  *   2. `package.json`'s dependency on the engine is moved to that tag
- *      (`"@intellectual-frontiers/stolos": "github:intellectual-frontiers/stolos#v<version>"`),
+ *      (`"@intellectual-frontiers/stolos": "github:intellectual-frontiers/stolos#stolos-v<version>"`),
  *      and `bun install` pins the commit the tag names, and its integrity, in `bun.lock`. The
  *      installed package must say it is that version: a typo, or a tag that is not that version, is
  *      refused and everything is put back. Hosts run `bun install --frozen-lockfile`: an engine
@@ -24,10 +25,10 @@
  *   participant U as stolos fleet upgrade
  *   participant G as GitHub (the engine's tag)
  *   participant R as fleet repository
- *   P->>U: fleet upgrade vX.Y.Z
- *   U->>R: package.json: github:...#vX.Y.Z, the reusable workflows' tag
+ *   P->>U: fleet upgrade stolos-vX.Y.Z
+ *   U->>R: package.json: github:...#stolos-vX.Y.Z, the reusable workflows' tag
  *   U->>G: bun install: the tag's commit
- *   U->>R: bun.lock (the commit, its integrity); the installed engine says vX.Y.Z
+ *   U->>R: bun.lock (the commit, its integrity); the installed engine says X.Y.Z
  *   U->>R: validate every fleet with the new engine
  *   U->>R: one signed commit
  *   P->>R: stolos apply (the approval)
@@ -38,6 +39,7 @@
 // Spec: 046-engine-instance
 // Spec: 096-bun-runtime
 // Spec: 105-calm-output FR-005, FR-012 to FR-014
+// Spec: 114-release-record FR-005, FR-007
 
 import { object, record, string } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
@@ -45,6 +47,7 @@ import { listFleets, P } from "../core/paths.ts";
 import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
 import { engineCommand, installDependencies } from "../install/bun.ts";
+import { TAG_PREFIX } from "../version.ts";
 import { adoptMessage, commitSigned, describeSigning } from "./signing.ts";
 
 /** The engine's package name, as a fleet repository depends on it. */
@@ -59,17 +62,19 @@ export const PIN_FILE = "package.json";
 /** The file that holds the commit and the integrity of the pinned engine. */
 export const LOCK_FILE = "bun.lock";
 
-const TAG = /^v(\d+)\.(\d+)\.(\d+)$/;
+const TAG = new RegExp(`^${TAG_PREFIX}(\\d+)\\.(\\d+)\\.(\\d+)$`);
 /**
- * A Git dependency at a version tag: `github:<owner>/<name>#v0.7.0`, or any `git+` URL (a mirror,
- * or a local copy of the engine in a test) at such a tag.
+ * A Git dependency at a version tag: `github:<owner>/<name>#stolos-v0.150.0`, or any `git+` URL (a
+ * mirror, or a local copy of the engine in a test) at such a tag. No other spelling is a pin.
  */
-const PIN = /^((?:github:[^#\s]+)|(?:git\+[^#\s]+))#(v\d+\.\d+\.\d+)$/;
+const PIN = new RegExp(
+  `^((?:github:[^#\\s]+)|(?:git\\+[^#\\s]+))#(${TAG_PREFIX}\\d+\\.\\d+\\.\\d+)$`,
+);
 
 /** A version: major, minor, patch. */
 export type Semver = [number, number, number];
 
-/** A tag ("v1.2.3") as a version, or undefined. */
+/** A tag ("stolos-v1.2.3") as a version, or undefined. */
 export function parseTag(tag: string): Semver | undefined {
   const m = tag.match(TAG);
   return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : undefined;
@@ -85,13 +90,13 @@ export function compare(a: Semver, b: Semver): number {
 export interface Pin {
   /** The dependency before `#`: `github:intellectual-frontiers/stolos`, or a `git+` URL. */
   source: string;
-  /** The tag, "vX.Y.Z". */
+  /** The tag, "stolos-vX.Y.Z". */
   tag: string;
 }
 
-/** The dependency on the engine at a tag: `github:intellectual-frontiers/stolos#v<version>`. */
+/** The dependency on the engine at a tag: `github:intellectual-frontiers/stolos#stolos-v<version>`. */
 export function engineDependency(tag: string, source: string = ENGINE_SOURCE): string {
-  return `${source}#v${tag.replace(/^v/, "")}`;
+  return `${source}#${tag}`;
 }
 
 /** The parts of a package.json the pin is read from. */
@@ -137,7 +142,10 @@ export function engineRepository(pin: Pin): string | undefined {
 export function rewriteWorkflowRefs(text: string, engineRepo: string, tag: string): string {
   const esc = engineRepo.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&");
   return text.replace(
-    new RegExp(`(${esc}/\\.github/workflows/[\\w.-]+\\.ya?ml@)v\\d+\\.\\d+\\.\\d+`, "g"),
+    new RegExp(
+      `(${esc}/\\.github/workflows/[\\w.-]+\\.ya?ml@)${TAG_PREFIX}\\d+\\.\\d+\\.\\d+`,
+      "g",
+    ),
     `$1${tag}`,
   );
 }
@@ -244,14 +252,17 @@ export async function fleetUpgrade(o: UpgradeOptions): Promise<number> {
   const have = pin ? parseTag(pin.tag) : undefined;
   if (!text || !pin || !have) {
     p.fail(
-      `${pinPath} does not depend on ${ENGINE_PACKAGE} by Git at a version tag ("${engineDependency("vX.Y.Z")}")`,
-      "see bun run stolos docs fleet-repository, section 'The pin'",
+      `${pinPath} does not depend on ${ENGINE_PACKAGE} by Git at a version tag ("${engineDependency(`${TAG_PREFIX}X.Y.Z`)}")`,
+      `pin the newest release once (bun add ${ENGINE_SOURCE}#${TAG_PREFIX}<version>), then bun run stolos update; see bun run stolos docs fleet-repository, section 'The pin'`,
     );
     return ui.finish();
   }
   const want = parseTag(o.tag);
   if (!want) {
-    p.fail(`'${o.tag}' is not a version tag`, "use the form v1.2.3 (the engine's version tags)");
+    p.fail(
+      `'${o.tag}' is not a version tag`,
+      `use the form ${TAG_PREFIX}1.2.3 (the engine's version tags)`,
+    );
     return ui.finish();
   }
   const order = compare(want, have);

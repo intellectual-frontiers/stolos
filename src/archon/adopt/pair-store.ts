@@ -18,7 +18,7 @@
  * @example
  * ```ts
  * import { MemoryPairStore, newPairRecord } from "./pair-store.ts";
- * const store = new MemoryPairStore(newPairRecord({ code: "WDJB-MJHT", fleet: "lab", engine: "v1.0.0" }));
+ * const store = new MemoryPairStore(newPairRecord({ code: "WDJB-MJHT", fleet: "lab", engine: "stolos-v1.0.0" }));
  * const r = await store.update((rec) => (rec.tries["10.0.0.9"] = 1));
  * r?.result; // 1
  * ```
@@ -80,7 +80,7 @@ export interface PairRecord {
   code: string;
   /** The fleet's id. */
   fleet: string;
-  /** The engine's tag (v1.2.3), for the scripts' messages. */
+  /** The engine's tag (stolos-v1.2.3), for the scripts' messages. */
   engine: string;
   /** When the session began (milliseconds). */
   startedAt: number;

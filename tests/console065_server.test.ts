@@ -78,7 +78,7 @@ function deps(): ConsoleDeps & {
           at: new Date().toISOString(),
         },
         signer: "alice-daily",
-        engine: "v0.66.0",
+        engine: "stolos-v0.66.0",
         signers: [
           { name: "alice-daily", role: "daily" },
           {

@@ -106,6 +106,7 @@ export const rung4 = RungSchema.make(term(STOLOS, "rung-4"), {
     "bun.lock",
     "bunfig.toml",
     "package.json",
+    "release.ts",
     "tsconfig.json",
   ],
   mayRelyOn: [rung0, rung1, rung3],

@@ -10,11 +10,12 @@
  */
 // Spec: 069-integrate
 // Spec: 101-ladder FR-006
+// Spec: 114-release-record FR-005
 
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import { tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
 import { P } from "../core/paths.ts";
-import { VERSION } from "../version.ts";
+import { TAG } from "../version.ts";
 import { PROBE_SCRIPT, PROBE_SCRIPT_WINDOWS } from "./probe.ts";
 import type { CheckIn } from "./checkin.ts";
 import { INTEGRATION_KINDS, type IntegrationKind } from "../ontology.auto.ts";
@@ -45,7 +46,7 @@ export async function integrateLines(o: {
   repo?: string;
   tag?: string;
 }): Promise<{ posix: string; windows?: string }> {
-  const tag = o.tag ?? `v${VERSION}`;
+  const tag = o.tag ?? TAG;
   const flags = o.as.map((k) => `--${k}`);
   const common = [
     ...(o.fleet ? ["--fleet", o.fleet] : []),

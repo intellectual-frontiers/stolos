@@ -17,10 +17,11 @@
  * @module
  */
 // Spec: 062-bootstrap
+// Spec: 114-release-record FR-005
 
 import { ASSETS } from "../assets.auto.ts";
 import { run } from "../core/exec.ts";
-import { VERSION } from "../version.ts";
+import { TAG } from "../version.ts";
 
 /** The template's path in the engine, by the fleet's file name. */
 const TEMPLATES: Record<string, string> = {
@@ -82,7 +83,7 @@ const RAW = "https://raw.githubusercontent.com/intellectual-frontiers/stolos/";
  * The one line that bootstraps a PC from the engine's bootstrap at `tag` (it is
  * public: no sign-in needed to fetch it), for the fleet `repo` (owner/name).
  */
-export function bootstrapOneLiner(os: "windows" | "posix", repo = "", tag = `v${VERSION}`): string {
+export function bootstrapOneLiner(os: "windows" | "posix", repo = "", tag = TAG): string {
   const r = repo || "<owner>/<fleet-repo>";
   return os === "windows"
     ? `& ([scriptblock]::Create((irm ${RAW}${tag}/bin/bootstrap.windows.ps1))) --repo ${r}`

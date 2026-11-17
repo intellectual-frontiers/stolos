@@ -1,0 +1,3 @@
+# Requirements proven by review, not by a test: the requirement, a tab, how it is verified.
+114-release-record FR-009	The release job runs only on a push to main after every other job passed, so it cannot run in a test: .github/workflows/ci.yml job "release" (the tag step, the docs publish step and its keep-the-newest-20 logic) is read in review, and the first release (0.150.0) is the proof; tests/release114.test.ts proves the tag the job makes (commons' versions tag, on a real Git repository).
+114-release-record FR-012	The Operator action line belongs to the commit that brings 0.150.0, which a review checks; it cannot be proved before that commit exists.

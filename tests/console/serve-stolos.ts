@@ -106,7 +106,7 @@ export const FACTS: PcFacts = {
     title: "lab",
     repo: "example/fleet",
     domain: "lab.example.org",
-    engine: "v0.0.0",
+    engine: "stolos-v0.0.0",
   },
   machines: [
     {
@@ -502,7 +502,7 @@ export async function fakeConsole(
         ...(as.includes("adopt")
           ? { key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIexampleexampleexampleexample0000" }
           : {}),
-        tag: "v0.0.0",
+        tag: "stolos-v0.0.0",
       });
     },
     bootLog: () => Promise.resolve(BOOT_LOG),

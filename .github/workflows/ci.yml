@@ -1,9 +1,11 @@
-# Specs 046-engine-instance and 096-bun-runtime: every push and pull request is checked on the
-# pinned Bun (and Node 26, the backup runtime); every push to main must raise the version in
-# src/archon/version.ts, and once everything passes the commit is installed as a Git dependency
-# into an empty project and run on Bun and on Node, then tagged v<version>. The tag is the
-# release: no GitHub release, no tarball, no build. A fleet repository depends on it by Git
-# (package.json: "github:intellectual-frontiers/stolos#v<version>"); bun.lock pins its commit.
+# Specs 046-engine-instance, 096-bun-runtime and 114-release-record: every push and pull request
+# is checked on the pinned Bun (and Node 26, the backup runtime); every push to main must raise
+# the version in src/archon/version.ts (package.json and release.ts follow it), and once
+# everything passes the commit is installed as a Git dependency into an empty project and run on
+# Bun and on Node, then tagged stolos-v<version> (an annotated tag, made by commons' versions
+# tool). The tag is the release: no GitHub release, no tarball, no build. A fleet repository
+# depends on it by Git (package.json: "github:intellectual-frontiers/stolos#stolos-v<version>");
+# bun.lock pins its commit.
 name: ci
 
 on:
@@ -71,6 +73,19 @@ jobs:
       - name: The version is newer than main (pull request)
         if: github.event_name == 'pull_request'
         run: bun run version check origin/${{ github.base_ref }}
+      # Spec 114-release-record FR-009: commons' check of works (0026-works-versioning FR-022), offline and
+      # path-scoped: the files of the work changed and its record's version did not grow.
+      - name: The work's record and its version (commons' versions check, push to main)
+        if: github.event_name == 'push'
+        run: |
+          if git rev-parse -q --verify HEAD^ >/dev/null; then
+            bun node_modules/@intellectual-frontiers/commons/commons/ts/mizan/versions.ts check --base HEAD^
+          else
+            echo "the first commit: nothing to compare with"
+          fi
+      - name: The work's record and its version (commons' versions check, pull request)
+        if: github.event_name == 'pull_request'
+        run: bun node_modules/@intellectual-frontiers/commons/commons/ts/mizan/versions.ts check --base origin/${{ github.base_ref }}
 
   suite:
     # Spec 096 FR-004: the parts of the suite that apply on macOS and Windows, on Bun.
@@ -178,8 +193,9 @@ jobs:
 
   release:
     # Spec 096 FR-005: on a push to main that passed everything, this commit installed as a Git
-    # dependency (git+file:) into an empty project and run on Bun and on Node 26, then the tag
-    # v<version>, which is the release. Then this version's documentation (spec 055).
+    # dependency (git+file:) into an empty project and run on Bun and on Node 26, then the annotated
+    # tag stolos-v<version>, which is the release (spec 114-release-record). Then this version's
+    # documentation (spec 055).
     needs: [check, suite, bootstrap-windows, integrate-posix, console-browser]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
@@ -196,10 +212,12 @@ jobs:
         run: bun install --frozen-lockfile
       - name: This commit as a fleet installs it (git+file:), archon and stolos --version on Bun and on Node
         run: bun tools/smoke.ts --repo "$GITHUB_WORKSPACE" --commit "$GITHUB_SHA"
-      - name: Tag v<version>
+      - name: Tag stolos-v<version>
         id: tag
+        # An annotated tag whose message holds the commit and the tree hash (commons 0026
+        # FR-018). CI has no signing key, so it is not signed: a signed tag is a later item.
         run: |
-          TAG="v$(bun tools/version.ts show)"
+          TAG="$(bun tools/version.ts tag)"
           echo "tag=$TAG" >>"$GITHUB_OUTPUT"
           if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
             if [ "$(git rev-list -n 1 "$TAG")" = "$(git rev-parse HEAD)" ]; then
@@ -208,11 +226,13 @@ jobs:
               echo "::error::$TAG already tags another commit: raise the version" && exit 1
             fi
           else
-            git tag "$TAG"
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            bun node_modules/@intellectual-frontiers/commons/commons/ts/mizan/versions.ts tag "$(bun tools/version.ts slug)"
             git push origin "$TAG"
           fi
       # Spec 055: this version's documentation, on GitHub Pages (the gh-pages
-      # branch): /vX.Y.Z/ for each release, /latest/ for the newest, the last 20 kept.
+      # branch): /stolos-vX.Y.Z/ for each release, /latest/ for the newest, the last 20 kept.
       - name: Documentation (IFC Docs, docs.config.ts, into out/docs)
         run: bun run docs
       - name: Publish to the gh-pages branch
@@ -229,7 +249,7 @@ jobs:
           cp -r out/docs "../pages/$TAG"
           cp -r out/docs ../pages/latest
           # Keep the newest 20 versions.
-          ls -d ../pages/v*/ 2>/dev/null | sed 's#.*/\(v[0-9.]*\)/#\1#' | sort -V | head -n -20 |
+          ls -d ../pages/stolos-v*/ 2>/dev/null | sed 's#.*/\(stolos-v[0-9.]*\)/#\1#' | sort -V | head -n -20 |
             while read -r old; do rm -rf "../pages/$old"; done
           printf '<!DOCTYPE html><meta http-equiv="refresh" content="0; url=latest/index.html"><a href="latest/index.html">Stolos documentation</a>\n' >../pages/index.html
           touch ../pages/.nojekyll

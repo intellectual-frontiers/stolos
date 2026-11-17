@@ -19,12 +19,12 @@ proves(
   "058: the newest release tag, and the runtime version check",
   () => {
     const ls = [
-      "aaa\trefs/tags/v0.9.0",
-      "bbb\trefs/tags/v0.37.0",
-      "ccc\trefs/tags/v0.4.12",
+      "aaa\trefs/tags/stolos-v0.9.0",
+      "bbb\trefs/tags/stolos-v0.37.0",
+      "ccc\trefs/tags/stolos-v0.4.12",
       "ddd\trefs/tags/e2e-dev",
     ].join("\n");
-    assertEquals(newestTag(ls), "v0.37.0");
+    assertEquals(newestTag(ls), "stolos-v0.37.0");
     assertEquals(newestTag("nothing"), undefined);
     assert(atLeast("2.9.6", "2.9.6") && atLeast("2.10.0", "2.9.6") && atLeast("3.0.0", "2.9.6"));
     assert(!atLeast("2.9.5", "2.9.6") && !atLeast("1.46.3", "2.9.6"));

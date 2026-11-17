@@ -79,15 +79,15 @@ proves(
       as: ["adopt", "osquery"],
       fleet: "lab",
       key: KEY + " comment",
-      tag: "v1.2.3",
+      tag: "stolos-v1.2.3",
     });
     assertStringIncludes(
       l.posix,
-      "https://raw.githubusercontent.com/intellectual-frontiers/stolos/v1.2.3/bin/integrate.sh | sh -s --",
+      "https://raw.githubusercontent.com/intellectual-frontiers/stolos/stolos-v1.2.3/bin/integrate.sh | sh -s --",
     );
     assertStringIncludes(
       l.posix,
-      `--adopt --osquery --fleet lab --key '${KEY}' --engine v1.2.3 --probe-sha256 `,
+      `--adopt --osquery --fleet lab --key '${KEY}' --engine stolos-v1.2.3 --probe-sha256 `,
     );
     assert(!l.posix.includes("comment"), "the key's comment is not passed");
     assertStringIncludes(l.windows ?? "", "integrate.windows.ps1");
@@ -95,7 +95,7 @@ proves(
       as: ["workstation"],
       fleet: "lab",
       repo: "example/fleet",
-      tag: "v1.2.3",
+      tag: "stolos-v1.2.3",
     });
     assertEquals(ws.windows, undefined, "a Windows workstation is WSL: no PowerShell line");
     assertStringIncludes(ws.posix, "--repo example/fleet");

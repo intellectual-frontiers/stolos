@@ -526,7 +526,7 @@ proves(
   "074: the pull request workflow: pinned actions, least permissions, one comment, the gate",
   () => {
     const w = IMPACT_WORKFLOW_TEXT;
-    assertEquals(scaffoldFiles("v1.0.0")[IMPACT_WORKFLOW_PATH], w, "fleet init writes it");
+    assertEquals(scaffoldFiles("stolos-v1.0.0")[IMPACT_WORKFLOW_PATH], w, "fleet init writes it");
     assertStringIncludes(w, "on:\n  pull_request:\n");
     assert(
       !w.includes("pull_request_target"),

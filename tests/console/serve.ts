@@ -75,7 +75,7 @@ const h = consoleHandler({
         at: new Date().toISOString(),
       },
       signer: "alice-daily",
-      engine: "v0.0.0",
+      engine: "stolos-v0.0.0",
       signers: [
         { name: "alice-daily", role: "daily" },
         {

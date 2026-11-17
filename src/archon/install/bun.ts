@@ -8,7 +8,7 @@
  *   unpacking it, and links `/usr/local/bin/bun`. Raising the pin is a change to that file,
  *   reviewed like any other.
  * - **The engine in a checkout**: a fleet repository depends on the engine by Git at a tag
- *   (`package.json`: `github:intellectual-frontiers/stolos#v<version>`), and `bun.lock` pins the
+ *   (`package.json`: `github:intellectual-frontiers/stolos#stolos-v<version>`), and `bun.lock` pins the
  *   tag's commit and its integrity. `bun install --frozen-lockfile` installs exactly that, or stops
  *   (E046-LOCK-INTEGRITY): the lock is the control.
  * - **The launcher** (`/usr/local/bin/archon`, `capabilities/cli.ts`) runs the checkout's

@@ -37,30 +37,36 @@ const ENGINE = path.fromFileUrl(new URL("..", import.meta.url)).replace(/[\\/]$/
 const SOURCE = "github:intellectual-frontiers/stolos";
 
 proves(
-  ["046-engine-instance FR-005b", "096-bun-runtime FR-006"],
-  "046: tags, order, and the pin in package.json",
+  [
+    "046-engine-instance FR-005b",
+    "096-bun-runtime FR-006",
+    "114-release-record FR-005",
+    "114-release-record FR-010",
+  ],
+  "046: tags, order, and the pin in package.json (only the stolos-v spelling)",
   () => {
-    assertEquals(parseTag("v1.2.3"), [1, 2, 3]);
+    assertEquals(parseTag("stolos-v1.2.3"), [1, 2, 3]);
     assertEquals(parseTag("1.2.3"), undefined);
-    assertEquals(parseTag("v1.2"), undefined);
+    assertEquals(parseTag("v1.2.3"), undefined, "the old spelling is no tag");
+    assertEquals(parseTag("stolos-v1.2"), undefined);
     assertEquals(compare([0, 7, 0], [0, 10, 0]), -1, "numbers, not text");
-    const json = packageJsonText("v0.7.0");
+    const json = packageJsonText("stolos-v0.7.0");
     const pin = readPin(json);
-    assertEquals(pin, { source: SOURCE, tag: "v0.7.0" });
+    assertEquals(pin, { source: SOURCE, tag: "stolos-v0.7.0" });
     assert(pin);
-    assertEquals(engineDependency("v0.7.0"), `${SOURCE}#v0.7.0`);
-    const moved = writePin(json, pin, "v0.8.0");
+    assertEquals(engineDependency("stolos-v0.7.0"), `${SOURCE}#stolos-v0.7.0`);
+    const moved = writePin(json, pin, "stolos-v0.8.0");
     assertEquals(
       moved,
-      json.replace(`${SOURCE}#v0.7.0`, `${SOURCE}#v0.8.0`),
+      json.replace(`${SOURCE}#stolos-v0.7.0`, `${SOURCE}#stolos-v0.8.0`),
       "only the pin changes",
     );
     // A mirror or a local copy, by a git+ URL at a tag, is a pin too.
     const dep = (spec: string): string =>
       JSON.stringify({ dependencies: { "@intellectual-frontiers/stolos": spec } });
-    assertEquals(readPin(dep("git+file:///srv/stolos#v0.7.0")), {
+    assertEquals(readPin(dep("git+file:///srv/stolos#stolos-v0.7.0")), {
       source: "git+file:///srv/stolos",
-      tag: "v0.7.0",
+      tag: "stolos-v0.7.0",
     });
     // Not a Git dependency at a version tag: a branch, a commit, a tarball's URL, not JSON.
     assertEquals(readPin(dep(`${SOURCE}#main`)), undefined);
@@ -73,6 +79,8 @@ proves(
       ),
       undefined,
     );
+    assertEquals(readPin(dep(`${SOURCE}#v0.7.0`)), undefined, "the old spelling is no pin");
+    assertEquals(readPin(dep("git+file:///srv/stolos#v0.7.0")), undefined);
     assertEquals(readPin("{}"), undefined);
     assertEquals(readPin("not json"), undefined);
   },
@@ -126,21 +134,24 @@ async function engineRepo(dir: string, says: string, tags: readonly string[]): P
 const bun = proc.which("bun");
 
 proves(
-  ["046-engine-instance FR-005b", "096-bun-runtime FR-006"],
+  ["046-engine-instance FR-005b", "096-bun-runtime FR-006", "114-release-record FR-007"],
   "096: fleet upgrade moves the Git dependency's tag, locks its commit, validates, and signs; refuses what is not that version",
   async () => {
     const dir = await fs.makeTempDir({ prefix: "archon-upgrade-" });
-    // A local copy of the engine's repository: this version's tag, and "v0.0.2", a tag whose
+    // A local copy of the engine's repository: this version's tag, and "stolos-v0.0.2", a tag whose
     // package says it is another version.
     const engine = path.join(dir, "stolos");
-    const commit = await engineRepo(engine, VERSION, [`v${VERSION}`, "v0.0.2"]);
+    const commit = await engineRepo(engine, VERSION, [`stolos-v${VERSION}`, "stolos-v0.0.2"]);
     const source = `git+${path.toFileUrl(engine).href}`;
     const repo = path.join(dir, "fleet");
     try {
       // A fleet repository, pinned to an old version, with the example lab fleet.
       await fs.mkdir(path.join(repo, "fleets"), { recursive: true });
       await sh(ENGINE, "cp", "-r", "examples/fleets/lab", path.join(repo, "fleets", "lab"));
-      await fs.writeTextFile(path.join(repo, "package.json"), packageJsonText("v0.0.1", source));
+      await fs.writeTextFile(
+        path.join(repo, "package.json"),
+        packageJsonText("stolos-v0.0.1", source),
+      );
       await fs.writeTextFile(
         path.join(repo, "archon.ts"),
         'import { run } from "@intellectual-frontiers/stolos/archon/main";\n\nawait run();\n',
@@ -166,30 +177,35 @@ proves(
       await sh(repo, "git", "commit", "-q", "--no-gpg-sign", "-m", "start");
       const pinned = await fs.readTextFile(path.join(repo, "package.json"));
 
-      // Not that version: the package at "v0.0.2" says it is another version.
-      assertEquals(await upgrade({ tag: "v0.0.2", repo }), 1);
+      // Not that version: the package at "stolos-v0.0.2" says it is another version.
+      assertEquals(await upgrade({ tag: "stolos-v0.0.2", repo }), 1);
       // Not a tag at all, and not a tag of the engine's repository.
       assertEquals(await upgrade({ tag: "main", repo }), 1);
-      assertEquals(await upgrade({ tag: "v9.9.9", repo }), 1);
+      assertEquals(await upgrade({ tag: "stolos-v9.9.9", repo }), 1);
+      assertEquals(await upgrade({ tag: `v${VERSION}`, repo }), 1, "the old spelling is refused");
       assertEquals(await fs.readTextFile(path.join(repo, "package.json")), pinned, "put back");
       assert(!(await fs.exists(path.join(repo, "bun.lock"))), "no lock left behind");
 
       // A change waiting in the tree: the upgrade must be a commit of its own.
       await fs.writeTextFile(path.join(repo, "archon.ts"), "// changed\n", { append: true });
-      assertEquals(await upgrade({ tag: `v${VERSION}`, repo }), 1);
+      assertEquals(await upgrade({ tag: `stolos-v${VERSION}`, repo }), 1);
       await sh(repo, "git", "checkout", "--", "archon.ts");
 
       // The real thing.
-      assertEquals(await upgrade({ tag: `v${VERSION}`, repo }), 0);
+      assertEquals(await upgrade({ tag: `stolos-v${VERSION}`, repo }), 0);
       assertStringIncludes(
         await fs.readTextFile(path.join(repo, "package.json")),
-        engineDependency(`v${VERSION}`, source),
+        engineDependency(`stolos-v${VERSION}`, source),
       );
       const lock = await fs.readTextFile(path.join(repo, "bun.lock"));
-      assertStringIncludes(lock, engineDependency(`v${VERSION}`, source), "the lock names the tag");
+      assertStringIncludes(
+        lock,
+        engineDependency(`stolos-v${VERSION}`, source),
+        "the lock names the tag",
+      );
       assertStringIncludes(lock, commit, "and pins the commit it names");
       const log = await sh(repo, "git", "log", "-1", "--format=%s%n%B");
-      assertStringIncludes(log, `stolos v${VERSION}: adopt the engine v${VERSION}`);
+      assertStringIncludes(log, `stolos: adopt the engine stolos-v${VERSION}`);
       assertStringIncludes(
         await sh(repo, "git", "cat-file", "commit", "HEAD"),
         "BEGIN SSH SIGNATURE",
@@ -215,8 +231,8 @@ proves(
       );
 
       // Back to an older version: only with --downgrade (and only to that version).
-      assertEquals(await upgrade({ tag: "v0.0.2", repo }), 1);
-      assertEquals(await upgrade({ tag: `v${VERSION}`, repo }), 0, "already there");
+      assertEquals(await upgrade({ tag: "stolos-v0.0.2", repo }), 1);
+      assertEquals(await upgrade({ tag: `stolos-v${VERSION}`, repo }), 0, "already there");
     } finally {
       await fs.remove(dir, { recursive: true });
     }
@@ -227,21 +243,30 @@ proves(
 );
 
 proves(
-  ["046-engine-instance FR-005b"],
+  ["046-engine-instance FR-005b", "114-release-record FR-005"],
   "046: an upgrade moves the engine's reusable workflows to the same tag as the pin",
   () => {
-    const pin = { source: "github:acme/stolos", tag: "v0.1.0" };
+    const pin = { source: "github:acme/stolos", tag: "stolos-v0.1.0" };
     assertEquals(engineRepository(pin), "acme/stolos");
-    assertEquals(engineRepository({ source: "git+file:///srv/stolos", tag: "v0.1.0" }), undefined);
+    assertEquals(
+      engineRepository({ source: "git+file:///srv/stolos", tag: "stolos-v0.1.0" }),
+      undefined,
+    );
     const yml = [
-      "    uses: acme/stolos/.github/workflows/fleet-e2e.yml@v0.1.0",
-      "    uses: other/stolos/.github/workflows/fleet-e2e.yml@v0.1.0",
+      "    uses: acme/stolos/.github/workflows/fleet-e2e.yml@stolos-v0.1.0",
+      "    uses: other/stolos/.github/workflows/fleet-e2e.yml@stolos-v0.1.0",
       "    uses: actions/checkout@v5",
     ].join("\n");
-    assertEquals(rewriteWorkflowRefs(yml, "acme/stolos", "v0.2.0").split("\n"), [
-      "    uses: acme/stolos/.github/workflows/fleet-e2e.yml@v0.2.0",
-      "    uses: other/stolos/.github/workflows/fleet-e2e.yml@v0.1.0",
+    assertEquals(rewriteWorkflowRefs(yml, "acme/stolos", "stolos-v0.2.0").split("\n"), [
+      "    uses: acme/stolos/.github/workflows/fleet-e2e.yml@stolos-v0.2.0",
+      "    uses: other/stolos/.github/workflows/fleet-e2e.yml@stolos-v0.1.0",
       "    uses: actions/checkout@v5",
     ]);
+    const old = "    uses: acme/stolos/.github/workflows/fleet-e2e.yml@v0.1.0";
+    assertEquals(
+      rewriteWorkflowRefs(old, "acme/stolos", "stolos-v0.2.0"),
+      old,
+      "not the old spelling",
+    );
   },
 );

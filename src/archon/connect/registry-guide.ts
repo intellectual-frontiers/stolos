@@ -98,7 +98,7 @@
  * ```json
  * {
  *   "dependencies": {
- *     "@intellectual-frontiers/stolos": "github:intellectual-frontiers/stolos#v0.118.0"
+ *     "@intellectual-frontiers/stolos": "github:intellectual-frontiers/stolos#stolos-v0.150.0"
  *   }
  * }
  * ```

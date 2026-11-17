@@ -25,20 +25,28 @@ proves(
   "099: the newest release, newer or not, and the cache (no network when fresh)",
   async () => {
     assertEquals(
-      newestTag("a\trefs/tags/v0.9.0\nb\trefs/tags/v0.126.0\nc\trefs/tags/v0.99.1"),
-      "v0.126.0",
+      newestTag(
+        "a\trefs/tags/stolos-v0.9.0\nb\trefs/tags/stolos-v0.126.0\nc\trefs/tags/stolos-v0.99.1",
+      ),
+      "stolos-v0.126.0",
     );
-    assert(isNewer("v0.126.0", "v0.124.0") && isNewer("v0.126.0", "0.124.0"));
-    assert(!isNewer("v0.124.0", "v0.124.0") && !isNewer(undefined, "v1.0.0"));
+    assert(
+      isNewer("stolos-v0.126.0", "stolos-v0.124.0") && !isNewer("stolos-v0.126.0", "0.124.0"),
+      "a bare version is not a tag",
+    );
+    assert(!isNewer("stolos-v0.124.0", "stolos-v0.124.0") && !isNewer(undefined, "stolos-v1.0.0"));
     const dir = await fs.makeTempDir();
     const cacheFile = path.join(dir, "newest.json");
     const now = 1_000_000;
     await fs.writeTextFile(
       cacheFile,
-      JSON.stringify({ repo: "example/none", tag: "v9.9.9", at: now }),
+      JSON.stringify({ repo: "example/none", tag: "stolos-v9.9.9", at: now }),
     );
     // Fresh: from the cache (example/none does not exist, so a lookup would find nothing).
-    assertEquals(await newestRelease("example/none", { cacheFile, now: now + 1000 }), "v9.9.9");
+    assertEquals(
+      await newestRelease("example/none", { cacheFile, now: now + 1000 }),
+      "stolos-v9.9.9",
+    );
     await fs.remove(dir, { recursive: true });
   },
 );
@@ -62,23 +70,23 @@ proves(
   ["099-engine-update FR-002", "099-engine-update FR-003"],
   "099: the header shows the engine; a newer release is a link to update; Overview offers it",
   () => {
-    const now = frame({ running: "v0.126.0", href: "/actions/fleet?cmd=update" });
-    assertStringIncludes(now, "v0.126.0");
+    const now = frame({ running: "stolos-v0.126.0", href: "/actions/fleet?cmd=update" });
+    assertStringIncludes(now, "stolos-v0.126.0");
     assert(!now.includes("is out"), "no newer release: no link");
     const old = frame({
-      running: "v0.124.0",
-      newer: "v0.126.0",
+      running: "stolos-v0.124.0",
+      newer: "stolos-v0.126.0",
       href: "/actions/fleet?cmd=update",
     });
     assertStringIncludes(old, 'href="/actions/fleet?cmd=update"');
-    assertStringIncludes(old, "v0.126.0 is out · Update");
+    assertStringIncludes(old, "stolos-v0.126.0 is out · Update");
     const o = String(
       stolosOverview(structuredClone(FACTS), Date.now(), {
-        running: "v0.124.0",
-        newer: "v0.126.0",
+        running: "stolos-v0.124.0",
+        newer: "stolos-v0.126.0",
       }),
     );
-    assertStringIncludes(o, "Update to v0.126.0");
+    assertStringIncludes(o, "Update to stolos-v0.126.0");
     assertStringIncludes(o, "Your passphrase is asked");
     assert(!String(stolosOverview(structuredClone(FACTS))).includes("is out"));
   },
@@ -89,13 +97,13 @@ proves(
   "099: the Archon Console's Engine card explains the update and offers Update now to an operator",
   async () => {
     const { engineCard } = await import("../src/archon/console/pages.ts");
-    const e = { running: "v0.124.0", newer: "v0.126.0" };
-    const a = String(engineCard({ engine: "v0.124.0" }, undefined, { role: "operator" }, e));
+    const e = { running: "stolos-v0.124.0", newer: "stolos-v0.126.0" };
+    const a = String(engineCard({ engine: "stolos-v0.124.0" }, undefined, { role: "operator" }, e));
     assertStringIncludes(a, 'id="engine"');
-    assertStringIncludes(a, "v0.126.0 is out");
+    assertStringIncludes(a, "stolos-v0.126.0 is out");
     assertStringIncludes(a, "bun run stolos update");
     assertStringIncludes(a, 'href="/actions/server?cmd=update"');
-    const v = String(engineCard({ engine: "v0.124.0" }, undefined, { role: "viewer" }, e));
+    const v = String(engineCard({ engine: "stolos-v0.124.0" }, undefined, { role: "viewer" }, e));
     assert(!v.includes("cmd=update"), "only an operator");
   },
 );

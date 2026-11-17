@@ -4,6 +4,7 @@
  * @module
  */
 // Spec: 012-cli-mcp
+// Spec: 114-release-record FR-005
 
 import { fs } from "@intellectual-frontiers/commons/ts/runtime";
 import { ALLOWED_SIGNERS, ALLOWED_SIGNERS_LOCAL, allowedSignersText } from "../identity/signers.ts";
@@ -58,7 +59,7 @@ export OTEL_EXPORTER_OTLP_ENDPOINT="\${OTEL_EXPORTER_OTLP_ENDPOINT:-http://127.0
 export OTEL_EXPORTER_OTLP_PROTOCOL="\${OTEL_EXPORTER_OTLP_PROTOCOL:-http/json}"
 # Spec 049: every signal says which fleet, host, engine, and commit it is about.
 _f=$(cat /etc/archon/fleet 2>/dev/null); _h=$(cat /etc/archon/host 2>/dev/null)
-_v=$(sed -n 's#.*"@intellectual-frontiers/stolos": *"[^"]*\\#\\(v[0-9][0-9.]*\\)".*#\\1#p' /srv/archon/package.json 2>/dev/null | head -n 1)
+_v=$(sed -n 's#.*"@intellectual-frontiers/stolos": *"[^"]*\\#\\(stolos-v[0-9][0-9.]*\\)".*#\\1#p' /srv/archon/package.json 2>/dev/null | head -n 1)
 _r=$(git -C /srv/archon rev-parse HEAD 2>/dev/null)
 export OTEL_RESOURCE_ATTRIBUTES="\${OTEL_RESOURCE_ATTRIBUTES:+$OTEL_RESOURCE_ATTRIBUTES,}service.namespace=$_f,host.name=$_h,service.version=$_v,vcs.ref.head.revision=$_r"
 # Spec 096: the fleet repository's entry file runs the engine its package.json pins,

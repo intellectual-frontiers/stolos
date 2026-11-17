@@ -92,7 +92,7 @@ export function whereSteps(f: WhereFacts): Step[] {
     text: f.pinned
       ? `engine ${f.pinned}${f.locked ? ", locked" : ", not locked (bun.lock is missing)"}`
       : "the engine is not pinned in package.json",
-    command: `bun run stolos fleet upgrade v<version> (the newest tag of intellectual-frontiers/stolos)`,
+    command: `bun run stolos fleet upgrade stolos-v<version> (the newest tag of intellectual-frontiers/stolos)`,
   });
   raw.push({
     done: f.signers.daily > 0,
