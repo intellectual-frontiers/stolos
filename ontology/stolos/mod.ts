@@ -6,9 +6,11 @@
  * @module
  */
 // Spec: 101-ladder FR-004
+// Spec: 116-kept-unaligned FR-004
 import { MZ } from "@intellectual-frontiers/commons/ontology/mizan";
 import { rdf } from "@intellectual-frontiers/commons/ts/kernel";
 import { rungs } from "./architecture.ts";
+import { file as auditFile } from "./audit.ts";
 import { individuals as codeIndividuals } from "./codes.ts";
 import {
   classes,
@@ -67,6 +69,8 @@ export const files: readonly (rdf.OntologyFile & { readonly module: string })[] 
     prefixes: [STOLOS, MZ, rdf.RDFS, rdf.SKOS],
     individuals: rungs,
   },
+  // Spec 116-kept-unaligned FR-004: the audit of the terms and the decisions of those kept unaligned reach the Turtle.
+  { ...auditFile, module: "ontology/stolos/audit.ts" },
 ];
 
 /** The schemas whose individuals cite a spec in their `spec` field (commons 0015-trace FR-008). */

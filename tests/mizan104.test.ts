@@ -75,15 +75,15 @@ async function check(...args: string[]): Promise<{ code: number; stderr: string 
 
 proves(
   ["104-mizan FR-004", "104-mizan FR-005"],
-  "104: check:mizan passes with its baseline, holds a missing decision for 90 days and fails one overdue whatever the baseline holds",
+  "104: check:mizan passes with its baseline, holds no missing decision (every unaligned term is decided, spec 116)",
   async () => {
     const now = await check("--today", "2026-11-18");
     assertEquals(now.code, 0, now.stderr);
     assertStringIncludes(now.stderr, "passed");
     const within = await check("--today", "2027-02-15");
     assertEquals(within.code, 0, within.stderr);
+    // Spec 116: every unaligned term now carries a decision, so no day makes one overdue.
     const late = await check("--today", "2027-02-16");
-    assertEquals(late.code, 1);
-    assertStringIncludes(late.stderr, "mizan/decision-overdue");
+    assertEquals(late.code, 0, late.stderr);
   },
 );

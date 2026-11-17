@@ -145,11 +145,11 @@ proves(
       await fs.writeTextFile(path.join(dir, "release.ts"), before);
       const off = await version(dir, "check", "base");
       assertEquals(off.code, 1);
-      assertStringIncludes(off.stderr, "release.ts 0.150.0");
+      assertStringIncludes(off.stderr, `release.ts ${VERSION}`);
       assertEquals((await version(dir, "sync")).code, 0);
       assertEquals((await version(dir, "check", "base")).code, 0);
       // set
-      assertEquals((await version(dir, "set", "0.150.0")).stdout.trim(), "0.150.0");
+      assertEquals((await version(dir, "set", VERSION)).stdout.trim(), VERSION);
       assertEquals(await fs.readTextFile(path.join(dir, "release.ts")), before);
       assertEquals((await version(dir, "set", "0.150")).code, 2);
       assertEquals((await version(dir, "set", "v0.150.0")).code, 2);

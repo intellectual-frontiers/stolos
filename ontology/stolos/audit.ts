@@ -12,7 +12,14 @@
  */
 // Spec: 104-mizan FR-003
 // Spec: 114-release-record FR-004
-import { bases, MZ, MZID, OntologyTerm } from "@intellectual-frontiers/commons/ontology/mizan";
+// Spec: 116-kept-unaligned FR-001, FR-002, FR-003, FR-004, FR-005
+import {
+  bases,
+  Decision,
+  MZ,
+  MZID,
+  OntologyTerm,
+} from "@intellectual-frontiers/commons/ontology/mizan";
 import { rdf } from "@intellectual-frontiers/commons/ts/kernel";
 import { STOLOS, stolos } from "./vocabulary.ts";
 
@@ -20,6 +27,34 @@ const { en, RDFS, SKOS, term, XSD } = rdf;
 
 /** The day the audit was made, from which the decision of each `unaligned` term is due (commons 0018-standards-first FR-005). */
 export const AUDITED_ON = "2026-11-17";
+
+/** The day of the owner's decision to keep the terms below unaligned (spec 116-kept-unaligned FR-002). */
+export const KEPT_UNALIGNED_ON = "2026-11-17";
+
+/** The day by which the terms kept unaligned are looked at again (spec 116-kept-unaligned FR-002). */
+export const KEPT_UNALIGNED_REVIEW_BY = "2027-02-15";
+
+/** The sentence a term kept unaligned carries in its justification in place of "Decision pending" (spec 116-kept-unaligned FR-003). */
+export const KEPT_UNALIGNED_SENTENCE = `Kept unaligned by the owner's decision of ${KEPT_UNALIGNED_ON} (stolos issue #37); reviewed again by ${KEPT_UNALIGNED_REVIEW_BY}.`;
+
+/** The identifier of the `mz:Decision` of a term kept unaligned, `decision-stolos-<local>`, for its audit record's `mz:decision` (spec 116-kept-unaligned FR-002). */
+export function keptUnalignedDecisionId(local: string): ReturnType<typeof term<"mz:Decision">> {
+  return term<"mz:Decision">(MZID, `decision-stolos-${local}`);
+}
+
+/**
+ * The `mz:Decision` of a Stolos term kept unaligned, in the shape of commons' `keptUnalignedDecision` (which accepts only commons' own ontologies): it says of the term with
+ * the record `term-stolos-<local>` that it stays unaligned, on the day of the decision, with where it is recorded. Who decided what and when is W3C PROV-O's question; commons'
+ * `mz:Decision` answers it with `decidedOn` and `record` (spec 116-kept-unaligned FR-002).
+ */
+export function keptUnalignedDecision(local: string): ReturnType<typeof Decision.make> {
+  return Decision.make(keptUnalignedDecisionId(local), {
+    label: en(`Keep stolos:${local} unaligned`),
+    decisionOf: term<"mz:OntologyTerm">(MZID, `term-stolos-${local}`),
+    decidedOn: KEPT_UNALIGNED_ON,
+    record: `owner decision of ${KEPT_UNALIGNED_ON} in stolos issue #37: keep the term unaligned; reviewed again by ${KEPT_UNALIGNED_REVIEW_BY}`,
+  });
+}
 
 /** What is still to examine for a term, by its local name; a term not listed has no candidate found yet. */
 const CANDIDATES: Readonly<Record<string, string>> = {
@@ -126,7 +161,8 @@ function record(local: string) {
   return OntologyTerm.make(term(MZID, `term-stolos-${local}`), {
     ...base,
     basis: bases.Unaligned,
-    justification: `No standard adopted yet. Candidates to examine: ${CANDIDATES[local] ?? "none found"}. Decision pending (commons 0018-standards-first FR-005).`,
+    justification: `No standard adopted yet. Candidates to examine: ${CANDIDATES[local] ?? "none found"}. ${KEPT_UNALIGNED_SENTENCE}`,
+    decision: keptUnalignedDecisionId(local),
     addedOn: AUDITED_ON,
   });
 }
@@ -134,9 +170,14 @@ function record(local: string) {
 /** One record for every class and property of Stolos' vocabulary, in the order of the vocabulary. */
 export const terms = Object.keys(stolos).map(record);
 
+/** The decision of every term kept unaligned: one for each class and property with no mapping (spec 116-kept-unaligned FR-001). */
+export const decisions = Object.keys(stolos)
+  .filter((local) => MAPPED[local] === undefined)
+  .map(keptUnalignedDecision);
+
 /** The file this module states: its name, its prefixes and its individuals. */
 export const file = {
   name: "audit",
   prefixes: [STOLOS, MZ, MZID, RDFS, SKOS, XSD],
-  individuals: terms,
+  individuals: [...terms, ...decisions],
 };

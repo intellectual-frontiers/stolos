@@ -1,58 +1,6 @@
 # The findings of the rules Mizan adds (commons 0003-mizan FR-015) that existed when each rule was first held.
 # A new finding fails the check, and so does a line below that no longer occurs: when you fix one, delete its line.
 # Never add a line to make a check pass.
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#AddressBlock
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#AdoptedMachine
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#AnswerState
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#Capability
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#Check
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#CommandTier
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#ConsoleDevice
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#ConsoleName
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#Controller
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#DataClass
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#Decision
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#Device
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#DevicePath
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#Door
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#EmailSender
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#FileKind
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#Finding
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#Fleet
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#Host
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#IntegrationKind
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#Lease
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#LineKind
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#Listener
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#MachineKind
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#MachineTable
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#OutcomeLevel
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#OutputClass
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#PairingCode
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#PairingSession
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#PairingStage
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#PassphraseSession
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#PhaseTiming
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#PortForward
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#ProbeCache
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#Record
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#Route
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#RouterHealth
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#Signer
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#SignerRole
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#SigningOutcome
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#TagRule
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#TagSelection
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#TrustedNetwork
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#Verbosity
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#WayOfJoining
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#WifiNetwork
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#ascii
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#emoji
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#onListener
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#pathPrefix
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#port
-mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#protocol
 mizan/requirement-keyword specs/001-platform/spec.md FR-001
 mizan/requirement-keyword specs/001-platform/spec.md FR-002
 mizan/requirement-keyword specs/001-platform/spec.md FR-003
