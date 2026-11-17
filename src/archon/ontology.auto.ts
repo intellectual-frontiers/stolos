@@ -17,6 +17,31 @@ export const OUTCOME_LEVELS: readonly OutcomeLevel[] = [
   "action",
 ];
 
+/** What a command is for, which decides how much it shows by default (`stolos:OutputClass`; 105-calm-output FR-001). */
+export type OutputClass = "report" | "action";
+
+/** Every {@link OutputClass}, in the ontology's order. */
+export const OUTPUT_CLASSES: readonly OutputClass[] = ["report", "action"];
+
+/** How much of a run reaches the screen (`stolos:Verbosity`; 105-calm-output FR-002). */
+export type Verbosity = "quiet" | "calm" | "verbose" | "json";
+
+/** Every {@link Verbosity}, in the ontology's order. */
+export const VERBOSITIES: readonly Verbosity[] = ["quiet", "calm", "verbose", "json"];
+
+/** What a line of a run is (`stolos:LineKind`; 105-calm-output FR-003, 105-calm-output FR-008). */
+export type LineKind = "step" | "problem" | "yours" | "waiting" | "hint" | "outcome";
+
+/** Every {@link LineKind}, in the ontology's order. */
+export const LINE_KINDS: readonly LineKind[] = [
+  "step",
+  "problem",
+  "yours",
+  "waiting",
+  "hint",
+  "outcome",
+];
+
 /** What a machine of a fleet is to Stolos (`stolos:MachineKind`; 002-model, 020-workstation, 067-adopt, 069-integrate FR-005, 066-stolos-console FR-003, 097-controller FR-001). */
 export type MachineKind =
   "server" | "workstation" | "adopted" | "device" | "discovered" | "cloud" | "controller";

@@ -67,7 +67,7 @@ proves(
 
       const archon = (args: string[]): ReturnType<typeof sb.run> =>
         sb.run("src/stolos/main.ts", args, "", { ...env, ARCHON_REPO: mine, ARCHON_FLEET: "lab" });
-      let r = await archon(["update", "--no-doctor"]);
+      let r = await archon(["update", "--no-doctor", "--verbose"]);
       assertEquals(r.code, 0, r.out);
       assertStringIncludes(r.out, "up to date");
 
@@ -76,14 +76,14 @@ proves(
       await sh(theirs, "git", "add", "-A");
       await sh(theirs, "git", "commit", "-q", "--no-gpg-sign", "-m", "unsigned change");
       await sh(theirs, "git", "push", "-q", "origin", "main");
-      r = await archon(["update", "--no-doctor"]);
+      r = await archon(["update", "--no-doctor", "--verbose"]);
       assertStringIncludes(r.out, "1 new commit(s)");
       assertStringIncludes(r.out, "servers wait for your approval");
-      assertStringIncludes(r.out, "bun run stolos apply (it lists those commits");
+      assertStringIncludes(r.out, "fix: bun run stolos apply");
       assertEquals(await sh(mine, "git", "log", "-1", "--format=%s"), "unsigned change");
 
       // Again: nothing new; nothing changes.
-      r = await archon(["update", "--no-doctor"]);
+      r = await archon(["update", "--no-doctor", "--verbose"]);
       assertStringIncludes(r.out, "up to date");
       assert(!r.out.includes("servers will refuse"), r.out);
 
@@ -92,7 +92,7 @@ proves(
       await sh(theirs, "git", "commit", "-q", "-a", "--no-gpg-sign", "-m", "another");
       await sh(theirs, "git", "push", "-q", "origin", "main");
       await fs.writeTextFile(path.join(mine, "note.txt"), "mine\n");
-      r = await archon(["update", "--no-doctor"]);
+      r = await archon(["update", "--no-doctor", "--verbose"]);
       assertStringIncludes(r.out, "you have changes not committed");
       assertEquals(await fs.readTextFile(path.join(mine, "note.txt")), "mine\n");
     } finally {

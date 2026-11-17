@@ -16,9 +16,12 @@ import {
   FileKindSchema,
   IntegrationKindSchema,
   ListenerSchema,
+  LineKindSchema,
   MachineKindSchema,
   OutcomeLevelSchema,
+  OutputClassSchema,
   SignerRoleSchema,
+  VerbositySchema,
 } from "./vocabulary.ts";
 
 const { en } = rdf;
@@ -63,6 +66,92 @@ export const outcomeLevels = codeList(OutcomeLevelSchema, "outcome", {
     ),
     spec: ["099-engine-update FR-007"],
     ...marks("action"),
+  },
+});
+
+/** What a command is for, which decides how much it shows by default (spec 105-calm-output FR-001). */
+export const outputClasses = codeList(OutputClassSchema, "output", {
+  report: {
+    label: en("report"),
+    definition: en(
+      "Meant to be read by a person as a whole (a doctor, a status, a long-running server): verbose by default, every line shown.",
+    ),
+    spec: ["105-calm-output FR-001"],
+  },
+  action: {
+    label: en("action"),
+    definition: en(
+      "Does something (update, apply, upgrade, pair, adopt, back up): calm by default, only what needs a person is shown.",
+    ),
+    spec: ["105-calm-output FR-001"],
+  },
+});
+
+/** How much of a run reaches the screen (spec 105-calm-output FR-002). */
+export const verbosities = codeList(VerbositySchema, "verbosity", {
+  quiet: {
+    label: en("quiet"),
+    definition: en("One verdict line and the exit code, nothing else (--quiet)."),
+    spec: ["105-calm-output FR-002"],
+  },
+  calm: {
+    label: en("calm"),
+    definition: en(
+      "Problems, what is the person's to do and the outcome lines, progress while working; a step that went well is not printed.",
+    ),
+    spec: ["105-calm-output FR-002"],
+  },
+  verbose: {
+    label: en("verbose"),
+    definition: en("Every line, steps that went well included (--verbose)."),
+    spec: ["105-calm-output FR-002"],
+  },
+  json: {
+    label: en("json"),
+    definition: en("Nothing drawn: the result as JSON (--json)."),
+    spec: ["105-calm-output FR-002"],
+  },
+});
+
+/** What a line of a run is, which decides whether calm shows it (spec 105-calm-output FR-003). */
+export const lineKinds = codeList(LineKindSchema, "line", {
+  step: {
+    label: en("step"),
+    definition: en("A step or phase that went well: shown only with --verbose."),
+    spec: ["105-calm-output FR-003"],
+  },
+  problem: {
+    label: en("problem"),
+    definition: en(
+      "A failure or a warning (a cross or a warning mark): always shown, with its code.",
+    ),
+    spec: ["105-calm-output FR-003"],
+  },
+  yours: {
+    label: en("yours"),
+    definition: en(
+      "Something that is the person's to do (a lightning mark): always shown, with its command.",
+    ),
+    spec: ["105-calm-output FR-003"],
+  },
+  waiting: {
+    label: en("waiting"),
+    definition: en(
+      "Waiting on time or on someone else (an hourglass): shown in the closing block.",
+    ),
+    spec: ["105-calm-output FR-003"],
+  },
+  hint: {
+    label: en("hint"),
+    definition: en(
+      "An optional feature that is merely off: shown at most once a week for each hint, and always with --verbose.",
+    ),
+    spec: ["105-calm-output FR-008"],
+  },
+  outcome: {
+    label: en("outcome"),
+    definition: en("A line the person needs (what was sent, what happens next): always shown."),
+    spec: ["105-calm-output FR-003"],
   },
 });
 
@@ -271,6 +360,21 @@ export const CODE_LISTS = {
     array: "OUTCOME_LEVELS",
     list: outcomeLevels,
     what: "How a step ended, with its mark",
+  },
+  OutputClass: {
+    array: "OUTPUT_CLASSES",
+    list: outputClasses,
+    what: "What a command is for, which decides how much it shows by default",
+  },
+  Verbosity: {
+    array: "VERBOSITIES",
+    list: verbosities,
+    what: "How much of a run reaches the screen",
+  },
+  LineKind: {
+    array: "LINE_KINDS",
+    list: lineKinds,
+    what: "What a line of a run is",
   },
   MachineKind: {
     array: "MACHINE_KINDS",

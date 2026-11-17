@@ -296,6 +296,7 @@ export async function hostRelease(name: string): Promise<number> {
   await removeSecret(probeKeyPath(name));
   await removeSecret(`${probeKeyPath(name)}.pub`);
   p.done(`${name} released: its model and probe key are gone`);
+  ui.outcome(`${name} released: its model and probe key are gone`);
   ui.next.push(`keep it: bun run stolos apply -m "067-adopt: release ${name}"`);
   return fail();
 }

@@ -37,6 +37,7 @@
  */
 // Spec: 046-engine-instance
 // Spec: 096-bun-runtime
+// Spec: 105-calm-output FR-005, FR-012 to FR-014
 
 import { object, record, string } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs, path, proc } from "@intellectual-frontiers/commons/ts/runtime";
@@ -44,6 +45,7 @@ import { listFleets, P } from "../core/paths.ts";
 import { run } from "../core/exec.ts";
 import { ui } from "../core/ui.ts";
 import { engineCommand, installDependencies } from "../install/bun.ts";
+import { adoptMessage, commitSigned, describeSigning } from "./signing.ts";
 
 /** The engine's package name, as a fleet repository depends on it. */
 export const ENGINE_PACKAGE = "@intellectual-frontiers/stolos";
@@ -160,6 +162,46 @@ async function moveWorkflowRefs(repo: string, pin: Pin, tag: string): Promise<st
     /* no workflows */
   }
   return changed;
+}
+
+/**
+ * Files an engine upgrade changes (`fleet upgrade`): the pin, the lock, the reusable workflows'
+ * tag, and what the new engine refreshes (the bootstrap scripts, .gitattributes).
+ */
+function ofUpgrade(file: string): boolean {
+  const f = file.replace(/\\/g, "/");
+  return (
+    f === PIN_FILE ||
+    f === LOCK_FILE ||
+    f === ".gitattributes" ||
+    f.startsWith(".github/workflows/") ||
+    f.startsWith("bin/bootstrap.")
+  );
+}
+
+/** An engine upgrade left without its signature (spec 105-calm-output FR-014). */
+export interface WaitingUpgrade {
+  /** The tag HEAD pins. */
+  from: string;
+  /** The tag the files now pin. */
+  to: string;
+}
+
+/**
+ * Whether the changed files are an engine upgrade waiting for its signature (spec 105-calm-output
+ * FR-014): the pin differs from HEAD's and nothing but an upgrade's files changed. It is never
+ * "your changes".
+ */
+export async function waitingUpgrade(
+  repo: string,
+  changed: readonly string[],
+): Promise<WaitingUpgrade | undefined> {
+  if (!changed.includes(PIN_FILE) || !changed.every(ofUpgrade)) return undefined;
+  const head = await run(["git", "-C", repo, "show", `HEAD:${PIN_FILE}`]);
+  const a = readPin(head.stdout);
+  const b = readPin((await fs.readTextOr(path.join(repo, PIN_FILE))) ?? "");
+  if (!a || !b || a.tag === b.tag) return undefined;
+  return { from: a.tag, to: b.tag };
 }
 
 /** The version of the engine installed in a checkout (its package's own package.json), or undefined. */
@@ -342,8 +384,10 @@ export async function fleetUpgrade(o: UpgradeOptions): Promise<number> {
   const files = [PIN_FILE, LOCK_FILE, ...workflows, ...refreshed];
   if (o.noCommit) {
     c.done("files changed, not committed (--no-commit)");
-    ui.next.push(
-      `review: git diff; then: git add ${files.join(" ")} && git commit -S -m "stolos ${o.tag}: adopt the engine ${o.tag}"`,
+    c.action(
+      "The upgrade's files are changed and not committed (--no-commit)",
+      `git add ${files.join(" ")}`,
+      "E105-UNSENT",
     );
     return ui.finish();
   }
@@ -352,37 +396,37 @@ export async function fleetUpgrade(o: UpgradeOptions): Promise<number> {
   if (refreshed.includes("bin/bootstrap.sh")) {
     await git(["update-index", "--chmod=+x", "bin/bootstrap.sh"]);
   }
-  c.status("signing (your key's passphrase)");
-  ui.pause();
-  const commit = await run(
-    [
-      "git",
-      "-C",
-      repo,
-      "commit",
-      "-S",
-      "-q",
-      "-m",
-      `stolos ${o.tag}: adopt the engine ${o.tag}`,
-      "-m",
-      `From ${pin.tag}. ${LOCK_FILE} pins the engine's commit at ${o.tag} and its integrity; validated: ${
-        fleets.join(", ") || "no fleets"
-      }.`,
-    ],
-    { inherit: true },
-  );
-  ui.resume();
+  const message = adoptMessage(o.tag);
+  ui.live(`Signing ${files.length} files: ${describeSigning(files, { to: o.tag })}`);
+  const commit = await commitSigned(repo, [
+    "-S",
+    "-q",
+    "-m",
+    message,
+    "-m",
+    `From ${pin.tag}. ${LOCK_FILE} pins the engine's commit at ${o.tag} and its integrity; validated: ${
+      fleets.join(", ") || "no fleets"
+    }.`,
+  ]);
   if (!commit.ok) {
+    // Cause first, what happened to the person's files, and the one command (spec 105-calm-output FR-007).
     c.fail(
-      "the commit was not made (signing failed or was cancelled)",
-      `check your signing setup (stolos signers), then: git commit -S -m "stolos ${o.tag}: adopt the engine ${o.tag}"`,
+      commit.wrongPassphrase
+        ? `That passphrase didn't unlock your daily key, three times. The engine upgrade to ${o.tag} is not signed and nothing was sent; your files are safe and the upgrade waits for its signature.`
+        : `The engine upgrade to ${o.tag} could not be signed, so nothing was sent; your files are safe and the upgrade waits for its signature.`,
+      "bun run stolos update",
+      commit.wrongPassphrase ? "E105-SIGN-PASSPHRASE" : "E105-UPGRADE-WAITING",
     );
     return ui.finish();
   }
-  c.done(`signed commit "stolos ${o.tag}: adopt the engine ${o.tag}"`);
-  ui.next.push(
-    "push it: bun run stolos apply (pushing is the approval; hosts move to it within 15 minutes)",
-    "then watch them: stolos fleet status",
-  );
+  c.done(`signed commit "${message}"`);
+  // Run by update, the parent sends it; on its own, the person does.
+  if (ui.nested === undefined) {
+    c.action(
+      `The engine upgrade to ${o.tag} is signed here and not sent yet`,
+      "bun run stolos apply",
+      "E105-UNSENT",
+    );
+  }
   return ui.finish();
 }

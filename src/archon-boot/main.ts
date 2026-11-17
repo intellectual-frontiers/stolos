@@ -22,12 +22,13 @@
  *
  * @module
  */
+// Spec: 105-calm-output FR-001, FR-002
 // Spec: 004-install
 // Spec: 103-three-ports FR-001, FR-004, FR-010, FR-011
 
 import { fs, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { VERSION } from "../archon/version.ts";
-import { ui } from "../archon/core/ui.ts";
+import { muteOutput, ui } from "../archon/core/ui.ts";
 import { P, resetRoots } from "../archon/core/paths.ts";
 import { armHost, liveToken, loadTokens } from "../archon/core/secrets.ts";
 import { loadFleet, loadServers } from "../archon/model/load.ts";
@@ -422,7 +423,28 @@ export async function bootMain(argv: readonly string[]): Promise<number> {
       resetRoots();
     }
   }
-  return await main(argv);
+  // Spec 105-calm-output FR-001, FR-002: `boot doctor`, `serve`, `status` and `observe` are reports
+  // (verbose by default); the others do something (calm). `vault` is the registry's own.
+  const at = argv.findIndex((a) => !a.startsWith("-"));
+  const cmd = at >= 0 ? argv[at] : undefined;
+  if (cmd === "vault") return await main(argv);
+  const quiet = argv.some((a) => a === "-q" || a === "--quiet");
+  const verbose = argv.some((a) => a === "-v" || a === "--verbose");
+  const rest = argv.filter((a) => !["-q", "--quiet", "-v", "--verbose"].includes(a));
+  if (verbose) ui.verbose = true;
+  const report = cmd === undefined || ["doctor", "serve", "status", "observe"].includes(cmd);
+  ui.setMode(quiet ? "quiet" : verbose || report ? "verbose" : "calm");
+  if (report) ui.verdictTitle = "Checked";
+  if (!quiet) return await main(rest);
+  const restore = muteOutput();
+  let code = 1;
+  try {
+    code = await main(rest);
+  } finally {
+    restore();
+    if (!ui.closed) ui.quietVerdict(`boot ${cmd ?? ""}`.trim(), code);
+  }
+  return code;
 }
 
 if (import.meta.main) await run();

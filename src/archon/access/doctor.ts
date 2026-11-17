@@ -31,8 +31,8 @@ export interface AccessFacts {
 
 /** One line of the doctor's "Remote access" phase. */
 export interface DoctorLine {
-  /** ok (a note), action (⚡), or pending (⏳, not set up yet). */
-  level: "ok" | "action" | "pending";
+  /** ok (a note), action (⚡), pending (⏳, waiting on time or someone else) or hint (👉, an optional feature that is merely off, spec 105-calm-output FR-008). */
+  level: "ok" | "action" | "pending" | "hint";
   /** What it found. */
   msg: string;
   /** The next step. */
@@ -57,8 +57,8 @@ export function accessDoctor(
   const out: DoctorLine[] = [];
   if (!f.configured) {
     out.push({
-      level: "pending",
-      msg: "the Stolos Console answers on this PC only (no remote access set up)",
+      level: "hint",
+      msg: "The Stolos Console answers on this PC only: remote access is not set up.",
       fix: "bun run stolos console --lan (it proposes the names under the web domain)",
     });
     return out;

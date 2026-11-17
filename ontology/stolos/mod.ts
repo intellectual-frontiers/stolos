@@ -18,8 +18,10 @@ import {
   FileKindSchema,
   IntegrationKindSchema,
   ListenerSchema,
+  LineKindSchema,
   MachineKindSchema,
   OutcomeLevelSchema,
+  OutputClassSchema,
   properties,
   RungSchema,
   SignerRoleSchema,
@@ -28,6 +30,7 @@ import {
   StolosDatatypeProperty,
   StolosObjectProperty,
   stolosOntology,
+  VerbositySchema,
 } from "./vocabulary.ts";
 
 export { CODE_LISTS } from "./codes.ts";
@@ -62,6 +65,9 @@ export const citingSchemas = [
   StolosDatatypeProperty,
   StolosObjectProperty,
   OutcomeLevelSchema,
+  OutputClassSchema,
+  VerbositySchema,
+  LineKindSchema,
   MachineKindSchema,
   SignerRoleSchema,
   CommandTierSchema,

@@ -15,10 +15,11 @@
  */
 // Spec: 099-engine-update FR-007
 // Spec: 101-ladder FR-006
+// Spec: 105-calm-output FR-002 to FR-011
 import { palette } from "@intellectual-frontiers/commons/ts/kernel";
-import type { OutcomeLevel } from "../ontology.auto.ts";
+import type { LineKind, OutcomeLevel, Verbosity } from "../ontology.auto.ts";
 import { fs, proc, stdio, tty } from "@intellectual-frontiers/commons/ts/runtime";
-import { translate } from "./explain.ts";
+import { EXPLAIN, translate } from "./explain.ts";
 import { asRoot, P } from "./paths.ts";
 
 // ARCHON_VERBOSE=1 (or -v): every item is shown, dimmed, as it happens.
@@ -53,6 +54,71 @@ export interface Problem {
   code?: string;
   /** Its line in the run's log, when there is one. */
   logLine?: number;
+  /** The raw text of a system error, when `message` is its plain sentence (spec 105-calm-output FR-009): shown with --verbose. */
+  raw?: string;
+}
+
+/** An optional feature that is merely off (spec 105-calm-output FR-008): a hint, not a problem. */
+export interface Hint {
+  /** Its stable id: it is shown at most once per 7 days. */
+  id: string;
+  /** What is off, and what it would give. */
+  message: string;
+  /** The command that turns it on, when there is one. */
+  command?: string;
+}
+
+/** How long a hint stays quiet after it was shown (spec 105-calm-output FR-008). */
+export const HINT_DAYS = 7;
+
+/** How many failed, warned, waiting and your-move items a child run found, and each of them (the STOLOS_SUMMARY file, spec 105-calm-output FR-005). */
+export interface RunSummary {
+  /** Failures. */
+  fails: number;
+  /** Warnings. */
+  warns: number;
+  /** Items waiting on time or someone else. */
+  pending: number;
+  /** Items for the person to do. */
+  actions: number;
+  /** Every problem, in order. */
+  problems: Problem[];
+  /** The outcome lines the run wants the person to see ("Sent: every server applies it within 15 minutes"). */
+  outcomes: string[];
+}
+
+/**
+ * A fix text split into the one command in it and the instruction around it (spec 105-calm-output
+ * FR-011): a `run:`, `next:` or `fix:` line holds only the command, any words go on another line.
+ */
+export function splitFix(fix: string | undefined): { say?: string; cmd?: string } {
+  if (!fix) return {};
+  const text = fix.trim();
+  const head =
+    /^((?:bun run stolos|stolos|archon|git|gh|sudo|ssh|bun)\b[^;(]*?)(?:\s+\((.*)\))?\s*$/s.exec(
+      text,
+    );
+  if (head?.[1] && !/,\s|\bthen\b/.test(head[1])) {
+    const say = head[2]?.trim();
+    return { cmd: head[1].trim(), ...(say ? { say: say[0]?.toUpperCase() + say.slice(1) } : {}) };
+  }
+  const inner =
+    /(?:^|[:;,]\s*|\bthen\s+)((?:bun run stolos|archon|stolos)\s+[A-Za-z][^;(,]*?)\s*(?:\(|;|,|\.\s|$)/.exec(
+      text,
+    );
+  if (inner?.[1]) {
+    const cmd = inner[1].trim();
+    const say = text
+      .replace(cmd, "")
+      .replace(/^\s*[:;,]\s*/, "")
+      .replace(/\s*(,\s*)?(then|:)\s*$/i, "")
+      .replace(/^then\s+/i, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    const said = say ? say[0]?.toUpperCase() + say.slice(1) : "";
+    return { cmd, ...(said && said !== ":" ? { say: said } : {}) };
+  }
+  return { say: text };
 }
 
 /** How a {@link Ui} draws: the defaults come from the terminal and the environment. */
@@ -67,6 +133,10 @@ export interface UiOptions {
   verbose?: boolean;
   /** Show nothing (the log still records everything). */
   quiet?: boolean;
+  /** How much of the run reaches the screen (spec 105-calm-output FR-002); default: verbose, every phase line. */
+  mode?: Verbosity;
+  /** Where hints are remembered (default: `hints.json` in this PC's state folder of the program). */
+  hintsFile?: string | null;
   /** Where output goes; default: stdout. */
   write?: (s: string) => void;
   /** The run's log file (null: none). */
@@ -131,6 +201,13 @@ const MARKS = {
     done: "==>",
     bad: "!!",
   },
+};
+/** The code a problem carries when its raiser gave none (spec 105-calm-output FR-009): each is explained by `stolos explain`. */
+const GENERIC_CODE: Record<ProblemLevel, string> = {
+  fail: "E105-FAILED",
+  warn: "E105-WARNING",
+  pending: "P105-WAITING",
+  action: "E105-YOURS",
 };
 const SPIN = {
   emoji: ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"],
@@ -243,6 +320,36 @@ export class Phase {
   get level(): Level {
     return this.fails ? "fail" : this.warns ? "warn" : "ok";
   }
+  /**
+   * Its honest mark (spec 105-calm-output FR-004): a cross for a failure, a warning mark for a
+   * warning, a lightning mark where it holds something for the person to do, an hourglass where
+   * it holds something waiting, a check only where it recorded none of them.
+   */
+  get mark(): "ok" | "warn" | "fail" | "action" | "pending" {
+    return this.fails
+      ? "fail"
+      : this.warns
+        ? "warn"
+        : this.actions
+          ? "action"
+          : this.pendings
+            ? "pending"
+            : "ok";
+  }
+  /** Take in what a nested run found (spec 105-calm-output FR-005): its problems become this phase's, shown once by the parent. */
+  merge(problems: readonly Problem[], outcomes: readonly string[] = []): void {
+    for (const o of outcomes) this.ui.outcome(o);
+    for (const p of problems) {
+      if (p.level === "fail") this.fail(p.message, p.fix, p.code);
+      else if (p.level === "warn") this.warn(p.message, p.fix, p.code);
+      else if (p.level === "pending") this.pending(p.message, p.fix ?? "", p.code);
+      else this.action(p.message, p.fix ?? "", p.code);
+    }
+  }
+  /** An optional feature that is merely off (spec 105-calm-output FR-008): a hint, shown at most once a week. */
+  hint(id: string, message: string, command?: string): void {
+    this.ui.hint(id, message, command);
+  }
   /** Its one-line result: set by done(), or counted from its items. */
   summary(): string {
     if (this.result !== undefined) {
@@ -271,6 +378,19 @@ export class Ui {
   verbose: boolean;
   /** Showing nothing on screen. */
   quiet: boolean;
+  /** How much of the run reaches the screen (spec 105-calm-output FR-002). */
+  mode: Verbosity;
+  /** Run inside another run (spec 105-calm-output FR-005): the parent's mode, else undefined. */
+  readonly nested: Verbosity | undefined;
+  /** The word that opens the closing verdict ("Up to date", "Updated to v0.136.0"). */
+  verdictTitle: string | undefined;
+  /** Optional features that are off, found by this run. */
+  readonly hints: Hint[] = [];
+  /** The outcome lines of this run (spec 105-calm-output FR-003). */
+  readonly outcomes: string[] = [];
+  private hintsFile: string | null | undefined;
+  private readonly screen: (s: string) => unknown;
+  private readonly customWrite: boolean;
   /** The clock (milliseconds). */
   readonly now: () => number;
   /** When the run started. */
@@ -286,12 +406,22 @@ export class Ui {
   /** Suggested next steps printed under the closing line. */
   next: string[] = [];
   /** The secrets backup panel (spec 029), shown once: by finish, or by the entry point on exit. */
-  panel?: { lines: string[]; level: "amber" | "red" };
+  panel?: {
+    lines: string[];
+    level: "amber" | "red";
+    /** The same, as one thing for the person to do (spec 105-calm-output FR-017). */
+    summary?: { text: string; command: string };
+  };
   private panelShown = false;
+
+  /** The closing block was printed already (once per run). */
+  get closed(): boolean {
+    return this.finished;
+  }
 
   /** Print the backup panel, once (calm: one panel per run). */
   printPanel(): void {
-    if (!this.panel || this.panelShown) return;
+    if (!this.panel || this.panelShown || this.mode === "quiet" || this.mode === "json") return;
     this.panelShown = true;
     const color = this.panel.level === "red" ? this.red : this.yellow;
     this.out("");
@@ -318,8 +448,16 @@ export class Ui {
     this.emoji = o.emoji ?? emojiTerminal();
     this.verbose = o.verbose ?? env("ARCHON_VERBOSE") !== undefined;
     this.quiet = o.quiet ?? false;
+    this.mode = o.mode ?? (this.quiet ? "json" : "verbose");
+    const parent = env("STOLOS_NESTED");
+    this.nested =
+      parent === "calm" || parent === "verbose" || parent === "quiet" ? parent : undefined;
+    this.hintsFile = o.hintsFile;
     this.now = o.now ?? Date.now;
     this.started = Number(env("ARCHON_UI_START")) || this.now();
+    // The screen's own writer, taken now: --quiet holds back what commands write themselves, never this.
+    this.screen = stdio.stderr.writeSync.bind(stdio.stderr);
+    this.customWrite = o.write !== undefined;
     this.write =
       o.write ??
       ((s) => {
@@ -360,6 +498,21 @@ export class Ui {
   /** Magenta text. */
   magenta = (s: string): string => this.c("35", s);
 
+  /** Whether a line of this kind reaches the screen in this run's mode (spec 105-calm-output FR-003): calm hides only the green steps. */
+  shows(kind: LineKind): boolean {
+    if (this.nested !== undefined && this.nested !== "verbose") return false;
+    if (this.mode === "json" || this.mode === "quiet") return false;
+    if (this.mode === "verbose") return true;
+    return kind !== "step";
+  }
+
+  /** Choose how much of the run reaches the screen: quiet and json draw nothing during the run. */
+  setMode(mode: Verbosity): void {
+    this.mode = mode;
+    if (mode === "quiet" || mode === "json") this.quiet = true;
+    if (mode === "verbose" && this.nested === undefined) this.quiet = false;
+  }
+
   /** Open the run log lazily (operations only). */
   private openLog(): void {
     if (this.logFile || this.logPath === null) return;
@@ -394,7 +547,7 @@ export class Ui {
 
   /** Write a line on screen (and in the log). */
   private out(line: string): void {
-    if (this.quiet) return;
+    if (this.quiet || (this.nested !== undefined && this.nested !== "verbose")) return;
     this.clearLine();
     this.write(line + "\n");
     this.redraw();
@@ -403,7 +556,8 @@ export class Ui {
   /** The run's header: its title and what it acts on. */
   header(title: string, subtitle = ""): void {
     this.log(`== ${title}${subtitle ? ` · ${subtitle}` : ""}`);
-    if (env("ARCHON_UI_CONTINUE")) return;
+    // One run, one header (spec 105-calm-output FR-005): a nested run draws none.
+    if (env("ARCHON_UI_CONTINUE") || this.nested !== undefined) return;
     const head = `${this.m.start} ${this.bold(this.cyan(title))}${
       subtitle ? this.dim(`  ·  ${subtitle}`) : ""
     }`;
@@ -440,40 +594,89 @@ export class Ui {
   /** One item of the current phase (shown with -v; always logged). */
   item(kind: "change" | "ok" | "skip" | "defer" | "note", msg: string): void {
     this.log(`   ${kind.padEnd(6)} ${msg}`);
-    if (!this.verbose || this.quiet) return;
+    if (!this.verbose || this.quiet || this.nested !== undefined) return;
     const mark =
       kind === "change" ? "~" : kind === "defer" ? this.m.defer : kind === "skip" ? "-" : " ";
     this.out(this.dim(`     ${mark} ${msg}`));
   }
 
-  /** Record a problem: shown now, and again when the run ends. A known raw error from another tool gets its code and fix (spec 052). */
+  /**
+   * Record a problem (spec 105-calm-output FR-007, FR-009): a known raw error from another tool gets
+   * its plain sentence, code and fix (spec 052) and keeps its raw text for the log and --verbose;
+   * every problem has a code. In a calm run it is shown once, in the closing block; in a verbose
+   * report also where it happened.
+   */
   problem(level: ProblemLevel, phase: string, message: string, fix?: string, code?: string): void {
-    // Spec 052: a raw tool error gets its plain cause and fix, when it is a known one.
-    if (!fix || !code) {
-      const t = translate(message);
-      if (t) {
-        fix ??= t.fix;
-        code ??= t.code;
+    let raw: string | undefined;
+    const t = translate(message);
+    if (t) {
+      if (!code || code === t.code) {
+        raw = message;
+        message = EXPLAIN[t.code]?.title ?? message;
       }
+      fix ||= t.fix;
+      code ??= t.code;
     }
+    // A fix that points at `explain <code>` says its code: it is shown as the code, once.
+    const pointer = fix
+      ? /\s*\(?\b(?:bun run stolos|stolos|archon) explain ([EP]\d{3}-[A-Z0-9-]+)\)?/.exec(fix)
+      : null;
+    if (pointer?.[1] && fix) {
+      code ??= pointer[1];
+      fix = fix.replace(pointer[0], "").replace(/[\s:;,]+$/, "");
+    }
+    code ??= GENERIC_CODE[level];
     const logLine = this.log(
       `   ${level === "pending" ? "TODO" : level === "action" ? "YOU" : level.toUpperCase()} ${message}${
         fix ? ` (${level === "pending" || level === "action" ? "next" : "fix"}: ${fix})` : ""
-      }${code ? ` [${code}]` : ""}`,
+      } [${code}]${raw ? ` raw: ${raw.replace(/\n/g, " | ")}` : ""}`,
     );
     if (this.problems.some((p) => p.level === level && p.message === message)) return;
     this.problems.push({
       level,
       phase,
       message,
-      ...(fix !== undefined ? { fix } : {}),
-      ...(code !== undefined ? { code } : {}),
+      ...(fix ? { fix } : {}),
+      code,
       logLine,
+      ...(raw !== undefined ? { raw } : {}),
     });
+    // A nested run hands its problems to its parent; a calm run shows them once, at the end.
+    if (this.nested !== undefined || this.mode !== "verbose") return;
     const mark = this.m[level];
     const text =
       level === "fail" ? this.red(message) : level === "warn" ? this.yellow(message) : message;
     this.out(`   ${mark} ${text}`);
+  }
+
+  /**
+   * An outcome the person needs ("Sent: every server applies it within 15 minutes"): shown in a calm
+   * run (a verbose one has it as a phase line), kept in the log, and handed to the parent of a nested run.
+   */
+  outcome(msg: string): void {
+    this.log(`   OUT ${msg}`);
+    if (this.outcomes.includes(msg)) return;
+    this.outcomes.push(msg);
+    if ((this.mode === "calm" || this.mode === "verbose") && this.nested === undefined)
+      this.out(msg);
+  }
+
+  /**
+   * A line shown now even by a nested run, for what is said right before the person is asked for
+   * something (what is being signed, a passphrase that did not unlock): never in --quiet.
+   */
+  live(msg: string): void {
+    this.log(`   ${msg}`);
+    if (this.mode === "quiet" || this.mode === "json" || this.nested === "quiet") return;
+    this.clearLine();
+    this.write(`${msg}\n`);
+  }
+
+  /** An optional feature that is merely off: a hint, shown at most once per 7 days per id, always with --verbose. */
+  hint(id: string, message: string, command?: string): void {
+    this.log(`   HINT ${message}${command ? ` (${command})` : ""} [${id}]`);
+    if (this.hints.some((h) => h.id === id)) return;
+    this.hints.push({ id, message, ...(command ? { command } : {}) });
   }
 
   /** A progress bar, n of total. */
@@ -485,7 +688,7 @@ export class Ui {
 
   /** Draw the current phase's line again (spinner, progress). */
   redraw(): void {
-    if (!this.tty || this.quiet || !this.current) return;
+    if (!this.tty || this.quiet || this.nested !== undefined || !this.current) return;
     const p = this.current;
     const spin =
       (this.emoji ? SPIN.emoji : SPIN.ascii)[this.spinIndex % (this.emoji ? 10 : 4)] ?? "";
@@ -507,7 +710,7 @@ export class Ui {
 
   /** Start the spinner (terminals only). */
   private startSpinner(): void {
-    if (!this.tty || this.quiet || this.timer !== undefined) return;
+    if (!this.tty || this.quiet || this.nested !== undefined || this.timer !== undefined) return;
     // A timer that never keeps the process alive, set again on each tick.
     const tick = (): void => {
       this.spinIndex++;
@@ -521,6 +724,8 @@ export class Ui {
   private stopSpinner(): void {
     this.timer?.clear();
     this.timer = undefined;
+    // Nothing of the spinner stays in the scrollback (spec 105-calm-output FR-003).
+    this.clearLine();
   }
 
   /** Called as each phase ends (the first boot reports progress to the boot server). */
@@ -545,15 +750,18 @@ export class Ui {
     if (!this.current) this.stopSpinner();
     const took = this.now() - p.started;
     const time = took >= 5000 ? this.dim(` (${fmtDuration(took)})`) : "";
-    const mark = this.m[p.level];
+    const level = p.mark;
+    const mark = this.m[level];
     const summary =
-      p.level === "fail"
+      level === "fail"
         ? this.red(p.summary())
-        : p.level === "warn"
+        : level === "warn"
           ? this.yellow(p.summary())
           : p.summary();
     this.log(`-- ${p.name}: ${p.summary()} (${fmtDuration(took)})`);
-    this.out(`${mark} ${this.bold(p.name.padEnd(16))} ${summary}${time}`);
+    // Calm: a phase that went well is not printed; what did not is in the closing block.
+    if (this.shows("step")) this.out(`${mark} ${this.bold(p.name.padEnd(16))} ${summary}${time}`);
+    else this.clearLine();
   }
 
   /** Pause in-place drawing (for prompts). */
@@ -596,7 +804,11 @@ export class Ui {
     return yes;
   }
 
-  /** Print the closing summary and return the exit code. */
+  /**
+   * Print the closing block and return the exit code (spec 105-calm-output FR-006). In order:
+   * problems, your move, waiting, hints, the verdict line (counts, or the root cause of a failure),
+   * then at most one `next:` line. A nested run prints nothing: it hands its problems to its parent.
+   */
   finish(o: { title?: string; next?: string[] } = {}): number {
     if (this.current) this.endPhase(this.current);
     this.stopSpinner();
@@ -605,100 +817,209 @@ export class Ui {
     // ends every operation with one), would otherwise print it twice.
     if (this.finished) return fails.length ? 1 : 0;
     this.finished = true;
-    // A caller that ran this as a step (stolos update runs boot doctor) reads the counts.
+    // A caller that ran this as a step (stolos update runs boot doctor) reads every problem.
     const summaryFile = env("STOLOS_SUMMARY");
+    // A nested run hands the secrets reminder to its parent as one thing to do.
+    const nestedPanel = this.nested !== undefined ? this.takePanel(true) : undefined;
     if (summaryFile !== undefined) {
       try {
-        fs.writeTextFileSync(
-          summaryFile,
-          JSON.stringify({
-            fails: fails.length,
-            warns: this.problems.filter((p) => p.level === "warn").length,
-            pending: this.problems.filter((p) => p.level === "pending").length,
-            actions: this.problems.filter((p) => p.level === "action").length,
-          }),
-        );
+        const sum: RunSummary = {
+          fails: fails.length,
+          warns: this.problems.filter((p) => p.level === "warn").length,
+          pending: this.problems.filter((p) => p.level === "pending").length,
+          actions: this.problems.filter((p) => p.level === "action").length,
+          problems: [...this.problems, ...(nestedPanel ? [nestedPanel] : [])],
+          outcomes: this.outcomes,
+        };
+        fs.writeTextFileSync(summaryFile, JSON.stringify(sum));
       } catch (e) {
         console.error(`could not write ${summaryFile}: ${(e as Error).message}`);
       }
     }
-    if (this.deferred.length) {
-      this.out("");
-      this.out(
-        `${this.m.defer} ${"Deferred".padEnd(16)} ${this.deferred.length} disruptive change${
-          this.deferred.length > 1 ? "s" : ""
-        }`,
+    const warns = this.problems.filter((p) => p.level === "warn");
+    const pending = this.problems.filter((p) => p.level === "pending");
+    const actions = this.problems.filter((p) => p.level === "action");
+    const code = fails.length ? 1 : 0;
+    const closeLog = (): void => {
+      this.log(
+        `== finished: ${fails.length} failure(s), ${warns.length} warning(s), ${pending.length} not set up yet, ${actions.length} for you to do, ${
+          this.deferred.length
+        } deferred`,
       );
-      this.out(`   ${" ".repeat(16)} ${this.dim(this.deferHint)}`);
+      try {
+        this.logFile?.close();
+      } catch {
+        /* closed */
+      }
+      this.logFile = undefined;
+    };
+    if (this.nested !== undefined || this.mode === "json") {
+      closeLog();
+      return code;
     }
-    const rule = (title: string) =>
-      this.bold(`${this.emoji ? "━━" : "=="} ${title} ${(this.emoji ? "━" : "=").repeat(40)}`);
-    const show = (p: Problem) => {
+    const root = fails[0];
+    const secrets = this.takePanel();
+    const shownHints = this.hintsToShow();
+    const lines: string[] = [];
+    const say = (l: string): void => void lines.push(l);
+    const showProblem = (p: Problem): void => {
       const msg =
         p.level === "fail"
           ? this.red(p.message)
           : p.level === "warn"
             ? this.yellow(p.message)
             : p.message;
-      this.out(`${this.m[p.level]} ${this.bold(p.phase.toLowerCase().padEnd(14))} ${msg}`);
-      if (p.fix) {
-        this.out(
-          `   ${" ".repeat(14)} ${this.dim(
-            `${p.level === "pending" ? "next" : p.level === "action" ? "run" : "fix"}: ${p.fix}`,
-          )}`,
+      say(`${this.m[p.level]} ${msg}${p.code ? this.dim(` [${p.code}]`) : ""}`);
+      const f = splitFix(p.fix);
+      if (f.say) say(`   ${f.say}`);
+      if (f.cmd)
+        say(
+          `   ${this.dim(`${p.level === "fail" || p.level === "warn" ? "fix" : "run"}: ${f.cmd}`)}`,
         );
-      }
-      if (p.code) this.out(`   ${" ".repeat(14)} ${this.dim(`explain: ${explainHint(p.code)}`)}`);
-      if (this.logPath && p.logLine && p.level !== "pending" && p.level !== "action") {
-        this.out(`   ${" ".repeat(14)} ${this.dim(`log: ${this.logPath}:${p.logLine}`)}`);
+      if (this.verbose && p.raw) say(`   ${this.dim(`raw: ${p.raw}`)}`);
+      if (this.verbose && this.logPath && p.logLine) {
+        say(`   ${this.dim(`log: ${this.logPath}:${p.logLine}`)}`);
       }
     };
-    const real = this.problems.filter((p) => p.level === "fail" || p.level === "warn");
-    const pending = this.problems.filter((p) => p.level === "pending");
-    const actions = this.problems.filter((p) => p.level === "action");
-    if (real.length) {
-      this.out("");
-      this.out(rule("Needs attention"));
-      real.forEach(show);
-    }
-    if (actions.length) {
-      this.out("");
-      this.out(rule("Your move"));
-      actions.forEach(show);
-    }
-    if (pending.length) {
-      this.out("");
-      this.out(rule("Not set up yet"));
-      pending.forEach(show);
-    }
-    this.printPanel();
-    const took = fmtDuration(this.now() - this.started);
-    const where = this.logPath ? ` · log: ${this.logPath}` : "";
-    this.out("");
-    if (fails.length) {
-      this.out(
-        `${this.m.bad} ${this.red(
-          `${o.title ?? "finished"} with ${fails.length} failure${fails.length > 1 ? "s" : ""}`,
-        )} in ${took}${this.dim(where)}`,
+    if (this.deferred.length) {
+      say(
+        `${this.m.defer} ${this.deferred.length} disruptive change${
+          this.deferred.length > 1 ? "s" : ""
+        } left for later`,
       );
+      say(`   ${this.dim(this.deferHint)}`);
+    }
+    // 1. Problems (the root cause of a failure is the verdict, not listed twice).
+    for (const p of [...fails.slice(1), ...warns]) showProblem(p);
+    // 2. Your move.
+    for (const p of actions) showProblem(p);
+    if (secrets) showProblem(secrets);
+    // 3. Not set up yet: only what waits on time or on someone else.
+    for (const p of pending) showProblem(p);
+    // 4. Hints.
+    for (const h of shownHints) {
+      say(`${palette.MARKS.hint[this.emoji ? "emoji" : "ascii"]} ${h.message}`);
+      if (h.command) say(`   ${this.dim(`run: ${h.command}`)}`);
+    }
+    // Steps a command spells out for the person ("then: power on alpha"): lines of their own; the one
+    // line that is a `next:` is a candidate for the closing next line, and holds only the command.
+    let suggested: string | undefined;
+    for (const e of o.next ?? this.next) {
+      const m = /^next:\s*(.+)$/.exec(e);
+      if (m?.[1]) suggested ??= splitFix(m[1]).cmd ?? m[1];
+      else say(`   ${this.dim(e.replace(/^then:\s*/, ""))}`);
+    }
+    // 5. The verdict, with counts; a failure is its own cause.
+    const forYou = actions.length + (secrets ? 1 : 0);
+    let verdict: string;
+    if (root) {
+      verdict = `${this.m.bad} ${this.red(root.message)}${root.code ? this.dim(` [${root.code}]`) : ""}`;
     } else {
-      this.out(`${this.m.done} ${this.green(o.title ?? "done")} in ${took}${this.dim(where)}`);
+      const parts = [o.title ?? this.verdictTitle ?? "Up to date"];
+      if (warns.length) parts.push(`${warns.length} warning${warns.length > 1 ? "s" : ""}`);
+      if (forYou) parts.push(`${forYou} for you`);
+      if (pending.length) parts.push(`${pending.length} waiting`);
+      if (shownHints.length) parts.push(`${shownHints.length} optional`);
+      verdict = `${this.m.done} ${this.green(parts.join(" · "))}`;
     }
-    for (const n of o.next ?? this.next) this.out(`   ${this.dim(n)}`);
-    this.log(
-      `== finished: ${fails.length} failure(s), ${
-        this.problems.filter((p) => p.level === "warn").length
-      } warning(s), ${pending.length} not set up yet, ${actions.length} for you to do, ${
-        this.deferred.length
-      } deferred`,
+    const rootFix = splitFix(root?.fix);
+    if (root && rootFix.say) say(`   ${rootFix.say}`);
+    if (this.verbose && this.logPath) say(this.dim(`   log: ${this.logPath}`));
+    // 6. Exactly one next: the one command of the failure, else the most important thing for you.
+    const nextCmd =
+      rootFix.cmd ??
+      (root
+        ? undefined
+        : (splitFix(actions[0]?.fix).cmd ??
+          (secrets ? splitFix(secrets.fix).cmd : undefined) ??
+          suggested));
+    if (this.mode === "quiet") {
+      (this.customWrite ? this.write : this.screen)(`${verdict}\n`);
+    } else {
+      this.out("");
+      for (const l of lines) this.out(l);
+      this.out(verdict);
+      if (nextCmd) this.out(`next: ${nextCmd}`);
+    }
+    closeLog();
+    return code;
+  }
+
+  /** The one line `--quiet` prints for a command that draws no phases of its own (spec 105-calm-output FR-002). */
+  quietVerdict(command: string, code: number): void {
+    (this.customWrite ? this.write : this.screen)(
+      code === 0
+        ? `${this.m.done} ${this.green(`${command}: up to date`)}\n`
+        : `${this.m.bad} ${this.red(`${command} did not finish (exit code ${code})`)}\n`,
     );
-    try {
-      this.logFile?.close();
-    } catch {
-      /* closed */
+  }
+
+  /** The secrets backup panel as one thing for the person to do, once (spec 105-calm-output FR-017); undefined where the box is shown instead. */
+  private takePanel(force = false): Problem | undefined {
+    if (!this.panel || this.panelShown || (this.mode === "verbose" && !force)) return undefined;
+    this.panelShown = true;
+    const x = this.panel.summary;
+    if (!x) return undefined;
+    return {
+      level: "action",
+      phase: "Secrets",
+      message: x.text,
+      fix: x.command,
+      code: "E105-BACKUP",
+    };
+  }
+
+  /** The hints to show now: all with --verbose, none with --quiet, else those not shown in the last 7 days (and remember them). */
+  private hintsToShow(): Hint[] {
+    if (!this.hints.length || this.mode === "quiet") return [];
+    if (this.mode === "verbose") return this.hints;
+    const file = this.hintsFile === undefined ? defaultHintsFile() : this.hintsFile;
+    const now = hintClock(this.now);
+    const seen = file ? readHints(file) : {};
+    const due = this.hints.filter((h) => now - (seen[h.id] ?? -Infinity) >= HINT_DAYS * 86_400_000);
+    if (file && due.length) {
+      for (const h of due) seen[h.id] = now;
+      writeHints(file, seen);
     }
-    this.logFile = undefined;
-    return fails.length ? 1 : 0;
+    return due;
+  }
+}
+
+/** The clock hints are measured on: STOLOS_HINT_NOW (milliseconds, for tests), else the Ui's. */
+function hintClock(now: () => number): number {
+  return Number(env("STOLOS_HINT_NOW")) || now();
+}
+
+/** Where this PC remembers when each hint was shown: `hints.json` in the program's local state folder (never in Git). */
+export function defaultHintsFile(): string | null {
+  const win = proc.build.os === "windows";
+  const dir = win
+    ? `${env("LOCALAPPDATA") ?? `${env("USERPROFILE") ?? "C:"}\\AppData\\Local`}\\${logProgram}`
+    : `${env("HOME") ?? "/tmp"}/.local/state/${logProgram}`;
+  return `${dir}${win ? "\\" : "/"}hints.json`;
+}
+
+/** The hints' times (id to milliseconds); empty where there is no file or it is unreadable. */
+function readHints(file: string): Record<string, number> {
+  try {
+    const d: unknown = JSON.parse(fs.readTextFileSync(file));
+    const out: Record<string, number> = {};
+    if (typeof d === "object" && d !== null) {
+      for (const [k, v] of Object.entries(d)) if (typeof v === "number") out[k] = v;
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+/** Remember the hints' times; best effort. */
+function writeHints(file: string, seen: Record<string, number>): void {
+  try {
+    fs.mkdirSync(file.replace(/[\\/][^\\/]*$/, ""), { recursive: true });
+    fs.writeTextFileSync(file, JSON.stringify(seen));
+  } catch {
+    /* a hint shown twice is harmless */
   }
 }
 
@@ -788,24 +1109,61 @@ export function defaultLogPath(): string | null {
   const inherited = env("ARCHON_LOG");
   if (inherited !== undefined) return inherited;
   const stamp = new Date().toISOString().replace(/[:.]/g, "").slice(0, 15);
-  const root = asRoot();
-  // Windows: %LOCALAPPDATA%\stolos\log (beside boot.log), with Windows separators.
-  const win = proc.build.os === "windows";
-  const sep = win ? "\\" : "/";
-  const dir = win
-    ? `${
-        env("LOCALAPPDATA") ?? `${env("USERPROFILE") ?? "C:"}\\AppData\\Local`
-      }\\${logProgram}\\log`
-    : root
-      ? P.log
-      : `${env("HOME") ?? "/tmp"}/.local/state/${logProgram}/log`;
+  const dir = logDir();
   try {
     fs.mkdirSync(dir, { recursive: true });
     pruneRunLogs(dir);
-    return `${dir}${sep}${stamp}-${proc.pid}.log`;
+    return `${dir}${proc.build.os === "windows" ? "\\" : "/"}${stamp}-${proc.pid}.log`;
   } catch {
     return null;
   }
+}
+
+/** The folder the program's run logs are in (spec 105-calm-output FR-010: `stolos log` reads the newest). */
+export function logDir(): string {
+  const win = proc.build.os === "windows";
+  return win
+    ? `${
+        env("LOCALAPPDATA") ?? `${env("USERPROFILE") ?? "C:"}\\AppData\\Local`
+      }\\${logProgram}\\log`
+    : asRoot()
+      ? P.log
+      : `${env("HOME") ?? "/tmp"}/.local/state/${logProgram}/log`;
+}
+
+/** The newest run log in the folder (by modification time), or undefined. */
+export function lastLogPath(dir = logDir()): string | undefined {
+  let best: { file: string; at: number } | undefined;
+  try {
+    for (const e of fs.readDirSync(dir)) {
+      if (!e.isFile || !e.name.endsWith(".log")) continue;
+      const file = `${dir}${proc.build.os === "windows" ? "\\" : "/"}${e.name}`;
+      const at = fs.statSync(file).mtime?.getTime() ?? 0;
+      if (!best || at >= best.at) best = { file, at };
+    }
+  } catch {
+    return undefined;
+  }
+  return best?.file;
+}
+
+/**
+ * `--quiet` (spec 105-calm-output FR-002): nothing but the verdict line reaches the screen, so what
+ * a command writes itself is held back until the run ends. Returns the function that restores it.
+ */
+export function muteOutput(): () => void {
+  const out = stdio.stdout.writeSync.bind(stdio.stdout);
+  const err = stdio.stderr.writeSync.bind(stdio.stderr);
+  const log = { log: console.log, info: console.info, warn: console.warn, error: console.error };
+  const none = (): number => 0;
+  stdio.stdout.writeSync = none;
+  stdio.stderr.writeSync = none;
+  console.log = console.info = console.warn = console.error = (): void => {};
+  return () => {
+    stdio.stdout.writeSync = out;
+    stdio.stderr.writeSync = err;
+    Object.assign(console, log);
+  };
 }
 
 /** The process-wide UI. */

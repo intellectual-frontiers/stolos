@@ -64,7 +64,7 @@ async function keysSandbox() {
   await git("add", "-A");
   await git("commit", "-q", "--no-gpg-sign", "-m", "demo: the fleet");
   const archon = (args: string[], stdin = "", extra: Record<string, string> = {}) =>
-    sb.run("src/stolos/main.ts", args, stdin, { ...env, ...extra });
+    sb.run("src/stolos/main.ts", [...args, "--verbose"], stdin, { ...env, ...extra });
   const script = (file: string) => sb.run(file, [], "", env);
   return { home, repo, git, archon, script, daily: path.join(home, ".ssh", "fleet-signing") };
 }
@@ -630,7 +630,7 @@ proves(
       assertStringIncludes(r.out, "E057-RECOVERY-CHECK");
       // FR-008: signers shows the same checks; the backup's restore steps use these commands.
       r = await s.archon(["signers"]);
-      assertStringIncludes(r.out, "(bun run stolos explain E057-RECOVERY-CHECK)");
+      assertStringIncludes(r.out, "[E057-RECOVERY-CHECK]");
       const { restoreText } = await import("../src/archon/vault/zip.ts");
       assertStringIncludes(restoreText(), "bun run stolos keys setup");
       // The weekly email, through the mailbox (a relay that does not answer keeps it in the spool).

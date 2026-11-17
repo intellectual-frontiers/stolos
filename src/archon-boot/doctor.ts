@@ -6,6 +6,7 @@
  *
  * @module
  */
+// Spec: 105-calm-output FR-008, FR-017
 // Spec: 099-engine-update FR-006, FR-007
 // Spec: 100-remote-access FR-012
 // Spec: 103-three-ports FR-001, FR-009, FR-011
@@ -52,31 +53,45 @@ export async function doctor(o: {
   const ahead = Number((await git(["rev-list", "--count", `origin/${branch}..HEAD`])).stdout) || 0;
   const behind = Number((await git(["rev-list", "--count", `HEAD..origin/${branch}`])).stdout) || 0;
   if (!fetched) {
-    g.warn("could not reach GitHub to compare", "check this PC's network and gh auth status");
+    g.warn("GitHub could not be reached to compare.", "gh auth status", "E105-GITHUB");
   }
   if (dirty.length) {
     // Spec 099: records Stolos wrote (an install's registration, ...) are expected, not a mistake.
     const { porcelainPath, splitChanges, yoursNamed } = await import("../archon/fleet/records.ts");
-    const { records, yours } = splitChanges(dirty.map(porcelainPath));
+    const files = dirty.map(porcelainPath);
+    // Spec 105-calm-output FR-014: an engine upgrade waiting for its signature is Stolos's, not yours.
+    const { waitingUpgrade } = await import("../archon/fleet/upgrade.ts");
+    const waiting = await waitingUpgrade(P.repo, files);
+    const { records, yours } = splitChanges(waiting ? [] : files);
+    if (waiting) {
+      g.action(
+        `The engine upgrade to ${waiting.to} is waiting for its signature, so nothing has been sent.`,
+        "bun run stolos update",
+        "E105-UPGRADE-WAITING",
+      );
+    }
     if (records.length) {
       g.action(
-        `not sent yet: ${records.map((r) => r.what).join("; ")}`,
-        "bun run stolos update (it sends them with one signed commit)",
+        `Not sent yet: ${records.map((r) => r.what).join("; ")}`,
+        "bun run stolos update",
+        "E105-UNSENT",
       );
     }
     if (yours.length) {
       g.action(
-        `${yours.length} change(s) of yours not sent yet (${yours.slice(0, 3).map(yoursNamed).join(", ")}${
+        `${yours.length} change${yours.length > 1 ? "s" : ""} of yours not sent yet (${yours.slice(0, 3).map(yoursNamed).join(", ")}${
           yours.length > 3 ? ", ..." : ""
-        }): servers see them once they are sent`,
-        "bun run stolos apply (or bun run stolos update, which offers to send them)",
+        }): servers see them once they are sent.`,
+        "bun run stolos apply",
+        "E105-UNSENT",
       );
     }
   }
   if (ahead) {
     g.action(
-      `${ahead} commit(s) not sent yet: servers see them once they are`,
+      `${ahead} commit(s) not sent yet: servers see them once they are.`,
       "bun run stolos apply",
+      "E105-UNSENT",
     );
   }
   if (behind) {
@@ -136,16 +151,16 @@ export async function doctor(o: {
   }
   // Spec 029: anything newer than the last vault backup.
   const { assess } = await import("../archon/vault/state.ts");
-  const { remind, installPrePushHook } = await import("../archon/vault/reminder.ts");
+  const { remind, installPrePushHook, secretsInWords } =
+    await import("../archon/vault/reminder.ts");
   const va = await assess();
   if (va.unbacked.length) {
-    const names = va.unbacked.map((x) => x.name);
     // Spec 099: a backup to make is your move (⚡); a week overdue, or keys never backed up, a warning.
+    // Spec 105-calm-output FR-017: grouped by machine, in words, with the command on its own line.
     (va.severity === "red" ? s.warn.bind(s) : s.action.bind(s))(
-      `${names.length} secret(s) ${
-        va.lastBackup ? "newer than the last backup" : "never backed up"
-      }: ${names.slice(0, 4).join(", ")}${names.length > 4 ? ", ..." : ""}`,
-      "bun run stolos vault backup, then move the ZIP somewhere safe",
+      `Your secrets ${va.lastBackup ? "changed since the last backup" : "were never backed up"}: ${secretsInWords(va)}`,
+      "bun run stolos vault backup",
+      "E105-BACKUP",
     );
   }
   await remind();
@@ -240,7 +255,8 @@ export async function doctor(o: {
       ? await firewallWarnings([{ protocol: "TCP", port, what: "Stolos Console (HTTPS)" }])
       : [];
     for (const l of accessDoctor(facts, Date.now(), fw, proc.build.os)) {
-      if (l.level === "action") ra.action(l.msg, l.fix ?? "");
+      if (l.level === "hint") ra.hint("remote-access", l.msg, l.fix?.split(" (")[0]);
+      else if (l.level === "action") ra.action(l.msg, l.fix ?? "", "E105-YOURS");
       else if (l.level === "pending") ra.pending(l.msg, l.fix ?? "");
       else ra.note(l.msg);
     }

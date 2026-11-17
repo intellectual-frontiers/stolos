@@ -6,12 +6,13 @@
  * @module
  */
 // Spec: 059-stolos-and-archon
+// Spec: 105-calm-output FR-001 to FR-003, FR-005, FR-006
 
 import { fs, lock, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { asRoot, onHost, P, resetRoots } from "./core/paths.ts";
 import { COMMANDS, findCommand, offeredOn } from "./commands/registry.ts";
 import { effectiveTier, GLOBAL_ARGS, parseArgs, type RunContext } from "./core/registry-types.ts";
-import { defaultLogPath, ui } from "./core/ui.ts";
+import { defaultLogPath, muteOutput, ui } from "./core/ui.ts";
 import { shareCheckout } from "./core/share.ts";
 import { writeStatus } from "./core/status.ts";
 import { hostLock } from "./core/lock.ts";
@@ -78,8 +79,8 @@ function usage(surface: Surface): string {
       : []),
     "",
     surface === "pc"
-      ? "Global options: --fleet <id>, --client <id> (a provider's client), --host <name>, --json, -v/--verbose."
-      : "Global options: --fleet <id>, --host <name>, --json, -v/--verbose.",
+      ? "Global options: --fleet <id>, --client <id> (a provider's client), --host <name>, --json, -v/--verbose (every step), -q/--quiet (one line and the exit code)."
+      : "Global options: --fleet <id>, --host <name>, --json, -v/--verbose (every step), -q/--quiet (one line and the exit code).",
     surface === "pc"
       ? "Where you are, and the one thing to do next: bun run stolos (no arguments). A problem's code: stolos explain <code>."
       : "This machine's state: archon (no arguments). Every command has a man page: man archon-<command>. A problem's code: archon explain <code>.",
@@ -98,6 +99,7 @@ type Globals = {
   host?: string;
   json?: boolean;
   verbose?: boolean;
+  quiet?: boolean;
 };
 
 /** Pull global options out of argv. */
@@ -110,6 +112,10 @@ function globals(argv: readonly string[]): { rest: string[]; g: Globals } {
       g.verbose = true;
       continue;
     }
+    if (a === "-q") {
+      g.quiet = true;
+      continue;
+    }
     const [k = "", inline] = a.startsWith("--") ? a.slice(2).split("=", 2) : [""];
     const spec = GLOBAL_ARGS.find((x) => x.name === k);
     if (spec === undefined) {
@@ -120,6 +126,7 @@ function globals(argv: readonly string[]): { rest: string[]; g: Globals } {
     switch (k) {
       case "json":
       case "verbose":
+      case "quiet":
         g[k] = true;
         break;
       case "fleet":
@@ -246,7 +253,7 @@ export async function main(
       const p = await proc.output(
         [
           "sudo",
-          "--preserve-env=ARCHON_AGENT,ARCHON_VERBOSE,ARCHON_PLAIN,NO_COLOR,LANG,LC_ALL,TERM,TRACEPARENT,ARCHON_FLEET,ARCHON_REPO,ARCHON_CLIENT,ARCHON_GITHUB_API",
+          "--preserve-env=ARCHON_AGENT,ARCHON_VERBOSE,STOLOS_NESTED,STOLOS_SUMMARY,ARCHON_LOG,ARCHON_PLAIN,NO_COLOR,LANG,LC_ALL,TERM,TRACEPARENT,ARCHON_FLEET,ARCHON_REPO,ARCHON_CLIENT,ARCHON_GITHUB_API",
           self,
           ...argv,
         ],
@@ -268,9 +275,22 @@ export async function main(
       hostName: g.host ?? (await localHostName()),
       json: g.json === true,
       verbose: g.verbose === true,
+      quiet: g.quiet === true,
     };
     if (ctx.verbose) ui.verbose = true;
-    if (ctx.json) ui.quiet = true;
+    // Spec 105-calm-output FR-001, FR-002: a report is verbose by default, an action calm.
+    ui.setMode(
+      ctx.json
+        ? "json"
+        : ctx.quiet
+          ? "quiet"
+          : ctx.verbose
+            ? "verbose"
+            : cmd.output === "report"
+              ? "verbose"
+              : "calm",
+    );
+    if (cmd.output === "report") ui.verdictTitle = "Checked";
     // One host-changing run at a time; the lock is released when this process exits.
     if ((tier === "mutate" || tier === "destructive") && asRoot() && !cmd.unlocked) {
       const held = await hostLock({
@@ -297,12 +317,17 @@ export async function main(
       (tier === "read" && cmd.name !== "push") || cmd.unlocked
         ? Promise.resolve()
         : writeStatus({ command: cmd.name, failures, warnings, deferred });
+    const mute = ui.mode === "quiet" ? muteOutput() : undefined;
     if (!cmd.operation) {
       let code = 1;
       try {
         code = await cmd.run(args, ctx);
         return code;
       } finally {
+        mute?.();
+        if (ui.mode === "quiet") {
+          ui.quietVerdict(cmd.name, code);
+        }
         await shareCheckout();
         await record(code ? 1 : 0, 0, 0);
         endRun(code, code ? 1 : 0, 0);
@@ -334,7 +359,8 @@ export async function main(
       ui.problems.filter((p) => p.level === "warn").length,
     );
     await flushEvents(ui.problems);
-    const summary = ui.finish({ title: `${cmd.name} finished` });
+    mute?.();
+    const summary = ui.finish();
     return Math.max(code, summary);
   } catch (e) {
     complain(`${ui.red("error:")} ${e instanceof Error ? e.message : String(e)}`);

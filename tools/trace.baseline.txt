@@ -92,7 +92,6 @@ trace/no-spec-line src/archon/trust/site.ts
 trace/no-spec-line src/archon/update/update.ts
 trace/no-spec-line src/archon/vault/commands.ts
 trace/no-spec-line src/archon/vault/mod.ts
-trace/no-spec-line src/archon/vault/reminder.ts
 trace/no-spec-line src/archon/web/mod.ts
 trace/no-spec-line src/mod.ts
 trace/no-spec-line src/stolos/main.ts

@@ -41,9 +41,11 @@ proves(
     p.done();
     assertEquals(ui.finish(), 0);
     const t = text();
-    assertStringIncludes(t, "Not set up yet");
-    assertStringIncludes(t, "next: bun run stolos boot mail-push alpha");
-    assertStringIncludes(t, "explain: archon explain P027-MAIL-TOKEN");
+    // Spec 105-calm-output FR-006: waiting items come after problems and your move, the verdict
+    // counts them, and its code and its one command are on lines of their own.
+    assertStringIncludes(t, "no relay token yet [P027-MAIL-TOKEN]");
+    assertStringIncludes(t, "run: bun run stolos boot mail-push alpha");
+    assertStringIncludes(t, "1 waiting");
     assert(!t.includes("Needs attention"), "a pending item is not a problem");
     assert(!t.includes("failure"));
   },
@@ -72,7 +74,8 @@ proves(["052-self-describing FR-002"], "052: the summary and the exit code alway
         .pop() ?? "";
     assertEquals(code, fails ? 1 : 0, `${fails}/${warns}/${pendings}`);
     assertEquals(last.startsWith("!!"), fails > 0, last);
-    assertEquals(last.includes("failure"), fails > 0, last);
+    // The verdict of a failure is its cause, once (spec 105-calm-output FR-007).
+    assertEquals(last.includes("f0"), fails > 0, last);
   }
 });
 
@@ -97,7 +100,7 @@ proves(
     const { ui, text } = quiet();
     ui.phase("Reach").fail("alpha: Host key verification failed.");
     ui.finish();
-    assertStringIncludes(text(), "archon explain E047-HOST-KEY");
+    assertStringIncludes(text(), "[E047-HOST-KEY]");
     assertStringIncludes(text(), "fleet trust");
   },
 );

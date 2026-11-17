@@ -32,14 +32,22 @@
  */
 // Spec: 058-operator-update
 // Spec: 099-engine-update FR-001, FR-004, FR-006
+// Spec: 105-calm-output FR-005, FR-007, FR-012 to FR-016
 
 import { fs, path, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";
 import { P, repoRel } from "../core/paths.ts";
-import { ui } from "../core/ui.ts";
+import { type Problem, type RunSummary, ui } from "../core/ui.ts";
 import { SECRETS } from "../core/secrets.ts";
-import { json, object, integer } from "@intellectual-frontiers/commons/ts/kernel";
-import { compare, engineRepository, parseTag, PIN_FILE, readPin } from "../fleet/upgrade.ts";
+import {
+  compare,
+  engineRepository,
+  parseTag,
+  PIN_FILE,
+  readPin,
+  waitingUpgrade,
+} from "../fleet/upgrade.ts";
+import { whatsNew } from "../fleet/whatsnew.ts";
 import { newestTag } from "../fleet/releases.ts";
 import { BUN_VERSION } from "../core/bun-pin.ts";
 import { engineCommand } from "../install/bun.ts";
@@ -57,18 +65,50 @@ export function atLeast(have: string, want: string): boolean {
   return true;
 }
 
-/** What a step run as its own command found (from its STOLOS_SUMMARY). */
+/** What a step run as its own command found (from its STOLOS_SUMMARY, spec 105-calm-output FR-005). */
 interface StepSummary {
   code: number;
   fails: number;
   warns: number;
   pending: number;
+  /** Every problem of the step, to be merged into the parent's phase. */
+  problems: Problem[];
+  /** The outcome lines the step wants shown. */
+  outcomes: string[];
 }
 
-/** What a step writes to STOLOS_SUMMARY (core/ui.ts `finish`). */
-const SUMMARY = object({}, { fails: integer, warns: integer, pending: integer });
+/** The problems and outcomes in a step's STOLOS_SUMMARY text (empty where it wrote none or wrote something else). */
+export function readSummary(text: string): Pick<RunSummary, "problems" | "outcomes"> {
+  const none = { problems: [], outcomes: [] };
+  try {
+    const d: unknown = JSON.parse(text || "{}");
+    if (typeof d !== "object" || d === null) return none;
+    const levels = ["fail", "warn", "pending", "action"];
+    const problems = (
+      Array.isArray((d as { problems?: unknown }).problems)
+        ? ((d as { problems: unknown[] }).problems as Array<Partial<Problem>>)
+        : []
+    ).filter(
+      (p): p is Problem =>
+        typeof p === "object" &&
+        p !== null &&
+        typeof p.message === "string" &&
+        typeof p.phase === "string" &&
+        typeof p.level === "string" &&
+        levels.includes(p.level),
+    );
+    const o = (d as { outcomes?: unknown }).outcomes;
+    return { problems, outcomes: Array.isArray(o) ? o.filter((x) => typeof x === "string") : [] };
+  } catch {
+    return none;
+  }
+}
 
-/** Run `stolos <args>` in the checkout (a fresh process), with the terminal (it may ask for a passphrase). */
+/**
+ * Run `stolos <args>` in the checkout as a phase of this run (spec 105-calm-output FR-005): a fresh
+ * process with the terminal (it may ask for a passphrase) that prints no header, no summary and no
+ * `next:`, appends to this run's log, and hands its problems back to be merged.
+ */
 async function stolos(args: string[]): Promise<StepSummary> {
   const summary = await fs.makeTempFile({ prefix: "stolos-summary-" });
   ui.pause();
@@ -78,12 +118,29 @@ async function stolos(args: string[]): Promise<StepSummary> {
       stdin: "inherit",
       stdout: "inherit",
       stderr: "inherit",
-      env: { ...(P.fleetId ? { ARCHON_FLEET: P.fleetId } : {}), STOLOS_SUMMARY: summary },
+      env: {
+        ...(P.fleetId ? { ARCHON_FLEET: P.fleetId } : {}),
+        STOLOS_SUMMARY: summary,
+        STOLOS_NESTED:
+          ui.mode === "quiet" || ui.mode === "json"
+            ? "quiet"
+            : ui.mode === "verbose"
+              ? "verbose"
+              : "calm",
+        ARCHON_UI_START: String(ui.started),
+        ...(ui.logPath ? { ARCHON_LOG: ui.logPath } : {}),
+        ...(ui.verbose ? { ARCHON_VERBOSE: "1" } : {}),
+      },
     });
-    // No summary: the step wrote none, and its exit code says enough.
-    const d = json((await fs.readTextOr(summary)) || "{}", SUMMARY);
-    const c = d.kind === "ok" ? d.value : {};
-    return { code: r.code, fails: c.fails ?? 0, warns: c.warns ?? 0, pending: c.pending ?? 0 };
+    const c = readSummary((await fs.readTextOr(summary)) ?? "");
+    const count = (l: Problem["level"]): number => c.problems.filter((p) => p.level === l).length;
+    return {
+      code: r.code,
+      fails: count("fail"),
+      warns: count("warn"),
+      pending: count("pending"),
+      ...c,
+    };
   } finally {
     ui.resume();
     try {
@@ -92,6 +149,29 @@ async function stolos(args: string[]): Promise<StepSummary> {
       stdio.stderr.writeSync(`stolos: could not remove ${summary}: ${(e as Error).message}\n`);
     }
   }
+}
+
+/**
+ * A step's result in the parent's phase, once (spec 105-calm-output FR-007): its problems and
+ * outcomes merged, never re-reported; where it failed without saying why, one plain failure.
+ * Returns whether the step succeeded.
+ */
+function took(
+  phase: ReturnType<typeof ui.phase>,
+  r: StepSummary,
+  whenNoReason: string,
+  fix: string,
+): boolean {
+  phase.merge(r.problems, r.outcomes);
+  if (r.code !== 0 && !r.fails) phase.fail(whenNoReason, fix, "E105-FAILED");
+  return r.code === 0 && !r.fails;
+}
+
+/** Where the engine's releases are listed: the pin's GitHub repository, or the mirror a `git+` pin names. */
+function engineRemote(pin: { source: string; tag: string }): string | undefined {
+  const repo = engineRepository(pin);
+  if (repo) return `https://github.com/${repo}.git`;
+  return pin.source.startsWith("git+") ? pin.source.slice(4) : undefined;
 }
 
 /** What `archon update` on a PC is told. */
@@ -117,7 +197,8 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
   else {
     d.warn(
       `Bun ${version} is older than ${BUN_VERSION}, the version Stolos is pinned to`,
-      `bun upgrade (or the bootstrap again: bin/bootstrap.sh)`,
+      `bun upgrade`,
+      "E105-RUNTIME-OLD",
     );
     d.done();
   }
@@ -132,9 +213,11 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
   p.status(`git fetch origin ${branch}`);
   const fetch = await git(["fetch", "--quiet", "origin", branch]);
   if (!fetch.ok) {
+    ui.log(`   git fetch: ${fetch.stderr.trim()}`);
     p.fail(
-      `git fetch failed: ${fetch.stderr.trim().split("\n").pop()}`,
-      "check the network and your GitHub sign-in (gh auth status), then run this again",
+      "GitHub could not be reached, so nothing was changed. Check the network and your GitHub sign-in.",
+      "gh auth status",
+      "E105-GITHUB",
     );
     return 1;
   }
@@ -144,11 +227,7 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
   let dirty = (await git(["status", "--porcelain", "--untracked-files=no"])).stdout.trim();
   let pulled: string[] = [];
   if (!behind) {
-    p.done(
-      ahead
-        ? `up to date; ${ahead} commit(s) of yours not pushed yet (bun run stolos apply)`
-        : "up to date",
-    );
+    p.done("up to date");
   } else if (ahead && !dirty) {
     // Spec 099: yours on top of GitHub's (never a merge); a conflict is undone and named.
     pulled = (await git(["log", "--format=%h %s", `HEAD..${remote}`])).stdout
@@ -159,8 +238,9 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
       await git(["rebase", "--abort"]);
       pulled = [];
       p.warn(
-        `your ${ahead} commit(s) and ${behind} new one(s) on GitHub change the same lines`,
-        "git pull --rebase, resolve the conflict, then bun run stolos update",
+        `Your ${ahead} commit(s) and ${behind} new one(s) on GitHub change the same lines, so nothing was moved.`,
+        "git pull --rebase",
+        "E105-CONFLICT",
       );
       p.done();
     } else {
@@ -171,14 +251,16 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
     }
   } else if (ahead) {
     p.warn(
-      `your ${ahead} commit(s) and ${behind} new one(s) on GitHub went different ways, and you have changes not committed`,
-      "bun run stolos apply (sends your changes), then bun run stolos update",
+      `Your ${ahead} commit(s) and ${behind} new one(s) on GitHub went different ways, and you have changes not committed, so nothing was moved.`,
+      "bun run stolos apply",
+      "E105-CONFLICT",
     );
     p.done();
   } else if (dirty) {
     p.warn(
-      `${behind} new commit(s) on GitHub, but you have changes not committed`,
-      "send them first (bun run stolos apply), or set them aside (git stash), then run this again",
+      `${behind} new commit(s) on GitHub, but you have changes not committed, so nothing was moved. Send them first, or set them aside (git stash).`,
+      "bun run stolos apply",
+      "E105-UNSENT",
     );
     p.done();
   } else {
@@ -187,12 +269,18 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
       .filter(Boolean);
     const ff = await git(["merge", "--ff-only", "--quiet", remote]);
     if (!ff.ok) {
-      p.fail(`fast-forward failed: ${ff.stderr.trim()}`, "git status shows why");
+      ui.log(`   git merge: ${ff.stderr.trim()}`);
+      p.fail(
+        "GitHub's new commits could not be fast-forwarded, so nothing was changed.",
+        "git status",
+        "E105-CONFLICT",
+      );
       return 1;
     }
     for (const c of pulled.slice(0, 10)) p.note(c);
     p.done(`${pulled.length} new commit(s)`);
   }
+  if (pulled.length) ui.verdictTitle = "Updated";
 
   // 2. Approval: the new tip, against the signers the fleet had before.
   if (pulled.length && P.fleetId) {
@@ -213,11 +301,11 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
         if (t.ok) a.done(`signed by ${t.signer}`);
         else {
           a.warn(
-            `what you pulled was made elsewhere, not signed by a fleet signer (${head.slice(
+            `What you pulled was made elsewhere, not signed by a fleet signer (${head.slice(
               0,
               10,
-            )}): servers wait for your approval`,
-            "bun run stolos apply (it lists those commits and approves them with one signed commit)",
+            )}): servers wait for your approval.`,
+            "bun run stolos apply",
             `E047-${(t.code ?? "untrusted").toUpperCase()}`,
           );
           a.done();
@@ -234,20 +322,26 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
 
   // Spec 099: what is here and not on GitHub goes out first (stolos apply: checked, signed,
   // pushed), so the engine can be upgraded on top of it. Records Stolos wrote (an install's
-  // registration, an adoption) are sent without asking; your own edits only when you say so.
+  // registration, an adoption) are sent without asking; your own edits only when you say so. An
+  // engine upgrade that waits for its signature is finished here (spec 105-calm-output FR-014).
+  let finishedUpgrade: string | undefined;
   if (!o.noUpgrade) {
     const { porcelainPath, splitChanges, yoursNamed } = await import("../fleet/records.ts");
     const changed = (await git(["status", "--porcelain", "--untracked-files=all"])).stdout
       .split("\n")
       .filter(Boolean)
       .map(porcelainPath);
-    const { records, yours } = splitChanges(changed);
+    const waiting = await waitingUpgrade(P.repo, changed);
+    const { records, yours } = splitChanges(waiting ? [] : changed);
     ahead = Number((await git(["rev-list", "--count", `${remote}..HEAD`])).stdout.trim()) || 0;
     let send = changed.length > 0 || ahead > 0;
     const s = ui.phase("Send");
     if (yours.length) {
       s.note(
         `your changes: ${yours.slice(0, 5).map(yoursNamed).join(", ")}${yours.length > 5 ? ", ..." : ""}`,
+      );
+      ui.live(
+        `Your ${yours.length} change${yours.length > 1 ? "s" : ""}: ${yours.slice(0, 5).map(yoursNamed).join(", ")}${yours.length > 5 ? ", ..." : ""}`,
       );
       send = await ui.confirm(
         `  Send your ${yours.length} change(s) now, with the update (one signed commit)?`,
@@ -256,61 +350,71 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
     if (!send) {
       if (yours.length) {
         s.action(
-          "your changes stay here, not sent; the engine upgrade waits for them",
-          "bun run stolos apply, then bun run stolos update",
+          "Your changes stay here, not sent; the engine upgrade waits for them.",
+          "bun run stolos apply",
+          "E105-UNSENT",
         );
       }
       s.done(changed.length || ahead ? "nothing sent" : "nothing to send");
     } else {
       const what = [
+        ...(waiting ? [`engine upgrade to ${waiting.to}`] : []),
         ...records.map((r) => r.what),
         ...(yours.length ? [`${yours.length} change(s) of yours`] : []),
         ...(ahead ? [`${ahead} commit(s)`] : []),
       ].join("; ");
-      stdio.stdout.writeSync(`\n  Sending ${what} (stolos apply).\n\n`);
       const args = ["apply"];
       if (records.length && !yours.length) {
         args.push("-m", `${P.fleetId}: ${records.map((r) => r.what).join("; ")}`);
       }
       const r = await stolos(args);
-      if (r.code === 0) {
-        s.done(`sent: ${what}`);
-        ahead = 0;
-        dirty = (await git(["status", "--porcelain", "--untracked-files=no"])).stdout.trim();
-      } else {
-        s.action("not sent (stolos apply's messages are above)", "bun run stolos apply");
+      if (
+        !took(
+          s,
+          r,
+          "Nothing was sent: the send did not finish. Your files are safe.",
+          "bun run stolos apply",
+        )
+      ) {
         s.done();
+        return 1;
       }
+      s.done(`sent: ${what}`);
+      if (waiting) finishedUpgrade = waiting.to;
+      ahead = 0;
+      dirty = (await git(["status", "--porcelain", "--untracked-files=no"])).stdout.trim();
     }
+  }
+  if (finishedUpgrade) {
+    ui.verdictTitle = `Updated to ${finishedUpgrade}`;
+    return await onNewEngine(o, finishedUpgrade);
   }
 
   // 3. The engine: the newest Stolos release, and the pin.
   const e = ui.phase("Engine");
   const pin = readPin((await fs.readTextOr(path.join(P.repo, PIN_FILE))) ?? "");
-  const engineRepo = pin ? engineRepository(pin) : undefined;
+  const remoteUrl = pin ? engineRemote(pin) : undefined;
   let upgradeTo: string | undefined;
-  if (!pin || !engineRepo) e.done("not pinned to a release (an engine checkout): nothing to check");
+  if (!pin || !remoteUrl) e.done("not pinned to a release (an engine checkout): nothing to check");
   else {
-    e.status(`newest release of ${engineRepo}`);
-    const ls = await run([
-      "git",
-      "ls-remote",
-      "--tags",
-      "--refs",
-      `https://github.com/${engineRepo}.git`,
-    ]);
+    e.status("newest release of the engine");
+    const ls = await run(["git", "ls-remote", "--tags", "--refs", remoteUrl]);
     const newest = ls.ok ? newestTag(ls.stdout) : undefined;
     if (!newest) {
-      e.warn(`cannot read ${engineRepo}'s releases`, "check the network, then run this again");
+      ui.log(`   git ls-remote ${remoteUrl}: ${ls.stderr.trim()}`);
+      e.warn(
+        "The engine's newest release could not be read, so the engine was not checked.",
+        "bun run stolos update",
+        "E105-GITHUB",
+      );
       e.done(`pinned ${pin.tag}`);
     } else if (compare(parseTag(newest) ?? [0, 0, 0], parseTag(pin.tag) ?? [0, 0, 0]) <= 0) {
       e.done(`${pin.tag}, the newest release`);
     } else if (o.noUpgrade || dirty || ahead) {
       e.action(
-        `${newest} is out (pinned: ${pin.tag}): next, once your changes are sent`,
-        dirty || ahead
-          ? "bun run stolos apply, then bun run stolos update"
-          : "bun run stolos update (without --no-upgrade)",
+        `${newest} is out (pinned: ${pin.tag}): next, once your changes are sent.`,
+        dirty || ahead ? "bun run stolos apply" : "bun run stolos update",
+        "E105-UNSENT",
       );
       e.done();
     } else {
@@ -323,7 +427,8 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
           `${newest} is out (pinned: ${pin.tag}), but this checkout cannot sign a commit yet: ${blocking
             .map((k) => k.code)
             .join(", ")}`,
-          "a restored PC: bun run stolos vault restore <your backup ZIP>; otherwise: bun run stolos keys setup. Then: bun run stolos update",
+          "bun run stolos keys setup",
+          blocking[0]?.code ?? "E057-NO-KEY",
         );
         e.done();
       } else {
@@ -332,37 +437,73 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
       }
     }
   }
-  let upgraded = false;
-  if (upgradeTo) {
+  if (upgradeTo && pin) {
     // A fresh process with the engine pinned now: it validates, locks, and makes one signed commit.
-    stdio.stdout.writeSync(
-      `\n  Upgrading the engine to ${upgradeTo}: Git asks for your passphrase to sign it.\n\n`,
-    );
-    const { code } = await stolos(["fleet", "upgrade", upgradeTo]);
-    const u = ui.phase("Upgrade");
-    if (code === 0) {
-      upgraded = true;
-      u.done(`pinned to ${upgradeTo} (one signed commit)`);
-      // Spec 099: publish it too (stolos apply: verified, pushed); pushing is approval.
-      stdio.stdout.writeSync(`\n  Sending the upgrade to every machine (stolos apply).\n\n`);
-      const ap = await stolos(["apply"]);
-      const pub = ui.phase("Publish");
-      if (ap.code === 0)
-        pub.done(`on GitHub: every server moves to ${upgradeTo} within 15 minutes`);
-      else {
-        pub.fail(
-          "the upgrade is committed here but not sent (stolos apply's messages are above)",
-          "bun run stolos apply",
-        );
-      }
-    } else {
-      u.fail(
-        `fleet upgrade to ${upgradeTo} did not finish`,
-        `see its messages above; then: bun run stolos update`,
-      );
+    const up = ui.phase("Upgrade");
+    if (
+      !took(
+        up,
+        await stolos(["fleet", "upgrade", upgradeTo]),
+        `The engine upgrade to ${upgradeTo} did not finish. Nothing was sent.`,
+        "bun run stolos update",
+      )
+    ) {
+      up.done();
+      return 1;
     }
+    up.done(`pinned to ${upgradeTo} (one signed commit)`);
+    // Spec 099: publish it too (stolos apply: verified, pushed); pushing is approval.
+    const pub = ui.phase("Publish");
+    if (
+      !took(
+        pub,
+        await stolos(["apply"]),
+        "The upgrade is signed here but not sent.",
+        "bun run stolos apply",
+      )
+    ) {
+      pub.done();
+      return 1;
+    }
+    pub.done(`on GitHub: every server moves to ${upgradeTo} within 15 minutes`);
+    ui.verdictTitle = `Updated to ${upgradeTo}`;
+    await announce(pin.tag, upgradeTo);
+    return await onNewEngine(o, upgradeTo);
   }
+  return await rest(o, pin);
+}
 
+/** What the new engine brought (spec 105-calm-output FR-016): up to five bullets, and each operator action as a thing to do. */
+async function announce(from: string, to: string): Promise<void> {
+  const w = await whatsNew(from, to);
+  if (w.bullets.length) {
+    ui.outcome(`What's new in ${to}:`);
+    for (const b of w.bullets) ui.outcome(`  - ${b}`);
+  }
+  if (w.actions.length) {
+    const n = ui.phase("What's new");
+    for (const a of w.actions) n.action(a, "", "E105-OPERATOR");
+    n.done();
+  }
+}
+
+/**
+ * The rest of the update, on the engine that was just adopted (spec 105-calm-output FR-015): a
+ * fresh process, so what is reported is what runs, and its problems are this run's.
+ */
+async function onNewEngine(o: OperatorUpdateOptions, tag: string): Promise<number> {
+  const n = ui.phase(`The engine ${tag}`);
+  const r = await stolos(["update", "--no-upgrade", ...(o.noDoctor ? ["--no-doctor"] : [])]);
+  took(n, r, `The rest of the update on ${tag} did not finish.`, "bun run stolos update");
+  n.done();
+  return ui.problems.some((x) => x.level === "fail") ? 1 : 0;
+}
+
+/** Install the engine, repair keys, run the doctor: the end of every update. */
+async function rest(
+  o: OperatorUpdateOptions,
+  pin: { source: string; tag: string } | undefined,
+): Promise<number> {
   // The engine bun.lock holds, installed here: what stolos runs, and what VS Code checks fleet.ts against.
   if (pin) {
     const ed = ui.phase("Install");
@@ -371,12 +512,14 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
     const c = await installEngine(P.repo);
     if (c.ok) ed.done(`the engine ${pin.tag}, as bun.lock holds it`);
     else {
+      ui.log(`   bun install: ${c.why}`);
+      const integrity = /integrity|checksum|mismatch/i.test(c.why ?? "");
       ed.warn(
-        `the engine could not be installed: ${c.why}`,
-        /integrity|checksum|mismatch/i.test(c.why ?? "")
-          ? "stop: do not regenerate bun.lock (bun run stolos explain E046-LOCK-INTEGRITY)"
-          : "check the network, then run this again",
-        /integrity|checksum|mismatch/i.test(c.why ?? "") ? "E046-LOCK-INTEGRITY" : undefined,
+        integrity
+          ? "The engine does not match bun.lock. Stop: do not regenerate bun.lock."
+          : "The engine could not be installed on this PC.",
+        integrity ? "bun run stolos explain E046-LOCK-INTEGRITY" : "bun run stolos update",
+        integrity ? "E046-LOCK-INTEGRITY" : "E105-INSTALL",
       );
       ed.done();
     }
@@ -392,26 +535,18 @@ export async function operatorUpdate(o: OperatorUpdateOptions = {}): Promise<num
     );
   }
 
-  // 5. The doctor (in a fresh process: the engine may have just moved).
+  // 5. The doctor (in a fresh process, as a phase of this run: its problems are merged, once).
   if (!o.noDoctor) {
     const boot = await fs.exists(SECRETS.adminPasswordHash);
-    stdio.stdout.writeSync("\n");
     const r = boot ? await stolos(["boot", "doctor"]) : await stolos(["keys"]);
     const dr = ui.phase("Doctor");
-    const what = boot ? "boot doctor" : "stolos keys";
-    const again = boot ? "bun run stolos boot doctor" : "bun run stolos keys";
-    const notYet = r.pending ? `; ${r.pending} thing(s) not set up yet` : "";
-    // The update itself is done: what the doctor found is shown above, each with its fix.
-    if (r.code !== 0 || r.fails) {
-      dr.warn(
-        `${what}: ${r.fails || "some"} thing(s) to fix, each with its fix (above)${notYet}`,
-        again,
-      );
-    } else if (r.warns) {
-      dr.warn(`${what}: ${r.warns} warning(s), each with its fix (above)${notYet}`, again);
-    } else dr.done(`${what}: all well${notYet}`);
-    if (!dr.level || dr.level !== "ok") dr.done();
+    took(
+      dr,
+      r,
+      `${boot ? "boot doctor" : "stolos keys"} did not finish.`,
+      boot ? "bun run stolos boot doctor" : "bun run stolos keys",
+    );
+    dr.done();
   }
-  if (!upgraded && !pulled.length) ui.next.push("next: bun run stolos (where you are)");
   return ui.problems.some((x) => x.level === "fail") ? 1 : 0;
 }

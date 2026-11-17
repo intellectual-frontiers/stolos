@@ -62,6 +62,11 @@ no build. This file is the entry point for any agent; the constitution,
 - **Every push to `main` raises the version.** Run `bun run version bump` (0.1.0, 0.2.0, ...) in
   the same push; CI fails otherwise and tags the commit `v<version>` when it passes. The version
   lives in `src/archon/version.ts`; `package.json`'s follows it (`bun run version` writes both).
+- **Tell the operator in the commit** (spec 105-calm-output FR-016). When a change you release needs
+  the operator to do something (run a command, move a file, decide), add a line to the commit's body
+  that begins `Operator action:` and says it in one sentence (`Operator action: run bun run stolos
+vault backup`). `stolos update` shows the subjects of the commits between the old and the new
+  engine, and every such line as a thing for the person to do.
 - **Name no particular agent.** Instructions are this file; the agent layer is MCP (`.mcp.json`
   rendered for a fleet), limited by each server (Article 17).
 - **Never** put a secret, a token, or a person's data in this repository: it is public.

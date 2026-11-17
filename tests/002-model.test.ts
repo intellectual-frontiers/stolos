@@ -140,7 +140,7 @@ proves(
       r = await stolos(l, ["validate"]);
       assert(r.code !== 0, r.out);
       assertStringIncludes(r.out, "not-a-mac");
-      r = await stolos(l, ["build"]);
+      r = await stolos(l, ["build", "--verbose"]);
       assert(r.code !== 0, r.out);
       assertStringIncludes(r.out, "nothing rendered");
       assert(!(await fs.exists(rootfs("gamma"))), "an invalid model renders nothing");

@@ -12,13 +12,17 @@
  * @module
  */
 
+// Spec: 029-vault
+// Spec: 105-calm-output FR-017
 import { fs, path as paths, proc } from "@intellectual-frontiers/commons/ts/runtime";
 import { P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";
 import { readLedger, writeLedger } from "../core/secret-ledger.ts";
 import { labelFor } from "../model/secret-inventory.ts";
 import { assess, type Assessment, writePromptStatus } from "./state.ts";
-import { panelLines } from "./panel.ts";
+import { panelLines, secretsInWords } from "./panel.ts";
+
+export { secretsInWords };
 import { PRE_PUSH_HOOK } from "../identity/keys.ts";
 
 const DAY = 86_400_000;
@@ -30,8 +34,16 @@ export async function preparePanel(a?: Assessment): Promise<Assessment> {
   const x = a ?? (await assess());
   await writePromptStatus(x);
   const lines = panelLines(x, pcName());
-  if (lines) ui.panel = { lines, level: x.severity === "red" ? "red" : "amber" };
-  else delete ui.panel;
+  if (lines) {
+    ui.panel = {
+      lines,
+      level: x.severity === "red" ? "red" : "amber",
+      summary: {
+        text: `Your secrets changed since the last backup: ${secretsInWords(x)}`,
+        command: "bun run stolos vault backup",
+      },
+    };
+  } else delete ui.panel;
   return x;
 }
 

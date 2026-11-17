@@ -139,7 +139,7 @@ proves(
       const discover = () =>
         sb.run(
           "src/archon/main.ts",
-          ["--host", "alpha", "observe", "discover", "--check"],
+          ["--host", "alpha", "observe", "discover", "--check", "--verbose"],
           "",
           env,
         );

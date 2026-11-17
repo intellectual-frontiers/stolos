@@ -97,9 +97,10 @@ proves(
       assertEquals(await sh(repo, "git", "rev-list", "--all", "--count"), "0");
 
       // The first apply: one signed commit, verified, pushed.
-      r = await stolos(["apply", "-m", "lab: the fleet and its signers"]);
+      r = await stolos(["apply", "-m", "lab: the fleet and its signers", "--verbose"]);
       assertEquals(r.code, 0, r.out);
       assertStringIncludes(r.out, "signed by a key the servers trust");
+      assertStringIncludes(r.out, "Sent: every server applies it within 15 minutes");
       const head = await sh(origin, "git", "rev-parse", "main");
       assertEquals(
         await sh(origin, "git", "log", "-1", "--format=%s", "main"),
@@ -121,7 +122,7 @@ proves(
       );
 
       // Again: nothing to do.
-      r = await stolos(["apply"]);
+      r = await stolos(["apply", "--verbose"]);
       assertEquals(r.code, 0, r.out);
       assertStringIncludes(r.out, "up to date");
 
@@ -145,14 +146,14 @@ proves(
       r = await stolos(["apply"]);
       assertEquals(r.code, 0, r.out);
       assertStringIncludes(r.out, "notes, unsigned (t)");
-      assertStringIncludes(r.out, "1 commit(s) here are not signed by a fleet signer");
+      assertStringIncludes(r.out, "not signed by a fleet signer (your signed commit approves it)");
       const tip = await sh(origin, "git", "rev-parse", "main");
       assert((await checkTip(origin, tip, "", allowed)).ok, "servers accept GitHub's tip again");
       assertStringIncludes(
         await sh(origin, "git", "log", "-1", "--format=%s", "main"),
         "lab: approve 1 commit(s)",
       );
-      r = await stolos(["apply"]);
+      r = await stolos(["apply", "--verbose"]);
       assertStringIncludes(r.out, "up to date");
 
       // No passphrase is remembered: no file this left behind holds it (but the askpass helper

@@ -6,8 +6,9 @@
  * @module
  */
 // Spec: 101-ladder FR-006
+// Spec: 105-calm-output FR-001, FR-002
 import { proc } from "@intellectual-frontiers/commons/ts/runtime";
-import type { CommandTier } from "../ontology.auto.ts";
+import type { CommandTier, OutputClass } from "../ontology.auto.ts";
 
 /**
  * What a command may do, from least to most: read, change the repository, change a machine, or
@@ -54,6 +55,8 @@ export interface RunContext {
   json: boolean;
   /** -v: every item, as it happens. */
   verbose?: boolean;
+  /** -q: only one verdict line and the exit code (spec 105-calm-output FR-002). */
+  quiet?: boolean;
 }
 
 /** One archon command: its name, help, tier, arguments, and what it runs. The man pages, the MCP tools, and `archon help` all come from these. */
@@ -66,6 +69,11 @@ export interface Command {
   description: string;
   /** What it may do: read, write the repository, change the host, or destroy (spec 030: MCP serves up to the fleet's tier). */
   tier: Tier;
+  /**
+   * What it is for (spec 105-calm-output FR-001): a `report` is read as a whole and is verbose by
+   * default; an `action` does something and is calm by default. Every command declares one.
+   */
+  output: OutputClass;
   /** Tier when this flag is set (for example apply --check is read-only). */
   readOnlyWith?: string;
   /**
@@ -196,6 +204,12 @@ export const GLOBAL_ARGS: ArgSpec[] = [
     name: "verbose",
     type: "boolean",
     description:
-      "Show every item as it happens (also -v or ARCHON_VERBOSE=1); the run log always has everything.",
+      "Show every step as it happens, the green ones too, for any command (also -v or ARCHON_VERBOSE=1); the run log always has everything.",
+  },
+  {
+    name: "quiet",
+    type: "boolean",
+    description:
+      "Print one verdict line and exit with the code, nothing else (also -q); the run log still has everything.",
   },
 ];

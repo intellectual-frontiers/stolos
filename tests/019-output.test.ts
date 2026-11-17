@@ -30,7 +30,7 @@ function captured(o: ConstructorParameters<typeof Ui>[0] = {}): { ui: Ui; out: (
 
 proves(
   ["019-output FR-001"],
-  "019: one line per phase with a mark and a result; progress; each problem with its fix and log line, again under Needs attention",
+  "019: one line per phase with a mark and a result; progress; each problem once in the closing block with its code, the log keeps every line",
   async () => {
     const dir = await fs.makeTempDir({ prefix: "archon-ui-test-" });
     try {
@@ -64,20 +64,20 @@ proves(
       );
       // Items already right are not listed (they are in the log).
       assert(!out().includes("/etc/archon/host"));
-      // The problem when it happens, and again at the end with its fix and its line in the run log.
-      const at = lines.indexOf("== Needs attention ========================================");
+      // The closing block (spec 105-calm-output FR-006): the warning, then the verdict, which is the
+      // root cause of the failure, once, with its code; and no long log path on a problem line.
+      assert(lines.filter((l) => l.includes("sshd -t failed")).length === 2, out());
+      const at = lines.findIndex((l) => l.startsWith("[warn] dns:ipv4: no answer"));
       assert(at > 0, out());
       const end = lines.slice(at).join("\n");
+      assertStringIncludes(end, "[warn] dns:ipv4: no answer [E105-WARNING]");
       assertStringIncludes(
         end,
-        "[FAIL] files          /etc/ssh/sshd_config.d/50-archon.conf: sshd -t failed",
+        "!! /etc/ssh/sshd_config.d/50-archon.conf: sshd -t failed [E105-FAILED]",
       );
-      assertStringIncludes(end, "fix: sshd -t shows the line");
-      assertStringIncludes(end, "[warn] verify         dns:ipv4: no answer");
-      const logLine = end.match(/log: (.+):(\d+)/);
-      assert(logLine !== null, end);
-      assertEquals(logLine[1], log);
-      const logged = (await fs.readTextFile(log)).split("\n")[Number(logLine[2]) - 1] ?? "";
+      assert(!end.includes("log:"), "a calm closing block prints no log path");
+      const logged =
+        (await fs.readTextFile(log)).split("\n").find((l) => l.includes("FAIL /etc/ssh")) ?? "";
       assertStringIncludes(logged, "FAIL /etc/ssh/sshd_config.d/50-archon.conf: sshd -t failed");
       // Progress while working: a bar with n of total, redrawn in place on a terminal.
       const t = captured({ tty: true });

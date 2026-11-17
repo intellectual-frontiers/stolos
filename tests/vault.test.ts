@@ -42,7 +42,7 @@ async function vaultSandbox() {
   await put("mail.json", '{"token":"t1"}\n');
   await put("install-tokens.json", "[]\n");
   const archon = (args: string[], stdin = "", extra: Record<string, string> = {}) =>
-    sb.run("src/stolos/main.ts", args, stdin, extra);
+    sb.run("src/stolos/main.ts", [...args, "--verbose"], stdin, extra);
   return { home, secrets, archon, put };
 }
 

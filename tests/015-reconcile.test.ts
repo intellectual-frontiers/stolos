@@ -289,7 +289,7 @@ proves(
       );
       await fs.chmod(self, 0o755);
       const update = async () => {
-        const r = await proc.run([self, "update", "--host", "alpha"], {
+        const r = await proc.run([self, "update", "--host", "alpha", "--verbose"], {
           env: {
             ARCHON_REPO: checkout,
             ARCHON_FLEET: "lab",

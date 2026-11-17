@@ -101,6 +101,11 @@ stolos:IntegrationKind a owl:Class ;
     skos:definition "What a machine integrates as: discovered, adopted, with osquery, as a server or as a workstation."@en ;
     stolos:spec "069-integrate" .
 
+stolos:LineKind a owl:Class ;
+    rdfs:label "Line kind"@en ;
+    skos:definition "What a line of a run is: a step that went well, a problem, something for the person to do, something waiting, a hint, or an outcome the person needs."@en ;
+    stolos:spec "105-calm-output FR-003" .
+
 stolos:Listener a owl:Class ;
     rdfs:label "Listener"@en ;
     skos:definition "One of the three sockets the controller PC opens for Stolos (UDP 69 and TCP 8080 for the boot server, TCP 443 for the console over TLS): its protocol and port. Every other exchange is a route on one of them or is loopback-only (Article 29)."@en ;
@@ -115,6 +120,11 @@ stolos:OutcomeLevel a owl:Class ;
     rdfs:label "Outcome level"@en ;
     skos:definition "How a step ended, as every command line and console shows it, with its mark."@en ;
     stolos:spec "099-engine-update FR-007" .
+
+stolos:OutputClass a owl:Class ;
+    rdfs:label "Output class"@en ;
+    skos:definition "What a command is for: a report is read as a whole (verbose by default), an action does something (calm by default)."@en ;
+    stolos:spec "105-calm-output FR-001" .
 
 stolos:PairingCode a owl:Class ;
     rdfs:label "Pairing code"@en ;
@@ -145,6 +155,11 @@ stolos:TrustedNetwork a owl:Class ;
     rdfs:label "Trusted network"@en ;
     skos:definition "The site's LAN, or a zero trust mesh network the fleet chooses, on which the fleet's own short, content-authenticated exchanges run (Article 28)."@en ;
     stolos:spec "098-pair FR-008, FR-010" .
+
+stolos:Verbosity a owl:Class ;
+    rdfs:label "Verbosity"@en ;
+    skos:definition "How much of a run reaches the screen: nothing but a verdict line, only what needs a person, every line, or JSON."@en ;
+    stolos:spec "105-calm-output FR-002" .
 
 stolos:ascii a owl:DatatypeProperty ;
     rdfs:domain stolos:OutcomeLevel ;
@@ -285,6 +300,42 @@ stolos:kind-workstation a stolos:MachineKind ;
     skos:notation "workstation" ;
     stolos:spec "020-workstation" .
 
+stolos:line-hint a stolos:LineKind ;
+    rdfs:label "hint"@en ;
+    skos:definition "An optional feature that is merely off: shown at most once a week for each hint, and always with --verbose."@en ;
+    skos:notation "hint" ;
+    stolos:spec "105-calm-output FR-008" .
+
+stolos:line-outcome a stolos:LineKind ;
+    rdfs:label "outcome"@en ;
+    skos:definition "A line the person needs (what was sent, what happens next): always shown."@en ;
+    skos:notation "outcome" ;
+    stolos:spec "105-calm-output FR-003" .
+
+stolos:line-problem a stolos:LineKind ;
+    rdfs:label "problem"@en ;
+    skos:definition "A failure or a warning (a cross or a warning mark): always shown, with its code."@en ;
+    skos:notation "problem" ;
+    stolos:spec "105-calm-output FR-003" .
+
+stolos:line-step a stolos:LineKind ;
+    rdfs:label "step"@en ;
+    skos:definition "A step or phase that went well: shown only with --verbose."@en ;
+    skos:notation "step" ;
+    stolos:spec "105-calm-output FR-003" .
+
+stolos:line-waiting a stolos:LineKind ;
+    rdfs:label "waiting"@en ;
+    skos:definition "Waiting on time or on someone else (an hourglass): shown in the closing block."@en ;
+    skos:notation "waiting" ;
+    stolos:spec "105-calm-output FR-003" .
+
+stolos:line-yours a stolos:LineKind ;
+    rdfs:label "yours"@en ;
+    skos:definition "Something that is the person's to do (a lightning mark): always shown, with its command."@en ;
+    skos:notation "yours" ;
+    stolos:spec "105-calm-output FR-003" .
+
 stolos:listener-boot-http a stolos:Listener ;
     rdfs:label "boot HTTP"@en ;
     skos:definition "The boot server's plain HTTP (UEFI HTTP Boot and GRUB speak only plain HTTP); also door A of pairing."@en ;
@@ -365,6 +416,18 @@ stolos:outcome-warning a stolos:OutcomeLevel ;
     stolos:ascii "[!]" ;
     stolos:emoji "⚠️" ;
     stolos:spec "019-output" .
+
+stolos:output-action a stolos:OutputClass ;
+    rdfs:label "action"@en ;
+    skos:definition "Does something (update, apply, upgrade, pair, adopt, back up): calm by default, only what needs a person is shown."@en ;
+    skos:notation "action" ;
+    stolos:spec "105-calm-output FR-001" .
+
+stolos:output-report a stolos:OutputClass ;
+    rdfs:label "report"@en ;
+    skos:definition "Meant to be read by a person as a whole (a doctor, a status, a long-running server): verbose by default, every line shown."@en ;
+    skos:notation "report" ;
+    stolos:spec "105-calm-output FR-001" .
 
 stolos:pathPrefix a owl:DatatypeProperty ;
     rdfs:domain stolos:DevicePath ;
@@ -626,6 +689,30 @@ stolos:tier-repo a stolos:CommandTier ;
     skos:definition "Writes the fleet repository."@en ;
     skos:notation "repo" ;
     stolos:spec "030-agent-layer FR-003" .
+
+stolos:verbosity-calm a stolos:Verbosity ;
+    rdfs:label "calm"@en ;
+    skos:definition "Problems, what is the person's to do and the outcome lines, progress while working; a step that went well is not printed."@en ;
+    skos:notation "calm" ;
+    stolos:spec "105-calm-output FR-002" .
+
+stolos:verbosity-json a stolos:Verbosity ;
+    rdfs:label "json"@en ;
+    skos:definition "Nothing drawn: the result as JSON (--json)."@en ;
+    skos:notation "json" ;
+    stolos:spec "105-calm-output FR-002" .
+
+stolos:verbosity-quiet a stolos:Verbosity ;
+    rdfs:label "quiet"@en ;
+    skos:definition "One verdict line and the exit code, nothing else (--quiet)."@en ;
+    skos:notation "quiet" ;
+    stolos:spec "105-calm-output FR-002" .
+
+stolos:verbosity-verbose a stolos:Verbosity ;
+    rdfs:label "verbose"@en ;
+    skos:definition "Every line, steps that went well included (--verbose)."@en ;
+    skos:notation "verbose" ;
+    stolos:spec "105-calm-output FR-002" .
 
 <https://intellectual-frontiers.github.io/stolos/ontology> a owl:Ontology ;
     dcterms:description "The terms of Stolos, the fleet engine: the machines of a fleet, its signers and decisions, its checks and findings, the code lists the engine branches on, and the ladder its repository is built on."@en ;

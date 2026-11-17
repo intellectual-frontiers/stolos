@@ -1351,7 +1351,7 @@ proves(
     const now = NOW;
     assertEquals(
       accessDoctor({ configured: false, unused: 0, devices: 0 }, now, [], "linux")[0]?.level,
-      "pending",
+      "hint",
     );
     const lines = accessDoctor(
       {

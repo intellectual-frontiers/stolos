@@ -862,7 +862,7 @@ proves(
       const stolos = (args: string[]) =>
         sb.run("src/stolos/main.ts", args, "", { ...env, ARCHON_REPO: repo, ARCHON_FLEET: "lab" });
       assertEquals((await stolos(["keys", "setup"])).code, 0);
-      let r = await stolos(["apply", "-m", "lab: the fleet"]);
+      let r = await stolos(["apply", "-m", "lab: the fleet", "--verbose"]);
       assertEquals(r.code, 0, r.out);
       assertStringIncludes(r.out, "the first push: nothing to compare with");
       const base = await sh(origin, "git", "rev-parse", "main");
@@ -877,7 +877,7 @@ proves(
           "capabilities: foundation().filter((_, i) => i !== 4),",
         ),
       );
-      r = await stolos(["apply", "-m", "lab: beta"]);
+      r = await stolos(["apply", "-m", "lab: beta", "--verbose"]);
       assertEquals(r.code, 1, r.out);
       const changes = r.out.indexOf("Changes");
       const impact = r.out.indexOf("Compliance impact");
@@ -889,7 +889,7 @@ proves(
       assertEquals(await sh(origin, "git", "rev-parse", "main"), base, "nothing pushed");
 
       // --approve: the approval is a trailer of the one signed commit, pushed.
-      r = await stolos(["apply", "-m", "lab: beta", "--approve", "updates/beta"]);
+      r = await stolos(["apply", "-m", "lab: beta", "--approve", "updates/beta", "--verbose"]);
       assertEquals(r.code, 0, r.out);
       assert(r.out.indexOf("Compliance impact") < r.out.indexOf("Commit"), r.out);
       assertStringIncludes(
@@ -900,7 +900,7 @@ proves(
 
       // Turning them back on strengthens it: a pass, and nothing blocks.
       await fs.writeTextFile(beta, before);
-      r = await stolos(["apply", "-m", "lab: beta again"]);
+      r = await stolos(["apply", "-m", "lab: beta again", "--verbose"]);
       assertEquals(r.code, 0, r.out);
       assertStringIncludes(r.out, "0 control(s) weakened, 1 strengthened");
     } finally {

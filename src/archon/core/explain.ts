@@ -19,6 +19,7 @@
  * @module
  */
 // Spec: 052-self-describing
+// Spec: 105-calm-output FR-009, FR-013
 
 import { guideRef, guideUrl } from "./guides.ts";
 
@@ -38,6 +39,104 @@ export interface Explanation {
 
 /** Every explanation, by code. */
 export const EXPLAIN: Record<string, Explanation> = {
+  "E105-RUNTIME-OLD": {
+    title: "Bun is older than the version Stolos is pinned to",
+    what: "The Bun on this PC is older than the pinned version.",
+    why: "Bun was installed before the pin moved.",
+    fix: "bun upgrade",
+    doc: "fleet-repository",
+  },
+  "E105-GITHUB": {
+    title: "GitHub could not be reached",
+    what: "A step that needs GitHub (fetch, the list of releases) got no answer; nothing was changed.",
+    why: "The network is down, or the GitHub sign-in expired.",
+    fix: "gh auth status",
+    doc: "fleet-repository",
+  },
+  "E105-CONFLICT": {
+    title: "Your commits and GitHub's went different ways",
+    what: "Your commits and the new ones on GitHub change the same lines, or you have changes not committed; nothing was moved.",
+    why: "Someone else changed the fleet while you did.",
+    fix: "git pull --rebase",
+    doc: "fleet-repository",
+  },
+  "E105-INSTALL": {
+    title: "The engine could not be installed on this PC",
+    what: "bun install --frozen-lockfile failed; the run log has its raw message.",
+    why: "The network, or a full disk.",
+    fix: "bun run stolos update",
+    doc: "fleet-repository",
+  },
+  "E105-OPERATOR": {
+    title: "The engine release asks you to do something",
+    what: "A commit of the engine you just adopted says the operator has to act (an Operator action line).",
+    why: "A change in the engine needs a decision or a command only you can make.",
+    fix: "Do what the line says.",
+    doc: "fleet-repository",
+  },
+  "E105-FAILED": {
+    title: "A step failed",
+    what: "A step of the command stopped; the command's own message says which.",
+    why: "See the run log for the raw message (stolos log).",
+    fix: "stolos log --last 40",
+    doc: "fleet-repository",
+  },
+  "E105-WARNING": {
+    title: "Something needs a look",
+    what: "A step finished, with something that is worth a look.",
+    why: "See the run log for the raw message (stolos log).",
+    fix: "stolos log --last 40",
+    doc: "fleet-repository",
+  },
+  "E105-YOURS": {
+    title: "A step is yours to take",
+    what: "Nothing is wrong: this is a step only you can take (send a change, back up, approve).",
+    why: "Stolos does not take it for you: it needs your passphrase, your decision or your hands.",
+    fix: "The command shown under it.",
+    doc: "fleet-repository",
+  },
+  "E105-BACKUP": {
+    title: "Secrets changed since the last backup",
+    what: "Secrets on this PC are newer than its last backup; if this PC failed now they would have to be recreated.",
+    why: "A command made or changed them (a key, a token, a deploy key).",
+    fix: "bun run stolos vault backup (then move the ZIP it makes somewhere safe)",
+    doc: "boot-machine",
+  },
+  "E105-SIGN-PASSPHRASE": {
+    title: "The passphrase did not unlock your daily key",
+    what: "Git could not sign: the passphrase typed was not the one of your daily signing key. Nothing was sent and your files are safe.",
+    why: "A typo, or another key's passphrase.",
+    fix: "bun run stolos update (type the passphrase of your daily key; it is never stored)",
+    doc: "fleet-repository",
+  },
+  "E105-UPGRADE-WAITING": {
+    title: "An engine upgrade is waiting for its signature",
+    what: "An earlier engine upgrade changed package.json and bun.lock but was not signed.",
+    why: "Signing failed or was cancelled (a wrong passphrase).",
+    fix: "bun run stolos update (it signs the upgrade and sends it)",
+    doc: "fleet-repository",
+  },
+  "E105-UNSENT": {
+    title: "Changes here are not sent yet",
+    what: "Commits or files in this checkout are not on GitHub, so no server has them.",
+    why: "They were made here and not sent yet; pushing is the approval.",
+    fix: "bun run stolos apply",
+    doc: "fleet-repository",
+  },
+  "E105-FILE-LOCKED": {
+    title: "A file could not be changed because another program holds it",
+    what: "The system refused to change or remove a file (EPERM, EBUSY): another program has it open, or this account may not touch it.",
+    why: "An editor, a virus scanner or a sync client holds the file.",
+    fix: "Close the program that holds it, then run the command again.",
+    doc: "fleet-repository",
+  },
+  "P105-WAITING": {
+    title: "Waiting on time or on someone else",
+    what: "Nothing is wrong: this is expected to become ready by itself or when someone else acts.",
+    why: "It depends on time (a certificate, a timer) or on another person.",
+    fix: "Run the command again later.",
+    doc: "fleet-repository",
+  },
   "E046-LOCK-INTEGRITY": {
     title: "The engine's package does not match bun.lock",
     what: "bun install --frozen-lockfile refused the engine: what it downloaded is not the commit, with the integrity, that bun.lock holds.",
@@ -269,6 +368,11 @@ const PATTERNS: Array<[RegExp, string]> = [
   [
     /Integrity check failed|integrity.*bun\.lock|lockfile.*(mismatch|integrity)/i,
     "E046-LOCK-INTEGRITY",
+  ],
+  [/incorrect passphrase|bad passphrase|Load key .*: incorrect/i, "E105-SIGN-PASSPHRASE"],
+  [
+    /\bEPERM\b|\bEBUSY\b|operation not permitted|being used by another process/i,
+    "E105-FILE-LOCKED",
   ],
   [/Host key verification failed|REMOTE HOST IDENTIFICATION HAS CHANGED/, "E047-HOST-KEY"],
   [/Permission denied \(publickey/, "E004-SSH-KEY"],

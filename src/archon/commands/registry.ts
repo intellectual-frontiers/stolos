@@ -9,6 +9,7 @@
 // Spec: 099-engine-update FR-001
 // Spec: 100-remote-access FR-003, FR-005, FR-008
 // Spec: 103-three-ports FR-008, FR-009
+// Spec: 105-calm-output FR-001, FR-010
 
 import { fs, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { CHOICE_ARGS, chooseData, CONFIRM_DESTROY_ARG } from "../model/durable.ts";
@@ -28,6 +29,7 @@ async function requireHost(name: string): Promise<HostDef> {
 export const COMMANDS: Command[] = [
   {
     name: "validate",
+    output: "report",
     summary: "Validate the fleet and every host (TypeScript); change nothing",
     description: `Loads fleets/<fleet>/fleet.ts and fleets/<fleet>/hosts/*/host.ts, resolves each host's plan, and runs every validation rule (spec 002). Each problem is reported with where, what, and a fix. Exits non-zero when anything is wrong.`,
     tier: "read",
@@ -45,6 +47,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "build",
+    output: "action",
     summary: "Validate, then render every host's files into out/",
     description: `Validates the model (an invalid model renders nothing, Article 10), then renders each host's files under out/hosts/<host>/rootfs/. Deterministic: building twice changes no file.`,
     tier: "repo",
@@ -57,6 +60,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "apply",
+    output: "action",
     aliases: ["push"],
     summary: "Your changes to the fleet, to every machine: check, build, one signed commit, push",
     description: `One command instead of build, git add, git commit, and git push (spec 060; stolos push is the same command). In order, stopping at the first problem with its fix: checks (a fleet is chosen, this is its branch, your keys can sign); catches up with GitHub (fast-forward only; your uncommitted edits are kept); builds (validate and render: an invalid model commits nothing); shows what changes, by fleet and host; shows its compliance impact (spec 074: the SCF controls the change weakens or strengthens, with their framework requirements; with compliance.gate { block: "weakens" } in fleet.ts, a weakening without an accepted risk or an approval commits nothing, and --approve <keys> approves it in the signed commit); makes one signed commit (your passphrase, once; -m gives the message, else it is written from what changed); verifies that servers will trust it; and pushes. Every machine applies it within 15 minutes. With nothing new, it says so and does nothing. --check stops before the commit.`,
@@ -105,6 +109,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "fleet use",
+    output: "action",
     summary: "Choose which fleet of this repository archon works on (remembered here)",
     description: `For a repository with more than one fleet (fleets/<id>/): every archon command in this checkout is then for that fleet, at once, in every terminal, until you choose another. The choice is kept in .git/stolos/fleet, so it is never committed and each checkout makes its own. --fleet <id> (or ARCHON_FLEET) still chooses another for one command. fleet init chooses the fleet it creates.`,
     tier: "read",
@@ -126,6 +131,7 @@ export const COMMANDS: Command[] = [
   // Spec 082: a provider's clients, each its own repository, vault, and signers.
   {
     name: "clients add",
+    output: "action",
     summary: "Register a client's checkout on this provider's PC (spec 082)",
     description: `Spec 082. For managed service providers and virtual CISOs: adds a client to this PC's registry of clients (clients.json in your Stolos config folder, never in any repository): its id, its title, the path of its checkout (a clone of the client's own fleet repository), and the fleet in it. One checkout belongs to one client. Then any command runs for that client with --client <id>: its repository, its state, its secrets, and its key store on this PC, apart from every other client's.`,
     tier: "read",
@@ -164,6 +170,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "clients list",
+    output: "report",
     summary: "The clients registered on this PC, and which one is chosen (spec 082)",
     description: `Spec 082. Each client's id, title, fleet, and checkout; the chosen one (clients use) is marked with *. With --json, the registry as JSON.`,
     tier: "read",
@@ -176,6 +183,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "clients remove",
+    output: "action",
     summary: "Forget a client on this PC (nothing is deleted) (spec 082)",
     description: `Spec 082. Removes the client from this PC's registry. Its checkout, its state and secrets on this PC, and its repository stay as they are.`,
     tier: "read",
@@ -196,6 +204,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "clients use",
+    output: "action",
     summary: "Choose the client every stolos command is for (spec 082)",
     description: `Spec 082. Every stolos command on this PC is then for that client (its checkout, state, and secrets), in every terminal, until you choose another; --client <id> still chooses another for one command. Without an id, says which is chosen; --clear goes back to the fleet repository you are in.`,
     tier: "read",
@@ -211,6 +220,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "clients summary",
+    output: "report",
     summary: "Every client's compliance in numbers, each read on its own (spec 082)",
     description: `Spec 082. For each client, read in its own scope: controls passing, failing, partial, without evidence, and with stale evidence; controls changed since --since (default a day) and how many got worse; the last observation; open POA&M items; and the newest evidence bundle's date. Numbers and dates only: nothing of what any client holds. With --json, as JSON.`,
     tier: "read",
@@ -232,6 +242,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "clients report",
+    output: "report",
     summary: "One compliance report per client, each in its own folder, and the summary (spec 082)",
     description: `Spec 082. Writes <out>/<client>/report.md, summary.json, and compliance.json for each client (each read in its own scope, so each folder holds that client's data only), then <out>/summary.md and summary.json (numbers only). A folder inside any client's checkout is refused. Each client's signed evidence bundle is still stolos --client <id> evidence export.`,
     tier: "read",
@@ -265,6 +276,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "clients console",
+    output: "report",
     summary: "Every client in one Stolos Console: switch between them, see the summary (spec 082)",
     description: `Spec 082. The Stolos Console for a provider, on 127.0.0.1 with a one-time launch link: /clients is the summary across clients (numbers only); opening a client starts a session for that client alone (its own pages, REST API, and commands, run in its checkout). Switching to another client ends that session and starts a new one. Ctrl+C stops it.`,
     tier: "read",
@@ -284,6 +296,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "fleet init",
+    output: "action",
     summary: "Create the fleet from your GitHub identity (boot machine, once)",
     description: `With an id, the fleet is fleets/<id>/ of this repository (ARCHON_REPO, else the nearest folder holding fleets/, else the working directory); in a new, empty repository it also writes package.json pinned to this engine's release, archon.ts, stolos.ts, .gitignore, and bun.lock (specs 046 and 096). Reads your GitHub account with gh (login, ID, name, the noreply commit address) and your public SSH keys from github.com/<login>.keys, asks for your Unix account name and an admin password, and writes fleets/<fleet>/fleet.ts (spec 003). If fleets/<fleet>/fleet.ts already exists (a rebuilt boot machine), it is kept, with its admin account, and only the password hash and this checkout's git identity are set again; --rewrite starts the file over. Only the password's SHA-512 crypt hash is kept, in this machine's secret store, never in the repository (Article 13). Runs on Windows or Linux.`,
     tier: "repo",
@@ -345,6 +358,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "fleet status",
+    output: "report",
     summary: "Every server and workstation: last install, and how to reach and observe it",
     description: `Lists every host in the model with its last install as it recorded it (the host's own archon.sql (opt-in installed): when, checks, problems) and whether it is armed, then how to reach and observe each: ssh, Cockpit's address (servers; the router decides who reaches it), archon observe, btop, archon observe tui, archon verify. On the boot machine it also shows the address each host last installed from. Read-only.`,
     tier: "read",
@@ -358,6 +372,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "host add",
+    output: "action",
     summary: "Add a host: its model, its GitHub deploy key, and one armed install",
     description: `Writes fleets/<fleet>/hosts/<name>/host.ts and registration.ts, creates the host's ed25519 deploy key with ssh-keygen and registers it on the repository read-only (hosts never push, spec 048) through your gh login (the private half stays in this machine's secret store), arms the host for one install by archon-boot, builds, commits, and pushes the new model (the install clones main; --no-push leaves it). Say how its machine is recognized when it network-boots, with exactly one of --claim (the next unknown machine to network-boot in 30 minutes becomes the host; its MAC is learned from it) or --mac-address <mac> (only that network card). The installer erases no disk that is not blank unless --confirm-destroy <name> is given, typed by a person (spec 051).`,
     tier: "repo",
@@ -432,6 +447,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "where",
+    output: "report",
     summary:
       "Where you are, and the one thing to do next (also: bun run stolos, with no arguments)",
     description: `In a fleet repository (the boot machine, a workstation's checkout): every step from a new repository to running hosts (the fleet, the engine pin and lock, signers and this machine's signing, the admin password, mail and Cloudflare tokens, each server, and whether everything is committed and pushed), each marked done, next, to do, or not set up yet, as the real state says, with the one command to run next. Nothing about progress is stored: it is computed each time. On a host: archon state (spec 053).`,
@@ -444,6 +460,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "explain",
+    output: "report",
     summary: "What a problem's code means, its likely cause, and its fix",
     description: `Every problem archon can explain has a stable code (E for a problem, P for something not set up yet), shown as "explain: archon explain <code>" under it. Without a code, lists them all. Runs anywhere, offline (spec 052).`,
     tier: "read",
@@ -464,7 +481,42 @@ export const COMMANDS: Command[] = [
     },
   },
   {
+    name: "log",
+    output: "report",
+    summary: "The last run's log, or where it is",
+    description: `Prints the log of the last run of this command (every step, including the raw system messages a calm run keeps off the screen), or with --path where it is. --last N prints only its last N lines. Runs offline (spec 105-calm-output).`,
+    tier: "read",
+    place: "pc",
+    args: [
+      { name: "last", type: "string", description: "Only the last N lines." },
+      { name: "path", type: "boolean", description: "Print only where the log is." },
+    ],
+    examples: [
+      { cmd: "bun run stolos log --path", text: "Where the last run's log is." },
+      { cmd: "bun run stolos log --last 40", text: "The end of the last run's log." },
+    ],
+    async run(a: Parsed): Promise<number> {
+      const { lastLogPath } = await import("../core/ui.ts");
+      const file = lastLogPath();
+      if (file === undefined) {
+        stdio.stdout.writeSync("no run log yet\n");
+        return 1;
+      }
+      if (a["path"]) {
+        stdio.stdout.writeSync(`${file}\n`);
+        return 0;
+      }
+      const lines = (await fs.readTextFile(file)).replace(/\n$/, "").split("\n");
+      const n = Number(a["last"]);
+      stdio.stdout.writeSync(
+        `${(Number.isInteger(n) && n > 0 ? lines.slice(-n) : lines).join("\n")}\n`,
+      );
+      return 0;
+    },
+  },
+  {
     name: "state",
+    output: "report",
     summary: "What this machine recorded about itself: install, latest verify, switches, data",
     description: `Reads this machine's own archon.sql (spec 048): its install record, its latest verify, the operators' switches (pg, s3, smb), and whether it holds durable data. Fleet status on the boot machine asks each server for this over MCP; nothing is pushed to Git.`,
     tier: "read",
@@ -476,6 +528,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "query",
+    output: "report",
     summary: "Ask this machine one SQL question through osquery (read-only, allowlisted tables)",
     description: `Runs one SELECT through osqueryi, with Archon's own tables (archon_install, archon_verify, archon_prov, archon_optin, from archon.sql) next to osquery's. This server limits it: one statement, only tables on the allowlist (never shadow, process_envs, curl, file, yara, ...), at most 1000 rows, 20 seconds (spec 048, Article 17).`,
     tier: "read",
@@ -497,6 +550,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "fleet upgrade",
+    output: "action",
     summary: "Move this repository to another released engine version, locked and signed",
     description: `Run in the fleet repository, on the boot machine or a workstation. Checks that the tag is a release (the engine's own version.ts at that tag says the same version), refuses an older version unless --downgrade, rewrites the engine's release URL in package.json, runs bun install so bun.lock holds the new release's integrity (hosts install with --frozen-lockfile, so the lock is what makes your signature cover the engine's code), validates every fleet with the new engine, and makes one signed commit of package.json and bun.lock. Send it with stolos apply to approve it (stolos update does all of this, and the apply, by itself: spec 099). If anything fails, nothing is committed (spec 046; the fleet-repository guide (bun run stolos docs fleet-repository)).`,
     tier: "repo",
@@ -534,6 +588,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "fleet trust",
+    output: "action",
     summary: "Trust every host's SSH keys from Git (registration.ts) in your known_hosts",
     description: `On a workstation or the boot machine: writes each registered host's SSH host public keys (fleets/<fleet>/hosts/<host>/registration.ts, written by stolos host add) into your known_hosts, for every name it has (host, DNS name, address, web name), replacing older lines. Plain ssh and MCP clients then check each server against Git, never trusting a first connection blindly. stolos fleet status and fleet query do the same on their own, with known_hosts.auto (spec 047).`,
     tier: "repo",
@@ -547,6 +602,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "signers",
+    output: "report",
     summary: "Who may approve this fleet's changes, and your own signing setup",
     description: `Lists the fleet's signers (fleets/<fleet>/signers.ts): each one's role (daily, which approves changes; recovery, kept offline to replace a lost or stolen daily key), key, and when it was added. Then checks your own signing setup: Git signs commits with SSH, the key is protected by a passphrase, and it is not loaded in an ssh-agent (so every signature asks you, and an agent cannot approve on its own). A host applies only a tip of main signed by one of these keys (spec 047, Article 9).`,
     tier: "read",
@@ -559,6 +615,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "signers add",
+    output: "action",
     summary: "Add a signer (or replace one by name) in the fleet's signers.ts",
     description: `Writes fleets/<fleet>/signers.ts in its fixed form. --key is the public key or its .pub file. Hosts accept the new list only from a commit signed by a key already on it: commit with git commit -S and push (spec 047).`,
     tier: "repo",
@@ -581,6 +638,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "signers remove",
+    output: "action",
     summary: "Remove a signer from the fleet's signers.ts",
     description: `Removes the signer by name. Commit signed by another listed key and push; hosts stop accepting the removed key once they apply that commit (spec 047).`,
     tier: "repo",
@@ -601,6 +659,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "signers trust",
+    output: "action",
     summary: "Emergency: trust a signing key on this host, typed by a person here",
     description: `For when every signing key is lost: a person logged in to the host (never an agent, never over MCP) trusts a new public key in /etc/archon/allowed_signers.local, and the mailbox is told. Then add it to the fleet's signers.ts, commit signed by it, push, and remove the local file (spec 047).`,
     tier: "mutate",
@@ -624,6 +683,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "keys",
+    output: "report",
     summary: "Your signing keys: every check, and the one command that fixes each",
     description: `Checks this PC's signing setup for the fleet (spec 057): OpenSSH can sign (8.2 or newer); your daily key exists, is locked by a passphrase, and is not in an ssh-agent; Git signs every commit in this repository with it; signers.ts lists it; a recovery key is listed, its private file is not on this PC, and it was checked in the last six months; and every push is checked first. Each problem shows its code (archon explain E057-...) and its fix, usually bun run stolos keys setup. Changes nothing; never asks for a passphrase. Exits 1 when signing does not work.`,
     tier: "read",
@@ -636,6 +696,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "keys setup",
+    output: "action",
     summary: "Set up (or repair) signing on this PC: keys, Git, signers.ts, the push check",
     description: `Does only what is missing, so it is safe to run again at any time (spec 057): checks OpenSSH; makes your daily key (~/.ssh/fleet-signing; ssh-keygen asks for its passphrase, which is never stored); sets Git, for this repository only, to sign every commit with it; lists it in signers.ts; makes a recovery key in this PC's key store (beside the secrets, so every backup holds it) and lists it; installs the pre-push check; and makes one test signature when anything changed (or with --test). Never overwrites a key.`,
     tier: "repo",
@@ -655,6 +716,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "keys check-recovery",
+    output: "report",
     summary: "Prove the recovery key still works (a test signature; changes nothing)",
     description: `Checks that the key store's recovery key (or --key <file>) is the fleet's recovery key and that you still know its passphrase, by signing a test message and verifying it against signers.ts. Records the date on this PC: stolos keys and boot doctor remind you after six months (spec 057).`,
     tier: "read",
@@ -675,6 +737,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "keys rotate",
+    output: "action",
     summary: "Replace your daily key with a new one, approved by the current one",
     description: `Makes a new daily key, puts it in signers.ts in place of the current one (same signer name), and commits that alone, signed with the current key. Then the new key takes the old one's place (the old pair is kept as <file>.retired-<date>, never used again); Git's settings do not change. If interrupted, run it again: it continues. Push to approve (spec 057).`,
     tier: "repo",
@@ -688,6 +751,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "keys lost",
+    output: "action",
     summary: "Your daily key is lost or stolen: replace it, approved by the recovery key",
     description: `Makes a new daily key (with --stolen, the old one still here is retired first; without it, a key that is here and listed is left alone), puts it in signers.ts in place of the lost one, and commits that alone, signed with the recovery key you pass. Once pushed, servers stop trusting the old key. If interrupted, run it again: it continues (spec 057).`,
     tier: "repo",
@@ -713,6 +777,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "keys rotate-recovery",
+    output: "action",
     summary:
       "Replace the recovery key, approved by the old one (or by the daily key if it is lost)",
     description: `Makes a new recovery key in the key store, tests it with a signature, puts it in signers.ts in place of the old one (same signer name), and commits that alone, signed with the OLD recovery key (the key store's, or --recovery <file>), which proves you still hold it. The old pair stays in the key store as fleet-recovery.retired-<date>. With --old-lost, the daily key signs instead, and it says so: a copied daily key could do the same. If interrupted, run it again: it continues; once done, it does nothing (spec 057).`,
@@ -744,6 +809,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "keys check-push",
+    output: "report",
     summary: "The pre-push check: what you push is signed by a key the fleet trusts",
     description: `Run by Git before each push (the hook keys setup installs): each pushed tip of the fleet's branch must be signed by a key signers.ts lists as of what the remote has now, the same check servers make (spec 047). Refuses the push otherwise, with the fix. Skip it once with git push --no-verify.`,
     tier: "read",
@@ -756,6 +822,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "host bootstrap",
+    output: "action",
     summary: "Finish a host whose Ubuntu was installed by hand (over SSH)",
     description: `For a server installed from Ubuntu's ISO (or any other way) instead of by network boot: copies the host's first-boot files and its deploy key over SSH and runs the same first boot with sudo (spec 005). Run it from the boot machine after stolos host add.`,
     tier: "repo",
@@ -777,6 +844,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "device add",
+    output: "action",
     summary:
       "Add a device (printer, router, switch, NAS, camera, UPS) read over SNMPv3: encrypted, read-only",
     description: `Spec 069. Records the device in fleets/<fleet>/devices/<name>/device.ts, asks for its SNMPv3 passphrases here (not echoed; from the Stolos Console, in the console's terminal) and keeps them in this PC's vault, then reads it once: model, serial, firmware, uptime, contact and location. It shows where to make a read-only SNMPv3 user on common devices. Only SNMPv3 with authentication and privacy (authPriv): never v1 or v2c. Stolos only reads (GET and GETNEXT).`,
@@ -856,6 +924,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "device observe",
+    output: "action",
     summary: "Read every device (or one) now over SNMPv3, and record what it said in Git",
     description: `Spec 069. Writes fleets/<fleet>/devices/<name>/observed.ts (GENERATED). Keep it with bun run stolos apply.`,
     tier: "repo",
@@ -874,6 +943,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "device check",
+    output: "report",
     summary:
       "The devices' policies: observed, encrypted SNMPv3, an owner and location, restarted for firmware",
     description: `Spec 069. From the last observations, each with its SCF controls. Exits 1 when any fails; --json for auditors.`,
@@ -893,6 +963,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "device remove",
+    output: "action",
     summary: "Stop reading a device: its files and its SNMP passphrases go",
     description: `Spec 069. Removes fleets/<fleet>/devices/<name>/ and its passphrases from the vault. Remove the SNMPv3 user on the device too.`,
     tier: "repo",
@@ -912,6 +983,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "host integrate",
+    output: "action",
     summary:
       "The one line to run on a machine to bring it into the fleet (discover, adopt, server, workstation)",
     description: `Spec 069. Prints the command to run on the machine itself (Linux, macOS, WSL: integrate.sh; Windows: integrate.windows.ps1), at this engine's release, with the fleet filled in. It says what it will do, asks once, and ends with a check-in code to paste back here (or in the Stolos Console). --as discover changes nothing on the machine; adopt adds the read-only probe (its key is made in the vault now); osquery also installs osquery; server prepares a hand-installed Ubuntu for host bootstrap; workstation makes a managed workstation.`,
@@ -963,6 +1035,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "host adopt",
+    output: "action",
     summary: "Adopt a machine over SSH (macOS, any Linux): observe and check it, never manage it",
     description: `Spec 067. Pins the machine's SSH host key in Git, makes a probe key in the vault, and installs a read-only probe in the account's ~/.local/bin (over your own SSH, once: it may ask your password). The probe key's line in authorized_keys runs that probe and nothing else. Then it observes the machine and checks its policies (disk encryption, firewall, updates, supported OS, administrators), each labeled with its SCF controls. Writes fleets/<fleet>/adopted/<name>/machine.ts and observed.ts: keep them with bun run stolos apply. Run it again to reinstall the probe; it keeps the pinned key.`,
     tier: "repo",
@@ -1012,6 +1085,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "host observe",
+    output: "action",
     summary: "Observe adopted machines now (all, or one): what their probe finds",
     description: `Spec 067. Runs the read-only probe on each adopted machine with its probe key and writes fleets/<fleet>/adopted/<name>/observed.ts (git log -p is the machine's history). Keep the observations with bun run stolos apply.`,
     tier: "repo",
@@ -1030,6 +1104,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "host check",
+    output: "report",
     summary: "The policies of adopted machines: pass, fail, and the fix (SCF controls)",
     description: `Spec 067. Reads each adopted machine's last observation and checks its policies: observed recently, disk encryption, firewall, automatic updates, updates waiting, a supported OS, SSH keys only, few administrators, osquery. Each result names the Secure Controls Framework controls it is evidence for. Exits 1 when any fails. --json for scripts and auditors.`,
     tier: "read",
@@ -1048,6 +1123,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "host accept",
+    output: "action",
     summary: "Record an accepted risk: a policy an adopted machine may fail, why, and until when",
     description: `Spec 067. Writes the acceptance into the machine's machine.ts (who, from git user.name; why; until a date at most a year away). Until then the policy shows as accepted, not as passing, and Compliance counts it as partial; after it, it fails again. Keep it with bun run stolos apply: the signed commit is the auditor's record.`,
     tier: "repo",
@@ -1097,6 +1173,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "host release",
+    output: "action",
     summary: "Stop adopting a machine: remove its probe, its model, and its probe key",
     description: `Spec 067. Over your own SSH, removes ~/.local/bin/stolos-probe and the probe key's line from authorized_keys; then deletes fleets/<fleet>/adopted/<name>/ and the probe key from the vault. Nothing else on the machine changes. Keep it with bun run stolos apply.`,
     tier: "repo",
@@ -1116,6 +1193,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "fleet query",
+    output: "report",
     summary: "Ask every machine one SQL question (osquery): managed and adopted, one table",
     description: `Spec 067. Runs one osquery SELECT on every machine: managed servers through their MCP server (archon query, over SSH as ops) and adopted machines through their probe (where osquery is installed). Prints one table with a machine column; --json for scripts. Read-only: one SELECT on the allowlisted tables (as archon query), anything else is refused; each server also limits what it answers (spec 048). Examples: "select name, version from os_version"; "select name, bundle_short_version from apps where name like 'Google Chrome%'"; "select port, address from listening_ports".`,
     tier: "read",
@@ -1135,6 +1213,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "compliance",
+    output: "report",
     summary:
       "The fleet's evidence by SCF control, and by each framework's requirements (SOC 2, HIPAA, PCI DSS, CMMC, NIST, FedRAMP)",
     description: `Specs 068 and 071. From what this PC already knows (managed servers' last verify, adopted machines' and devices' policies, the SaaS and cloud accounts' posture, the repository's signatures): each Secure Controls Framework control's status and evidence, and each framework requirement's status through its controls, by the SCF Council's own mappings (STRM; bun run stolos compliance catalog downloads them once). Spec 073: each control's evidence age (newest and oldest), each source held to its cadence (managed servers verify every 15 minutes; adopted machines, devices, and accounts daily; compliance.cadence in fleet.ts overrides them); stale evidence is a failing check of its controls and of MON-02, with the command that observes it again. Exits 1 when a control fails; --json for auditors (with the ages).`,
@@ -1167,6 +1246,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "controls list",
+    output: "report",
     summary: "The fleet's own control packs and their controls (TypeScript, tested like code)",
     description: `Spec 078. Lists each pack in fleets/<fleet>/controls/<pack>/pack.ts: its version, and each control's id (<pack>/<control>), subject (estate SQL, osquery on adopted machines, or an observation), SCF controls, and title. A pack that does not load is named with why. --json for scripts. How to write one: bun run stolos docs controls.`,
     tier: "read",
@@ -1178,6 +1258,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "controls run",
+    output: "report",
     summary:
       "Run the fleet's control packs now: estate SQL, osquery on adopted machines, observations",
     description: `Spec 078. Runs every control of every pack (or one pack): estate controls over the estate graph built from Git, observation controls over the observations in Git, and osquery controls on each adopted machine through its probe (one SELECT, as fleet query; each answer is kept on this PC, so stolos compliance and the consoles show it without asking again). Accepted risks (fleets/<fleet>/controls/accepted.ts) apply. Read-only. Exits 1 when a control fails; --json for scripts.`,
@@ -1197,6 +1278,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "controls test",
+    output: "report",
     summary: "Run the control packs' tests (bun test fleets/<fleet>/controls/)",
     description: `Spec 078. Runs the tests of fleets/<fleet>/controls/ in the fleet repository: each pack's *.test.ts, which test its controls over fixtures with testControl. Nothing is asked of a machine or an account. The same as bun run test, for the packs only. Terminal only.`,
     tier: "read",
@@ -1209,6 +1291,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "risks list",
+    output: "report",
     aliases: ["risks"],
     summary: "The risk register (fleets/<fleet>/risks.ts), highest level of risk first",
     description: `Spec 080. Lists each risk in fleets/<fleet>/risks.ts: its level (NIST SP 800-30 Rev 1 Table I-2, from its likelihood and impact), treatment (accept, mitigate, transfer, avoid), owner, next review, and status. --json for scripts. How to write it: bun run stolos docs risks.`,
@@ -1221,6 +1304,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "risks check",
+    output: "report",
     summary: "Check the risk register and vendors: overdue reviews, owners, accepted risks, triage",
     description: `Spec 080. Runs the risk-register controls over the estate graph built from Git: an open risk past its next review fails (SCF RSK-14, RSK-13.2); an owner who is not an active person on the roster warns (RSK-11); an accepted risk past its date fails, and one no risk names warns (RSK-16.1); a discovered vendor not triaged in vendors.ts warns (TPM-08, TPM-09). Then names who approved the last change to risks.ts and vendors.ts (git verify-commit against signers.ts). Read-only. Exits 1 when a control fails; --json for scripts.`,
     tier: "read",
@@ -1232,6 +1316,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "risks review",
+    output: "action",
     summary: "Record a risk's review: its next review date moves on, in a signed pull request",
     description: `Spec 080. From a clean checkout: a branch from the main branch on GitHub, risks.ts with the risk's nextReview moved on (by its reviewEveryDays, 90 by default, or to --next), one commit signed with your daily key (ssh-keygen asks its passphrase here), a push of that branch, and a pull request (gh pr create). Nothing is merged: a fleet signer approves by merging with a signed merge commit. --check shows the change and makes none. Terminal only.`,
     tier: "repo",
@@ -1259,6 +1344,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "vendors list",
+    output: "report",
     aliases: ["vendors"],
     summary:
       "The fleet's vendors: discovered (SSO applications, DNS, connected accounts) and triaged",
@@ -1272,6 +1358,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "vendors triage",
+    output: "action",
     summary: "Vendors waiting for triage; --write opens a pull request adding them to vendors.ts",
     description: `Spec 080. Lists each discovered vendor that is not in fleets/<fleet>/vendors.ts, or whose criticality is still unassessed. With --write: from a clean checkout, a branch, vendors.ts with an entry for each new vendor (criticality "unassessed", for the reviewer to set), one signed commit, a push, and a pull request (gh pr create). A fleet signer approves by merging with a signed merge commit. Terminal only.`,
     tier: "repo",
@@ -1290,6 +1377,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "people status",
+    output: "report",
     aliases: ["people"],
     summary:
       "People controls now: leavers, joiners, people on leave, access reviews, policies, training, screening",
@@ -1304,6 +1392,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "people review",
+    output: "action",
     summary: "This quarter's access reviews: one file per manager, signed, as a pull request",
     description: `Spec 077. Writes fleets/<fleet>/people/reviews/<quarter>/<manager>.md for each manager in the HR system's reporting lines: each report's active accounts and admin rights, one line to tick each. Commits them signed (your passphrase) on the branch people/review-<quarter>, pushes it, and opens a pull request with gh. A manager approves by ticking every line in a commit signed with their own key (people/keys.ts) or a fleet signer's. A file already on this branch is kept. --check shows what it would write; --local commits on the branch without pushing. Terminal only.`,
     tier: "repo",
@@ -1342,6 +1431,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "people ack",
+    output: "action",
     summary: "Acknowledge a policy's current version, in a commit signed with your own key",
     description: `Spec 077. Adds you (Git's user.email) with the policy's current version (its front matter) to fleets/<fleet>/policies/acks/<policy>.ts and commits it signed with your own key, the one people/keys.ts lists for your email, with the trailer Acknowledges: <policy>@<version>. The signed commit is the e-signature. It does not push: send it to main in a pull request, or, as a fleet signer, with stolos apply. Terminal only.`,
     tier: "repo",
@@ -1368,6 +1458,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "evidence export",
+    output: "report",
     summary: "A period's evidence as one signed bundle an auditor checks offline",
     description: `Spec 072. Gathers, for the period: every commit in the fleet repository (each raw, with its SSH signature), each observation Stolos recorded in it (adopted machines, devices, the estate), the verify and install results this PC recorded, signers.ts, and the OSCAL assessment results. Each item is stored under its SHA-256 and listed in a hash-chained manifest, which your daily key signs (ssh-keygen asks its passphrase here; Stolos never sees it). Terminal only.`,
     tier: "read",
@@ -1402,6 +1493,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "evidence verify",
+    output: "report",
     summary: "Check an evidence bundle, offline: unchanged, complete, chained, signed",
     description: `Spec 072. Checks that every item is unchanged (its SHA-256), none is missing or added, the chain is whole, the manifest is signed by an allowed signer, and every commit carries a valid Git signature. Each problem is named with its reason; exits 1 on any. Without --signers it trusts the signers inside the bundle, and says so.`,
     tier: "read",
@@ -1431,6 +1523,7 @@ export const COMMANDS: Command[] = [
   // Spec 083: the auditor portal.
   {
     name: "audit open",
+    output: "action",
     summary:
       "Open an audit engagement: the firm, the period, the controls in scope, access until a day",
     description: `Spec 083. Writes fleets/<fleet>/audits/<id>/engagement.ts: the audit firm and its people, the period, the frameworks, the controls in scope (--controls "CC6.2=leavers,CC8.1=change": each control's id and the population it is tested on; populations: change, leavers, mfa, devices, repositories, access-reviews, verify; default: each population as its own control), and the last day the auditor's access works (--expires). One commit of that file, signed with your daily key (ssh-keygen asks its passphrase here); nothing is pushed. Terminal only.`,
@@ -1496,6 +1589,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "audit bundle",
+    output: "action",
     summary:
       "Pin the period's evidence bundle to an engagement (its populations are drawn from it)",
     description: `Spec 083. Checks the bundle (spec 072: signed by a fleet signer, covering the engagement's period), copies it into this PC's evidence directory, and records its file name, SHA-256, and manifest head in engagement.ts, in a signed commit. Terminal only.`,
@@ -1524,6 +1618,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "audit access",
+    output: "action",
     summary: "Move the last day an engagement's auditor access works",
     description: `Spec 083. Sets access.expires in engagement.ts, in a signed commit. The portal refuses every request after that day. Terminal only.`,
     tier: "repo",
@@ -1550,6 +1645,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "audit request",
+    output: "action",
     summary: "Record an auditor's request in the engagement's trail (a signed commit)",
     description: `Spec 083. Adds the next numbered file to fleets/<fleet>/audits/<id>/trail/ with the request's text as the auditor sent it, in a commit signed with your daily key whose trailer names the file's SHA-256. --by is one of the engagement's auditors. Terminal only.`,
     tier: "repo",
@@ -1583,6 +1679,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "audit respond",
+    output: "action",
     summary: "Record the company's response to a request in the trail (a signed commit)",
     description: `Spec 083. Adds the next numbered file to the trail with the response, answering request --re, in a commit signed with your daily key. Point to evidence by its SHA-256 or its portal page, never paste a secret. Terminal only.`,
     tier: "repo",
@@ -1611,6 +1708,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "audit sample",
+    output: "action",
     summary: "Draw a sample from a control's population with the auditor's seed, and record it",
     description: `Spec 083. Computes the control's population from the pinned bundle, draws --size units with the auditor's --seed (simple random sampling without replacement by SHA-256 sort keys: stolos-srswor-sha256/1, which the auditor can redraw with a shell), and records the sample, seed, method, and population hash in the trail, in a signed commit. The sample size is the auditor's choice. Terminal only.`,
     tier: "repo",
@@ -1649,6 +1747,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "audit close",
+    output: "action",
     summary: "Close an audit engagement: its portal refuses every request from then on",
     description: `Spec 083. Records the day it was closed and by whom in engagement.ts, in a signed commit. The trail and the files stay in the repository as the audit's record. Terminal only.`,
     tier: "repo",
@@ -1669,6 +1768,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "audit list",
+    output: "report",
     aliases: ["audit"],
     summary: "The fleet's audit engagements: firm, period, open, expired, or closed",
     description: `Spec 083. Each engagement in fleets/<fleet>/audits/ as committed, with where it stands. Read-only; --json for scripts.`,
@@ -1681,6 +1781,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "audit show",
+    output: "report",
     summary:
       "An engagement checked: its populations, samples, trail, and anything an auditor would find wrong",
     description: `Spec 083. Reads the engagement as committed, verifies its bundle (verifyBundle) and each commit that records it and its trail, computes each control's population, and redraws each sample from its seed. Exits 1 when anything does not check out. Read-only; --json for scripts.`,
@@ -1701,6 +1802,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "audit portal",
+    output: "report",
     summary:
       "Start the auditor portal and print its one-time link (this engagement only, time-boxed)",
     description: `Spec 083. Starts the Stolos Console on 127.0.0.1 and prints a link that works once, for two minutes, and opens a read-only session that sees only /audit/<id>/ and /v1/audit/<id>/, for at most four hours, refused once the engagement has expired or been closed. For an auditor elsewhere, send the export package instead (stolos audit export). Terminal only.`,
@@ -1732,6 +1834,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "audit export",
+    output: "report",
     summary: "An engagement as one package an auditor verifies offline",
     description: `Spec 083. Writes a ZIP with the evidence bundle, engagement.ts and every trail entry each with the raw signed commit that recorded it, the populations, the fleet's signers, the portal as one static page, and a README saying how to check it by hand. Nothing new is signed: everything in it is signed already or recomputes from the bundle. The package is not time-boxed: sending it is your decision. Terminal only.`,
     tier: "read",
@@ -1757,6 +1860,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "audit verify",
+    output: "report",
     summary: "Check an audit export package, offline: bundle, signed trail, populations, samples",
     description: `Spec 083. Verifies the package's evidence bundle (verifyBundle), that engagement.ts and every trail entry are the exact text a commit signed by an allowed signer vouches for, recomputes every population from the bundle and redraws every sample from its seed. Each problem is named; exits 1 on any. Without --signers it trusts the signers inside the package, and says so.`,
     tier: "read",
@@ -1785,6 +1889,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "trust build",
+    output: "report",
     summary: "A Trust Center: a status page for customers, built from a verified evidence bundle",
     description: `Spec 081. Verifies the bundle first (as evidence verify does) and refuses it, with each reason, when anything is wrong. Then writes a static, self-contained page (index.html: no requests, light and dark, phone width) from the bundle alone: the company, the period, the signer; each framework requirement's status through the SCF Council's mappings of the SCF release the bundle names (without that catalog on this PC, NIST SP 800-53 from the bundle's own findings); each SCF control's status, its checks, and its evidence age when signed (stale evidence fails, spec 073; a bundle older than 7 days makes every status stale); and each claim's backing item by SHA-256, with how to check it with evidence verify, sha256sum, and ssh-keygen. --public (the default) leaves out subjects, hostnames, people, what each check found, and item names, and publishes a summary bundle beside the page, signed by the full bundle's signer (--key; ssh-keygen asks the passphrase), or with --on-request no bundle at all. --gated shows everything and publishes the full bundle: host it only behind your own access (the trust guide). Terminal only.`,
     tier: "read",
@@ -1862,6 +1967,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "compliance drift",
+    output: "report",
     summary:
       "Which SCF controls changed status since a commit or a date; --notify mails the fleet's mailbox",
     description: `Spec 073. Compares each SCF control's status now (the working tree) with its status at a past commit of the fleet repository (--since: a commit, or the last commit before a date such as 2026-11-01 or "1 day ago"; default "1 day ago"), from the observations Git records (adopted machines, devices, connected accounts), each side held to the evidence cadences as of its own time, so evidence that went stale is drift too. Lists the controls whose status changed and the evidence under them. --notify mails a summary to the fleet's mailbox (fleet.mail.to) through the fleet's notify path: control ids, subjects, checks, and statuses only, never what a check found. Managed servers' verifies are in this PC's state, not in Git, so they are not compared. Run it on a schedule with this PC's own scheduler (the compliance guide shows how).`,
@@ -1896,6 +2002,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "compliance impact",
+    output: "report",
     summary:
       "The SCF controls a change weakens or strengthens, with their framework requirements; the gate's verdict",
     description: `Spec 074. Compares the fleet at --base (default: the fleet's branch on GitHub, origin/<branch>; the merge base with the head is used) with --head (a commit; default: the working tree). Model changes: each host's plan and the fleet's settings, against Stolos's declarations of which setting implements which SCF control and which direction weakens it (unattended upgrades: VPM-08; SSH passwords: IAC-14; the host firewall and its ports: NET-02; backups: BCD-24; osquery and the evidence cadences: MON-02; etckeeper: CHG-03; administrators and the agents' tier: IAC-30). Evidence changes: the observations in Git and the fleet's control packs, per control, as compliance drift reads them. Each affected control is listed with its SCF name and, when the SCF catalog is cached, the framework requirements the SCF Council maps it to. The gate (compliance.gate in fleet.ts, read from the base): with block "weakens", a weakening blocks unless gate.allow names it, an accepted risk covers it (policy "impact/<key>" in controls/accepted.ts), or a commit in the change signed by one of the base's signers carries "Compliance-Approved: <key>". Exits 1 when the gate blocks, 2 when the impact cannot be computed. --markdown prints the pull request comment (the fleet repository's compliance-impact workflow runs it); --json for scripts. Runs each side's fleet.ts and host.ts (as build does), read-only.`,
@@ -1940,6 +2047,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "compliance catalog",
+    output: "action",
     summary: "Download the SCF Council's and NIST's catalogs (pinned, SHA-256 checked), once",
     description: `Spec 071. Downloads the Secure Controls Framework workbook from the SCF Council's repository and NIST's OSCAL catalogs (SP 800-53 Rev 5, SP 800-171 Rev 3) from NIST's, each at a pinned commit; refuses any whose SHA-256 differs; reads them here and keeps what Stolos needs in this PC's state directory. Stolos does not redistribute them. --update downloads them again.`,
     tier: "repo",
@@ -1952,6 +2060,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "compliance export",
+    output: "report",
     summary: "The fleet's OSCAL documents: component definition, SSP, assessment results, POA&M",
     description: `Spec 071. Writes four OSCAL ${"1.2.3"} JSON documents to NIST SP 800-53 Rev 5, each control reached through the SCF Council's mappings: Stolos's component definition; a system security plan importing NIST's moderate baseline, with the fleet's machines as its inventory; assessment results (every observation, a finding per control); and a POA&M (each failing check open, each accepted risk a deviation approved). A machine, control, risk, or POA&M item keeps its UUID from one export to the next.`,
     tier: "read",
@@ -1976,6 +2085,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "compliance fedramp",
+    output: "report",
     summary:
       "FedRAMP 20x: each Key Security Indicator for Class A or B, and its validation package (the Security Decision Record)",
     description: `Spec 076. Each FedRAMP 20x Key Security Indicator (KSI) the class asks for, from FedRAMP's Consolidated Rules (Class A: the seven of FRC-CLA-MFR; Class B: all of them), with the Stolos checks that give evidence for it and their results and observation times, or why Stolos cannot observe it (a person's process, a document, a contract). --out writes the Security Decision Record in FedRAMP's JSON format (SDR-CSX-KSI), with the cadences the rules set for the class (VDR-TFR-MVX, CPO-CSX-CPM). From what this PC already knows; nothing is asked of a server. Exits 1 when a KSI's checks fail.`,
@@ -2018,6 +2128,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "export list",
+    output: "report",
     summary: "The export jobs: kinds, tenants, where each delivers, its schedule, its last run",
     description: `Spec 092. Lists estate.exports from fleets/<fleet>/fleet.ts: each job's kinds and tenants, where it delivers (the fleet's OpenTelemetry collector when one is configured, else a file on this PC, and email when it has recipients), its schedule, and how its last run on this PC went.`,
     tier: "read",
@@ -2030,6 +2141,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "export run",
+    output: "action",
     summary: "Make one export job's documents and deliver them: collector, file, encrypted email",
     description: `Spec 092. Makes the job's documents (its kinds, for its tenants) and delivers them: to the fleet's OpenTelemetry collector over OTLP/HTTP when telemetry.collector is configured, otherwise (or when it does not answer) to a file in this PC's state directory (exports/<job>/<time>/); with recipients, the files are also emailed, send-only, one message per recipient encrypted with S/MIME to that recipient's certificate (no shared secret). Mail leaves through the fleet's relay with the fleet's send-only credential (stolos boot mail-setup), or the job's own (stolos export credential <name>), over TLS only. What happened is in exports/<job>/last-run.json, without secrets. The scheduled job (stolos export schedule) runs this.`,
     tier: "read",
@@ -2056,6 +2168,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "export schedule",
+    output: "action",
     summary:
       "Run an export job by itself: this PC's own scheduler (Task Scheduler, launchd, systemd)",
     description: `Spec 092. Creates the operating system's own scheduled job on this PC, so the export runs without Stolos open: on Windows a Task Scheduler task (Stolos\\export-<fleet>-<job>, as you, no stored password), on macOS a LaunchAgent in ~/Library/LaunchAgents, on Linux a systemd user service and timer in ~/.config/systemd/user. It runs bun run stolos --fleet <fleet> export run <job> in this fleet checkout, at the job's schedule (estate.exports[].schedule). Nothing secret is written into it. --remove takes it away; --dry-run prints the files and commands and changes nothing.`,
@@ -2093,6 +2206,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "export credential",
+    output: "action",
     summary: "Store a separate send-only mail credential for export jobs, on this PC only",
     description: `Spec 092. For a tenant that sends through its own account (email.credential in an export job). Reads the credential without echo (or one line on stdin), logs in to the job's relay over TLS without sending, and stores it in this PC's secrets folder (mail-<name>.json, this user only; the vault backs it up). Use a send-only credential: a Cloudflare API token with only Email Sending: Edit, or an SMTP account with reading (IMAP, POP, the mail API) turned off. Stolos only submits mail; it never reads a mailbox. Terminal only.`,
     tier: "repo",
@@ -2118,6 +2232,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "console",
+    output: "report",
     summary: "The Stolos Console: the fleet in your browser, on this PC only",
     description: `Spec 066. Checks that your GitHub account (gh) may push to the fleet repository, listens on 127.0.0.1, and prints a one-time launch link (it works once, for two minutes) and opens it. Every machine (managed, adopted, in a cloud), the clouds, one SQL question to every machine, the changes waiting and who may approve them, and the stolos commands as forms. Commands run here, in the fleet repository: a passphrase or token they ask for is typed in this terminal, never in the browser. Ctrl+C stops it.`,
     tier: "read",
@@ -2168,6 +2283,7 @@ export const COMMANDS: Command[] = [
   // Spec 100: the devices that may sign in to the Stolos Console.
   {
     name: "devices",
+    output: "report",
     summary: "The devices that may sign in to the Stolos Console, and when each last did",
     description: `Spec 100. Lists fleets/<fleet>/access.ts: each device's id, signer, name, passkey (synced or bound to the device), when and from where it registered, who approved it, and its last sign-in on this PC. Read-only.`,
     tier: "read",
@@ -2179,6 +2295,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "devices approve",
+    output: "action",
     summary: "Approve a device's code: it may sign in to the Stolos Console (one signed commit)",
     description: `Spec 100. Asks the controller (--controller, default https://stolos.<web domain>) for the registration waiting under the code (public fields only), shows it, asks, writes the device into fleets/<fleet>/access.ts with you as its approver, and sends it with stolos apply (your key signs). The controller honours it once it reads that signed commit from GitHub. Refuses while other changes are uncommitted.`,
     tier: "repo",
@@ -2220,6 +2337,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "devices revoke",
+    output: "action",
     summary: "Revoke a device: it may no longer sign in to the Stolos Console (one signed commit)",
     description: `Spec 100. Removes the device from fleets/<fleet>/access.ts and sends it with stolos apply (your key signs). The controller refuses the device once it reads that commit.`,
     tier: "repo",
@@ -2246,6 +2364,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "mesh",
+    output: "report",
     summary: "Zero trust mesh networks: the choices, and this PC's mesh addresses (guidance only)",
     description: `Spec 098 (constitution Article 28). The fleet's plain-HTTP exchanges (PXE, HTTP Boot, stolos pair) run on the site's LAN, or on a zero trust mesh network for a device that is not on it. Prints what that means, the common choices (Tailscale, Headscale, NetBird, ZeroTier, Nebula, WireGuard by hand) without preferring one, what to look for, and this PC's mesh addresses with the pair --address line to use. Changes nothing; Stolos installs no network product.`,
     tier: "read",
@@ -2259,6 +2378,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "pair",
+    output: "action",
     summary:
       "Bring a machine into the fleet with a short code: one line to run there, approve here",
     description: `Specs 098 and 103. Shows one short line per door that is up (curl ... | sh, or irm ... | iex on Windows as administrator), HTTPS first, and an 8-character code that expires in 10 minutes. Pairing is /device/pair on two of the three ports this PC opens (Article 29): TCP 443, the console's TLS, when stolos console --lan serves and its name is this PC's; and TCP 8080, plain HTTP, the boot server's (this command serves just those routes there when boot serve is not running). The machine's script, served by this PC from this engine, asks for the code, turns on SSH, installs the read-only probe, and sends its check-in signed with the code; you approve it here, seeing its name, OS, address and SSH host key, and it is adopted (host adopt) with nothing copied by hand. One machine per code; 5 wrong codes end it. Plain HTTP on the boot server's port on purpose: run it on a trusted LAN, or reach the machine over a zero trust mesh network (see stolos mesh), never over the internet.`,
@@ -2308,6 +2428,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "discover",
+    output: "report",
     summary:
       "Machines seen on this PC's network or in the fleet's clouds, not yet managed or adopted",
     description: `Spec 067. Reads this PC's neighbor table (machines it has talked to; nothing is scanned) and the cloud observations in Git (servers and instances no fleet machine owns), and lists what the fleet does not know, by MAC, address, or name. Records nothing. Adopt the ones you are responsible for with host adopt.`,
@@ -2340,6 +2461,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "connect",
+    output: "action",
     summary: "Connect a cloud account read-only: Cloudflare, Microsoft 365 and Azure, AWS, Hetzner",
     description: `Spec 067. Shows how to make a read-only credential in the provider's console (Stolos never changes a cloud), asks for it in the terminal where Stolos runs (secrets are not echoed; from the Stolos Console, type it in the console's terminal), keeps it in this PC's vault (connectors/<provider>/credential.json), and takes a first observation. Providers: cloudflare, microsoft (Microsoft 365 and Azure), aws, hetzner.`,
     tier: "repo",
@@ -2400,6 +2522,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "connector add",
+    output: "action",
     summary: "Add a connector from a pinned URL (a tag or a commit), checked, with a lock entry",
     description: `Spec 088. Adds a connector Stolos does not ship, the way the fleet takes the engine: <source>@<ref>, where the source is https://github.com/<owner>/<repo>[/<path>] (read from raw.githubusercontent.com; the path defaults to mod.ts) and the ref a version tag or a full commit SHA (a branch is refused). It loads the module in its own process with no network, files, or secrets (imports from its host only), and checks it: a connector made with defineConnector, an id no other connector has, labels that follow the naming rules (D3FEND, OCSF, UDM), only SCF ids Stolos knows, a read-only credential, an engine range this engine is in, and its own recorded-fixture tests, which must pass. Then it writes the import and Stolos's lock entry to fleets/<fleet>/connectors.ts and the hash of every file it loads to the fleet's lock. Approve it with bun run stolos apply (spec 060). --index <url> finds <id>@<tag> in an index anyone can host (bun run stolos docs connectors).`,
     tier: "repo",
@@ -2429,6 +2552,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "connector list",
+    output: "report",
     aliases: ["connectors"],
     summary:
       "The connectors this fleet added (fleets/<fleet>/connectors.ts), each pin and engine range",
@@ -2442,6 +2566,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "connector remove",
+    output: "action",
     summary:
       "Remove an added connector: its import and lock entry (its last observation stays in Git)",
     description: `Spec 088. Removes the connector's import and entry from fleets/<fleet>/connectors.ts. Its credential stays in the vault until stolos disconnect <id>; its last observation stays in Git. Approve it with bun run stolos apply (spec 060).`,
@@ -2463,6 +2588,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "connector test",
+    output: "report",
     summary: "Test added connectors at their pins, or a connector module you are writing",
     description: `Spec 088. For each added connector (or the one named): its module still hashes as the fleet's lock and connectors.ts say, it supports this engine, and its recorded-fixture tests pass, run in a restricted process. Given a path or URL instead, it checks a module not added yet, as connector add would (an author's own check before tagging a release). Exits 1 when any check fails.`,
     tier: "read",
@@ -2482,6 +2608,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "estate observe",
+    output: "action",
     summary: "Read every connected cloud account and record what it holds in Git",
     description: `Spec 067. Lists each connected account's assets (zones, DNS records, Workers, R2; users, licenses, Azure resources; IAM users, S3, EC2; Hetzner servers, volumes, firewalls) and posture facts into fleets/<fleet>/estate/<provider>.ts (GENERATED); assets named after a fleet machine are marked as its. Keep it with bun run stolos apply.`,
     tier: "repo",
@@ -2534,6 +2661,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "estate check",
+    output: "report",
     summary: "The cloud accounts' posture policies: pass, fail, and the fix (SCF controls)",
     description: `Spec 067. From the last observations: Cloudflare TLS (Full strict, HTTPS only, TLS 1.2), DNSSEC; Microsoft MFA enforced and registered, Global Administrators; AWS root MFA and keys, S3 public access, IMDSv2; Hetzner backups, firewalls, deletion protection. Exits 1 when any fails; --json for auditors.`,
     tier: "read",
@@ -2586,6 +2714,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "estate query",
+    output: "report",
     summary: "One SQL question across every source: people, accounts, machines, repositories",
     description: `Spec 090. The estate graph, built from the observations in Git (no network): Universal Data Model tables (party, person, organization, party_role, party_relationship, contact_mechanism, party_contact_mechanism, fixed_asset, party_fixed_asset_assignment), a property graph (tenant, node, node_label, edge, node_property_provenance), findings and observations, and views with OCSF's and D3FEND's names (user_account, code_repository, user_inventory, device, compliance_finding). One SELECT. Booleans are 0 and 1. The full schema: bun run stolos estate schema --docs.`,
     tier: "read",
@@ -2615,6 +2744,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "estate build",
+    output: "report",
     summary: "Write the estate graph as canonical SQL and as the SQLite file osquery reads",
     description: `Spec 090. Builds the estate graph from the observations in Git and writes, in this PC's state directory, estate.sql (the schema and every row: the canonical form, loadable into other databases), estate.auto.sqlite.db made from it (what osquery reads), and estate.osquery.json (spec 093: osquery's configuration that makes each table and view an osquery table, stolos_<name>).`,
     tier: "read",
@@ -2626,6 +2756,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "estate osquery",
+    output: "report",
     summary: "The estate graph as osquery tables: write or print osquery's configuration",
     description: `Spec 093. Writes estate.osquery.json next to estate.auto.sqlite.db: an osquery configuration (Automatic Table Construction, no extension) that makes every estate table and view an osquery table named stolos_<name> (stolos_device, stolos_user_account, stolos_person, ...) with exactly its declared columns, read from that SQLite file. Prints how to load it: osqueryi --config_path <file>, an existing osqueryd configuration, or a fleet manager. Every column is text in osquery. bun run stolos estate build writes it too, with fresh data.`,
     tier: "read",
@@ -2653,6 +2784,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "estate diff",
+    output: "report",
     summary: "What a query gains and loses between a date or commit and now",
     description: `Spec 090. Runs one SELECT on the estate graph as Git had it at --since (a date, YYYY-MM-DD, or a commit) and as it is now, and lists the rows added and removed: drift, and a Type 2 period's record.`,
     tier: "read",
@@ -2678,6 +2810,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "estate schema",
+    output: "report",
     summary: "The estate graph's schema: its SQL, or its documentation",
     description: `Spec 090. Prints the estate graph's schema as SQL (generated from its TypeScript declarations), or with --docs as documentation with an ER diagram: every table and view, what each column holds, and the standard each name comes from.`,
     tier: "read",
@@ -2689,6 +2822,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "estate assets",
+    output: "report",
     summary: "Everything in the fleet's cloud accounts, as one table",
     description: `Spec 067. From the last observations in Git (no network): provider, kind, name, where, the fleet machine it belongs to, and a few facts. --kind narrows it (zone, dns-record, worker, r2-bucket, user, license, azure-resource, s3-bucket, ec2-instance, server, ...); --json for scripts.`,
     tier: "read",
@@ -2752,6 +2886,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "disconnect",
+    output: "action",
     summary: "Forget a cloud account's credential (the last observation stays in Git)",
     description: `Spec 067. Removes connectors/<provider>/credential.json from this PC's vault. Revoke the credential in the provider's console too.`,
     tier: "repo",
@@ -2806,6 +2941,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "workstation add",
+    output: "action",
     summary:
       "Set up this Ubuntu on WSL (or desktop) as a workstation: tools, dotfiles, the agent layer",
     description: `Run inside Ubuntu on WSL (or on an Ubuntu desktop), from the checkout in /srv/archon, as your own user. Writes fleets/<fleet>/hosts/<name>/host.ts as a workstation (spec 020) and converges, through sudo, only the user-level parts: the tools at their newest releases, the dotfiles (fish, oh-my-posh, tmux, git), Claude Code (the agent layer, spec 030), the archon command, and Ubuntu's daily updates. It checks first that this is the fleet's Ubuntu release, that systemd runs, and where the checkout is.`,
@@ -2833,6 +2969,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "apply",
+    output: "action",
     summary: "Converge this host to its plan",
     description: `Installs missing packages (apt or snap), converges accounts, writes files, and enables units, then runs queued actions. Idempotent (Article 11). With --check, shows what would change.`,
     tier: "mutate",
@@ -2853,6 +2990,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "verify",
+    output: "report",
     summary: "Run every verification command in this host's plan",
     description: `Checks every package, unit, and tool the plan declares (Article 15) and reports each failure with its command.`,
     tier: "read",
@@ -2867,6 +3005,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "web status",
+    output: "report",
     summary: "This server's HTTPS: Traefik, the certificate, DNS, and every route",
     description: `Shows whether Traefik and the welcome page run, which certificate answers on 443 (Let's Encrypt, or Traefik's self-signed one until it arrives), whether <host>.<domain> resolves to this server, and every route: the welcome page at https://<host>.<domain>, Traefik's dashboard at traefik.<host>.<domain>, each route from the model and its capabilities (cockpit.<host>.<domain>), and each guest that publishes a port. Containers (Podman) publish themselves with the label traefik.enable=true. Who reaches anything behind the proxy is the router's decision (spec 064). See the web guide (bun run stolos docs web).`,
     tier: "read",
@@ -2879,6 +3018,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "web dns",
+    output: "action",
     summary: "Keep <host>.<domain> and *.<host>.<domain> in Cloudflare, to this server",
     description: `Creates or corrects this server's two A records in Cloudflare (its name and its wildcard, not proxied, TTL 60) to the address it reaches the network from now (the source of its default route: no reserved IPs needed), with the token the boot machine delivered (Zone: Read and DNS: Edit on the zone). Runs after an install and when a token arrives; archon web dns-check runs it whenever the address changes. Without fleet.web it does nothing (spec 032).`,
     tier: "mutate",
@@ -2891,6 +3031,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "web dns-check",
+    output: "action",
     summary: "Update Cloudflare if this server's address changed (the timer, every 5 minutes)",
     description: `Run by archon-web-dns.timer at boot and every 5 minutes: compares the address this server reaches the network from (its default route's source) with the one last published, and runs archon web dns only when it changed (a new DHCP lease) or a day has passed, so the records follow the server without reserved IPs. A change is journaled (archon-web) and the mailbox is told. Quiet otherwise: no run log (spec 032).`,
     tier: "mutate",
@@ -2904,6 +3045,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "web credential",
+    output: "action",
     summary: "Install the Cloudflare DNS token from stdin (bun run stolos boot web-push)",
     description: `Reads the web credential (JSON with a Cloudflare API token that has Zone: Read and DNS: Edit on the fleet's zone) on stdin and stores it root-only for archon web dns (/etc/archon/web/cloudflare.json) and for Traefik's DNS challenge (/etc/archon/web/cloudflare.env), restarts Traefik, then publishes this server's DNS records (spec 032). The boot machine sends it with bun run stolos boot web-push <host>; installs deliver it by themselves.`,
     tier: "mutate",
@@ -2917,6 +3059,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "web acme-export",
+    output: "report",
     summary: "Print Traefik's Let's Encrypt store as JSON (for boot reinstall)",
     description: `Prints this server's Traefik ACME store (the Let's Encrypt account, certificates, and keys) with each certificate's names and expiry, as JSON on stdout. bun run stolos boot reinstall runs it before rebooting the server and keeps the result on the boot machine; the install hands it back, so the new install serves the same trusted certificate from its first minute and does not ask Let's Encrypt again (spec 032). Root only; never offered over MCP.`,
     tier: "read",
@@ -2930,6 +3073,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "web serve",
+    output: "report",
     summary: "Serve this server's welcome page on loopback (the archon-web service)",
     description: `Serves the welcome page on http://127.0.0.1:8090, behind Traefik, which publishes it at https://<host>.<domain> and at any name or address no route claims: this server's health (last archon run, install record, certificate), its services with links, ports that listen but are not published (with the model line that would publish one), and how to work on it. Read-only; rendered per request (spec 032).`,
     tier: "read",
@@ -2943,6 +3087,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "console exec",
+    output: "action",
     summary: "Run a command for the Archon Console's signed-in person (the console's account only)",
     description: `Used by the Archon Console (spec 065), never by people: runs one archon command for the person signed in to the console, as a transient systemd service outside the console's sandbox, with SUDO_USER set to that person so every record names them. Accepts only the console's own account (archon-console, through sudo), and checks again that the person may run the command (their groups and the command's tier). After a command that changes the server, mails the fleet's mailbox.`,
     tier: "mutate",
@@ -2979,6 +3124,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "docs",
+    output: "report",
     summary: "The engine's guides, offline and at this version: list them, or read one",
     description: `Each guide is the documentation of the module beside the code it explains (bun run docs renders them, with diagrams, on GitHub Pages). Without a name: every guide, with its page online. With one: the guide, in the terminal (its diagrams are drawn online). For example: docs fleet-repository, docs disaster-recovery, docs adopted.`,
     tier: "read",
@@ -3004,6 +3150,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "guide",
+    output: "report",
     summary: "What's on this machine and how to use it, in plain words",
     description: `Lists, for newcomers, what is installed on this machine and how to use each part: your shell and dotfiles, web apps and containers, watching the server, what happens by itself (updates, firewall, backups, the history of /etc), email, and how changes are made through the repository. It starts with how to manage the server with an AI agent (Claude Code, Codex, or any MCP client) and keep the fleet up to date through Git. The same text is on the welcome page (https://<host>.<domain>), computed from this machine's own model (spec 035). See archon-guide(7) for the narrative guide.`,
     tier: "read",
@@ -3016,6 +3163,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "fs smb on",
+    output: "action",
     summary: "Turn on SMB file sharing (Windows, macOS, Linux) on this server",
     description: `Starts Samba on this server and records the decision in the host's own archon.sql (opt-in smb) (who, when), so every apply and reboot keeps it on until an operator runs archon fs smb off. Clients connect to smb.<host>.<domain> (who reaches it is the router's decision) (for example \\\\smb.alpha.lab.example.net\\shared): one share, shared, for everyone with an account, and each account's own home folder. --durable or --ephemeral is required (Article 23, spec 044): durable shares are archived nightly and guarded; ephemeral ones are not. SMB3 only, encryption when the client supports it, no guests. People sign in with their own Linux username and password: Samba keeps a copy, updated by PAM whenever the password is typed on the server (Cockpit, sudo, a password login, passwd); an account not on this server gets no access. The mailbox is told. The switch is in this machine's own archon.sql (spec 048).`,
     tier: "mutate",
@@ -3028,6 +3176,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "fs smb off",
+    output: "action",
     summary: "Turn off SMB file sharing on this server",
     description: `Stops and masks Samba and records the decision in the host's own archon.sql (opt-in smb), so it stays off across applies, reboots, and reinstalls until an operator runs archon fs smb on. Shared files and SMB passwords are kept (spec 037).`,
     tier: "mutate",
@@ -3040,6 +3189,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "fs smb status",
+    output: "report",
     summary: "Whether SMB file sharing is on, its shares, and how to connect",
     description: `Shows whether SMB is on (since when, and who turned it on), whether smbd runs and port 445 listens, the shares and who may use them, which accounts Samba already knows the password of (as root), and how to connect from Windows, macOS, and Linux (spec 037).`,
     tier: "read",
@@ -3052,6 +3202,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "pg list",
+    output: "report",
     summary: "List this server's PostgreSQL instances",
     description: `Every PostgreSQL instance Archon keeps on this server (from the model and the host's record, the host's own archon.sql (opt-in pg)): name, version, port, status, environment, and whether it is published. Clusters Archon did not create are listed as not Archon's and left alone. --json prints {host, instances, notArchons} (spec 038). See archon-pg(7).`,
     tier: "read",
@@ -3064,6 +3215,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "pg status",
+    output: "report",
     summary: "One PostgreSQL instance: version, port, status, published",
     description: `Shows one instance (default prime): its version, port, postgresql-common unit, data directory, status, whether it accepts connections, environment, protected or not, and where it is published. Exits non-zero when it is not online. (spec 038). See archon-pg(7).`,
     tier: "read",
@@ -3084,6 +3236,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "pg ensure",
+    output: "action",
     summary: "Create a PostgreSQL instance, or make sure it is right (idempotent)",
     description: `Makes the instance exist and match the model: the cluster <version>/<name> (pg_createcluster, its own port from 5432 up, its own data directory, unit, and log), Archon's configuration (conf.d/50-archon.conf: localhost only, scram-sha-256, TLS 1.3), pg_hba.conf (peer on the socket, scram-sha-256 on loopback), its roles and their passwords, and their databases. An instance not in the model is recorded in the host's own archon.sql (opt-in pg), and every apply keeps it from then on. An instance that exists, is Archon's, and is online needs nothing, so ensure then answers without sudo: an app's service account runs it unattended. Never touches a cluster Archon did not create. --json prints {ok, name, version, port, status, unit, created, changes}; a failure exits non-zero with one sentence. (spec 038). See archon-pg(7).`,
     tier: "mutate",
@@ -3120,6 +3273,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "pg start",
+    output: "action",
     summary: "Start a PostgreSQL instance",
     description: `pg_ctlcluster <version> <name> start, for an instance Archon created. (spec 038). See archon-pg(7).`,
     tier: "mutate",
@@ -3139,6 +3293,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "pg stop",
+    output: "action",
     summary: "Stop a PostgreSQL instance",
     description: `pg_ctlcluster <version> <name> stop, for an instance Archon created. A stopped instance is started again by the next apply (the model says it runs). (spec 038). See archon-pg(7).`,
     tier: "mutate",
@@ -3158,6 +3313,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "pg restart",
+    output: "action",
     summary: "Restart a PostgreSQL instance",
     description: `pg_ctlcluster <version> <name> restart, for an instance Archon created. (spec 038). See archon-pg(7).`,
     tier: "mutate",
@@ -3177,6 +3333,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "pg reload",
+    output: "action",
     summary: "Reload the configuration of a PostgreSQL instance",
     description: `pg_ctlcluster <version> <name> reload, for an instance Archon created. (spec 038). See archon-pg(7).`,
     tier: "mutate",
@@ -3196,6 +3353,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "pg upgrade",
+    output: "action",
     summary: "Upgrade a PostgreSQL instance to a newer major version",
     description: `Dumps the instance first (never in place without a backup), installs the new version, and runs pg_upgradecluster; the old cluster is kept, stopped, until archon pg remove NAME --version OLD. Destructive: runs only when specs/038-pg/spec.md has the owner's approve: destructive line and --confirm-destroy repeats the name. Never served over MCP. (spec 038). See archon-pg(7).`,
     tier: "destructive",
@@ -3228,6 +3386,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "pg remove",
+    output: "action",
     summary: "Remove a PostgreSQL instance (dumped first)",
     description: `Dumps the instance, drops its cluster (pg_dropcluster), and forgets its record and passwords; with --version, removes only an older cluster kept after an upgrade. An instance in the model must leave the model first. Destructive: runs only when specs/038-pg/spec.md has the owner's approve: destructive line and --confirm-destroy repeats the name. Never served over MCP. (spec 038). See archon-pg(7).`,
     tier: "destructive",
@@ -3264,6 +3423,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "pg backup",
+    output: "action",
     summary: "Dump a PostgreSQL instance now",
     description: `pg_dumpall, compressed with zstd, into /var/backups/archon/pg/<name>/ (root only), keeping the last 7; spec 016's nightly archive carries them, and a timer dumps every instance nightly before it (archon pg backup --all). (spec 038). See archon-pg(7).`,
     tier: "mutate",
@@ -3284,6 +3444,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "pg restore",
+    output: "action",
     summary: "Restore a PostgreSQL instance from a dump",
     description: `Loads a dump (the newest in /var/backups/archon/pg/<name>/, or --from FILE) into the instance, after dumping what is there now, then sets Archon's passwords again. Destructive: runs only when specs/038-pg/spec.md has the owner's approve: destructive line and --confirm-destroy repeats the name. Never served over MCP. (spec 038). See archon-pg(7).`,
     tier: "destructive",
@@ -3316,6 +3477,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "pg maintain",
+    output: "report",
     summary: "VACUUM ANALYZE an instance, and report connections, sizes, and bloat",
     description: `Runs VACUUM ANALYZE on every database (online; nothing is locked or rewritten) and reports connections by database and state against max_connections, database sizes, and the tables with the most dead rows. Read tier: it changes no data or configuration. Runs as root. (spec 038). See archon-pg(7).`,
     tier: "read",
@@ -3336,6 +3498,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "pg publish",
+    output: "action",
     summary: "Make a PostgreSQL instance reachable over TLS (the router decides from where)",
     description: `Records the decision in the host's own archon.sql (opt-in pg) and applies it: PostgreSQL also listens on the server's address, pg_hba.conf admits TLS with scram-sha-256 (hostssl; postgres refused over any network), the firewall opens the instance's port, and PostgreSQL serves the server's wildcard certificate, so clients use pg-<name>.<host>.<domain> with sslmode=verify-full sslrootcert=system (archon pg show NAME --form external prints it all). Every address may connect: the router decides what reaches the server (the machine restricts no network). PostgreSQL speaks TLS itself; Traefik is not involved. Undo with archon pg unpublish (spec 038).`,
     tier: "mutate",
@@ -3355,6 +3518,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "pg unpublish",
+    output: "action",
     summary: "Make a PostgreSQL instance private again",
     description: `Records the decision and applies it: localhost only, the hostssl lines and the firewall rule removed. (spec 038). See archon-pg(7).`,
     tier: "mutate",
@@ -3374,6 +3538,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "pg connect",
+    output: "report",
     summary: "Print, or write, your libpq service for an instance (no password on the server)",
     description: `Prints the libpq service block for ~/.pg_service.conf; with --write, writes it there (0600, replacing only that service). On the server you connect as your own role over the socket (peer): your Linux account is your PostgreSQL identity, and no password is involved. With --remote, the service uses the published name with TLS (sslmode=verify-full sslrootcert=system): a person types their Linux password (libpq asks; PAM keeps PostgreSQL's copy in step), and a service account also gets its generated password in its own ~/.pgpass. Services: everyone already has the instances in the system-wide service file, so psql service=<name> works without this. --json prints {ok, service, host, port, user, database, sslmode, published?, files?}; a failure exits non-zero with one sentence (specs 038, 039). See archon-pg(7).`,
     tier: "read",
@@ -3410,6 +3575,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "pg admin-tui",
+    output: "report",
     summary: "Browse, query, and edit an instance in rainfrog, already connected",
     description: `Starts rainfrog (a terminal UI for PostgreSQL: tables, a query editor, results) connected to NAME (default prime). NAME is found the way archon pg show finds it: an instance Archon keeps, any cluster on this host, or a section of your service files. On this server it connects through the socket as you (peer, no password); with --remote, to the published name over TLS with sslmode=verify-full against the system's trusted roots. A password never goes on rainfrog's command line (other accounts see those): it asks for one when it needs it. Needs a terminal; not an MCP tool (spec 043). See archon-pg(7).`,
     tier: "read",
@@ -3438,6 +3604,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "pg observe-tui",
+    output: "report",
     summary: "Watch an instance live in pgcenter top, already connected",
     description: `Starts pgcenter top (live activity, statements, waits, tables, and the server's CPU, memory, and disks) connected to NAME (default prime). NAME is found the way archon pg show finds it: an instance Archon keeps, any cluster on this host, or a section of your service files. On this server it connects through the socket as you (peer, no password); with --remote, to the published name over TLS with sslmode=verify-full against the system's trusted roots. Over the network, the password comes from your ~/.pgpass when it has a line for the instance, else it is asked here and handed to pgcenter in its own environment only (never its command line, a file, or a log). pgcenter needs pg_monitor for every view, which people are given (spec 039). Needs a terminal; not an MCP tool (spec 043). See archon-pg(7).`,
     tier: "read",
@@ -3466,6 +3633,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "data",
+    output: "report",
     summary: "Whether this server is durable or ephemeral, and why",
     description: `Article 23 (spec 044): every source of end users' data (PostgreSQL, S3, SMB shares, LXD guests) is either durable (it exists nowhere else) or ephemeral (losing it is harmless), chosen by the operator when it is turned on; there is no default. A server is durable when anything on it is durable, and ephemeral otherwise. Lists each source and its choice, says what the class means (a durable server is archived nightly and nothing reinstalls or wipes it without --confirm-destroy), and exits non-zero when a source has no recorded choice (it counts as durable). Home directories are ephemeral by rule. The boot machine asks this before a reinstall.`,
     tier: "read",
@@ -3479,6 +3647,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "data set",
+    output: "action",
     summary: "Record an opt-in's data as durable or ephemeral",
     description: `Changes the choice made when the opt-in was turned on (pg, s3, or smb; a guest's is in the model). Ephemeral to durable needs nothing; durable to ephemeral removes the protection, so it needs --confirm-destroy with the host's name, typed by a person (never over MCP). Recorded in an opt-in record in this machine's own archon.sql; the mailbox is told (spec 044).`,
     tier: "mutate",
@@ -3506,6 +3675,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "opt-in",
+    output: "report",
     summary: "This server's opt-in services and containers: on or off, since when, by whom",
     description: `Opt-in services and containers (spec 040) are on every server and off until an operator turns one on; then they stay on, across applies and reboots, until an operator turns them off. Each decision is the host's record, an opt-in record in this machine's own archon.sql. Lists each one: SMB file sharing (archon fs smb), PostgreSQL (archon pg), and S3 object storage (archon fs s3), whether it is on, since when, who turned it on, and the command that turns it on or shows it. Where an opt-in can use Linux accounts and their credentials, it does.`,
     tier: "read",
@@ -3518,6 +3688,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "pg connections",
+    output: "report",
     summary: "Your PostgreSQL password file and service files, as libpq reads them (no passwords)",
     description: `Lists every entry of your PostgreSQL password file (~/.pgpass, or PGPASSFILE) and every section of your service files (~/.pg_service.conf, or PGSERVICEFILE, then the system's /etc/postgresql-common/pg_service.conf), matched the way libpq matches them. For each password-file entry: host, port, database, and user, which services it serves, and whether libpq can use it. Problems are named with their reason: an entry without five fields, an entry no service uses, a password file that group or others can access (libpq then ignores the whole file), a service section that holds a password, and a network service without sslmode=verify-full. A password is never printed, logged, or returned, in text, JSON, an MCP result, or an error. Read-only; it works for entries Archon did not make (spec 043).`,
     tier: "read",
@@ -3530,6 +3701,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "pg show",
+    output: "report",
     summary:
       "How to reach an instance: conninfo, URL, PG* environment, a service section, or everything for an external client",
     description: `Prints how to reach NAME (default prime): an instance Archon keeps, any cluster on this host (Archon's or not), or a section of your service files. --form conninfo (the default, a libpq connection string), url (postgresql://user@host:port/db), env (PG* settings to export), service (a service-file section), jdbc (a JDBC URL for DBeaver, IntelliJ, and Java apps: sslmode=verify-full with Java's own trust store, since pgJDBC reads sslrootcert as a file), npgsql (a connection string for .NET, Power BI, and Excel's Power Query, which trust the system's store), odbc (psqlODBC connection strings for Windows and Linux), dotenv (DATABASE_URL lines for app frameworks: libpq-based, Node, and Prisma), pgadmin (a servers.json for pgAdmin's Import Servers), ca (the root certificate behind the server's chain, fetched with PostgreSQL's own STARTTLS and checked against the system's trusted roots, for clients without a system store: libpq's root.crt), or external (everything a client on another machine needs: the published name and the server's IP address as hostaddr, port, database, user, sslmode=verify-full, sslrootcert=system, where the password comes from, then the four forms filled in for that client). On this host it is the socket directory and you as yourself (peer); with --remote, or for a service whose host is on the network, the published name with sslmode=verify-full and sslrootcert=system, never a fallback to plain text. No password in any form: it stays in ~/.pgpass for libpq. An unknown form is a usage error that lists them all. Read-only (spec 043).`,
@@ -3569,6 +3741,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "pg test",
+    output: "report",
     summary: "Test an external connection: TLS to the published name, with a password you type",
     description: `Connects to NAME (default prime) the way a client on another machine does: to its published name, never localhost, over TLS with the server's certificate verified (sslmode=verify-full), as you (or --user) with a password you type (not echoed, not stored: it reaches psql through a private, temporary password file removed at once). Reports who you connected as, the server's and your addresses, and the TLS version; on failure, the likely cause and its fix: the password (PostgreSQL learns your Linux password when you type it on the server after publishing: sudo -k && sudo -v there), the certificate, the name not resolving, or nothing answering (firewall, router). Run it from another machine (a workstation) to test the firewall and the router too. Interactive, so not an MCP tool (spec 043).`,
     tier: "read",
@@ -3591,6 +3764,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "pg on",
+    output: "action",
     summary: "Turn PostgreSQL on for this server (off until an operator does)",
     description: `PostgreSQL is an opt-in service (spec 040): every server has postgresql-common, and postgresql.service stays masked until an operator runs this. --durable or --ephemeral is required (Article 23, spec 044): durable makes the server durable (guarded against reinstalls and wipes). It records the decision in the host's own archon.sql (opt-in pg) (who, when, which) and applies it: postgresql.service is unmasked and started, and every instance in the model and the host's record is created or started. Every apply, reboot, and reinstall keeps it on until an operator runs archon pg off. The mailbox is told. See archon-pg(7) and archon-opt-in(1).`,
     tier: "mutate",
@@ -3606,6 +3780,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "pg off",
+    output: "action",
     summary: "Turn PostgreSQL off for this server: every instance stopped and held",
     description: `Records the decision and applies it: postgresql.service is masked and stopped, which stops every instance (each is PartOf it), and nothing starts them (a reboot included) until an operator runs archon pg on. Data, roles, and passwords are kept (spec 040).`,
     tier: "mutate",
@@ -3618,6 +3793,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "pg who",
+    output: "report",
     summary: "An instance's roles and the Linux accounts behind them",
     description: `Lists every role in the instance: its kind (human, service, group, the superuser postgres), whether a Linux account of that name exists, whether it can log in, whether it is a superuser, whether it has a password (as root), and its groups. Exits non-zero when a rule of spec 039 is broken: a role that can log in without a Linux account, a superuser other than postgres, or a person's password on a private instance. See archon-pg(7).`,
     tier: "read",
@@ -3638,6 +3814,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "pg passwd-sync",
+    output: "action",
     summary: "Give PostgreSQL a person's Linux password (run by PAM)",
     description: `Run by Archon's PAM hook (as root, in the background) after Linux accepts or changes a password: reads it from standard input and, for each instance where that person has a role, sets a SCRAM verifier of the same password, so a published instance takes their Linux password. Nothing else is stored, printed, or logged. Not for people to run (spec 039).`,
     tier: "mutate",
@@ -3659,6 +3836,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "decide",
+    output: "action",
     summary:
       "Record an opt-in decision for a host in Git (on a workstation): on or off, durable or ephemeral",
     description: `Writes fleets/<fleet>/hosts/<host>/decisions.ts (spec 047): whether an opt-in (pg, s3, smb, otel-ui) is on for that host and, for one that holds end users' data, whether that data is durable or ephemeral (Article 23). A decision in Git wins over the host's own record, survives a re-install, and lets the boot machine know a host's data class while it is offline. Commit it signed and push: the host applies it within 15 minutes. Durable to ephemeral needs --confirm-destroy with the host's name, typed by a person.`,
@@ -3708,6 +3886,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "otel ui on",
+    output: "action",
     summary: "Turn on the telemetry web UI (OpenObserve) on this server; it collects for the fleet",
     description: `The telemetry web UI is an opt-in container (specs 040, 050): every server has it, masked, until an operator runs this. --durable or --ephemeral is required (Article 23, spec 044); telemetry is usually ephemeral. OpenObserve (pinned by digest) starts under Podman, unprivileged, on 127.0.0.1; Traefik serves it at otel.<host>.<domain>; its admin password is generated here, root only (archon otel ui password --show). This server's Collector then forwards everything it collects (journald, PCP, Archon's and apps' OTLP) to it, adding the credential itself, and accepts OTLP on 4318 (the router decides from where): point otel.localdomain (router DNS) or telemetry.collector in fleet.ts at this server and the others find it within 15 minutes. Only telemetry from then on is forwarded. Until this is on anywhere, every server keeps its own telemetry and the headless Collector works as before. See the telemetry guide (bun run stolos docs telemetry).`,
     tier: "mutate",
@@ -3728,6 +3907,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "otel ui off",
+    output: "action",
     summary: "Turn off the telemetry web UI on this server (its data kept)",
     description: `Records the decision and applies it: the container stops and its unit is masked, its route leaves Traefik, the Collector stops accepting OTLP from the network and goes back to local only (or to another collector it finds). /srv/otel-ui and the credentials are kept (specs 040, 050).`,
     tier: "mutate",
@@ -3744,6 +3924,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "otel ui status",
+    output: "report",
     summary:
       "Whether the telemetry web UI is on here, ready, where, and where this server forwards",
     description: `Read-only (spec 050): on or off, whether OpenObserve answers, its address, and the collector this server forwards to (the web UI here, telemetry.collector, otel.localdomain, the boot PC, or none). --json for tools.`,
@@ -3756,6 +3937,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "otel ui password",
+    output: "action",
     summary: "The telemetry web UI's sign-in (the password only with --show, typed by a person)",
     description: `Prints the admin's sign-in name; with --show, its password too. The password is root only on this server; --show is typed by a person and never offered over MCP (spec 050).`,
     tier: "mutate",
@@ -3775,6 +3957,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "fs s3 on",
+    output: "action",
     summary: "Turn on S3 object storage (RustFS) on this server",
     description: `S3 object storage is an opt-in container (specs 040, 041): every server has it, masked, until an operator runs this. --durable or --ephemeral is required (Article 23, spec 044): durable buckets (/srv/s3) are archived nightly and the server is guarded against reinstalls and wipes. Records the decision in the host's own archon.sql (opt-in s3) (who, when, which) and applies it: RustFS (pinned by digest) is pulled and started under Podman, as an unprivileged user with every capability dropped, on 127.0.0.1 only; Traefik serves it on the local networks at s3.<host>.<domain> (the S3 API, path-style) and s3-console.<host>.<domain> (the console). Every person on the server and every fleet service account gets an S3 user of the same name, allowed the buckets named <name>-*, with a secret only that account can read (archon fs s3 key). It stays on, across applies and reboots, until an operator runs archon fs s3 off. The mailbox is told.`,
     tier: "mutate",
@@ -3790,6 +3973,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "fs s3 off",
+    output: "action",
     summary: "Turn off S3 object storage on this server (data kept)",
     description: `Records the decision and applies it: the container is stopped and its unit masked, its routes leave Traefik, and it stays off until an operator runs archon fs s3 on. Buckets, users, and keys are kept (/srv/s3, /var/lib/archon/s3, /var/lib/archon-keys/s3) (specs 040, 041).`,
     tier: "mutate",
@@ -3802,6 +3986,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "fs s3 status",
+    output: "report",
     summary: "Whether S3 object storage is on, ready, and where",
     description: `Shows whether S3 is on (since when, who turned it on), whether its container runs and answers ready, the API and console addresses, and (as root) its users. Exits non-zero when it is on but not ready (spec 041).`,
     tier: "read",
@@ -3814,6 +3999,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "fs s3 key",
+    output: "action",
     summary: "Your S3 access key (your username) and secret, or an AWS profile with them",
     description: `Your S3 user is your Linux username; its secret was generated on the server and only you (and root) can read it: S3 signs every request with a secret the server keeps, so it cannot be your Linux password. Without --write, shows your access key, the endpoint, and your buckets (<you>-*). With --write, puts a profile s3-<host> in ~/.aws/credentials and ~/.aws/config (0600, replacing only that profile), for the aws CLI, rclone, and the SDKs. The web console (s3-console.<host>.<domain>) signs in with Account: your username and Key: this secret, not your Linux password; --show prints the secret on your terminal to paste there (never in JSON, a log, MCP, or for an agent). --rotate gives you a new secret at once (through sudo) and the old one stops working: use it when the secret may have been seen, then run --write again and update anything that uses it. Run it as the account that needs the key (a service: sudo -u s-<app> archon fs s3 key --write) (spec 041).`,
     tier: "read",
@@ -3847,6 +4033,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "shell emit",
+    output: "report",
     summary: "Print the shell code for Archon's aliases, keys, and prompt",
     description: `Prints, for bash, zsh, or fish, the code that turns on Archon's shell features: the modern ls, ll, la, and tree (eza), cat (bat), and fd; fzf's keys (Ctrl+R history, Ctrl+T files, Alt+C folders); zoxide's z; delta for git; the terminal title; and the prompt. One line in a shell's startup file turns it all on, and a shell without that line gets none of it:\n\n  bash  ~/.bashrc:                  eval "$(archon shell emit bash)"\n  zsh   ~/.zshrc:                   eval "$(archon shell emit zsh)"\n  fish  ~/.config/fish/config.fish: archon shell emit fish | source\n\nThe fleet's dotfiles carry the line for everyone (man archon-dotfiles). Without a shell name, the shell that runs the line is used (its parent process, else $SHELL). Everything is guarded: nothing happens in a non-interactive shell, and each piece only when its tool is installed. The prompt is plain (no icons, status in words) on a console terminal (the physical console or a serial line) and Oh My Posh everywhere else; ARCHON_PROMPT=plain or ARCHON_PROMPT=pretty overrides that. The output is rendered into /usr/local/share/archon/shell/init.<shell> by archon apply, and the archon launcher prints that file without starting the engine, so a new shell starts fast (spec 036).`,
     tier: "read",
@@ -3867,6 +4054,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "shell status",
+    output: "report",
     summary: "Which of your shells have Archon's shell features turned on",
     description: `Checks ~/.bashrc, ~/.zshrc, and ~/.config/fish/config.fish for the archon shell emit line, and shows the line to add where it is missing (spec 036).`,
     tier: "read",
@@ -3879,6 +4067,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "dotfiles",
+    output: "report",
     summary: "Show where your dotfiles come from (layers in the repository)",
     description: `Lists the layers that make up a user's chezmoi source on this host, most general first: the engine's home/ (every fleet), fleets/<id>/home/ (everyone in this fleet), fleets/<id>/hosts/<host>/home/ (everyone on this host), fleets/<id>/users/<user>/home/ (this user everywhere), and fleets/<id>/hosts/<host>/users/<user>/home/ (this user here). A later layer replaces a file with the same target. With a path (~/.bashrc, .config/fish/config.fish), shows the one layer and repository file that provide it; without, every managed file and its layer. Read-only: archon apply composes the source into /var/lib/archon-dotfiles/<user> and runs chezmoi from there (spec 031). See archon-dotfiles(7).`,
     tier: "read",
@@ -3903,6 +4092,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "first-boot",
+    output: "action",
     summary: "First boot of a freshly installed host (run by cloud-init)",
     description: `Run once by cloud-init after the first-boot script cloned the repository (spec 005): applies the host, hands the deploy key to ops, verifies, and pushes the host's first record.`,
     tier: "mutate",
@@ -3915,6 +4105,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "tools sync",
+    output: "action",
     summary: "Install or upgrade the tool catalog and write the report",
     description: `Article 5: fish, tmux, and git come from Ubuntu; Bun, gh, chezmoi, and oh-my-posh are upstream binaries, verified against GitHub's published SHA-256 digests, installed side by side under /opt/tools/<tool>/<version>, smoke-tested, and linked into /usr/local/bin with rollback; Claude Code is installed on workstations only and updates itself (specs 010, 030).`,
     tier: "mutate",
@@ -3950,6 +4141,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "capture",
+    output: "report",
     summary: "Report this host's drift from the model (writes nothing)",
     description: `Reads manually installed packages, snaps, enabled units, listening ports, accounts, and tool versions, compares them with the plan, and prints the drift. Nothing is recorded or pushed (spec 048): ask the machine directly with archon query.`,
     tier: "read",
@@ -3967,6 +4159,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "drift",
+    output: "report",
     summary: "What changed on this host outside Stolos, not proposed yet (read-only)",
     description: `Spec 095: what this host has, minus its plan, minus the birth snapshot (what Ubuntu put here at install, so unattended upgrades are never drift). Each item shows who changed it and when (from sudo's journal, apt's history, etckeeper, osquery) and the model change that would adopt it (packages.add, units.enable, ports.open, files.override), or what a person does by hand. A file no package owns under /usr/local or /opt is flagged (Article 5); a modified package file is a SECURITY ALERT, never a proposal (exit 1). Reads what was collected (by the daily report, every apply, or --collect); --collect reads every source again first, as root. --all also lists items already proposed, accepted as local, or rejected. Propose them with archon propose.`,
     tier: "read",
@@ -3999,6 +4192,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "propose",
+    output: "action",
     summary: "Propose changes made outside Stolos: signed with the host key, mailed to the fleet",
     description: `Spec 095: anyone with sudo may propose. Collects again, then takes the drift items chosen (--all, --intent <id> for a change session, --item <key>, repeatable), each with an action: adopt (put it in the model), revert (let Stolos converge it back; Archon never removes anything itself, so the proposal names the command), or local (keep it here, recorded as accepted local drift until --until, default 30 days; not for an item the plan manages). A written --reason is required (a recording's counts). Builds proposal.json (format stolos-proposal/1: the host, the model commit it runs, the evidence, and per item the structured model edits), with no secrets (a secret path or key-like content is a hash only), signs it with the host's SSH host key (ssh-keygen -Y sign -n stolos-proposal), keeps it in /var/lib/archon/proposals/<id>/, and mails it to the fleet's mailbox with a readable summary. On your PC: stolos proposal import. --dry-run prints it and sends nothing.`,
     tier: "mutate",
@@ -4082,6 +4276,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "record",
+    output: "action",
     summary: 'Record a change made by hand: archon record "reason", the work, archon record done',
     description: `Spec 095: archon record "why" starts a recording; archon record done ends it, collects, and shows everything that changed outside Stolos in between as one intent, with that reason (sudo archon propose --intent <its id> proposes it; the recording's reason counts as the written reason). archon record alone shows the recording that runs. One at a time per host.`,
     tier: "mutate",
@@ -4110,6 +4305,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "proposal import",
+    output: "action",
     summary: "Import proposals mailed by servers: verify each against the host's key in Git",
     description: `Spec 095: reads a saved message (.eml: its proposal.json and proposal.json.sig attachments, base64 or quoted-printable, gzipped or not), or proposal.json (or .json.gz) with proposal.json.sig beside it, or a folder of them. Each is checked: its format (stolos-proposal/1), that its host is in this fleet, and that it was signed with one of that host's SSH host keys in fleets/<fleet>/hosts/<host>/registration.ts (namespace stolos-proposal). A forged or altered proposal is refused with the reason. Good ones are kept in your state folder (not in Git; Article 4: no JSON in a fleet). No mailbox access and no credential: save the mail, then import it.`,
     tier: "repo",
@@ -4135,6 +4331,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "proposal list",
+    output: "report",
     summary: "The imported proposals: host, who, items, and the decision",
     description: `Spec 095: every imported proposal, newest first, with its host, time, proposer, number of items, its reason, and its decision in Git (waiting, accepted, rejected).`,
     tier: "read",
@@ -4146,6 +4343,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "proposal show",
+    output: "report",
     summary: "One proposal: its reason, items, evidence, and the model diff accepting makes",
     description: `Spec 095: verifies the proposal again, then shows who proposed it and why, the change sessions and their sudo commands, each item with its action (adopt, revert, local) and its structured edits, and the change to the host's host.ts that accepting makes. Items the model already has are named; so is every conflict (the model sets the item otherwise, with the spec that does), and a note when the host's model changed since the host made it.`,
     tier: "read",
@@ -4165,6 +4363,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "proposal accept",
+    output: "action",
     summary: "Accept a proposal: edit the host's model, write a draft spec, record it, build",
     description: `Spec 095: verifies the proposal again, then compares each edit with the model now. A conflict (the model already sets the item otherwise) is named with the spec that owns it and nothing is written; --skip <key> leaves an item out (it stays flagged on the host). Otherwise: adds adopted({...}) (bare keys) to the host's capabilities in host.ts, with its import; writes a draft spec fleets/<fleet>/specs/NNN-<host>-<reason>/spec.md from the proposal's reason and evidence; records the decision in fleets/<fleet>/hosts/<host>/proposals.ts (with the items kept local and their dates); and runs stolos build. Review the change, then stolos apply: the host converges, and its holds end.`,
     tier: "repo",
@@ -4197,6 +4396,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "proposal reject",
+    output: "action",
     summary: "Reject a proposal: recorded in Git; managed items revert, the rest stays flagged",
     description: `Spec 095: records the rejection in fleets/<fleet>/hosts/<host>/proposals.ts. After stolos apply, the host ends the proposal's holds: the next apply reverts the items the plan manages; anything else stays flagged in archon drift.`,
     tier: "repo",
@@ -4217,6 +4417,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "reboot",
+    output: "action",
     summary: "Reboot this host; --netboot boots it from the network once (for a re-install)",
     description: `Waits until nothing changes packages (apt, dpkg, unattended-upgrades: up to 15 minutes; --now does not wait, spec 054), then reboots in 5 seconds, so it can be run over SSH. With --netboot it first sets the firmware's one-time next boot (UEFI BootNext) to the network entry the install recorded (/etc/archon/netboot-entry), or the first PXE/HTTP IPv4 entry, so the boot server can re-install an armed host without anyone at the console; the boot order itself is unchanged. bun run stolos boot reinstall <host> runs this for you (spec 004).`,
     tier: "mutate",
@@ -4246,6 +4447,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "poweroff",
+    output: "action",
     summary: "Shut this host down cleanly, after apt and dpkg finish",
     description: `Waits until nothing changes packages (apt, dpkg, unattended-upgrades: up to 15 minutes, saying what it waits for), then shuts down cleanly in 5 seconds, so it can be run over SSH. Cutting the power while apt runs can break dpkg's state; this is the way to turn a server off (spec 054). --now does not wait.`,
     tier: "mutate",
@@ -4265,6 +4467,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "observe",
+    output: "report",
     summary: "What this machine records about itself, where, and within which limits",
     // The Collector's files belong to its own service user; members of
     // archon-ops are not asked for a password.
@@ -4280,6 +4483,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "observe tui",
+    output: "report",
     summary: "Open otel-tui on this machine's telemetry (PCP's metrics live, Archon's OTLP)",
     description: `Runs otel-tui, a terminal viewer for OpenTelemetry, on 127.0.0.1: PCP's core metrics live (through pmproxy's OpenMetrics endpoint) and Archon's recent traces, metrics, and logs from the local Collector's OTLP file. Quit with q. Runs through sudo, which does not prompt members of archon-ops.`,
     tier: "read",
@@ -4292,6 +4496,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "observe discover",
+    output: "action",
     summary: "Look for a central OpenTelemetry collector and forward to it if one answers",
     description: `Looks for a central OpenTelemetry collector (spec 024): the fleet model's telemetry.collector, else the name "otel.localdomain" (telemetry.name), a Local DNS record in the router. Never mDNS or DNS-SD (constitution Article 20). A candidate counts only if it accepts OTLP. When one answers, the local Collector also reads journald and PCP (through pmproxy) and forwards them and Archon's own telemetry as OTLP, with a bounded queue on disk; when none does, everything stays local. The archon-observe-discover timer runs this every 15 minutes. With --check, only reports.`,
     tier: "mutate",
@@ -4305,6 +4510,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "doctor",
+    output: "report",
     summary: "Can this machine reach what it needs? Network and email, with where to look",
     description: `A quick, read-only diagnosis (spec 026), each problem with what it means and where to look:\n\nLink: the default route, carrier, duplex, and interface errors (ip, sysfs). Gateway: loss and latency (ping), and whether full-size packets pass (ping with don't-fragment). DNS: the configured servers (resolvectl), five uncached lookups of archive.ubuntu.com to catch a flaky upstream, each server directly (dig), a public resolver only when they all fail (to tell the router's DNS from the internet's), and this host's Local DNS name. IPv6: a route, and whether apt is limited to IPv4 where there is none (spec 009). Time: synchronized, offset, sources (timedatectl, chronyc), because TLS needs the right time. Proxy and firewall: proxy settings, UFW's outgoing policy.\n\nInternet: every endpoint this machine uses, taken from its own configuration: each apt repository's InRelease (Ubuntu, security, PPAs, GitHub CLI), the checkout's remote (over SSH as ops with the deploy key), GitHub's API and a release download (tools sync), the Claude Code installer (workstations), the Snap Store (snapd's own snap debug connectivity), and the OpenTelemetry collector if the model names one; each with curl's DNS, connect, and TLS times, and a curl failure explained (DNS, refused, timeout, TLS, certificate, reset). With --trace, mtr follows the path to each failing site over TCP.\n\nEmail (specs 025, 027): the sending domain's records in DNS (Cloudflare's cf-bounce SPF, DKIM, and MX, and DMARC), the relay's credential, a login to the relay without sending (curl, EHLO, AUTH, NOOP), and on servers Postfix: running, relaying to the right place, and its queue. archon notify's queue and last send. With --send, it also mails what the Email phase found to the shared mailbox through archon's own sender and through Postfix, so the result arrives where it matters; this happens by itself after bun run stolos boot mail-setup, after an install, and when a server receives a new token.`,
     tier: "read",
@@ -4339,6 +4545,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "vault status",
+    output: "report",
     summary: "Boot machine: every secret, when it changed, and whether the last backup has it",
     description: `Lists every secret in the boot machine's secrets folder with its inventory name, when it last changed, and when it was last backed up (specs 029 and 056): ✓ backed up, ⚠ newer than the last backup. Exits 1 if anything is newer than the last backup. With --lost, prints how each secret would be made again if the boot machine were lost without a backup. Also writes the prompt's 🔐 backup status, installs the git pre-push reminder hook, and sends the "not backed up" email when due. Run as bun run stolos vault status.`,
     tier: "repo",
@@ -4358,6 +4565,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "vault backup",
+    output: "action",
     summary: "Boot machine: one ZIP of every secret and your signing key, to keep somewhere safe",
     description: `Writes stolos-backup-<pc>-<UTC>.zip into stolos's backup folder (Windows: %LOCALAPPDATA%\\stolos\\backup; Linux and macOS: stolos's data folder, backup) with every fleet's secrets on this PC (except ephemeral install tokens), your signing key (both halves, from git config user.signingkey; the private half stays locked by its passphrase), a manifest (names, SHA-256, sizes; never a value), and RESTORE.txt (the restore steps). It reads the ZIP back and checks every file before reporting success, makes it readable by you only, and records it. Then move the ZIP wherever you keep important things safe (an encrypted place: it is not encrypted itself). Spec 056.`,
     tier: "repo",
@@ -4371,6 +4579,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "vault restore",
+    output: "action",
     summary:
       "Boot machine: restore a backup ZIP on a freshly cloned PC (secrets, both keys, signing)",
     description: `Run in the freshly cloned fleet repository: checks the backup ZIP (its format and every file's SHA-256), chooses the fleet it is for, puts every file back (the secrets readable by you only, the daily key in .ssh, the recovery key in the key store), records it as the last backup, then runs keys setup (Git's signing for this checkout and one test signature: your daily passphrase) and downloads the engine's types for VS Code. It never overwrites: a file already there with the same bytes is kept, and one that differs stops it before anything is written, so it can be run again. --destroy-existing restores clean: every fleet's secrets, the key store, and the backup's daily key files in .ssh are removed first (anything there the backup does not hold identically is saved as a backup ZIP of its own first; no other .ssh file is touched). --files-only stops after the files. Without a ZIP: prints the steps (the same as RESTORE.txt in every ZIP). Specs 056 and 061.`,
@@ -4412,6 +4621,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "vault list",
+    output: "report",
     summary: "Boot machine: the backup ZIPs still in the backup folder",
     description: `Lists the backup ZIPs still in stolos's backup folder, newest first. Once you move one somewhere safe, it is no longer listed.`,
     tier: "repo",
@@ -4424,6 +4634,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "vault recover-host-keys",
+    output: "action",
     summary: "Boot machine: pull a running host's SSH host keys and deploy key back over SSH",
     description: `For a boot machine lost without a backup: connects to the host as the fleet admin, runs archon host-keys export there, and stores its SSH host keys and ops' deploy key in the secrets folder, then trusts the host keys again (known_hosts). The rebuilt boot machine holds the same identities: nothing changes on GitHub, and the next re-install keeps the host's identity.`,
     tier: "repo",
@@ -4445,6 +4656,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "host-keys export",
+    output: "report",
     summary: "Print this host's SSH host keys as JSON (for vault recover-host-keys)",
     description: `Prints this host's SSH host keys and ops' deploy key (private and public) as JSON on stdout, for bun run stolos vault recover-host-keys <host> on a boot machine that lost its copy (spec 029). Root only; never offered over MCP.`,
     tier: "read",
@@ -4458,6 +4670,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "notify send",
+    output: "action",
     summary: "Email the fleet's mailbox from this machine",
     description: `Queues one message to the fleet's shared mailbox (mail.to in fleets/<fleet>/fleet.ts), from root+<host>.<mail.tag>@<mail.domain>, and starts sending it through Cloudflare Email Service (specs 025, 027). A short subject becomes "[Archon] <host>: <subject>"; a subject that starts with "[" or "Lab " is sent as given (for example "Lab Network Runbook Change Log: ..." with the reference HTML attached).\n\nAttachments are trimmed or gzipped to keep a message under about 1 MB. Secrets are redacted from the subject, body, and text attachments: tokens, keys, password hashes, and the credential itself. With --key, a message with the same key in the last hour is dropped. Messages wait in /var/spool/archon/notify and are retried with backoff; sending never blocks or fails the command that asked for it.`,
     tier: "mutate",
@@ -4512,6 +4725,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "notify test",
+    output: "action",
     summary: "Send a test message and wait for the relay to accept it",
     description: `Sends "[Archon] <host>: notification test" to the fleet's mailbox right away and reports whether the relay accepted it (spec 025). If this machine has no credential: on the boot machine, bun run stolos boot mail-setup; for a host, bun run stolos boot mail-push <host>.`,
     tier: "mutate",
@@ -4524,6 +4738,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "notify status",
+    output: "report",
     summary: "Mailbox, last send and its result, and messages waiting",
     description: `Shows where this machine's notifications go, the relay, whether it holds the relay's credential, the last send and its result, and how many messages wait in the queue (spec 025). With --check (archon verify uses it, as a warning): exits 1 if notifications are not configured, the last send failed, or a message has waited more than 6 hours.`,
     tier: "read",
@@ -4535,6 +4750,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "notify flush",
+    output: "action",
     summary: "Send what is waiting in the notify queue",
     description: `Sends the queued messages whose retry time has come, oldest first, and stops at the first failure (spec 025). Five or more messages older than an hour are sent as one "N messages were queued" summary. The archon-notify-flush timer runs this every 5 minutes, and every queued message starts it at once.`,
     tier: "mutate",
@@ -4547,6 +4763,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "notify watch",
+    output: "report",
     summary: "Follow the journal and email logins and other major server events",
     description: `Runs as the archon-notify-watch service (spec 025). It follows the journal, where Ubuntu already records every event below, and emails the fleet's mailbox: SSH logins (user, address and its DNS name, local network or not, method, and the key's fingerprint and name; once per user, address, and method an hour, as a warning when the address is outside the local networks or new for that user); any root login; failed SSH logins, summarized hourly by address and users tried; console logins (keyboard or AMT); su; sudo refusals; account and group changes made outside archon apply; changes to any authorized_keys file; kernel out-of-memory kills, disk and filesystem errors, read-only remounts, and hardware errors; failed system units; each boot, and whether the previous one ended cleanly; and filesystems over 90% full. Nothing is added to sshd, PAM, or auditd.`,
     tier: "mutate",
@@ -4560,6 +4777,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "mail credential",
+    output: "action",
     summary: "Install the mail relay's token from stdin (bun run stolos boot mail-push)",
     description: `Reads the mail credential (JSON with a Cloudflare API token that has Email Sending: Edit) on stdin and stores it as Postfix's /etc/postfix/sasl_passwd, readable by root only, then reloads Postfix (spec 027). archon's own messages use the same token. The boot machine sends it with bun run stolos boot mail-push <host>; installs deliver it by themselves.`,
     tier: "mutate",
@@ -4573,6 +4791,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "mail test",
+    output: "action",
     summary: "Send a test through Postfix, the way apps and cron jobs send mail",
     description: `Hands one message for root to /usr/sbin/sendmail (spec 027). This host's Postfix sends mail for local accounts to the fleet's mailbox, from root+<host>.<mail.tag>@<mail.domain>, through Cloudflare Email Service. archon notify test checks archon's own path; this checks the one every other program uses.`,
     tier: "mutate",
@@ -4586,6 +4805,7 @@ export const COMMANDS: Command[] = [
 
   {
     name: "observe prune",
+    output: "action",
     summary: "Keep PCP's metric archives within their size and free-space limits",
     description: `Removes PCP's oldest metric archives while they are over the size limit or the disk is below its free-space floor (spec 021); the archive being written is never removed. pmlogger_daily already removes archives past their age limit, and journald and the Collector's files limit themselves. The archon-observe-prune timer runs this daily. With --check, only reports.`,
     tier: "mutate",
@@ -4599,6 +4819,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "update",
+    output: "action",
     summary: "Bring this machine up to date with GitHub: pull, apply, verify",
     description: `Pulls the repository (as its owner), then with the freshly pulled code validates the model, applies, syncs tools, applies dotfiles again when tools changed, and verifies (spec 015). An invalid model stops before anything is applied (Article 10). With --check, shows incoming commits and the plan.`,
     tier: "mutate",
@@ -4626,6 +4847,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "update",
+    output: "action",
     summary: "Bring this PC's checkout up to date (use it instead of git pull), then the doctor",
     description: `Instead of git pull (spec 058): fetches and fast-forwards a clean checkout (never a merge); checks that what arrived is signed by a key the fleet trusted (as servers will); sends your own commits first (stolos apply), upgrades the pinned engine when a newer Stolos release is out (fleet upgrade: one signed commit) and sends that too (stolos apply), so every server follows within 15 minutes; --no-upgrade only reports; a pull that diverged from yours is rebased (yours on top), and a conflict is undone and named; repairs Git's allowed signers and the pre-push check; then runs boot doctor (on a boot machine) or stolos keys. Every step is safe to run again.`,
     tier: "repo",
@@ -4647,6 +4869,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "reconcile",
+    output: "action",
     summary: "Converge to the repository (run by the timer every 15 minutes)",
     description: `Fetches the fleet's branch, fast-forwards a clean checkout, and applies only when HEAD equals the remote (Article 9). Skips when another archon run holds the host lock, or when the checkout has local changes.`,
     tier: "mutate",
@@ -4658,6 +4881,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "export",
+    output: "action",
     summary:
       "The fleet in a standard format: OCSF, OTLP, CycloneDX attestations, in-toto, OSCAL, or RDF",
     description: `Spec 092. Writes one document from what this PC knows, by default to this PC's state directory (export/): ocsf-jsonl (OCSF 1.9.0 events, one per line: each person and account, machine, and other node in the estate graph, and a Compliance Finding per check and SCF control); otlp-json (the same events as an OTLP/HTTP JSON logs request; --entities adds OpenTelemetry entity events); cyclonedx-attestation (CycloneDX 1.6: the SCF controls as a standard, a claim per control with its evidence and conformance, the evidence bundle's items by SHA-256 with --bundle); intoto-statement (an in-toto Statement v1 for an evidence bundle: --bundle, or the newest one here); the four OSCAL documents (oscal-component-definition, oscal-ssp, oscal-assessment-results, oscal-poam). Without a kind, or rdf: out/rdf/fleet.ttl, using W3C PROV, Dublin Core terms, FOAF, and the archon: namespace (specs 002 and 014). Changes nothing else.`,
@@ -4720,6 +4944,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "report daily",
+    output: "report",
     summary: "Write the daily health report",
     description: `Failed units, disk, pending upgrades, archon timers, drift, and the latest tools report, written to /var/lib/archon/reports/daily-<date>.md and the journal (tag archon-report). Facts only: no agent runs on a server (spec 030); a workstation agent reads reports as MCP resources.`,
     tier: "read",
@@ -4746,6 +4971,7 @@ export const COMMANDS: Command[] = [
   },
   {
     name: "mcp",
+    output: "report",
     summary: "Serve the commands to an agent as MCP tools (stdio)",
     description: `Starts a Model Context Protocol server on stdin/stdout. Each command within --max-tier becomes a tool named archon_<command>; man pages, specs, the constitution, and reports are resources. A command above the tier is not listed and is refused; one with a read-only flag (apply --check) is listed and runs only with that flag. The destructive tier is never served. Each call is journaled (tag archon-mcp, with SSH_CLIENT).
 
@@ -4767,6 +4993,7 @@ On a server, workstations reach it as ops over SSH (spec 030): ops' authorized_k
   },
   {
     name: "backup run",
+    output: "action",
     summary: "Write a backup archive now (the timer runs it daily)",
     description: `Archives the host's own state and its durable data (S3 buckets and SMB shares recorded as durable, Article 23) with tar and zstd into the backup target (default /var/backups/archon), exports each durable LXD guest (lxc export), and keeps the newest N of each (specs 016, 044).`,
     tier: "mutate",
@@ -4804,6 +5031,7 @@ On a server, workstations reach it as ops over SSH (spec 030): ops' authorized_k
   },
   {
     name: "backup verify",
+    output: "report",
     summary: "Restore-test the newest archive",
     description: `Lists the newest archive and extracts the host marker into a temporary directory to prove it restores (Article 14).`,
     tier: "read",
@@ -4821,6 +5049,7 @@ On a server, workstations reach it as ops over SSH (spec 030): ops' authorized_k
   },
   {
     name: "backup restore",
+    output: "action",
     summary: "Extract an archive into a directory to inspect (never in place)",
     description: `Extracts the newest (or a named) archive into --to/<archive>/ so you can copy back what you need. It never overwrites the live system.`,
     tier: "mutate",
@@ -4845,6 +5074,7 @@ On a server, workstations reach it as ops over SSH (spec 030): ops' authorized_k
   },
   {
     name: "guest sync",
+    output: "action",
     summary: "Create and start the LXD guests the model declares",
     description: `Creates missing LXD instances (containers or VMs) from the host model and starts stopped ones (spec 017). Never deletes: instances not in the model are listed and kept.`,
     tier: "mutate",

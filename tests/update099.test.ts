@@ -18,7 +18,7 @@ import { stolosOverview } from "../src/archon/console/stolos-pages.ts";
 import { Askpass, askpassEnv } from "../src/archon/console/askpass.ts";
 import { askpassForm } from "../src/archon/console/stolos-server.ts";
 import { FACTS, fakeConsole } from "./console/serve-stolos.ts";
-import { linkEngine, sandbox } from "./sandbox.ts";
+import { ENGINE_ROOT, linkEngine, sandbox } from "./sandbox.ts";
 
 proves(
   ["099-engine-update FR-002"],
@@ -233,7 +233,7 @@ proves(
       await fs.writeTextFile(path.join(mine, "mine.txt"), "m\n");
       await sh(mine, "git", "add", "mine.txt");
       await sh(mine, "git", "commit", "-q", "--no-gpg-sign", "-m", "mine");
-      let r = await stolos(["update", "--no-upgrade", "--no-doctor"]);
+      let r = await stolos(["update", "--no-upgrade", "--no-doctor", "--verbose"]);
       assertStringIncludes(r.out, "your 1 commit(s) on top");
       assertEquals(await sh(mine, "git", "log", "-2", "--format=%s"), "mine\ntheirs");
 
@@ -331,6 +331,11 @@ proves(
       await fs.mkdir(path.join(mine, "fleets"), { recursive: true });
       await sh(".", "cp", "-r", "examples/fleets/lab", path.join(mine, "fleets", "lab"));
       await fs.writeTextFile(path.join(mine, ".gitignore"), "node_modules/\n");
+      // The checkout's own entry file: what update runs for its steps (spec 105-calm-output FR-005).
+      await fs.writeTextFile(
+        path.join(mine, "stolos.ts"),
+        `import { run } from ${JSON.stringify(path.toFileUrl(path.join(ENGINE_ROOT, "src/stolos/main.ts")).href)};\nawait run();\n`,
+      );
       await sh(mine, "git", "add", "-A");
       await sh(mine, "git", "commit", "-q", "--no-gpg-sign", "-m", "lab");
       await sh(mine, "git", "push", "-q", "origin", "main");
@@ -342,7 +347,10 @@ proves(
         ARCHON_REPO: mine,
         ARCHON_FLEET: "lab",
       });
-      assertStringIncludes(r.out, "Sending alpha's registration (from its install) (stolos apply)");
+      // It is handed to `stolos apply` without asking (this checkout has no signing key, so apply says
+      // why it cannot sign), and is never offered as your own change.
+      assert(!/Send your|of yours/.test(r.out), r.out);
+      assertStringIncludes(r.out, "E057-NO-KEY");
       assert(!/push or commit your own changes/.test(r.out), r.out);
       const d = await sb.run("src/stolos/main.ts", ["boot", "doctor"], "", {
         ...env,
@@ -350,7 +358,7 @@ proves(
         ARCHON_FLEET: "lab",
       });
       if ((await sh(mine, "git", "status", "--porcelain")).includes("registration.ts")) {
-        assertStringIncludes(d.out, "not sent yet: alpha's registration (from its install)");
+        assertStringIncludes(d.out, "Not sent yet: alpha's registration (from its install)");
       }
       assert(!/change\(s\) not committed/.test(d.out), d.out);
     } finally {
@@ -385,12 +393,14 @@ proves(
     const e = run(true);
     assertEquals(e.code, 0, "an action is not a failure");
     assertStringIncludes(e.text, `${palette.MARKS.action.emoji} not sent yet`);
-    assertStringIncludes(e.text, "━━ Your move");
+    // Spec 105-calm-output FR-006: your move first, then what waits, then the verdict; the phase
+    // that holds a ⚡ is not green; nothing is wrong, so nothing is a problem.
+    assertStringIncludes(e.text, `${palette.MARKS.action.emoji} Checkout`);
     assertStringIncludes(e.text, "run: bun run stolos update");
     assert(!e.text.includes("Needs attention"), "nothing is wrong");
     assert(
-      e.text.indexOf("Your move") < e.text.indexOf("Not set up yet"),
-      "Your move comes before Not set up yet",
+      e.text.lastIndexOf("not sent yet") < e.text.lastIndexOf("a certificate is not issued yet"),
+      "Your move comes before what waits",
     );
     const a = run(false);
     assertStringIncludes(a.text, `${palette.MARKS.action.ascii} not sent yet`);

@@ -200,8 +200,14 @@ export async function discover(host: HostDef, check = false): Promise<number> {
   // say so, and how to use it, so that anyone can set it up.
   const boot = tried.find((c) => c.source === "boot");
   if (!found && boot) {
+    // Spec 105-calm-output FR-008: an optional feature that is merely off is a hint, not a problem.
     p.note(
       `the boot PC (${boot.endpoint}) is not collecting: it does only while \`bun run stolos boot serve\` runs on it (optional; see the telemetry guide (bun run stolos docs telemetry))`,
+    );
+    p.hint(
+      "boot-pc-collector",
+      "Telemetry stays on this machine: the boot PC is not collecting (optional).",
+      "bun run stolos boot serve",
     );
   } else if (!found && !fleet.site?.bootServer) {
     p.note(

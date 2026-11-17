@@ -63,6 +63,9 @@ export const stolos = vocabulary(STOLOS, {
   Rung: "owl:Class",
   // The code lists' classes.
   OutcomeLevel: "owl:Class",
+  OutputClass: "owl:Class",
+  Verbosity: "owl:Class",
+  LineKind: "owl:Class",
   MachineKind: "owl:Class",
   SignerRole: "owl:Class",
   CommandTier: "owl:Class",
@@ -122,6 +125,13 @@ export const OutcomeLevelSchema = classSchema(stolos.OutcomeLevel, {
   emoji: one(stolos.emoji, range.string),
   ascii: one(stolos.ascii, range.string),
 });
+
+/** The schema of an output class (spec 105-calm-output): what a command is for, which decides how much it shows by default. */
+export const OutputClassSchema = classSchema(stolos.OutputClass, CODE);
+/** The schema of a verbosity (spec 105-calm-output): how much of a run reaches the screen. */
+export const VerbositySchema = classSchema(stolos.Verbosity, CODE);
+/** The schema of a kind of output line (spec 105-calm-output): what a line of a run is, which decides whether calm shows it. */
+export const LineKindSchema = classSchema(stolos.LineKind, CODE);
 
 /** The schema of a machine kind. */
 export const MachineKindSchema = classSchema(stolos.MachineKind, CODE);
@@ -323,6 +333,27 @@ export const classes = [
     label: en("Outcome level"),
     definition: en("How a step ended, as every command line and console shows it, with its mark."),
     spec: ["099-engine-update FR-007"],
+  }),
+  StolosClass.make(stolos.OutputClass, {
+    label: en("Output class"),
+    definition: en(
+      "What a command is for: a report is read as a whole (verbose by default), an action does something (calm by default).",
+    ),
+    spec: ["105-calm-output FR-001"],
+  }),
+  StolosClass.make(stolos.Verbosity, {
+    label: en("Verbosity"),
+    definition: en(
+      "How much of a run reaches the screen: nothing but a verdict line, only what needs a person, every line, or JSON.",
+    ),
+    spec: ["105-calm-output FR-002"],
+  }),
+  StolosClass.make(stolos.LineKind, {
+    label: en("Line kind"),
+    definition: en(
+      "What a line of a run is: a step that went well, a problem, something for the person to do, something waiting, a hint, or an outcome the person needs.",
+    ),
+    spec: ["105-calm-output FR-003"],
   }),
   StolosClass.make(stolos.MachineKind, {
     label: en("Machine kind"),

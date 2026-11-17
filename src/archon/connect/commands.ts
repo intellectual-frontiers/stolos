@@ -198,6 +198,7 @@ async function observeOne(c: Connector, t: http.Transport): Promise<Observation 
   const cred = await readCred(c.id);
   if (!cred) {
     p.done(`not connected (bun run stolos connect ${c.id})`);
+    ui.outcome(`${c.title}: not connected (bun run stolos connect ${c.id})`);
     return undefined;
   }
   try {
@@ -343,6 +344,7 @@ export async function connectorDisconnect(id: string): Promise<number> {
   const { removeSecret } = await import("../core/secrets.ts");
   await removeSecret(connectorCredPath(id));
   ui.phase("Disconnect").done(`${c.title}: the credential is gone from this PC's vault`);
+  ui.outcome(`${c.title}: the credential is gone from this PC's vault`);
   ui.next.push(
     `revoke it in ${c.title} too; the last observation stays in ${observationFile(id).replace(
       P.repo + "/",

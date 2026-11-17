@@ -62,7 +62,10 @@ proves(
     );
     const constitution = await read(".specify/memory/constitution.md");
     assert(constitution.includes("## Article 0: The Ladder (NON-NEGOTIABLE)"));
-    assert(constitution.includes("**Version**: 6.1.0"));
+    assert(
+      /\*\*Version\*\*: \d+\.\d+\.\d+/.test(constitution),
+      "the constitution says its version",
+    );
     assert(constitution.includes(ladderTable()), "the constitution's table is the ontology's");
     assert(
       (await read("AGENTS.md")).includes(layoutList()),

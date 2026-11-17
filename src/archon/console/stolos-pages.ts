@@ -103,6 +103,7 @@ const FIRST_STOLOS_GROUP: StolosGroup = {
     "decide",
     "update",
     "explain",
+    "log",
     "docs",
     "fleet use",
     "fleet init",

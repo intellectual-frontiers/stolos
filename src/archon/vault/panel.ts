@@ -8,6 +8,7 @@
  * @module
  */
 // Spec: 029-vault
+// Spec: 105-calm-output FR-017
 
 import { labelFor } from "../model/secret-inventory.ts";
 import type { Assessment } from "./state.ts";
@@ -92,4 +93,27 @@ export function panelLines(a: Assessment, pc: string, now = Date.now()): string[
     ...body.map((l) => `│  ${pad(l, inner - 2)}│`),
     `╰${"─".repeat(inner)}╯`,
   ];
+}
+
+/**
+ * The secrets reminder in words, grouped by machine (spec 105-calm-output FR-017): "intrepid's probe
+ * key, olympia's deploy key, 6 more". A label whose first word is a machine ("olympia deploy key")
+ * becomes "olympia's deploy key"; two are named, the rest counted.
+ */
+export function secretsInWords(a: Assessment, name = 2): string {
+  const secret = a.unbacked.filter((s) => !s.name.endsWith(".pub"));
+  const listed = secret.length ? secret : a.unbacked;
+  const seen = new Set<string>();
+  const labels: string[] = [];
+  for (const s of listed) {
+    const label = s.ref ? labelFor(s.ref, s.name) : s.name;
+    const [first = "", ...rest] = label.split(" ");
+    const worded = rest.length > 1 ? `${first}'s ${rest.join(" ")}` : label;
+    if (!seen.has(worded)) {
+      seen.add(worded);
+      labels.push(worded);
+    }
+  }
+  const named = labels.slice(0, name).join(", ");
+  return labels.length > name ? `${named}, ${labels.length - name} more` : named;
 }

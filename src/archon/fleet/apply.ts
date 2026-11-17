@@ -18,11 +18,15 @@
  * @module
  */
 // Spec: 060-stolos-apply
+// Spec: 105-calm-output FR-006, FR-007, FR-012 to FR-014, FR-017
 
-import { fs, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
+import { fs } from "@intellectual-frontiers/commons/ts/runtime";
 import { run } from "../core/exec.ts";
 import { P } from "../core/paths.ts";
 import { ui } from "../core/ui.ts";
+import { adoptMessage, commitSigned, describeCommit, describeSigning } from "./signing.ts";
+import { porcelainPath } from "./records.ts";
+import { waitingUpgrade } from "./upgrade.ts";
 
 /** What `stolos apply` is told. */
 export interface FleetApplyOptions {
@@ -65,21 +69,6 @@ export function describeChanges(porcelain: string): string {
   return parts.length > 8
     ? [...parts.slice(0, 8), `${parts.length - 8} more`].join("; ")
     : parts.join("; ");
-}
-
-/** Run git with the terminal (it may ask for the signing key's passphrase). */
-async function gitInteractive(args: string[]): Promise<boolean> {
-  ui.pause();
-  try {
-    const r = await proc.output(["git", "-C", P.repo, ...args], {
-      stdin: "inherit",
-      stdout: "inherit",
-      stderr: "inherit",
-    });
-    return r.success;
-  } finally {
-    ui.resume();
-  }
 }
 
 /** `stolos apply`: check, catch up, build, commit (signed), verify, push. */
@@ -177,23 +166,42 @@ export async function fleetApply(o: FleetApplyOptions = {}): Promise<number> {
     s.done("nothing to commit or push: up to date");
     return 0;
   }
+  const files = porcelain.split("\n").filter(Boolean).map(porcelainPath);
+  const upgrade = what ? await waitingUpgrade(P.repo, files) : undefined;
   if (what) s.done(what);
   else if (approve.length) {
-    stdio.stdout.writeSync(
-      "\n  Not signed by a fleet signer (your signed commit approves them):\n",
-    );
-    for (const c of approve) stdio.stdout.writeSync(`    ${c}\n`);
-    stdio.stdout.writeSync("\n");
     s.done(
-      `${approve.length} commit(s) here are not signed by a fleet signer (listed above): one signed commit approves them`,
+      `${approve.length} commit(s) here are not signed by a fleet signer: one signed commit approves them`,
     );
   } else s.done(`${ahead} commit(s) to push`);
   const message =
     o.message?.trim() ||
-    (approve.length
-      ? `${P.fleetId}: approve ${approve.length} commit(s) not signed by a fleet signer`
-      : `${P.fleetId}: ${what || "changes"}`
+    (upgrade
+      ? adoptMessage(upgrade.to)
+      : approve.length
+        ? `${P.fleetId}: approve ${approve.length} commit(s) not signed by a fleet signer`
+        : `${P.fleetId}: ${what || "changes"}`
     ).slice(0, 200);
+  // Pushing is approval (Article 9): what is about to leave, before the passphrase is asked (spec 105-calm-output FR-012).
+  const unseen = approve.length
+    ? approve
+    : ahead
+      ? (await git(["log", "--format=%h %s", `${exists ? `${remote}..` : ""}HEAD`])).stdout
+          .split("\n")
+          .filter(Boolean)
+      : [];
+  if (unseen.length && !o.check) {
+    ui.live(
+      approve.length
+        ? `${approve.length} commit${approve.length > 1 ? "s" : ""} made elsewhere, not signed by a fleet signer (your signed commit approves ${approve.length > 1 ? "them" : "it"}):`
+        : `Sending ${unseen.length} commit${unseen.length > 1 ? "s" : ""} made here:`,
+    );
+    for (const c of unseen.slice(0, 10)) {
+      const [sha = "", ...subject] = c.split(" ");
+      ui.live(`  ${sha} ${describeCommit(subject.join(" "))}`);
+    }
+    if (unseen.length > 10) ui.live(`  and ${unseen.length - 10} more`);
+  }
 
   // 4b. Spec 074: the controls this change weakens or strengthens, and the fleet's gate.
   if (what || ahead) {
@@ -205,7 +213,11 @@ export async function fleetApply(o: FleetApplyOptions = {}): Promise<number> {
     if (!pass && !o.check) return fail();
   }
   if (o.check) {
-    ui.next.push(`to commit and push it: bun run stolos apply -m "${message}"`);
+    s.action(
+      "This is not sent yet: --check changed nothing",
+      `bun run stolos apply -m "${message}"`,
+      "E105-UNSENT",
+    );
     return 0;
   }
 
@@ -226,22 +238,28 @@ export async function fleetApply(o: FleetApplyOptions = {}): Promise<number> {
       k.fail(`git add: ${last(add)}`, "git status");
       return fail();
     }
-    stdio.stdout.writeSync("\n  Signing the commit: type your daily key's passphrase.\n\n");
-    if (
-      !(await gitInteractive([
-        "commit",
-        "-q",
-        "-S",
-        ...(what ? [] : ["--allow-empty"]),
-        "-m",
-        message,
-        // Spec 074: the approval travels in the signed commit, as a trailer.
-        ...(o.approve ? ["-m", `Compliance-Approved: ${o.approve.trim()}`] : []),
-      ]))
-    ) {
+    if (what)
+      ui.live(
+        `Signing ${files.length} file${files.length === 1 ? "" : "s"}: ${describeSigning(files, upgrade)}`,
+      );
+    else ui.live(`Signing one approval of ${approve.length} commit(s)`);
+    const commit = await commitSigned(P.repo, [
+      "-q",
+      "-S",
+      ...(what ? [] : ["--allow-empty"]),
+      "-m",
+      message,
+      // Spec 074: the approval travels in the signed commit, as a trailer.
+      ...(o.approve ? ["-m", `Compliance-Approved: ${o.approve.trim()}`] : []),
+    ]);
+    if (!commit.ok) {
+      // Cause first, what happened to the person's data, one command (spec 105-calm-output FR-007).
       k.fail(
-        "the commit was not made (a wrong passphrase, or it was cancelled)",
-        "run this again: your changes are still here",
+        commit.wrongPassphrase
+          ? `That passphrase didn't unlock your daily key, three times. Nothing was sent. Your ${files.length} file${files.length === 1 ? " is" : "s are"} safe.`
+          : "The commit could not be made, so nothing was sent. Your files are safe.",
+        "bun run stolos apply",
+        commit.wrongPassphrase ? "E105-SIGN-PASSPHRASE" : "E105-FAILED",
       );
       return fail();
     }
@@ -285,13 +303,13 @@ export async function fleetApply(o: FleetApplyOptions = {}): Promise<number> {
     return fail();
   }
   p.done(`on GitHub (${branch}): every machine applies it within 15 minutes`);
+  ui.outcome("Sent: every server applies it within 15 minutes");
 
-  // 8. After.
+  // 8. After: a secret that changed is one thing for the person to do, shown once at the end.
   const { assess } = await import("../vault/state.ts");
-  if ((await assess().catch(() => undefined))?.unbacked.length) {
-    ui.next.push("a secret changed: bun run stolos vault backup");
-  }
-  ui.next.push("watch them: bun run stolos fleet status");
+  const { preparePanel } = await import("../vault/reminder.ts");
+  const assessed = await assess().catch(() => undefined);
+  if (assessed?.unbacked.length) await preparePanel(assessed);
   return 0;
 }
 
