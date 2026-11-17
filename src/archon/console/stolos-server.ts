@@ -30,6 +30,7 @@
 // Spec: 100-remote-access FR-003, FR-007, FR-009
 // Spec: 103-three-ports FR-003, FR-004, FR-005
 // Spec: 107-pairing-and-query FR-008, FR-011, FR-012
+// Spec: 108-tags FR-013, FR-014
 
 import type { EngineVersions } from "../fleet/releases.ts";
 import { type Askpass, type Question, sameToken } from "./askpass.ts";
@@ -528,7 +529,10 @@ export function stolosHandler(
   };
 
   const query = async (req: Request, s: Session): Promise<Response> => {
-    const sql = formText((await req.formData()).get("sql")).trim();
+    const form = await req.formData();
+    const sql = formText(form.get("sql")).trim();
+    // Spec 108-tags FR-013: the machines to ask, chosen by tags with the same parser the command line uses.
+    const pick = formText(form.get("select")).trim();
     const enc = new TextEncoder();
     const stream = new ReadableStream<Uint8Array>({
       async start(ctl) {
@@ -554,6 +558,8 @@ export function stolosHandler(
         const { answeredLine, queryRefusal, tableRows } = await import("../adopt/query.ts");
         const why = queryRefusal(sql);
         if (why) return refuse(why);
+        const chosen = pick ? await (await import("../fleet/tags.ts")).readSelectionFor(pick) : {};
+        if (chosen.error) return refuse(chosen.error);
         const ask = deps.ask ?? (await import("../adopt/commands.ts")).askFleet;
         // The grid fills in as the machines answer (spec 107-pairing-and-query FR-011): a row for each machine at once, asking.
         const feed = (change: Parameters<typeof tableItem>[0]) =>
@@ -564,6 +570,7 @@ export function stolosHandler(
         const got: Array<Awaited<ReturnType<typeof ask>>[number]> = [];
         let total = 0;
         const answers = await ask(sql, {
+          ...(chosen.selection ? { selection: chosen.selection } : {}),
           onStart: (ms) => {
             total = ms.length;
             feed({
@@ -577,7 +584,9 @@ export function stolosHandler(
               remove: [],
             });
             summary(`0 of ${total} answered`);
-            if (!total) state("There is no machine to ask yet");
+            if (!total) {
+              state(pick ? `No machine has the tags ${pick}` : "There is no machine to ask yet");
+            }
           },
           onAnswer: (a) => {
             got.push(a);
@@ -867,7 +876,16 @@ export function stolosHandler(
           f,
         );
       }
-      if (path === "/machines") return await frame(s, "Machines", "/machines", machinesPage(f), f);
+      if (path === "/machines") {
+        const group = url.searchParams.get("group") ?? "";
+        return await frame(
+          s,
+          "Machines",
+          "/machines",
+          machinesPage(f, Date.now(), group ? { group } : {}),
+          f,
+        );
+      }
       if (path.startsWith("/machines/")) {
         let name = "";
         try {
@@ -988,7 +1006,11 @@ export function stolosHandler(
           s,
           "Ask every machine",
           "/query",
-          queryPage(url.searchParams.get("sql") ?? "select name, version from os_version"),
+          queryPage(
+            url.searchParams.get("sql") ?? "select name, version from os_version",
+            f.tagging,
+            url.searchParams.get("select") ?? "",
+          ),
           f,
         );
       }

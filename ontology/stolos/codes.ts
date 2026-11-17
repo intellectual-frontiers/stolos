@@ -26,6 +26,9 @@ import {
   WayOfJoiningSchema,
   PairingStageSchema,
   AnswerStateSchema,
+  TagCardinalitySchema,
+  TagColourSchema,
+  TagOriginSchema,
 } from "./vocabulary.ts";
 
 const { en } = rdf;
@@ -469,6 +472,94 @@ export const answerStates = codeList(AnswerStateSchema, "answer", {
   },
 });
 
+/** The colours a defined tag may be drawn in (spec 108-tags FR-001): names of the console's palette, never raw colours. */
+export const tagColours = codeList(TagColourSchema, "colour", {
+  grey: {
+    label: en("grey"),
+    definition: en("Neutral: the default of a tag that has no colour of its own."),
+    spec: ["108-tags FR-001"],
+  },
+  red: {
+    label: en("red"),
+    definition: en("For what needs care: production, high criticality."),
+    spec: ["108-tags FR-001"],
+  },
+  orange: {
+    label: en("orange"),
+    definition: en("A warm accent, between red and yellow."),
+    spec: ["108-tags FR-001"],
+  },
+  yellow: {
+    label: en("yellow"),
+    definition: en("A caution accent."),
+    spec: ["108-tags FR-001"],
+  },
+  green: {
+    label: en("green"),
+    definition: en("For what is safe to touch: lab, low criticality, public data."),
+    spec: ["108-tags FR-001"],
+  },
+  teal: {
+    label: en("teal"),
+    definition: en("A cool accent, between green and blue."),
+    spec: ["108-tags FR-001"],
+  },
+  blue: {
+    label: en("blue"),
+    definition: en("A calm accent for roles and sites."),
+    spec: ["108-tags FR-001"],
+  },
+  violet: {
+    label: en("violet"),
+    definition: en("An accent for owners and teams."),
+    spec: ["108-tags FR-001"],
+  },
+  pink: {
+    label: en("pink"),
+    definition: en("A soft accent for anything else."),
+    spec: ["108-tags FR-001"],
+  },
+});
+
+/** How many values of a dimension a machine may hold (spec 108-tags FR-001, FR-004). */
+export const tagCardinalities = codeList(TagCardinalitySchema, "cardinality", {
+  "one-of": {
+    label: en("one of"),
+    definition: en(
+      "A machine holds at most one value of the dimension (an environment: prod, staging or lab).",
+    ),
+    spec: ["108-tags FR-004"],
+  },
+  "many-of": {
+    label: en("many of"),
+    definition: en("A machine may hold any number of the dimension's values (its roles)."),
+    spec: ["108-tags FR-004"],
+  },
+});
+
+/** Where a tag on a machine came from (spec 108-tags FR-009, FR-010, FR-011), strongest first. */
+export const tagOrigins = codeList(TagOriginSchema, "origin", {
+  person: {
+    label: en("person"),
+    definition: en(
+      "Added by a person: `stolos tag add`, or the tags of `stolos pair`. It wins over a rule and over a group.",
+    ),
+    spec: ["108-tags FR-006, FR-008, FR-011"],
+  },
+  rule: {
+    label: en("rule"),
+    definition: en(
+      "Given by a rule of the fleet's `tags.ts`, from what Stolos knows of the machine.",
+    ),
+    spec: ["108-tags FR-009"],
+  },
+  inherited: {
+    label: en("inherited"),
+    definition: en("Inherited from a group of the fleet's `tags.ts` the machine belongs to."),
+    spec: ["108-tags FR-010"],
+  },
+});
+
 /** Every code list, by the name of the type the generator writes for it, with the name of its array and what it is. */
 export const CODE_LISTS = {
   OutcomeLevel: {
@@ -515,6 +606,21 @@ export const CODE_LISTS = {
     array: "ANSWER_STATES",
     list: answerStates,
     what: "Where one machine is in a question to every machine",
+  },
+  TagColour: {
+    array: "TAG_COLOURS",
+    list: tagColours,
+    what: "The colours a defined tag may be drawn in",
+  },
+  TagCardinality: {
+    array: "TAG_CARDINALITIES",
+    list: tagCardinalities,
+    what: "How many values of a tag dimension a machine may hold",
+  },
+  TagOrigin: {
+    array: "TAG_ORIGINS",
+    list: tagOrigins,
+    what: "Where a tag on a machine came from",
   },
   SignerRole: { array: "SIGNER_ROLES", list: signerRoles, what: "A signer's role" },
   CommandTier: { array: "COMMAND_TIERS", list: commandTiers, what: "What a command may do" },

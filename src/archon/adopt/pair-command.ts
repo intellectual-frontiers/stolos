@@ -13,6 +13,7 @@
 // Spec: 103-three-ports FR-004, FR-005, FR-006, FR-008, FR-011
 // Spec: 106-one-passphrase-speed FR-006
 // Spec: 107-pairing-and-query FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007
+// Spec: 108-tags FR-008
 
 import { dns, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { compact, toBase64 } from "@intellectual-frontiers/commons/ts/kernel";
@@ -32,6 +33,7 @@ import {
 } from "./pair-store.ts";
 import type { PairingStage } from "../ontology.auto.ts";
 import { devicePairHandler, pairEngine, pairingStore } from "./pair-service.ts";
+import { addAssigned, classifyTag, tokensOf, type TagSet } from "../model/tags.ts";
 
 const fail = (): number => (ui.problems.some((x) => x.level === "fail") ? 1 : 0);
 
@@ -335,15 +337,65 @@ export function sessionStatus(rec: PairRecord): string {
   return `Session is open: Ctrl+C closes it${parts.length ? ` · ${parts.join(" · ")}` : " · no machine yet"}`;
 }
 
-/** `stolos pair [--name n] [--port 8080] [--address a]`: pair machines with a short code, until you close the session. */
+/** The tags a machine gets when it is paired (spec 108-tags FR-008): defined ones and free-form ones, apart. */
+export interface PairTags {
+  /** Defined tags (`env:lab`). */
+  tags: string[];
+  /** Free-form tags (`pilot`), always shown as custom. */
+  customTags: string[];
+}
+
+/**
+ * Read tags a person typed (`--tag`, or the answer at a machine's prompt): each defined or free-form, one value per one-of
+ * dimension. The error says what is wrong with the fix; `none` (or `-`) is no tags at all.
+ */
+export function readPairTags(
+  set: Pick<TagSet, "dimensions"> | undefined,
+  words: readonly string[],
+): { assigned: PairTags } | { error: string } {
+  if (words.length === 1 && (words[0] === "-" || words[0]?.toLowerCase() === "none")) {
+    return { assigned: { tags: [], customTags: [] } };
+  }
+  const tokens = words.map((w) => classifyTag(set, w));
+  const bad = tokens.flatMap((t) => (t.kind === "bad" ? [t] : []));
+  if (bad.length) return { error: bad.map((b) => `${b.why} (${b.fix})`).join("; ") };
+  const { assigned, replaced } = addAssigned(set ?? { dimensions: {} }, {}, tokens);
+  if (replaced.length) {
+    return {
+      error: replaced
+        .map((r) => `${r.was} and ${r.by} are values of one dimension: a machine holds one`)
+        .join("; "),
+    };
+  }
+  return { assigned };
+}
+
+/** `stolos pair [--name n] [--port 8080] [--address a] [--tag t]`: pair machines with a short code, until you close the session. */
 export async function pair(o: {
   name?: string;
   port?: number;
   address?: string;
   title?: string;
   owner?: string;
+  tag?: string;
 }): Promise<number> {
   const c = ui.phase("Pairing");
+  // Spec 108-tags FR-008: the tags every machine of this session gets, checked before anything is opened.
+  const { loadTagSet } = await import("../fleet/tags.ts");
+  const loaded = await loadTagSet();
+  if (loaded.error) {
+    c.fail(loaded.error, "fix fleets/<fleet>/tags.ts, then run this again");
+    return ui.finish();
+  }
+  const tagSet = loaded.set;
+  const sessionTags = readPairTags(tagSet, tokensOf(o.tag));
+  if ("error" in sessionTags) {
+    c.fail(
+      `--tag: ${sessionTags.error}`,
+      "bun run stolos tag list shows the tags this fleet defines",
+    );
+    return ui.finish();
+  }
   if (o.name && !MACHINE_NAME.test(o.name)) {
     c.fail(`${o.name} is not a name (lowercase letters, digits, -)`, "for example: alice-laptop");
     return fail();
@@ -437,7 +489,11 @@ export async function pair(o: {
       return false;
     }
     c.done(
-      `${found.doors.map((d) => d.base).join(" · ")} · fleet ${P.fleetId} · many machines, until you close it`,
+      `${found.doors.map((d) => d.base).join(" · ")} · fleet ${P.fleetId} · many machines, until you close it${
+        sessionTags.assigned.tags.length || sessionTags.assigned.customTags.length
+          ? ` · tags: ${[...sessionTags.assigned.tags, ...sessionTags.assigned.customTags.map((x) => `${x} (custom)`)].join(" ")}`
+          : ""
+      }`,
     );
     for (const line of found.notes) c.note(line);
     // Read-only firewall checks, as actions (the exact command is in each line).
@@ -479,7 +535,7 @@ export async function pair(o: {
     approve: async (text, hello) => {
       prompting = true;
       try {
-        return await approve(text, hello, o);
+        return await approve(text, hello, o, { set: tagSet, session: sessionTags.assigned });
       } finally {
         prompting = false;
         for (const l of held.splice(0)) print(l);
@@ -549,6 +605,7 @@ async function approve(
   text: string,
   hello: Hello,
   o: { title?: string; owner?: string },
+  tagging: { set: TagSet | undefined; session: PairTags },
 ): Promise<{ ok: boolean; message: string }> {
   const { parseCheckIn } = await import("./checkin.ts");
   let ci;
@@ -580,10 +637,43 @@ async function approve(
   if (!(await ui.confirm("  Approve?"))) {
     return { ok: false, message: "the person at the PC did not approve it; nothing was kept" };
   }
+  // Spec 108-tags FR-008: the session's tags, which this machine may change here.
+  const tags = await chooseTags(hello.name, tagging);
   const { adoptCheckIn } = await import("./commands.ts");
-  await adoptCheckIn(ci, { name: hello.name, spec: "098-pair", joined: "paired", ...compact(o) });
+  await adoptCheckIn(ci, {
+    name: hello.name,
+    spec: "098-pair",
+    joined: "paired",
+    ...compact(o),
+    ...(tags.tags.length ? { tags: tags.tags } : {}),
+    ...(tags.customTags.length ? { customTags: tags.customTags } : {}),
+  });
   const failed = ui.problems.some((x) => x.level === "fail");
   return failed
     ? { ok: true, message: `${hello.name} is adopted, but the PC could not read its facts yet` }
     : { ok: true, message: `${hello.name} is adopted by the fleet ${P.fleetId}` };
+}
+
+/**
+ * The tags of one machine at its prompt (spec 108-tags FR-008): the session's by default (Enter keeps them), a list that replaces
+ * them, `-` for none. A word that is not a tag is said plainly and asked again; with no terminal the session's tags stand.
+ */
+export async function chooseTags(
+  name: string,
+  t: { set: TagSet | undefined; session: PairTags },
+): Promise<PairTags> {
+  if (!t.set && !t.session.tags.length && !t.session.customTags.length) return t.session;
+  const shown = [...t.session.tags, ...t.session.customTags.map((x) => `${x} (custom)`)];
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const answer = await ui.ask(
+      `  Tags for ${name} [${shown.join(" ") || "none"}] (Enter keeps them, a list replaces them, - for none):`,
+    );
+    const words = tokensOf(answer?.replace(/\s+/g, ","));
+    if (!words.length) return t.session;
+    const read = readPairTags(t.set, words);
+    if ("assigned" in read) return read.assigned;
+    stdio.stdout.writeSync(`  ${read.error}\n`);
+  }
+  stdio.stdout.writeSync(`  keeping the session's tags for ${name}\n`);
+  return t.session;
 }

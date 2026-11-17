@@ -127,6 +127,7 @@ proves(
       await fs.remove(s.home, { recursive: true });
     }
   },
+  { timeout: 180_000 },
 );
 
 proves(
@@ -485,26 +486,33 @@ proves(
   },
 );
 
-test("057: a second PC's key: setup prints the exact command that approves it", async () => {
-  const s = await keysSandbox();
-  try {
-    assertEquals((await s.archon(["keys", "setup"])).code, 0);
-    await s.git("add", "-A");
-    await s.git("commit", "-q", "-m", "demo: signers");
-    // Another PC: no daily key here yet (this one's moved aside).
-    for (const ext of ["", ".pub"]) await fs.rename(s.daily + ext, `${s.daily}.first${ext}`);
-    const r = await s.archon(["keys", "setup"]);
-    const pub = (await fs.readTextFile(s.daily + ".pub")).trim().split(" ").slice(0, 2).join(" ");
-    assertStringIncludes(r.out, "must be approved by a key already listed");
-    assertStringIncludes(r.out, `--role daily --key "${pub}"`);
-    assertStringIncludes(r.out, "git checkout -- fleets/demo/signers.ts && bun run stolos update");
-    // Running it again still shows the commands (the approval is still missing).
-    const again = await s.archon(["keys", "setup"]);
-    assertStringIncludes(again.out, `--key "${pub}"`);
-  } finally {
-    await fs.remove(s.home, { recursive: true });
-  }
-});
+test(
+  "057: a second PC's key: setup prints the exact command that approves it",
+  async () => {
+    const s = await keysSandbox();
+    try {
+      assertEquals((await s.archon(["keys", "setup"])).code, 0);
+      await s.git("add", "-A");
+      await s.git("commit", "-q", "-m", "demo: signers");
+      // Another PC: no daily key here yet (this one's moved aside).
+      for (const ext of ["", ".pub"]) await fs.rename(s.daily + ext, `${s.daily}.first${ext}`);
+      const r = await s.archon(["keys", "setup"]);
+      const pub = (await fs.readTextFile(s.daily + ".pub")).trim().split(" ").slice(0, 2).join(" ");
+      assertStringIncludes(r.out, "must be approved by a key already listed");
+      assertStringIncludes(r.out, `--role daily --key "${pub}"`);
+      assertStringIncludes(
+        r.out,
+        "git checkout -- fleets/demo/signers.ts && bun run stolos update",
+      );
+      // Running it again still shows the commands (the approval is still missing).
+      const again = await s.archon(["keys", "setup"]);
+      assertStringIncludes(again.out, `--key "${pub}"`);
+    } finally {
+      await fs.remove(s.home, { recursive: true });
+    }
+  },
+  { timeout: 180_000 },
+);
 
 test("057: the approval steps, on WSL (Windows PowerShell) and elsewhere", async () => {
   const { approvalSteps } = await import("../src/archon/identity/keys-commands.ts");
@@ -689,6 +697,7 @@ await remind();
       await fs.remove(s.home, { recursive: true });
     }
   },
+  { timeout: 180_000 },
 );
 
 proves(

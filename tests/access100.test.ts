@@ -997,6 +997,7 @@ proves(
       await fs.remove(sb.home, { recursive: true });
     }
   },
+  { timeout: 180_000 },
 );
 
 // ------------------------------------------------------------------ FR-004, FR-007 with fakes

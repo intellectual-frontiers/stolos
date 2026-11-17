@@ -45,6 +45,9 @@ const CANDIDATES: Readonly<Record<string, string>> = {
   CommandTier: "none found",
   DataClass: "NIST SP 800-60 information types, FIPS 199 categories",
   IntegrationKind: "none found",
+  TagRule:
+    "none found as a vocabulary; NIST SP 800-128 configuration management for rules over component facts",
+  TagSelection: "none found; a boolean expression over concepts (SKOS has no query language)",
   Listener: "IANA service names and port numbers (RFC 6335)",
   Door: "none found",
   DevicePath: "none found",
@@ -58,7 +61,16 @@ const CANDIDATES: Readonly<Record<string, string>> = {
 };
 
 /** The terms of Stolos' vocabulary that rest on a Dublin Core term. */
-const MAPPED: Readonly<Record<string, string>> = { spec: "http://purl.org/dc/terms/source" };
+const MAPPED: Readonly<Record<string, string>> = {
+  spec: "http://purl.org/dc/terms/source",
+  // Spec 108-tags: a tag is a concept, a dimension is the scheme it belongs to, a group is a collection of them, and the three code lists are schemes (W3C SKOS).
+  Tag: "http://www.w3.org/2004/02/skos/core#Concept",
+  TagDimension: "http://www.w3.org/2004/02/skos/core#ConceptScheme",
+  TagGroup: "http://www.w3.org/2004/02/skos/core#Collection",
+  TagColour: "http://www.w3.org/2004/02/skos/core#ConceptScheme",
+  TagCardinality: "http://www.w3.org/2004/02/skos/core#ConceptScheme",
+  TagOrigin: "http://www.w3.org/2004/02/skos/core#ConceptScheme",
+};
 
 function record(local: string) {
   const iri = (stolos as Readonly<Record<string, { readonly iri: string }>>)[local]?.iri ?? "";

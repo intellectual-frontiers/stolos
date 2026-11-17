@@ -8,6 +8,7 @@
  * @module
  */
 // Spec: 107-pairing-and-query FR-009
+// Spec: 108-tags FR-015
 
 import { getRecord, putRecord } from "../state/store.ts";
 import { callRemoteTool } from "./remote.ts";
@@ -35,7 +36,7 @@ interface Installed {
  * Spec 107-pairing-and-query FR-009: the controller PC first, marked as auto-adopted: it needs no pairing and is observed by the
  * local probe (nothing is asked of it over the network).
  */
-async function showController(): Promise<void> {
+async function showController(tagsOf: (name: string) => string): Promise<void> {
   try {
     const { loadAdopted } = await import("../adopt/adopt.ts");
     const { controllerName } = await import("../adopt/controller.ts");
@@ -44,7 +45,7 @@ async function showController(): Promise<void> {
       ui.phase(a.machine.name).done(
         `${a.machine.name === me ? "this PC" : "controller PC"} · ${joinedMark(wayOfJoining({ kind: "adopted", role: "controller" }))}${
           a.observed ? ` · observed ${a.observed.at.slice(0, 16).replace("T", " ")}` : ""
-        }`,
+        }${tagsOf(a.machine.name) ? ` · ${tagsOf(a.machine.name)}` : ""}`,
       );
     }
   } catch {
@@ -60,7 +61,14 @@ export async function fleetStatus(): Promise<number> {
   const fleet = await loadFleet();
   const hosts = await loadHosts();
   const tokens = await loadTokens().catch(() => []);
-  await showController();
+  // Spec 108-tags FR-015: each machine's tags on its line, the free-form ones apart (`custom: pilot`).
+  const { loadFleetTags, tagLine } = await import("../fleet/tags.ts");
+  const ft = await loadFleetTags({ fleet, hosts }).catch(() => undefined);
+  const tagsOf = (name: string): string => {
+    const t = ft?.machines.find((m) => m.name === name)?.resolved.tags ?? [];
+    return t.length ? `tags ${tagLine(t)}` : "";
+  };
+  await showController(tagsOf);
   if (!hosts.length) {
     ui.next.push("no hosts yet: bun run stolos host add <name> (or workstation add, in WSL)");
     return 0;
@@ -150,6 +158,7 @@ export async function fleetStatus(): Promise<number> {
           : "not installed yet",
         // Article 23: from the model here (the host itself says it live: archon data).
         h.kind === "workstation" ? "" : describeData(hostData(h)),
+        tagsOf(h.name),
         liveToken(tokens, h.name) ? "armed for an install" : "",
       ]
         .filter(Boolean)

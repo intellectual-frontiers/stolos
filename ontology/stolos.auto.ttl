@@ -192,6 +192,46 @@ stolos:SigningOutcome a owl:Class ;
     skos:definition "How an attempt to sign ended, which decides what happens to the passphrase held in memory: kept, thrown away and asked again, or thrown away."@en ;
     stolos:spec "106-one-passphrase-speed FR-003" .
 
+stolos:Tag a owl:Class ;
+    rdfs:label "Tag"@en ;
+    skos:definition "A label a fleet gives to machines, written `<dimension>:<value>` and defined in the fleet's own `tags.ts` (an id, a label, a colour and a description); or a free-form tag, a lowercase word with no colon, which is never defined and is always shown as custom."@en ;
+    stolos:spec "108-tags FR-001, FR-004, FR-005" .
+
+stolos:TagCardinality a owl:Class ;
+    rdfs:label "Tag cardinality"@en ;
+    skos:definition "How many values of a tag dimension one machine may hold: one-of (at most one) or many-of (any number)."@en ;
+    stolos:spec "108-tags FR-001, FR-004" .
+
+stolos:TagColour a owl:Class ;
+    rdfs:label "Tag colour"@en ;
+    skos:definition "A named colour of the console's palette that a defined tag is drawn in, light and dark."@en ;
+    stolos:spec "108-tags FR-001" .
+
+stolos:TagDimension a owl:Class ;
+    rdfs:label "Tag dimension"@en ;
+    skos:definition "A family of tags that answer one question about a machine (its environment, its role, its site, its owner, its criticality, its data class): one-of when a machine holds at most one of its values, many-of when it may hold several."@en ;
+    stolos:spec "108-tags FR-001, FR-003" .
+
+stolos:TagGroup a owl:Class ;
+    rdfs:label "Tag group"@en ;
+    skos:definition "A group in the fleet's `tags.ts` (a site network, an address range, or named machines) whose tags every member inherits; the tag shows the group as its origin."@en ;
+    stolos:spec "108-tags FR-010" .
+
+stolos:TagOrigin a owl:Class ;
+    rdfs:label "Tag origin"@en ;
+    skos:definition "Where a tag on a machine came from: a person (added by `stolos tag add` or at pairing), a rule of `tags.ts`, or a group it inherits from."@en ;
+    stolos:spec "108-tags FR-009, FR-010, FR-011" .
+
+stolos:TagRule a owl:Class ;
+    rdfs:label "Tag rule"@en ;
+    skos:definition "A rule in the fleet's `tags.ts`, written in TypeScript over what Stolos knows of a machine (its operating system, address, kind, name, owner), that gives the machine a defined tag whenever it holds; the tag shows the rule as its origin."@en ;
+    stolos:spec "108-tags FR-009" .
+
+stolos:TagSelection a owl:Class ;
+    rdfs:label "Tag selection"@en ;
+    skos:definition "A choice of machines by their tags: tags that must all hold, tags of which one must hold, or a small expression (`env:prod and not role:db`) read by a typed parser, never evaluated as code."@en ;
+    stolos:spec "108-tags FR-012, FR-013" .
+
 stolos:TrustedNetwork a owl:Class ;
     rdfs:label "Trusted network"@en ;
     skos:definition "The site's LAN, or a zero trust mesh network the fleet chooses, on which the fleet's own short, content-authenticated exchanges run (Article 28)."@en ;
@@ -237,6 +277,72 @@ stolos:ascii a owl:DatatypeProperty ;
     rdfs:range xsd:string ;
     skos:definition "The mark of an outcome level where the terminal shows ASCII alone (commons 0006-signals FR-027)."@en ;
     stolos:spec "099-engine-update FR-007" .
+
+stolos:cardinality-many-of a stolos:TagCardinality ;
+    rdfs:label "many of"@en ;
+    skos:definition "A machine may hold any number of the dimension's values (its roles)."@en ;
+    skos:notation "many-of" ;
+    stolos:spec "108-tags FR-004" .
+
+stolos:cardinality-one-of a stolos:TagCardinality ;
+    rdfs:label "one of"@en ;
+    skos:definition "A machine holds at most one value of the dimension (an environment: prod, staging or lab)."@en ;
+    skos:notation "one-of" ;
+    stolos:spec "108-tags FR-004" .
+
+stolos:colour-blue a stolos:TagColour ;
+    rdfs:label "blue"@en ;
+    skos:definition "A calm accent for roles and sites."@en ;
+    skos:notation "blue" ;
+    stolos:spec "108-tags FR-001" .
+
+stolos:colour-green a stolos:TagColour ;
+    rdfs:label "green"@en ;
+    skos:definition "For what is safe to touch: lab, low criticality, public data."@en ;
+    skos:notation "green" ;
+    stolos:spec "108-tags FR-001" .
+
+stolos:colour-grey a stolos:TagColour ;
+    rdfs:label "grey"@en ;
+    skos:definition "Neutral: the default of a tag that has no colour of its own."@en ;
+    skos:notation "grey" ;
+    stolos:spec "108-tags FR-001" .
+
+stolos:colour-orange a stolos:TagColour ;
+    rdfs:label "orange"@en ;
+    skos:definition "A warm accent, between red and yellow."@en ;
+    skos:notation "orange" ;
+    stolos:spec "108-tags FR-001" .
+
+stolos:colour-pink a stolos:TagColour ;
+    rdfs:label "pink"@en ;
+    skos:definition "A soft accent for anything else."@en ;
+    skos:notation "pink" ;
+    stolos:spec "108-tags FR-001" .
+
+stolos:colour-red a stolos:TagColour ;
+    rdfs:label "red"@en ;
+    skos:definition "For what needs care: production, high criticality."@en ;
+    skos:notation "red" ;
+    stolos:spec "108-tags FR-001" .
+
+stolos:colour-teal a stolos:TagColour ;
+    rdfs:label "teal"@en ;
+    skos:definition "A cool accent, between green and blue."@en ;
+    skos:notation "teal" ;
+    stolos:spec "108-tags FR-001" .
+
+stolos:colour-violet a stolos:TagColour ;
+    rdfs:label "violet"@en ;
+    skos:definition "An accent for owners and teams."@en ;
+    skos:notation "violet" ;
+    stolos:spec "108-tags FR-001" .
+
+stolos:colour-yellow a stolos:TagColour ;
+    rdfs:label "yellow"@en ;
+    skos:definition "A caution accent."@en ;
+    skos:notation "yellow" ;
+    stolos:spec "108-tags FR-001" .
 
 stolos:data-durable a stolos:DataClass ;
     rdfs:label "durable"@en ;
@@ -467,6 +573,24 @@ stolos:onListener a owl:ObjectProperty ;
     rdfs:range stolos:Listener ;
     skos:definition "The listener a pairing door is served on."@en ;
     stolos:spec "103-three-ports FR-004" .
+
+stolos:origin-inherited a stolos:TagOrigin ;
+    rdfs:label "inherited"@en ;
+    skos:definition "Inherited from a group of the fleet's `tags.ts` the machine belongs to."@en ;
+    skos:notation "inherited" ;
+    stolos:spec "108-tags FR-010" .
+
+stolos:origin-person a stolos:TagOrigin ;
+    rdfs:label "person"@en ;
+    skos:definition "Added by a person: `stolos tag add`, or the tags of `stolos pair`. It wins over a rule and over a group."@en ;
+    skos:notation "person" ;
+    stolos:spec "108-tags FR-006, FR-008, FR-011" .
+
+stolos:origin-rule a stolos:TagOrigin ;
+    rdfs:label "rule"@en ;
+    skos:definition "Given by a rule of the fleet's `tags.ts`, from what Stolos knows of the machine."@en ;
+    skos:notation "rule" ;
+    stolos:spec "108-tags FR-009" .
 
 stolos:outcome-action a stolos:OutcomeLevel ;
     rdfs:label "action"@en ;

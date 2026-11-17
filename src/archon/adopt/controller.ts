@@ -134,6 +134,9 @@ export async function controllerDef(existing?: AdoptedDef): Promise<AdoptedDef> 
     hostKeys: [],
     adopted: existing?.adopted ?? new Date().toISOString(),
     ...(existing?.accepted ? { accepted: existing.accepted } : {}),
+    // Spec 108-tags: the tags a person gave it are kept.
+    ...(existing?.tags?.length ? { tags: existing.tags } : {}),
+    ...(existing?.customTags?.length ? { customTags: existing.customTags } : {}),
   };
 }
 

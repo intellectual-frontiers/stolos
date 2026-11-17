@@ -53,6 +53,9 @@ export async function loadModel(): Promise<Model> {
       fix: "change it only with stolos decide (or copy that form exactly)",
     });
   }
+  // Spec 108-tags FR-002: tags.ts is sound, and every tag a machine holds is defined in it.
+  const { tagProblems } = await import("./fleet/tags.ts");
+  problems.push(...(await tagProblems()));
   const specs = await knownSpecs();
   const plans: HostPlan[] = [];
   for (const h of hosts) {

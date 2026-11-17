@@ -9,6 +9,7 @@
 // Spec: 003-identity
 // Spec: 097-controller FR-001
 // Spec: 100-remote-access FR-001
+// Spec: 108-tags FR-003
 
 import { fs, path as paths, proc, stdio, tty } from "@intellectual-frontiers/commons/ts/runtime";
 import { cryptSalt, sha512Crypt, tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
@@ -39,6 +40,19 @@ export interface FleetInitOptions {
 /** GitHub's anonymized commit address for an account. */
 export function noreply(id: number, login: string): string {
   return `${id}+${login}@users.noreply.github.com`;
+}
+
+/**
+ * Spec 108-tags FR-003: a new fleet comes with its tags, the starter kit (`fleets/<fleet>/tags.ts`), to edit freely. Written only
+ * where the file is missing; true when it was written.
+ */
+export async function writeStarterTags(fleetDir: string): Promise<boolean> {
+  const file = paths.join(fleetDir, "tags.ts");
+  if (await fs.exists(file)) return false;
+  const { starterTagsSource } = await import("../model/tags.ts");
+  await fs.mkdir(fleetDir, { recursive: true });
+  await fs.writeTextFile(file, starterTagsSource());
+  return true;
 }
 
 /** Your GitHub account, as gh reports it, with your public SSH keys. */
@@ -369,6 +383,7 @@ export async function fleetInit(o: FleetInitOptions): Promise<void> {
   const { chooseFleet } = await import("../fleet/use.ts");
   await chooseFleet(P.fleetId);
   if (!kept) await fs.writeTextFile(P.fleet, fleetSource(fleet));
+  if (!kept) await writeStarterTags(P.fleetDir);
   // Commits from this checkout carry your GitHub identity (noreply address),
   // set for this repository only; a global identity, if any, is left alone.
   await run(["git", "-C", P.repo, "config", "user.name", gh.name]);

@@ -66,6 +66,11 @@ export const stolos = vocabulary(STOLOS, {
   PairingSession: "owl:Class",
   AddressBlock: "owl:Class",
   MachineTable: "owl:Class",
+  Tag: "owl:Class",
+  TagDimension: "owl:Class",
+  TagRule: "owl:Class",
+  TagGroup: "owl:Class",
+  TagSelection: "owl:Class",
   // The architecture.
   // The code lists' classes.
   OutcomeLevel: "owl:Class",
@@ -85,6 +90,9 @@ export const stolos = vocabulary(STOLOS, {
   WayOfJoining: "owl:Class",
   PairingStage: "owl:Class",
   AnswerState: "owl:Class",
+  TagColour: "owl:Class",
+  TagCardinality: "owl:Class",
+  TagOrigin: "owl:Class",
   // Properties.
   spec: "owl:DatatypeProperty",
   emoji: "owl:DatatypeProperty",
@@ -180,6 +188,13 @@ export const WayOfJoiningSchema = classSchema(stolos.WayOfJoining, CODE);
 export const PairingStageSchema = classSchema(stolos.PairingStage, CODE);
 /** The schema of an answer state (spec 107-pairing-and-query): where one machine is in a question to every machine. */
 export const AnswerStateSchema = classSchema(stolos.AnswerState, CODE);
+
+/** The schema of a tag colour (spec 108-tags): a named colour of the console's palette, the only way a tag is coloured. */
+export const TagColourSchema = classSchema(stolos.TagColour, CODE);
+/** The schema of a tag cardinality (spec 108-tags): how many values of a dimension a machine may hold. */
+export const TagCardinalitySchema = classSchema(stolos.TagCardinality, CODE);
+/** The schema of a tag origin (spec 108-tags): where a tag on a machine came from. */
+export const TagOriginSchema = classSchema(stolos.TagOrigin, CODE);
 
 /** The schema of a rung of the ladder (Article 0): commons' `mz:Rung` (commons 0016-ladder), which Stolos states its eight rungs with. */
 export const RungSchema = MizanRung;
@@ -460,6 +475,62 @@ export const classes = [
       "The one merged table of a question asked to every machine: a row per answer, and a row for each machine that failed or timed out with its reason, drawn by the console's vendored grid.",
     ),
     spec: ["107-pairing-and-query FR-012, FR-013"],
+  }),
+  StolosClass.make(stolos.Tag, {
+    label: en("Tag"),
+    definition: en(
+      "A label a fleet gives to machines, written `<dimension>:<value>` and defined in the fleet's own `tags.ts` (an id, a label, a colour and a description); or a free-form tag, a lowercase word with no colon, which is never defined and is always shown as custom.",
+    ),
+    spec: ["108-tags FR-001, FR-004, FR-005"],
+  }),
+  StolosClass.make(stolos.TagDimension, {
+    label: en("Tag dimension"),
+    definition: en(
+      "A family of tags that answer one question about a machine (its environment, its role, its site, its owner, its criticality, its data class): one-of when a machine holds at most one of its values, many-of when it may hold several.",
+    ),
+    spec: ["108-tags FR-001, FR-003"],
+  }),
+  StolosClass.make(stolos.TagRule, {
+    label: en("Tag rule"),
+    definition: en(
+      "A rule in the fleet's `tags.ts`, written in TypeScript over what Stolos knows of a machine (its operating system, address, kind, name, owner), that gives the machine a defined tag whenever it holds; the tag shows the rule as its origin.",
+    ),
+    spec: ["108-tags FR-009"],
+  }),
+  StolosClass.make(stolos.TagGroup, {
+    label: en("Tag group"),
+    definition: en(
+      "A group in the fleet's `tags.ts` (a site network, an address range, or named machines) whose tags every member inherits; the tag shows the group as its origin.",
+    ),
+    spec: ["108-tags FR-010"],
+  }),
+  StolosClass.make(stolos.TagSelection, {
+    label: en("Tag selection"),
+    definition: en(
+      "A choice of machines by their tags: tags that must all hold, tags of which one must hold, or a small expression (`env:prod and not role:db`) read by a typed parser, never evaluated as code.",
+    ),
+    spec: ["108-tags FR-012, FR-013"],
+  }),
+  StolosClass.make(stolos.TagColour, {
+    label: en("Tag colour"),
+    definition: en(
+      "A named colour of the console's palette that a defined tag is drawn in, light and dark.",
+    ),
+    spec: ["108-tags FR-001"],
+  }),
+  StolosClass.make(stolos.TagCardinality, {
+    label: en("Tag cardinality"),
+    definition: en(
+      "How many values of a tag dimension one machine may hold: one-of (at most one) or many-of (any number).",
+    ),
+    spec: ["108-tags FR-001, FR-004"],
+  }),
+  StolosClass.make(stolos.TagOrigin, {
+    label: en("Tag origin"),
+    definition: en(
+      "Where a tag on a machine came from: a person (added by `stolos tag add` or at pairing), a rule of `tags.ts`, or a group it inherits from.",
+    ),
+    spec: ["108-tags FR-009, FR-010, FR-011"],
   }),
   StolosClass.make(stolos.WayOfJoining, {
     label: en("Way of joining"),

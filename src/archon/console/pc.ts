@@ -11,6 +11,7 @@
 // Spec: 066-stolos-console
 // Spec: 101-ladder FR-006
 // Spec: 107-pairing-and-query FR-007, FR-008
+// Spec: 108-tags FR-014
 
 import type { Attention, RecordedVerify } from "../state/verify.ts";
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
@@ -24,6 +25,7 @@ import type { PackRun } from "../controls/run.ts";
 import type { DeviceDef, DeviceObserved } from "../device/device.ts";
 import type { MachineKind, WayOfJoining } from "../ontology.auto.ts";
 import { wayOfJoining } from "../adopt/joining.ts";
+import type { ResolvedTag, TaggingView } from "../fleet/tags.ts";
 
 /** One machine, whatever its kind. */
 export interface PcMachine {
@@ -72,6 +74,8 @@ export interface PcMachine {
   sync?: { at: string; blocked?: string };
   /** Whether its applied commit is the repository's newest (undefined: not known). */
   upToDate?: boolean;
+  /** Its tags (spec 108-tags FR-014), each with its origin; free-form ones are marked custom. Absent where it has none. */
+  tags?: ResolvedTag[];
 }
 
 /** One cloud account, observed. */
@@ -110,6 +114,8 @@ export interface PcFacts {
   fleet: { id: string; title: string; repo: string; domain?: string; engine?: string };
   /** Every machine. */
   machines: PcMachine[];
+  /** The fleet's tags (spec 108-tags FR-014): the dimensions with how many machines hold each tag, and the free-form tags apart. */
+  tagging?: TaggingView;
   /** Adopted machines with their observations and policies. */
   adopted: Array<{ machine: AdoptedDef; observed?: Observed; results: PolicyResult[] }>;
   /** Every cloud provider. */
@@ -356,6 +362,28 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
       m.upToDate = newest.startsWith(m.applied.commit) || m.applied.commit.startsWith(newest);
     }
   }
+  // Spec 108-tags FR-014: every machine's tags, and the fleet's tags with their counts.
+  const { loadFleetTags, taggingView } = await import("../fleet/tags.ts");
+  const ft = await loadFleetTags({
+    ...(fleet ? { fleet } : {}),
+    hosts,
+    adopted: adopted.map((a) => ({
+      machine: a.machine,
+      ...(a.observed ? { observed: a.observed } : {}),
+    })),
+  }).catch(warn("tags"));
+  if (ft) {
+    for (const m of machines) {
+      const t = ft.machines.find((x) => x.name === m.name);
+      if (t?.resolved.tags.length) m.tags = t.resolved.tags;
+    }
+  }
+  const tagging = ft
+    ? {
+        ...taggingView(ft.set, ft.error, machines),
+        problems: ft.machines.flatMap((x) => x.resolved.problems),
+      }
+    : undefined;
   const { loadEstate } = await import("../estate/commands.ts");
   const { estatePolicies } = await import("../estate/graph.ts");
   const estate = await loadEstate().catch(warn("the estate graph"));
@@ -370,6 +398,7 @@ export async function pcFacts(repo = P.repo): Promise<PcFacts> {
       ...(pin ? { engine: pin.tag } : {}),
     },
     machines,
+    ...(tagging ? { tagging } : {}),
     adopted,
     clouds,
     devices,

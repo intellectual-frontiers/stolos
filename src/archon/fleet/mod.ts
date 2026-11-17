@@ -229,6 +229,28 @@
  * Running `archon pg on` (and the others) on the host itself still works, but only that machine
  * remembers it; it tells you the `stolos decide` line that records it in Git.
  *
+ * ## Tags: what each machine is (spec 108-tags)
+ *
+ * A fleet describes its machines with **tags** it defines itself, in `fleets/<id>/tags.ts` (a new fleet
+ * gets a starter kit: an environment, a role, a site, an owner, a criticality and a data class). A tag is
+ * `<dimension>:<value>` (`env:prod`); a one-of dimension holds one value per machine, a many-of one
+ * (`role`) any number. A tag the file does not define is a type error where it is written and a problem
+ * of `stolos build`. Machines (managed servers and workstations, adopted machines, the controller) get
+ * tags from a person, from a rule, or from a group, and each tag shows which:
+ *
+ * ```sh
+ * bun run stolos tag add alpha env:prod role:web     # one signed commit (decisions.ts or machine.ts)
+ * bun run stolos tag add alpha pilot                 # a free-form tag: always shown as custom
+ * bun run stolos tag list --select 'env:prod and not role:database'
+ * bun run stolos fleet query "select * from uptime" --tag env:prod
+ * bun run stolos pair --tag env:lab --tag role:nas   # every machine paired in the session
+ * ```
+ *
+ * A rule in `tags.ts` gives a defined tag from what Stolos knows of a machine (`osIs("windows")`,
+ * `addressIn("10.0.1.0/24")`), a group gives its tags to a site network or named machines; a tag a person
+ * gave wins over a rule's, and a rule's over a group's. The Stolos Console draws a chip for every tag,
+ * filters and groups the machines by them, and picks the machines for "Ask every machine".
+ *
  * ## Signing: your keys (spec 057)
  *
  * Each operator signs with their own key, listed in the fleet's `signers.ts`. The key is a file,
@@ -286,5 +308,6 @@
  *
  * @module
  */
+// Spec: 108-tags FR-006, FR-007
 
 export {};

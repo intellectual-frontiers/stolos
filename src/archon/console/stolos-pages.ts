@@ -12,6 +12,7 @@
 // Spec: 099-engine-update FR-002, FR-003
 // Spec: 100-remote-access FR-008, FR-010
 // Spec: 107-pairing-and-query FR-008, FR-012
+// Spec: 108-tags FR-013, FR-014, FR-015
 
 import type { EngineVersions } from "../fleet/releases.ts";
 import type { Attention } from "../state/verify.ts";
@@ -29,6 +30,9 @@ import {
 } from "../adopt/joining.ts";
 import { logo, logoFor } from "./logos.ts";
 import { GUIDES } from "../core/guides.ts";
+import { originWords, tagRecord } from "../fleet/tags.ts";
+import type { TaggingView } from "../fleet/tags.ts";
+import { groupByDimension, groupLinks, tagChips, tagFacets, tagIds, tagPicker } from "./tags.ts";
 
 /** The logo for an operating system's name. */
 export function osLogo(os: string): string | undefined {
@@ -185,6 +189,9 @@ export const STOLOS_GROUPS: StolosGroup[] = [
       "device check",
       "device remove",
       "fleet query",
+      "tag list",
+      "tag add",
+      "tag remove",
     ],
     first: "pair",
     diagram: (f) =>
@@ -701,10 +708,11 @@ function changeCard(x: PcMachine, f: PcFacts, now: number): Html {
 function machineRow(x: PcMachine, now: number): Html {
   const text = `${x.name} ${x.title ?? ""} ${x.kind} ${x.os ?? ""} ${x.owner ?? ""} ${
     x.where ?? ""
-  } ${x.joined ? JOINED_LABEL[x.joined] : ""} ${x.controller ? "controller" : ""} ${x.failing.join(" ")}`
+  } ${x.joined ? JOINED_LABEL[x.joined] : ""} ${x.controller ? "controller" : ""} ${x.failing.join(" ")} ${tagIds(x.tags)}`
     .toLowerCase()
     .replace(/[^a-z0-9 .:-]/g, " ");
-  const show = `'${text}'.includes($q.trim().toLowerCase()) && ($joined === '' || $joined === '${x.joined ?? "none"}')`;
+  // Spec 108-tags FR-014: the tag filter (a tag chosen in the facets above the table).
+  const show = `'${text}'.includes($q.trim().toLowerCase()) && ($joined === '' || $joined === '${x.joined ?? "none"}') && ($tag === '' || '${tagIds(x.tags)}'.includes(' ' + $tag + ' '))`;
   return html`
     <tr data-row data-show="${show}">
       <td>
@@ -715,6 +723,7 @@ function machineRow(x: PcMachine, now: number): Html {
       <td>${x.os ? html`${logo(osLogo(x.os), 14)} ${x.os}` : ""}</td>
       <td class="mono">${x.where ?? ""}</td>
       <td>${x.owner ?? ""}</td>
+      <td>${tagChips(x.tags)}</td>
       <td>${x.kind === "cloud" ? "" : checksCell(x)}</td>
       <td>${applies(x)}</td>
       <td class="sub">${ago(x.seen, now)}</td>
@@ -732,10 +741,12 @@ function machineRow(x: PcMachine, now: number): Html {
 }
 
 /** Every machine, one table: this PC (the controller) first, in a group of its own, then the others, with how each joined. */
-export function machinesPage(f: PcFacts, now = Date.now()): Html {
+export function machinesPage(f: PcFacts, now = Date.now(), opts: { group?: string } = {}): Html {
   const mine = f.machines.filter((x) => x.thisPc);
   const rest = f.machines.filter((x) => !x.thisPc);
-  const cols = 10;
+  const cols = 11;
+  // Spec 108-tags FR-014: grouped by a dimension (environment, role, site, owner, ...): one block per value.
+  const grouped = opts.group ? groupByDimension(f.machines, f.tagging, opts.group) : undefined;
   return html`
     <div class="pagehead">
       <div>
@@ -753,7 +764,19 @@ export function machinesPage(f: PcFacts, now = Date.now()): Html {
         ><a class="btn" href="/add">Add a machine</a>
       </div>
     </div>
-    <div class="card scroll" data-signals="{q: '', joined: ''}">
+    <div class="card scroll" data-signals="{q: '', joined: '', tag: ''}">
+      ${
+        f.tagging?.problems.length
+          ? html`<div class="help" id="tag-problems" style="margin-bottom:10px">
+              <h3>Tags need a look</h3>
+              <ul>
+                ${f.tagging.problems.map((p) => html`<li>${p}</li>`)}
+              </ul>
+              <p class="sub">stolos build says the same, with the fix.</p>
+            </div>`
+          : ""
+      }
+      ${tagFacets(f.tagging)}
       <div class="row" style="margin-bottom:10px;align-items:flex-end">
         <label class="field" style="flex:1 1 260px"
           ><span>Filter</span
@@ -770,6 +793,7 @@ export function machinesPage(f: PcFacts, now = Date.now()): Html {
             ${WAYS_OF_JOINING.map((w) => html`<option value="${w}">${JOINED_LABEL[w]}</option>`)}
           </select>
         </label>
+        ${groupLinks(f.tagging, opts.group ?? "")}
       </div>
       <table>
         <thead>
@@ -780,6 +804,7 @@ export function machinesPage(f: PcFacts, now = Date.now()): Html {
             <th>OS</th>
             <th>Where</th>
             <th>Owner</th>
+            <th>Tags</th>
             <th>Checks</th>
             <th>Applies</th>
             <th>Last record</th>
@@ -787,25 +812,37 @@ export function machinesPage(f: PcFacts, now = Date.now()): Html {
           </tr>
         </thead>
         ${
-          mine.length
-            ? html`<tbody id="this-pc">
-                <tr class="grp">
-                  <th colspan="${cols}" scope="rowgroup">This PC</th>
-                </tr>
-                ${mine.map((x) => machineRow(x, now))}
-              </tbody>`
-            : ""
+          grouped
+            ? grouped.map(
+                (g) =>
+                  html`<tbody data-group="${g.key}">
+                    <tr class="grp">
+                      <th colspan="${cols}" scope="rowgroup">${g.label} (${g.machines.length})</th>
+                    </tr>
+                    ${g.machines.map((x) => machineRow(x, now))}
+                  </tbody>`,
+              )
+            : html`${
+                  mine.length
+                    ? html`<tbody id="this-pc">
+                        <tr class="grp">
+                          <th colspan="${cols}" scope="rowgroup">This PC</th>
+                        </tr>
+                        ${mine.map((x) => machineRow(x, now))}
+                      </tbody>`
+                    : ""
+                }
+                <tbody>
+                  ${
+                    mine.length && rest.length
+                      ? html`<tr class="grp">
+                          <th colspan="${cols}" scope="rowgroup">Other machines</th>
+                        </tr>`
+                      : ""
+                  }
+                  ${rest.map((x) => machineRow(x, now))}
+                </tbody>`
         }
-        <tbody>
-          ${
-            mine.length && rest.length
-              ? html`<tr class="grp">
-                  <th colspan="${cols}" scope="rowgroup">Other machines</th>
-                </tr>`
-              : ""
-          }
-          ${rest.map((x) => machineRow(x, now))}
-        </tbody>
       </table>
       ${
         f.machines.length
@@ -819,6 +856,52 @@ export function machinesPage(f: PcFacts, now = Date.now()): Html {
       }
     </div>
   `;
+}
+
+/** One machine's tags: each with its label, what it means and where it came from; free-form ones apart; and how to change them. */
+function tagsCard(f: PcFacts, x: PcMachine): Html {
+  const defined = (x.tags ?? []).filter((t) => t.standing !== "custom");
+  const custom = (x.tags ?? []).filter((t) => t.standing === "custom");
+  const can = x.kind === "server" || x.kind === "workstation" || x.kind === "adopted";
+  return html`<div class="card" id="tags" style="margin-bottom:14px">
+    <h2>Tags</h2>
+    ${
+      defined.length || custom.length
+        ? html`<table>
+            <tbody>
+              ${defined.map(
+                (t) =>
+                  html`<tr>
+                    <td>${tagChips([t])}</td>
+                    <td class="mono">${t.id}</td>
+                    <td class="sub">${t.description ?? ""}</td>
+                    <td class="sub">${originWords(t)}</td>
+                  </tr>`,
+              )}
+              ${custom.map(
+                (t) =>
+                  html`<tr>
+                    <td>${tagChips([t])}</td>
+                    <td class="mono">${t.id}</td>
+                    <td class="sub">free-form: not defined in tags.ts</td>
+                    <td class="sub">${originWords(t)}</td>
+                  </tr>`,
+              )}
+            </tbody>
+          </table>`
+        : html`<p class="sub">No tags yet.</p>`
+    }
+    ${
+      can
+        ? html`<p class="sub">
+            Change them with <code>bun run stolos tag add ${x.name} env:lab</code> or
+            <code>bun run stolos tag remove ${x.name} env:lab</code>: one signed commit, as every
+            change.
+            ${f.tagging?.configured ? "" : "This fleet defines no tags yet (fleets/<fleet>/tags.ts)."}
+          </p>`
+        : html`<p class="sub">Tags are given to managed and adopted machines.</p>`
+    }
+  </div>`;
 }
 
 /** A fix: a command as code, anything else as words. */
@@ -1034,6 +1117,7 @@ export function machinePage(f: PcFacts, name: string, now = Date.now()): Html | 
                 : ""
       }
     </div>
+    ${tagsCard(f, x)}
     ${
       a
         ? html`
@@ -1225,7 +1309,7 @@ export function connectorsPage(f: PcFacts, now = Date.now()): Html {
 }
 
 /** One question to every machine, answered in one merged table that fills in as the machines answer (spec 107-pairing-and-query). */
-export function queryPage(sql: string): Html {
+export function queryPage(sql: string, view?: TaggingView, select = ""): Html {
   const examples: Array<[string, string]> = [
     ["Which OS is every machine on?", "select name, version from os_version"],
     ["What listens on the network?", "select port, address, protocol from listening_ports"],
@@ -1252,6 +1336,7 @@ export function queryPage(sql: string): Html {
       id="queryform"
       data-on:submit="@post('/query/run', {contentType: 'form'})"
     >
+      ${tagPicker(view, select)}
       <label class="field"
         ><span>SQL <span class="sub">(one SELECT)</span></span
         ><input type="text" name="sql" value="${sql}" autocomplete="off" class="mono"
@@ -1508,6 +1593,9 @@ export function machinesCsv(f: PcFacts): string {
     "checks_total",
     "not_met",
     "last_record",
+    "tags",
+    "custom_tags",
+    "tag_origins",
   ];
   const rows = f.machines.map((x) =>
     [
@@ -1523,6 +1611,16 @@ export function machinesCsv(f: PcFacts): string {
       x.score?.total,
       x.failing.join("; "),
       x.seen,
+      // Spec 108-tags FR-014, FR-015: the defined tags and the free-form ones in columns of their own, and where each came from.
+      (x.tags ?? [])
+        .filter((t) => t.standing !== "custom")
+        .map((t) => t.id)
+        .join("; "),
+      (x.tags ?? [])
+        .filter((t) => t.standing === "custom")
+        .map((t) => t.id)
+        .join("; "),
+      (x.tags ?? []).map((t) => `${t.id}=${originWords(t)}`).join("; "),
     ]
       .map(cell)
       .join(","),
@@ -1544,12 +1642,14 @@ export function evidence(f: PcFacts, now = new Date()): unknown {
         installed: x.seen,
         checks: x.score,
         failing: x.failing,
+        tags: (x.tags ?? []).map(tagRecord),
       })),
     adopted: f.adopted.map((a) => ({
       name: a.machine.name,
       owner: a.machine.owner,
       observed: a.observed?.at,
       results: a.results,
+      tags: (f.machines.find((m) => m.name === a.machine.name)?.tags ?? []).map(tagRecord),
     })),
     clouds: f.clouds
       .flatMap((c) => (c.observed ? [{ ...c, observed: c.observed }] : []))

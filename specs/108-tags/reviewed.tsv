@@ -1,0 +1,3 @@
+# Requirements proven by review, not by a test: the requirement, a tab, how it is verified.
+108-tags FR-017	No tag code starts a process or probes the system; paths are built with path.join. CI runs the suite on both boot-machine platforms and as a user who is not root: .github/workflows/ci.yml job "check" (Bun and Node) and job "suite" (matrix windows-latest, macos-latest).
+108-tags FR-018	The guide in src/archon/fleet/mod.ts and the command help are written with the change and read in review; bun run check:trace, check:layers and check:ontology run in CI (bun run ci) with their baselines, which only shrink.

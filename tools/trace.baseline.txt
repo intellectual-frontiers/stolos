@@ -16,7 +16,6 @@ trace/no-spec-line src/archon/clients/commands.ts
 trace/no-spec-line src/archon/clients/launch.ts
 trace/no-spec-line src/archon/clients/mod.ts
 trace/no-spec-line src/archon/commands/mod.ts
-trace/no-spec-line src/archon/compliance/commands.ts
 trace/no-spec-line src/archon/compliance/findings.ts
 trace/no-spec-line src/archon/compliance/mod.ts
 trace/no-spec-line src/archon/connect/endpoint.ts
@@ -49,7 +48,6 @@ trace/no-spec-line src/archon/evidence/mod.ts
 trace/no-spec-line src/archon/export/commands.ts
 trace/no-spec-line src/archon/export/delivery-commands.ts
 trace/no-spec-line src/archon/fedramp/commands.ts
-trace/no-spec-line src/archon/fleet/mod.ts
 trace/no-spec-line src/archon/fleet/use.ts
 trace/no-spec-line src/archon/guide/command.ts
 trace/no-spec-line src/archon/guide/docs-command.ts
@@ -61,7 +59,6 @@ trace/no-spec-line src/archon/install/ubuntu.ts
 trace/no-spec-line src/archon/install/workstation.ts
 trace/no-spec-line src/archon/mcp/mod.ts
 trace/no-spec-line src/archon/model/export.ts
-trace/no-spec-line src/archon/model/load.ts
 trace/no-spec-line src/archon/model/providers.ts
 trace/no-spec-line src/archon/observe/next.ts
 trace/no-spec-line src/archon/people/mod.ts

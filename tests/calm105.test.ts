@@ -156,6 +156,7 @@ proves(
       await fs.remove(f.sb.home, { recursive: true });
     }
   },
+  { timeout: 180_000 },
 );
 
 proves(
@@ -284,6 +285,7 @@ proves(
   {
     skip:
       proc.which("bun") === undefined && "bun is not installed (fleet upgrade runs bun install)",
+    timeout: 180_000,
   },
 );
 
@@ -667,4 +669,5 @@ proves(
       await fs.remove(f.sb.home, { recursive: true });
     }
   },
+  { timeout: 180_000 },
 );

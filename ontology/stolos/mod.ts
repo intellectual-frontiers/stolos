@@ -36,6 +36,9 @@ import {
   WayOfJoiningSchema,
   PairingStageSchema,
   AnswerStateSchema,
+  TagCardinalitySchema,
+  TagColourSchema,
+  TagOriginSchema,
 } from "./vocabulary.ts";
 
 export { CODE_LISTS } from "./codes.ts";
@@ -86,6 +89,9 @@ export const citingSchemas = [
   WayOfJoiningSchema,
   PairingStageSchema,
   AnswerStateSchema,
+  TagColourSchema,
+  TagCardinalitySchema,
+  TagOriginSchema,
   RungSchema,
 ] as const;
 

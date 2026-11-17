@@ -8,10 +8,12 @@
  */
 // Spec: 066-stolos-console
 // Spec: 107-pairing-and-query FR-012
+// Spec: 108-tags FR-014
 
 import { sha256 } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs } from "@intellectual-frontiers/commons/ts/runtime";
 import { ASSETS } from "../assets.auto.ts";
+import { TAG_COLOURS, type TagColour } from "../ontology.auto.ts";
 import { VERSION } from "../version.ts";
 import { type Html, raw } from "./html.ts";
 
@@ -42,6 +44,43 @@ export const STOLOS_LOGO: Html = raw(
 
 /** The favicon: Archon's mark. */
 export const FAVICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#4F46E5"/><path d="M8 25V15a8 8 0 0 1 16 0v10" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><rect x="13.5" y="5.5" width="5" height="5" rx="1.2" fill="#fff"/></svg>`;
+
+/** The tag colours (`stolos:TagColour`): the text and the soft background of each, light then dark. */
+const TAG_PALETTE: Record<TagColour, { fg: string; soft: string; dfg: string; dsoft: string }> = {
+  grey: { fg: "#5B6178", soft: "#EEF0F6", dfg: "#9AA0B8", dsoft: "#262B40" },
+  red: { fg: "#B42334", soft: "#FDECEE", dfg: "#FF8593", dsoft: "#3A1820" },
+  orange: { fg: "#A8480A", soft: "#FFEEDD", dfg: "#FFA566", dsoft: "#3A2412" },
+  yellow: { fg: "#7D5A00", soft: "#FFF6CF", dfg: "#F0CB55", dsoft: "#332B0C" },
+  green: { fg: "#0B6E4C", soft: "#E6F6EF", dfg: "#3CC98F", dsoft: "#12302A" },
+  teal: { fg: "#0C6B73", soft: "#DFF5F6", dfg: "#4FD0DA", dsoft: "#0F2E31" },
+  blue: { fg: "#1F5FBF", soft: "#E7F0FF", dfg: "#7FB0FF", dsoft: "#14284A" },
+  violet: { fg: "#6D3FC4", soft: "#F0E9FF", dfg: "#B494FF", dsoft: "#2A2046" },
+  pink: { fg: "#B02A75", soft: "#FFE8F3", dfg: "#FF8EC4", dsoft: "#3A1829" },
+};
+
+/**
+ * Spec 108-tags FR-014: the tag chips. A defined tag is drawn in its colour; a free-form one is always drawn apart (a dashed outline,
+ * italics, and the word "custom" in the chip); one written but not defined says so, in the warning colour.
+ */
+export const TAG_CSS = `
+:root { ${TAG_COLOURS.map((c) => `--tag-${c}: ${TAG_PALETTE[c].fg}; --tag-${c}-soft: ${TAG_PALETTE[c].soft};`).join(" ")} }
+@media (prefers-color-scheme: dark) { :root { ${TAG_COLOURS.map((c) => `--tag-${c}: ${TAG_PALETTE[c].dfg}; --tag-${c}-soft: ${TAG_PALETTE[c].dsoft};`).join(" ")} } }
+.tags { display: inline-flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.tag { --tg: var(--muted); --tg-soft: var(--code); display: inline-flex; align-items: center; gap: 5px; border-radius: 6px; padding: 1px 8px;
+  font: inherit; font-size: 12px; font-weight: 500; line-height: 1.6; white-space: nowrap; color: var(--tg); background: var(--tg-soft);
+  border: 1px solid transparent; text-decoration: none; }
+button.tag { cursor: pointer; }
+.tag .n { opacity: .75; font-variant-numeric: tabular-nums; }
+.tag[aria-pressed="true"] { border-color: var(--tg); box-shadow: 0 0 0 1px var(--tg); }
+.tag.custom { background: transparent; border: 1px dashed var(--muted); color: var(--muted); font-style: italic; }
+.tag .kind { font-style: normal; font-size: 10px; text-transform: uppercase; letter-spacing: .06em; border-radius: 4px; background: var(--code); padding: 0 4px; color: var(--muted); }
+.tag.undefined { background: var(--warn-soft); color: var(--warn); border: 1px solid var(--warn); }
+.tag.undefined .kind { background: transparent; color: var(--warn); }
+${TAG_COLOURS.map((c) => `.tag.c-${c} { --tg: var(--tag-${c}); --tg-soft: var(--tag-${c}-soft); }`).join("\n")}
+.facets { display: grid; gap: 8px; }
+.facets .dim { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.facets .dim > b { min-width: 110px; font-size: 12px; font-weight: 600; }
+`;
 
 /** Both consoles' stylesheet: tokens first (light, then dark), then the parts. Served at {@link CSS_URL}. */
 export const CONSOLE_CSS = `
@@ -160,6 +199,7 @@ input[type=text], input[type=password], input[type=search], select { font: inher
 .diagram pre.mermaid.plain { text-align: left; font-family: var(--mono); font-size: 12px; white-space: pre; }
 .diagram figcaption { margin-top: 8px; }
 .prose { max-width: 78ch; } .prose pre { background: var(--code); padding: 10px; border-radius: 8px; overflow-x: auto; }
+${TAG_CSS}
 @media (max-width: 860px) {
   .shell { grid-template-columns: minmax(0, 1fr); }
   .rail { flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--line); padding: 8px; }

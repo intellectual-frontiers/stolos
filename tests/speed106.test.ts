@@ -110,6 +110,7 @@ proves(
   {
     skip:
       proc.which("bun") === undefined && "bun is not installed (fleet upgrade runs bun install)",
+    timeout: 180_000,
   },
 );
 

@@ -26,6 +26,7 @@
 // Spec: 067-adopt
 // Spec: 097-controller FR-002
 // Spec: 107-pairing-and-query FR-007
+// Spec: 108-tags FR-004, FR-005, FR-008
 
 import { errors, fs, path, proc, stdio, toError } from "@intellectual-frontiers/commons/ts/runtime";
 import { compact, tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
@@ -36,8 +37,8 @@ import { authorizedLine, parseProbe, PROBE_SCRIPT, type ProbeOutput } from "./pr
 import type { ControllerFacts } from "./controller.ts";
 import type { WayOfJoining } from "../ontology.auto.ts";
 
-/** An adopted machine, as the fleet declares it (machine.ts). */
-export type AdoptedDef = {
+/** An adopted machine, as the fleet declares it (machine.ts); `T` is the fleet's own tag ids (its `TagId`). */
+export type AdoptedDef<T extends string = string> = {
   /** Its name in the fleet (a DNS label). */
   name: string;
   /** What it is, for people ("Shahid's MacBook Pro"). */
@@ -63,6 +64,13 @@ export type AdoptedDef = {
    * is auto-adopted by its role.
    */
   joined?: Extract<WayOfJoining, "paired" | "integrated">;
+  /**
+   * Spec 108-tags FR-004: the defined tags a person gave it (`env:lab`), by `stolos tag add` or `stolos pair --tag`; typed by
+   * the fleet's own tags.ts, so a tag it does not define is a type error.
+   */
+  tags?: readonly T[];
+  /** Spec 108-tags FR-005: the free-form tags a person gave it (`pilot`), always shown as custom. */
+  customTags?: readonly string[];
   /**
    * Risks the owner accepted, each for a while: a policy that fails is shown
    * as accepted (not as passing) until the date, with who and why (for an
@@ -219,12 +227,14 @@ export async function loadAdopted(): Promise<Array<{ machine: AdoptedDef; observ
 
 /** machine.ts's text. */
 export function machineSource(m: AdoptedDef): string {
+  // Spec 108-tags: a machine with tags is typed by the fleet's own tags.ts (a type error where a tag is not defined there).
+  const typed = (m.tags?.length ?? 0) > 0;
   return `// An adopted machine (spec 067): Stolos observes and checks it; it does not manage it.
 // Written by \`stolos host adopt\`; edit title, owner, and until freely.
 
 import type { AdoptedDef } from "@intellectual-frontiers/stolos/archon/adopt/adopt";
-
-export const machine: AdoptedDef = ${tsLiteral(m)};
+${typed ? `import type { TagId } from "../../tags.ts";\n` : ""}
+export const machine: AdoptedDef${typed ? "<TagId>" : ""} = ${tsLiteral(m)};
 `;
 }
 

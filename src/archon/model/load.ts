@@ -6,6 +6,7 @@
  *
  * @module
  */
+// Spec: 108-tags FR-004
 
 import { createRequire } from "node:module";
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
@@ -116,9 +117,10 @@ export async function loadHosts(): Promise<HostDef[]> {
     const { loadDecisions } = await import("../fleet/decisions.ts");
     const { loadRegistration } = await import("../fleet/registration.ts");
     const registration = await loadRegistration(host.name);
+    const decisions = await loadDecisions(host.name);
     const optIn = {
       ...(await readOptIns(host.name)),
-      ...((await loadDecisions(host.name)).optIns ?? {}),
+      ...(decisions.optIns ?? {}),
     };
     hosts.push({
       ...host,
@@ -127,6 +129,9 @@ export async function loadHosts(): Promise<HostDef[]> {
       ...(registration ? { registration } : {}),
       ...(pgState ? { pgState } : {}),
       ...(Object.keys(optIn).length ? { optIn } : {}),
+      // Spec 108-tags: the tags a person gave it (decisions.ts).
+      ...(decisions.tags?.length ? { tags: decisions.tags } : {}),
+      ...(decisions.customTags?.length ? { customTags: decisions.customTags } : {}),
     });
   }
   return hosts;

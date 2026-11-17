@@ -9,6 +9,7 @@
  *
  * @module
  */
+// Spec: 108-tags FR-016
 
 import { errors, fs, path, stdio, toError } from "@intellectual-frontiers/commons/ts/runtime";
 import type { OscalDocuments } from "./oscal.ts";
@@ -23,8 +24,16 @@ const print = (text: string): void => {
 
 const CATALOG_HINT = "bun run stolos compliance catalog";
 
-/** Print the fleet's compliance view; exit 1 when a control fails. */
-export async function complianceCommand(fw?: string, json = false, ocsf = false): Promise<number> {
+/**
+ * Print the fleet's compliance view; exit 1 when a control fails. Spec 108-tags FR-016: with `--tag`, `--any-tag` or `--select`,
+ * only the machines those tags choose count (managed, adopted and devices); a cloud account's and the estate's evidence stays.
+ */
+export async function complianceCommand(
+  fw?: string,
+  json = false,
+  ocsf = false,
+  pick: { tag?: unknown; "any-tag"?: unknown; select?: unknown } = {},
+): Promise<number> {
   if (fw && !FRAMEWORKS.some((f) => f.id === fw)) {
     ui.phase("Compliance").fail(
       `no framework ${fw}`,
@@ -34,8 +43,35 @@ export async function complianceCommand(fw?: string, json = false, ocsf = false)
   }
   const { pcFacts } = await import("../console/pc.ts");
   const catalog = await loadScf();
+  let facts = await pcFacts();
+  // Spec 108-tags FR-016: the evidence of the machines the tags choose.
+  const { loadFleetTags, selectionFromArgs, chosen, selectionText, scopeFacts } =
+    await import("../fleet/tags.ts");
+  const ft = await loadFleetTags();
+  const sel = selectionFromArgs(pick, ft.set);
+  if (sel.error) {
+    ui.phase("Compliance").fail(
+      sel.error,
+      "for example: --tag env:prod, --select 'env:prod and not role:database' (stolos tag list)",
+    );
+    return 1;
+  }
+  if (sel.selection) {
+    const keep = new Set(chosen(ft.machines, sel.selection).map((m) => m.name));
+    if (!keep.size) {
+      ui.phase("Compliance").fail(
+        `no machine has ${selectionText(sel.selection)}`,
+        "stolos tag list shows which machines hold which tags",
+      );
+      return 1;
+    }
+    facts = scopeFacts(facts, keep);
+    ui.phase("Scope").done(
+      `${keep.size} machine(s) chosen by ${selectionText(sel.selection)}; cloud accounts and the estate are not machine-scoped and stay`,
+    );
+  }
   // Spec 073: each piece of evidence held to its source's cadence; stale evidence fails.
-  const view = fleetFreshView(await pcFacts(), catalog, { cadences: await loadCadences() });
+  const view = fleetFreshView(facts, catalog, { cadences: await loadCadences() });
   const failing = view.controls.some((c) => c.status === "fail");
   if (ocsf) {
     // Spec 089: one OCSF Compliance Finding per piece of evidence and SCF control, as JSON Lines.

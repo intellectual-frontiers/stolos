@@ -93,6 +93,35 @@ export type AnswerState = "asking" | "answered" | "failed" | "timed-out";
 /** Every {@link AnswerState}, in the ontology's order. */
 export const ANSWER_STATES: readonly AnswerState[] = ["asking", "answered", "failed", "timed-out"];
 
+/** The colours a defined tag may be drawn in (`stolos:TagColour`; 108-tags FR-001). */
+export type TagColour =
+  "grey" | "red" | "orange" | "yellow" | "green" | "teal" | "blue" | "violet" | "pink";
+
+/** Every {@link TagColour}, in the ontology's order. */
+export const TAG_COLOURS: readonly TagColour[] = [
+  "grey",
+  "red",
+  "orange",
+  "yellow",
+  "green",
+  "teal",
+  "blue",
+  "violet",
+  "pink",
+];
+
+/** How many values of a tag dimension a machine may hold (`stolos:TagCardinality`; 108-tags FR-004). */
+export type TagCardinality = "one-of" | "many-of";
+
+/** Every {@link TagCardinality}, in the ontology's order. */
+export const TAG_CARDINALITIES: readonly TagCardinality[] = ["one-of", "many-of"];
+
+/** Where a tag on a machine came from (`stolos:TagOrigin`; 108-tags FR-006, FR-008, FR-011, 108-tags FR-009, 108-tags FR-010). */
+export type TagOrigin = "person" | "rule" | "inherited";
+
+/** Every {@link TagOrigin}, in the ontology's order. */
+export const TAG_ORIGINS: readonly TagOrigin[] = ["person", "rule", "inherited"];
+
 /** A signer's role (`stolos:SignerRole`; 047-intent-and-identity FR-001, 057-keys). */
 export type SignerRole = "daily" | "recovery";
 

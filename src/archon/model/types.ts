@@ -8,6 +8,7 @@
  */
 // Spec: 100-remote-access FR-001, FR-004
 // Spec: 101-ladder FR-006
+// Spec: 108-tags FR-004, FR-005
 
 import type { SiteDef } from "./site.ts";
 import type { DataClass as DataClassCode, MachineKind, SignerRole } from "../ontology.auto.ts";
@@ -603,6 +604,10 @@ export interface HostDef {
   ipv6?: boolean;
   /** Its fixed address (a UniFi Fixed IP), inside its network (spec 028). */
   ip?: string;
+  /** The defined tags a person gave it (spec 108-tags), read from decisions.ts by loadHosts. */
+  tags?: readonly string[];
+  /** The free-form tags a person gave it (spec 108-tags), read from decisions.ts by loadHosts. */
+  customTags?: readonly string[];
   /** Its unicast DNS name, a UniFi Local DNS record (Article 20): "alpha.localdomain". */
   dnsName?: string;
   /** The switch port it is cabled to: "flex-2.5g/3". */
@@ -735,9 +740,16 @@ export interface HostRegistration {
  * What operators decided for a host, in Git (spec 047): fleets/<id>/hosts/<host>/decisions.ts,
  * written by `stolos decide`. A decision here wins over the host's own record.
  */
-export interface HostDecisions {
+export interface HostDecisions<T extends string = string> {
   /** What operators decided in Git (decisions.ts): opt-in name to its record. */
   optIns?: Record<string, OptInRecord>;
+  /**
+   * Spec 108-tags FR-004: the defined tags a person gave the host (`env:prod`), written by `stolos tag add`; typed by the
+   * fleet's own `tags.ts` (a file written by the engine is `satisfies HostDecisions<TagId>`).
+   */
+  tags?: readonly T[];
+  /** Spec 108-tags FR-005: the free-form tags a person gave it (`pilot`), always shown as custom. */
+  customTags?: readonly string[];
 }
 
 /** the host's own archon.sql (opt-in pg): the opt-in switch (spec 040) and the instances Archon made. */

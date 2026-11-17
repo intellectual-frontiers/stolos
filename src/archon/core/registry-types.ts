@@ -7,6 +7,7 @@
  */
 // Spec: 101-ladder FR-006
 // Spec: 105-calm-output FR-001, FR-002
+// Spec: 108-tags FR-006
 import { proc } from "@intellectual-frontiers/commons/ts/runtime";
 import type { CommandTier, OutputClass } from "../ontology.auto.ts";
 
@@ -33,7 +34,7 @@ export interface ArgSpec {
   required?: boolean;
   /** Its value when it is not given. */
   default?: string | boolean;
-  /** May be given more than once; the values are joined with newlines. */
+  /** May be given more than once (the last positional too: `tag add <machine> <tag...>`); the values are joined with newlines. */
   repeatable?: boolean;
   /**
    * Only a person types it (--confirm-destroy, Article 23; --show for a secret): never offered over
@@ -159,8 +160,13 @@ export function parseArgs(cmd: Command, argv: string[]): Parsed {
       }
     } else {
       const spec = positionals[pi++];
-      if (!spec) throw new Error(`unexpected argument '${a}' for 'archon ${cmd.name}'`);
-      out[spec.name] = a;
+      if (!spec) {
+        // Spec 108-tags: the last positional may repeat (`tag add <machine> <tag...>`); its values are joined with newlines.
+        const rest = positionals[positionals.length - 1];
+        if (!rest?.repeatable)
+          throw new Error(`unexpected argument '${a}' for 'archon ${cmd.name}'`);
+        out[rest.name] = `${out[rest.name] as string}\n${a}`;
+      } else out[spec.name] = a;
     }
   }
   const agent = proc.env.get("ARCHON_AGENT");

@@ -9,6 +9,7 @@
  * @module
  */
 // Spec: 047-intent-and-identity
+// Spec: 108-tags FR-004, FR-006
 
 import { fs, path } from "@intellectual-frontiers/commons/ts/runtime";
 import { lf, tsKey } from "@intellectual-frontiers/commons/ts/kernel";
@@ -19,6 +20,15 @@ import type { DataClass, HostDecisions, OptInRecord } from "../model/types.ts";
 /** fleets/<id>/hosts/<host>/decisions.ts. */
 export function decisionsFile(host: string): string {
   return path.join(P.hosts, host, "decisions.ts");
+}
+
+/** A list as the formatter writes it (on one line while it fits in 100 columns, else one tag to a line), or nothing. */
+function list(key: string, items: readonly string[] | undefined): string {
+  if (!items?.length) return "";
+  const one = `  ${key}: [${items.map((t) => JSON.stringify(t)).join(", ")}],\n`;
+  return one.length <= 101
+    ? one
+    : `  ${key}: [\n${items.map((t) => `    ${JSON.stringify(t)},\n`).join("")}  ],\n`;
 }
 
 /** The fixed form of decisions.ts (sorted, one way to write each value). */
@@ -32,6 +42,10 @@ export function decisionsSource(d: HostDecisions): string {
         }      by: ${JSON.stringify(r.by)},\n      at: ${JSON.stringify(r.at)},\n    },\n`,
     )
     .join("");
+  // Spec 108-tags: a person's tags, typed by the fleet's own tags.ts (a type error where one is not defined there).
+  const tags = list("tags", d.tags);
+  const custom = list("customTags", d.customTags);
+  const typed = tags !== "";
   return `/**
  * Written by stolos decide (spec 047): what operators decided for this host.
  * Change it with stolos decide, in a signed commit; a decision here wins over the host's own record.
@@ -39,11 +53,10 @@ export function decisionsSource(d: HostDecisions): string {
  * @module
  */
 import type { HostDecisions } from "@intellectual-frontiers/stolos/archon/model/types";
-
+${typed ? `import type { TagId } from "../../tags.ts";\n` : ""}
 export default {
-  optIns: {
-${rows}  },
-} satisfies HostDecisions;
+${rows ? `  optIns: {\n${rows}  },` : "  optIns: {},"}
+${tags}${custom}} satisfies HostDecisions${typed ? "<TagId>" : ""};
 `;
 }
 

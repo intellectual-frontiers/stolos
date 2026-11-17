@@ -26,8 +26,11 @@
  * @module
  */
 // Spec: 107-pairing-and-query FR-010, FR-011
+// Spec: 108-tags FR-013
 
 import type { AnswerState } from "../ontology.auto.ts";
+import type { ResolvedTag, Selection } from "../model/tags.ts";
+import { tagLine } from "../fleet/tags.ts";
 
 export { queryRefusal } from "../state/query.ts";
 
@@ -36,6 +39,9 @@ export const QUERY_CAP = 8;
 
 /** How long each machine has to answer, in seconds, unless `--timeout` says another. */
 export const QUERY_TIMEOUT_S = 15;
+
+/** A tag of a machine that was asked (spec 108-tags FR-013): its id, whether it is defined or custom, and its origin. */
+export type QueryTag = Pick<ResolvedTag, "id" | "standing" | "origin"> & { from?: string };
 
 /** One machine's answer to a question to every machine. */
 export interface QueryAnswer {
@@ -51,6 +57,8 @@ export interface QueryAnswer {
   error?: string;
   /** How long it took, in milliseconds. */
   ms?: number;
+  /** The machine's tags (spec 108-tags FR-013), when the fleet gives it any: custom ones are marked as such. */
+  tags?: QueryTag[];
 }
 
 /** A machine to ask, and how: `ask` gives its rows, throws with its reason, and should stop when `signal` aborts. */
@@ -73,6 +81,8 @@ export interface AskOptions {
   onStart?: (machines: ReadonlyArray<Pick<AskTarget, "machine" | "kind">>) => void;
   /** Called with each answer as it arrives (any order). */
   onAnswer?: (a: QueryAnswer) => void;
+  /** Spec 108-tags FR-013: ask only the machines whose tags this chooses (`askFleet` reads it; `askAll` asks the targets it is given). */
+  selection?: Selection;
 }
 
 /** One machine, asked within its time limit: always an answer, never a throw. */
@@ -151,13 +161,19 @@ export function answeredLine(answers: readonly QueryAnswer[], total = answers.le
 export function tableRows(answers: readonly QueryAnswer[]): Array<Record<string, unknown>> {
   return answers.flatMap((a) =>
     a.state === "answered" && a.rows?.length
-      ? a.rows.map((r) => ({ machine: a.machine, answer: a.state, ...r }))
+      ? a.rows.map((r) => ({ machine: a.machine, answer: a.state, ...tagCell(a), ...r }))
       : [
           {
             machine: a.machine,
             answer: a.state,
+            ...tagCell(a),
             reason: a.state === "answered" ? "no rows" : (a.error ?? ""),
           },
         ],
   );
+}
+
+/** A machine's tags as one cell (`env:lab role:nas · custom: pilot`): the custom ones apart, labelled. Nothing where it has none. */
+export function tagCell(a: Pick<QueryAnswer, "tags">): { tags?: string } {
+  return a.tags?.length ? { tags: tagLine(a.tags) } : {};
 }

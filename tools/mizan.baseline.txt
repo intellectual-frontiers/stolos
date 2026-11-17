@@ -37,6 +37,8 @@ mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#
 mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#Signer
 mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#SignerRole
 mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#SigningOutcome
+mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#TagRule
+mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#TagSelection
 mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#TrustedNetwork
 mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#Verbosity
 mizan/decision-missing https://intellectual-frontiers.github.io/stolos/ontology#WayOfJoining

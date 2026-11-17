@@ -7,6 +7,7 @@
 // Spec: 097-controller FR-001, FR-006
 // Spec: 098-pair FR-009
 // Spec: 107-pairing-and-query FR-007, FR-010, FR-011
+// Spec: 108-tags FR-004, FR-008, FR-013
 
 import {
   array,
@@ -45,7 +46,9 @@ import {
   type AskTarget,
   QUERY_CAP,
   type QueryAnswer,
+  type QueryTag,
   QUERY_TIMEOUT_S,
+  tagCell,
 } from "./query.ts";
 
 const fail = (): number => (ui.problems.some((x) => x.level === "fail") ? 1 : 0);
@@ -130,6 +133,9 @@ export async function hostAdopt(o: {
     hostKeys,
     ...compact({ until: (o.until ?? existing?.until) || undefined }),
     adopted: existing?.adopted ?? new Date().toISOString(),
+    // Spec 108-tags: the tags a person gave it are kept.
+    ...(existing?.tags?.length ? { tags: existing.tags } : {}),
+    ...(existing?.customTags?.length ? { customTags: existing.customTags } : {}),
   };
 
   const pk = ui.phase("Probe key");
@@ -409,13 +415,47 @@ export async function queryTargets(sql: string): Promise<AskTarget[]> {
 /**
  * Ask every machine one SELECT (spec 107-pairing-and-query FR-010): all at once, at most `cap` at a time, each within `timeoutMs`;
  * `onStart` and `onAnswer` let a page draw the table as the answers come. The caller has checked the SQL (`queryRefusal`).
+ * Spec 108-tags FR-013: with a `selection`, only the machines whose tags it chooses are asked, and each answer carries its
+ * machine's tags.
  */
 export async function askFleet(sql: string, o: AskOptions = {}): Promise<QueryAnswer[]> {
-  return await askAll(await queryTargets(sql), o);
+  const { selection, ...pool } = o;
+  const { chosen, loadFleetTags } = await import("../fleet/tags.ts");
+  const ft = await loadFleetTags();
+  const keep = selection ? new Set(chosen(ft.machines, selection).map((m) => m.name)) : undefined;
+  const tags = new Map(
+    ft.machines.map((m) => [
+      m.name,
+      m.resolved.tags.map((t): QueryTag => ({
+        id: t.id,
+        standing: t.standing,
+        origin: t.origin,
+        ...(t.from === undefined ? {} : { from: t.from }),
+      })),
+    ]),
+  );
+  const withTags = (a: QueryAnswer): QueryAnswer => {
+    const t = tags.get(a.machine);
+    return t?.length ? { ...a, tags: t } : a;
+  };
+  const targets = (await queryTargets(sql)).filter((t) => !keep || keep.has(t.machine));
+  const answers = await askAll(targets, {
+    ...pool,
+    ...(pool.onAnswer ? { onAnswer: (a: QueryAnswer) => pool.onAnswer?.(withTags(a)) } : {}),
+  });
+  return answers.map(withTags);
 }
 
-/** `stolos fleet query "<sql>" [--timeout s]`: one osquery SELECT on every machine at once; one merged table. */
-export async function fleetQuery(sql: string, json = false, timeoutS?: number): Promise<number> {
+/**
+ * `stolos fleet query "<sql>" [--timeout s] [--tag t ...] [--any-tag t ...] [--select expr]`: one osquery SELECT on every machine
+ * (or the machines the tags choose) at once; one merged table.
+ */
+export async function fleetQuery(
+  sql: string,
+  json = false,
+  timeoutS?: number,
+  pick: { tag?: unknown; "any-tag"?: unknown; select?: unknown } = {},
+): Promise<number> {
   const { queryRefusal, table } = await import("../state/query.ts");
   const why = queryRefusal(sql);
   if (why) {
@@ -426,23 +466,45 @@ export async function fleetQuery(sql: string, json = false, timeoutS?: number): 
     return fail();
   }
   const p = ui.phase("Query");
+  // Spec 108-tags FR-012, FR-013: the machines by their tags; a typo in a tag is refused before anything is asked.
+  const { loadFleetTags, selectionFromArgs, chosen, selectionText } =
+    await import("../fleet/tags.ts");
+  const ft = await loadFleetTags();
+  const sel = selectionFromArgs(pick, ft.set);
+  if (sel.error) {
+    p.fail(
+      sel.error,
+      "for example: --tag env:prod, --any-tag role:nas --any-tag role:web, --select 'env:prod and not role:database' (stolos tag list)",
+    );
+    return fail();
+  }
+  if (sel.selection && !chosen(ft.machines, sel.selection).length) {
+    p.fail(
+      `no machine has ${selectionText(sel.selection)}: nothing was asked`,
+      "stolos tag list shows which machines hold which tags",
+    );
+    return fail();
+  }
   let asked = 0;
   let got = 0;
   const answers = await askFleet(sql, {
     timeoutMs: (timeoutS ?? QUERY_TIMEOUT_S) * 1000,
+    ...(sel.selection ? { selection: sel.selection } : {}),
     onStart: (ms) => {
       asked = ms.length;
       p.status(`Asking ${asked} machine(s), ${Math.min(QUERY_CAP, asked)} at a time`);
     },
     onAnswer: () => p.status(`${++got} of ${asked} answered or failed`),
   });
-  p.done(answeredLine(answers));
+  p.done(
+    `${answeredLine(answers)}${sel.selection ? ` (chosen by ${selectionText(sel.selection)})` : ""}`,
+  );
   if (json) {
     stdio.stdout.writeSync(`${JSON.stringify(answers, null, 2)}\n`);
     return 0;
   }
   const rows: Array<Record<string, unknown>> = answers.flatMap((a) =>
-    (a.rows ?? []).map((r) => ({ machine: a.machine, ...r })),
+    (a.rows ?? []).map((r) => ({ machine: a.machine, ...tagCell(a), ...r })),
   );
   if (rows.length) stdio.stdout.writeSync(`${table(rows)}\n`);
   for (const a of answers.filter((x) => x.state !== "answered")) {
@@ -641,6 +703,10 @@ export async function adoptCheckIn(
     spec?: string;
     /** How it joined, recorded in machine.ts (spec 107-pairing-and-query FR-007): `paired` by `stolos pair`. */
     joined?: "paired" | "integrated";
+    /** Spec 108-tags FR-008: the defined tags a person chose for it at pairing (kept from before when none). */
+    tags?: readonly string[];
+    /** Spec 108-tags FR-008: the free-form tags a person chose for it at pairing. */
+    customTags?: readonly string[];
   },
   c = ui.phase("Check-in"),
 ): Promise<number> {
@@ -664,6 +730,10 @@ export async function adoptCheckIn(
     adopted: existing?.adopted ?? new Date().toISOString(),
     ...((j) => (j ? { joined: j } : {}))(o.joined ?? existing?.joined),
     ...(existing?.accepted ? { accepted: existing.accepted } : {}),
+    ...((t) => (t?.length ? { tags: t } : {}))(o.tags?.length ? o.tags : existing?.tags),
+    ...((t) => (t?.length ? { customTags: t } : {}))(
+      o.customTags?.length ? o.customTags : existing?.customTags,
+    ),
   };
   await fs.mkdir(adoptedDir(o.name), { recursive: true });
   await fs.writeTextFile(path.join(adoptedDir(o.name), "machine.ts"), machineSource(machine));
