@@ -6,6 +6,7 @@
  * @module
  */
 // Spec: 101-ladder FR-004
+import { MZ } from "@intellectual-frontiers/commons/ontology/mizan";
 import { rdf } from "@intellectual-frontiers/commons/ts/kernel";
 import { rungs } from "./architecture.ts";
 import { individuals as codeIndividuals } from "./codes.ts";
@@ -58,7 +59,7 @@ export const files: readonly (rdf.OntologyFile & { readonly module: string })[] 
   {
     name: "architecture",
     module: "ontology/stolos/architecture.ts",
-    prefixes: [STOLOS, rdf.RDFS, rdf.SKOS],
+    prefixes: [STOLOS, MZ, rdf.RDFS, rdf.SKOS],
     individuals: rungs,
   },
 ];

@@ -22,8 +22,8 @@ same, with commons' TypeScript checks.
 ## Ontology
 
 The terms this spec uses, each defined in `ontology/stolos/` before it is used here:
-`stolos:Rung` (the rungs `stolos:rung-0` to `stolos:rung-7`), `stolos:home`, `stolos:mayRelyOn`,
-`stolos:provedBy`, `stolos:spec`, and the code lists `stolos:OutcomeLevel`, `stolos:MachineKind`,
+commons' `mz:Rung` (commons 0016-ladder; the rungs `stolos:rung-0` to `stolos:rung-7` are its individuals), `mz:home`, `mz:mayRelyOn`,
+`mz:provedBy`, `stolos:spec`, and the code lists `stolos:OutcomeLevel`, `stolos:MachineKind`,
 `stolos:SignerRole`, `stolos:CommandTier`, `stolos:DataClass`, `stolos:IntegrationKind` and
 `stolos:FileKind`.
 
@@ -33,7 +33,7 @@ The terms this spec uses, each defined in `ontology/stolos/` before it is used h
   first (0 ontology, 1 specifications, 2 governed data, 3 data operations, 4 infrastructure rules,
   5 business rules, 6 application: headless hosts, then windowed hosts, 7 documentation), its two
   rules (dependency direction; order of work) and headless first. The rungs are individuals of
-  `stolos:Rung` in `ontology/stolos/architecture.ts`, each with its number, purpose, homes, the
+  `mz:Rung` (commons' shared class, `104-mizan`) in `ontology/stolos/architecture.ts`, each with its number, purpose, homes, the
   rungs it may rely on and the commands that prove it; `bun run gen` writes the constitution's table
   between `<!-- ladder:begin -->` and `<!-- ladder:end -->` and `AGENTS.md`'s layout between
   `<!-- layout:begin -->` and `<!-- layout:end -->` from them, and `bun run gen --check` fails where

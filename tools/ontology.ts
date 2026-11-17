@@ -156,7 +156,7 @@ function rungFacts(): readonly {
   return rungs.map((r) => ({
     n: r.values.rungNumber,
     label: r.values.label.value,
-    purpose: r.values.definition.value,
+    purpose: r.values.purpose.value,
     homes: (r.values.home ?? []).map((h) => `\`${h}\``).join(", "),
     relies: reliesOn(
       (r.values.mayRelyOn ?? []).map(

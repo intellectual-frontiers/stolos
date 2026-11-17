@@ -14,6 +14,7 @@
  * @module
  */
 // Spec: 101-ladder FR-004
+import { Rung as MizanRung } from "@intellectual-frontiers/commons/ontology/mizan";
 import { rdf } from "@intellectual-frontiers/commons/ts/kernel";
 
 const {
@@ -66,7 +67,6 @@ export const stolos = vocabulary(STOLOS, {
   AddressBlock: "owl:Class",
   MachineTable: "owl:Class",
   // The architecture.
-  Rung: "owl:Class",
   // The code lists' classes.
   OutcomeLevel: "owl:Class",
   OutputClass: "owl:Class",
@@ -87,10 +87,6 @@ export const stolos = vocabulary(STOLOS, {
   AnswerState: "owl:Class",
   // Properties.
   spec: "owl:DatatypeProperty",
-  rungNumber: "owl:DatatypeProperty",
-  home: "owl:DatatypeProperty",
-  mayRelyOn: "owl:ObjectProperty",
-  provedBy: "owl:DatatypeProperty",
   emoji: "owl:DatatypeProperty",
   ascii: "owl:DatatypeProperty",
   protocol: "owl:DatatypeProperty",
@@ -185,16 +181,8 @@ export const PairingStageSchema = classSchema(stolos.PairingStage, CODE);
 /** The schema of an answer state (spec 107-pairing-and-query): where one machine is in a question to every machine. */
 export const AnswerStateSchema = classSchema(stolos.AnswerState, CODE);
 
-/** The schema of a rung of the ladder (Article 0): its number, name, purpose, homes, the rungs it may rely on and what proves it. */
-export const RungSchema = classSchema(stolos.Rung, {
-  label: one(rdfs.label, range.langString),
-  rungNumber: one(stolos.rungNumber, range.integer),
-  definition: one(skos.definition, range.langString),
-  home: many(stolos.home, range.string),
-  mayRelyOn: many(stolos.mayRelyOn, range.ref<"stolos:Rung">()),
-  provedBy: many(stolos.provedBy, range.string),
-  spec: many(stolos.spec, range.string),
-});
+/** The schema of a rung of the ladder (Article 0): commons' `mz:Rung` (commons 0016-ladder), which Stolos states its eight rungs with. */
+export const RungSchema = MizanRung;
 
 /**
  * A code list of a schema: each key is the word code branches on (the individual's `skos:notation`), its local name `<prefix>-<key>`,
@@ -341,13 +329,6 @@ export const classes = [
       "An HTTPS name of the Stolos Console under the fleet's web domain, with its DNS record and certificate.",
     ),
     spec: ["100-remote-access FR-001, FR-002"],
-  }),
-  StolosClass.make(stolos.Rung, {
-    label: en("Rung"),
-    definition: en(
-      "A rung of the ladder of Article 0: a purpose, its homes in the repository, the rungs it may rely on and what proves it.",
-    ),
-    spec: ["101-ladder FR-001"],
   }),
   StolosClass.make(stolos.OutcomeLevel, {
     label: en("Outcome level"),
@@ -519,36 +500,6 @@ export const properties = [
       "The specification (`NNN-slug`) or requirement (`NNN-slug FR-NNN`) a term comes from; `bun run check:trace` holds it.",
     ),
     spec: [LADDER, "101-ladder FR-007"],
-  }),
-  StolosDatatypeProperty.make(stolos.rungNumber, {
-    label: en("rung number"),
-    domain: stolos.Rung,
-    range: xsd.integer,
-    definition: en("The rung's number, 0 (the ontology) to 7 (the documentation)."),
-    spec: ["101-ladder FR-001"],
-  }),
-  StolosDatatypeProperty.make(stolos.home, {
-    label: en("home"),
-    domain: stolos.Rung,
-    range: xsd.string,
-    definition: en(
-      "A glob of the paths on the rung; a trailing `/` is everything under a folder (commons 0015-trace FR-009).",
-    ),
-    spec: ["101-ladder FR-002"],
-  }),
-  StolosObjectProperty.make(stolos.mayRelyOn, {
-    label: en("may rely on"),
-    domain: stolos.Rung,
-    range: stolos.Rung,
-    definition: en("A lower rung this rung may import from (spec 101-ladder FR-003)."),
-    spec: ["101-ladder FR-003"],
-  }),
-  StolosDatatypeProperty.make(stolos.provedBy, {
-    label: en("proved by"),
-    domain: stolos.Rung,
-    range: xsd.string,
-    definition: en("A command whose passing proves the rung."),
-    spec: ["101-ladder FR-001"],
   }),
   StolosDatatypeProperty.make(stolos.protocol, {
     label: en("protocol"),

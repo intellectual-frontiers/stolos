@@ -35,6 +35,10 @@ no build. This file is the entry point for any agent; the constitution,
   file; never ids built at run time), or a `// Proves:` line. A requirement no test can prove is
   listed in its spec's `reviewed.tsv` with the reason. `bun run check:trace` holds all of it,
   and every ontology term's spec too.
+- **Mizan, commons' profile of Spec Kit** (spec `104-mizan`): the ladder's rungs are individuals of commons' `mz:Rung`, and every class and
+  property of the vocabulary has a record of the standard it rests on, or that none is adopted, in `ontology/stolos/audit.ts`. `bun run check:mizan` runs commons' rules on
+  `specs/` and the audit, held by `tools/mizan.baseline.txt`, which only shrinks (a term with no record, and a decision more than 90 days past its audit, fail whatever it
+  holds). Take a standard before you invent a term: name the candidates you examined, in order: law, US and NIST standards, ISO, broadly used vocabularies.
 - **The checks' baselines only shrink.** `tools/trace.baseline.txt` and
   `tools/layers.baseline.txt` hold the findings that existed when each check was first held.
   A new finding fails the check, and so does a line of a baseline that no longer occurs: when

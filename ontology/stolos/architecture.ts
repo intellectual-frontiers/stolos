@@ -15,6 +15,7 @@
  */
 // Spec: 101-ladder FR-001, FR-002, FR-003
 import { rdf } from "@intellectual-frontiers/commons/ts/kernel";
+import { rungKinds } from "@intellectual-frontiers/commons/ontology/mizan";
 import { RungSchema, STOLOS } from "./vocabulary.ts";
 
 const { en, term } = rdf;
@@ -26,7 +27,8 @@ const SPEC = ["101-ladder FR-001"];
 export const rung0 = RungSchema.make(term(STOLOS, "rung-0"), {
   label: en("Ontology"),
   rungNumber: 0,
-  definition: en(
+  kind: rungKinds.Required,
+  purpose: en(
     "Terms, classes and code lists, stated once as TypeScript on commons' kernel RDF; Turtle and the code's unions are generated from it.",
   ),
   home: ["ontology/", "src/archon/ontology.auto.ts"],
@@ -38,7 +40,8 @@ export const rung0 = RungSchema.make(term(STOLOS, "rung-0"), {
 export const rung1 = RungSchema.make(term(STOLOS, "rung-1"), {
   label: en("Specifications"),
   rungNumber: 1,
-  definition: en(
+  kind: rungKinds.Required,
+  purpose: en(
     "What each part must do, in Spec Kit (specify, clarify, plan, tasks, implement), using only terms the ontology defines.",
   ),
   home: [".specify/", "specs/"],
@@ -51,7 +54,8 @@ export const rung1 = RungSchema.make(term(STOLOS, "rung-1"), {
 export const rung2 = RungSchema.make(term(STOLOS, "rung-2"), {
   label: en("Governed data"),
   rungNumber: 2,
-  definition: en(
+  kind: rungKinds.Required,
+  purpose: en(
     "The shapes of what is kept: the fleet model's types and the site's, the estate's tables and the schema language and vocabulary they are declared in.",
   ),
   home: [
@@ -70,7 +74,8 @@ export const rung2 = RungSchema.make(term(STOLOS, "rung-2"), {
 export const rung3 = RungSchema.make(term(STOLOS, "rung-3"), {
   label: en("Data operations"),
   rungNumber: 3,
-  definition: en(
+  kind: rungKinds.Required,
+  purpose: en(
     "Work as close to the data as possible: the model loaded and validated, the state store (archon.sql), the estate graph and the vault.",
   ),
   home: ["src/archon/model/", "src/archon/state/", "src/archon/estate/", "src/archon/vault/"],
@@ -83,7 +88,8 @@ export const rung3 = RungSchema.make(term(STOLOS, "rung-3"), {
 export const rung4 = RungSchema.make(term(STOLOS, "rung-4"), {
   label: en("Infrastructure rules"),
   rungNumber: 4,
-  definition: en(
+  kind: rungKinds.Required,
+  purpose: en(
     "Logic every part reuses, neutral to any one service: the core (output, paths, exec, secrets), identity and keys, install, the web front door, telemetry's names, and the use of commons.",
   ),
   home: [
@@ -111,7 +117,8 @@ export const rung4 = RungSchema.make(term(STOLOS, "rung-4"), {
 export const rung5 = RungSchema.make(term(STOLOS, "rung-5"), {
   label: en("Business rules"),
   rungNumber: 5,
-  definition: en(
+  kind: rungKinds.Required,
+  purpose: en(
     "The engine's own logic: capabilities and what they render, compliance and controls, adopt and pair, access, update, proposals and the other services.",
   ),
   home: [
@@ -169,7 +176,8 @@ export const rung5 = RungSchema.make(term(STOLOS, "rung-5"), {
 export const rung6 = RungSchema.make(term(STOLOS, "rung-6"), {
   label: en("Application: headless hosts, then windowed hosts"),
   rungNumber: 6,
-  definition: en(
+  kind: rungKinds.Required,
+  purpose: en(
     "Two bands: the headless hosts (the stolos and archon command lines and their registry, the MCP server, the REST API, the boot server, the bootstrap scripts and the harness's tools), which reach the operations below with no window, session or person present; then the windowed hosts (the Archon and Stolos consoles), which draw a model and call those operations.",
   ),
   home: [
@@ -194,7 +202,8 @@ export const rung6 = RungSchema.make(term(STOLOS, "rung-6"), {
 export const rung7 = RungSchema.make(term(STOLOS, "rung-7"), {
   label: en("Documentation"),
   rungNumber: 7,
-  definition: en(
+  kind: rungKinds.Required,
+  purpose: en(
     "The guides (each module's @module documentation, src/**/mod.ts first), docs/, the manuals site (docs.config.ts), the example fleet, this repository's own documents, and the tests that prove every rung below.",
   ),
   home: [
