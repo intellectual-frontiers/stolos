@@ -21,7 +21,7 @@ proves(
     const ids = new Set(MARKET_CATEGORIES.map((m) => m.id));
     for (const c of CONNECTORS) {
       assert(
-        c.serviceModels.length > 0 &&
+        (c.serviceModels.length > 0 || c.selfHosted === true) &&
           c.serviceModels.every((m) => (SERVICE_MODELS as readonly string[]).includes(m)),
         c.id,
       );

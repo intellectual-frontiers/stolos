@@ -11,6 +11,7 @@
  * @module
  */
 // Spec: 071-catalogs-oscal
+// Spec: 109-integrations-api FR-016
 
 /** The frameworks, in the order the consoles show them; each maps through SCF's STRM. */
 export const FRAMEWORKS = [
@@ -51,6 +52,26 @@ export const SCF_CONTROLS = [
     id: "AST-07.1",
     name: "Technology Assets, Applications, Services and/or Data (TAASD) Ownership Assignment",
     how: "Every device has someone responsible for it and a known location.",
+  },
+  {
+    id: "NET-10",
+    name: "Virtual Local Area Network (VLAN) Separation",
+    how: "A router's controller is read: more than the default network exists, so guests, IoT and servers are separated (spec 109).",
+  },
+  {
+    id: "NET-24",
+    name: "Wireless Networking",
+    how: "A router's controller is read: no enabled Wi-Fi network is open (spec 109).",
+  },
+  {
+    id: "NET-39",
+    name: "Email Domain Reputation Protections",
+    how: "The domains that have email publish SPF, DKIM and DMARC records (spec 109).",
+  },
+  {
+    id: "CRY-09",
+    name: "Public Key Infrastructure (PKI)",
+    how: "The certificate of a controller Stolos reads from is pinned or verified by a CA (spec 109).",
   },
   {
     id: "MON-02",

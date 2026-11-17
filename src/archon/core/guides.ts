@@ -117,6 +117,12 @@ export const GUIDES: GuideDef[] = [
     module: "src/archon/connect/registry-guide.ts",
   },
   {
+    name: "integrations",
+    title: "Integrations: routers, DNS and email",
+    why: "One typed layer over a router, a DNS provider and an email provider; UniFi, Cloudflare; how a controller's certificate is trusted.",
+    module: "src/archon/connect/mod.ts",
+  },
+  {
     name: "people",
     title: "People controls",
     why: "Joiners and leavers, access reviews, policies, training, and screening, as code.",

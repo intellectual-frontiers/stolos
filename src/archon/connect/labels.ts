@@ -8,6 +8,7 @@
  * @module
  */
 // Spec: 091-connectors
+// Spec: 109-integrations-api FR-003, FR-015
 
 import { defineLabel, type LabelView } from "../schema/define.ts";
 import { codeRepository, userAccount } from "../estate/schema.ts";
@@ -406,6 +407,144 @@ export const CONFIGURATION_MANAGEMENT_DATABASE: LabelView = defineLabel({
   },
 });
 
+/**
+ * A device connected to a network, as its router sees it (OCSF network endpoint): spec 109. Records of this label are the
+ * clients of a router; the adopted devices of a controller are `hardware_device` records' sisters, `computer_network_node`.
+ */
+export const NETWORK_ENDPOINT: LabelView = defineLabel({
+  name: "network_endpoint",
+  terms: [{ from: "ocsf", term: "network_endpoint" }],
+  doc: "A client connected to a network, as its router sees it: its name, kind of connection, MAC and IP address, and the device it connects through.",
+  props: {
+    kind: { type: "text", doc: "wired, wireless, vpn, or teleport." },
+    mac: { type: "text", doc: "Its MAC address." },
+    ip: { type: "text", doc: "Its IP address." },
+    site: { type: "text", doc: "The site of the controller it is on." },
+    uplink: { type: "text", doc: "The id of the network device it connects through." },
+    guest: { type: "boolean", doc: "It is a guest of the network." },
+    connected_at: { type: "text", doc: "When it connected (ISO)." },
+  },
+});
+
+/** A network of a router (D3FEND local area network): a VLAN with its id. */
+export const LOCAL_AREA_NETWORK: LabelView = defineLabel({
+  name: "local_area_network",
+  terms: [{ from: "d3fend", term: "local_area_network" }],
+  doc: "A network of a router, with its VLAN id.",
+  props: {
+    vlan_id: { type: "integer", doc: "Its VLAN id (IEEE 802.1Q); 1 is the default network." },
+    enabled: { type: "boolean", doc: "It is on." },
+    is_default: { type: "boolean", doc: "It is the default network." },
+    management: { type: "text", doc: "Who manages it (gateway, switch, or unmanaged)." },
+    site: { type: "text", doc: "The site of the controller it is on." },
+    zone: { type: "text", doc: "The id of the firewall zone it belongs to." },
+  },
+});
+
+/** A device a network is made of (D3FEND computer network node): a gateway, a switch, an access point. */
+export const COMPUTER_NETWORK_NODE: LabelView = defineLabel({
+  name: "computer_network_node",
+  terms: [{ from: "d3fend", term: "computer_network_node" }],
+  doc: "A device a network is made of and a controller has adopted: a gateway, a switch, an access point.",
+  props: {
+    kind: { type: "text", doc: "gateway, switch, access-point, or other." },
+    model: { type: "text", doc: "Its model." },
+    mac: { type: "text", doc: "Its MAC address." },
+    ip: { type: "text", doc: "Its IP address." },
+    state: { type: "text", doc: "Its state at the controller (ONLINE, OFFLINE, UPDATING, ...)." },
+    firmware: { type: "text", doc: "Its firmware version." },
+    firmware_updatable: { type: "boolean", doc: "A firmware update is waiting for it." },
+    site: { type: "text", doc: "The site of the controller it is on." },
+  },
+});
+
+/** A port of a switch (OCSF network interface): its state, speed and power over Ethernet. */
+export const NETWORK_INTERFACE: LabelView = defineLabel({
+  name: "network_interface",
+  terms: [{ from: "ocsf", term: "network_interface" }],
+  doc: "A port of a switch or gateway: its state, speed, connector and power over Ethernet.",
+  props: {
+    device: { type: "text", doc: "The id of the device it is on." },
+    device_name: { type: "text", doc: "The name of the device it is on." },
+    port: { type: "integer", doc: "Its index on the device." },
+    state: { type: "text", doc: "UP, DOWN, or UNKNOWN." },
+    speed_mbps: { type: "integer", doc: "Its speed now (Mbps)." },
+    max_speed_mbps: { type: "integer", doc: "Its highest speed (Mbps)." },
+    connector: { type: "text", doc: "RJ45, SFP, ..." },
+    poe_state: { type: "text", doc: "Whether it supplies power (UP, DOWN, LIMITED), when it can." },
+  },
+});
+
+/** A rule of a router's firewall (OCSF firewall rule). */
+export const FIREWALL_RULE: LabelView = defineLabel({
+  name: "firewall_rule",
+  terms: [{ from: "ocsf", term: "firewall_rule" }],
+  doc: "A rule of a router's firewall: its action, the zones it applies between, and whether it is on.",
+  props: {
+    enabled: { type: "boolean", doc: "It is on." },
+    rule_action: { type: "text", doc: "allow, block, or reject." },
+    source_zone: { type: "text", doc: "The name of the zone traffic comes from." },
+    destination_zone: { type: "text", doc: "The name of the zone traffic goes to." },
+    position: { type: "integer", doc: "Its place in the order of the rules." },
+    logging: { type: "boolean", doc: "It writes a log entry when it matches." },
+    origin: { type: "text", doc: "system, user, or derived: who made it." },
+    site: { type: "text", doc: "The site of the controller it is on." },
+  },
+});
+
+/** A network that is not a VLAN of a router: a Wi-Fi network an access point broadcasts (D3FEND network). */
+export const NETWORK: LabelView = defineLabel({
+  name: "network",
+  terms: [{ from: "d3fend", term: "network" }],
+  doc: "A Wi-Fi network an access point broadcasts: its name, whether it is on, how it is secured.",
+  props: {
+    kind: { type: "text", doc: "wifi." },
+    enabled: { type: "boolean", doc: "It is on." },
+    security: {
+      type: "text",
+      doc: "OPEN, WPA2_PERSONAL, WPA3_PERSONAL, ... (the controller's word).",
+    },
+    frequencies_ghz: { type: "text", doc: "The frequencies it uses (GHz), comma separated." },
+    guest: { type: "boolean", doc: "It is a guest network (a hotspot)." },
+    site: { type: "text", doc: "The site of the controller it is on." },
+  },
+});
+
+/** A domain's email service (D3FEND mail service): its MX records and what it publishes to be trusted. */
+export const MAIL_SERVICE: LabelView = defineLabel({
+  name: "mail_service",
+  terms: [{ from: "d3fend", term: "mail_service" }],
+  doc: "A domain as its email depends on it: its MX records, and whether it publishes SPF, DKIM and DMARC records.",
+  props: {
+    domain: { type: "text", doc: "The domain." },
+    mx: { type: "text", doc: "Its MX hosts, comma separated." },
+    spf: { type: "boolean", doc: "It publishes an SPF record." },
+    dkim: { type: "boolean", doc: "It publishes at least one DKIM key." },
+    dmarc: { type: "boolean", doc: "It publishes a DMARC record." },
+    dmarc_policy: {
+      type: "text",
+      doc: "Its DMARC policy (none, quarantine, reject), when it has one.",
+    },
+    routing: { type: "boolean", doc: "Email routing is on at the provider." },
+  },
+});
+
+/** A rule of an email service (D3FEND email rule): an address and what happens to its mail. */
+export const EMAIL_RULE: LabelView = defineLabel({
+  name: "email_rule",
+  terms: [{ from: "d3fend", term: "email_rule" }],
+  doc: "A rule of an email routing service: the address it matches, whether it is on, and what it does with a message.",
+  props: {
+    zone: { type: "text", doc: "The domain it belongs to." },
+    enabled: { type: "boolean", doc: "It is on." },
+    priority: { type: "integer", doc: "Its priority (lower runs first)." },
+    matches: { type: "text", doc: "The addresses it matches, comma separated." },
+    actions: { type: "text", doc: "What it does (forward, worker, drop), comma separated." },
+    destinations: { type: "integer", doc: "How many addresses it forwards to (never which)." },
+    catch_all: { type: "boolean", doc: "It is the rule for every other address." },
+  },
+});
+
 /** Every connector label. */
 export const CONNECTOR_LABELS: readonly LabelView[] = [
   USER_ACCOUNT,
@@ -437,4 +576,12 @@ export const CONNECTOR_LABELS: readonly LabelView[] = [
   INTRUSION_DETECTION_SYSTEM,
   CONFIGURATION_MANAGEMENT_DATABASE,
   PERSON_RECORD,
+  NETWORK_ENDPOINT,
+  LOCAL_AREA_NETWORK,
+  COMPUTER_NETWORK_NODE,
+  NETWORK_INTERFACE,
+  FIREWALL_RULE,
+  NETWORK,
+  MAIL_SERVICE,
+  EMAIL_RULE,
 ];

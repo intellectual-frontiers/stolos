@@ -29,6 +29,8 @@ import {
   TagCardinalitySchema,
   TagColourSchema,
   TagOriginSchema,
+  ApiKindSchema,
+  ApiCapabilitySchema,
 } from "./vocabulary.ts";
 
 const { en } = rdf;
@@ -560,6 +562,108 @@ export const tagOrigins = codeList(TagOriginSchema, "origin", {
   },
 });
 
+/** The kinds of API an integration may be (spec 109-integrations-api FR-001). */
+export const apiKinds = codeList(ApiKindSchema, "api-kind", {
+  router: {
+    label: en("router"),
+    definition: en(
+      "A router and the controller that manages it: its clients, devices, networks, ports and firewall.",
+    ),
+    spec: ["109-integrations-api FR-001"],
+  },
+  dns: {
+    label: en("DNS"),
+    definition: en("A DNS provider: the zones it serves and their records."),
+    spec: ["109-integrations-api FR-001"],
+  },
+  email: {
+    label: en("email"),
+    definition: en(
+      "An email provider: the domains it handles, how it sends and how it routes inbound mail.",
+    ),
+    spec: ["109-integrations-api FR-001"],
+  },
+});
+
+/** The capabilities of each kind of integration, written `<kind>-<capability>` (spec 109-integrations-api FR-001, FR-002). */
+export const apiCapabilities = codeList(ApiCapabilitySchema, "api-capability", {
+  "router-dhcp-leases": {
+    label: en("router dhcp-leases"),
+    definition: en("Reads the DHCP leases the router has given."),
+    spec: ["109-integrations-api FR-001"],
+  },
+  "router-clients": {
+    label: en("router clients"),
+    definition: en("Reads the clients connected to it."),
+    spec: ["109-integrations-api FR-001"],
+  },
+  "router-devices": {
+    label: en("router devices"),
+    definition: en("Reads the devices it manages."),
+    spec: ["109-integrations-api FR-001"],
+  },
+  "router-networks-and-vlans": {
+    label: en("router networks-and-vlans"),
+    definition: en("Reads its networks and VLANs."),
+    spec: ["109-integrations-api FR-001"],
+  },
+  "router-ports": {
+    label: en("router ports"),
+    definition: en("Reads the ports of its switches."),
+    spec: ["109-integrations-api FR-001"],
+  },
+  "router-port-forwards": {
+    label: en("router port-forwards"),
+    definition: en("Reads its port forwards."),
+    spec: ["109-integrations-api FR-001"],
+  },
+  "router-firewall-rules": {
+    label: en("router firewall-rules"),
+    definition: en("Reads its firewall rules."),
+    spec: ["109-integrations-api FR-001"],
+  },
+  "router-wifi": {
+    label: en("router wifi"),
+    definition: en("Reads its Wi-Fi networks."),
+    spec: ["109-integrations-api FR-001"],
+  },
+  "router-routes": {
+    label: en("router routes"),
+    definition: en("Reads its routes."),
+    spec: ["109-integrations-api FR-001"],
+  },
+  "router-health": {
+    label: en("router health"),
+    definition: en("Reads its health."),
+    spec: ["109-integrations-api FR-001"],
+  },
+  "dns-zones": {
+    label: en("dns zones"),
+    definition: en("Reads the zones the provider serves."),
+    spec: ["109-integrations-api FR-001"],
+  },
+  "dns-records": {
+    label: en("dns records"),
+    definition: en("Reads the records of those zones."),
+    spec: ["109-integrations-api FR-001"],
+  },
+  "email-domains": {
+    label: en("email domains"),
+    definition: en("Reads the domains it handles and their email DNS records."),
+    spec: ["109-integrations-api FR-001"],
+  },
+  "email-sending": {
+    label: en("email sending"),
+    definition: en("Reads how the domains send mail through it."),
+    spec: ["109-integrations-api FR-001"],
+  },
+  "email-routing": {
+    label: en("email routing"),
+    definition: en("Reads its rules for inbound mail."),
+    spec: ["109-integrations-api FR-001"],
+  },
+});
+
 /** Every code list, by the name of the type the generator writes for it, with the name of its array and what it is. */
 export const CODE_LISTS = {
   OutcomeLevel: {
@@ -621,6 +725,16 @@ export const CODE_LISTS = {
     array: "TAG_ORIGINS",
     list: tagOrigins,
     what: "Where a tag on a machine came from",
+  },
+  ApiKind: {
+    array: "API_KINDS",
+    list: apiKinds,
+    what: "What an account's API is a kind of (an integration's kind)",
+  },
+  ApiCapability: {
+    array: "API_CAPABILITIES",
+    list: apiCapabilities,
+    what: "One thing an integration of a kind may read, written <kind>-<capability>",
   },
   SignerRole: { array: "SIGNER_ROLES", list: signerRoles, what: "A signer's role" },
   CommandTier: { array: "COMMAND_TIERS", list: commandTiers, what: "What a command may do" },

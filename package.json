@@ -1,6 +1,6 @@
 {
   "name": "@intellectual-frontiers/stolos",
-  "version": "0.143.0",
+  "version": "0.144.0",
   "description": "Stolos, the fleet engine: the archon command, the boot server, and everything general about turning bare metal into a converged, verified Ubuntu host (spec 096-bun-runtime).",
   "license": "BUSL-1.1",
   "type": "module",
@@ -32,6 +32,7 @@
     "ci": "bun tools/gen-assets.ts --check && bun run check && bun run lint && bun fmt --check && bun run docs:lint && bun run check:ontology && bun run check:trace && bun run check:layers && bun run check:mizan && bun run test:ci && bun tools/version.ts check origin/main",
     "ocsf": "bun tools/ocsf-gen.ts",
     "fedramp": "bun tools/fedramp-gen.ts",
+    "unifi-api": "bun tools/unifi-api-gen.ts",
     "check:mizan": "bun tools/mizan.ts"
   },
   "dependencies": {

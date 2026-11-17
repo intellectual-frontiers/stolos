@@ -10,6 +10,7 @@
 // Spec: 100-remote-access FR-003, FR-005, FR-008
 // Spec: 103-three-ports FR-008, FR-009
 // Spec: 105-calm-output FR-001, FR-010
+// Spec: 109-integrations-api FR-018
 // Spec: 108-tags FR-006, FR-007, FR-008, FR-013, FR-016
 
 import { fs, stdio } from "@intellectual-frontiers/commons/ts/runtime";
@@ -2716,6 +2717,7 @@ export const COMMANDS: Command[] = [
           "gcp",
           "digitalocean",
           "hetzner",
+          "unifi",
         ],
       },
     ],
@@ -2861,6 +2863,7 @@ export const COMMANDS: Command[] = [
           "gcp",
           "digitalocean",
           "hetzner",
+          "unifi",
         ],
       },
     ],
@@ -2914,6 +2917,7 @@ export const COMMANDS: Command[] = [
           "gcp",
           "digitalocean",
           "hetzner",
+          "unifi",
         ],
       },
     ],
@@ -3075,6 +3079,7 @@ export const COMMANDS: Command[] = [
           "gcp",
           "digitalocean",
           "hetzner",
+          "unifi",
         ],
       },
       { name: "kind", type: "string", description: "Only this kind of asset." },
@@ -3141,6 +3146,7 @@ export const COMMANDS: Command[] = [
           "gcp",
           "digitalocean",
           "hetzner",
+          "unifi",
         ],
       },
     ],

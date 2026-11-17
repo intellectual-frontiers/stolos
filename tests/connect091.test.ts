@@ -727,6 +727,8 @@ proves(
       "rippling",
     ];
     for (const c of CONNECTORS) {
+      // Spec 109: the integration family (a router's controller) is made by integrationConnector, with its own proofs.
+      if (c.id === "unifi") continue;
       assert("def" in c, `${c.id} is declared with defineConnector`);
       const def: unknown = Reflect.get(c, "def");
       const resources = Reflect.get(def as object, "resources") as Record<

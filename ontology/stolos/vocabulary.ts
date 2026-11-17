@@ -71,6 +71,23 @@ export const stolos = vocabulary(STOLOS, {
   TagRule: "owl:Class",
   TagGroup: "owl:Class",
   TagSelection: "owl:Class",
+  // Spec 109-integrations-api: an account's API as a typed integration, and what it reads.
+  ApiIntegration: "owl:Class",
+  NetworkClient: "owl:Class",
+  NetworkDevice: "owl:Class",
+  Vlan: "owl:Class",
+  SwitchPort: "owl:Class",
+  Lease: "owl:Class",
+  PortForward: "owl:Class",
+  FirewallRule: "owl:Class",
+  WifiNetwork: "owl:Class",
+  Route: "owl:Class",
+  RouterHealth: "owl:Class",
+  DnsZone: "owl:Class",
+  DnsRecord: "owl:Class",
+  EmailDomain: "owl:Class",
+  EmailRoute: "owl:Class",
+  EmailSender: "owl:Class",
   // The architecture.
   // The code lists' classes.
   OutcomeLevel: "owl:Class",
@@ -93,6 +110,8 @@ export const stolos = vocabulary(STOLOS, {
   TagColour: "owl:Class",
   TagCardinality: "owl:Class",
   TagOrigin: "owl:Class",
+  ApiKind: "owl:Class",
+  ApiCapability: "owl:Class",
   // Properties.
   spec: "owl:DatatypeProperty",
   emoji: "owl:DatatypeProperty",
@@ -195,6 +214,11 @@ export const TagColourSchema = classSchema(stolos.TagColour, CODE);
 export const TagCardinalitySchema = classSchema(stolos.TagCardinality, CODE);
 /** The schema of a tag origin (spec 108-tags): where a tag on a machine came from. */
 export const TagOriginSchema = classSchema(stolos.TagOrigin, CODE);
+
+/** The schema of a kind of API an integration is (spec 109-integrations-api): what an account's API is a kind of, and so which capabilities it can offer. */
+export const ApiKindSchema = classSchema(stolos.ApiKind, CODE);
+/** The schema of a capability of an integration (spec 109-integrations-api): one thing an integration of a kind may read, written `<kind>-<capability>`. */
+export const ApiCapabilitySchema = classSchema(stolos.ApiCapability, CODE);
 
 /** The schema of a rung of the ladder (Article 0): commons' `mz:Rung` (commons 0016-ladder), which Stolos states its eight rungs with. */
 export const RungSchema = MizanRung;
@@ -531,6 +555,132 @@ export const classes = [
       "Where a tag on a machine came from: a person (added by `stolos tag add` or at pairing), a rule of `tags.ts`, or a group it inherits from.",
     ),
     spec: ["108-tags FR-009, FR-010, FR-011"],
+  }),
+  StolosClass.make(stolos.ApiIntegration, {
+    label: en("API integration"),
+    definition: en(
+      "An account's API read through the integration layer: it declares its kind (a router, a DNS provider, an email provider) and the capabilities of that kind it offers, and a function that needs a capability accepts only an integration that offers it.",
+    ),
+    spec: ["109-integrations-api FR-001, FR-002"],
+  }),
+  StolosClass.make(stolos.NetworkClient, {
+    label: en("Network client"),
+    definition: en(
+      "A device connected to a network as the router sees it: its name, type (wired, wireless, VPN), MAC and IP address, and the device it is connected through.",
+    ),
+    spec: ["109-integrations-api FR-001, FR-013"],
+  }),
+  StolosClass.make(stolos.NetworkDevice, {
+    label: en("Network device"),
+    definition: en(
+      "A device a network is made of and a controller has adopted (a gateway, a switch, an access point): its name, model, MAC and IP address, state and firmware.",
+    ),
+    spec: ["109-integrations-api FR-001, FR-013, FR-015"],
+  }),
+  StolosClass.make(stolos.Vlan, {
+    label: en("VLAN"),
+    definition: en(
+      "A network of a router with its VLAN id (IEEE 802.1Q), whether it is enabled and whether it is the default one.",
+    ),
+    spec: ["109-integrations-api FR-001, FR-013"],
+  }),
+  StolosClass.make(stolos.SwitchPort, {
+    label: en("Switch port"),
+    definition: en(
+      "One port of a switch or gateway: its index, state, speed, connector and power over Ethernet.",
+    ),
+    spec: ["109-integrations-api FR-001, FR-013"],
+  }),
+  StolosClass.make(stolos.Lease, {
+    label: en("DHCP lease"),
+    definition: en(
+      "An address a router's DHCP server has given to a client, with the client's MAC address and when the lease ends.",
+    ),
+    spec: ["109-integrations-api FR-001, FR-014"],
+  }),
+  StolosClass.make(stolos.PortForward, {
+    label: en("Port forward"),
+    definition: en(
+      "A rule that sends traffic arriving at a port of the router's public address to an address and port inside the network.",
+    ),
+    spec: ["109-integrations-api FR-001, FR-014"],
+  }),
+  StolosClass.make(stolos.FirewallRule, {
+    label: en("Firewall rule"),
+    definition: en(
+      "A rule of a router's firewall: its action, the zones it applies between, whether it is enabled, and whether the system or a person made it.",
+    ),
+    spec: ["109-integrations-api FR-001, FR-013"],
+  }),
+  StolosClass.make(stolos.WifiNetwork, {
+    label: en("Wi-Fi network"),
+    definition: en(
+      "A Wi-Fi network an access point broadcasts: its name, whether it is enabled, the frequencies it uses and how it is secured.",
+    ),
+    spec: ["109-integrations-api FR-001, FR-013"],
+  }),
+  StolosClass.make(stolos.Route, {
+    label: en("Route"),
+    definition: en(
+      "An entry of a router's routing table: a destination network, its next hop and the interface it leaves by.",
+    ),
+    spec: ["109-integrations-api FR-001, FR-014"],
+  }),
+  StolosClass.make(stolos.RouterHealth, {
+    label: en("Router health"),
+    definition: en(
+      "What a controller says of its own health: the version of its application and how many of its devices are online and offline.",
+    ),
+    spec: ["109-integrations-api FR-001, FR-013"],
+  }),
+  StolosClass.make(stolos.DnsZone, {
+    label: en("DNS zone"),
+    definition: en(
+      "A zone a DNS provider serves for a domain, with its status and whether it is signed (DNSSEC).",
+    ),
+    spec: ["109-integrations-api FR-001, FR-007"],
+  }),
+  StolosClass.make(stolos.DnsRecord, {
+    label: en("DNS record"),
+    definition: en(
+      "A record of a zone: its name, type, content, time to live and whether the provider proxies it.",
+    ),
+    spec: ["109-integrations-api FR-001, FR-007"],
+  }),
+  StolosClass.make(stolos.EmailDomain, {
+    label: en("Email domain"),
+    definition: en(
+      "A domain as its email depends on it: its MX records, and whether it publishes SPF, DKIM and DMARC records and has email routing on.",
+    ),
+    spec: ["109-integrations-api FR-001, FR-008"],
+  }),
+  StolosClass.make(stolos.EmailRoute, {
+    label: en("Email route"),
+    definition: en(
+      "A rule of an email routing service: the address it matches, whether it is enabled and what it does with a message (without the addresses it forwards to).",
+    ),
+    spec: ["109-integrations-api FR-001, FR-008"],
+  }),
+  StolosClass.make(stolos.EmailSender, {
+    label: en("Email sender"),
+    definition: en(
+      "A way a domain sends email through a provider: the sending domain and how it is authenticated.",
+    ),
+    spec: ["109-integrations-api FR-001, FR-008"],
+  }),
+  StolosClass.make(stolos.ApiKind, {
+    label: en("API kind"),
+    definition: en(
+      "What an account's API is a kind of: a router, a DNS provider or an email provider. Each kind has its own set of capabilities (`stolos:ApiCapability`).",
+    ),
+    spec: ["109-integrations-api FR-001"],
+  }),
+  StolosClass.make(stolos.ApiCapability, {
+    label: en("API capability"),
+    definition: en(
+      "One thing an integration of a kind may read, written `<kind>-<capability>` (`router-clients`, `dns-zones`, `email-routing`): a type-level fact, so that asking for a capability an integration does not offer does not compile.",
+    ),
+    spec: ["109-integrations-api FR-001, FR-002"],
   }),
   StolosClass.make(stolos.WayOfJoining, {
     label: en("Way of joining"),

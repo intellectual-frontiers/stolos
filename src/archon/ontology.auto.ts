@@ -122,6 +122,49 @@ export type TagOrigin = "person" | "rule" | "inherited";
 /** Every {@link TagOrigin}, in the ontology's order. */
 export const TAG_ORIGINS: readonly TagOrigin[] = ["person", "rule", "inherited"];
 
+/** What an account's API is a kind of (an integration's kind) (`stolos:ApiKind`; 109-integrations-api FR-001). */
+export type ApiKind = "router" | "dns" | "email";
+
+/** Every {@link ApiKind}, in the ontology's order. */
+export const API_KINDS: readonly ApiKind[] = ["router", "dns", "email"];
+
+/** One thing an integration of a kind may read, written <kind>-<capability> (`stolos:ApiCapability`; 109-integrations-api FR-001). */
+export type ApiCapability =
+  | "router-dhcp-leases"
+  | "router-clients"
+  | "router-devices"
+  | "router-networks-and-vlans"
+  | "router-ports"
+  | "router-port-forwards"
+  | "router-firewall-rules"
+  | "router-wifi"
+  | "router-routes"
+  | "router-health"
+  | "dns-zones"
+  | "dns-records"
+  | "email-domains"
+  | "email-sending"
+  | "email-routing";
+
+/** Every {@link ApiCapability}, in the ontology's order. */
+export const API_CAPABILITIES: readonly ApiCapability[] = [
+  "router-dhcp-leases",
+  "router-clients",
+  "router-devices",
+  "router-networks-and-vlans",
+  "router-ports",
+  "router-port-forwards",
+  "router-firewall-rules",
+  "router-wifi",
+  "router-routes",
+  "router-health",
+  "dns-zones",
+  "dns-records",
+  "email-domains",
+  "email-sending",
+  "email-routing",
+];
+
 /** A signer's role (`stolos:SignerRole`; 047-intent-and-identity FR-001, 057-keys). */
 export type SignerRole = "daily" | "recovery";
 

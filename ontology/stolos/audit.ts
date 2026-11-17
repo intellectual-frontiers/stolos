@@ -48,6 +48,18 @@ const CANDIDATES: Readonly<Record<string, string>> = {
   TagRule:
     "none found as a vocabulary; NIST SP 800-128 configuration management for rules over component facts",
   TagSelection: "none found; a boolean expression over concepts (SKOS has no query language)",
+  Lease:
+    "RFC 2131 and RFC 8415 (DHCP) define the lease in prose and no vocabulary; OCSF dhcp_activity is an event class, not a lease; D3FEND dhcp_service and DHCPServer are the service",
+  PortForward:
+    "none found as a vocabulary; RFC 4787 (NAT behavioral requirements) and RFC 6887 (PCP) name the mapping, OCSF has no port-forward object",
+  Route:
+    "RFC 1812 (router requirements) and RFC 8349 (YANG routing management) name routes; no RDF vocabulary found; OCSF has no route object",
+  WifiNetwork:
+    "IEEE 802.11 (an SSID and a BSS); D3FEND WirelessLink and WirelessAccessPoint are the link and the device, not the named network; NIST SP 800-153",
+  RouterHealth:
+    "none found; OpenTelemetry system and device semantic conventions for metrics, OCSF metric object, RFC 8343 (YANG interfaces state)",
+  EmailSender:
+    "RFC 5321 (SMTP) and RFC 7489 (DMARC) name sending domains and their authentication; schema:EmailMessage is a message; no vocabulary for a sending domain found",
   Listener: "IANA service names and port numbers (RFC 6335)",
   Door: "none found",
   DevicePath: "none found",
@@ -70,6 +82,29 @@ const MAPPED: Readonly<Record<string, string>> = {
   TagColour: "http://www.w3.org/2004/02/skos/core#ConceptScheme",
   TagCardinality: "http://www.w3.org/2004/02/skos/core#ConceptScheme",
   TagOrigin: "http://www.w3.org/2004/02/skos/core#ConceptScheme",
+  // Spec 109-integrations-api: the two code lists are concept schemes (W3C SKOS); an integration is a web API an account offers (schema.org WebAPI); the entities it reads are
+  // OCSF 1.9.0 objects (documented at schema.ocsf.io, which publishes no RDF) or MITRE D3FEND classes, each narrower or as close as its relation says.
+  ApiKind: "http://www.w3.org/2004/02/skos/core#ConceptScheme",
+  ApiCapability: "http://www.w3.org/2004/02/skos/core#ConceptScheme",
+  ApiIntegration: "https://schema.org/WebAPI",
+  NetworkClient: "https://schema.ocsf.io/1.9.0/objects/network_endpoint",
+  NetworkDevice: "http://d3fend.mitre.org/ontologies/d3fend.owl#ComputerNetworkNode",
+  Vlan: "http://d3fend.mitre.org/ontologies/d3fend.owl#LocalAreaNetwork",
+  SwitchPort: "https://schema.ocsf.io/1.9.0/objects/network_interface",
+  FirewallRule: "https://schema.ocsf.io/1.9.0/objects/firewall_rule",
+  DnsZone: "http://d3fend.mitre.org/ontologies/d3fend.owl#DomainName",
+  DnsRecord: "http://d3fend.mitre.org/ontologies/d3fend.owl#DNSRecord",
+  EmailDomain: "http://d3fend.mitre.org/ontologies/d3fend.owl#DomainName",
+  EmailRoute: "http://d3fend.mitre.org/ontologies/d3fend.owl#EmailRule",
+};
+
+/** How a mapped term relates to the standard's term, where it is not `closeMatch`: the narrower terms and the broader standard term. */
+const RELATION: Readonly<Record<string, "narrowMatch" | "broadMatch">> = {
+  NetworkClient: "narrowMatch",
+  NetworkDevice: "narrowMatch",
+  Vlan: "narrowMatch",
+  SwitchPort: "narrowMatch",
+  EmailDomain: "broadMatch",
 };
 
 function record(local: string) {
@@ -81,7 +116,7 @@ function record(local: string) {
       ...base,
       basis: bases.Maps,
       standardTerm: std,
-      mappingRelation: "closeMatch",
+      mappingRelation: RELATION[local] ?? "closeMatch",
     });
   }
   return OntologyTerm.make(term(MZID, `term-stolos-${local}`), {

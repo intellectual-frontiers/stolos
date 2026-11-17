@@ -23,6 +23,21 @@ stolos:AnswerState a owl:Class ;
     skos:definition "Where one machine is in a question to every machine: asking, answered, failed, or timed out."@en ;
     stolos:spec "107-pairing-and-query FR-010, FR-011" .
 
+stolos:ApiCapability a owl:Class ;
+    rdfs:label "API capability"@en ;
+    skos:definition "One thing an integration of a kind may read, written `<kind>-<capability>` (`router-clients`, `dns-zones`, `email-routing`): a type-level fact, so that asking for a capability an integration does not offer does not compile."@en ;
+    stolos:spec "109-integrations-api FR-001, FR-002" .
+
+stolos:ApiIntegration a owl:Class ;
+    rdfs:label "API integration"@en ;
+    skos:definition "An account's API read through the integration layer: it declares its kind (a router, a DNS provider, an email provider) and the capabilities of that kind it offers, and a function that needs a capability accepts only an integration that offers it."@en ;
+    stolos:spec "109-integrations-api FR-001, FR-002" .
+
+stolos:ApiKind a owl:Class ;
+    rdfs:label "API kind"@en ;
+    skos:definition "What an account's API is a kind of: a router, a DNS provider or an email provider. Each kind has its own set of capabilities (`stolos:ApiCapability`)."@en ;
+    stolos:spec "109-integrations-api FR-001" .
+
 stolos:Capability a owl:Class ;
     rdfs:label "Capability"@en ;
     skos:definition "A part of a host's model that contributes packages, files, units, ports and tools, each with its verification."@en ;
@@ -75,10 +90,35 @@ stolos:DevicePath a owl:Class ;
     skos:definition "A URL path prefix under `/device/`, the namespace reserved for device-specific endpoints on the controller's listeners; pairing is the first."@en ;
     stolos:spec "103-three-ports FR-003" .
 
+stolos:DnsRecord a owl:Class ;
+    rdfs:label "DNS record"@en ;
+    skos:definition "A record of a zone: its name, type, content, time to live and whether the provider proxies it."@en ;
+    stolos:spec "109-integrations-api FR-001, FR-007" .
+
+stolos:DnsZone a owl:Class ;
+    rdfs:label "DNS zone"@en ;
+    skos:definition "A zone a DNS provider serves for a domain, with its status and whether it is signed (DNSSEC)."@en ;
+    stolos:spec "109-integrations-api FR-001, FR-007" .
+
 stolos:Door a owl:Class ;
     rdfs:label "Door"@en ;
     skos:definition "A way a machine reaches the pairing: plain HTTP on the boot server's port (the same trust as PXE) or TLS on the console's port, both serving one handler."@en ;
     stolos:spec "103-three-ports FR-004" .
+
+stolos:EmailDomain a owl:Class ;
+    rdfs:label "Email domain"@en ;
+    skos:definition "A domain as its email depends on it: its MX records, and whether it publishes SPF, DKIM and DMARC records and has email routing on."@en ;
+    stolos:spec "109-integrations-api FR-001, FR-008" .
+
+stolos:EmailRoute a owl:Class ;
+    rdfs:label "Email route"@en ;
+    skos:definition "A rule of an email routing service: the address it matches, whether it is enabled and what it does with a message (without the addresses it forwards to)."@en ;
+    stolos:spec "109-integrations-api FR-001, FR-008" .
+
+stolos:EmailSender a owl:Class ;
+    rdfs:label "Email sender"@en ;
+    skos:definition "A way a domain sends email through a provider: the sending domain and how it is authenticated."@en ;
+    stolos:spec "109-integrations-api FR-001, FR-008" .
 
 stolos:EngineRelease a owl:Class ;
     rdfs:label "Engine release"@en ;
@@ -96,6 +136,11 @@ stolos:Finding a owl:Class ;
     stolos:spec "068-compliance",
         "089-ocsf-schema-language" .
 
+stolos:FirewallRule a owl:Class ;
+    rdfs:label "Firewall rule"@en ;
+    skos:definition "A rule of a router's firewall: its action, the zones it applies between, whether it is enabled, and whether the system or a person made it."@en ;
+    stolos:spec "109-integrations-api FR-001, FR-013" .
+
 stolos:Fleet a owl:Class ;
     rdfs:label "Fleet"@en ;
     skos:definition "A set of machines under one identity, site and list of signers, kept in `fleets/<id>/` of an operator's repository."@en ;
@@ -111,6 +156,11 @@ stolos:IntegrationKind a owl:Class ;
     rdfs:label "Integration kind"@en ;
     skos:definition "What a machine integrates as: discovered, adopted, with osquery, as a server or as a workstation."@en ;
     stolos:spec "069-integrate" .
+
+stolos:Lease a owl:Class ;
+    rdfs:label "DHCP lease"@en ;
+    skos:definition "An address a router's DHCP server has given to a client, with the client's MAC address and when the lease ends."@en ;
+    stolos:spec "109-integrations-api FR-001, FR-014" .
 
 stolos:LineKind a owl:Class ;
     rdfs:label "Line kind"@en ;
@@ -131,6 +181,16 @@ stolos:MachineTable a owl:Class ;
     rdfs:label "Machine table"@en ;
     skos:definition "The one merged table of a question asked to every machine: a row per answer, and a row for each machine that failed or timed out with its reason, drawn by the console's vendored grid."@en ;
     stolos:spec "107-pairing-and-query FR-012, FR-013" .
+
+stolos:NetworkClient a owl:Class ;
+    rdfs:label "Network client"@en ;
+    skos:definition "A device connected to a network as the router sees it: its name, type (wired, wireless, VPN), MAC and IP address, and the device it is connected through."@en ;
+    stolos:spec "109-integrations-api FR-001, FR-013" .
+
+stolos:NetworkDevice a owl:Class ;
+    rdfs:label "Network device"@en ;
+    skos:definition "A device a network is made of and a controller has adopted (a gateway, a switch, an access point): its name, model, MAC and IP address, state and firmware."@en ;
+    stolos:spec "109-integrations-api FR-001, FR-013, FR-015" .
 
 stolos:OutcomeLevel a owl:Class ;
     rdfs:label "Outcome level"@en ;
@@ -167,6 +227,11 @@ stolos:PhaseTiming a owl:Class ;
     skos:definition "A line of a run's log that says how long a phase took, in milliseconds, and a closing line for the whole run: for finding what is slow, never drawn on the screen."@en ;
     stolos:spec "106-one-passphrase-speed FR-010" .
 
+stolos:PortForward a owl:Class ;
+    rdfs:label "Port forward"@en ;
+    skos:definition "A rule that sends traffic arriving at a port of the router's public address to an address and port inside the network."@en ;
+    stolos:spec "109-integrations-api FR-001, FR-014" .
+
 stolos:ProbeCache a owl:Class ;
     rdfs:label "Probe cache"@en ;
     skos:definition "What an earlier run found out about this PC's firewall, kept for a short time in the program's state folder so that the next run does not ask the system again; never stale across a rule change by more than its time to live."@en ;
@@ -176,6 +241,16 @@ stolos:Record a owl:Class ;
     rdfs:label "Record"@en ;
     skos:definition "A file Stolos writes in a fleet repository about what happened (a registration, an observation): sent by `stolos update`."@en ;
     stolos:spec "099-engine-update FR-006" .
+
+stolos:Route a owl:Class ;
+    rdfs:label "Route"@en ;
+    skos:definition "An entry of a router's routing table: a destination network, its next hop and the interface it leaves by."@en ;
+    stolos:spec "109-integrations-api FR-001, FR-014" .
+
+stolos:RouterHealth a owl:Class ;
+    rdfs:label "Router health"@en ;
+    skos:definition "What a controller says of its own health: the version of its application and how many of its devices are online and offline."@en ;
+    stolos:spec "109-integrations-api FR-001, FR-013" .
 
 stolos:Signer a owl:Class ;
     rdfs:label "Signer"@en ;
@@ -191,6 +266,11 @@ stolos:SigningOutcome a owl:Class ;
     rdfs:label "Signing outcome"@en ;
     skos:definition "How an attempt to sign ended, which decides what happens to the passphrase held in memory: kept, thrown away and asked again, or thrown away."@en ;
     stolos:spec "106-one-passphrase-speed FR-003" .
+
+stolos:SwitchPort a owl:Class ;
+    rdfs:label "Switch port"@en ;
+    skos:definition "One port of a switch or gateway: its index, state, speed, connector and power over Ethernet."@en ;
+    stolos:spec "109-integrations-api FR-001, FR-013" .
 
 stolos:Tag a owl:Class ;
     rdfs:label "Tag"@en ;
@@ -242,10 +322,20 @@ stolos:Verbosity a owl:Class ;
     skos:definition "How much of a run reaches the screen: nothing but a verdict line, only what needs a person, every line, or JSON."@en ;
     stolos:spec "105-calm-output FR-002" .
 
+stolos:Vlan a owl:Class ;
+    rdfs:label "VLAN"@en ;
+    skos:definition "A network of a router with its VLAN id (IEEE 802.1Q), whether it is enabled and whether it is the default one."@en ;
+    stolos:spec "109-integrations-api FR-001, FR-013" .
+
 stolos:WayOfJoining a owl:Class ;
     rdfs:label "Way of joining"@en ;
     skos:definition "How a machine came to be in the fleet: auto-adopted (the controller), paired, integrated, managed, or cloud."@en ;
     stolos:spec "107-pairing-and-query FR-007" .
+
+stolos:WifiNetwork a owl:Class ;
+    rdfs:label "Wi-Fi network"@en ;
+    skos:definition "A Wi-Fi network an access point broadcasts: its name, whether it is enabled, the frequencies it uses and how it is secured."@en ;
+    stolos:spec "109-integrations-api FR-001, FR-013" .
 
 stolos:answer-answered a stolos:AnswerState ;
     rdfs:label "answered"@en ;
@@ -270,6 +360,114 @@ stolos:answer-timed-out a stolos:AnswerState ;
     skos:definition "The machine did not answer within the time limit of each machine."@en ;
     skos:notation "timed-out" ;
     stolos:spec "107-pairing-and-query FR-010" .
+
+stolos:api-capability-dns-records a stolos:ApiCapability ;
+    rdfs:label "dns records"@en ;
+    skos:definition "Reads the records of those zones."@en ;
+    skos:notation "dns-records" ;
+    stolos:spec "109-integrations-api FR-001" .
+
+stolos:api-capability-dns-zones a stolos:ApiCapability ;
+    rdfs:label "dns zones"@en ;
+    skos:definition "Reads the zones the provider serves."@en ;
+    skos:notation "dns-zones" ;
+    stolos:spec "109-integrations-api FR-001" .
+
+stolos:api-capability-email-domains a stolos:ApiCapability ;
+    rdfs:label "email domains"@en ;
+    skos:definition "Reads the domains it handles and their email DNS records."@en ;
+    skos:notation "email-domains" ;
+    stolos:spec "109-integrations-api FR-001" .
+
+stolos:api-capability-email-routing a stolos:ApiCapability ;
+    rdfs:label "email routing"@en ;
+    skos:definition "Reads its rules for inbound mail."@en ;
+    skos:notation "email-routing" ;
+    stolos:spec "109-integrations-api FR-001" .
+
+stolos:api-capability-email-sending a stolos:ApiCapability ;
+    rdfs:label "email sending"@en ;
+    skos:definition "Reads how the domains send mail through it."@en ;
+    skos:notation "email-sending" ;
+    stolos:spec "109-integrations-api FR-001" .
+
+stolos:api-capability-router-clients a stolos:ApiCapability ;
+    rdfs:label "router clients"@en ;
+    skos:definition "Reads the clients connected to it."@en ;
+    skos:notation "router-clients" ;
+    stolos:spec "109-integrations-api FR-001" .
+
+stolos:api-capability-router-devices a stolos:ApiCapability ;
+    rdfs:label "router devices"@en ;
+    skos:definition "Reads the devices it manages."@en ;
+    skos:notation "router-devices" ;
+    stolos:spec "109-integrations-api FR-001" .
+
+stolos:api-capability-router-dhcp-leases a stolos:ApiCapability ;
+    rdfs:label "router dhcp-leases"@en ;
+    skos:definition "Reads the DHCP leases the router has given."@en ;
+    skos:notation "router-dhcp-leases" ;
+    stolos:spec "109-integrations-api FR-001" .
+
+stolos:api-capability-router-firewall-rules a stolos:ApiCapability ;
+    rdfs:label "router firewall-rules"@en ;
+    skos:definition "Reads its firewall rules."@en ;
+    skos:notation "router-firewall-rules" ;
+    stolos:spec "109-integrations-api FR-001" .
+
+stolos:api-capability-router-health a stolos:ApiCapability ;
+    rdfs:label "router health"@en ;
+    skos:definition "Reads its health."@en ;
+    skos:notation "router-health" ;
+    stolos:spec "109-integrations-api FR-001" .
+
+stolos:api-capability-router-networks-and-vlans a stolos:ApiCapability ;
+    rdfs:label "router networks-and-vlans"@en ;
+    skos:definition "Reads its networks and VLANs."@en ;
+    skos:notation "router-networks-and-vlans" ;
+    stolos:spec "109-integrations-api FR-001" .
+
+stolos:api-capability-router-port-forwards a stolos:ApiCapability ;
+    rdfs:label "router port-forwards"@en ;
+    skos:definition "Reads its port forwards."@en ;
+    skos:notation "router-port-forwards" ;
+    stolos:spec "109-integrations-api FR-001" .
+
+stolos:api-capability-router-ports a stolos:ApiCapability ;
+    rdfs:label "router ports"@en ;
+    skos:definition "Reads the ports of its switches."@en ;
+    skos:notation "router-ports" ;
+    stolos:spec "109-integrations-api FR-001" .
+
+stolos:api-capability-router-routes a stolos:ApiCapability ;
+    rdfs:label "router routes"@en ;
+    skos:definition "Reads its routes."@en ;
+    skos:notation "router-routes" ;
+    stolos:spec "109-integrations-api FR-001" .
+
+stolos:api-capability-router-wifi a stolos:ApiCapability ;
+    rdfs:label "router wifi"@en ;
+    skos:definition "Reads its Wi-Fi networks."@en ;
+    skos:notation "router-wifi" ;
+    stolos:spec "109-integrations-api FR-001" .
+
+stolos:api-kind-dns a stolos:ApiKind ;
+    rdfs:label "DNS"@en ;
+    skos:definition "A DNS provider: the zones it serves and their records."@en ;
+    skos:notation "dns" ;
+    stolos:spec "109-integrations-api FR-001" .
+
+stolos:api-kind-email a stolos:ApiKind ;
+    rdfs:label "email"@en ;
+    skos:definition "An email provider: the domains it handles, how it sends and how it routes inbound mail."@en ;
+    skos:notation "email" ;
+    stolos:spec "109-integrations-api FR-001" .
+
+stolos:api-kind-router a stolos:ApiKind ;
+    rdfs:label "router"@en ;
+    skos:definition "A router and the controller that manages it: its clients, devices, networks, ports and firewall."@en ;
+    skos:notation "router" ;
+    stolos:spec "109-integrations-api FR-001" .
 
 stolos:ascii a owl:DatatypeProperty ;
     rdfs:domain stolos:OutcomeLevel ;

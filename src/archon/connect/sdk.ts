@@ -43,6 +43,11 @@ import {
   type ServiceModel,
 } from "./connector.ts";
 
+/** The OCSF class uid of a class Stolos emits, by its name (spec 109: the integration layer's records name theirs the way connectors do). */
+export function ocsfUid(name: keyof typeof OCSF_CLASSES): number {
+  return OCSF_CLASSES[name].uid;
+}
+
 /** One field of a credential. */
 export interface FieldDef {
   /** A secret (a token, a key): asked for without echo, kept only in the vault. */

@@ -5,6 +5,7 @@
  * @module
  */
 // Spec: 067-adopt
+// Spec: 109-integrations-api FR-006, FR-012, FR-018
 
 import { json, record, string } from "@intellectual-frontiers/commons/ts/kernel";
 import { fs, http, path, stdio } from "@intellectual-frontiers/commons/ts/runtime";
@@ -19,7 +20,8 @@ import {
   observationFile,
   observationSource,
 } from "./connector.ts";
-import { cloudflare } from "./cloudflare.ts";
+import { cloudflareFamily } from "./cloudflare-integration.ts";
+import { unifi } from "./unifi.ts";
 import { github } from "./github.ts";
 import { google } from "./google.ts";
 import { bamboohr, rippling } from "./hris.ts";
@@ -51,7 +53,7 @@ import { digitalocean } from "./digitalocean.ts";
 
 /** Every provider, in the fleet's order of importance. */
 export const CONNECTORS: Connector[] = [
-  cloudflare,
+  cloudflareFamily,
   microsoft,
   google,
   okta,
@@ -83,6 +85,7 @@ export const CONNECTORS: Connector[] = [
   gcp,
   digitalocean,
   hetzner,
+  unifi,
 ];
 
 const warned = new Set<string>();
@@ -158,7 +161,7 @@ export function joinFleet(o: Observation, machines: string[], domain?: string): 
       a.name === `${label}.${domain}` ||
       a.name.endsWith(`.${domain}`);
     const hit =
-      ["dns-record", "server", "ec2-instance", "azure-resource"].includes(a.kind) &&
+      ["dns-record", "server", "ec2-instance", "azure-resource", "client"].includes(a.kind) &&
       names.has(label) &&
       inDomain;
     return hit ? { ...a, fleetMachine: label } : a;
@@ -247,11 +250,26 @@ export async function connectorConnect(
         ui.say("read it into the vault: delete that file now, so the vault is its only copy");
       }
       if (!v.trim()) {
+        // Spec 109: a setting with a default may be left empty (never a secret).
+        if (f.optional && !f.secret) continue;
         ui.resume();
         ui.phase("Connect").fail(`no ${f.hint}`, `bun run stolos connect ${id}`);
         return fail();
       }
       cred[f.name] = v.trim();
+    }
+    // Spec 109 FR-012: before the credential is kept, the connector makes sure the person trusts what it will read from.
+    if (c.trust) {
+      const decided = await c.trust(cred, {
+        say: (line) => ui.say(line),
+        ask: (q) => ui.ask(`  ${q}`),
+      });
+      if (!decided.ok) {
+        ui.resume();
+        ui.phase("Connect").fail(decided.why, `bun run stolos connect ${id}`);
+        return fail();
+      }
+      Object.assign(cred, decided.cred);
     }
   } finally {
     ui.resume();

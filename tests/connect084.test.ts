@@ -417,6 +417,7 @@ proves(
         "gcp",
         "digitalocean",
         "hetzner",
+        "unifi",
       ],
     );
     for (const c of CONNECTORS) {

@@ -16,6 +16,7 @@
  * @module
  */
 // Spec: 084-connectors
+// Spec: 109-integrations-api FR-006, FR-012
 
 import { formatJson5Error, parseJson5, tsLiteral } from "@intellectual-frontiers/commons/ts/kernel";
 import { type http, path } from "@intellectual-frontiers/commons/ts/runtime";
@@ -59,6 +60,11 @@ export const MARKET_CATEGORIES: MarketCategory[] = [
     id: "edge-development-platforms",
     name: "Edge Development Platforms",
     source: "Forrester Wave",
+  },
+  {
+    id: "enterprise-wired-wireless-lan",
+    name: "Enterprise Wired and Wireless LAN Infrastructure",
+    source: "Gartner Magic Quadrant",
   },
   { id: "access-management", name: "Access Management", source: "Gartner Magic Quadrant" },
   {
@@ -162,6 +168,11 @@ export interface Connector {
   id: string;
   /** Its NIST SP 800-145 service models (what FedRAMP calls the offering's service model). */
   serviceModels: ServiceModel[];
+  /**
+   * Spec 109: a product the owner runs on their own network (a router's controller) is not a cloud service, so it has no NIST service
+   * model: `serviceModels` is empty only where this is true.
+   */
+  selfHosted?: boolean;
   /** Its market categories, as the analyst firms name them (ids in MARKET_CATEGORIES). */
   markets: string[];
   /** Its name for people. */
@@ -182,7 +193,23 @@ export interface Connector {
     hint: string;
     /** A file's path is asked for, and the file's content kept (a key file). */
     file?: boolean;
+    /** Spec 109: it may be left empty (a setting with a default, such as a base path or a CA file); a secret is never optional. */
+    optional?: boolean;
   }>;
+  /**
+   * Spec 109 FR-012: what `stolos connect` does with the credential before it is kept, to make sure the person trusts what it will
+   * read from: it may show something (a certificate's fingerprint) and ask, and answers the credential to keep (with what it added), or
+   * why not.
+   */
+  trust?: (
+    cred: Record<string, string>,
+    io: {
+      /** Show a line to the person. */
+      say(line: string): void;
+      /** Ask the person; undefined when there is no one to ask. */
+      ask(question: string): Promise<string | undefined>;
+    },
+  ) => Promise<{ ok: true; cred: Record<string, string> } | { ok: false; why: string }>;
   /** Read the account. */
   observe(cred: Record<string, string>, http: http.Transport, now: Date): Promise<Observation>;
   /** Its posture policies. */

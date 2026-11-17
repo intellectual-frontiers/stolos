@@ -28,6 +28,7 @@
  */
 // Spec: 078-control-sdk
 // Spec: 090-estate-graph
+// Spec: 109-integrations-api FR-003, FR-015
 
 import { DatabaseSync } from "node:sqlite";
 import type { PolicyResult } from "../adopt/policy.ts";
@@ -169,6 +170,7 @@ export const SOURCE_RANK: Record<string, number> = {
   stolos: 0,
   adopted: 1,
   snmp: 2,
+  unifi: 2,
   intune: 3,
   jamf: 3,
   kandji: 3,
@@ -444,7 +446,7 @@ export function buildGraph(
     set("encrypted", d.encrypted);
     if (d.managed) a["managed"] = true;
     a["fixed_asset_type"] ??=
-      d.source === "snmp"
+      d.source === "snmp" || d.source === "unifi"
         ? "network_device"
         : d.source === "stolos"
           ? "server"
