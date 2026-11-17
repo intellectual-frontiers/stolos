@@ -8,7 +8,7 @@ workstation) work through `archon` commands. These articles govern every spec,
 plan, task, and line of code of the engine. Amend them only with a commit whose
 subject starts with `constitution:`.
 
-**Version**: 6.1.0 · **Ratified**: 2026-11-13 · **Last amended**: 2026-11-17
+**Version**: 6.2.0 · **Ratified**: 2026-11-13 · **Last amended**: 2026-11-17
 
 ## Article 0: The Ladder (NON-NEGOTIABLE)
 
@@ -198,8 +198,37 @@ reset it.
 
 ## Article 19: Calm Output
 
-One line per phase, progress while working, every problem with a fix and a
-log line, collected again at the end. Full detail goes to the run log.
+Output follows what the command is for (spec 105-calm-output). Every command
+is one of two classes. A **report** is meant to be read by a person as a whole
+(`boot doctor`, `where`, `console`, the estate and compliance reports, every
+long-running server): its default is verbose, every line shown. An **action**
+does something (`update`, `apply`, `fleet upgrade`, `pair`, adopting a host,
+a vault backup): its default is calm. Every command answers `--verbose` (all
+steps, either class), `--quiet` (one verdict line and the exit code, nothing
+else) and `--json`.
+
+Calm means a step that went well is not printed: only problems (❌ ⚠️), what
+is the person's to do (⚡), the outcome lines the person needs, and progress
+while working, which leaves nothing behind in the scrollback. An optional
+feature that is merely off is a hint (👉), shown at most once a week.
+
+- **One run, one header, one summary.** A command run inside another (update
+  calls apply) is a phase of the parent: no header, no closing summary and no
+  log of its own; its problems go to the parent, which shows them once.
+- **The verdict and one next step come last**: problems, then your move, then
+  what is not set up yet, then one verdict line that counts them, then at most
+  one `next:` line (the most important ⚡ command; none when there is nothing
+  to do). A verdict never says "all well" or "done" beside something open.
+- **Marks are honest.** ✅ means the phase recorded no ❌ ⚠️ ⚡ or ⏳; a phase
+  that holds only ⚡ shows ⚡.
+- **A failure is shown once, cause first**, saying what happened to the
+  person's data and giving one command. A line that is a command holds only
+  the command.
+- **Raw system errors go to the run log**, not the screen: the screen has a
+  plain sentence and a stable code (`stolos explain <code>`); `--verbose`
+  shows the raw text. Every ❌ ⚠️ ⚡ carries a code.
+
+Full detail always goes to the run log (`stolos log`).
 
 ## Article 20: Names, Not Announcements
 
@@ -313,3 +342,4 @@ open.
 | 5.1.0 | 2026-11-16 | Article 28 (trusted networks, zero trust beyond them): plain HTTP on the LAN or a zero trust mesh network (Tailscale, Headscale, NetBird, ZeroTier, Nebula, WireGuard, or similar; the fleet's choice, guidance only) for short-lived, content-authenticated exchanges; never a listener on the internet (specs 097, 098). |
 | 6.0.0 | 2026-11-16 | Article 0 (the ladder, NON-NEGOTIABLE): eight rungs, from the ontology to the documentation, stated in the ontology (`ontology/stolos/architecture.ts`, TypeScript on commons' kernel RDF) and written into this table; dependency direction and order of work; the ontology and the specification drafted and committed together, then the code; Spec Kit fully; no code without a requirement or an ontology term (`// Spec:` lines, `proves()` in tests, a `spec` on every term), held by `check:trace`, `check:layers` and `check:ontology` with baselines that only shrink; headless first (spec 101-ladder, commons 0015-trace). Article 8 points to Article 0. |
 | 6.1.0 | 2026-11-17 | Article 29 (the controller opens three ports): UDP 69 and TCP 8080 for the boot server, TCP 443 for the console over TLS; everything else is a route on one of them or loopback-only; any other port is an explicit choice that prints its own firewall rule (spec 103-three-ports). |
+| 6.2.0 | 2026-11-17 | Article 19 (calm output) states its contract: two output classes (reports verbose by default, actions calm), `--verbose`, `--quiet` (one verdict line and the exit code) and `--json` on every command; one run, one header, one summary; the verdict and one `next:` line last; honest marks; a failure shown once, cause first; raw system errors in the run log, a code on every problem (spec 105-calm-output). |
