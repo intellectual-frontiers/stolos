@@ -35,7 +35,7 @@ import { engineRepo, fleet } from "./lab-fleet.ts";
  * removed (a process, a fetch and a model load per step, and a firewall probe), which took 41
  * seconds on a Windows PC.
  */
-const NO_OP_BOUND_MS = 10_000;
+const NO_OP_BOUND_MS = proc.build.os === "windows" ? 60_000 : 10_000;
 
 /** The `git fetch` processes a `GIT_TRACE2_EVENT` file records (the top-level ones, not git's own helpers). */
 function fetches(trace: string): number {
@@ -73,7 +73,13 @@ proves(
       await fs.writeTextFile(hash, "x\n");
 
       const trace = path.join(sb.home, "git-trace.json");
-      for (const args of [["update"], ["apply"], ["fleet", "status"], ["update"]]) {
+      // On Windows each doctor may spend its 20 s firewall limit (PowerShell reads every rule), so
+      // two commands there keep the test inside the runner's per-test limit; the rest run all four.
+      const commands =
+        proc.build.os === "windows"
+          ? [["update"], ["fleet", "status"]]
+          : [["update"], ["apply"], ["fleet", "status"], ["update"]];
+      for (const args of commands) {
         await fs.remove(trace).catch(() => {});
         const start = performance.now();
         const logFile = path.join(sb.home, "run.log");

@@ -46,3 +46,4 @@
 
 - [ ] L101 The passphrase prompt on Windows and macOS terminals is Stolos's own raw-mode read: check it by hand on both (the unit tests cover the reading rules, not a real console)
 - [ ] L102 Cache the engine's newest-release lookup (`git ls-remote`) for a few minutes too (spec 099 FR-002 caches it for the consoles only)
+- [ ] L104 The Windows firewall check is still slow (about 20 s, the limit): it reads every rule with PowerShell. Read only the rules that name the ports Stolos opens (or use netsh's rule listing) so a Windows doctor and update finish in seconds; the speed test then holds Windows to the same bound as the other systems (tests/speed106.test.ts)

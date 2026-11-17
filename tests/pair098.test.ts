@@ -33,7 +33,7 @@ import { DEVICE_PAIR_PATH } from "../src/archon/ontology.auto.ts";
 import { parseCheckIn } from "../src/archon/adopt/checkin.ts";
 import { PROBE_SCRIPT, PROBE_SCRIPT_WINDOWS } from "../src/archon/adopt/probe.ts";
 import { toBase64 } from "@intellectual-frontiers/commons/ts/kernel";
-import { servePair } from "./integrate/pair-server.ts";
+import { servePair, untilDelivered } from "./integrate/pair-server.ts";
 
 const KEY = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIexampleexampleexampleexampleexample00";
 const CODE = "WDJB-MJHT";
@@ -578,6 +578,46 @@ proves(
       ui.setMode(was);
       ui.outcomes.splice(0);
       ui.problems.splice(0);
+    }
+  },
+);
+
+proves(
+  ["107-pairing-and-query FR-014", "098-pair FR-006"],
+  "107: the pairing program answers a held check-in before it exits, for a client that polls late and keeps no connection (Windows CI)",
+  async () => {
+    // A slow poll (as on a busy Windows runner): the program must not exit 500 ms after the approval while the answer is still due.
+    const srv = await servePair({ code: CODE, key: KEY, fleet: "ci", pollMs: 1200 });
+    const hdr = async (body: string) => ({
+      "content-type": "text/plain",
+      connection: "close",
+      "x-stolos-mac": await mac(CODE, body),
+    });
+    try {
+      const hello = `nonce=${"ab".repeat(16)}\nhostname=RUNNERVM1\nos=windows\n`;
+      const h = await fetch(`${srv.url}/hello`, {
+        method: "POST",
+        body: hello,
+        headers: await hdr(hello),
+      });
+      assertEquals((await h.text()).split("\n")[0], "ok");
+      const text = "@checkin\nv=1\nfleet=ci\nhostname=RUNNERVM1\n";
+      const closed = untilDelivered(srv);
+      let over = false;
+      void closed.then(() => (over = true));
+      const res = await fetch(`${srv.url}/checkin`, {
+        method: "POST",
+        body: text,
+        headers: await hdr(text),
+        signal: AbortSignal.timeout(20000),
+      });
+      assertEquals(res.status, 200);
+      assertEquals(res.headers.get("content-type")?.startsWith("text/plain"), true);
+      assertStringIncludes(await res.text(), "ok runnervm1 is adopted by the fleet ci");
+      assert(!over, "the program was still serving when the answer was sent");
+      await closed;
+    } finally {
+      srv.close();
     }
   },
 );

@@ -120,7 +120,8 @@ release` of a controller it is asked to run). The machines CSV carries the way o
 - **FR-014** Windows and macOS are not diminished: paths are built with `path.join`, temporary files are in temporary folders, and the
   Windows loader (`irm <base>/w | iex`) and `integrate.windows.ps1 --pair` work against the session as before
   (`tests/integrate/windows-check.ps1` and `tests/integrate/pair-server.ts` use it: the server approves every check-in and the
-  program exits after the first, the session itself never ending). The wire protocol (the routes, the signatures, the answers'
+  program exits after the first one has been answered to its machine (never before: a client that waits for the held answer must
+  not find the PC gone), the session itself never ending). The wire protocol (the routes, the signatures, the answers'
   first words) is unchanged; a wrong code is still "that code is wrong (N tries left)".
 - **FR-015** Specs 098, 103-three-ports, 097-controller, 066-stolos-console and 106-one-passphrase-speed say what is true now, and the
   guides (`src/archon/adopt/mod.ts`, `src/archon/console/mod.ts`, the command help) say the same.

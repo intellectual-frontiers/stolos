@@ -11,7 +11,7 @@
 // Spec: 096-bun-runtime
 
 /** The engine's version (semver), raised on every push to main. */
-export const VERSION = "0.139.0";
+export const VERSION = "0.140.0";
 
 /** The git tag a fleet pins: "v0.1.0". */
 export const TAG = `v${VERSION}`;

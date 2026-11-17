@@ -14,7 +14,7 @@
  */
 // Spec: 098-pair FR-001, FR-006
 // Spec: 103-three-ports FR-003
-// Spec: 107-pairing-and-query FR-001, FR-002
+// Spec: 107-pairing-and-query FR-001, FR-002, FR-014
 
 import { fs, proc, stdio } from "@intellectual-frontiers/commons/ts/runtime";
 import { listen } from "../../src/archon-boot/http.ts";
@@ -66,6 +66,25 @@ export async function servePair(o: {
   };
 }
 
+/**
+ * Wait until the first approved machine has been told (its held check-in was answered), then a moment more for the bytes to leave,
+ * and close the server. The process of `windows-check.ps1` exits after this, so it must never exit while a client still waits for its
+ * answer: a client of a slow Windows runner polls late, and "the PC did not answer" is what it reports when the process is gone.
+ */
+export async function untilDelivered(
+  s: { approved: Promise<string>; store: MemoryPairStore; close: () => void },
+  graceMs = 500,
+): Promise<void> {
+  await s.approved;
+  for (;;) {
+    const r = await s.store.read();
+    if (!r || Object.values(r.machines).some((m) => m.delivered)) break;
+    await new Promise((ok) => setTimeout(ok, 50));
+  }
+  await new Promise((ok) => setTimeout(ok, graceMs));
+  s.close();
+}
+
 if (import.meta.main) {
   const [code = "", key = "", out = "checkin.txt"] = proc.args;
   const s = await servePair({
@@ -75,8 +94,6 @@ if (import.meta.main) {
     onCheckIn: (t) => fs.writeTextFile(out, t),
   });
   stdio.stdout.writeSync(`${s.url}\n`);
-  await s.approved;
-  await new Promise((r) => setTimeout(r, 500));
-  s.close();
+  await untilDelivered(s);
   proc.exit(0);
 }
