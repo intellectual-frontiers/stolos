@@ -8,7 +8,7 @@ workstation) work through `archon` commands. These articles govern every spec,
 plan, task, and line of code of the engine. Amend them only with a commit whose
 subject starts with `constitution:`.
 
-**Version**: 6.2.1 · **Ratified**: 2026-11-13 · **Last amended**: 2026-11-17
+**Version**: 6.3.0 · **Ratified**: 2026-11-13 · **Last amended**: 2026-11-17
 
 ## Article 0: The Ladder (NON-NEGOTIABLE)
 
@@ -285,7 +285,9 @@ belongs (registration: hosts, public keys, signers), and what operators decided
 (opt-ins and whether their data is durable). Each machine keeps its own state
 (what it observed, verified, and did) on itself, canonically as readable SQL
 (`archon.sql`), from which an `.auto.` SQLite file is built for osquery; it is
-read over SSH, never pushed. Hosts only read the repository.
+read over SSH, never pushed. A machine MAY record facts and claims about itself
+with `archon`, in its own state database, and none of it changes configuration.
+Hosts only read the repository.
 
 ## Article 26: Generated Files Say So
 
@@ -344,3 +346,4 @@ open.
 | 6.1.0 | 2026-11-17 | Article 29 (the controller opens three ports): UDP 69 and TCP 8080 for the boot server, TCP 443 for the console over TLS; everything else is a route on one of them or loopback-only; any other port is an explicit choice that prints its own firewall rule (spec 103-three-ports). |
 | 6.2.0 | 2026-11-17 | Article 19 (calm output) states its contract: two output classes (reports verbose by default, actions calm), `--verbose`, `--quiet` (one verdict line and the exit code) and `--json` on every command; one run, one header, one summary; the verdict and one `next:` line last; honest marks; a failure shown once, cause first; raw system errors in the run log, a code on every problem (spec 105-calm-output). |
 | 6.2.1 | 2026-11-17 | Article 24: the engine is one work of commons' 0026-works-versioning, its record is `release.ts`, and a release is the annotated tag `stolos-v<version>` (spec 114-release-record). |
+| 6.3.0 | 2026-11-17 | Article 25: a machine MAY record facts and claims about itself with `archon` (the tags it says about itself, `archon tag`), in its own state database; none of it changes configuration, and the fleet decides what to do with it (spec 112-machine-reported-tags). |
